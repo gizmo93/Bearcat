@@ -14,6 +14,8 @@ public class Rapidgator(
 {
     private static readonly HashSet<int> FinishedStatuses = [UploadStates.Done, UploadStates.Failed];
     
+    public string Name => "Rapidgator";
+    
     public async Task<UploadFileResult> UploadFileAsync(
         IHosterConfig hosterConfig,
         string fullFilePath,
