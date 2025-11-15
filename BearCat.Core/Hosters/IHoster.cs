@@ -4,6 +4,8 @@ namespace BearCat.Core.Hosters;
 
 public interface IHoster
 {
+    string Name { get; }
+    
     Task<UploadFileResult> UploadFileAsync(
         IHosterConfig hosterConfig,
         string fullFilePath,
