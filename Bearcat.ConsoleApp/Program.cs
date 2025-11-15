@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using BearCat.Core;
+using BearCat.Core.Hosters;
 using BearCat.Core.Hosters.Rapidgator;
 using BearCat.Core.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +22,9 @@ var config = new RapidgatorConfig
     Password = "REDACTED_SECRET"
 };
 
-var rapidgator = scope.ServiceProvider.GetRequiredService<Rapidgator>();
+var rapidgator = scope.ServiceProvider.GetRequiredService<IEnumerable<IHoster>>()
+    .OfType<Rapidgator>()
+    .First();
 
 var result = await rapidgator.UploadFileAsync(
     config,
