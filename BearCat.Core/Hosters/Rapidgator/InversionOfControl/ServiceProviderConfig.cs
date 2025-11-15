@@ -20,6 +20,6 @@ public static class ServiceProviderConfig
             })
             .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://rapidgator.net/"));
         services.AddScoped<RapidgatorApiClient>();
-        services.AddScoped<Rapidgator>();
+        services.AddScoped<IHoster, Rapidgator>();
     }
 }
