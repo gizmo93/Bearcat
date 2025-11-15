@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bearcat.ConsoleApp", "Bearcat.ConsoleApp\Bearcat.ConsoleApp.csproj", "{4C048ED3-449F-45BA-8BB2-88790A7B4362}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BearCat.Core", "BearCat.Core\BearCat.Core.csproj", "{CBB9F371-B36A-4158-B313-4C32619C8689}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4C048ED3-449F-45BA-8BB2-88790A7B4362}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C048ED3-449F-45BA-8BB2-88790A7B4362}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C048ED3-449F-45BA-8BB2-88790A7B4362}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C048ED3-449F-45BA-8BB2-88790A7B4362}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBB9F371-B36A-4158-B313-4C32619C8689}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBB9F371-B36A-4158-B313-4C32619C8689}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBB9F371-B36A-4158-B313-4C32619C8689}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBB9F371-B36A-4158-B313-4C32619C8689}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
