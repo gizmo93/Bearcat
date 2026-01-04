@@ -20,4 +20,8 @@
       <PackageReference Include="Refit.HttpClientFactory" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Application\" />
+    </ItemGroup>
+
 </Project>

@@ -7,6 +7,14 @@ public class BearcatDbContext(DbContextOptions<BearcatDbContext> options)
     : DbContext(options), IBearcatReadDbContext, IBearcatWriteDbContext
 {
     public DbSet<HosterRegistration> HosterRegistrations { get; set; } = null!;
+    
+    public DbSet<Distribution> Distributions { get; set; } = null!;
+    
+    public DbSet<DistributionUpload> DistributionUploads { get; set; } = null!;
+    
+    public DbSet<HosterFile> HosterFiles { get; set; } = null!;
+    
+    public DbSet<Release> Releases { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
