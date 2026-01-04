@@ -60,7 +60,7 @@ public class DistributionPackingService(
         
         var archiveResult = await archiver.ArchiveAsync(
             sourceFolderPath: distribution.DistributionFolderPath,
-            destinationPath: distribution.DistributionFolderPath,
+            destinationPath: CreateTemporaryFolder(distribution.DistributionFolderPath),
             archiveNamePrefix: archiveNamePrefix,
             targetFileSizeMb: targetFileSizeMb,
             password: distribution.ArchivePassword,
@@ -117,5 +117,12 @@ public class DistributionPackingService(
     private IArchiver GetArchiverByFullClassName(string fullClassName)
     {
         return archivers.First(a => a.GetType().FullName == fullClassName);
+    }
+    
+    private string CreateTemporaryFolder(string distributionFolderPath)
+    {
+        var tempFolderPath = Path.Combine(distributionFolderPath, Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempFolderPath);
+        return tempFolderPath;
     }
 }

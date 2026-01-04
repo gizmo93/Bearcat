@@ -5,6 +5,10 @@ namespace BearCat.Core.Domain.Abstractions.Hoster;
 public interface IHoster
 {
     string Name { get; }
+    
+    Task PrepareForUploadAsync(
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken);
 
     Task<UploadFileResult> UploadFileAsync(
         IHosterConfig hosterConfig,

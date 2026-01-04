@@ -18,26 +18,27 @@ public class Rapidgator(
 
     public string Name => "Rapidgator";
 
+    private LoginResponse? loginResponse;
+
+    public async Task PrepareForUploadAsync(IHosterConfig hosterConfig, CancellationToken cancellationToken)
+    {
+        if (hosterConfig is not RapidgatorConfig rapidgatorConfig)
+        {
+            throw new InvalidOperationException("Invalid hoster config for Rapidgator");
+        }
+        
+        await LoginAsync(rapidgatorConfig, cancellationToken);
+    }
+
     public async Task<UploadFileResult> UploadFileAsync(
         IHosterConfig hosterConfig,
         string fullFilePath,
         CancellationToken cancellationToken)
     {
-        if (hosterConfig is not RapidgatorConfig rapidgatorConfig)
-        {
-            return new UploadFileResult(
-                IsSuccess: false,
-                SourceFilePath: fullFilePath,
-                ErrorMessages: ["Invalid hoster config for Rapidgator"],
-                FileUrl: null);
-        }
-
-        var login = await LoginAsync(rapidgatorConfig, cancellationToken);
-
         await using var stream = File.OpenRead(fullFilePath);
 
         var uploadRequest = await rapidgatorApiClient.RequestUploadFileAsync(
-            token: login.Response.Token,
+            token: loginResponse!.Response.Token,
             name: Path.GetFileName(fullFilePath),
             size: stream.Length,
             hash: await CreateMd5HashAsync(stream, cancellationToken),
@@ -59,7 +60,7 @@ public class Rapidgator(
             cancellationToken: cancellationToken);
 
         var uploadStatus = await rapidgatorApiClient.GetUploadInfoAsync(
-            token: login.Response.Token,
+            token: loginResponse!.Response.Token,
             uploadId: uploadRequest.Response.Upload.UploadId,
             cancellationToken: cancellationToken);
 
@@ -71,7 +72,7 @@ public class Rapidgator(
             await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
 
             uploadStatus = await rapidgatorApiClient.GetUploadInfoAsync(
-                token: login.Response.Token,
+                token: loginResponse!.Response.Token,
                 uploadId: uploadRequest.Response.Upload.UploadId,
                 cancellationToken: cancellationToken);
         }
@@ -105,14 +106,14 @@ public class Rapidgator(
                 StatusPerFileUrl: new Dictionary<string, bool>());
         }
 
-        var login = await LoginAsync(rapidgatorConfig, cancellationToken);
+        await LoginAsync(rapidgatorConfig, cancellationToken);
 
         var responses = new List<CheckLinksResponse>();
 
         foreach (var urlsBatch in fileUrls.Chunk(25))
         {
             var response = await rapidgatorApi.CheckLinkAsync(
-                token: login.Response.Token,
+                token: loginResponse!.Response.Token,
                 links: urlsBatch,
                 cancellationToken: cancellationToken);
 
@@ -151,9 +152,9 @@ public class Rapidgator(
             throw new InvalidOperationException("Invalid hoster config for Rapidgator");
         }
 
-        var login = await LoginAsync(rapidgatorConfig, cancellationToken);
+        await LoginAsync(rapidgatorConfig, cancellationToken);
 
-        return login.Response.User.RemoteUpload.MaxNbJobs;
+        return loginResponse!.Response.User.RemoteUpload.MaxNbJobs;
     }
 
     public async Task<TryLoginResult> TryLoginAsync(IHosterConfig hosterConfig, CancellationToken cancellationToken)
@@ -165,10 +166,10 @@ public class Rapidgator(
 
         try
         {
-            var loginResponse = await LoginAsync(rapidgatorConfig, cancellationToken);
+            await LoginAsync(rapidgatorConfig, cancellationToken);
 
             return new TryLoginResult(
-                IsSuccess: loginResponse.Status == (int)HttpStatusCode.OK,
+                IsSuccess: loginResponse!.Status == (int)HttpStatusCode.OK,
                 ErrorMessage: loginResponse.Details);
         }
         catch (Exception e)
@@ -177,11 +178,11 @@ public class Rapidgator(
         }
     }
 
-    private async Task<LoginResponse> LoginAsync(
+    private async Task LoginAsync(
         RapidgatorConfig config,
         CancellationToken cancellationToken)
     {
-        return await rapidgatorApiClient.LoginAsync(
+        loginResponse ??= await rapidgatorApiClient.LoginAsync(
             login: config.Username,
             password: config.Password,
             cancellationToken: cancellationToken);
