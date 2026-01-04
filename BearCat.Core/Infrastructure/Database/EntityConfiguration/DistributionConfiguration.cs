@@ -15,6 +15,8 @@ public class DistributionConfiguration : IEntityTypeConfiguration<Distribution>
         builder.Property(d => d.ArchiverFullClassName).IsRequired().HasMaxLength(200);
         builder.Property(d => d.ArchivePassword).IsRequired(false).HasMaxLength(200);
         builder.Property(d => d.DistributionFolderPath).IsRequired().HasMaxLength(1000);
+        builder.Property(d => d.TargetArchiveFileSizeMb).IsRequired();
+        builder.Property(d => d.ArchiveNamePrefix).IsRequired(false).HasMaxLength(300);
 
         builder.HasOne(d => d.Release)
             .WithMany(r => r.Distributions)
