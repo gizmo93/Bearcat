@@ -12,7 +12,6 @@ public static class ServiceProviderConfig
     {
         public void AddDomain()
         {
-            services.AddScoped<HosterService>();
             services.AddScoped<HosterInstanceService>();
             services.AddScoped<HosterRegistrationService>();
             services.AddScoped<DistributionPackingService>();
