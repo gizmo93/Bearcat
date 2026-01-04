@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using BearCat.Core.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BearCat.Core.Infrastructure.Database.Migrations
 {
     [DbContext(typeof(BearcatDbContext))]
-    partial class BearcatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260104215037_RenameTable")]
+    partial class RenameTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -103,15 +106,20 @@ namespace BearCat.Core.Infrastructure.Database.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.PrimitiveCollection<List<string>>("ArchiveFilePaths")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
                     b.Property<int?>("ArchiveUploadId")
                         .HasColumnType("integer");
 
                     b.Property<int>("DistributionId")
                         .HasColumnType("integer");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "ArchiveFilePaths", "BearCat.Core.Domain.Entities.DistributionArchive.ArchiveFilePaths#List<string>", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<int>("Capacity");
+
+                            b1.ToJson("ArchiveFilePaths");
+                        });
 
                     b.HasKey("Id");
 

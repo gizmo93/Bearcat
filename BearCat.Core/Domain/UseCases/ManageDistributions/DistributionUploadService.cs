@@ -49,6 +49,8 @@ public class DistributionUploadService(
             archive.DistributionId,
             hoster.Name);
 
+        await hoster.PrepareForUploadAsync(hosterConfig, cancellationToken);
+
         archive.ArchiveUpload = new ArchiveUpload
         {
             State = ArchiveUploadState.Uploading,
@@ -107,7 +109,11 @@ public class DistributionUploadService(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken)
     {
-        var semaphore = new SemaphoreSlim(5);
+        var numberOfParallelUploads = await hoster.GetMaximumParallelUploadsAsync(
+            hosterConfig: hosterConfig,
+            cancellationToken: cancellationToken) ?? 1;
+        
+        var semaphore = new SemaphoreSlim(numberOfParallelUploads);
 
         var uploadTasks = archive.ArchiveFilePaths
             .OrderBy(f => f)
@@ -116,6 +122,12 @@ public class DistributionUploadService(
                 try
                 {
                     await semaphore.WaitAsync(cancellationToken);
+                    
+                    logger.LogInformation("Uploading file {FilePath} of archive {ArchiveId} to hoster {Hoster}",
+                        f,
+                        archive.Id,
+                        hoster.Name);
+                    
                     return await hoster.UploadFileAsync(
                         hosterConfig: hosterConfig,
                         fullFilePath: f,
