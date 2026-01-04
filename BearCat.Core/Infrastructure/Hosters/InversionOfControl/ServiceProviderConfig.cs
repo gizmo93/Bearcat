@@ -1,0 +1,13 @@
+using BearCat.Core.Infrastructure.Hosters.Rapidgator.InversionOfControl;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace BearCat.Core.Infrastructure.Hosters.InversionOfControl;
+
+public static class ServiceProviderConfig
+{
+    public static void AddHosters(this IServiceCollection services)
+    {
+        services.AddRapidgator();
+        services.AddScoped<HosterService>();
+    }
+}
