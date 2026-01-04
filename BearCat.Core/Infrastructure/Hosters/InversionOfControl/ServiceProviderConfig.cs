@@ -8,6 +8,5 @@ public static class ServiceProviderConfig
     public static void AddHosters(this IServiceCollection services)
     {
         services.AddRapidgator();
-        services.AddScoped<HosterService>();
     }
 }
