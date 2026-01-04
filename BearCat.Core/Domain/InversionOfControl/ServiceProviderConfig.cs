@@ -1,4 +1,5 @@
 using BearCat.Core.Domain.UseCases;
+using BearCat.Core.Domain.UseCases.ManageDistributions;
 using BearCat.Core.Domain.UseCases.ManageHosters;
 using BearCat.Core.Infrastructure.Hosters;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +15,10 @@ public static class ServiceProviderConfig
             services.AddScoped<HosterService>();
             services.AddScoped<HosterInstanceService>();
             services.AddScoped<HosterRegistrationService>();
+            services.AddScoped<DistributionPackingService>();
+            services.AddScoped<DistributionPackingBackgroundService>();
+            services.AddScoped<DistributionUploadService>();
+            services.AddScoped<DistributionUploadBackgroundService>();
         }
     }
 }

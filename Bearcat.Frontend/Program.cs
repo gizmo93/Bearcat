@@ -1,3 +1,4 @@
+using BearCat.Core.InversionOfControl;
 using Bearcat.Frontend.Components;
 using Microsoft.FluentUI.AspNetCore.Components;
 
@@ -7,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddFluentUIComponents();
+
+builder.Services.AddCore(builder.Configuration);
 
 var app = builder.Build();
 

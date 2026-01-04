@@ -6,9 +6,9 @@ public class HosterFile
 {
     public int Id { get; set; }
     
-    public int DistributionUploadId { get; set; }
+    public int ArchiveUploadId { get; set; }
     
-    public DistributionUpload DistributionUpload { get; set; } = null!;
+    public ArchiveUpload ArchiveUpload { get; set; } = null!;
     
     public string SourceFileName { get; set; } = null!;
     

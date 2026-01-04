@@ -9,6 +9,8 @@ public class RarArchiver(
     : IArchiver
 {
     public string Name => "RAR";
+    
+    public string FileExtension => ".rar";
 
     public async Task<ArchiveResult> ArchiveAsync(
         string sourceFolderPath,

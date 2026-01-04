@@ -13,15 +13,12 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
       <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
       <PackageReference Include="Npgsql" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
       <PackageReference Include="Refit" />
       <PackageReference Include="Refit.HttpClientFactory" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Application\" />
     </ItemGroup>
 
 </Project>

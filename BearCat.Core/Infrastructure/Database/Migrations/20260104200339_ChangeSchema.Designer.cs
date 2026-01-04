@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using BearCat.Core.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BearCat.Core.Infrastructure.Database.Migrations
 {
     [DbContext(typeof(BearcatDbContext))]
-    partial class BearcatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260104200339_ChangeSchema")]
+    partial class ChangeSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -55,9 +58,6 @@ namespace BearCat.Core.Infrastructure.Database.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ArchiveNamePrefix")
-                        .HasColumnType("text");
-
                     b.Property<string>("ArchivePassword")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
@@ -66,11 +66,6 @@ namespace BearCat.Core.Infrastructure.Database.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
-
-                    b.Property<string>("DistributionFolderPath")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
 
                     b.Property<int>("HosterRegistrationId")
                         .HasColumnType("integer");
@@ -81,9 +76,6 @@ namespace BearCat.Core.Infrastructure.Database.Migrations
                         .HasColumnType("character varying(200)");
 
                     b.Property<int>("ReleaseId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("TargetArchiveFileSizeMb")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -135,7 +127,7 @@ namespace BearCat.Core.Infrastructure.Database.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ArchiveUploadId")
+                    b.Property<int>("DistributionUploadId")
                         .HasColumnType("integer");
 
                     b.Property<string>("FileUrl")
@@ -152,7 +144,7 @@ namespace BearCat.Core.Infrastructure.Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ArchiveUploadId");
+                    b.HasIndex("DistributionUploadId");
 
                     b.ToTable("HosterFiles");
                 });
@@ -250,7 +242,7 @@ namespace BearCat.Core.Infrastructure.Database.Migrations
                 {
                     b.HasOne("BearCat.Core.Domain.Entities.ArchiveUpload", "ArchiveUpload")
                         .WithMany("HosterFiles")
-                        .HasForeignKey("ArchiveUploadId")
+                        .HasForeignKey("DistributionUploadId")
                         .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
 

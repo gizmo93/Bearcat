@@ -7,6 +7,10 @@ namespace BearCat.Core.Infrastructure.Database;
 public interface IBearcatWriteDbContext
 {
     DbSet<HosterRegistration> HosterRegistrations { get; set; }
+    DbSet<Distribution> Distributions { get; set; }
+    DbSet<ArchiveUpload> DistributionUploads { get; set; }
+    DbSet<HosterFile> HosterFiles { get; set; }
+    DbSet<Release> Releases { get; set; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 

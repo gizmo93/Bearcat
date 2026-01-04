@@ -9,6 +9,8 @@ public class SevenZipArchiver(
     : IArchiver
 {
     public string Name => "7Zip";
+    
+    public string FileExtension => ".7z";
 
     public async Task<ArchiveResult> ArchiveAsync(
         string sourceFolderPath,

@@ -1,6 +1,6 @@
 ﻿namespace BearCat.Core.Domain.ValueObjects;
 
-public enum DistributionUploadState
+public enum ArchiveUploadState
 {
     Unprocessed = 1,
     CreatingArchives = 2,

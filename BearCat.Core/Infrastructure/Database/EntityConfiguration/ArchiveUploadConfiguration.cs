@@ -4,19 +4,18 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BearCat.Core.Infrastructure.Database.EntityConfiguration;
 
-public class DistributionUploadConfiguration : IEntityTypeConfiguration<DistributionUpload>
+public class ArchiveUploadConfiguration : IEntityTypeConfiguration<ArchiveUpload>
 {
-    public void Configure(EntityTypeBuilder<DistributionUpload> builder)
+    public void Configure(EntityTypeBuilder<ArchiveUpload> builder)
     {
         builder.HasKey(u => u.Id);
-        builder.Property(u => u.DistributionId).IsRequired();
         builder.Property(u => u.State).IsRequired();
         builder.Property(u => u.CreatedAt).IsRequired().HasPrecision(4);
         builder.Property(u => u.UpdatedAt).IsRequired().HasPrecision(4);
 
         builder.HasMany(u => u.HosterFiles)
-            .WithOne(h => h.DistributionUpload)
-            .HasForeignKey(h => h.DistributionUploadId)
+            .WithOne(h => h.ArchiveUpload)
+            .HasForeignKey(h => h.ArchiveUploadId)
             .HasPrincipalKey(u => u.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.ClientCascade);

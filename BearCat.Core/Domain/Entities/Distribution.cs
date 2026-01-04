@@ -18,5 +18,11 @@ public class Distribution
     
     public string? ArchivePassword { get; set; }
     
-    public List<DistributionUpload> Uploads { get; set; } = new();
+    public string? ArchiveNamePrefix { get; set; }
+    
+    public int TargetArchiveFileSizeMb { get; set; }
+    
+    public string DistributionFolderPath { get; set; } = null!;
+    
+    public List<DistributionArchive> Archives { get; set; } = new();
 }

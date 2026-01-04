@@ -11,4 +11,8 @@
     <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" />
     <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BearCat.Core\BearCat.Core.csproj" />
+  </ItemGroup>
 </Project>

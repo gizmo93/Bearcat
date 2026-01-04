@@ -27,6 +27,7 @@ public class Rapidgator(
         {
             return new UploadFileResult(
                 IsSuccess: false,
+                SourceFilePath: fullFilePath,
                 ErrorMessages: ["Invalid hoster config for Rapidgator"],
                 FileUrl: null);
         }
@@ -46,6 +47,7 @@ public class Rapidgator(
         {
             return new UploadFileResult(
                 IsSuccess: false,
+                SourceFilePath: fullFilePath,
                 ErrorMessages: [uploadRequest.Details ?? string.Empty],
                 FileUrl: null);
         }
@@ -78,12 +80,14 @@ public class Rapidgator(
         {
             return new UploadFileResult(
                 IsSuccess: false,
+                SourceFilePath: fullFilePath,
                 ErrorMessages: [uploadStatus.Details ?? string.Empty],
                 FileUrl: null);
         }
 
         return new UploadFileResult(
             IsSuccess: true,
+            SourceFilePath: fullFilePath,
             ErrorMessages: [],
             FileUrl: uploadStatus.Response!.Upload!.File!.Url);
     }

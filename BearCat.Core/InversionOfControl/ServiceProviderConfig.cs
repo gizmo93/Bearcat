@@ -1,3 +1,4 @@
+using BearCat.Core.Application.BackgroundTasks;
 using BearCat.Core.Domain.InversionOfControl;
 using BearCat.Core.Infrastructure.Archivers.InversionOfControl;
 using BearCat.Core.Infrastructure.Database;
@@ -21,6 +22,13 @@ public static class ServiceProviderConfig
             services.AddRepositories();
             services.AddDomain();
             services.AddArchivers();
+            services.AddHostedServices();
+        }
+
+        private void AddHostedServices()
+        {
+            services.AddHostedService<DistributionPackingBackgroundTask>();
+            services.AddHostedService<DistributionUploadBackgroundTask>();
         }
 
         private void AddDatabase(IConfiguration configuration)
