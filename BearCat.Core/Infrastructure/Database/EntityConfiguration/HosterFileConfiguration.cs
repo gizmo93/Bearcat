@@ -9,7 +9,7 @@ public class HosterFileConfiguration : IEntityTypeConfiguration<HosterFile>
     public void Configure(EntityTypeBuilder<HosterFile> builder)
     {
         builder.HasKey(h => h.Id);
-        builder.Property(h => h.DistributionUploadId).IsRequired();
+        builder.Property(h => h.ArchiveUploadId).IsRequired();
         builder.Property(h => h.SourceFileName).IsRequired().HasMaxLength(200);
         builder.Property(h => h.FileUrl).IsRequired(false).HasMaxLength(200);
         builder.Property(h => h.State).IsRequired();

@@ -1,0 +1,10 @@
+﻿using BearCat.Core.Domain.Entities;
+
+namespace BearCat.Core.Domain.UseCases.ManageDistributions.Repositories;
+
+public interface IDistributionCreationWriteRepository
+{
+    Task SaveChangesAsync(CancellationToken cancellationToken);
+    void Add(Distribution distribution);
+    Task<Distribution> GetByIdAsync(int id, CancellationToken cancellationToken);
+}

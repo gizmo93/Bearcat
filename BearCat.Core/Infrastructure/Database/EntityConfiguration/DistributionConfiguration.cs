@@ -14,6 +14,7 @@ public class DistributionConfiguration : IEntityTypeConfiguration<Distribution>
         builder.Property(d => d.Name).IsRequired().HasMaxLength(200);
         builder.Property(d => d.ArchiverFullClassName).IsRequired().HasMaxLength(200);
         builder.Property(d => d.ArchivePassword).IsRequired(false).HasMaxLength(200);
+        builder.Property(d => d.DistributionFolderPath).IsRequired().HasMaxLength(1000);
 
         builder.HasOne(d => d.Release)
             .WithMany(r => r.Distributions)
@@ -22,9 +23,9 @@ public class DistributionConfiguration : IEntityTypeConfiguration<Distribution>
             .IsRequired()
             .OnDelete(DeleteBehavior.ClientCascade);
 
-        builder.HasMany(d => d.Uploads)
-            .WithOne(u => u.Distribution)
-            .HasForeignKey(u => u.DistributionId)
+        builder.HasMany(d => d.Archives)
+            .WithOne(a => a.Distribution)
+            .HasForeignKey(a => a.DistributionId)
             .HasPrincipalKey(d => d.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.ClientCascade);
