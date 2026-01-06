@@ -21,7 +21,7 @@ public class DistributionUploadBackgroundTask(
             }
             
             await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var uploadService = scope.ServiceProvider.GetRequiredService<DistributionUploadBackgroundService>();
+            var uploadService = scope.ServiceProvider.GetRequiredService<DistributionUploadService>();
             await uploadService.UploadPendingDistributionsAsync(stoppingToken);
 
             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);

@@ -1,18 +1,37 @@
 ﻿using BearCat.Core.Domain.Abstractions.Archiver;
 using BearCat.Core.Domain.Entities;
 using BearCat.Core.Domain.UseCases.ManageDistributions.Repositories;
-using BearCat.Core.Domain.UseCases.ManageHosters.Repositories;
 using BearCat.Core.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
 namespace BearCat.Core.Domain.UseCases.ManageDistributions;
 
 public class DistributionPackingService(
+    IDistributionCreationReadRepository readRepository,
     IDistributionCreationWriteRepository writeRepository,
     IEnumerable<IArchiver> archivers,
     ILogger<DistributionPackingService> logger)
 {
-    public async Task PackDistributionAsync(int distributionId, CancellationToken cancellationToken)
+    public async Task PackPendingDistributionsAsync(CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Get pending distributions to pack");
+        var distributionIds = await readRepository.GetDistributionIdsToPackAsync(cancellationToken);
+        logger.LogInformation("Found {Count} distributions to pack", distributionIds.Count);
+        
+        foreach (var id in distributionIds)
+        {
+            try
+            {
+                await PackDistributionAsync(id, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error packing distribution with Id {DistributionId}", id);
+            }
+        }
+    }
+    
+    private async Task PackDistributionAsync(int distributionId, CancellationToken cancellationToken)
     {
         var distribution = await writeRepository.GetByIdAsync(distributionId, cancellationToken);
         var archiver = GetArchiverByFullClassName(distribution.ArchiverFullClassName);
