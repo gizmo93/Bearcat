@@ -55,4 +55,9 @@ public class DistributionCreationRepository(IBearcatWriteDbContext dbWrite)
     {
         dbWrite.Add(distribution);
     }
+
+    public void Remove(Distribution distribution)
+    {
+        dbWrite.Remove(distribution);
+    }
 }

@@ -7,4 +7,5 @@ public interface IDistributionCreationWriteRepository
     Task SaveChangesAsync(CancellationToken cancellationToken);
     void Add(Distribution distribution);
     Task<Distribution> GetByIdAsync(int id, CancellationToken cancellationToken);
+    void Remove(Distribution distribution);
 }

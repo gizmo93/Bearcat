@@ -15,6 +15,7 @@ public static class ServiceProviderConfig
             services.AddScoped<HosterRegistrationService>();
             services.AddScoped<DistributionPackingService>();
             services.AddScoped<DistributionUploadService>();
+            services.AddScoped<ModifyDistributionService>();
         }
     }
 }
