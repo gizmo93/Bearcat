@@ -1,5 +1,6 @@
 using BearCat.Core.Domain.UseCases.ManageDistributions.Repositories;
 using BearCat.Core.Domain.UseCases.ManageHosters.Repositories;
+using BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
 using BearCat.Core.Infrastructure.Database.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,8 +14,9 @@ public static class ServiceProviderConfig
         {
             services.AddScoped<IHosterConfigurationReadRepository, HosterConfigurationRepository>();
             services.AddScoped<IHosterConfigurationWriteRepository, HosterConfigurationRepository>();
-            services.AddScoped<IDistributionCreationWriteRepository, DistributionCreationRepository>();
-            services.AddScoped<IDistributionCreationReadRepository, DistributionCreationRepository>();
+            services.AddScoped<IDistributionWriteRepository, DistributionRepository>();
+            services.AddScoped<IDistributionReadRepository, DistributionRepository>();
+            services.AddScoped<IReleaseWriteRepository, ReleaseRepository>();
         }
     }
 }

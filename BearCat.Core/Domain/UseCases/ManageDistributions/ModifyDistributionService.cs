@@ -4,7 +4,7 @@ using BearCat.Core.Domain.UseCases.ManageDistributions.Repositories;
 namespace BearCat.Core.Domain.UseCases.ManageDistributions;
 
 public class ModifyDistributionService(
-    IDistributionCreationWriteRepository writeRepository)
+    IDistributionWriteRepository writeRepository)
 {
     public async Task<int> CreateAsync(
         int releaseId,

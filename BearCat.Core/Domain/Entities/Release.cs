@@ -11,4 +11,6 @@ public class Release
     public ReleaseType ReleaseType { get; set; }
     
     public List<Distribution> Distributions { get; set; } = new();
+    
+    public string ReleaseFolderPath { get; set; } = null!;
 }

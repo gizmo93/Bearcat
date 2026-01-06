@@ -8,8 +8,8 @@ using Microsoft.Extensions.Logging;
 namespace BearCat.Core.Domain.UseCases.ManageDistributions;
 
 public class DistributionUploadService(
-    IDistributionCreationReadRepository readRepository,
-    IDistributionCreationWriteRepository writeRepository,
+    IDistributionReadRepository readRepository,
+    IDistributionWriteRepository writeRepository,
     HosterInstanceService hosterInstanceService,
     ILogger<DistributionUploadService> logger)
 {

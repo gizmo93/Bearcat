@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BearCat.Core.Infrastructure.Database.Repositories;
 
-public class DistributionCreationRepository(IBearcatWriteDbContext dbWrite)
-    : IDistributionCreationWriteRepository, IDistributionCreationReadRepository
+public class DistributionRepository(IBearcatWriteDbContext dbWrite)
+    : IDistributionWriteRepository, IDistributionReadRepository
 {
     public async Task<Distribution> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
