@@ -21,7 +21,7 @@ public class DistributionPackingBackgroundTask(
             }
             
             await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var packingService = scope.ServiceProvider.GetRequiredService<DistributionPackingBackgroundService>();
+            var packingService = scope.ServiceProvider.GetRequiredService<DistributionPackingService>();
             await packingService.PackPendingDistributionsAsync(stoppingToken);
             
             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);

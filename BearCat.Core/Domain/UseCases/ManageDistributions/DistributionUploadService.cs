@@ -2,18 +2,37 @@
 using BearCat.Core.Domain.Abstractions.Hoster.Results;
 using BearCat.Core.Domain.Entities;
 using BearCat.Core.Domain.UseCases.ManageDistributions.Repositories;
-using BearCat.Core.Domain.UseCases.ManageHosters.Repositories;
 using BearCat.Core.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
 namespace BearCat.Core.Domain.UseCases.ManageDistributions;
 
 public class DistributionUploadService(
+    IDistributionCreationReadRepository readRepository,
     IDistributionCreationWriteRepository writeRepository,
     HosterInstanceService hosterInstanceService,
     ILogger<DistributionUploadService> logger)
 {
-    public async Task UploadDistributionAsync(int distributionId, CancellationToken cancellationToken)
+    public async Task UploadPendingDistributionsAsync(CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Get pending distributions to upload");
+        var distributionIds = await readRepository.GetDistributionIdsToUploadAsync(cancellationToken);
+        logger.LogInformation("Found {Count} distributions to upload", distributionIds.Count);
+        
+        foreach (var id in distributionIds)
+        {
+            try
+            {
+                await UploadDistributionAsync(id, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error uploading distribution with Id {DistributionId}", id);
+            }
+        }
+    }
+    
+    private async Task UploadDistributionAsync(int distributionId, CancellationToken cancellationToken)
     {
         var distribution = await writeRepository.GetByIdAsync(distributionId, cancellationToken);
         var hoster = hosterInstanceService.GetByFullClassName(distribution.HosterRegistration.HosterFullClassName);
