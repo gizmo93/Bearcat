@@ -7,8 +7,8 @@ using Microsoft.Extensions.Logging;
 namespace BearCat.Core.Domain.UseCases.ManageDistributions;
 
 public class DistributionPackingService(
-    IDistributionCreationReadRepository readRepository,
-    IDistributionCreationWriteRepository writeRepository,
+    IDistributionReadRepository readRepository,
+    IDistributionWriteRepository writeRepository,
     IEnumerable<IArchiver> archivers,
     ILogger<DistributionPackingService> logger)
 {

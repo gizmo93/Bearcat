@@ -1,6 +1,7 @@
 using BearCat.Core.Domain.UseCases;
 using BearCat.Core.Domain.UseCases.ManageDistributions;
 using BearCat.Core.Domain.UseCases.ManageHosters;
+using BearCat.Core.Domain.UseCases.ManageReleases;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BearCat.Core.Domain.InversionOfControl;
@@ -16,6 +17,7 @@ public static class ServiceProviderConfig
             services.AddScoped<DistributionPackingService>();
             services.AddScoped<DistributionUploadService>();
             services.AddScoped<ModifyDistributionService>();
+            services.AddScoped<ReleaseService>();
         }
     }
 }

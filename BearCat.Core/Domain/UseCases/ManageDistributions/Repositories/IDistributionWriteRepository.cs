@@ -2,7 +2,7 @@
 
 namespace BearCat.Core.Domain.UseCases.ManageDistributions.Repositories;
 
-public interface IDistributionCreationWriteRepository
+public interface IDistributionWriteRepository
 {
     Task SaveChangesAsync(CancellationToken cancellationToken);
     void Add(Distribution distribution);
