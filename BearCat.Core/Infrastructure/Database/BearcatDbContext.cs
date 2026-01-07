@@ -12,7 +12,7 @@ public class BearcatDbContext(DbContextOptions<BearcatDbContext> options)
     
     public DbSet<DistributionArchive> DistributionArchives { get; set; } = null!;
     
-    public DbSet<ArchiveUpload> DistributionUploads { get; set; } = null!;
+    public DbSet<ArchiveUpload> ArchiveUploads { get; set; } = null!;
     
     public DbSet<HosterFile> HosterFiles { get; set; } = null!;
     
