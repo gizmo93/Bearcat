@@ -1,7 +1,9 @@
+using BearCat.Core.Domain.Entities;
+
 namespace BearCat.Core.Domain.Abstractions.Hoster.Results;
 
 public record UploadFileResult(
     bool IsSuccess,
-    string SourceFilePath,
+    ArchiveFile ArchiveFile,
     IReadOnlyList<string> ErrorMessages,
     string? FileUrl);

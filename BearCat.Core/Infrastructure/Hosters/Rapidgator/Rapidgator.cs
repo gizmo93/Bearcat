@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using BearCat.Core.Domain.Abstractions.Hoster;
 using BearCat.Core.Domain.Abstractions.Hoster.Results;
+using BearCat.Core.Domain.Entities;
 using BearCat.Core.Infrastructure.Hosters.Rapidgator.ApiClient;
 using BearCat.Core.Infrastructure.Hosters.Rapidgator.ApiClient.File;
 using BearCat.Core.Infrastructure.Hosters.Rapidgator.ApiClient.User;
@@ -31,15 +32,14 @@ public class Rapidgator(
     }
 
     public async Task<UploadFileResult> UploadFileAsync(
-        IHosterConfig hosterConfig,
-        string fullFilePath,
+        ArchiveFile archiveFile,
         CancellationToken cancellationToken)
     {
-        await using var stream = File.OpenRead(fullFilePath);
+        await using var stream = File.OpenRead(archiveFile.FullFileName);
 
         var uploadRequest = await rapidgatorApiClient.RequestUploadFileAsync(
             token: loginResponse!.Response.Token,
-            name: Path.GetFileName(fullFilePath),
+            name: Path.GetFileName(archiveFile.FullFileName),
             size: stream.Length,
             hash: await CreateMd5HashAsync(stream, cancellationToken),
             cancellationToken: cancellationToken);
@@ -48,7 +48,7 @@ public class Rapidgator(
         {
             return new UploadFileResult(
                 IsSuccess: false,
-                SourceFilePath: fullFilePath,
+                ArchiveFile: archiveFile,
                 ErrorMessages: [uploadRequest.Details ?? string.Empty],
                 FileUrl: null);
         }
@@ -56,7 +56,7 @@ public class Rapidgator(
         await rapidgatorApiClient.UploadFileAsync(
             uploadUrl: uploadRequest.Response.Upload.Url,
             stream: stream,
-            fileName: Path.GetFileName(fullFilePath),
+            fileName: Path.GetFileName(archiveFile.FullFileName),
             cancellationToken: cancellationToken);
 
         var uploadStatus = await rapidgatorApiClient.GetUploadInfoAsync(
@@ -81,14 +81,14 @@ public class Rapidgator(
         {
             return new UploadFileResult(
                 IsSuccess: false,
-                SourceFilePath: fullFilePath,
+                ArchiveFile: archiveFile,
                 ErrorMessages: [uploadStatus.Details ?? string.Empty],
                 FileUrl: null);
         }
 
         return new UploadFileResult(
             IsSuccess: true,
-            SourceFilePath: fullFilePath,
+            ArchiveFile: archiveFile,
             ErrorMessages: [],
             FileUrl: uploadStatus.Response!.Upload!.File!.Url);
     }

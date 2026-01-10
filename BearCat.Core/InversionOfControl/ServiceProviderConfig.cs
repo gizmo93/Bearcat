@@ -27,8 +27,8 @@ public static class ServiceProviderConfig
 
         private void AddHostedServices()
         {
-            services.AddHostedService<DistributionPackingBackgroundTask>();
-            services.AddHostedService<DistributionUploadBackgroundTask>();
+            services.AddHostedService<ArchivingBackgroundTask>();
+            services.AddHostedService<ArchiveUploadBackgroundTask>();
         }
 
         private void AddDatabase(IConfiguration configuration)

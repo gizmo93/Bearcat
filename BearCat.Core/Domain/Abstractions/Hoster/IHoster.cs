@@ -1,4 +1,5 @@
 using BearCat.Core.Domain.Abstractions.Hoster.Results;
+using BearCat.Core.Domain.Entities;
 
 namespace BearCat.Core.Domain.Abstractions.Hoster;
 
@@ -11,8 +12,7 @@ public interface IHoster
         CancellationToken cancellationToken);
 
     Task<UploadFileResult> UploadFileAsync(
-        IHosterConfig hosterConfig,
-        string fullFilePath,
+        ArchiveFile archiveFile,
         CancellationToken cancellationToken);
 
     Task<FileExistResult> CheckFilesExistAsync(
