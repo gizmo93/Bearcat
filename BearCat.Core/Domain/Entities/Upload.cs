@@ -21,6 +21,6 @@ public class Upload
     public UploadState UploadState { get; set; }
 
     public OnlineState OnlineState { get; set; }
-    
-    public List<UploadedFile> UploadedFiles { get; set; } = new();
+
+    public List<UploadedFile> UploadedFiles { get; set; } = null!;
 }

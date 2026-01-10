@@ -9,6 +9,6 @@ public class ArchiveFile
     public Archive Archive { get; set; } = null!;
     
     public string FullFileName { get; set; } = null!;
-    
-    public List<UploadedFile> UploadedFiles { get; set; } = new();
+
+    public List<UploadedFile> UploadedFiles { get; set; } = null!;
 }

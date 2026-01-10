@@ -17,6 +17,6 @@ public class UploadConfig
     public HosterRegistration HosterRegistration { get; set; } = null!;
     
     public string Name { get; set; } = null!;
-    
-    public List<Upload> Uploads { get; set; } = new();
+
+    public List<Upload> Uploads { get; set; } = null!;
 }

@@ -114,16 +114,29 @@ public class Rapidgator(
         {
             var response = await rapidgatorApi.CheckLinkAsync(
                 token: loginResponse!.Response.Token,
-                links: urlsBatch,
+                links: string.Join(',', urlsBatch),
                 cancellationToken: cancellationToken);
 
             responses.Add(response.Content!);
         }
 
+        if (responses.Any(r => r.Status != (int)HttpStatusCode.OK))
+        {
+            var errrorMessages = responses
+                .Where(r => r.Status != (int)HttpStatusCode.OK)
+                .Select(r => r.Details ?? "Unknown error")
+                .ToList();
+            
+            return new FileExistResult(
+                IsSuccess: false,
+                ErrorMessages: errrorMessages,
+                StatusPerFileUrl: new Dictionary<string, bool>());
+        }
+
         var statusPerFileUrl = responses
             .Where(r => r.Responses is not null)
             .SelectMany(r => r.Responses!)
-            .ToDictionary(r => r.Filename, r => r.Status == "ACCESS");
+            .ToDictionary(r => r.Url, r => r.Status == "ACCESS");
 
         return new FileExistResult(
             IsSuccess: true,

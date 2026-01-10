@@ -9,8 +9,8 @@ public class Archive
     public ArchiveConfig ArchiveConfig { get; set; } = null!;
     
     public string ArchiveFolderPath { get; set; } = null!;
-    
-    public List<ArchiveFile> ArchiveFiles { get; set; } = new();
-    
-    public List<Upload> Uploads { get; set; } = new();
+
+    public List<ArchiveFile> ArchiveFiles { get; set; } = null!;
+
+    public List<Upload> Uploads { get; set; } = null!;
 }

@@ -18,6 +18,7 @@ public static class ServiceProviderConfig
             services.AddScoped<IReleaseWriteRepository, ReleaseRepository>();
             services.AddScoped<IArchiveCreationRepository, ArchiveCreationRepository>();
             services.AddScoped<IUploadFilesRepository, UploadFilesRepository>();
+            services.AddScoped<IUploadStateRepository, UploadStateRepository>();
         }
     }
 }
