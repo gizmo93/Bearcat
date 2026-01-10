@@ -12,10 +12,13 @@ public class HosterRegistrationService(
     public async Task<int> RegisterHosterAsync(
         string name,
         bool isActive,
-        string serializedConfig,
+        Dictionary<string, string> configuration,
         string hosterClassName,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
+        var hoster = hosterInstanceService.GetByFullClassName(hosterClassName);
+        var serializedConfig = hoster.SerializeHosterConfig(configuration);
+        
         var registration = new HosterRegistration
         {
             Name = name,
@@ -36,7 +39,7 @@ public class HosterRegistrationService(
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task ToggleIsActiveAsync(int id, CancellationToken cancellationToken)
+    public async Task ToggleIsActiveAsync(int id, CancellationToken cancellationToken = default)
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         registration.IsActive = !registration.IsActive;
@@ -46,12 +49,15 @@ public class HosterRegistrationService(
     public async Task UpdateRegistrationAsync(
         int id,
         string name,
-        string serializedConfig,
-        CancellationToken cancellationToken)
+        Dictionary<string, string> configuration,
+        CancellationToken cancellationToken = default)
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
+        var hoster = hosterInstanceService.GetByFullClassName(registration.HosterFullClassName);
+        
         registration.Name = name;
-        registration.SerializedConfig = serializedConfig;
+        registration.SerializedConfig = hoster.SerializeHosterConfig(configuration);
+        
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 

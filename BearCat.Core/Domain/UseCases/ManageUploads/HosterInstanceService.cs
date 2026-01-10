@@ -8,4 +8,14 @@ public class HosterInstanceService(IEnumerable<IHoster> hosters)
     {
         return hosters.First(h => h.GetType().FullName == fullClassName);
     }
+
+    public IReadOnlyList<HosterReadModel> GetHosterReadModels()
+    {
+        return hosters
+            .Select(h => new HosterReadModel(
+                Name: h.Name,
+                FullClassName: h.GetType().FullName!,
+                ConfigurationKeys: h.ConfigurationKeys))
+            .ToList();
+    }
 }

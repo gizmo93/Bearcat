@@ -4,4 +4,6 @@ public record HosterRegistrationDto(
     int Id,
     string Name,
     bool IsActive,
-    string HosterName);
+    string HosterName,
+    string FullClassName,
+    IReadOnlyDictionary<string, string> Configuration);
