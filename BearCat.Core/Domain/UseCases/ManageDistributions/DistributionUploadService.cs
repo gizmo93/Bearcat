@@ -43,14 +43,14 @@ public class DistributionUploadService(
             distribution.Id,
             hoster.Name);
         
-        var archivesToUpload = distribution.Archives
-            .Where(a => a.ArchiveUpload is null)
+        var archivesToUpload = distribution.Uploads
+            .Where(a => a.UploadState == UploadState.Pending)
             .ToList();
 
         foreach (var archive in archivesToUpload)
         {
             await UploadArchiveAsync(
-                archive: archive,
+                archive: new Archive(),
                 hoster: hoster,
                 hosterConfig: hosterConfig,
                 cancellationToken: cancellationToken);
@@ -58,24 +58,17 @@ public class DistributionUploadService(
     }
     
     private async Task UploadArchiveAsync(
-        DistributionArchive archive,
+        Archive archive,
         IHoster hoster,
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken)
     {
         logger.LogInformation("Start uploading archive {ArchiveId} of distribution {DistributionId} to hoster {Hoster}",
             archive.Id,
-            archive.DistributionId,
+            archive.Id,
             hoster.Name);
 
         await hoster.PrepareForUploadAsync(hosterConfig, cancellationToken);
-
-        archive.ArchiveUpload = new ArchiveUpload
-        {
-            State = ArchiveUploadState.Uploading,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
         await writeRepository.SaveChangesAsync(cancellationToken);
 
         var uploadResults = await ProcessUploadAsync(
@@ -92,7 +85,7 @@ public class DistributionUploadService(
         {
             logger.LogError("Failed to upload the following files for archive {ArchiveId} of distribution {DistributionId} to hoster {Hoster}: {FailedFiles}",
                 archive.Id,
-                archive.DistributionId,
+                archive.ArchiveConfigId,
                 hoster.Name,
                 string.Join(", ", failedUploads.Select(f => f.SourceFilePath)));
         }
@@ -100,30 +93,15 @@ public class DistributionUploadService(
         {
             logger.LogInformation("Successfully uploaded archive {ArchiveId} of distribution {DistributionId} to hoster {Hoster}",
                 archive.Id,
-                archive.DistributionId,
+                archive.ArchiveConfigId,
                 hoster.Name);
         }
-
-        archive.ArchiveUpload.UpdatedAt = DateTime.UtcNow;
-        archive.ArchiveUpload.State = failedUploads.Count > 0
-            ? ArchiveUploadState.Failed
-            : ArchiveUploadState.Completed;
-        archive.ArchiveUpload.HosterFiles = uploadResults
-            .Select(r => new HosterFile
-            {
-                SourceFileName = r.SourceFilePath,
-                FileUrl = r.FileUrl ?? string.Empty,
-                State = r.IsSuccess
-                    ? HosterFileState.Online
-                    : HosterFileState.UploadFailed,
-            })
-            .ToList();
         
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 
     private async Task<IReadOnlyList<UploadFileResult>> ProcessUploadAsync(
-        DistributionArchive archive,
+        Archive archive,
         IHoster hoster,
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken)
@@ -134,8 +112,8 @@ public class DistributionUploadService(
         
         var semaphore = new SemaphoreSlim(numberOfParallelUploads);
 
-        var uploadTasks = archive.ArchiveFilePaths
-            .OrderBy(f => f)
+        var uploadTasks = archive.ArchiveFiles
+            .OrderBy(f => f.FullFileName)
             .Select(async f =>
             {
                 try
@@ -149,7 +127,7 @@ public class DistributionUploadService(
                     
                     return await hoster.UploadFileAsync(
                         hosterConfig: hosterConfig,
-                        fullFilePath: f,
+                        fullFilePath: f.FullFileName,
                         cancellationToken: cancellationToken);
                 }
                 finally

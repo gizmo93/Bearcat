@@ -14,8 +14,6 @@ public static class ServiceProviderConfig
         {
             services.AddScoped<IHosterConfigurationReadRepository, HosterConfigurationRepository>();
             services.AddScoped<IHosterConfigurationWriteRepository, HosterConfigurationRepository>();
-            services.AddScoped<IDistributionWriteRepository, DistributionRepository>();
-            services.AddScoped<IDistributionReadRepository, DistributionRepository>();
             services.AddScoped<IReleaseWriteRepository, ReleaseRepository>();
         }
     }

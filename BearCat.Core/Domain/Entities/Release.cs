@@ -10,7 +10,9 @@ public class Release
 
     public ReleaseType ReleaseType { get; set; }
     
-    public List<Distribution> Distributions { get; set; } = new();
+    public List<UploadConfig> UploadConfigs { get; set; } = new();
+    
+    public List<ArchiveConfig> ArchiveConfigs { get; set; } = new();
     
     public string ReleaseFolderPath { get; set; } = null!;
 }

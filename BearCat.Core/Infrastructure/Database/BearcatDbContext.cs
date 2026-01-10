@@ -8,15 +8,19 @@ public class BearcatDbContext(DbContextOptions<BearcatDbContext> options)
 {
     public DbSet<HosterRegistration> HosterRegistrations { get; set; } = null!;
     
-    public DbSet<Distribution> Distributions { get; set; } = null!;
-    
-    public DbSet<DistributionArchive> DistributionArchives { get; set; } = null!;
-    
-    public DbSet<ArchiveUpload> ArchiveUploads { get; set; } = null!;
-    
-    public DbSet<HosterFile> HosterFiles { get; set; } = null!;
-    
     public DbSet<Release> Releases { get; set; } = null!;
+    
+    public DbSet<Archive> Archives { get; set; } = null!;
+    
+    public DbSet<ArchiveConfig> ArchiveConfigs { get; set; } = null!;
+    
+    public DbSet<ArchiveFile> ArchiveFiles { get; set; } = null!;
+    
+    public DbSet<Upload> Uploads { get; set; } = null!;
+    
+    public DbSet<UploadConfig> UploadConfigs { get; set; } = null!;
+    
+    public DbSet<UploadedFile> UploadedFiles { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

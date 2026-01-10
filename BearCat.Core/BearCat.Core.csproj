@@ -21,4 +21,8 @@
       <PackageReference Include="Refit.HttpClientFactory" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Infrastructure\Database\Migrations\" />
+    </ItemGroup>
+
 </Project>
