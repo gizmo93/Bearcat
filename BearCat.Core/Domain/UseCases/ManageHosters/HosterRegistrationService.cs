@@ -1,6 +1,7 @@
 using BearCat.Core.Domain.Abstractions.Hoster.Results;
 using BearCat.Core.Domain.Entities;
 using BearCat.Core.Domain.UseCases.ManageHosters.Repositories;
+using BearCat.Core.Domain.UseCases.ManageUploads;
 
 namespace BearCat.Core.Domain.UseCases.ManageHosters;
 

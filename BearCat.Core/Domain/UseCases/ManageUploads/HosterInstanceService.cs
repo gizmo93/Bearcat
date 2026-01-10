@@ -1,6 +1,6 @@
 using BearCat.Core.Domain.Abstractions.Hoster;
 
-namespace BearCat.Core.Domain.UseCases;
+namespace BearCat.Core.Domain.UseCases.ManageUploads;
 
 public class HosterInstanceService(IEnumerable<IHoster> hosters)
 {
