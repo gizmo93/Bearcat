@@ -8,6 +8,8 @@ public class ArchiveConfig
     
     public Release Release { get; set; } = null!;
     
+    public string ArchiveFilesBasePath { get; set; } = null!;
+    
     public string ArchiverFullClassName { get; set; } = null!;
     
     public string ArchiveNamePrefix { get; set; } = null!;

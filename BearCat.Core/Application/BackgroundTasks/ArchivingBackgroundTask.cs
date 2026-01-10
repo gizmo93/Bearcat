@@ -1,13 +1,13 @@
-﻿using BearCat.Core.Domain.UseCases.ManageDistributions;
+﻿using BearCat.Core.Domain.UseCases.ManageArchives;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace BearCat.Core.Application.BackgroundTasks;
 
-public class DistributionPackingBackgroundTask(
+public class ArchivingBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,
-    ILogger<DistributionPackingBackgroundTask> logger) : BackgroundService
+    ILogger<ArchivingBackgroundTask> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -21,8 +21,8 @@ public class DistributionPackingBackgroundTask(
             }
             
             await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var packingService = scope.ServiceProvider.GetRequiredService<DistributionPackingService>();
-            await packingService.PackPendingDistributionsAsync(stoppingToken);
+            var archiveCreationService = scope.ServiceProvider.GetRequiredService<ArchiveCreationService>();
+            await archiveCreationService.ProcessUploadsWithoutArchiveAsync(stoppingToken);
             
             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
