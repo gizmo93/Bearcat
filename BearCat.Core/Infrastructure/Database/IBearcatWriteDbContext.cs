@@ -14,6 +14,7 @@ public interface IBearcatWriteDbContext
     DbSet<Upload> Uploads { get; set; }
     DbSet<UploadConfig> UploadConfigs { get; set; }
     DbSet<UploadedFile> UploadedFiles { get; set; }
+    DbSet<Notification> Notifications { get; set; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 

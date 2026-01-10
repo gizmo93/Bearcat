@@ -21,6 +21,8 @@ public class BearcatDbContext(DbContextOptions<BearcatDbContext> options)
     public DbSet<UploadConfig> UploadConfigs { get; set; } = null!;
     
     public DbSet<UploadedFile> UploadedFiles { get; set; } = null!;
+    
+    public DbSet<Notification> Notifications { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

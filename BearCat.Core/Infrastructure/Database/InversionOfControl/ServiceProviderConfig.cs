@@ -1,5 +1,6 @@
 using BearCat.Core.Domain.UseCases.ManageArchives.Repositories;
 using BearCat.Core.Domain.UseCases.ManageHosters.Repositories;
+using BearCat.Core.Domain.UseCases.ManageNotifications.Repositories;
 using BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
 using BearCat.Core.Domain.UseCases.ManageUploads.Repositories;
 using BearCat.Core.Infrastructure.Database.Repositories;
@@ -19,6 +20,7 @@ public static class ServiceProviderConfig
             services.AddScoped<IArchiveCreationRepository, ArchiveCreationRepository>();
             services.AddScoped<IUploadFilesRepository, UploadFilesRepository>();
             services.AddScoped<IUploadStateRepository, UploadStateRepository>();
+            services.AddScoped<INotificationRepository, NotificationRepository>();
         }
     }
 }
