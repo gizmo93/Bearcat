@@ -11,6 +11,6 @@ public class HosterRegistration
     public bool IsActive { get; set; }
 
     public required string HosterFullClassName { get; set; }
-    
-    public List<UploadConfig> UploadConfigs { get; set; } = new();
+
+    public List<UploadConfig> UploadConfigs { get; set; } = null!;
 }

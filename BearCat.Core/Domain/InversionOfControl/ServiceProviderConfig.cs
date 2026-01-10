@@ -18,6 +18,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ReleaseService>();
             services.AddScoped<ArchiveCreationService>();
             services.AddScoped<UploadFilesService>();
+            services.AddScoped<UploadStateService>();
         }
     }
 }

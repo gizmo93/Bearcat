@@ -65,6 +65,8 @@ public class UploadFilesService(
         
         var anyFailedUploads = uploadTasks.Any(t => t.IsFaulted || !t.Result.IsSuccess);
 
+        upload.UploadedFiles = [];
+
         foreach (var task in uploadTasks)
         {
             if (task.IsFaulted)
@@ -103,6 +105,7 @@ public class UploadFilesService(
         }
         
         upload.UploadState = anyFailedUploads ? UploadState.Failed : UploadState.Completed;
+        upload.OnlineState = anyFailedUploads ? OnlineState.PartiallyOnline : OnlineState.Online;
         await repository.SaveChangesAsync(cancellationToken);
     }
 }

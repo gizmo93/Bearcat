@@ -17,8 +17,8 @@ public class ArchiveConfig
     public string? ArchivePassword { get; set; }
     
     public int ArchiveFileSizeMb { get; set; }
-    
-    public List<Archive> Archives { get; set; } = new();
-    
-    public List<UploadConfig> UploadConfigs { get; set; } = new();
+
+    public List<Archive> Archives { get; set; } = null!;
+
+    public List<UploadConfig> UploadConfigs { get; set; } = null!;
 }

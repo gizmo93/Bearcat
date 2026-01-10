@@ -29,6 +29,7 @@ public static class ServiceProviderConfig
         {
             services.AddHostedService<ArchivingBackgroundTask>();
             services.AddHostedService<ArchiveUploadBackgroundTask>();
+            services.AddHostedService<CheckUploadStateBackgroundTask>();
         }
 
         private void AddDatabase(IConfiguration configuration)
