@@ -19,6 +19,8 @@ public class Rapidgator(
 
     public string Name => "Rapidgator";
 
+    public IReadOnlyList<string> ConfigurationKeys => ["Username", "Password"];
+
     private LoginResponse? loginResponse;
 
     public async Task PrepareForUploadAsync(IHosterConfig hosterConfig, CancellationToken cancellationToken)
@@ -151,9 +153,15 @@ public class Rapidgator(
         return config ?? throw new InvalidOperationException("Failed to deserialize Rapidgator config");
     }
 
-    public string SerializeHosterConfig(IHosterConfig hosterConfig)
+    public string SerializeHosterConfig(Dictionary<string, string> hosterConfig)
     {
-        return JsonSerializer.Serialize(hosterConfig);
+        var config = new RapidgatorConfig
+        {
+            Username = hosterConfig.GetValueOrDefault("Username") ?? string.Empty,
+            Password = hosterConfig.GetValueOrDefault("Password") ?? string.Empty
+        };
+        
+        return JsonSerializer.Serialize(config);
     }
 
     public async Task<int?> GetMaximumParallelUploadsAsync(

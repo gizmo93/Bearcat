@@ -14,20 +14,25 @@ public class HosterConfigurationRepository(
     public async Task<IReadOnlyList<HosterRegistrationDto>> GetAllRegistrationsAsync(
         CancellationToken cancellationToken = default)
     {
-        var hosterNamesByClassName = GetHosterNamesByClassName();
+        var hostersByClassName = GetHostersByClassName();
 
         return await dbRead.HosterRegistrations
+            .OrderBy(h => h.Name)
             .Select(h => new HosterRegistrationDto(
                 h.Id,
                 h.Name,
                 h.IsActive,
-                hosterNamesByClassName[h.HosterFullClassName]))
+                hostersByClassName[h.HosterFullClassName].Name,
+                h.HosterFullClassName,
+                hostersByClassName[h.HosterFullClassName]
+                    .DeserializeHosterConfig(h.SerializedConfig)
+                    .ToDictionary()))
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
     public async Task<HosterRegistration> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
-        return await dbRead.HosterRegistrations
+        return await dbWrite.HosterRegistrations
             .FirstAsync(h => h.Id == id, cancellationToken);
     }
 
@@ -45,10 +50,10 @@ public class HosterConfigurationRepository(
     {
         await dbWrite.SaveChangesAsync(cancellationToken);
     }
-
-    private Dictionary<string, string> GetHosterNamesByClassName()
+    
+    private Dictionary<string, IHoster> GetHostersByClassName()
     {
         return hosters
-            .ToDictionary(h => h.GetType().FullName!, h => h.Name);
+            .ToDictionary(h => h.GetType().FullName!);
     }
 }

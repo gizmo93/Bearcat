@@ -22,7 +22,9 @@ public interface IHoster
 
     IHosterConfig DeserializeHosterConfig(string serializedConfig);
 
-    string SerializeHosterConfig(IHosterConfig hosterConfig);
+    string SerializeHosterConfig(Dictionary<string, string> hosterConfig);
+    
+    IReadOnlyList<string> ConfigurationKeys { get; }
 
     Task<int?> GetMaximumParallelUploadsAsync(IHosterConfig hosterConfig, CancellationToken cancellationToken);
 
