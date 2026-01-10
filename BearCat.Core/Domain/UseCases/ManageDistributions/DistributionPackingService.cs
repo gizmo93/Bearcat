@@ -34,7 +34,7 @@ public class DistributionPackingService(
     private async Task PackDistributionAsync(int distributionId, CancellationToken cancellationToken)
     {
         var distribution = await writeRepository.GetByIdAsync(distributionId, cancellationToken);
-        var archiver = GetArchiverByFullClassName(distribution.ArchiverFullClassName);
+        var archiver = GetArchiverByFullClassName(distribution.ArchiveConfig.ArchiverFullClassName);
         
         logger.LogInformation("Start packing distribution {Name} with Id {DistributionId}",
             distributionId,
@@ -61,7 +61,7 @@ public class DistributionPackingService(
     }
     
     private async Task HandleManagedDistributionAsync(
-        Distribution distribution,
+        UploadConfig distribution,
         IArchiver archiver,
         CancellationToken cancellationToken)
     {
@@ -70,19 +70,19 @@ public class DistributionPackingService(
             distribution.Id,
             archiver.Name);
         
-        var archiveNamePrefix = distribution.ArchiveNamePrefix
+        var archiveNamePrefix = distribution.ArchiveConfig.ArchiveNamePrefix
                             ?? throw new InvalidOperationException("Archive name prefix is required for managed distributions.");
         
-        var targetFileSizeMb = distribution.TargetArchiveFileSizeMb > 0
-            ? distribution.TargetArchiveFileSizeMb
+        var targetFileSizeMb = distribution.ArchiveConfig.ArchiveFileSizeMb > 0
+            ? distribution.ArchiveConfig.ArchiveFileSizeMb
             : throw new InvalidOperationException("Target archive file size must be greater than zero for managed distributions.");
         
         var archiveResult = await archiver.ArchiveAsync(
-            sourceFolderPath: distribution.DistributionFolderPath,
-            destinationPath: CreateTemporaryFolder(distribution.DistributionFolderPath),
+            sourceFolderPath: string.Empty,
+            destinationPath: CreateTemporaryFolder(string.Empty),
             archiveNamePrefix: archiveNamePrefix,
             targetFileSizeMb: targetFileSizeMb,
-            password: distribution.ArchivePassword,
+            password: distribution.ArchiveConfig.ArchivePassword,
             cancellationToken: cancellationToken);
 
         if (!archiveResult.IsSuccess)
@@ -99,17 +99,12 @@ public class DistributionPackingService(
             archiveResult.CreatedFileNames.Count,
             distribution.Name,
             distribution.Id);
-        
-        distribution.Archives.Add(new DistributionArchive
-        {
-            ArchiveFilePaths = archiveResult.CreatedFileNames.ToList(),
-        });
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 
     private async Task HandleUnmanagedDistributionAsync(
-        Distribution distribution,
+        UploadConfig distribution,
         string archiveFileExtension,
         CancellationToken cancellationToken)
     {
@@ -117,18 +112,13 @@ public class DistributionPackingService(
             distribution.Name,
             distribution.Id);
         
-        var directoryInfo = new DirectoryInfo(distribution.DistributionFolderPath);
+        var directoryInfo = new DirectoryInfo(string.Empty);
         var archiveFiles = directoryInfo.GetFiles($"*{archiveFileExtension}");
         
         logger.LogInformation("Found {ArchiveCount} archive files for unmanaged distribution {Name} with Id {DistributionId}",
             archiveFiles.Length,
             distribution.Name,
             distribution.Id);
-        
-        distribution.Archives.Add(new DistributionArchive
-        {
-            ArchiveFilePaths = archiveFiles.Select(a => a.FullName).ToList(),
-        });
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }

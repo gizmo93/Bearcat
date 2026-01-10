@@ -11,10 +11,8 @@ public class ReleaseRepository(IBearcatWriteDbContext dbWrite)
     {
         return await dbWrite.Releases
             .AsSplitQuery()
-            .Include(r => r.Distributions)
-            .ThenInclude(d => d.Archives)
-            .ThenInclude(a => a.ArchiveUpload)
-            .ThenInclude(a => a!.HosterFiles)
+            .Include(r => r.UploadConfigs)
+            .Include(r => r.ArchiveConfigs)
             .FirstAsync(r => r.Id == id, cancellationToken);
     }
     
