@@ -63,7 +63,7 @@ public class HosterRegistrationService(
 
     public async Task<TryLoginResult> TryLoginAsync(
         int id,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         var hoster = hosterInstanceService.GetByFullClassName(registration.HosterFullClassName);

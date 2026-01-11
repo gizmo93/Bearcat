@@ -8,8 +8,9 @@ namespace Bearcat.Frontend.Components.Pages.HosterRegistration;
 
 public partial class HosterRegistration(
     IHosterConfigurationReadRepository readRepository,
-    HosterRegistrationService service,
-    IDialogService dialogService)
+    IServiceScopeFactory serviceScopeFactory,
+    IDialogService dialogService,
+    IToastService toastService)
     : ComponentBase
 {
     private IQueryable<HosterRegistrationDto> hosters = Enumerable.Empty<HosterRegistrationDto>().AsQueryable();
@@ -64,14 +65,41 @@ public partial class HosterRegistration(
 
     private async Task ToggleIsActiveAsync(HosterRegistrationDto hoster)
     {
+        await using var scope = serviceScopeFactory.CreateAsyncScope();
+        var service = scope.ServiceProvider.GetRequiredService<HosterRegistrationService>();
+        
         await service.ToggleIsActiveAsync(hoster.Id);
         await LoadHostersAsync();
     }
 
     private async Task DeleteAsync(HosterRegistrationDto hoster)
     {
+        await using var scope = serviceScopeFactory.CreateAsyncScope();
+        var service = scope.ServiceProvider.GetRequiredService<HosterRegistrationService>();
+        
         await service.RemoveAsync(hoster.Id);
         await LoadHostersAsync();
+    }
+    
+    private async Task TryLoginAsync(HosterRegistrationDto hoster)
+    {
+        await using var scope = serviceScopeFactory.CreateAsyncScope();
+        var service = scope.ServiceProvider.GetRequiredService<HosterRegistrationService>();
+        
+        var result = await service.TryLoginAsync(hoster.Id);
+        
+        const int timeoutMilliseconds = 10_000;
+
+        if (result.IsSuccess)
+        {
+            toastService.ShowSuccess(
+                $"Login for registration {hoster.Name} successful", timeout: timeoutMilliseconds);
+        }
+        else
+        {
+            toastService.ShowError(
+                $"Login for registration {hoster.Name} failed: {result.ErrorMessage}", timeout: timeoutMilliseconds);
+        }
     }
 }
 
