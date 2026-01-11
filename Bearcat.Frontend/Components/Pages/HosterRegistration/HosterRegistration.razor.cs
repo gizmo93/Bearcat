@@ -66,13 +66,28 @@ public partial class HosterRegistration(
     private async Task ToggleIsActiveAsync(HosterRegistrationDto hoster)
     {
         await hosterRegistrationService.ToggleIsActiveAsync(hoster.Id);
+        
+        var status = hoster.IsActive ? "deactivated" : "activated";
+        toastService.ShowSuccess($"Hoster registration {hoster.Name} {status}");
         await LoadHostersAsync();
     }
 
     private async Task DeleteAsync(HosterRegistrationDto hoster)
     {
-        await hosterRegistrationService.RemoveAsync(hoster.Id);
-        await LoadHostersAsync();
+        var message = $"Are you sure you want to delete hoster registration {hoster.Name}?" +
+                      $"\nBe careful, as it will also remove all uploads related to that hoster registration.";
+        
+        var dialog = await dialogService.ShowConfirmationAsync(
+            message: message,
+            title: "Delete hoster registration");
+        
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            await hosterRegistrationService.RemoveAsync(id: hoster.Id);
+        }
+        await LoadHostersAsync();   
     }
     
     private async Task TryLoginAsync(HosterRegistrationDto hoster)
