@@ -30,7 +30,7 @@ public class Rapidgator(
             throw new InvalidOperationException("Invalid hoster config for Rapidgator");
         }
         
-        await LoginAsync(rapidgatorConfig, cancellationToken);
+        await LoginAsync(rapidgatorConfig, cancellationToken: cancellationToken);
     }
 
     public async Task<UploadFileResult> UploadFileAsync(
@@ -108,7 +108,7 @@ public class Rapidgator(
                 StatusPerFileUrl: new Dictionary<string, bool>());
         }
 
-        await LoginAsync(rapidgatorConfig, cancellationToken);
+        await LoginAsync(rapidgatorConfig, cancellationToken: cancellationToken);
 
         var responses = new List<CheckLinksResponse>();
 
@@ -173,7 +173,7 @@ public class Rapidgator(
             throw new InvalidOperationException("Invalid hoster config for Rapidgator");
         }
 
-        await LoginAsync(rapidgatorConfig, cancellationToken);
+        await LoginAsync(rapidgatorConfig, cancellationToken: cancellationToken);
 
         return loginResponse!.Response.User.RemoteUpload.MaxNbJobs;
     }
@@ -187,7 +187,10 @@ public class Rapidgator(
 
         try
         {
-            await LoginAsync(rapidgatorConfig, cancellationToken);
+            await LoginAsync(
+                config: rapidgatorConfig,
+                forceReLogin: true,
+                cancellationToken: cancellationToken);
 
             return new TryLoginResult(
                 IsSuccess: loginResponse!.Status == (int)HttpStatusCode.OK,
@@ -201,8 +204,14 @@ public class Rapidgator(
 
     private async Task LoginAsync(
         RapidgatorConfig config,
-        CancellationToken cancellationToken)
+        bool forceReLogin = false,
+        CancellationToken cancellationToken = default)
     {
+        if (forceReLogin)
+        {
+            loginResponse = null;
+        }
+        
         loginResponse ??= await rapidgatorApiClient.LoginAsync(
             login: config.Username,
             password: config.Password,

@@ -1,23 +1,23 @@
 ﻿using BearCat.Core.Domain.UseCases.ManageHosters;
 using BearCat.Core.Domain.UseCases.ManageHosters.Dto;
 using BearCat.Core.Domain.UseCases.ManageHosters.Repositories;
-using Microsoft.AspNetCore.Components;
 using Microsoft.FluentUI.AspNetCore.Components;
 
 namespace Bearcat.Frontend.Components.Pages.HosterRegistration;
 
 public partial class HosterRegistration(
     IHosterConfigurationReadRepository readRepository,
-    IServiceScopeFactory serviceScopeFactory,
     IDialogService dialogService,
     IToastService toastService)
-    : ComponentBase
+
 {
     private IQueryable<HosterRegistrationDto> hosters = Enumerable.Empty<HosterRegistrationDto>().AsQueryable();
+    private HosterRegistrationService hosterRegistrationService = null!;
     
     protected override async Task OnInitializedAsync()
     {
         await LoadHostersAsync();
+        hosterRegistrationService = ScopedServices.GetRequiredService<HosterRegistrationService>();
     }
 
     private async Task LoadHostersAsync()
@@ -65,28 +65,19 @@ public partial class HosterRegistration(
 
     private async Task ToggleIsActiveAsync(HosterRegistrationDto hoster)
     {
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var service = scope.ServiceProvider.GetRequiredService<HosterRegistrationService>();
-        
-        await service.ToggleIsActiveAsync(hoster.Id);
+        await hosterRegistrationService.ToggleIsActiveAsync(hoster.Id);
         await LoadHostersAsync();
     }
 
     private async Task DeleteAsync(HosterRegistrationDto hoster)
     {
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var service = scope.ServiceProvider.GetRequiredService<HosterRegistrationService>();
-        
-        await service.RemoveAsync(hoster.Id);
+        await hosterRegistrationService.RemoveAsync(hoster.Id);
         await LoadHostersAsync();
     }
     
     private async Task TryLoginAsync(HosterRegistrationDto hoster)
     {
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var service = scope.ServiceProvider.GetRequiredService<HosterRegistrationService>();
-        
-        var result = await service.TryLoginAsync(hoster.Id);
+        var result = await hosterRegistrationService.TryLoginAsync(hoster.Id);
         
         const int timeoutMilliseconds = 10_000;
 
