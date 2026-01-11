@@ -32,7 +32,7 @@ public class HosterRegistrationService(
         return registration.Id;
     }
 
-    public async Task RemoveAsync(int id, CancellationToken cancellationToken)
+    public async Task RemoveAsync(int id, CancellationToken cancellationToken = default)
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         writeRepository.Remove(registration);

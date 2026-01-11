@@ -22,8 +22,8 @@
                 Placeholder="Select a hoster"
                 Items="hosterReadModels"
                 Disabled="Content.IsEdit"
-                OptionValue="@(row => row.FullClassName)"
-                OptionText="@(row => row.Name)"
+                OptionValue="@(row => row?.FullClassName)"
+                OptionText="@(row => row?.Name)"
                 @bind-Value="Content.FullClassName"
                 SelectedOptionChanged="@(EventCallback.Factory.Create<HosterReadModel?>(this, value => OnSelectedHosterChanged(value)))"/>
             

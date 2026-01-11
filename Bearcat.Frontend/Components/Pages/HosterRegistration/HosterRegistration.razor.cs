@@ -67,5 +67,11 @@ public partial class HosterRegistration(
         await service.ToggleIsActiveAsync(hoster.Id);
         await LoadHostersAsync();
     }
+
+    private async Task DeleteAsync(HosterRegistrationDto hoster)
+    {
+        await service.RemoveAsync(hoster.Id);
+        await LoadHostersAsync();
+    }
 }
 
