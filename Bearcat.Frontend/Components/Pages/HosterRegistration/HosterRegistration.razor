@@ -28,9 +28,9 @@
                     </TemplateColumn>
                 </FluentDataGrid>
             </TemplateColumn>
-            <TemplateColumn Title="Actions">
+            <TemplateColumn>
                 <FluentButton IconStart="@(new Icons.Filled.Size20.Edit())" Appearance="Appearance.Neutral" Title="Edit"  OnClick="@(() => ShowEditDialogAsync(context))" />
-                <FluentButton IconStart="@(new Icons.Filled.Size20.Delete())" Appearance="Appearance.Neutral" Title="Delete" />
+                <FluentButton IconStart="@(new Icons.Filled.Size20.Delete())" Appearance="Appearance.Neutral" Title="Delete" OnClick="@(() => DeleteAsync(context))" />
                 
                 @if (context.IsActive)
                 {
