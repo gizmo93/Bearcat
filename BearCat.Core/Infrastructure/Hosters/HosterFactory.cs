@@ -14,7 +14,7 @@ public class HosterFactory(
 
     public IReadOnlyList<HosterReadModel> GetHosterReadModels()
     {
-        var hosters = serviceProvider.GetRequiredService<IEnumerable<IHoster>>();
+        var hosters = serviceProvider.GetKeyedServices<IHoster>(KeyedService.AnyKey);
         
         return hosters
             .Select(h => new HosterReadModel(
