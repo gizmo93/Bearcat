@@ -9,12 +9,12 @@ namespace BearCat.Core.Infrastructure.Database.Repositories;
 public class HosterConfigurationRepository(
     IBearcatReadDbContext dbRead,
     IBearcatWriteDbContext dbWrite,
-    IEnumerable<IHoster> hosters) : IHosterConfigurationReadRepository, IHosterConfigurationWriteRepository
+    IHosterFactory hosterFactory) : IHosterConfigurationReadRepository, IHosterConfigurationWriteRepository
 {
     public async Task<IReadOnlyList<HosterRegistrationDto>> GetAllRegistrationsAsync(
         CancellationToken cancellationToken = default)
     {
-        var hostersByClassName = GetHostersByClassName();
+        var hostersByName = hosterFactory.GetHostersByName();
 
         return await dbRead.HosterRegistrations
             .OrderBy(h => h.Name)
@@ -22,9 +22,9 @@ public class HosterConfigurationRepository(
                 h.Id,
                 h.Name,
                 h.IsActive,
-                hostersByClassName[h.HosterFullClassName].Name,
-                h.HosterFullClassName,
-                hostersByClassName[h.HosterFullClassName]
+                hostersByName[h.HosterClassName].Name,
+                h.HosterClassName,
+                hostersByName[h.HosterClassName]
                     .DeserializeHosterConfig(h.SerializedConfig)
                     .ToDictionary()))
             .ToListAsync(cancellationToken: cancellationToken);
@@ -49,11 +49,5 @@ public class HosterConfigurationRepository(
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         await dbWrite.SaveChangesAsync(cancellationToken);
-    }
-    
-    private Dictionary<string, IHoster> GetHostersByClassName()
-    {
-        return hosters
-            .ToDictionary(h => h.GetType().FullName!);
     }
 }

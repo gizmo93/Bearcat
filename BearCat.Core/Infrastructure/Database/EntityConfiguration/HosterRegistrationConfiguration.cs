@@ -12,6 +12,6 @@ public class HosterRegistrationConfiguration : IEntityTypeConfiguration<HosterRe
         builder.Property(h => h.Name).IsRequired().HasMaxLength(100);
         builder.Property(h => h.IsActive).IsRequired();
         builder.Property(h => h.SerializedConfig).IsRequired().HasMaxLength(2000);
-        builder.Property(h => h.HosterFullClassName).IsRequired().HasMaxLength(500);
+        builder.Property(h => h.HosterClassName).IsRequired().HasMaxLength(500);
     }
 }

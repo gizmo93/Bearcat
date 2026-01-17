@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using BearCat.Core.Domain.Abstractions;
 using BearCat.Core.Domain.Abstractions.Hoster;
 using BearCat.Core.Infrastructure.Hosters.Rapidgator.ApiClient;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +22,6 @@ public static class ServiceProviderConfig
             })
             .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://rapidgator.net/"));
         services.AddScoped<RapidgatorApiClient>();
-        services.AddScoped<IHoster, Rapidgator>();
+        services.AddKeyedScoped<IHoster, Rapidgator>(nameof(Rapidgator));
     }
 }

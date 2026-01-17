@@ -8,16 +8,16 @@ namespace BearCat.Core.Domain.UseCases.ManageUploads;
 
 public class UploadFilesService(
     IUploadFilesRepository repository,
-    HosterInstanceService hosterInstanceService,
+    IHosterFactory hosterFactory,
     ILogger<UploadFilesService> logger)
 {
     public async Task ProcessPendingUploadsAsync(CancellationToken cancellationToken)
     {
         var pendingUploads = await repository.GetPendingUploadsAsync(cancellationToken);
 
-        foreach (var uploads in pendingUploads.GroupBy(u => u.UploadConfig.HosterRegistration.HosterFullClassName))
+        foreach (var uploads in pendingUploads.GroupBy(u => u.UploadConfig.HosterRegistration.HosterClassName))
         {
-            var hoster = hosterInstanceService.GetByFullClassName(uploads.Key);
+            var hoster = hosterFactory.GetByName(uploads.Key);
             var hosterConfig = hoster.DeserializeHosterConfig(
                 uploads.First().UploadConfig.HosterRegistration.SerializedConfig);
             await hoster.PrepareForUploadAsync(hosterConfig, cancellationToken);

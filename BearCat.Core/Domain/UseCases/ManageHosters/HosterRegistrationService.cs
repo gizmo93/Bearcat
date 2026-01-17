@@ -1,13 +1,13 @@
+using BearCat.Core.Domain.Abstractions.Hoster;
 using BearCat.Core.Domain.Abstractions.Hoster.Results;
 using BearCat.Core.Domain.Entities;
 using BearCat.Core.Domain.UseCases.ManageHosters.Repositories;
-using BearCat.Core.Domain.UseCases.ManageUploads;
 
 namespace BearCat.Core.Domain.UseCases.ManageHosters;
 
 public class HosterRegistrationService(
     IHosterConfigurationWriteRepository writeRepository,
-    HosterInstanceService hosterInstanceService)
+    IHosterFactory hosterFactory)
 {
     public async Task<int> RegisterHosterAsync(
         string name,
@@ -16,7 +16,7 @@ public class HosterRegistrationService(
         string hosterClassName,
         CancellationToken cancellationToken = default)
     {
-        var hoster = hosterInstanceService.GetByFullClassName(hosterClassName);
+        var hoster = hosterFactory.GetByName(hosterClassName);
         var serializedConfig = hoster.SerializeHosterConfig(configuration);
         
         var registration = new HosterRegistration
@@ -24,7 +24,7 @@ public class HosterRegistrationService(
             Name = name,
             IsActive = isActive,
             SerializedConfig = serializedConfig,
-            HosterFullClassName = hosterClassName
+            HosterClassName = hosterClassName
         };
 
         writeRepository.Add(registration);
@@ -53,7 +53,7 @@ public class HosterRegistrationService(
         CancellationToken cancellationToken = default)
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
-        var hoster = hosterInstanceService.GetByFullClassName(registration.HosterFullClassName);
+        var hoster = hosterFactory.GetByName(registration.HosterClassName);
         
         registration.Name = name;
         registration.SerializedConfig = hoster.SerializeHosterConfig(configuration);
@@ -66,7 +66,7 @@ public class HosterRegistrationService(
         CancellationToken cancellationToken = default)
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
-        var hoster = hosterInstanceService.GetByFullClassName(registration.HosterFullClassName);
+        var hoster = hosterFactory.GetByName(registration.HosterClassName);
         var config = hoster.DeserializeHosterConfig(registration.SerializedConfig);
         return await hoster.TryLoginAsync(config, cancellationToken);
     }

@@ -8,7 +8,7 @@ namespace BearCat.Core.Domain.UseCases.ManageUploads;
 
 public class UploadStateService(
     IUploadStateRepository uploadStateRepository,
-    HosterInstanceService hosterInstanceService,
+    IHosterFactory hosterFactory,
     ILogger<UploadStateService> logger)
 {
     public async Task CheckUploadStatesAsync(DateTime utcNow, CancellationToken cancellationToken)
@@ -21,9 +21,9 @@ public class UploadStateService(
     {
         var uploadsToCheck = await uploadStateRepository.GetUploadsToCheckAsync(utcNow, cancellationToken);
 
-        foreach (var uploadGroup in uploadsToCheck.GroupBy(u => u.UploadConfig.HosterRegistration.HosterFullClassName))
+        foreach (var uploadGroup in uploadsToCheck.GroupBy(u => u.UploadConfig.HosterRegistration.HosterClassName))
         {
-            var hoster = hosterInstanceService.GetByFullClassName(uploadGroup.Key);
+            var hoster = hosterFactory.GetByName(uploadGroup.Key);
             var hosterConfig = hoster.DeserializeHosterConfig(
                 uploadGroup.First().UploadConfig.HosterRegistration.SerializedConfig);
             

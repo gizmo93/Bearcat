@@ -10,7 +10,7 @@ public class HosterRegistration
 
     public bool IsActive { get; set; }
 
-    public required string HosterFullClassName { get; set; }
+    public required string HosterClassName { get; set; }
 
     public List<UploadConfig> UploadConfigs { get; set; } = null!;
 }
