@@ -16,11 +16,12 @@ public static class ServiceProviderConfig
         {
             services.AddScoped<IHosterConfigurationReadRepository, HosterConfigurationRepository>();
             services.AddScoped<IHosterConfigurationWriteRepository, HosterConfigurationRepository>();
-            services.AddScoped<IReleaseWriteRepository, ReleaseRepository>();
+            services.AddScoped<IReleaseWriteRepository, ReleaseWriteRepository>();
             services.AddScoped<IArchiveCreationRepository, ArchiveCreationRepository>();
             services.AddScoped<IUploadFilesRepository, UploadFilesRepository>();
             services.AddScoped<IUploadStateRepository, UploadStateRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
+            services.AddScoped<IReleaseReadRepository, ReleaseReadRepository>();
         }
     }
 }

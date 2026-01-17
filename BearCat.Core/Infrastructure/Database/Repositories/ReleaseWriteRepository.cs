@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BearCat.Core.Infrastructure.Database.Repositories;
 
-public class ReleaseRepository(IBearcatWriteDbContext dbWrite)
+public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite)
     : IReleaseWriteRepository
 {
     public async Task<Release> GetByIdAsync(int id, CancellationToken cancellationToken)

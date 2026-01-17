@@ -1,0 +1,14 @@
+@inherits OwningComponentBase
+@page "/release"
+
+<h3>Releases</h3>
+
+
+<FluentStack Orientation="Orientation.Vertical">
+    <FluentDataGrid Items="releases.AsQueryable()" AutoFit="true    ">
+        <PropertyColumn Property="@(item => item.Name)" Title="Name" />
+        <PropertyColumn Property="@(item => item.ReleaseType)" Title="Type" />
+        <PropertyColumn Property="@(item => item.ArchiveConfigCount)" Title="# Archive configs" />
+        <PropertyColumn Property="@(item => item.UploadConfigCount)" Title="# Upload configs" />
+    </FluentDataGrid>
+</FluentStack>
