@@ -1,9 +1,12 @@
 ﻿using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
 using BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
+using Microsoft.AspNetCore.Components;
 
-namespace Bearcat.Frontend.Components.Pages;
+namespace Bearcat.Frontend.Components.Pages.ManageReleases;
 
-public partial class Releases(IReleaseReadRepository readRepository)
+public partial class AllReleasesPage(
+    IReleaseReadRepository readRepository,
+    NavigationManager navigationManager)
 {
     private IReadOnlyList<ReleaseListDto> releases = [];
     

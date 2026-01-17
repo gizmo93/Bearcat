@@ -3,9 +3,9 @@ using BearCat.Core.Domain.UseCases.ManageHosters.Dto;
 using BearCat.Core.Domain.UseCases.ManageHosters.Repositories;
 using Microsoft.FluentUI.AspNetCore.Components;
 
-namespace Bearcat.Frontend.Components.Pages.HosterRegistration;
+namespace Bearcat.Frontend.Components.Pages.ManageHosters;
 
-public partial class HosterRegistration(
+public partial class AllHostersPage(
     IHosterConfigurationReadRepository readRepository,
     IDialogService dialogService,
     IToastService toastService)

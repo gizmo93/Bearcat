@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.FluentUI.AspNetCore.Components;
 
-namespace Bearcat.Frontend.Components.Pages.HosterRegistration;
+namespace Bearcat.Frontend.Components.Pages.ManageHosters;
 
 public partial class AddOrEditHoster(
     IHosterFactory hosterFactory,
