@@ -4,6 +4,7 @@ using BearCat.Core.Domain.UseCases.ManageHosters;
 using BearCat.Core.Domain.UseCases.ManageNotifications;
 using BearCat.Core.Domain.UseCases.ManageReleases;
 using BearCat.Core.Domain.UseCases.ManageUploads;
+using BearCat.Core.Infrastructure.Archivers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BearCat.Core.Domain.InversionOfControl;
@@ -21,7 +22,7 @@ public static class ServiceProviderConfig
             services.AddScoped<UploadStateService>();
             services.AddScoped<UploadStateService>();
             services.AddScoped<INotificationService, NotificationService>();
-            services.AddScoped<ArchiverInstanceService>();
+            services.AddScoped<ArchiverFactory>();
         }
     }
 }

@@ -10,7 +10,7 @@ public class ArchiveConfig
     
     public string ArchiveFilesBasePath { get; set; } = null!;
     
-    public string ArchiverFullClassName { get; set; } = null!;
+    public string ArchiverName { get; set; } = null!;
     
     public string ArchiveNamePrefix { get; set; } = null!;
     

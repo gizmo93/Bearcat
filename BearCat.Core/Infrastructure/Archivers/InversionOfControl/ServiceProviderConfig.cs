@@ -11,8 +11,9 @@ public static class ServiceProviderConfig
     {
         public void AddArchivers()
         {
-            services.AddScoped<IArchiver, RarArchiver>();
-            services.AddScoped<IArchiver, SevenZipArchiver>();
+            services.AddKeyedScoped<IArchiver, RarArchiver>(nameof(RarArchiver));
+            services.AddKeyedScoped<IArchiver, SevenZipArchiver>(nameof(SevenZipArchiver));
+            services.AddScoped<IArchiverFactory, ArchiverFactory>();
         }
     }
 }

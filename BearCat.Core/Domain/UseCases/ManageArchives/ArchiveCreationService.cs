@@ -1,4 +1,5 @@
-﻿using BearCat.Core.Domain.Entities;
+﻿using BearCat.Core.Domain.Abstractions.Archiver;
+using BearCat.Core.Domain.Entities;
 using BearCat.Core.Domain.UseCases.ManageArchives.Repositories;
 using BearCat.Core.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -8,7 +9,7 @@ namespace BearCat.Core.Domain.UseCases.ManageArchives;
 public class ArchiveCreationService(
     IArchiveCreationRepository repository,
     ILogger<ArchiveCreationService> logger,
-    ArchiverInstanceService archiverInstanceService)
+    IArchiverFactory archiverFactory)
 {
     public async Task ProcessUploadsWithoutArchiveAsync(CancellationToken cancellationToken)
     {
@@ -88,9 +89,9 @@ public class ArchiveCreationService(
         logger.LogInformation("Creating archive for ArchiveConfig {ArchiveConfigId} with {UploadCount} uploads and archiver {ArchiverClassName}",
             config.Id,
             uploads.Count,
-            config.ArchiverFullClassName);
+            config.ArchiverName);
 
-        var archiver = archiverInstanceService.GetByFullClassName(config.ArchiverFullClassName);
+        var archiver = archiverFactory.GetByName(config.ArchiverName);
         var archiveDirectoryPath = CreateArchiveDirectory(config.ArchiveFilesBasePath);
 
         var archiveResult = await archiver.ArchiveAsync(

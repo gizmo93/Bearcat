@@ -10,7 +10,7 @@ public class ArchiveConfigConfiguration : IEntityTypeConfiguration<ArchiveConfig
     {
         builder.HasKey(a => a.Id);
         builder.Property(a => a.ReleaseId).IsRequired();
-        builder.Property(a => a.ArchiverFullClassName).IsRequired().HasMaxLength(200);
+        builder.Property(a => a.ArchiverName).IsRequired().HasMaxLength(200);
         builder.Property(a => a.ArchivePassword).HasMaxLength(100).IsRequired(false);
         builder.Property(a => a.ArchiveFileSizeMb).IsRequired();
         builder.Property(a => a.ArchiveNamePrefix).IsRequired().HasMaxLength(200);
