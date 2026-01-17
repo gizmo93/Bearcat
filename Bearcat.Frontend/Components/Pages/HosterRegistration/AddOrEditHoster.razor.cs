@@ -1,4 +1,5 @@
-﻿using BearCat.Core.Domain.UseCases.ManageHosters;
+﻿using BearCat.Core.Domain.Abstractions.Hoster;
+using BearCat.Core.Domain.UseCases.ManageHosters;
 using BearCat.Core.Domain.UseCases.ManageUploads;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
@@ -7,7 +8,7 @@ using Microsoft.FluentUI.AspNetCore.Components;
 namespace Bearcat.Frontend.Components.Pages.HosterRegistration;
 
 public partial class AddOrEditHoster(
-    HosterInstanceService hosterInstanceService,
+    IHosterFactory hosterFactory,
     HosterRegistrationService hosterRegistrationService)
     : ComponentBase, IDialogContentComponent<HosterFormModel>
 {
@@ -27,7 +28,7 @@ public partial class AddOrEditHoster(
     
     protected override void OnInitialized()
     {
-        hosterReadModels = hosterInstanceService.GetHosterReadModels();
+        hosterReadModels = hosterFactory.GetHosterReadModels();
         editContext = new EditContext(Content);
         editContext.OnValidationRequested += HandleValidationRequested;
         messageStore = new(editContext);

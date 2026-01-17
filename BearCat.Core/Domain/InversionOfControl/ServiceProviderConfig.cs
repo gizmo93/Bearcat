@@ -1,5 +1,4 @@
 using BearCat.Core.Domain.Shared;
-using BearCat.Core.Domain.UseCases;
 using BearCat.Core.Domain.UseCases.ManageArchives;
 using BearCat.Core.Domain.UseCases.ManageHosters;
 using BearCat.Core.Domain.UseCases.ManageNotifications;
@@ -15,7 +14,6 @@ public static class ServiceProviderConfig
     {
         public void AddDomain()
         {
-            services.AddScoped<HosterInstanceService>();
             services.AddScoped<HosterRegistrationService>();
             services.AddScoped<ReleaseService>();
             services.AddScoped<ArchiveCreationService>();
