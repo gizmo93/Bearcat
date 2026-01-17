@@ -1,0 +1,31 @@
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size24.WindowApps())" />
+        <FluentLabel Typo="Typography.PaneHeader">
+            @Dialog.Instance.Parameters.Title
+        </FluentLabel>
+    </FluentStack>
+</FluentDialogHeader>   
+
+<FluentDialogBody>
+    <FluentTreeView Items="@directoryTree" @bind-SelectedItem="@selectedFolderPath">
+        <ItemTemplate>
+            @context.Text
+            <span style="color: var(--accent-fill-rest); margin: 0 4px;">
+                @(context.Items == null ? "" : $"[{context.Items.Count()}]")
+            </span>
+        </ItemTemplate>
+    </FluentTreeView>
+</FluentDialogBody>
+
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Accent"
+                  Disabled="@(selectedFolderPath is null)"
+                  OnClick="@(async () => await OnSaveAsync())">
+        Select folder
+    </FluentButton>
+    <FluentButton Appearance="Appearance.Neutral"
+                  OnClick="@(() => Dialog.CancelAsync())">
+        Cancel
+    </FluentButton>
+</FluentDialogFooter>

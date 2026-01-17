@@ -1,0 +1,21 @@
+@page "/releases"
+
+<h3>Releases</h3>
+
+
+<FluentStack Orientation="Orientation.Vertical">
+    <FluentToolbar id="toolbar-fluent-components">
+        <FluentButton
+            IconStart="@(new Icons.Filled.Size20.Add())"
+            Appearance="Appearance.Accent"
+            OnClick="@(() => navigationManager.NavigateTo("releases/create"))">
+            Add Release
+        </FluentButton>
+    </FluentToolbar>
+    <FluentDataGrid Items="releases.AsQueryable()" AutoFit="true">
+        <PropertyColumn Property="@(item => item.Name)" Title="Name"/>
+        <PropertyColumn Property="@(item => item.ReleaseType)" Title="Type"/>
+        <PropertyColumn Property="@(item => item.ArchiveConfigCount)" Title="# Archive configs"/>
+        <PropertyColumn Property="@(item => item.UploadConfigCount)" Title="# Upload configs"/>
+    </FluentDataGrid>
+</FluentStack>

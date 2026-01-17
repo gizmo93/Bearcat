@@ -1,0 +1,16 @@
+@using BearCat.Core.Domain.ValueObjects
+
+<FluentStack Orientation="Orientation.Vertical">
+    @(ReleaseType switch
+    {
+        ReleaseType.Managed => "Fully managed by Bearcat",
+        ReleaseType.Unmanaged => "You provide the archives, Bearcat uploads them",
+        _ => "",
+    })
+</FluentStack>
+
+@code {
+    [Parameter]
+    [EditorRequired] 
+    public ReleaseType ReleaseType { get; set; }
+}

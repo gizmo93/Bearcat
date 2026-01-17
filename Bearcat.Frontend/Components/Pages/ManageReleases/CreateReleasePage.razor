@@ -1,0 +1,38 @@
+@page "/releases/create"
+@using BearCat.Core.Domain.ValueObjects
+@inherits OwningComponentBase
+<h3>Create release</h3>
+
+<EditForm EditContext="editContext">
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="12" Width="400px">
+        <FluentTextField Label="Name" Placeholder="Name your release" />
+        <FluentSelect
+            Width="400px"
+            Label="Release type"
+            Placeholder="Select a release type"
+            @bind-Value="model.ReleaseType"
+            Items="@(Enum.GetValues<ReleaseType>().ToList())"
+            OptionValue="@(t => ((int)t).ToString())"
+            OptionText="@(t => t.ToString())">
+            <OptionTemplate Context="option">
+                <ReleaseTypeOption ReleaseType="option" />
+            </OptionTemplate>
+        </FluentSelect>
+        
+        <FluentStack Orientation="Orientation.Vertical">
+            <FluentLabel Typo="Typography.Body">Folder path</FluentLabel>
+            <FluentButton
+                BackgroundColor="@(string.IsNullOrWhiteSpace(model.FolderPath) ? "#e384a0" : "#8dcc92")"
+                OnClick="@(() => ShowSelectFolderDialogAsync())">
+                @if (string.IsNullOrWhiteSpace(model.FolderPath))
+                {
+                    <span>Select a folder</span>
+                }
+                else
+                {
+                    @model.FolderPath
+                }
+            </FluentButton>
+        </FluentStack>
+    </FluentStack>
+</EditForm>
