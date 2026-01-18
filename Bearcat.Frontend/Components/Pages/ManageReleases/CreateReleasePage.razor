@@ -1,11 +1,12 @@
 @page "/releases/create"
 @using BearCat.Core.Domain.ValueObjects
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 @inherits OwningComponentBase
 <h3>Create release</h3>
 
-<EditForm EditContext="editContext">
+<EditForm EditContext="editContext" OnValidSubmit="@(() => SaveAsync())">
     <FluentStack Orientation="Orientation.Vertical" VerticalGap="12" Width="400px">
-        <FluentTextField Label="Name" Placeholder="Name your release" />
+        <FluentTextField Label="Name" Placeholder="Name your release" @bind-Value="model.Name" />
         <FluentSelect
             Width="400px"
             Label="Release type"
@@ -32,6 +33,25 @@
                 {
                     @model.FolderPath
                 }
+            </FluentButton>
+        </FluentStack>
+        <div style="color: var(--error);">
+            <ValidationMessage For="@(() => model.Name)" />
+            <ValidationMessage For="@(() => model.ReleaseType)" />
+            <ValidationMessage For="@(() => model.FolderPath)" />
+        </div>
+        <FluentStack 
+            VerticalGap="50"
+            Orientation="Orientation.Horizontal"
+            HorizontalAlignment="HorizontalAlignment.Right">
+            <FluentButton
+                OnClick="@(() => navigationManager.NavigateTo("releases"))">
+                Abort
+            </FluentButton>
+            <FluentButton
+                Type="ButtonType.Submit"
+                IconStart="@(new Size20.Save())">
+                Create release
             </FluentButton>
         </FluentStack>
     </FluentStack>

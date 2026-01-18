@@ -10,7 +10,7 @@ public class ReleaseService(IReleaseWriteRepository writeRepository)
         string name,
         string releaseFolderPath,
         ReleaseType releaseType,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
         var release = new Release
         {
