@@ -231,3 +231,5 @@ custom.aprof
 /src/Client/Bearcat.Client.Maui/Platforms/Android/google-services.json
 
 .env
+
+docker-compose-override.yml
