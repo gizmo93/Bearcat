@@ -2,11 +2,15 @@
 using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular;
 
-namespace Bearcat.Frontend.Components.Pages.ManageReleases;
+namespace Bearcat.Frontend.Components.Shared;
 
-public partial class FolderSelectionDialog(IConfiguration configuration) : ComponentBase, IDialogContentComponent
+public partial class FolderSelectionDialog : ComponentBase, IDialogContentComponent<string>
 {
-    [CascadingParameter] public FluentDialog Dialog { get; set; } = null!;
+    [Parameter] 
+    public string Content { get; set; } = null!;
+    
+    [CascadingParameter] 
+    public FluentDialog Dialog { get; set; } = null!;
 
     private ITreeViewItem? selectedFolderPath;
 
@@ -33,7 +37,7 @@ public partial class FolderSelectionDialog(IConfiguration configuration) : Compo
 
     private TreeViewItem GetDirectoryTree()
     {
-        var rootPath = configuration.GetRequiredSection("ReleaseDataDirectory").Value!;
+        var rootPath = Content;
         var item = CreateTreeViewItem(rootPath);
         return item;
     }
