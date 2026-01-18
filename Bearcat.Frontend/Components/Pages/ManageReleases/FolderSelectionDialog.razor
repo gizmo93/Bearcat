@@ -11,9 +11,6 @@
     <FluentTreeView Items="@directoryTree" @bind-SelectedItem="@selectedFolderPath">
         <ItemTemplate>
             @context.Text
-            <span style="color: var(--accent-fill-rest); margin: 0 4px;">
-                @(context.Items == null ? "" : $"[{context.Items.Count()}]")
-            </span>
         </ItemTemplate>
     </FluentTreeView>
 </FluentDialogBody>
