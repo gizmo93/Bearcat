@@ -233,3 +233,4 @@ custom.aprof
 .env
 
 docker-compose-override.yml
+appsettings.user.json
