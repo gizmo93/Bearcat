@@ -34,35 +34,43 @@ public partial class FolderSelectionDialog(IConfiguration configuration) : Compo
     private TreeViewItem GetDirectoryTree()
     {
         var rootPath = configuration.GetRequiredSection("ReleaseDataDirectory").Value!;
-
-        return GetTreeViewItem(rootPath);
+        var item = CreateTreeViewItem(rootPath);
+        return item;
     }
 
-    private TreeViewItem GetTreeViewItem(string path)
+    private Task OnExpandedAsync(TreeViewItemExpandedEventArgs e)
     {
-        var treeViewItem = new TreeViewItem
+        e.CurrentItem.Items = e.Expanded
+            ? GetTreeViewItems(e.CurrentItem.Id)
+            : TreeViewItem.LoadingTreeViewItems;
+
+        return Task.CompletedTask;
+    }
+
+    private List<TreeViewItem> GetTreeViewItems(string path)
+    {
+        return Directory.GetDirectories(
+                path: path,
+                searchPattern: "*",
+                enumerationOptions: new EnumerationOptions
+                {
+                    IgnoreInaccessible = true,
+                    ReturnSpecialDirectories = false
+                })
+            .Select(CreateTreeViewItem)
+            .ToList();
+    }
+    
+    private TreeViewItem CreateTreeViewItem(string path)
+    {
+        return new TreeViewItem
         {
             Id = path,
             Text = Path.GetFileName(path),
-            Items = new List<TreeViewItem>(),
+            Items = TreeViewItem.LoadingTreeViewItems,
             IconCollapsed = iconCollapsed,
             IconExpanded = iconExpanded,
+            OnExpandedAsync = OnExpandedAsync
         };
-
-        var children = new List<TreeViewItem>();
-
-        foreach (var folder in Directory.GetDirectories(path, "*",
-                     enumerationOptions: new EnumerationOptions
-                     {
-                         IgnoreInaccessible = true, ReturnSpecialDirectories = false
-                     }))
-        {
-            var child = GetTreeViewItem(folder);
-            children.Add(child);
-        }
-
-        treeViewItem.Items = children;
-
-        return treeViewItem;
     }
 }
