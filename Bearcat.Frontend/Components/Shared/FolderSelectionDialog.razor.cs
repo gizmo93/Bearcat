@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using BearCat.Core.Domain.Abstractions;
+using Microsoft.AspNetCore.Components;
 using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular;
 
 namespace Bearcat.Frontend.Components.Shared;
 
-public partial class FolderSelectionDialog : ComponentBase, IDialogContentComponent<string>
+public partial class FolderSelectionDialog(
+    IFileSystemService fileSystemService)
+    : ComponentBase, IDialogContentComponent<string>
 {
     [Parameter] 
     public string Content { get; set; } = null!;
@@ -53,14 +56,7 @@ public partial class FolderSelectionDialog : ComponentBase, IDialogContentCompon
 
     private List<TreeViewItem> GetTreeViewItems(string path)
     {
-        return Directory.GetDirectories(
-                path: path,
-                searchPattern: "*",
-                enumerationOptions: new EnumerationOptions
-                {
-                    IgnoreInaccessible = true,
-                    ReturnSpecialDirectories = false
-                })
+        return fileSystemService.GetFoldersInPath(path)
             .Select(CreateTreeViewItem)
             .ToList();
     }
