@@ -2,7 +2,9 @@
 
 public class CreateReleaseModel
 {
-    public string? ReleaseType { get; set; }
+    public string Name { get; set; } = string.Empty;
     
-    public string? FolderPath { get; set; }
+    public string ReleaseType { get; set; } = string.Empty;
+    
+    public string FolderPath { get; set; } = string.Empty;
 }
