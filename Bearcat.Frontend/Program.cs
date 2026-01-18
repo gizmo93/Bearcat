@@ -11,6 +11,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddFluentUIComponents();
 
+builder.Configuration.AddJsonFile("appsettings.user.json", optional: true, reloadOnChange: false);
+
 builder.Services.AddCore(builder.Configuration);
 
 var app = builder.Build();
@@ -33,7 +35,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 
-if (builder.Environment.IsProduction())
+if (app.Environment.IsProduction())
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<BearcatDbContext>();
