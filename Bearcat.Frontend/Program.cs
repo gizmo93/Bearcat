@@ -11,7 +11,10 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddFluentUIComponents();
 
-builder.Configuration.AddJsonFile("appsettings.user.json", optional: true, reloadOnChange: false);
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddJsonFile("appsettings.user.json", optional: true, reloadOnChange: false);
+}
 
 builder.Services.AddCore(builder.Configuration);
 
