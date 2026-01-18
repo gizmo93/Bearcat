@@ -1,5 +1,7 @@
+using BearCat.Core.Infrastructure.Database;
 using BearCat.Core.InversionOfControl;
 using Bearcat.Frontend.Components;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.FluentUI.AspNetCore.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,5 +31,13 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+
+if (builder.Environment.IsProduction())
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<BearcatDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
 
 app.Run();

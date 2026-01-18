@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  bearcat:
+    build: .
+    container_name: bearcat
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ReleaseDataDirectory=/mnt/data
+      - Database__ConnectionString=Host=postgres;Database=${POSTGRES_DB:-bearcat};Username=${POSTGRES_USER:-bearcat};Password=${POSTGRES_PASSWORD:-bearcat123}
+    volumes:
+        - ${RELEASES_DIR}:/mnt/data/releases
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bearcat-network
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: bearcat-postgres
+    environment:
+      - POSTGRES_DB=bearcat
+      - POSTGRES_USER=bearcat
+      - POSTGRES_PASSWORD=bearcat123
+    volumes:
+      - ${POSTGRES_DATA_DIR:-./postgres-data}:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - bearcat-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bearcat -d bearcat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  bearcat-network:
+    driver: bridge
