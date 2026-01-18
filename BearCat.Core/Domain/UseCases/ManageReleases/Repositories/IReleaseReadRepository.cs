@@ -5,4 +5,5 @@ namespace BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
 public interface IReleaseReadRepository
 {
     Task<IReadOnlyList<ReleaseListDto>> GetReleasesAsync(CancellationToken cancellationToken = default);
+    Task<ReleaseDto?> GetReleaseAsync(int releaseId, CancellationToken cancellationToken = default);
 }

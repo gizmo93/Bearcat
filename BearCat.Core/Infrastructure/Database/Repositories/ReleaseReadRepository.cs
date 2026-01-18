@@ -1,4 +1,5 @@
-﻿using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
+﻿using BearCat.Core.Domain.Entities;
+using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
 using BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,5 +27,18 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead) : IReleaseReadR
                                 .OnlineState))
                     .ToList()))
             .ToListAsync(cancellationToken: cancellationToken);
+    }
+    
+    public async Task<ReleaseDto?> GetReleaseAsync(int releaseId, CancellationToken cancellationToken = default)
+    {
+        return await dbRead
+            .Releases
+            .Where(r => r.Id == releaseId)
+            .Select(r => new ReleaseDto(
+                r.Id,
+                r.Name,
+                r.ReleaseType,
+                r.ReleaseFolderPath))
+            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 }

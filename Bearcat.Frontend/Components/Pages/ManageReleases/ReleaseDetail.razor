@@ -1,0 +1,19 @@
+@page "/releases/{releaseId:int}"
+@inherits OwningComponentBase
+
+@if (release is null)
+{
+    return;
+}
+
+<FluentMainLayout>
+    <Header>
+        <h3>Release</h3>
+    </Header>
+    <SubHeader>
+        <p>@release.Name</p>
+    </SubHeader>
+    <Body>
+    
+    </Body>
+</FluentMainLayout>
