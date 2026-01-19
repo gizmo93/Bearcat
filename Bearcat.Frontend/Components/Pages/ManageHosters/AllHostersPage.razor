@@ -1,11 +1,13 @@
 @page "/hoster-registrations"
 @inherits OwningComponentBase
+@using Bearcat.Frontend.Components.Shared
 @using Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 
-<h3>Hoster Registrations</h3>
-
-<FluentGrid>
-    <FluentGridItem xs="12" lg="12">
+<ContentPage>
+    <Header>
+        <FluentLabel Typo="Typography.H3">Hoster Registrations</FluentLabel>
+    </Header>
+    <Menu>
         <FluentToolbar id="toolbar-fluent-components">
             <FluentButton
                 IconStart="@(new Icons.Filled.Size20.Add())"
@@ -14,39 +16,44 @@
                 Add Hoster
             </FluentButton>
         </FluentToolbar>
-        <FluentDataGrid Items="hosters" AutoFit="true" MultiLine="true">
-            <PropertyColumn Property="@(row => row.Name)" Title="Name"/>
-            <PropertyColumn Property="@(row => row.HosterName)" Title="Hoster"/>
-            <TemplateColumn Title="Is active">
-                @(context.IsActive ? "Yes" : "No")
-            </TemplateColumn>
-            <TemplateColumn Title="Config">
-                <FluentDataGrid Items="@context.Configuration.AsQueryable()">
-                    <TemplateColumn Title="Name" Context="item">
-                        @item.Key
-                    </TemplateColumn>
-                    <TemplateColumn Title="Value" Context="item">
-                        @item.Value
-                    </TemplateColumn>
-                </FluentDataGrid>
-            </TemplateColumn>
-            <TemplateColumn>
-                <FluentStack>
-                    <FluentButton OnClick="@(() => TryLoginAsync(context))">Try login</FluentButton>
-                    <FluentButton IconStart="@(new Size20.Edit())" Appearance="Appearance.Neutral" Title="Edit" OnClick="@(() => ShowEditDialogAsync(context))"/>
-                    <FluentButton IconStart="@(new Size20.Delete())" Appearance="Appearance.Neutral" Title="Delete" OnClick="@(() => DeleteAsync(context))"/>
+    </Menu>
+    <Body>
+    <FluentDataGrid Items="hosters" AutoFit="true" MultiLine="true">
+        <PropertyColumn Property="@(row => row.Name)" Title="Name"/>
+        <PropertyColumn Property="@(row => row.HosterName)" Title="Hoster"/>
+        <TemplateColumn Title="Is active">
+            @(context.IsActive ? "Yes" : "No")
+        </TemplateColumn>
+        <TemplateColumn Title="Config">
+            <FluentDataGrid Items="@context.Configuration.AsQueryable()">
+                <TemplateColumn Title="Name" Context="item">
+                    @item.Key
+                </TemplateColumn>
+                <TemplateColumn Title="Value" Context="item">
+                    @item.Value
+                </TemplateColumn>
+            </FluentDataGrid>
+        </TemplateColumn>
+        <TemplateColumn>
+            <FluentStack>
+                <FluentButton OnClick="@(() => TryLoginAsync(context))">Try login</FluentButton>
+                <FluentButton IconStart="@(new Size20.Edit())" Appearance="Appearance.Neutral" Title="Edit"
+                              OnClick="@(() => ShowEditDialogAsync(context))"/>
+                <FluentButton IconStart="@(new Size20.Delete())" Appearance="Appearance.Neutral" Title="Delete"
+                              OnClick="@(() => DeleteAsync(context))"/>
 
-                    @if (context.IsActive)
-                    {
-                        <FluentButton IconStart="@(new Size20.Stop())" Appearance="Appearance.Neutral" Title="Disable" OnClick="@(() => ToggleIsActiveAsync(context))"/>
-                    }
-                    else
-                    {
-                        <FluentButton IconStart="@(new Size20.Play())" Appearance="Appearance.Neutral" Title="Enable" OnClick="@(() => ToggleIsActiveAsync(context))"/>
-                    }
-                </FluentStack>
-            </TemplateColumn>
-        </FluentDataGrid>
-
-    </FluentGridItem>
-</FluentGrid>
+                @if (context.IsActive)
+                {
+                    <FluentButton IconStart="@(new Size20.Stop())" Appearance="Appearance.Neutral" Title="Disable"
+                                  OnClick="@(() => ToggleIsActiveAsync(context))"/>
+                }
+                else
+                {
+                    <FluentButton IconStart="@(new Size20.Play())" Appearance="Appearance.Neutral" Title="Enable"
+                                  OnClick="@(() => ToggleIsActiveAsync(context))"/>
+                }
+            </FluentStack>
+        </TemplateColumn>
+    </FluentDataGrid>
+    </Body>
+</ContentPage>

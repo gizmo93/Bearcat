@@ -1,21 +1,26 @@
 @page "/releases"
+@using Bearcat.Frontend.Components.Shared
 
-<h3>Releases</h3>
-
-
-<FluentStack Orientation="Orientation.Vertical">
-    <FluentToolbar id="toolbar-fluent-components">
-        <FluentButton
-            IconStart="@(new Icons.Filled.Size20.Add())"
-            Appearance="Appearance.Accent"
-            OnClick="@(() => navigationManager.NavigateTo("releases/create"))">
-            Add Release
-        </FluentButton>
-    </FluentToolbar>
-    <FluentDataGrid Items="releases.AsQueryable()" AutoFit="true">
+<ContentPage>
+    <Header>
+        <FluentLabel Typo="Typography.H3">Releases</FluentLabel>
+    </Header>
+    <Menu>
+        <FluentToolbar id="toolbar-fluent-components">
+            <FluentButton
+                IconStart="@(new Icons.Filled.Size20.Add())"
+                Appearance="Appearance.Accent"
+                OnClick="@(() => navigationManager.NavigateTo("releases/create"))">
+                Add Release
+            </FluentButton>
+        </FluentToolbar>
+    </Menu>
+    <Body>
+    <FluentDataGrid Items="releases.AsQueryable()" AutoFit="true" HeaderCellAsButtonWithMenu="true">
         <PropertyColumn Property="@(item => item.Name)" Title="Name"/>
         <PropertyColumn Property="@(item => item.ReleaseType)" Title="Type"/>
         <PropertyColumn Property="@(item => item.ArchiveConfigCount)" Title="# Archive configs"/>
         <PropertyColumn Property="@(item => item.UploadConfigCount)" Title="# Upload configs"/>
     </FluentDataGrid>
-</FluentStack>
+    </Body>
+</ContentPage>

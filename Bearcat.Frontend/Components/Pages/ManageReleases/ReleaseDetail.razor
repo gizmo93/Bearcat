@@ -1,4 +1,5 @@
 @page "/releases/{releaseId:int}"
+@using Bearcat.Frontend.Components.Shared
 @inherits OwningComponentBase
 
 @if (release is null)
@@ -6,14 +7,34 @@
     return;
 }
 
-<FluentMainLayout>
+<ContentPage>
     <Header>
-        <h3>Release</h3>
+        <FluentLabel Typo="Typography.H3">@release.Name</FluentLabel>
     </Header>
-    <SubHeader>
-        <p>@release.Name</p>
-    </SubHeader>
     <Body>
-    
+    <FluentGrid>
+        <FluentGridItem xs="12" lg="12">
+            <FluentCard>
+                <FluentGrid>
+                    <FluentGridItem lg="6" xs="6">
+                        <TitledList>
+                            <TitledListItem>
+                                <Title>Id</Title>
+                                <Content>@release.ReleaseId</Content>
+                            </TitledListItem>
+                            <TitledListItem>
+                                <Title>Name</Title>
+                                <Content>@release.Name</Content>
+                            </TitledListItem>
+                            <TitledListItem>
+                                <Title>Release type</Title>
+                                <Content>@release.ReleaseType</Content>
+                            </TitledListItem>
+                        </TitledList>
+                    </FluentGridItem>
+                </FluentGrid>
+            </FluentCard>
+        </FluentGridItem>
+    </FluentGrid>
     </Body>
-</FluentMainLayout>
+</ContentPage>

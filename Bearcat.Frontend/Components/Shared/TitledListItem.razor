@@ -1,0 +1,14 @@
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="1">
+    <FluentLabel Typo="Typography.Body" Weight="FontWeight.Bolder">@Title</FluentLabel>
+    <FluentLabel Typo="Typography.Body">@Content</FluentLabel>
+</FluentStack>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public RenderFragment Title { get; set; } = null!;
+    
+    [Parameter]
+    [EditorRequired]
+    public RenderFragment Content { get; set; } = null!;
+}
