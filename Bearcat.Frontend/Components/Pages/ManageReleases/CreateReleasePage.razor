@@ -1,58 +1,71 @@
 @page "/releases/create"
 @using BearCat.Core.Domain.ValueObjects
+@using Bearcat.Frontend.Components.Shared
 @using Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 @inherits OwningComponentBase
-<h3>Create release</h3>
 
-<EditForm EditContext="editContext" OnValidSubmit="@(() => SaveAsync())">
-    <FluentStack Orientation="Orientation.Vertical" VerticalGap="12" Width="400px">
-        <FluentTextField Label="Name" Placeholder="Name your release" @bind-Value="model.Name" />
-        <FluentSelect
-            Width="400px"
-            Label="Release type"
-            Placeholder="Select a release type"
-            @bind-Value="model.ReleaseType"
-            Items="@(Enum.GetValues<ReleaseType>().ToList())"
-            OptionValue="@(t => ((int)t).ToString())"
-            OptionText="@(t => t.ToString())">
-            <OptionTemplate Context="option">
-                <ReleaseTypeOption ReleaseType="option" />
-            </OptionTemplate>
-        </FluentSelect>
-        
-        <FluentStack Orientation="Orientation.Vertical">
-            <FluentLabel Typo="Typography.Body">Folder path</FluentLabel>
-            <FluentButton
-                BackgroundColor="@(string.IsNullOrWhiteSpace(model.FolderPath) ? "#e384a0" : "#8dcc92")"
-                OnClick="@(() => ShowSelectFolderDialogAsync())">
-                @if (string.IsNullOrWhiteSpace(model.FolderPath))
-                {
-                    <span>Select a folder</span>
-                }
-                else
-                {
-                    @model.FolderPath
-                }
-            </FluentButton>
-        </FluentStack>
-        <div style="color: var(--error);">
-            <ValidationMessage For="@(() => model.Name)" />
-            <ValidationMessage For="@(() => model.ReleaseType)" />
-            <ValidationMessage For="@(() => model.FolderPath)" />
-        </div>
-        <FluentStack 
-            VerticalGap="50"
-            Orientation="Orientation.Horizontal"
-            HorizontalAlignment="HorizontalAlignment.Right">
-            <FluentButton
-                OnClick="@(() => navigationManager.NavigateTo("releases"))">
-                Abort
-            </FluentButton>
-            <FluentButton
-                Type="ButtonType.Submit"
-                IconStart="@(new Size20.Save())">
-                Create release
-            </FluentButton>
-        </FluentStack>
-    </FluentStack>
+<ContentPage>
+    <Header>
+        <FluentLabel Typo="Typography.H3">Create release</FluentLabel>
+    </Header>
+    <Body>
+    <EditForm EditContext="editContext" OnValidSubmit="@(() => SaveAsync())">
+    <FluentGrid>
+        <FluentGridItem xs="12" lg="8">
+            <FluentCard>
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
+                    <FluentTextField Label="Name" Placeholder="Name your release" @bind-Value="model.Name"/>
+                    <FluentSelect
+                        Width="400px"
+                        Label="Release type"
+                        Placeholder="Select a release type"
+                        @bind-Value="model.ReleaseType"
+                        Items="@(Enum.GetValues<ReleaseType>().ToList())"
+                        OptionValue="@(t => ((int)t).ToString())"
+                        OptionText="@(t => t.ToString())">
+                        <OptionTemplate Context="option">
+                            <ReleaseTypeOption ReleaseType="option"/>
+                        </OptionTemplate>
+                    </FluentSelect>
+
+                    <FluentStack Orientation="Orientation.Vertical">
+                        <FluentLabel Typo="Typography.Body">Folder path</FluentLabel>
+                        <FluentButton
+                            BackgroundColor="@(string.IsNullOrWhiteSpace(model.FolderPath) ? "#e384a0" : "#8dcc92")"
+                            OnClick="@(() => ShowSelectFolderDialogAsync())">
+                            @if (string.IsNullOrWhiteSpace(model.FolderPath))
+                            {
+                                <span>Select a folder</span>
+                            }
+                            else
+                            {
+                                @model.FolderPath
+                            }
+                        </FluentButton>
+                    </FluentStack>
+                    <div style="color: var(--error);">
+                        <ValidationMessage For="@(() => model.Name)"/>
+                        <ValidationMessage For="@(() => model.ReleaseType)"/>
+                        <ValidationMessage For="@(() => model.FolderPath)"/>
+                    </div>
+                    <FluentStack
+                        VerticalGap="10"
+                        Orientation="Orientation.Horizontal"
+                        HorizontalAlignment="HorizontalAlignment.Right">
+                        <FluentButton
+                            OnClick="@(() => navigationManager.NavigateTo("releases"))">
+                            Abort
+                        </FluentButton>
+                        <FluentButton
+                            Type="ButtonType.Submit"
+                            IconStart="@(new Size20.Save())">
+                            Create release
+                        </FluentButton>
+                    </FluentStack>
+                </FluentStack>
+            </FluentCard>
+        </FluentGridItem>
+    </FluentGrid>
 </EditForm>
+    </Body>
+</ContentPage>
