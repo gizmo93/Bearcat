@@ -1,26 +1,28 @@
 @page "/releases"
-@using Bearcat.Frontend.Components.Shared
 
-<ContentPage>
-    <Header>
-        <FluentLabel Typo="Typography.H3">Releases</FluentLabel>
-    </Header>
-    <Menu>
-        <FluentToolbar id="toolbar-fluent-components">
-            <FluentButton
-                IconStart="@(new Icons.Filled.Size20.Add())"
-                Appearance="Appearance.Accent"
-                OnClick="@(() => navigationManager.NavigateTo("releases/create"))">
-                Add Release
-            </FluentButton>
-        </FluentToolbar>
-    </Menu>
-    <Body>
-    <FluentDataGrid Items="releases.AsQueryable()" AutoFit="true" HeaderCellAsButtonWithMenu="true">
-        <PropertyColumn Property="@(item => item.Name)" Title="Name"/>
-        <PropertyColumn Property="@(item => item.ReleaseType)" Title="Type"/>
-        <PropertyColumn Property="@(item => item.ArchiveConfigCount)" Title="# Archive configs"/>
-        <PropertyColumn Property="@(item => item.UploadConfigCount)" Title="# Upload configs"/>
-    </FluentDataGrid>
-    </Body>
-</ContentPage>
+<PageTitle>Releases</PageTitle>
+
+
+<MudStack Spacing="3" AlignItems="AlignItems.Start">
+    <MudText Typo="Typo.h4">Releases</MudText>
+    <MudButton
+        Variant="Variant.Filled"
+        OnClick="@(() => ShowAddReleaseDialogAsync())"
+        StartIcon="@Icons.Material.Filled.Add">
+        Add release
+    </MudButton>
+    <MudDataGrid Items="releases" SortMode="SortMode.Multiple">
+        <Columns>
+            <TemplateColumn Title="Name" Sortable="true" SortBy="@(row => row.Name)">
+                <CellTemplate>
+                    <MudLink OnClick="@(() => navigationManager.NavigateTo($"releases/{context.Item.ReleaseId}"))">
+                        @context.Item.Name
+                    </MudLink>
+                </CellTemplate>
+            </TemplateColumn>
+            <PropertyColumn Property="@(row => row.ReleaseType)" Title="Release type"/>
+            <PropertyColumn Property="@(row => row.ArchiveConfigCount)" Title="# Archive configs"/>
+            <PropertyColumn Property="@(row => row.UploadConfigCount)" Title="# Upload configs"/>
+        </Columns>
+    </MudDataGrid>
+</MudStack>

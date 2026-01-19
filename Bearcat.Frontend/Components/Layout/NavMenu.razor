@@ -1,17 +1,8 @@
-﻿@rendermode InteractiveServer
+﻿
+<MudNavMenu>
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+    <MudNavLink Href="hoster-registrations" Icon="@Icons.Material.Filled.Key" Match="NavLinkMatch.Prefix">Hoster registrations</MudNavLink>
+    <MudNavLink Href="releases" Icon="@Icons.Material.Filled.UploadFile" Match="NavLinkMatch.Prefix">Releases</MudNavLink>
+</MudNavMenu>
 
-<div class="navmenu">
-    <input type="checkbox" title="Menu expand/collapse toggle" id="navmenu-toggle" class="navmenu-icon" />
-    <label for="navmenu-toggle" class="navmenu-icon"><FluentIcon Value="@(new Icons.Regular.Size20.Navigation())" Color="Color.Fill" /></label>
-    <nav class="sitenav" aria-labelledby="main-menu">
-        <FluentNavMenu Id="main-menu" Collapsible="true" Width="250" Title="Navigation menu" @bind-Expanded="expanded" CustomToggle="true">
-            <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Icons.Regular.Size20.Home())" IconColor="Color.Accent">Home</FluentNavLink>
-            <FluentNavLink Href="hoster-registrations">Hoster registrations</FluentNavLink>
-            <FluentNavLink Href="releases">Releases</FluentNavLink>
-        </FluentNavMenu>
-    </nav>
-</div>
 
-@code {
-    private bool expanded = true;
-}

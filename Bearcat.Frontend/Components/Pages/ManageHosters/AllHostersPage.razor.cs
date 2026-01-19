@@ -1,18 +1,22 @@
 ﻿using BearCat.Core.Domain.UseCases.ManageHosters;
 using BearCat.Core.Domain.UseCases.ManageHosters.Dto;
 using BearCat.Core.Domain.UseCases.ManageHosters.Repositories;
-using Microsoft.FluentUI.AspNetCore.Components;
+using MudBlazor;
 
 namespace Bearcat.Frontend.Components.Pages.ManageHosters;
 
 public partial class AllHostersPage(
     IHosterConfigurationReadRepository readRepository,
     IDialogService dialogService,
-    IToastService toastService)
+    ISnackbar snackbar)
 
 {
-    private IQueryable<HosterRegistrationDto> hosters = Enumerable.Empty<HosterRegistrationDto>().AsQueryable();
+    private IReadOnlyList<HosterRegistrationDto> hosters = [];
     private HosterRegistrationService hosterRegistrationService = null!;
+    
+    private MudMenu contextMenu = null!;
+
+    private HosterRegistrationDto? contextMenuRow;
     
     protected override async Task OnInitializedAsync()
     {
@@ -22,21 +26,29 @@ public partial class AllHostersPage(
 
     private async Task LoadHostersAsync()
     {
-        hosters = (await readRepository.GetAllRegistrationsAsync()).AsQueryable();
+        hosters = await readRepository.GetAllRegistrationsAsync();
+    }
+    
+    private async Task OpenMenuContent(DataGridRowClickEventArgs<HosterRegistrationDto> args)
+    {
+        contextMenuRow = args.Item;
+        await contextMenu.OpenMenuAsync(args.MouseEventArgs);
     }
 
     private async Task ShowAddDialogAsync()
     {
         var formModel = new HosterFormModel();
-        var dialog = await dialogService.ShowDialogAsync<AddOrEditHoster>(formModel,
-            new DialogParameters
-            {
-                Title = "Add hoster",
-                Modal = true,
-                PreventDismissOnOverlayClick = true,
-            });
+        
+        var parameters = new DialogParameters<AddOrEditHoster> { { x => x.Content, formModel } };
+        
+        var dialog = await dialogService.ShowAsync<AddOrEditHoster>("Add Hoster", parameters, new DialogOptions
+        {
+            BackdropClick = false,
+            FullWidth = true,
+        });
 
         await dialog.Result;
+        await LoadHostersAsync();
         await LoadHostersAsync();
     }
     
@@ -50,14 +62,14 @@ public partial class AllHostersPage(
             IsEdit = true,
             HosterRegistrationId = hosterRegistration.Id,
         };
+
+        var parameters = new DialogParameters<AddOrEditHoster> { { x => x.Content, formModel } };
         
-        var dialog = await dialogService.ShowDialogAsync<AddOrEditHoster>(formModel,
-            new DialogParameters
-            {
-                Title = $"Edit {hosterRegistration.Name}",
-                Modal = true,
-                PreventDismissOnOverlayClick = true,
-            });
+        var dialog = await dialogService.ShowAsync<AddOrEditHoster>($"Edit {hosterRegistration.Name}", parameters, new DialogOptions
+        {
+            BackdropClick = false,
+            FullWidth = true,
+        });
 
         await dialog.Result;
         await LoadHostersAsync();
@@ -68,7 +80,7 @@ public partial class AllHostersPage(
         await hosterRegistrationService.ToggleIsActiveAsync(hoster.Id);
         
         var status = hoster.IsActive ? "deactivated" : "activated";
-        toastService.ShowSuccess($"Hoster registration {hoster.Name} {status}");
+        snackbar.Add($"Hoster registration {hoster.Name} {status}", Severity.Success);
         await LoadHostersAsync();
     }
 
@@ -77,16 +89,16 @@ public partial class AllHostersPage(
         var message = $"Are you sure you want to delete hoster registration {hoster.Name}?" +
                       $"\nBe careful, as it will also remove all uploads related to that hoster registration.";
         
-        var dialog = await dialogService.ShowConfirmationAsync(
+        var result = await dialogService.ShowMessageBoxAsync(title: $"Delete {hoster.Name}",
             message: message,
-            title: "Delete hoster registration");
-        
-        var result = await dialog.Result;
+            yesText: "Delete",
+            noText: "Cancel");
 
-        if (!result.Cancelled)
+        if (result == true)
         {
-            await hosterRegistrationService.RemoveAsync(id: hoster.Id);
+            await hosterRegistrationService.RemoveAsync(hoster.Id);
         }
+        
         await LoadHostersAsync();   
     }
     
@@ -94,17 +106,13 @@ public partial class AllHostersPage(
     {
         var result = await hosterRegistrationService.TryLoginAsync(hoster.Id);
         
-        const int timeoutMilliseconds = 10_000;
-
         if (result.IsSuccess)
         {
-            toastService.ShowSuccess(
-                $"Login for registration {hoster.Name} successful", timeout: timeoutMilliseconds);
+            snackbar.Add($"Login for registration {hoster.Name} successful", Severity.Success);
         }
         else
         {
-            toastService.ShowError(
-                $"Login for registration {hoster.Name} failed: {result.ErrorMessage}", timeout: timeoutMilliseconds);
+            snackbar.Add($"Login for registration {hoster.Name} failed: {result.ErrorMessage}", Severity.Error);
         }
     }
 }

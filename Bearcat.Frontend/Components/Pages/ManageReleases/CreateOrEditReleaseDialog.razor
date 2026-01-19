@@ -1,0 +1,62 @@
+@page "/releases/create"
+@using BearCat.Core.Domain.ValueObjects
+@inherits OwningComponentBase
+
+<EditForm EditContext="editContext" OnValidSubmit="@(() => SaveAsync())">
+    <MudDialog>
+        <TitleContent>
+            <MudStack Row>
+                @if (formModel.IsEdit)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Edit" />
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Add" />
+                }
+                @MudDialog.Title
+            </MudStack>
+        </TitleContent>
+        <DialogContent>
+            <MudStack>
+                <MudTextField Label="Name" Placeholder="Name your release" @bind-Value="formModel.Name"/>
+                
+                <MudSelect
+                    Label="Release type"
+                    Placeholder="Select a release type"
+                    @bind-Value="formModel.ReleaseType">
+                    @foreach (var releaseType in Enum.GetValues<ReleaseType>())
+                    {
+                        <MudSelectItem Value="@((ReleaseType?)releaseType)">@releaseType</MudSelectItem>
+                    }
+                </MudSelect>
+                
+                <MudStack Row>
+                    <MudTextField Label="Release folder" Disabled @bind-Value="formModel.FolderPath" />
+                    <MudButton
+                        OnClick="@(() => ShowSelectFolderDialogAsync())" 
+                        Variant="Variant.Filled"
+                        Size="Size.Small"
+                        IconColor="@(string.IsNullOrWhiteSpace(formModel.FolderPath) ? Color.Warning : Color.Success)"
+                        StartIcon="@(string.IsNullOrWhiteSpace(formModel.FolderPath) ? Icons.Material.Filled.Error : Icons.Material.Filled.Check)">
+                        Select release folder
+                    </MudButton>
+                </MudStack>
+                
+                <div style="color: red;">
+                    <ValidationMessage For="@(() => formModel.Name)"/>
+                    <ValidationMessage For="@(() => formModel.ReleaseType)"/>
+                    <ValidationMessage For="@(() => formModel.FolderPath)"/>
+                </div>
+            </MudStack>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Color="Color.Secondary" OnClick="@(() => MudDialog.Cancel())" StartIcon="@Icons.Material.Filled.Cancel">
+                Cancel
+            </MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save">
+                Create release
+            </MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>

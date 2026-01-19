@@ -1,60 +1,62 @@
-@using BearCat.Core.Domain.UseCases.ManageUploads
-
-<FluentDialogHeader ShowDismiss="true">
-    <FluentStack VerticalAlignment="VerticalAlignment.Center">
-        <FluentIcon Value="@(new Icons.Regular.Size24.WindowApps())" />
-        <FluentLabel Typo="Typography.PaneHeader">
-            @Dialog!.Instance.Parameters.Title
-        </FluentLabel>
-    </FluentStack>
-</FluentDialogHeader>   
-
-<FluentDialogBody>
-    <EditForm EditContext="editContext">
-        <FluentStack Orientation="Orientation.Vertical">
-            <FluentTextField
-                Label="Name"
-                Placeholder="Enter a name for the configuration"
-                @bind-Value="Content.Name" />
-        
-            <FluentSelect
-                Label="Hoster"
-                Placeholder="Select a hoster"
-                Items="hosterReadModels"
-                Disabled="Content.IsEdit"
-                OptionValue="@(row => row?.HosterClassName)"
-                OptionText="@(row => row?.Name)"
-                @bind-Value="Content.FullClassName"
-                SelectedOptionChanged="@(EventCallback.Factory.Create<HosterReadModel?>(this, value => OnSelectedHosterChanged(value)))"/>
-            
-            @if (selectedHoster is not null)
-            {
-                @foreach (var key in selectedHoster.ConfigurationKeys)
+<EditForm EditContext="editContext" OnValidSubmit="@(() => SaveAsync())">
+    <MudDialog>
+        <TitleContent>
+            <MudStack Row>
+                @if (Content.IsEdit)
                 {
-                    <FluentTextField
-                        Label="@key"
-                        Value="@Content.Configuration.GetValueOrDefault(key)"
-                        ValueChanged="@(EventCallback.Factory.Create<string?>(this, value => OnConfigurationValueChanged(key, value)))"/>
+                    <MudIcon Icon="@Icons.Material.Filled.Edit"/>
                 }
-            }
-            
-            <div style="color: var(--error);">
-                <ValidationMessage For="@(() => Content.Name)" />
-                <ValidationMessage For="@(() => Content.FullClassName)" />
-                <ValidationMessage For="@(() => Content.Configuration)" />
-            </div>
-        </FluentStack>
-    </EditForm>
-</FluentDialogBody>
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Add"/>
+                }
+                @MudDialog.Title
+            </MudStack>
+        </TitleContent>
+        <DialogContent>
+            <MudStack>
+                <MudTextField
+                    Label="Name"
+                    Placeholder="Enter a name for the configuration"
+                    @bind-Value="Content.Name"/>
 
-<FluentDialogFooter>
-    <FluentButton Appearance="Appearance.Accent"
-                  Disabled="@(!editContext.Validate())"
-                  OnClick="@SaveAsync">
-        Save
-    </FluentButton>
-    <FluentButton Appearance="Appearance.Neutral"
-                  OnClick="@CancelAsync">
-        Cancel
-    </FluentButton>
-</FluentDialogFooter>
+                <MudSelect
+                    Label="Hoster"
+                    Placeholder="Select a hoster"
+                    Disabled="Content.IsEdit"
+                    @bind-Value="Content.FullClassName"
+                    @bind-Value:after="@(OnSelectedHosterChanged)">
+                    @foreach (var hoster in hosterReadModels)
+                    {
+                        <MudSelectItem Value="@hoster.HosterClassName">@hoster.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                @if (selectedHoster is not null)
+                {
+                    @foreach (var key in selectedHoster.ConfigurationKeys)
+                    {
+                        <MudTextField
+                            Label="@key"
+                            Value="@Content.Configuration.GetValueOrDefault(key)"
+                            ValueChanged="@(EventCallback.Factory.Create<string?>(this, value => OnConfigurationValueChanged(key, value)))"/>
+                    }
+                }
+
+                <div style="color: red;">
+                    <ValidationMessage For="@(() => Content.Name)"/>
+                    <ValidationMessage For="@(() => Content.FullClassName)"/>
+                    <ValidationMessage For="@(() => Content.Configuration)"/>
+                </div>
+            </MudStack>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Color="Color.Secondary" OnClick="@(() => Cancel())" StartIcon="@Icons.Material.Filled.Cancel">
+                Cancel
+            </MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save">
+                Save
+            </MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>

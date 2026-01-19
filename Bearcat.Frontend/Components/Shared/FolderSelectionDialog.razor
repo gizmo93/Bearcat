@@ -1,28 +1,37 @@
-<FluentDialogHeader ShowDismiss="true">
-    <FluentStack VerticalAlignment="VerticalAlignment.Center">
-        <FluentIcon Value="@(new Icons.Regular.Size24.WindowApps())" />
-        <FluentLabel Typo="Typography.PaneHeader">
-            @Dialog.Instance.Parameters.Title
-        </FluentLabel>
-    </FluentStack>
-</FluentDialogHeader>   
-
-<FluentDialogBody>
-    <FluentTreeView Items="@directoryTree" @bind-SelectedItem="@selectedFolderPath">
-        <ItemTemplate>
-            @context.Text
-        </ItemTemplate>
-    </FluentTreeView>
-</FluentDialogBody>
-
-<FluentDialogFooter>
-    <FluentButton Appearance="Appearance.Accent"
-                  Disabled="@(selectedFolderPath is null)"
-                  OnClick="@(async () => await OnSaveAsync())">
-        Select folder
-    </FluentButton>
-    <FluentButton Appearance="Appearance.Neutral"
-                  OnClick="@(() => Dialog.CancelAsync())">
-        Cancel
-    </FluentButton>
-</FluentDialogFooter>
+<MudDialog>
+    <TitleContent>
+        @MudDialog.Title
+    </TitleContent>
+    <DialogContent>
+        <MudTreeView
+            Hover
+            @bind-SelectedValue="selectedItem"
+            SelectionMode="SelectionMode.SingleSelection"
+            Items="initialTreeItems"
+            ServerData="@GetTreeViewItems"
+            AutoExpand="true">
+            <ItemTemplate>
+                <MudTreeViewItem 
+                    Text="@context.Text"
+                    Value="@context.Value" 
+                    Items="@context.Children" 
+                    CanExpand="@context.Expandable"
+                    Icon="@context.Icon" 
+                    LoadingIconColor="Color.Info" 
+                />
+            </ItemTemplate>
+        </MudTreeView>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Secondary" OnClick="@(() => MudDialog.Close())" StartIcon="@Icons.Material.Filled.Cancel">
+            Cancel
+        </MudButton>
+        <MudButton
+            Color="Color.Primary"
+            Disabled="@string.IsNullOrWhiteSpace(selectedItem)"
+            OnClick="@(() => Save())"
+            StartIcon="@Icons.Material.Filled.Save">
+            Save
+        </MudButton>
+    </DialogActions>
+</MudDialog>

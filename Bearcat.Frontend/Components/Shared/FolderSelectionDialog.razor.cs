@@ -1,76 +1,70 @@
 ﻿using BearCat.Core.Domain.Abstractions;
 using Microsoft.AspNetCore.Components;
-using Microsoft.FluentUI.AspNetCore.Components;
-using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular;
+using MudBlazor;
 
 namespace Bearcat.Frontend.Components.Shared;
 
 public partial class FolderSelectionDialog(
     IFileSystemService fileSystemService)
-    : ComponentBase, IDialogContentComponent<string>
+    : ComponentBase
 {
-    [Parameter] 
-    public string Content { get; set; } = null!;
+    [Parameter]
+    public string BaseFolderPath { get; set; } = null!;
     
-    [CascadingParameter] 
-    public FluentDialog Dialog { get; set; } = null!;
+    [CascadingParameter]
+    public IMudDialogInstance MudDialog { get; set; } = null!;
+    
+    private List<TreeItemData<string?>> initialTreeItems = [];
 
-    private ITreeViewItem? selectedFolderPath;
-
-    private List<TreeViewItem> directoryTree = new();
-
-    private readonly Icon iconCollapsed = new Size20.Folder();
-    private readonly Icon iconExpanded = new Size20.FolderOpen();
+    private string? selectedItem;
 
     protected override void OnInitialized()
     {
-        directoryTree = [GetDirectoryTree()];
+        InitializeTreeData();
     }
 
-    private async Task OnSaveAsync()
+    private void Save()
     {
-        try
+        var result = !string.IsNullOrEmpty(selectedItem)
+            ? DialogResult.Ok(selectedItem)
+            : DialogResult.Cancel();
+        
+        MudDialog.Close(result);
+    }
+
+    private void InitializeTreeData()
+    {
+        var item = CreateTreeViewItem(BaseFolderPath);
+        initialTreeItems = [item];
+    }
+
+    private Task<IReadOnlyCollection<TreeItemData<string?>>> GetTreeViewItems(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
         {
-            await Dialog.CloseAsync(DialogResult.Ok(selectedFolderPath!.Id));
+            return Task.FromResult<IReadOnlyCollection<TreeItemData<string?>>>(new List<TreeItemData<string?>>());
         }
-        catch (ObjectDisposedException)
-        {
-        }
-    }
-
-    private TreeViewItem GetDirectoryTree()
-    {
-        var rootPath = Content;
-        var item = CreateTreeViewItem(rootPath);
-        return item;
-    }
-
-    private Task OnExpandedAsync(TreeViewItemExpandedEventArgs e)
-    {
-        e.CurrentItem.Items = e.Expanded
-            ? GetTreeViewItems(e.CurrentItem.Id)
-            : TreeViewItem.LoadingTreeViewItems;
-
-        return Task.CompletedTask;
-    }
-
-    private List<TreeViewItem> GetTreeViewItems(string path)
-    {
-        return fileSystemService.GetFoldersInPath(path)
+        
+        var items = fileSystemService.GetFoldersInPath(path)
             .Select(CreateTreeViewItem)
             .ToList();
+
+        return Task.FromResult<IReadOnlyCollection<TreeItemData<string?>>>(items);
     }
     
-    private TreeViewItem CreateTreeViewItem(string path)
+    private static TreeItemData<string?> CreateTreeViewItem(string path)
     {
-        return new TreeViewItem
+        return new TreeItemData<string?>
         {
-            Id = path,
-            Text = Path.GetFileName(path),
-            Items = TreeViewItem.LoadingTreeViewItems,
-            IconCollapsed = iconCollapsed,
-            IconExpanded = iconExpanded,
-            OnExpandedAsync = OnExpandedAsync
+            Text = string.IsNullOrWhiteSpace(Path.GetFileName(path))
+                ? path
+                : Path.GetFileName(path),
+            Icon = Icons.Material.Filled.Folder,
+            Value = path,
+            Expanded = false,
+            Expandable = true,
+            Selected = false,
+            Visible = true,
         };
     }
 }
