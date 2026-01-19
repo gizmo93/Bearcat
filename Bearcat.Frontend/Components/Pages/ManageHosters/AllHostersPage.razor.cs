@@ -39,7 +39,7 @@ public partial class AllHostersPage(
     {
         var formModel = new HosterFormModel();
         
-        var parameters = new DialogParameters<AddOrEditHoster> { { x => x.Content, formModel } };
+        var parameters = new DialogParameters<AddOrEditHoster> { { x => x.FormModel, formModel } };
         
         var dialog = await dialogService.ShowAsync<AddOrEditHoster>("Add Hoster", parameters, new DialogOptions
         {
@@ -63,7 +63,7 @@ public partial class AllHostersPage(
             HosterRegistrationId = hosterRegistration.Id,
         };
 
-        var parameters = new DialogParameters<AddOrEditHoster> { { x => x.Content, formModel } };
+        var parameters = new DialogParameters<AddOrEditHoster> { { x => x.FormModel, formModel } };
         
         var dialog = await dialogService.ShowAsync<AddOrEditHoster>($"Edit {hosterRegistration.Name}", parameters, new DialogOptions
         {

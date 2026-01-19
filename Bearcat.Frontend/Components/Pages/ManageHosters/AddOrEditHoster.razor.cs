@@ -13,7 +13,7 @@ public partial class AddOrEditHoster(
     : ComponentBase
 {
     [Parameter] 
-    public HosterFormModel Content { get; set; } = new();
+    public HosterFormModel FormModel { get; set; } = new();
 
     [CascadingParameter]
     public IMudDialogInstance MudDialog { get; set; } = null!;
@@ -29,32 +29,32 @@ public partial class AddOrEditHoster(
     protected override void OnInitialized()
     {
         hosterReadModels = hosterFactory.GetHosterReadModels();
-        editContext = new EditContext(Content);
+        editContext = new EditContext(FormModel);
         editContext.OnValidationRequested += HandleValidationRequested;
         messageStore = new(editContext);
 
-        if (Content.IsEdit)
+        if (FormModel.IsEdit)
         {
-            selectedHoster = hosterReadModels.First(h => h.HosterClassName == Content.FullClassName);
+            selectedHoster = hosterReadModels.First(h => h.HosterClassName == FormModel.FullClassName);
         }
     }
     
     private async Task SaveAsync()
     {
-        if (!Content.IsEdit)
+        if (!FormModel.IsEdit)
         {
             await hosterRegistrationService.RegisterHosterAsync(
-                name: Content.Name,
+                name: FormModel.Name,
                 isActive: true,
-                configuration: Content.Configuration,
-                hosterClassName: Content.FullClassName);   
+                configuration: FormModel.Configuration,
+                hosterClassName: FormModel.FullClassName);   
         }
         else
         {
             await hosterRegistrationService.UpdateRegistrationAsync(
-                Content.HosterRegistrationId!.Value,
-                Content.Name,
-                Content.Configuration);
+                FormModel.HosterRegistrationId!.Value,
+                FormModel.Name,
+                FormModel.Configuration);
         }
 
         MudDialog.Close();
@@ -70,38 +70,38 @@ public partial class AddOrEditHoster(
     {
         messageStore!.Clear();
 
-        if (string.IsNullOrWhiteSpace(Content.Name))
+        if (string.IsNullOrWhiteSpace(FormModel.Name))
         {
-            messageStore.Add(() => Content.Name, "Name is required");
+            messageStore.Add(() => FormModel.Name, "Name is required");
         }
         
         if (selectedHoster is null)
         {
-            messageStore.Add(() => Content.FullClassName, "You must select a hoster");
+            messageStore.Add(() => FormModel.FullClassName, "You must select a hoster");
         }
 
         if (selectedHoster is not null)
         {
             var missingConfigs = selectedHoster.ConfigurationKeys
-                .Except(Content.Configuration.Keys)
+                .Except(FormModel.Configuration.Keys)
                 .ToList();
 
             foreach (var config in missingConfigs)
             {
-                messageStore.Add(() => Content.Configuration, $"Configuration '{config}' is required");
+                messageStore.Add(() => FormModel.Configuration, $"Configuration '{config}' is required");
             }
         }
     }
 
     private void OnSelectedHosterChanged()
     {
-        selectedHoster = string.IsNullOrEmpty(Content.FullClassName)
+        selectedHoster = string.IsNullOrEmpty(FormModel.FullClassName)
             ? null
-            : hosterReadModels.First(h => h.HosterClassName == Content.FullClassName);
+            : hosterReadModels.First(h => h.HosterClassName == FormModel.FullClassName);
 
-        if (!Content.IsEdit)
+        if (!FormModel.IsEdit)
         {
-            Content.Configuration = new Dictionary<string, string>();
+            FormModel.Configuration = new Dictionary<string, string>();
         }
     }
     
@@ -109,11 +109,11 @@ public partial class AddOrEditHoster(
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            Content.Configuration.Remove(key);
+            FormModel.Configuration.Remove(key);
             return;
         }
         
-        Content.Configuration[key] = value!;
+        FormModel.Configuration[key] = value!;
     }
 }
 
