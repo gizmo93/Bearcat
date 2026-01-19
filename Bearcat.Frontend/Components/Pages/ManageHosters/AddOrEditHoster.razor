@@ -2,7 +2,7 @@
     <MudDialog>
         <TitleContent>
             <MudStack Row>
-                @if (Content.IsEdit)
+                @if (FormModel.IsEdit)
                 {
                     <MudIcon Icon="@Icons.Material.Filled.Edit"/>
                 }
@@ -18,13 +18,13 @@
                 <MudTextField
                     Label="Name"
                     Placeholder="Enter a name for the configuration"
-                    @bind-Value="Content.Name"/>
+                    @bind-Value="FormModel.Name"/>
 
                 <MudSelect
                     Label="Hoster"
                     Placeholder="Select a hoster"
-                    Disabled="Content.IsEdit"
-                    @bind-Value="Content.FullClassName"
+                    Disabled="FormModel.IsEdit"
+                    @bind-Value="FormModel.FullClassName"
                     @bind-Value:after="@(OnSelectedHosterChanged)">
                     @foreach (var hoster in hosterReadModels)
                     {
@@ -38,15 +38,15 @@
                     {
                         <MudTextField
                             Label="@key"
-                            Value="@Content.Configuration.GetValueOrDefault(key)"
+                            Value="@FormModel.Configuration.GetValueOrDefault(key)"
                             ValueChanged="@(EventCallback.Factory.Create<string?>(this, value => OnConfigurationValueChanged(key, value)))"/>
                     }
                 }
 
                 <div style="color: red;">
-                    <ValidationMessage For="@(() => Content.Name)"/>
-                    <ValidationMessage For="@(() => Content.FullClassName)"/>
-                    <ValidationMessage For="@(() => Content.Configuration)"/>
+                    <ValidationMessage For="@(() => FormModel.Name)"/>
+                    <ValidationMessage For="@(() => FormModel.FullClassName)"/>
+                    <ValidationMessage For="@(() => FormModel.Configuration)"/>
                 </div>
             </MudStack>
         </DialogContent>
