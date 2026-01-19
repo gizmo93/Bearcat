@@ -3,27 +3,28 @@ using BearCat.Core.Domain.ValueObjects;
 using Bearcat.Frontend.Components.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.FluentUI.AspNetCore.Components;
+using MudBlazor;
 
 namespace Bearcat.Frontend.Components.Pages.ManageReleases;
 
-public partial class CreateReleasePage(
+public partial class CreateOrEditReleaseDialog(
     IDialogService dialogService,
     IConfiguration configuration,
     NavigationManager navigationManager) : OwningComponentBase
 {
-    private CreateReleaseModel model = null!;
+    [CascadingParameter]
+    public IMudDialogInstance MudDialog { get; set; } = null!;
+    
+    private ReleaseFormModel formModel = null!;
 
     private EditContext editContext = null!;
     
     private ValidationMessageStore? messageStore;
 
-    private bool isValid;
-
     protected override void OnInitialized()
     {
-        model = new CreateReleaseModel();
-        editContext = new EditContext(model);
+        formModel = new ReleaseFormModel();
+        editContext = new EditContext(formModel);
         messageStore = new ValidationMessageStore(editContext);
         editContext.OnValidationRequested += HandleValidationRequested;
     }
@@ -32,11 +33,11 @@ public partial class CreateReleasePage(
     {
         var service = ScopedServices.GetRequiredService<ReleaseService>();
 
-        var releaseType = (ReleaseType)Convert.ToInt32(model.ReleaseType);
+        var releaseType = (ReleaseType)Convert.ToInt32(formModel.ReleaseType);
         
         var id = await service.CreateAsync(
-            name: model.Name,
-            releaseFolderPath: model.FolderPath,
+            name: formModel.Name,
+            releaseFolderPath: formModel.FolderPath,
             releaseType: releaseType);
         
         navigationManager.NavigateTo("releases");
@@ -48,36 +49,44 @@ public partial class CreateReleasePage(
     {
         messageStore!.Clear();
 
-        if (string.IsNullOrWhiteSpace(model.Name))
+        if (string.IsNullOrWhiteSpace(formModel.Name))
         {
-            messageStore.Add(() => model.Name, "Name is required");
+            messageStore.Add(() => formModel.Name, "Name is required");
         }
         
-        if (string.IsNullOrWhiteSpace(model.FolderPath))
+        if (string.IsNullOrWhiteSpace(formModel.FolderPath))
         {
-            messageStore.Add(() => model.FolderPath, "You must select a folder");
+            messageStore.Add(() => formModel.FolderPath, "You must select a folder");
         }
 
-        if (string.IsNullOrWhiteSpace(model.ReleaseType) || model.ReleaseType == "0")
+        if (formModel.ReleaseType is null)
         {
-            messageStore.Add(() => model.ReleaseType, "You must select a release type");
+            messageStore.Add(() => formModel.ReleaseType!, "You must select a release type");
         }
     }
 
     private async Task ShowSelectFolderDialogAsync()
     {
         var releasesPath = configuration.GetRequiredSection("ReleaseDataDirectory").Value!;
-        var dialog = await dialogService.ShowDialogAsync<FolderSelectionDialog>(
-            data: releasesPath,
-            parameters: new DialogParameters
+
+        var parameters = new DialogParameters<FolderSelectionDialog>
+        {
+            { dlg => dlg.BaseFolderPath, releasesPath }
+        };
+        
+        var dialog = await dialogService.ShowAsync<FolderSelectionDialog>(
+            "Select release folder",
+            parameters, new DialogOptions
             {
-                Title = "Select release folder", Modal = true, PreventDismissOnOverlayClick = true,
+                CloseButton = true,
+                FullWidth = true,
             });
 
         var result = await dialog.Result;
-        if (result is { Cancelled: false, Data: string selectedFolderPath })
+
+        if (result is { Canceled: false, Data: string folderPath })
         {
-            model.FolderPath = selectedFolderPath;
+            formModel.FolderPath = folderPath;
         }
     }
 }

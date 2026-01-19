@@ -10,8 +10,10 @@ public partial class ReleaseDetail(NavigationManager navigationManager)
     public int ReleaseId { get; set; }
     
     private IReleaseReadRepository releaseReadRepository = null!;
-    
+
     private ReleaseDto release = null!;
+
+    private bool isInitialized;
 
     protected override async Task OnInitializedAsync()
     {
@@ -27,6 +29,7 @@ public partial class ReleaseDetail(NavigationManager navigationManager)
         }
 
         release = releaseDto!;
+        isInitialized = true;
     }
 }
 

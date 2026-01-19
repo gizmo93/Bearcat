@@ -3,20 +3,20 @@ using BearCat.Core.Domain.UseCases.ManageHosters;
 using BearCat.Core.Domain.UseCases.ManageUploads;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.FluentUI.AspNetCore.Components;
+using MudBlazor;
 
 namespace Bearcat.Frontend.Components.Pages.ManageHosters;
 
 public partial class AddOrEditHoster(
     IHosterFactory hosterFactory,
     HosterRegistrationService hosterRegistrationService)
-    : ComponentBase, IDialogContentComponent<HosterFormModel>
+    : ComponentBase
 {
     [Parameter] 
     public HosterFormModel Content { get; set; } = new();
 
     [CascadingParameter]
-    public FluentDialog? Dialog { get; set; }
+    public IMudDialogInstance MudDialog { get; set; } = null!;
     
     private IReadOnlyList<HosterReadModel> hosterReadModels = [];
 
@@ -32,15 +32,15 @@ public partial class AddOrEditHoster(
         editContext = new EditContext(Content);
         editContext.OnValidationRequested += HandleValidationRequested;
         messageStore = new(editContext);
+
+        if (Content.IsEdit)
+        {
+            selectedHoster = hosterReadModels.First(h => h.HosterClassName == Content.FullClassName);
+        }
     }
     
     private async Task SaveAsync()
     {
-        if (!editContext.Validate())
-        {
-            return;
-        }
-
         if (!Content.IsEdit)
         {
             await hosterRegistrationService.RegisterHosterAsync(
@@ -56,13 +56,13 @@ public partial class AddOrEditHoster(
                 Content.Name,
                 Content.Configuration);
         }
-        
-        await Dialog!.CloseAsync(Content);
+
+        MudDialog.Close();
     }
 
-    private async Task CancelAsync()
+    private void Cancel()
     {
-        await Dialog!.CancelAsync();
+        MudDialog.Cancel();
     }
     
     private void HandleValidationRequested(object? sender,
@@ -93,9 +93,11 @@ public partial class AddOrEditHoster(
         }
     }
 
-    private void OnSelectedHosterChanged(HosterReadModel? hoster)
+    private void OnSelectedHosterChanged()
     {
-        selectedHoster = hoster;
+        selectedHoster = string.IsNullOrEmpty(Content.FullClassName)
+            ? null
+            : hosterReadModels.First(h => h.HosterClassName == Content.FullClassName);
 
         if (!Content.IsEdit)
         {

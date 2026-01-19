@@ -1,59 +1,60 @@
 @page "/hoster-registrations"
+@using BearCat.Core.Domain.UseCases.ManageHosters.Dto
 @inherits OwningComponentBase
-@using Bearcat.Frontend.Components.Shared
-@using Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 
-<ContentPage>
-    <Header>
-        <FluentLabel Typo="Typography.H3">Hoster Registrations</FluentLabel>
-    </Header>
-    <Menu>
-        <FluentToolbar id="toolbar-fluent-components">
-            <FluentButton
-                IconStart="@(new Icons.Filled.Size20.Add())"
-                Appearance="Appearance.Accent"
-                OnClick="@(ShowAddDialogAsync)">
-                Add Hoster
-            </FluentButton>
-        </FluentToolbar>
-    </Menu>
-    <Body>
-    <FluentDataGrid Items="hosters" AutoFit="true" MultiLine="true">
-        <PropertyColumn Property="@(row => row.Name)" Title="Name"/>
-        <PropertyColumn Property="@(row => row.HosterName)" Title="Hoster"/>
-        <TemplateColumn Title="Is active">
-            @(context.IsActive ? "Yes" : "No")
-        </TemplateColumn>
-        <TemplateColumn Title="Config">
-            <FluentDataGrid Items="@context.Configuration.AsQueryable()">
-                <TemplateColumn Title="Name" Context="item">
-                    @item.Key
-                </TemplateColumn>
-                <TemplateColumn Title="Value" Context="item">
-                    @item.Value
-                </TemplateColumn>
-            </FluentDataGrid>
-        </TemplateColumn>
-        <TemplateColumn>
-            <FluentStack>
-                <FluentButton OnClick="@(() => TryLoginAsync(context))">Try login</FluentButton>
-                <FluentButton IconStart="@(new Size20.Edit())" Appearance="Appearance.Neutral" Title="Edit"
-                              OnClick="@(() => ShowEditDialogAsync(context))"/>
-                <FluentButton IconStart="@(new Size20.Delete())" Appearance="Appearance.Neutral" Title="Delete"
-                              OnClick="@(() => DeleteAsync(context))"/>
+<PageTitle>Hoster registrations</PageTitle>
 
-                @if (context.IsActive)
-                {
-                    <FluentButton IconStart="@(new Size20.Stop())" Appearance="Appearance.Neutral" Title="Disable"
-                                  OnClick="@(() => ToggleIsActiveAsync(context))"/>
-                }
-                else
-                {
-                    <FluentButton IconStart="@(new Size20.Play())" Appearance="Appearance.Neutral" Title="Enable"
-                                  OnClick="@(() => ToggleIsActiveAsync(context))"/>
-                }
-            </FluentStack>
-        </TemplateColumn>
-    </FluentDataGrid>
-    </Body>
-</ContentPage>
+<MudStack AlignItems="AlignItems.Start" Spacing="3">
+    <MudText Typo="Typo.h4">Hoster registrations</MudText>
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => ShowAddDialogAsync())">
+        Add Hoster
+    </MudButton>
+    <MudDataGrid 
+        T="HosterRegistrationDto"
+        Items="hosters"
+        Hover
+        SortMode="SortMode.Multiple"
+        RowContextMenuClick="@(OpenMenuContent)">
+        <Columns>
+            <PropertyColumn Property="@(row => row.Name)" Title="Name"/>
+            <PropertyColumn Property="@(row => row.HosterName)" Title="Hoster name"/>
+            <TemplateColumn Title="Is Active" SortBy="@(row => row.IsActive)" Sortable="true">
+                <CellTemplate>
+                    @(context.Item.IsActive ? "Yes" : "No")
+                </CellTemplate>
+            </TemplateColumn>
+            <TemplateColumn Title="Config">
+                <CellTemplate>
+                    <MudPaper>
+                        <MudTable Items="context.Item.Configuration">
+                            <HeaderContent>
+                                <MudTh>Name</MudTh>
+                                <MudTh>Value</MudTh>
+                            </HeaderContent>
+                            <RowTemplate Context="config">
+                                <MudTd>@config.Key</MudTd>
+                                <MudTd>@config.Value</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudPaper>
+                </CellTemplate>
+            </TemplateColumn>
+            <TemplateColumn>
+                <CellTemplate>
+                    <MudButton OnClick="@(() => TryLoginAsync(context.Item!))">Try login</MudButton>
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+    </MudDataGrid>
+    <MudMenu PositionAtCursor="true" @ref="contextMenu" id="contextMenu">
+        <MudMenuItem Icon="@Icons.Material.Filled.Edit" OnClick="@(() => ShowEditDialogAsync(contextMenuRow!))">
+            Edit @contextMenuRow!.Name
+        </MudMenuItem>
+        <MudMenuItem Icon="@(contextMenuRow!.IsActive ? Icons.Material.Filled.ToggleOff : Icons.Material.Filled.ToggleOn)" OnClick="@(() => ToggleIsActiveAsync(contextMenuRow!))">
+            @(contextMenuRow!.IsActive ? "Disable" : "Enable") @contextMenuRow!.Name
+        </MudMenuItem>
+        <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteAsync(contextMenuRow!))">
+            Delete @contextMenuRow!.Name
+        </MudMenuItem>
+    </MudMenu>
+</MudStack>

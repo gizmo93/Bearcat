@@ -1,15 +1,21 @@
 using BearCat.Core.Infrastructure.Database;
 using BearCat.Core.InversionOfControl;
 using Bearcat.Frontend.Components;
+using MudBlazor.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.FluentUI.AspNetCore.Components;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add MudBlazor services
+builder.Services.AddMudServices(cfg =>
+{
+    cfg.SnackbarConfiguration.ShowTransitionDuration = 50;
+    cfg.SnackbarConfiguration.HideTransitionDuration = 50;
+});
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-builder.Services.AddFluentUIComponents();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -28,15 +34,14 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
+
 
 app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-
 
 if (app.Environment.IsProduction())
 {
