@@ -25,7 +25,7 @@ public class ReleaseService(IReleaseWriteRepository writeRepository)
         return release.Id;
     }
     
-    public async Task UpdateAsync(int releaseId, string name, CancellationToken cancellationToken)
+    public async Task UpdateAsync(int releaseId, string name, CancellationToken cancellationToken = default)
     {
         var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
         release.Name = name;
@@ -33,7 +33,7 @@ public class ReleaseService(IReleaseWriteRepository writeRepository)
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task DeleteAsync(int releaseId, CancellationToken cancellationToken)
+    public async Task DeleteAsync(int releaseId, CancellationToken cancellationToken = default)
     {
         var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
         writeRepository.Remove(release);

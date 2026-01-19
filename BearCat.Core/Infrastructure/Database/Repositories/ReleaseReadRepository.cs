@@ -17,6 +17,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead) : IReleaseReadR
                 r.ReleaseType,
                 r.ArchiveConfigs.Count(),
                 r.UploadConfigs.Count(),
+                r.ReleaseFolderPath,
                 r.UploadConfigs
                     .Select(u =>
                         new ReleaseListDto.UploadConfigDto(

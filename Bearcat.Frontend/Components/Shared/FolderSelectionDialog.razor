@@ -11,14 +11,13 @@
             ServerData="@GetTreeViewItems"
             AutoExpand="true">
             <ItemTemplate>
-                <MudTreeViewItem 
+                <MudTreeViewItem
                     Text="@context.Text"
-                    Value="@context.Value" 
-                    Items="@context.Children" 
+                    Value="@context.Value"
+                    Items="@context.Children"
                     CanExpand="@context.Expandable"
-                    Icon="@context.Icon" 
-                    LoadingIconColor="Color.Info" 
-                />
+                    Icon="@context.Icon"
+                    LoadingIconColor="Color.Info"/>
             </ItemTemplate>
         </MudTreeView>
     </DialogContent>

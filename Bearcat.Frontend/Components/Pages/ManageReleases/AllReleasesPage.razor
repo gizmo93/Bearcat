@@ -1,4 +1,7 @@
 @page "/releases"
+@inherits OwningComponentBase
+
+@using BearCat.Core.Domain.UseCases.ManageReleases.Dto
 
 <PageTitle>Releases</PageTitle>
 
@@ -11,18 +14,28 @@
         StartIcon="@Icons.Material.Filled.Add">
         Add release
     </MudButton>
-    <MudDataGrid Items="releases" SortMode="SortMode.Multiple">
+    <MudDataGrid
+        T="ReleaseListDto"
+        Items="releases"
+        SortMode="SortMode.Multiple"
+        RowClick="@(args => navigationManager.NavigateTo($"releases/{args.Item.ReleaseId}"))"
+        ColumnResizeMode="ResizeMode.Container"
+        Hover
+        RowContextMenuClick="OpenMenuContent">
         <Columns>
-            <TemplateColumn Title="Name" Sortable="true" SortBy="@(row => row.Name)">
-                <CellTemplate>
-                    <MudLink OnClick="@(() => navigationManager.NavigateTo($"releases/{context.Item.ReleaseId}"))">
-                        @context.Item.Name
-                    </MudLink>
-                </CellTemplate>
-            </TemplateColumn>
+            <PropertyColumn Property="@(row => row.Name)" Title="Name" />
             <PropertyColumn Property="@(row => row.ReleaseType)" Title="Release type"/>
+            <PropertyColumn Property="@(row => row.ReleaseFolderPath)" Title="Folder path"/>
             <PropertyColumn Property="@(row => row.ArchiveConfigCount)" Title="# Archive configs"/>
             <PropertyColumn Property="@(row => row.UploadConfigCount)" Title="# Upload configs"/>
         </Columns>
     </MudDataGrid>
+    
+    <MudMenu PositionAtCursor="true" id="contextMenu" @ref="contextMenu">
+        <MudMenuItem
+            Icon="@Icons.Material.Filled.Delete"
+            OnClick="@(() => DeleteReleaseAsync(contextMenuRow!))">
+            Delete Release @contextMenuRow!.Name
+        </MudMenuItem>
+    </MudMenu>
 </MudStack>
