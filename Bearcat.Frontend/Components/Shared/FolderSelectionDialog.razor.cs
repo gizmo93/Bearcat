@@ -17,6 +17,10 @@ public partial class FolderSelectionDialog(
     private List<TreeItemData<string?>> initialTreeItems = [];
 
     private string? selectedItem;
+    
+    private string? searchPhrase;
+    
+    private MudTreeView<string> treeView = null!;
 
     protected override void OnInitialized()
     {
@@ -50,6 +54,32 @@ public partial class FolderSelectionDialog(
             .ToList();
 
         return Task.FromResult<IReadOnlyCollection<TreeItemData<string?>>>(items);
+    }
+    
+    private async Task OnTextChangedAsync(string? search) 
+    {
+        searchPhrase = search;
+        await treeView.FilterAsync();
+    }
+    
+    private Task<bool> MatchesName(ITreeItemData<string> item)
+    {
+        if (string.IsNullOrEmpty(searchPhrase))
+        {
+            return Task.FromResult(true);
+        }
+        
+        if (string.IsNullOrEmpty(item.Text))
+        {
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(item.Text.Contains(searchPhrase, StringComparison.OrdinalIgnoreCase));
+    }
+    
+    private static void OnItemsLoaded(ITreeItemData<string?> treeItemData, IReadOnlyCollection<ITreeItemData<string?>> children)
+    {
+        treeItemData.Children = children.ToList();
     }
     
     private static TreeItemData<string?> CreateTreeViewItem(string path)

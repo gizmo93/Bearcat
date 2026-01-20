@@ -1,16 +1,18 @@
 <EditForm EditContext="editContext" OnValidSubmit="@(() => SaveAsync())">
     <MudDialog>
         <TitleContent>
-            <MudStack Row>
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
                 @if (FormModel.IsEdit)
                 {
-                    <MudIcon Icon="@Icons.Material.Filled.Edit"/>
+                    <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Edit"/>
                 }
                 else
                 {
-                    <MudIcon Icon="@Icons.Material.Filled.Add"/>
+                    <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Add"/>
                 }
-                @MudDialog.Title
+                <MudText Typo="Typo.h6">
+                    @MudDialog.Title
+                </MudText>
             </MudStack>
         </TitleContent>
         <DialogContent>

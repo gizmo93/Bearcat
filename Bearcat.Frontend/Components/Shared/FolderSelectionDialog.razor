@@ -1,6 +1,17 @@
 <MudDialog>
     <TitleContent>
-        @MudDialog.Title
+        <MudStack Spacing="3">
+            <MudText Typo="Typo.h6">@MudDialog.Title</MudText>
+            <MudTextField
+                T="string"
+                Label="Search"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Search"
+                TextChanged="OnTextChangedAsync"
+                Immediate="true"
+                DebounceInterval="50"
+                Clearable="true"/>
+        </MudStack>
     </TitleContent>
     <DialogContent>
         <MudTreeView
@@ -9,13 +20,17 @@
             SelectionMode="SelectionMode.SingleSelection"
             Items="initialTreeItems"
             ServerData="@GetTreeViewItems"
-            AutoExpand="true">
+            AutoExpand="true"
+            @ref="treeView"
+            FilterFunc="MatchesName">
             <ItemTemplate>
                 <MudTreeViewItem
                     Text="@context.Text"
                     Value="@context.Value"
                     Items="@context.Children"
+                    ItemsChanged="@(new Action<IReadOnlyCollection<ITreeItemData<string?>>>(items => OnItemsLoaded(context, items))!)"
                     CanExpand="@context.Expandable"
+                    Visible="@context.Visible"
                     Icon="@context.Icon"
                     LoadingIconColor="Color.Info"/>
             </ItemTemplate>
