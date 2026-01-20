@@ -7,14 +7,21 @@
 <PageTitle>Releases</PageTitle>
 
 
+<MudGrid>
+    <MudItem lg="12" xs="12">
+        
+    </MudItem>
+</MudGrid>
 <MudStack Spacing="3" AlignItems="AlignItems.Start">
     <MudText Typo="Typo.h4">Releases</MudText>
-    <MudButton
-        Variant="Variant.Filled"
+    
+    <MudFab
+        Size="Size.Small"
         OnClick="@(() => ShowAddReleaseDialogAsync())"
-        StartIcon="@Icons.Material.Filled.Add">
-        Add release
-    </MudButton>
+        StartIcon="@Icons.Material.Filled.Add"
+        Color="Color.Primary"
+        Label="Add release" />
+    
     <MudDataGrid
         T="ReleaseListDto"
         Items="releases"
