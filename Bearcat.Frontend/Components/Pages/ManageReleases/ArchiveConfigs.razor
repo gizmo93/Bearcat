@@ -1,0 +1,78 @@
+@using Bearcat.Frontend.Components.Shared
+<MudCard Elevation="3">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudStack Row AlignItems="AlignItems.Center">
+                <MudIcon Icon="@Icons.Material.Filled.Archive" />
+                <MudText Typo="Typo.subtitle1">Archive configurations</MudText>
+            </MudStack>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudFab OnClick="@(() => ShowAddDialogAsync())" Color="Color.Transparent" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" />
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudStack>
+            @foreach (var config in archiveConfigs)
+            {
+                <MudCard Elevation="6">
+                    <MudCardHeader Style="overflow: scroll;">
+                        <CardHeaderContent>
+                            <MudStack AlignItems="AlignItems.Center" Row>
+                                <MudText Typo="Typo.subtitle1">@config.ArchiveNamePrefix</MudText>
+                                <MudChip T="string" Variant="Variant.Outlined">@config.ArchiverName</MudChip>
+                            </MudStack>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudMenu Color="Color.Primary" Icon="@Icons.Material.Filled.Edit">
+                                <MudMenuItem Icon="@Icons.Material.Filled.Delete">Delete config</MudMenuItem>
+                            </MudMenu>
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudStack Spacing="3">
+                            <MudStack Row Spacing="4">
+                                <MudStack Spacing="2">
+                                    <MudText Typo="Typo.caption">Archiver</MudText>
+                                    <MudText Typo="Typo.body2">@config.ArchiverName</MudText>
+                                </MudStack>
+                                <MudStack Spacing="2" AlignItems="AlignItems.Baseline">
+                                    <MudText Typo="Typo.caption">Password</MudText>
+                                    <HiddenElement>
+                                        <MudText Typo="Typo.body2">@config.ArchivePassword</MudText>
+                                    </HiddenElement>
+                                </MudStack>
+                                <MudStack Spacing="2" AlignItems="AlignItems.Baseline">
+                                    <MudText Typo="Typo.caption">Size per Archive (MB)</MudText>
+                                    <MudText Typo="Typo.body2">
+                                        <NullableElement Value="config.ArchiveFileSizeMb" />
+                                    </MudText>
+                                </MudStack>
+                            </MudStack>
+                            <MudStack Row>
+                                <MudStack Spacing="2" AlignItems="AlignItems.Baseline" Style="overflow: scroll">
+                                    <MudText Typo="Typo.caption">Archive files base path</MudText>
+                                    <MudText Typo="Typo.body2">@config.ArchiveFilesBasePath</MudText>
+                                </MudStack>
+                            </MudStack>
+                        </MudStack>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudExpansionPanel Icon="@Icons.Material.Filled.ArrowDownward" Text="Archives">
+                            <MudTable Elevation="2" Items="config.ArchiveSummaries" Dense="true">
+                                <HeaderContent>
+                                    <MudTh>Id</MudTh>
+                                    <MudTh>File count</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd>@context.ArchiveId</MudTd>
+                                    <MudTd>@context.ArchiveFileCount</MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudExpansionPanel>
+                    </MudCardActions>
+                </MudCard>
+            }
+        </MudStack>
+    </MudCardContent>
+</MudCard>

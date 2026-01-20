@@ -8,6 +8,44 @@
 
 <PageTitle>Release - @release.Name</PageTitle>
 
+
 <MudStack>
-    <MudText Typo="Typo.h4">@release.Name</MudText>
+    <MudCard Elevation="3">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudStack Row AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.h6">@release.Name</MudText>
+                    <MudChip T="string" Color="Color.Primary"
+                             Variant="Variant.Outlined">@release.ReleaseType</MudChip>
+                </MudStack>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudMenu Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Label="Edit">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Delete">Delete release</MudMenuItem>
+                </MudMenu>
+            </CardHeaderActions>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudStack>
+                <MudStack>
+                    <MudText Typo="Typo.caption">Release folder</MudText>
+                    <MudText Typo="Typo.body1">@release.ReleaseFolderPath</MudText>
+                </MudStack>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+    <MudGrid>
+        <MudItem xl="4" lg="4" md="12" sm="12" xs="12">
+            <ArchiveConfigs ReleaseId="ReleaseId" />
+        </MudItem>
+        <MudItem xl="8" lg="8" md="12" sm="12" xs="12">
+            <MudCard Elevation="3">
+                <MudCardContent>
+                    <MudStack>
+                        <MudText Typo="Typo.caption"></MudText>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
 </MudStack>
