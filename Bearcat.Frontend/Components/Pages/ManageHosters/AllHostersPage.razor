@@ -7,9 +7,14 @@
 
 <MudStack AlignItems="AlignItems.Start" Spacing="3">
     <MudText Typo="Typo.h4">Hoster registrations</MudText>
-    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => ShowAddDialogAsync())">
-        Add Hoster
-    </MudButton>
+    
+    <MudFab 
+        Size="Size.Small"
+        StartIcon="@Icons.Material.Filled.Add"
+        OnClick="@(() => ShowAddDialogAsync())"
+        Color="Color.Primary"
+        Label="Add Hoster" />
+    
     <MudDataGrid 
         T="HosterRegistrationDto"
         Items="hosters"
