@@ -62,7 +62,7 @@ public partial class FolderSelectionDialog(
         await treeView.FilterAsync();
     }
     
-    private Task<bool> MatchesName(ITreeItemData<string> item)
+    private Task<bool> MatchesName(ITreeItemData<string?> item)
     {
         if (string.IsNullOrEmpty(searchPhrase))
         {
