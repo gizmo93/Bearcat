@@ -9,4 +9,15 @@ public class ArchiverFactory(IServiceProvider serviceProvider) : IArchiverFactor
     {
         return serviceProvider.GetRequiredKeyedService<IArchiver>(name);
     }
+    
+    public IReadOnlyList<ArchiverDto> GetArchivers()
+    {
+        var archivers = serviceProvider.GetKeyedServices<IArchiver>(KeyedService.AnyKey);
+        return archivers
+            .Select(a => new ArchiverDto(
+                Name: a.Name,
+                ClassName: a.GetType().Name,
+                FileExtension: a.FileExtension))
+            .ToList();
+    }
 }

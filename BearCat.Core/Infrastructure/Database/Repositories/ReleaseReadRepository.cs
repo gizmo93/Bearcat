@@ -42,4 +42,27 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead) : IReleaseReadR
                 r.ReleaseFolderPath))
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
+
+    public async Task<IReadOnlyList<ArchiveConfigDto>> GetArchiveConfigsAsync(int releaseId,
+        CancellationToken cancellationToken)
+    {
+        return await dbRead.ArchiveConfigs
+            .AsSplitQuery()
+            .Where(a => a.ReleaseId == releaseId)
+            .OrderBy(a => a.ArchiverName)
+            .Select(a => new ArchiveConfigDto(
+                a.Id,
+                a.ArchiveFilesBasePath,
+                a.ArchiverName,
+                a.ArchiveNamePrefix,
+                a.ArchivePassword,
+                a.ArchiveFileSizeMb,
+                a.Archives
+                    .OrderByDescending(ar => ar.Id)
+                    .Select(ar => new ArchiveConfigDto.ArchiveSummary(
+                        ar.Id,
+                        ar.ArchiveFiles.Count()))
+                    .ToList()))
+            .ToListAsync(cancellationToken: cancellationToken);
+    }
 }
