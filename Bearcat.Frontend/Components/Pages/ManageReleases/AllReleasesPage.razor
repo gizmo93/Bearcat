@@ -2,6 +2,7 @@
 @inherits OwningComponentBase
 
 @using BearCat.Core.Domain.UseCases.ManageReleases.Dto
+@using BearCat.Core.Domain.ValueObjects
 
 <PageTitle>Releases</PageTitle>
 
@@ -24,7 +25,13 @@
         RowContextMenuClick="OpenMenuContent">
         <Columns>
             <PropertyColumn Property="@(row => row.Name)" Title="Name" />
-            <PropertyColumn Property="@(row => row.ReleaseType)" Title="Release type"/>
+            <TemplateColumn Title="Release type" Sortable="true" SortBy="@(row => row.ReleaseType.ToString())">
+                <CellTemplate>
+                    <MudTooltip Text="@context.Item.ReleaseType.Description">
+                        @context.Item.ReleaseType
+                    </MudTooltip>
+                </CellTemplate>
+            </TemplateColumn>
             <PropertyColumn Property="@(row => row.ReleaseFolderPath)" Title="Folder path"/>
             <PropertyColumn Property="@(row => row.ArchiveConfigCount)" Title="# Archive configs"/>
             <PropertyColumn Property="@(row => row.UploadConfigCount)" Title="# Upload configs"/>

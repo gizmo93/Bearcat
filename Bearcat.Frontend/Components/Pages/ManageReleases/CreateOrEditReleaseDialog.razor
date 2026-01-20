@@ -27,20 +27,30 @@
                     @bind-Value="formModel.ReleaseType">
                     @foreach (var releaseType in Enum.GetValues<ReleaseType>())
                     {
-                        <MudSelectItem Value="@((ReleaseType?)releaseType)">@releaseType</MudSelectItem>
+                        <MudSelectItem Value="@((ReleaseType?)releaseType)">
+                            <MudStack>
+                                <MudText Typo="Typo.body2">@releaseType</MudText>
+                                <MudText Typo="Typo.body2" Style="font-weight: lighter;">
+                                   @releaseType.Description
+                                </MudText>
+                            </MudStack>
+                        </MudSelectItem>
                     }
                 </MudSelect>
                 
-                <MudStack Row>
-                    <MudTextField Label="Release folder" Disabled @bind-Value="formModel.FolderPath" />
-                    <MudButton
-                        OnClick="@(() => ShowSelectFolderDialogAsync())" 
-                        Variant="Variant.Filled"
-                        Size="Size.Small"
-                        IconColor="@(string.IsNullOrWhiteSpace(formModel.FolderPath) ? Color.Warning : Color.Success)"
-                        StartIcon="@(string.IsNullOrWhiteSpace(formModel.FolderPath) ? Icons.Material.Filled.Error : Icons.Material.Filled.Check)">
-                        Select release folder
-                    </MudButton>
+                <MudStack>
+                    <MudText Typo="Typo.caption">Release folder</MudText>
+                    <MudStack Row>
+                        <MudTextField @bind-Value="formModel.FolderPath" Disabled/>
+                        <MudButton
+                            OnClick="@(() => ShowSelectFolderDialogAsync())"
+                            Variant="Variant.Filled"
+                            Size="Size.Small"
+                            IconColor="@(string.IsNullOrWhiteSpace(formModel.FolderPath) ? Color.Warning : Color.Success)"
+                            StartIcon="@(string.IsNullOrWhiteSpace(formModel.FolderPath) ? Icons.Material.Filled.Error : Icons.Material.Filled.Check)">
+                            Select release folder
+                        </MudButton>
+                    </MudStack>
                 </MudStack>
                 
                 <div style="color: red;">

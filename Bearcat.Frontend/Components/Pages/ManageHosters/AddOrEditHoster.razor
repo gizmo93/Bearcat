@@ -36,10 +36,25 @@
                 {
                     @foreach (var key in selectedHoster.ConfigurationKeys)
                     {
-                        <MudTextField
-                            Label="@key"
-                            Value="@FormModel.Configuration.GetValueOrDefault(key)"
-                            ValueChanged="@(EventCallback.Factory.Create<string?>(this, value => OnConfigurationValueChanged(key, value)))"/>
+                        var isPasswordField = key.ToLowerInvariant() == "password";
+                        
+                        <MudStack Row>
+                            <MudTextField
+                                Label="@key"
+                                Value="@FormModel.Configuration.GetValueOrDefault(key)"
+                                InputType="@(isPasswordField && !displayedPasswords.Contains(key) ? InputType.Password : InputType.Text)"
+                                ValueChanged="@(EventCallback.Factory.Create<string?>(this, value => OnConfigurationValueChanged(key, value)))"/>
+                            
+                            @if (isPasswordField)
+                            {
+                                <MudIconButton 
+                                    Size="Size.Small"
+                                    Icon="@(displayedPasswords.Contains(key)
+                                              ? Icons.Material.Filled.VisibilityOff
+                                              : Icons.Material.Filled.Visibility)"
+                                    OnClick="@(() => ToggleShowHidePassword(key))"/>
+                            }
+                        </MudStack>
                     }
                 }
 

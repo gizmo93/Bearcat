@@ -25,6 +25,8 @@ public partial class AddOrEditHoster(
     private EditContext editContext = null!;
     
     private ValidationMessageStore? messageStore;
+
+    private HashSet<string> displayedPasswords = [];
     
     protected override void OnInitialized()
     {
@@ -114,6 +116,16 @@ public partial class AddOrEditHoster(
         }
         
         FormModel.Configuration[key] = value!;
+    }
+    
+    private void ToggleShowHidePassword(string key)
+    {
+        if (displayedPasswords.Add(key))
+        {
+            return;
+        }
+
+        displayedPasswords.Remove(key);
     }
 }
 
