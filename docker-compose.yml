@@ -17,6 +17,11 @@ services:
     networks:
       - bearcat-network
     restart: unless-stopped
+    mem_reservation: 200m
+    mem_limit: ${BEARCAT_MEMORY_LIMIT:-512m}
+    cpus: ${BEARCAT_CPU_LIMIT:-0.5}
+    memswap_limit: 0m
+
 
   postgres:
     image: postgres:18-alpine
@@ -37,6 +42,10 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    mem_reservation: 200m
+    mem_limit: ${POSTGRES_MEMORY_LIMIT:-512m}
+    cpus: ${POSTGRES_CPU_LIMIT:-0.5}
+    memswap_limit: 0m
 
 networks:
   bearcat-network:
