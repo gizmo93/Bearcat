@@ -9,7 +9,7 @@
     }
     <MudIconButton
         Size="Size.Small"
-        OnClick="@(() => isVisible = !isVisible)"
+        OnClick="@(() => OnToggleVisibilityAsync())"
         Icon="@(isVisible ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"/>
 </MudStack>
 
@@ -17,6 +17,29 @@
     [Parameter]
     [EditorRequired]
     public RenderFragment ChildContent { get; set; }
+
+    [Inject] 
+    public IDialogService DialogService { get; set; } = null!;
+
+    private async Task OnToggleVisibilityAsync()
+    {
+        if (isVisible)
+        {
+            isVisible = false;
+            return;
+        }
+        
+        var result = await DialogService.ShowMessageBoxAsync(
+            title: "Show hidden content",
+            message: "Are you sure you want to show this hidden content?", 
+            yesText: "Yes", 
+            noText: "No");
+
+        if (result == true)
+        {
+            isVisible = true;
+        }
+    }
 
     private bool isVisible;
 }
