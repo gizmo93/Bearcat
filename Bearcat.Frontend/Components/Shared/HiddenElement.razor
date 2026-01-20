@@ -1,0 +1,22 @@
+<MudStack AlignItems="AlignItems.Center" Spacing="3" Row>
+    @if (isVisible)
+    {
+        @ChildContent
+    }
+    else
+    {
+        <p>******</p>
+    }
+    <MudIconButton
+        Size="Size.Small"
+        OnClick="@(() => isVisible = !isVisible)"
+        Icon="@(isVisible ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"/>
+</MudStack>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public RenderFragment ChildContent { get; set; }
+
+    private bool isVisible;
+}

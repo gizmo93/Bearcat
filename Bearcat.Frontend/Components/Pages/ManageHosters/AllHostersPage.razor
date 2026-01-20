@@ -1,5 +1,6 @@
 @page "/hoster-registrations"
 @using BearCat.Core.Domain.UseCases.ManageHosters.Dto
+@using Bearcat.Frontend.Components.Shared
 @inherits OwningComponentBase
 
 <PageTitle>Hoster registrations</PageTitle>
@@ -25,18 +26,34 @@
             </TemplateColumn>
             <TemplateColumn Title="Config">
                 <CellTemplate>
-                    <MudPaper>
-                        <MudTable Items="context.Item.Configuration">
-                            <HeaderContent>
-                                <MudTh>Name</MudTh>
-                                <MudTh>Value</MudTh>
-                            </HeaderContent>
-                            <RowTemplate Context="config">
-                                <MudTd>@config.Key</MudTd>
-                                <MudTd>@config.Value</MudTd>
-                            </RowTemplate>
-                        </MudTable>
-                    </MudPaper>
+                    <MudExpansionPanel>
+                        <TitleContent>
+                            Show configuration
+                        </TitleContent>
+                        <ChildContent>
+                            <MudTable Items="context.Item.Configuration">
+                                <HeaderContent>
+                                    <MudTh>Name</MudTh>
+                                    <MudTh>Value</MudTh>
+                                </HeaderContent>
+                                <RowTemplate Context="config">
+                                    <MudTd>@config.Key</MudTd>
+                                    <MudTd>
+                                        @if (config.Key.ToLowerInvariant() == "password")
+                                        {
+                                            <HiddenElement>
+                                                @config.Value
+                                            </HiddenElement>
+                                        }
+                                        else
+                                        {
+                                            @config.Value
+                                        }
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </ChildContent>
+                    </MudExpansionPanel>
                 </CellTemplate>
             </TemplateColumn>
             <TemplateColumn>
