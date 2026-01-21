@@ -1,0 +1,95 @@
+@using Bearcat.Frontend.Components.Shared
+@inherits OwningComponentBase
+
+<MudCard Elevation="4">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudStack Row AlignItems="AlignItems.Center">
+                <MudIcon Icon="@Icons.Material.Filled.Archive" />
+                <MudText Typo="Typo.subtitle1">Archive configurations</MudText>
+            </MudStack>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudFab OnClick="@(() => ShowAddDialogAsync())" Color="Color.Transparent" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" />
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudStack>
+            @foreach (var config in archiveConfigs)
+            {
+                <MudCard Elevation="6">
+                    <MudCardHeader Style="overflow: scroll;">
+                        <CardHeaderContent>
+                            <MudStack AlignItems="AlignItems.Center" Row>
+                                <MudText Typo="Typo.subtitle1">@config.DisplayName</MudText>
+                                <MudChip T="string" Variant="Variant.Outlined">@config.ArchiverDisplayName</MudChip>
+                            </MudStack>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudMenu Color="Color.Primary" Icon="@Icons.Material.Filled.Menu">
+                                <MudMenuItem
+                                    Icon="@Icons.Material.Filled.Edit"
+                                    OnClick="@(() => ShowEditDialogAsync(config))">
+                                    Edit config
+                                </MudMenuItem>
+                                <MudMenuItem
+                                    Icon="@Icons.Material.Filled.Delete"
+                                    OnClick="@(() => DeleteConfigAsync(config))">
+                                    Delete config
+                                </MudMenuItem>
+                            </MudMenu>
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudStack Spacing="3">
+                            <MudStack Row Spacing="4" AlignItems="AlignItems.Baseline">
+                                <MudStack Spacing="2" AlignItems="AlignItems.Baseline">
+                                    <MudText Typo="Typo.caption">Password</MudText>
+                                    @if (config.ArchivePassword is null)
+                                    {
+                                        @("-")
+                                    }
+                                    else
+                                    {
+                                        <HiddenElement>
+                                            <MudText Typo="Typo.body2">@config.ArchivePassword</MudText>
+                                        </HiddenElement>
+                                    }
+                                </MudStack>
+                                <MudStack Spacing="2" AlignItems="AlignItems.Baseline">
+                                    <MudText Typo="Typo.caption">Size per Archive (MB)</MudText>
+                                    <MudText Typo="Typo.body2">
+                                        <NullableElement Value="config.ArchiveFileSizeMb" />
+                                    </MudText>
+                                </MudStack>
+                            </MudStack>
+                            <MudStack Row>
+                                <MudStack Spacing="2" AlignItems="AlignItems.Baseline" Style="overflow: scroll">
+                                    <MudText Typo="Typo.caption">Archive files base path</MudText>
+                                    <MudText Typo="Typo.body2">@config.ArchiveFilesBasePath</MudText>
+                                </MudStack>
+                            </MudStack>
+                        </MudStack>
+                    </MudCardContent>
+                    @if (config.ArchiveSummaries.Count > 0)
+                    {
+                        <MudCardActions>
+                            <MudExpansionPanel Icon="@Icons.Material.Filled.ArrowDownward" Text="Archives">
+                                <MudTable Elevation="2" Items="config.ArchiveSummaries" Dense="true">
+                                    <HeaderContent>
+                                        <MudTh>Id</MudTh>
+                                        <MudTh>File count</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd>@context.ArchiveId</MudTd>
+                                        <MudTd>@context.ArchiveFileCount</MudTd>
+                                    </RowTemplate>
+                                </MudTable>
+                            </MudExpansionPanel>
+                        </MudCardActions>
+                    }
+                </MudCard>
+            }
+        </MudStack>
+    </MudCardContent>
+</MudCard>
