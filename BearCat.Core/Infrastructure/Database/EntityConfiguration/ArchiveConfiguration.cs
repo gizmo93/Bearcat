@@ -11,6 +11,7 @@ public class ArchiveConfiguration : IEntityTypeConfiguration<Archive>
         builder.HasKey(a => a.Id);
         builder.Property(a => a.ArchiveConfigId);
         builder.Property(a => a.ArchiveFolderPath).HasMaxLength(500).IsRequired();
+        builder.Property(a => a.CreatedAt).IsRequired().HasPrecision(4);
 
         builder.HasMany(a => a.ArchiveFiles)
             .WithOne(a => a.Archive)

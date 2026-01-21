@@ -9,6 +9,8 @@ public class Archive
     public ArchiveConfig ArchiveConfig { get; set; } = null!;
     
     public string ArchiveFolderPath { get; set; } = null!;
+    
+    public DateTime CreatedAt { get; set; }
 
     public List<ArchiveFile> ArchiveFiles { get; set; } = null!;
 

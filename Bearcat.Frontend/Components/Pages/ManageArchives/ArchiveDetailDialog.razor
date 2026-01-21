@@ -1,0 +1,37 @@
+@if (!isInitialized)
+{
+    return;
+}
+
+<MudDialog>
+    <TitleContent>
+        <MudStack AlignItems="AlignItems.Baseline">
+            <MudStack Row AlignItems="AlignItems.Center">
+                <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Archive" />
+                <MudText Typo="Typo.h6">@MudDialog.Title</MudText>
+            </MudStack>
+            <MudStack Row AlignItems="AlignItems.Baseline" Style="overflow: scroll">
+                <MudStack AlignItems="AlignItems.Baseline">
+                    <MudText Typo="Typo.caption">Created at</MudText>
+                    <MudText Typo="Typo.body1">@Archive.CreatedAt</MudText>
+                </MudStack>
+                <MudStack AlignItems="AlignItems.Baseline">
+                    <MudText Typo="Typo.caption">Folder path</MudText>
+                    <MudText Typo="Typo.body1">@Archive.ArchiveFolderPath</MudText>
+                </MudStack>
+            </MudStack>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudStack>
+            <MudTable Elevation="3" Items="Archive.Files">
+                <HeaderContent>
+                    <MudTh>Filename</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.FullFileName</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudStack>
+    </DialogContent>
+</MudDialog>

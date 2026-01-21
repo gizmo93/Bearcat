@@ -24,6 +24,7 @@ public static class ServiceProviderConfig
             services.AddScoped<INotificationRepository, NotificationRepository>();
             services.AddScoped<IReleaseReadRepository, ReleaseReadRepository>();
             services.AddScoped<IArchiveConfigWriteRepository, ArchiveConfigWriteRepository>();
+            services.AddScoped<IArchiveReadRepository, ArchiveReadRepository>();
         }
     }
 }

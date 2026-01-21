@@ -1,0 +1,59 @@
+@using BearCat.Core.Domain.UseCases.ManageReleases.Dto
+@using Bearcat.Frontend.Components.Shared
+
+<MudCardContent>
+    <MudStack Spacing="3">
+        <MudStack Row Spacing="4" AlignItems="AlignItems.Baseline">
+            <MudStack Spacing="2" AlignItems="AlignItems.Baseline">
+                <MudText Typo="Typo.caption">Password</MudText>
+                @if (Config.ArchivePassword is null)
+                {
+                    @("-")
+                }
+                else
+                {
+                    <HiddenElement>
+                        <MudText Typo="Typo.body2">@Config.ArchivePassword</MudText>
+                    </HiddenElement>
+                }
+            </MudStack>
+            <MudStack Spacing="2" AlignItems="AlignItems.Baseline">
+                <MudText Typo="Typo.caption">Size per Archive (MB)</MudText>
+                <MudText Typo="Typo.body2">
+                    <NullableElement Value="Config.ArchiveFileSizeMb"/>
+                </MudText>
+            </MudStack>
+        </MudStack>
+        <MudStack Row>
+            <MudStack Spacing="2" AlignItems="AlignItems.Baseline" Style="overflow: scroll">
+                <MudText Typo="Typo.caption">Archive files base path</MudText>
+                <MudText Typo="Typo.body2">@Config.ArchiveFilesBasePath</MudText>
+            </MudStack>
+        </MudStack>
+    </MudStack>
+</MudCardContent>
+@if (Config.ArchiveSummaries.Count > 0)
+{
+    <MudCardActions>
+        <MudExpansionPanel Icon="@Icons.Material.Filled.ArrowDownward" Text="Archives">
+            <MudTable
+                T="ArchiveConfigDto.ArchiveSummary"
+                Elevation="2"
+                Items="Config.ArchiveSummaries"
+                Dense="true"
+                OnRowClick="@(row => ShowArchiveDialogAsync(row.Item!.ArchiveId))">
+                
+                <HeaderContent>
+                    <MudTh>Id</MudTh>
+                    <MudTh>File count</MudTh>
+                </HeaderContent>
+                
+                <RowTemplate>
+                    <MudTd>@context.ArchiveId</MudTd>
+                    <MudTd>@context.ArchiveFileCount</MudTd>
+                </RowTemplate>
+                
+            </MudTable>
+        </MudExpansionPanel>
+    </MudCardActions>
+}

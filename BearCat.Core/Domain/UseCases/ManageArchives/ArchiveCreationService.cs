@@ -11,7 +11,8 @@ public class ArchiveCreationService(
     IArchiveCreationRepository repository,
     ILogger<ArchiveCreationService> logger,
     IArchiverFactory archiverFactory,
-    IFileSystemService fileSystemService)
+    IFileSystemService fileSystemService,
+    TimeProvider timeProvider)
 {
     public async Task ProcessUploadsWithoutArchiveAsync(CancellationToken cancellationToken)
     {
@@ -120,6 +121,7 @@ public class ArchiveCreationService(
             ArchiveFiles = archiveResult.CreatedFileNames
                 .Select(f => new ArchiveFile { FullFileName = f })
                 .ToList(),
+            CreatedAt = timeProvider.GetLocalNow(),
             Uploads = uploads.ToList()
         };
 
