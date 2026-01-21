@@ -1,4 +1,5 @@
 @page "/releases/{releaseId:int}"
+@using Bearcat.Frontend.Components.Pages.ManageArchiveConfigs
 @inherits OwningComponentBase
 
 @if (!isInitialized)
@@ -20,7 +21,7 @@
                 </MudStack>
             </CardHeaderContent>
             <CardHeaderActions>
-                <MudMenu Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Label="Edit">
+                <MudMenu Color="Color.Primary" Icon="@Icons.Material.Filled.Menu" Label="Edit">
                     <MudMenuItem Icon="@Icons.Material.Filled.Delete">Delete release</MudMenuItem>
                 </MudMenu>
             </CardHeaderActions>
@@ -34,18 +35,22 @@
             </MudStack>
         </MudCardContent>
     </MudCard>
-    <MudGrid>
-        <MudItem xl="4" lg="4" md="12" sm="12" xs="12">
-            <ArchiveConfigs ReleaseId="ReleaseId" />
-        </MudItem>
-        <MudItem xl="8" lg="8" md="12" sm="12" xs="12">
-            <MudCard Elevation="3">
-                <MudCardContent>
-                    <MudStack>
-                        <MudText Typo="Typo.caption"></MudText>
-                    </MudStack>
-                </MudCardContent>
-            </MudCard>
-        </MudItem>
-    </MudGrid>
+    <MudTabs Elevation="3" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-6">
+        <MudTabPanel Text="Configuration">
+            <MudGrid>
+                <MudItem xl="4" lg="4" md="12" sm="12" xs="12">
+                    <ArchiveConfigs ReleaseId="ReleaseId"/>
+                </MudItem>
+                <MudItem xl="8" lg="8" md="12" sm="12" xs="12">
+                    <MudCard Elevation="3">
+                        <MudCardContent>
+                            <MudStack>
+                                <MudText Typo="Typo.caption"></MudText>
+                            </MudStack>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudTabPanel>
+    </MudTabs>
 </MudStack>

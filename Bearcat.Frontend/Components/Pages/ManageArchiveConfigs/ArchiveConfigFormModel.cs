@@ -1,4 +1,4 @@
-﻿namespace Bearcat.Frontend.Components.Pages.ManageReleases;
+﻿namespace Bearcat.Frontend.Components.Pages.ManageArchiveConfigs;
 
 public class ArchiveConfigFormModel
 {
@@ -11,6 +11,4 @@ public class ArchiveConfigFormModel
     public string? ArchivePassword { get; set; }
     
     public int? ArchiveFileSizeMb { get; set; }
-    
-    public bool IsEdit { get; set; }
 }

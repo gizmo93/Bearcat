@@ -1,11 +1,14 @@
-﻿using BearCat.Core.Domain.Entities;
+﻿using BearCat.Core.Domain.Abstractions.Archiver;
 using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
 using BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace BearCat.Core.Infrastructure.Database.Repositories;
 
-public class ReleaseReadRepository(IBearcatReadDbContext dbRead) : IReleaseReadRepository
+public class ReleaseReadRepository(
+    IBearcatReadDbContext dbRead,
+    IArchiverFactory archiverFactory)
+    : IReleaseReadRepository
 {
     public async Task<IReadOnlyList<ReleaseListDto>> GetReleasesAsync(CancellationToken cancellationToken = default)
     {
@@ -46,6 +49,14 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead) : IReleaseReadR
     public async Task<IReadOnlyList<ArchiveConfigDto>> GetArchiveConfigsAsync(int releaseId,
         CancellationToken cancellationToken)
     {
+        var archivers = archiverFactory.GetArchivers();
+        
+        var fileExtensionByArchiver = archivers
+            .ToDictionary(a => a.ClassName, a => a.FileExtension);
+        
+        var nameByArchiverClassName = archivers
+            .ToDictionary(a => a.ClassName, a => a.Name);
+        
         return await dbRead.ArchiveConfigs
             .AsSplitQuery()
             .Where(a => a.ReleaseId == releaseId)
@@ -54,9 +65,11 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead) : IReleaseReadR
                 a.Id,
                 a.ArchiveFilesBasePath,
                 a.ArchiverName,
+                nameByArchiverClassName[a.ArchiverName],
                 a.ArchiveNamePrefix,
                 a.ArchivePassword,
                 a.ArchiveFileSizeMb,
+                fileExtensionByArchiver[a.ArchiverName],
                 a.Archives
                     .OrderByDescending(ar => ar.Id)
                     .Select(ar => new ArchiveConfigDto.ArchiveSummary(

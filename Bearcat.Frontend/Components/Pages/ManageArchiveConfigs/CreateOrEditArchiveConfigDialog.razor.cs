@@ -1,10 +1,11 @@
 ﻿using BearCat.Core.Domain.Abstractions.Archiver;
+using BearCat.Core.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Frontend.Components.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 
-namespace Bearcat.Frontend.Components.Pages.ManageReleases;
+namespace Bearcat.Frontend.Components.Pages.ManageArchiveConfigs;
 
 public partial class CreateOrEditArchiveConfigDialog(
     IArchiverFactory archiverFactory,
@@ -17,6 +18,9 @@ public partial class CreateOrEditArchiveConfigDialog(
     [Parameter]
     public int ReleaseId { get; set; }
     
+    [Parameter]
+    public int? ArchiveConfigId { get; set; }
+    
     [CascadingParameter]
     public IMudDialogInstance MudDialog { get; set; } = null!;
 
@@ -28,6 +32,10 @@ public partial class CreateOrEditArchiveConfigDialog(
     private EditContext editContext = null!;
     
     private ValidationMessageStore messageStore = null!;
+
+    private ArchiveConfigService archiveConfigService = null!;
+
+    private bool isEdit;
     
     protected override void OnInitialized()
     {
@@ -35,12 +43,32 @@ public partial class CreateOrEditArchiveConfigDialog(
         editContext = new EditContext(FormModel);
         messageStore = new ValidationMessageStore(editContext);
         editContext.OnValidationRequested += HandleValidationRequested;
+        archiveConfigService = ScopedServices.GetRequiredService<ArchiveConfigService>();
+        isEdit = ArchiveConfigId is not null;
     }
 
-    private Task SaveAsync()
+    private async Task SaveAsync()
     {
+        if (!isEdit)
+        {
+            await archiveConfigService.CreateAsync(releaseId: ReleaseId,
+                archiveFilesBasePath: FormModel.ArchiveFilesBasePath!,
+                archiverName: FormModel.ArchiverName!,
+                archiveNamePrefix: FormModel.ArchiveNamePrefix!,
+                archivePassword: FormModel.ArchivePassword,
+                archiveFileSizeMb: FormModel.ArchiveFileSizeMb);   
+        }
+        else
+        {
+            await archiveConfigService.UpdateAsync(
+                archiveConfigId: ArchiveConfigId!.Value,
+                archiveFilesBasePath: FormModel.ArchiveFilesBasePath!,
+                archiveNamePrefix: FormModel.ArchiveNamePrefix!,
+                archivePassword: FormModel.ArchivePassword,
+                archiveFileSizeMb: FormModel.ArchiveFileSizeMb);
+        }
+        
         MudDialog.Close();
-        return Task.CompletedTask;
     }
 
     private async Task ShowSelectFolderDialogAsync()
