@@ -25,6 +25,7 @@ public static class ServiceProviderConfig
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<ArchiverFactory>();
             services.AddScoped<ArchiveConfigService>();
+            services.AddScoped<Domain.UseCases.TimeProvider>();
         }
     }
 }
