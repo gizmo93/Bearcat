@@ -39,7 +39,10 @@
         <MudTabPanel Text="Configuration">
             <MudGrid>
                 <MudItem xl="4" lg="4" md="12" sm="12" xs="12">
-                    <ArchiveConfigs ReleaseId="ReleaseId"/>
+                    <ArchiveConfigs 
+                        @ref="@reloadableComponents[nameof(ArchiveConfigs)]"
+                        ReleaseId="ReleaseId"
+                        OnChangeAffectingOtherComponents="HandleChangeAffectingOtherComponentsAsync" />
                 </MudItem>
                 <MudItem xl="8" lg="8" md="12" sm="12" xs="12">
                     <MudCard Elevation="3">
