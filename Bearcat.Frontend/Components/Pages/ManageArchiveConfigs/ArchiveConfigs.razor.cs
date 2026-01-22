@@ -1,6 +1,7 @@
 using BearCat.Core.Domain.UseCases.ManageArchiveConfigs;
 using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
 using BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Frontend.Components.Shared;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -8,9 +9,13 @@ namespace Bearcat.Frontend.Components.Pages.ManageArchiveConfigs;
 
 public partial class ArchiveConfigs(
     IReleaseReadRepository readRepository,
-    IDialogService dialogService)
+    IDialogService dialogService) : IReloadableComponent
 {
-    [Parameter] public int ReleaseId { get; set; }
+    [Parameter] 
+    public int ReleaseId { get; set; }
+    
+    [Parameter]
+    public EventCallback<string> OnChangeAffectingOtherComponents { get; set; }
 
     private IReadOnlyList<ArchiveConfigDto> archiveConfigs = [];
 
@@ -54,6 +59,7 @@ public partial class ArchiveConfigs(
             var archiveConfigService = ScopedServices.GetRequiredService<ArchiveConfigService>();
             await archiveConfigService.DeleteAsync(archiveConfig.ArchiveConfigId);
             await LoadArchiveConfigsAsync();
+            await OnChangeAffectingOtherComponents.InvokeAsync(this.GetType().Name);
         }
     }
 
@@ -91,6 +97,11 @@ public partial class ArchiveConfigs(
             });
 
         var result = await dialog.Result;
+        await LoadArchiveConfigsAsync();
+    }
+
+    public async Task ReloadAsync()
+    {
         await LoadArchiveConfigsAsync();
     }
 }
