@@ -1,3 +1,3 @@
 using Bearcat.Host;
 
-await Startup.StartupAsync(args);
+await HostStartup.RunAsync(args);
