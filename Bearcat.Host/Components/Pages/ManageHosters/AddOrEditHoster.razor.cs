@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 
-namespace Bearcat.Frontend.Components.Pages.ManageHosters;
+namespace Bearcat.Host.Components.Pages.ManageHosters;
 
 public partial class AddOrEditHoster(
     IHosterFactory hosterFactory,

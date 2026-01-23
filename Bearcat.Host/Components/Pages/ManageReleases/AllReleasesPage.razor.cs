@@ -4,7 +4,7 @@ using BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
-namespace Bearcat.Frontend.Components.Pages.ManageReleases;
+namespace Bearcat.Host.Components.Pages.ManageReleases;
 
 public partial class AllReleasesPage(
     IReleaseReadRepository readRepository,

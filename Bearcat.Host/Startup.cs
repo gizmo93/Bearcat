@@ -1,10 +1,10 @@
 ﻿using BearCat.Core.Infrastructure.Database;
 using BearCat.Core.InversionOfControl;
-using Bearcat.Frontend.Components;
+using Bearcat.Host.Components;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 
-namespace Bearcat.Frontend;
+namespace Bearcat.Host;
 
 public static class Startup
 {
