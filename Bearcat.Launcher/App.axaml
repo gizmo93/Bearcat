@@ -13,6 +13,8 @@
            <TrayIcon Icon="/Assets/trayicon.png" ToolTipText="Test">
                <TrayIcon.Menu>
                    <NativeMenu>
+                       <NativeMenuItem Header="Open Bearcat Launcher Window" Click="OpenBearcatLauncherWindow_OnClick" />
+                       <NativeMenuItemSeparator />
                        <NativeMenuItem Header="Exit Bearcat" Click="ExitBearcat_OnClick" />
                        <NativeMenuItem Header="Test">
                            <NativeMenu>

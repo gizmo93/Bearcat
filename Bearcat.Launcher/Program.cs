@@ -1,9 +1,5 @@
 ﻿using Avalonia;
 using System;
-using System.Reflection;
-using System.Threading;
-using Avalonia.Controls;
-using Bearcat.Host;
 
 namespace Bearcat.Launcher;
 
@@ -15,39 +11,19 @@ class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        var builder = BuildAvaloniaApp(args);
-        var app = builder.Instance;;
-        AppMain(app!, args);
+       BuildAvaloniaApp()
+            .StartWithClassicDesktopLifetime(args);
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.
-    private static AppBuilder BuildAvaloniaApp(string[] args)
-    {
-        return AppBuilder.Configure<App>()
+    public static AppBuilder BuildAvaloniaApp()
+        => AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .With(new MacOSPlatformOptions
             {
                 ShowInDock = false,
-                DisableDefaultApplicationMenuItems = true,
+                DisableDefaultApplicationMenuItems = false,
             })
             .WithInterFont()
-            .SetupWithClassicDesktopLifetime(args, options =>
-            {
-                options.MainWindow = null;
-                options.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-            })
             .LogToTrace();
-    }
-    
-    private static void AppMain(Application app, string[] args)
-    {
-        // A cancellation token source that will be 
-        // used to stop the main loop
-        var cts = new CancellationTokenSource();
-
-        Startup.StartupAsync(args);
-        
-        // Start the main loop
-        app.Run(cts.Token);
-    }
 }

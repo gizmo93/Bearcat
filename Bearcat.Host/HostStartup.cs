@@ -5,16 +5,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Host;
 
-public static class Startup
+public static class HostStartup
 {
-    public static async Task StartupAsync(string[] args)
+    public static async Task RunAsync(string[] args, CancellationToken cancellationToken = default)
     {
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {
             Args = args,
             ContentRootPath = AppContext.BaseDirectory
         });
-
 
         // Add services to the container.
         builder.Services.AddRazorComponents()
@@ -41,7 +40,6 @@ public static class Startup
 
         app.UseHttpsRedirection();
 
-
         app.UseAntiforgery();
 
         app.MapStaticAssets();
@@ -52,9 +50,9 @@ public static class Startup
         {
             using var scope = app.Services.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<BearcatDbContext>();
-            await dbContext.Database.MigrateAsync();
+            await dbContext.Database.MigrateAsync(cancellationToken);
         }
 
-        await app.RunAsync();
+        await app.RunAsync(cancellationToken);
     }
 }

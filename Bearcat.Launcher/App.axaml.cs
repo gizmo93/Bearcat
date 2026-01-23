@@ -17,7 +17,8 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = null;
+            desktop.MainWindow = new MainWindow(isInitialStart: true);
+            desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
         }
         base.OnFrameworkInitializationCompleted();
     }
@@ -28,5 +29,11 @@ public partial class App : Application
         {
             desktop.Shutdown();
         }
+    }
+
+    private void OpenBearcatLauncherWindow_OnClick(object? sender, EventArgs e)
+    {
+        var window = new MainWindow(isInitialStart: false);
+        window.Show();
     }
 }
