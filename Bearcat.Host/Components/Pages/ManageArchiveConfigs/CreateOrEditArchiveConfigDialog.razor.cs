@@ -1,11 +1,11 @@
 ﻿using BearCat.Core.Domain.Abstractions.Archiver;
 using BearCat.Core.Domain.UseCases.ManageArchiveConfigs;
-using Bearcat.Frontend.Components.Shared;
+using Bearcat.Host.Components.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 
-namespace Bearcat.Frontend.Components.Pages.ManageArchiveConfigs;
+namespace Bearcat.Host.Components.Pages.ManageArchiveConfigs;
 
 public partial class CreateOrEditArchiveConfigDialog(
     IArchiverFactory archiverFactory,

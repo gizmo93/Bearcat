@@ -1,9 +1,9 @@
 ﻿using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
-using Bearcat.Frontend.Components.Pages.ManageArchives;
+using Bearcat.Host.Components.Pages.ManageArchives;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
-namespace Bearcat.Frontend.Components.Pages.ManageArchiveConfigs;
+namespace Bearcat.Host.Components.Pages.ManageArchiveConfigs;
 
 public partial class ArchiveConfigContent(
     IDialogService dialogService)

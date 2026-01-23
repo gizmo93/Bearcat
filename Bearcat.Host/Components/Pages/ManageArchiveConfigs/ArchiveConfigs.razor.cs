@@ -1,11 +1,11 @@
 using BearCat.Core.Domain.UseCases.ManageArchiveConfigs;
 using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
 using BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
-using Bearcat.Frontend.Components.Shared;
+using Bearcat.Host.Components.Shared;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
-namespace Bearcat.Frontend.Components.Pages.ManageArchiveConfigs;
+namespace Bearcat.Host.Components.Pages.ManageArchiveConfigs;
 
 public partial class ArchiveConfigs(
     IReleaseReadRepository readRepository,

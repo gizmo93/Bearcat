@@ -3,7 +3,7 @@ using System;
 using System.Reflection;
 using System.Threading;
 using Avalonia.Controls;
-using Bearcat.Frontend;
+using Bearcat.Host;
 
 namespace Bearcat.Launcher;
 

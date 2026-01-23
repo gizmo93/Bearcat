@@ -3,7 +3,7 @@ using BearCat.Core.Domain.UseCases.ManageHosters.Dto;
 using BearCat.Core.Domain.UseCases.ManageHosters.Repositories;
 using MudBlazor;
 
-namespace Bearcat.Frontend.Components.Pages.ManageHosters;
+namespace Bearcat.Host.Components.Pages.ManageHosters;
 
 public partial class AllHostersPage(
     IHosterConfigurationReadRepository readRepository,

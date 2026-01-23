@@ -1,4 +1,4 @@
-﻿namespace Bearcat.Frontend.Components.Pages.ManageArchiveConfigs;
+﻿namespace Bearcat.Host.Components.Pages.ManageArchiveConfigs;
 
 public class ArchiveConfigFormModel
 {

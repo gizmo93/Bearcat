@@ -1,9 +1,9 @@
 ﻿using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
 using BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
-using Bearcat.Frontend.Components.Shared;
+using Bearcat.Host.Components.Shared;
 using Microsoft.AspNetCore.Components;
 
-namespace Bearcat.Frontend.Components.Pages.ManageReleases;
+namespace Bearcat.Host.Components.Pages.ManageReleases;
 
 public partial class ReleaseDetail(NavigationManager navigationManager)
 {

@@ -1,4 +1,4 @@
-﻿namespace Bearcat.Frontend.Components.Pages.ManageHosters;
+﻿namespace Bearcat.Host.Components.Pages.ManageHosters;
 
 public class HosterFormModel
 {
