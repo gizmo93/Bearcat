@@ -3,4 +3,5 @@
   <Project Path="BearCat.Core/BearCat.Core.csproj" />
   <Project Path="Bearcat.Host\Bearcat.Host.csproj" />
   <Project Path="Bearcat.Launcher/Bearcat.Launcher.csproj" />
+  <Project Path="Bearcat.Website\Bearcat.Website.csproj" />
 </Solution>

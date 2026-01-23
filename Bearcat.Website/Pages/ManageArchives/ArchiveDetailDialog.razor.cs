@@ -3,7 +3,7 @@ using BearCat.Core.Domain.UseCases.ManageArchives.Repositories;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
-namespace Bearcat.Host.Components.Pages.ManageArchives;
+namespace Bearcat.Website.Pages.ManageArchives;
 
 public partial class ArchiveDetailDialog(
     IArchiveReadRepository archiveReadRepository,

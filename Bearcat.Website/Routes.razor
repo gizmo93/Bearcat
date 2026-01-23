@@ -1,4 +1,5 @@
-﻿<Router AppAssembly="typeof(Program).Assembly">
+﻿@using System.Reflection
+<Router AppAssembly="Assembly.GetExecutingAssembly()">
     <Found Context="routeData">
         <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
         <FocusOnNavigate RouteData="routeData" Selector="h1" />

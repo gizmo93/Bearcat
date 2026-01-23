@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
-namespace Bearcat.Host.Components.Shared;
+namespace Bearcat.Website.Shared;
 
 public partial class FolderSelectionDialog(
     IFileSystemService fileSystemService)

@@ -8,11 +8,7 @@
 
 
   <ItemGroup>
-    <PackageReference Include="MudBlazor" />
-  </ItemGroup>
-
-
-  <ItemGroup>
     <ProjectReference Include="..\BearCat.Core\BearCat.Core.csproj" />
+    <ProjectReference Include="..\Bearcat.Website\Bearcat.Website.csproj" />
   </ItemGroup>
 </Project>

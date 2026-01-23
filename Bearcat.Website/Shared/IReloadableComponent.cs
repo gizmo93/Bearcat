@@ -1,4 +1,4 @@
-﻿namespace Bearcat.Host.Components.Shared;
+﻿namespace Bearcat.Website.Shared;
 
 public interface IReloadableComponent
 {

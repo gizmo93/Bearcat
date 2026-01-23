@@ -1,11 +1,13 @@
 ﻿using BearCat.Core.Domain.UseCases.ManageReleases;
 using BearCat.Core.Domain.ValueObjects;
-using Bearcat.Host.Components.Shared;
+using Bearcat.Website.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 
-namespace Bearcat.Host.Components.Pages.ManageReleases;
+namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class CreateOrEditReleaseDialog(
     IDialogService dialogService,
