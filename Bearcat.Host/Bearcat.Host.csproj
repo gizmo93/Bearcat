@@ -1,14 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <RequiresAspNetWebAssets>true</RequiresAspNetWebAssets>
+    </PropertyGroup>
 
+    <ItemGroup>
+        <PackageReference Include="MudBlazor"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\BearCat.Core\BearCat.Core.csproj" />
-    <ProjectReference Include="..\Bearcat.Website\Bearcat.Website.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\BearCat.Core\BearCat.Core.csproj"/>
+        <ProjectReference Include="..\Bearcat.Website\Bearcat.Website.csproj"/>
+    </ItemGroup>
 </Project>
