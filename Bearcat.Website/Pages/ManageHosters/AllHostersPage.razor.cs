@@ -1,9 +1,10 @@
 ﻿using BearCat.Core.Domain.UseCases.ManageHosters;
 using BearCat.Core.Domain.UseCases.ManageHosters.Dto;
 using BearCat.Core.Domain.UseCases.ManageHosters.Repositories;
+using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 
-namespace Bearcat.Host.Components.Pages.ManageHosters;
+namespace Bearcat.Website.Pages.ManageHosters;
 
 public partial class AllHostersPage(
     IHosterConfigurationReadRepository readRepository,

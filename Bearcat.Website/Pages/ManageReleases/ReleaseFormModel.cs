@@ -1,6 +1,6 @@
 ﻿using BearCat.Core.Domain.ValueObjects;
 
-namespace Bearcat.Host.Components.Pages.ManageReleases;
+namespace Bearcat.Website.Pages.ManageReleases;
 
 public class ReleaseFormModel
 {

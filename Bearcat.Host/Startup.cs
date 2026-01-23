@@ -1,8 +1,7 @@
 ﻿using BearCat.Core.Infrastructure.Database;
 using BearCat.Core.InversionOfControl;
-using Bearcat.Host.Components;
+using Bearcat.Website;
 using Microsoft.EntityFrameworkCore;
-using MudBlazor.Services;
 
 namespace Bearcat.Host;
 
@@ -16,16 +15,12 @@ public static class Startup
             ContentRootPath = AppContext.BaseDirectory
         });
 
-        // Add MudBlazor services
-        builder.Services.AddMudServices(cfg =>
-        {
-            cfg.SnackbarConfiguration.ShowTransitionDuration = 50;
-            cfg.SnackbarConfiguration.HideTransitionDuration = 50;
-        });
 
         // Add services to the container.
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents();
+
+        builder.Services.AddBearcatComponents();
 
         if (builder.Environment.IsDevelopment())
         {

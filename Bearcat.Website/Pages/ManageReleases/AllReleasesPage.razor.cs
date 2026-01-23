@@ -2,9 +2,10 @@
 using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
 using BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 
-namespace Bearcat.Host.Components.Pages.ManageReleases;
+namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class AllReleasesPage(
     IReleaseReadRepository readRepository,
