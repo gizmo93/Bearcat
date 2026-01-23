@@ -1,7 +1,9 @@
 <Solution>
-  <Project Path="Bearcat.ConsoleApp/Bearcat.ConsoleApp.csproj" />
+  <Folder Name="/Startups/">
+    <Project Path="Bearcat.ConsoleApp/Bearcat.ConsoleApp.csproj" />
+    <Project Path="Bearcat.Host\Bearcat.Host.csproj" />
+    <Project Path="Bearcat.Launcher/Bearcat.Launcher.csproj" />
+  </Folder>
   <Project Path="BearCat.Core/BearCat.Core.csproj" />
-  <Project Path="Bearcat.Host\Bearcat.Host.csproj" />
-  <Project Path="Bearcat.Launcher/Bearcat.Launcher.csproj" />
   <Project Path="Bearcat.Website\Bearcat.Website.csproj" />
 </Solution>
