@@ -2,4 +2,5 @@
   <Project Path="Bearcat.ConsoleApp/Bearcat.ConsoleApp.csproj" />
   <Project Path="BearCat.Core/BearCat.Core.csproj" />
   <Project Path="Bearcat.Frontend\Bearcat.Frontend.csproj" />
+  <Project Path="Bearcat.Launcher/Bearcat.Launcher.csproj" />
 </Solution>
