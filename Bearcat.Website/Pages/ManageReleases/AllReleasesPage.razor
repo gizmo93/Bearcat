@@ -30,6 +30,7 @@
         Elevation="4"
         RowClick="@(args => navigationManager.NavigateTo($"releases/{args.Item.ReleaseId}"))"
         ColumnResizeMode="ResizeMode.Container"
+        RowClass="cursor-pointer"
         Hover
         RowContextMenuClick="OpenMenuContent">
         <Columns>
