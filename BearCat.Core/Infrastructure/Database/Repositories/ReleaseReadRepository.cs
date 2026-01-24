@@ -21,16 +21,7 @@ public class ReleaseReadRepository(
                 r.ReleaseType,
                 r.ArchiveConfigs.Count(),
                 r.UploadConfigs.Count(),
-                r.ReleaseFolderPath,
-                r.UploadConfigs
-                    .Select(u =>
-                        new ReleaseListDto.UploadConfigDto(
-                            u.Name,
-                            u.Uploads
-                                .OrderByDescending(up => up.Id)
-                                .Last()
-                                .OnlineState))
-                    .ToList()))
+                r.ReleaseFolderPath))
             .ToListAsync(cancellationToken: cancellationToken);
     }
 

@@ -7,11 +7,7 @@ using MudBlazor.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add MudBlazor services
-builder.Services.AddMudServices(cfg =>
-{
-    cfg.SnackbarConfiguration.ShowTransitionDuration = 50;
-    cfg.SnackbarConfiguration.HideTransitionDuration = 50;
-});
+builder.Services.AddBearcatComponents();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
