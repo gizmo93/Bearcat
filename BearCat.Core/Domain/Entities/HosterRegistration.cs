@@ -1,4 +1,4 @@
-namespace BearCat.Core.Domain.Entities;
+﻿namespace BearCat.Core.Domain.Entities;
 
 public class HosterRegistration
 {

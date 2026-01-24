@@ -1,4 +1,4 @@
-using BearCat.Core.Domain.Entities;
+﻿using BearCat.Core.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 

@@ -1,5 +1,5 @@
-﻿using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
-using Bearcat.Website.Pages.ManageArchives;
+﻿using Bearcat.Website.Pages.ManageArchives;
+using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -18,7 +18,7 @@ public partial class ArchiveConfigContent(
         {
             { dlg => dlg.ArchiveId, archiveId }
         };
-        
+
         var dialog = await dialogService.ShowAsync<ArchiveDetailDialog>(
             $"Archive Id {archiveId}",
             parameters,

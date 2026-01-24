@@ -13,7 +13,7 @@ public class UploadConfigWriteRepository(IBearcatWriteDbContext dbWrite) : IUplo
                 u => u.Id == uploadConfigId,
                 cancellationToken: cancellationToken);
     }
-    
+
     public void Add(UploadConfig uploadConfig)
     {
         dbWrite.Add(uploadConfig);

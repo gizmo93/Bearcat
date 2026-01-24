@@ -21,13 +21,13 @@ public class UploadFilesService(
             var hosterConfig = hoster.DeserializeHosterConfig(
                 uploads.First().UploadConfig.HosterRegistration.SerializedConfig);
             await hoster.PrepareForUploadAsync(hosterConfig, cancellationToken);
-            
+
             foreach (var upload in uploads)
             {
                 logger.LogInformation("Starting upload for Upload {UploadId} to hoster {Hoster}",
                     upload.Id,
                     hoster.Name);
-                
+
                 await ProcessUploadAsync(
                     hoster: hoster,
                     hosterConfig: hosterConfig,
@@ -36,7 +36,7 @@ public class UploadFilesService(
             }
         }
     }
-    
+
     private async Task ProcessUploadAsync(
         IHoster hoster,
         IHosterConfig hosterConfig,
@@ -44,9 +44,9 @@ public class UploadFilesService(
         CancellationToken cancellationToken)
     {
         var maximumParallelUploads = await hoster.GetMaximumParallelUploadsAsync(hosterConfig, cancellationToken) ?? 1;
-        
+
         var semaphore = new SemaphoreSlim(maximumParallelUploads);
-        
+
         var uploadTasks = upload.Archive!.ArchiveFiles.Select(async file =>
         {
             await semaphore.WaitAsync(cancellationToken);
@@ -62,7 +62,7 @@ public class UploadFilesService(
         .ToList();
 
         await Task.WhenAll(uploadTasks);
-        
+
         var anyFailedUploads = uploadTasks.Any(t => t.IsFaulted || !t.Result.IsSuccess);
 
         upload.UploadedFiles = [];
@@ -81,7 +81,7 @@ public class UploadFilesService(
                     task.Result.ArchiveFile.FullFileName,
                     upload.Id,
                     string.Join(", ", task.Result.ErrorMessages));
-                
+
                 upload.UploadedFiles.Add(new UploadedFile
                 {
                     ArchiveFile = task.Result.ArchiveFile,
@@ -90,10 +90,10 @@ public class UploadFilesService(
                     CreatedAt = DateTime.UtcNow,
                     CheckedAt = DateTime.UtcNow
                 });
-                
+
                 continue;
             }
-            
+
             upload.UploadedFiles.Add(new UploadedFile
             {
                 ArchiveFile = task.Result.ArchiveFile,
@@ -103,7 +103,7 @@ public class UploadFilesService(
                 CheckedAt = DateTime.UtcNow
             });
         }
-        
+
         upload.UploadState = anyFailedUploads ? UploadState.Failed : UploadState.Completed;
         upload.OnlineState = anyFailedUploads ? OnlineState.PartiallyOnline : OnlineState.Online;
         await repository.SaveChangesAsync(cancellationToken);

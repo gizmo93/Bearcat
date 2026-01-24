@@ -1,8 +1,8 @@
+﻿using Bearcat.Website;
 using BearCat.Core.Infrastructure.Database;
 using BearCat.Core.InversionOfControl;
-using Bearcat.Website;
-using MudBlazor.Services;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -10,17 +10,17 @@ public class ArchiveConfigWriteRepository(IBearcatWriteDbContext dbWrite) : IArc
     {
         dbWrite.Add(archiveConfig);
     }
-    
+
     public void Remove(ArchiveConfig archiveConfig)
     {
         dbWrite.Remove(archiveConfig);
     }
-    
+
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         return await dbWrite.SaveChangesAsync(cancellationToken);
     }
-    
+
     public async Task<ArchiveConfig?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await dbWrite.ArchiveConfigs

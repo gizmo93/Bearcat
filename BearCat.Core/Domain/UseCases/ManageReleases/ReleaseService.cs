@@ -18,26 +18,26 @@ public class ReleaseService(IReleaseWriteRepository writeRepository)
             ReleaseType = releaseType,
             ReleaseFolderPath = releaseFolderPath,
         };
-        
+
         writeRepository.Add(release);
         await writeRepository.SaveChangesAsync(cancellationToken);
-        
+
         return release.Id;
     }
-    
+
     public async Task UpdateAsync(int releaseId, string name, CancellationToken cancellationToken = default)
     {
         var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
         release.Name = name;
-        
+
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
-    
+
     public async Task DeleteAsync(int releaseId, CancellationToken cancellationToken = default)
     {
         var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
         writeRepository.Remove(release);
-        
+
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 }

@@ -18,13 +18,13 @@ public class ArchiveCreationService(
     {
         var uploadsWithoutArchive = await repository.GetUploadsWithoutArchiveAsync(cancellationToken);
         var archivesToCreate = new Dictionary<ArchiveConfig, List<Upload>>();
-        
+
         foreach (var upload in uploadsWithoutArchive)
         {
             logger.LogInformation("Processing upload {UploadId} for UploadConfig {UploadConfigId} without archive",
                 upload.Id,
                 upload.UploadConfigId);
-            
+
             var existingArchiveCanBeAssigned = await TryAssignExistingArchiveAsync(upload, cancellationToken);
 
             if (existingArchiveCanBeAssigned)
@@ -42,9 +42,9 @@ public class ArchiveCreationService(
         {
             return;
         }
-        
+
         logger.LogInformation("Creating {ArchiveCount} new archives for uploads", archivesToCreate.Count);
-        
+
         foreach (var (archiveConfig, uploads) in archivesToCreate)
         {
             await CreateArchiveAsync(archiveConfig, uploads, cancellationToken);
@@ -69,18 +69,18 @@ public class ArchiveCreationService(
             logger.LogInformation("Could not find existing archive for upload {UploadId} with UploadConfig {UploadConfigId}",
                 upload.Id,
                 upload.UploadConfigId);
-            
+
             return false;
         }
 
         upload.Archive = availableArchive;
         upload.UploadState = UploadState.Pending;
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
-        
+
         logger.LogInformation("Assigned existing archive {ArchiveId} to upload {UploadId}",
             availableArchive.Id,
             upload.Id);
-        
+
         return true;
     }
 
@@ -129,10 +129,10 @@ public class ArchiveCreationService(
         {
             upload.UploadState = UploadState.Pending;
         }
-        
+
         repository.Add(archive);
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
-        
+
         logger.LogInformation("Created archive {ArchiveId} for ArchiveConfig {ArchiveConfigId} with {FileCount} files",
             archive.Id,
             config.Id,

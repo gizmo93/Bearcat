@@ -10,7 +10,7 @@ public class NotificationRepository(IBearcatWriteDbContext dbWrite)
     {
         dbWrite.Add(notification);
     }
-    
+
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         return await dbWrite.SaveChangesAsync(cancellationToken);

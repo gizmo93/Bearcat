@@ -1,4 +1,4 @@
-namespace BearCat.Core.Domain.Abstractions.Hoster.Results;
+﻿namespace BearCat.Core.Domain.Abstractions.Hoster.Results;
 
 public record FileExistResult(
     bool IsSuccess,

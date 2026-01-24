@@ -9,7 +9,7 @@ public interface IUploadStateRepository
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<UploadConfig>> GetUploadConfigsWithoutUploadsAsync(CancellationToken cancellationToken);
-    
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 
     void Add(Upload upload);

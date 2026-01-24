@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
 using BearCat.Core.Domain.Abstractions.Hoster;
 using BearCat.Core.Domain.Abstractions.Hoster.Results;
@@ -29,7 +29,7 @@ public class Rapidgator(
         {
             throw new InvalidOperationException("Invalid hoster config for Rapidgator");
         }
-        
+
         await LoginAsync(rapidgatorConfig, cancellationToken: cancellationToken);
     }
 
@@ -128,7 +128,7 @@ public class Rapidgator(
                 .Where(r => r.Status != (int)HttpStatusCode.OK)
                 .Select(r => r.Details ?? "Unknown error")
                 .ToList();
-            
+
             return new FileExistResult(
                 IsSuccess: false,
                 ErrorMessages: errrorMessages,
@@ -160,7 +160,7 @@ public class Rapidgator(
             Username = hosterConfig.GetValueOrDefault("Username") ?? string.Empty,
             Password = hosterConfig.GetValueOrDefault("Password") ?? string.Empty
         };
-        
+
         return JsonSerializer.Serialize(config);
     }
 
@@ -211,7 +211,7 @@ public class Rapidgator(
         {
             loginResponse = null;
         }
-        
+
         loginResponse ??= await rapidgatorApiClient.LoginAsync(
             login: config.Username,
             password: config.Password,

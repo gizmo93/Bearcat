@@ -1,4 +1,4 @@
-using BearCat.Core.Domain.Abstractions;
+﻿using BearCat.Core.Domain.Abstractions;
 using BearCat.Core.Domain.Abstractions.Hoster;
 
 namespace BearCat.Core.Infrastructure.Hosters.Rapidgator;

@@ -1,4 +1,4 @@
-using BearCat.Core.Application.BackgroundTasks;
+﻿using BearCat.Core.Application.BackgroundTasks;
 using BearCat.Core.Domain.InversionOfControl;
 using BearCat.Core.Infrastructure.Archivers.InversionOfControl;
 using BearCat.Core.Infrastructure.Database;

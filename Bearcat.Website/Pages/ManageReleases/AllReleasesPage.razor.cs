@@ -14,11 +14,11 @@ public partial class AllReleasesPage(
 {
     private IReadOnlyList<ReleaseListDto> releases = [];
     private ReleaseService service = null!;
-    
+
     private MudMenu contextMenu = null!;
-    
+
     private ReleaseListDto? contextMenuRow;
-    
+
     protected override async Task OnInitializedAsync()
     {
         await RefreshReleasesAsync();
@@ -48,17 +48,17 @@ public partial class AllReleasesPage(
             FullWidth = true,
             CloseButton = true,
         });
-        
+
         await dialog.Result;
         await RefreshReleasesAsync();
     }
-    
+
     private async Task OpenMenuContent(DataGridRowClickEventArgs<ReleaseListDto> args)
     {
         contextMenuRow = args.Item;
         await contextMenu.OpenMenuAsync(args.MouseEventArgs);
     }
-    
+
     private async Task RefreshReleasesAsync()
     {
         releases = await readRepository.GetReleasesAsync();

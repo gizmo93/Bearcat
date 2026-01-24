@@ -1,4 +1,4 @@
-using BearCat.Core.Domain.Abstractions.Hoster.Results;
+﻿using BearCat.Core.Domain.Abstractions.Hoster.Results;
 using BearCat.Core.Domain.Entities;
 
 namespace BearCat.Core.Domain.Abstractions.Hoster;
@@ -6,7 +6,7 @@ namespace BearCat.Core.Domain.Abstractions.Hoster;
 public interface IHoster
 {
     string Name { get; }
-    
+
     Task PrepareForUploadAsync(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken);
@@ -23,7 +23,7 @@ public interface IHoster
     IHosterConfig DeserializeHosterConfig(string serializedConfig);
 
     string SerializeHosterConfig(Dictionary<string, string> hosterConfig);
-    
+
     IReadOnlyList<string> ConfigurationKeys { get; }
 
     Task<int?> GetMaximumParallelUploadsAsync(IHosterConfig hosterConfig, CancellationToken cancellationToken);

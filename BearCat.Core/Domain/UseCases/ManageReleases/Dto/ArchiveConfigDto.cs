@@ -1,4 +1,4 @@
-namespace BearCat.Core.Domain.UseCases.ManageReleases.Dto;
+﻿namespace BearCat.Core.Domain.UseCases.ManageReleases.Dto;
 
 public record ArchiveConfigDto(
     int ArchiveConfigId,

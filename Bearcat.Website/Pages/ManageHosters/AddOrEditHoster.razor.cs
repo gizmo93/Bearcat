@@ -12,22 +12,22 @@ public partial class AddOrEditHoster(
     HosterRegistrationService hosterRegistrationService)
     : ComponentBase
 {
-    [Parameter] 
+    [Parameter]
     public HosterFormModel FormModel { get; set; } = new();
 
     [CascadingParameter]
     public IMudDialogInstance MudDialog { get; set; } = null!;
-    
+
     private IReadOnlyList<HosterReadModel> hosterReadModels = [];
 
     private HosterReadModel? selectedHoster;
-    
+
     private EditContext editContext = null!;
-    
+
     private ValidationMessageStore? messageStore;
 
     private HashSet<string> displayedPasswords = [];
-    
+
     protected override void OnInitialized()
     {
         hosterReadModels = hosterFactory.GetHosterReadModels();
@@ -40,7 +40,7 @@ public partial class AddOrEditHoster(
             selectedHoster = hosterReadModels.First(h => h.HosterClassName == FormModel.FullClassName);
         }
     }
-    
+
     private async Task SaveAsync()
     {
         if (!FormModel.IsEdit)
@@ -49,7 +49,7 @@ public partial class AddOrEditHoster(
                 name: FormModel.Name,
                 isActive: true,
                 configuration: FormModel.Configuration,
-                hosterClassName: FormModel.FullClassName);   
+                hosterClassName: FormModel.FullClassName);
         }
         else
         {
@@ -66,7 +66,7 @@ public partial class AddOrEditHoster(
     {
         MudDialog.Cancel();
     }
-    
+
     private void HandleValidationRequested(object? sender,
         ValidationRequestedEventArgs args)
     {
@@ -76,7 +76,7 @@ public partial class AddOrEditHoster(
         {
             messageStore.Add(() => FormModel.Name, "Name is required");
         }
-        
+
         if (selectedHoster is null)
         {
             messageStore.Add(() => FormModel.FullClassName, "You must select a hoster");
@@ -106,7 +106,7 @@ public partial class AddOrEditHoster(
             FormModel.Configuration = new Dictionary<string, string>();
         }
     }
-    
+
     private void OnConfigurationValueChanged(string key, string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -114,10 +114,10 @@ public partial class AddOrEditHoster(
             FormModel.Configuration.Remove(key);
             return;
         }
-        
+
         FormModel.Configuration[key] = value!;
     }
-    
+
     private void ToggleShowHidePassword(string key)
     {
         if (displayedPasswords.Add(key))

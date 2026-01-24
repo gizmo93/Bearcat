@@ -9,7 +9,7 @@ public class RarArchiver(
     : IArchiver
 {
     public string Name => "RAR";
-    
+
     public string FileExtension => ".rar";
 
     public async Task<ArchiveResult> ArchiveAsync(
@@ -104,7 +104,7 @@ public class RarArchiver(
         var passwordPart = !string.IsNullOrWhiteSpace(password)
             ? $"-p{password}"
             : string.Empty;
-        
+
         return $"a -ep1 -v{targetFileSizeMb}m {passwordPart} \"{archiveFullPath}\" \"{sourceFolderPath}\"/*";
     }
 }

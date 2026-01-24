@@ -1,4 +1,4 @@
-using BearCat.Core.Domain.UseCases.ManageArchiveConfigs;
+﻿using BearCat.Core.Domain.UseCases.ManageArchiveConfigs;
 using BearCat.Core.Domain.UseCases.ManageArchives.Repositories;
 using BearCat.Core.Domain.UseCases.ManageHosters.Repositories;
 using BearCat.Core.Domain.UseCases.ManageNotifications.Repositories;

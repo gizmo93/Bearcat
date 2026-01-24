@@ -3,7 +3,7 @@
 public interface IArchiver
 {
     string Name { get; }
-    
+
     string FileExtension { get; }
 
     Task<ArchiveResult> ArchiveAsync(

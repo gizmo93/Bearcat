@@ -1,7 +1,7 @@
-﻿using BearCat.Core.Domain.UseCases.ManageUploadConfigs;
+﻿using Bearcat.Website.Shared;
+using BearCat.Core.Domain.UseCases.ManageUploadConfigs;
 using BearCat.Core.Domain.UseCases.ManageUploadConfigs.Dto;
 using BearCat.Core.Domain.UseCases.ManageUploadConfigs.Repositories;
-using Bearcat.Website.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
@@ -10,8 +10,8 @@ namespace Bearcat.Website.Pages.ManageUploadConfigs;
 
 public partial class UploadConfigs(IDialogService dialogService) : IReloadableComponent
 {
-    [Parameter] 
-    [EditorRequired] 
+    [Parameter]
+    [EditorRequired]
     public int ReleaseId { get; set; }
 
     private IReadOnlyList<UploadConfigDto> uploadConfigs = [];
@@ -31,7 +31,10 @@ public partial class UploadConfigs(IDialogService dialogService) : IReloadableCo
         var dialog = await dialogService.ShowAsync<CreateOrEditUploadConfigDialog>("Add Upload Config", parameters,
             new DialogOptions
             {
-                BackdropClick = false, CloseOnEscapeKey = false, CloseButton = true, FullWidth = true,
+                BackdropClick = false,
+                CloseOnEscapeKey = false,
+                CloseButton = true,
+                FullWidth = true,
             });
 
         await dialog.Result;
@@ -50,7 +53,10 @@ public partial class UploadConfigs(IDialogService dialogService) : IReloadableCo
             parameters,
             new DialogOptions
             {
-                BackdropClick = false, CloseOnEscapeKey = false, CloseButton = true, FullWidth = true,
+                BackdropClick = false,
+                CloseOnEscapeKey = false,
+                CloseButton = true,
+                FullWidth = true,
             });
 
         await dialog.Result;

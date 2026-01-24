@@ -1,6 +1,6 @@
-﻿using BearCat.Core.Domain.UseCases.ManageReleases;
+﻿using Bearcat.Website.Shared;
+using BearCat.Core.Domain.UseCases.ManageReleases;
 using BearCat.Core.Domain.ValueObjects;
-using Bearcat.Website.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.Configuration;
@@ -16,11 +16,11 @@ public partial class CreateOrEditReleaseDialog(
 {
     [CascadingParameter]
     public IMudDialogInstance MudDialog { get; set; } = null!;
-    
+
     private ReleaseFormModel formModel = null!;
 
     private EditContext editContext = null!;
-    
+
     private ValidationMessageStore? messageStore;
 
     protected override void OnInitialized()
@@ -36,12 +36,12 @@ public partial class CreateOrEditReleaseDialog(
         var service = ScopedServices.GetRequiredService<ReleaseService>();
 
         var releaseType = (ReleaseType)Convert.ToInt32(formModel.ReleaseType);
-        
+
         var id = await service.CreateAsync(
             name: formModel.Name,
             releaseFolderPath: formModel.FolderPath,
             releaseType: releaseType);
-        
+
         navigationManager.NavigateTo("releases");
     }
 
@@ -55,7 +55,7 @@ public partial class CreateOrEditReleaseDialog(
         {
             messageStore.Add(() => formModel.Name, "Name is required");
         }
-        
+
         if (string.IsNullOrWhiteSpace(formModel.FolderPath))
         {
             messageStore.Add(() => formModel.FolderPath, "You must select a folder");
@@ -75,7 +75,7 @@ public partial class CreateOrEditReleaseDialog(
         {
             { dlg => dlg.BaseFolderPath, releasesPath }
         };
-        
+
         var dialog = await dialogService.ShowAsync<FolderSelectionDialog>(
             "Select release folder",
             parameters, new DialogOptions

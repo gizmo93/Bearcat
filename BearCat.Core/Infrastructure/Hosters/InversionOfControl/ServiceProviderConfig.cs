@@ -1,4 +1,4 @@
-using BearCat.Core.Domain.Abstractions.Hoster;
+﻿using BearCat.Core.Domain.Abstractions.Hoster;
 using BearCat.Core.Infrastructure.Hosters.Rapidgator.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
 

@@ -1,4 +1,4 @@
-using BearCat.Core.Domain.Entities;
+﻿using BearCat.Core.Domain.Entities;
 
 namespace BearCat.Core.Domain.UseCases.ManageHosters.Repositories;
 

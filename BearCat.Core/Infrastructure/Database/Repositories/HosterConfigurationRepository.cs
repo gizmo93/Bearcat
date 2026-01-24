@@ -1,4 +1,4 @@
-using BearCat.Core.Domain.Abstractions.Hoster;
+﻿using BearCat.Core.Domain.Abstractions.Hoster;
 using BearCat.Core.Domain.Entities;
 using BearCat.Core.Domain.UseCases.ManageHosters.Dto;
 using BearCat.Core.Domain.UseCases.ManageHosters.Repositories;

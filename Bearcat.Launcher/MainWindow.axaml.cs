@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 
@@ -13,9 +13,9 @@ public partial class MainWindow : Window
         if (isInitialStart)
         {
             CloseWindowAfterDelay();
-        } 
+        }
     }
-    
+
     private async Task CloseWindowAfterDelay()
     {
         await Task.Delay(TimeSpan.FromSeconds(3));

@@ -1,6 +1,6 @@
-﻿using BearCat.Core.Domain.Abstractions.Archiver;
+﻿using Bearcat.Website.Shared;
+using BearCat.Core.Domain.Abstractions.Archiver;
 using BearCat.Core.Domain.UseCases.ManageArchiveConfigs;
-using Bearcat.Website.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.Configuration;
@@ -16,29 +16,29 @@ public partial class CreateOrEditArchiveConfigDialog(
 {
     [Parameter]
     public ArchiveConfigFormModel FormModel { get; set; } = null!;
-    
+
     [Parameter]
     public int ReleaseId { get; set; }
-    
+
     [Parameter]
     public int? ArchiveConfigId { get; set; }
-    
+
     [CascadingParameter]
     public IMudDialogInstance MudDialog { get; set; } = null!;
 
     private IReadOnlyList<ArchiverDto> archivers = [];
-    
+
     private ArchiverDto? SelectedArchiver => archivers.FirstOrDefault(
         a => a.ClassName == FormModel.ArchiverName);
-    
+
     private EditContext editContext = null!;
-    
+
     private ValidationMessageStore messageStore = null!;
 
     private ArchiveConfigService archiveConfigService = null!;
 
     private bool isEdit;
-    
+
     protected override void OnInitialized()
     {
         archivers = archiverFactory.GetArchivers();
@@ -60,7 +60,7 @@ public partial class CreateOrEditArchiveConfigDialog(
                 archiverName: FormModel.ArchiverName!,
                 archiveNamePrefix: FormModel.ArchiveNamePrefix!,
                 archivePassword: FormModel.ArchivePassword,
-                archiveFileSizeMb: FormModel.ArchiveFileSizeMb);   
+                archiveFileSizeMb: FormModel.ArchiveFileSizeMb);
         }
         else
         {
@@ -72,7 +72,7 @@ public partial class CreateOrEditArchiveConfigDialog(
                 archivePassword: FormModel.ArchivePassword,
                 archiveFileSizeMb: FormModel.ArchiveFileSizeMb);
         }
-        
+
         MudDialog.Close();
     }
 
@@ -82,7 +82,7 @@ public partial class CreateOrEditArchiveConfigDialog(
         {
             { dlg => dlg.BaseFolderPath, configuration.GetRequiredSection("ReleaseDataDirectory").Value! }
         };
-        
+
         var dialog = await dialogService.ShowAsync<FolderSelectionDialog>(
             "Select a folder, where the archive files should be created",
             parameters,
@@ -93,7 +93,7 @@ public partial class CreateOrEditArchiveConfigDialog(
                 CloseButton = true,
                 FullWidth = true,
             });
-        
+
         var result = await dialog.Result;
 
         if (result is { Canceled: false, Data: string selectedPath })
@@ -115,12 +115,12 @@ public partial class CreateOrEditArchiveConfigDialog(
         {
             messageStore.Add(() => FormModel.ArchiverName!, "You must select an archiver");
         }
-        
+
         if (string.IsNullOrWhiteSpace(FormModel.ArchiveFilesBasePath))
         {
             messageStore.Add(() => FormModel.ArchiveFilesBasePath!, "Base path is required");
         }
-        
+
         if (string.IsNullOrWhiteSpace(FormModel.ArchiveNamePrefix))
         {
             messageStore.Add(() => FormModel.ArchiveNamePrefix!, "Archive name prefix is required");
