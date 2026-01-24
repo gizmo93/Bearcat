@@ -8,8 +8,4 @@ public record ReleaseListDto(
     ReleaseType ReleaseType,
     int ArchiveConfigCount,
     int UploadConfigCount,
-    string ReleaseFolderPath,
-    IReadOnlyList<ReleaseListDto.UploadConfigDto> UploadConfigStates)
-{
-    public record UploadConfigDto(string Name, OnlineState OnlineState);
-}
+    string ReleaseFolderPath);
