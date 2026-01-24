@@ -10,7 +10,9 @@ namespace Bearcat.Website.Pages.ManageUploadConfigs;
 
 public partial class UploadConfigs(IDialogService dialogService) : IReloadableComponent
 {
-    [Parameter] [EditorRequired] public int ReleaseId { get; set; }
+    [Parameter] 
+    [EditorRequired] 
+    public int ReleaseId { get; set; }
 
     private IReadOnlyList<UploadConfigDto> uploadConfigs = [];
 
