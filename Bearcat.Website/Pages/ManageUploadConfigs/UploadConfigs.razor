@@ -4,24 +4,24 @@
     <MudCardHeader>
         <CardHeaderContent>
             <MudStack Row AlignItems="AlignItems.Center">
-                <MudIcon Icon="@Icons.Material.Filled.Archive" />
-                <MudText Typo="Typo.subtitle1">Archive configurations</MudText>
+                <MudIcon Icon="@Icons.Material.Filled.Upload"/>
+                <MudText Typo="Typo.subtitle1">Upload configurations</MudText>
             </MudStack>
         </CardHeaderContent>
         <CardHeaderActions>
-            <MudFab OnClick="@(() => ShowAddDialogAsync())" Color="Color.Transparent" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" />
+            <MudFab OnClick="@(() => ShowAddDialogAsync())" Color="Color.Transparent" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add"/>
         </CardHeaderActions>
     </MudCardHeader>
     <MudCardContent>
         <MudStack>
-            @foreach (var config in archiveConfigs)
+            @foreach (var config in uploadConfigs)
             {
                 <MudCard Elevation="6">
                     <MudCardHeader Style="overflow: scroll;">
                         <CardHeaderContent>
                             <MudStack AlignItems="AlignItems.Center" Row>
                                 <MudText Typo="Typo.subtitle1">@config.Name</MudText>
-                                <MudChip T="string" Variant="Variant.Outlined">@config.ArchiverDisplayName</MudChip>
+                                <MudChip T="string" Variant="Variant.Outlined">@config.HosterRegistrationName</MudChip>
                             </MudStack>
                         </CardHeaderContent>
                         <CardHeaderActions>
@@ -39,7 +39,25 @@
                             </MudMenu>
                         </CardHeaderActions>
                     </MudCardHeader>
-                    <ArchiveConfigContent Config="config" />
+                    <MudCardContent>
+                        <MudStack Spacing="3" AlignItems="AlignItems.Baseline">
+                            <MudStack Row>
+                                <MudStack Spacing="2" AlignItems="AlignItems.Baseline">
+                                    <MudText Typo="Typo.caption">Archive config</MudText>
+                                    <MudText Typo="Typo.body2">@config.ArchiveConfigName</MudText>
+                                </MudStack>
+                            </MudStack>
+                            @if (config.LinksDistributedTo.Count > 0)
+                            {
+                                <MudStack Row>
+                                    <MudStack Spacing="2" AlignItems="AlignItems.Baseline">
+                                        <MudText Typo="Typo.caption">Links distributed to</MudText>
+                                        <MudText Typo="Typo.body2">@(string.Join(", ", config.LinksDistributedTo))</MudText>
+                                    </MudStack>
+                                </MudStack>   
+                            }
+                        </MudStack>
+                    </MudCardContent>
                 </MudCard>
             }
         </MudStack>

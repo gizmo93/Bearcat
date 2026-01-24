@@ -11,4 +11,6 @@ public class ArchiveConfigFormModel
     public string? ArchivePassword { get; set; }
     
     public int? ArchiveFileSizeMb { get; set; }
+    
+    public string? Name { get; set; }
 }

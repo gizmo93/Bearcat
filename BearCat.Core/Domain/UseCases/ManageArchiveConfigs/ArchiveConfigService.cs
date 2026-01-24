@@ -9,11 +9,13 @@ public class ArchiveConfigService(
         string archiverName,
         string archiveNamePrefix,
         string? archivePassword,
+        string name,
         int? archiveFileSizeMb)
     {
         var archiveConfig = new Entities.ArchiveConfig
         {
             ReleaseId = releaseId,
+            Name = name,
             ArchiveFilesBasePath = archiveFilesBasePath,
             ArchiverName = archiverName,
             ArchiveNamePrefix = archiveNamePrefix,
@@ -44,6 +46,7 @@ public class ArchiveConfigService(
         string archiveFilesBasePath,
         string archiveNamePrefix,
         string? archivePassword,
+        string name,
         int? archiveFileSizeMb)
     {
         var archiveConfig = await writeRepository.GetByIdAsync(archiveConfigId);
@@ -56,6 +59,7 @@ public class ArchiveConfigService(
         archiveConfig.ArchiveNamePrefix = archiveNamePrefix;
         archiveConfig.ArchivePassword = archivePassword;
         archiveConfig.ArchiveFileSizeMb = archiveFileSizeMb ?? 0;
+        archiveConfig.Name = name;
         
         await writeRepository.SaveChangesAsync();
     }

@@ -4,6 +4,7 @@ using BearCat.Core.Domain.UseCases.ManageArchives;
 using BearCat.Core.Domain.UseCases.ManageHosters;
 using BearCat.Core.Domain.UseCases.ManageNotifications;
 using BearCat.Core.Domain.UseCases.ManageReleases;
+using BearCat.Core.Domain.UseCases.ManageUploadConfigs;
 using BearCat.Core.Domain.UseCases.ManageUploads;
 using BearCat.Core.Infrastructure.Archivers;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +27,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ArchiverFactory>();
             services.AddScoped<ArchiveConfigService>();
             services.AddScoped<Domain.UseCases.TimeProvider>();
+            services.AddScoped<UploadConfigService>();
         }
     }
 }

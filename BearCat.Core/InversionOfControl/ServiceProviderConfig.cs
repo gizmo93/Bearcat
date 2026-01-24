@@ -22,7 +22,7 @@ public static class ServiceProviderConfig
             services.AddRepositories();
             services.AddDomain();
             services.AddArchivers();
-            services.AddHostedServices();
+            //services.AddHostedServices();
         }
 
         private void AddHostedServices()
