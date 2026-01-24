@@ -1,4 +1,4 @@
-using BearCat.Core.Infrastructure.Hosters.Rapidgator.ApiClient.File;
+﻿using BearCat.Core.Infrastructure.Hosters.Rapidgator.ApiClient.File;
 using BearCat.Core.Infrastructure.Hosters.Rapidgator.ApiClient.User;
 using Refit;
 
@@ -31,6 +31,6 @@ public interface IRapidgatorApi
     [Get("/api/v2/file/check_link")]
     Task<ApiResponse<CheckLinksResponse>> CheckLinkAsync(
         [Query] string token,
-        [Query] [AliasAs("url")] string links,
+        [Query][AliasAs("url")] string links,
         CancellationToken cancellationToken);
 }

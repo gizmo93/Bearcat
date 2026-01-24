@@ -12,14 +12,14 @@ public class ArchiveUploadBackgroundTask(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         logger.LogInformation("Starting Distribution Upload Background Task");
-        
+
         while (true)
         {
             if (stoppingToken.IsCancellationRequested)
             {
                 break;
             }
-            
+
             await using var scope = serviceScopeFactory.CreateAsyncScope();
             var uploadService = scope.ServiceProvider.GetRequiredService<UploadFilesService>();
             await uploadService.ProcessPendingUploadsAsync(stoppingToken);

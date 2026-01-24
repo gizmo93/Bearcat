@@ -12,7 +12,7 @@ public partial class ArchiveDetailDialog(
 {
     [Parameter]
     public int ArchiveId { get; set; }
-    
+
     [CascadingParameter]
     public IMudDialogInstance MudDialog { get; set; } = null!;
 

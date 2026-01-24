@@ -3,39 +3,38 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace BearCat.Core.Migrations
+namespace BearCat.Core.Migrations;
+
+/// <inheritdoc />
+public partial class AddSomeFields : Migration
 {
     /// <inheritdoc />
-    public partial class AddSomeFields : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.AddColumn<List<string>>(
-                name: "LinksDistributedTo",
-                table: "UploadConfigs",
-                type: "text[]",
-                nullable: false);
+        migrationBuilder.AddColumn<List<string>>(
+            name: "LinksDistributedTo",
+            table: "UploadConfigs",
+            type: "text[]",
+            nullable: false);
 
-            migrationBuilder.AddColumn<string>(
-                name: "Name",
-                table: "ArchiveConfigs",
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: false,
-                defaultValue: "");
-        }
+        migrationBuilder.AddColumn<string>(
+            name: "Name",
+            table: "ArchiveConfigs",
+            type: "character varying(100)",
+            maxLength: 100,
+            nullable: false,
+            defaultValue: "");
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "LinksDistributedTo",
-                table: "UploadConfigs");
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropColumn(
+            name: "LinksDistributedTo",
+            table: "UploadConfigs");
 
-            migrationBuilder.DropColumn(
-                name: "Name",
-                table: "ArchiveConfigs");
-        }
+        migrationBuilder.DropColumn(
+            name: "Name",
+            table: "ArchiveConfigs");
     }
 }

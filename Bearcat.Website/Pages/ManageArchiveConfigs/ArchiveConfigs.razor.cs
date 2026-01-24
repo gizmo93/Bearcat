@@ -1,7 +1,7 @@
+﻿using Bearcat.Website.Shared;
 using BearCat.Core.Domain.UseCases.ManageArchiveConfigs;
 using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
 using BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
-using Bearcat.Website.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
@@ -11,14 +11,14 @@ namespace Bearcat.Website.Pages.ManageArchiveConfigs;
 public partial class ArchiveConfigs(
     IDialogService dialogService) : IReloadableComponent
 {
-    [Parameter] 
+    [Parameter]
     public int ReleaseId { get; set; }
-    
+
     [Parameter]
     public EventCallback<string> OnChangeAffectingOtherComponents { get; set; }
 
     private IReadOnlyList<ArchiveConfigDto> archiveConfigs = [];
-    
+
     private IReleaseReadRepository readRepository = null!;
 
     protected override async Task OnInitializedAsync()
@@ -52,7 +52,7 @@ public partial class ArchiveConfigs(
     private async Task DeleteConfigAsync(ArchiveConfigDto archiveConfig)
     {
         var dialog = await dialogService.ShowMessageBoxAsync(
-            title: "Delete archive config", 
+            title: "Delete archive config",
             message: $"Are you sure you want to delete the archive config {archiveConfig.ArchiveNameWithExtension} (Archiver: {archiveConfig.ArchiverDisplayName})?",
             yesText: "Delete",
             noText: "Cancel");

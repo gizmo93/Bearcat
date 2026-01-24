@@ -10,13 +10,13 @@ namespace Bearcat.Launcher;
 public static class BearcatStartup
 {
     private static Process? _hostProcess;
-    
+
     public static async Task StartupBearcatAsync(string[] args, CancellationToken cancellationToken)
     {
         var assemblyPath = Assembly.GetExecutingAssembly().Location;
 
         var urls = "https://localhost:7208;http://localhost:5097";
-        
+
         // Starte den Host als separaten Prozess
         _hostProcess = new Process
         {

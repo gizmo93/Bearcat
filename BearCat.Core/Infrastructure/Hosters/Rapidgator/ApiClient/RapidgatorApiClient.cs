@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using BearCat.Core.Infrastructure.Hosters.Rapidgator.ApiClient.File;
 using BearCat.Core.Infrastructure.Hosters.Rapidgator.ApiClient.User;
@@ -41,7 +41,8 @@ public class RapidgatorApiClient(
         return JsonSerializer.Deserialize<UploadFileResponse>(content,
             options: new JsonSerializerOptions
             {
-                NumberHandling = JsonNumberHandling.AllowReadingFromString, PropertyNameCaseInsensitive = true,
+                NumberHandling = JsonNumberHandling.AllowReadingFromString,
+                PropertyNameCaseInsensitive = true,
             })!;
     }
 

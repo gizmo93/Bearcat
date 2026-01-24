@@ -1,4 +1,4 @@
-using BearCat.Core.Domain.Shared;
+﻿using BearCat.Core.Domain.Shared;
 using BearCat.Core.Domain.UseCases.ManageArchiveConfigs;
 using BearCat.Core.Domain.UseCases.ManageArchives;
 using BearCat.Core.Domain.UseCases.ManageHosters;

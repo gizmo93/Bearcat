@@ -15,17 +15,17 @@ public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite)
             .Include(r => r.ArchiveConfigs)
             .FirstAsync(r => r.Id == id, cancellationToken);
     }
-    
+
     public void Add(Release release)
     {
         dbWrite.Add(release);
     }
-    
+
     public void Remove(Release release)
     {
         dbWrite.Remove(release);
     }
-    
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         await dbWrite.SaveChangesAsync(cancellationToken);

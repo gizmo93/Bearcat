@@ -17,7 +17,7 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite)
             OnlineState.Online,
             OnlineState.PartiallyOnline
         ];
-        
+
         var lastCheckThreshold = utcNow.AddMinutes(-30);
 
         return await dbWrite.Uploads
@@ -25,7 +25,7 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite)
             .Include(u => u.UploadConfig)
             .ThenInclude(uc => uc.HosterRegistration)
             .Include(u => u.UploadedFiles)
-            .Where(u => 
+            .Where(u =>
                 onlineStatesToCheck.Contains(u.OnlineState)
                 && u.UploadedFiles.Any(f => f.CheckedAt == null
                                             || f.CheckedAt < lastCheckThreshold))

@@ -22,13 +22,13 @@ public class ArchiveConfigService(
             ArchivePassword = archivePassword,
             ArchiveFileSizeMb = archiveFileSizeMb ?? 0
         };
-        
+
         writeRepository.Add(archiveConfig);
         await writeRepository.SaveChangesAsync();
-        
+
         return archiveConfig.Id;
     }
-    
+
     public async Task DeleteAsync(int archiveConfigId)
     {
         var archiveConfig = await writeRepository.GetByIdAsync(archiveConfigId);
@@ -36,11 +36,11 @@ public class ArchiveConfigService(
         {
             throw new InvalidOperationException($"ArchiveConfig with ID {archiveConfigId} not found");
         }
-        
+
         writeRepository.Remove(archiveConfig);
         await writeRepository.SaveChangesAsync();
     }
-    
+
     public async Task UpdateAsync(
         int archiveConfigId,
         string archiveFilesBasePath,
@@ -54,13 +54,13 @@ public class ArchiveConfigService(
         {
             throw new InvalidOperationException($"ArchiveConfig with ID {archiveConfigId} not found");
         }
-        
+
         archiveConfig.ArchiveFilesBasePath = archiveFilesBasePath;
         archiveConfig.ArchiveNamePrefix = archiveNamePrefix;
         archiveConfig.ArchivePassword = archivePassword;
         archiveConfig.ArchiveFileSizeMb = archiveFileSizeMb ?? 0;
         archiveConfig.Name = name;
-        
+
         await writeRepository.SaveChangesAsync();
     }
 }

@@ -10,16 +10,16 @@ public partial class FolderSelectionDialog(
 {
     [Parameter]
     public string BaseFolderPath { get; set; } = null!;
-    
+
     [CascadingParameter]
     public IMudDialogInstance MudDialog { get; set; } = null!;
-    
+
     private List<TreeItemData<string?>> initialTreeItems = [];
 
     private string? selectedItem;
-    
+
     private string? searchPhrase;
-    
+
     private MudTreeView<string> treeView = null!;
 
     protected override void OnInitialized()
@@ -32,7 +32,7 @@ public partial class FolderSelectionDialog(
         var result = !string.IsNullOrEmpty(selectedItem)
             ? DialogResult.Ok(selectedItem)
             : DialogResult.Cancel();
-        
+
         MudDialog.Close(result);
     }
 
@@ -48,27 +48,27 @@ public partial class FolderSelectionDialog(
         {
             return Task.FromResult<IReadOnlyCollection<TreeItemData<string?>>>(new List<TreeItemData<string?>>());
         }
-        
+
         var items = fileSystemService.GetFoldersInPath(path)
             .Select(CreateTreeViewItem)
             .ToList();
 
         return Task.FromResult<IReadOnlyCollection<TreeItemData<string?>>>(items);
     }
-    
-    private async Task OnTextChangedAsync(string? search) 
+
+    private async Task OnTextChangedAsync(string? search)
     {
         searchPhrase = search;
         await treeView.FilterAsync();
     }
-    
+
     private Task<bool> MatchesName(ITreeItemData<string?> item)
     {
         if (string.IsNullOrEmpty(searchPhrase))
         {
             return Task.FromResult(true);
         }
-        
+
         if (string.IsNullOrEmpty(item.Text))
         {
             return Task.FromResult(false);
@@ -76,12 +76,12 @@ public partial class FolderSelectionDialog(
 
         return Task.FromResult(item.Text.Contains(searchPhrase, StringComparison.OrdinalIgnoreCase));
     }
-    
+
     private static void OnItemsLoaded(ITreeItemData<string?> treeItemData, IReadOnlyCollection<ITreeItemData<string?>> children)
     {
         treeItemData.Children = children.ToList();
     }
-    
+
     private static TreeItemData<string?> CreateTreeViewItem(string path)
     {
         return new TreeItemData<string?>

@@ -1,4 +1,4 @@
-namespace BearCat.Core.Domain.UseCases.ManageHosters.Dto;
+﻿namespace BearCat.Core.Domain.UseCases.ManageHosters.Dto;
 
 public record HosterRegistrationDto(
     int Id,

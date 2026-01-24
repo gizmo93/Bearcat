@@ -26,23 +26,23 @@ public class UploadStateService(
             var hoster = hosterFactory.GetByName(uploadGroup.Key);
             var hosterConfig = hoster.DeserializeHosterConfig(
                 uploadGroup.First().UploadConfig.HosterRegistration.SerializedConfig);
-            
+
             foreach (var upload in uploadGroup)
             {
                 logger.LogInformation("Checking online status for Upload {UploadId} on hoster {Hoster}",
                     upload.Id,
                     hoster.Name);
-                
+
                 await UpdateOnlineStatusAsync(
                     hoster: hoster,
                     hosterConfig: hosterConfig,
                     upload: upload,
                     cancellationToken: cancellationToken);
-                
+
                 CreateNewUploadIfNeeded(upload);
 
                 await uploadStateRepository.SaveChangesAsync(cancellationToken);
-                
+
                 logger.LogInformation("Updated online status for Upload {UploadId} to {OnlineState}",
                     upload.Id,
                     upload.OnlineState);
@@ -63,13 +63,13 @@ public class UploadStateService(
             hosterConfig: hosterConfig,
             fileUrls: filesByUrl.Keys.ToList(),
             cancellationToken: cancellationToken);
-        
+
         if (!result.IsSuccess)
         {
             logger.LogError("Failed to check file existence for Upload {UploadId}: {ErrorMessages}",
                 upload.Id,
                 string.Join("; ", result.ErrorMessages));
-            
+
             return;
         }
 
@@ -80,7 +80,7 @@ public class UploadStateService(
             file.OnlineState = exists ? OnlineState.Online : OnlineState.Offline;
             file.CheckedAt = DateTime.UtcNow;
         }
-        
+
         var offlineFilesCount = upload.UploadedFiles.Count(f => f.OnlineState == OnlineState.Offline);
 
         if (offlineFilesCount > 0)
@@ -110,14 +110,14 @@ public class UploadStateService(
             UploadState = UploadState.WaitingForArchive,
             OnlineState = OnlineState.Unknown,
         };
-        
+
         uploadStateRepository.Add(newUpload);
     }
 
     private async Task CreateMissingUploadsAsync(CancellationToken cancellationToken)
     {
         var uploadConfigsWithoutUploads = await uploadStateRepository.GetUploadConfigsWithoutUploadsAsync(cancellationToken);
-        
+
         foreach (var uploadConfig in uploadConfigsWithoutUploads)
         {
             var upload = new Upload
@@ -128,10 +128,10 @@ public class UploadStateService(
                 OnlineState = OnlineState.Unknown,
             };
             uploadStateRepository.Add(upload);
-            
+
             logger.LogInformation("Created missing upload for UploadConfig {UploadConfigId}", uploadConfig.Id);
         }
-        
+
         await uploadStateRepository.SaveChangesAsync(cancellationToken);
     }
 }

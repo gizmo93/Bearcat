@@ -9,7 +9,7 @@ public class SevenZipArchiver(
     : IArchiver
 {
     public string Name => "7Zip";
-    
+
     public string FileExtension => ".7z";
 
     public async Task<ArchiveResult> ArchiveAsync(
@@ -104,7 +104,7 @@ public class SevenZipArchiver(
         var passwordPart = !string.IsNullOrWhiteSpace(password)
             ? $"-p{password}"
             : string.Empty;
-        
+
         return $"a -v{targetFileSizeMb}m {passwordPart} \"{archiveFullPath}\" \"{sourceFolderPath}\"/*";
     }
 }

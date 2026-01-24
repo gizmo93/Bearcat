@@ -1,6 +1,6 @@
-﻿using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
+﻿using Bearcat.Website.Shared;
+using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
 using BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
-using Bearcat.Website.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,23 +10,23 @@ public partial class ReleaseDetail(NavigationManager navigationManager)
 {
     [Parameter]
     public int ReleaseId { get; set; }
-    
+
     private IReleaseReadRepository releaseReadRepository = null!;
 
     private ReleaseDto release = null!;
 
     private bool isInitialized;
-    
+
     private readonly Dictionary<string, IReloadableComponent> reloadableComponents = new();
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        
+
         releaseReadRepository = ScopedServices.GetRequiredService<IReleaseReadRepository>();
 
         var releaseDto = await releaseReadRepository.GetReleaseAsync(ReleaseId);
-        
+
         if (releaseDto is null)
         {
             navigationManager.NotFound();

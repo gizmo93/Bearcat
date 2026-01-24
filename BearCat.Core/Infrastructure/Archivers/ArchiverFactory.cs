@@ -9,7 +9,7 @@ public class ArchiverFactory(IServiceProvider serviceProvider) : IArchiverFactor
     {
         return serviceProvider.GetRequiredKeyedService<IArchiver>(name);
     }
-    
+
     public IReadOnlyList<ArchiverDto> GetArchivers()
     {
         var archivers = serviceProvider.GetKeyedServices<IArchiver>(KeyedService.AnyKey);

@@ -24,7 +24,7 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
                 u.LinksDistributedTo))
             .ToListAsync(cancellationToken: cancellationToken);
     }
-    
+
     public async Task<UploadConfigDto> GetDtoByIdAsync(
         int uploadConfigId,
         CancellationToken cancellationToken = default)
@@ -51,7 +51,7 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
                 h => h.Id, h => h.Name,
                 cancellationToken: cancellationToken);
     }
-    
+
     public async Task<IReadOnlyDictionary<int, string>> GetArchiveConfigOptionsAsync(
         int releaseId,
         CancellationToken cancellationToken = default)

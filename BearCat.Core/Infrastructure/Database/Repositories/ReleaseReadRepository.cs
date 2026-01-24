@@ -33,7 +33,7 @@ public class ReleaseReadRepository(
                     .ToList()))
             .ToListAsync(cancellationToken: cancellationToken);
     }
-    
+
     public async Task<ReleaseDto?> GetReleaseAsync(int releaseId, CancellationToken cancellationToken = default)
     {
         return await dbRead
@@ -51,13 +51,13 @@ public class ReleaseReadRepository(
         CancellationToken cancellationToken)
     {
         var archivers = archiverFactory.GetArchivers();
-        
+
         var fileExtensionByArchiver = archivers
             .ToDictionary(a => a.ClassName, a => a.FileExtension);
-        
+
         var nameByArchiverClassName = archivers
             .ToDictionary(a => a.ClassName, a => a.Name);
-        
+
         return await dbRead.ArchiveConfigs
             .AsSplitQuery()
             .Where(a => a.ReleaseId == releaseId)

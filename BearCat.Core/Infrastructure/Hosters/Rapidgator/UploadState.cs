@@ -1,4 +1,4 @@
-namespace BearCat.Core.Infrastructure.Hosters.Rapidgator;
+﻿namespace BearCat.Core.Infrastructure.Hosters.Rapidgator;
 
 public static class UploadStates
 {

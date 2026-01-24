@@ -14,11 +14,11 @@ public partial class AllHostersPage(
 {
     private IReadOnlyList<HosterRegistrationDto> hosters = [];
     private HosterRegistrationService hosterRegistrationService = null!;
-    
+
     private MudMenu contextMenu = null!;
 
     private HosterRegistrationDto? contextMenuRow;
-    
+
     protected override async Task OnInitializedAsync()
     {
         await LoadHostersAsync();
@@ -29,7 +29,7 @@ public partial class AllHostersPage(
     {
         hosters = await readRepository.GetAllRegistrationsAsync();
     }
-    
+
     private async Task OpenMenuContent(DataGridRowClickEventArgs<HosterRegistrationDto> args)
     {
         contextMenuRow = args.Item;
@@ -39,9 +39,9 @@ public partial class AllHostersPage(
     private async Task ShowAddDialogAsync()
     {
         var formModel = new HosterFormModel();
-        
+
         var parameters = new DialogParameters<AddOrEditHoster> { { x => x.FormModel, formModel } };
-        
+
         var dialog = await dialogService.ShowAsync<AddOrEditHoster>("Add Hoster", parameters, new DialogOptions
         {
             BackdropClick = false,
@@ -52,7 +52,7 @@ public partial class AllHostersPage(
         await LoadHostersAsync();
         await LoadHostersAsync();
     }
-    
+
     private async Task ShowEditDialogAsync(HosterRegistrationDto hosterRegistration)
     {
         var formModel = new HosterFormModel
@@ -65,7 +65,7 @@ public partial class AllHostersPage(
         };
 
         var parameters = new DialogParameters<AddOrEditHoster> { { x => x.FormModel, formModel } };
-        
+
         var dialog = await dialogService.ShowAsync<AddOrEditHoster>($"Edit {hosterRegistration.Name}", parameters, new DialogOptions
         {
             BackdropClick = false,
@@ -79,7 +79,7 @@ public partial class AllHostersPage(
     private async Task ToggleIsActiveAsync(HosterRegistrationDto hoster)
     {
         await hosterRegistrationService.ToggleIsActiveAsync(hoster.Id);
-        
+
         var status = hoster.IsActive ? "deactivated" : "activated";
         snackbar.Add($"Hoster registration {hoster.Name} {status}", Severity.Success);
         await LoadHostersAsync();
@@ -89,7 +89,7 @@ public partial class AllHostersPage(
     {
         var message = $"Are you sure you want to delete hoster registration {hoster.Name}?" +
                       $"\nBe careful, as it will also remove all uploads related to that hoster registration.";
-        
+
         var result = await dialogService.ShowMessageBoxAsync(title: $"Delete {hoster.Name}",
             message: message,
             yesText: "Delete",
@@ -99,14 +99,14 @@ public partial class AllHostersPage(
         {
             await hosterRegistrationService.RemoveAsync(hoster.Id);
         }
-        
-        await LoadHostersAsync();   
+
+        await LoadHostersAsync();
     }
-    
+
     private async Task TryLoginAsync(HosterRegistrationDto hoster)
     {
         var result = await hosterRegistrationService.TryLoginAsync(hoster.Id);
-        
+
         if (result.IsSuccess)
         {
             snackbar.Add($"Login for registration {hoster.Name} successful", Severity.Success);

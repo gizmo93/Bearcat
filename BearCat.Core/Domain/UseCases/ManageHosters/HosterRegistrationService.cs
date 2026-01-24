@@ -1,4 +1,4 @@
-using BearCat.Core.Domain.Abstractions.Hoster;
+﻿using BearCat.Core.Domain.Abstractions.Hoster;
 using BearCat.Core.Domain.Abstractions.Hoster.Results;
 using BearCat.Core.Domain.Entities;
 using BearCat.Core.Domain.UseCases.ManageHosters.Repositories;
@@ -18,7 +18,7 @@ public class HosterRegistrationService(
     {
         var hoster = hosterFactory.GetByName(hosterClassName);
         var serializedConfig = hoster.SerializeHosterConfig(configuration);
-        
+
         var registration = new HosterRegistration
         {
             Name = name,
@@ -54,10 +54,10 @@ public class HosterRegistrationService(
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         var hoster = hosterFactory.GetByName(registration.HosterClassName);
-        
+
         registration.Name = name;
         registration.SerializedConfig = hoster.SerializeHosterConfig(configuration);
-        
+
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 
