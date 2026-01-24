@@ -17,22 +17,23 @@
         </TitleContent>
         <DialogContent>
             <MudStack Spacing="4">
+                <MudTextField @bind-Value="FormModel.Name" Label="Name" />
                 <MudSelect @bind-Value="FormModel.ArchiverName" Label="Archiver" Disabled="isEdit">
                     @foreach (var archiver in archivers)
                     {
                         <MudSelectItem Value="@archiver.ClassName">@archiver.Name</MudSelectItem>
                     }
                 </MudSelect>
-            
+
                 @if (FormModel.ArchiverName is not null)
                 {
                     <MudStack Row AlignItems="AlignItems.Baseline">
-                        <MudTextField 
+                        <MudTextField
                             @bind-Value="FormModel.ArchiveNamePrefix"
-                            Label="Archive name prefix" />
+                            Label="Archive name prefix"/>
                         <MudText Typo="Typo.body1">@SelectedArchiver?.FileExtension</MudText>
                     </MudStack>
-                    
+
                     <MudStack Spacing="1">
                         <MudText Typo="Typo.caption">Archive files folder</MudText>
                         <MudStack Row>
@@ -47,11 +48,11 @@
                             </MudButton>
                         </MudStack>
                     </MudStack>
-                    
-                    <MudTextField @bind-Value="FormModel.ArchivePassword" Label="Archive password" />
-                    <MudNumericField @bind-Value="@FormModel.ArchiveFileSizeMb" Label="Archive file size (MB)" />
+
+                    <MudTextField @bind-Value="FormModel.ArchivePassword" Label="Archive password"/>
+                    <MudNumericField @bind-Value="@FormModel.ArchiveFileSizeMb" Label="Archive file size (MB)"/>
                 }
-                
+
                 <div style="color: red;">
                     <ValidationMessage For="@(() => FormModel.ArchiverName)"/>
                     <ValidationMessage For="@(() => FormModel.ArchiveFilesBasePath)"/>

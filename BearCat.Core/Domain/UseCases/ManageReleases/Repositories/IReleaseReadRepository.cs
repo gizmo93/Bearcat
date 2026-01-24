@@ -1,4 +1,5 @@
 ﻿using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
+using BearCat.Core.Domain.UseCases.ManageUploadConfigs.Dto;
 
 namespace BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
 

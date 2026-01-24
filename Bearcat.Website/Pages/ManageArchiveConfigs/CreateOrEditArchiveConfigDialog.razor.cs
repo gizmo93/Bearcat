@@ -53,7 +53,9 @@ public partial class CreateOrEditArchiveConfigDialog(
     {
         if (!isEdit)
         {
-            await archiveConfigService.CreateAsync(releaseId: ReleaseId,
+            await archiveConfigService.CreateAsync(
+                releaseId: ReleaseId,
+                name: FormModel.Name!,
                 archiveFilesBasePath: FormModel.ArchiveFilesBasePath!,
                 archiverName: FormModel.ArchiverName!,
                 archiveNamePrefix: FormModel.ArchiveNamePrefix!,
@@ -64,6 +66,7 @@ public partial class CreateOrEditArchiveConfigDialog(
         {
             await archiveConfigService.UpdateAsync(
                 archiveConfigId: ArchiveConfigId!.Value,
+                name: FormModel.Name!,
                 archiveFilesBasePath: FormModel.ArchiveFilesBasePath!,
                 archiveNamePrefix: FormModel.ArchiveNamePrefix!,
                 archivePassword: FormModel.ArchivePassword,
@@ -102,6 +105,11 @@ public partial class CreateOrEditArchiveConfigDialog(
     private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs e)
     {
         messageStore.Clear();
+
+        if (string.IsNullOrWhiteSpace(FormModel.Name))
+        {
+            messageStore.Add(() => FormModel.Name!, "Name is required");
+        }
 
         if (FormModel.ArchiverName is null)
         {

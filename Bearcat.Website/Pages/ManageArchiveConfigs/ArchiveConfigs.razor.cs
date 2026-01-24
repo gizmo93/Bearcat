@@ -9,7 +9,6 @@ using MudBlazor;
 namespace Bearcat.Website.Pages.ManageArchiveConfigs;
 
 public partial class ArchiveConfigs(
-    IReleaseReadRepository readRepository,
     IDialogService dialogService) : IReloadableComponent
 {
     [Parameter] 
@@ -19,9 +18,12 @@ public partial class ArchiveConfigs(
     public EventCallback<string> OnChangeAffectingOtherComponents { get; set; }
 
     private IReadOnlyList<ArchiveConfigDto> archiveConfigs = [];
+    
+    private IReleaseReadRepository readRepository = null!;
 
     protected override async Task OnInitializedAsync()
     {
+        readRepository = ScopedServices.GetRequiredService<IReleaseReadRepository>();
         await LoadArchiveConfigsAsync();
     }
 
@@ -51,7 +53,7 @@ public partial class ArchiveConfigs(
     {
         var dialog = await dialogService.ShowMessageBoxAsync(
             title: "Delete archive config", 
-            message: $"Are you sure you want to delete the archive config {archiveConfig.DisplayName} (Archiver: {archiveConfig.ArchiverDisplayName})?",
+            message: $"Are you sure you want to delete the archive config {archiveConfig.ArchiveNameWithExtension} (Archiver: {archiveConfig.ArchiverDisplayName})?",
             yesText: "Delete",
             noText: "Cancel");
 

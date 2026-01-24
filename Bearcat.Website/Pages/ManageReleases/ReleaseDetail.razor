@@ -1,5 +1,6 @@
 @page "/releases/{releaseId:int}"
 @using Bearcat.Website.Pages.ManageArchiveConfigs
+@using Bearcat.Website.Pages.ManageUploadConfigs
 @inherits OwningComponentBase
 
 @if (!isInitialized)
@@ -45,13 +46,9 @@
                         OnChangeAffectingOtherComponents="HandleChangeAffectingOtherComponentsAsync" />
                 </MudItem>
                 <MudItem xl="8" lg="8" md="12" sm="12" xs="12">
-                    <MudCard Elevation="3">
-                        <MudCardContent>
-                            <MudStack>
-                                <MudText Typo="Typo.caption"></MudText>
-                            </MudStack>
-                        </MudCardContent>
-                    </MudCard>
+                    <UploadConfigs 
+                        @ref="@reloadableComponents[nameof(UploadConfigs)]"
+                        ReleaseId="@ReleaseId" />
                 </MudItem>
             </MudGrid>
         </MudTabPanel>

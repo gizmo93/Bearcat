@@ -3,6 +3,7 @@ using BearCat.Core.Domain.UseCases.ManageArchives.Repositories;
 using BearCat.Core.Domain.UseCases.ManageHosters.Repositories;
 using BearCat.Core.Domain.UseCases.ManageNotifications.Repositories;
 using BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
+using BearCat.Core.Domain.UseCases.ManageUploadConfigs.Repositories;
 using BearCat.Core.Domain.UseCases.ManageUploads.Repositories;
 using BearCat.Core.Infrastructure.Database.Repositories;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,6 +26,8 @@ public static class ServiceProviderConfig
             services.AddScoped<IReleaseReadRepository, ReleaseReadRepository>();
             services.AddScoped<IArchiveConfigWriteRepository, ArchiveConfigWriteRepository>();
             services.AddScoped<IArchiveReadRepository, ArchiveReadRepository>();
+            services.AddScoped<IUploadConfigReadRepository, UploadConfigReadRepository>();
+            services.AddScoped<IUploadConfigWriteRepository, UploadConfigWriteRepository>();
         }
     }
 }

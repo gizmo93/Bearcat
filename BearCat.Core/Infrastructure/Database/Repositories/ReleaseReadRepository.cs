@@ -1,6 +1,7 @@
 ﻿using BearCat.Core.Domain.Abstractions.Archiver;
 using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
 using BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
+using BearCat.Core.Domain.UseCases.ManageUploadConfigs.Dto;
 using Microsoft.EntityFrameworkCore;
 
 namespace BearCat.Core.Infrastructure.Database.Repositories;
@@ -70,6 +71,7 @@ public class ReleaseReadRepository(
                 a.ArchivePassword,
                 a.ArchiveFileSizeMb,
                 fileExtensionByArchiver[a.ArchiverName],
+                a.Name,
                 a.Archives
                     .OrderByDescending(ar => ar.Id)
                     .Select(ar => new ArchiveConfigDto.ArchiveSummary(
