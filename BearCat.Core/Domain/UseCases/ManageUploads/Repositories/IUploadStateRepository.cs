@@ -5,7 +5,7 @@ namespace BearCat.Core.Domain.UseCases.ManageUploads.Repositories;
 public interface IUploadStateRepository
 {
     Task<IReadOnlyList<Upload>> GetUploadsToCheckAsync(
-        DateTime utcNow,
+        DateTime localNow,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<UploadConfig>> GetUploadConfigsWithoutUploadsAsync(CancellationToken cancellationToken);

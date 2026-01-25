@@ -24,7 +24,7 @@ public class ArchiveUploadBackgroundTask(
             var uploadService = scope.ServiceProvider.GetRequiredService<UploadFilesService>();
             await uploadService.ProcessPendingUploadsAsync(stoppingToken);
 
-            await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
         }
     }
 }

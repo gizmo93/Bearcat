@@ -16,7 +16,9 @@
         <NavMenu />
     </MudDrawer>
     <MudMainContent Class="pt-16 pa-4">
-        @Body
+        <ErrorBoundary>
+            @Body
+        </ErrorBoundary>
     </MudMainContent>
 </MudLayout>
 

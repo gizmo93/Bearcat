@@ -9,17 +9,18 @@ namespace BearCat.Core.Domain.UseCases.ManageUploads;
 public class UploadStateService(
     IUploadStateRepository uploadStateRepository,
     IHosterFactory hosterFactory,
+    TimeProvider timeProvider,
     ILogger<UploadStateService> logger)
 {
-    public async Task CheckUploadStatesAsync(DateTime utcNow, CancellationToken cancellationToken)
+    public async Task CheckUploadStatesAsync(DateTime localNow, CancellationToken cancellationToken)
     {
-        await ProcessUploadStateChecksAsync(utcNow, cancellationToken);
+        await ProcessUploadStateChecksAsync(localNow, cancellationToken);
         await CreateMissingUploadsAsync(cancellationToken);
     }
 
-    private async Task ProcessUploadStateChecksAsync(DateTime utcNow, CancellationToken cancellationToken)
+    private async Task ProcessUploadStateChecksAsync(DateTime localNow, CancellationToken cancellationToken)
     {
-        var uploadsToCheck = await uploadStateRepository.GetUploadsToCheckAsync(utcNow, cancellationToken);
+        var uploadsToCheck = await uploadStateRepository.GetUploadsToCheckAsync(localNow, cancellationToken);
 
         foreach (var uploadGroup in uploadsToCheck.GroupBy(u => u.UploadConfig.HosterRegistration.HosterClassName))
         {
@@ -78,7 +79,7 @@ public class UploadStateService(
             var file = filesByUrl[url];
 
             file.OnlineState = exists ? OnlineState.Online : OnlineState.Offline;
-            file.CheckedAt = DateTime.UtcNow;
+            file.CheckedAt = timeProvider.GetLocalNow();
         }
 
         var offlineFilesCount = upload.UploadedFiles.Count(f => f.OnlineState == OnlineState.Offline);
@@ -105,7 +106,7 @@ public class UploadStateService(
         var newUpload = new Upload
         {
             UploadConfig = upload.UploadConfig,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = timeProvider.GetLocalNow(),
             UploadedAt = null,
             UploadState = UploadState.WaitingForArchive,
             OnlineState = OnlineState.Unknown,
@@ -123,7 +124,7 @@ public class UploadStateService(
             var upload = new Upload
             {
                 UploadConfig = uploadConfig,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = timeProvider.GetLocalNow(),
                 UploadState = UploadState.WaitingForArchive,
                 OnlineState = OnlineState.Unknown,
             };

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using BearCat.Core.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BearCat.Core.Migrations
 {
     [DbContext(typeof(BearcatDbContext))]
-    partial class BearcatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260125163425_AddErrorMessagesToUploadedFile")]
+    partial class AddErrorMessagesToUploadedFile
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -309,7 +312,6 @@ namespace BearCat.Core.Migrations
                         .HasColumnType("timestamp(4) without time zone");
 
                     b.PrimitiveCollection<List<string>>("ErrorMessages")
-                        .IsRequired()
                         .HasColumnType("text[]");
 
                     b.Property<string>("HosterFileLink")

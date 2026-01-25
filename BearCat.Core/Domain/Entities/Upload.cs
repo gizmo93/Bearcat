@@ -23,6 +23,6 @@ public class Upload
     public OnlineState OnlineState { get; set; }
 
     public List<UploadedFile> UploadedFiles { get; set; } = null!;
-    
-    public List<string> ErrorMessages { get; set; } = null!;
+
+    public List<string> ErrorMessages { get; set; } = [];
 }

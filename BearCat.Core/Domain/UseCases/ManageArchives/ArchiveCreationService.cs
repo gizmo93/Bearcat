@@ -129,6 +129,11 @@ public class ArchiveCreationService(
         {
             upload.UploadState = UploadState.Pending;
         }
+
+        archive.ArchiveState = ArchiveState.Created;
+        archive.ArchiveFiles = archiveResult.CreatedFileNames
+            .Select(f => new ArchiveFile { FullFileName = f })
+            .ToList();
         
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 

@@ -24,7 +24,7 @@ public class ArchivingBackgroundTask(
             var archiveCreationService = scope.ServiceProvider.GetRequiredService<ArchiveCreationService>();
             await archiveCreationService.ProcessUploadsWithoutArchiveAsync(stoppingToken);
 
-            await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
         }
     }
 }

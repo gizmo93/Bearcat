@@ -6,4 +6,5 @@ public enum UploadState
     Pending = 2,
     Completed = 3,
     Failed = 4,
+    Uploading = 5,
 }

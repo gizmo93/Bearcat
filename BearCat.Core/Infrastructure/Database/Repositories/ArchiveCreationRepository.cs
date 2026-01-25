@@ -12,6 +12,8 @@ public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite)
     {
         return await dbWrite.Uploads
             .Include(u => u.UploadConfig)
+            .ThenInclude(u => u.ArchiveConfig)
+            .ThenInclude(a => a.Release)
             .Where(u => u.ArchiveId == null && u.UploadState == UploadState.WaitingForArchive)
             .OrderBy(u => u.Id)
             .ToListAsync(cancellationToken: cancellationToken);
@@ -19,12 +21,13 @@ public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite)
 
     public async Task<int?> GetPossibleAssignableArchiveId(int archiveConfigId, CancellationToken cancellationToken)
     {
-        return await dbWrite.Archives
+        var archiveId = await dbWrite.Archives
             .Where(a => a.ArchiveConfigId == archiveConfigId && a.ArchiveState == ArchiveState.Created)
             .OrderByDescending(a => a.Id)
             .Select(a => a.Id)
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
-
+        
+        return archiveId > 0 ? archiveId : null;
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)

@@ -4,7 +4,9 @@ using BearCat.Core.Domain.ValueObjects;
 
 namespace BearCat.Core.Domain.UseCases.ManageNotifications;
 
-public class NotificationService(INotificationRepository repository) : INotificationService
+public class NotificationService(
+    INotificationRepository repository,
+    TimeProvider timeProvider) : INotificationService
 {
     public async Task CreateInfoAsync(string message, CancellationToken cancellationToken)
     {
@@ -27,7 +29,7 @@ public class NotificationService(INotificationRepository repository) : INotifica
         {
             NotificationType = type,
             Message = message,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = timeProvider.GetLocalNow(),
         };
 
         repository.Add(notification);
