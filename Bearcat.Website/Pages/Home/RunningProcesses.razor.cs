@@ -24,8 +24,8 @@ public partial class RunningProcesses(ILogger<RunningProcesses> logger)
 
     private Timer? refreshTimer;
     
-    private SemaphoreSlim loadDataSemaphore = new(1,1);
-
+    private readonly SemaphoreSlim loadDataSemaphore = new(1,1);
+    
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
