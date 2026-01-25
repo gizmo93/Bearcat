@@ -10,8 +10,6 @@ public class CheckUploadStateBackgroundTask(
     ILogger<CheckUploadStateBackgroundTask> logger)
     : BackgroundService
 {
-    private const int DelayInMinutes = 5;
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         logger.LogInformation("Starting Check Upload State Background Task");
@@ -27,7 +25,7 @@ public class CheckUploadStateBackgroundTask(
             var uploadStateService = scope.ServiceProvider.GetRequiredService<UploadStateService>();
             await uploadStateService.CheckUploadStatesAsync(DateTime.UtcNow, stoppingToken);
 
-            await Task.Delay(TimeSpan.FromMinutes(DelayInMinutes), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
         }
     }
 }

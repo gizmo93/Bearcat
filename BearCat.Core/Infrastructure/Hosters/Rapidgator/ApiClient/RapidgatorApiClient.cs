@@ -1,29 +1,44 @@
-﻿using System.Text.Json;
+﻿using System.Net;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using BearCat.Core.Infrastructure.Hosters.Extensions;
 using BearCat.Core.Infrastructure.Hosters.Rapidgator.ApiClient.File;
 using BearCat.Core.Infrastructure.Hosters.Rapidgator.ApiClient.User;
+using Microsoft.Extensions.Logging;
 
 namespace BearCat.Core.Infrastructure.Hosters.Rapidgator.ApiClient;
 
 public class RapidgatorApiClient(
     IRapidgatorApi api,
-    IHttpClientFactory httpClientFactory)
+    IHttpClientFactory httpClientFactory,
+    ILogger<RapidgatorApiClient> logger)
 {
-    public async Task<LoginResponse> LoginAsync(string login, string password, CancellationToken cancellationToken)
-    {
-        var response = await api.LoginAsync(login, password, cancellationToken);
-        return response.Content!;
-    }
+    private const int AuthTimeout = 400;
+    
+    private bool NeedsReauthentication => string.IsNullOrWhiteSpace(authToken) 
+                                          || (DateTime.UtcNow - lastAuthTime).TotalSeconds > AuthTimeout;
+
+    private string? authToken;
+
+    private DateTime lastAuthTime = DateTime.MinValue;
+    
+    private readonly SemaphoreSlim authSemaphore = new(initialCount: 1, maxCount: 1);
+    
 
     public async Task<UploadFileResponse> RequestUploadFileAsync(
-        string token,
         string name,
         long size,
         string hash,
+        RapidgatorConfig config,
         CancellationToken cancellationToken)
     {
-        var response = await api.RequestUploadFileAsync(token, name, size, hash, cancellationToken);
-        return response.Content!;
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+        return await api.RequestUploadFileAsync(
+            token: token,
+            name: name,
+            size: size,
+            hash: hash,
+            cancellationToken: cancellationToken);
     }
 
     public async Task<UploadFileResponse> UploadFileAsync(
@@ -32,26 +47,98 @@ public class RapidgatorApiClient(
         string fileName,
         CancellationToken cancellationToken)
     {
-        var httpClient = httpClientFactory.CreateClient();
-        var response = await httpClient.PostAsync(uploadUrl,
+        using var httpClient = httpClientFactory.CreateClient("RapidgatorUpload");
+        var httpResponse = await httpClient.PostAsync(uploadUrl,
             new MultipartFormDataContent { { new StreamContent(stream), "file", fileName } }, cancellationToken);
 
-        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (!httpResponse.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                $"Upload request failed with status code {httpResponse.StatusCode} for file {fileName}");
+        }
 
-        return JsonSerializer.Deserialize<UploadFileResponse>(content,
+        var content = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
+
+        var response = JsonSerializer.Deserialize<UploadFileResponse>(content,
             options: new JsonSerializerOptions
             {
                 NumberHandling = JsonNumberHandling.AllowReadingFromString,
                 PropertyNameCaseInsensitive = true,
             })!;
+
+        if (!((HttpStatusCode)response.Status).IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                $"Upload failed for file {fileName} with message: {response.Details}");
+        }
+        
+        return response;
     }
 
     public async Task<UploadFileResponse> GetUploadInfoAsync(
-        string token,
+        RapidgatorConfig config,
         string uploadId,
         CancellationToken cancellationToken)
     {
+        var token = await GetAuthTokenAsync(config, cancellationToken);
         var response = await api.GetFileStatusAsync(token, uploadId, cancellationToken);
+        return response;
+    }
+    
+    public async Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
+        RapidgatorConfig config,
+        IReadOnlyList<string> links,
+        CancellationToken cancellationToken)
+    {
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+        
+        var responses = new List<CheckLinksResponse>();
+
+        foreach (var linksBatch in links.Chunk(25))
+        {
+            var response = await api.CheckLinkAsync(
+                token: token,
+                links: string.Join(',', linksBatch),
+                cancellationToken: cancellationToken);
+
+            responses.Add(response.Content!);
+        }
+
+        return responses
+            .Where(r => r.Responses is not null)
+            .SelectMany(r => r.Responses!)
+            .ToDictionary(r => r.Url, r => r.Status == "ACCESS");
+    }
+
+    private async Task<string> GetAuthTokenAsync(RapidgatorConfig config, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await authSemaphore.WaitAsync(cancellationToken);
+            
+            if (NeedsReauthentication)
+            {
+                logger.LogInformation("Authenticating to Rapidgator for user {Username}", config.Username);
+                var loginResponse = await LoginAsync(
+                    login: config.Username,
+                    password: config.Password,
+                    cancellationToken: cancellationToken);
+
+                authToken = loginResponse.Response.Token;
+                lastAuthTime = DateTime.UtcNow;
+            }
+
+            return authToken!;
+        }
+        finally
+        {
+            authSemaphore.Release();
+        }
+    }
+    
+    private async Task<LoginResponse> LoginAsync(string login, string password, CancellationToken cancellationToken)
+    {
+        var response = await api.LoginAsync(login, password, cancellationToken);
         return response.Content!;
     }
 }

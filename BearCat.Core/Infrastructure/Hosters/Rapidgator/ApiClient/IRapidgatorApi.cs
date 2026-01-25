@@ -15,7 +15,7 @@ public interface IRapidgatorApi
         CancellationToken cancellationToken);
 
     [Post("/api/v2/file/upload")]
-    Task<ApiResponse<UploadFileResponse>> RequestUploadFileAsync(
+    Task<UploadFileResponse> RequestUploadFileAsync(
         [Query] string token,
         [Query] string name,
         [Query] long size,
@@ -23,7 +23,7 @@ public interface IRapidgatorApi
         CancellationToken cancellationToken);
 
     [Get("/api/v2/file/upload_info?upload_id={uploadId}&token={token}")]
-    Task<ApiResponse<UploadFileResponse>> GetFileStatusAsync(
+    Task<UploadFileResponse> GetFileStatusAsync(
         string token,
         string uploadId,
         CancellationToken cancellationToken);

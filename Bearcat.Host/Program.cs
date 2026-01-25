@@ -39,6 +39,8 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 if (app.Environment.IsProduction())
 {
     using var scope = app.Services.CreateScope();

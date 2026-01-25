@@ -20,7 +20,8 @@ public class UploadFileResponse
 
     public class Upload
     {
-        [JsonPropertyName("upload_id")] public string UploadId { get; set; } = null!;
+        [JsonPropertyName("upload_id")] 
+        public string UploadId { get; set; } = null!;
 
 
         public string Url { get; set; } = null!;
@@ -29,20 +30,25 @@ public class UploadFileResponse
 
         public int State { get; set; }
 
-        [JsonPropertyName("state_label")] public string StateLabel { get; set; } = null!;
+        [JsonPropertyName("state_label")] 
+        public string StateLabel { get; set; } = null!;
     }
 
     public class File
     {
-        [JsonPropertyName("file_id")] public string FileId { get; set; } = null!;
+        [JsonPropertyName("file_id")] 
+        public string FileId { get; set; } = null!;
 
         public int Mode { get; set; }
 
-        [JsonPropertyName("mode_label")] public string ModeLabel { get; set; } = null!;
+        [JsonPropertyName("mode_label")] 
+        public string ModeLabel { get; set; } = null!;
 
-        [JsonPropertyName("folder_id")] public string? FolderId { get; set; }
+        [JsonPropertyName("folder_id")] 
+        public string? FolderId { get; set; }
 
-        [JsonPropertyName("name")] public string Name { get; set; } = null!;
+        [JsonPropertyName("name")] 
+        public string Name { get; set; } = null!;
 
         public string Hash { get; set; } = null!;
 

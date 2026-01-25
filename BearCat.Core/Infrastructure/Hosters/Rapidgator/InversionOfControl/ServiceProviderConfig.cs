@@ -11,16 +11,29 @@ public static class ServiceProviderConfig
 {
     public static void AddRapidgator(this IServiceCollection services)
     {
-        services.AddRefitClient<IRapidgatorApi>(settings: new RefitSettings
-        {
-            ContentSerializer = new SystemTextJsonContentSerializer(
-                    jsonSerializerOptions: new JsonSerializerOptions
-                    {
-                        NumberHandling = JsonNumberHandling.AllowReadingFromString,
-                        PropertyNameCaseInsensitive = true,
-                    })
-        })
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://rapidgator.net/"));
+        services.AddRefitClient<IRapidgatorApi>(
+                new RefitSettings
+                {
+                    ContentSerializer = new SystemTextJsonContentSerializer(
+                        jsonSerializerOptions: new JsonSerializerOptions
+                        {
+                            NumberHandling = JsonNumberHandling.AllowReadingFromString,
+                            PropertyNameCaseInsensitive = true,
+                        })
+                })
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://rapidgator.net/");
+                c.Timeout = Timeout.InfiniteTimeSpan;
+            });
+
+        services.AddHttpClient(
+            "RapidgatorUpload",
+            c =>
+            {
+                c.Timeout = Timeout.InfiniteTimeSpan;
+            });
+
         services.AddScoped<RapidgatorApiClient>();
         services.AddKeyedScoped<IHoster, Rapidgator>(nameof(Rapidgator));
     }

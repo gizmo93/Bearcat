@@ -20,7 +20,6 @@ public class UploadFilesService(
             var hoster = hosterFactory.GetByName(uploads.Key);
             var hosterConfig = hoster.DeserializeHosterConfig(
                 uploads.First().UploadConfig.HosterRegistration.SerializedConfig);
-            await hoster.PrepareForUploadAsync(hosterConfig, cancellationToken);
 
             foreach (var upload in uploads)
             {
@@ -33,6 +32,11 @@ public class UploadFilesService(
                     hosterConfig: hosterConfig,
                     upload: upload,
                     cancellationToken: cancellationToken);
+                
+                logger.LogInformation("Completed upload for Upload {UploadId} to hoster {Hoster} with state {UploadState}",
+                    upload.Id,
+                    hoster.Name,
+                    upload.UploadState);
             }
         }
     }
@@ -52,7 +56,15 @@ public class UploadFilesService(
             await semaphore.WaitAsync(cancellationToken);
             try
             {
-                return await hoster.UploadFileAsync(file, cancellationToken);
+                return await hoster.UploadFileAsync(file, hosterConfig, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Exception during upload of file {FilePath} for upload {UploadId}: {Exception}",
+                    file.FullFileName,
+                    upload.Id,
+                    ex);
+                throw;
             }
             finally
             {

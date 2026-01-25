@@ -7,12 +7,9 @@ public interface IHoster
 {
     string Name { get; }
 
-    Task PrepareForUploadAsync(
-        IHosterConfig hosterConfig,
-        CancellationToken cancellationToken);
-
     Task<UploadFileResult> UploadFileAsync(
         ArchiveFile archiveFile,
+        IHosterConfig hosterConfig,
         CancellationToken cancellationToken);
 
     Task<FileExistResult> CheckFilesExistAsync(
