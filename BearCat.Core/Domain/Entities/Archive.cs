@@ -13,7 +13,7 @@ public class Archive
     public string ArchiveFolderPath { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; }
-    
+
     public ArchiveState ArchiveState { get; set; }
 
     public List<string> ErrorMessages { get; set; } = new();

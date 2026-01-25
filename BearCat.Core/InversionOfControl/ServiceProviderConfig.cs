@@ -20,7 +20,7 @@ public static class ServiceProviderConfig
             {
                 cfg.Timeout = Timeout.InfiniteTimeSpan;
             });
-            
+
             services.AddHosters();
             services.AddDatabase(configuration);
             services.AddRepositories();

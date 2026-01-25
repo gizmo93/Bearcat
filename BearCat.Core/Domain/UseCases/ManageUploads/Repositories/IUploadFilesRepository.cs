@@ -8,4 +8,5 @@ public interface IUploadFilesRepository
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     Task<IReadOnlyList<Upload>> GetOrphanedUploadsAsync(CancellationToken cancellationToken);
+    void ClearChangeTracker();
 }

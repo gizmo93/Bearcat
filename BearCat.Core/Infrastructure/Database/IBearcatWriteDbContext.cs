@@ -21,4 +21,6 @@ public interface IBearcatWriteDbContext
     EntityEntry Add(object entity);
 
     EntityEntry Remove(object entity);
+
+    ChangeTracker ChangeTracker { get; }
 }

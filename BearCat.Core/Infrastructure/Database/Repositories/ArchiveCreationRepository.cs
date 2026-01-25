@@ -26,8 +26,15 @@ public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite)
             .OrderByDescending(a => a.Id)
             .Select(a => a.Id)
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
-        
+
         return archiveId > 0 ? archiveId : null;
+    }
+
+    public async Task DeleteOrphanedArchivesAsync(CancellationToken cancellationToken)
+    {
+        await dbWrite.Archives
+            .Where(a => a.ArchiveState == ArchiveState.Creating)
+            .ExecuteDeleteAsync(cancellationToken);
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)

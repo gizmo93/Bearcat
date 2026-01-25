@@ -18,7 +18,11 @@
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.Id</MudTd>
-            <MudTd>@context.UploadConfig.Release.Name</MudTd>
+            <MudTd>
+                <MudLink Href="@($"/releases/{context.UploadConfig.ReleaseId}")">
+                    @context.UploadConfig.Release.Name
+                </MudLink>
+            </MudTd>
             <MudTd>@context.UploadConfig.Name</MudTd>
             <MudTd>@context.UploadConfig.HosterRegistration.Name</MudTd>
             <MudTd>

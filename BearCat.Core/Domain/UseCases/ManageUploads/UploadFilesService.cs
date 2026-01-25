@@ -15,7 +15,13 @@ public class UploadFilesService(
     TimeProvider timeProvider,
     ILogger<UploadFilesService> logger)
 {
-    public async Task ProcessPendingUploadsAsync(CancellationToken cancellationToken)
+    public async Task ProcessAsync(CancellationToken cancellationToken)
+    {
+        await CleanupOrphanedUploadsAsync(cancellationToken);
+        await ProcessPendingUploadsAsync(cancellationToken);
+    }
+
+    private async Task ProcessPendingUploadsAsync(CancellationToken cancellationToken)
     {
         var pendingUploads = await repository.GetPendingUploadsAsync(cancellationToken);
 
@@ -55,6 +61,20 @@ public class UploadFilesService(
         }
     }
 
+    private async Task CleanupOrphanedUploadsAsync(CancellationToken cancellationToken)
+    {
+        var orphanedUploads = await repository.GetOrphanedUploadsAsync(cancellationToken);
+
+        foreach (var upload in orphanedUploads)
+        {
+            logger.LogInformation("Cleaning up orphaned upload {UploadId}", upload.Id);
+            upload.UploadState = UploadState.Pending;
+        }
+
+        await repository.SaveChangesAsync(cancellationToken);
+        repository.ClearChangeTracker();
+    }
+
     private async Task ProcessUploadAsync(
         IHoster hoster,
         IHosterConfig hosterConfig,
@@ -73,7 +93,7 @@ public class UploadFilesService(
                 .ArchiveFiles
                 .Where(f => upload.UploadedFiles.All(uf => uf.ArchiveFileId != f.Id))
                 .ToList();
-            
+
             upload.UploadState = UploadState.Uploading;
             await repository.SaveChangesAsync(cancellationToken);
 
@@ -103,16 +123,16 @@ public class UploadFilesService(
                         upload.Id,
                         e.Message);
                 }
-                
+
                 await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
             }
-            
+
             await PersistIntermediateResultsAsync(
                 upload: upload,
                 uploadTasks: uploadTasks,
                 finishedTasks: finishedTasks,
                 cancellationToken: cancellationToken);
-            
+
             var anyFailedUploads = uploadTasks.Any(t => t.IsFaulted || !t.Result.IsSuccess);
 
             upload.UploadState = anyFailedUploads ? UploadState.Failed : UploadState.Completed;
@@ -123,11 +143,11 @@ public class UploadFilesService(
         {
             upload.UploadState = UploadState.Failed;
             upload.ErrorMessages.Add($"Exception during upload processing: {e.Message}");
-            
+
             logger.LogError(e, "Exception during upload processing for Upload {UploadId}: {Message}",
                 upload.Id,
                 e.Message);
-            
+
             await repository.SaveChangesAsync(cancellationToken);
         }
     }
@@ -188,7 +208,7 @@ public class UploadFilesService(
             .ToList();
 
         finishedTasks.UnionWith(newlyFinishedTasks);
-                
+
         upload.UploadedFiles.AddRange(missingUploadedFiles);
         await repository.SaveChangesAsync(cancellationToken);
     }
