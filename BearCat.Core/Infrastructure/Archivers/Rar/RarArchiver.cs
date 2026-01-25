@@ -105,6 +105,6 @@ public class RarArchiver(
             ? $"-p{password}"
             : string.Empty;
 
-        return $"a -ep1 -v{targetFileSizeMb}m {passwordPart} \"{archiveFullPath}\" \"{sourceFolderPath}\"/*";
+        return $"a -ep1 -m0 -v{targetFileSizeMb}m {passwordPart} \"{archiveFullPath}\" \"{sourceFolderPath}\"/*";
     }
 }

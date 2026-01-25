@@ -5,7 +5,7 @@ using BearCat.Core.Domain.Abstractions.Hoster.Results;
 using BearCat.Core.Domain.Entities;
 using BearCat.Core.Infrastructure.Hosters.Rapidgator.ApiClient;
 using BearCat.Core.Infrastructure.Hosters.Rapidgator.ApiClient.File;
-using BearCat.Core.Infrastructure.Hosters.Rapidgator.ApiClient.User;
+using BearCat.Core.Infrastructure.Hosters.Rapidgator.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace BearCat.Core.Infrastructure.Hosters.Rapidgator;
@@ -15,84 +15,62 @@ public class Rapidgator(
     IRapidgatorApi rapidgatorApi,
     ILogger<Rapidgator> logger) : IHoster
 {
-    private static readonly HashSet<int> FinishedStatuses = [UploadStates.Done, UploadStates.Failed];
-
     public string Name => "Rapidgator";
 
     public IReadOnlyList<string> ConfigurationKeys => ["Username", "Password"];
 
-    private LoginResponse? loginResponse;
-
-    public async Task PrepareForUploadAsync(IHosterConfig hosterConfig, CancellationToken cancellationToken)
-    {
-        if (hosterConfig is not RapidgatorConfig rapidgatorConfig)
-        {
-            throw new InvalidOperationException("Invalid hoster config for Rapidgator");
-        }
-
-        await LoginAsync(rapidgatorConfig, cancellationToken: cancellationToken);
-    }
-
     public async Task<UploadFileResult> UploadFileAsync(
         ArchiveFile archiveFile,
+        IHosterConfig hosterConfig,
         CancellationToken cancellationToken)
     {
-        await using var stream = File.OpenRead(archiveFile.FullFileName);
-
-        var uploadRequest = await rapidgatorApiClient.RequestUploadFileAsync(
-            token: loginResponse!.Response.Token,
-            name: Path.GetFileName(archiveFile.FullFileName),
-            size: stream.Length,
-            hash: await CreateMd5HashAsync(stream, cancellationToken),
-            cancellationToken: cancellationToken);
-
-        if (uploadRequest.Response?.Upload is null)
+        if (hosterConfig is not RapidgatorConfig config)
         {
-            return new UploadFileResult(
-                IsSuccess: false,
-                ArchiveFile: archiveFile,
-                ErrorMessages: [uploadRequest.Details ?? string.Empty],
-                FileUrl: null);
+            throw new ArgumentException("Invalid hoster config for Rapidgator", nameof(hosterConfig));
         }
-
-        await rapidgatorApiClient.UploadFileAsync(
-            uploadUrl: uploadRequest.Response.Upload.Url,
-            stream: stream,
-            fileName: Path.GetFileName(archiveFile.FullFileName),
-            cancellationToken: cancellationToken);
-
-        var uploadStatus = await rapidgatorApiClient.GetUploadInfoAsync(
-            token: loginResponse!.Response.Token,
-            uploadId: uploadRequest.Response.Upload.UploadId,
-            cancellationToken: cancellationToken);
-
-        while (uploadStatus.Response?.Upload is not null &&
-               !FinishedStatuses.Contains(uploadStatus.Response.Upload.State))
+        
+        var errors = new List<string>();
+        
+        foreach (var attempt in Enumerable.Range(1, 3))
         {
-            logger.LogDebug("File upload still in progress, waiting for it to finish");
+            try
+            {
+                return await UploadFileInternalAsync(
+                    archiveFile: archiveFile,
+                    config: config,
+                    cancellationToken: cancellationToken);
+            }
+            catch (RetryException) { }
+            catch (HttpRequestException ex)
+            {
+                logger.LogError("HTTP request failed on attempt {Attempt} for file {FileName}: {Message}",
+                    attempt,
+                    archiveFile.FullFileName,
+                    ex.Message);
 
-            await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
-
-            uploadStatus = await rapidgatorApiClient.GetUploadInfoAsync(
-                token: loginResponse!.Response.Token,
-                uploadId: uploadRequest.Response.Upload.UploadId,
-                cancellationToken: cancellationToken);
+                errors.Add(ex.Message);
+            }
+            catch (Refit.ApiException ex)
+            when (ex.StatusCode == HttpStatusCode.ServiceUnavailable)
+            {
+                logger.LogError("Service unavailable on attempt {Attempt} for file {FileName}: {Message}",
+                    attempt,
+                    archiveFile.FullFileName,
+                    ex.Message);
+            }
+            
+            logger.LogInformation("Retrying upload for file {FileName}, current attempt {Attempt}",
+                archiveFile.FullFileName,
+                attempt);
+            
+            await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
         }
-
-        if (uploadStatus.Response is null)
-        {
-            return new UploadFileResult(
-                IsSuccess: false,
-                ArchiveFile: archiveFile,
-                ErrorMessages: [uploadStatus.Details ?? string.Empty],
-                FileUrl: null);
-        }
-
+        
         return new UploadFileResult(
-            IsSuccess: true,
+            IsSuccess: false,
             ArchiveFile: archiveFile,
-            ErrorMessages: [],
-            FileUrl: uploadStatus.Response!.Upload!.File!.Url);
+            ErrorMessages: errors,
+            FileUrl: null);
     }
 
     public async Task<FileExistResult> CheckFilesExistAsync(
@@ -107,43 +85,26 @@ public class Rapidgator(
                 ErrorMessages: ["Invalid hoster config for Rapidgator"],
                 StatusPerFileUrl: new Dictionary<string, bool>());
         }
-
-        await LoginAsync(rapidgatorConfig, cancellationToken: cancellationToken);
-
-        var responses = new List<CheckLinksResponse>();
-
-        foreach (var urlsBatch in fileUrls.Chunk(25))
+        
+        try 
         {
-            var response = await rapidgatorApi.CheckLinkAsync(
-                token: loginResponse!.Response.Token,
-                links: string.Join(',', urlsBatch),
+            var statusPerLink = await rapidgatorApiClient.CheckLinksAsync(
+                config: rapidgatorConfig,
+                links: fileUrls,
                 cancellationToken: cancellationToken);
-
-            responses.Add(response.Content!);
+            
+            return new FileExistResult(
+                IsSuccess: true,
+                ErrorMessages: [],
+                StatusPerFileUrl: statusPerLink);
         }
-
-        if (responses.Any(r => r.Status != (int)HttpStatusCode.OK))
+        catch (Exception ex)
         {
-            var errrorMessages = responses
-                .Where(r => r.Status != (int)HttpStatusCode.OK)
-                .Select(r => r.Details ?? "Unknown error")
-                .ToList();
-
             return new FileExistResult(
                 IsSuccess: false,
-                ErrorMessages: errrorMessages,
+                ErrorMessages: [$"Login failed: {ex.Message}"],
                 StatusPerFileUrl: new Dictionary<string, bool>());
         }
-
-        var statusPerFileUrl = responses
-            .Where(r => r.Responses is not null)
-            .SelectMany(r => r.Responses!)
-            .ToDictionary(r => r.Url, r => r.Status == "ACCESS");
-
-        return new FileExistResult(
-            IsSuccess: true,
-            ErrorMessages: [],
-            StatusPerFileUrl: statusPerFileUrl);
     }
 
     public IHosterConfig DeserializeHosterConfig(string serializedConfig)
@@ -173,9 +134,12 @@ public class Rapidgator(
             throw new InvalidOperationException("Invalid hoster config for Rapidgator");
         }
 
-        await LoginAsync(rapidgatorConfig, cancellationToken: cancellationToken);
+        var response = await rapidgatorApi.LoginAsync(
+            login: rapidgatorConfig.Username,
+            password: rapidgatorConfig.Password,
+            cancellationToken: cancellationToken);
 
-        return loginResponse!.Response.User.RemoteUpload.MaxNbJobs;
+        return response.Content!.Response.User.RemoteUpload.MaxNbJobs;
     }
 
     public async Task<TryLoginResult> TryLoginAsync(IHosterConfig hosterConfig, CancellationToken cancellationToken)
@@ -187,35 +151,112 @@ public class Rapidgator(
 
         try
         {
-            await LoginAsync(
-                config: rapidgatorConfig,
-                forceReLogin: true,
+            var response = await rapidgatorApi.LoginAsync(
+                rapidgatorConfig.Username,
+                rapidgatorConfig.Password,
                 cancellationToken: cancellationToken);
 
             return new TryLoginResult(
-                IsSuccess: loginResponse!.Status == (int)HttpStatusCode.OK,
-                ErrorMessage: loginResponse.Details);
+                IsSuccess: response.Content!.Status == (int)HttpStatusCode.OK,
+                ErrorMessage: response.Content.Details);
         }
         catch (Exception e)
         {
             return new TryLoginResult(IsSuccess: false, ErrorMessage: e.Message);
         }
     }
-
-    private async Task LoginAsync(
+    
+        private async Task<UploadFileResult> UploadFileInternalAsync(
+        ArchiveFile archiveFile,
         RapidgatorConfig config,
-        bool forceReLogin = false,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
-        if (forceReLogin)
+        await using var stream = File.OpenRead(archiveFile.FullFileName);
+
+        var uploadRequest = await rapidgatorApiClient.RequestUploadFileAsync(
+            name: Path.GetFileName(archiveFile.FullFileName),
+            size: stream.Length,
+            hash: await CreateMd5HashAsync(stream, cancellationToken),
+            config: config,
+            cancellationToken: cancellationToken);
+
+        if (uploadRequest.Response?.Upload?.File?.FileId is not null)
         {
-            loginResponse = null;
+            return new UploadFileResult(
+                IsSuccess: false,
+                ArchiveFile: archiveFile,
+                ErrorMessages: ["File already exists"],
+                FileUrl: null);
         }
 
-        loginResponse ??= await rapidgatorApiClient.LoginAsync(
-            login: config.Username,
-            password: config.Password,
+        if (uploadRequest.Response?.Upload?.Url is null)
+        {
+            throw new RetryException();
+        }
+
+        logger.LogInformation("Uploading file {FileName} to Rapidgator with URL {Url}",
+            archiveFile.FullFileName,
+            uploadRequest.Response.Upload.Url);
+
+        var uploadResult = await rapidgatorApiClient.UploadFileAsync(
+            uploadUrl: uploadRequest.Response.Upload.Url,
+            stream: stream,
+            fileName: Path.GetFileName(archiveFile.FullFileName),
             cancellationToken: cancellationToken);
+
+        logger.LogInformation(
+            "Finished uploading file {FileName} with Result JSON: {Json}, wait for processing to finish",
+            archiveFile.FullFileName,
+            JsonSerializer.Serialize(uploadResult));
+
+        UploadFileResponse uploadStatus;
+        
+        while (true)
+        {
+            try
+            {
+                uploadStatus = await rapidgatorApiClient.GetUploadInfoAsync(
+                    uploadId: uploadResult.Response?.Upload?.UploadId ?? uploadRequest.Response.Upload.UploadId,
+                    config: config,
+                    cancellationToken: cancellationToken);
+
+            }
+            catch (Refit.ApiException ex)
+            {
+                logger.LogWarning("Failed to get upload status for file {FileName}: {Message}",
+                    archiveFile.FullFileName,
+                    ex.Message);
+                continue;
+            }
+
+            if (uploadStatus.Response?.Upload?.State != UploadStates.Processing)
+            {
+                break;
+            }
+            
+            logger.LogInformation(
+                "File upload for file {File} still in progress, state label: {Label}. state: {State}, waiting for it to finish. JSON: {Json}",
+                archiveFile.FullFileName,
+                uploadStatus.Response.Upload.StateLabel,
+                uploadStatus.Response.Upload.State,
+                JsonSerializer.Serialize(uploadStatus.Response));
+            
+            await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+        }
+
+        logger.LogInformation("Finished upload of file {FileName} to Rapidgator with status {Status}",
+            archiveFile.FullFileName,
+            uploadStatus?.Response?.Upload?.State);
+        
+        var errors = new List<string?> { uploadResult.Details, uploadStatus?.Details }
+            .OfType<string>()
+            .ToList();
+
+        return new UploadFileResult(
+            IsSuccess: uploadStatus?.Response?.Upload?.State == UploadStates.Done,
+            ArchiveFile: archiveFile,
+            ErrorMessages: errors,
+            FileUrl: uploadStatus?.Response?.Upload?.File?.Url);
     }
 
     private static async Task<string> CreateMd5HashAsync(

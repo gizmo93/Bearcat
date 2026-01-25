@@ -16,13 +16,17 @@ public static class ServiceProviderConfig
     {
         public void AddCore(IConfiguration configuration)
         {
-            services.AddHttpClient();
+            services.AddHttpClient<HttpClient>(cfg =>
+            {
+                cfg.Timeout = Timeout.InfiniteTimeSpan;
+            });
+            
             services.AddHosters();
             services.AddDatabase(configuration);
             services.AddRepositories();
             services.AddDomain();
             services.AddArchivers();
-            //services.AddHostedServices();
+            services.AddHostedServices();
         }
 
         private void AddHostedServices()

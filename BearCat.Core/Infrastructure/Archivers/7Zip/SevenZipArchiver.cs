@@ -105,6 +105,6 @@ public class SevenZipArchiver(
             ? $"-p{password}"
             : string.Empty;
 
-        return $"a -v{targetFileSizeMb}m {passwordPart} \"{archiveFullPath}\" \"{sourceFolderPath}\"/*";
+        return $"a -v{targetFileSizeMb}m -mx=0 {passwordPart} \"{archiveFullPath}\" \"{sourceFolderPath}\"/*";
     }
 }

@@ -1,6 +1,7 @@
 services:
   bearcat:
     build: .
+    platform: linux/amd64
     container_name: bearcat
     ports:
       - "8080:8080"
