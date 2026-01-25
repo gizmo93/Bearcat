@@ -14,16 +14,16 @@ public class RapidgatorApiClient(
     ILogger<RapidgatorApiClient> logger)
 {
     private const int AuthTimeout = 400;
-    
-    private bool NeedsReauthentication => string.IsNullOrWhiteSpace(authToken) 
+
+    private bool NeedsReauthentication => string.IsNullOrWhiteSpace(authToken)
                                           || (DateTime.UtcNow - lastAuthTime).TotalSeconds > AuthTimeout;
 
     private string? authToken;
 
     private DateTime lastAuthTime = DateTime.MinValue;
-    
+
     private readonly SemaphoreSlim authSemaphore = new(initialCount: 1, maxCount: 1);
-    
+
 
     public async Task<UploadFileResponse> RequestUploadFileAsync(
         string name,
@@ -71,7 +71,7 @@ public class RapidgatorApiClient(
             throw new HttpRequestException(
                 $"Upload failed for file {fileName} with message: {response.Details}");
         }
-        
+
         return response;
     }
 
@@ -84,14 +84,14 @@ public class RapidgatorApiClient(
         var response = await api.GetFileStatusAsync(token, uploadId, cancellationToken);
         return response;
     }
-    
+
     public async Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
         RapidgatorConfig config,
         IReadOnlyList<string> links,
         CancellationToken cancellationToken)
     {
         var token = await GetAuthTokenAsync(config, cancellationToken);
-        
+
         var responses = new List<CheckLinksResponse>();
 
         foreach (var linksBatch in links.Chunk(25))
@@ -115,7 +115,7 @@ public class RapidgatorApiClient(
         try
         {
             await authSemaphore.WaitAsync(cancellationToken);
-            
+
             if (NeedsReauthentication)
             {
                 logger.LogInformation("Authenticating to Rapidgator for user {Username}", config.Username);
@@ -135,7 +135,7 @@ public class RapidgatorApiClient(
             authSemaphore.Release();
         }
     }
-    
+
     private async Task<LoginResponse> LoginAsync(string login, string password, CancellationToken cancellationToken)
     {
         var response = await api.LoginAsync(login, password, cancellationToken);

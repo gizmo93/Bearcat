@@ -28,9 +28,9 @@ public class Rapidgator(
         {
             throw new ArgumentException("Invalid hoster config for Rapidgator", nameof(hosterConfig));
         }
-        
+
         var errors = new List<string>();
-        
+
         foreach (var attempt in Enumerable.Range(1, 3))
         {
             try
@@ -58,14 +58,14 @@ public class Rapidgator(
                     archiveFile.FullFileName,
                     ex.Message);
             }
-            
+
             logger.LogInformation("Retrying upload for file {FileName}, current attempt {Attempt}",
                 archiveFile.FullFileName,
                 attempt);
-            
+
             await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
         }
-        
+
         return new UploadFileResult(
             IsSuccess: false,
             ArchiveFile: archiveFile,
@@ -85,14 +85,14 @@ public class Rapidgator(
                 ErrorMessages: ["Invalid hoster config for Rapidgator"],
                 StatusPerFileUrl: new Dictionary<string, bool>());
         }
-        
-        try 
+
+        try
         {
             var statusPerLink = await rapidgatorApiClient.CheckLinksAsync(
                 config: rapidgatorConfig,
                 links: fileUrls,
                 cancellationToken: cancellationToken);
-            
+
             return new FileExistResult(
                 IsSuccess: true,
                 ErrorMessages: [],
@@ -165,11 +165,11 @@ public class Rapidgator(
             return new TryLoginResult(IsSuccess: false, ErrorMessage: e.Message);
         }
     }
-    
-        private async Task<UploadFileResult> UploadFileInternalAsync(
-        ArchiveFile archiveFile,
-        RapidgatorConfig config,
-        CancellationToken cancellationToken)
+
+    private async Task<UploadFileResult> UploadFileInternalAsync(
+    ArchiveFile archiveFile,
+    RapidgatorConfig config,
+    CancellationToken cancellationToken)
     {
         await using var stream = File.OpenRead(archiveFile.FullFileName);
 
@@ -210,7 +210,7 @@ public class Rapidgator(
             JsonSerializer.Serialize(uploadResult));
 
         UploadFileResponse uploadStatus;
-        
+
         while (true)
         {
             try
@@ -233,21 +233,21 @@ public class Rapidgator(
             {
                 break;
             }
-            
+
             logger.LogInformation(
                 "File upload for file {File} still in progress, state label: {Label}. state: {State}, waiting for it to finish. JSON: {Json}",
                 archiveFile.FullFileName,
                 uploadStatus.Response.Upload.StateLabel,
                 uploadStatus.Response.Upload.State,
                 JsonSerializer.Serialize(uploadStatus.Response));
-            
+
             await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
         }
 
         logger.LogInformation("Finished upload of file {FileName} to Rapidgator with status {Status}",
             archiveFile.FullFileName,
             uploadStatus?.Response?.Upload?.State);
-        
+
         var errors = new List<string?> { uploadResult.Details, uploadStatus?.Details }
             .OfType<string>()
             .ToList();

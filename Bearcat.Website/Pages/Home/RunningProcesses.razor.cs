@@ -11,28 +11,28 @@ namespace Bearcat.Website.Pages.Home;
 public partial class RunningProcesses(ILogger<RunningProcesses> logger)
 {
     private IReadOnlyList<Upload> runningUploads = [];
-    
+
     private IReadOnlyList<Archive> runningArchives = [];
-    
+
     private IBearcatReadDbContext dbRead = null!;
-    
+
     private bool SomethingIsRunning => runningUploads.Count > 0 || runningArchives.Count > 0;
 
     private bool autoRefresh;
-    
+
     private bool refreshInProgress;
 
     private Timer? refreshTimer;
-    
-    private readonly SemaphoreSlim loadDataSemaphore = new(1,1);
-    
+
+    private readonly SemaphoreSlim loadDataSemaphore = new(1, 1);
+
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         dbRead = ScopedServices.GetRequiredService<IBearcatReadDbContext>();
         await LoadDataAsync();
     }
-    
+
     private async Task LoadRunningUploadsAsync()
     {
         runningUploads = await dbRead.Uploads
@@ -49,7 +49,7 @@ public partial class RunningProcesses(ILogger<RunningProcesses> logger)
             .Where(u => u.UploadState == UploadState.Pending || u.UploadState == UploadState.Uploading)
             .ToListAsync();
     }
-    
+
     private async Task LoadRunningArchivesAsync()
     {
         runningArchives = await dbRead.Archives
@@ -61,10 +61,10 @@ public partial class RunningProcesses(ILogger<RunningProcesses> logger)
 
     private void ToggleAutoRefresh()
     {
-        if(autoRefresh)
+        if (autoRefresh)
         {
             autoRefresh = false;
-            
+
             if (refreshTimer is null)
             {
                 return;
@@ -75,7 +75,7 @@ public partial class RunningProcesses(ILogger<RunningProcesses> logger)
             refreshTimer = null;
             return;
         }
-        
+
         autoRefresh = true;
         refreshTimer = new Timer(TimeSpan.FromSeconds(10));
         refreshTimer.Elapsed += async (_, _) =>

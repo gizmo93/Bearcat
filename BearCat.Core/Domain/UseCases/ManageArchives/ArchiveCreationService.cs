@@ -14,7 +14,13 @@ public class ArchiveCreationService(
     IFileSystemService fileSystemService,
     TimeProvider timeProvider)
 {
-    public async Task ProcessUploadsWithoutArchiveAsync(CancellationToken cancellationToken)
+    public async Task ProcessAsync(CancellationToken cancellationToken)
+    {
+        await repository.DeleteOrphanedArchivesAsync(cancellationToken);
+        await ProcessUploadsWithoutArchiveAsync(cancellationToken);
+    }
+
+    private async Task ProcessUploadsWithoutArchiveAsync(CancellationToken cancellationToken)
     {
         var uploadsWithoutArchive = await repository.GetUploadsWithoutArchiveAsync(cancellationToken);
         var archivesToCreate = new Dictionary<ArchiveConfig, List<Upload>>();
@@ -56,7 +62,7 @@ public class ArchiveCreationService(
         var assignableArchiveId = await repository.GetPossibleAssignableArchiveId(
             archiveConfigId: upload.UploadConfig.ArchiveConfigId,
             cancellationToken: cancellationToken);
-        
+
         if (assignableArchiveId is null)
         {
             logger.LogInformation("Could not find existing archive for upload {UploadId} with UploadConfig {UploadConfigId}",
@@ -86,10 +92,10 @@ public class ArchiveCreationService(
             config.Id,
             uploads.Count,
             config.ArchiverName);
-        
+
         var archiver = archiverFactory.GetByName(config.ArchiverName);
         var archiveDirectoryPath = fileSystemService.CreateTempDirectory(config.ArchiveFilesBasePath);
-        
+
         var archive = new Archive
         {
             ArchiveConfig = config,
@@ -100,7 +106,7 @@ public class ArchiveCreationService(
             Uploads = uploads.ToList(),
             ErrorMessages = [],
         };
-        
+
         repository.Add(archive);
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
@@ -117,11 +123,11 @@ public class ArchiveCreationService(
             logger.LogError("Failed to create archive for ArchiveConfig {ArchiveConfigId}: {ErrorMessages}",
                 config.Id,
                 string.Join(",  ", archiveResult.ErrorMessages ?? []));
-            
+
             archive.ArchiveState = ArchiveState.CreationFailed;
             archive.ErrorMessages.AddRange(archiveResult.ErrorMessages ?? []);
             await repository.SaveChangesAsync(cancellationToken: cancellationToken);
-            
+
             return;
         }
 
@@ -134,7 +140,7 @@ public class ArchiveCreationService(
         archive.ArchiveFiles = archiveResult.CreatedFileNames
             .Select(f => new ArchiveFile { FullFileName = f })
             .ToList();
-        
+
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
         logger.LogInformation("Created archive {ArchiveId} for ArchiveConfig {ArchiveConfigId} with {FileCount} files",

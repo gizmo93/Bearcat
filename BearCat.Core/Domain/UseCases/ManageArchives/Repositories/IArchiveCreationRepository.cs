@@ -10,4 +10,5 @@ public interface IArchiveCreationRepository
 
     void Add(Archive archive);
     Task<int?> GetPossibleAssignableArchiveId(int archiveConfigId, CancellationToken cancellationToken);
+    Task DeleteOrphanedArchivesAsync(CancellationToken cancellationToken);
 }
