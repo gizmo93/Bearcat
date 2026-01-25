@@ -1,4 +1,6 @@
-﻿namespace BearCat.Core.Domain.Entities;
+﻿using BearCat.Core.Domain.ValueObjects;
+
+namespace BearCat.Core.Domain.Entities;
 
 public class Archive
 {
@@ -11,6 +13,10 @@ public class Archive
     public string ArchiveFolderPath { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; }
+    
+    public ArchiveState ArchiveState { get; set; }
+    
+    public List<string> ErrorMessages { get; set; } = null!;
 
     public List<ArchiveFile> ArchiveFiles { get; set; } = null!;
 

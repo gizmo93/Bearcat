@@ -1,8 +1,8 @@
 ﻿using BearCat.Core.Domain.Abstractions;
 using BearCat.Core.Domain.Abstractions.Archiver;
 using BearCat.Core.Infrastructure.Archivers._7Zip;
-using BearCat.Core.Infrastructure.Archivers.FileSystem;
 using BearCat.Core.Infrastructure.Archivers.Rar;
+using BearCat.Core.Infrastructure.FileSystem;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BearCat.Core.Infrastructure.Archivers.InversionOfControl;

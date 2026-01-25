@@ -53,18 +53,11 @@ public class ArchiveCreationService(
 
     private async Task<bool> TryAssignExistingArchiveAsync(Upload upload, CancellationToken cancellationToken)
     {
-        var alreadyUsedArchiveIds = upload.UploadConfig.Uploads
-            .Select(u => u.ArchiveId)
-            .OfType<int>()
-            .ToHashSet();
-
-        var availableArchive = upload.UploadConfig.ArchiveConfig
-            .Archives
-            .Where(a => !alreadyUsedArchiveIds.Contains(a.Id))
-            .OrderBy(a => a.Id)
-            .FirstOrDefault();
-
-        if (availableArchive is null)
+        var assignableArchiveId = await repository.GetPossibleAssignableArchiveId(
+            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+            cancellationToken: cancellationToken);
+        
+        if (assignableArchiveId is null)
         {
             logger.LogInformation("Could not find existing archive for upload {UploadId} with UploadConfig {UploadConfigId}",
                 upload.Id,
@@ -73,12 +66,12 @@ public class ArchiveCreationService(
             return false;
         }
 
-        upload.Archive = availableArchive;
+        upload.ArchiveId = assignableArchiveId;
         upload.UploadState = UploadState.Pending;
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
         logger.LogInformation("Assigned existing archive {ArchiveId} to upload {UploadId}",
-            availableArchive.Id,
+            assignableArchiveId,
             upload.Id);
 
         return true;
@@ -93,9 +86,23 @@ public class ArchiveCreationService(
             config.Id,
             uploads.Count,
             config.ArchiverName);
-
+        
         var archiver = archiverFactory.GetByName(config.ArchiverName);
         var archiveDirectoryPath = fileSystemService.CreateTempDirectory(config.ArchiveFilesBasePath);
+        
+        var archive = new Archive
+        {
+            ArchiveConfig = config,
+            ArchiveFolderPath = archiveDirectoryPath,
+            ArchiveFiles = [],
+            ArchiveState = ArchiveState.Creating,
+            CreatedAt = timeProvider.GetLocalNow(),
+            Uploads = uploads.ToList(),
+            ErrorMessages = [],
+        };
+        
+        repository.Add(archive);
+        await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
         var archiveResult = await archiver.ArchiveAsync(
             sourceFolderPath: config.Release.ReleaseFolderPath,
@@ -110,27 +117,19 @@ public class ArchiveCreationService(
             logger.LogError("Failed to create archive for ArchiveConfig {ArchiveConfigId}: {ErrorMessages}",
                 config.Id,
                 string.Join(",  ", archiveResult.ErrorMessages ?? []));
-
+            
+            archive.ArchiveState = ArchiveState.CreationFailed;
+            archive.ErrorMessages.AddRange(archiveResult.ErrorMessages ?? []);
+            await repository.SaveChangesAsync(cancellationToken: cancellationToken);
+            
             return;
         }
-
-        var archive = new Archive
-        {
-            ArchiveConfig = config,
-            ArchiveFolderPath = archiveDirectoryPath,
-            ArchiveFiles = archiveResult.CreatedFileNames
-                .Select(f => new ArchiveFile { FullFileName = f })
-                .ToList(),
-            CreatedAt = timeProvider.GetLocalNow(),
-            Uploads = uploads.ToList()
-        };
 
         foreach (var upload in uploads)
         {
             upload.UploadState = UploadState.Pending;
         }
-
-        repository.Add(archive);
+        
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
         logger.LogInformation("Created archive {ArchiveId} for ArchiveConfig {ArchiveConfigId} with {FileCount} files",

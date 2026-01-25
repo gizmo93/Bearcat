@@ -1,6 +1,6 @@
 ﻿using BearCat.Core.Domain.Abstractions;
 
-namespace BearCat.Core.Infrastructure.Archivers.FileSystem;
+namespace BearCat.Core.Infrastructure.FileSystem;
 
 public class FileSystemService : IFileSystemService
 {
@@ -21,5 +21,10 @@ public class FileSystemService : IFileSystemService
     {
         var folderPath = Path.Combine(basePath, Guid.NewGuid().ToString("N"));
         return Directory.CreateDirectory(folderPath).FullName;
+    }
+
+    public bool FileExists(string filePath)
+    {
+        return File.Exists(filePath);
     }
 }
