@@ -50,8 +50,14 @@ public class UploadFilesService(
         var maximumParallelUploads = await hoster.GetMaximumParallelUploadsAsync(hosterConfig, cancellationToken) ?? 1;
 
         var semaphore = new SemaphoreSlim(maximumParallelUploads);
+        
+        var filesToUpload = upload
+            .Archive!
+            .ArchiveFiles
+            .Where(f => upload.UploadedFiles.All(uf => uf.ArchiveFileId != f.Id))
+            .ToList();
 
-        var uploadTasks = upload.Archive!.ArchiveFiles.Select(async file =>
+        var uploadTasks = filesToUpload.Select(async file =>
         {
             await semaphore.WaitAsync(cancellationToken);
             try
@@ -76,8 +82,6 @@ public class UploadFilesService(
         await Task.WhenAll(uploadTasks);
 
         var anyFailedUploads = uploadTasks.Any(t => t.IsFaulted || !t.Result.IsSuccess);
-
-        upload.UploadedFiles = [];
 
         foreach (var task in uploadTasks)
         {
