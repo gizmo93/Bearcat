@@ -1,0 +1,53 @@
+@using BearCat.Core.Domain.ValueObjects
+
+<MudStack Spacing="2" AlignItems="AlignItems.Start">
+    <MudText Typo="Typo.h6">Running & pending uploads</MudText>
+    <MudTable
+        Items="Uploads.OrderByDescending(u => u.UploadState)"
+        Elevation="4"
+        Dense="true"
+        HorizontalScrollbar="true"
+        Breakpoint="Breakpoint.None">
+        <HeaderContent>
+            <MudTh>Id</MudTh>
+            <MudTh>Release</MudTh>
+            <MudTh>Upload config</MudTh>
+            <MudTh>Hoster</MudTh>
+            <MudTh>State</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Id</MudTd>
+            <MudTd>@context.UploadConfig.Release.Name</MudTd>
+            <MudTd>@context.UploadConfig.Name</MudTd>
+            <MudTd>@context.UploadConfig.HosterRegistration.Name</MudTd>
+            <MudTd>
+                @context.UploadState
+            </MudTd>
+            <MudTd>
+                @if (context.UploadState is UploadState.Uploading)
+                {
+                    var uploadedFiles = context.UploadedFiles.Count;
+                    var archiveFiles = context.Archive!.ArchiveFiles.Count;
+
+                    var percentage = Math.Round((double)uploadedFiles / archiveFiles * 100, 0);
+
+                    <MudButton Variant="@(showDetailIds.Contains(context.Id) ? Variant.Filled : Variant.Text)"
+                               Size="Size.Small" OnClick="@(() => ToggleShowUploadDetails(context.Id))">
+                        <MudProgressCircular Color="Color.Primary" Min="0" Value="percentage" Size="Size.Large">
+                            <ChildContent>
+                                @percentage %
+                            </ChildContent>
+                        </MudProgressCircular>
+                    </MudButton>
+                }
+            </MudTd>
+        </RowTemplate>
+        <ChildRowContent>
+            @if (showDetailIds.Contains(context.Id))
+            {
+                <FileDetails Upload="context" />
+            }
+        </ChildRowContent>
+    </MudTable>
+</MudStack>
