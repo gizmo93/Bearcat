@@ -12,6 +12,7 @@ public class UploadFilesRepository(IBearcatWriteDbContext dbWrite)
     {
         return await dbWrite.Uploads
             .AsSplitQuery()
+            .Include(u => u.UploadedFiles)
             .Include(u => u.UploadConfig)
             .ThenInclude(uc => uc.HosterRegistration)
             .Include(u => u.Archive)
