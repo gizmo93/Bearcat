@@ -1,5 +1,6 @@
 ﻿using BearCat.Core.Domain.Abstractions;
 using BearCat.Core.Domain.Abstractions.Hoster;
+using BearCat.Core.Domain.Abstractions.Hoster.Results;
 using BearCat.Core.Domain.Entities;
 using BearCat.Core.Domain.UseCases.ManageUploads.Repositories;
 using BearCat.Core.Domain.ValueObjects;
@@ -11,6 +12,7 @@ public class UploadFilesService(
     IUploadFilesRepository repository,
     IHosterFactory hosterFactory,
     IFileSystemService fileSystemService,
+    TimeProvider timeProvider,
     ILogger<UploadFilesService> logger)
 {
     public async Task ProcessPendingUploadsAsync(CancellationToken cancellationToken)
@@ -64,76 +66,54 @@ public class UploadFilesService(
             var maximumParallelUploads =
                 await hoster.GetMaximumParallelUploadsAsync(hosterConfig, cancellationToken) ?? 1;
 
-            var semaphore = new SemaphoreSlim(maximumParallelUploads);
+            using var semaphore = new SemaphoreSlim(maximumParallelUploads);
 
             var filesToUpload = upload
                 .Archive!
                 .ArchiveFiles
                 .Where(f => upload.UploadedFiles.All(uf => uf.ArchiveFileId != f.Id))
                 .ToList();
+            
+            upload.UploadState = UploadState.Uploading;
+            await repository.SaveChangesAsync(cancellationToken);
 
-            var uploadTasks = filesToUpload.Select(async file =>
-                {
-                    await semaphore.WaitAsync(cancellationToken);
-                    try
-                    {
-                        return await hoster.UploadFileAsync(file, hosterConfig, cancellationToken);
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogError("Exception during upload of file {FilePath} for upload {UploadId}: {Exception}",
-                            file.FullFileName,
-                            upload.Id,
-                            ex);
-                        throw;
-                    }
-                    finally
-                    {
-                        semaphore.Release();
-                    }
-                })
-                .ToList();
+            var uploadTasks = StartUploadTasks(
+                upload: upload,
+                filesToUpload: filesToUpload,
+                semaphore: semaphore,
+                hoster: hoster,
+                hosterConfig: hosterConfig,
+                cancellationToken: cancellationToken);
 
-            await Task.WhenAll(uploadTasks);
+            var finishedTasks = new HashSet<Task<UploadFileResult>>();
 
-            var anyFailedUploads = uploadTasks.Any(t => t.IsFaulted || !t.Result.IsSuccess);
-
-            foreach (var task in uploadTasks)
+            while (uploadTasks.Any(t => !t.IsCompleted))
             {
-                if (task.IsFaulted)
+                try
                 {
-                    logger.LogError(task.Exception, "Upload failed for file for upload {UploadId}", upload.Id);
-                    continue;
+                    await PersistIntermediateResultsAsync(
+                        upload: upload,
+                        uploadTasks: uploadTasks,
+                        finishedTasks: finishedTasks,
+                        cancellationToken: cancellationToken);
                 }
-
-                if (!task.Result.IsSuccess)
+                catch (Exception e)
                 {
-                    logger.LogError("Upload failed for file {FilePath} for upload {UploadId}: {ErrorMessages}",
-                        task.Result.ArchiveFile.FullFileName,
+                    logger.LogError("Exception during persisting intermediate upload results for Upload {UploadId}: {Message}",
                         upload.Id,
-                        string.Join(", ", task.Result.ErrorMessages));
-
-                    upload.UploadedFiles.Add(new UploadedFile
-                    {
-                        ArchiveFile = task.Result.ArchiveFile,
-                        HosterFileLink = string.Empty,
-                        OnlineState = OnlineState.Unknown,
-                        CreatedAt = DateTime.UtcNow,
-                        CheckedAt = DateTime.UtcNow
-                    });
-
-                    continue;
+                        e.Message);
                 }
-
-                upload.UploadedFiles.Add(new UploadedFile
-                {
-                    ArchiveFile = task.Result.ArchiveFile,
-                    HosterFileLink = task.Result.FileUrl!,
-                    OnlineState = OnlineState.Online,
-                    CreatedAt = DateTime.UtcNow,
-                    CheckedAt = DateTime.UtcNow
-                });
+                
+                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
             }
+            
+            await PersistIntermediateResultsAsync(
+                upload: upload,
+                uploadTasks: uploadTasks,
+                finishedTasks: finishedTasks,
+                cancellationToken: cancellationToken);
+            
+            var anyFailedUploads = uploadTasks.Any(t => t.IsFaulted || !t.Result.IsSuccess);
 
             upload.UploadState = anyFailedUploads ? UploadState.Failed : UploadState.Completed;
             upload.OnlineState = anyFailedUploads ? OnlineState.PartiallyOnline : OnlineState.Online;
@@ -149,6 +129,89 @@ public class UploadFilesService(
                 e.Message);
             
             await repository.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private List<Task<UploadFileResult>> StartUploadTasks(
+        Upload upload,
+        List<ArchiveFile> filesToUpload,
+        SemaphoreSlim semaphore,
+        IHoster hoster,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken)
+    {
+        return filesToUpload.Select(async file =>
+            {
+                await semaphore.WaitAsync(cancellationToken);
+                try
+                {
+                    return await hoster.UploadFileAsync(file, hosterConfig, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError("Exception during upload of file {FilePath} for upload {UploadId}: {Exception}",
+                        file.FullFileName,
+                        upload.Id,
+                        ex);
+                    throw;
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            })
+            .ToList();
+    }
+
+    private async Task PersistIntermediateResultsAsync(
+        Upload upload,
+        List<Task<UploadFileResult>> uploadTasks,
+        HashSet<Task<UploadFileResult>> finishedTasks,
+        CancellationToken cancellationToken)
+    {
+        var newlyFinishedTasks = uploadTasks
+            .Where(t => !finishedTasks.Contains(t) && t.IsCompleted)
+            .ToHashSet();
+
+        var missingUploadedFiles = newlyFinishedTasks
+            .Select(t => t.Result)
+            .Where(r => upload.UploadedFiles.All(u => u.ArchiveFile != r.ArchiveFile))
+            .Select(r => new UploadedFile
+            {
+                ArchiveFile = r.ArchiveFile,
+                HosterFileLink = r.FileUrl ?? string.Empty,
+                OnlineState = r.IsSuccess ? OnlineState.Online : OnlineState.Unknown,
+                ErrorMessages = r.ErrorMessages.ToList(),
+                CreatedAt = timeProvider.GetLocalNow(),
+                CheckedAt = timeProvider.GetLocalNow(),
+            })
+            .ToList();
+
+        finishedTasks.UnionWith(newlyFinishedTasks);
+                
+        upload.UploadedFiles.AddRange(missingUploadedFiles);
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    private void LogUploadErrors(Upload upload, List<Task<UploadFileResult>> failedTasks)
+    {
+        foreach (var task in failedTasks)
+        {
+            if (task.IsFaulted)
+            {
+                logger.LogError(task.Exception, "Upload failed for file for upload {UploadId}", upload.Id);
+                continue;
+            }
+
+            if (task.Result.IsSuccess)
+            {
+                continue;
+            }
+
+            logger.LogError("Upload failed for file {FilePath} for upload {UploadId}: {ErrorMessages}",
+                task.Result.ArchiveFile.FullFileName,
+                upload.Id,
+                string.Join(", ", task.Result.ErrorMessages));
         }
     }
 

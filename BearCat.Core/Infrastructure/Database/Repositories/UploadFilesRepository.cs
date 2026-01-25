@@ -20,6 +20,13 @@ public class UploadFilesRepository(IBearcatWriteDbContext dbWrite)
             .Where(u => u.UploadState == UploadState.Pending)
             .ToListAsync(cancellationToken);
     }
+    
+    public async Task<IReadOnlyList<Upload>> GetOrphanedUploadsAsync(CancellationToken cancellationToken)
+    {
+        return await dbWrite.Uploads
+            .Where(u => u.UploadState == UploadState.Uploading)
+            .ToListAsync(cancellationToken: cancellationToken);
+    }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {

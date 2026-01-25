@@ -9,7 +9,7 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite)
     : IUploadStateRepository
 {
     public async Task<IReadOnlyList<Upload>> GetUploadsToCheckAsync(
-        DateTime utcNow,
+        DateTime localNow,
         CancellationToken cancellationToken)
     {
         List<OnlineState> onlineStatesToCheck =
@@ -18,7 +18,7 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite)
             OnlineState.PartiallyOnline
         ];
 
-        var lastCheckThreshold = utcNow.AddMinutes(-30);
+        var lastCheckThreshold = localNow.AddMinutes(-30);
 
         return await dbWrite.Uploads
             .AsSplitQuery()

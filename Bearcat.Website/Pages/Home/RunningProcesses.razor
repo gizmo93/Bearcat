@@ -1,0 +1,102 @@
+@using BearCat.Core.Domain.ValueObjects
+@inherits OwningComponentBase
+
+<MudStack Spacing="3">
+    <MudCard Elevation="3">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudStack Row Spacing="3" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.h5">Running processes</MudText>
+                    @if (autoRefresh)
+                    {
+                        <MudChip T="string" Color="Color.Info">Auto refresh</MudChip>
+                    }
+                </MudStack>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudStack Row AlignItems="AlignItems.Baseline" Spacing="1">
+                    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Disabled="refreshInProgress" OnClick="@(() => LoadDataAsync())" />
+                    <MudMenu Icon="@Icons.Material.Filled.Menu">
+                        <MudMenuItem
+                            OnClick="@(() => ToggleAutoRefresh())"
+                            Disabled="refreshInProgress"
+                            Icon="@(autoRefresh ? Icons.Material.Filled.ToggleOff : Icons.Material.Filled.ToggleOn)"
+                            Label="@($"Auto refresh: {(autoRefresh ? "On" : "Off")}")"/>
+                    </MudMenu>
+                </MudStack>
+            </CardHeaderActions>
+        </MudCardHeader>
+        <MudCardContent>
+            @if (SomethingIsRunning)
+            {
+                <MudStack>
+                    @if (runningUploads.Count > 0)
+                    {
+                        <MudStack Spacing="2" AlignItems="AlignItems.Start">
+                            <MudText Typo="Typo.h6">Running & pending uploads</MudText>
+                            <MudTable Items="runningUploads" Elevation="3" Dense="true">
+                                <HeaderContent>
+                                    <MudTh>Id</MudTh>
+                                    <MudTh>Release</MudTh>
+                                    <MudTh>Upload config</MudTh>
+                                    <MudTh>Hoster</MudTh>
+                                    <MudTh>State</MudTh>
+                                    <MudTh></MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd>@context.Id</MudTd>
+                                    <MudTd>@context.UploadConfig.Release.Name</MudTd>
+                                    <MudTd>@context.UploadConfig.Name</MudTd>
+                                    <MudTd>@context.UploadConfig.HosterRegistration.Name</MudTd>
+                                    <MudTd>
+                                        @context.UploadState
+                                    </MudTd>
+                                    <MudTd>
+                                        @if (context.UploadState is UploadState.Uploading)
+                                        {
+                                            var uploadedFiles = context.UploadedFiles.Count;
+                                            var archiveFiles = context.Archive!.ArchiveFiles.Count;
+
+                                            var percentage = Math.Round((double)uploadedFiles / archiveFiles * 100, 0);
+
+                                            <MudProgressCircular Color="Color.Primary" Min="0" Value="percentage" Size="Size.Large">
+                                                <ChildContent>
+                                                    @percentage %
+                                                </ChildContent>
+                                            </MudProgressCircular>
+                                        }
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudStack>
+                    }
+
+                    @if (runningArchives.Count > 0)
+                    {
+                        <MudStack Spacing="2" AlignItems="AlignItems.Start">
+                            <MudText Typo="Typo.h6">Running archives</MudText>
+                            <MudTable Items="runningArchives" Elevation="3" Dense="true">
+                                <HeaderContent>
+                                    <MudTh>Id</MudTh>
+                                    <MudTh>Release</MudTh>
+                                    <MudTh>Archive config</MudTh>
+                                    <MudTh>Archiver</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd>@context.Id</MudTd>
+                                    <MudTd>@context.ArchiveConfig.Release.Name</MudTd>
+                                    <MudTd>@context.ArchiveConfig.Name</MudTd>
+                                    <MudTd>@context.ArchiveConfig.ArchiverName</MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudStack>
+                    }
+                </MudStack>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Success">Currently nothing is running</MudAlert>
+            }
+        </MudCardContent>
+    </MudCard>
+</MudStack>

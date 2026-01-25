@@ -15,6 +15,8 @@ public class UploadedFile
     public ArchiveFile ArchiveFile { get; set; } = null!;
 
     public string HosterFileLink { get; set; } = null!;
+    
+    public List<string> ErrorMessages { get; set; } = [];
 
     public OnlineState OnlineState { get; set; }
 

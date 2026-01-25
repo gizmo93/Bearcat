@@ -15,8 +15,8 @@ public class Archive
     public DateTime CreatedAt { get; set; }
     
     public ArchiveState ArchiveState { get; set; }
-    
-    public List<string> ErrorMessages { get; set; } = null!;
+
+    public List<string> ErrorMessages { get; set; } = new();
 
     public List<ArchiveFile> ArchiveFiles { get; set; } = null!;
 
