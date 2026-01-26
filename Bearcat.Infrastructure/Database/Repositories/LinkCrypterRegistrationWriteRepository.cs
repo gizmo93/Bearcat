@@ -11,17 +11,17 @@ public class LinkCrypterRegistrationWriteRepository(IBearcatWriteDbContext dbWri
     {
         return await dbWrite.LinkCrypterRegistrations.FirstAsync(l => l.Id == id, cancellationToken);
     }
-    
+
     public void Add(LinkCrypterRegistration registration)
     {
         dbWrite.LinkCrypterRegistrations.Add(registration);
     }
-    
+
     public void Remove(LinkCrypterRegistration registration)
     {
         dbWrite.LinkCrypterRegistrations.Remove(registration);
     }
-    
+
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         return await dbWrite.SaveChangesAsync(cancellationToken);

@@ -86,12 +86,12 @@ public class DDownloadApiClient(
             Name = "\"file\"",
             FileName = $"\"{fileName}\""
         };
-    
+
         multipartForm.Add(fileContent);
-        
+
         uploadUrl = $"{uploadUrl}?upload_type=file&utype=reg";
         uploadUrl = uploadUrl.Replace("https://", "http://");
-        
+
         var httpResponse = await httpClient.PostAsync(uploadUrl, multipartForm, cancellationToken);
 
         if (!httpResponse.IsSuccessStatusCode)
@@ -106,9 +106,10 @@ public class DDownloadApiClient(
             content,
             options: new JsonSerializerOptions
             {
-                NumberHandling = JsonNumberHandling.AllowReadingFromString, PropertyNameCaseInsensitive = true,
+                NumberHandling = JsonNumberHandling.AllowReadingFromString,
+                PropertyNameCaseInsensitive = true,
             })!;
-        
+
         return response.First();
     }
 }

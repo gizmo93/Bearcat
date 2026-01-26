@@ -25,4 +25,6 @@ public class Upload
     public List<UploadedFile> UploadedFiles { get; set; } = null!;
 
     public List<string> ErrorMessages { get; set; } = [];
+
+    public List<LinkCrypterContainer> LinkCrypterContainers { get; set; } = null!;
 }

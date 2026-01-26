@@ -6,10 +6,10 @@ public class Request
 {
     [JsonPropertyName("name")]
     public string Name { get; set; } = null!;
-    
+
     [JsonPropertyName("password")]
     public string? Password { get; set; }
-    
+
     [JsonPropertyName("mirrors")]
     public IReadOnlyList<string> Mirrors { get; set; } = [];
 }

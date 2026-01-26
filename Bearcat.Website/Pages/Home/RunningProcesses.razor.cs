@@ -30,7 +30,7 @@ public partial class RunningProcesses(
         await base.OnInitializedAsync();
         dbRead = ScopedServices.GetRequiredService<IBearcatReadDbContext>();
         await LoadDataAsync();
-        
+
         navigationManager.LocationChanged += (_, _) =>
         {
             if (!autoRefresh || refreshTimer is null)

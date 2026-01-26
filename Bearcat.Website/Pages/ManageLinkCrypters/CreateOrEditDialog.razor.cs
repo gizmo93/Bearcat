@@ -12,41 +12,41 @@ public partial class CreateOrEditDialog
 {
     [Parameter]
     public int? LinkCrypterRegistrationId { get; set; }
-    
+
     [CascadingParameter]
     public IMudDialogInstance MudDialog { get; set; } = null!;
-    
+
     private bool IsEditMode => LinkCrypterRegistrationId.HasValue;
-    
+
     private ILinkCrypterRegistrationReadRepository readRepository = null!;
-    
+
     private ILinkCrypterFactory linkCrypterFactory = null!;
 
     private RegistrationFormModel formModel = new();
 
     private EditContext editContext = null!;
-    
+
     private ValidationMessageStore validationMessageStore = null!;
-    
+
     private IReadOnlyList<LinkCrypterDto> crypters = [];
-    
+
     private HashSet<string> displayedPasswords = new();
 
     private LinkCrypterDto? SelectedCrypter => crypters
         .FirstOrDefault(c => c.ClassName == formModel.ClassName);
-    
+
     private bool isInitialized;
-    
-    
-    
+
+
+
     protected override async Task OnInitializedAsync()
     {
         readRepository = ScopedServices.GetRequiredService<ILinkCrypterRegistrationReadRepository>();
         linkCrypterFactory = ScopedServices.GetRequiredService<ILinkCrypterFactory>();
-        
+
         await InitializeFormModelAsync();
         InitializeCrypters();
-        
+
         editContext = new EditContext(formModel);
         editContext.OnValidationRequested += OnValidationRequested;
         validationMessageStore = new ValidationMessageStore(editContext);
@@ -70,21 +70,21 @@ public partial class CreateOrEditDialog
                 name: formModel.Name!,
                 configuration: formModel.Configuration);
         }
-        
+
         MudDialog.Close();
     }
 
     private void OnValidationRequested(object? sender, ValidationRequestedEventArgs e)
     {
         validationMessageStore.Clear();
-        
+
         if (string.IsNullOrWhiteSpace(formModel.Name))
         {
             validationMessageStore.Add(
                 () => formModel.Name!,
                 "Name is required.");
         }
-        
+
         if (string.IsNullOrWhiteSpace(formModel.ClassName))
         {
             validationMessageStore.Add(
@@ -102,7 +102,7 @@ public partial class CreateOrEditDialog
             .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Value))
             .Select(kvp => kvp.Key)
             .ToHashSet();
-            
+
         var missingKeys = SelectedCrypter!
             .ConfigurationKeys
             .Where(key => !configuredKeys.Contains(key))
@@ -116,19 +116,19 @@ public partial class CreateOrEditDialog
 
     private async Task InitializeFormModelAsync()
     {
-        if(!IsEditMode)
+        if (!IsEditMode)
         {
             formModel = new RegistrationFormModel();
             return;
         }
-        
+
         var registration = await readRepository.GetByIdAsync(LinkCrypterRegistrationId!.Value);
 
         if (registration is null)
         {
             MudDialog.Cancel();
         }
-        
+
         formModel = new RegistrationFormModel
         {
             Name = registration!.Name,
@@ -136,10 +136,10 @@ public partial class CreateOrEditDialog
             Configuration = registration.Configuration
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
         };
-        
+
         StateHasChanged();
     }
-    
+
     private void ToggleShowHidePassword(string key)
     {
         if (displayedPasswords.Add(key))
@@ -149,7 +149,7 @@ public partial class CreateOrEditDialog
 
         displayedPasswords.Remove(key);
     }
-    
+
     private void InitializeCrypters()
     {
         crypters = linkCrypterFactory.GetLinkCrypters();
@@ -161,9 +161,9 @@ public partial class CreateOrEditDialog
         {
             return;
         }
-        
+
         var crypter = SelectedCrypter;
-        
+
         if (crypter is null)
         {
             formModel.Configuration = new Dictionary<string, string>();

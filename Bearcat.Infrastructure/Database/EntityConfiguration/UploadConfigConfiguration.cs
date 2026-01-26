@@ -27,5 +27,12 @@ public class UploadConfigConfiguration : IEntityTypeConfiguration<UploadConfig>
             .HasPrincipalKey(u => u.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(u => u.LinkCrypters)
+            .WithOne(l => l.UploadConfig)
+            .HasForeignKey(l => l.UploadConfigId)
+            .HasPrincipalKey(u => u.Id)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

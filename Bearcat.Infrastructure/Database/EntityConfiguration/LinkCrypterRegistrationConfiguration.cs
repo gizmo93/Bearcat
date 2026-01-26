@@ -9,11 +9,11 @@ public class LinkCrypterRegistrationConfiguration : IEntityTypeConfiguration<Lin
     public void Configure(EntityTypeBuilder<LinkCrypterRegistration> builder)
     {
         builder.HasKey(l => l.Id);
-        
+
         builder.Property(l => l.Name)
             .IsRequired()
             .HasMaxLength(200);
-        
+
         builder.Property(l => l.LinkCrypterClassName)
             .IsRequired()
             .HasMaxLength(50);
@@ -21,7 +21,7 @@ public class LinkCrypterRegistrationConfiguration : IEntityTypeConfiguration<Lin
         builder.Property(l => l.SerializedConfig)
             .IsRequired()
             .HasMaxLength(1000);
-        
+
         builder.Property(l => l.IsActive)
             .IsRequired();
     }

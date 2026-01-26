@@ -94,7 +94,7 @@ public class UploadFilesService(
             var newPendingUploads = (await GetPendingUploadsAsync(pendingUploadIds, cancellationToken))
                 .Where(u => !pendingUploadIds.Contains(u.Id))
                 .ToList();
-        
+
             var filesToUpload = GetFilesToUpload(
                 uploads: newPendingUploads,
                 hosters: hosters,
@@ -355,7 +355,7 @@ public class UploadFilesService(
         {
             return false;
         }
-        
+
         var nonExistingFiles = upload
             .Archive!
             .ArchiveFiles

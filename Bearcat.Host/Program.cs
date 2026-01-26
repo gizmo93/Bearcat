@@ -1,11 +1,11 @@
 ﻿using Bearcat.Application.InversionOfControl;
 using Bearcat.Archivers.InversionOfControl;
-using Bearcat.Website;
 using Bearcat.Domain.InversionOfControl;
 using Bearcat.Hosters.InversionOfControl;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.InversionOfControl;
 using Bearcat.LinkCrypters.InversionOfControl;
+using Bearcat.Website;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
