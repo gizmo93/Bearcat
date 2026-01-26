@@ -23,14 +23,14 @@ public class LinkCrypterContainerCreationService(
             logger.LogInformation("No uploads found with missing link crypter containers, finishing");
             return;
         }
-        
+
         foreach (var upload in uploadsToProcess)
         {
             logger.LogInformation("Processing upload {UploadId} for missing link crypter containers",
                 upload.Id);
             await ProcessUploadAsync(upload, cancellationToken);
         }
-        
+
         logger.LogInformation("Finished processing link crypter container creation for uploads");
     }
 
@@ -51,7 +51,7 @@ public class LinkCrypterContainerCreationService(
                 cancellationToken: cancellationToken);
         }
     }
-    
+
     private async Task CreateLinkCrypterContainerAsync(
         Upload upload,
         UploadConfigLinkCrypter linkCrypterConfig,
@@ -99,7 +99,7 @@ public class LinkCrypterContainerCreationService(
                 linkCrypterConfig.Id,
                 string.Join("; ", result.ErrorMessages));
         }
-        
+
         repository.Add(container);
         await repository.SaveChangesAsync(cancellationToken);
     }

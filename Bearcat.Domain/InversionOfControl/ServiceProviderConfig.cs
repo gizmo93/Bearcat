@@ -6,6 +6,7 @@ using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Domain.UseCases.ManageLinkCrypters;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +32,7 @@ public static class ServiceProviderConfig
             services.AddScoped<UploadConfigService>();
             services.AddScoped<LinkCrypterService>();
             services.AddScoped<LinkCrypterContainerCreationService>();
+            services.AddScoped<UploadConfigLinkCrypterService>();
         }
     }
 }

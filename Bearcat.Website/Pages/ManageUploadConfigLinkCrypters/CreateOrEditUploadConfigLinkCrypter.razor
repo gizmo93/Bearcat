@@ -1,0 +1,63 @@
+@inherits OwningComponentBase
+
+@if (!isInitialized)
+{
+    return;
+}
+
+<EditForm EditContext="editContext" OnValidSubmit="@(() => SaveAsync())">
+    <MudDialog>
+        <TitleContent>
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                @if (IsEdit)
+                {
+                    <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Edit"/>
+                }
+                else
+                {
+                    <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Add"/>
+                }
+                <MudText Typo="Typo.h6">
+                    @MudDialog.Title
+                </MudText>
+            </MudStack>
+        </TitleContent>
+        <DialogContent>
+            <MudStack>
+                <MudTextField
+                    Label="Container name"
+                    Placeholder="Enter a name for the link crypter container"
+                    @bind-Value="formModel.ContainerName"/>
+                
+                <MudSelect
+                    Label="Link crypter"
+                    Placeholder="Select a link crypter"
+                    Disabled="IsEdit"
+                    @bind-Value="@formModel.LinkCrypterRegistrationId">
+                    @foreach (var (id, name) in linkCrypterOptions)
+                    {
+                        <MudSelectItem Value="@id">@name</MudSelectItem>
+                    }
+                </MudSelect>
+                
+                <MudTextField
+                    Label="Container password"
+                    Placeholder="Set an optional password for the container"
+                    @bind-Value="@formModel.Password" />
+
+                <div style="color: red;">
+                    <ValidationMessage For="@(() => formModel.ContainerName)"/>
+                    <ValidationMessage For="@(() => formModel.LinkCrypterRegistrationId)"/>
+                </div>
+            </MudStack>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Color="Color.Secondary" OnClick="@(() => MudDialog.Cancel())" StartIcon="@Icons.Material.Filled.Cancel">
+                Cancel
+            </MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Check">
+                Save
+            </MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
