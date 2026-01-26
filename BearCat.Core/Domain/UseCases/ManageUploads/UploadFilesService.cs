@@ -19,7 +19,7 @@ public class UploadFilesService(
 {
     private const int MaxParallelUploads = 10;
 
-    private readonly SemaphoreSlim saveChangesSemaphore = new(
+    private readonly SemaphoreSlim dbContextSemaphore = new(
         initialCount: 1,
         maxCount: 1);
 
@@ -92,7 +92,7 @@ public class UploadFilesService(
             var newPendingUploads = (await GetPendingUploadsAsync(pendingUploadIds, cancellationToken))
                 .Where(u => !pendingUploadIds.Contains(u.Id))
                 .ToList();
-
+        
             var filesToUpload = GetFilesToUpload(
                 uploads: newPendingUploads,
                 hosters: hosters,
@@ -180,13 +180,22 @@ public class UploadFilesService(
         HashSet<int>? excludeUploadIds = null,
         CancellationToken cancellationToken = default)
     {
-        var pendingUploads = await repository.GetPendingUploadsAsync(
-            uploadIdsToExclude: excludeUploadIds ?? [],
-            cancellationToken: cancellationToken);
+        await dbContextSemaphore.WaitAsync(cancellationToken);
 
-        var uploadsToSkip = await HandleUploadsWithMissingFilesAsync(pendingUploads, cancellationToken);
+        try
+        {
+            var pendingUploads = await repository.GetPendingUploadsAsync(
+                uploadIdsToExclude: excludeUploadIds ?? [],
+                cancellationToken: cancellationToken);
 
-        return pendingUploads.Except(uploadsToSkip).ToList();
+            var uploadsToSkip = await HandleUploadsWithMissingFilesAsync(pendingUploads, cancellationToken);
+
+            return pendingUploads.Except(uploadsToSkip).ToList();
+        }
+        finally
+        {
+            dbContextSemaphore.Release();
+        }
     }
 
     private async Task UploadFileAsync(
@@ -340,6 +349,11 @@ public class UploadFilesService(
 
     private async Task<bool> HandleNonExistingArchiveFilesAsync(Upload upload, CancellationToken cancellationToken)
     {
+        if (upload.Archive is null)
+        {
+            return false;
+        }
+        
         var nonExistingFiles = upload
             .Archive!
             .ArchiveFiles
@@ -373,18 +387,18 @@ public class UploadFilesService(
     {
         try
         {
-            await saveChangesSemaphore.WaitAsync(cancellationToken);
+            await dbContextSemaphore.WaitAsync(cancellationToken);
             await repository.SaveChangesAsync(cancellationToken);
         }
         finally
         {
-            saveChangesSemaphore.Release();
+            dbContextSemaphore.Release();
         }
     }
 
     private void DisposeSemaphores()
     {
-        saveChangesSemaphore.Dispose();
+        dbContextSemaphore.Dispose();
         globalUploadSemaphore.Dispose();
 
         foreach (var semaphore in hosterUploadSemaphores.Values)

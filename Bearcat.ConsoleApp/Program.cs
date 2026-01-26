@@ -4,9 +4,12 @@ using BearCat.Core;
 using BearCat.Core.Domain.Abstractions;
 using BearCat.Core.Domain.Abstractions.Archiver;
 using BearCat.Core.Domain.Abstractions.Hoster;
+using BearCat.Core.Domain.Entities;
 using BearCat.Core.Infrastructure.Archivers._7Zip;
 using BearCat.Core.Infrastructure.Archivers.Rar;
 using BearCat.Core.Infrastructure.Hosters;
+using BearCat.Core.Infrastructure.Hosters.DDownload;
+using BearCat.Core.Infrastructure.Hosters.DDownload.ApiClient;
 using BearCat.Core.Infrastructure.Hosters.Rapidgator;
 using BearCat.Core.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,18 +24,19 @@ await app.StartAsync();
 
 await using var scope = app.Services.CreateAsyncScope();
 
-var archivers = scope.ServiceProvider.GetServices<IArchiver>();
-var rarArchiver = archivers.OfType<SevenZipArchiver>().First();
+var hoster = scope.ServiceProvider.GetRequiredKeyedService<IHoster>(nameof(DDownload));
 
-var sourceFolder = "/Volumes/Samsung 980/Test/TestFolder";
-var outputFolder = "/Volumes/Samsung 980/Test";
+var cfg = new DDownloadConfig { ApiKey = "98866i0d44iln26txsfdf" };
 
-var result = await rarArchiver.ArchiveAsync(
-    sourceFolderPath: sourceFolder,
-    destinationPath: outputFolder,
-    archiveNamePrefix: "Video",
-    targetFileSizeMb: 300,
-    password: "SuperSafePassword123",
-    cancellationToken: CancellationToken.None);
+var file = new ArchiveFile
+{
+    Id = 0,
+    ArchiveId = 0,
+    Archive = new Archive(),
+    FullFileName = "/Users/gizmo_/Downloads/Client.php.zip",
+    UploadedFiles = new List<UploadedFile>()
+};
+
+var result = await hoster!.UploadFileAsync(file, cfg, CancellationToken.None);
 
 await app.StopAsync();
