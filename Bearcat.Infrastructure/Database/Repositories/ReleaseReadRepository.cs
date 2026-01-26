@@ -1,4 +1,4 @@
-﻿using Bearcat.Domain.Abstractions.Archiver;
+﻿using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Microsoft.EntityFrameworkCore;

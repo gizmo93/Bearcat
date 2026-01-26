@@ -3,12 +3,11 @@ using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Timer = System.Timers.Timer;
 
 namespace Bearcat.Website.Pages.Home;
 
-public partial class RunningProcesses(ILogger<RunningProcesses> logger)
+public partial class RunningProcesses
 {
     private IReadOnlyList<Upload> runningUploads = [];
 

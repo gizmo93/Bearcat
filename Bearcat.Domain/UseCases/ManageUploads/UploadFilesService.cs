@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Threading.Channels;
+using Bearcat.Abstractions;
 using Bearcat.Domain.Abstractions;
 using Bearcat.Domain.Abstractions.Hoster;
 using Bearcat.Domain.Entities;

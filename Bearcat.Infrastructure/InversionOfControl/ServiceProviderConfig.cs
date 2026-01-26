@@ -1,3 +1,4 @@
+using Bearcat.Abstractions;
 using Bearcat.Domain.Abstractions;
 using Bearcat.Infrastructure.Database.InversionOfControl;
 using Bearcat.Infrastructure.FileSystem;

@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using Bearcat.Domain.Abstractions.Archiver;
+using Bearcat.Abstractions.Archiver;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Archivers.Rar;

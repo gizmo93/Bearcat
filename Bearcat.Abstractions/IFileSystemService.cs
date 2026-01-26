@@ -1,4 +1,4 @@
-﻿namespace Bearcat.Domain.Abstractions;
+﻿namespace Bearcat.Abstractions;
 
 public interface IFileSystemService
 {

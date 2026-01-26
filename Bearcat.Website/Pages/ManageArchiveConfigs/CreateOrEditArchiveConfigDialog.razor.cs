@@ -1,4 +1,4 @@
-﻿using Bearcat.Domain.Abstractions.Archiver;
+﻿using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Website.Shared;
 using Microsoft.AspNetCore.Components;
