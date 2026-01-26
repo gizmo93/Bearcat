@@ -8,7 +8,9 @@ namespace BearCat.Core.Infrastructure.Database.Repositories;
 public class UploadFilesRepository(IBearcatWriteDbContext dbWrite)
     : IUploadFilesRepository
 {
-    public async Task<IReadOnlyList<Upload>> GetPendingUploadsAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Upload>> GetPendingUploadsAsync(
+        IReadOnlySet<int> uploadIdsToExclude,
+        CancellationToken cancellationToken)
     {
         return await dbWrite.Uploads
             .AsSplitQuery()
@@ -17,7 +19,7 @@ public class UploadFilesRepository(IBearcatWriteDbContext dbWrite)
             .ThenInclude(uc => uc.HosterRegistration)
             .Include(u => u.Archive)
             .ThenInclude(a => a!.ArchiveFiles)
-            .Where(u => u.UploadState == UploadState.Pending)
+            .Where(u => !uploadIdsToExclude.Contains(u.Id) && u.UploadState == UploadState.Pending)
             .ToListAsync(cancellationToken);
     }
 
