@@ -14,6 +14,8 @@ public class ArchiveCreationService(
     IFileSystemService fileSystemService,
     TimeProvider timeProvider)
 {
+    private const string uniqueFileName = "__nonce";
+
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
         await repository.DeleteOrphanedArchivesAsync(cancellationToken);
@@ -110,6 +112,8 @@ public class ArchiveCreationService(
         repository.Add(archive);
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
+        await CreateOrUpdateUniqueFileAsync(config.Release.ReleaseFolderPath, cancellationToken);
+
         var archiveResult = await archiver.ArchiveAsync(
             sourceFolderPath: config.Release.ReleaseFolderPath,
             destinationPath: archiveDirectoryPath,
@@ -147,5 +151,14 @@ public class ArchiveCreationService(
             archive.Id,
             config.Id,
             archive.ArchiveFiles.Count);
+    }
+
+    private async Task CreateOrUpdateUniqueFileAsync(string releasePath, CancellationToken cancellationToken)
+    {
+        var uniqueFilePath = Path.Join(releasePath, uniqueFileName);
+        await File.WriteAllTextAsync(
+            path: uniqueFilePath,
+            contents: Guid.NewGuid().ToString(),
+            cancellationToken: cancellationToken);
     }
 }
