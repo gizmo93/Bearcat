@@ -5,6 +5,7 @@ using Bearcat.Domain.InversionOfControl;
 using Bearcat.Hosters.InversionOfControl;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.InversionOfControl;
+using Bearcat.LinkCrypters.InversionOfControl;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +27,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddDomain();
 builder.Services.AddHosters();
 builder.Services.AddArchivers();
+builder.Services.AddLinkCrypters();
 
 var app = builder.Build();
 
