@@ -1,12 +1,12 @@
 <Solution>
-  <Folder Name="/Plugins/">
-    <Project Path="Bearcat.Archivers/Bearcat.Archivers.csproj" />
-    <Project Path="Bearcat.Hosters/Bearcat.Hosters.csproj" />
-  </Folder>
-  <Folder Name="/Startups/">
+  <Folder Name="/1_Startups/">
     <Project Path="Bearcat.ConsoleApp/Bearcat.ConsoleApp.csproj" />
     <Project Path="Bearcat.Host\Bearcat.Host.csproj" />
     <Project Path="Bearcat.Launcher/Bearcat.Launcher.csproj" />
+  </Folder>
+  <Folder Name="/2_Plugins/">
+    <Project Path="Bearcat.Archivers/Bearcat.Archivers.csproj" />
+    <Project Path="Bearcat.Hosters/Bearcat.Hosters.csproj" />
   </Folder>
   <Project Path="Bearcat.Application/Bearcat.Application.csproj" />
   <Project Path="Bearcat.Domain\Bearcat.Domain.csproj" />
