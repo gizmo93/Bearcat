@@ -1,4 +1,4 @@
-﻿namespace Bearcat.Domain.Abstractions.Archiver;
+﻿namespace Bearcat.Abstractions.Archiver;
 
 public record ArchiveResult(
     bool IsSuccess,

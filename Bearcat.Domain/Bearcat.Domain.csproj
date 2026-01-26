@@ -19,4 +19,8 @@
       <PackageReference Include="Refit.HttpClientFactory" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Bearcat.Abstractions\Bearcat.Abstractions.csproj" />
+    </ItemGroup>
+
 </Project>

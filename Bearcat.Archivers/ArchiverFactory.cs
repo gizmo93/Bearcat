@@ -1,4 +1,4 @@
-﻿using Bearcat.Domain.Abstractions.Archiver;
+﻿using Bearcat.Abstractions.Archiver;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Archivers;

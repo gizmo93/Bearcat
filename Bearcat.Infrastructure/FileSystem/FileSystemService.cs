@@ -1,4 +1,5 @@
-﻿using Bearcat.Domain.Abstractions;
+﻿using Bearcat.Abstractions;
+using Bearcat.Domain.Abstractions;
 
 namespace Bearcat.Infrastructure.FileSystem;
 
