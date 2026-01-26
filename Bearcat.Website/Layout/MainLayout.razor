@@ -21,9 +21,7 @@
                 @Body
             </ChildContent>
             <ErrorContent>
-                @{
-                    Snackbar.Add(context.ToString(), Severity.Error);
-                }
+                @Snackbar.Add(context.ToString(), Severity.Error);
             </ErrorContent>
         </ErrorBoundary>
     </MudMainContent>
