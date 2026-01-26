@@ -1,3 +1,5 @@
+using Bearcat.Domain.ValueObjects;
+
 namespace Bearcat.Domain.Entities;
 
 public class LinkCrypterContainer
@@ -12,7 +14,15 @@ public class LinkCrypterContainer
 
     public Upload Upload { get; set; } = null!;
 
-    public string ExternalReference { get; set; } = null!;
+    public string? ExternalReference { get; set; }
 
     public string ContainerUrl { get; set; } = null!;
+    
+    public string? Password { get; set; }
+
+    public LinkCrypterContainerState State { get; set; }
+    
+    public List<string> Errors { get; set; } = new();
+    
+    public DateTime CreatedAt { get; set; }
 }
