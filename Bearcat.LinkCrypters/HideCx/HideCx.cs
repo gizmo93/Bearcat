@@ -64,7 +64,7 @@ public class HideCx(IHideCxApi api)
                 $"Expected {nameof(linkCrypterConfig)} to be of type {nameof(HideCxConfig)}",
                 nameof(linkCrypterConfig));
         }
-        
+
         // As hide.cx does not provide a dedicated login endpoint, we abuse the container search
         // to do a login check
         try
@@ -106,6 +106,6 @@ public class HideCx(IHideCxApi api)
     {
         return JsonSerializer.Deserialize<HideCxConfig>(serializedConfig)!;
     }
-    
+
     private static string GetAuthToken(string apiKey) => $"Bearer {apiKey}";
 }

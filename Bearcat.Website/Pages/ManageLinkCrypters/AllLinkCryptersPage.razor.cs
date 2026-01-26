@@ -42,7 +42,8 @@ public partial class AllLinkCryptersPage(
             title: "Add Crypter",
             options: new DialogOptions
             {
-                BackdropClick = false, FullWidth = true,
+                BackdropClick = false,
+                FullWidth = true,
             });
 
         await dialog.Result;
@@ -61,7 +62,8 @@ public partial class AllLinkCryptersPage(
             parameters: parameters,
             options: new DialogOptions
             {
-                BackdropClick = false, FullWidth = true,
+                BackdropClick = false,
+                FullWidth = true,
             });
 
         await dialog.Result;

@@ -27,7 +27,7 @@ public class LinkCrypterRegistrationReadRepository(
                 l.IsActive))
             .ToListAsync(cancellationToken);
     }
-    
+
     public async Task<LinkCrypterRegistrationDto?> GetByIdAsync(
         int id,
         CancellationToken cancellationToken = default)

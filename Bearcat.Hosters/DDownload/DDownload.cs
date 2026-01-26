@@ -18,19 +18,19 @@ public class DDownload(
     public string Name => "ddownload";
 
     public IReadOnlyList<string> ConfigurationKeys => ["ApiKey"];
-    
+
     private const string DdownloadBaseUrl = "https://www.ddownload.com";
-    
+
 
     public async Task<UploadFileResult> UploadFileAsync(ArchiveFile archiveFile, IHosterConfig hosterConfig, CancellationToken cancellationToken)
     {
-        if(hosterConfig is not DDownloadConfig config)
+        if (hosterConfig is not DDownloadConfig config)
         {
             throw new ArgumentException(message: "Invalid hoster config type.", paramName: nameof(hosterConfig));
         }
-        
+
         var errors = new List<string>();
-        
+
         foreach (var attempt in Enumerable.Range(start: 1, count: 3))
         {
             try
@@ -39,14 +39,15 @@ public class DDownload(
                     archiveFile: archiveFile,
                     config: config,
                     cancellationToken: cancellationToken);
-                
+
                 return new UploadFileResult(
                     IsSuccess: true,
                     ErrorMessages: [],
                     ArchiveFile: archiveFile,
                     FileUrl: $"{DdownloadBaseUrl}/{response.FileCode}");
 
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 logger.LogError(message: "Upload attempt {Attempt} failed for file {FileName}: {Message}", args: [attempt, archiveFile.FullFileName, ex.Message]);
                 errors.Add(ex.Message);
@@ -68,21 +69,21 @@ public class DDownload(
         var uploadRequest = await apiClient.RequestUploadAsync(
             apiKey: config.ApiKey,
             cancellationToken: cancellationToken);
-        
+
         if (!((HttpStatusCode)uploadRequest.Status).IsSuccessStatusCode)
         {
             throw new RetryException();
         }
-        
+
         await using var stream = File.OpenRead(archiveFile.FullFileName);
-                
+
         var uploadResponse = await apiClient.UploadFileAsync(
             stream: stream,
             uploadUrl: uploadRequest.UploadUrl!,
             sessionId: uploadRequest.SessionId!,
             fileName: Path.GetFileName(archiveFile.FullFileName),
             cancellationToken: cancellationToken);
-        
+
         return uploadResponse;
     }
 
@@ -141,7 +142,7 @@ public class DDownload(
 
     public async Task<TryLoginResult> TryLoginAsync(IHosterConfig hosterConfig, CancellationToken cancellationToken)
     {
-        if(hosterConfig is not DDownloadConfig config)
+        if (hosterConfig is not DDownloadConfig config)
         {
             throw new ArgumentException("Invalid hoster config type.", nameof(hosterConfig));
         }

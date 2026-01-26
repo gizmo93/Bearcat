@@ -16,9 +16,9 @@ public class LinkCrypterService(
         CancellationToken cancellationToken = default)
     {
         var crypter = linkCrypterFactory.Get(className);
-        
+
         var serializedConfig = crypter.SerializeConfig(configuration);
-        
+
         var registration = new Entities.LinkCrypterRegistration
         {
             Name = name,
@@ -30,17 +30,17 @@ public class LinkCrypterService(
         repository.Add(registration);
         await repository.SaveChangesAsync(cancellationToken);
     }
-    
+
     public async Task DeleteAsync(
         int id,
         CancellationToken cancellationToken = default)
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
-        
+
         repository.Remove(registration);
         await repository.SaveChangesAsync(cancellationToken);
     }
-    
+
     public async Task UpdateAsync(
         int id,
         string name,
@@ -48,28 +48,28 @@ public class LinkCrypterService(
         CancellationToken cancellationToken = default)
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
-        
+
         var crypter = linkCrypterFactory.Get(registration.LinkCrypterClassName);
-        
+
         var serializedConfig = crypter.SerializeConfig(configuration);
-        
+
         registration.Name = name;
         registration.SerializedConfig = serializedConfig;
 
         await repository.SaveChangesAsync(cancellationToken);
     }
-    
+
     public async Task ToggleIsActiveAsync(
         int id,
         CancellationToken cancellationToken = default)
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
-        
+
         registration.IsActive = !registration.IsActive;
 
         await repository.SaveChangesAsync(cancellationToken);
     }
-    
+
     public async Task<TryLoginResult> TryLoginAsync(
         int id,
         CancellationToken cancellationToken = default)
@@ -77,7 +77,7 @@ public class LinkCrypterService(
         var registration = await readRepository.GetByIdAsync(id, cancellationToken);
         var crypter = linkCrypterFactory.Get(registration!.LinkCrypterClassName);
         var config = crypter.DeserializeConfig(registration.SerializedConfig);
-        
+
         return await crypter.TryLoginAsync(config, cancellationToken);
     }
 }

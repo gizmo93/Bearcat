@@ -32,10 +32,10 @@ public static class ServiceProviderConfig
                 dbContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
                 return dbContext;
             });
-            
+
             services.AddRepositories();
         }
-        
+
         private void AddRepositories()
         {
             services.AddScoped<IHosterConfigurationReadRepository, HosterConfigurationRepository>();
