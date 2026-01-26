@@ -1,13 +1,13 @@
 ﻿@inherits LayoutComponentBase
 
-<MudThemeProvider Theme="@theme" IsDarkMode="isDarkMode" />
+<MudThemeProvider @ref="themeProvider" Theme="@theme" IsDarkMode="isDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudLayout>
     <MudAppBar Elevation="2" Dense="true">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudText Typo="Typo.h5" Class="ml-3">Bearcat</MudText>
+        <MudImage Style="max-height: 35px;" Src="_content/Bearcat.Website/bearcat.png"/>
         <MudSpacer />
         <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle" />
         <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
@@ -34,9 +34,11 @@
     private bool isDarkMode = true;
     private MudTheme? theme;
 
-    protected override void OnInitialized()
+    private MudThemeProvider? themeProvider;
+
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await base.OnInitializedAsync();
 
         theme = new MudTheme
         {
@@ -45,7 +47,17 @@
             LayoutProperties = new LayoutProperties()
         };
     }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && themeProvider != null)
+        {
+            isDarkMode = await themeProvider.GetSystemDarkModeAsync();
+        }
 
+        await base.OnAfterRenderAsync(firstRender);
+    }
+    
     private void DrawerToggle()
     {
         drawerOpen = !drawerOpen;
