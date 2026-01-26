@@ -56,7 +56,7 @@ public class Files
     public long? Downloads { get; set; }
     
     [JsonPropertyName("uploaded")]
-    public DateTime? Uploaded { get; set; }
+    public string? Uploaded { get; set; }
     
     [JsonPropertyName("msg")]
     public string? Msg { get; set; }

@@ -4,15 +4,10 @@
 @using BearCat.Core.Domain.UseCases.ManageReleases.Dto
 @using BearCat.Core.Domain.ValueObjects
 
-<PageTitle>Releases</PageTitle>
+<PageTitle>Releases - Bearcat</PageTitle>
 
 
-<MudGrid>
-    <MudItem lg="12" xs="12">
-        
-    </MudItem>
-</MudGrid>
-<MudStack Spacing="3" AlignItems="AlignItems.Start">
+<MudStack Spacing="3" AlignItems="AlignItems.Baseline">
     <MudText Typo="Typo.h4">Releases</MudText>
     
     <MudFab
@@ -29,7 +24,6 @@
         Dense="true"
         Elevation="4"
         RowClick="@(args => navigationManager.NavigateTo($"releases/{args.Item.ReleaseId}"))"
-        ColumnResizeMode="ResizeMode.Container"
         RowClass="cursor-pointer"
         Hover
         RowContextMenuClick="OpenMenuContent">
