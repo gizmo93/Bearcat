@@ -23,4 +23,5 @@ public interface IBearcatWriteDbContext
     EntityEntry Remove(object entity);
 
     ChangeTracker ChangeTracker { get; }
+    DbSet<LinkCrypterRegistration> LinkCrypterRegistrations { get; set; }
 }

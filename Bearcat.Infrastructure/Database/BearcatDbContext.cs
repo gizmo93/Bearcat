@@ -23,6 +23,8 @@ public class BearcatDbContext(DbContextOptions<BearcatDbContext> options)
     public DbSet<UploadedFile> UploadedFiles { get; set; } = null!;
 
     public DbSet<Notification> Notifications { get; set; } = null!;
+    
+    public DbSet<LinkCrypterRegistration> LinkCrypterRegistrations { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

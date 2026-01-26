@@ -1,0 +1,85 @@
+@inherits OwningComponentBase
+
+@if (!isInitialized)
+{
+    return;
+}
+
+<EditForm EditContext="editContext" OnValidSubmit="@(() => SaveAsync())">
+    <MudDialog>
+        <TitleContent>
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                @if (IsEditMode)
+                {
+                    <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Edit"/>
+                }
+                else
+                {
+                    <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.Add"/>
+                }
+                <MudText Typo="Typo.h6">
+                    @MudDialog.Title
+                </MudText>
+            </MudStack>
+        </TitleContent>
+        <DialogContent>
+            <MudStack>
+                <MudTextField
+                    Label="Name"
+                    Placeholder="Enter a name for the configuration"
+                    @bind-Value="formModel.Name"/>
+
+                <MudSelect
+                    Label="Hoster"
+                    Placeholder="Select a hoster"
+                    Disabled="IsEditMode"
+                    @bind-Value="formModel.ClassName"
+                    @bind-Value:after="@(OnSelectedCrypterChanged)">
+                    @foreach (var crypter in crypters)
+                    {
+                        <MudSelectItem Value="@crypter.ClassName">@crypter.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                @if (SelectedCrypter is not null)
+                {
+                    @foreach (var key in formModel.Configuration.Keys)
+                    {
+                        var isPasswordField = key.ToLowerInvariant() == "password";
+                        
+                        <MudStack Row>
+                            <MudTextField
+                                Label="@key"
+                                @bind-Value="formModel.Configuration[key]"
+                                InputType="@(isPasswordField && !displayedPasswords.Contains(key) ? InputType.Password : InputType.Text)" />
+                            
+                            @if (isPasswordField)
+                            {
+                                <MudIconButton 
+                                    Size="Size.Small"
+                                    Icon="@(displayedPasswords.Contains(key)
+                                              ? Icons.Material.Filled.VisibilityOff
+                                              : Icons.Material.Filled.Visibility)"
+                                    OnClick="@(() => ToggleShowHidePassword(key))"/>
+                            }
+                        </MudStack>
+                    }
+                }
+
+                <div style="color: red;">
+                    <ValidationMessage For="@(() => formModel.Name)"/>
+                    <ValidationMessage For="@(() => formModel.ClassName)"/>
+                    <ValidationMessage For="@(() => formModel.Configuration)"/>
+                </div>
+            </MudStack>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Color="Color.Secondary" OnClick="@(() => MudDialog.Cancel())" StartIcon="@Icons.Material.Filled.Cancel">
+                Cancel
+            </MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Check">
+                Save
+            </MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>

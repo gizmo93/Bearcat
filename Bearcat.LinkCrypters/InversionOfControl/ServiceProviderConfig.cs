@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.LinkCrypters.HideCx.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +11,7 @@ public static class ServiceProviderConfig
         public void AddLinkCrypters()
         {
             services.AddHideCx();
+            services.AddScoped<ILinkCrypterFactory, LinkCrypterFactory>();
         }
     }
 }

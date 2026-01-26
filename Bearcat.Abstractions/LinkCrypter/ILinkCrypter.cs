@@ -15,7 +15,11 @@ public interface ILinkCrypter
         IReadOnlyList<string> links,
         CancellationToken cancellationToken = default);
     
-    string SerializeConfig(IReadOnlyDictionary<string, object> config);
+    string SerializeConfig(IReadOnlyDictionary<string, string> config);
     
     ILinkCrypterConfig DeserializeConfig(string serializedConfig);
+    
+    Task<TryLoginResult> TryLoginAsync(
+        ILinkCrypterConfig linkCrypterConfig,
+        CancellationToken cancellationToken = default);
 }

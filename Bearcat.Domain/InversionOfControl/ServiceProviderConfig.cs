@@ -2,6 +2,7 @@
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageHosters;
+using Bearcat.Domain.UseCases.ManageLinkCrypters;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
@@ -27,6 +28,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ArchiveConfigService>();
             services.AddScoped<TimeProvider>();
             services.AddScoped<UploadConfigService>();
+            services.AddScoped<LinkCrypterService>();
         }
     }
 }
