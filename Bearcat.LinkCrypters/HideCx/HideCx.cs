@@ -37,7 +37,7 @@ public class HideCx(IHideCxApi api)
 
             var result = await api.CreateContainerAsync(
                 request: request,
-                apiKey: config.ApiKey,
+                apiToken: GetAuthToken(config.ApiKey),
                 cancellationToken: cancellationToken);
 
             return new CreateContainerResult(
@@ -54,7 +54,50 @@ public class HideCx(IHideCxApi api)
         }
     }
 
-    public string SerializeConfig(IReadOnlyDictionary<string, object> config)
+    public async Task<TryLoginResult> TryLoginAsync(
+        ILinkCrypterConfig linkCrypterConfig,
+        CancellationToken cancellationToken = default)
+    {
+        if (linkCrypterConfig is not HideCxConfig config)
+        {
+            throw new ArgumentException(
+                $"Expected {nameof(linkCrypterConfig)} to be of type {nameof(HideCxConfig)}",
+                nameof(linkCrypterConfig));
+        }
+        
+        // As hide.cx does not provide a dedicated login endpoint, we abuse the container search
+        // to do a login check
+        try
+        {
+            var request = new ApiClient.SearchContainers.Request
+            {
+                Limit = 1,
+                Offset = 0,
+                Search = string.Empty,
+                PrimaryType = null,
+                AccessStatus = "unknown",
+                OrderBy = "created_at",
+                OrderType = "desc"
+            };
+
+            await api.SearchContainersAsync(
+                request: request,
+                apiToken: GetAuthToken(config.ApiKey),
+                cancellationToken: cancellationToken);
+
+            return new TryLoginResult(
+                IsSuccess: true,
+                ErrorMessage: null);
+        }
+        catch (Exception ex)
+        {
+            return new TryLoginResult(
+                IsSuccess: false,
+                ErrorMessage: ex.Message);
+        }
+    }
+
+    public string SerializeConfig(IReadOnlyDictionary<string, string> config)
     {
         return JsonSerializer.Serialize(config);
     }
@@ -63,4 +106,6 @@ public class HideCx(IHideCxApi api)
     {
         return JsonSerializer.Deserialize<HideCxConfig>(serializedConfig)!;
     }
+    
+    private static string GetAuthToken(string apiKey) => $"Bearer {apiKey}";
 }

@@ -1,6 +1,7 @@
 ﻿using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
+using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
@@ -49,6 +50,8 @@ public static class ServiceProviderConfig
             services.AddScoped<IArchiveReadRepository, ArchiveReadRepository>();
             services.AddScoped<IUploadConfigReadRepository, UploadConfigReadRepository>();
             services.AddScoped<IUploadConfigWriteRepository, UploadConfigWriteRepository>();
+            services.AddScoped<ILinkCrypterRegistrationWriteRepository, LinkCrypterRegistrationWriteRepository>();
+            services.AddScoped<ILinkCrypterRegistrationReadRepository, LinkCrypterRegistrationReadRepository>();
         }
     }
 }

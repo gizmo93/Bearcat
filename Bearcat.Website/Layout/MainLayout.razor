@@ -17,7 +17,14 @@
     </MudDrawer>
     <MudMainContent Class="pt-16 pa-4">
         <ErrorBoundary>
-            @Body
+            <ChildContent>
+                @Body
+            </ChildContent>
+            <ErrorContent>
+                @{
+                    Snackbar.Add(context.ToString(), Severity.Error);
+                }
+            </ErrorContent>
         </ErrorBoundary>
     </MudMainContent>
 </MudLayout>
@@ -35,6 +42,9 @@
     private MudTheme? theme;
 
     private MudThemeProvider? themeProvider;
+    
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {

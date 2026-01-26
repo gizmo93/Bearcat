@@ -1,3 +1,3 @@
 namespace Bearcat.Abstractions.LinkCrypter;
 
-public record LinkCrypterDto(string Name, string ClassName);
+public record LinkCrypterDto(string Name, string ClassName, List<string> ConfigurationKeys);

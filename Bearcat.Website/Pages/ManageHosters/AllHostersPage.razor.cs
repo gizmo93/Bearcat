@@ -50,7 +50,6 @@ public partial class AllHostersPage(
 
         await dialog.Result;
         await LoadHostersAsync();
-        await LoadHostersAsync();
     }
 
     private async Task ShowEditDialogAsync(HosterRegistrationDto hosterRegistration)

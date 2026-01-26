@@ -2,7 +2,9 @@ namespace Bearcat.Abstractions.LinkCrypter;
 
 public interface ILinkCrypterFactory
 {
-    public IReadOnlyList<LinkCrypterDto> GetLinkCrypters();
+    IReadOnlyList<LinkCrypterDto> GetLinkCrypters();
     
-    public ILinkCrypter GetByClassName(string className);
+    ILinkCrypter Get(string className);
+    
+    IReadOnlyDictionary<string, ILinkCrypter> GetByClassName();
 }

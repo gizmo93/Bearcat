@@ -6,9 +6,9 @@ public record HideCxConfig : ILinkCrypterConfig
 {
     public string ApiKey { get; init; } = null!;
 
-    public IReadOnlyDictionary<string, object> ToDictionary()
+    public IReadOnlyDictionary<string, string> ToDictionary()
     {
-        return new Dictionary<string, object>
+        return new Dictionary<string, string>
         {
             ["ApiKey"] = ApiKey
         };
