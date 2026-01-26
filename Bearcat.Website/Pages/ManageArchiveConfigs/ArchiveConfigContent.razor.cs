@@ -1,5 +1,5 @@
-﻿using Bearcat.Website.Pages.ManageArchives;
-using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
+﻿using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Website.Pages.ManageArchives;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 

@@ -1,4 +1,4 @@
-﻿using BearCat.Core.Domain.ValueObjects;
+﻿using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 

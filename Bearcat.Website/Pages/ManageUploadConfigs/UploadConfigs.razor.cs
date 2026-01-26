@@ -1,7 +1,7 @@
-﻿using Bearcat.Website.Shared;
-using BearCat.Core.Domain.UseCases.ManageUploadConfigs;
-using BearCat.Core.Domain.UseCases.ManageUploadConfigs.Dto;
-using BearCat.Core.Domain.UseCases.ManageUploadConfigs.Repositories;
+﻿using Bearcat.Domain.UseCases.ManageUploadConfigs;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
+using Bearcat.Website.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;

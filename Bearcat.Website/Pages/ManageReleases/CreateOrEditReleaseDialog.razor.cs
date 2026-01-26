@@ -1,6 +1,6 @@
-﻿using Bearcat.Website.Shared;
-using BearCat.Core.Domain.UseCases.ManageReleases;
-using BearCat.Core.Domain.ValueObjects;
+﻿using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.Configuration;

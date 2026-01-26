@@ -1,8 +1,11 @@
-﻿using Bearcat.Website;
-using BearCat.Core.Infrastructure.Database;
-using BearCat.Core.InversionOfControl;
+﻿using Bearcat.Application.InversionOfControl;
+using Bearcat.Archivers.InversionOfControl;
+using Bearcat.Website;
+using Bearcat.Domain.InversionOfControl;
+using Bearcat.Hosters.InversionOfControl;
+using Bearcat.Infrastructure.Database;
+using Bearcat.Infrastructure.InversionOfControl;
 using Microsoft.EntityFrameworkCore;
-using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +21,11 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddJsonFile("appsettings.user.json", optional: true, reloadOnChange: false);
 }
 
-builder.Services.AddCore(builder.Configuration);
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddDomain();
+builder.Services.AddHosters();
+builder.Services.AddArchivers();
 
 var app = builder.Build();
 

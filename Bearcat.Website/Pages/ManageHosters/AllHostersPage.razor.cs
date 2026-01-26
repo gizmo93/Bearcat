@@ -1,6 +1,6 @@
-﻿using BearCat.Core.Domain.UseCases.ManageHosters;
-using BearCat.Core.Domain.UseCases.ManageHosters.Dto;
-using BearCat.Core.Domain.UseCases.ManageHosters.Repositories;
+﻿using Bearcat.Domain.UseCases.ManageHosters;
+using Bearcat.Domain.UseCases.ManageHosters.Dto;
+using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 

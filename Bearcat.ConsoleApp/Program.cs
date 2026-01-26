@@ -1,22 +1,17 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using BearCat.Core;
-using BearCat.Core.Domain.Abstractions;
-using BearCat.Core.Domain.Abstractions.Archiver;
-using BearCat.Core.Domain.Abstractions.Hoster;
-using BearCat.Core.Domain.Entities;
-using BearCat.Core.Infrastructure.Archivers._7Zip;
-using BearCat.Core.Infrastructure.Archivers.Rar;
-using BearCat.Core.Infrastructure.Hosters;
-using BearCat.Core.Infrastructure.Hosters.DDownload;
-using BearCat.Core.Infrastructure.Hosters.DDownload.ApiClient;
-using BearCat.Core.Infrastructure.Hosters.Rapidgator;
-using BearCat.Core.InversionOfControl;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Bearcat.Domain.Abstractions.Hoster;
+using Bearcat.Domain.Entities;
+using Bearcat.Domain.InversionOfControl;
+using Bearcat.Hosters.DDownload;
+using Bearcat.Hosters.DDownload.ApiClient;
+using Bearcat.Hosters.InversionOfControl;
+using Bearcat.Infrastructure.InversionOfControl;
 
 var builder = new HostApplicationBuilder();
-builder.Services.AddCore(builder.Configuration);
+builder.Services.AddDomain();
+builder.Services.AddHosters();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
