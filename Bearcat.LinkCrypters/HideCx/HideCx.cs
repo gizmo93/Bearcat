@@ -43,6 +43,7 @@ public class HideCx(IHideCxApi api)
             return new CreateContainerResult(
                 IsSuccess: true,
                 ContainerLink: result.CanonicalUrl,
+                ExternalReference: result.Id,
                 ErrorMessages: []);
         }
         catch (Exception ex)
@@ -50,6 +51,7 @@ public class HideCx(IHideCxApi api)
             return new CreateContainerResult(
                 IsSuccess: false,
                 ContainerLink: null,
+                ExternalReference: null,
                 ErrorMessages: [ex.Message]);
         }
     }

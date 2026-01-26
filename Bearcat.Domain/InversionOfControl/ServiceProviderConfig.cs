@@ -1,4 +1,5 @@
 ﻿using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.CreateLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageHosters;
@@ -29,6 +30,7 @@ public static class ServiceProviderConfig
             services.AddScoped<TimeProvider>();
             services.AddScoped<UploadConfigService>();
             services.AddScoped<LinkCrypterService>();
+            services.AddScoped<LinkCrypterContainerCreationService>();
         }
     }
 }

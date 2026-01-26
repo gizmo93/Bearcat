@@ -13,6 +13,8 @@ public class UploadConfigLinkCrypter
     public LinkCrypterRegistration LinkCrypterRegistration { get; set; } = null!;
 
     public string ContainerName { get; set; } = null!;
+    
+    public string? Password { get; set; }
 
     public List<LinkCrypterContainer> LinkCrypterContainers { get; set; } = null!;
 }

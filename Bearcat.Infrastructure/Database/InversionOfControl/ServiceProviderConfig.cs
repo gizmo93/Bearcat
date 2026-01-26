@@ -1,4 +1,5 @@
-﻿using Bearcat.Domain.UseCases.ManageArchiveConfigs;
+﻿using Bearcat.Domain.UseCases.CreateLinkCrypterContainers.Repositories;
+using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
@@ -52,6 +53,8 @@ public static class ServiceProviderConfig
             services.AddScoped<IUploadConfigWriteRepository, UploadConfigWriteRepository>();
             services.AddScoped<ILinkCrypterRegistrationWriteRepository, LinkCrypterRegistrationWriteRepository>();
             services.AddScoped<ILinkCrypterRegistrationReadRepository, LinkCrypterRegistrationReadRepository>();
+            services
+                .AddScoped<ILinkCrypterContainerCreationWriteRepository, LinkCrypterContainerCreationWriteRepository>();
         }
     }
 }
