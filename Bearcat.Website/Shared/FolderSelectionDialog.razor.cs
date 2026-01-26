@@ -1,4 +1,4 @@
-﻿using BearCat.Core.Domain.Abstractions;
+﻿using Bearcat.Domain.Abstractions;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 

@@ -1,5 +1,5 @@
-﻿using BearCat.Core.Domain.UseCases.ManageUploadConfigs;
-using BearCat.Core.Domain.UseCases.ManageUploadConfigs.Repositories;
+﻿using Bearcat.Domain.UseCases.ManageUploadConfigs;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.DependencyInjection;

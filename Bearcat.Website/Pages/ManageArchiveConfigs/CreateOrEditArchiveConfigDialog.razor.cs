@@ -1,6 +1,6 @@
-﻿using Bearcat.Website.Shared;
-using BearCat.Core.Domain.Abstractions.Archiver;
-using BearCat.Core.Domain.UseCases.ManageArchiveConfigs;
+﻿using Bearcat.Domain.Abstractions.Archiver;
+using Bearcat.Domain.UseCases.ManageArchiveConfigs;
+using Bearcat.Website.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.Configuration;

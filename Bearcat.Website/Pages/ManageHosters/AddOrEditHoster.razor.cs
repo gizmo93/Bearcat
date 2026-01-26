@@ -1,6 +1,6 @@
-﻿using BearCat.Core.Domain.Abstractions.Hoster;
-using BearCat.Core.Domain.UseCases.ManageHosters;
-using BearCat.Core.Domain.UseCases.ManageUploads;
+﻿using Bearcat.Domain.Abstractions.Hoster;
+using Bearcat.Domain.UseCases.ManageHosters;
+using Bearcat.Domain.UseCases.ManageUploads;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;

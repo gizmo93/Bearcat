@@ -1,4 +1,4 @@
-using BearCat.Core.Domain.Entities;
+using Bearcat.Domain.Entities;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.Home.RunningUploads;

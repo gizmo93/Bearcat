@@ -1,6 +1,6 @@
-﻿using BearCat.Core.Domain.UseCases.ManageReleases;
-using BearCat.Core.Domain.UseCases.ManageReleases.Dto;
-using BearCat.Core.Domain.UseCases.ManageReleases.Repositories;
+﻿using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;

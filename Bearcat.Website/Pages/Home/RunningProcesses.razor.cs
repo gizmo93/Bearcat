@@ -1,6 +1,6 @@
-using BearCat.Core.Domain.Entities;
-using BearCat.Core.Domain.ValueObjects;
-using BearCat.Core.Infrastructure.Database;
+using Bearcat.Domain.Entities;
+using Bearcat.Domain.ValueObjects;
+using Bearcat.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -106,10 +106,6 @@ public partial class RunningProcesses(ILogger<RunningProcesses> logger)
 
             refreshInProgress = false;
             StateHasChanged();
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Error loading running processes: {Message}", e.Message);
         }
         finally
         {
