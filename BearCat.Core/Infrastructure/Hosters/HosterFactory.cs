@@ -27,6 +27,6 @@ public class HosterFactory(
     public IReadOnlyDictionary<string, IHoster> GetHostersByName()
     {
         var hosters = serviceProvider.GetKeyedServices<IHoster>(KeyedService.AnyKey);
-        return hosters.ToDictionary(h => h.Name);
+        return hosters.ToDictionary(h => h.GetType().Name);
     }
 }
