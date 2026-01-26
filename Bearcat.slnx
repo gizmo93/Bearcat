@@ -16,5 +16,6 @@
   <Folder Name="/4_Plugins/">
     <Project Path="Bearcat.Archivers/Bearcat.Archivers.csproj" />
     <Project Path="Bearcat.Hosters/Bearcat.Hosters.csproj" />
+    <Project Path="Bearcat.LinkCrypters/Bearcat.LinkCrypters.csproj" />
   </Folder>
 </Solution>

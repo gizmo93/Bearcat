@@ -20,7 +20,7 @@ public static class ServiceProviderConfig
         {
             services.AddDbContext<BearcatDbContext>(builder =>
             {
-                var connectionString = configuration.GetValue<string>("Database:ConnectionString");
+                var connectionString = configuration.GetRequiredSection("Database:ConnectionString").Value;
                 builder.UseNpgsql(connectionString);
             }, ServiceLifetime.Transient);
 
