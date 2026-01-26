@@ -1,13 +1,15 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
+using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Timer = System.Timers.Timer;
 
 namespace Bearcat.Website.Pages.Home;
 
-public partial class RunningProcesses
+public partial class RunningProcesses(
+    NavigationManager navigationManager)
 {
     private IReadOnlyList<Upload> runningUploads = [];
 
@@ -23,13 +25,23 @@ public partial class RunningProcesses
 
     private Timer? refreshTimer;
 
-    private readonly SemaphoreSlim loadDataSemaphore = new(1, 1);
-
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         dbRead = ScopedServices.GetRequiredService<IBearcatReadDbContext>();
         await LoadDataAsync();
+        
+        navigationManager.LocationChanged += (_, _) =>
+        {
+            if (!autoRefresh || refreshTimer is null)
+            {
+                return;
+            }
+
+            refreshTimer.Stop();
+            refreshTimer.Dispose();
+            refreshTimer = null;
+        };
     }
 
     private async Task LoadRunningUploadsAsync()
@@ -93,22 +105,13 @@ public partial class RunningProcesses
 
     private async Task LoadDataAsync()
     {
-        await loadDataSemaphore.WaitAsync();
+        refreshInProgress = true;
+        StateHasChanged();
 
-        try
-        {
-            refreshInProgress = true;
-            StateHasChanged();
+        await LoadRunningUploadsAsync();
+        await LoadRunningArchivesAsync();
 
-            await LoadRunningUploadsAsync();
-            await LoadRunningArchivesAsync();
-
-            refreshInProgress = false;
-            StateHasChanged();
-        }
-        finally
-        {
-            loadDataSemaphore.Release();
-        }
+        refreshInProgress = false;
+        StateHasChanged();
     }
 }
