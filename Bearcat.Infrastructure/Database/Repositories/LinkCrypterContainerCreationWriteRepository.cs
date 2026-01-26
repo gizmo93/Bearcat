@@ -34,7 +34,7 @@ public class LinkCrypterContainerCreationWriteRepository(IBearcatWriteDbContext 
     {
         dbWrite.Add(container);
     }
-    
+
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         return await dbWrite.SaveChangesAsync(cancellationToken);

@@ -17,12 +17,12 @@ public class LinkCrypterContainer
     public string? ExternalReference { get; set; }
 
     public string ContainerUrl { get; set; } = null!;
-    
+
     public string? Password { get; set; }
 
     public LinkCrypterContainerState State { get; set; }
-    
+
     public List<string> Errors { get; set; } = new();
-    
+
     public DateTime CreatedAt { get; set; }
 }
