@@ -7,4 +7,5 @@ public record UploadConfigDto(
     int HosterRegistrationId,
     int ArchiveConfigId,
     string ArchiveConfigName,
+    string ReleaseName,
     IReadOnlyList<string> LinksDistributedTo);

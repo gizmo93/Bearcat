@@ -32,7 +32,7 @@ public class HideCx(IHideCxApi api)
             {
                 Name = containerName,
                 Password = password,
-                Mirrors = links
+                Mirrors = [links.ToArray()]
             };
 
             var result = await api.CreateContainerAsync(

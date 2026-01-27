@@ -66,12 +66,11 @@ public class LinkCrypterContainerCreationService(
 
         var result = await crypter.CreateContainerAsync(
             linkCrypterConfig: config,
-            containerName: linkCrypterConfig.ContainerName,
+            containerName: Guid.NewGuid().ToString(),
             password: linkCrypterConfig.Password,
             links: fileUrls,
             cancellationToken: cancellationToken);
-
-
+        
         var container = new LinkCrypterContainer
         {
             UploadConfigLinkCrypter = linkCrypterConfig,
@@ -88,18 +87,20 @@ public class LinkCrypterContainerCreationService(
 
         if (result.IsSuccess)
         {
-            logger.LogInformation("Successfully created link crypter container for upload {UploadId} using link crypter {LinkCrypterId}",
+            logger.LogInformation(
+                "Successfully created link crypter container for upload {UploadId} using link crypter {LinkCrypterId}",
                 upload.Id,
                 linkCrypterConfig.Id);
         }
         else
         {
-            logger.LogError("Failed to create link crypter container for upload {UploadId} using link crypter {LinkCrypterId}. Errors: {Errors}",
+            logger.LogError(
+                "Failed to create link crypter container for upload {UploadId} using link crypter {LinkCrypterId}. Errors: {Errors}",
                 upload.Id,
                 linkCrypterConfig.Id,
                 string.Join("; ", result.ErrorMessages));
         }
-
+        
         repository.Add(container);
         await repository.SaveChangesAsync(cancellationToken);
     }

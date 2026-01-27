@@ -57,6 +57,7 @@ public static class ServiceProviderConfig
             services
                 .AddScoped<ILinkCrypterContainerCreationWriteRepository, LinkCrypterContainerCreationWriteRepository>();
             services.AddScoped<IUploadConfigLinkCrypterReadRepository, UploadConfigLinkCrypterReadRepository>();
+            services.AddScoped<IUploadConfigLinkCrypterWriteRepository, UploadConfigLinkCrypterWriteRepository>();
         }
     }
 }

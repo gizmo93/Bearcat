@@ -1,3 +1,4 @@
+@using Bearcat.Website.Pages.ManageUploadConfigLinkCrypters
 @inherits OwningComponentBase
 
 <MudCard Elevation="4">
@@ -56,6 +57,7 @@
                                     </MudStack>
                                 </MudStack>   
                             }
+                            <UploadConfigLinkCryptersList UploadConfigId="@config.UploadConfigId" ReleaseName="@config.ReleaseName" />
                         </MudStack>
                     </MudCardContent>
                 </MudCard>

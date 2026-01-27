@@ -20,6 +20,7 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
                 u.HosterRegistrationId,
                 u.ArchiveConfigId,
                 u.ArchiveConfig.Name,
+                u.Release.Name,
                 u.LinksDistributedTo))
             .ToListAsync(cancellationToken: cancellationToken);
     }
@@ -38,6 +39,7 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
                 u.HosterRegistrationId,
                 u.ArchiveConfigId,
                 u.ArchiveConfig.Name,
+                u.Release.Name,
                 u.LinksDistributedTo))
             .FirstAsync(cancellationToken: cancellationToken);
     }

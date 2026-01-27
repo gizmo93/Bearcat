@@ -8,7 +8,9 @@ using MudBlazor;
 
 namespace Bearcat.Website.Pages.ManageUploadConfigs;
 
-public partial class UploadConfigs(IDialogService dialogService) : IReloadableComponent
+public partial class UploadConfigs(
+    IDialogService dialogService)
+    : IReloadableComponent
 {
     [Parameter]
     [EditorRequired]
