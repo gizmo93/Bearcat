@@ -104,8 +104,8 @@ public class LinkCrypterContainerCreationService(
 
             notificationService.CreateError(
                 message: $"Failed to create link crypter container for upload {upload.Id} using link crypter {linkCrypterConfig.Id}. Errors: {string.Join("; ", result.ErrorMessages)}",
-                entity: new LinkCrypterContainerNotification(container),
-                selector: n => n.LinkCrypterContainerNotification);
+                entity: container,
+                selector: n => n.LinkCrypterContainer);
         }
 
         repository.Add(container);

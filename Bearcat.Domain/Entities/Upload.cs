@@ -1,9 +1,8 @@
-﻿using Bearcat.Domain.Abstractions;
-using Bearcat.Domain.ValueObjects;
+﻿using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.Entities;
 
-public class Upload : IEntityWithNotifications
+public class Upload
 {
     public int Id { get; set; }
 
@@ -29,5 +28,5 @@ public class Upload : IEntityWithNotifications
 
     public List<LinkCrypterContainer> LinkCrypterContainers { get; set; } = null!;
 
-    public List<UploadNotification> Notifications { get; set; } = null!;
+    public List<Notification> Notifications { get; set; } = null!;
 }

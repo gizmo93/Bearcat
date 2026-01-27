@@ -69,8 +69,6 @@ public class NotificationService(
         property.SetValue(notification, entity, null);
 
         repository.Add(notification);
-
-        Console.WriteLine("a");
     }
 
     private async Task CreateAsync(NotificationType type, string message, CancellationToken cancellationToken)

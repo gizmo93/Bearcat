@@ -1,9 +1,8 @@
-﻿using Bearcat.Domain.Abstractions;
-using Bearcat.Domain.ValueObjects;
+﻿using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.Entities;
 
-public class Archive : IEntityWithNotifications
+public class Archive
 {
     public int Id { get; set; }
 
@@ -23,5 +22,5 @@ public class Archive : IEntityWithNotifications
 
     public List<Upload> Uploads { get; set; } = null!;
 
-    public List<ArchiveNotification> Notifications { get; set; } = null!;
+    public List<Notification> Notifications { get; set; } = null!;
 }

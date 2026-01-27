@@ -294,8 +294,8 @@ public class UploadFilesService(
                 notificationService.Create(
                     type: anyFailedUploads ? NotificationType.Error : NotificationType.Info,
                     message: notificationText,
-                    entity: new UploadNotification(result.Upload),
-                    selector: n => n.UploadNotification);
+                    entity: result.Upload,
+                    selector: n => n.Upload);
 
                 logger.LogInformation(
                     "Completed upload for Upload {UploadId} to hoster {Hoster} with state {UploadState}",
@@ -386,8 +386,8 @@ public class UploadFilesService(
 
         notificationService.CreateWarning(
             message: "The archive assigned upload has missing files, triggering re-packaging",
-            entity: new UploadNotification(upload),
-            selector: n => n.UploadNotification);
+            entity: upload,
+            selector: n => n.Upload);
 
         if (upload.Archive.ArchiveState == ArchiveState.Created)
         {

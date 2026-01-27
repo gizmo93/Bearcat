@@ -125,21 +125,6 @@ namespace BearCat.Infrastructure.Migrations
                     b.ToTable("ArchiveFiles");
                 });
 
-            modelBuilder.Entity("Bearcat.Domain.Entities.ArchiveNotification", b =>
-                {
-                    b.Property<int>("NotificationId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("EntityId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("NotificationId");
-
-                    b.HasIndex("EntityId");
-
-                    b.ToTable("ArchiveNotifications", (string)null);
-                });
-
             modelBuilder.Entity("Bearcat.Domain.Entities.HosterRegistration", b =>
                 {
                     b.Property<int>("Id")
@@ -216,21 +201,6 @@ namespace BearCat.Infrastructure.Migrations
                     b.HasIndex("UploadId");
 
                     b.ToTable("LinkCrypterContainers");
-                });
-
-            modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterContainerNotification", b =>
-                {
-                    b.Property<int>("NotificationId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("EntityId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("NotificationId");
-
-                    b.HasIndex("EntityId");
-
-                    b.ToTable("LinkCrypterContainerNotifications", (string)null);
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterRegistration", b =>
@@ -424,21 +394,6 @@ namespace BearCat.Infrastructure.Migrations
                     b.ToTable("UploadConfigLinkCrypters");
                 });
 
-            modelBuilder.Entity("Bearcat.Domain.Entities.UploadNotification", b =>
-                {
-                    b.Property<int>("NotificationId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("EntityId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("NotificationId");
-
-                    b.HasIndex("EntityId");
-
-                    b.ToTable("UploadNotifications", (string)null);
-                });
-
             modelBuilder.Entity("Bearcat.Domain.Entities.UploadedFile", b =>
                 {
                     b.Property<int>("Id")
@@ -515,24 +470,6 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("Archive");
                 });
 
-            modelBuilder.Entity("Bearcat.Domain.Entities.ArchiveNotification", b =>
-                {
-                    b.HasOne("Bearcat.Domain.Entities.Archive", "Entity")
-                        .WithMany("Notifications")
-                        .HasForeignKey("EntityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Bearcat.Domain.Entities.Notification", "Notification")
-                        .WithOne("ArchiveNotification")
-                        .HasForeignKey("Bearcat.Domain.Entities.ArchiveNotification", "NotificationId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Entity");
-
-                    b.Navigation("Notification");
-                });
-
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterContainer", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.UploadConfigLinkCrypter", "UploadConfigLinkCrypter")
@@ -550,24 +487,6 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("Upload");
 
                     b.Navigation("UploadConfigLinkCrypter");
-                });
-
-            modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterContainerNotification", b =>
-                {
-                    b.HasOne("Bearcat.Domain.Entities.LinkCrypterContainer", "Entity")
-                        .WithMany("Notifications")
-                        .HasForeignKey("EntityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Bearcat.Domain.Entities.Notification", "Notification")
-                        .WithOne("LinkCrypterContainerNotification")
-                        .HasForeignKey("Bearcat.Domain.Entities.LinkCrypterContainerNotification", "NotificationId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Entity");
-
-                    b.Navigation("Notification");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.Upload", b =>
@@ -634,24 +553,6 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("UploadConfig");
                 });
 
-            modelBuilder.Entity("Bearcat.Domain.Entities.UploadNotification", b =>
-                {
-                    b.HasOne("Bearcat.Domain.Entities.Upload", "Entity")
-                        .WithMany("Notifications")
-                        .HasForeignKey("EntityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Bearcat.Domain.Entities.Notification", "Notification")
-                        .WithOne("UploadNotification")
-                        .HasForeignKey("Bearcat.Domain.Entities.UploadNotification", "NotificationId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Entity");
-
-                    b.Navigation("Notification");
-                });
-
             modelBuilder.Entity("Bearcat.Domain.Entities.UploadedFile", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.ArchiveFile", "ArchiveFile")
@@ -675,8 +576,6 @@ namespace BearCat.Infrastructure.Migrations
                 {
                     b.Navigation("ArchiveFiles");
 
-                    b.Navigation("Notifications");
-
                     b.Navigation("Uploads");
                 });
 
@@ -697,20 +596,6 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("UploadConfigs");
                 });
 
-            modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterContainer", b =>
-                {
-                    b.Navigation("Notifications");
-                });
-
-            modelBuilder.Entity("Bearcat.Domain.Entities.Notification", b =>
-                {
-                    b.Navigation("ArchiveNotification");
-
-                    b.Navigation("LinkCrypterContainerNotification");
-
-                    b.Navigation("UploadNotification");
-                });
-
             modelBuilder.Entity("Bearcat.Domain.Entities.Release", b =>
                 {
                     b.Navigation("ArchiveConfigs");
@@ -721,8 +606,6 @@ namespace BearCat.Infrastructure.Migrations
             modelBuilder.Entity("Bearcat.Domain.Entities.Upload", b =>
                 {
                     b.Navigation("LinkCrypterContainers");
-
-                    b.Navigation("Notifications");
 
                     b.Navigation("UploadedFiles");
                 });

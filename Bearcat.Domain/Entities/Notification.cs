@@ -13,10 +13,16 @@ public class Notification
     public NotificationType NotificationType { get; set; }
 
     public string Message { get; set; } = null!;
+    
+    public int? UploadId { get; set; }
 
-    public UploadNotification? UploadNotification { get; set; }
+    public Upload? Upload { get; set; }
+    
+    public int? ArchiveId { get; set; }
 
-    public ArchiveNotification? ArchiveNotification { get; set; }
+    public Archive? Archive { get; set; }
+    
+    public int? LinkCrypterContainerId { get; set; }
 
-    public LinkCrypterContainerNotification? LinkCrypterContainerNotification { get; set; }
+    public LinkCrypterContainer? LinkCrypterContainer { get; set; }
 }
