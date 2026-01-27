@@ -39,6 +39,7 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite)
             UploadState.Pending,
             UploadState.Uploading,
             UploadState.WaitingForArchive,
+            UploadState.Failed,
         ];
 
         return await dbWrite.Uploads
