@@ -74,10 +74,10 @@ public class UploadStateService(
             logger.LogError("Failed to check file existence for Upload {UploadId}: {ErrorMessages}",
                 upload.Id,
                 string.Join("; ", result.ErrorMessages));
-            
+
             notificationService.CreateError(
                 message: "Failed to check file existence on hoster.",
-                entity: new UploadNotification { Upload = upload },
+                entity: new UploadNotification(upload),
                 selector: u => u.UploadNotification);
 
             return;
@@ -98,9 +98,9 @@ public class UploadStateService(
             upload.OnlineState = offlineFilesCount == upload.UploadedFiles.Count
                 ? OnlineState.Offline
                 : OnlineState.PartiallyOnline;
-            
+
             notificationService.CreateWarning(message: "Some files are offline on the hoster",
-                entity: new UploadNotification { Upload = upload },
+                entity: new UploadNotification(upload),
                 selector: u => u.UploadNotification);
         }
         else
@@ -112,12 +112,12 @@ public class UploadStateService(
     private async Task ProcessOfflineUploadsWithoutReuploadsAsync(CancellationToken cancellationToken)
     {
         var uploads = await uploadStateRepository.GetOfflineUploadsWithoutReuploadAsync(cancellationToken);
-        
+
         foreach (var upload in uploads)
         {
             CreateNewUploadIfNeeded(upload);
         }
-        
+
         await uploadStateRepository.SaveChangesAsync(cancellationToken);
     }
 
@@ -136,9 +136,9 @@ public class UploadStateService(
             UploadState = UploadState.WaitingForArchive,
             OnlineState = OnlineState.Unknown,
         };
-        
+
         notificationService.CreateInfo(message: "Reupload scheduled due to offline files",
-            entity: new UploadNotification { Upload = newUpload },
+            entity: new UploadNotification(upload),
             selector: u => u.UploadNotification);
 
         uploadStateRepository.Add(newUpload);
@@ -158,9 +158,9 @@ public class UploadStateService(
                 OnlineState = OnlineState.Unknown,
             };
             uploadStateRepository.Add(upload);
-            
+
             notificationService.CreateInfo(message: "Initial upload created for release",
-                entity: new UploadNotification { Upload = upload },
+                entity: new UploadNotification(upload),
                 selector: u => u.UploadNotification);
 
             logger.LogInformation("Created missing upload for UploadConfig {UploadConfigId}", uploadConfig.Id);

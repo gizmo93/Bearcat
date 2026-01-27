@@ -18,7 +18,7 @@ public record ReleaseDto(
             {
                 return null;
             }
-            
+
             if (ActiveUploadConfigsCount == OnlineUploadConfigsCount)
             {
                 return ValueObjects.OnlineState.Online;

@@ -46,7 +46,7 @@ public class Rapidgator(
                     attempt,
                     archiveFile.FullFileName,
                     ex.InnerException?.Message ?? ex.Message);
-                
+
                 errors.Add(ex.InnerException?.Message ?? ex.Message);
             }
             catch (HttpRequestException ex)

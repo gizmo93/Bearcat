@@ -138,9 +138,9 @@ public class ArchiveCreationService(
             notificationService
                 .CreateError(
                     message: $"Failed to create archive: {string.Join(", ", archiveResult.ErrorMessages ?? [])}",
-                    entity: new ArchiveNotification{Archive = archive},
+                    entity: new ArchiveNotification(archive),
                     selector: n => n.ArchiveNotification);
-            
+
             await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
             return;

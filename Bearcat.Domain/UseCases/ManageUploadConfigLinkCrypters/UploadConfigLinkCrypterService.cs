@@ -17,18 +17,18 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
             LinkCrypterRegistrationId = linkCrypterRegistrationId,
             Password = CleanPassword(password),
         };
-        
+
         repository.Add(uploadConfigLinkCrypter);
         await repository.SaveChangesAsync(cancellationToken);
     }
-    
+
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         var uploadConfigLinkCrypter = await repository.GetByIdAsync(id, cancellationToken);
         repository.Remove(uploadConfigLinkCrypter);
         await repository.SaveChangesAsync(cancellationToken);
     }
-    
+
     public async Task UpdateAsync(
         int id,
         string? password,

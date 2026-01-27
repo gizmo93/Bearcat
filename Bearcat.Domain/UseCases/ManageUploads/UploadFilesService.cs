@@ -286,7 +286,7 @@ public class UploadFilesService(
 
                 result.Upload.UploadState = anyFailedUploads ? UploadState.Failed : UploadState.Completed;
                 result.Upload.OnlineState = anyFailedUploads ? OnlineState.PartiallyOnline : OnlineState.Online;
-                
+
                 var notificationText = anyFailedUploads
                     ? "Some files failed to upload"
                     : "All files uploaded successfully";
@@ -294,9 +294,9 @@ public class UploadFilesService(
                 notificationService.Create(
                     type: anyFailedUploads ? NotificationType.Error : NotificationType.Info,
                     message: notificationText,
-                    entity: new UploadNotification { Upload = result.Upload },
+                    entity: new UploadNotification(result.Upload),
                     selector: n => n.UploadNotification);
-                
+
                 logger.LogInformation(
                     "Completed upload for Upload {UploadId} to hoster {Hoster} with state {UploadState}",
                     result.Upload.Id,
@@ -386,7 +386,7 @@ public class UploadFilesService(
 
         notificationService.CreateWarning(
             message: "The archive assigned upload has missing files, triggering re-packaging",
-            entity: new UploadNotification { Upload = upload },
+            entity: new UploadNotification(upload),
             selector: n => n.UploadNotification);
 
         if (upload.Archive.ArchiveState == ArchiveState.Created)

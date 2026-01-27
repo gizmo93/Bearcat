@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Bearcat.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BearCat.Infrastructure.Migrations
 {
     [DbContext(typeof(BearcatDbContext))]
-    partial class BearcatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260127213404_ChangeNotificationTables")]
+    partial class ChangeNotificationTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -130,10 +133,15 @@ namespace BearCat.Infrastructure.Migrations
                     b.Property<int>("NotificationId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ArchiveId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("EntityId")
                         .HasColumnType("integer");
 
                     b.HasKey("NotificationId");
+
+                    b.HasIndex("ArchiveId");
 
                     b.HasIndex("EntityId");
 
@@ -226,9 +234,14 @@ namespace BearCat.Infrastructure.Migrations
                     b.Property<int>("EntityId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("LinkCrypterContainerId")
+                        .HasColumnType("integer");
+
                     b.HasKey("NotificationId");
 
                     b.HasIndex("EntityId");
+
+                    b.HasIndex("LinkCrypterContainerId");
 
                     b.ToTable("LinkCrypterContainerNotifications", (string)null);
                 });
@@ -272,9 +285,15 @@ namespace BearCat.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("ArchiveNotificationNotificationId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasPrecision(4)
                         .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<int?>("LinkCrypterContainerNotificationNotificationId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Message")
                         .IsRequired()
@@ -288,7 +307,16 @@ namespace BearCat.Infrastructure.Migrations
                         .HasPrecision(4)
                         .HasColumnType("timestamp(4) without time zone");
 
+                    b.Property<int?>("UploadNotificationNotificationId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ArchiveNotificationNotificationId");
+
+                    b.HasIndex("LinkCrypterContainerNotificationNotificationId");
+
+                    b.HasIndex("UploadNotificationNotificationId");
 
                     b.ToTable("Notifications");
                 });
@@ -432,9 +460,14 @@ namespace BearCat.Infrastructure.Migrations
                     b.Property<int>("EntityId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("UploadId")
+                        .HasColumnType("integer");
+
                     b.HasKey("NotificationId");
 
                     b.HasIndex("EntityId");
+
+                    b.HasIndex("UploadId");
 
                     b.ToTable("UploadNotifications", (string)null);
                 });
@@ -517,14 +550,18 @@ namespace BearCat.Infrastructure.Migrations
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ArchiveNotification", b =>
                 {
-                    b.HasOne("Bearcat.Domain.Entities.Archive", "Entity")
+                    b.HasOne("Bearcat.Domain.Entities.Archive", null)
                         .WithMany("Notifications")
+                        .HasForeignKey("ArchiveId");
+
+                    b.HasOne("Bearcat.Domain.Entities.Archive", "Entity")
+                        .WithMany()
                         .HasForeignKey("EntityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Bearcat.Domain.Entities.Notification", "Notification")
-                        .WithOne("ArchiveNotification")
+                        .WithOne()
                         .HasForeignKey("Bearcat.Domain.Entities.ArchiveNotification", "NotificationId")
                         .OnDelete(DeleteBehavior.Cascade);
 
@@ -555,19 +592,44 @@ namespace BearCat.Infrastructure.Migrations
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterContainerNotification", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.LinkCrypterContainer", "Entity")
-                        .WithMany("Notifications")
+                        .WithMany()
                         .HasForeignKey("EntityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bearcat.Domain.Entities.LinkCrypterContainer", null)
+                        .WithMany("Notifications")
+                        .HasForeignKey("LinkCrypterContainerId");
+
                     b.HasOne("Bearcat.Domain.Entities.Notification", "Notification")
-                        .WithOne("LinkCrypterContainerNotification")
+                        .WithOne()
                         .HasForeignKey("Bearcat.Domain.Entities.LinkCrypterContainerNotification", "NotificationId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Entity");
 
                     b.Navigation("Notification");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.Notification", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.ArchiveNotification", "ArchiveNotification")
+                        .WithMany()
+                        .HasForeignKey("ArchiveNotificationNotificationId");
+
+                    b.HasOne("Bearcat.Domain.Entities.LinkCrypterContainerNotification", "LinkCrypterContainerNotification")
+                        .WithMany()
+                        .HasForeignKey("LinkCrypterContainerNotificationNotificationId");
+
+                    b.HasOne("Bearcat.Domain.Entities.UploadNotification", "UploadNotification")
+                        .WithMany()
+                        .HasForeignKey("UploadNotificationNotificationId");
+
+                    b.Navigation("ArchiveNotification");
+
+                    b.Navigation("LinkCrypterContainerNotification");
+
+                    b.Navigation("UploadNotification");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.Upload", b =>
@@ -637,15 +699,19 @@ namespace BearCat.Infrastructure.Migrations
             modelBuilder.Entity("Bearcat.Domain.Entities.UploadNotification", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.Upload", "Entity")
-                        .WithMany("Notifications")
+                        .WithMany()
                         .HasForeignKey("EntityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Bearcat.Domain.Entities.Notification", "Notification")
-                        .WithOne("UploadNotification")
+                        .WithOne()
                         .HasForeignKey("Bearcat.Domain.Entities.UploadNotification", "NotificationId")
                         .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Bearcat.Domain.Entities.Upload", null)
+                        .WithMany("Notifications")
+                        .HasForeignKey("UploadId");
 
                     b.Navigation("Entity");
 
@@ -700,15 +766,6 @@ namespace BearCat.Infrastructure.Migrations
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterContainer", b =>
                 {
                     b.Navigation("Notifications");
-                });
-
-            modelBuilder.Entity("Bearcat.Domain.Entities.Notification", b =>
-                {
-                    b.Navigation("ArchiveNotification");
-
-                    b.Navigation("LinkCrypterContainerNotification");
-
-                    b.Navigation("UploadNotification");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.Release", b =>

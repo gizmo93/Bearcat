@@ -49,11 +49,11 @@ public class DDownload(
             }
             catch (Exception ex)
             {
-                logger.LogError(message: "Upload attempt {Attempt} failed for file {FileName}: {Message}", 
+                logger.LogError(message: "Upload attempt {Attempt} failed for file {FileName}: {Message}",
                     attempt,
                     archiveFile.FullFileName,
                     ex.InnerException?.Message ?? ex.Message);
-                
+
                 errors.Add(ex.Message);
             }
         }

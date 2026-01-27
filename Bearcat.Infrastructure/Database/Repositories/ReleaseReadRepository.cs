@@ -63,7 +63,7 @@ public class ReleaseReadRepository(
                     .ToList()))
             .ToListAsync(cancellationToken: cancellationToken);
     }
-    
+
     private static Expression<Func<Release, ReleaseDto>> ToReleaseDto()
     {
         return entity => new ReleaseDto(

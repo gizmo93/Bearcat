@@ -26,8 +26,7 @@ var notificationService = scope.ServiceProvider.GetRequiredService<INotification
 
 var upload = await dbContext.Uploads.FirstAsync(u => u.Id == 139, cancellationToken: CancellationToken.None);
 
-notificationService.CreateInfo("Test", new UploadNotification
-    { Upload = upload}, n => n.UploadNotification);
+notificationService.CreateInfo("Test", new UploadNotification(upload), n => n.UploadNotification);
 
 await dbContext.SaveChangesAsync(CancellationToken.None);
 
