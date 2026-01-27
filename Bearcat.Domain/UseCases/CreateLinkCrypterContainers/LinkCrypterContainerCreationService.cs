@@ -72,7 +72,7 @@ public class LinkCrypterContainerCreationService(
             password: linkCrypterConfig.Password,
             links: fileUrls,
             cancellationToken: cancellationToken);
-        
+
         var container = new LinkCrypterContainer
         {
             UploadConfigLinkCrypter = linkCrypterConfig,
@@ -101,13 +101,13 @@ public class LinkCrypterContainerCreationService(
                 upload.Id,
                 linkCrypterConfig.Id,
                 string.Join("; ", result.ErrorMessages));
-            
+
             notificationService.CreateError(
                 message: $"Failed to create link crypter container for upload {upload.Id} using link crypter {linkCrypterConfig.Id}. Errors: {string.Join("; ", result.ErrorMessages)}",
-                entity: new LinkCrypterContainerNotification { LinkCrypterContainer = container },
+                entity: new LinkCrypterContainerNotification(container),
                 selector: n => n.LinkCrypterContainerNotification);
         }
-        
+
         repository.Add(container);
         await repository.SaveChangesAsync(cancellationToken);
     }

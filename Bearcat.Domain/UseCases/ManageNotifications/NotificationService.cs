@@ -26,7 +26,7 @@ public class NotificationService(
     {
         await CreateAsync(NotificationType.Error, message, cancellationToken);
     }
-    
+
     public void CreateInfo<TEntity>(
         string message,
         TEntity entity,
@@ -34,7 +34,7 @@ public class NotificationService(
     {
         Create(NotificationType.Info, message, entity, selector);
     }
-    
+
     public void CreateWarning<TEntity>(
         string message,
         TEntity entity,
@@ -42,7 +42,7 @@ public class NotificationService(
     {
         Create(NotificationType.Warning, message, entity, selector);
     }
-    
+
     public void CreateError<TEntity>(
         string message,
         TEntity entity,
@@ -63,11 +63,11 @@ public class NotificationService(
             Message = message,
             CreatedAt = timeProvider.GetLocalNow(),
         };
-        
+
         var member = (MemberExpression)selector.Body;
         var property = (PropertyInfo)member.Member;
         property.SetValue(notification, entity, null);
-        
+
         repository.Add(notification);
 
         Console.WriteLine("a");

@@ -1,13 +1,17 @@
+using Bearcat.Domain.Abstractions;
+
 namespace Bearcat.Domain.Entities;
 
-public class UploadNotification
+public class UploadNotification : EntityNotification<Upload>
 {
-    public int NotificationId { get; set; }
-    
-    public int UploadId { get; set; }
-    
-    public Upload Upload { get; set; } = null!;
+    public UploadNotification(Upload upload)
+    {
+        Entity = upload;
+    }
 
-    
-    public Notification Notification { get; set; } = null!;
+    // EF Core
+    public UploadNotification()
+    {
+
+    }
 }

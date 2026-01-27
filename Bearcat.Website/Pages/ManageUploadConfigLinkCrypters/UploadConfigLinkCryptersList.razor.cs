@@ -12,7 +12,7 @@ public partial class UploadConfigLinkCryptersList(IDialogService dialogService)
     [Parameter]
     [EditorRequired]
     public int UploadConfigId { get; set; }
-    
+
     [Parameter]
     [EditorRequired]
     public string? ReleaseName { get; set; }
@@ -22,9 +22,9 @@ public partial class UploadConfigLinkCryptersList(IDialogService dialogService)
     private IReadOnlyList<UploadConfigLinkCrypterDto> uploadConfigLinkCrypters = [];
 
     private UploadConfigLinkCrypterDto? selectedItem;
-    
+
     private MudMenu contextMenu = null!;
-    
+
     private bool isInitialized;
 
 
@@ -39,7 +39,7 @@ public partial class UploadConfigLinkCryptersList(IDialogService dialogService)
     {
         await ShowAddOrEditDialogAsync(null);
     }
-    
+
     private async Task ShowEditDialogAsync(UploadConfigLinkCrypterDto config)
     {
         await ShowAddOrEditDialogAsync(config);
@@ -59,7 +59,7 @@ public partial class UploadConfigLinkCryptersList(IDialogService dialogService)
                 dlg => dlg.UploadConfigLinkCrypterId,
                 config.UploadConfigLinkCrypterId);
         }
-        
+
         var dialogTitle = config is null
             ? "Add Link Crypter Container"
             : "Edit Link Crypter Container";
@@ -78,7 +78,7 @@ public partial class UploadConfigLinkCryptersList(IDialogService dialogService)
         await dialog.Result;
         await LoadDataAsync();
     }
-    
+
     private async Task ShowDeleteDialogAsync(UploadConfigLinkCrypterDto uploadConfigLinkCrypterDto)
     {
         var result = await dialogService.ShowMessageBoxAsync(
@@ -94,7 +94,7 @@ public partial class UploadConfigLinkCryptersList(IDialogService dialogService)
             await LoadDataAsync();
         }
     }
-    
+
     private async Task LoadDataAsync()
     {
         uploadConfigLinkCrypters = await readRepository.GetByUploadConfigIdAsync(UploadConfigId);

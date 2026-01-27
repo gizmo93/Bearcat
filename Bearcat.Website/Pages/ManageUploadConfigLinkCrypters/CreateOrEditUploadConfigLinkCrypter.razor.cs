@@ -14,25 +14,25 @@ public partial class CreateOrEditUploadConfigLinkCrypter
 
     [Parameter]
     public int? UploadConfigLinkCrypterId { get; set; }
-    
+
     [Parameter]
     public string? ReleaseName { get; set; }
 
     [CascadingParameter]
     public IMudDialogInstance MudDialog { get; set; } = null!;
-    
+
     private IReadOnlyDictionary<int, string> linkCrypterOptions = new Dictionary<int, string>();
-    
+
     private bool isInitialized = false;
-    
+
     private FormModel formModel = new();
-    
+
     private EditContext editContext = null!;
-    
+
     private ValidationMessageStore messageStore = null!;
-    
+
     private IUploadConfigLinkCrypterReadRepository readRepository = null!;
-    
+
     private bool IsEdit => UploadConfigLinkCrypterId.HasValue;
 
 
@@ -42,11 +42,11 @@ public partial class CreateOrEditUploadConfigLinkCrypter
 
         linkCrypterOptions = await readRepository.GetLinkCrypterOptionsAsync();
         await InitializeFormModelAsync();
-        
+
         editContext = new EditContext(formModel);
         editContext.OnValidationRequested += OnValidationRequested;
         messageStore = new ValidationMessageStore(editContext);
-        
+
         isInitialized = true;
     }
 
@@ -66,7 +66,7 @@ public partial class CreateOrEditUploadConfigLinkCrypter
                 linkCrypterRegistrationId: formModel.LinkCrypterRegistrationId!.Value,
                 password: formModel.Password);
         }
-        
+
         MudDialog.Close();
     }
 
@@ -85,12 +85,12 @@ public partial class CreateOrEditUploadConfigLinkCrypter
         if (!IsEdit)
         {
             formModel = new FormModel();
-            
+
             return;
         }
-        
+
         var configDto = await readRepository.GetByIdAsync(UploadConfigLinkCrypterId!.Value);
-        
+
         formModel = new FormModel
         {
             LinkCrypterRegistrationId = configDto.LinkCrypterRegistrationId,

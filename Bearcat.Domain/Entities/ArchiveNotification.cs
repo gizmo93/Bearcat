@@ -1,12 +1,17 @@
+using Bearcat.Domain.Abstractions;
+
 namespace Bearcat.Domain.Entities;
 
-public class ArchiveNotification
+public class ArchiveNotification : EntityNotification<Archive>
 {
-    public int NotificationId { get; set; }
+    public ArchiveNotification(Archive archive)
+    {
+        Entity = archive;
+    }
 
-    public int ArchiveId { get; set; }
-    
-    public Archive Archive { get; set; } = null!;
-    
-    public Notification Notification { get; set; } = null!;
+    // EF Core
+    public ArchiveNotification()
+    {
+
+    }
 }

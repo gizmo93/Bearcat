@@ -1,12 +1,17 @@
+using Bearcat.Domain.Abstractions;
+
 namespace Bearcat.Domain.Entities;
 
-public class LinkCrypterContainerNotification
+public class LinkCrypterContainerNotification : EntityNotification<LinkCrypterContainer>
 {
-    public int NotificationId { get; set; }
+    public LinkCrypterContainerNotification(LinkCrypterContainer entity)
+    {
+        Entity = entity;
+    }
 
-    public int LinkCrypterContainerId { get; set; }
-    
-    public LinkCrypterContainer LinkCrypterContainer { get; set; } = null!;
-    
-    public Notification Notification { get; set; } = null!;
+    // EF Core
+    public LinkCrypterContainerNotification()
+    {
+
+    }
 }
