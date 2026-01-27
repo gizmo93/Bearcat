@@ -1,6 +1,7 @@
 @page "/releases/{releaseId:int}"
 @using Bearcat.Website.Pages.ManageArchiveConfigs
 @using Bearcat.Website.Pages.ManageUploadConfigs
+@using Bearcat.Website.Shared
 @inherits OwningComponentBase
 
 @if (!isInitialized)
@@ -19,6 +20,7 @@
                     <MudText Typo="Typo.h6">@release.Name</MudText>
                     <MudChip T="string" Color="Color.Primary"
                              Variant="Variant.Outlined">@release.ReleaseType</MudChip>
+                    <OnlineStateBadge Value="release.OnlineState" Size="Size.Medium" />
                 </MudStack>
             </CardHeaderContent>
             <CardHeaderActions>

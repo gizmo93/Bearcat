@@ -32,6 +32,23 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Upload>> GetOfflineUploadsWithoutReuploadAsync(CancellationToken cancellationToken)
+    {
+        List<UploadState> pendingStates =
+        [
+            UploadState.Pending,
+            UploadState.Uploading,
+            UploadState.WaitingForArchive,
+        ];
+
+        return await dbWrite.Uploads
+            .Include(u => u.UploadConfig)
+            .Where(u => u.OnlineState == OnlineState.Offline
+                        && !u.UploadConfig.Uploads.Any(ru => ru.OnlineState == OnlineState.Online
+                                                             || pendingStates.Contains(ru.UploadState)))
+            .ToListAsync(cancellationToken: cancellationToken);
+    }
+
     public async Task<IReadOnlyList<UploadConfig>> GetUploadConfigsWithoutUploadsAsync(CancellationToken cancellationToken)
     {
         return await dbWrite.UploadConfigs

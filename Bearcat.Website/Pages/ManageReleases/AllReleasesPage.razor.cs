@@ -12,12 +12,12 @@ public partial class AllReleasesPage(
     IDialogService dialogService,
     NavigationManager navigationManager)
 {
-    private IReadOnlyList<ReleaseListDto> releases = [];
+    private IReadOnlyList<ReleaseDto> releases = [];
     private ReleaseService service = null!;
 
     private MudMenu contextMenu = null!;
 
-    private ReleaseListDto? contextMenuRow;
+    private ReleaseDto? contextMenuRow;
 
     protected override async Task OnInitializedAsync()
     {
@@ -25,7 +25,7 @@ public partial class AllReleasesPage(
         service = ScopedServices.GetRequiredService<ReleaseService>();
     }
 
-    private async Task DeleteReleaseAsync(ReleaseListDto release)
+    private async Task DeleteReleaseAsync(ReleaseDto release)
     {
         var result = await dialogService.ShowMessageBoxAsync(
             title: $"Delete Release {release.Name}",
@@ -53,7 +53,7 @@ public partial class AllReleasesPage(
         await RefreshReleasesAsync();
     }
 
-    private async Task OpenMenuContent(DataGridRowClickEventArgs<ReleaseListDto> args)
+    private async Task OpenMenuContent(DataGridRowClickEventArgs<ReleaseDto> args)
     {
         contextMenuRow = args.Item;
         await contextMenu.OpenMenuAsync(args.MouseEventArgs);

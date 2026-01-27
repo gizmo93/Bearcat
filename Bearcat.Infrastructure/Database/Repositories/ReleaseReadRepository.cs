@@ -1,6 +1,9 @@
-﻿using Bearcat.Abstractions.Archiver;
+﻿using System.Linq.Expressions;
+using Bearcat.Abstractions.Archiver;
+using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -10,17 +13,11 @@ public class ReleaseReadRepository(
     IArchiverFactory archiverFactory)
     : IReleaseReadRepository
 {
-    public async Task<IReadOnlyList<ReleaseListDto>> GetReleasesAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ReleaseDto>> GetReleasesAsync(CancellationToken cancellationToken = default)
     {
         return await dbRead
             .Releases
-            .Select(r => new ReleaseListDto(
-                r.Id,
-                r.Name,
-                r.ReleaseType,
-                r.ArchiveConfigs.Count(),
-                r.UploadConfigs.Count(),
-                r.ReleaseFolderPath))
+            .Select(ToReleaseDto())
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
@@ -29,11 +26,7 @@ public class ReleaseReadRepository(
         return await dbRead
             .Releases
             .Where(r => r.Id == releaseId)
-            .Select(r => new ReleaseDto(
-                r.Id,
-                r.Name,
-                r.ReleaseType,
-                r.ReleaseFolderPath))
+            .Select(ToReleaseDto())
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 
@@ -69,5 +62,20 @@ public class ReleaseReadRepository(
                         ar.ArchiveFiles.Count()))
                     .ToList()))
             .ToListAsync(cancellationToken: cancellationToken);
+    }
+    
+    private static Expression<Func<Release, ReleaseDto>> ToReleaseDto()
+    {
+        return entity => new ReleaseDto(
+            entity.Id,
+            entity.Name,
+            entity.ReleaseType,
+            entity.ReleaseFolderPath,
+            entity.UploadConfigs.Count(),
+            entity.UploadConfigs
+                .Where(uc => uc.Uploads
+                    .Any(u => u.OnlineState == OnlineState.Online))
+                .Distinct()
+                .Count());
     }
 }
