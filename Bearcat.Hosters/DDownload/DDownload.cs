@@ -49,7 +49,11 @@ public class DDownload(
             }
             catch (Exception ex)
             {
-                logger.LogError(message: "Upload attempt {Attempt} failed for file {FileName}: {Message}", args: [attempt, archiveFile.FullFileName, ex.Message]);
+                logger.LogError(message: "Upload attempt {Attempt} failed for file {FileName}: {Message}", 
+                    attempt,
+                    archiveFile.FullFileName,
+                    ex.InnerException?.Message ?? ex.Message);
+                
                 errors.Add(ex.Message);
             }
         }
@@ -72,7 +76,7 @@ public class DDownload(
 
         if (!((HttpStatusCode)uploadRequest.Status).IsSuccessStatusCode)
         {
-            throw new RetryException();
+            throw new RetryException(uploadRequest.Msg);
         }
 
         await using var stream = File.OpenRead(archiveFile.FullFileName);
@@ -120,7 +124,7 @@ public class DDownload(
         {
             return new FileExistResult(
                 IsSuccess: false,
-                ErrorMessages: [ex.Message],
+                ErrorMessages: [ex.InnerException?.Message ?? ex.Message],
                 StatusPerFileUrl: new Dictionary<string, bool>());
         }
     }
@@ -159,7 +163,9 @@ public class DDownload(
         }
         catch (Exception ex)
         {
-            return new TryLoginResult(IsSuccess: false, ErrorMessage: ex.Message);
+            return new TryLoginResult(
+                IsSuccess: false,
+                ErrorMessage: ex.InnerException?.Message ?? ex.Message);
         }
     }
 }

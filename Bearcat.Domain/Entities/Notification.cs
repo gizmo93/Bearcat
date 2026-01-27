@@ -13,4 +13,10 @@ public class Notification
     public NotificationType NotificationType { get; set; }
 
     public string Message { get; set; } = null!;
+    
+    public UploadNotification? UploadNotification { get; set; }
+    
+    public ArchiveNotification? ArchiveNotification { get; set; }
+    
+    public LinkCrypterContainerNotification? LinkCrypterContainerNotification { get; set; }
 }

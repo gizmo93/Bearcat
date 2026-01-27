@@ -2,6 +2,7 @@
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Abstractions;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -14,9 +15,10 @@ public class ArchiveCreationService(
     ILogger<ArchiveCreationService> logger,
     IArchiverFactory archiverFactory,
     IFileSystemService fileSystemService,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    INotificationService notificationService)
 {
-    private const string uniqueFileName = "__nonce";
+    private const string UniqueFileName = "__nonce";
 
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
@@ -132,6 +134,13 @@ public class ArchiveCreationService(
 
             archive.ArchiveState = ArchiveState.CreationFailed;
             archive.ErrorMessages.AddRange(archiveResult.ErrorMessages ?? []);
+
+            notificationService
+                .CreateError(
+                    message: $"Failed to create archive: {string.Join(", ", archiveResult.ErrorMessages ?? [])}",
+                    entity: new ArchiveNotification{Archive = archive},
+                    selector: n => n.ArchiveNotification);
+            
             await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
             return;
@@ -155,9 +164,9 @@ public class ArchiveCreationService(
             archive.ArchiveFiles.Count);
     }
 
-    private async Task CreateOrUpdateUniqueFileAsync(string releasePath, CancellationToken cancellationToken)
+    private static async Task CreateOrUpdateUniqueFileAsync(string releasePath, CancellationToken cancellationToken)
     {
-        var uniqueFilePath = Path.Join(releasePath, uniqueFileName);
+        var uniqueFilePath = Path.Join(releasePath, UniqueFileName);
         await File.WriteAllTextAsync(
             path: uniqueFilePath,
             contents: Guid.NewGuid().ToString(),

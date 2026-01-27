@@ -40,18 +40,26 @@ public class Rapidgator(
                     config: config,
                     cancellationToken: cancellationToken);
             }
-            catch (RetryException) { }
+            catch (RetryException ex)
+            {
+                logger.LogWarning("Retryable error occurred on attempt {Attempt} for file {FileName}: {Error}",
+                    attempt,
+                    archiveFile.FullFileName,
+                    ex.InnerException?.Message ?? ex.Message);
+                
+                errors.Add(ex.InnerException?.Message ?? ex.Message);
+            }
             catch (HttpRequestException ex)
             {
                 logger.LogError("HTTP request failed on attempt {Attempt} for file {FileName}: {Message}",
                     attempt,
                     archiveFile.FullFileName,
-                    ex.Message);
+                    ex.InnerException?.Message ?? ex.Message);
 
-                errors.Add(ex.Message);
+                errors.Add(ex.InnerException?.Message ?? ex.Message);
             }
             catch (Refit.ApiException ex)
-            when (ex.StatusCode == HttpStatusCode.ServiceUnavailable)
+                when (ex.StatusCode == HttpStatusCode.ServiceUnavailable)
             {
                 logger.LogError("Service unavailable on attempt {Attempt} for file {FileName}: {Message}",
                     attempt,
@@ -167,9 +175,9 @@ public class Rapidgator(
     }
 
     private async Task<UploadFileResult> UploadFileInternalAsync(
-    ArchiveFile archiveFile,
-    RapidgatorConfig config,
-    CancellationToken cancellationToken)
+        ArchiveFile archiveFile,
+        RapidgatorConfig config,
+        CancellationToken cancellationToken)
     {
         await using var stream = File.OpenRead(archiveFile.FullFileName);
 
@@ -191,7 +199,8 @@ public class Rapidgator(
 
         if (uploadRequest.Response?.Upload?.Url is null)
         {
-            throw new RetryException();
+            throw new RetryException(uploadRequest.Details ??
+                                     uploadRequest?.Response?.Upload?.StateLabel ?? string.Empty);
         }
 
         logger.LogInformation("Uploading file {FileName} to Rapidgator with URL {Url}",
@@ -219,13 +228,12 @@ public class Rapidgator(
                     uploadId: uploadResult.Response?.Upload?.UploadId ?? uploadRequest.Response.Upload.UploadId,
                     config: config,
                     cancellationToken: cancellationToken);
-
             }
             catch (Refit.ApiException ex)
             {
                 logger.LogWarning("Failed to get upload status for file {FileName}: {Message}",
                     archiveFile.FullFileName,
-                    ex.Message);
+                    ex.InnerException?.Message ?? ex.Message);
                 continue;
             }
 

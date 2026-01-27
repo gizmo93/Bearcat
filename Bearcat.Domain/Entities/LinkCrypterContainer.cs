@@ -25,4 +25,6 @@ public class LinkCrypterContainer
     public List<string> Errors { get; set; } = new();
 
     public DateTime CreatedAt { get; set; }
+    
+    public List<LinkCrypterContainerNotification> Notifications { get; set; } = null!;
 }
