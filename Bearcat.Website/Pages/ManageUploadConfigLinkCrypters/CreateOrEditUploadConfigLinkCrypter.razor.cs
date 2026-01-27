@@ -57,15 +57,13 @@ public partial class CreateOrEditUploadConfigLinkCrypter
         {
             await service.UpdateAsync(
                 UploadConfigLinkCrypterId!.Value,
-                formModel.ContainerName,
                 formModel.Password);
         }
         else
         {
             await service.CreateAsync(
                 uploadConfigId: UploadConfigId,
-                linkCrypterRegistrationId: formModel.LinkCrypterRegistrationId,
-                containerName: formModel.ContainerName,
+                linkCrypterRegistrationId: formModel.LinkCrypterRegistrationId!.Value,
                 password: formModel.Password);
         }
         
@@ -76,14 +74,9 @@ public partial class CreateOrEditUploadConfigLinkCrypter
     {
         messageStore.Clear();
 
-        if (string.IsNullOrWhiteSpace(formModel.ContainerName))
+        if (formModel.LinkCrypterRegistrationId is null)
         {
-            messageStore.Add(() => formModel.ContainerName, "Container Name is required.");
-        }
-
-        if (formModel.LinkCrypterRegistrationId <= 0)
-        {
-            messageStore.Add(() => formModel.LinkCrypterRegistrationId, "You need to select a Link Crypter.");
+            messageStore.Add(() => formModel.LinkCrypterRegistrationId!, "You need to select a Link Crypter.");
         }
     }
 
@@ -91,10 +84,7 @@ public partial class CreateOrEditUploadConfigLinkCrypter
     {
         if (!IsEdit)
         {
-            formModel = new FormModel
-            {
-                ContainerName = ReleaseName ?? string.Empty,
-            };
+            formModel = new FormModel();
             
             return;
         }
@@ -104,7 +94,6 @@ public partial class CreateOrEditUploadConfigLinkCrypter
         formModel = new FormModel
         {
             LinkCrypterRegistrationId = configDto.LinkCrypterRegistrationId,
-            ContainerName = configDto.ContainerName,
             Password = configDto.Password
         };
     }

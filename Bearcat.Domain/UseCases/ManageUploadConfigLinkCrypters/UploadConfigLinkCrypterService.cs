@@ -8,7 +8,6 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
     public async Task CreateAsync(
         int uploadConfigId,
         int linkCrypterRegistrationId,
-        string containerName,
         string? password,
         CancellationToken cancellationToken = default)
     {
@@ -16,15 +15,14 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
         {
             UploadConfigId = uploadConfigId,
             LinkCrypterRegistrationId = linkCrypterRegistrationId,
-            ContainerName = containerName,
-            Password = password,
+            Password = CleanPassword(password),
         };
         
         repository.Add(uploadConfigLinkCrypter);
         await repository.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task DeleteAsync(int id, CancellationToken cancellationToken)
+    public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         var uploadConfigLinkCrypter = await repository.GetByIdAsync(id, cancellationToken);
         repository.Remove(uploadConfigLinkCrypter);
@@ -33,13 +31,16 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
     
     public async Task UpdateAsync(
         int id,
-        string containerName,
         string? password,
         CancellationToken cancellationToken = default)
     {
         var uploadConfigLinkCrypter = await repository.GetByIdAsync(id, cancellationToken);
-        uploadConfigLinkCrypter.ContainerName = containerName;
-        uploadConfigLinkCrypter.Password = password;
+        uploadConfigLinkCrypter.Password = CleanPassword(password);
         await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    private static string? CleanPassword(string? password)
+    {
+        return string.IsNullOrWhiteSpace(password) ? null : password;
     }
 }

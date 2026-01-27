@@ -1,0 +1,63 @@
+@using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Dto
+@using Bearcat.Website.Shared
+@inherits OwningComponentBase
+
+@if (!isInitialized)
+{
+    return;
+}
+
+<MudCard Elevation="3">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.body1">Link crypters</MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudFab 
+                Size="Size.Small"
+                StartIcon="@Icons.Material.Filled.Add"
+                OnClick="@(() => ShowAddDialogAsync())"/>
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudDataGrid
+            T="UploadConfigLinkCrypterDto"
+            Items="uploadConfigLinkCrypters"
+            Dense="true"
+            ColumnResizeMode="ResizeMode.None"
+            Breakpoint="Breakpoint.None"
+            HorizontalScrollbar="true"
+            Elevation="3"
+            RowContextMenuClick="@(ShowContextMenuAsync)">
+            <Columns>
+                <TemplateColumn Title="Crypter">
+                    <CellTemplate>
+                        @context.Item!.LinkCrypterRegistrationName (@context.Item.LinkCrypterName)
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Password">
+                    <CellTemplate>
+                        @if (!string.IsNullOrWhiteSpace(context.Item.Password))
+                        {
+                            <HiddenElement>
+                                @context.Item.Password
+                            </HiddenElement>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudCardContent>
+    <MudMenu @ref="contextMenu" PositionAtCursor="true">
+        
+        <MudMenuItem
+            Icon="@Icons.Material.Filled.Edit"
+            Label="Edit"
+            OnClick="@(() => ShowEditDialogAsync(selectedItem!))"/>
+
+        <MudMenuItem 
+            Icon="@Icons.Material.Filled.Delete"
+            Label="Delete"
+            OnClick="@(() => ShowDeleteDialogAsync(selectedItem!))"/>
+    </MudMenu>
+</MudCard>

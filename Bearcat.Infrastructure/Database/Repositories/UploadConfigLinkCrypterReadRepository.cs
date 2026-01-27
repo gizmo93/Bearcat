@@ -21,7 +21,6 @@ public class UploadConfigLinkCrypterReadRepository(
                 linkCrypterNamesByClassName[u.LinkCrypterRegistration.LinkCrypterClassName],
                 u.LinkCrypterRegistration.Name,
                 u.LinkCrypterRegistrationId,
-                u.ContainerName,
                 u.Password,
                 u.LinkCrypterRegistration.IsActive))
             .FirstAsync(cancellationToken: cancellationToken);
@@ -41,7 +40,6 @@ public class UploadConfigLinkCrypterReadRepository(
                 linkCrypterNamesByClassName[u.LinkCrypterRegistration.LinkCrypterClassName],
                 u.LinkCrypterRegistration.Name,
                 u.LinkCrypterRegistrationId,
-                u.ContainerName,
                 u.Password,
                 u.LinkCrypterRegistration.IsActive))
             .ToListAsync(cancellationToken: cancellationToken);

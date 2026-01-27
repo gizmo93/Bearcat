@@ -24,11 +24,6 @@
         </TitleContent>
         <DialogContent>
             <MudStack>
-                <MudTextField
-                    Label="Container name"
-                    Placeholder="Enter a name for the link crypter container"
-                    @bind-Value="formModel.ContainerName"/>
-                
                 <MudSelect
                     Label="Link crypter"
                     Placeholder="Select a link crypter"
@@ -36,7 +31,7 @@
                     @bind-Value="@formModel.LinkCrypterRegistrationId">
                     @foreach (var (id, name) in linkCrypterOptions)
                     {
-                        <MudSelectItem Value="@id">@name</MudSelectItem>
+                        <MudSelectItem Value="@((int?)id)">@name</MudSelectItem>
                     }
                 </MudSelect>
                 
@@ -46,7 +41,6 @@
                     @bind-Value="@formModel.Password" />
 
                 <div style="color: red;">
-                    <ValidationMessage For="@(() => formModel.ContainerName)"/>
                     <ValidationMessage For="@(() => formModel.LinkCrypterRegistrationId)"/>
                 </div>
             </MudStack>
