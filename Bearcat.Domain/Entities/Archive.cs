@@ -21,4 +21,6 @@ public class Archive
     public List<ArchiveFile> ArchiveFiles { get; set; } = null!;
 
     public List<Upload> Uploads { get; set; } = null!;
+    
+    public List<ArchiveNotification> Notifications { get; set; } = null!;
 }

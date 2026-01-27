@@ -1,5 +1,6 @@
 ﻿using Bearcat.Domain.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,7 @@ public class UploadStateService(
     IUploadStateRepository uploadStateRepository,
     IHosterFactory hosterFactory,
     TimeProvider timeProvider,
+    INotificationService notificationService,
     ILogger<UploadStateService> logger)
 {
     public async Task CheckUploadStatesAsync(DateTime localNow, CancellationToken cancellationToken)
@@ -72,6 +74,11 @@ public class UploadStateService(
             logger.LogError("Failed to check file existence for Upload {UploadId}: {ErrorMessages}",
                 upload.Id,
                 string.Join("; ", result.ErrorMessages));
+            
+            notificationService.CreateError(
+                message: "Failed to check file existence on hoster.",
+                entity: new UploadNotification { Upload = upload },
+                selector: u => u.UploadNotification);
 
             return;
         }
@@ -91,6 +98,10 @@ public class UploadStateService(
             upload.OnlineState = offlineFilesCount == upload.UploadedFiles.Count
                 ? OnlineState.Offline
                 : OnlineState.PartiallyOnline;
+            
+            notificationService.CreateWarning(message: "Some files are offline on the hoster",
+                entity: new UploadNotification { Upload = upload },
+                selector: u => u.UploadNotification);
         }
         else
         {
@@ -125,6 +136,10 @@ public class UploadStateService(
             UploadState = UploadState.WaitingForArchive,
             OnlineState = OnlineState.Unknown,
         };
+        
+        notificationService.CreateInfo(message: "Reupload scheduled due to offline files",
+            entity: new UploadNotification { Upload = newUpload },
+            selector: u => u.UploadNotification);
 
         uploadStateRepository.Add(newUpload);
     }
@@ -143,6 +158,10 @@ public class UploadStateService(
                 OnlineState = OnlineState.Unknown,
             };
             uploadStateRepository.Add(upload);
+            
+            notificationService.CreateInfo(message: "Initial upload created for release",
+                entity: new UploadNotification { Upload = upload },
+                selector: u => u.UploadNotification);
 
             logger.LogInformation("Created missing upload for UploadConfig {UploadConfigId}", uploadConfig.Id);
         }

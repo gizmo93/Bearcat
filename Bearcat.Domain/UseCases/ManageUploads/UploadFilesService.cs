@@ -4,6 +4,7 @@ using Bearcat.Abstractions;
 using Bearcat.Domain.Abstractions;
 using Bearcat.Domain.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -17,7 +18,8 @@ public class UploadFilesService(
     IHosterFactory hosterFactory,
     IFileSystemService fileSystemService,
     TimeProvider timeProvider,
-    ILogger<UploadFilesService> logger)
+    ILogger<UploadFilesService> logger,
+    INotificationService notificationService)
 {
     private const int MaxParallelUploads = 10;
 
@@ -284,7 +286,17 @@ public class UploadFilesService(
 
                 result.Upload.UploadState = anyFailedUploads ? UploadState.Failed : UploadState.Completed;
                 result.Upload.OnlineState = anyFailedUploads ? OnlineState.PartiallyOnline : OnlineState.Online;
+                
+                var notificationText = anyFailedUploads
+                    ? "Some files failed to upload"
+                    : "All files uploaded successfully";
 
+                notificationService.Create(
+                    type: anyFailedUploads ? NotificationType.Error : NotificationType.Info,
+                    message: notificationText,
+                    entity: new UploadNotification { Upload = result.Upload },
+                    selector: n => n.UploadNotification);
+                
                 logger.LogInformation(
                     "Completed upload for Upload {UploadId} to hoster {Hoster} with state {UploadState}",
                     result.Upload.Id,
@@ -371,6 +383,11 @@ public class UploadFilesService(
         logger.LogInformation("The following archive files for Upload {UploadId} do not exist: {FilePaths}",
             upload.Id,
             string.Join(", ", nonExistingFiles.Select(f => f.FullFileName)));
+
+        notificationService.CreateWarning(
+            message: "The archive assigned upload has missing files, triggering re-packaging",
+            entity: new UploadNotification { Upload = upload },
+            selector: n => n.UploadNotification);
 
         if (upload.Archive.ArchiveState == ArchiveState.Created)
         {

@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.CreateLinkCrypterContainers.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -11,7 +12,8 @@ public class LinkCrypterContainerCreationService(
     ILinkCrypterContainerCreationWriteRepository repository,
     ILogger<LinkCrypterContainerCreationService> logger,
     ILinkCrypterFactory linkCrypterFactory,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    INotificationService notificationService)
 {
     public async Task CreateMissingLinkCrypterContainersAsync(CancellationToken cancellationToken)
     {
@@ -99,6 +101,11 @@ public class LinkCrypterContainerCreationService(
                 upload.Id,
                 linkCrypterConfig.Id,
                 string.Join("; ", result.ErrorMessages));
+            
+            notificationService.CreateError(
+                message: $"Failed to create link crypter container for upload {upload.Id} using link crypter {linkCrypterConfig.Id}. Errors: {string.Join("; ", result.ErrorMessages)}",
+                entity: new LinkCrypterContainerNotification { LinkCrypterContainer = container },
+                selector: n => n.LinkCrypterContainerNotification);
         }
         
         repository.Add(container);

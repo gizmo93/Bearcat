@@ -1,4 +1,7 @@
-﻿using Bearcat.Domain.Shared;
+﻿using System.Linq.Expressions;
+using System.Reflection;
+using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -23,10 +26,56 @@ public class NotificationService(
     {
         await CreateAsync(NotificationType.Error, message, cancellationToken);
     }
+    
+    public void CreateInfo<TEntity>(
+        string message,
+        TEntity entity,
+        Expression<Func<Notification, TEntity?>> selector)
+    {
+        Create(NotificationType.Info, message, entity, selector);
+    }
+    
+    public void CreateWarning<TEntity>(
+        string message,
+        TEntity entity,
+        Expression<Func<Notification, TEntity?>> selector)
+    {
+        Create(NotificationType.Warning, message, entity, selector);
+    }
+    
+    public void CreateError<TEntity>(
+        string message,
+        TEntity entity,
+        Expression<Func<Notification, TEntity?>> selector)
+    {
+        Create(NotificationType.Error, message, entity, selector);
+    }
+
+    public void Create<TEntity>(
+        NotificationType type,
+        string message,
+        TEntity entity,
+        Expression<Func<Notification, TEntity?>> selector)
+    {
+        var notification = new Notification
+        {
+            NotificationType = type,
+            Message = message,
+            CreatedAt = timeProvider.GetLocalNow(),
+        };
+        
+        var member = (MemberExpression)selector.Body;
+        var property = (PropertyInfo)member.Member;
+        property.SetValue(notification, entity, null);
+        
+        repository.Add(notification);
+
+        Console.WriteLine("a");
+    }
 
     private async Task CreateAsync(NotificationType type, string message, CancellationToken cancellationToken)
     {
-        var notification = new Entities.Notification
+        var notification = new Notification
         {
             NotificationType = type,
             Message = message,
