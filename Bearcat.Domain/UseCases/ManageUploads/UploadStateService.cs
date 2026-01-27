@@ -77,8 +77,8 @@ public class UploadStateService(
 
             notificationService.CreateError(
                 message: "Failed to check file existence on hoster.",
-                entity: new UploadNotification(upload),
-                selector: u => u.UploadNotification);
+                entity: upload,
+                selector: u => u.Upload);
 
             return;
         }
@@ -100,8 +100,8 @@ public class UploadStateService(
                 : OnlineState.PartiallyOnline;
 
             notificationService.CreateWarning(message: "Some files are offline on the hoster",
-                entity: new UploadNotification(upload),
-                selector: u => u.UploadNotification);
+                entity: upload,
+                selector: u => u.Upload);
         }
         else
         {
@@ -138,8 +138,8 @@ public class UploadStateService(
         };
 
         notificationService.CreateInfo(message: "Reupload scheduled due to offline files",
-            entity: new UploadNotification(upload),
-            selector: u => u.UploadNotification);
+            entity: upload,
+            selector: u => u.Upload);
 
         uploadStateRepository.Add(newUpload);
     }
@@ -160,8 +160,8 @@ public class UploadStateService(
             uploadStateRepository.Add(upload);
 
             notificationService.CreateInfo(message: "Initial upload created for release",
-                entity: new UploadNotification(upload),
-                selector: u => u.UploadNotification);
+                entity: upload,
+                selector: u => u.Upload);
 
             logger.LogInformation("Created missing upload for UploadConfig {UploadConfigId}", uploadConfig.Id);
         }

@@ -1,5 +1,4 @@
 ﻿using Bearcat.Domain.Entities;
-using Bearcat.Infrastructure.Database.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database;
@@ -35,19 +34,6 @@ public class BearcatDbContext(DbContextOptions<BearcatDbContext> options)
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BearcatDbContext).Assembly);
-
-        modelBuilder.AddNotificationEntity<Upload, UploadNotification>(
-            u => u.Notifications,
-            n => n.UploadNotification);
-
-        modelBuilder.AddNotificationEntity<Archive, ArchiveNotification>(
-            a => a.Notifications,
-            n => n.ArchiveNotification);
-
-        modelBuilder.AddNotificationEntity<LinkCrypterContainer, LinkCrypterContainerNotification>(
-            lc => lc.Notifications,
-            n => n.LinkCrypterContainerNotification);
-
         base.OnModelCreating(modelBuilder);
     }
 }

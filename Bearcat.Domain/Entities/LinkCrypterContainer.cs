@@ -1,9 +1,8 @@
-using Bearcat.Domain.Abstractions;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.Entities;
 
-public class LinkCrypterContainer : IEntityWithNotifications
+public class LinkCrypterContainer
 {
     public int Id { get; set; }
 
@@ -27,5 +26,5 @@ public class LinkCrypterContainer : IEntityWithNotifications
 
     public DateTime CreatedAt { get; set; }
 
-    public List<LinkCrypterContainerNotification> Notifications { get; set; } = null!;
+    public List<Notification> Notifications { get; set; } = null!;
 }
