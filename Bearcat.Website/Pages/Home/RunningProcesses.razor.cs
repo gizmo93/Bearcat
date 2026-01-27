@@ -88,7 +88,7 @@ public partial class RunningProcesses(
         }
 
         autoRefresh = true;
-        refreshTimer = new Timer(TimeSpan.FromSeconds(10));
+        refreshTimer = new Timer(TimeSpan.FromSeconds(3));
         refreshTimer.Elapsed += async (_, _) =>
         {
             await InvokeAsync(async () =>

@@ -17,6 +17,7 @@ public class UploadStateService(
     {
         await ProcessUploadStateChecksAsync(localNow, cancellationToken);
         await CreateMissingUploadsAsync(cancellationToken);
+        await ProcessOfflineUploadsWithoutReuploadsAsync(cancellationToken);
     }
 
     private async Task ProcessUploadStateChecksAsync(DateTime localNow, CancellationToken cancellationToken)
@@ -95,6 +96,18 @@ public class UploadStateService(
         {
             upload.OnlineState = OnlineState.Online;
         }
+    }
+
+    private async Task ProcessOfflineUploadsWithoutReuploadsAsync(CancellationToken cancellationToken)
+    {
+        var uploads = await uploadStateRepository.GetOfflineUploadsWithoutReuploadAsync(cancellationToken);
+        
+        foreach (var upload in uploads)
+        {
+            CreateNewUploadIfNeeded(upload);
+        }
+        
+        await uploadStateRepository.SaveChangesAsync(cancellationToken);
     }
 
     private void CreateNewUploadIfNeeded(Upload upload)

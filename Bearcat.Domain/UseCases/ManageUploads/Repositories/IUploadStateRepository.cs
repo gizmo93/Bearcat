@@ -13,4 +13,5 @@ public interface IUploadStateRepository
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 
     void Add(Upload upload);
+    Task<IReadOnlyList<Upload>> GetOfflineUploadsWithoutReuploadAsync(CancellationToken cancellationToken);
 }
