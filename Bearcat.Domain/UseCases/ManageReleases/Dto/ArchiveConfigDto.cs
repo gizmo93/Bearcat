@@ -5,7 +5,7 @@ public record ArchiveConfigDto(
     string ArchiveFilesBasePath,
     string ArchiverName,
     string ArchiverDisplayName,
-    string ArchiveNamePrefix,
+    string? ArchiveNamePrefix,
     string? ArchivePassword,
     int ArchiveFileSizeMb,
     string ArchiveFileExtension,
@@ -14,5 +14,7 @@ public record ArchiveConfigDto(
 {
     public record ArchiveSummary(int ArchiveId, int ArchiveFileCount);
 
-    public string ArchiveNameWithExtension => $"{ArchiveNamePrefix}{ArchiveFileExtension}";
+    public string? ArchiveNameWithExtension => ArchiveNamePrefix is null
+        ? null
+        : $"{ArchiveNamePrefix}{ArchiveFileExtension}";
 }

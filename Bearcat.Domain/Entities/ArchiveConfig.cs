@@ -14,7 +14,7 @@ public class ArchiveConfig
 
     public string ArchiverName { get; set; } = null!;
 
-    public string ArchiveNamePrefix { get; set; } = null!;
+    public string? ArchiveNamePrefix { get; set; }
 
     public string? ArchivePassword { get; set; }
 

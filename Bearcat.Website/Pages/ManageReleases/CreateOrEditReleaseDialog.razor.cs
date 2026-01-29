@@ -89,6 +89,11 @@ public partial class CreateOrEditReleaseDialog(
         if (result is { Canceled: false, Data: string folderPath })
         {
             formModel.FolderPath = folderPath;
+
+            if (string.IsNullOrWhiteSpace(formModel.Name))
+            {
+                formModel.Name = Path.GetFileName(formModel.FolderPath);
+            }
         }
     }
 }

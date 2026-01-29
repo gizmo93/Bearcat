@@ -10,6 +10,10 @@ public record RapidgatorConfig : IHosterConfig
 
     public IReadOnlyDictionary<string, string> ToDictionary()
     {
-        return new Dictionary<string, string> { { "Username", Username }, { "Password", Password } };
+        return new Dictionary<string, string>
+        {
+            [nameof(Username)] = Username,
+            [nameof(Password)] = Password,
+        };
     }
 }

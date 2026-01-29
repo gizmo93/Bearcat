@@ -1,16 +1,17 @@
+using System.Text.Json;
 using Bearcat.Abstractions.LinkCrypter;
 
-namespace Bearcat.LinkCrypters.HideCx;
+namespace Bearcat.LinkCrypters.KeepLinks;
 
-public record HideCxConfig : ILinkCrypterConfig
+public record KeepLinksConfig : ILinkCrypterConfig
 {
     public string ApiKey { get; init; } = null!;
-
+    
     public IReadOnlyDictionary<string, string> ToDictionary()
     {
         return new Dictionary<string, string>
         {
-            [nameof(ApiKey)] = ApiKey
+            [nameof(ApiKey)] = ApiKey,
         };
     }
 }

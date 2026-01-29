@@ -17,7 +17,10 @@ public class Rapidgator(
 {
     public string Name => "Rapidgator";
 
-    public IReadOnlyList<string> ConfigurationKeys => ["Username", "Password"];
+    public IReadOnlyList<string> ConfigurationKeys => [
+        nameof(RapidgatorConfig.Username),
+        nameof(RapidgatorConfig.Password)
+    ];
 
     public async Task<UploadFileResult> UploadFileAsync(
         ArchiveFile archiveFile,
@@ -264,7 +267,9 @@ public class Rapidgator(
             IsSuccess: uploadStatus?.Response?.Upload?.State == UploadStates.Done,
             ArchiveFile: archiveFile,
             ErrorMessages: errors,
-            FileUrl: uploadStatus?.Response?.Upload?.File?.Url);
+            FileUrl: ShortenFileUrl(
+                fileUrl: uploadStatus?.Response?.Upload?.File?.Url,
+                fileName: Path.GetFileName(archiveFile.FullFileName)));
     }
 
     private static async Task<string> CreateMd5HashAsync(
@@ -275,5 +280,16 @@ public class Rapidgator(
         var hashBytes = await md5.ComputeHashAsync(stream, cancellationToken);
         stream.Seek(0, SeekOrigin.Begin);
         return Convert.ToHexStringLower(hashBytes);
+    }
+
+    private static string? ShortenFileUrl(string? fileUrl, string fileName)
+    {
+        if (fileUrl is null)
+        {
+            return null;
+        }
+        
+        var fileNameWithHtml = $"/{Path.GetFileName(fileName)}.html";
+        return fileUrl.Replace(fileNameWithHtml, string.Empty);
     }
 }

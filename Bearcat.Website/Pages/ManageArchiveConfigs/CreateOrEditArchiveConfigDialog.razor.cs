@@ -121,11 +121,6 @@ public partial class CreateOrEditArchiveConfigDialog(
             messageStore.Add(() => FormModel.ArchiveFilesBasePath!, "Base path is required");
         }
 
-        if (string.IsNullOrWhiteSpace(FormModel.ArchiveNamePrefix))
-        {
-            messageStore.Add(() => FormModel.ArchiveNamePrefix!, "Archive name prefix is required");
-        }
-
         if (FormModel.ArchiveFileSizeMb < 0)
         {
             messageStore.Add(() => FormModel.ArchiveFileSizeMb, "Archive file size must be zero or greater");
