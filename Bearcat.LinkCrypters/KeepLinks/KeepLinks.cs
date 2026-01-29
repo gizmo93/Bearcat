@@ -2,7 +2,6 @@ using System.Text.Json;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.LinkCrypters.KeepLinks.ApiClient;
-using Bearcat.LinkCrypters.KeepLinks.ApiClient.GetLinks;
 
 namespace Bearcat.LinkCrypters.KeepLinks;
 
