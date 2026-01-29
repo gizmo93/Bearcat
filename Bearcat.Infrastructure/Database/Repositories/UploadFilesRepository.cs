@@ -30,6 +30,30 @@ public class UploadFilesRepository(IBearcatWriteDbContext dbWrite)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
+    public async Task<IReadOnlyDictionary<int, string>> GetConfigByHosterRegistrationId(
+        CancellationToken cancellationToken)
+    {
+        return await dbWrite.HosterRegistrations
+            .Where(h => h.IsActive)
+            .ToDictionaryAsync(
+                h => h.Id,
+                h => h.SerializedConfig,
+                cancellationToken);
+    }
+    
+    public async Task<IReadOnlyDictionary<string, string>> GetConfigByHosterClassName(
+        CancellationToken cancellationToken)
+    {
+        var registrations = await dbWrite.HosterRegistrations
+            .Where(h => h.IsActive)
+            .Select(h => new { h.HosterClassName, h.SerializedConfig })
+            .ToListAsync(cancellationToken);
+
+        return registrations
+            .DistinctBy(r => r.HosterClassName)
+            .ToDictionary(r => r.HosterClassName, r => r.SerializedConfig);
+    }
+
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         return await dbWrite.SaveChangesAsync(cancellationToken);

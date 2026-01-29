@@ -121,7 +121,7 @@ public class ArchiveCreationService(
         var archiveResult = await archiver.ArchiveAsync(
             sourceFolderPath: config.Release.ReleaseFolderPath,
             destinationPath: archiveDirectoryPath,
-            archiveNamePrefix: config.ArchiveNamePrefix,
+            archiveNamePrefix: config.ArchiveNamePrefix ?? Guid.NewGuid().ToString(),
             targetFileSizeMb: config.ArchiveFileSizeMb,
             password: config.ArchivePassword,
             cancellationToken: cancellationToken);

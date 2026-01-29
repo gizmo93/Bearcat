@@ -10,7 +10,7 @@ public class HideCx(IHideCxApi api)
 {
     public string Name => "Hide.cx";
 
-    public List<string> ConfigurationKeys => ["ApiKey"];
+    public List<string> ConfigurationKeys => [nameof(HideCxConfig.ApiKey)];
 
     public async Task<CreateContainerResult> CreateContainerAsync(
         ILinkCrypterConfig linkCrypterConfig,

@@ -1,6 +1,6 @@
 using Bearcat.Domain.Abstractions.Hoster;
 
-namespace Bearcat.Hosters.DDownload.ApiClient;
+namespace Bearcat.Hosters.DDownload;
 
 public record DDownloadConfig : IHosterConfig
 {
@@ -8,6 +8,6 @@ public record DDownloadConfig : IHosterConfig
 
     public IReadOnlyDictionary<string, string> ToDictionary()
     {
-        return new Dictionary<string, string> { ["ApiKey"] = ApiKey };
+        return new Dictionary<string, string> { [nameof(ApiKey)] = ApiKey };
     }
 }

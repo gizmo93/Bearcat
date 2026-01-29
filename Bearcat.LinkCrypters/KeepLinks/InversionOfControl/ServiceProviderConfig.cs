@@ -1,19 +1,19 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.LinkCrypter;
-using Bearcat.LinkCrypters.HideCx.ApiClient;
+using Bearcat.LinkCrypters.KeepLinks.ApiClient;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
 
-namespace Bearcat.LinkCrypters.HideCx.InversionOfControl;
+namespace Bearcat.LinkCrypters.KeepLinks.InversionOfControl;
 
-public static class InversionOfControl
+public static class ServiceProviderConfig
 {
     extension(IServiceCollection services)
     {
-        public void AddHideCx()
+        public void AddKeepLinks()
         {
-            services.AddRefitClient<IHideCxApi>(
+            services.AddRefitClient<IKeepLinksApi>(
                     new RefitSettings
                     {
                         ContentSerializer = new SystemTextJsonContentSerializer(
@@ -25,10 +25,10 @@ public static class InversionOfControl
                     })
                 .ConfigureHttpClient(c =>
                 {
-                    c.BaseAddress = new Uri("https://api.hide.cx");
+                    c.BaseAddress = new Uri("https://www.keeplinks.org");
                 });
 
-            services.AddKeyedScoped<ILinkCrypter, HideCx>(nameof(HideCx));
+            services.AddKeyedScoped<ILinkCrypter, KeepLinks>(nameof(KeepLinks));
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Threading.Channels;
 using Bearcat.Abstractions;
-using Bearcat.Domain.Abstractions;
 using Bearcat.Domain.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
@@ -52,24 +51,19 @@ public class UploadFilesService(
             return;
         }
 
-        var hosters = pendingUploads
-            .GroupBy(u => u.UploadConfig.HosterRegistration.HosterClassName)
-            .ToDictionary(
-                g => g.Key,
-                g => hosterFactory.GetByName(g.Key));
-
-        var hosterConfigByHosterName = pendingUploads
-            .GroupBy(u => u.UploadConfig.HosterRegistration.HosterClassName)
-            .ToDictionary(
-                g => g.Key,
-                g => hosters[g.Key].DeserializeHosterConfig(
-                    g.First().UploadConfig.HosterRegistration.SerializedConfig));
+        var hosters = hosterFactory
+            .GetHostersByName()
+            .ToDictionary();
+        
+        await SetMaxParallelUploadsPerHosterSemaphoresAsync(
+            hostersByName: hosters,
+            cancellationToken: cancellationToken);
 
         var uploadQueue = new ConcurrentQueue<FileToUpload>(
-            GetFilesToUpload(
+            await GetFilesToUploadAsync(
                 uploads: pendingUploads,
                 hosters: hosters,
-                hosterConfigByHosterName: hosterConfigByHosterName));
+                cancellationToken: cancellationToken));
 
         var channel = Channel.CreateUnbounded<FileUploadCompleted>(
             options: new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
@@ -82,8 +76,6 @@ public class UploadFilesService(
         var uploadFilesTask = Task.Run(() => UploadFilesAsync(
                 uploadQueue: uploadQueue,
                 resultWriter: channel.Writer,
-                hostersByName: hosters,
-                hosterConfigsByHoster: hosterConfigByHosterName,
                 cancellationToken: cancellationToken),
             cancellationToken);
 
@@ -97,10 +89,10 @@ public class UploadFilesService(
                 .Where(u => !pendingUploadIds.Contains(u.Id))
                 .ToList();
 
-            var filesToUpload = GetFilesToUpload(
+            var filesToUpload = await GetFilesToUploadAsync(
                 uploads: newPendingUploads,
                 hosters: hosters,
-                hosterConfigByHosterName: hosterConfigByHosterName);
+                cancellationToken: cancellationToken);
 
             foreach (var file in filesToUpload)
             {
@@ -123,34 +115,41 @@ public class UploadFilesService(
         logger.LogInformation("Finished processing pending uploads");
     }
 
-    private static List<FileToUpload> GetFilesToUpload(
+    private async Task<List<FileToUpload>> GetFilesToUploadAsync(
         IReadOnlyList<Upload> uploads,
         Dictionary<string, IHoster> hosters,
-        Dictionary<string, IHosterConfig> hosterConfigByHosterName)
+        CancellationToken cancellationToken)
     {
+        if (uploads.Count == 0)
+        {
+            return [];
+        }
+        
+        var hosterConfigsByRegistrationId = await repository.GetConfigByHosterRegistrationId(cancellationToken);
+
         return uploads
             .SelectMany(u => u.Archive!.ArchiveFiles
                 .Where(af => u.UploadedFiles.All(uf => uf.ArchiveFileId != af.Id))
-                .Select(f => new FileToUpload(
-                    Upload: u,
-                    ArchiveFile: f,
-                    Hoster: hosters[u.UploadConfig.HosterRegistration.HosterClassName],
-                    HosterConfig: hosterConfigByHosterName[u.UploadConfig.HosterRegistration.HosterClassName])))
+                .Select(f =>
+                {
+                    var hoster = hosters[u.UploadConfig.HosterRegistration.HosterClassName];
+                    var hosterConfig = hoster.DeserializeHosterConfig(
+                        hosterConfigsByRegistrationId[u.UploadConfig.HosterRegistrationId]);
+
+                    return new FileToUpload(
+                        Upload: u,
+                        ArchiveFile: f,
+                        Hoster: hoster,
+                        HosterConfig: hosterConfig);
+                }))
             .ToList();
     }
 
     private async Task UploadFilesAsync(
         ConcurrentQueue<FileToUpload> uploadQueue,
         ChannelWriter<FileUploadCompleted> resultWriter,
-        Dictionary<string, IHoster> hostersByName,
-        Dictionary<string, IHosterConfig> hosterConfigsByHoster,
         CancellationToken cancellationToken)
     {
-        await SetMaxParallelUploadsPerHosterSemaphoresAsync(
-            hostersByName: hostersByName,
-            hosterConfigsByHoster: hosterConfigsByHoster,
-            cancellationToken: cancellationToken);
-
         var runningUploadTasks = new List<Task>();
 
         while (true)
@@ -324,16 +323,18 @@ public class UploadFilesService(
 
     private async Task SetMaxParallelUploadsPerHosterSemaphoresAsync(
         Dictionary<string, IHoster> hostersByName,
-        Dictionary<string, IHosterConfig> hosterConfigsByHoster,
         CancellationToken cancellationToken)
     {
+        var hosterConfigs = await repository.GetConfigByHosterClassName(cancellationToken);
         var result = new Dictionary<string, SemaphoreSlim>();
 
         foreach (var (hosterName, hoster) in hostersByName)
         {
+            var hosterConfig = hoster.DeserializeHosterConfig(hosterConfigs[hosterName]);
+            
             var maxParallelUploads =
                 await hoster.GetMaximumParallelUploadsAsync(
-                    hosterConfigsByHoster[hosterName],
+                    hosterConfig,
                     cancellationToken) ?? 1;
 
             result[hosterName] = new SemaphoreSlim(maxParallelUploads);

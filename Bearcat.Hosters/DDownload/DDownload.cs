@@ -17,7 +17,7 @@ public class DDownload(
 {
     public string Name => "ddownload";
 
-    public IReadOnlyList<string> ConfigurationKeys => ["ApiKey"];
+    public IReadOnlyList<string> ConfigurationKeys => [nameof(DDownloadConfig.ApiKey)];
 
     private const string DdownloadBaseUrl = "https://www.ddownload.com";
 
