@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Bearcat.LinkCrypters.HideCx.ApiClient.SearchContainers;
+namespace Bearcat.LinkCrypters.HideCx.Api.SearchContainers;
 
 public class Request
 {

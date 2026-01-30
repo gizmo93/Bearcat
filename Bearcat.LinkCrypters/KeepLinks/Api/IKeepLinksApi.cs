@@ -1,6 +1,6 @@
 using Refit;
 
-namespace Bearcat.LinkCrypters.KeepLinks.ApiClient;
+namespace Bearcat.LinkCrypters.KeepLinks.Api;
 
 public interface IKeepLinksApi
 {
@@ -15,5 +15,12 @@ public interface IKeepLinksApi
         [Query][AliasAs("link-to-protect")] string linksToProtect,
         [Query][AliasAs("password")] string? password,
         [Query][AliasAs("title")] string? title,
+        CancellationToken cancellationToken = default);
+    
+    [Post("/api.php?captcha=on&captchatype=Re&output=json")]
+    Task<ProtectLinks.Response> UpdateContainerAsync(
+        [Query][AliasAs("apihash")] string apiKey,
+        [Query][AliasAs("link-to-protect")] string linksToProtect,
+        [Query][AliasAs("url-id")] string urlId,
         CancellationToken cancellationToken = default);
 }

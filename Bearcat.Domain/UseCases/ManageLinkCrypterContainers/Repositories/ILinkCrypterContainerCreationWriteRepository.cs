@@ -1,6 +1,6 @@
 using Bearcat.Domain.Entities;
 
-namespace Bearcat.Domain.UseCases.CreateLinkCrypterContainers.Repositories;
+namespace Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 
 public interface ILinkCrypterContainerCreationWriteRepository
 {

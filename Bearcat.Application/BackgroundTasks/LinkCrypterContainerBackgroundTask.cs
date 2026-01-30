@@ -1,4 +1,4 @@
-using Bearcat.Domain.UseCases.CreateLinkCrypterContainers;
+using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -22,7 +22,7 @@ public class LinkCrypterContainerBackgroundTask(
             }
 
             await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var archiveCreationService = scope.ServiceProvider.GetRequiredService<LinkCrypterContainerCreationService>();
+            var archiveCreationService = scope.ServiceProvider.GetRequiredService<LinkCrypterContainerService>();
             await archiveCreationService.CreateMissingLinkCrypterContainersAsync(stoppingToken);
 
             await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);

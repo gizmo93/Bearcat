@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.LinkCrypter;
-using Bearcat.LinkCrypters.KeepLinks.ApiClient;
+using Bearcat.LinkCrypters.KeepLinks.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
 

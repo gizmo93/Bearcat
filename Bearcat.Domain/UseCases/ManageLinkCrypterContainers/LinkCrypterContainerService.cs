@@ -1,16 +1,16 @@
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.UseCases.CreateLinkCrypterContainers.Repositories;
+using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
-namespace Bearcat.Domain.UseCases.CreateLinkCrypterContainers;
+namespace Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 
-public class LinkCrypterContainerCreationService(
+public class LinkCrypterContainerService(
     ILinkCrypterContainerCreationWriteRepository repository,
-    ILogger<LinkCrypterContainerCreationService> logger,
+    ILogger<LinkCrypterContainerService> logger,
     ILinkCrypterFactory linkCrypterFactory,
     TimeProvider timeProvider,
     INotificationService notificationService)
@@ -47,11 +47,61 @@ public class LinkCrypterContainerCreationService(
 
         foreach (var linkCrypterConfig in missingConfigs)
         {
+            var previousContainer = upload
+                .UploadConfig
+                .Uploads
+                .Where(u => u.Id < upload.Id
+                            && u.LinkCrypterContainers
+                                .Any(l => l.UploadConfigLinkCrypterId == linkCrypterConfig.Id))
+                .Select(u => u.LinkCrypterContainers.First(l => l.UploadConfigLinkCrypterId == linkCrypterConfig.Id))
+                .FirstOrDefault();
+
+            if (previousContainer is not null)
+            {
+                try
+                {
+                    await UpdateLinkCrypterContainerAsync(
+                        upload: upload,
+                        previousContainer: previousContainer,
+                        linkCrypterConfig: linkCrypterConfig,
+                        cancellationToken: cancellationToken);
+                    continue;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(
+                        ex,
+                        "Failed to update link crypter container for upload {UploadId} using link crypter config Id {LinkCrypterId}. Falling back to creating a new container",
+                        upload.Id,
+                        linkCrypterConfig.Id);
+                }
+            }
+            
             await CreateLinkCrypterContainerAsync(
                 upload: upload,
                 linkCrypterConfig: linkCrypterConfig,
                 cancellationToken: cancellationToken);
         }
+    }
+    
+    private async Task UpdateLinkCrypterContainerAsync(
+        Upload upload,
+        LinkCrypterContainer previousContainer,
+        UploadConfigLinkCrypter linkCrypterConfig,
+        CancellationToken cancellationToken)
+    {
+        var crypter = linkCrypterFactory.Get(linkCrypterConfig.LinkCrypterRegistration.LinkCrypterClassName);
+        var config = crypter.DeserializeConfig(linkCrypterConfig.LinkCrypterRegistration.SerializedConfig);
+
+        await crypter.UpdateContainerAsync(
+            linkCrypterConfig: config,
+            containerLink: previousContainer.ContainerUrl,
+            externalReference: previousContainer.ExternalReference,
+            links: upload.UploadedFiles
+                .Select(uf => uf.HosterFileLink)
+                .OrderBy(l => l)
+                .ToList(),
+            cancellationToken: cancellationToken);
     }
 
     private async Task CreateLinkCrypterContainerAsync(
@@ -64,6 +114,7 @@ public class LinkCrypterContainerCreationService(
 
         var fileUrls = upload.UploadedFiles
             .Select(f => f.HosterFileLink)
+            .OrderBy(l => l)
             .ToList();
 
         var result = await crypter.CreateContainerAsync(

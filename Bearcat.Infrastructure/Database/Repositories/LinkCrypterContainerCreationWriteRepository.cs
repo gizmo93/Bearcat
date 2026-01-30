@@ -1,5 +1,5 @@
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.CreateLinkCrypterContainers.Repositories;
+using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +19,9 @@ public class LinkCrypterContainerCreationWriteRepository(IBearcatWriteDbContext 
             .ThenInclude(l => l.LinkCrypterRegistration)
             .Include(u => u.LinkCrypterContainers)
             .Include(u => u.UploadedFiles)
+            .Include(u => u.UploadConfig)
+            .ThenInclude(uc => uc.Uploads)
+            .ThenInclude(u => u.LinkCrypterContainers)
             .Where(u => u.UploadState == UploadState.Completed
                         && u.OnlineState == OnlineState.Online
                         && u.UploadedFiles.Any()

@@ -1,7 +1,8 @@
 using System.Text.Json;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.LinkCrypter.Results;
-using Bearcat.LinkCrypters.KeepLinks.ApiClient;
+using Bearcat.LinkCrypters.Extensions;
+using Bearcat.LinkCrypters.KeepLinks.Api;
 
 namespace Bearcat.LinkCrypters.KeepLinks;
 
@@ -16,10 +17,7 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
         string? password,
         IReadOnlyList<string> links, CancellationToken cancellationToken = default)
     {
-        if (linkCrypterConfig is not KeepLinksConfig config)
-        {
-            throw new ArgumentException("Invalid config type", nameof(linkCrypterConfig));
-        }
+        var config = linkCrypterConfig.As<KeepLinksConfig>();
 
         try
         {
@@ -66,10 +64,7 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
         ILinkCrypterConfig linkCrypterConfig,
         CancellationToken cancellationToken = default)
     {
-        if(linkCrypterConfig is not KeepLinksConfig config)
-        {
-            throw new ArgumentException("Invalid config type", nameof(linkCrypterConfig));
-        }
+        var config = linkCrypterConfig.As<KeepLinksConfig>();
         
         const string loginErrorMessage = "API hash is not valid";
         
@@ -88,6 +83,39 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
         catch (Exception ex)
         {
             return new TryLoginResult(
+                IsSuccess: false,
+                ErrorMessage: ex.InnerException?.Message ?? ex.Message);
+        }
+    }
+
+    public async Task<UpdateContainerResult> UpdateContainerAsync(
+        ILinkCrypterConfig linkCrypterConfig,
+        string containerLink,
+        string? externalReference,
+        IReadOnlyList<string> links,
+        CancellationToken cancellationToken = default)
+    {
+        var config = linkCrypterConfig.As<KeepLinksConfig>();
+
+        try
+        {
+            var linksString = string.Join(',', links);
+            
+            var response = await api.UpdateContainerAsync(
+                apiKey: config.ApiKey,
+                linksToProtect: linksString,
+                urlId: containerLink.Split('/').Last(),
+                cancellationToken: cancellationToken);
+
+            var success = response.ApiError is null;
+
+            return new UpdateContainerResult(
+                IsSuccess: success,
+                ErrorMessage: response.ApiError);
+        }
+        catch (Exception ex)
+        {
+            return new UpdateContainerResult(
                 IsSuccess: false,
                 ErrorMessage: ex.InnerException?.Message ?? ex.Message);
         }
