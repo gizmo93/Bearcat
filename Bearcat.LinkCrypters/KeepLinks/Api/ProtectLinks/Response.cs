@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Bearcat.LinkCrypters.KeepLinks.ApiClient.ProtectLinks;
+namespace Bearcat.LinkCrypters.KeepLinks.Api.ProtectLinks;
 
 public class Response
 {

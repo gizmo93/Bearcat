@@ -1,7 +1,9 @@
 using System.Text.Json;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.LinkCrypter.Results;
-using Bearcat.LinkCrypters.HideCx.ApiClient;
+using Bearcat.LinkCrypters.Extensions;
+using Bearcat.LinkCrypters.HideCx.Api;
+using Bearcat.LinkCrypters.HideCx.Api.CreateContainer;
 
 namespace Bearcat.LinkCrypters.HideCx;
 
@@ -19,21 +21,11 @@ public class HideCx(IHideCxApi api)
         IReadOnlyList<string> links,
         CancellationToken cancellationToken = default)
     {
-        if (linkCrypterConfig is not HideCxConfig config)
-        {
-            throw new ArgumentException(
-                $"Expected {nameof(linkCrypterConfig)} to be of type {nameof(HideCxConfig)}",
-                nameof(linkCrypterConfig));
-        }
+        var config = linkCrypterConfig.As<HideCxConfig>();
 
         try
         {
-            var request = new ApiClient.CreateContainer.Request
-            {
-                Name = containerName,
-                Password = password,
-                Mirrors = [links.ToArray()]
-            };
+            var request = new Request { Name = containerName, Password = password, Mirrors = [links.ToArray()] };
 
             var result = await api.CreateContainerAsync(
                 request: request,
@@ -60,18 +52,13 @@ public class HideCx(IHideCxApi api)
         ILinkCrypterConfig linkCrypterConfig,
         CancellationToken cancellationToken = default)
     {
-        if (linkCrypterConfig is not HideCxConfig config)
-        {
-            throw new ArgumentException(
-                $"Expected {nameof(linkCrypterConfig)} to be of type {nameof(HideCxConfig)}",
-                nameof(linkCrypterConfig));
-        }
+        var config = linkCrypterConfig.As<HideCxConfig>();
 
         // As hide.cx does not provide a dedicated login endpoint, we abuse the container search
         // to do a login check
         try
         {
-            var request = new ApiClient.SearchContainers.Request
+            var request = new Api.SearchContainers.Request
             {
                 Limit = 1,
                 Offset = 0,
@@ -96,6 +83,33 @@ public class HideCx(IHideCxApi api)
             return new TryLoginResult(
                 IsSuccess: false,
                 ErrorMessage: ex.Message);
+        }
+    }
+
+    public async Task<UpdateContainerResult> UpdateContainerAsync(
+        ILinkCrypterConfig linkCrypterConfig,
+        string containerLink,
+        string? externalReference,
+        IReadOnlyList<string> links,
+        CancellationToken cancellationToken = default)
+    {
+        var config = linkCrypterConfig.As<HideCxConfig>();
+
+        try
+        {
+            await api.UpdateContainerAsync(
+                containerId: externalReference!,
+                request: new Api.UpdateContainer.Request { Mirrors = links },
+                apiToken: GetAuthToken(config.ApiKey),
+                cancellationToken: cancellationToken);
+
+            return new UpdateContainerResult(IsSuccess: true, ErrorMessage: null);
+        }
+        catch (Exception ex)
+        {
+            return new UpdateContainerResult(
+                IsSuccess: false,
+                ErrorMessage: ex.InnerException?.Message ?? ex.Message);
         }
     }
 

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Bearcat.LinkCrypters.HideCx.ApiClient.CreateContainer;
+namespace Bearcat.LinkCrypters.HideCx.Api.CreateContainer;
 
 public class Response
 {

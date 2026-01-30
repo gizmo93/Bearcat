@@ -1,6 +1,6 @@
 using Refit;
 
-namespace Bearcat.LinkCrypters.HideCx.ApiClient;
+namespace Bearcat.LinkCrypters.HideCx.Api;
 
 public interface IHideCxApi
 {
@@ -13,6 +13,13 @@ public interface IHideCxApi
     [Post("/containers/search")]
     Task<SearchContainers.Response> SearchContainersAsync(
         SearchContainers.Request request,
+        [Header("Authorization")] string apiToken,
+        CancellationToken cancellationToken);
+
+    [Patch("/containers/{containerId}")]
+    Task<string?> UpdateContainerAsync(
+        [Query] string containerId,
+        UpdateContainer.Request request,
         [Header("Authorization")] string apiToken,
         CancellationToken cancellationToken);
 }
