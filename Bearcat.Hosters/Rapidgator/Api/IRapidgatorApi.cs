@@ -1,8 +1,8 @@
-﻿using Bearcat.Hosters.Rapidgator.ApiClient.File;
-using Bearcat.Hosters.Rapidgator.ApiClient.User;
+﻿using Bearcat.Hosters.Rapidgator.Api.File;
+using Bearcat.Hosters.Rapidgator.Api.User;
 using Refit;
 
-namespace Bearcat.Hosters.Rapidgator.ApiClient;
+namespace Bearcat.Hosters.Rapidgator.Api;
 
 public interface IRapidgatorApi
 {

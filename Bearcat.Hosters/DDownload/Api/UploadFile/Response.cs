@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Bearcat.Hosters.DDownload.ApiClient.UploadFile;
+namespace Bearcat.Hosters.DDownload.Api.UploadFile;
 
 
 public class Response

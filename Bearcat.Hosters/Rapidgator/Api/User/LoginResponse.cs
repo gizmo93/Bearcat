@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Bearcat.Hosters.Rapidgator.ApiClient.User;
+namespace Bearcat.Hosters.Rapidgator.Api.User;
 
 public class LoginResponse
 {

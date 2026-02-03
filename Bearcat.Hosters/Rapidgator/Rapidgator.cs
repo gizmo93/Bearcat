@@ -3,15 +3,16 @@ using System.Text.Json;
 using Bearcat.Domain.Abstractions.Hoster;
 using Bearcat.Domain.Abstractions.Hoster.Results;
 using Bearcat.Domain.Entities;
-using Bearcat.Hosters.Rapidgator.ApiClient;
-using Bearcat.Hosters.Rapidgator.ApiClient.File;
+using Bearcat.Hosters.Extensions;
+using Bearcat.Hosters.Rapidgator.Api;
+using Bearcat.Hosters.Rapidgator.Api.File;
 using Bearcat.Hosters.Rapidgator.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.Rapidgator;
 
 public class Rapidgator(
-    RapidgatorApiClient rapidgatorApiClient,
+    ApiClient apiClient,
     IRapidgatorApi rapidgatorApi,
     ILogger<Rapidgator> logger) : IHoster
 {
@@ -27,10 +28,7 @@ public class Rapidgator(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken)
     {
-        if (hosterConfig is not RapidgatorConfig config)
-        {
-            throw new ArgumentException("Invalid hoster config for Rapidgator", nameof(hosterConfig));
-        }
+        var config = hosterConfig.As<RapidgatorConfig>();
 
         var errors = new List<string>();
 
@@ -89,18 +87,12 @@ public class Rapidgator(
         IReadOnlyList<string> fileUrls,
         CancellationToken cancellationToken)
     {
-        if (hosterConfig is not RapidgatorConfig rapidgatorConfig)
-        {
-            return new FileExistResult(
-                IsSuccess: false,
-                ErrorMessages: ["Invalid hoster config for Rapidgator"],
-                StatusPerFileUrl: new Dictionary<string, bool>());
-        }
+        var config = hosterConfig.As<RapidgatorConfig>();
 
         try
         {
-            var statusPerLink = await rapidgatorApiClient.CheckLinksAsync(
-                config: rapidgatorConfig,
+            var statusPerLink = await apiClient.CheckLinksAsync(
+                config: config,
                 links: fileUrls,
                 cancellationToken: cancellationToken);
 
@@ -140,14 +132,11 @@ public class Rapidgator(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken)
     {
-        if (hosterConfig is not RapidgatorConfig rapidgatorConfig)
-        {
-            throw new InvalidOperationException("Invalid hoster config for Rapidgator");
-        }
+        var config = hosterConfig.As<RapidgatorConfig>();
 
         var response = await rapidgatorApi.LoginAsync(
-            login: rapidgatorConfig.Username,
-            password: rapidgatorConfig.Password,
+            login: config.Username,
+            password: config.Password,
             cancellationToken: cancellationToken);
 
         return response.Content!.Response.User.RemoteUpload.MaxNbJobs;
@@ -184,7 +173,7 @@ public class Rapidgator(
     {
         await using var stream = File.OpenRead(archiveFile.FullFileName);
 
-        var uploadRequest = await rapidgatorApiClient.RequestUploadFileAsync(
+        var uploadRequest = await apiClient.RequestUploadFileAsync(
             name: Path.GetFileName(archiveFile.FullFileName),
             size: stream.Length,
             hash: await CreateMd5HashAsync(stream, cancellationToken),
@@ -210,7 +199,7 @@ public class Rapidgator(
             archiveFile.FullFileName,
             uploadRequest.Response.Upload.Url);
 
-        var uploadResult = await rapidgatorApiClient.UploadFileAsync(
+        var uploadResult = await apiClient.UploadFileAsync(
             uploadUrl: uploadRequest.Response.Upload.Url,
             stream: stream,
             fileName: Path.GetFileName(archiveFile.FullFileName),
@@ -227,7 +216,7 @@ public class Rapidgator(
         {
             try
             {
-                uploadStatus = await rapidgatorApiClient.GetUploadInfoAsync(
+                uploadStatus = await apiClient.GetUploadInfoAsync(
                     uploadId: uploadResult.Response?.Upload?.UploadId ?? uploadRequest.Response.Upload.UploadId,
                     config: config,
                     cancellationToken: cancellationToken);

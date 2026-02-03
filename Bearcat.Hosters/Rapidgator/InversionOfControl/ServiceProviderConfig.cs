@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Domain.Abstractions.Hoster;
-using Bearcat.Hosters.Rapidgator.ApiClient;
+using Bearcat.Hosters.Rapidgator.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
 
@@ -27,14 +27,7 @@ public static class ServiceProviderConfig
                 c.Timeout = Timeout.InfiniteTimeSpan;
             });
 
-        services.AddHttpClient(
-            "RapidgatorUpload",
-            c =>
-            {
-                c.Timeout = Timeout.InfiniteTimeSpan;
-            });
-
-        services.AddScoped<RapidgatorApiClient>();
+        services.AddScoped<ApiClient>();
         services.AddKeyedScoped<IHoster, Rapidgator>(nameof(Rapidgator));
     }
 }

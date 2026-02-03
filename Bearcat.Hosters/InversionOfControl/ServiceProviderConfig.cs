@@ -1,6 +1,7 @@
 ﻿using Bearcat.Domain.Abstractions.Hoster;
 using Bearcat.Hosters.DDownload.InversionOfControl;
 using Bearcat.Hosters.Rapidgator.InversionOfControl;
+using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Hosters.InversionOfControl;
@@ -11,6 +12,15 @@ public static class ServiceProviderConfig
     {
         services.AddRapidgator();
         services.AddDdownload();
+        
         services.AddScoped<IHosterFactory, HosterFactory>();
+        services.AddHttpClient(
+            name: HttpClientProvider.UploadHttpClientName,
+            configureClient: c =>
+            {
+                c.Timeout = Timeout.InfiniteTimeSpan;
+            });
+
+        services.AddScoped<HttpClientProvider>();
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Bearcat.Hosters.Rapidgator.ApiClient.File;
+namespace Bearcat.Hosters.Rapidgator.Api.File;
 
 public class UploadFileResponse
 {
