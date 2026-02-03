@@ -1,4 +1,4 @@
-﻿using Bearcat.Domain.Abstractions.Hoster;
+﻿using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;

@@ -1,3 +1,3 @@
-﻿namespace Bearcat.Domain.Abstractions.Hoster.Results;
+﻿namespace Bearcat.Abstractions.Hoster.Results;
 
 public record TryLoginResult(bool IsSuccess, string? ErrorMessage);

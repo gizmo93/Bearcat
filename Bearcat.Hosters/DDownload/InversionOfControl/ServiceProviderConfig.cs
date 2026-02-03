@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Bearcat.Domain.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Hosters.DDownload.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;

@@ -1,8 +1,8 @@
 using System.Net;
 using System.Text.Json;
-using Bearcat.Domain.Abstractions.Hoster;
-using Bearcat.Domain.Abstractions.Hoster.Results;
-using Bearcat.Domain.Entities;
+using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.DDownload.Api;
 using Bearcat.Hosters.DDownload.Api.UploadFile;
 using Bearcat.Hosters.Extensions;
@@ -23,7 +23,10 @@ public class DDownload(
     private const string DdownloadBaseUrl = "https://www.ddownload.com";
 
 
-    public async Task<UploadFileResult> UploadFileAsync(ArchiveFile archiveFile, IHosterConfig hosterConfig, CancellationToken cancellationToken)
+    public async Task<UploadFileResult> UploadFileAsync(
+        FileDto fileDto,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken)
     {
         var config = hosterConfig.As<DDownloadConfig>();
 
@@ -34,14 +37,14 @@ public class DDownload(
             try
             {
                 var response = await UploadFileInternalAsync(
-                    archiveFile: archiveFile,
+                    fileDto: fileDto,
                     config: config,
                     cancellationToken: cancellationToken);
 
                 return new UploadFileResult(
                     IsSuccess: true,
                     ErrorMessages: [],
-                    ArchiveFile: archiveFile,
+                    FileDto: fileDto,
                     FileUrl: $"{DdownloadBaseUrl}/{response.FileCode}");
 
             }
@@ -49,7 +52,7 @@ public class DDownload(
             {
                 logger.LogError(message: "Upload attempt {Attempt} failed for file {FileName}: {Message}",
                     attempt,
-                    archiveFile.FullFileName,
+                    fileDto.FullFileName,
                     ex.InnerException?.Message ?? ex.Message);
 
                 errors.Add(ex.Message);
@@ -58,7 +61,7 @@ public class DDownload(
 
         return new UploadFileResult(
             IsSuccess: false,
-            ArchiveFile: archiveFile,
+            FileDto: fileDto,
             ErrorMessages: errors,
             FileUrl: null);
     }
@@ -136,7 +139,7 @@ public class DDownload(
     }
     
     private async Task<Response> UploadFileInternalAsync(
-        ArchiveFile archiveFile,
+        FileDto fileDto,
         DDownloadConfig config,
         CancellationToken cancellationToken)
     {
@@ -149,13 +152,13 @@ public class DDownload(
             throw new RetryException(uploadRequest.Msg);
         }
 
-        await using var stream = File.OpenRead(archiveFile.FullFileName);
+        await using var stream = File.OpenRead(fileDto.FullFileName);
 
         var uploadResponse = await apiClient.UploadFileAsync(
             stream: stream,
             uploadUrl: uploadRequest.UploadUrl!,
             sessionId: uploadRequest.SessionId!,
-            fileName: Path.GetFileName(archiveFile.FullFileName),
+            fileName: Path.GetFileName(fileDto.FullFileName),
             cancellationToken: cancellationToken);
 
         return uploadResponse;

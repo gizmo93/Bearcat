@@ -1,4 +1,4 @@
-﻿namespace Bearcat.Domain.Abstractions.Hoster;
+﻿namespace Bearcat.Abstractions.Hoster;
 
 public interface IHosterConfig
 {

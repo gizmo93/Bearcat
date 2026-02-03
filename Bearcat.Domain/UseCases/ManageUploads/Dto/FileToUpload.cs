@@ -1,4 +1,4 @@
-using Bearcat.Domain.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
 
 namespace Bearcat.Domain.UseCases.ManageUploads.Dto;

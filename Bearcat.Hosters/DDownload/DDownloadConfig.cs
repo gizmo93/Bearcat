@@ -1,4 +1,4 @@
-using Bearcat.Domain.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster;
 
 namespace Bearcat.Hosters.DDownload;
 
