@@ -1,5 +1,6 @@
 ﻿using Bearcat.Abstractions.Hoster;
 using Bearcat.Hosters.DDownload.InversionOfControl;
+using Bearcat.Hosters.GoFile.InversionOfControl;
 using Bearcat.Hosters.Rapidgator.InversionOfControl;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,7 @@ public static class ServiceProviderConfig
     {
         services.AddRapidgator();
         services.AddDdownload();
+        services.AddGoFile();
         
         services.AddScoped<IHosterFactory, HosterFactory>();
         services.AddHttpClient(
