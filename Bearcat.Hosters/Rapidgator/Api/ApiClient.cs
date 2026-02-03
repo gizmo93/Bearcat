@@ -2,16 +2,17 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Hosters.Extensions;
-using Bearcat.Hosters.Rapidgator.ApiClient.File;
-using Bearcat.Hosters.Rapidgator.ApiClient.User;
+using Bearcat.Hosters.Rapidgator.Api.File;
+using Bearcat.Hosters.Rapidgator.Api.User;
+using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 
-namespace Bearcat.Hosters.Rapidgator.ApiClient;
+namespace Bearcat.Hosters.Rapidgator.Api;
 
-public class RapidgatorApiClient(
+public class ApiClient(
     IRapidgatorApi api,
-    IHttpClientFactory httpClientFactory,
-    ILogger<RapidgatorApiClient> logger)
+    HttpClientProvider httpClientProvider,
+    ILogger<ApiClient> logger)
 {
     private const int AuthTimeout = 400;
 
@@ -47,7 +48,7 @@ public class RapidgatorApiClient(
         string fileName,
         CancellationToken cancellationToken)
     {
-        using var httpClient = httpClientFactory.CreateClient("RapidgatorUpload");
+        using var httpClient = httpClientProvider.GetUploadClient();
         var httpResponse = await httpClient.PostAsync(uploadUrl,
             new MultipartFormDataContent { { new StreamContent(stream), "file", fileName } }, cancellationToken);
 

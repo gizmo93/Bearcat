@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Bearcat.Hosters.DDownload.ApiClient.FileOnlineCheck;
+namespace Bearcat.Hosters.DDownload.Api.FileOnlineCheck;
 
 public class Response
 {

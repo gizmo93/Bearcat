@@ -1,7 +1,7 @@
-using Bearcat.Hosters.DDownload.ApiClient.FileOnlineCheck;
+using Bearcat.Hosters.DDownload.Api.FileOnlineCheck;
 using Refit;
 
-namespace Bearcat.Hosters.DDownload.ApiClient;
+namespace Bearcat.Hosters.DDownload.Api;
 
 public interface IDDownloadApi
 {

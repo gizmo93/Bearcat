@@ -2,12 +2,13 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Hosters.Shared;
 
-namespace Bearcat.Hosters.DDownload.ApiClient;
+namespace Bearcat.Hosters.DDownload.Api;
 
-public class DDownloadApiClient(
+public class ApiClient(
     IDDownloadApi api,
-    IHttpClientFactory httpClientFactory)
+    HttpClientProvider httpClientProvider)
 {
     public const string ApiBaseUrl = "https://api-v2.ddownload.com/api";
 
@@ -60,7 +61,7 @@ public class DDownloadApiClient(
         string sessionId,
         CancellationToken cancellationToken)
     {
-        using var httpClient = httpClientFactory.CreateClient("DDownloadUpload");
+        using var httpClient = httpClientProvider.GetUploadClient();
 
         using var multipartForm = new MultipartFormDataContent();
 

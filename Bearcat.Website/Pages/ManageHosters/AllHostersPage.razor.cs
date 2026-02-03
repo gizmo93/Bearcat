@@ -104,7 +104,9 @@ public partial class AllHostersPage(
 
     private async Task TryLoginAsync(HosterRegistrationDto hoster)
     {
-        var service = ScopedServices.GetRequiredService<HosterRegistrationService>();
+        await using var scope = ScopedServices.CreateAsyncScope();
+        var service = scope.ServiceProvider.GetRequiredService<HosterRegistrationService>();
+        
         var result = await service.TryLoginAsync(hoster.Id);
 
         if (result.IsSuccess)

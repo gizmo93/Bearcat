@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Domain.Abstractions.Hoster;
-using Bearcat.Hosters.DDownload.ApiClient;
+using Bearcat.Hosters.DDownload.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
 
@@ -25,18 +25,11 @@ public static class ServiceProviderConfig
                     })
                 .ConfigureHttpClient(c =>
                 {
-                    c.BaseAddress = new Uri(DDownloadApiClient.ApiBaseUrl);
+                    c.BaseAddress = new Uri(ApiClient.ApiBaseUrl);
                     c.Timeout = Timeout.InfiniteTimeSpan;
                 });
 
-            services.AddHttpClient(
-                "DDownloadUpload",
-                c =>
-                {
-                    c.Timeout = Timeout.InfiniteTimeSpan;
-                });
-
-            services.AddScoped<DDownloadApiClient>();
+            services.AddScoped<ApiClient>();
             services.AddKeyedScoped<IHoster, DDownload>(nameof(DDownload));
         }
     }

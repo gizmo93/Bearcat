@@ -3,7 +3,8 @@ using System.Text.Json;
 using Bearcat.Domain.Abstractions.Hoster;
 using Bearcat.Domain.Abstractions.Hoster.Results;
 using Bearcat.Domain.Entities;
-using Bearcat.Hosters.DDownload.ApiClient;
+using Bearcat.Hosters.DDownload.Api;
+using Bearcat.Hosters.DDownload.Api.UploadFile;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Rapidgator.Exceptions;
 using Microsoft.Extensions.Logging;
@@ -11,7 +12,7 @@ using Microsoft.Extensions.Logging;
 namespace Bearcat.Hosters.DDownload;
 
 public class DDownload(
-    DDownloadApiClient apiClient,
+    ApiClient apiClient,
     ILogger<DDownload> logger)
     : IHoster
 {
@@ -24,10 +25,7 @@ public class DDownload(
 
     public async Task<UploadFileResult> UploadFileAsync(ArchiveFile archiveFile, IHosterConfig hosterConfig, CancellationToken cancellationToken)
     {
-        if (hosterConfig is not DDownloadConfig config)
-        {
-            throw new ArgumentException(message: "Invalid hoster config type.", paramName: nameof(hosterConfig));
-        }
+        var config = hosterConfig.As<DDownloadConfig>();
 
         var errors = new List<string>();
 
@@ -65,41 +63,12 @@ public class DDownload(
             FileUrl: null);
     }
 
-    private async Task<ApiClient.UploadFile.Response> UploadFileInternalAsync(
-        ArchiveFile archiveFile,
-        DDownloadConfig config,
-        CancellationToken cancellationToken)
-    {
-        var uploadRequest = await apiClient.RequestUploadAsync(
-            apiKey: config.ApiKey,
-            cancellationToken: cancellationToken);
-
-        if (!((HttpStatusCode)uploadRequest.Status).IsSuccessStatusCode)
-        {
-            throw new RetryException(uploadRequest.Msg);
-        }
-
-        await using var stream = File.OpenRead(archiveFile.FullFileName);
-
-        var uploadResponse = await apiClient.UploadFileAsync(
-            stream: stream,
-            uploadUrl: uploadRequest.UploadUrl!,
-            sessionId: uploadRequest.SessionId!,
-            fileName: Path.GetFileName(archiveFile.FullFileName),
-            cancellationToken: cancellationToken);
-
-        return uploadResponse;
-    }
-
     public async Task<FileExistResult> CheckFilesExistAsync(
         IHosterConfig hosterConfig,
         IReadOnlyList<string> fileUrls,
         CancellationToken cancellationToken)
     {
-        if (hosterConfig is not DDownloadConfig config)
-        {
-            throw new ArgumentException("Invalid hoster config type.", nameof(hosterConfig));
-        }
+        var config = hosterConfig.As<DDownloadConfig>();
 
         var fileUrlByFileCode = fileUrls
             .Distinct()
@@ -146,10 +115,7 @@ public class DDownload(
 
     public async Task<TryLoginResult> TryLoginAsync(IHosterConfig hosterConfig, CancellationToken cancellationToken)
     {
-        if (hosterConfig is not DDownloadConfig config)
-        {
-            throw new ArgumentException("Invalid hoster config type.", nameof(hosterConfig));
-        }
+        var config = hosterConfig.As<DDownloadConfig>();
 
         try
         {
@@ -167,5 +133,31 @@ public class DDownload(
                 IsSuccess: false,
                 ErrorMessage: ex.InnerException?.Message ?? ex.Message);
         }
+    }
+    
+    private async Task<Response> UploadFileInternalAsync(
+        ArchiveFile archiveFile,
+        DDownloadConfig config,
+        CancellationToken cancellationToken)
+    {
+        var uploadRequest = await apiClient.RequestUploadAsync(
+            apiKey: config.ApiKey,
+            cancellationToken: cancellationToken);
+
+        if (!((HttpStatusCode)uploadRequest.Status).IsSuccessStatusCode)
+        {
+            throw new RetryException(uploadRequest.Msg);
+        }
+
+        await using var stream = File.OpenRead(archiveFile.FullFileName);
+
+        var uploadResponse = await apiClient.UploadFileAsync(
+            stream: stream,
+            uploadUrl: uploadRequest.UploadUrl!,
+            sessionId: uploadRequest.SessionId!,
+            fileName: Path.GetFileName(archiveFile.FullFileName),
+            cancellationToken: cancellationToken);
+
+        return uploadResponse;
     }
 }
