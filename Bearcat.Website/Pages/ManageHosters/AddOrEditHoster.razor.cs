@@ -1,4 +1,5 @@
-﻿using Bearcat.Domain.Abstractions.Hoster;
+﻿using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Microsoft.AspNetCore.Components;
@@ -18,9 +19,9 @@ public partial class AddOrEditHoster(
     [CascadingParameter]
     public IMudDialogInstance MudDialog { get; set; } = null!;
 
-    private IReadOnlyList<HosterReadModel> hosterReadModels = [];
+    private IReadOnlyList<HosterDto> hosterReadModels = [];
 
-    private HosterReadModel? selectedHoster;
+    private HosterDto? selectedHoster;
 
     private EditContext editContext = null!;
 

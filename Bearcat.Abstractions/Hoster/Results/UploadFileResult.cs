@@ -1,9 +1,9 @@
-﻿using Bearcat.Domain.Entities;
+﻿using Bearcat.Abstractions.Hoster.Dto;
 
-namespace Bearcat.Domain.Abstractions.Hoster.Results;
+namespace Bearcat.Abstractions.Hoster.Results;
 
 public record UploadFileResult(
     bool IsSuccess,
-    ArchiveFile ArchiveFile,
+    FileDto FileDto,
     IReadOnlyList<string> ErrorMessages,
     string? FileUrl);

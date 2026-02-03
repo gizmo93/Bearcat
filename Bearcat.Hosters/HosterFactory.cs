@@ -1,5 +1,5 @@
-﻿using Bearcat.Domain.Abstractions.Hoster;
-using Bearcat.Domain.UseCases.ManageUploads;
+﻿using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Dto;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Hosters;
@@ -12,12 +12,12 @@ public class HosterFactory(
         return serviceProvider.GetRequiredKeyedService<IHoster>(name);
     }
 
-    public IReadOnlyList<HosterReadModel> GetHosterReadModels()
+    public IReadOnlyList<HosterDto> GetHosterReadModels()
     {
         var hosters = serviceProvider.GetKeyedServices<IHoster>(KeyedService.AnyKey);
 
         return hosters
-            .Select(h => new HosterReadModel(
+            .Select(h => new HosterDto(
                 Name: h.Name,
                 HosterClassName: h.GetType().Name,
                 ConfigurationKeys: h.ConfigurationKeys))

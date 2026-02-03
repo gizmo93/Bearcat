@@ -1,7 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Threading.Channels;
 using Bearcat.Abstractions;
-using Bearcat.Domain.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
@@ -219,8 +220,12 @@ public class UploadFilesService(
                 await SaveChangesAsync(cancellationToken);
             }
 
+            var fileDto = new FileDto(
+                Id: fileToUpload.ArchiveFile.Id,
+                FullFileName: fileToUpload.ArchiveFile.FullFileName);
+
             var result = await fileToUpload.Hoster.UploadFileAsync(
-                fileToUpload.ArchiveFile,
+                fileDto,
                 fileToUpload.HosterConfig,
                 cancellationToken);
 

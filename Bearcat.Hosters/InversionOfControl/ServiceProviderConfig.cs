@@ -1,4 +1,4 @@
-﻿using Bearcat.Domain.Abstractions.Hoster;
+﻿using Bearcat.Abstractions.Hoster;
 using Bearcat.Hosters.DDownload.InversionOfControl;
 using Bearcat.Hosters.Rapidgator.InversionOfControl;
 using Bearcat.Hosters.Shared;

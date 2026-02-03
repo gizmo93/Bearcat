@@ -1,5 +1,5 @@
-﻿using Bearcat.Domain.Abstractions.Hoster;
-using Bearcat.Domain.Abstractions.Hoster.Results;
+﻿using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 

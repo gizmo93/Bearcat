@@ -1,14 +1,14 @@
-﻿using Bearcat.Domain.Abstractions.Hoster.Results;
-using Bearcat.Domain.Entities;
+﻿using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Results;
 
-namespace Bearcat.Domain.Abstractions.Hoster;
+namespace Bearcat.Abstractions.Hoster;
 
 public interface IHoster
 {
     string Name { get; }
 
     Task<UploadFileResult> UploadFileAsync(
-        ArchiveFile archiveFile,
+        FileDto fileDto,
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken);
 
