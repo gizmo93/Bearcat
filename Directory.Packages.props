@@ -1,30 +1,29 @@
 <Project>
-    <PropertyGroup>
-        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    </PropertyGroup>
-    <ItemGroup>
-        <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.2"/>
-        <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2"/>
-        <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.2"/>
-        <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.2"/>
-        <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.2"/>
-        <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.2"/>
-        <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2"/>
-        <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.2" />
-        <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
-        <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.2" />
-        <PackageVersion Include="Npgsql" Version="10.0.1"/>
-        <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0"/>
-        <PackageVersion Include="Refit" Version="8.0.0"/>
-        <PackageVersion Include="Refit.HttpClientFactory" Version="8.0.0"/>
-        <PackageVersion Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.13.2"/>
-        <PackageVersion Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.13.2"/>
-        <PackageVersion Include="MudBlazor" Version="9.0.0-preview.2"/>
-
-        <PackageVersion Include="Avalonia" Version="11.3.11"/>
-        <PackageVersion Include="Avalonia.Desktop" Version="11.3.11"/>
-        <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.3.11"/>
-        <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.3.11"/>
-        <PackageVersion Include="Avalonia.Diagnostics" Version="11.3.11" />
-    </ItemGroup>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.4" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.4" />
+    <PackageVersion Include="Npgsql" Version="10.0.1" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    <PackageVersion Include="Refit" Version="10.0.1" />
+    <PackageVersion Include="Refit.HttpClientFactory" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.13.2" />
+    <PackageVersion Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.13.2" />
+    <PackageVersion Include="MudBlazor" Version="9.1.0" />
+    <PackageVersion Include="Avalonia" Version="11.3.12" />
+    <PackageVersion Include="Avalonia.Desktop" Version="11.3.12" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.3.12" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.3.12" />
+    <PackageVersion Include="Avalonia.Diagnostics" Version="11.3.12" />
+  </ItemGroup>
 </Project>
