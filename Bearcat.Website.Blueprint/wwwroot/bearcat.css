@@ -335,6 +335,14 @@ a {
     font-weight: 500;
 }
 
+.bearcat-upload-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
 .bearcat-release-page-nav {
     display: flex;
     justify-content: flex-start;
@@ -401,6 +409,49 @@ a {
     line-height: 1.35;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.bearcat-upload-link {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    color: var(--primary);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.bearcat-upload-link:hover {
+    text-decoration: underline;
+}
+
+.bearcat-file-link-name {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--foreground);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bearcat-upload-links-table {
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.bearcat-upload-links-table :where(table) {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.bearcat-upload-links-table :where(th, td) {
+    min-width: 0;
+    overflow: hidden;
 }
 
 .bearcat-registration-config {
