@@ -26,6 +26,23 @@ public class NotificationService(INotificationRepository repository, TimeProvide
         await CreateAsync(NotificationType.Error, message, cancellationToken);
     }
 
+    public async Task ResolveAsync(
+        int notificationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await repository.ResolveAsync(
+            notificationId,
+            timeProvider.GetLocalNow(),
+            cancellationToken
+        );
+    }
+
+    public async Task ResolveAllAsync(CancellationToken cancellationToken = default)
+    {
+        await repository.ResolveAllAsync(timeProvider.GetLocalNow(), cancellationToken);
+    }
+
     public void CreateInfo<TEntity>(
         string message,
         TEntity entity,

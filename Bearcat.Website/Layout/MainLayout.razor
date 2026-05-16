@@ -30,13 +30,14 @@
     <BbSidebarInset Class="bearcat-app-inset bg-background">
         <header class="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border/70 bg-background/90 px-4 backdrop-blur">
             <BbSidebarTrigger />
-            <div class="min-w-0">
+            <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-medium">@CurrentPageTitle</p>
                 @if (!string.IsNullOrWhiteSpace(CurrentPageSubtitle))
                 {
                     <p class="truncate text-xs text-muted-foreground">@CurrentPageSubtitle</p>
                 }
             </div>
+            <NotificationBell />
         </header>
 
         <main class="bearcat-main p-4 md:p-6">
@@ -89,6 +90,8 @@
             "" => (L["Home"], L["WorkspaceOverview"]),
             "hoster-registrations" => (L["HosterRegistrations"], L["CredentialsAndLoginChecks"]),
             "link-crypter-registrations" => (L["CrypterRegistrations"], L["ContainersAndValidation"]),
+            "notifications" => (L["Notifications"], L["UnresolvedNotifications"]),
+            var notification when notification.StartsWith("notifications/", StringComparison.OrdinalIgnoreCase) => (L["NotificationDetails"], L["NotificationDetailsSubtitle"]),
             "releases" => (L["Releases"], L["ReleaseRootsAndOnlineState"]),
             var release when release.StartsWith("releases/", StringComparison.OrdinalIgnoreCase) => (L["ReleaseDetails"], L["ArchiveAndUploadConfiguration"]),
             _ => ("Bearcat", string.Empty)

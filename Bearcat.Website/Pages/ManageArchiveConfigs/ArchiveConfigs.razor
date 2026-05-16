@@ -36,7 +36,7 @@
                 </div>
                 @foreach (var config in archiveConfigs)
                 {
-                    <BbCollapsible Class="bearcat-config-item">
+                    <BbCollapsible Class="@($"bearcat-config-item {(FocusArchiveConfigId == config.ArchiveConfigId ? "bearcat-config-item-focused" : string.Empty)}")">
                         <div class="bearcat-config-row bearcat-archive-grid">
                             <div class="min-w-0">
                                 <div class="flex flex-wrap items-center gap-2">

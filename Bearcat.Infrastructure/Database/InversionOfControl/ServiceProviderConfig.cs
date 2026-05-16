@@ -57,6 +57,7 @@ public static class ServiceProviderConfig
             services.AddScoped<IUploadFilesRepository, UploadFilesRepository>();
             services.AddScoped<IUploadStateRepository, UploadStateRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
+            services.AddScoped<INotificationReadRepository, NotificationReadRepository>();
             services.AddScoped<IReleaseReadRepository, ReleaseReadRepository>();
             services.AddScoped<IArchiveConfigWriteRepository, ArchiveConfigWriteRepository>();
             services.AddScoped<IArchiveReadRepository, ArchiveReadRepository>();

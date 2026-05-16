@@ -1,0 +1,86 @@
+@page "/notifications/{NotificationId:int}"
+@using Bearcat.Website.Localization
+@inherits OwningComponentBase
+
+@if (!isInitialized)
+{
+    return;
+}
+
+<PageTitle>@L["NotificationDetails"] - Bearcat</PageTitle>
+
+<section class="mx-auto flex w-full max-w-4xl flex-col gap-4">
+    <div class="bearcat-page-header">
+        <div class="min-w-0">
+            <h1 class="text-3xl font-semibold tracking-tight">@L["NotificationDetails"]</h1>
+            <p class="mt-2 text-sm text-muted-foreground">@L["CreatedAt"]: @notification.CreatedAt.ToString("g")</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="BackToNotifications">
+                <LucideIcon Name="arrow-left" class="h-4 w-4" />
+                @L["Notifications"]
+            </BbButton>
+            @if (notification.ResolvedAt is null)
+            {
+                <BbButton OnClick="ResolveNotificationAsync">
+                    <LucideIcon Name="check" class="h-4 w-4" />
+                    @L["ResolveNotification"]
+                </BbButton>
+            }
+            else
+            {
+                <BbBadge Variant="BadgeVariant.Secondary">@L["Resolved"]</BbBadge>
+            }
+        </div>
+    </div>
+
+    <BbCard Class="border-border/70 shadow-sm">
+        <BbCardHeader>
+            <div class="flex flex-wrap items-center gap-2">
+                <BbBadge Variant="@GetNotificationVariant(notification.NotificationType)">
+                    @L.Localize(notification.NotificationType)
+                </BbBadge>
+                @if (notification.ResolvedAt is not null)
+                {
+                    <span class="text-sm text-muted-foreground">@L["ResolvedAt"]: @notification.ResolvedAt.Value.ToString("g")</span>
+                }
+            </div>
+        </BbCardHeader>
+        <BbCardContent>
+            <div class="whitespace-pre-wrap rounded-md border border-border/70 bg-muted/20 p-4 text-sm leading-6">
+                @notification.Message
+            </div>
+        </BbCardContent>
+    </BbCard>
+
+    <BbCard Class="border-border/70 shadow-sm">
+        <BbCardHeader>
+            <BbCardTitle class="text-base">@L["RelatedEntity"]</BbCardTitle>
+        </BbCardHeader>
+        <BbCardContent>
+            @if (notification.RelatedEntity is null)
+            {
+                <p class="text-sm text-muted-foreground">@L["Unlinked"]</p>
+            }
+            else
+            {
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                            <LucideIcon Name="@GetEntityIcon(notification.RelatedEntity.EntityType)" class="h-4 w-4 text-muted-foreground" />
+                            <BbBadge Variant="BadgeVariant.Outline">@L[$"NotificationEntity.{notification.RelatedEntity.EntityType}"]</BbBadge>
+                        </div>
+                        <p class="mt-2 break-words text-sm font-medium">@notification.RelatedEntity.DisplayName</p>
+                    </div>
+                    @if (notification.RelatedEntity.TargetUrl is not null)
+                    {
+                        <BbButton Variant="ButtonVariant.Outline" OnClick="@(() => navigationManager.NavigateTo(notification.RelatedEntity.TargetUrl))">
+                            <LucideIcon Name="external-link" class="h-4 w-4" />
+                            @L["OpenRelatedEntity"]
+                        </BbButton>
+                    }
+                </div>
+            }
+        </BbCardContent>
+    </BbCard>
+</section>

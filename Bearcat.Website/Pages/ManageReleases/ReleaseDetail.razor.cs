@@ -14,10 +14,25 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
     [Parameter]
     public int ReleaseId { get; set; }
 
+    [SupplyParameterFromQuery(Name = "tab")]
+    public string? RequestedTab { get; set; }
+
+    [SupplyParameterFromQuery(Name = "uploadConfigId")]
+    public int? FocusUploadConfigId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "archiveConfigId")]
+    public int? FocusArchiveConfigId { get; set; }
+
     private IReleaseReadRepository releaseReadRepository = null!;
     private ReleaseDto release = null!;
     private bool isInitialized;
+    private string activeTab = "archives";
     private readonly Dictionary<string, IReloadableComponent> reloadableComponents = new();
+
+    protected override void OnParametersSet()
+    {
+        activeTab = NormalizeTab(RequestedTab);
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -48,6 +63,20 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
             await component.ReloadAsync();
         }
     }
+
+    private Task HandleTabChangedAsync(string? value)
+    {
+        activeTab = NormalizeTab(value);
+        return Task.CompletedTask;
+    }
+
+    private static string NormalizeTab(string? tab) =>
+        tab switch
+        {
+            "upload-configs" => "upload-configs",
+            "uploads" => "uploads",
+            _ => "archives",
+        };
 
     private async Task DeleteReleaseAsync()
     {

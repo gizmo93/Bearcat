@@ -1,0 +1,190 @@
+@page "/notifications"
+@using Bearcat.Domain.UseCases.ManageNotifications.Dto
+@using Bearcat.Website.Localization
+@inherits OwningComponentBase
+
+<PageTitle>@L["Notifications"] - Bearcat</PageTitle>
+
+<section class="mx-auto flex w-full max-w-6xl flex-col gap-4">
+    <div class="bearcat-page-header">
+        <div class="min-w-0">
+            <h1 class="text-3xl font-semibold tracking-tight">@L["Notifications"]</h1>
+            <p class="mt-2 max-w-2xl text-sm text-muted-foreground">
+                @L["NotificationsIntro"]
+            </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+            <label class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <BbSwitch @bind-Checked="includeResolved"
+                          @bind-Checked:after="OnIncludeResolvedChangedAsync"
+                          Size="SwitchSize.Small"
+                          AriaLabel="@L["ShowResolvedNotifications"]" />
+                <span>@L["ShowResolvedNotifications"]</span>
+            </label>
+
+            <BbButton Variant="ButtonVariant.Outline" OnClick="RefreshNotificationsAsync">
+                <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
+                @L["Refresh"]
+            </BbButton>
+
+            <BbButton Disabled="@(unresolvedCount == 0)" OnClick="ResolveAllNotificationsAsync">
+                <LucideIcon Name="check-check" class="h-4 w-4" />
+                @L["ResolveAllNotifications"]
+            </BbButton>
+        </div>
+    </div>
+
+    <BbDataTable TData="NotificationDto"
+                 @key="NotificationsTableKey"
+                 Data="notifications"
+                 ShowToolbar="false"
+                 ShowPagination="false"
+                 InitialPageSize="@pageSize"
+                 IsLoading="isLoading"
+                 AriaLabel="@L["Notifications"]"
+                 Class="bearcat-data-table">
+        <Columns>
+            <BbDataTableColumn TData="NotificationDto" TValue="string"
+                               Header="@L["Type"]"
+                               Property="@(notification => notification.NotificationType.ToString())"
+                               Width="130px">
+                <CellTemplate Context="notification">
+                    <BbBadge Variant="@GetNotificationVariant(notification.NotificationType)">
+                        @L.Localize(notification.NotificationType)
+                    </BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="NotificationDto" TValue="string"
+                               Header="@L["Status"]"
+                               Property="@(notification => notification.ResolvedAt is null ? "Unresolved" : "Resolved")"
+                               Width="145px">
+                <CellTemplate Context="notification">
+                    @if (notification.ResolvedAt is null)
+                    {
+                        <BbBadge Variant="BadgeVariant.Outline">@L["Unresolved"]</BbBadge>
+                    }
+                    else
+                    {
+                        <div class="min-w-0">
+                            <BbBadge Variant="BadgeVariant.Secondary">@L["Resolved"]</BbBadge>
+                            <p class="mt-1 truncate text-xs text-muted-foreground">@notification.ResolvedAt.Value.ToString("g")</p>
+                        </div>
+                    }
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="NotificationDto" TValue="string"
+                               Header="@L["Message"]"
+                               Property="@(notification => notification.Message)"
+                               MinWidth="280px">
+                <CellTemplate Context="notification">
+                    <a href="@($"/notifications/{notification.NotificationId}")" class="block min-w-0 hover:underline">
+                        <p class="truncate text-sm font-medium" title="@notification.Message">@notification.Message</p>
+                    </a>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="NotificationDto" TValue="string"
+                               Header="@L["RelatedEntity"]"
+                               Property="@(notification => notification.RelatedEntity?.DisplayName ?? string.Empty)"
+                               MinWidth="240px">
+                <CellTemplate Context="notification">
+                    @if (notification.RelatedEntity is null)
+                    {
+                        <span class="text-sm text-muted-foreground">@L["Unlinked"]</span>
+                    }
+                    else if (notification.RelatedEntity.TargetUrl is null)
+                    {
+                        <span class="text-sm font-medium">@notification.RelatedEntity.DisplayName</span>
+                    }
+                    else
+                    {
+                        <a href="@notification.RelatedEntity.TargetUrl" class="flex min-w-0 items-center gap-2 text-sm font-medium hover:underline">
+                            <LucideIcon Name="@GetEntityIcon(notification.RelatedEntity.EntityType)" class="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span class="truncate" title="@notification.RelatedEntity.DisplayName">@notification.RelatedEntity.DisplayName</span>
+                        </a>
+                    }
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="NotificationDto" TValue="DateTime"
+                               Header="@L["CreatedAt"]"
+                               Property="@(notification => notification.CreatedAt)"
+                               Width="180px">
+                <CellTemplate Context="notification">
+                    <span class="text-sm">@notification.CreatedAt.ToString("g")</span>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="NotificationDto" TValue="int"
+                               Header="@L["Actions"]"
+                               Property="@(notification => notification.NotificationId)"
+                               Width="130px"
+                               HeaderClass="text-right">
+                <CellTemplate Context="notification">
+                    <div class="flex justify-end gap-1">
+                        <BbButton Variant="ButtonVariant.Ghost"
+                                  Size="ButtonSize.IconSmall"
+                                  AriaLabel="@L["OpenDetails"]"
+                                  OnClick="@(() => OpenDetails(notification.NotificationId))">
+                            <LucideIcon Name="external-link" class="h-4 w-4" />
+                        </BbButton>
+                        @if (notification.ResolvedAt is null)
+                        {
+                            <BbButton Variant="ButtonVariant.Ghost"
+                                      Size="ButtonSize.IconSmall"
+                                      AriaLabel="@L["ResolveNotification"]"
+                                      OnClick="@(() => ResolveNotificationAsync(notification.NotificationId))">
+                                <LucideIcon Name="check" class="h-4 w-4" />
+                            </BbButton>
+                        }
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+        <EmptyTemplate>
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="inbox" class="h-5 w-5" />
+                <span>@(includeResolved ? L["NoNotificationsFound"] : L["NoUnresolvedNotifications"])</span>
+            </div>
+        </EmptyTemplate>
+    </BbDataTable>
+
+    <div class="bearcat-release-pagination">
+        <p class="text-sm text-muted-foreground">
+            @L["NotificationResultsSummary", FirstResult, LastResult, totalCount]
+        </p>
+
+        @if (TotalPages > 1)
+        {
+            <BbPagination Class="bearcat-release-page-nav">
+                <BbPaginationContent>
+                    <BbPaginationItem>
+                        <BbPaginationPrevious Disabled="@(CurrentPage <= 1)"
+                                              Text="@L["Previous"]"
+                                              OnClick="GoToPreviousPageAsync" />
+                    </BbPaginationItem>
+
+                    @foreach (var page in PaginationItems)
+                    {
+                        <BbPaginationItem>
+                            @if (page is null)
+                            {
+                                <BbPaginationEllipsis />
+                            }
+                            else
+                            {
+                                <BbPaginationLink IsActive="@(page == CurrentPage)"
+                                                  OnClick="@(() => GoToPageAsync(page.Value))">
+                                    @(page.Value)
+                                </BbPaginationLink>
+                            }
+                        </BbPaginationItem>
+                    }
+
+                    <BbPaginationItem>
+                        <BbPaginationNext Disabled="@(CurrentPage >= TotalPages)"
+                                          Text="@L["Next"]"
+                                          OnClick="GoToNextPageAsync" />
+                    </BbPaginationItem>
+                </BbPaginationContent>
+            </BbPagination>
+        }
+    </div>
+</section>
