@@ -2,8 +2,8 @@
 @using Bearcat.Domain.ValueObjects
 <section class="space-y-3">
     <div>
-        <h2 class="text-lg font-semibold">Running and pending uploads</h2>
-        <p class="text-sm text-muted-foreground">Upload queues, status, and per-file progress.</p>
+        <h2 class="text-lg font-semibold">@L["RunningAndPendingUploads"]</h2>
+        <p class="text-sm text-muted-foreground">@L["RunningUploadsDescription"]</p>
     </div>
 
     <BbDataTable TData="Upload"
@@ -11,15 +11,15 @@
                  ShowToolbar="false"
                  ShowPagination="@(Uploads.Count > 10)"
                  InitialPageSize="10"
-                 AriaLabel="Running uploads"
+                 AriaLabel="@L["RunningUploads"]"
                  Class="rounded-lg border border-border/70">
         <Columns>
             <BbDataTableColumn TData="Upload" TValue="int"
-                               Header="Id"
+                               Header="@L["Id"]"
                                Property="@(upload => upload.Id)"
                                Sortable="true" />
             <BbDataTableColumn TData="Upload" TValue="string"
-                               Header="Release"
+                               Header="@L["Release"]"
                                Property="@(upload => upload.UploadConfig.Release.Name)"
                                Sortable="true"
                                Filterable="true">
@@ -30,27 +30,27 @@
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="Upload" TValue="string"
-                               Header="Upload config"
+                               Header="@L["UploadConfig"]"
                                Property="@(upload => upload.UploadConfig.Name)"
                                Sortable="true"
                                Filterable="true" />
             <BbDataTableColumn TData="Upload" TValue="string"
-                               Header="Hoster"
+                               Header="@L["Hoster"]"
                                Property="@(upload => upload.UploadConfig.HosterRegistration.Name)"
                                Sortable="true"
                                Filterable="true" />
             <BbDataTableColumn TData="Upload" TValue="string"
-                               Header="State"
+                               Header="@L["State"]"
                                Property="@(upload => upload.UploadState.ToString())"
                                Sortable="true">
                 <CellTemplate Context="upload">
                     <BbBadge Variant="@GetUploadVariant(upload.UploadState)">
-                        @upload.UploadState
+                        @L.Localize(upload.UploadState)
                     </BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="Upload" TValue="double"
-                               Header="Progress"
+                               Header="@L["Progress"]"
                                Property="@(GetUploadProgress)"
                                Sortable="true">
                 <CellTemplate Context="upload">
@@ -67,7 +67,7 @@
                             </div>
                             <BbButton Variant="ButtonVariant.Ghost"
                                       Size="ButtonSize.IconSmall"
-                                      AriaLabel="Toggle upload details"
+                                      AriaLabel="@L["ToggleUploadDetails"]"
                                       OnClick="@(_ => ToggleShowUploadDetails(upload.Id))">
                                 <LucideIcon Name="@(isExpanded ? "chevron-up" : "chevron-down")" class="h-4 w-4" />
                             </BbButton>

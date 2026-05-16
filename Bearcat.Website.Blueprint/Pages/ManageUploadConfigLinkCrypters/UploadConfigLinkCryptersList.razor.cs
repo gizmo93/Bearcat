@@ -54,15 +54,15 @@ public partial class UploadConfigLinkCryptersList(DialogService dialogService) :
         }
 
         var dialogTitle = config is null
-            ? "Add Link Crypter Container"
-            : "Edit Link Crypter Container";
+            ? L["AddLinkCrypterContainer"]
+            : L["EditLinkCrypterContainer"];
 
         var dialog = await dialogService.OpenAsync<CreateOrEditUploadConfigLinkCrypter>(
             parameters,
             new DialogOpenOptions
             {
                 Title = dialogTitle,
-                Description = "Attach a link crypter to this upload configuration.",
+                Description = L["LinkCrypterContainerDialogDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
                 PreventClose = true,
@@ -78,12 +78,12 @@ public partial class UploadConfigLinkCryptersList(DialogService dialogService) :
     private async Task ShowDeleteDialogAsync(UploadConfigLinkCrypterDto uploadConfigLinkCrypterDto)
     {
         var result = await dialogService.ConfirmAsync(
-            "Delete Link Crypter Container Config",
-            "Are you sure you want to delete this link crypter container config?",
+            L["DeleteLinkCrypterContainerConfig"],
+            L["DeleteLinkCrypterContainerConfigConfirmation"],
             new ConfirmDialogOptions
             {
-                ConfirmText = "Delete",
-                CancelText = "Cancel",
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
                 Destructive = true,
             }
         );

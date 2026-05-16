@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Add" xml:space="preserve"><value>Add</value></data>
+  <data name="AddArchiveConfiguration" xml:space="preserve"><value>Add Archive Configuration</value></data>
+  <data name="AddCrypter" xml:space="preserve"><value>Add crypter</value></data>
+  <data name="AddHoster" xml:space="preserve"><value>Add hoster</value></data>
+  <data name="AddLinkCrypterContainer" xml:space="preserve"><value>Add Link Crypter Container</value></data>
+  <data name="AddUploadConfig" xml:space="preserve"><value>Add Upload Config</value></data>
+  <data name="ArchiveAndUploadConfiguration" xml:space="preserve"><value>Archive and upload configuration</value></data>
+  <data name="ArchiveConfig" xml:space="preserve"><value>Archive config</value></data>
+  <data name="ArchiveConfigRequired" xml:space="preserve"><value>Archive config is required.</value></data>
+  <data name="ArchiveConfiguration" xml:space="preserve"><value>Archive configuration</value></data>
+  <data name="ArchiveConfigurationDialogDescription" xml:space="preserve"><value>Configure how archives are created for this release.</value></data>
+  <data name="ArchiveConfigurations" xml:space="preserve"><value>Archive configurations</value></data>
+  <data name="ArchiveConfigurationsDescription" xml:space="preserve"><value>Archiver setup and generated archive history.</value></data>
+  <data name="ArchiveDetailDescription" xml:space="preserve"><value>Generated archive files and metadata.</value></data>
+  <data name="ArchiveFileSizeMb" xml:space="preserve"><value>Archive file size (MB)</value></data>
+  <data name="ArchiveFileSizeMustBeZeroOrGreater" xml:space="preserve"><value>Archive file size must be zero or greater</value></data>
+  <data name="ArchiveFiles" xml:space="preserve"><value>Archive files</value></data>
+  <data name="ArchiveFilesBasePath" xml:space="preserve"><value>Archive files base path</value></data>
+  <data name="ArchiveFilesFolder" xml:space="preserve"><value>Archive files folder</value></data>
+  <data name="ArchiveName" xml:space="preserve"><value>Archive name</value></data>
+  <data name="ArchiveNaming" xml:space="preserve"><value>Archive naming</value></data>
+  <data name="ArchiveNotFound" xml:space="preserve"><value>Archive with ID {0} not found.</value></data>
+  <data name="ArchivePassword" xml:space="preserve"><value>Archive password</value></data>
+  <data name="ArchiveSummaries" xml:space="preserve"><value>Archive summaries</value></data>
+  <data name="ArchiveTitle" xml:space="preserve"><value>Archive {0}</value></data>
+  <data name="Archiver" xml:space="preserve"><value>Archiver</value></data>
+  <data name="Archives" xml:space="preserve"><value>Archives</value></data>
+  <data name="AutoRefresh" xml:space="preserve"><value>Auto refresh</value></data>
+  <data name="BasePathRequired" xml:space="preserve"><value>Base path is required</value></data>
+  <data name="Browse" xml:space="preserve"><value>Browse</value></data>
+  <data name="BrowseArchiveFolders" xml:space="preserve"><value>Browse archive folders</value></data>
+  <data name="BrowseReleaseFolders" xml:space="preserve"><value>Browse release folders</value></data>
+  <data name="BuiltWithBlazorBlueprint" xml:space="preserve"><value>Built with BlazorBlueprint</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Configuration" xml:space="preserve"><value>Configuration</value></data>
+  <data name="ConfigurationNamePlaceholder" xml:space="preserve"><value>Enter a name for the configuration</value></data>
+  <data name="ConfigurationValueMustBeProvided" xml:space="preserve"><value>You need to provide a value for '{0}'</value></data>
+  <data name="ConfigurationValueRequired" xml:space="preserve"><value>Configuration '{0}' is required</value></data>
+  <data name="ContainerPassword" xml:space="preserve"><value>Container password</value></data>
+  <data name="ContainerPasswordPlaceholder" xml:space="preserve"><value>Set an optional password for the container</value></data>
+  <data name="ContainersAndValidation" xml:space="preserve"><value>Containers and validation</value></data>
+  <data name="CreateRelease" xml:space="preserve"><value>Create release</value></data>
+  <data name="CreateReleaseDescription" xml:space="preserve"><value>Define the release type and choose its source folder.</value></data>
+  <data name="CreatedAt" xml:space="preserve"><value>Created at</value></data>
+  <data name="CredentialsAndLoginChecks" xml:space="preserve"><value>Credentials and login checks</value></data>
+  <data name="Crypter" xml:space="preserve"><value>Crypter</value></data>
+  <data name="CrypterDialogDescription" xml:space="preserve"><value>Store crypter configuration and verify connectivity when needed.</value></data>
+  <data name="CrypterRegistrations" xml:space="preserve"><value>Crypter registrations</value></data>
+  <data name="Crypters" xml:space="preserve"><value>Crypters</value></data>
+  <data name="CurrentlyNothingRunning" xml:space="preserve"><value>Currently nothing is running.</value></data>
+  <data name="Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="DeleteArchiveConfig" xml:space="preserve"><value>Delete archive config</value></data>
+  <data name="DeleteArchiveConfigConfirmation" xml:space="preserve"><value>Are you sure you want to delete the archive config {0} (Archiver: {1})?</value></data>
+  <data name="DeleteConfig" xml:space="preserve"><value>Delete config</value></data>
+  <data name="DeleteHosterRegistrationConfirmation" xml:space="preserve"><value>Are you sure you want to delete hoster registration {0}? This also removes uploads tied to that registration.</value></data>
+  <data name="DeleteLink" xml:space="preserve"><value>Delete link</value></data>
+  <data name="DeleteLinkCrypterContainerConfig" xml:space="preserve"><value>Delete Link Crypter Container Config</value></data>
+  <data name="DeleteLinkCrypterContainerConfigConfirmation" xml:space="preserve"><value>Are you sure you want to delete this link crypter container config?</value></data>
+  <data name="DeleteLinkCrypterRegistrationConfirmation" xml:space="preserve"><value>Are you sure you want to delete link crypter registration {0}?</value></data>
+  <data name="DeleteNamedItem" xml:space="preserve"><value>Delete {0}</value></data>
+  <data name="DeleteRegistration" xml:space="preserve"><value>Delete registration</value></data>
+  <data name="DeleteRelease" xml:space="preserve"><value>Delete release</value></data>
+  <data name="DeleteReleaseConfirmation" xml:space="preserve"><value>Are you sure you want to delete the release {0}?</value></data>
+  <data name="DeleteReleaseTitle" xml:space="preserve"><value>Delete Release {0}</value></data>
+  <data name="DeleteUploadConfig" xml:space="preserve"><value>Delete Upload Config</value></data>
+  <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Are you sure you want to delete the upload config {0}?</value></data>
+  <data name="Disable" xml:space="preserve"><value>Disable</value></data>
+  <data name="Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="EditArchiveConfiguration" xml:space="preserve"><value>Edit Archive Configuration</value></data>
+  <data name="EditConfig" xml:space="preserve"><value>Edit config</value></data>
+  <data name="EditLinkCrypterContainer" xml:space="preserve"><value>Edit Link Crypter Container</value></data>
+  <data name="EditNamedItem" xml:space="preserve"><value>Edit {0}</value></data>
+  <data name="EditRegistration" xml:space="preserve"><value>Edit registration</value></data>
+  <data name="EditUploadConfig" xml:space="preserve"><value>Edit Upload Config</value></data>
+  <data name="Enable" xml:space="preserve"><value>Enable</value></data>
+  <data name="EnableRefresh" xml:space="preserve"><value>Enable refresh</value></data>
+  <data name="FieldCount" xml:space="preserve"><value>{0} field(s)</value></data>
+  <data name="File" xml:space="preserve"><value>File</value></data>
+  <data name="FileCount" xml:space="preserve"><value>File count</value></data>
+  <data name="Filename" xml:space="preserve"><value>Filename</value></data>
+  <data name="FilterLoadedFolderTree" xml:space="preserve"><value>Filter the loaded folder tree.</value></data>
+  <data name="FolderPath" xml:space="preserve"><value>Folder path</value></data>
+  <data name="FolderSelectionTree" xml:space="preserve"><value>Folder selection tree</value></data>
+  <data name="Home" xml:space="preserve"><value>Home</value></data>
+  <data name="HomeIntro" xml:space="preserve"><value>Keep an eye on uploads and archive work from one place.</value></data>
+  <data name="Hoster" xml:space="preserve"><value>Hoster</value></data>
+  <data name="HosterConfigurationHelp" xml:space="preserve"><value>Provide the required values for the selected hoster.</value></data>
+  <data name="HosterDialogDescription" xml:space="preserve"><value>Save hoster credentials and configuration for uploads.</value></data>
+  <data name="HosterRegistration" xml:space="preserve"><value>Hoster registration</value></data>
+  <data name="HosterRegistrationActivated" xml:space="preserve"><value>Hoster registration {0} activated</value></data>
+  <data name="HosterRegistrationDeactivated" xml:space="preserve"><value>Hoster registration {0} deactivated</value></data>
+  <data name="HosterRegistrationRequired" xml:space="preserve"><value>Hoster registration is required.</value></data>
+  <data name="HosterRegistrations" xml:space="preserve"><value>Hoster registrations</value></data>
+  <data name="HosterRegistrationsIntro" xml:space="preserve"><value>Manage hoster credentials, activation state, and login validation.</value></data>
+  <data name="HosterTarget" xml:space="preserve"><value>Hoster target</value></data>
+  <data name="Hosters" xml:space="preserve"><value>Hosters</value></data>
+  <data name="Id" xml:space="preserve"><value>Id</value></data>
+  <data name="Inactive" xml:space="preserve"><value>Inactive</value></data>
+  <data name="Language" xml:space="preserve"><value>Language</value></data>
+  <data name="LinkCrypter" xml:space="preserve"><value>Link crypter</value></data>
+  <data name="LinkCrypterConfigurationHelp" xml:space="preserve"><value>Provide all required values for the selected link crypter.</value></data>
+  <data name="LinkCrypterContainerDialogDescription" xml:space="preserve"><value>Attach a link crypter to this upload configuration.</value></data>
+  <data name="LinkCrypterRegistrationActivated" xml:space="preserve"><value>Link crypter registration {0} activated</value></data>
+  <data name="LinkCrypterRegistrationDeactivated" xml:space="preserve"><value>Link crypter registration {0} deactivated</value></data>
+  <data name="LinkCrypterRegistrations" xml:space="preserve"><value>Link crypter registrations</value></data>
+  <data name="LinkCrypterRegistrationsIntro" xml:space="preserve"><value>Manage crypter configurations, active state, and login checks.</value></data>
+  <data name="LinkCrypters" xml:space="preserve"><value>Link crypters</value></data>
+  <data name="LinkCryptersDescription" xml:space="preserve"><value>Optional containers for distributed upload links.</value></data>
+  <data name="Links" xml:space="preserve"><value>Links</value></data>
+  <data name="LinksDistributedTo" xml:space="preserve"><value>Links distributed to</value></data>
+  <data name="LinksDistributedToHelp" xml:space="preserve"><value>Optional tracking for forum or board posts using this upload config.</value></data>
+  <data name="Login" xml:space="preserve"><value>Login</value></data>
+  <data name="LoginFailed" xml:space="preserve"><value>Login for registration {0} failed: {1}</value></data>
+  <data name="LoginSuccessful" xml:space="preserve"><value>Login for registration {0} successful</value></data>
+  <data name="Name" xml:space="preserve"><value>Name</value></data>
+  <data name="NameIsRequired" xml:space="preserve"><value>Name is required</value></data>
+  <data name="NameUploadConfigPlaceholder" xml:space="preserve"><value>Name the upload config</value></data>
+  <data name="NameYourRelease" xml:space="preserve"><value>Name your release</value></data>
+  <data name="NewHoster" xml:space="preserve"><value>New hoster</value></data>
+  <data name="NewLinkCrypter" xml:space="preserve"><value>New link crypter</value></data>
+  <data name="NewRelease" xml:space="preserve"><value>New release</value></data>
+  <data name="No" xml:space="preserve"><value>No</value></data>
+  <data name="NoArchiveConfigurationsYet" xml:space="preserve"><value>No archive configurations yet.</value></data>
+  <data name="NoDistributionTargets" xml:space="preserve"><value>No distribution targets</value></data>
+  <data name="NoTargets" xml:space="preserve"><value>No targets</value></data>
+  <data name="NoUploadConfigurationsYet" xml:space="preserve"><value>No upload configurations yet.</value></data>
+  <data name="OnlineConfigs" xml:space="preserve"><value>Online configs</value></data>
+  <data name="OnlineState" xml:space="preserve"><value>Online state</value></data>
+  <data name="OnlineState.Offline" xml:space="preserve"><value>Offline</value></data>
+  <data name="OnlineState.Online" xml:space="preserve"><value>Online</value></data>
+  <data name="OnlineState.PartiallyOnline" xml:space="preserve"><value>Partially online</value></data>
+  <data name="OnlineState.Unknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="OpenArchiveConfigActions" xml:space="preserve"><value>Open archive config actions</value></data>
+  <data name="OpenDetails" xml:space="preserve"><value>Open details</value></data>
+  <data name="OpenHosterActions" xml:space="preserve"><value>Open hoster actions</value></data>
+  <data name="OpenLinkCrypterActions" xml:space="preserve"><value>Open link crypter actions</value></data>
+  <data name="OpenReleaseActions" xml:space="preserve"><value>Open release actions</value></data>
+  <data name="OpenUploadConfigActions" xml:space="preserve"><value>Open upload config actions</value></data>
+  <data name="Password" xml:space="preserve"><value>Password</value></data>
+  <data name="PauseRefresh" xml:space="preserve"><value>Pause refresh</value></data>
+  <data name="Pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="Preview" xml:space="preserve"><value>Preview</value></data>
+  <data name="Progress" xml:space="preserve"><value>Progress</value></data>
+  <data name="RandomArchiveNameWillBeGenerated" xml:space="preserve"><value>A random archive name will be generated</value></data>
+  <data name="RandomName" xml:space="preserve"><value>Random name</value></data>
+  <data name="Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Registration" xml:space="preserve"><value>registration</value></data>
+  <data name="Release" xml:space="preserve"><value>Release</value></data>
+  <data name="ReleaseDetails" xml:space="preserve"><value>Release details</value></data>
+  <data name="ReleaseFolder" xml:space="preserve"><value>Release folder</value></data>
+  <data name="ReleaseRootsAndOnlineState" xml:space="preserve"><value>Release roots and online state</value></data>
+  <data name="ReleaseType" xml:space="preserve"><value>Release type</value></data>
+  <data name="ReleaseType.Managed" xml:space="preserve"><value>Managed</value></data>
+  <data name="ReleaseType.Managed.Description" xml:space="preserve"><value>Bearcat creates the archives and manages uploads automatically</value></data>
+  <data name="ReleaseType.Unmanaged" xml:space="preserve"><value>Unmanaged</value></data>
+  <data name="ReleaseType.Unmanaged.Description" xml:space="preserve"><value>You create the archives and Bearcat just uploads them</value></data>
+  <data name="Releases" xml:space="preserve"><value>Releases</value></data>
+  <data name="ReleasesIntro" xml:space="preserve"><value>Manage release roots and inspect their current online state.</value></data>
+  <data name="Reload" xml:space="preserve"><value>Reload</value></data>
+  <data name="RunningAndPendingUploads" xml:space="preserve"><value>Running and pending uploads</value></data>
+  <data name="RunningArchives" xml:space="preserve"><value>Running archives</value></data>
+  <data name="RunningArchivesDescription" xml:space="preserve"><value>Archives that are currently being created.</value></data>
+  <data name="RunningProcesses" xml:space="preserve"><value>Running processes</value></data>
+  <data name="RunningProcessesDescription" xml:space="preserve"><value>Live view of pending uploads and archive creation.</value></data>
+  <data name="RunningUploads" xml:space="preserve"><value>Running uploads</value></data>
+  <data name="RunningUploadsDescription" xml:space="preserve"><value>Upload queues, status, and per-file progress.</value></data>
+  <data name="Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Search" xml:space="preserve"><value>Search</value></data>
+  <data name="SearchFolders" xml:space="preserve"><value>Search folders</value></data>
+  <data name="SelectArchiveConfiguration" xml:space="preserve"><value>Select an archive configuration</value></data>
+  <data name="SelectArchiveFolder" xml:space="preserve"><value>Select a folder where the archive files should be created</value></data>
+  <data name="SelectArchiveFolderDescription" xml:space="preserve"><value>Choose where Bearcat should create archive files.</value></data>
+  <data name="SelectArchiver" xml:space="preserve"><value>Select an archiver</value></data>
+  <data name="SelectArchiverRequired" xml:space="preserve"><value>You must select an archiver</value></data>
+  <data name="SelectCrypter" xml:space="preserve"><value>Select a crypter</value></data>
+  <data name="SelectFolderRequired" xml:space="preserve"><value>You must select a folder</value></data>
+  <data name="SelectHoster" xml:space="preserve"><value>Select a hoster</value></data>
+  <data name="SelectHosterRegistration" xml:space="preserve"><value>Select a hoster registration</value></data>
+  <data name="SelectHosterRequired" xml:space="preserve"><value>You must select a hoster</value></data>
+  <data name="SelectLinkCrypter" xml:space="preserve"><value>Select a link crypter</value></data>
+  <data name="SelectLinkCrypterRequired" xml:space="preserve"><value>You need to select a link crypter.</value></data>
+  <data name="SelectReleaseFolder" xml:space="preserve"><value>Select release folder</value></data>
+  <data name="SelectReleaseFolderDescription" xml:space="preserve"><value>Choose a folder below to use as the release root.</value></data>
+  <data name="SelectReleaseType" xml:space="preserve"><value>Select a release type</value></data>
+  <data name="SelectReleaseTypeRequired" xml:space="preserve"><value>You must select a release type</value></data>
+  <data name="Selected" xml:space="preserve"><value>Selected</value></data>
+  <data name="ShowHiddenContent" xml:space="preserve"><value>Show hidden content</value></data>
+  <data name="ShowHiddenContentConfirmation" xml:space="preserve"><value>Are you sure you want to show this hidden content?</value></data>
+  <data name="Size" xml:space="preserve"><value>Size</value></data>
+  <data name="SizePerArchiveMb" xml:space="preserve"><value>Size per archive (MB)</value></data>
+  <data name="State" xml:space="preserve"><value>State</value></data>
+  <data name="Status" xml:space="preserve"><value>Status</value></data>
+  <data name="StillAvailable" xml:space="preserve"><value>still available</value></data>
+  <data name="ToggleArchiveConfigDetails" xml:space="preserve"><value>Toggle archive config details</value></data>
+  <data name="ToggleConfigurationDetails" xml:space="preserve"><value>Toggle configuration details</value></data>
+  <data name="TogglePasswordVisibility" xml:space="preserve"><value>Toggle password visibility</value></data>
+  <data name="ToggleUploadConfigDetails" xml:space="preserve"><value>Toggle upload config details</value></data>
+  <data name="ToggleUploadDetails" xml:space="preserve"><value>Toggle upload details</value></data>
+  <data name="ToggleVisibility" xml:space="preserve"><value>Toggle visibility</value></data>
+  <data name="TotalConfigured" xml:space="preserve"><value>total configured</value></data>
+  <data name="TryLogin" xml:space="preserve"><value>Try login</value></data>
+  <data name="UnhandledError" xml:space="preserve"><value>An unhandled error has occurred.</value></data>
+  <data name="UploadConfig" xml:space="preserve"><value>Upload config</value></data>
+  <data name="UploadConfigDialogDescription" xml:space="preserve"><value>Define where archives go and keep track of distributed links.</value></data>
+  <data name="UploadConfigLinkCrypters" xml:space="preserve"><value>Upload config link crypters</value></data>
+  <data name="UploadConfigs" xml:space="preserve"><value>Upload configs</value></data>
+  <data name="UploadConfigurations" xml:space="preserve"><value>Upload configurations</value></data>
+  <data name="UploadConfigurationsDescription" xml:space="preserve"><value>Hoster targets and link distribution metadata.</value></data>
+  <data name="UploadFileStatus" xml:space="preserve"><value>Upload file status</value></data>
+  <data name="UploadState.Completed" xml:space="preserve"><value>Completed</value></data>
+  <data name="UploadState.Failed" xml:space="preserve"><value>Failed</value></data>
+  <data name="UploadState.Pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="UploadState.Uploading" xml:space="preserve"><value>Uploading</value></data>
+  <data name="UploadState.WaitingForArchive" xml:space="preserve"><value>Waiting for archive</value></data>
+  <data name="UploadStatus" xml:space="preserve"><value>Upload status</value></data>
+  <data name="UploadStatusSubtitle" xml:space="preserve"><value>Upload #{0} for {1}</value></data>
+  <data name="UploadTarget" xml:space="preserve"><value>Upload target</value></data>
+  <data name="Welcome" xml:space="preserve"><value>Welcome</value></data>
+  <data name="Workspace" xml:space="preserve"><value>Workspace</value></data>
+  <data name="WorkspaceOverview" xml:space="preserve"><value>Workspace overview</value></data>
+  <data name="Yes" xml:space="preserve"><value>Yes</value></data>
+</root>

@@ -31,8 +31,8 @@ public partial class AllLinkCryptersPage(
         var dialog = await dialogService.OpenAsync<CreateOrEditDialog>(
             new DialogOpenOptions
             {
-                Title = "Add crypter",
-                Description = "Store crypter configuration and verify connectivity when needed.",
+                Title = L["AddCrypter"],
+                Description = L["CrypterDialogDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
                 PreventClose = true,
@@ -57,8 +57,8 @@ public partial class AllLinkCryptersPage(
             parameters,
             new DialogOpenOptions
             {
-                Title = $"Edit {crypter.Name}",
-                Description = "Store crypter configuration and verify connectivity when needed.",
+                Title = L["EditNamedItem", crypter.Name],
+                Description = L["CrypterDialogDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
                 PreventClose = true,
@@ -75,20 +75,23 @@ public partial class AllLinkCryptersPage(
     {
         await linkCrypterService.ToggleIsActiveAsync(crypter.LinkCrypterRegistrationId);
 
-        var status = crypter.IsActive ? "deactivated" : "activated";
-        toastService.Success($"Link crypter registration {crypter.Name} {status}");
+        toastService.Success(
+            crypter.IsActive
+                ? L["LinkCrypterRegistrationDeactivated", crypter.Name]
+                : L["LinkCrypterRegistrationActivated", crypter.Name]
+        );
         await LoadCryptersAsync();
     }
 
     private async Task DeleteAsync(LinkCrypterRegistrationDto crypter)
     {
         var result = await dialogService.ConfirmAsync(
-            $"Delete {crypter.Name}",
-            $"Are you sure you want to delete link crypter registration {crypter.Name}?",
+            L["DeleteNamedItem", crypter.Name],
+            L["DeleteLinkCrypterRegistrationConfirmation", crypter.Name],
             new ConfirmDialogOptions
             {
-                ConfirmText = "Delete",
-                CancelText = "Cancel",
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
                 Destructive = true,
             }
         );
@@ -109,10 +112,10 @@ public partial class AllLinkCryptersPage(
 
         if (result.IsSuccess)
         {
-            toastService.Success($"Login for registration {crypter.Name} successful");
+            toastService.Success(L["LoginSuccessful", crypter.Name]);
             return;
         }
 
-        toastService.Error($"Login for registration {crypter.Name} failed: {result.ErrorMessage}");
+        toastService.Error(L["LoginFailed", crypter.Name, result.ErrorMessage ?? string.Empty]);
     }
 }

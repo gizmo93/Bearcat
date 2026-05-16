@@ -36,8 +36,8 @@ public partial class UploadConfigs(DialogService dialogService)
             parameters,
             new DialogOpenOptions
             {
-                Title = "Add Upload Config",
-                Description = "Define where archives go and keep track of distributed links.",
+                Title = L["AddUploadConfig"],
+                Description = L["UploadConfigDialogDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
                 PreventClose = true,
@@ -63,8 +63,8 @@ public partial class UploadConfigs(DialogService dialogService)
             parameters,
             new DialogOpenOptions
             {
-                Title = "Edit Upload Config",
-                Description = "Define where archives go and keep track of distributed links.",
+                Title = L["EditUploadConfig"],
+                Description = L["UploadConfigDialogDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
                 PreventClose = true,
@@ -80,12 +80,12 @@ public partial class UploadConfigs(DialogService dialogService)
     private async Task DeleteConfigAsync(UploadConfigDto uploadConfigDto)
     {
         var result = await dialogService.ConfirmAsync(
-            "Delete Upload Config",
-            $"Are you sure you want to delete the upload config {uploadConfigDto.Name}?",
+            L["DeleteUploadConfig"],
+            L["DeleteUploadConfigConfirmation", uploadConfigDto.Name],
             new ConfirmDialogOptions
             {
-                ConfirmText = "Delete",
-                CancelText = "Cancel",
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
                 Destructive = true,
             }
         );

@@ -52,12 +52,12 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
     private async Task DeleteReleaseAsync()
     {
         var result = await dialogService.ConfirmAsync(
-            $"Delete Release {release.Name}",
-            $"Are you sure you want to delete the release {release.Name}?",
+            L["DeleteReleaseTitle", release.Name],
+            L["DeleteReleaseConfirmation", release.Name],
             new ConfirmDialogOptions
             {
-                ConfirmText = "Delete",
-                CancelText = "Cancel",
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
                 Destructive = true,
             }
         );

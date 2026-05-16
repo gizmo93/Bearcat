@@ -3,7 +3,7 @@
 @inject NavigationManager NavigationManager
 
 <BbSidebarProvider DefaultOpen="true" Variant="SidebarVariant.Inset">
-    <BbSidebar Class="border-r border-border/70 bg-sidebar text-sidebar-foreground">
+    <BbSidebar Class="bearcat-sidebar border-r border-border/70 bg-sidebar text-sidebar-foreground">
         <BbSidebarHeader>
             <BbSidebarHeaderContent>
                 <div class="flex h-12 w-12 shrink-0 items-center justify-center">
@@ -19,9 +19,9 @@
             <NavMenu />
         </BbSidebarContent>
 
-        <BbSidebarFooter>
-            <div class="px-2 pb-2 text-xs text-muted-foreground">
-                Built with BlazorBlueprint
+        <BbSidebarFooter Class="mt-auto">
+            <div class="flex justify-center px-2 pb-3">
+                <CultureSelector />
             </div>
         </BbSidebarFooter>
     </BbSidebar>
@@ -60,8 +60,8 @@
 <BbPortalHost />
 
 <div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
+    @L["UnhandledError"]
+    <a href="." class="reload">@L["Reload"]</a>
     <span class="dismiss">x</span>
 </div>
 
@@ -85,11 +85,11 @@
 
         return path switch
         {
-            "" => ("Home", "Workspace overview"),
-            "hoster-registrations" => ("Hoster registrations", "Credentials and login checks"),
-            "link-crypter-registrations" => ("Crypter registrations", "Containers and validation"),
-            "releases" => ("Releases", "Release roots and online state"),
-            var release when release.StartsWith("releases/", StringComparison.OrdinalIgnoreCase) => ("Release details", "Archive and upload configuration"),
+            "" => (L["Home"], L["WorkspaceOverview"]),
+            "hoster-registrations" => (L["HosterRegistrations"], L["CredentialsAndLoginChecks"]),
+            "link-crypter-registrations" => (L["CrypterRegistrations"], L["ContainersAndValidation"]),
+            "releases" => (L["Releases"], L["ReleaseRootsAndOnlineState"]),
+            var release when release.StartsWith("releases/", StringComparison.OrdinalIgnoreCase) => (L["ReleaseDetails"], L["ArchiveAndUploadConfiguration"]),
             _ => ("Bearcat", string.Empty)
         };
     }

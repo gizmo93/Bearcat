@@ -87,8 +87,8 @@ public partial class CreateOrEditArchiveConfigDialog(
             parameters,
             new DialogOpenOptions
             {
-                Title = "Select a folder, where the archive files should be created",
-                Description = "Choose where Bearcat should create archive files.",
+                Title = L["SelectArchiveFolder"],
+                Description = L["SelectArchiveFolderDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
             }
@@ -110,24 +110,24 @@ public partial class CreateOrEditArchiveConfigDialog(
 
         if (string.IsNullOrWhiteSpace(FormModel.Name))
         {
-            messageStore.Add(() => FormModel.Name!, "Name is required");
+            messageStore.Add(() => FormModel.Name!, L["NameIsRequired"]);
         }
 
         if (FormModel.ArchiverName is null)
         {
-            messageStore.Add(() => FormModel.ArchiverName!, "You must select an archiver");
+            messageStore.Add(() => FormModel.ArchiverName!, L["SelectArchiverRequired"]);
         }
 
         if (string.IsNullOrWhiteSpace(FormModel.ArchiveFilesBasePath))
         {
-            messageStore.Add(() => FormModel.ArchiveFilesBasePath!, "Base path is required");
+            messageStore.Add(() => FormModel.ArchiveFilesBasePath!, L["BasePathRequired"]);
         }
 
         if (FormModel.ArchiveFileSizeMb < 0)
         {
             messageStore.Add(
                 () => FormModel.ArchiveFileSizeMb,
-                "Archive file size must be zero or greater"
+                L["ArchiveFileSizeMustBeZeroOrGreater"]
             );
         }
     }

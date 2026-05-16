@@ -2,9 +2,9 @@
     <div class="shrink-0">
         <BbFormFieldInput TValue="string"
                           @bind-Value="searchText"
-                          Label="Search"
-                          Placeholder="Search folders"
-                          HelperText="Filter the loaded folder tree." />
+                          Label="@L["Search"]"
+                          Placeholder="@L["SearchFolders"]"
+                          HelperText="@L["FilterLoadedFolderTree"]" />
     </div>
 
     <div class="bearcat-folder-tree">
@@ -17,23 +17,23 @@
                     @bind-SelectedValue="selectedItem"
                     DefaultExpandDepth="1"
                     ShowIcons="true"
-                    AriaLabel="Folder selection tree" />
+                    AriaLabel="@L["FolderSelectionTree"]" />
     </div>
 
     @if (!string.IsNullOrWhiteSpace(selectedItem))
     {
         <div class="shrink-0 rounded-lg border border-border/70 bg-muted/30 px-3 py-2 text-sm">
-            <span class="text-muted-foreground">Selected:</span>
+            <span class="text-muted-foreground">@L["Selected"]:</span>
             <span class="ml-2 break-all font-medium">@selectedItem</span>
         </div>
     }
 
     <div class="bearcat-folder-dialog-footer">
         <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
-            Cancel
+            @L["Cancel"]
         </BbButton>
         <BbButton Disabled="@string.IsNullOrWhiteSpace(selectedItem)" OnClick="SaveAsync">
-            Save
+            @L["Save"]
         </BbButton>
     </div>
 </div>

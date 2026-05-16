@@ -7,13 +7,13 @@
             <div class="flex items-center gap-2">
                 <LucideIcon Name="upload" class="h-4 w-4" />
                 <div>
-                    <BbCardTitle class="text-base">Upload configurations</BbCardTitle>
-                    <BbCardDescription>Hoster targets and link distribution metadata.</BbCardDescription>
+                    <BbCardTitle class="text-base">@L["UploadConfigurations"]</BbCardTitle>
+                    <BbCardDescription>@L["UploadConfigurationsDescription"]</BbCardDescription>
                 </div>
             </div>
             <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="ShowAddDialogAsync">
                 <LucideIcon Name="plus" class="h-4 w-4" />
-                Add
+                @L["Add"]
             </BbButton>
         </div>
     </BbCardHeader>
@@ -21,18 +21,18 @@
         @if (uploadConfigs.Count == 0)
         {
             <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
-                No upload configurations yet.
+                @L["NoUploadConfigurationsYet"]
             </div>
         }
         else
         {
             <div class="bearcat-config-list">
                 <div class="bearcat-config-header bearcat-upload-grid">
-                    <span>Upload target</span>
-                    <span>Archive config</span>
-                    <span>Links</span>
-                    <span>Preview</span>
-                    <span class="text-right">Actions</span>
+                    <span>@L["UploadTarget"]</span>
+                    <span>@L["ArchiveConfig"]</span>
+                    <span>@L["Links"]</span>
+                    <span>@L["Preview"]</span>
+                    <span class="text-right">@L["Actions"]</span>
                 </div>
                 @foreach (var config in uploadConfigs)
                 {
@@ -43,44 +43,44 @@
                                     <span class="text-sm font-semibold">@config.Name</span>
                                     <BbBadge Variant="BadgeVariant.Outline">@config.HosterRegistrationName</BbBadge>
                                 </div>
-                                <p class="mt-1 text-xs text-muted-foreground">Hoster target</p>
+                                <p class="mt-1 text-xs text-muted-foreground">@L["HosterTarget"]</p>
                             </div>
 
                             <div class="min-w-0">
-                                <p class="bearcat-mobile-label">Archive config</p>
+                                <p class="bearcat-mobile-label">@L["ArchiveConfig"]</p>
                                 <p class="truncate text-sm font-medium" title="@config.ArchiveConfigName">@config.ArchiveConfigName</p>
                             </div>
 
                             <div>
-                                <p class="bearcat-mobile-label">Links</p>
+                                <p class="bearcat-mobile-label">@L["Links"]</p>
                                 <p class="text-sm font-medium">@config.LinksDistributedTo.Count</p>
                             </div>
 
                             <div class="min-w-0">
-                                <p class="bearcat-mobile-label">Preview</p>
-                                <p class="truncate text-sm font-medium" title="@(config.LinksDistributedTo.FirstOrDefault() ?? "No distribution targets")">
-                                    @(config.LinksDistributedTo.FirstOrDefault() ?? "No targets")
+                                <p class="bearcat-mobile-label">@L["Preview"]</p>
+                                <p class="truncate text-sm font-medium" title="@(config.LinksDistributedTo.FirstOrDefault() ?? L["NoDistributionTargets"])">
+                                    @(config.LinksDistributedTo.FirstOrDefault() ?? L["NoTargets"])
                                 </p>
                             </div>
 
                             <div class="bearcat-config-actions">
                                 <BbDropdownMenu>
                                     <BbDropdownMenuTrigger>
-                                        <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="Open upload config actions">
+                                        <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenUploadConfigActions"]">
                                             <LucideIcon Name="ellipsis" class="h-4 w-4" />
                                         </BbButton>
                                     </BbDropdownMenuTrigger>
                                     <BbDropdownMenuContent Align="PopoverAlign.End">
                                         <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(config))">
-                                            Edit config
+                                            @L["EditConfig"]
                                         </BbDropdownMenuItem>
                                         <BbDropdownMenuItem OnClick="@(async _ => await DeleteConfigAsync(config))">
-                                            Delete config
+                                            @L["DeleteConfig"]
                                         </BbDropdownMenuItem>
                                     </BbDropdownMenuContent>
                                 </BbDropdownMenu>
                                 <BbCollapsibleTrigger>
-                                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="Toggle upload config details">
+                                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["ToggleUploadConfigDetails"]">
                                         <LucideIcon Name="chevron-down" class="h-4 w-4" />
                                     </BbButton>
                                 </BbCollapsibleTrigger>
@@ -91,7 +91,7 @@
                                 @if (config.LinksDistributedTo.Count > 0)
                                 {
                                     <div class="space-y-2">
-                                        <p class="text-xs text-muted-foreground">Links distributed to</p>
+                                        <p class="text-xs text-muted-foreground">@L["LinksDistributedTo"]</p>
                                         <div class="flex flex-wrap gap-2">
                                             @foreach (var link in config.LinksDistributedTo)
                                             {

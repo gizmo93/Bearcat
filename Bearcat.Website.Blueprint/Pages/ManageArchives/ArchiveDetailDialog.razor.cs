@@ -26,7 +26,7 @@ public partial class ArchiveDetailDialog(
 
         if (archive is null)
         {
-            toastService.Error($"Archive with ID {ArchiveId} not found.");
+            toastService.Error(L["ArchiveNotFound", ArchiveId]);
             await DialogRef.CancelAsync();
             return;
         }

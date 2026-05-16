@@ -1,0 +1,38 @@
+@using System.Globalization
+@inject NavigationManager NavigationManager
+
+<div class="bearcat-culture-selector">
+    <label class="sr-only" for="bearcat-culture-selector">@L["Language"]</label>
+    <select id="bearcat-culture-selector"
+            class="bearcat-culture-select"
+            value="@CurrentCulture"
+            @onchange="OnCultureChanged"
+            aria-label="@L["Language"]">
+        <option value="en-US">English</option>
+        <option value="de-DE">Deutsch</option>
+    </select>
+</div>
+
+@code {
+    private string CurrentCulture => CultureInfo.CurrentUICulture.Name switch
+    {
+        "de-DE" => "de-DE",
+        _ => "en-US",
+    };
+
+    private void OnCultureChanged(ChangeEventArgs args)
+    {
+        var culture = args.Value?.ToString();
+
+        if (string.IsNullOrWhiteSpace(culture) || culture == CurrentCulture)
+        {
+            return;
+        }
+
+        var redirectUri = new Uri(NavigationManager.Uri).PathAndQuery;
+        NavigationManager.NavigateTo(
+            $"culture/set?culture={Uri.EscapeDataString(culture)}&redirectUri={Uri.EscapeDataString(redirectUri)}",
+            forceLoad: true
+        );
+    }
+}

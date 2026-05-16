@@ -12,8 +12,8 @@
         <div class="space-y-4">
             <BbFormFieldSelect TValue="int?"
                                @bind-Value="formModel.LinkCrypterRegistrationId"
-                               Label="Link crypter"
-                               Placeholder="Select a link crypter"
+                               Label="@L["LinkCrypter"]"
+                               Placeholder="@L["SelectLinkCrypter"]"
                                Disabled="IsEdit"
                                Options="linkCrypterOptions
                                    .OrderBy(kvp => kvp.Value)
@@ -21,16 +21,16 @@
 
             <BbFormFieldInput TValue="string"
                               @bind-Value="formModel.Password"
-                              Label="Container password"
-                              Placeholder="Set an optional password for the container" />
+                              Label="@L["ContainerPassword"]"
+                              Placeholder="@L["ContainerPasswordPlaceholder"]" />
         </div>
 
         <div class="flex justify-end gap-2">
             <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
-                Cancel
+                @L["Cancel"]
             </BbButton>
             <BbButton Type="ButtonType.Submit">
-                Save
+                @L["Save"]
             </BbButton>
         </div>
     </div>

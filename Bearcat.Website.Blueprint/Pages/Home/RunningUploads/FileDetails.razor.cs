@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Blueprint.Localization;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
@@ -16,7 +17,7 @@ public partial class FileDetails : ComponentBase
         var uploadedFile = Upload.UploadedFiles.FirstOrDefault(x =>
             x.ArchiveFileId == archiveFile.Id
         );
-        return uploadedFile?.OnlineState.ToString() ?? "Pending";
+        return uploadedFile is null ? L["Pending"] : L.Localize(uploadedFile.OnlineState);
     }
 
     private BadgeVariant GetSummaryVariant() =>

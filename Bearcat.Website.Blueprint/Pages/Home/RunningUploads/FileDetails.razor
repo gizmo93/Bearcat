@@ -4,14 +4,14 @@
     <div class="border-b border-border/70 px-4 py-3">
         <div class="flex items-center justify-between gap-3">
             <div>
-                <p class="text-sm font-medium">Upload status</p>
+                <p class="text-sm font-medium">@L["UploadStatus"]</p>
                 <p class="text-xs text-muted-foreground">
-                    Upload #@Upload.Id for @Upload.UploadConfig.Name
+                    @L["UploadStatusSubtitle", Upload.Id, Upload.UploadConfig.Name]
                 </p>
             </div>
 
             <BbBadge Variant="@GetSummaryVariant()">
-                @Upload.UploadState
+                @L.Localize(Upload.UploadState)
             </BbBadge>
         </div>
     </div>
@@ -21,16 +21,16 @@
                  ShowToolbar="false"
                  ShowPagination="@(Upload.Archive!.ArchiveFiles.Count > 10)"
                  InitialPageSize="10"
-                 AriaLabel="Upload file status"
+                 AriaLabel="@L["UploadFileStatus"]"
                  Class="border-0">
         <Columns>
             <BbDataTableColumn TData="ArchiveFile" TValue="string"
-                               Header="File"
+                               Header="@L["File"]"
                                Property="@(archiveFile => archiveFile.FullFileName)"
                                Sortable="true"
                                Filterable="true" />
             <BbDataTableColumn TData="ArchiveFile" TValue="string"
-                               Header="Status"
+                               Header="@L["Status"]"
                                Property="@(archiveFile => GetStatusLabel(archiveFile))"
                                Sortable="true">
                 <CellTemplate Context="archiveFile">
@@ -42,14 +42,14 @@
                         <div class="flex items-center gap-2">
                             <LucideIcon Name="@(uploadedFile.OnlineState == OnlineState.Online ? "circle-check" : "circle-x")"
                                         class="@($"h-4 w-4 {(uploadedFile.OnlineState == OnlineState.Online ? "text-emerald-400" : "text-red-400")}")" />
-                            <span>@uploadedFile.OnlineState</span>
+                            <span>@L.Localize(uploadedFile.OnlineState)</span>
                         </div>
                     }
                     else
                     {
                         <div class="flex items-center gap-2 text-muted-foreground">
                             <LucideIcon Name="upload" class="h-4 w-4" />
-                            <span>Pending</span>
+                            <span>@L["Pending"]</span>
                         </div>
                     }
                 </CellTemplate>

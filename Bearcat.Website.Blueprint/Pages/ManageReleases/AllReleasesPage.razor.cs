@@ -23,12 +23,12 @@ public partial class AllReleasesPage(
     private async Task DeleteReleaseAsync(ReleaseDto release)
     {
         var result = await dialogService.ConfirmAsync(
-            $"Delete Release {release.Name}",
-            $"Are you sure you want to delete the release {release.Name}?",
+            L["DeleteReleaseTitle", release.Name],
+            L["DeleteReleaseConfirmation", release.Name],
             new ConfirmDialogOptions
             {
-                ConfirmText = "Delete",
-                CancelText = "Cancel",
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
                 Destructive = true,
             }
         );
@@ -47,8 +47,8 @@ public partial class AllReleasesPage(
         var dialog = await dialogService.OpenAsync<CreateOrEditReleaseDialog>(
             new DialogOpenOptions
             {
-                Title = "Create Release",
-                Description = "Define the release type and choose its source folder.",
+                Title = L["CreateRelease"],
+                Description = L["CreateReleaseDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
                 PreventClose = true,

@@ -73,15 +73,12 @@ public partial class CreateOrEditDialog
 
         if (string.IsNullOrWhiteSpace(formModel.Name))
         {
-            validationMessageStore.Add(() => formModel.Name!, "Name is required.");
+            validationMessageStore.Add(() => formModel.Name!, L["NameIsRequired"]);
         }
 
         if (string.IsNullOrWhiteSpace(formModel.ClassName))
         {
-            validationMessageStore.Add(
-                () => formModel.ClassName!,
-                "You need to select a link crypter"
-            );
+            validationMessageStore.Add(() => formModel.ClassName!, L["SelectLinkCrypterRequired"]);
         }
 
         if (SelectedCrypter is null)
@@ -99,7 +96,7 @@ public partial class CreateOrEditDialog
         {
             validationMessageStore.Add(
                 () => formModel.Configuration,
-                $"You need to provide a value for '{key}'"
+                L["ConfigurationValueMustBeProvided", key]
             );
         }
     }

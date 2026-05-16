@@ -37,8 +37,8 @@ public partial class AllHostersPage(
             parameters,
             new DialogOpenOptions
             {
-                Title = "Add hoster",
-                Description = "Save hoster credentials and configuration for uploads.",
+                Title = L["AddHoster"],
+                Description = L["HosterDialogDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
                 PreventClose = true,
@@ -69,8 +69,8 @@ public partial class AllHostersPage(
             parameters,
             new DialogOpenOptions
             {
-                Title = $"Edit {hosterRegistration.Name}",
-                Description = "Save hoster credentials and configuration for uploads.",
+                Title = L["EditNamedItem", hosterRegistration.Name],
+                Description = L["HosterDialogDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
                 PreventClose = true,
@@ -87,20 +87,23 @@ public partial class AllHostersPage(
     {
         await hosterRegistrationService.ToggleIsActiveAsync(hoster.Id);
 
-        var status = hoster.IsActive ? "deactivated" : "activated";
-        toastService.Success($"Hoster registration {hoster.Name} {status}");
+        toastService.Success(
+            hoster.IsActive
+                ? L["HosterRegistrationDeactivated", hoster.Name]
+                : L["HosterRegistrationActivated", hoster.Name]
+        );
         await LoadHostersAsync();
     }
 
     private async Task DeleteAsync(HosterRegistrationDto hoster)
     {
         var result = await dialogService.ConfirmAsync(
-            $"Delete {hoster.Name}",
-            $"Are you sure you want to delete hoster registration {hoster.Name}? This also removes uploads tied to that registration.",
+            L["DeleteNamedItem", hoster.Name],
+            L["DeleteHosterRegistrationConfirmation", hoster.Name],
             new ConfirmDialogOptions
             {
-                ConfirmText = "Delete",
-                CancelText = "Cancel",
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
                 Destructive = true,
             }
         );
@@ -123,10 +126,10 @@ public partial class AllHostersPage(
 
         if (result.IsSuccess)
         {
-            toastService.Success($"Login for registration {hoster.Name} successful");
+            toastService.Success(L["LoginSuccessful", hoster.Name]);
             return;
         }
 
-        toastService.Error($"Login for registration {hoster.Name} failed: {result.ErrorMessage}");
+        toastService.Error(L["LoginFailed", hoster.Name, result.ErrorMessage ?? string.Empty]);
     }
 }
