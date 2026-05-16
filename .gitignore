@@ -218,6 +218,9 @@ ModelManifest.xml
 
 profile.arm.json
 
+# Local Codex project notes
+AGENTS.md
+
 # Bearcat
 *.map
 *Resource.designer.cs
