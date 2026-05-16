@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -11,13 +12,35 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactory archiverFactory)
     : IReleaseReadRepository
 {
-    public async Task<IReadOnlyList<ReleaseDto>> GetReleasesAsync(
+    public async Task<PagedResult<ReleaseDto>> SearchReleasesAsync(
+        ReleaseSearchQuery query,
         CancellationToken cancellationToken = default
     )
     {
-        return await dbRead
-            .Releases.Select(ToReleaseDto())
+        var pageSize = Math.Clamp(query.PageSize, 5, 100);
+        var pageIndex = Math.Max(0, query.PageIndex);
+
+        var releasesQuery = ApplyReleaseSearch(dbRead.Releases, query);
+        var totalCount = await releasesQuery.CountAsync(cancellationToken);
+
+        var releases = await releasesQuery
+            .OrderBy(r => r.Name)
+            .ThenBy(r => r.Id)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .Select(ToReleaseDto())
             .ToListAsync(cancellationToken: cancellationToken);
+
+        return new PagedResult<ReleaseDto>(releases, totalCount, pageIndex, pageSize);
+    }
+
+    public IReadOnlyList<ArchiverDto> GetArchiverFilterOptions()
+    {
+        return archiverFactory
+            .GetArchivers()
+            .OrderBy(a => a.Name)
+            .ThenBy(a => a.FileExtension)
+            .ToList();
     }
 
     public async Task<ReleaseDto?> GetReleaseAsync(
@@ -82,5 +105,106 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                 .Distinct()
                 .Count()
         );
+    }
+
+    private static IQueryable<Release> ApplyReleaseSearch(
+        IQueryable<Release> releases,
+        ReleaseSearchQuery query
+    )
+    {
+        var searchTerm = Normalize(query.SearchTerm);
+        if (searchTerm is not null)
+        {
+            var pattern = ToContainsPattern(searchTerm);
+            releases = releases.Where(r =>
+                EF.Functions.ILike(r.Name, pattern)
+                || EF.Functions.ILike(r.ReleaseFolderPath, pattern)
+            );
+        }
+
+        if (query.OnlineState is not null)
+        {
+            releases = ApplyOnlineStateFilter(releases, query.OnlineState.Value);
+        }
+
+        if (query.HosterRegistrationId is not null)
+        {
+            releases = releases.Where(r =>
+                r.UploadConfigs.Any(u => u.HosterRegistrationId == query.HosterRegistrationId.Value)
+            );
+        }
+
+        var archiverName = Normalize(query.ArchiverName);
+        if (archiverName is not null)
+        {
+            releases = releases.Where(r =>
+                r.ArchiveConfigs.Any(a => a.ArchiverName == archiverName)
+            );
+        }
+
+        if (query.LinkCrypterRegistrationId is not null)
+        {
+            releases = releases.Where(r =>
+                r.UploadConfigs.Any(u =>
+                    u.LinkCrypters.Any(l =>
+                        l.LinkCrypterRegistrationId == query.LinkCrypterRegistrationId.Value
+                    )
+                )
+            );
+        }
+
+        var linksDistributedTo = Normalize(query.LinksDistributedTo);
+        if (linksDistributedTo is not null)
+        {
+            var pattern = ToContainsPattern(linksDistributedTo);
+            releases = releases.Where(r =>
+                r.UploadConfigs.Any(u =>
+                    u.LinksDistributedTo.Any(link => EF.Functions.ILike(link, pattern))
+                )
+            );
+        }
+
+        return releases;
+    }
+
+    private static IQueryable<Release> ApplyOnlineStateFilter(
+        IQueryable<Release> releases,
+        OnlineState onlineState
+    )
+    {
+        return onlineState switch
+        {
+            OnlineState.Unknown => releases.Where(r => !r.UploadConfigs.Any()),
+            OnlineState.Online => releases.Where(r =>
+                r.UploadConfigs.Any()
+                && r.UploadConfigs.Count()
+                    == r.UploadConfigs.Count(uc =>
+                        uc.Uploads.Any(u => u.OnlineState == OnlineState.Online)
+                    )
+            ),
+            OnlineState.PartiallyOnline => releases.Where(r =>
+                r.UploadConfigs.Any(uc => uc.Uploads.Any(u => u.OnlineState == OnlineState.Online))
+                && r.UploadConfigs.Any(uc =>
+                    !uc.Uploads.Any(u => u.OnlineState == OnlineState.Online)
+                )
+            ),
+            OnlineState.Offline => releases.Where(r =>
+                r.UploadConfigs.Any()
+                && !r.UploadConfigs.Any(uc =>
+                    uc.Uploads.Any(u => u.OnlineState == OnlineState.Online)
+                )
+            ),
+            _ => releases,
+        };
+    }
+
+    private static string? Normalize(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static string ToContainsPattern(string value)
+    {
+        return $"%{value}%";
     }
 }

@@ -41,6 +41,10 @@
   <data name="ArchiveTitle" xml:space="preserve"><value>Archiv {0}</value></data>
   <data name="Archiver" xml:space="preserve"><value>Archiver</value></data>
   <data name="Archives" xml:space="preserve"><value>Archive</value></data>
+  <data name="AnyArchiver" xml:space="preserve"><value>Alle Archiver</value></data>
+  <data name="AnyHosterConfig" xml:space="preserve"><value>Alle Hoster-Konfigurationen</value></data>
+  <data name="AnyLinkCrypterConfig" xml:space="preserve"><value>Alle Link-Crypter-Konfigurationen</value></data>
+  <data name="AnyOnlineState" xml:space="preserve"><value>Jeder Online-Status</value></data>
   <data name="AutoRefresh" xml:space="preserve"><value>Auto-Aktualisierung</value></data>
   <data name="BasePathRequired" xml:space="preserve"><value>Basispfad ist erforderlich</value></data>
   <data name="Browse" xml:space="preserve"><value>Durchsuchen</value></data>
@@ -126,6 +130,7 @@
   <data name="Links" xml:space="preserve"><value>Links</value></data>
   <data name="LinksDistributedTo" xml:space="preserve"><value>Links verteilt an</value></data>
   <data name="LinksDistributedToHelp" xml:space="preserve"><value>Optionale Nachverfolgung für Forum- oder Board-Posts mit dieser Upload-Konfiguration.</value></data>
+  <data name="LinksDistributedToSearchPlaceholder" xml:space="preserve"><value>Forum, Board oder Notiz</value></data>
   <data name="Login" xml:space="preserve"><value>Login</value></data>
   <data name="LoginFailed" xml:space="preserve"><value>Login für Registrierung {0} fehlgeschlagen: {1}</value></data>
   <data name="LoginSuccessful" xml:space="preserve"><value>Login für Registrierung {0} erfolgreich</value></data>
@@ -136,9 +141,11 @@
   <data name="NewHoster" xml:space="preserve"><value>Neuer Hoster</value></data>
   <data name="NewLinkCrypter" xml:space="preserve"><value>Neuer Link-Crypter</value></data>
   <data name="NewRelease" xml:space="preserve"><value>Neues Release</value></data>
+  <data name="Next" xml:space="preserve"><value>Weiter</value></data>
   <data name="No" xml:space="preserve"><value>Nein</value></data>
   <data name="NoArchiveConfigurationsYet" xml:space="preserve"><value>Noch keine Archiv-Konfigurationen.</value></data>
   <data name="NoDistributionTargets" xml:space="preserve"><value>Keine Verteilziele</value></data>
+  <data name="NoReleasesFound" xml:space="preserve"><value>Keine Releases gefunden</value></data>
   <data name="NoTargets" xml:space="preserve"><value>Keine Ziele</value></data>
   <data name="NoUploadConfigurationsYet" xml:space="preserve"><value>Noch keine Upload-Konfigurationen.</value></data>
   <data name="OnlineConfigs" xml:space="preserve"><value>Online-Konfigs</value></data>
@@ -157,6 +164,7 @@
   <data name="PauseRefresh" xml:space="preserve"><value>Aktualisierung pausieren</value></data>
   <data name="Pending" xml:space="preserve"><value>Ausstehend</value></data>
   <data name="Preview" xml:space="preserve"><value>Vorschau</value></data>
+  <data name="Previous" xml:space="preserve"><value>Zurück</value></data>
   <data name="Progress" xml:space="preserve"><value>Fortschritt</value></data>
   <data name="RandomArchiveNameWillBeGenerated" xml:space="preserve"><value>Ein zufälliger Archivname wird erzeugt</value></data>
   <data name="RandomName" xml:space="preserve"><value>Zufälliger Name</value></data>
@@ -166,6 +174,8 @@
   <data name="ReleaseDetails" xml:space="preserve"><value>Release-Details</value></data>
   <data name="ReleaseFolder" xml:space="preserve"><value>Release-Ordner</value></data>
   <data name="ReleaseRootsAndOnlineState" xml:space="preserve"><value>Release-Wurzeln und Online-Status</value></data>
+  <data name="ReleaseResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Releases</value></data>
+  <data name="ReleaseSearchPlaceholder" xml:space="preserve"><value>Name oder Ordnerpfad</value></data>
   <data name="ReleaseType" xml:space="preserve"><value>Release-Typ</value></data>
   <data name="ReleaseType.Managed" xml:space="preserve"><value>Managed</value></data>
   <data name="ReleaseType.Managed.Description" xml:space="preserve"><value>Bearcat erstellt die Archive und verwaltet Uploads automatisch</value></data>
@@ -174,6 +184,8 @@
   <data name="Releases" xml:space="preserve"><value>Releases</value></data>
   <data name="ReleasesIntro" xml:space="preserve"><value>Verwalte Release-Wurzeln und prüfe ihren aktuellen Online-Status.</value></data>
   <data name="Reload" xml:space="preserve"><value>Neu laden</value></data>
+  <data name="ResetFilters" xml:space="preserve"><value>Filter zurücksetzen</value></data>
+  <data name="RowsPerPage" xml:space="preserve"><value>Zeilen pro Seite</value></data>
   <data name="RunningAndPendingUploads" xml:space="preserve"><value>Laufende und ausstehende Uploads</value></data>
   <data name="RunningArchives" xml:space="preserve"><value>Laufende Archive</value></data>
   <data name="RunningArchivesDescription" xml:space="preserve"><value>Archive, die gerade erstellt werden.</value></data>
@@ -184,6 +196,7 @@
   <data name="Save" xml:space="preserve"><value>Speichern</value></data>
   <data name="Search" xml:space="preserve"><value>Suchen</value></data>
   <data name="SearchFolders" xml:space="preserve"><value>Ordner suchen</value></data>
+  <data name="SearchReleases" xml:space="preserve"><value>Releases suchen</value></data>
   <data name="SelectArchiveConfiguration" xml:space="preserve"><value>Archiv-Konfiguration auswählen</value></data>
   <data name="SelectArchiveFolder" xml:space="preserve"><value>Ordner auswählen, in dem die Archivdateien erstellt werden</value></data>
   <data name="SelectArchiveFolderDescription" xml:space="preserve"><value>Wähle, wo Bearcat Archivdateien erstellen soll.</value></data>
