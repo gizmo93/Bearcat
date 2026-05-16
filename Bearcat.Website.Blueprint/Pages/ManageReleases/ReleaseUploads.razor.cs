@@ -19,12 +19,12 @@ public partial class ReleaseUploads(
     [EditorRequired]
     public int ReleaseId { get; set; }
 
-    private readonly int[] pageSizes = [10, 20, 50, 100];
+    private readonly int[] pageSizes = [5, 10, 20, 50, 100];
     private IReadOnlyList<ReleaseUploadDto> uploads = [];
     private IReadOnlyList<UploadConfigDto> uploadConfigs = [];
     private int totalCount;
     private int pageIndex;
-    private int pageSize = 10;
+    private int pageSize = 5;
     private int selectedUploadConfigId;
     private bool isLoading;
 
@@ -32,6 +32,7 @@ public partial class ReleaseUploads(
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
     private int FirstResult => totalCount == 0 ? 0 : pageIndex * pageSize + 1;
     private int LastResult => Math.Min(totalCount, (pageIndex + 1) * pageSize);
+    private string UploadsTableKey => $"{selectedUploadConfigId}-{pageIndex}-{pageSize}";
 
     private IEnumerable<SelectOption<int>> PageSizeOptions =>
         pageSizes.Select(size => new SelectOption<int>(size, size.ToString()));

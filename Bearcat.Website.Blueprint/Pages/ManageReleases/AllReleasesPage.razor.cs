@@ -19,7 +19,7 @@ public partial class AllReleasesPage(
     DialogService dialogService
 )
 {
-    private readonly int[] pageSizes = [10, 20, 50, 100];
+    private readonly int[] pageSizes = [5, 10, 20, 50, 100];
 
     private IReadOnlyList<ReleaseDto> releases = [];
     private IReadOnlyList<HosterRegistrationDto> hosterRegistrations = [];
@@ -29,13 +29,14 @@ public partial class AllReleasesPage(
     private ReleaseSearchQuery searchQuery = new();
     private int totalCount;
     private int pageIndex;
-    private int pageSize = 10;
+    private int pageSize = 5;
     private bool isLoading;
 
     private int CurrentPage => totalCount == 0 ? 1 : pageIndex + 1;
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
     private int FirstResult => totalCount == 0 ? 0 : pageIndex * pageSize + 1;
     private int LastResult => Math.Min(totalCount, (pageIndex + 1) * pageSize);
+    private string ReleasesTableKey => $"{pageIndex}-{pageSize}-{searchQuery.GetHashCode()}";
 
     private IEnumerable<SelectOption<int>> PageSizeOptions =>
         pageSizes.Select(size => new SelectOption<int>(size, size.ToString()));

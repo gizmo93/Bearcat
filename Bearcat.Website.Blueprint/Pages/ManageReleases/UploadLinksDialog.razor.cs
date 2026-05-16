@@ -5,15 +5,10 @@ using Bearcat.Website.Blueprint.Localization;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 
 namespace Bearcat.Website.Blueprint.Pages.ManageReleases;
 
-public partial class UploadLinksDialog(
-    IReleaseReadRepository readRepository,
-    IJSRuntime jsRuntime,
-    ToastService toastService
-) : ComponentBase, IAsyncDisposable
+public partial class UploadLinksDialog(IReleaseReadRepository readRepository) : ComponentBase
 {
     [Parameter]
     public int ReleaseId { get; set; }
@@ -27,24 +22,25 @@ public partial class UploadLinksDialog(
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
-    private readonly int[] pageSizes = [10, 20, 50, 100];
+    private readonly int[] pageSizes = [5, 10, 20, 50, 100];
     private IReadOnlyList<ReleaseUploadLinkDto> links = [];
     private IReadOnlyList<string> allUploadLinks = [];
     private int totalCount;
     private int pageIndex;
-    private int pageSize = 10;
+    private int pageSize = 5;
     private bool isInitialized;
     private bool isLoading;
-    private bool isCopying;
-    private bool isClipboardReady;
     private bool showFileColumn;
     private int selectedOnlineState;
-    private IJSObjectReference? clipboardModule;
 
     private int CurrentPage => totalCount == 0 ? 1 : pageIndex + 1;
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
     private int FirstResult => totalCount == 0 ? 0 : pageIndex * pageSize + 1;
     private int LastResult => Math.Min(totalCount, (pageIndex + 1) * pageSize);
+    private string CopyTextAreaId => $"upload-links-copy-{UploadId}";
+    private string LinksText => string.Join(Environment.NewLine, allUploadLinks);
+    private string LinksTableKey =>
+        $"{showFileColumn}-{selectedOnlineState}-{pageIndex}-{pageSize}";
 
     private IEnumerable<SelectOption<int>> PageSizeOptions =>
         pageSizes.Select(size => new SelectOption<int>(size, size.ToString()));
@@ -97,21 +93,6 @@ public partial class UploadLinksDialog(
         await RefreshAllUploadLinksAsync();
         await RefreshLinksAsync();
         isInitialized = true;
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender)
-        {
-            return;
-        }
-
-        clipboardModule = await jsRuntime.InvokeAsync<IJSObjectReference>(
-            "import",
-            "/_content/Bearcat.Website.Blueprint/bearcat.js"
-        );
-        isClipboardReady = true;
-        StateHasChanged();
     }
 
     private async Task RefreshLinksAsync()
@@ -196,29 +177,6 @@ public partial class UploadLinksDialog(
         showFileColumn = !showFileColumn;
     }
 
-    private async Task CopyAllLinksAsync()
-    {
-        isCopying = true;
-
-        try
-        {
-            await clipboardModule!.InvokeVoidAsync(
-                "copyText",
-                string.Join(Environment.NewLine, allUploadLinks)
-            );
-
-            toastService.Success(L["UploadLinksCopied", allUploadLinks.Count]);
-        }
-        catch
-        {
-            toastService.Error(L["CopyUploadLinksFailed"]);
-        }
-        finally
-        {
-            isCopying = false;
-        }
-    }
-
     private static string GetFileName(string filePath)
     {
         return Path.GetFileName(filePath);
@@ -227,13 +185,5 @@ public partial class UploadLinksDialog(
     private async Task CloseAsync()
     {
         await DialogRef.CancelAsync();
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (clipboardModule is not null)
-        {
-            await clipboardModule.DisposeAsync();
-        }
     }
 }

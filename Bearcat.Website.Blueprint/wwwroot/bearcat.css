@@ -343,6 +343,33 @@ a {
     gap: 0.5rem;
 }
 
+.bearcat-copy-button {
+    display: inline-flex;
+    min-height: 2rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid var(--input);
+    border-radius: calc(var(--radius) - 2px);
+    background: var(--background);
+    color: var(--foreground);
+    padding-inline: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1;
+    transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.bearcat-copy-button:hover:not(:disabled) {
+    background: var(--accent);
+    color: var(--accent-foreground);
+}
+
+.bearcat-copy-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
 .bearcat-release-page-nav {
     display: flex;
     justify-content: flex-start;
