@@ -25,9 +25,11 @@
                        OnSearch="ApplySearchAsync" />
 
     <BbDataTable TData="ReleaseDto"
+                 @key="ReleasesTableKey"
                  Data="releases"
                  ShowToolbar="false"
                  ShowPagination="false"
+                 InitialPageSize="@pageSize"
                  IsLoading="isLoading"
                  AriaLabel="@L["Releases"]"
                  Class="bearcat-releases-table">

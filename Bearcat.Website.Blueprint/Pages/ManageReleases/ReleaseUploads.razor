@@ -25,9 +25,11 @@
     </div>
 
     <BbDataTable TData="ReleaseUploadDto"
+                 @key="UploadsTableKey"
                  Data="uploads"
                  ShowToolbar="false"
                  ShowPagination="false"
+                 InitialPageSize="@pageSize"
                  IsLoading="isLoading"
                  AriaLabel="@L["ReleaseUploads"]"
                  Class="bearcat-data-table">

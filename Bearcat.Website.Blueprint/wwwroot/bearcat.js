@@ -1,8 +1,12 @@
 export async function copyText(text) {
+    if (!text) {
+        throw new Error("No clipboard text provided");
+    }
+
     if (navigator.clipboard?.writeText) {
         try {
             await navigator.clipboard.writeText(text);
-            return;
+            return true;
         } catch {
             // Fall through to the textarea copy path.
         }
@@ -15,12 +19,45 @@ export async function copyText(text) {
     textarea.style.inset = "0 auto auto 0";
     textarea.style.opacity = "0";
     document.body.appendChild(textarea);
+    textarea.focus({ preventScroll: true });
     textarea.select();
+    textarea.setSelectionRange(0, text.length);
 
-    document.execCommand("copy");
-    document.body.removeChild(textarea);
+    try {
+        const copied = document.execCommand("copy");
+        if (!copied) {
+            throw new Error("Clipboard copy failed");
+        }
+
+        return true;
+    } finally {
+        document.body.removeChild(textarea);
+    }
+}
+
+function setButtonLabel(button, label) {
+    const labelElement = button.querySelector(".bearcat-copy-button-label");
+    if (labelElement) {
+        labelElement.textContent = label;
+    }
+}
+
+export async function copyFromTarget(button) {
+    const targetId = button.dataset.copyTarget;
+    const target = targetId ? document.getElementById(targetId) : null;
+    const originalLabel = button.dataset.copyLabel || button.textContent;
+
+    try {
+        await copyText(target?.value || "");
+        setButtonLabel(button, button.dataset.copySuccessLabel || originalLabel);
+    } catch {
+        setButtonLabel(button, button.dataset.copyFailureLabel || originalLabel);
+    } finally {
+        window.setTimeout(() => setButtonLabel(button, originalLabel), 1400);
+    }
 }
 
 window.bearcat = {
+    copyFromTarget,
     copyText,
 };

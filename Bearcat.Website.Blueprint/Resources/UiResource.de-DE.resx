@@ -55,6 +55,8 @@
   <data name="Cancel" xml:space="preserve"><value>Abbrechen</value></data>
   <data name="Close" xml:space="preserve"><value>Schließen</value></data>
   <data name="CopyAllLinks" xml:space="preserve"><value>Alle Links kopieren</value></data>
+  <data name="Copied" xml:space="preserve"><value>Kopiert</value></data>
+  <data name="CopyFailed" xml:space="preserve"><value>Kopieren fehlgeschlagen</value></data>
   <data name="CopyUploadLinksFailed" xml:space="preserve"><value>Uploadlinks konnten nicht kopiert werden.</value></data>
   <data name="Configuration" xml:space="preserve"><value>Konfiguration</value></data>
   <data name="ConfigurationNamePlaceholder" xml:space="preserve"><value>Namen für die Konfiguration eingeben</value></data>

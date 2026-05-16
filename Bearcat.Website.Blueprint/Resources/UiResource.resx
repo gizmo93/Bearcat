@@ -55,6 +55,8 @@
   <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Close" xml:space="preserve"><value>Close</value></data>
   <data name="CopyAllLinks" xml:space="preserve"><value>Copy all links</value></data>
+  <data name="Copied" xml:space="preserve"><value>Copied</value></data>
+  <data name="CopyFailed" xml:space="preserve"><value>Copy failed</value></data>
   <data name="CopyUploadLinksFailed" xml:space="preserve"><value>Upload links could not be copied.</value></data>
   <data name="Configuration" xml:space="preserve"><value>Configuration</value></data>
   <data name="ConfigurationNamePlaceholder" xml:space="preserve"><value>Enter a name for the configuration</value></data>

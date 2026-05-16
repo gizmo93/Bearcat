@@ -37,22 +37,29 @@
                 @(showFileColumn ? L["HideFileColumn"] : L["ShowFileColumn"])
             </BbButton>
 
-            <BbButton Variant="ButtonVariant.Outline"
-                      Size="ButtonSize.Small"
-                      Disabled="@(totalCount == 0 || isCopying || !isClipboardReady)"
-                      OnClick="CopyAllLinksAsync">
+            <textarea id="@CopyTextAreaId" hidden readonly>@LinksText</textarea>
+
+            <button type="button"
+                    class="bearcat-copy-button"
+                    disabled="@(totalCount == 0)"
+                    data-copy-target="@CopyTextAreaId"
+                    data-copy-label="@L["CopyAllLinks"]"
+                    data-copy-success-label="@L["Copied"]"
+                    data-copy-failure-label="@L["CopyFailed"]"
+                    onclick="window.bearcat.copyFromTarget(this)">
                 <LucideIcon Name="copy" class="h-4 w-4" />
-                @L["CopyAllLinks"]
-            </BbButton>
+                <span class="bearcat-copy-button-label">@L["CopyAllLinks"]</span>
+            </button>
         </div>
     </div>
 
     <div class="bearcat-archive-dialog-body">
         <BbDataTable TData="ReleaseUploadLinkDto"
-                     @key="showFileColumn"
+                     @key="LinksTableKey"
                      Data="links"
                      ShowToolbar="false"
                      ShowPagination="false"
+                     InitialPageSize="@pageSize"
                      IsLoading="isLoading"
                      AriaLabel="@L["UploadLinks"]"
                      Class="bearcat-upload-links-table rounded-lg border border-border/70">
