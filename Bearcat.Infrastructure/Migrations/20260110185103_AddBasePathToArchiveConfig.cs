@@ -16,14 +16,13 @@ public partial class AddBasePathToArchiveConfig : Migration
             type: "character varying(300)",
             maxLength: 300,
             nullable: false,
-            defaultValue: "");
+            defaultValue: ""
+        );
     }
 
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropColumn(
-            name: "ArchiveFilesBasePath",
-            table: "ArchiveConfigs");
+        migrationBuilder.DropColumn(name: "ArchiveFilesBasePath", table: "ArchiveConfigs");
     }
 }

@@ -22,4 +22,3 @@ public class Result
     [JsonPropertyName("storage_used")]
     public long? StorageUsed { get; set; }
 }
-

@@ -35,10 +35,10 @@ public partial class CreateOrEditUploadConfigLinkCrypter
 
     private bool IsEdit => UploadConfigLinkCrypterId.HasValue;
 
-
     protected override async Task OnInitializedAsync()
     {
-        readRepository = ScopedServices.GetRequiredService<IUploadConfigLinkCrypterReadRepository>();
+        readRepository =
+            ScopedServices.GetRequiredService<IUploadConfigLinkCrypterReadRepository>();
 
         linkCrypterOptions = await readRepository.GetLinkCrypterOptionsAsync();
         await InitializeFormModelAsync();
@@ -55,16 +55,15 @@ public partial class CreateOrEditUploadConfigLinkCrypter
         var service = ScopedServices.GetRequiredService<UploadConfigLinkCrypterService>();
         if (IsEdit)
         {
-            await service.UpdateAsync(
-                UploadConfigLinkCrypterId!.Value,
-                formModel.Password);
+            await service.UpdateAsync(UploadConfigLinkCrypterId!.Value, formModel.Password);
         }
         else
         {
             await service.CreateAsync(
                 uploadConfigId: UploadConfigId,
                 linkCrypterRegistrationId: formModel.LinkCrypterRegistrationId!.Value,
-                password: formModel.Password);
+                password: formModel.Password
+            );
         }
 
         MudDialog.Close();
@@ -76,7 +75,10 @@ public partial class CreateOrEditUploadConfigLinkCrypter
 
         if (formModel.LinkCrypterRegistrationId is null)
         {
-            messageStore.Add(() => formModel.LinkCrypterRegistrationId!, "You need to select a Link Crypter.");
+            messageStore.Add(
+                () => formModel.LinkCrypterRegistrationId!,
+                "You need to select a Link Crypter."
+            );
         }
     }
 
@@ -94,8 +96,7 @@ public partial class CreateOrEditUploadConfigLinkCrypter
         formModel = new FormModel
         {
             LinkCrypterRegistrationId = configDto.LinkCrypterRegistrationId,
-            Password = configDto.Password
+            Password = configDto.Password,
         };
     }
 }
-

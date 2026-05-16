@@ -1,0 +1,50 @@
+@inject DialogService DialogService
+
+<div class="flex items-center gap-3">
+    @if (isVisible)
+    {
+        @ChildContent
+    }
+    else
+    {
+        <p class="text-sm text-muted-foreground">******</p>
+    }
+
+    <BbButton Variant="ButtonVariant.Ghost"
+              Size="ButtonSize.IconSmall"
+              AriaLabel="Toggle visibility"
+              OnClick="OnToggleVisibilityAsync">
+        <LucideIcon Name="@(isVisible ? "eye-off" : "eye")" class="h-4 w-4" />
+    </BbButton>
+</div>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public RenderFragment ChildContent { get; set; } = null!;
+
+    private bool isVisible;
+
+    private async Task OnToggleVisibilityAsync()
+    {
+        if (isVisible)
+        {
+            isVisible = false;
+            return;
+        }
+
+        var result = await DialogService.ConfirmAsync(
+            "Show hidden content",
+            "Are you sure you want to show this hidden content?",
+            new ConfirmDialogOptions
+            {
+                ConfirmText = "Yes",
+                CancelText = "No"
+            });
+
+        if (result.Confirmed)
+        {
+            isVisible = true;
+        }
+    }
+}

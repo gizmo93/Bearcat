@@ -16,7 +16,8 @@ public partial class AddMissingColumns : Migration
             table: "UploadConfigLinkCrypters",
             type: "character varying(100)",
             maxLength: 100,
-            nullable: true);
+            nullable: true
+        );
 
         migrationBuilder.AlterColumn<string>(
             name: "ExternalReference",
@@ -26,47 +27,43 @@ public partial class AddMissingColumns : Migration
             nullable: true,
             oldClrType: typeof(string),
             oldType: "character varying(100)",
-            oldMaxLength: 100);
+            oldMaxLength: 100
+        );
 
         migrationBuilder.AddColumn<List<string>>(
             name: "Errors",
             table: "LinkCrypterContainers",
             type: "text[]",
-            nullable: false);
+            nullable: false
+        );
 
         migrationBuilder.AddColumn<string>(
             name: "Password",
             table: "LinkCrypterContainers",
             type: "character varying(100)",
             maxLength: 100,
-            nullable: true);
+            nullable: true
+        );
 
         migrationBuilder.AddColumn<int>(
             name: "State",
             table: "LinkCrypterContainers",
             type: "integer",
             nullable: false,
-            defaultValue: 0);
+            defaultValue: 0
+        );
     }
 
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropColumn(
-            name: "Password",
-            table: "UploadConfigLinkCrypters");
+        migrationBuilder.DropColumn(name: "Password", table: "UploadConfigLinkCrypters");
 
-        migrationBuilder.DropColumn(
-            name: "Errors",
-            table: "LinkCrypterContainers");
+        migrationBuilder.DropColumn(name: "Errors", table: "LinkCrypterContainers");
 
-        migrationBuilder.DropColumn(
-            name: "Password",
-            table: "LinkCrypterContainers");
+        migrationBuilder.DropColumn(name: "Password", table: "LinkCrypterContainers");
 
-        migrationBuilder.DropColumn(
-            name: "State",
-            table: "LinkCrypterContainers");
+        migrationBuilder.DropColumn(name: "State", table: "LinkCrypterContainers");
 
         migrationBuilder.AlterColumn<string>(
             name: "ExternalReference",
@@ -78,6 +75,7 @@ public partial class AddMissingColumns : Migration
             oldClrType: typeof(string),
             oldType: "character varying(100)",
             oldMaxLength: 100,
-            oldNullable: true);
+            oldNullable: true
+        );
     }
 }

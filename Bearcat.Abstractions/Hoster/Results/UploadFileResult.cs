@@ -6,4 +6,5 @@ public record UploadFileResult(
     bool IsSuccess,
     FileDto FileDto,
     IReadOnlyList<string> ErrorMessages,
-    string? FileUrl);
+    string? FileUrl
+);

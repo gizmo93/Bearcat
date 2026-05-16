@@ -8,10 +8,11 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
 {
     public async Task<IReadOnlyList<UploadConfigDto>> GetUploadConfigsAsync(
         int releaseId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
-        return await dbRead.UploadConfigs
-            .Where(u => u.ReleaseId == releaseId)
+        return await dbRead
+            .UploadConfigs.Where(u => u.ReleaseId == releaseId)
             .OrderBy(u => u.Id)
             .Select(u => new UploadConfigDto(
                 u.Id,
@@ -21,16 +22,18 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
                 u.ArchiveConfigId,
                 u.ArchiveConfig.Name,
                 u.Release.Name,
-                u.LinksDistributedTo))
+                u.LinksDistributedTo
+            ))
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
     public async Task<UploadConfigDto> GetDtoByIdAsync(
         int uploadConfigId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
-        return await dbRead.UploadConfigs
-            .Where(u => u.Id == uploadConfigId)
+        return await dbRead
+            .UploadConfigs.Where(u => u.Id == uploadConfigId)
             .OrderBy(u => u.Id)
             .Select(u => new UploadConfigDto(
                 u.Id,
@@ -40,27 +43,29 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
                 u.ArchiveConfigId,
                 u.ArchiveConfig.Name,
                 u.Release.Name,
-                u.LinksDistributedTo))
+                u.LinksDistributedTo
+            ))
             .FirstAsync(cancellationToken: cancellationToken);
     }
 
     public async Task<IReadOnlyDictionary<int, string>> GetHosterRegistrationOptionsAsync(
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
-        return await dbRead.HosterRegistrations
-            .ToDictionaryAsync(
-                h => h.Id, h => h.Name,
-                cancellationToken: cancellationToken);
+        return await dbRead.HosterRegistrations.ToDictionaryAsync(
+            h => h.Id,
+            h => h.Name,
+            cancellationToken: cancellationToken
+        );
     }
 
     public async Task<IReadOnlyDictionary<int, string>> GetArchiveConfigOptionsAsync(
         int releaseId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
-        return await dbRead.ArchiveConfigs
-            .Where(a => a.ReleaseId == releaseId)
-            .ToDictionaryAsync(
-                a => a.Id, a => a.Name,
-                cancellationToken: cancellationToken);
+        return await dbRead
+            .ArchiveConfigs.Where(a => a.ReleaseId == releaseId)
+            .ToDictionaryAsync(a => a.Id, a => a.Name, cancellationToken: cancellationToken);
     }
 }

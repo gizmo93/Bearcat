@@ -8,8 +8,7 @@ using MudBlazor;
 
 namespace Bearcat.Website.Pages.ManageArchiveConfigs;
 
-public partial class ArchiveConfigs(
-    IDialogService dialogService) : IReloadableComponent
+public partial class ArchiveConfigs(IDialogService dialogService) : IReloadableComponent
 {
     [Parameter]
     public int ReleaseId { get; set; }
@@ -31,7 +30,8 @@ public partial class ArchiveConfigs(
     {
         var parameters = new DialogParameters<CreateOrEditArchiveConfigDialog>
         {
-            { "ReleaseId", ReleaseId }, { "FormModel", new ArchiveConfigFormModel()}
+            { "ReleaseId", ReleaseId },
+            { "FormModel", new ArchiveConfigFormModel() },
         };
 
         var dialog = await dialogService.ShowAsync<CreateOrEditArchiveConfigDialog>(
@@ -43,7 +43,8 @@ public partial class ArchiveConfigs(
                 CloseOnEscapeKey = true,
                 CloseButton = true,
                 FullWidth = true,
-            });
+            }
+        );
 
         var result = await dialog.Result;
         await LoadArchiveConfigsAsync();
@@ -55,7 +56,8 @@ public partial class ArchiveConfigs(
             title: "Delete archive config",
             message: $"Are you sure you want to delete the archive config {archiveConfig.ArchiveNameWithExtension} (Archiver: {archiveConfig.ArchiverDisplayName})?",
             yesText: "Delete",
-            noText: "Cancel");
+            noText: "Cancel"
+        );
 
         if (dialog == true)
         {
@@ -68,7 +70,10 @@ public partial class ArchiveConfigs(
 
     private async Task LoadArchiveConfigsAsync()
     {
-        archiveConfigs = await readRepository.GetArchiveConfigsAsync(ReleaseId, CancellationToken.None);
+        archiveConfigs = await readRepository.GetArchiveConfigsAsync(
+            ReleaseId,
+            CancellationToken.None
+        );
     }
 
     private async Task ShowEditDialogAsync(ArchiveConfigDto config)
@@ -76,16 +81,18 @@ public partial class ArchiveConfigs(
         var parameters = new DialogParameters<CreateOrEditArchiveConfigDialog>
         {
             { dlg => dlg.ReleaseId, ReleaseId },
-            { dlg => dlg.FormModel, new ArchiveConfigFormModel
+            {
+                dlg => dlg.FormModel,
+                new ArchiveConfigFormModel
                 {
                     ArchiveFilesBasePath = config.ArchiveFilesBasePath,
                     ArchiverName = config.ArchiverName,
                     ArchiveNamePrefix = config.ArchiveNamePrefix,
                     ArchivePassword = config.ArchivePassword,
-                    ArchiveFileSizeMb = config.ArchiveFileSizeMb
+                    ArchiveFileSizeMb = config.ArchiveFileSizeMb,
                 }
             },
-            { dlg => dlg.ArchiveConfigId, config.ArchiveConfigId }
+            { dlg => dlg.ArchiveConfigId, config.ArchiveConfigId },
         };
 
         var dialog = await dialogService.ShowAsync<CreateOrEditArchiveConfigDialog>(
@@ -97,7 +104,8 @@ public partial class ArchiveConfigs(
                 CloseOnEscapeKey = true,
                 CloseButton = true,
                 FullWidth = true,
-            });
+            }
+        );
 
         var result = await dialog.Result;
         await LoadArchiveConfigsAsync();

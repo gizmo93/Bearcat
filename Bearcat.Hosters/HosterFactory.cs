@@ -4,8 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Hosters;
 
-public class HosterFactory(
-    IServiceProvider serviceProvider) : IHosterFactory
+public class HosterFactory(IServiceProvider serviceProvider) : IHosterFactory
 {
     public IHoster GetByName(string name)
     {
@@ -20,7 +19,8 @@ public class HosterFactory(
             .Select(h => new HosterDto(
                 Name: h.Name,
                 HosterClassName: h.GetType().Name,
-                ConfigurationKeys: h.ConfigurationKeys))
+                ConfigurationKeys: h.ConfigurationKeys
+            ))
             .ToList();
     }
 

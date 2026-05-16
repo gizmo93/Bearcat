@@ -12,12 +12,14 @@ namespace Bearcat.Hosters.Rapidgator.Api;
 public class ApiClient(
     IRapidgatorApi api,
     HttpClientProvider httpClientProvider,
-    ILogger<ApiClient> logger)
+    ILogger<ApiClient> logger
+)
 {
     private const int AuthTimeout = 400;
 
-    private bool NeedsReauthentication => string.IsNullOrWhiteSpace(authToken)
-                                          || (DateTime.UtcNow - lastAuthTime).TotalSeconds > AuthTimeout;
+    private bool NeedsReauthentication =>
+        string.IsNullOrWhiteSpace(authToken)
+        || (DateTime.UtcNow - lastAuthTime).TotalSeconds > AuthTimeout;
 
     private string? authToken;
 
@@ -25,13 +27,13 @@ public class ApiClient(
 
     private readonly SemaphoreSlim authSemaphore = new(initialCount: 1, maxCount: 1);
 
-
     public async Task<UploadFileResponse> RequestUploadFileAsync(
         string name,
         long size,
         string hash,
         RapidgatorConfig config,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var token = await GetAuthTokenAsync(config, cancellationToken);
         return await api.RequestUploadFileAsync(
@@ -39,38 +41,47 @@ public class ApiClient(
             name: name,
             size: size,
             hash: hash,
-            cancellationToken: cancellationToken);
+            cancellationToken: cancellationToken
+        );
     }
 
     public async Task<UploadFileResponse> UploadFileAsync(
         string uploadUrl,
         Stream stream,
         string fileName,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         using var httpClient = httpClientProvider.GetUploadClient();
-        var httpResponse = await httpClient.PostAsync(uploadUrl,
-            new MultipartFormDataContent { { new StreamContent(stream), "file", fileName } }, cancellationToken);
+        var httpResponse = await httpClient.PostAsync(
+            uploadUrl,
+            new MultipartFormDataContent { { new StreamContent(stream), "file", fileName } },
+            cancellationToken
+        );
 
         if (!httpResponse.IsSuccessStatusCode)
         {
             throw new HttpRequestException(
-                $"Upload request failed with status code {httpResponse.StatusCode} for file {fileName}");
+                $"Upload request failed with status code {httpResponse.StatusCode} for file {fileName}"
+            );
         }
 
         var content = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
 
-        var response = JsonSerializer.Deserialize<UploadFileResponse>(content,
+        var response = JsonSerializer.Deserialize<UploadFileResponse>(
+            content,
             options: new JsonSerializerOptions
             {
                 NumberHandling = JsonNumberHandling.AllowReadingFromString,
                 PropertyNameCaseInsensitive = true,
-            })!;
+            }
+        )!;
 
         if (!((HttpStatusCode)response.Status).IsSuccessStatusCode)
         {
             throw new HttpRequestException(
-                $"Upload failed for file {fileName} with message: {response.Details}");
+                $"Upload failed for file {fileName} with message: {response.Details}"
+            );
         }
 
         return response;
@@ -79,7 +90,8 @@ public class ApiClient(
     public async Task<UploadFileResponse> GetUploadInfoAsync(
         RapidgatorConfig config,
         string uploadId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var token = await GetAuthTokenAsync(config, cancellationToken);
         var response = await api.GetFileStatusAsync(token, uploadId, cancellationToken);
@@ -89,7 +101,8 @@ public class ApiClient(
     public async Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
         RapidgatorConfig config,
         IReadOnlyList<string> links,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var token = await GetAuthTokenAsync(config, cancellationToken);
 
@@ -100,7 +113,8 @@ public class ApiClient(
             var response = await api.CheckLinkAsync(
                 token: token,
                 links: string.Join(',', linksBatch),
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken
+            );
 
             responses.Add(response.Content!);
         }
@@ -111,7 +125,10 @@ public class ApiClient(
             .ToDictionary(r => r.Url, r => r.Status == "ACCESS");
     }
 
-    private async Task<string> GetAuthTokenAsync(RapidgatorConfig config, CancellationToken cancellationToken)
+    private async Task<string> GetAuthTokenAsync(
+        RapidgatorConfig config,
+        CancellationToken cancellationToken
+    )
     {
         try
         {
@@ -119,11 +136,15 @@ public class ApiClient(
 
             if (NeedsReauthentication)
             {
-                logger.LogInformation("Authenticating to Rapidgator for user {Username}", config.Username);
+                logger.LogInformation(
+                    "Authenticating to Rapidgator for user {Username}",
+                    config.Username
+                );
                 var loginResponse = await LoginAsync(
                     login: config.Username,
                     password: config.Password,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: cancellationToken
+                );
 
                 authToken = loginResponse.Response.Token;
                 lastAuthTime = DateTime.UtcNow;
@@ -137,7 +158,11 @@ public class ApiClient(
         }
     }
 
-    private async Task<LoginResponse> LoginAsync(string login, string password, CancellationToken cancellationToken)
+    private async Task<LoginResponse> LoginAsync(
+        string login,
+        string password,
+        CancellationToken cancellationToken
+    )
     {
         var response = await api.LoginAsync(login, password, cancellationToken);
         return response.Content!;

@@ -16,4 +16,3 @@ public class Response
     [JsonPropertyName("sess_id")]
     public string? SessionId { get; set; }
 }
-

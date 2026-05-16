@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
 
-public class ArchiveConfigWriteRepository(IBearcatWriteDbContext dbWrite) : IArchiveConfigWriteRepository
+public class ArchiveConfigWriteRepository(IBearcatWriteDbContext dbWrite)
+    : IArchiveConfigWriteRepository
 {
     public void Add(ArchiveConfig archiveConfig)
     {
@@ -21,9 +22,14 @@ public class ArchiveConfigWriteRepository(IBearcatWriteDbContext dbWrite) : IArc
         return await dbWrite.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<ArchiveConfig?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<ArchiveConfig?> GetByIdAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
     {
-        return await dbWrite.ArchiveConfigs
-            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken: cancellationToken);
+        return await dbWrite.ArchiveConfigs.FirstOrDefaultAsync(
+            a => a.Id == id,
+            cancellationToken: cancellationToken
+        );
     }
 }

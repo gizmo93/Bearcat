@@ -12,7 +12,8 @@ namespace Bearcat.Website.Pages.ManageReleases;
 public partial class CreateOrEditReleaseDialog(
     IDialogService dialogService,
     IConfiguration configuration,
-    NavigationManager navigationManager) : OwningComponentBase
+    NavigationManager navigationManager
+) : OwningComponentBase
 {
     [CascadingParameter]
     public IMudDialogInstance MudDialog { get; set; } = null!;
@@ -40,14 +41,13 @@ public partial class CreateOrEditReleaseDialog(
         var id = await service.CreateAsync(
             name: formModel.Name,
             releaseFolderPath: formModel.FolderPath,
-            releaseType: releaseType);
+            releaseType: releaseType
+        );
 
         navigationManager.NavigateTo("releases");
     }
 
-    private void HandleValidationRequested(
-        object? sender,
-        ValidationRequestedEventArgs args)
+    private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs args)
     {
         messageStore!.Clear();
 
@@ -73,16 +73,14 @@ public partial class CreateOrEditReleaseDialog(
 
         var parameters = new DialogParameters<FolderSelectionDialog>
         {
-            { dlg => dlg.BaseFolderPath, releasesPath }
+            { dlg => dlg.BaseFolderPath, releasesPath },
         };
 
         var dialog = await dialogService.ShowAsync<FolderSelectionDialog>(
             "Select release folder",
-            parameters, new DialogOptions
-            {
-                CloseButton = true,
-                FullWidth = true,
-            });
+            parameters,
+            new DialogOptions { CloseButton = true, FullWidth = true }
+        );
 
         var result = await dialog.Result;
 

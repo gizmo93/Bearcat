@@ -61,4 +61,3 @@ public class Files
     [JsonPropertyName("msg")]
     public string? Msg { get; set; }
 }
-

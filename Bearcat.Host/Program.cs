@@ -1,28 +1,29 @@
-﻿using Bearcat.Application.InversionOfControl;
-using Bearcat.Archivers.InversionOfControl;
+﻿using Bearcat.Archivers.InversionOfControl;
 using Bearcat.Domain.InversionOfControl;
 using Bearcat.Hosters.InversionOfControl;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.InversionOfControl;
 using Bearcat.LinkCrypters.InversionOfControl;
-using Bearcat.Website;
+using Bearcat.Website.Blueprint;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add MudBlazor services
-builder.Services.AddBearcatComponents();
+builder.Services.AddBearcatBlueprintComponents();
 
 // Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
 if (builder.Environment.IsDevelopment())
 {
-    builder.Configuration.AddJsonFile("appsettings.user.json", optional: true, reloadOnChange: false);
+    builder.Configuration.AddJsonFile(
+        "appsettings.user.json",
+        optional: true,
+        reloadOnChange: false
+    );
 }
 
-builder.Services.AddApplication();
+//builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddDomain();
 builder.Services.AddHosters();
@@ -41,12 +42,10 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-
 app.UseAntiforgery();
 
 app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 

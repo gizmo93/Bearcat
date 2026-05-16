@@ -1,0 +1,61 @@
+@page "/releases/create"
+@using Bearcat.Domain.ValueObjects
+@inherits OwningComponentBase
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="formModel.Name"
+                              Label="Name"
+                              Placeholder="Name your release" />
+
+            <BbFormFieldSelect TValue="ReleaseType?"
+                               @bind-Value="formModel.ReleaseType"
+                               Label="Release type"
+                               Placeholder="Select a release type">
+                @foreach (var releaseType in Enum.GetValues<ReleaseType>())
+                {
+                    <BbSelectItem Value="@((ReleaseType?)releaseType)" Text="@releaseType.ToString()" />
+                }
+            </BbFormFieldSelect>
+
+            <div class="space-y-2">
+                <label class="text-sm font-medium">Release folder</label>
+                <div class="bearcat-folder-field">
+                    <BbInput Value="@formModel.FolderPath" Disabled="true" Class="sm:flex-1" />
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Class="bearcat-folder-button"
+                              AriaLabel="Browse release folders"
+                              OnClick="OpenFolderDialogAsync">
+                        <LucideIcon Name="folder-open" class="h-4 w-4" />
+                        Browse
+                    </BbButton>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(folderValidationMessage))
+                {
+                    <p class="text-sm text-destructive">@folderValidationMessage</p>
+                }
+            </div>
+
+            @if (formModel.ReleaseType is not null)
+            {
+                <div class="rounded-lg border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                    @formModel.ReleaseType.Value.Description
+                </div>
+            }
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                Cancel
+            </BbButton>
+            <BbButton Type="ButtonType.Submit">
+                Create release
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

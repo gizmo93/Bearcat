@@ -9,7 +9,8 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
         int uploadConfigId,
         int linkCrypterRegistrationId,
         string? password,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var uploadConfigLinkCrypter = new UploadConfigLinkCrypter
         {
@@ -32,7 +33,8 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
     public async Task UpdateAsync(
         int id,
         string? password,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var uploadConfigLinkCrypter = await repository.GetByIdAsync(id, cancellationToken);
         uploadConfigLinkCrypter.Password = CleanPassword(password);

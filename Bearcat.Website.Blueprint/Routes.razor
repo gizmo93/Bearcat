@@ -1,0 +1,8 @@
+@using System.Reflection
+@using Bearcat.Website.Blueprint.Layout
+<Router AppAssembly="Assembly.GetExecutingAssembly()">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>

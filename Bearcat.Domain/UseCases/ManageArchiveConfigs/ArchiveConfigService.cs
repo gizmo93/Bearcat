@@ -1,7 +1,8 @@
-﻿namespace Bearcat.Domain.UseCases.ManageArchiveConfigs;
+﻿using Bearcat.Domain.Entities;
 
-public class ArchiveConfigService(
-    IArchiveConfigWriteRepository writeRepository)
+namespace Bearcat.Domain.UseCases.ManageArchiveConfigs;
+
+public class ArchiveConfigService(IArchiveConfigWriteRepository writeRepository)
 {
     public async Task<int> CreateAsync(
         int releaseId,
@@ -10,9 +11,10 @@ public class ArchiveConfigService(
         string archiveNamePrefix,
         string? archivePassword,
         string name,
-        int? archiveFileSizeMb)
+        int? archiveFileSizeMb
+    )
     {
-        var archiveConfig = new Entities.ArchiveConfig
+        var archiveConfig = new ArchiveConfig
         {
             ReleaseId = releaseId,
             Name = name,
@@ -20,7 +22,7 @@ public class ArchiveConfigService(
             ArchiverName = archiverName,
             ArchiveNamePrefix = archiveNamePrefix,
             ArchivePassword = archivePassword,
-            ArchiveFileSizeMb = archiveFileSizeMb ?? 0
+            ArchiveFileSizeMb = archiveFileSizeMb ?? 0,
         };
 
         writeRepository.Add(archiveConfig);
@@ -34,7 +36,9 @@ public class ArchiveConfigService(
         var archiveConfig = await writeRepository.GetByIdAsync(archiveConfigId);
         if (archiveConfig == null)
         {
-            throw new InvalidOperationException($"ArchiveConfig with ID {archiveConfigId} not found");
+            throw new InvalidOperationException(
+                $"ArchiveConfig with ID {archiveConfigId} not found"
+            );
         }
 
         writeRepository.Remove(archiveConfig);
@@ -47,12 +51,15 @@ public class ArchiveConfigService(
         string archiveNamePrefix,
         string? archivePassword,
         string name,
-        int? archiveFileSizeMb)
+        int? archiveFileSizeMb
+    )
     {
         var archiveConfig = await writeRepository.GetByIdAsync(archiveConfigId);
         if (archiveConfig == null)
         {
-            throw new InvalidOperationException($"ArchiveConfig with ID {archiveConfigId} not found");
+            throw new InvalidOperationException(
+                $"ArchiveConfig with ID {archiveConfigId} not found"
+            );
         }
 
         archiveConfig.ArchiveFilesBasePath = archiveFilesBasePath;

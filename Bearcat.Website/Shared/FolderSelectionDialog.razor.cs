@@ -4,9 +4,7 @@ using MudBlazor;
 
 namespace Bearcat.Website.Shared;
 
-public partial class FolderSelectionDialog(
-    IFileSystemService fileSystemService)
-    : ComponentBase
+public partial class FolderSelectionDialog(IFileSystemService fileSystemService) : ComponentBase
 {
     [Parameter]
     public string BaseFolderPath { get; set; } = null!;
@@ -46,12 +44,12 @@ public partial class FolderSelectionDialog(
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            return Task.FromResult<IReadOnlyCollection<TreeItemData<string?>>>(new List<TreeItemData<string?>>());
+            return Task.FromResult<IReadOnlyCollection<TreeItemData<string?>>>(
+                new List<TreeItemData<string?>>()
+            );
         }
 
-        var items = fileSystemService.GetFoldersInPath(path)
-            .Select(CreateTreeViewItem)
-            .ToList();
+        var items = fileSystemService.GetFoldersInPath(path).Select(CreateTreeViewItem).ToList();
 
         return Task.FromResult<IReadOnlyCollection<TreeItemData<string?>>>(items);
     }
@@ -74,10 +72,15 @@ public partial class FolderSelectionDialog(
             return Task.FromResult(false);
         }
 
-        return Task.FromResult(item.Text.Contains(searchPhrase, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(
+            item.Text.Contains(searchPhrase, StringComparison.OrdinalIgnoreCase)
+        );
     }
 
-    private static void OnItemsLoaded(ITreeItemData<string?> treeItemData, IReadOnlyCollection<ITreeItemData<string?>> children)
+    private static void OnItemsLoaded(
+        ITreeItemData<string?> treeItemData,
+        IReadOnlyCollection<ITreeItemData<string?>> children
+    )
     {
         treeItemData.Children = children.ToList();
     }

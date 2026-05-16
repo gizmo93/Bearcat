@@ -16,23 +16,39 @@ public partial class AddNotifications : Migration
             name: "Notifications",
             columns: table => new
             {
-                Id = table.Column<int>(type: "integer", nullable: false)
-                    .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                CreatedAt = table.Column<DateTime>(type: "timestamp(4) with time zone", precision: 4, nullable: false),
-                ResolvedAt = table.Column<DateTime>(type: "timestamp(4) with time zone", precision: 4, nullable: true),
+                Id = table
+                    .Column<int>(type: "integer", nullable: false)
+                    .Annotation(
+                        "Npgsql:ValueGenerationStrategy",
+                        NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
+                    ),
+                CreatedAt = table.Column<DateTime>(
+                    type: "timestamp(4) with time zone",
+                    precision: 4,
+                    nullable: false
+                ),
+                ResolvedAt = table.Column<DateTime>(
+                    type: "timestamp(4) with time zone",
+                    precision: 4,
+                    nullable: true
+                ),
                 NotificationType = table.Column<int>(type: "integer", nullable: false),
-                Message = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false)
+                Message = table.Column<string>(
+                    type: "character varying(2000)",
+                    maxLength: 2000,
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
                 table.PrimaryKey("PK_Notifications", x => x.Id);
-            });
+            }
+        );
     }
 
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropTable(
-            name: "Notifications");
+        migrationBuilder.DropTable(name: "Notifications");
     }
 }

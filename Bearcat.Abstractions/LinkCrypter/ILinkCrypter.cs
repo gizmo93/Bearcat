@@ -13,14 +13,16 @@ public interface ILinkCrypter
         string containerName,
         string? password,
         IReadOnlyList<string> links,
-        CancellationToken cancellationToken = default);
-    
+        CancellationToken cancellationToken = default
+    );
+
     Task<UpdateContainerResult> UpdateContainerAsync(
         ILinkCrypterConfig linkCrypterConfig,
         string containerLink,
         string? externalReference,
         IReadOnlyList<string> links,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     string SerializeConfig(IReadOnlyDictionary<string, string> config);
 
@@ -28,5 +30,6 @@ public interface ILinkCrypter
 
     Task<TryLoginResult> TryLoginAsync(
         ILinkCrypterConfig linkCrypterConfig,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 }

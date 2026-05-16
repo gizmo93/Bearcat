@@ -25,4 +25,3 @@ public class Result
     [JsonPropertyName("name")]
     public string? Name { get; set; }
 }
-

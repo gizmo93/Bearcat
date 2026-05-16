@@ -32,16 +32,15 @@ public partial class CreateOrEditDialog
 
     private HashSet<string> displayedPasswords = new();
 
-    private LinkCrypterDto? SelectedCrypter => crypters
-        .FirstOrDefault(c => c.ClassName == formModel.ClassName);
+    private LinkCrypterDto? SelectedCrypter =>
+        crypters.FirstOrDefault(c => c.ClassName == formModel.ClassName);
 
     private bool isInitialized;
 
-
-
     protected override async Task OnInitializedAsync()
     {
-        readRepository = ScopedServices.GetRequiredService<ILinkCrypterRegistrationReadRepository>();
+        readRepository =
+            ScopedServices.GetRequiredService<ILinkCrypterRegistrationReadRepository>();
         linkCrypterFactory = ScopedServices.GetRequiredService<ILinkCrypterFactory>();
 
         await InitializeFormModelAsync();
@@ -61,14 +60,16 @@ public partial class CreateOrEditDialog
             await service.CreateAsync(
                 name: formModel.Name!,
                 className: formModel.ClassName!,
-                configuration: formModel.Configuration);
+                configuration: formModel.Configuration
+            );
         }
         else
         {
             await service.UpdateAsync(
                 id: LinkCrypterRegistrationId!.Value,
                 name: formModel.Name!,
-                configuration: formModel.Configuration);
+                configuration: formModel.Configuration
+            );
         }
 
         MudDialog.Close();
@@ -80,16 +81,15 @@ public partial class CreateOrEditDialog
 
         if (string.IsNullOrWhiteSpace(formModel.Name))
         {
-            validationMessageStore.Add(
-                () => formModel.Name!,
-                "Name is required.");
+            validationMessageStore.Add(() => formModel.Name!, "Name is required.");
         }
 
         if (string.IsNullOrWhiteSpace(formModel.ClassName))
         {
             validationMessageStore.Add(
                 () => formModel.ClassName!,
-                "You need to select a link crypter");
+                "You need to select a link crypter"
+            );
         }
 
         if (string.IsNullOrWhiteSpace(formModel.ClassName))
@@ -98,19 +98,20 @@ public partial class CreateOrEditDialog
         }
 
         var configuredKeys = formModel
-            .Configuration
-            .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Value))
+            .Configuration.Where(kvp => !string.IsNullOrWhiteSpace(kvp.Value))
             .Select(kvp => kvp.Key)
             .ToHashSet();
 
         var missingKeys = SelectedCrypter!
-            .ConfigurationKeys
-            .Where(key => !configuredKeys.Contains(key))
+            .ConfigurationKeys.Where(key => !configuredKeys.Contains(key))
             .ToList();
 
         foreach (var key in missingKeys)
         {
-            validationMessageStore.Add(() => formModel.Configuration, $"You need to provide a value for '{key}'");
+            validationMessageStore.Add(
+                () => formModel.Configuration,
+                $"You need to provide a value for '{key}'"
+            );
         }
     }
 
@@ -133,8 +134,10 @@ public partial class CreateOrEditDialog
         {
             Name = registration!.Name,
             ClassName = registration.LinkCrypterClassName,
-            Configuration = registration.Configuration
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+            Configuration = registration.Configuration.ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value
+            ),
         };
 
         StateHasChanged();
@@ -170,8 +173,6 @@ public partial class CreateOrEditDialog
             return;
         }
 
-        formModel.Configuration = crypter.ConfigurationKeys
-            .ToDictionary(k => k, k => string.Empty);
+        formModel.Configuration = crypter.ConfigurationKeys.ToDictionary(k => k, k => string.Empty);
     }
 }
-

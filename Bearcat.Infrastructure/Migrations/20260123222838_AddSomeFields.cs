@@ -15,7 +15,8 @@ public partial class AddSomeFields : Migration
             name: "LinksDistributedTo",
             table: "UploadConfigs",
             type: "text[]",
-            nullable: false);
+            nullable: false
+        );
 
         migrationBuilder.AddColumn<string>(
             name: "Name",
@@ -23,18 +24,15 @@ public partial class AddSomeFields : Migration
             type: "character varying(100)",
             maxLength: 100,
             nullable: false,
-            defaultValue: "");
+            defaultValue: ""
+        );
     }
 
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropColumn(
-            name: "LinksDistributedTo",
-            table: "UploadConfigs");
+        migrationBuilder.DropColumn(name: "LinksDistributedTo", table: "UploadConfigs");
 
-        migrationBuilder.DropColumn(
-            name: "Name",
-            table: "ArchiveConfigs");
+        migrationBuilder.DropColumn(name: "Name", table: "ArchiveConfigs");
     }
 }

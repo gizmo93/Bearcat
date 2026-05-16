@@ -2,7 +2,6 @@ using System.Text.Json.Serialization;
 
 namespace Bearcat.Hosters.DDownload.Api.UploadFile;
 
-
 public class Response
 {
     [JsonPropertyName("file_status")]
@@ -11,4 +10,3 @@ public class Response
     [JsonPropertyName("file_code")]
     public string FileCode { get; set; } = null!;
 }
-

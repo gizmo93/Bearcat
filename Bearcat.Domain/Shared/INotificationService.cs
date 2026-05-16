@@ -13,21 +13,25 @@ public interface INotificationService
     void CreateInfo<TEntity>(
         string message,
         TEntity entity,
-        Expression<Func<Notification, TEntity?>> selector);
+        Expression<Func<Notification, TEntity?>> selector
+    );
 
     void CreateWarning<TEntity>(
         string message,
         TEntity entity,
-        Expression<Func<Notification, TEntity?>> selector);
+        Expression<Func<Notification, TEntity?>> selector
+    );
 
     void CreateError<TEntity>(
         string message,
         TEntity entity,
-        Expression<Func<Notification, TEntity?>> selector);
+        Expression<Func<Notification, TEntity?>> selector
+    );
 
     void Create<TEntity>(
         NotificationType type,
         string message,
         TEntity entity,
-        Expression<Func<Notification, TEntity?>> selector);
+        Expression<Func<Notification, TEntity?>> selector
+    );
 }

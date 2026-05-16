@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Bearcat.Infrastructure.Database;
 
 public class BearcatDbContext(DbContextOptions<BearcatDbContext> options)
-    : DbContext(options), IBearcatReadDbContext, IBearcatWriteDbContext
+    : DbContext(options),
+        IBearcatReadDbContext,
+        IBearcatWriteDbContext
 {
     public DbSet<HosterRegistration> HosterRegistrations { get; set; } = null!;
 
@@ -29,7 +31,6 @@ public class BearcatDbContext(DbContextOptions<BearcatDbContext> options)
     public DbSet<UploadConfigLinkCrypter> UploadConfigLinkCrypters { get; set; } = null!;
 
     public DbSet<LinkCrypterContainer> LinkCrypterContainers { get; set; } = null!;
-
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

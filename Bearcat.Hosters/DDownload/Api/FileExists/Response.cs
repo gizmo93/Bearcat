@@ -45,4 +45,3 @@ public class Matches
     [JsonPropertyName("link")]
     public string Link { get; set; } = null!;
 }
-

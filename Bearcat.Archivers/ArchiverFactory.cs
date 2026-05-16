@@ -17,7 +17,8 @@ public class ArchiverFactory(IServiceProvider serviceProvider) : IArchiverFactor
             .Select(a => new ArchiverDto(
                 Name: a.Name,
                 ClassName: a.GetType().Name,
-                FileExtension: a.FileExtension))
+                FileExtension: a.FileExtension
+            ))
             .ToList();
     }
 }

@@ -15,11 +15,19 @@ public partial class AddMoreLinkCrypterTables : Migration
             name: "UploadConfigLinkCrypters",
             columns: table => new
             {
-                Id = table.Column<int>(type: "integer", nullable: false)
-                    .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                Id = table
+                    .Column<int>(type: "integer", nullable: false)
+                    .Annotation(
+                        "Npgsql:ValueGenerationStrategy",
+                        NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
+                    ),
                 UploadConfigId = table.Column<int>(type: "integer", nullable: false),
                 LinkCrypterRegistrationId = table.Column<int>(type: "integer", nullable: false),
-                ContainerName = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false)
+                ContainerName = table.Column<string>(
+                    type: "character varying(300)",
+                    maxLength: 300,
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
@@ -29,14 +37,17 @@ public partial class AddMoreLinkCrypterTables : Migration
                     column: x => x.LinkCrypterRegistrationId,
                     principalTable: "LinkCrypterRegistrations",
                     principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
+                    onDelete: ReferentialAction.Cascade
+                );
                 table.ForeignKey(
                     name: "FK_UploadConfigLinkCrypters_UploadConfigs_UploadConfigId",
                     column: x => x.UploadConfigId,
                     principalTable: "UploadConfigs",
                     principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
-            });
+                    onDelete: ReferentialAction.Cascade
+                );
+            }
+        );
 
         migrationBuilder.CreateTable(
             name: "LinkCrypterContainers",
@@ -45,8 +56,16 @@ public partial class AddMoreLinkCrypterTables : Migration
                 Id = table.Column<int>(type: "integer", nullable: false),
                 UploadConfigLinkCrypterId = table.Column<int>(type: "integer", nullable: false),
                 UploadId = table.Column<int>(type: "integer", nullable: false),
-                ExternalReference = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                ContainerUrl = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false)
+                ExternalReference = table.Column<string>(
+                    type: "character varying(100)",
+                    maxLength: 100,
+                    nullable: false
+                ),
+                ContainerUrl = table.Column<string>(
+                    type: "character varying(200)",
+                    maxLength: 200,
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
@@ -56,38 +75,42 @@ public partial class AddMoreLinkCrypterTables : Migration
                     column: x => x.Id,
                     principalTable: "UploadConfigLinkCrypters",
                     principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
+                    onDelete: ReferentialAction.Cascade
+                );
                 table.ForeignKey(
                     name: "FK_LinkCrypterContainers_Uploads_UploadId",
                     column: x => x.UploadId,
                     principalTable: "Uploads",
                     principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
-            });
+                    onDelete: ReferentialAction.Cascade
+                );
+            }
+        );
 
         migrationBuilder.CreateIndex(
             name: "IX_LinkCrypterContainers_UploadId",
             table: "LinkCrypterContainers",
-            column: "UploadId");
+            column: "UploadId"
+        );
 
         migrationBuilder.CreateIndex(
             name: "IX_UploadConfigLinkCrypters_LinkCrypterRegistrationId",
             table: "UploadConfigLinkCrypters",
-            column: "LinkCrypterRegistrationId");
+            column: "LinkCrypterRegistrationId"
+        );
 
         migrationBuilder.CreateIndex(
             name: "IX_UploadConfigLinkCrypters_UploadConfigId",
             table: "UploadConfigLinkCrypters",
-            column: "UploadConfigId");
+            column: "UploadConfigId"
+        );
     }
 
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropTable(
-            name: "LinkCrypterContainers");
+        migrationBuilder.DropTable(name: "LinkCrypterContainers");
 
-        migrationBuilder.DropTable(
-            name: "UploadConfigLinkCrypters");
+        migrationBuilder.DropTable(name: "UploadConfigLinkCrypters");
     }
 }

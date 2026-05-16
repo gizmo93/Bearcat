@@ -4,7 +4,8 @@ namespace Bearcat.Hosters.Rapidgator.Api.File;
 
 public class CheckLinksResponse
 {
-    [JsonPropertyName("response")] public List<ResponseObject>? Responses { get; set; }
+    [JsonPropertyName("response")]
+    public List<ResponseObject>? Responses { get; set; }
 
     public int Status { get; set; }
 

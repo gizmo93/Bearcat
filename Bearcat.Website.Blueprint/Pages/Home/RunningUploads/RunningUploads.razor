@@ -1,0 +1,94 @@
+@using Bearcat.Domain.Entities
+@using Bearcat.Domain.ValueObjects
+<section class="space-y-3">
+    <div>
+        <h2 class="text-lg font-semibold">Running and pending uploads</h2>
+        <p class="text-sm text-muted-foreground">Upload queues, status, and per-file progress.</p>
+    </div>
+
+    <BbDataTable TData="Upload"
+                 Data="SortedUploads"
+                 ShowToolbar="false"
+                 ShowPagination="@(Uploads.Count > 10)"
+                 InitialPageSize="10"
+                 AriaLabel="Running uploads"
+                 Class="rounded-lg border border-border/70">
+        <Columns>
+            <BbDataTableColumn TData="Upload" TValue="int"
+                               Header="Id"
+                               Property="@(upload => upload.Id)"
+                               Sortable="true" />
+            <BbDataTableColumn TData="Upload" TValue="string"
+                               Header="Release"
+                               Property="@(upload => upload.UploadConfig.Release.Name)"
+                               Sortable="true"
+                               Filterable="true">
+                <CellTemplate Context="upload">
+                    <a class="font-medium text-primary transition hover:underline" href="@($"/releases/{upload.UploadConfig.ReleaseId}")">
+                        @upload.UploadConfig.Release.Name
+                    </a>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="Upload" TValue="string"
+                               Header="Upload config"
+                               Property="@(upload => upload.UploadConfig.Name)"
+                               Sortable="true"
+                               Filterable="true" />
+            <BbDataTableColumn TData="Upload" TValue="string"
+                               Header="Hoster"
+                               Property="@(upload => upload.UploadConfig.HosterRegistration.Name)"
+                               Sortable="true"
+                               Filterable="true" />
+            <BbDataTableColumn TData="Upload" TValue="string"
+                               Header="State"
+                               Property="@(upload => upload.UploadState.ToString())"
+                               Sortable="true">
+                <CellTemplate Context="upload">
+                    <BbBadge Variant="@GetUploadVariant(upload.UploadState)">
+                        @upload.UploadState
+                    </BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="Upload" TValue="double"
+                               Header="Progress"
+                               Property="@(GetUploadProgress)"
+                               Sortable="true">
+                <CellTemplate Context="upload">
+                    @{
+                        var percentage = GetUploadProgress(upload);
+                        var isExpanded = showDetailIds.Contains(upload.Id);
+                    }
+                    @if (upload.UploadState is UploadState.Uploading)
+                    {
+                        <div class="flex items-center justify-end gap-3">
+                            <div class="flex min-w-[9rem] items-center gap-3">
+                                <BbProgress Value="percentage" Class="w-full" />
+                                <span class="w-12 text-right text-xs text-muted-foreground">@percentage%</span>
+                            </div>
+                            <BbButton Variant="ButtonVariant.Ghost"
+                                      Size="ButtonSize.IconSmall"
+                                      AriaLabel="Toggle upload details"
+                                      OnClick="@(_ => ToggleShowUploadDetails(upload.Id))">
+                                <LucideIcon Name="@(isExpanded ? "chevron-up" : "chevron-down")" class="h-4 w-4" />
+                            </BbButton>
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="text-xs text-muted-foreground">-</span>
+                    }
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+    </BbDataTable>
+
+    @if (ExpandedUploads.Count > 0)
+    {
+        <div class="space-y-4">
+            @foreach (var upload in ExpandedUploads)
+            {
+                <FileDetails Upload="upload" />
+            }
+        </div>
+    }
+</section>

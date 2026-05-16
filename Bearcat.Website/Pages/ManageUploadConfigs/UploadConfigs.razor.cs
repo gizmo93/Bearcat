@@ -8,9 +8,7 @@ using MudBlazor;
 
 namespace Bearcat.Website.Pages.ManageUploadConfigs;
 
-public partial class UploadConfigs(
-    IDialogService dialogService)
-    : IReloadableComponent
+public partial class UploadConfigs(IDialogService dialogService) : IReloadableComponent
 {
     [Parameter]
     [EditorRequired]
@@ -28,16 +26,22 @@ public partial class UploadConfigs(
 
     private async Task ShowAddDialogAsync()
     {
-        var parameters = new DialogParameters<CreateOrEditUploadConfigDialog> { { dlg => dlg.ReleaseId, ReleaseId } };
+        var parameters = new DialogParameters<CreateOrEditUploadConfigDialog>
+        {
+            { dlg => dlg.ReleaseId, ReleaseId },
+        };
 
-        var dialog = await dialogService.ShowAsync<CreateOrEditUploadConfigDialog>("Add Upload Config", parameters,
+        var dialog = await dialogService.ShowAsync<CreateOrEditUploadConfigDialog>(
+            "Add Upload Config",
+            parameters,
             new DialogOptions
             {
                 BackdropClick = false,
                 CloseOnEscapeKey = false,
                 CloseButton = true,
                 FullWidth = true,
-            });
+            }
+        );
 
         await dialog.Result;
         await LoadUploadConfigsAsync();
@@ -47,7 +51,8 @@ public partial class UploadConfigs(
     {
         var parameters = new DialogParameters<CreateOrEditUploadConfigDialog>
         {
-            { dlg => dlg.ReleaseId, ReleaseId }, { dlg => dlg.UploadConfigId, uploadConfigDto.UploadConfigId }
+            { dlg => dlg.ReleaseId, ReleaseId },
+            { dlg => dlg.UploadConfigId, uploadConfigDto.UploadConfigId },
         };
 
         var dialog = await dialogService.ShowAsync<CreateOrEditUploadConfigDialog>(
@@ -59,7 +64,8 @@ public partial class UploadConfigs(
                 CloseOnEscapeKey = false,
                 CloseButton = true,
                 FullWidth = true,
-            });
+            }
+        );
 
         await dialog.Result;
         await LoadUploadConfigsAsync();
@@ -71,7 +77,8 @@ public partial class UploadConfigs(
             title: "Delete Upload Config",
             message: $"Are you sure you want to delete the upload config {uploadConfigDto.Name}?",
             yesText: "Delete",
-            noText: "Cancel");
+            noText: "Cancel"
+        );
 
         if (dialog == true)
         {

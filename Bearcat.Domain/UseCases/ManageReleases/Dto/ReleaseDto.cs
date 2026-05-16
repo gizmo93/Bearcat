@@ -8,7 +8,8 @@ public record ReleaseDto(
     ReleaseType ReleaseType,
     string ReleaseFolderPath,
     int ActiveUploadConfigsCount,
-    int OnlineUploadConfigsCount)
+    int OnlineUploadConfigsCount
+)
 {
     public OnlineState? OnlineState
     {

@@ -12,7 +12,8 @@ public class ArchiveFileConfiguration : IEntityTypeConfiguration<ArchiveFile>
         builder.Property(a => a.ArchiveId).IsRequired();
         builder.Property(a => a.FullFileName).IsRequired().HasMaxLength(1000);
 
-        builder.HasMany(a => a.UploadedFiles)
+        builder
+            .HasMany(a => a.UploadedFiles)
             .WithOne(u => u.ArchiveFile)
             .HasForeignKey(u => u.ArchiveFileId)
             .HasPrincipalKey(a => a.Id)

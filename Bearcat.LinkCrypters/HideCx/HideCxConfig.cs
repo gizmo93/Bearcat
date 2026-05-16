@@ -8,9 +8,6 @@ public record HideCxConfig : ILinkCrypterConfig
 
     public IReadOnlyDictionary<string, string> ToDictionary()
     {
-        return new Dictionary<string, string>
-        {
-            [nameof(ApiKey)] = ApiKey
-        };
+        return new Dictionary<string, string> { [nameof(ApiKey)] = ApiKey };
     }
 }

@@ -7,15 +7,17 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 
 public class LinkCrypterRegistrationReadRepository(
     IBearcatReadDbContext dbRead,
-    ILinkCrypterFactory linkCrypterFactory) : ILinkCrypterRegistrationReadRepository
+    ILinkCrypterFactory linkCrypterFactory
+) : ILinkCrypterRegistrationReadRepository
 {
     public async Task<IReadOnlyList<LinkCrypterRegistrationDto>> GetAllAsync(
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var cryptersByClassName = linkCrypterFactory.GetByClassName();
 
-        return await dbRead.LinkCrypterRegistrations
-            .Select(l => new LinkCrypterRegistrationDto(
+        return await dbRead
+            .LinkCrypterRegistrations.Select(l => new LinkCrypterRegistrationDto(
                 l.Id,
                 l.Name,
                 l.LinkCrypterClassName,
@@ -24,18 +26,20 @@ public class LinkCrypterRegistrationReadRepository(
                 cryptersByClassName[l.LinkCrypterClassName]
                     .DeserializeConfig(l.SerializedConfig)
                     .ToDictionary(),
-                l.IsActive))
+                l.IsActive
+            ))
             .ToListAsync(cancellationToken);
     }
 
     public async Task<LinkCrypterRegistrationDto?> GetByIdAsync(
         int id,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var cryptersByClassName = linkCrypterFactory.GetByClassName();
 
-        return await dbRead.LinkCrypterRegistrations
-            .Where(l => l.Id == id)
+        return await dbRead
+            .LinkCrypterRegistrations.Where(l => l.Id == id)
             .Select(l => new LinkCrypterRegistrationDto(
                 l.Id,
                 l.Name,
@@ -45,7 +49,8 @@ public class LinkCrypterRegistrationReadRepository(
                 cryptersByClassName[l.LinkCrypterClassName]
                     .DeserializeConfig(l.SerializedConfig)
                     .ToDictionary(),
-                l.IsActive))
+                l.IsActive
+            ))
             .FirstOrDefaultAsync(cancellationToken);
     }
 }

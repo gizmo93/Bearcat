@@ -15,14 +15,13 @@ public partial class AddErrorMessagesToUploadedFile : Migration
             name: "ErrorMessages",
             table: "UploadedFiles",
             type: "text[]",
-            nullable: true);
+            nullable: true
+        );
     }
 
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropColumn(
-            name: "ErrorMessages",
-            table: "UploadedFiles");
+        migrationBuilder.DropColumn(name: "ErrorMessages", table: "UploadedFiles");
     }
 }

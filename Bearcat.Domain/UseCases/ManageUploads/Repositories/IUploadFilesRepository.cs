@@ -6,15 +6,18 @@ public interface IUploadFilesRepository
 {
     Task<IReadOnlyList<Upload>> GetPendingUploadsAsync(
         IReadOnlySet<int> uploadIdsToExclude,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     Task<IReadOnlyList<Upload>> GetOrphanedUploadsAsync(CancellationToken cancellationToken);
     void ClearChangeTracker();
 
     Task<IReadOnlyDictionary<int, string>> GetConfigByHosterRegistrationId(
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 
     Task<IReadOnlyDictionary<string, string>> GetConfigByHosterClassName(
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 }

@@ -7,4 +7,5 @@ public record FileUploadCompleted(
     ArchiveFile ArchiveFile,
     string? FileUrl,
     bool IsSuccess,
-    IReadOnlyList<string> Errors);
+    IReadOnlyList<string> Errors
+);

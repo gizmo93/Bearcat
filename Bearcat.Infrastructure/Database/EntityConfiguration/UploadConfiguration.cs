@@ -17,14 +17,16 @@ public class UploadConfiguration : IEntityTypeConfiguration<Upload>
         builder.Property(u => u.OnlineState).IsRequired();
         builder.Property(u => u.ErrorMessages);
 
-        builder.HasMany(u => u.UploadedFiles)
+        builder
+            .HasMany(u => u.UploadedFiles)
             .WithOne(u => u.Upload)
             .HasForeignKey(u => u.UploadId)
             .HasPrincipalKey(u => u.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(u => u.LinkCrypterContainers)
+        builder
+            .HasMany(u => u.LinkCrypterContainers)
             .WithOne(l => l.Upload)
             .HasForeignKey(l => l.UploadId)
             .HasPrincipalKey(u => u.Id)

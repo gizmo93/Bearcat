@@ -48,4 +48,3 @@ public partial class ReleaseDetail(NavigationManager navigationManager)
         }
     }
 }
-

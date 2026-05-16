@@ -9,4 +9,3 @@ public partial class FileDetails : ComponentBase
     [EditorRequired]
     public Upload Upload { get; set; } = null!;
 }
-

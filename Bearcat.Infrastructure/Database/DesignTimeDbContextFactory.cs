@@ -10,9 +10,11 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<BearcatDbC
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
         var optionsBuilder = new DbContextOptionsBuilder<BearcatDbContext>();
-        
+
         // Dummy credentials when creating migrations using dotnet-ef
-        optionsBuilder.UseNpgsql("Host=localhost;Database=bearcat;Username=postgres;Password=postgres");
+        optionsBuilder.UseNpgsql(
+            "Host=localhost;Database=bearcat;Username=postgres;Password=postgres"
+        );
         return new BearcatDbContext(optionsBuilder.Options);
     }
 }

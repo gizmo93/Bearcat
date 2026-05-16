@@ -10,7 +10,8 @@ namespace Bearcat.Website.Pages.ManageReleases;
 public partial class AllReleasesPage(
     IReleaseReadRepository readRepository,
     IDialogService dialogService,
-    NavigationManager navigationManager)
+    NavigationManager navigationManager
+)
 {
     private IReadOnlyList<ReleaseDto> releases = [];
     private ReleaseService service = null!;
@@ -31,7 +32,8 @@ public partial class AllReleasesPage(
             title: $"Delete Release {release.Name}",
             message: $"Are you sure you want to delete the release {release.Name}?",
             yesText: "Delete",
-            noText: "Cancel");
+            noText: "Cancel"
+        );
 
         if (result is true)
         {
@@ -42,12 +44,15 @@ public partial class AllReleasesPage(
 
     private async Task ShowAddReleaseDialogAsync()
     {
-        var dialog = await dialogService.ShowAsync<CreateOrEditReleaseDialog>("Create Release", new DialogOptions
-        {
-            BackdropClick = false,
-            FullWidth = true,
-            CloseButton = true,
-        });
+        var dialog = await dialogService.ShowAsync<CreateOrEditReleaseDialog>(
+            "Create Release",
+            new DialogOptions
+            {
+                BackdropClick = false,
+                FullWidth = true,
+                CloseButton = true,
+            }
+        );
 
         await dialog.Result;
         await RefreshReleasesAsync();
@@ -64,4 +69,3 @@ public partial class AllReleasesPage(
         releases = await readRepository.GetReleasesAsync();
     }
 }
-

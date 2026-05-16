@@ -10,7 +10,8 @@ public class ReleaseService(IReleaseWriteRepository writeRepository)
         string name,
         string releaseFolderPath,
         ReleaseType releaseType,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var release = new Release
         {
@@ -25,7 +26,11 @@ public class ReleaseService(IReleaseWriteRepository writeRepository)
         return release.Id;
     }
 
-    public async Task UpdateAsync(int releaseId, string name, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(
+        int releaseId,
+        string name,
+        CancellationToken cancellationToken = default
+    )
     {
         var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
         release.Name = name;

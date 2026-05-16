@@ -6,4 +6,5 @@ public record HosterRegistrationDto(
     bool IsActive,
     string HosterName,
     string FullClassName,
-    IReadOnlyDictionary<string, string> Configuration);
+    IReadOnlyDictionary<string, string> Configuration
+);

@@ -5,24 +5,30 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
 
-public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite)
-    : IArchiveCreationRepository
+public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite) : IArchiveCreationRepository
 {
-    public async Task<IReadOnlyList<Upload>> GetUploadsWithoutArchiveAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Upload>> GetUploadsWithoutArchiveAsync(
+        CancellationToken cancellationToken
+    )
     {
-        return await dbWrite.Uploads
-            .Include(u => u.UploadConfig)
-            .ThenInclude(u => u.ArchiveConfig)
-            .ThenInclude(a => a.Release)
+        return await dbWrite
+            .Uploads.Include(u => u.UploadConfig)
+                .ThenInclude(u => u.ArchiveConfig)
+                    .ThenInclude(a => a.Release)
             .Where(u => u.ArchiveId == null && u.UploadState == UploadState.WaitingForArchive)
             .OrderBy(u => u.Id)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<int?> GetPossibleAssignableArchiveId(int archiveConfigId, CancellationToken cancellationToken)
+    public async Task<int?> GetPossibleAssignableArchiveId(
+        int archiveConfigId,
+        CancellationToken cancellationToken
+    )
     {
-        var archiveId = await dbWrite.Archives
-            .Where(a => a.ArchiveConfigId == archiveConfigId && a.ArchiveState == ArchiveState.Created)
+        var archiveId = await dbWrite
+            .Archives.Where(a =>
+                a.ArchiveConfigId == archiveConfigId && a.ArchiveState == ArchiveState.Created
+            )
             .OrderByDescending(a => a.Id)
             .Select(a => a.Id)
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
@@ -32,8 +38,8 @@ public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite)
 
     public async Task DeleteOrphanedArchivesAsync(CancellationToken cancellationToken)
     {
-        await dbWrite.Archives
-            .Where(a => a.ArchiveState == ArchiveState.Creating)
+        await dbWrite
+            .Archives.Where(a => a.ArchiveState == ArchiveState.Creating)
             .ExecuteDeleteAsync(cancellationToken);
     }
 

@@ -1,0 +1,109 @@
+@page "/releases"
+@using Bearcat.Domain.UseCases.ManageReleases.Dto
+@using Bearcat.Domain.ValueObjects
+@inherits OwningComponentBase
+
+<PageTitle>Releases - Bearcat</PageTitle>
+
+<section class="bearcat-releases-page space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">Releases</h1>
+            <p class="text-sm text-muted-foreground">
+                Manage release roots and inspect their current online state.
+            </p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddReleaseDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            New release
+        </BbButton>
+    </div>
+
+    <BbDataTable TData="ReleaseDto"
+                 Data="releases"
+                 ShowToolbar="false"
+                 ShowPagination="@(releases.Count > 10)"
+                 InitialPageSize="10"
+                 AriaLabel="Releases"
+                 Class="bearcat-releases-table">
+        <Columns>
+            <BbDataTableColumn TData="ReleaseDto" TValue="string"
+                               Header="Name"
+                               Property="@(release => release.Name)"
+                               Sortable="true"
+                               Filterable="true"
+                               Width="38%">
+                <CellTemplate Context="release">
+                    <a class="bearcat-release-list-name"
+                       href="@($"/releases/{release.ReleaseId}")">
+                        @release.Name
+                    </a>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseDto" TValue="string"
+                               Header="Online state"
+                               Property="@(release => release.OnlineState.ToString())"
+                               Sortable="true"
+                               Width="140px">
+                <CellTemplate Context="release">
+                    <OnlineStateBadge Value="@release.OnlineState" />
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseDto" TValue="string"
+                               Header="Release type"
+                               Property="@(release => release.ReleaseType.ToString())"
+                               Sortable="true"
+                               Width="140px">
+                <CellTemplate Context="release">
+                    <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
+                        <BbTooltipTrigger>
+                            <span class="bearcat-badge-trigger">
+                                <BbBadge Variant="BadgeVariant.Outline">@release.ReleaseType</BbBadge>
+                            </span>
+                        </BbTooltipTrigger>
+                        <BbTooltipContent Class="max-w-xs text-xs">
+                            @release.ReleaseType.Description
+                        </BbTooltipContent>
+                    </BbTooltip>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseDto" TValue="string"
+                               Header="Folder path"
+                               Property="@(release => release.ReleaseFolderPath)"
+                               Sortable="true"
+                               Filterable="true"
+                               MinWidth="260px">
+                <CellTemplate Context="release">
+                    <p class="bearcat-release-list-path" title="@release.ReleaseFolderPath">
+                        @release.ReleaseFolderPath
+                    </p>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseDto" TValue="string"
+                               Header=""
+                               Property="@(release => release.Name)"
+                               Width="56px">
+                <CellTemplate Context="release">
+                    <div class="flex justify-end">
+                        <BbDropdownMenu>
+                            <BbDropdownMenuTrigger>
+                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="Open release actions">
+                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                </BbButton>
+                            </BbDropdownMenuTrigger>
+                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                                <BbDropdownMenuItem Href="@($"/releases/{release.ReleaseId}")">
+                                    Open details
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await DeleteReleaseAsync(release))">
+                                    Delete release
+                                </BbDropdownMenuItem>
+                            </BbDropdownMenuContent>
+                        </BbDropdownMenu>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+    </BbDataTable>
+</section>

@@ -13,15 +13,15 @@ public class Notification
     public NotificationType NotificationType { get; set; }
 
     public string Message { get; set; } = null!;
-    
+
     public int? UploadId { get; set; }
 
     public Upload? Upload { get; set; }
-    
+
     public int? ArchiveId { get; set; }
 
     public Archive? Archive { get; set; }
-    
+
     public int? LinkCrypterContainerId { get; set; }
 
     public LinkCrypterContainer? LinkCrypterContainer { get; set; }

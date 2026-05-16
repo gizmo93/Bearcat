@@ -2,26 +2,30 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Hosters.DDownload.Api.AccountInfo;
 using Bearcat.Hosters.Shared;
 
 namespace Bearcat.Hosters.DDownload.Api;
 
-public class ApiClient(
-    IDDownloadApi api,
-    HttpClientProvider httpClientProvider)
+public class ApiClient(IDDownloadApi api, HttpClientProvider httpClientProvider)
 {
     public const string ApiBaseUrl = "https://api-v2.ddownload.com/api";
 
     public async Task<Dictionary<string, bool>> FilesExistAsync(
         string apiKey,
         IReadOnlySet<string> fileCodes,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var result = new Dictionary<string, bool>();
 
         foreach (var batch in fileCodes.Chunk(100))
         {
-            var response = await api.CheckFilesExistAsync(apiKey, batch.ToHashSet(), cancellationToken);
+            var response = await api.CheckFilesExistAsync(
+                apiKey,
+                batch.ToHashSet(),
+                cancellationToken
+            );
 
             foreach (var file in response.Result.Files)
             {
@@ -32,23 +36,26 @@ public class ApiClient(
         return result;
     }
 
-    public async Task<AccountInfo.Response> GetAccountInfoAsync(
+    public async Task<Response> GetAccountInfoAsync(
         string apiKey,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         return await api.GetAccountInfoAsync(apiKey, cancellationToken);
     }
 
     public async Task<RequestUpload.Response> RequestUploadAsync(
         string apiKey,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var response = await api.RequestUploadAsync(apiKey, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
             throw new HttpRequestException(
-                $"Request upload server failed with status code {response.StatusCode}");
+                $"Request upload server failed with status code {response.StatusCode}"
+            );
         }
 
         return response.Content!;
@@ -59,7 +66,8 @@ public class ApiClient(
         string fileName,
         string uploadUrl,
         string sessionId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         using var httpClient = httpClientProvider.GetUploadClient();
 
@@ -69,7 +77,7 @@ public class ApiClient(
         sessIdContent.Headers.ContentType = null;
         sessIdContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
         {
-            Name = "\"sess_id\""
+            Name = "\"sess_id\"",
         };
         multipartForm.Add(sessIdContent, "sess_id");
 
@@ -77,7 +85,7 @@ public class ApiClient(
         utypeContent.Headers.ContentType = null;
         utypeContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
         {
-            Name = "\"utype\""
+            Name = "\"utype\"",
         };
         multipartForm.Add(utypeContent, "utype");
 
@@ -85,7 +93,7 @@ public class ApiClient(
         fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
         {
             Name = "\"file\"",
-            FileName = $"\"{fileName}\""
+            FileName = $"\"{fileName}\"",
         };
 
         multipartForm.Add(fileContent);
@@ -98,7 +106,8 @@ public class ApiClient(
         if (!httpResponse.IsSuccessStatusCode)
         {
             throw new HttpRequestException(
-                $"Upload request failed with status code {httpResponse.StatusCode} for file {fileName}");
+                $"Upload request failed with status code {httpResponse.StatusCode} for file {fileName}"
+            );
         }
 
         var content = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
@@ -109,7 +118,8 @@ public class ApiClient(
             {
                 NumberHandling = JsonNumberHandling.AllowReadingFromString,
                 PropertyNameCaseInsensitive = true,
-            })!;
+            }
+        )!;
 
         return response.First();
     }

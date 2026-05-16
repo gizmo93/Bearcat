@@ -6,14 +6,16 @@ public class FileSystemService : IFileSystemService
 {
     public List<string> GetFoldersInPath(string path)
     {
-        return Directory.GetDirectories(
+        return Directory
+            .GetDirectories(
                 path: path,
                 searchPattern: "*",
                 enumerationOptions: new EnumerationOptions
                 {
                     IgnoreInaccessible = true,
-                    ReturnSpecialDirectories = false
-                })
+                    ReturnSpecialDirectories = false,
+                }
+            )
             .ToList();
     }
 

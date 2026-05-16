@@ -21,13 +21,20 @@ public static class ServiceProviderConfig
     {
         public void AddDatabase(IConfiguration configuration)
         {
-            services.AddDbContext<BearcatDbContext>(builder =>
-            {
-                var connectionString = configuration.GetRequiredSection("Database:ConnectionString").Value;
-                builder.UseNpgsql(connectionString);
-            }, ServiceLifetime.Transient);
+            services.AddDbContext<BearcatDbContext>(
+                builder =>
+                {
+                    var connectionString = configuration
+                        .GetRequiredSection("Database:ConnectionString")
+                        .Value;
+                    builder.UseNpgsql(connectionString);
+                },
+                ServiceLifetime.Transient
+            );
 
-            services.AddScoped<IBearcatWriteDbContext>(s => s.GetRequiredService<BearcatDbContext>());
+            services.AddScoped<IBearcatWriteDbContext>(s =>
+                s.GetRequiredService<BearcatDbContext>()
+            );
             services.AddScoped<IBearcatReadDbContext>(s =>
             {
                 var dbContext = s.GetRequiredService<BearcatDbContext>();
@@ -41,7 +48,10 @@ public static class ServiceProviderConfig
         private void AddRepositories()
         {
             services.AddScoped<IHosterConfigurationReadRepository, HosterConfigurationRepository>();
-            services.AddScoped<IHosterConfigurationWriteRepository, HosterConfigurationRepository>();
+            services.AddScoped<
+                IHosterConfigurationWriteRepository,
+                HosterConfigurationRepository
+            >();
             services.AddScoped<IReleaseWriteRepository, ReleaseWriteRepository>();
             services.AddScoped<IArchiveCreationRepository, ArchiveCreationRepository>();
             services.AddScoped<IUploadFilesRepository, UploadFilesRepository>();
@@ -52,12 +62,26 @@ public static class ServiceProviderConfig
             services.AddScoped<IArchiveReadRepository, ArchiveReadRepository>();
             services.AddScoped<IUploadConfigReadRepository, UploadConfigReadRepository>();
             services.AddScoped<IUploadConfigWriteRepository, UploadConfigWriteRepository>();
-            services.AddScoped<ILinkCrypterRegistrationWriteRepository, LinkCrypterRegistrationWriteRepository>();
-            services.AddScoped<ILinkCrypterRegistrationReadRepository, LinkCrypterRegistrationReadRepository>();
-            services
-                .AddScoped<ILinkCrypterContainerCreationWriteRepository, LinkCrypterContainerCreationWriteRepository>();
-            services.AddScoped<IUploadConfigLinkCrypterReadRepository, UploadConfigLinkCrypterReadRepository>();
-            services.AddScoped<IUploadConfigLinkCrypterWriteRepository, UploadConfigLinkCrypterWriteRepository>();
+            services.AddScoped<
+                ILinkCrypterRegistrationWriteRepository,
+                LinkCrypterRegistrationWriteRepository
+            >();
+            services.AddScoped<
+                ILinkCrypterRegistrationReadRepository,
+                LinkCrypterRegistrationReadRepository
+            >();
+            services.AddScoped<
+                ILinkCrypterContainerCreationWriteRepository,
+                LinkCrypterContainerCreationWriteRepository
+            >();
+            services.AddScoped<
+                IUploadConfigLinkCrypterReadRepository,
+                UploadConfigLinkCrypterReadRepository
+            >();
+            services.AddScoped<
+                IUploadConfigLinkCrypterWriteRepository,
+                UploadConfigLinkCrypterWriteRepository
+            >();
         }
     }
 }

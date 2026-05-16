@@ -11,7 +11,6 @@ public partial class RunningUploads : ComponentBase
 
     private readonly HashSet<int> showDetailIds = [];
 
-
     private void ToggleShowUploadDetails(int uploadId)
     {
         if (!showDetailIds.Remove(uploadId))
@@ -22,4 +21,3 @@ public partial class RunningUploads : ComponentBase
         StateHasChanged();
     }
 }
-

@@ -3,8 +3,7 @@ using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
 
-public class NotificationRepository(IBearcatWriteDbContext dbWrite)
-    : INotificationRepository
+public class NotificationRepository(IBearcatWriteDbContext dbWrite) : INotificationRepository
 {
     public void Add(Notification notification)
     {

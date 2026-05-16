@@ -1,0 +1,73 @@
+@using Bearcat.Domain.UseCases.ManageReleases.Dto
+<div class="space-y-4">
+    <div class="grid gap-4 md:grid-cols-2">
+        <div class="space-y-2">
+            <p class="text-xs text-muted-foreground">Password</p>
+            @if (Config.ArchivePassword is null)
+            {
+                <p class="text-sm">-</p>
+            }
+            else
+            {
+                <HiddenElement>
+                    <span class="text-sm">@Config.ArchivePassword</span>
+                </HiddenElement>
+            }
+        </div>
+
+        <div class="space-y-2">
+            <p class="text-xs text-muted-foreground">Size per archive (MB)</p>
+            <p class="text-sm"><NullableElement Value="Config.ArchiveFileSizeMb" /></p>
+        </div>
+
+        <div class="space-y-2">
+            <p class="text-xs text-muted-foreground">Archive name</p>
+            <p class="text-sm">
+                @if (!string.IsNullOrWhiteSpace(Config.ArchiveNamePrefix))
+                {
+                    @Config.ArchiveNameWithExtension
+                }
+                else
+                {
+                    <span class="text-muted-foreground">A random archive name will be generated</span>
+                }
+            </p>
+        </div>
+
+        <div class="space-y-2">
+            <p class="text-xs text-muted-foreground">Archive files base path</p>
+            <p class="truncate text-sm">@Config.ArchiveFilesBasePath</p>
+        </div>
+    </div>
+
+    @if (Config.ArchiveSummaries.Count > 0)
+    {
+        <div class="space-y-3">
+            <p class="text-sm font-medium">Archives</p>
+            <BbDataTable TData="ArchiveConfigDto.ArchiveSummary"
+                         Data="Config.ArchiveSummaries"
+                         ShowToolbar="false"
+                         ShowPagination="@(Config.ArchiveSummaries.Count > 10)"
+                         InitialPageSize="10"
+                         AriaLabel="Archive summaries"
+                         Class="rounded-lg border border-border/70">
+                <Columns>
+                    <BbDataTableColumn TData="ArchiveConfigDto.ArchiveSummary" TValue="int"
+                                       Header="Id"
+                                       Property="@(summary => summary.ArchiveId)"
+                                       Sortable="true">
+                        <CellTemplate Context="summary">
+                            <BbButton Variant="ButtonVariant.Link" OnClick="@(() => ShowArchiveDialogAsync(summary.ArchiveId))">
+                                @summary.ArchiveId
+                            </BbButton>
+                        </CellTemplate>
+                    </BbDataTableColumn>
+                    <BbDataTableColumn TData="ArchiveConfigDto.ArchiveSummary" TValue="int"
+                                       Header="File count"
+                                       Property="@(summary => summary.ArchiveFileCount)"
+                                       Sortable="true" />
+                </Columns>
+            </BbDataTable>
+        </div>
+    }
+</div>

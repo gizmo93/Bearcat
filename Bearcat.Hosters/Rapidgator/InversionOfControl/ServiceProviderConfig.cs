@@ -11,7 +11,8 @@ public static class ServiceProviderConfig
 {
     public static void AddRapidgator(this IServiceCollection services)
     {
-        services.AddRefitClient<IRapidgatorApi>(
+        services
+            .AddRefitClient<IRapidgatorApi>(
                 new RefitSettings
                 {
                     ContentSerializer = new SystemTextJsonContentSerializer(
@@ -19,8 +20,10 @@ public static class ServiceProviderConfig
                         {
                             NumberHandling = JsonNumberHandling.AllowReadingFromString,
                             PropertyNameCaseInsensitive = true,
-                        })
-                })
+                        }
+                    ),
+                }
+            )
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri("https://rapidgator.net/");

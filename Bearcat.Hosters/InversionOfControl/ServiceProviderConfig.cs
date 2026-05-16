@@ -14,14 +14,15 @@ public static class ServiceProviderConfig
         services.AddRapidgator();
         services.AddDdownload();
         services.AddGoFile();
-        
+
         services.AddScoped<IHosterFactory, HosterFactory>();
         services.AddHttpClient(
             name: HttpClientProvider.UploadHttpClientName,
             configureClient: c =>
             {
                 c.Timeout = Timeout.InfiniteTimeSpan;
-            });
+            }
+        );
 
         services.AddScoped<HttpClientProvider>();
     }

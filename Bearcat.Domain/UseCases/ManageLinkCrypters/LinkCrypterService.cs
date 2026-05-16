@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.LinkCrypter.Results;
+using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 
 namespace Bearcat.Domain.UseCases.ManageLinkCrypters;
@@ -7,33 +8,33 @@ namespace Bearcat.Domain.UseCases.ManageLinkCrypters;
 public class LinkCrypterService(
     ILinkCrypterRegistrationWriteRepository repository,
     ILinkCrypterRegistrationReadRepository readRepository,
-    ILinkCrypterFactory linkCrypterFactory)
+    ILinkCrypterFactory linkCrypterFactory
+)
 {
     public async Task CreateAsync(
         string name,
         string className,
         IReadOnlyDictionary<string, string> configuration,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var crypter = linkCrypterFactory.Get(className);
 
         var serializedConfig = crypter.SerializeConfig(configuration);
 
-        var registration = new Entities.LinkCrypterRegistration
+        var registration = new LinkCrypterRegistration
         {
             Name = name,
             LinkCrypterClassName = className,
             SerializedConfig = serializedConfig,
-            IsActive = true
+            IsActive = true,
         };
 
         repository.Add(registration);
         await repository.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task DeleteAsync(
-        int id,
-        CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
 
@@ -45,7 +46,8 @@ public class LinkCrypterService(
         int id,
         string name,
         IReadOnlyDictionary<string, string> configuration,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
 
@@ -59,9 +61,7 @@ public class LinkCrypterService(
         await repository.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task ToggleIsActiveAsync(
-        int id,
-        CancellationToken cancellationToken = default)
+    public async Task ToggleIsActiveAsync(int id, CancellationToken cancellationToken = default)
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
 
@@ -72,7 +72,8 @@ public class LinkCrypterService(
 
     public async Task<TryLoginResult> TryLoginAsync(
         int id,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var registration = await readRepository.GetByIdAsync(id, cancellationToken);
         var crypter = linkCrypterFactory.Get(registration!.LinkCrypterClassName);

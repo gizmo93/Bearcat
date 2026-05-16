@@ -4,14 +4,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
 
-public class UploadConfigWriteRepository(IBearcatWriteDbContext dbWrite) : IUploadConfigWriteRepository
+public class UploadConfigWriteRepository(IBearcatWriteDbContext dbWrite)
+    : IUploadConfigWriteRepository
 {
-    public async Task<UploadConfig> GetByIdAsync(int uploadConfigId, CancellationToken cancellationToken = default)
+    public async Task<UploadConfig> GetByIdAsync(
+        int uploadConfigId,
+        CancellationToken cancellationToken = default
+    )
     {
-        return await dbWrite.UploadConfigs
-            .FirstAsync(
-                u => u.Id == uploadConfigId,
-                cancellationToken: cancellationToken);
+        return await dbWrite.UploadConfigs.FirstAsync(
+            u => u.Id == uploadConfigId,
+            cancellationToken: cancellationToken
+        );
     }
 
     public void Add(UploadConfig uploadConfig)

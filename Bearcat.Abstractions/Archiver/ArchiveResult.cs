@@ -3,4 +3,5 @@
 public record ArchiveResult(
     bool IsSuccess,
     IReadOnlyList<string> CreatedFileNames,
-    IReadOnlyList<string>? ErrorMessages);
+    IReadOnlyList<string>? ErrorMessages
+);

@@ -13,7 +13,8 @@ public static class ServiceProviderConfig
     {
         public void AddDdownload()
         {
-            services.AddRefitClient<IDDownloadApi>(
+            services
+                .AddRefitClient<IDDownloadApi>(
                     new RefitSettings
                     {
                         ContentSerializer = new SystemTextJsonContentSerializer(
@@ -21,8 +22,10 @@ public static class ServiceProviderConfig
                             {
                                 NumberHandling = JsonNumberHandling.AllowReadingFromString,
                                 PropertyNameCaseInsensitive = true,
-                            })
-                    })
+                            }
+                        ),
+                    }
+                )
                 .ConfigureHttpClient(c =>
                 {
                     c.BaseAddress = new Uri(ApiClient.ApiBaseUrl);

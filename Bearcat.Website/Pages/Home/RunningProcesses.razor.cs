@@ -8,8 +8,7 @@ using Timer = System.Timers.Timer;
 
 namespace Bearcat.Website.Pages.Home;
 
-public partial class RunningProcesses(
-    NavigationManager navigationManager)
+public partial class RunningProcesses(NavigationManager navigationManager)
 {
     private IReadOnlyList<Upload> runningUploads = [];
 
@@ -46,26 +45,28 @@ public partial class RunningProcesses(
 
     private async Task LoadRunningUploadsAsync()
     {
-        runningUploads = await dbRead.Uploads
-            .AsSplitQuery()
+        runningUploads = await dbRead
+            .Uploads.AsSplitQuery()
             .Include(u => u.UploadedFiles)
             .Include(u => u.Archive)
-            .ThenInclude(a => a!.ArchiveFiles)
+                .ThenInclude(a => a!.ArchiveFiles)
             .Include(u => u.UploadConfig)
-            .ThenInclude(uc => uc.Release)
+                .ThenInclude(uc => uc.Release)
             .Include(u => u.UploadConfig)
-            .ThenInclude(u => u.HosterRegistration)
+                .ThenInclude(u => u.HosterRegistration)
             .Include(u => u.UploadConfig)
-            .ThenInclude(uc => uc.ArchiveConfig)
-            .Where(u => u.UploadState == UploadState.Pending || u.UploadState == UploadState.Uploading)
+                .ThenInclude(uc => uc.ArchiveConfig)
+            .Where(u =>
+                u.UploadState == UploadState.Pending || u.UploadState == UploadState.Uploading
+            )
             .ToListAsync();
     }
 
     private async Task LoadRunningArchivesAsync()
     {
-        runningArchives = await dbRead.Archives
-            .Include(a => a.ArchiveConfig)
-            .ThenInclude(ac => ac.Release)
+        runningArchives = await dbRead
+            .Archives.Include(a => a.ArchiveConfig)
+                .ThenInclude(ac => ac.Release)
             .Where(a => a.ArchiveState == ArchiveState.Creating)
             .ToListAsync();
     }
