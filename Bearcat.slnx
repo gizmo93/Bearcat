@@ -2,7 +2,6 @@
     <Folder Name="/1_Startups/">
         <Project Path="Bearcat.ConsoleApp/Bearcat.ConsoleApp.csproj" />
         <Project Path="Bearcat.Host\Bearcat.Host.csproj" />
-        <Project Path="Bearcat.Launcher/Bearcat.Launcher.csproj" />
     </Folder>
     <Folder Name="/2_Shared/">
         <Project Path="Bearcat.Abstractions/Bearcat.Abstractions.csproj" />
@@ -11,7 +10,6 @@
         <Project Path="Bearcat.Application/Bearcat.Application.csproj" />
         <Project Path="Bearcat.Domain\Bearcat.Domain.csproj" />
         <Project Path="Bearcat.Infrastructure/Bearcat.Infrastructure.csproj" />
-        <Project Path="Bearcat.Website\Bearcat.Website.csproj" />
         <Project Path="Bearcat.Website.Blueprint\Bearcat.Website.Blueprint.csproj" />
     </Folder>
     <Folder Name="/4_Plugins/">
