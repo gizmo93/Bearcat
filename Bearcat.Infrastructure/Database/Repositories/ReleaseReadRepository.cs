@@ -92,6 +92,101 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
+    public async Task<PagedResult<ReleaseUploadDto>> SearchUploadsAsync(
+        ReleaseUploadSearchQuery query,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var pageSize = Math.Clamp(query.PageSize, 5, 100);
+        var pageIndex = Math.Max(0, query.PageIndex);
+
+        var uploadsQuery = dbRead.Uploads.Where(u => u.UploadConfig.ReleaseId == query.ReleaseId);
+
+        if (query.UploadConfigId is not null)
+        {
+            uploadsQuery = uploadsQuery.Where(u => u.UploadConfigId == query.UploadConfigId.Value);
+        }
+
+        var totalCount = await uploadsQuery.CountAsync(cancellationToken);
+
+        var uploads = await uploadsQuery
+            .OrderByDescending(u => u.UploadedAt ?? u.CreatedAt)
+            .ThenByDescending(u => u.Id)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .Select(u => new ReleaseUploadDto(
+                u.Id,
+                u.UploadConfig.Name,
+                u.UploadConfig.HosterRegistration.Name,
+                u.CreatedAt,
+                u.UploadedAt,
+                u.UploadState,
+                u.OnlineState,
+                u.UploadedFiles.Count()
+            ))
+            .ToListAsync(cancellationToken: cancellationToken);
+
+        return new PagedResult<ReleaseUploadDto>(uploads, totalCount, pageIndex, pageSize);
+    }
+
+    public async Task<PagedResult<ReleaseUploadLinkDto>> SearchUploadLinksAsync(
+        ReleaseUploadLinkSearchQuery query,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var pageSize = Math.Clamp(query.PageSize, 5, 100);
+        var pageIndex = Math.Max(0, query.PageIndex);
+
+        var linksQuery = dbRead.UploadedFiles.Where(f =>
+            f.UploadId == query.UploadId && f.Upload.UploadConfig.ReleaseId == query.ReleaseId
+        );
+
+        if (query.OnlineState is not null)
+        {
+            linksQuery = linksQuery.Where(f => f.OnlineState == query.OnlineState.Value);
+        }
+
+        var totalCount = await linksQuery.CountAsync(cancellationToken);
+
+        var links = await linksQuery
+            .OrderBy(f => f.ArchiveFile.FullFileName)
+            .ThenBy(f => f.Id)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .Select(f => new ReleaseUploadLinkDto(
+                f.ArchiveFile.FullFileName,
+                f.HosterFileLink,
+                f.OnlineState,
+                f.CheckedAt
+            ))
+            .ToListAsync(cancellationToken: cancellationToken);
+
+        return new PagedResult<ReleaseUploadLinkDto>(links, totalCount, pageIndex, pageSize);
+    }
+
+    public async Task<IReadOnlyList<string>> GetUploadLinksAsync(
+        int releaseId,
+        int uploadId,
+        OnlineState? onlineState = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var linksQuery = dbRead.UploadedFiles.Where(f =>
+            f.UploadId == uploadId && f.Upload.UploadConfig.ReleaseId == releaseId
+        );
+
+        if (onlineState is not null)
+        {
+            linksQuery = linksQuery.Where(f => f.OnlineState == onlineState.Value);
+        }
+
+        return await linksQuery
+            .OrderBy(f => f.ArchiveFile.FullFileName)
+            .ThenBy(f => f.Id)
+            .Select(f => f.HosterFileLink)
+            .ToListAsync(cancellationToken: cancellationToken);
+    }
+
     private static Expression<Func<Release, ReleaseDto>> ToReleaseDto()
     {
         return entity => new ReleaseDto(

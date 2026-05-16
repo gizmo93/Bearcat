@@ -45,6 +45,7 @@
   <data name="AnyHosterConfig" xml:space="preserve"><value>Alle Hoster-Konfigurationen</value></data>
   <data name="AnyLinkCrypterConfig" xml:space="preserve"><value>Alle Link-Crypter-Konfigurationen</value></data>
   <data name="AnyOnlineState" xml:space="preserve"><value>Jeder Online-Status</value></data>
+  <data name="AllUploadConfigs" xml:space="preserve"><value>Alle Upload-Konfigurationen</value></data>
   <data name="AutoRefresh" xml:space="preserve"><value>Auto-Aktualisierung</value></data>
   <data name="BasePathRequired" xml:space="preserve"><value>Basispfad ist erforderlich</value></data>
   <data name="Browse" xml:space="preserve"><value>Durchsuchen</value></data>
@@ -53,6 +54,8 @@
   <data name="BuiltWithBlazorBlueprint" xml:space="preserve"><value>Erstellt mit BlazorBlueprint</value></data>
   <data name="Cancel" xml:space="preserve"><value>Abbrechen</value></data>
   <data name="Close" xml:space="preserve"><value>Schließen</value></data>
+  <data name="CopyAllLinks" xml:space="preserve"><value>Alle Links kopieren</value></data>
+  <data name="CopyUploadLinksFailed" xml:space="preserve"><value>Uploadlinks konnten nicht kopiert werden.</value></data>
   <data name="Configuration" xml:space="preserve"><value>Konfiguration</value></data>
   <data name="ConfigurationNamePlaceholder" xml:space="preserve"><value>Namen für die Konfiguration eingeben</value></data>
   <data name="ConfigurationValueMustBeProvided" xml:space="preserve"><value>Du musst einen Wert für „{0}“ angeben</value></data>
@@ -111,6 +114,7 @@
   <data name="HosterRegistrationActivated" xml:space="preserve"><value>Hoster-Registrierung {0} aktiviert</value></data>
   <data name="HosterRegistrationDeactivated" xml:space="preserve"><value>Hoster-Registrierung {0} deaktiviert</value></data>
   <data name="HosterRegistrationRequired" xml:space="preserve"><value>Hoster-Registrierung ist erforderlich.</value></data>
+  <data name="HideFileColumn" xml:space="preserve"><value>Datei ausblenden</value></data>
   <data name="HosterRegistrations" xml:space="preserve"><value>Hoster-Registrierungen</value></data>
   <data name="HosterRegistrationsIntro" xml:space="preserve"><value>Verwalte Hoster-Zugangsdaten, Aktivierungsstatus und Login-Prüfung.</value></data>
   <data name="HosterTarget" xml:space="preserve"><value>Hoster-Ziel</value></data>
@@ -148,6 +152,8 @@
   <data name="NoReleasesFound" xml:space="preserve"><value>Keine Releases gefunden</value></data>
   <data name="NoTargets" xml:space="preserve"><value>Keine Ziele</value></data>
   <data name="NoUploadConfigurationsYet" xml:space="preserve"><value>Noch keine Upload-Konfigurationen.</value></data>
+  <data name="NoUploadLinksFound" xml:space="preserve"><value>Keine Uploadlinks gefunden</value></data>
+  <data name="NoUploadsFound" xml:space="preserve"><value>Keine Uploads gefunden</value></data>
   <data name="OnlineConfigs" xml:space="preserve"><value>Online-Konfigs</value></data>
   <data name="OnlineState" xml:space="preserve"><value>Online-Status</value></data>
   <data name="OnlineState.Offline" xml:space="preserve"><value>Offline</value></data>
@@ -214,6 +220,7 @@
   <data name="SelectReleaseType" xml:space="preserve"><value>Release-Typ auswählen</value></data>
   <data name="SelectReleaseTypeRequired" xml:space="preserve"><value>Du musst einen Release-Typ auswählen</value></data>
   <data name="Selected" xml:space="preserve"><value>Ausgewählt</value></data>
+  <data name="ShowFileColumn" xml:space="preserve"><value>Datei anzeigen</value></data>
   <data name="ShowHiddenContent" xml:space="preserve"><value>Verborgenen Inhalt anzeigen</value></data>
   <data name="ShowHiddenContentConfirmation" xml:space="preserve"><value>Möchtest du diesen verborgenen Inhalt wirklich anzeigen?</value></data>
   <data name="Size" xml:space="preserve"><value>Größe</value></data>
@@ -230,6 +237,7 @@
   <data name="TotalConfigured" xml:space="preserve"><value>insgesamt konfiguriert</value></data>
   <data name="TryLogin" xml:space="preserve"><value>Login testen</value></data>
   <data name="UnhandledError" xml:space="preserve"><value>Ein unbehandelter Fehler ist aufgetreten.</value></data>
+  <data name="Upload" xml:space="preserve"><value>Upload</value></data>
   <data name="UploadConfig" xml:space="preserve"><value>Upload-Konfig.</value></data>
   <data name="UploadConfigDialogDescription" xml:space="preserve"><value>Lege fest, wohin Archive gehen, und verfolge verteilte Links.</value></data>
   <data name="UploadConfigLinkCrypters" xml:space="preserve"><value>Upload-Konfigurations-Link-Crypter</value></data>
@@ -237,6 +245,16 @@
   <data name="UploadConfigurations" xml:space="preserve"><value>Upload-Konfigurationen</value></data>
   <data name="UploadConfigurationsDescription" xml:space="preserve"><value>Hoster-Ziele und Metadaten zur Linkverteilung.</value></data>
   <data name="UploadFileStatus" xml:space="preserve"><value>Upload-Dateistatus</value></data>
+  <data name="UploadLink" xml:space="preserve"><value>Uploadlink</value></data>
+  <data name="UploadLinkResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Uploadlinks</value></data>
+  <data name="UploadLinks" xml:space="preserve"><value>Uploadlinks</value></data>
+  <data name="UploadLinksCopied" xml:space="preserve"><value>{0} Uploadlinks kopiert.</value></data>
+  <data name="UploadLinksDialogDescription" xml:space="preserve"><value>Links, die für Upload-Konfiguration {0} erzeugt wurden.</value></data>
+  <data name="UploadLinksTitle" xml:space="preserve"><value>Links für Upload #{0}</value></data>
+  <data name="UploadedAt" xml:space="preserve"><value>Hochgeladen am</value></data>
+  <data name="Uploads" xml:space="preserve"><value>Uploads</value></data>
+  <data name="UploadResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Uploads</value></data>
+  <data name="ReleaseUploads" xml:space="preserve"><value>Release-Uploads</value></data>
   <data name="UploadState.Completed" xml:space="preserve"><value>Abgeschlossen</value></data>
   <data name="UploadState.Failed" xml:space="preserve"><value>Fehlgeschlagen</value></data>
   <data name="UploadState.Pending" xml:space="preserve"><value>Ausstehend</value></data>
@@ -245,6 +263,8 @@
   <data name="UploadStatus" xml:space="preserve"><value>Upload-Status</value></data>
   <data name="UploadStatusSubtitle" xml:space="preserve"><value>Upload #{0} für {1}</value></data>
   <data name="UploadTarget" xml:space="preserve"><value>Upload-Ziel</value></data>
+  <data name="CheckedAt" xml:space="preserve"><value>Geprüft am</value></data>
+  <data name="ViewUploadLinks" xml:space="preserve"><value>Uploadlinks anzeigen</value></data>
   <data name="Welcome" xml:space="preserve"><value>Willkommen</value></data>
   <data name="Workspace" xml:space="preserve"><value>Arbeitsbereich</value></data>
   <data name="WorkspaceOverview" xml:space="preserve"><value>Arbeitsbereichsübersicht</value></data>

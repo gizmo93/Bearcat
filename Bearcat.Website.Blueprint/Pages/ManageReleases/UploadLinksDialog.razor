@@ -1,0 +1,173 @@
+@using Bearcat.Domain.UseCases.ManageReleases.Dto
+@using Bearcat.Domain.ValueObjects
+
+@if (!isInitialized)
+{
+    return;
+}
+
+<div class="bearcat-archive-dialog">
+    <div class="shrink-0 space-y-3">
+        <div class="grid gap-3 sm:grid-cols-2">
+            <div class="rounded-lg border border-border/70 bg-muted/30 px-3 py-2">
+                <p class="text-xs text-muted-foreground">@L["Upload"]</p>
+                <p class="text-sm font-medium">#@UploadId</p>
+            </div>
+            <div class="rounded-lg border border-border/70 bg-muted/30 px-3 py-2">
+                <p class="text-xs text-muted-foreground">@L["UploadConfig"]</p>
+                <p class="truncate text-sm font-medium" title="@UploadConfigName">@UploadConfigName</p>
+            </div>
+        </div>
+
+        <div class="bearcat-upload-filter-row">
+            <label class="bearcat-page-size">
+                <span>@L["OnlineState"]</span>
+                <BbSelect TValue="int"
+                          @bind-Value="selectedOnlineState"
+                          @bind-Value:after="OnOnlineStateFilterChangedAsync"
+                          Options="OnlineStateOptions"
+                          Placeholder="@L["AnyOnlineState"]"
+                          Class="w-48" />
+            </label>
+
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      OnClick="ToggleFileColumn">
+                <LucideIcon Name="@(showFileColumn ? "eye-off" : "eye")" class="h-4 w-4" />
+                @(showFileColumn ? L["HideFileColumn"] : L["ShowFileColumn"])
+            </BbButton>
+
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      Disabled="@(totalCount == 0 || isCopying || !isClipboardReady)"
+                      OnClick="CopyAllLinksAsync">
+                <LucideIcon Name="copy" class="h-4 w-4" />
+                @L["CopyAllLinks"]
+            </BbButton>
+        </div>
+    </div>
+
+    <div class="bearcat-archive-dialog-body">
+        <BbDataTable TData="ReleaseUploadLinkDto"
+                     @key="showFileColumn"
+                     Data="links"
+                     ShowToolbar="false"
+                     ShowPagination="false"
+                     IsLoading="isLoading"
+                     AriaLabel="@L["UploadLinks"]"
+                     Class="bearcat-upload-links-table rounded-lg border border-border/70">
+            <Columns>
+                <BbDataTableColumn TData="ReleaseUploadLinkDto" TValue="string"
+                                   Header="@L["OnlineState"]"
+                                   Property="@(link => link.OnlineState.ToString())"
+                                   Width="150px">
+                    <CellTemplate Context="link">
+                        <OnlineStateBadge Value="@link.OnlineState" />
+                    </CellTemplate>
+                </BbDataTableColumn>
+                <BbDataTableColumn TData="ReleaseUploadLinkDto" TValue="DateTime?"
+                                   Header="@L["CheckedAt"]"
+                                   Property="@(link => link.CheckedAt)"
+                                   Width="180px">
+                    <CellTemplate Context="link">
+                        <span class="text-sm">@(link.CheckedAt?.ToString("g") ?? "-")</span>
+                    </CellTemplate>
+                </BbDataTableColumn>
+                <BbDataTableColumn TData="ReleaseUploadLinkDto" TValue="string"
+                                   Header="@L["UploadLink"]"
+                                   Property="@(link => link.HosterFileLink)"
+                                   MinWidth="360px">
+                    <CellTemplate Context="link">
+                        <div class="flex min-w-0 items-center gap-2">
+                            <a class="bearcat-upload-link"
+                               href="@link.HosterFileLink"
+                               target="_blank"
+                               rel="noreferrer noopener"
+                               title="@link.HosterFileLink">
+                                @link.HosterFileLink
+                            </a>
+                        </div>
+                    </CellTemplate>
+                </BbDataTableColumn>
+                @if (showFileColumn)
+                {
+                    <BbDataTableColumn TData="ReleaseUploadLinkDto" TValue="string"
+                                       Header="@L["File"]"
+                                       Property="@(link => link.FileName)"
+                                       Width="35%">
+                        <CellTemplate Context="link">
+                            <p class="bearcat-file-link-name" title="@link.FileName">
+                                @GetFileName(link.FileName)
+                            </p>
+                        </CellTemplate>
+                    </BbDataTableColumn>
+                }
+            </Columns>
+            <EmptyTemplate>
+                <div class="bearcat-release-empty">
+                    <LucideIcon Name="inbox" class="h-5 w-5" />
+                    <span>@L["NoUploadLinksFound"]</span>
+                </div>
+            </EmptyTemplate>
+        </BbDataTable>
+
+        <div class="bearcat-release-pagination mt-3">
+            <p class="text-sm text-muted-foreground">
+                @L["UploadLinkResultsSummary", FirstResult, LastResult, totalCount]
+            </p>
+
+            <div class="bearcat-release-pagination-controls">
+                <label class="bearcat-page-size">
+                    <span>@L["RowsPerPage"]</span>
+                    <BbSelect TValue="int"
+                              @bind-Value="pageSize"
+                              @bind-Value:after="OnPageSizeChangedAsync"
+                              Options="PageSizeOptions"
+                              Class="w-24" />
+                </label>
+
+                @if (TotalPages > 1)
+                {
+                    <BbPagination Class="bearcat-release-page-nav">
+                        <BbPaginationContent>
+                            <BbPaginationItem>
+                                <BbPaginationPrevious Disabled="@(CurrentPage <= 1)"
+                                                      Text="@L["Previous"]"
+                                                      OnClick="GoToPreviousPageAsync" />
+                            </BbPaginationItem>
+
+                            @foreach (var page in PaginationItems)
+                            {
+                                <BbPaginationItem>
+                                    @if (page is null)
+                                    {
+                                        <BbPaginationEllipsis />
+                                    }
+                                    else
+                                    {
+                                        <BbPaginationLink IsActive="@(page == CurrentPage)"
+                                                          OnClick="@(() => GoToPageAsync(page.Value))">
+                                            @(page.Value)
+                                        </BbPaginationLink>
+                                    }
+                                </BbPaginationItem>
+                            }
+
+                            <BbPaginationItem>
+                                <BbPaginationNext Disabled="@(CurrentPage >= TotalPages)"
+                                                  Text="@L["Next"]"
+                                                  OnClick="GoToNextPageAsync" />
+                            </BbPaginationItem>
+                        </BbPaginationContent>
+                    </BbPagination>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="bearcat-archive-dialog-footer">
+        <BbButton Variant="ButtonVariant.Outline" OnClick="CloseAsync">
+            @L["Close"]
+        </BbButton>
+    </div>
+</div>

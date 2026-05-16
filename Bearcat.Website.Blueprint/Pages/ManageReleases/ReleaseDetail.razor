@@ -81,7 +81,8 @@
     <BbTabs DefaultValue="archives" Class="space-y-4">
         <BbTabsList>
             <BbTabsTrigger Value="archives">@L["ArchiveConfigurations"]</BbTabsTrigger>
-            <BbTabsTrigger Value="uploads">@L["UploadConfigurations"]</BbTabsTrigger>
+            <BbTabsTrigger Value="upload-configs">@L["UploadConfigurations"]</BbTabsTrigger>
+            <BbTabsTrigger Value="uploads">@L["Uploads"]</BbTabsTrigger>
         </BbTabsList>
 
         <BbTabsContent Value="archives" Class="space-y-4">
@@ -91,10 +92,14 @@
                 OnChangeAffectingOtherComponents="HandleChangeAffectingOtherComponentsAsync" />
         </BbTabsContent>
 
-        <BbTabsContent Value="uploads" Class="space-y-4">
+        <BbTabsContent Value="upload-configs" Class="space-y-4">
             <UploadConfigs
                 @ref="@reloadableComponents[nameof(UploadConfigs)]"
                 ReleaseId="@ReleaseId" />
+        </BbTabsContent>
+
+        <BbTabsContent Value="uploads" Class="space-y-4">
+            <ReleaseUploads ReleaseId="@ReleaseId" />
         </BbTabsContent>
     </BbTabs>
 </section>
