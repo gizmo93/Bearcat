@@ -1,4 +1,5 @@
-﻿using Bearcat.Archivers.InversionOfControl;
+﻿using Bearcat.Application.InversionOfControl;
+using Bearcat.Archivers.InversionOfControl;
 using Bearcat.Domain.InversionOfControl;
 using Bearcat.Hosters.InversionOfControl;
 using Bearcat.Infrastructure.Database;
@@ -24,7 +25,7 @@ if (builder.Environment.IsDevelopment())
     );
 }
 
-//builder.Services.AddApplication();
+builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddDomain();
 builder.Services.AddHosters();

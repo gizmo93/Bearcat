@@ -31,7 +31,6 @@
                     <span>@L["UploadTarget"]</span>
                     <span>@L["ArchiveConfig"]</span>
                     <span>@L["Links"]</span>
-                    <span>@L["Preview"]</span>
                     <span class="text-right">@L["Actions"]</span>
                 </div>
                 @foreach (var config in uploadConfigs)
@@ -54,13 +53,6 @@
                             <div>
                                 <p class="bearcat-mobile-label">@L["Links"]</p>
                                 <p class="text-sm font-medium">@config.LinksDistributedTo.Count</p>
-                            </div>
-
-                            <div class="min-w-0">
-                                <p class="bearcat-mobile-label">@L["Preview"]</p>
-                                <p class="truncate text-sm font-medium" title="@(config.LinksDistributedTo.FirstOrDefault() ?? L["NoDistributionTargets"])">
-                                    @(config.LinksDistributedTo.FirstOrDefault() ?? L["NoTargets"])
-                                </p>
                             </div>
 
                             <div class="bearcat-config-actions">
