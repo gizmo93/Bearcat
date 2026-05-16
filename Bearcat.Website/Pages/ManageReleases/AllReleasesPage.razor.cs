@@ -3,6 +3,8 @@ using Bearcat.Domain.UseCases.ManageHosters.Dto;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Dto;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
+using Bearcat.Domain.UseCases.ManageReleaseGroups.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
@@ -16,7 +18,9 @@ public partial class AllReleasesPage(
     IReleaseReadRepository readRepository,
     IHosterConfigurationReadRepository hosterReadRepository,
     ILinkCrypterRegistrationReadRepository linkCrypterReadRepository,
-    DialogService dialogService
+    IReleaseGroupReadRepository releaseGroupReadRepository,
+    DialogService dialogService,
+    ToastService toastService
 )
 {
     private readonly int[] pageSizes = [5, 10, 20, 50, 100];
@@ -25,11 +29,14 @@ public partial class AllReleasesPage(
     private IReadOnlyList<HosterRegistrationDto> hosterRegistrations = [];
     private IReadOnlyList<ArchiverDto> archiverOptions = [];
     private IReadOnlyList<LinkCrypterRegistrationDto> linkCrypterRegistrations = [];
+    private IReadOnlyList<ReleaseGroupDto> releaseGroups = [];
+    private readonly HashSet<int> selectedReleaseIds = [];
     private ReleaseService service = null!;
     private ReleaseSearchQuery searchQuery = new();
     private int totalCount;
     private int pageIndex;
     private int pageSize = 5;
+    private int selectedBulkReleaseGroupId;
     private bool isLoading;
 
     private int CurrentPage => totalCount == 0 ? 1 : pageIndex + 1;
@@ -37,9 +44,16 @@ public partial class AllReleasesPage(
     private int FirstResult => totalCount == 0 ? 0 : pageIndex * pageSize + 1;
     private int LastResult => Math.Min(totalCount, (pageIndex + 1) * pageSize);
     private string ReleasesTableKey => $"{pageIndex}-{pageSize}-{searchQuery.GetHashCode()}";
+    private bool AreAllVisibleReleasesSelected =>
+        releases.Count > 0 && releases.All(r => selectedReleaseIds.Contains(r.ReleaseId));
 
     private IEnumerable<SelectOption<int>> PageSizeOptions =>
         pageSizes.Select(size => new SelectOption<int>(size, size.ToString()));
+
+    private IEnumerable<SelectOption<int>> ReleaseGroupOptions =>
+        new[] { new SelectOption<int>(0, L["SelectReleaseGroup"]) }.Concat(
+            releaseGroups.Select(group => new SelectOption<int>(group.ReleaseGroupId, group.Name))
+        );
 
     private IEnumerable<int?> PaginationItems
     {
@@ -77,6 +91,7 @@ public partial class AllReleasesPage(
         hosterRegistrations = await hosterReadRepository.GetAllRegistrationsAsync();
         archiverOptions = readRepository.GetArchiverFilterOptions();
         linkCrypterRegistrations = await linkCrypterReadRepository.GetAllAsync();
+        releaseGroups = await releaseGroupReadRepository.GetAllAsync();
         await RefreshReleasesAsync();
     }
 
@@ -121,6 +136,37 @@ public partial class AllReleasesPage(
         }
     }
 
+    private async Task ShowEditReleaseDialogAsync(ReleaseDto release)
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(CreateOrEditReleaseDialog.ReleaseId)] = release.ReleaseId,
+            [nameof(CreateOrEditReleaseDialog.FormModel)] = new ReleaseFormModel
+            {
+                Name = release.Name,
+                ReleaseGroupId = release.ReleaseGroupId,
+                IsEdit = true,
+            },
+        };
+
+        var dialog = await dialogService.OpenAsync<CreateOrEditReleaseDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["EditNamedItem", release.Name],
+                Description = L["EditReleaseDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (!dialog.Cancelled)
+        {
+            await RefreshReleasesAsync();
+        }
+    }
+
     private async Task RefreshReleasesAsync()
     {
         isLoading = true;
@@ -139,6 +185,7 @@ public partial class AllReleasesPage(
             totalCount = result.TotalCount;
             pageIndex = result.PageIndex;
             pageSize = result.PageSize;
+            selectedReleaseIds.RemoveWhere(id => releases.All(r => r.ReleaseId != id));
 
             if (totalCount > 0 && pageIndex >= TotalPages)
             {
@@ -156,6 +203,49 @@ public partial class AllReleasesPage(
     {
         searchQuery = query;
         pageIndex = 0;
+        selectedReleaseIds.Clear();
+        await RefreshReleasesAsync();
+    }
+
+    private void ToggleReleaseSelection(int releaseId, bool selected)
+    {
+        if (selected)
+        {
+            selectedReleaseIds.Add(releaseId);
+            return;
+        }
+
+        selectedReleaseIds.Remove(releaseId);
+    }
+
+    private void SelectAllVisibleReleases()
+    {
+        foreach (var release in releases)
+        {
+            selectedReleaseIds.Add(release.ReleaseId);
+        }
+    }
+
+    private void DeselectAllReleases()
+    {
+        selectedReleaseIds.Clear();
+        selectedBulkReleaseGroupId = 0;
+    }
+
+    private async Task ApplyBulkReleaseGroupAsync()
+    {
+        if (selectedReleaseIds.Count == 0 || selectedBulkReleaseGroupId == 0)
+        {
+            return;
+        }
+
+        var releaseIds = selectedReleaseIds.ToList();
+
+        await service.UpdateReleaseGroupAsync(releaseIds, selectedBulkReleaseGroupId);
+
+        toastService.Success(L["ReleaseGroupChangedForReleases", releaseIds.Count]);
+        selectedReleaseIds.Clear();
+        selectedBulkReleaseGroupId = 0;
         await RefreshReleasesAsync();
     }
 

@@ -13,10 +13,13 @@ public interface IUploadStateRepository
         CancellationToken cancellationToken
     );
 
+    Task<IReadOnlyList<Upload>> GetUploadsEligibleForAutomaticReuploadAsync(
+        CancellationToken cancellationToken
+    );
+
+    Task<Upload> GetUploadForReuploadAsync(int uploadId, CancellationToken cancellationToken);
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 
     void Add(Upload upload);
-    Task<IReadOnlyList<Upload>> GetOfflineUploadsWithoutReuploadAsync(
-        CancellationToken cancellationToken
-    );
 }

@@ -8,6 +8,8 @@ public class ReleaseFormModel
 
     public ReleaseType? ReleaseType { get; set; }
 
+    public int ReleaseGroupId { get; set; }
+
     public string FolderPath { get; set; } = string.Empty;
 
     public bool IsEdit { get; set; }

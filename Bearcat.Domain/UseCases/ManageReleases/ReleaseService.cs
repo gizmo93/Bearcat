@@ -10,6 +10,7 @@ public class ReleaseService(IReleaseWriteRepository writeRepository)
         string name,
         string releaseFolderPath,
         ReleaseType releaseType,
+        int releaseGroupId,
         CancellationToken cancellationToken = default
     )
     {
@@ -17,6 +18,7 @@ public class ReleaseService(IReleaseWriteRepository writeRepository)
         {
             Name = name,
             ReleaseType = releaseType,
+            ReleaseGroupId = releaseGroupId,
             ReleaseFolderPath = releaseFolderPath,
         };
 
@@ -29,11 +31,34 @@ public class ReleaseService(IReleaseWriteRepository writeRepository)
     public async Task UpdateAsync(
         int releaseId,
         string name,
+        int releaseGroupId,
         CancellationToken cancellationToken = default
     )
     {
         var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
         release.Name = name;
+        release.ReleaseGroupId = releaseGroupId;
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdateReleaseGroupAsync(
+        IReadOnlyCollection<int> releaseIds,
+        int releaseGroupId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (releaseIds.Count == 0)
+        {
+            return;
+        }
+
+        var releases = await writeRepository.GetByIdsAsync(releaseIds, cancellationToken);
+
+        foreach (var release in releases)
+        {
+            release.ReleaseGroupId = releaseGroupId;
+        }
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }

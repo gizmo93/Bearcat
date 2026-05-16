@@ -44,6 +44,7 @@
   <data name="AnyArchiver" xml:space="preserve"><value>Any archiver</value></data>
   <data name="AnyHosterConfig" xml:space="preserve"><value>Any hoster config</value></data>
   <data name="AnyLinkCrypterConfig" xml:space="preserve"><value>Any link crypter config</value></data>
+  <data name="AnyReleaseGroup" xml:space="preserve"><value>Any release group</value></data>
   <data name="AnyOnlineState" xml:space="preserve"><value>Any online state</value></data>
   <data name="AllUploadConfigs" xml:space="preserve"><value>All upload configs</value></data>
   <data name="AutoRefresh" xml:space="preserve"><value>Auto refresh</value></data>
@@ -300,4 +301,34 @@
   <data name="ShowResolvedNotifications" xml:space="preserve"><value>Show resolved</value></data>
   <data name="Unresolved" xml:space="preserve"><value>Unresolved</value></data>
   <data name="ViewAllNotifications" xml:space="preserve"><value>View all unresolved</value></data>
+  <data name="AssignedReleases" xml:space="preserve"><value>Assigned releases</value></data>
+  <data name="AutomaticReuploads" xml:space="preserve"><value>Automatic reuploads</value></data>
+  <data name="AutomaticReuploadsHelp" xml:space="preserve"><value>Create replacement uploads automatically when checked offline files are old enough.</value></data>
+  <data name="ChangeReleaseGroup" xml:space="preserve"><value>Change group</value></data>
+  <data name="CreateManualReupload" xml:space="preserve"><value>Create manual reupload</value></data>
+  <data name="DeleteReleaseGroupConfirmation" xml:space="preserve"><value>Are you sure you want to delete release group {0}?</value></data>
+  <data name="DeselectAll" xml:space="preserve"><value>Deselect all</value></data>
+  <data name="Disabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="EditReleaseDescription" xml:space="preserve"><value>Update the release name and assignment.</value></data>
+  <data name="Enabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="HoursCount" xml:space="preserve"><value>{0} h</value></data>
+  <data name="HoursUntilReupload" xml:space="preserve"><value>Hours until reupload</value></data>
+  <data name="HoursUntilReuploadHelp" xml:space="preserve"><value>Minimum 0, which schedules immediately after files are confirmed offline.</value></data>
+  <data name="HoursUntilReuploadMustBeZeroOrGreater" xml:space="preserve"><value>Hours until reupload must be zero or greater.</value></data>
+  <data name="ManualReuploadCreated" xml:space="preserve"><value>Manual reupload created for upload #{0}.</value></data>
+  <data name="NewReleaseGroup" xml:space="preserve"><value>New release group</value></data>
+  <data name="NoReleaseGroupsFound" xml:space="preserve"><value>No release groups found</value></data>
+  <data name="NoReleasesSelected" xml:space="preserve"><value>No releases selected</value></data>
+  <data name="OpenReleaseGroupActions" xml:space="preserve"><value>Open release group actions</value></data>
+  <data name="ReleaseGroup" xml:space="preserve"><value>Release group</value></data>
+  <data name="ReleaseGroupChangedForReleases" xml:space="preserve"><value>Release group changed for {0} release(s).</value></data>
+  <data name="ReleaseGroupDeleteBlocked" xml:space="preserve"><value>Release group {0} is still assigned to releases.</value></data>
+  <data name="ReleaseGroupDialogDescription" xml:space="preserve"><value>Configure automatic reupload behavior for assigned releases.</value></data>
+  <data name="ReleaseGroupNamePlaceholder" xml:space="preserve"><value>Name the release group</value></data>
+  <data name="ReleaseGroups" xml:space="preserve"><value>Release groups</value></data>
+  <data name="ReleaseGroupsIntro" xml:space="preserve"><value>Control which releases create automatic reuploads and when.</value></data>
+  <data name="SelectReleaseGroup" xml:space="preserve"><value>Select release group</value></data>
+  <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>You must select a release group</value></data>
+  <data name="SelectAll" xml:space="preserve"><value>Select all</value></data>
+  <data name="SelectedReleaseCount" xml:space="preserve"><value>{0} release(s) selected</value></data>
 </root>

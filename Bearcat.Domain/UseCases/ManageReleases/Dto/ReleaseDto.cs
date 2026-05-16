@@ -6,6 +6,8 @@ public record ReleaseDto(
     int ReleaseId,
     string Name,
     ReleaseType ReleaseType,
+    int ReleaseGroupId,
+    string ReleaseGroupName,
     string ReleaseFolderPath,
     int ActiveUploadConfigsCount,
     int OnlineUploadConfigsCount

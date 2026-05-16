@@ -1,7 +1,10 @@
+using Bearcat.Domain.UseCases.ManageReleaseGroups.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
+using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.Configuration;
@@ -12,34 +15,72 @@ namespace Bearcat.Website.Pages.ManageReleases;
 public partial class CreateOrEditReleaseDialog(
     DialogService dialogService,
     IConfiguration configuration,
-    NavigationManager navigationManager
+    NavigationManager navigationManager,
+    IReleaseGroupReadRepository releaseGroupReadRepository
 ) : OwningComponentBase
 {
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
+    [Parameter]
+    public ReleaseFormModel? FormModel { get; set; }
+
+    [Parameter]
+    public int? ReleaseId { get; set; }
+
+    private IReadOnlyList<ReleaseGroupDto> releaseGroups = [];
     private ReleaseFormModel formModel = null!;
     private EditContext editContext = null!;
     private ValidationMessageStore? messageStore;
     private string? folderValidationMessage;
 
-    protected override void OnInitialized()
+    private IEnumerable<SelectOption<int>> ReleaseGroupOptions =>
+        releaseGroups.Select(group => new SelectOption<int>(group.ReleaseGroupId, group.Name));
+
+    private string GetReleaseGroupDisplayText(int releaseGroupId)
     {
-        formModel = new ReleaseFormModel();
+        return releaseGroups.FirstOrDefault(group => group.ReleaseGroupId == releaseGroupId)?.Name
+            ?? releaseGroupId.ToString();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        formModel = FormModel ?? new ReleaseFormModel();
         editContext = new EditContext(formModel);
         messageStore = new ValidationMessageStore(editContext);
         editContext.OnValidationRequested += HandleValidationRequested;
+
+        releaseGroups = await releaseGroupReadRepository.GetAllAsync();
+
+        if (releaseGroups.Count == 1 && formModel.ReleaseGroupId == 0)
+        {
+            formModel.ReleaseGroupId = releaseGroups[0].ReleaseGroupId;
+        }
     }
 
     private async Task SaveAsync()
     {
         var service = ScopedServices.GetRequiredService<ReleaseService>();
-        var releaseType = (ReleaseType)Convert.ToInt32(formModel.ReleaseType);
+
+        if (formModel.IsEdit && ReleaseId is not null)
+        {
+            await service.UpdateAsync(
+                releaseId: ReleaseId.Value,
+                name: formModel.Name,
+                releaseGroupId: formModel.ReleaseGroupId
+            );
+
+            await DialogRef.CloseAsync(DialogResult.Ok(ReleaseId.Value));
+            return;
+        }
+
+        var releaseType = formModel.ReleaseType!.Value;
 
         var id = await service.CreateAsync(
             name: formModel.Name,
             releaseFolderPath: formModel.FolderPath,
-            releaseType: releaseType
+            releaseType: releaseType,
+            releaseGroupId: formModel.ReleaseGroupId
         );
 
         await DialogRef.CloseAsync(DialogResult.Ok(id));
@@ -56,13 +97,18 @@ public partial class CreateOrEditReleaseDialog(
             messageStore.Add(() => formModel.Name, L["NameIsRequired"]);
         }
 
-        if (string.IsNullOrWhiteSpace(formModel.FolderPath))
+        if (!formModel.IsEdit && string.IsNullOrWhiteSpace(formModel.FolderPath))
         {
             folderValidationMessage = L["SelectFolderRequired"];
             messageStore.Add(() => formModel.FolderPath, folderValidationMessage);
         }
 
-        if (formModel.ReleaseType is null)
+        if (formModel.ReleaseGroupId == 0)
+        {
+            messageStore.Add(() => formModel.ReleaseGroupId, L["SelectReleaseGroupRequired"]);
+        }
+
+        if (!formModel.IsEdit && formModel.ReleaseType is null)
         {
             messageStore.Add(() => formModel.ReleaseType!, L["SelectReleaseTypeRequired"]);
         }

@@ -8,6 +8,7 @@ public record ReleaseSearchQuery(
     int? HosterRegistrationId = null,
     string? ArchiverName = null,
     int? LinkCrypterRegistrationId = null,
+    int? ReleaseGroupId = null,
     string? LinksDistributedTo = null,
     int PageIndex = 0,
     int PageSize = 10

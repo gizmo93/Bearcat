@@ -10,5 +10,6 @@ public record ReleaseUploadDto(
     DateTime? UploadedAt,
     UploadState UploadState,
     OnlineState OnlineState,
-    int LinkCount
+    int LinkCount,
+    bool CanCreateReupload
 );

@@ -10,6 +10,10 @@ public class Release
 
     public ReleaseType ReleaseType { get; set; }
 
+    public int ReleaseGroupId { get; set; }
+
+    public ReleaseGroup ReleaseGroup { get; set; } = null!;
+
     public List<UploadConfig> UploadConfigs { get; set; } = null!;
 
     public List<ArchiveConfig> ArchiveConfigs { get; set; } = null!;

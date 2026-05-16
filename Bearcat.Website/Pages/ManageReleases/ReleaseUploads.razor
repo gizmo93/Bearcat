@@ -97,7 +97,14 @@
                                Property="@(upload => upload.UploadId)"
                                Width="64px">
                 <CellTemplate Context="upload">
-                    <div class="flex justify-end">
+                    <div class="flex justify-end gap-1">
+                        <BbButton Variant="ButtonVariant.Ghost"
+                                  Size="ButtonSize.IconSmall"
+                                  Disabled="@(!CanCreateManualReupload(upload))"
+                                  AriaLabel="@L["CreateManualReupload"]"
+                                  OnClick="@(() => CreateManualReuploadAsync(upload))">
+                            <LucideIcon Name="cloud-upload" class="h-4 w-4" />
+                        </BbButton>
                         <BbButton Variant="ButtonVariant.Ghost"
                                   Size="ButtonSize.IconSmall"
                                   Disabled="@(upload.LinkCount == 0)"

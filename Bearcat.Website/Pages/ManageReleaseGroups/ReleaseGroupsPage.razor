@@ -1,0 +1,94 @@
+@page "/release-groups"
+@using Bearcat.Domain.UseCases.ManageReleaseGroups.Dto
+@inherits OwningComponentBase
+
+<PageTitle>@L["ReleaseGroups"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["ReleaseGroups"]</h1>
+            <p class="text-sm text-muted-foreground">
+                @L["ReleaseGroupsIntro"]
+            </p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewReleaseGroup"]
+        </BbButton>
+    </div>
+
+    <BbDataTable TData="ReleaseGroupDto"
+                 Data="releaseGroups"
+                 ShowToolbar="false"
+                 ShowPagination="@(releaseGroups.Count > 10)"
+                 InitialPageSize="10"
+                 IsLoading="isLoading"
+                 AriaLabel="@L["ReleaseGroups"]"
+                 Class="bearcat-data-table">
+        <Columns>
+            <BbDataTableColumn TData="ReleaseGroupDto" TValue="string"
+                               Header="@L["Name"]"
+                               Property="@(group => group.Name)"
+                               Sortable="true"
+                               Width="30%" />
+            <BbDataTableColumn TData="ReleaseGroupDto" TValue="bool"
+                               Header="@L["AutomaticReuploads"]"
+                               Property="@(group => group.EnableAutomaticReuploads)"
+                               Width="190px">
+                <CellTemplate Context="group">
+                    <BbBadge Variant="@(group.EnableAutomaticReuploads ? BadgeVariant.Default : BadgeVariant.Outline)">
+                        @(group.EnableAutomaticReuploads ? L["Enabled"] : L["Disabled"])
+                    </BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseGroupDto" TValue="int"
+                               Header="@L["HoursUntilReupload"]"
+                               Property="@(group => group.NumberOfHoursUntilReupload)"
+                               Width="190px">
+                <CellTemplate Context="group">
+                    <span class="text-sm">@L["HoursCount", group.NumberOfHoursUntilReupload]</span>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseGroupDto" TValue="int"
+                               Header="@L["AssignedReleases"]"
+                               Property="@(group => group.AssignedReleaseCount)"
+                               Width="170px">
+                <CellTemplate Context="group">
+                    <BbBadge Variant="BadgeVariant.Outline">@group.AssignedReleaseCount</BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseGroupDto" TValue="string"
+                               Header=""
+                               Property="@(group => group.Name)"
+                               Width="56px">
+                <CellTemplate Context="group">
+                    <div class="flex justify-end">
+                        <BbDropdownMenu>
+                            <BbDropdownMenuTrigger>
+                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenReleaseGroupActions"]">
+                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                </BbButton>
+                            </BbDropdownMenuTrigger>
+                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                                <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(group))">
+                                    @L["Edit"]
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(group))">
+                                    @L["Delete"]
+                                </BbDropdownMenuItem>
+                            </BbDropdownMenuContent>
+                        </BbDropdownMenu>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+        <EmptyTemplate>
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="inbox" class="h-5 w-5" />
+                <span>@L["NoReleaseGroupsFound"]</span>
+            </div>
+        </EmptyTemplate>
+    </BbDataTable>
+</section>

@@ -1,0 +1,35 @@
+@inherits OwningComponentBase
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="FormModel.Name"
+                              Label="@L["Name"]"
+                              Placeholder="@L["ReleaseGroupNamePlaceholder"]" />
+
+            <BbFormFieldSwitch @bind-Checked="FormModel.EnableAutomaticReuploads"
+                               Label="@L["AutomaticReuploads"]"
+                               HelperText="@L["AutomaticReuploadsHelp"]" />
+
+            <BbFormFieldNumericInput TValue="int"
+                                     @bind-Value="FormModel.NumberOfHoursUntilReupload"
+                                     Label="@L["HoursUntilReupload"]"
+                                     Min="0"
+                                     Step="1"
+                                     ShowButtons="true"
+                                     HelperText="@L["HoursUntilReuploadHelp"]" />
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

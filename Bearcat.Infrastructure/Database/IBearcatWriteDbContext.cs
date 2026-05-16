@@ -8,6 +8,7 @@ public interface IBearcatWriteDbContext
 {
     public DbSet<HosterRegistration> HosterRegistrations { get; set; }
     public DbSet<Release> Releases { get; set; }
+    public DbSet<ReleaseGroup> ReleaseGroups { get; set; }
     DbSet<Archive> Archives { get; set; }
     DbSet<ArchiveConfig> ArchiveConfigs { get; set; }
     DbSet<ArchiveFile> ArchiveFiles { get; set; }
