@@ -97,6 +97,14 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
         CancellationToken cancellationToken = default
     )
     {
+        List<UploadState> reuploadBlockingStates =
+        [
+            UploadState.Pending,
+            UploadState.Uploading,
+            UploadState.WaitingForArchive,
+            UploadState.Failed,
+        ];
+
         var pageSize = Math.Clamp(query.PageSize, 5, 100);
         var pageIndex = Math.Max(0, query.PageIndex);
 
@@ -122,7 +130,18 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                 u.UploadedAt,
                 u.UploadState,
                 u.OnlineState,
-                u.UploadedFiles.Count()
+                u.UploadedFiles.Count(),
+                (
+                    u.OnlineState == OnlineState.Offline
+                    || u.OnlineState == OnlineState.PartiallyOnline
+                )
+                    && !u.UploadConfig.Uploads.Any(ru =>
+                        ru.Id != u.Id
+                        && (
+                            ru.OnlineState == OnlineState.Online
+                            || reuploadBlockingStates.Contains(ru.UploadState)
+                        )
+                    )
             ))
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -193,6 +212,8 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             entity.Id,
             entity.Name,
             entity.ReleaseType,
+            entity.ReleaseGroupId,
+            entity.ReleaseGroup.Name,
             entity.ReleaseFolderPath,
             entity.UploadConfigs.Count(),
             entity
@@ -246,6 +267,11 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                     )
                 )
             );
+        }
+
+        if (query.ReleaseGroupId is not null)
+        {
+            releases = releases.Where(r => r.ReleaseGroupId == query.ReleaseGroupId.Value);
         }
 
         var linksDistributedTo = Normalize(query.LinksDistributedTo);

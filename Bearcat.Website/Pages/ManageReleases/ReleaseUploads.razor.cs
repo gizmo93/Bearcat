@@ -2,6 +2,7 @@ using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
+using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
@@ -12,7 +13,9 @@ namespace Bearcat.Website.Pages.ManageReleases;
 public partial class ReleaseUploads(
     IReleaseReadRepository readRepository,
     IUploadConfigReadRepository uploadConfigReadRepository,
-    DialogService dialogService
+    DialogService dialogService,
+    UploadStateService uploadStateService,
+    ToastService toastService
 ) : ComponentBase
 {
     [Parameter]
@@ -160,6 +163,13 @@ public partial class ReleaseUploads(
         );
     }
 
+    private async Task CreateManualReuploadAsync(ReleaseUploadDto upload)
+    {
+        await uploadStateService.CreateManualReuploadAsync(upload.UploadId);
+        toastService.Success(L["ManualReuploadCreated", upload.UploadId]);
+        await RefreshUploadsAsync();
+    }
+
     private async Task GoToPageAsync(int page)
     {
         var nextPageIndex = Math.Clamp(page - 1, 0, TotalPages - 1);
@@ -208,4 +218,7 @@ public partial class ReleaseUploads(
             UploadState.Failed => BadgeVariant.Destructive,
             _ => BadgeVariant.Outline,
         };
+
+    private static bool CanCreateManualReupload(ReleaseUploadDto upload) =>
+        upload.CanCreateReupload;
 }

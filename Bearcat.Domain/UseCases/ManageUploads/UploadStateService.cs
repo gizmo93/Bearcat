@@ -20,7 +20,38 @@ public class UploadStateService(
     {
         await ProcessUploadStateChecksAsync(localNow, cancellationToken);
         await CreateMissingUploadsAsync(cancellationToken);
-        await ProcessOfflineUploadsWithoutReuploadsAsync(cancellationToken);
+        await ProcessAutomaticReuploadsAsync(localNow, cancellationToken);
+    }
+
+    public async Task<int> CreateManualReuploadAsync(
+        int uploadId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var upload = await uploadStateRepository.GetUploadForReuploadAsync(
+            uploadId,
+            cancellationToken
+        );
+
+        if (upload.OnlineState is not OnlineState.Offline and not OnlineState.PartiallyOnline)
+        {
+            throw new InvalidOperationException(
+                "Manual reuploads can only be created for offline or partially online uploads."
+            );
+        }
+
+        if (HasBlockingReupload(upload))
+        {
+            throw new InvalidOperationException(
+                "A replacement upload already exists or is pending for this upload config."
+            );
+        }
+
+        var newUpload = CreateNewUpload(upload, "Manual reupload scheduled");
+
+        await uploadStateRepository.SaveChangesAsync(cancellationToken);
+
+        return newUpload.Id;
     }
 
     private async Task ProcessUploadStateChecksAsync(
@@ -58,8 +89,6 @@ public class UploadStateService(
                     upload: upload,
                     cancellationToken: cancellationToken
                 );
-
-                CreateNewUploadIfNeeded(upload);
 
                 await uploadStateRepository.SaveChangesAsync(cancellationToken);
 
@@ -135,29 +164,28 @@ public class UploadStateService(
         }
     }
 
-    private async Task ProcessOfflineUploadsWithoutReuploadsAsync(
+    private async Task ProcessAutomaticReuploadsAsync(
+        DateTime localNow,
         CancellationToken cancellationToken
     )
     {
-        var uploads = await uploadStateRepository.GetOfflineUploadsWithoutReuploadAsync(
+        var uploads = await uploadStateRepository.GetUploadsEligibleForAutomaticReuploadAsync(
             cancellationToken
         );
 
         foreach (var upload in uploads)
         {
-            CreateNewUploadIfNeeded(upload);
+            if (IsAutomaticReuploadDue(upload, localNow))
+            {
+                CreateNewUpload(upload, "Automatic reupload scheduled due to offline files");
+            }
         }
 
         await uploadStateRepository.SaveChangesAsync(cancellationToken);
     }
 
-    private void CreateNewUploadIfNeeded(Upload upload)
+    private Upload CreateNewUpload(Upload upload, string notificationMessage)
     {
-        if (upload.OnlineState == OnlineState.Online)
-        {
-            return;
-        }
-
         var newUpload = new Upload
         {
             UploadConfig = upload.UploadConfig,
@@ -168,12 +196,52 @@ public class UploadStateService(
         };
 
         notificationService.CreateInfo(
-            message: "Reupload scheduled due to offline files",
+            message: notificationMessage,
             entity: upload,
             selector: u => u.Upload
         );
 
         uploadStateRepository.Add(newUpload);
+        return newUpload;
+    }
+
+    private static bool IsAutomaticReuploadDue(Upload upload, DateTime localNow)
+    {
+        var releaseGroup = upload.UploadConfig.Release.ReleaseGroup;
+
+        if (!releaseGroup.EnableAutomaticReuploads || upload.UploadedFiles.Count == 0)
+        {
+            return false;
+        }
+
+        if (upload.UploadedFiles.Any(f => f.CheckedAt is null))
+        {
+            return false;
+        }
+
+        var oldestCheckedAt = upload.UploadedFiles.Min(f => f.CheckedAt!.Value);
+        var threshold = localNow.AddHours(-releaseGroup.NumberOfHoursUntilReupload);
+
+        return oldestCheckedAt <= threshold;
+    }
+
+    private static bool HasBlockingReupload(Upload upload)
+    {
+        List<UploadState> reuploadBlockingStates =
+        [
+            UploadState.Pending,
+            UploadState.Uploading,
+            UploadState.WaitingForArchive,
+            UploadState.Failed,
+        ];
+
+        return upload.UploadConfig.Uploads.Any(ru =>
+            ru.Id != upload.Id
+            && (
+                ru.OnlineState == OnlineState.Online
+                || reuploadBlockingStates.Contains(ru.UploadState)
+            )
+        );
     }
 
     private async Task CreateMissingUploadsAsync(CancellationToken cancellationToken)

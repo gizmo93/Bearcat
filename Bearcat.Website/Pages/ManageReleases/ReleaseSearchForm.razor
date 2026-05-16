@@ -1,6 +1,7 @@
 @using Bearcat.Abstractions.Archiver
 @using Bearcat.Domain.UseCases.ManageHosters.Dto
 @using Bearcat.Domain.UseCases.ManageLinkCrypters.Dto
+@using Bearcat.Domain.UseCases.ManageReleaseGroups.Dto
 @using Bearcat.Domain.UseCases.ManageReleases.Dto
 @using Bearcat.Domain.ValueObjects
 @using Bearcat.Website.Localization
@@ -30,6 +31,11 @@
                            @bind-Value="selectedLinkCrypterRegistrationId"
                            Label="@L["LinkCrypter"]"
                            Options="LinkCrypterRegistrationOptions" />
+
+        <BbFormFieldSelect TValue="int"
+                           @bind-Value="selectedReleaseGroupId"
+                           Label="@L["ReleaseGroup"]"
+                           Options="ReleaseGroupOptions" />
 
         <BbFormFieldInput TValue="string"
                           @bind-Value="linksDistributedTo"
@@ -68,6 +74,9 @@
     public IReadOnlyList<LinkCrypterRegistrationDto> LinkCrypterRegistrations { get; set; } = [];
 
     [Parameter]
+    public IReadOnlyList<ReleaseGroupDto> ReleaseGroups { get; set; } = [];
+
+    [Parameter]
     public EventCallback<ReleaseSearchQuery> OnSearch { get; set; }
 
     private const string SearchButtonStyle = "width: 8.75rem; min-width: 8.75rem; height: 2.25rem; min-height: 2.25rem; padding: 0 0.85rem; justify-content: center;";
@@ -78,6 +87,7 @@
     private int? selectedHosterRegistrationId;
     private string selectedArchiverName = string.Empty;
     private int? selectedLinkCrypterRegistrationId;
+    private int selectedReleaseGroupId;
 
     private bool HasActiveFilters =>
         !string.IsNullOrWhiteSpace(searchTerm)
@@ -85,7 +95,8 @@
         || selectedOnlineState is not null
         || selectedHosterRegistrationId is not null
         || !string.IsNullOrWhiteSpace(selectedArchiverName)
-        || selectedLinkCrypterRegistrationId is not null;
+        || selectedLinkCrypterRegistrationId is not null
+        || selectedReleaseGroupId != 0;
 
     private IEnumerable<SelectOption<OnlineState?>> OnlineStateOptions =>
         new SelectOption<OnlineState?>[]
@@ -121,6 +132,14 @@
             ))
         );
 
+    private IEnumerable<SelectOption<int>> ReleaseGroupOptions =>
+        new[] { new SelectOption<int>(0, L["AnyReleaseGroup"]) }.Concat(
+            ReleaseGroups.Select(group => new SelectOption<int>(
+                group.ReleaseGroupId,
+                group.Name
+            ))
+        );
+
     private async Task ApplyFiltersAsync()
     {
         await OnSearch.InvokeAsync(CreateQuery());
@@ -139,6 +158,7 @@
         selectedHosterRegistrationId = null;
         selectedArchiverName = string.Empty;
         selectedLinkCrypterRegistrationId = null;
+        selectedReleaseGroupId = 0;
 
         await OnSearch.InvokeAsync(CreateQuery());
     }
@@ -153,6 +173,7 @@
                 ? null
                 : selectedArchiverName,
             LinkCrypterRegistrationId: selectedLinkCrypterRegistrationId,
+            ReleaseGroupId: selectedReleaseGroupId == 0 ? null : selectedReleaseGroupId,
             LinksDistributedTo: linksDistributedTo
         );
     }

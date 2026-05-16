@@ -23,8 +23,57 @@
 
     <ReleaseSearchForm HosterRegistrations="hosterRegistrations"
                        Archivers="archiverOptions"
+                       ReleaseGroups="releaseGroups"
                        LinkCrypterRegistrations="linkCrypterRegistrations"
                        OnSearch="ApplySearchAsync" />
+
+    <div class="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border/70 bg-muted/25 px-3 py-2">
+        @if (selectedReleaseIds.Count > 0)
+        {
+            <p class="text-sm font-medium">@L["SelectedReleaseCount", selectedReleaseIds.Count]</p>
+            <div class="flex flex-wrap items-center gap-2">
+                @if (!AreAllVisibleReleasesSelected)
+                {
+                    <BbButton Variant="ButtonVariant.Secondary"
+                              Size="ButtonSize.Small"
+                              Disabled="@(releases.Count == 0)"
+                              OnClick="SelectAllVisibleReleases">
+                        <LucideIcon Name="list-checks" class="h-4 w-4" />
+                        @L["SelectAll"]
+                    </BbButton>
+                }
+                <BbButton Variant="ButtonVariant.Secondary"
+                          Size="ButtonSize.Small"
+                          OnClick="DeselectAllReleases">
+                    <LucideIcon Name="list-x" class="h-4 w-4" />
+                    @L["DeselectAll"]
+                </BbButton>
+                <BbSelect TValue="int"
+                          @bind-Value="selectedBulkReleaseGroupId"
+                          Options="ReleaseGroupOptions"
+                          Placeholder="@L["SelectReleaseGroup"]"
+                          Class="w-56" />
+                <BbButton Variant="ButtonVariant.Outline"
+                          Size="ButtonSize.Small"
+                          Disabled="@(selectedBulkReleaseGroupId == 0)"
+                          OnClick="ApplyBulkReleaseGroupAsync">
+                    <LucideIcon Name="layers" class="h-4 w-4" />
+                    @L["ChangeReleaseGroup"]
+                </BbButton>
+            </div>
+        }
+        else
+        {
+            <p class="text-sm text-muted-foreground">@L["NoReleasesSelected"]</p>
+            <BbButton Variant="ButtonVariant.Secondary"
+                      Size="ButtonSize.Small"
+                      Disabled="@(releases.Count == 0)"
+                      OnClick="SelectAllVisibleReleases">
+                <LucideIcon Name="list-checks" class="h-4 w-4" />
+                @L["SelectAll"]
+            </BbButton>
+        }
+    </div>
 
     <BbDataTable TData="ReleaseDto"
                  @key="ReleasesTableKey"
@@ -36,10 +85,22 @@
                  AriaLabel="@L["Releases"]"
                  Class="bearcat-releases-table">
         <Columns>
+            <BbDataTableColumn TData="ReleaseDto" TValue="bool"
+                               Header=""
+                               Property="@(release => selectedReleaseIds.Contains(release.ReleaseId))"
+                               Width="48px">
+                <CellTemplate Context="release">
+                    <div class="flex justify-center" @onclick:stopPropagation="true">
+                        <BbCheckbox Checked="@selectedReleaseIds.Contains(release.ReleaseId)"
+                                    AriaLabel="@L["Selected"]"
+                                    CheckedChanged="@((bool selected) => ToggleReleaseSelection(release.ReleaseId, selected))" />
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
             <BbDataTableColumn TData="ReleaseDto" TValue="string"
                                Header="@L["Name"]"
                                Property="@(release => release.Name)"
-                               Width="38%">
+                               Width="28%">
                 <CellTemplate Context="release">
                     <a class="bearcat-release-list-name"
                        href="@($"/releases/{release.ReleaseId}")">
@@ -73,6 +134,14 @@
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="ReleaseDto" TValue="string"
+                               Header="@L["ReleaseGroup"]"
+                               Property="@(release => release.ReleaseGroupName)"
+                               Width="180px">
+                <CellTemplate Context="release">
+                    <BbBadge Variant="BadgeVariant.Outline">@release.ReleaseGroupName</BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseDto" TValue="string"
                                Header="@L["FolderPath"]"
                                Property="@(release => release.ReleaseFolderPath)"
                                MinWidth="260px">
@@ -97,6 +166,9 @@
                             <BbDropdownMenuContent Align="PopoverAlign.End">
                                 <BbDropdownMenuItem Href="@($"/releases/{release.ReleaseId}")">
                                     @L["OpenDetails"]
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await ShowEditReleaseDialogAsync(release))">
+                                    @L["Edit"]
                                 </BbDropdownMenuItem>
                                 <BbDropdownMenuItem OnClick="@(async _ => await DeleteReleaseAsync(release))">
                                     @L["DeleteRelease"]

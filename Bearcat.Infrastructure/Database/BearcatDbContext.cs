@@ -12,6 +12,8 @@ public class BearcatDbContext(DbContextOptions<BearcatDbContext> options)
 
     public DbSet<Release> Releases { get; set; } = null!;
 
+    public DbSet<ReleaseGroup> ReleaseGroups { get; set; } = null!;
+
     public DbSet<Archive> Archives { get; set; } = null!;
 
     public DbSet<ArchiveConfig> ArchiveConfigs { get; set; } = null!;

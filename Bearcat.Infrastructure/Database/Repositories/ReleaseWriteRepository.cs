@@ -10,9 +10,18 @@ public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite) : IReleaseWr
     {
         return await dbWrite
             .Releases.AsSplitQuery()
+            .Include(r => r.ReleaseGroup)
             .Include(r => r.UploadConfigs)
             .Include(r => r.ArchiveConfigs)
             .FirstAsync(r => r.Id == id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Release>> GetByIdsAsync(
+        IReadOnlyCollection<int> ids,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite.Releases.Where(r => ids.Contains(r.Id)).ToListAsync(cancellationToken);
     }
 
     public void Add(Release release)

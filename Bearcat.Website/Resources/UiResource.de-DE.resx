@@ -44,6 +44,7 @@
   <data name="AnyArchiver" xml:space="preserve"><value>Alle Archiver</value></data>
   <data name="AnyHosterConfig" xml:space="preserve"><value>Alle Hoster-Konfigurationen</value></data>
   <data name="AnyLinkCrypterConfig" xml:space="preserve"><value>Alle Link-Crypter-Konfigurationen</value></data>
+  <data name="AnyReleaseGroup" xml:space="preserve"><value>Alle Release-Gruppen</value></data>
   <data name="AnyOnlineState" xml:space="preserve"><value>Jeder Online-Status</value></data>
   <data name="AllUploadConfigs" xml:space="preserve"><value>Alle Upload-Konfigurationen</value></data>
   <data name="AutoRefresh" xml:space="preserve"><value>Auto-Aktualisierung</value></data>
@@ -300,4 +301,34 @@
   <data name="ShowResolvedNotifications" xml:space="preserve"><value>Erledigte anzeigen</value></data>
   <data name="Unresolved" xml:space="preserve"><value>Ungelöst</value></data>
   <data name="ViewAllNotifications" xml:space="preserve"><value>Alle ungelösten anzeigen</value></data>
+  <data name="AssignedReleases" xml:space="preserve"><value>Zugewiesene Releases</value></data>
+  <data name="AutomaticReuploads" xml:space="preserve"><value>Automatische Reuploads</value></data>
+  <data name="AutomaticReuploadsHelp" xml:space="preserve"><value>Erstellt Ersatz-Uploads automatisch, wenn geprüfte Offline-Dateien alt genug sind.</value></data>
+  <data name="ChangeReleaseGroup" xml:space="preserve"><value>Gruppe ändern</value></data>
+  <data name="CreateManualReupload" xml:space="preserve"><value>Manuellen Reupload erstellen</value></data>
+  <data name="DeleteReleaseGroupConfirmation" xml:space="preserve"><value>Möchtest du die Release-Gruppe {0} wirklich löschen?</value></data>
+  <data name="DeselectAll" xml:space="preserve"><value>Auswahl aufheben</value></data>
+  <data name="Disabled" xml:space="preserve"><value>Deaktiviert</value></data>
+  <data name="EditReleaseDescription" xml:space="preserve"><value>Release-Name und Zuordnung bearbeiten.</value></data>
+  <data name="Enabled" xml:space="preserve"><value>Aktiviert</value></data>
+  <data name="HoursCount" xml:space="preserve"><value>{0} h</value></data>
+  <data name="HoursUntilReupload" xml:space="preserve"><value>Stunden bis Reupload</value></data>
+  <data name="HoursUntilReuploadHelp" xml:space="preserve"><value>Minimum 0; dann wird direkt nach bestätigten Offline-Dateien eingeplant.</value></data>
+  <data name="HoursUntilReuploadMustBeZeroOrGreater" xml:space="preserve"><value>Stunden bis Reupload muss null oder größer sein.</value></data>
+  <data name="ManualReuploadCreated" xml:space="preserve"><value>Manueller Reupload für Upload #{0} erstellt.</value></data>
+  <data name="NewReleaseGroup" xml:space="preserve"><value>Neue Release-Gruppe</value></data>
+  <data name="NoReleaseGroupsFound" xml:space="preserve"><value>Keine Release-Gruppen gefunden</value></data>
+  <data name="NoReleasesSelected" xml:space="preserve"><value>Keine Releases ausgewählt</value></data>
+  <data name="OpenReleaseGroupActions" xml:space="preserve"><value>Release-Gruppen-Aktionen öffnen</value></data>
+  <data name="ReleaseGroup" xml:space="preserve"><value>Release-Gruppe</value></data>
+  <data name="ReleaseGroupChangedForReleases" xml:space="preserve"><value>Release-Gruppe für {0} Release(s) geändert.</value></data>
+  <data name="ReleaseGroupDeleteBlocked" xml:space="preserve"><value>Release-Gruppe {0} ist noch Releases zugewiesen.</value></data>
+  <data name="ReleaseGroupDialogDescription" xml:space="preserve"><value>Konfiguriere automatische Reuploads für zugewiesene Releases.</value></data>
+  <data name="ReleaseGroupNamePlaceholder" xml:space="preserve"><value>Release-Gruppe benennen</value></data>
+  <data name="ReleaseGroups" xml:space="preserve"><value>Release-Gruppen</value></data>
+  <data name="ReleaseGroupsIntro" xml:space="preserve"><value>Steuere, welche Releases automatische Reuploads erstellen und wann.</value></data>
+  <data name="SelectReleaseGroup" xml:space="preserve"><value>Release-Gruppe auswählen</value></data>
+  <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>Du musst eine Release-Gruppe auswählen</value></data>
+  <data name="SelectAll" xml:space="preserve"><value>Alle auswählen</value></data>
+  <data name="SelectedReleaseCount" xml:space="preserve"><value>{0} Release(s) ausgewählt</value></data>
 </root>

@@ -13,40 +13,53 @@
                               Label="@L["Name"]"
                               Placeholder="@L["NameYourRelease"]" />
 
-            <BbFormFieldSelect TValue="ReleaseType?"
-                               @bind-Value="formModel.ReleaseType"
-                               Label="@L["ReleaseType"]"
-                               Placeholder="@L["SelectReleaseType"]">
-                @foreach (var releaseType in Enum.GetValues<ReleaseType>())
-                {
-                    <BbSelectItem Value="@((ReleaseType?)releaseType)" Text="@L.Localize(releaseType)" />
-                }
-            </BbFormFieldSelect>
-
-            <div class="space-y-2">
-                <label class="text-sm font-medium">@L["ReleaseFolder"]</label>
-                <div class="bearcat-folder-field">
-                    <BbInput Value="@formModel.FolderPath" Disabled="true" Class="sm:flex-1" />
-                    <BbButton Variant="ButtonVariant.Outline"
-                              Size="ButtonSize.Small"
-                              Class="bearcat-folder-button"
-                              AriaLabel="@L["BrowseReleaseFolders"]"
-                              OnClick="OpenFolderDialogAsync">
-                        <LucideIcon Name="folder-open" class="h-4 w-4" />
-                        @L["Browse"]
-                    </BbButton>
-                </div>
-                @if (!string.IsNullOrWhiteSpace(folderValidationMessage))
-                {
-                    <p class="text-sm text-destructive">@folderValidationMessage</p>
-                }
-            </div>
-
-            @if (formModel.ReleaseType is not null)
+            @if (releaseGroups.Count > 0)
             {
-                <div class="rounded-lg border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
-                    @L.LocalizeDescription(formModel.ReleaseType.Value)
+                <BbFormFieldSelect TValue="int"
+                                   @bind-Value="formModel.ReleaseGroupId"
+                                   Label="@L["ReleaseGroup"]"
+                                   Placeholder="@L["SelectReleaseGroup"]"
+                                   DisplayTextSelector="GetReleaseGroupDisplayText"
+                                   Options="ReleaseGroupOptions" />
+            }
+
+            @if (!formModel.IsEdit)
+            {
+                <BbFormFieldSelect TValue="ReleaseType?"
+                                   @bind-Value="formModel.ReleaseType"
+                                   Label="@L["ReleaseType"]"
+                                   Placeholder="@L["SelectReleaseType"]">
+                    @foreach (var releaseType in Enum.GetValues<ReleaseType>())
+                    {
+                        <BbSelectItem Value="@((ReleaseType?)releaseType)" Text="@L.Localize(releaseType)" />
+                    }
+                </BbFormFieldSelect>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">@L["ReleaseFolder"]</label>
+                    <div class="bearcat-folder-field">
+                        <BbInput Value="@formModel.FolderPath" Disabled="true" Class="sm:flex-1" />
+                        <BbButton Variant="ButtonVariant.Outline"
+                                  Size="ButtonSize.Small"
+                                  Class="bearcat-folder-button"
+                                  AriaLabel="@L["BrowseReleaseFolders"]"
+                                  OnClick="OpenFolderDialogAsync">
+                            <LucideIcon Name="folder-open" class="h-4 w-4" />
+                            @L["Browse"]
+                        </BbButton>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(folderValidationMessage))
+                    {
+                        <p class="text-sm text-destructive">@folderValidationMessage</p>
+                    }
                 </div>
+
+                @if (formModel.ReleaseType is not null)
+                {
+                    <div class="rounded-lg border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                        @L.LocalizeDescription(formModel.ReleaseType.Value)
+                    </div>
+                }
             }
         </div>
 
@@ -55,7 +68,7 @@
                 @L["Cancel"]
             </BbButton>
             <BbButton Type="ButtonType.Submit">
-                @L["CreateRelease"]
+                @(formModel.IsEdit ? L["Save"] : L["CreateRelease"])
             </BbButton>
         </div>
     </div>

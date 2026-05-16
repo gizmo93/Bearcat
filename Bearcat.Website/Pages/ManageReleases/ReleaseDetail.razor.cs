@@ -78,6 +78,37 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
             _ => "archives",
         };
 
+    private async Task ShowEditReleaseDialogAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(CreateOrEditReleaseDialog.ReleaseId)] = release.ReleaseId,
+            [nameof(CreateOrEditReleaseDialog.FormModel)] = new ReleaseFormModel
+            {
+                Name = release.Name,
+                ReleaseGroupId = release.ReleaseGroupId,
+                IsEdit = true,
+            },
+        };
+
+        var dialog = await dialogService.OpenAsync<CreateOrEditReleaseDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["EditNamedItem", release.Name],
+                Description = L["EditReleaseDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (!dialog.Cancelled)
+        {
+            await ReloadReleaseAsync();
+        }
+    }
+
     private async Task DeleteReleaseAsync()
     {
         var result = await dialogService.ConfirmAsync(
@@ -99,5 +130,18 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
         var service = ScopedServices.GetRequiredService<ReleaseService>();
         await service.DeleteAsync(release.ReleaseId);
         navigationManager.NavigateTo("/releases");
+    }
+
+    private async Task ReloadReleaseAsync()
+    {
+        var releaseDto = await releaseReadRepository.GetReleaseAsync(ReleaseId);
+
+        if (releaseDto is null)
+        {
+            navigationManager.NotFound();
+            return;
+        }
+
+        release = releaseDto;
     }
 }

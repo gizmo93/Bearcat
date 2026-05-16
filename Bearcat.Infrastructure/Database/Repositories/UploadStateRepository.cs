@@ -19,6 +19,9 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
         return await dbWrite
             .Uploads.AsSplitQuery()
             .Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.Release)
+                    .ThenInclude(r => r.ReleaseGroup)
+            .Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.HosterRegistration)
             .Include(u => u.UploadedFiles)
             .Where(u =>
@@ -28,7 +31,7 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Upload>> GetOfflineUploadsWithoutReuploadAsync(
+    public async Task<IReadOnlyList<Upload>> GetUploadsEligibleForAutomaticReuploadAsync(
         CancellationToken cancellationToken
     )
     {
@@ -41,14 +44,33 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
         ];
 
         return await dbWrite
-            .Uploads.Include(u => u.UploadConfig)
+            .Uploads.AsSplitQuery()
+            .Include(u => u.UploadedFiles)
+            .Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.Release)
+                    .ThenInclude(r => r.ReleaseGroup)
             .Where(u =>
-                u.OnlineState == OnlineState.Offline
+                (
+                    u.OnlineState == OnlineState.Offline
+                    || u.OnlineState == OnlineState.PartiallyOnline
+                )
+                && u.UploadConfig.Release.ReleaseGroup.EnableAutomaticReuploads
                 && !u.UploadConfig.Uploads.Any(ru =>
                     ru.OnlineState == OnlineState.Online || pendingStates.Contains(ru.UploadState)
                 )
             )
             .ToListAsync(cancellationToken: cancellationToken);
+    }
+
+    public async Task<Upload> GetUploadForReuploadAsync(
+        int uploadId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .Uploads.Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.Uploads)
+            .FirstAsync(u => u.Id == uploadId, cancellationToken);
     }
 
     public async Task<IReadOnlyList<UploadConfig>> GetUploadConfigsWithoutUploadsAsync(

@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageNotifications.Dto;
@@ -82,7 +83,7 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
         return dbRead.Notifications.AsNoTracking();
     }
 
-    private static System.Linq.Expressions.Expression<
+    private static Expression<
         Func<Notification, NotificationProjection>
     > ToProjection()
     {

@@ -44,6 +44,9 @@
                         </BbButton>
                     </BbDropdownMenuTrigger>
                     <BbDropdownMenuContent Align="PopoverAlign.End">
+                        <BbDropdownMenuItem OnClick="ShowEditReleaseDialogAsync">
+                            @L["Edit"]
+                        </BbDropdownMenuItem>
                         <BbDropdownMenuItem OnClick="DeleteReleaseAsync">
                             @L["DeleteRelease"]
                         </BbDropdownMenuItem>
@@ -62,18 +65,11 @@
             </div>
         </div>
 
-        <div class="bearcat-release-stats">
-            <div class="bearcat-release-kpi">
-                <span class="bearcat-release-kpi-value">@release.ActiveUploadConfigsCount</span>
-                <span class="bearcat-release-kpi-copy">
-                    <span class="bearcat-release-kpi-label">@L["UploadConfigs"]</span>
-                </span>
-            </div>
-            <div class="bearcat-release-kpi">
-                <span class="bearcat-release-kpi-value">@release.OnlineUploadConfigsCount</span>
-                <span class="bearcat-release-kpi-copy">
-                    <span class="bearcat-release-kpi-label">@L["OnlineConfigs"]</span>
-                </span>
+        <div class="bearcat-release-folder">
+            <LucideIcon Name="layers" class="h-4 w-4 shrink-0 text-muted-foreground" />
+            <div class="min-w-0">
+                <p class="text-xs text-muted-foreground">@L["ReleaseGroup"]</p>
+                <p class="bearcat-release-path">@release.ReleaseGroupName</p>
             </div>
         </div>
     </div>
@@ -81,8 +77,18 @@
     <BbTabs Value="@activeTab" ValueChanged="HandleTabChangedAsync" Class="space-y-4">
         <BbTabsList>
             <BbTabsTrigger Value="archives">@L["ArchiveConfigurations"]</BbTabsTrigger>
-            <BbTabsTrigger Value="upload-configs">@L["UploadConfigurations"]</BbTabsTrigger>
-            <BbTabsTrigger Value="uploads">@L["Uploads"]</BbTabsTrigger>
+            <BbTabsTrigger Value="upload-configs">
+                <span class="bearcat-tab-label">
+                    <span>@L["UploadConfigurations"]</span>
+                    <span class="bearcat-tab-meta">@release.ActiveUploadConfigsCount</span>
+                </span>
+            </BbTabsTrigger>
+            <BbTabsTrigger Value="uploads">
+                <span class="bearcat-tab-label">
+                    <span>@L["Uploads"]</span>
+                    <span class="bearcat-tab-meta">@release.OnlineUploadConfigsCount @L["OnlineState.Online"]</span>
+                </span>
+            </BbTabsTrigger>
         </BbTabsList>
 
         <BbTabsContent Value="archives" Class="space-y-4">
