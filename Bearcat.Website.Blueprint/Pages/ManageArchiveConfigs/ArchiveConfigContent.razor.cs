@@ -22,8 +22,8 @@ public partial class ArchiveConfigContent(DialogService dialogService)
             parameters,
             new DialogOpenOptions
             {
-                Title = $"Archive {archiveId}",
-                Description = "Generated archive files and metadata.",
+                Title = L["ArchiveTitle", archiveId],
+                Description = L["ArchiveDetailDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
             }

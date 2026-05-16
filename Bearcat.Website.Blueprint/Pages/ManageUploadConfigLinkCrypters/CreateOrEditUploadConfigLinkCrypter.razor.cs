@@ -72,7 +72,7 @@ public partial class CreateOrEditUploadConfigLinkCrypter : OwningComponentBase
         {
             messageStore.Add(
                 () => formModel.LinkCrypterRegistrationId!,
-                "You need to select a link crypter."
+                L["SelectLinkCrypterRequired"]
             );
         }
     }

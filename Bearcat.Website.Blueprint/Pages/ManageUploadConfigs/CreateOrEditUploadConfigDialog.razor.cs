@@ -75,20 +75,20 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
 
         if (string.IsNullOrWhiteSpace(formModel.Name))
         {
-            messageStore.Add(() => formModel.Name!, "Name is required.");
+            messageStore.Add(() => formModel.Name!, L["NameIsRequired"]);
         }
 
         if (formModel.HosterRegistrationId is null)
         {
             messageStore.Add(
                 () => formModel.HosterRegistrationId!,
-                "Hoster registration is required."
+                L["HosterRegistrationRequired"]
             );
         }
 
         if (formModel.ArchiveConfigId is null)
         {
-            messageStore.Add(() => formModel.ArchiveConfigId!, "Archive config is required.");
+            messageStore.Add(() => formModel.ArchiveConfigId!, L["ArchiveConfigRequired"]);
         }
     }
 

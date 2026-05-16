@@ -2,7 +2,7 @@
 <div class="space-y-4">
     <div class="grid gap-4 md:grid-cols-2">
         <div class="space-y-2">
-            <p class="text-xs text-muted-foreground">Password</p>
+            <p class="text-xs text-muted-foreground">@L["Password"]</p>
             @if (Config.ArchivePassword is null)
             {
                 <p class="text-sm">-</p>
@@ -16,12 +16,12 @@
         </div>
 
         <div class="space-y-2">
-            <p class="text-xs text-muted-foreground">Size per archive (MB)</p>
+            <p class="text-xs text-muted-foreground">@L["SizePerArchiveMb"]</p>
             <p class="text-sm"><NullableElement Value="Config.ArchiveFileSizeMb" /></p>
         </div>
 
         <div class="space-y-2">
-            <p class="text-xs text-muted-foreground">Archive name</p>
+            <p class="text-xs text-muted-foreground">@L["ArchiveName"]</p>
             <p class="text-sm">
                 @if (!string.IsNullOrWhiteSpace(Config.ArchiveNamePrefix))
                 {
@@ -29,13 +29,13 @@
                 }
                 else
                 {
-                    <span class="text-muted-foreground">A random archive name will be generated</span>
+                    <span class="text-muted-foreground">@L["RandomArchiveNameWillBeGenerated"]</span>
                 }
             </p>
         </div>
 
         <div class="space-y-2">
-            <p class="text-xs text-muted-foreground">Archive files base path</p>
+            <p class="text-xs text-muted-foreground">@L["ArchiveFilesBasePath"]</p>
             <p class="truncate text-sm">@Config.ArchiveFilesBasePath</p>
         </div>
     </div>
@@ -43,17 +43,17 @@
     @if (Config.ArchiveSummaries.Count > 0)
     {
         <div class="space-y-3">
-            <p class="text-sm font-medium">Archives</p>
+            <p class="text-sm font-medium">@L["Archives"]</p>
             <BbDataTable TData="ArchiveConfigDto.ArchiveSummary"
                          Data="Config.ArchiveSummaries"
                          ShowToolbar="false"
                          ShowPagination="@(Config.ArchiveSummaries.Count > 10)"
                          InitialPageSize="10"
-                         AriaLabel="Archive summaries"
+                         AriaLabel="@L["ArchiveSummaries"]"
                          Class="rounded-lg border border-border/70">
                 <Columns>
                     <BbDataTableColumn TData="ArchiveConfigDto.ArchiveSummary" TValue="int"
-                                       Header="Id"
+                                       Header="@L["Id"]"
                                        Property="@(summary => summary.ArchiveId)"
                                        Sortable="true">
                         <CellTemplate Context="summary">
@@ -63,7 +63,7 @@
                         </CellTemplate>
                     </BbDataTableColumn>
                     <BbDataTableColumn TData="ArchiveConfigDto.ArchiveSummary" TValue="int"
-                                       Header="File count"
+                                       Header="@L["FileCount"]"
                                        Property="@(summary => summary.ArchiveFileCount)"
                                        Sortable="true" />
                 </Columns>

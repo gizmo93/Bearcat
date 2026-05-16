@@ -103,6 +103,38 @@ a {
     display: none;
 }
 
+.bearcat-sidebar {
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+.bearcat-culture-selector {
+    width: 8.75rem;
+}
+
+.bearcat-culture-select {
+    width: 100%;
+    height: 1.9rem;
+    border: 1px solid color-mix(in oklch, var(--sidebar-border) 72%, transparent);
+    border-radius: 0.55rem;
+    background: transparent;
+    color: var(--muted-foreground);
+    padding-inline: 0.55rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    outline: none;
+}
+
+.bearcat-culture-select:hover {
+    border-color: var(--sidebar-border);
+    color: var(--foreground);
+}
+
+.bearcat-culture-select:focus {
+    border-color: var(--ring);
+    box-shadow: 0 0 0 2px color-mix(in oklch, var(--ring) 24%, transparent);
+}
+
 .bearcat-release-shell {
     display: flex;
     flex-direction: column;

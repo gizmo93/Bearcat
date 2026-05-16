@@ -53,18 +53,18 @@ public partial class CreateOrEditReleaseDialog(
 
         if (string.IsNullOrWhiteSpace(formModel.Name))
         {
-            messageStore.Add(() => formModel.Name, "Name is required");
+            messageStore.Add(() => formModel.Name, L["NameIsRequired"]);
         }
 
         if (string.IsNullOrWhiteSpace(formModel.FolderPath))
         {
-            folderValidationMessage = "You must select a folder";
+            folderValidationMessage = L["SelectFolderRequired"];
             messageStore.Add(() => formModel.FolderPath, folderValidationMessage);
         }
 
         if (formModel.ReleaseType is null)
         {
-            messageStore.Add(() => formModel.ReleaseType!, "You must select a release type");
+            messageStore.Add(() => formModel.ReleaseType!, L["SelectReleaseTypeRequired"]);
         }
     }
 
@@ -80,8 +80,8 @@ public partial class CreateOrEditReleaseDialog(
             parameters,
             new DialogOpenOptions
             {
-                Title = "Select release folder",
-                Description = "Choose a folder below to use as the release root.",
+                Title = L["SelectReleaseFolder"],
+                Description = L["SelectReleaseFolderDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
             }

@@ -5,6 +5,7 @@ using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.InversionOfControl;
 using Bearcat.LinkCrypters.InversionOfControl;
 using Bearcat.Website.Blueprint;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,10 +43,45 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+var supportedCultures = new[] { "en-US", "de-DE" };
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture(supportedCultures[0])
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+
+app.UseRequestLocalization(localizationOptions);
+
 app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+
+app.MapGet(
+    "/culture/set",
+    (string culture, string redirectUri, HttpContext context) =>
+    {
+        if (supportedCultures.Contains(culture, StringComparer.OrdinalIgnoreCase))
+        {
+            context.Response.Cookies.Append(
+                CookieRequestCultureProvider.DefaultCookieName,
+                CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
+                new CookieOptions
+                {
+                    Expires = DateTimeOffset.UtcNow.AddYears(1),
+                    IsEssential = true,
+                    Path = "/",
+                    SameSite = SameSiteMode.Lax,
+                }
+            );
+        }
+
+        var localRedirect = Uri.IsWellFormedUriString(redirectUri, UriKind.Relative)
+            ? redirectUri
+            : "/";
+
+        return Results.LocalRedirect(localRedirect);
+    }
+);
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 

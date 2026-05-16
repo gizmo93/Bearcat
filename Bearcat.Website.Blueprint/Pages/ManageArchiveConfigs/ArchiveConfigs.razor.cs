@@ -39,8 +39,8 @@ public partial class ArchiveConfigs(DialogService dialogService)
             parameters,
             new DialogOpenOptions
             {
-                Title = "Add Archive Configuration",
-                Description = "Configure how archives are created for this release.",
+                Title = L["AddArchiveConfiguration"],
+                Description = L["ArchiveConfigurationDialogDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
                 PreventClose = true,
@@ -56,12 +56,16 @@ public partial class ArchiveConfigs(DialogService dialogService)
     private async Task DeleteConfigAsync(ArchiveConfigDto archiveConfig)
     {
         var result = await dialogService.ConfirmAsync(
-            "Delete archive config",
-            $"Are you sure you want to delete the archive config {archiveConfig.ArchiveNameWithExtension} (Archiver: {archiveConfig.ArchiverDisplayName})?",
+            L["DeleteArchiveConfig"],
+            L[
+                "DeleteArchiveConfigConfirmation",
+                archiveConfig.ArchiveNameWithExtension ?? archiveConfig.Name,
+                archiveConfig.ArchiverDisplayName
+            ],
             new ConfirmDialogOptions
             {
-                ConfirmText = "Delete",
-                CancelText = "Cancel",
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
                 Destructive = true,
             }
         );
@@ -106,8 +110,8 @@ public partial class ArchiveConfigs(DialogService dialogService)
             parameters,
             new DialogOpenOptions
             {
-                Title = "Edit Archive Configuration",
-                Description = "Configure how archives are created for this release.",
+                Title = L["EditArchiveConfiguration"],
+                Description = L["ArchiveConfigurationDialogDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
                 PreventClose = true,

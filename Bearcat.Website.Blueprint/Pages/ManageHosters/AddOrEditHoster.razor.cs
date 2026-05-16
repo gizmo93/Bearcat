@@ -73,12 +73,12 @@ public partial class AddOrEditHoster(
 
         if (string.IsNullOrWhiteSpace(FormModel.Name))
         {
-            messageStore.Add(() => FormModel.Name, "Name is required");
+            messageStore.Add(() => FormModel.Name, L["NameIsRequired"]);
         }
 
         if (selectedHoster is null)
         {
-            messageStore.Add(() => FormModel.FullClassName, "You must select a hoster");
+            messageStore.Add(() => FormModel.FullClassName, L["SelectHosterRequired"]);
         }
 
         if (selectedHoster is null)
@@ -96,7 +96,7 @@ public partial class AddOrEditHoster(
         {
             messageStore.Add(
                 () => FormModel.Configuration,
-                $"Configuration '{config}' is required"
+                L["ConfigurationValueRequired", config]
             );
         }
     }

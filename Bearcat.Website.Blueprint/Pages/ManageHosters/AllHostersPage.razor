@@ -2,20 +2,20 @@
 @using Bearcat.Domain.UseCases.ManageHosters.Dto
 @inherits OwningComponentBase
 
-<PageTitle>Hoster registrations - Bearcat</PageTitle>
+<PageTitle>@L["HosterRegistrations"] - Bearcat</PageTitle>
 
 <section class="space-y-4">
     <div class="bearcat-page-header">
         <div>
-            <h1 class="text-3xl font-semibold tracking-tight">Hoster registrations</h1>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["HosterRegistrations"]</h1>
             <p class="text-sm text-muted-foreground">
-                Manage hoster credentials, activation state, and login validation.
+                @L["HosterRegistrationsIntro"]
             </p>
         </div>
 
         <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddDialogAsync">
             <LucideIcon Name="plus" class="h-4 w-4" />
-            New hoster
+            @L["NewHoster"]
         </BbButton>
     </div>
 
@@ -24,34 +24,34 @@
                  ShowToolbar="false"
                  ShowPagination="@(hosters.Count > 10)"
                  InitialPageSize="10"
-                 AriaLabel="Hoster registrations"
+                 AriaLabel="@L["HosterRegistrations"]"
                  Class="bearcat-data-table">
         <Columns>
             <BbDataTableColumn TData="HosterRegistrationDto" TValue="string"
-                               Header="Name"
+                               Header="@L["Name"]"
                                Property="@(hoster => hoster.Name)"
                                Sortable="true"
                                Filterable="true"
                                Width="20%" />
             <BbDataTableColumn TData="HosterRegistrationDto" TValue="string"
-                               Header="Hoster"
+                               Header="@L["Hoster"]"
                                Property="@(hoster => hoster.HosterName)"
                                Sortable="true"
                                Filterable="true"
                                Width="16%" />
             <BbDataTableColumn TData="HosterRegistrationDto" TValue="bool"
-                               Header="Active"
+                               Header="@L["Active"]"
                                Property="@(hoster => hoster.IsActive)"
                                Sortable="true"
                                Width="110px">
                 <CellTemplate Context="hoster">
                     <BbBadge Variant="@(hoster.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
-                        @(hoster.IsActive ? "Active" : "Inactive")
+                        @(hoster.IsActive ? L["Active"] : L["Inactive"])
                     </BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="HosterRegistrationDto" TValue="string"
-                               Header="Configuration"
+                               Header="@L["Configuration"]"
                                Property="@(hoster => hoster.Name)"
                                MinWidth="280px">
                 <CellTemplate Context="hoster">
@@ -62,13 +62,13 @@
                     <BbCollapsible Class="bearcat-registration-config">
                         <div class="bearcat-registration-config-summary">
                             <div class="min-w-0">
-                                <p class="text-sm font-medium">@($"{hoster.Configuration.Count} field{(hoster.Configuration.Count == 1 ? string.Empty : "s")}")</p>
+                                <p class="text-sm font-medium">@L["FieldCount", hoster.Configuration.Count]</p>
                                 <p class="truncate text-xs text-muted-foreground">
                                     @string.Join(", ", previewKeys)@(extraCount > 0 ? $" +{extraCount}" : string.Empty)
                                 </p>
                             </div>
                             <BbCollapsibleTrigger>
-                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="Toggle configuration details">
+                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["ToggleConfigurationDetails"]">
                                     <LucideIcon Name="chevrons-up-down" class="h-4 w-4" />
                                 </BbButton>
                             </BbCollapsibleTrigger>
@@ -97,12 +97,12 @@
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="HosterRegistrationDto" TValue="string"
-                               Header="Login"
+                               Header="@L["Login"]"
                                Property="@(hoster => hoster.Name)"
                                Width="120px">
                 <CellTemplate Context="hoster">
                     <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => TryLoginAsync(hoster))">
-                        Try login
+                        @L["TryLogin"]
                     </BbButton>
                 </CellTemplate>
             </BbDataTableColumn>
@@ -114,19 +114,19 @@
                     <div class="flex justify-end">
                         <BbDropdownMenu>
                             <BbDropdownMenuTrigger>
-                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="Open hoster actions">
+                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenHosterActions"]">
                                     <LucideIcon Name="ellipsis" class="h-4 w-4" />
                                 </BbButton>
                             </BbDropdownMenuTrigger>
                             <BbDropdownMenuContent Align="PopoverAlign.End">
                                 <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(hoster))">
-                                    Edit registration
+                                    @L["EditRegistration"]
                                 </BbDropdownMenuItem>
                                 <BbDropdownMenuItem OnClick="@(async _ => await ToggleIsActiveAsync(hoster))">
-                                    @(hoster.IsActive ? "Disable" : "Enable") registration
+                                    @(hoster.IsActive ? L["Disable"] : L["Enable"]) @L["Registration"]
                                 </BbDropdownMenuItem>
                                 <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(hoster))">
-                                    Delete registration
+                                    @L["DeleteRegistration"]
                                 </BbDropdownMenuItem>
                             </BbDropdownMenuContent>
                         </BbDropdownMenu>

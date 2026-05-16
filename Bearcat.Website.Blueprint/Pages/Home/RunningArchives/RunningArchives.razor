@@ -1,8 +1,8 @@
 @using Bearcat.Domain.Entities
 <section class="space-y-3">
     <div>
-        <h2 class="text-lg font-semibold">Running archives</h2>
-        <p class="text-sm text-muted-foreground">Archives that are currently being created.</p>
+        <h2 class="text-lg font-semibold">@L["RunningArchives"]</h2>
+        <p class="text-sm text-muted-foreground">@L["RunningArchivesDescription"]</p>
     </div>
 
     <BbDataTable TData="Archive"
@@ -10,25 +10,25 @@
                  ShowToolbar="false"
                  ShowPagination="@(Archives.Count > 10)"
                  InitialPageSize="10"
-                 AriaLabel="Running archives"
+                 AriaLabel="@L["RunningArchives"]"
                  Class="rounded-lg border border-border/70">
         <Columns>
             <BbDataTableColumn TData="Archive" TValue="int"
-                               Header="Id"
+                               Header="@L["Id"]"
                                Property="@(archive => archive.Id)"
                                Sortable="true" />
             <BbDataTableColumn TData="Archive" TValue="string"
-                               Header="Release"
+                               Header="@L["Release"]"
                                Property="@(archive => archive.ArchiveConfig.Release.Name)"
                                Sortable="true"
                                Filterable="true" />
             <BbDataTableColumn TData="Archive" TValue="string"
-                               Header="Archive config"
+                               Header="@L["ArchiveConfig"]"
                                Property="@(archive => archive.ArchiveConfig.Name)"
                                Sortable="true"
                                Filterable="true" />
             <BbDataTableColumn TData="Archive" TValue="string"
-                               Header="Archiver"
+                               Header="@L["Archiver"]"
                                Property="@(archive => archive.ArchiveConfig.ArchiverName)"
                                Sortable="true"
                                Filterable="true" />

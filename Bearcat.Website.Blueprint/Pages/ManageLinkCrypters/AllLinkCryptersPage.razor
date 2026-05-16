@@ -2,20 +2,20 @@
 @using Bearcat.Domain.UseCases.ManageLinkCrypters.Dto
 @inherits OwningComponentBase
 
-<PageTitle>Link crypter registrations - Bearcat</PageTitle>
+<PageTitle>@L["LinkCrypterRegistrations"] - Bearcat</PageTitle>
 
 <section class="space-y-4">
     <div class="bearcat-page-header">
         <div>
-            <h1 class="text-3xl font-semibold tracking-tight">Link crypter registrations</h1>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["LinkCrypterRegistrations"]</h1>
             <p class="text-sm text-muted-foreground">
-                Manage crypter configurations, active state, and login checks.
+                @L["LinkCrypterRegistrationsIntro"]
             </p>
         </div>
 
         <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddDialogAsync">
             <LucideIcon Name="plus" class="h-4 w-4" />
-            New link crypter
+            @L["NewLinkCrypter"]
         </BbButton>
     </div>
 
@@ -24,34 +24,34 @@
                  ShowToolbar="false"
                  ShowPagination="@(crypters.Count > 10)"
                  InitialPageSize="10"
-                 AriaLabel="Link crypter registrations"
+                 AriaLabel="@L["LinkCrypterRegistrations"]"
                  Class="bearcat-data-table">
         <Columns>
             <BbDataTableColumn TData="LinkCrypterRegistrationDto" TValue="string"
-                               Header="Name"
+                               Header="@L["Name"]"
                                Property="@(crypter => crypter.Name)"
                                Sortable="true"
                                Filterable="true"
                                Width="20%" />
             <BbDataTableColumn TData="LinkCrypterRegistrationDto" TValue="string"
-                               Header="Crypter"
+                               Header="@L["Crypter"]"
                                Property="@(crypter => crypter.CrypterName)"
                                Sortable="true"
                                Filterable="true"
                                Width="16%" />
             <BbDataTableColumn TData="LinkCrypterRegistrationDto" TValue="bool"
-                               Header="Active"
+                               Header="@L["Active"]"
                                Property="@(crypter => crypter.IsActive)"
                                Sortable="true"
                                Width="110px">
                 <CellTemplate Context="crypter">
                     <BbBadge Variant="@(crypter.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
-                        @(crypter.IsActive ? "Active" : "Inactive")
+                        @(crypter.IsActive ? L["Active"] : L["Inactive"])
                     </BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="LinkCrypterRegistrationDto" TValue="string"
-                               Header="Configuration"
+                               Header="@L["Configuration"]"
                                Property="@(crypter => crypter.Name)"
                                MinWidth="280px">
                 <CellTemplate Context="crypter">
@@ -62,13 +62,13 @@
                     <BbCollapsible Class="bearcat-registration-config">
                         <div class="bearcat-registration-config-summary">
                             <div class="min-w-0">
-                                <p class="text-sm font-medium">@($"{crypter.Configuration.Count} field{(crypter.Configuration.Count == 1 ? string.Empty : "s")}")</p>
+                                <p class="text-sm font-medium">@L["FieldCount", crypter.Configuration.Count]</p>
                                 <p class="truncate text-xs text-muted-foreground">
                                     @string.Join(", ", previewKeys)@(extraCount > 0 ? $" +{extraCount}" : string.Empty)
                                 </p>
                             </div>
                             <BbCollapsibleTrigger>
-                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="Toggle configuration details">
+                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["ToggleConfigurationDetails"]">
                                     <LucideIcon Name="chevrons-up-down" class="h-4 w-4" />
                                 </BbButton>
                             </BbCollapsibleTrigger>
@@ -97,12 +97,12 @@
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="LinkCrypterRegistrationDto" TValue="string"
-                               Header="Login"
+                               Header="@L["Login"]"
                                Property="@(crypter => crypter.Name)"
                                Width="120px">
                 <CellTemplate Context="crypter">
                     <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => TryLoginAsync(crypter))">
-                        Try login
+                        @L["TryLogin"]
                     </BbButton>
                 </CellTemplate>
             </BbDataTableColumn>
@@ -114,19 +114,19 @@
                     <div class="flex justify-end">
                         <BbDropdownMenu>
                             <BbDropdownMenuTrigger>
-                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="Open link crypter actions">
+                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenLinkCrypterActions"]">
                                     <LucideIcon Name="ellipsis" class="h-4 w-4" />
                                 </BbButton>
                             </BbDropdownMenuTrigger>
                             <BbDropdownMenuContent Align="PopoverAlign.End">
                                 <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(crypter))">
-                                    Edit registration
+                                    @L["EditRegistration"]
                                 </BbDropdownMenuItem>
                                 <BbDropdownMenuItem OnClick="@(async _ => await ToggleIsActiveAsync(crypter))">
-                                    @(crypter.IsActive ? "Disable" : "Enable") registration
+                                    @(crypter.IsActive ? L["Disable"] : L["Enable"]) @L["Registration"]
                                 </BbDropdownMenuItem>
                                 <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(crypter))">
-                                    Delete registration
+                                    @L["DeleteRegistration"]
                                 </BbDropdownMenuItem>
                             </BbDropdownMenuContent>
                         </BbDropdownMenu>

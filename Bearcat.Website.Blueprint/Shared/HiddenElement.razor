@@ -12,7 +12,7 @@
 
     <BbButton Variant="ButtonVariant.Ghost"
               Size="ButtonSize.IconSmall"
-              AriaLabel="Toggle visibility"
+              AriaLabel="@L["ToggleVisibility"]"
               OnClick="OnToggleVisibilityAsync">
         <LucideIcon Name="@(isVisible ? "eye-off" : "eye")" class="h-4 w-4" />
     </BbButton>
@@ -34,12 +34,12 @@
         }
 
         var result = await DialogService.ConfirmAsync(
-            "Show hidden content",
-            "Are you sure you want to show this hidden content?",
+            L["ShowHiddenContent"],
+            L["ShowHiddenContentConfirmation"],
             new ConfirmDialogOptions
             {
-                ConfirmText = "Yes",
-                CancelText = "No"
+                ConfirmText = L["Yes"],
+                CancelText = L["No"]
             });
 
         if (result.Confirmed)

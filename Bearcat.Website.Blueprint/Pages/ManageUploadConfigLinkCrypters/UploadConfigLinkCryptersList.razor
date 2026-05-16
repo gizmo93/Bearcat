@@ -10,12 +10,12 @@
     <BbCardHeader>
         <div class="bearcat-section-header">
             <div>
-                <BbCardTitle class="text-base">Link crypters</BbCardTitle>
-                <BbCardDescription>Optional containers for distributed upload links.</BbCardDescription>
+                <BbCardTitle class="text-base">@L["LinkCrypters"]</BbCardTitle>
+                <BbCardDescription>@L["LinkCryptersDescription"]</BbCardDescription>
             </div>
             <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="ShowAddDialogAsync">
                 <LucideIcon Name="plus" class="h-4 w-4" />
-                Add
+                @L["Add"]
             </BbButton>
         </div>
     </BbCardHeader>
@@ -25,11 +25,11 @@
                      ShowToolbar="false"
                      ShowPagination="@(uploadConfigLinkCrypters.Count > 10)"
                      InitialPageSize="10"
-                     AriaLabel="Upload config link crypters"
+                     AriaLabel="@L["UploadConfigLinkCrypters"]"
                      Class="rounded-lg border border-border/70">
             <Columns>
                 <BbDataTableColumn TData="UploadConfigLinkCrypterDto" TValue="string"
-                                   Header="Crypter"
+                                   Header="@L["Crypter"]"
                                    Property="@(item => item.LinkCrypterRegistrationName)"
                                    Sortable="true"
                                    Filterable="true">
@@ -41,7 +41,7 @@
                     </CellTemplate>
                 </BbDataTableColumn>
                 <BbDataTableColumn TData="UploadConfigLinkCrypterDto" TValue="string"
-                                   Header="Password"
+                                   Header="@L["Password"]"
                                    Property="@(item => item.Password ?? string.Empty)">
                     <CellTemplate Context="item">
                         @if (!string.IsNullOrWhiteSpace(item.Password))
@@ -57,12 +57,12 @@
                     </CellTemplate>
                 </BbDataTableColumn>
                 <BbDataTableColumn TData="UploadConfigLinkCrypterDto" TValue="bool"
-                                   Header="Active"
+                                   Header="@L["Active"]"
                                    Property="@(item => item.LinkCrypterIsActive)"
                                    Sortable="true">
                     <CellTemplate Context="item">
                         <BbBadge Variant="@(item.LinkCrypterIsActive ? BadgeVariant.Default : BadgeVariant.Secondary)">
-                            @(item.LinkCrypterIsActive ? "Active" : "Inactive")
+                            @(item.LinkCrypterIsActive ? L["Active"] : L["Inactive"])
                         </BbBadge>
                     </CellTemplate>
                 </BbDataTableColumn>
@@ -73,16 +73,16 @@
                         <div class="flex justify-end">
                             <BbDropdownMenu>
                                 <BbDropdownMenuTrigger>
-                                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="Open link crypter actions">
+                                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenLinkCrypterActions"]">
                                         <LucideIcon Name="ellipsis" class="h-4 w-4" />
                                     </BbButton>
                                 </BbDropdownMenuTrigger>
                                 <BbDropdownMenuContent Align="PopoverAlign.End">
                                     <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(item))">
-                                        Edit
+                                        @L["Edit"]
                                     </BbDropdownMenuItem>
                                     <BbDropdownMenuItem OnClick="@(async _ => await ShowDeleteDialogAsync(item))">
-                                        Delete
+                                        @L["Delete"]
                                     </BbDropdownMenuItem>
                                 </BbDropdownMenuContent>
                             </BbDropdownMenu>
