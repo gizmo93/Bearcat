@@ -9,15 +9,17 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 public class HosterConfigurationRepository(
     IBearcatReadDbContext dbRead,
     IBearcatWriteDbContext dbWrite,
-    IHosterFactory hosterFactory) : IHosterConfigurationReadRepository, IHosterConfigurationWriteRepository
+    IHosterFactory hosterFactory
+) : IHosterConfigurationReadRepository, IHosterConfigurationWriteRepository
 {
     public async Task<IReadOnlyList<HosterRegistrationDto>> GetAllRegistrationsAsync(
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var hostersByName = hosterFactory.GetHostersByName();
 
-        return await dbRead.HosterRegistrations
-            .OrderBy(h => h.Name)
+        return await dbRead
+            .HosterRegistrations.OrderBy(h => h.Name)
             .Select(h => new HosterRegistrationDto(
                 h.Id,
                 h.Name,
@@ -26,14 +28,14 @@ public class HosterConfigurationRepository(
                 h.HosterClassName,
                 hostersByName[h.HosterClassName]
                     .DeserializeHosterConfig(h.SerializedConfig)
-                    .ToDictionary()))
+                    .ToDictionary()
+            ))
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
     public async Task<HosterRegistration> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
-        return await dbWrite.HosterRegistrations
-            .FirstAsync(h => h.Id == id, cancellationToken);
+        return await dbWrite.HosterRegistrations.FirstAsync(h => h.Id == id, cancellationToken);
     }
 
     public void Add(HosterRegistration registration)

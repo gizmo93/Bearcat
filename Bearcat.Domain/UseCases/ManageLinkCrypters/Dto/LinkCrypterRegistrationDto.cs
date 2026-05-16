@@ -7,4 +7,5 @@ public record LinkCrypterRegistrationDto(
     string CrypterName,
     string SerializedConfig,
     IReadOnlyDictionary<string, string> Configuration,
-    bool IsActive);
+    bool IsActive
+);

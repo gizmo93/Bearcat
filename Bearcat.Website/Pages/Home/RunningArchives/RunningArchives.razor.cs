@@ -9,4 +9,3 @@ public partial class RunningArchives : ComponentBase
     [EditorRequired]
     public IReadOnlyList<Archive> Archives { get; set; } = null!;
 }
-

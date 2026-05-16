@@ -7,8 +7,7 @@ using Bearcat.LinkCrypters.HideCx.Api.CreateContainer;
 
 namespace Bearcat.LinkCrypters.HideCx;
 
-public class HideCx(IHideCxApi api)
-    : ILinkCrypter
+public class HideCx(IHideCxApi api) : ILinkCrypter
 {
     public string Name => "Hide.cx";
 
@@ -19,24 +18,32 @@ public class HideCx(IHideCxApi api)
         string containerName,
         string? password,
         IReadOnlyList<string> links,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var config = linkCrypterConfig.As<HideCxConfig>();
 
         try
         {
-            var request = new Request { Name = containerName, Password = password, Mirrors = [links.ToArray()] };
+            var request = new Request
+            {
+                Name = containerName,
+                Password = password,
+                Mirrors = [links.ToArray()],
+            };
 
             var result = await api.CreateContainerAsync(
                 request: request,
                 apiToken: GetAuthToken(config.ApiKey),
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken
+            );
 
             return new CreateContainerResult(
                 IsSuccess: true,
                 ContainerLink: result.CanonicalUrl,
                 ExternalReference: result.Id,
-                ErrorMessages: []);
+                ErrorMessages: []
+            );
         }
         catch (Exception ex)
         {
@@ -44,13 +51,15 @@ public class HideCx(IHideCxApi api)
                 IsSuccess: false,
                 ContainerLink: null,
                 ExternalReference: null,
-                ErrorMessages: [ex.Message]);
+                ErrorMessages: [ex.Message]
+            );
         }
     }
 
     public async Task<TryLoginResult> TryLoginAsync(
         ILinkCrypterConfig linkCrypterConfig,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var config = linkCrypterConfig.As<HideCxConfig>();
 
@@ -66,23 +75,20 @@ public class HideCx(IHideCxApi api)
                 PrimaryType = null,
                 AccessStatus = "unknown",
                 OrderBy = "created_at",
-                OrderType = "desc"
+                OrderType = "desc",
             };
 
             await api.SearchContainersAsync(
                 request: request,
                 apiToken: GetAuthToken(config.ApiKey),
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken
+            );
 
-            return new TryLoginResult(
-                IsSuccess: true,
-                ErrorMessage: null);
+            return new TryLoginResult(IsSuccess: true, ErrorMessage: null);
         }
         catch (Exception ex)
         {
-            return new TryLoginResult(
-                IsSuccess: false,
-                ErrorMessage: ex.Message);
+            return new TryLoginResult(IsSuccess: false, ErrorMessage: ex.Message);
         }
     }
 
@@ -91,7 +97,8 @@ public class HideCx(IHideCxApi api)
         string containerLink,
         string? externalReference,
         IReadOnlyList<string> links,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var config = linkCrypterConfig.As<HideCxConfig>();
 
@@ -101,7 +108,8 @@ public class HideCx(IHideCxApi api)
                 containerId: externalReference!,
                 request: new Api.UpdateContainer.Request { Mirrors = links },
                 apiToken: GetAuthToken(config.ApiKey),
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken
+            );
 
             return new UpdateContainerResult(IsSuccess: true, ErrorMessage: null);
         }
@@ -109,7 +117,8 @@ public class HideCx(IHideCxApi api)
         {
             return new UpdateContainerResult(
                 IsSuccess: false,
-                ErrorMessage: ex.InnerException?.Message ?? ex.Message);
+                ErrorMessage: ex.InnerException?.Message ?? ex.Message
+            );
         }
     }
 

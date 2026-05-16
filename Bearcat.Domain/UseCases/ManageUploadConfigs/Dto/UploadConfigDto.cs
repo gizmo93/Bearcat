@@ -8,4 +8,5 @@ public record UploadConfigDto(
     int ArchiveConfigId,
     string ArchiveConfigName,
     string ReleaseName,
-    IReadOnlyList<string> LinksDistributedTo);
+    IReadOnlyList<string> LinksDistributedTo
+);

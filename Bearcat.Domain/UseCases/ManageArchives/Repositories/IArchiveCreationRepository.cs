@@ -9,6 +9,9 @@ public interface IArchiveCreationRepository
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 
     void Add(Archive archive);
-    Task<int?> GetPossibleAssignableArchiveId(int archiveConfigId, CancellationToken cancellationToken);
+    Task<int?> GetPossibleAssignableArchiveId(
+        int archiveConfigId,
+        CancellationToken cancellationToken
+    );
     Task DeleteOrphanedArchivesAsync(CancellationToken cancellationToken);
 }

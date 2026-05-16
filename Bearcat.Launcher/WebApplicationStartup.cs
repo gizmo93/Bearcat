@@ -28,8 +28,8 @@ public static class BearcatStartup
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
-                WorkingDirectory = Path.GetDirectoryName(assemblyPath)
-            }
+                WorkingDirectory = Path.GetDirectoryName(assemblyPath),
+            },
         };
 
         // Log Output für Debugging
@@ -54,11 +54,14 @@ public static class BearcatStartup
         _hostProcess.BeginErrorReadLine();
 
         // Warte auf Cancellation
-        await Task.Run(() =>
-        {
-            cancellationToken.WaitHandle.WaitOne();
-            StopHost();
-        }, cancellationToken);
+        await Task.Run(
+            () =>
+            {
+                cancellationToken.WaitHandle.WaitOne();
+                StopHost();
+            },
+            cancellationToken
+        );
     }
 
     public static void StopHost()

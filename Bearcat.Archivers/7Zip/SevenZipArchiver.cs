@@ -4,9 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Archivers._7Zip;
 
-public class SevenZipArchiver(
-    ILogger<SevenZipArchiver> logger)
-    : IArchiver
+public class SevenZipArchiver(ILogger<SevenZipArchiver> logger) : IArchiver
 {
     public string Name => "7Zip";
 
@@ -18,14 +16,16 @@ public class SevenZipArchiver(
         string archiveNamePrefix,
         int targetFileSizeMb,
         string? password,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var commandLineArgs = CreateCommandLineArguments(
             sourceFolderPath: sourceFolderPath,
             destinationPath: destinationPath,
             archiveNamePrefix: archiveNamePrefix,
             targetFileSizeMb: targetFileSizeMb,
-            password: password);
+            password: password
+        );
 
         var processStartInfo = new ProcessStartInfo
         {
@@ -65,32 +65,30 @@ public class SevenZipArchiver(
 
         if (process.ExitCode != 0)
         {
-            return new ArchiveResult(
-                IsSuccess: false,
-                CreatedFileNames: [],
-                ErrorMessages: errors);
+            return new ArchiveResult(IsSuccess: false, CreatedFileNames: [], ErrorMessages: errors);
         }
 
         var createdFiles = CollectCreatedFiles(
             destinationPath: destinationPath,
-            archiveNamePrefix: archiveNamePrefix);
+            archiveNamePrefix: archiveNamePrefix
+        );
 
         return new ArchiveResult(
             IsSuccess: true,
             CreatedFileNames: createdFiles,
-            ErrorMessages: null);
+            ErrorMessages: null
+        );
     }
 
     private static List<string> CollectCreatedFiles(
         string destinationPath,
-        string archiveNamePrefix)
+        string archiveNamePrefix
+    )
     {
         var directoryInfo = new DirectoryInfo(destinationPath);
         var files = directoryInfo.GetFiles($"{archiveNamePrefix}.7z*");
 
-        return files
-            .Select(f => f.FullName)
-            .ToList();
+        return files.Select(f => f.FullName).ToList();
     }
 
     private static string CreateCommandLineArguments(
@@ -98,12 +96,11 @@ public class SevenZipArchiver(
         string destinationPath,
         string archiveNamePrefix,
         int targetFileSizeMb,
-        string? password)
+        string? password
+    )
     {
         var archiveFullPath = Path.Combine(destinationPath, archiveNamePrefix + ".7z");
-        var passwordPart = !string.IsNullOrWhiteSpace(password)
-            ? $"-p{password}"
-            : string.Empty;
+        var passwordPart = !string.IsNullOrWhiteSpace(password) ? $"-p{password}" : string.Empty;
 
         return $"a -v{targetFileSizeMb}m -mx=0 {passwordPart} \"{archiveFullPath}\" \"{sourceFolderPath}\"/*";
     }

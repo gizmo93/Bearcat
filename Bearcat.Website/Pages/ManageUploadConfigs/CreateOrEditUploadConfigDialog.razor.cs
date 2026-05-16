@@ -59,7 +59,8 @@ public partial class CreateOrEditUploadConfigDialog
                 name: formModel.Name!,
                 hosterRegistrationId: formModel.HosterRegistrationId!.Value,
                 archiveConfigId: formModel.ArchiveConfigId!.Value,
-                linksDistributedTo: formModel.LinksDistributedTo);
+                linksDistributedTo: formModel.LinksDistributedTo
+            );
         }
         else
         {
@@ -68,7 +69,8 @@ public partial class CreateOrEditUploadConfigDialog
                 name: formModel.Name!,
                 hosterRegistrationId: formModel.HosterRegistrationId!.Value,
                 archiveConfigId: formModel.ArchiveConfigId!.Value,
-                linksDistributedTo: formModel.LinksDistributedTo);
+                linksDistributedTo: formModel.LinksDistributedTo
+            );
         }
 
         MudDialog.Close();
@@ -80,23 +82,20 @@ public partial class CreateOrEditUploadConfigDialog
 
         if (string.IsNullOrWhiteSpace(formModel.Name))
         {
-            messageStore.Add(
-                () => formModel.Name!,
-                "Name is required.");
+            messageStore.Add(() => formModel.Name!, "Name is required.");
         }
 
         if (formModel.HosterRegistrationId is null)
         {
             messageStore.Add(
                 () => formModel.HosterRegistrationId!,
-                "Hoster Registration is required.");
+                "Hoster Registration is required."
+            );
         }
 
         if (formModel.ArchiveConfigId is null)
         {
-            messageStore.Add(
-                () => formModel.ArchiveConfigId!,
-                "Archive Config is required.");
+            messageStore.Add(() => formModel.ArchiveConfigId!, "Archive Config is required.");
         }
     }
 
@@ -126,8 +125,7 @@ public partial class CreateOrEditUploadConfigDialog
             Name = uploadConfig.Name,
             HosterRegistrationId = uploadConfig.HosterRegistrationId,
             ArchiveConfigId = uploadConfig.ArchiveConfigId,
-            LinksDistributedTo = uploadConfig.LinksDistributedTo.ToList()
+            LinksDistributedTo = uploadConfig.LinksDistributedTo.ToList(),
         };
     }
 }
-

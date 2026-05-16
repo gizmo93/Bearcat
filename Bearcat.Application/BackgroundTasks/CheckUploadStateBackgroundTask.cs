@@ -8,8 +8,8 @@ namespace Bearcat.Application.BackgroundTasks;
 
 public class CheckUploadStateBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,
-    ILogger<CheckUploadStateBackgroundTask> logger)
-    : BackgroundService
+    ILogger<CheckUploadStateBackgroundTask> logger
+) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -25,7 +25,10 @@ public class CheckUploadStateBackgroundTask(
             await using var scope = serviceScopeFactory.CreateAsyncScope();
             var uploadStateService = scope.ServiceProvider.GetRequiredService<UploadStateService>();
             var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
-            await uploadStateService.CheckUploadStatesAsync(timeProvider.GetLocalNow(), stoppingToken);
+            await uploadStateService.CheckUploadStatesAsync(
+                timeProvider.GetLocalNow(),
+                stoppingToken
+            );
 
             await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
         }

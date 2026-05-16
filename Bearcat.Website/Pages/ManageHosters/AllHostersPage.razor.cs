@@ -9,8 +9,8 @@ namespace Bearcat.Website.Pages.ManageHosters;
 public partial class AllHostersPage(
     IHosterConfigurationReadRepository readRepository,
     IDialogService dialogService,
-    ISnackbar snackbar)
-
+    ISnackbar snackbar
+)
 {
     private IReadOnlyList<HosterRegistrationDto> hosters = [];
     private HosterRegistrationService hosterRegistrationService = null!;
@@ -42,11 +42,11 @@ public partial class AllHostersPage(
 
         var parameters = new DialogParameters<AddOrEditHoster> { { x => x.FormModel, formModel } };
 
-        var dialog = await dialogService.ShowAsync<AddOrEditHoster>("Add Hoster", parameters, new DialogOptions
-        {
-            BackdropClick = false,
-            FullWidth = true,
-        });
+        var dialog = await dialogService.ShowAsync<AddOrEditHoster>(
+            "Add Hoster",
+            parameters,
+            new DialogOptions { BackdropClick = false, FullWidth = true }
+        );
 
         await dialog.Result;
         await LoadHostersAsync();
@@ -65,11 +65,11 @@ public partial class AllHostersPage(
 
         var parameters = new DialogParameters<AddOrEditHoster> { { x => x.FormModel, formModel } };
 
-        var dialog = await dialogService.ShowAsync<AddOrEditHoster>($"Edit {hosterRegistration.Name}", parameters, new DialogOptions
-        {
-            BackdropClick = false,
-            FullWidth = true,
-        });
+        var dialog = await dialogService.ShowAsync<AddOrEditHoster>(
+            $"Edit {hosterRegistration.Name}",
+            parameters,
+            new DialogOptions { BackdropClick = false, FullWidth = true }
+        );
 
         await dialog.Result;
         await LoadHostersAsync();
@@ -86,13 +86,16 @@ public partial class AllHostersPage(
 
     private async Task DeleteAsync(HosterRegistrationDto hoster)
     {
-        var message = $"Are you sure you want to delete hoster registration {hoster.Name}?" +
-                      $"\nBe careful, as it will also remove all uploads related to that hoster registration.";
+        var message =
+            $"Are you sure you want to delete hoster registration {hoster.Name}?"
+            + $"\nBe careful, as it will also remove all uploads related to that hoster registration.";
 
-        var result = await dialogService.ShowMessageBoxAsync(title: $"Delete {hoster.Name}",
+        var result = await dialogService.ShowMessageBoxAsync(
+            title: $"Delete {hoster.Name}",
             message: message,
             yesText: "Delete",
-            noText: "Cancel");
+            noText: "Cancel"
+        );
 
         if (result == true)
         {
@@ -106,7 +109,7 @@ public partial class AllHostersPage(
     {
         await using var scope = ScopedServices.CreateAsyncScope();
         var service = scope.ServiceProvider.GetRequiredService<HosterRegistrationService>();
-        
+
         var result = await service.TryLoginAsync(hoster.Id);
 
         if (result.IsSuccess)
@@ -115,8 +118,10 @@ public partial class AllHostersPage(
         }
         else
         {
-            snackbar.Add($"Login for registration {hoster.Name} failed: {result.ErrorMessage}", Severity.Error);
+            snackbar.Add(
+                $"Login for registration {hoster.Name} failed: {result.ErrorMessage}",
+                Severity.Error
+            );
         }
     }
 }
-

@@ -14,21 +14,24 @@ public class UploadConfigConfiguration : IEntityTypeConfiguration<UploadConfig>
         builder.Property(u => u.Name).HasMaxLength(200).IsRequired();
         builder.Property(u => u.LinksDistributedTo);
 
-        builder.HasOne(u => u.HosterRegistration)
+        builder
+            .HasOne(u => u.HosterRegistration)
             .WithMany(h => h.UploadConfigs)
             .HasForeignKey(u => u.HosterRegistrationId)
             .HasPrincipalKey(h => h.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(u => u.Uploads)
+        builder
+            .HasMany(u => u.Uploads)
             .WithOne(u => u.UploadConfig)
             .HasForeignKey(u => u.UploadConfigId)
             .HasPrincipalKey(u => u.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(u => u.LinkCrypters)
+        builder
+            .HasMany(u => u.LinkCrypters)
             .WithOne(l => l.UploadConfig)
             .HasForeignKey(l => l.UploadConfigId)
             .HasPrincipalKey(u => u.Id)

@@ -13,7 +13,8 @@ public partial class RenameColumn : Migration
         migrationBuilder.RenameColumn(
             name: "HosterFullClassName",
             table: "HosterRegistrations",
-            newName: "HosterClassName");
+            newName: "HosterClassName"
+        );
     }
 
     /// <inheritdoc />
@@ -22,6 +23,7 @@ public partial class RenameColumn : Migration
         migrationBuilder.RenameColumn(
             name: "HosterClassName",
             table: "HosterRegistrations",
-            newName: "HosterFullClassName");
+            newName: "HosterFullClassName"
+        );
     }
 }

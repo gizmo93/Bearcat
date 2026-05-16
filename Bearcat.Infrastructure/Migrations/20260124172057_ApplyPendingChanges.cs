@@ -20,7 +20,8 @@ public partial class ApplyPendingChanges : Migration
             oldClrType: typeof(DateTime),
             oldType: "timestamp(4) with time zone",
             oldPrecision: 4,
-            oldNullable: true);
+            oldNullable: true
+        );
 
         migrationBuilder.AlterColumn<DateTime>(
             name: "CreatedAt",
@@ -30,7 +31,8 @@ public partial class ApplyPendingChanges : Migration
             nullable: false,
             oldClrType: typeof(DateTime),
             oldType: "timestamp(4) with time zone",
-            oldPrecision: 4);
+            oldPrecision: 4
+        );
 
         migrationBuilder.AlterColumn<DateTime>(
             name: "CreatedAt",
@@ -40,7 +42,8 @@ public partial class ApplyPendingChanges : Migration
             nullable: false,
             oldClrType: typeof(DateTime),
             oldType: "timestamp(4) with time zone",
-            oldPrecision: 4);
+            oldPrecision: 4
+        );
 
         migrationBuilder.AlterColumn<DateTime>(
             name: "CheckedAt",
@@ -51,7 +54,8 @@ public partial class ApplyPendingChanges : Migration
             oldClrType: typeof(DateTime),
             oldType: "timestamp(4) with time zone",
             oldPrecision: 4,
-            oldNullable: true);
+            oldNullable: true
+        );
 
         migrationBuilder.AlterColumn<DateTime>(
             name: "ResolvedAt",
@@ -62,7 +66,8 @@ public partial class ApplyPendingChanges : Migration
             oldClrType: typeof(DateTime),
             oldType: "timestamp(4) with time zone",
             oldPrecision: 4,
-            oldNullable: true);
+            oldNullable: true
+        );
 
         migrationBuilder.AlterColumn<DateTime>(
             name: "CreatedAt",
@@ -72,7 +77,8 @@ public partial class ApplyPendingChanges : Migration
             nullable: false,
             oldClrType: typeof(DateTime),
             oldType: "timestamp(4) with time zone",
-            oldPrecision: 4);
+            oldPrecision: 4
+        );
 
         migrationBuilder.AlterColumn<DateTime>(
             name: "CreatedAt",
@@ -82,7 +88,8 @@ public partial class ApplyPendingChanges : Migration
             nullable: false,
             oldClrType: typeof(DateTime),
             oldType: "timestamp(4) with time zone",
-            oldPrecision: 4);
+            oldPrecision: 4
+        );
     }
 
     /// <inheritdoc />
@@ -97,7 +104,8 @@ public partial class ApplyPendingChanges : Migration
             oldClrType: typeof(DateTime),
             oldType: "timestamp(4) without time zone",
             oldPrecision: 4,
-            oldNullable: true);
+            oldNullable: true
+        );
 
         migrationBuilder.AlterColumn<DateTime>(
             name: "CreatedAt",
@@ -107,7 +115,8 @@ public partial class ApplyPendingChanges : Migration
             nullable: false,
             oldClrType: typeof(DateTime),
             oldType: "timestamp(4) without time zone",
-            oldPrecision: 4);
+            oldPrecision: 4
+        );
 
         migrationBuilder.AlterColumn<DateTime>(
             name: "CreatedAt",
@@ -117,7 +126,8 @@ public partial class ApplyPendingChanges : Migration
             nullable: false,
             oldClrType: typeof(DateTime),
             oldType: "timestamp(4) without time zone",
-            oldPrecision: 4);
+            oldPrecision: 4
+        );
 
         migrationBuilder.AlterColumn<DateTime>(
             name: "CheckedAt",
@@ -128,7 +138,8 @@ public partial class ApplyPendingChanges : Migration
             oldClrType: typeof(DateTime),
             oldType: "timestamp(4) without time zone",
             oldPrecision: 4,
-            oldNullable: true);
+            oldNullable: true
+        );
 
         migrationBuilder.AlterColumn<DateTime>(
             name: "ResolvedAt",
@@ -139,7 +150,8 @@ public partial class ApplyPendingChanges : Migration
             oldClrType: typeof(DateTime),
             oldType: "timestamp(4) without time zone",
             oldPrecision: 4,
-            oldNullable: true);
+            oldNullable: true
+        );
 
         migrationBuilder.AlterColumn<DateTime>(
             name: "CreatedAt",
@@ -149,7 +161,8 @@ public partial class ApplyPendingChanges : Migration
             nullable: false,
             oldClrType: typeof(DateTime),
             oldType: "timestamp(4) without time zone",
-            oldPrecision: 4);
+            oldPrecision: 4
+        );
 
         migrationBuilder.AlterColumn<DateTime>(
             name: "CreatedAt",
@@ -159,6 +172,7 @@ public partial class ApplyPendingChanges : Migration
             nullable: false,
             oldClrType: typeof(DateTime),
             oldType: "timestamp(4) without time zone",
-            oldPrecision: 4);
+            oldPrecision: 4
+        );
     }
 }

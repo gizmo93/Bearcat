@@ -13,9 +13,10 @@ public static class ReleaseTypeExtensions
         public string Description =>
             releaseType switch
             {
-                ReleaseType.Managed => "Bearcat creates the archives and manages uploads automatically",
+                ReleaseType.Managed =>
+                    "Bearcat creates the archives and manages uploads automatically",
                 ReleaseType.Unmanaged => "You create the archives and Bearcat just uploads them",
-                _ => throw new ArgumentOutOfRangeException(nameof(releaseType), releaseType, null)
+                _ => throw new ArgumentOutOfRangeException(nameof(releaseType), releaseType, null),
             };
     }
 }

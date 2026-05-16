@@ -1,0 +1,103 @@
+@inherits OwningComponentBase
+
+<BbCard Class="border-border/70 shadow-sm">
+    <BbCardHeader>
+        <div class="bearcat-section-header">
+            <div class="flex items-center gap-2">
+                <LucideIcon Name="archive" class="h-4 w-4" />
+                <div>
+                    <BbCardTitle class="text-base">Archive configurations</BbCardTitle>
+                    <BbCardDescription>Archiver setup and generated archive history.</BbCardDescription>
+                </div>
+            </div>
+            <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="ShowAddDialogAsync">
+                <LucideIcon Name="plus" class="h-4 w-4" />
+                Add
+            </BbButton>
+        </div>
+    </BbCardHeader>
+    <BbCardContent>
+        @if (archiveConfigs.Count == 0)
+        {
+            <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                No archive configurations yet.
+            </div>
+        }
+        else
+        {
+            <div class="bearcat-config-list">
+                <div class="bearcat-config-header bearcat-archive-grid">
+                    <span>Configuration</span>
+                    <span>Archiver</span>
+                    <span>Archives</span>
+                    <span>Size</span>
+                    <span>Archive name</span>
+                    <span class="text-right">Actions</span>
+                </div>
+                @foreach (var config in archiveConfigs)
+                {
+                    <BbCollapsible Class="bearcat-config-item">
+                        <div class="bearcat-config-row bearcat-archive-grid">
+                            <div class="min-w-0">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="text-sm font-semibold">@config.Name</span>
+                                </div>
+                                <p class="mt-1 truncate text-xs text-muted-foreground" title="@config.ArchiveFilesBasePath">
+                                    @config.ArchiveFilesBasePath
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="bearcat-mobile-label">Archiver</p>
+                                <BbBadge Variant="BadgeVariant.Outline">@config.ArchiverDisplayName</BbBadge>
+                            </div>
+
+                            <div>
+                                <p class="bearcat-mobile-label">Archives</p>
+                                <p class="text-sm font-medium">@config.ArchiveSummaries.Count</p>
+                            </div>
+
+                            <div>
+                                <p class="bearcat-mobile-label">Size</p>
+                                <p class="text-sm font-medium">@config.ArchiveFileSizeMb MB</p>
+                            </div>
+
+                            <div class="min-w-0">
+                                <p class="bearcat-mobile-label">Archive name</p>
+                                <p class="truncate text-sm font-medium" title="@(config.ArchiveNameWithExtension ?? "Random name")">
+                                    @(config.ArchiveNameWithExtension ?? "Random name")
+                                </p>
+                            </div>
+
+                            <div class="bearcat-config-actions">
+                                <BbDropdownMenu>
+                                    <BbDropdownMenuTrigger>
+                                        <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="Open archive config actions">
+                                            <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                        </BbButton>
+                                    </BbDropdownMenuTrigger>
+                                    <BbDropdownMenuContent Align="PopoverAlign.End">
+                                        <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(config))">
+                                            Edit config
+                                        </BbDropdownMenuItem>
+                                        <BbDropdownMenuItem OnClick="@(async _ => await DeleteConfigAsync(config))">
+                                            Delete config
+                                        </BbDropdownMenuItem>
+                                    </BbDropdownMenuContent>
+                                </BbDropdownMenu>
+                                <BbCollapsibleTrigger>
+                                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="Toggle archive config details">
+                                        <LucideIcon Name="chevron-down" class="h-4 w-4" />
+                                    </BbButton>
+                                </BbCollapsibleTrigger>
+                            </div>
+                        </div>
+                        <BbCollapsibleContent Class="border-t border-border/70 bg-muted/5 px-4 pb-4 pt-4">
+                            <ArchiveConfigContent Config="config" />
+                        </BbCollapsibleContent>
+                    </BbCollapsible>
+                }
+            </div>
+        }
+    </BbCardContent>
+</BbCard>

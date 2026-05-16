@@ -10,9 +10,7 @@ public partial class RemoveContainerName : Migration
     /// <inheritdoc />
     protected override void Up(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropColumn(
-            name: "ContainerName",
-            table: "UploadConfigLinkCrypters");
+        migrationBuilder.DropColumn(name: "ContainerName", table: "UploadConfigLinkCrypters");
     }
 
     /// <inheritdoc />
@@ -24,6 +22,7 @@ public partial class RemoveContainerName : Migration
             type: "character varying(300)",
             maxLength: 300,
             nullable: false,
-            defaultValue: "");
+            defaultValue: ""
+        );
     }
 }

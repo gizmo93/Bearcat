@@ -7,8 +7,8 @@ namespace Bearcat.Website.Pages.ManageArchives;
 
 public partial class ArchiveDetailDialog(
     IArchiveReadRepository archiveReadRepository,
-    ISnackbar snackbar)
-    : ComponentBase
+    ISnackbar snackbar
+) : ComponentBase
 {
     [Parameter]
     public int ArchiveId { get; set; }
@@ -34,4 +34,3 @@ public partial class ArchiveDetailDialog(
         isInitialized = true;
     }
 }
-

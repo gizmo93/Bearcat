@@ -1,0 +1,75 @@
+@inherits OwningComponentBase
+
+@if (!isInitialized)
+{
+    return;
+}
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="formModel.Name"
+                              Label="Name"
+                              Placeholder="Enter a name for the configuration" />
+
+            <BbFormFieldSelect TValue="string"
+                               @bind-Value="formModel.ClassName"
+                               @bind-Value:after="OnSelectedCrypterChanged"
+                               Label="Crypter"
+                               Disabled="IsEditMode"
+                               Placeholder="Select a crypter"
+                               Options="crypters.Select(crypter => new SelectOption<string>(crypter.ClassName, crypter.Name))" />
+
+            @if (SelectedCrypter is not null)
+            {
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-sm font-medium">Configuration</p>
+                        <p class="text-xs text-muted-foreground">
+                            Provide all required values for the selected link crypter.
+                        </p>
+                    </div>
+
+                    @foreach (var key in SelectedCrypter.ConfigurationKeys)
+                    {
+                        var isPasswordField = string.Equals(key, "password", StringComparison.OrdinalIgnoreCase);
+
+                        <div class="grid gap-2">
+                            <label class="text-sm font-medium">@key</label>
+                            <div class="flex items-center gap-2">
+                                <BbInput Value="@formModel.Configuration.GetValueOrDefault(key)"
+                                         ValueChanged="@(value => OnConfigurationValueChanged(key, value))"
+                                         Type="@(isPasswordField && !displayedPasswords.Contains(key) ? InputType.Password : InputType.Text)"
+                                         class="flex-1" />
+
+                                @if (isPasswordField)
+                                {
+                                    <BbButton Variant="ButtonVariant.Ghost"
+                                              Size="ButtonSize.IconSmall"
+                                              AriaLabel="Toggle password visibility"
+                                              OnClick="@(() => ToggleShowHidePassword(key))">
+                                        <LucideIcon Name="@(displayedPasswords.Contains(key) ? "eye-off" : "eye")" class="h-4 w-4" />
+                                    </BbButton>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <ValidationMessage For="@(() => formModel.Configuration)" />
+                </div>
+            }
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                Cancel
+            </BbButton>
+            <BbButton Type="ButtonType.Submit">
+                Save
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

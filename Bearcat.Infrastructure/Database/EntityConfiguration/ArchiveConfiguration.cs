@@ -15,14 +15,16 @@ public class ArchiveConfiguration : IEntityTypeConfiguration<Archive>
         builder.Property(a => a.ErrorMessages);
         builder.Property(a => a.ArchiveState).IsRequired();
 
-        builder.HasMany(a => a.ArchiveFiles)
+        builder
+            .HasMany(a => a.ArchiveFiles)
             .WithOne(a => a.Archive)
             .HasForeignKey(a => a.ArchiveId)
             .HasPrincipalKey(a => a.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(a => a.Uploads)
+        builder
+            .HasMany(a => a.Uploads)
             .WithOne(u => u.Archive)
             .HasForeignKey(u => u.ArchiveId)
             .HasPrincipalKey(a => a.Id)

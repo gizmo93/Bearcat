@@ -17,14 +17,16 @@ public class ArchiveConfigConfiguration : IEntityTypeConfiguration<ArchiveConfig
         builder.Property(a => a.ArchiveNamePrefix).IsRequired(false).HasMaxLength(200);
         builder.Property(a => a.ArchiveFilesBasePath).IsRequired().HasMaxLength(300);
 
-        builder.HasMany(a => a.Archives)
+        builder
+            .HasMany(a => a.Archives)
             .WithOne(a => a.ArchiveConfig)
             .HasForeignKey(a => a.ArchiveConfigId)
             .HasPrincipalKey(a => a.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(a => a.UploadConfigs)
+        builder
+            .HasMany(a => a.UploadConfigs)
             .WithOne(u => u.ArchiveConfig)
             .HasForeignKey(u => u.ArchiveConfigId)
             .HasPrincipalKey(a => a.Id)

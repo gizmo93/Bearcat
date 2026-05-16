@@ -1,0 +1,44 @@
+@using Bearcat.Domain.UseCases.ManageArchives.Dto
+@if (!isInitialized)
+{
+    return;
+}
+
+<div class="bearcat-archive-dialog">
+    <div class="shrink-0">
+        <div class="grid gap-3 sm:grid-cols-2">
+            <div class="rounded-lg border border-border/70 bg-muted/30 px-3 py-2">
+                <p class="text-xs text-muted-foreground">Created at</p>
+                <p class="text-sm font-medium">@Archive.CreatedAt</p>
+            </div>
+            <div class="rounded-lg border border-border/70 bg-muted/30 px-3 py-2">
+                <p class="text-xs text-muted-foreground">Folder path</p>
+                <p class="truncate text-sm font-medium">@Archive.ArchiveFolderPath</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bearcat-archive-dialog-body">
+        <BbDataTable TData="ArchiveDto.ArchiveFileDto"
+                     Data="Archive.Files"
+                     ShowToolbar="false"
+                     ShowPagination="@(Archive.Files.Count > 10)"
+                     InitialPageSize="10"
+                     AriaLabel="Archive files"
+                     Class="rounded-lg border border-border/70">
+            <Columns>
+                <BbDataTableColumn TData="ArchiveDto.ArchiveFileDto" TValue="string"
+                                   Header="Filename"
+                                   Property="@(file => file.FullFileName)"
+                                   Sortable="true"
+                                   Filterable="true" />
+            </Columns>
+        </BbDataTable>
+    </div>
+
+    <div class="bearcat-archive-dialog-footer">
+        <BbButton Variant="ButtonVariant.Outline" OnClick="CloseAsync">
+            Close
+        </BbButton>
+    </div>
+</div>

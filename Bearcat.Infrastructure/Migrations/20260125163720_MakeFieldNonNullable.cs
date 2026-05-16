@@ -18,7 +18,8 @@ public partial class MakeFieldNonNullable : Migration
             nullable: false,
             oldClrType: typeof(List<string>),
             oldType: "text[]",
-            oldNullable: true);
+            oldNullable: true
+        );
     }
 
     /// <inheritdoc />
@@ -30,6 +31,7 @@ public partial class MakeFieldNonNullable : Migration
             type: "text[]",
             nullable: true,
             oldClrType: typeof(List<string>),
-            oldType: "text[]");
+            oldType: "text[]"
+        );
     }
 }

@@ -1,0 +1,24 @@
+@using Bearcat.Domain.ValueObjects
+@if (Value is not null)
+{
+    <BbBadge Variant="@variant" Class="@Class">
+        @Value
+    </BbBadge>
+}
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public OnlineState? Value { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private BadgeVariant variant => Value switch
+    {
+        OnlineState.Online => BadgeVariant.Default,
+        OnlineState.PartiallyOnline => BadgeVariant.Secondary,
+        OnlineState.Offline => BadgeVariant.Destructive,
+        _ => BadgeVariant.Outline
+    };
+}

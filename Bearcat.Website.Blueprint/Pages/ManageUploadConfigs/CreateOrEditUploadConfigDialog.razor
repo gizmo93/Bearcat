@@ -1,0 +1,68 @@
+@inherits OwningComponentBase
+
+@if (!isInitialized)
+{
+    return;
+}
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="formModel.Name"
+                              Label="Name"
+                              Placeholder="Name the upload config" />
+
+            <BbFormFieldSelect TValue="int?"
+                               @bind-Value="formModel.HosterRegistrationId"
+                               Label="Hoster registration"
+                               Placeholder="Select a hoster registration"
+                               Options="hosterRegistrationOptions.OrderBy(kvp => kvp.Value).Select(kvp => new SelectOption<int?>(kvp.Key, kvp.Value))" />
+
+            <BbFormFieldSelect TValue="int?"
+                               @bind-Value="formModel.ArchiveConfigId"
+                               Label="Archive configuration"
+                               Placeholder="Select an archive configuration"
+                               Options="archiveConfigOptions.OrderBy(kvp => kvp.Value).Select(kvp => new SelectOption<int?>(kvp.Key, kvp.Value))" />
+
+            <div class="space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-medium">Links distributed to</p>
+                        <p class="text-xs text-muted-foreground">
+                            Optional tracking for forum or board posts using this upload config.
+                        </p>
+                    </div>
+                    <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="AddLinkDistributedTo">
+                        <LucideIcon Name="plus" class="h-4 w-4" />
+                        Add
+                    </BbButton>
+                </div>
+
+                @foreach (var index in Enumerable.Range(0, formModel.LinksDistributedTo.Count))
+                {
+                    <div class="flex items-center gap-2">
+                        <BbInput @bind-Value="formModel.LinksDistributedTo[index]" class="flex-1" />
+                        <BbButton Variant="ButtonVariant.Ghost"
+                                  Size="ButtonSize.IconSmall"
+                                  AriaLabel="Delete link"
+                                  OnClick="@(() => DeleteLinkDistributedTo(index))">
+                            <LucideIcon Name="trash-2" class="h-4 w-4" />
+                        </BbButton>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                Cancel
+            </BbButton>
+            <BbButton Type="ButtonType.Submit">
+                Save
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

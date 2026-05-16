@@ -7,7 +7,8 @@ namespace Bearcat.Application.BackgroundTasks;
 
 public class ArchiveUploadBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,
-    ILogger<ArchiveUploadBackgroundTask> logger) : BackgroundService
+    ILogger<ArchiveUploadBackgroundTask> logger
+) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

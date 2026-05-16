@@ -15,20 +15,23 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
         ILinkCrypterConfig linkCrypterConfig,
         string containerName,
         string? password,
-        IReadOnlyList<string> links, CancellationToken cancellationToken = default)
+        IReadOnlyList<string> links,
+        CancellationToken cancellationToken = default
+    )
     {
         var config = linkCrypterConfig.As<KeepLinksConfig>();
 
         try
         {
             var linksString = string.Join(',', links);
-            
+
             var response = await api.ProtectLinkAsync(
                 apiKey: config.ApiKey,
                 linksToProtect: linksString,
                 password: password,
                 title: containerName,
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken
+            );
 
             var success = response.ApiError is null;
 
@@ -36,9 +39,8 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
                 IsSuccess: success,
                 ContainerLink: response.ContainerLink,
                 ExternalReference: null,
-                ErrorMessages: !success
-                    ? [response.ApiError ?? "Unknown error"]
-                    : []);
+                ErrorMessages: !success ? [response.ApiError ?? "Unknown error"] : []
+            );
         }
         catch (Exception ex)
         {
@@ -46,7 +48,8 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
                 IsSuccess: false,
                 ContainerLink: null,
                 ExternalReference: null,
-                ErrorMessages: [ex.InnerException?.Message ?? ex.Message]);
+                ErrorMessages: [ex.InnerException?.Message ?? ex.Message]
+            );
         }
     }
 
@@ -62,29 +65,30 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
 
     public async Task<TryLoginResult> TryLoginAsync(
         ILinkCrypterConfig linkCrypterConfig,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var config = linkCrypterConfig.As<KeepLinksConfig>();
-        
+
         const string loginErrorMessage = "API hash is not valid";
-        
+
         try
         {
             var response = await api.GetLinksAsync(
                 apiKey: config.ApiKey,
-                cancellationToken: cancellationToken);
-            
+                cancellationToken: cancellationToken
+            );
+
             var success = !response.Contains(loginErrorMessage);
-            
-            return new TryLoginResult(
-                IsSuccess: success,
-                ErrorMessage: loginErrorMessage);
+
+            return new TryLoginResult(IsSuccess: success, ErrorMessage: loginErrorMessage);
         }
         catch (Exception ex)
         {
             return new TryLoginResult(
                 IsSuccess: false,
-                ErrorMessage: ex.InnerException?.Message ?? ex.Message);
+                ErrorMessage: ex.InnerException?.Message ?? ex.Message
+            );
         }
     }
 
@@ -93,31 +97,32 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
         string containerLink,
         string? externalReference,
         IReadOnlyList<string> links,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var config = linkCrypterConfig.As<KeepLinksConfig>();
 
         try
         {
             var linksString = string.Join(',', links);
-            
+
             var response = await api.UpdateContainerAsync(
                 apiKey: config.ApiKey,
                 linksToProtect: linksString,
                 urlId: containerLink.Split('/').Last(),
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken
+            );
 
             var success = response.ApiError is null;
 
-            return new UpdateContainerResult(
-                IsSuccess: success,
-                ErrorMessage: response.ApiError);
+            return new UpdateContainerResult(IsSuccess: success, ErrorMessage: response.ApiError);
         }
         catch (Exception ex)
         {
             return new UpdateContainerResult(
                 IsSuccess: false,
-                ErrorMessage: ex.InnerException?.Message ?? ex.Message);
+                ErrorMessage: ex.InnerException?.Message ?? ex.Message
+            );
         }
     }
 }

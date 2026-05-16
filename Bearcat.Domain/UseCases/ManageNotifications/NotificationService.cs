@@ -8,9 +8,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ManageNotifications;
 
-public class NotificationService(
-    INotificationRepository repository,
-    TimeProvider timeProvider) : INotificationService
+public class NotificationService(INotificationRepository repository, TimeProvider timeProvider)
+    : INotificationService
 {
     public async Task CreateInfoAsync(string message, CancellationToken cancellationToken)
     {
@@ -30,7 +29,8 @@ public class NotificationService(
     public void CreateInfo<TEntity>(
         string message,
         TEntity entity,
-        Expression<Func<Notification, TEntity?>> selector)
+        Expression<Func<Notification, TEntity?>> selector
+    )
     {
         Create(NotificationType.Info, message, entity, selector);
     }
@@ -38,7 +38,8 @@ public class NotificationService(
     public void CreateWarning<TEntity>(
         string message,
         TEntity entity,
-        Expression<Func<Notification, TEntity?>> selector)
+        Expression<Func<Notification, TEntity?>> selector
+    )
     {
         Create(NotificationType.Warning, message, entity, selector);
     }
@@ -46,7 +47,8 @@ public class NotificationService(
     public void CreateError<TEntity>(
         string message,
         TEntity entity,
-        Expression<Func<Notification, TEntity?>> selector)
+        Expression<Func<Notification, TEntity?>> selector
+    )
     {
         Create(NotificationType.Error, message, entity, selector);
     }
@@ -55,7 +57,8 @@ public class NotificationService(
         NotificationType type,
         string message,
         TEntity entity,
-        Expression<Func<Notification, TEntity?>> selector)
+        Expression<Func<Notification, TEntity?>> selector
+    )
     {
         var notification = new Notification
         {
@@ -71,7 +74,11 @@ public class NotificationService(
         repository.Add(notification);
     }
 
-    private async Task CreateAsync(NotificationType type, string message, CancellationToken cancellationToken)
+    private async Task CreateAsync(
+        NotificationType type,
+        string message,
+        CancellationToken cancellationToken
+    )
     {
         var notification = new Notification
         {

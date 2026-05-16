@@ -9,8 +9,8 @@ namespace Bearcat.Website.Pages.ManageLinkCrypters;
 public partial class AllLinkCryptersPage(
     ILinkCrypterRegistrationReadRepository readRepository,
     IDialogService dialogService,
-    ISnackbar snackbar)
-
+    ISnackbar snackbar
+)
 {
     private IReadOnlyList<LinkCrypterRegistrationDto> crypters = [];
     private LinkCrypterService linkCrypterService = null!;
@@ -40,11 +40,8 @@ public partial class AllLinkCryptersPage(
     {
         var dialog = await dialogService.ShowAsync<CreateOrEditDialog>(
             title: "Add Crypter",
-            options: new DialogOptions
-            {
-                BackdropClick = false,
-                FullWidth = true,
-            });
+            options: new DialogOptions { BackdropClick = false, FullWidth = true }
+        );
 
         await dialog.Result;
         await LoadCryptersAsync();
@@ -54,17 +51,14 @@ public partial class AllLinkCryptersPage(
     {
         var parameters = new DialogParameters<CreateOrEditDialog>
         {
-            { x => x.LinkCrypterRegistrationId, crypter.LinkCrypterRegistrationId }
+            { x => x.LinkCrypterRegistrationId, crypter.LinkCrypterRegistrationId },
         };
 
         var dialog = await dialogService.ShowAsync<CreateOrEditDialog>(
             title: $"Edit {crypter.Name}",
             parameters: parameters,
-            options: new DialogOptions
-            {
-                BackdropClick = false,
-                FullWidth = true,
-            });
+            options: new DialogOptions { BackdropClick = false, FullWidth = true }
+        );
 
         await dialog.Result;
         await LoadCryptersAsync();
@@ -83,10 +77,12 @@ public partial class AllLinkCryptersPage(
     {
         var message = $"Are you sure you want to delete link crypter registration {crypter.Name}?";
 
-        var result = await dialogService.ShowMessageBoxAsync(title: $"Delete {crypter.Name}",
+        var result = await dialogService.ShowMessageBoxAsync(
+            title: $"Delete {crypter.Name}",
             message: message,
             yesText: "Delete",
-            noText: "Cancel");
+            noText: "Cancel"
+        );
 
         if (result == true)
         {
@@ -107,7 +103,10 @@ public partial class AllLinkCryptersPage(
         }
         else
         {
-            snackbar.Add($"Login for registration {crypter.Name} failed: {result.ErrorMessage}", Severity.Error);
+            snackbar.Add(
+                $"Login for registration {crypter.Name} failed: {result.ErrorMessage}",
+                Severity.Error
+            );
         }
     }
 }

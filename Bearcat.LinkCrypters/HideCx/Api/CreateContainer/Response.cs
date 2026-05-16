@@ -13,4 +13,3 @@ public class Response
     [JsonPropertyName("canonical_url")]
     public string CanonicalUrl { get; set; } = null!;
 }
-

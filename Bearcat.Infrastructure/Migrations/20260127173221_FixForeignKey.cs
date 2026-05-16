@@ -13,21 +13,28 @@ public partial class FixForeignKey : Migration
     {
         migrationBuilder.DropForeignKey(
             name: "FK_LinkCrypterContainers_UploadConfigLinkCrypters_Id",
-            table: "LinkCrypterContainers");
+            table: "LinkCrypterContainers"
+        );
 
-        migrationBuilder.AlterColumn<int>(
-            name: "Id",
-            table: "LinkCrypterContainers",
-            type: "integer",
-            nullable: false,
-            oldClrType: typeof(int),
-            oldType: "integer")
-            .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+        migrationBuilder
+            .AlterColumn<int>(
+                name: "Id",
+                table: "LinkCrypterContainers",
+                type: "integer",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "integer"
+            )
+            .Annotation(
+                "Npgsql:ValueGenerationStrategy",
+                NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
+            );
 
         migrationBuilder.CreateIndex(
             name: "IX_LinkCrypterContainers_UploadConfigLinkCrypterId",
             table: "LinkCrypterContainers",
-            column: "UploadConfigLinkCrypterId");
+            column: "UploadConfigLinkCrypterId"
+        );
 
         migrationBuilder.AddForeignKey(
             name: "FK_LinkCrypterContainers_UploadConfigLinkCrypters_UploadConfig~",
@@ -35,7 +42,8 @@ public partial class FixForeignKey : Migration
             column: "UploadConfigLinkCrypterId",
             principalTable: "UploadConfigLinkCrypters",
             principalColumn: "Id",
-            onDelete: ReferentialAction.Cascade);
+            onDelete: ReferentialAction.Cascade
+        );
     }
 
     /// <inheritdoc />
@@ -43,20 +51,27 @@ public partial class FixForeignKey : Migration
     {
         migrationBuilder.DropForeignKey(
             name: "FK_LinkCrypterContainers_UploadConfigLinkCrypters_UploadConfig~",
-            table: "LinkCrypterContainers");
+            table: "LinkCrypterContainers"
+        );
 
         migrationBuilder.DropIndex(
             name: "IX_LinkCrypterContainers_UploadConfigLinkCrypterId",
-            table: "LinkCrypterContainers");
+            table: "LinkCrypterContainers"
+        );
 
-        migrationBuilder.AlterColumn<int>(
-            name: "Id",
-            table: "LinkCrypterContainers",
-            type: "integer",
-            nullable: false,
-            oldClrType: typeof(int),
-            oldType: "integer")
-            .OldAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+        migrationBuilder
+            .AlterColumn<int>(
+                name: "Id",
+                table: "LinkCrypterContainers",
+                type: "integer",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "integer"
+            )
+            .OldAnnotation(
+                "Npgsql:ValueGenerationStrategy",
+                NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
+            );
 
         migrationBuilder.AddForeignKey(
             name: "FK_LinkCrypterContainers_UploadConfigLinkCrypters_Id",
@@ -64,6 +79,7 @@ public partial class FixForeignKey : Migration
             column: "Id",
             principalTable: "UploadConfigLinkCrypters",
             principalColumn: "Id",
-            onDelete: ReferentialAction.Cascade);
+            onDelete: ReferentialAction.Cascade
+        );
     }
 }

@@ -5,8 +5,7 @@ using MudBlazor;
 
 namespace Bearcat.Website.Pages.ManageArchiveConfigs;
 
-public partial class ArchiveConfigContent(
-    IDialogService dialogService)
+public partial class ArchiveConfigContent(IDialogService dialogService)
 {
     [Parameter]
     [EditorRequired]
@@ -16,7 +15,7 @@ public partial class ArchiveConfigContent(
     {
         var parameters = new DialogParameters<ArchiveDetailDialog>
         {
-            { dlg => dlg.ArchiveId, archiveId }
+            { dlg => dlg.ArchiveId, archiveId },
         };
 
         var dialog = await dialogService.ShowAsync<ArchiveDetailDialog>(
@@ -27,7 +26,8 @@ public partial class ArchiveConfigContent(
                 CloseButton = true,
                 CloseOnEscapeKey = true,
                 FullWidth = true,
-            });
+            }
+        );
 
         await dialog.Result;
     }

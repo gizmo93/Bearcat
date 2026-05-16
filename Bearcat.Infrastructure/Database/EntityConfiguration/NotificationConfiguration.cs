@@ -14,21 +14,24 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(n => n.NotificationType).IsRequired();
         builder.Property(n => n.Message).IsRequired().HasMaxLength(2000);
 
-        builder.HasOne(n => n.LinkCrypterContainer)
+        builder
+            .HasOne(n => n.LinkCrypterContainer)
             .WithMany(l => l.Notifications)
             .HasForeignKey(n => n.LinkCrypterContainerId)
             .HasPrincipalKey(l => l.Id)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
-        
-        builder.HasOne(n => n.Upload)
+
+        builder
+            .HasOne(n => n.Upload)
             .WithMany(l => l.Notifications)
             .HasForeignKey(n => n.UploadId)
             .HasPrincipalKey(l => l.Id)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
-        
-        builder.HasOne(n => n.Archive)
+
+        builder
+            .HasOne(n => n.Archive)
             .WithMany(l => l.Notifications)
             .HasForeignKey(n => n.ArchiveId)
             .HasPrincipalKey(l => l.Id)

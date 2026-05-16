@@ -13,7 +13,8 @@ public static class ServiceProviderConfig
     {
         public void AddGoFile()
         {
-            services.AddRefitClient<IGoFileApi>(
+            services
+                .AddRefitClient<IGoFileApi>(
                     new RefitSettings
                     {
                         ContentSerializer = new SystemTextJsonContentSerializer(
@@ -21,8 +22,10 @@ public static class ServiceProviderConfig
                             {
                                 NumberHandling = JsonNumberHandling.AllowReadingFromString,
                                 PropertyNameCaseInsensitive = true,
-                            })
-                    })
+                            }
+                        ),
+                    }
+                )
                 .ConfigureHttpClient(c =>
                 {
                     c.BaseAddress = new Uri("https://api.gofile.io");

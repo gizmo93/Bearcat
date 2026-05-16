@@ -13,14 +13,16 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
         builder.Property(r => r.ReleaseType).IsRequired();
         builder.Property(r => r.ReleaseFolderPath).HasMaxLength(1000).IsRequired();
 
-        builder.HasMany(r => r.ArchiveConfigs)
+        builder
+            .HasMany(r => r.ArchiveConfigs)
             .WithOne(a => a.Release)
             .HasForeignKey(a => a.ReleaseId)
             .HasPrincipalKey(r => r.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(r => r.UploadConfigs)
+        builder
+            .HasMany(r => r.UploadConfigs)
             .WithOne(u => u.Release)
             .HasForeignKey(u => u.ReleaseId)
             .HasPrincipalKey(r => r.Id)

@@ -14,34 +14,40 @@ namespace BearCat.Infrastructure.Migrations
                 name: "ArchiveId",
                 table: "Notifications",
                 type: "integer",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.AddColumn<int>(
                 name: "LinkCrypterContainerId",
                 table: "Notifications",
                 type: "integer",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.AddColumn<int>(
                 name: "UploadId",
                 table: "Notifications",
                 type: "integer",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notifications_ArchiveId",
                 table: "Notifications",
-                column: "ArchiveId");
+                column: "ArchiveId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notifications_LinkCrypterContainerId",
                 table: "Notifications",
-                column: "LinkCrypterContainerId");
+                column: "LinkCrypterContainerId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notifications_UploadId",
                 table: "Notifications",
-                column: "UploadId");
+                column: "UploadId"
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Notifications_Archives_ArchiveId",
@@ -49,7 +55,8 @@ namespace BearCat.Infrastructure.Migrations
                 column: "ArchiveId",
                 principalTable: "Archives",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Notifications_LinkCrypterContainers_LinkCrypterContainerId",
@@ -57,7 +64,8 @@ namespace BearCat.Infrastructure.Migrations
                 column: "LinkCrypterContainerId",
                 principalTable: "LinkCrypterContainers",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Notifications_Uploads_UploadId",
@@ -65,7 +73,8 @@ namespace BearCat.Infrastructure.Migrations
                 column: "UploadId",
                 principalTable: "Uploads",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade
+            );
         }
 
         /// <inheritdoc />
@@ -73,39 +82,33 @@ namespace BearCat.Infrastructure.Migrations
         {
             migrationBuilder.DropForeignKey(
                 name: "FK_Notifications_Archives_ArchiveId",
-                table: "Notifications");
+                table: "Notifications"
+            );
 
             migrationBuilder.DropForeignKey(
                 name: "FK_Notifications_LinkCrypterContainers_LinkCrypterContainerId",
-                table: "Notifications");
+                table: "Notifications"
+            );
 
             migrationBuilder.DropForeignKey(
                 name: "FK_Notifications_Uploads_UploadId",
-                table: "Notifications");
+                table: "Notifications"
+            );
 
-            migrationBuilder.DropIndex(
-                name: "IX_Notifications_ArchiveId",
-                table: "Notifications");
+            migrationBuilder.DropIndex(name: "IX_Notifications_ArchiveId", table: "Notifications");
 
             migrationBuilder.DropIndex(
                 name: "IX_Notifications_LinkCrypterContainerId",
-                table: "Notifications");
+                table: "Notifications"
+            );
 
-            migrationBuilder.DropIndex(
-                name: "IX_Notifications_UploadId",
-                table: "Notifications");
+            migrationBuilder.DropIndex(name: "IX_Notifications_UploadId", table: "Notifications");
 
-            migrationBuilder.DropColumn(
-                name: "ArchiveId",
-                table: "Notifications");
+            migrationBuilder.DropColumn(name: "ArchiveId", table: "Notifications");
 
-            migrationBuilder.DropColumn(
-                name: "LinkCrypterContainerId",
-                table: "Notifications");
+            migrationBuilder.DropColumn(name: "LinkCrypterContainerId", table: "Notifications");
 
-            migrationBuilder.DropColumn(
-                name: "UploadId",
-                table: "Notifications");
+            migrationBuilder.DropColumn(name: "UploadId", table: "Notifications");
         }
     }
 }

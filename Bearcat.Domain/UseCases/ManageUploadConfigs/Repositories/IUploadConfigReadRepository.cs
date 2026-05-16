@@ -6,16 +6,20 @@ public interface IUploadConfigReadRepository
 {
     Task<IReadOnlyList<UploadConfigDto>> GetUploadConfigsAsync(
         int releaseId,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     Task<UploadConfigDto> GetDtoByIdAsync(
         int uploadConfigId,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     Task<IReadOnlyDictionary<int, string>> GetHosterRegistrationOptionsAsync(
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     Task<IReadOnlyDictionary<int, string>> GetArchiveConfigOptionsAsync(
         int releaseId,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 }

@@ -1,14 +1,15 @@
+@using Bearcat.Domain.ValueObjects
 @if (Value is null)
 {
     return;
 }
 
-<MudChip T="Domain.ValueObjects.OnlineState" Size="@Size" Variant="Variant.Outlined" Color="color">@Value</MudChip>
+<MudChip T="OnlineState" Size="@Size" Variant="Variant.Outlined" Color="color">@Value</MudChip>
 
 @code {
     [Parameter]
     [EditorRequired]
-    public Domain.ValueObjects.OnlineState? Value { get; set; }
+    public OnlineState? Value { get; set; }
     
     [Parameter]
     public Size Size { get; set; } = Size.Small;
@@ -19,9 +20,9 @@
     {
         color = Value switch
         {
-            Domain.ValueObjects.OnlineState.Online => Color.Success,
-            Domain.ValueObjects.OnlineState.PartiallyOnline => Color.Warning,
-            Domain.ValueObjects.OnlineState.Offline => Color.Error,
+            OnlineState.Online => Color.Success,
+            OnlineState.PartiallyOnline => Color.Warning,
+            OnlineState.Offline => Color.Error,
             _ => Color.Default
         };
     }

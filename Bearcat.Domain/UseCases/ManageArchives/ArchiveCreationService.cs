@@ -15,7 +15,8 @@ public class ArchiveCreationService(
     IArchiverFactory archiverFactory,
     IFileSystemService fileSystemService,
     TimeProvider timeProvider,
-    INotificationService notificationService)
+    INotificationService notificationService
+)
 {
     private const string UniqueFileName = "__nonce";
 
@@ -27,16 +28,23 @@ public class ArchiveCreationService(
 
     private async Task ProcessUploadsWithoutArchiveAsync(CancellationToken cancellationToken)
     {
-        var uploadsWithoutArchive = await repository.GetUploadsWithoutArchiveAsync(cancellationToken);
+        var uploadsWithoutArchive = await repository.GetUploadsWithoutArchiveAsync(
+            cancellationToken
+        );
         var archivesToCreate = new Dictionary<ArchiveConfig, List<Upload>>();
 
         foreach (var upload in uploadsWithoutArchive)
         {
-            logger.LogInformation("Processing upload {UploadId} for UploadConfig {UploadConfigId} without archive",
+            logger.LogInformation(
+                "Processing upload {UploadId} for UploadConfig {UploadConfigId} without archive",
                 upload.Id,
-                upload.UploadConfigId);
+                upload.UploadConfigId
+            );
 
-            var existingArchiveCanBeAssigned = await TryAssignExistingArchiveAsync(upload, cancellationToken);
+            var existingArchiveCanBeAssigned = await TryAssignExistingArchiveAsync(
+                upload,
+                cancellationToken
+            );
 
             if (existingArchiveCanBeAssigned)
             {
@@ -54,7 +62,10 @@ public class ArchiveCreationService(
             return;
         }
 
-        logger.LogInformation("Creating {ArchiveCount} new archives for uploads", archivesToCreate.Count);
+        logger.LogInformation(
+            "Creating {ArchiveCount} new archives for uploads",
+            archivesToCreate.Count
+        );
 
         foreach (var (archiveConfig, uploads) in archivesToCreate)
         {
@@ -62,17 +73,23 @@ public class ArchiveCreationService(
         }
     }
 
-    private async Task<bool> TryAssignExistingArchiveAsync(Upload upload, CancellationToken cancellationToken)
+    private async Task<bool> TryAssignExistingArchiveAsync(
+        Upload upload,
+        CancellationToken cancellationToken
+    )
     {
         var assignableArchiveId = await repository.GetPossibleAssignableArchiveId(
             archiveConfigId: upload.UploadConfig.ArchiveConfigId,
-            cancellationToken: cancellationToken);
+            cancellationToken: cancellationToken
+        );
 
         if (assignableArchiveId is null)
         {
-            logger.LogInformation("Could not find existing archive for upload {UploadId} with UploadConfig {UploadConfigId}",
+            logger.LogInformation(
+                "Could not find existing archive for upload {UploadId} with UploadConfig {UploadConfigId}",
                 upload.Id,
-                upload.UploadConfigId);
+                upload.UploadConfigId
+            );
 
             return false;
         }
@@ -81,9 +98,11 @@ public class ArchiveCreationService(
         upload.UploadState = UploadState.Pending;
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
-        logger.LogInformation("Assigned existing archive {ArchiveId} to upload {UploadId}",
+        logger.LogInformation(
+            "Assigned existing archive {ArchiveId} to upload {UploadId}",
             assignableArchiveId,
-            upload.Id);
+            upload.Id
+        );
 
         return true;
     }
@@ -91,15 +110,20 @@ public class ArchiveCreationService(
     private async Task CreateArchiveAsync(
         ArchiveConfig config,
         IReadOnlyList<Upload> uploads,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        logger.LogInformation("Creating archive for ArchiveConfig {ArchiveConfigId} with {UploadCount} uploads and archiver {ArchiverClassName}",
+        logger.LogInformation(
+            "Creating archive for ArchiveConfig {ArchiveConfigId} with {UploadCount} uploads and archiver {ArchiverClassName}",
             config.Id,
             uploads.Count,
-            config.ArchiverName);
+            config.ArchiverName
+        );
 
         var archiver = archiverFactory.GetByName(config.ArchiverName);
-        var archiveDirectoryPath = fileSystemService.CreateTempDirectory(config.ArchiveFilesBasePath);
+        var archiveDirectoryPath = fileSystemService.CreateTempDirectory(
+            config.ArchiveFilesBasePath
+        );
 
         var archive = new Archive
         {
@@ -123,22 +147,25 @@ public class ArchiveCreationService(
             archiveNamePrefix: config.ArchiveNamePrefix ?? Guid.NewGuid().ToString(),
             targetFileSizeMb: config.ArchiveFileSizeMb,
             password: config.ArchivePassword,
-            cancellationToken: cancellationToken);
+            cancellationToken: cancellationToken
+        );
 
         if (!archiveResult.IsSuccess)
         {
-            logger.LogError("Failed to create archive for ArchiveConfig {ArchiveConfigId}: {ErrorMessages}",
+            logger.LogError(
+                "Failed to create archive for ArchiveConfig {ArchiveConfigId}: {ErrorMessages}",
                 config.Id,
-                string.Join(",  ", archiveResult.ErrorMessages ?? []));
+                string.Join(",  ", archiveResult.ErrorMessages ?? [])
+            );
 
             archive.ArchiveState = ArchiveState.CreationFailed;
             archive.ErrorMessages.AddRange(archiveResult.ErrorMessages ?? []);
 
-            notificationService
-                .CreateError(
-                    message: $"Failed to create archive: {string.Join(", ", archiveResult.ErrorMessages ?? [])}",
-                    entity: archive,
-                    selector: n => n.Archive);
+            notificationService.CreateError(
+                message: $"Failed to create archive: {string.Join(", ", archiveResult.ErrorMessages ?? [])}",
+                entity: archive,
+                selector: n => n.Archive
+            );
 
             await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
@@ -151,24 +178,30 @@ public class ArchiveCreationService(
         }
 
         archive.ArchiveState = ArchiveState.Created;
-        archive.ArchiveFiles = archiveResult.CreatedFileNames
-            .Select(f => new ArchiveFile { FullFileName = f })
+        archive.ArchiveFiles = archiveResult
+            .CreatedFileNames.Select(f => new ArchiveFile { FullFileName = f })
             .ToList();
 
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
-        logger.LogInformation("Created archive {ArchiveId} for ArchiveConfig {ArchiveConfigId} with {FileCount} files",
+        logger.LogInformation(
+            "Created archive {ArchiveId} for ArchiveConfig {ArchiveConfigId} with {FileCount} files",
             archive.Id,
             config.Id,
-            archive.ArchiveFiles.Count);
+            archive.ArchiveFiles.Count
+        );
     }
 
-    private static async Task CreateOrUpdateUniqueFileAsync(string releasePath, CancellationToken cancellationToken)
+    private static async Task CreateOrUpdateUniqueFileAsync(
+        string releasePath,
+        CancellationToken cancellationToken
+    )
     {
         var uniqueFilePath = Path.Join(releasePath, UniqueFileName);
         await File.WriteAllTextAsync(
             path: uniqueFilePath,
             contents: Guid.NewGuid().ToString(),
-            cancellationToken: cancellationToken);
+            cancellationToken: cancellationToken
+        );
     }
 }

@@ -1,7 +1,6 @@
 ﻿using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Domain.UseCases.ManageHosters;
-using Bearcat.Domain.UseCases.ManageUploads;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
@@ -10,8 +9,8 @@ namespace Bearcat.Website.Pages.ManageHosters;
 
 public partial class AddOrEditHoster(
     IHosterFactory hosterFactory,
-    HosterRegistrationService hosterRegistrationService)
-    : ComponentBase
+    HosterRegistrationService hosterRegistrationService
+) : ComponentBase
 {
     [Parameter]
     public HosterFormModel FormModel { get; set; } = new();
@@ -38,7 +37,9 @@ public partial class AddOrEditHoster(
 
         if (FormModel.IsEdit)
         {
-            selectedHoster = hosterReadModels.First(h => h.HosterClassName == FormModel.FullClassName);
+            selectedHoster = hosterReadModels.First(h =>
+                h.HosterClassName == FormModel.FullClassName
+            );
         }
     }
 
@@ -50,14 +51,16 @@ public partial class AddOrEditHoster(
                 name: FormModel.Name,
                 isActive: true,
                 configuration: FormModel.Configuration,
-                hosterClassName: FormModel.FullClassName);
+                hosterClassName: FormModel.FullClassName
+            );
         }
         else
         {
             await hosterRegistrationService.UpdateRegistrationAsync(
                 FormModel.HosterRegistrationId!.Value,
                 FormModel.Name,
-                FormModel.Configuration);
+                FormModel.Configuration
+            );
         }
 
         MudDialog.Close();
@@ -68,8 +71,7 @@ public partial class AddOrEditHoster(
         MudDialog.Cancel();
     }
 
-    private void HandleValidationRequested(object? sender,
-        ValidationRequestedEventArgs args)
+    private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs args)
     {
         messageStore!.Clear();
 
@@ -85,13 +87,16 @@ public partial class AddOrEditHoster(
 
         if (selectedHoster is not null)
         {
-            var missingConfigs = selectedHoster.ConfigurationKeys
-                .Except(FormModel.Configuration.Keys)
+            var missingConfigs = selectedHoster
+                .ConfigurationKeys.Except(FormModel.Configuration.Keys)
                 .ToList();
 
             foreach (var config in missingConfigs)
             {
-                messageStore.Add(() => FormModel.Configuration, $"Configuration '{config}' is required");
+                messageStore.Add(
+                    () => FormModel.Configuration,
+                    $"Configuration '{config}' is required"
+                );
             }
         }
     }
@@ -129,4 +134,3 @@ public partial class AddOrEditHoster(
         displayedPasswords.Remove(key);
     }
 }
-

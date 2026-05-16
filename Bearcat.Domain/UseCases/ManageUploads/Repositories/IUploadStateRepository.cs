@@ -6,12 +6,17 @@ public interface IUploadStateRepository
 {
     Task<IReadOnlyList<Upload>> GetUploadsToCheckAsync(
         DateTime localNow,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 
-    Task<IReadOnlyList<UploadConfig>> GetUploadConfigsWithoutUploadsAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<UploadConfig>> GetUploadConfigsWithoutUploadsAsync(
+        CancellationToken cancellationToken
+    );
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 
     void Add(Upload upload);
-    Task<IReadOnlyList<Upload>> GetOfflineUploadsWithoutReuploadAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<Upload>> GetOfflineUploadsWithoutReuploadAsync(
+        CancellationToken cancellationToken
+    );
 }

@@ -6,4 +6,5 @@ public record UploadConfigLinkCrypterDto(
     string LinkCrypterRegistrationName,
     int LinkCrypterRegistrationId,
     string? Password,
-    bool LinkCrypterIsActive);
+    bool LinkCrypterIsActive
+);

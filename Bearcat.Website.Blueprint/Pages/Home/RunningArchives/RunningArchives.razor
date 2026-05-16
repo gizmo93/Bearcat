@@ -1,0 +1,37 @@
+@using Bearcat.Domain.Entities
+<section class="space-y-3">
+    <div>
+        <h2 class="text-lg font-semibold">Running archives</h2>
+        <p class="text-sm text-muted-foreground">Archives that are currently being created.</p>
+    </div>
+
+    <BbDataTable TData="Archive"
+                 Data="Archives"
+                 ShowToolbar="false"
+                 ShowPagination="@(Archives.Count > 10)"
+                 InitialPageSize="10"
+                 AriaLabel="Running archives"
+                 Class="rounded-lg border border-border/70">
+        <Columns>
+            <BbDataTableColumn TData="Archive" TValue="int"
+                               Header="Id"
+                               Property="@(archive => archive.Id)"
+                               Sortable="true" />
+            <BbDataTableColumn TData="Archive" TValue="string"
+                               Header="Release"
+                               Property="@(archive => archive.ArchiveConfig.Release.Name)"
+                               Sortable="true"
+                               Filterable="true" />
+            <BbDataTableColumn TData="Archive" TValue="string"
+                               Header="Archive config"
+                               Property="@(archive => archive.ArchiveConfig.Name)"
+                               Sortable="true"
+                               Filterable="true" />
+            <BbDataTableColumn TData="Archive" TValue="string"
+                               Header="Archiver"
+                               Property="@(archive => archive.ArchiveConfig.ArchiverName)"
+                               Sortable="true"
+                               Filterable="true" />
+        </Columns>
+    </BbDataTable>
+</section>

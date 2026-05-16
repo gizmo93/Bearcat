@@ -11,10 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.DDownload;
 
-public class DDownload(
-    ApiClient apiClient,
-    ILogger<DDownload> logger)
-    : IHoster
+public class DDownload(ApiClient apiClient, ILogger<DDownload> logger) : IHoster
 {
     public string Name => "ddownload";
 
@@ -22,11 +19,11 @@ public class DDownload(
 
     private const string DdownloadBaseUrl = "https://www.ddownload.com";
 
-
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var config = hosterConfig.As<DDownloadConfig>();
 
@@ -39,21 +36,24 @@ public class DDownload(
                 var response = await UploadFileInternalAsync(
                     fileDto: fileDto,
                     config: config,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: cancellationToken
+                );
 
                 return new UploadFileResult(
                     IsSuccess: true,
                     ErrorMessages: [],
                     FileDto: fileDto,
-                    FileUrl: $"{DdownloadBaseUrl}/{response.FileCode}");
-
+                    FileUrl: $"{DdownloadBaseUrl}/{response.FileCode}"
+                );
             }
             catch (Exception ex)
             {
-                logger.LogError(message: "Upload attempt {Attempt} failed for file {FileName}: {Message}",
+                logger.LogError(
+                    message: "Upload attempt {Attempt} failed for file {FileName}: {Message}",
                     attempt,
                     fileDto.FullFileName,
-                    ex.InnerException?.Message ?? ex.Message);
+                    ex.InnerException?.Message ?? ex.Message
+                );
 
                 errors.Add(ex.Message);
             }
@@ -63,13 +63,15 @@ public class DDownload(
             IsSuccess: false,
             FileDto: fileDto,
             ErrorMessages: errors,
-            FileUrl: null);
+            FileUrl: null
+        );
     }
 
     public async Task<FileExistResult> CheckFilesExistAsync(
         IHosterConfig hosterConfig,
         IReadOnlyList<string> fileUrls,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var config = hosterConfig.As<DDownloadConfig>();
 
@@ -82,22 +84,27 @@ public class DDownload(
             var results = await apiClient.FilesExistAsync(
                 apiKey: config.ApiKey,
                 fileCodes: fileUrlByFileCode.Keys.ToHashSet(),
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken
+            );
 
-            var statusPerFileUrl = results
-                .ToDictionary(kvp => fileUrlByFileCode[kvp.Key], kvp => kvp.Value);
+            var statusPerFileUrl = results.ToDictionary(
+                kvp => fileUrlByFileCode[kvp.Key],
+                kvp => kvp.Value
+            );
 
             return new FileExistResult(
                 IsSuccess: true,
                 ErrorMessages: [],
-                StatusPerFileUrl: statusPerFileUrl);
+                StatusPerFileUrl: statusPerFileUrl
+            );
         }
         catch (Exception ex)
         {
             return new FileExistResult(
                 IsSuccess: false,
                 ErrorMessages: [ex.InnerException?.Message ?? ex.Message],
-                StatusPerFileUrl: new Dictionary<string, bool>());
+                StatusPerFileUrl: new Dictionary<string, bool>()
+            );
         }
     }
 
@@ -111,12 +118,18 @@ public class DDownload(
         return JsonSerializer.Serialize(hosterConfig);
     }
 
-    public Task<int?> GetMaximumParallelUploadsAsync(IHosterConfig hosterConfig, CancellationToken cancellationToken)
+    public Task<int?> GetMaximumParallelUploadsAsync(
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
     {
         return Task.FromResult<int?>(50);
     }
 
-    public async Task<TryLoginResult> TryLoginAsync(IHosterConfig hosterConfig, CancellationToken cancellationToken)
+    public async Task<TryLoginResult> TryLoginAsync(
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
     {
         var config = hosterConfig.As<DDownloadConfig>();
 
@@ -124,28 +137,33 @@ public class DDownload(
         {
             var result = await apiClient.GetAccountInfoAsync(
                 apiKey: config.ApiKey,
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken
+            );
 
             return new TryLoginResult(
                 IsSuccess: result.Status is (int)HttpStatusCode.OK,
-                ErrorMessage: null);
+                ErrorMessage: null
+            );
         }
         catch (Exception ex)
         {
             return new TryLoginResult(
                 IsSuccess: false,
-                ErrorMessage: ex.InnerException?.Message ?? ex.Message);
+                ErrorMessage: ex.InnerException?.Message ?? ex.Message
+            );
         }
     }
-    
+
     private async Task<Response> UploadFileInternalAsync(
         FileDto fileDto,
         DDownloadConfig config,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var uploadRequest = await apiClient.RequestUploadAsync(
             apiKey: config.ApiKey,
-            cancellationToken: cancellationToken);
+            cancellationToken: cancellationToken
+        );
 
         if (!((HttpStatusCode)uploadRequest.Status).IsSuccessStatusCode)
         {
@@ -159,7 +177,8 @@ public class DDownload(
             uploadUrl: uploadRequest.UploadUrl!,
             sessionId: uploadRequest.SessionId!,
             fileName: Path.GetFileName(fileDto.FullFileName),
-            cancellationToken: cancellationToken);
+            cancellationToken: cancellationToken
+        );
 
         return uploadResponse;
     }

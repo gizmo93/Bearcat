@@ -13,7 +13,8 @@ public partial class RenameArchiveClassNameColumn : Migration
         migrationBuilder.RenameColumn(
             name: "ArchiverFullClassName",
             table: "ArchiveConfigs",
-            newName: "ArchiverName");
+            newName: "ArchiverName"
+        );
     }
 
     /// <inheritdoc />
@@ -22,6 +23,7 @@ public partial class RenameArchiveClassNameColumn : Migration
         migrationBuilder.RenameColumn(
             name: "ArchiverName",
             table: "ArchiveConfigs",
-            newName: "ArchiverFullClassName");
+            newName: "ArchiverFullClassName"
+        );
     }
 }

@@ -4,11 +4,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
 
-public class UploadConfigLinkCrypterWriteRepository(IBearcatWriteDbContext dbWrite) : IUploadConfigLinkCrypterWriteRepository
+public class UploadConfigLinkCrypterWriteRepository(IBearcatWriteDbContext dbWrite)
+    : IUploadConfigLinkCrypterWriteRepository
 {
-    public async Task<UploadConfigLinkCrypter> GetByIdAsync(int id, CancellationToken cancellationToken)
+    public async Task<UploadConfigLinkCrypter> GetByIdAsync(
+        int id,
+        CancellationToken cancellationToken
+    )
     {
-        return await dbWrite.UploadConfigLinkCrypters.FirstAsync(u => u.Id == id, cancellationToken);
+        return await dbWrite.UploadConfigLinkCrypters.FirstAsync(
+            u => u.Id == id,
+            cancellationToken
+        );
     }
 
     public void Add(UploadConfigLinkCrypter uploadConfigLinkCrypter)

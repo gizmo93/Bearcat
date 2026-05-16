@@ -1,0 +1,65 @@
+@inherits OwningComponentBase
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="FormModel.Name"
+                              Label="Name" />
+
+            <BbFormFieldSelect TValue="string"
+                               @bind-Value="FormModel.ArchiverName"
+                               Label="Archiver"
+                               Disabled="isEdit"
+                               Placeholder="Select an archiver"
+                               Options="archivers.Select(archiver => new SelectOption<string>(archiver.ClassName, archiver.Name))" />
+
+            @if (FormModel.ArchiverName is not null)
+            {
+                <div class="grid gap-4">
+                    <div class="grid gap-2">
+                        <label class="text-sm font-medium">Archive naming</label>
+                        <div class="flex items-center gap-2">
+                            <BbInput @bind-Value="FormModel.ArchiveNamePrefix" class="flex-1" />
+                            <span class="text-sm text-muted-foreground">@SelectedArchiver?.FileExtension</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium">Archive files folder</label>
+                        <div class="bearcat-folder-field">
+                            <BbInput Value="@FormModel.ArchiveFilesBasePath" Disabled="true" class="sm:flex-1" />
+                            <BbButton Variant="ButtonVariant.Outline"
+                                      Size="ButtonSize.Small"
+                                      Class="bearcat-folder-button"
+                                      AriaLabel="Browse archive folders"
+                                      OnClick="OpenFolderDialogAsync">
+                                <LucideIcon Name="folder-open" class="h-4 w-4" />
+                                Browse
+                            </BbButton>
+                        </div>
+                    </div>
+
+                    <BbFormFieldInput TValue="string"
+                                      @bind-Value="FormModel.ArchivePassword"
+                                      Label="Archive password" />
+
+                    <BbFormFieldNumericInput TValue="int"
+                                             @bind-Value="FormModel.ArchiveFileSizeMb"
+                                             Label="Archive file size (MB)" />
+                </div>
+            }
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                Cancel
+            </BbButton>
+            <BbButton Type="ButtonType.Submit">
+                Save
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

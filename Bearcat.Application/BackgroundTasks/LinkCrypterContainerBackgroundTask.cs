@@ -7,8 +7,8 @@ namespace Bearcat.Application.BackgroundTasks;
 
 public class LinkCrypterContainerBackgroundTask(
     ILogger<LinkCrypterContainerBackgroundTask> logger,
-    IServiceScopeFactory serviceScopeFactory)
-    : BackgroundService
+    IServiceScopeFactory serviceScopeFactory
+) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -22,7 +22,8 @@ public class LinkCrypterContainerBackgroundTask(
             }
 
             await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var archiveCreationService = scope.ServiceProvider.GetRequiredService<LinkCrypterContainerService>();
+            var archiveCreationService =
+                scope.ServiceProvider.GetRequiredService<LinkCrypterContainerService>();
             await archiveCreationService.CreateMissingLinkCrypterContainersAsync(stoppingToken);
 
             await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);

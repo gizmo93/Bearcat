@@ -7,14 +7,16 @@ namespace Bearcat.Domain.UseCases.ManageHosters;
 
 public class HosterRegistrationService(
     IHosterConfigurationWriteRepository writeRepository,
-    IHosterFactory hosterFactory)
+    IHosterFactory hosterFactory
+)
 {
     public async Task<int> RegisterHosterAsync(
         string name,
         bool isActive,
         Dictionary<string, string> configuration,
         string hosterClassName,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var hoster = hosterFactory.GetByName(hosterClassName);
         var serializedConfig = hoster.SerializeHosterConfig(configuration);
@@ -24,7 +26,7 @@ public class HosterRegistrationService(
             Name = name,
             IsActive = isActive,
             SerializedConfig = serializedConfig,
-            HosterClassName = hosterClassName
+            HosterClassName = hosterClassName,
         };
 
         writeRepository.Add(registration);
@@ -50,7 +52,8 @@ public class HosterRegistrationService(
         int id,
         string name,
         Dictionary<string, string> configuration,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         var hoster = hosterFactory.GetByName(registration.HosterClassName);
@@ -63,7 +66,8 @@ public class HosterRegistrationService(
 
     public async Task<TryLoginResult> TryLoginAsync(
         int id,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         var hoster = hosterFactory.GetByName(registration.HosterClassName);

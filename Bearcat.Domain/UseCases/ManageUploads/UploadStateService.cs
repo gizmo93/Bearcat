@@ -13,7 +13,8 @@ public class UploadStateService(
     IHosterFactory hosterFactory,
     TimeProvider timeProvider,
     INotificationService notificationService,
-    ILogger<UploadStateService> logger)
+    ILogger<UploadStateService> logger
+)
 {
     public async Task CheckUploadStatesAsync(DateTime localNow, CancellationToken cancellationToken)
     {
@@ -22,35 +23,51 @@ public class UploadStateService(
         await ProcessOfflineUploadsWithoutReuploadsAsync(cancellationToken);
     }
 
-    private async Task ProcessUploadStateChecksAsync(DateTime localNow, CancellationToken cancellationToken)
+    private async Task ProcessUploadStateChecksAsync(
+        DateTime localNow,
+        CancellationToken cancellationToken
+    )
     {
-        var uploadsToCheck = await uploadStateRepository.GetUploadsToCheckAsync(localNow, cancellationToken);
+        var uploadsToCheck = await uploadStateRepository.GetUploadsToCheckAsync(
+            localNow,
+            cancellationToken
+        );
 
-        foreach (var uploadGroup in uploadsToCheck.GroupBy(u => u.UploadConfig.HosterRegistration.HosterClassName))
+        foreach (
+            var uploadGroup in uploadsToCheck.GroupBy(u =>
+                u.UploadConfig.HosterRegistration.HosterClassName
+            )
+        )
         {
             var hoster = hosterFactory.GetByName(uploadGroup.Key);
             var hosterConfig = hoster.DeserializeHosterConfig(
-                uploadGroup.First().UploadConfig.HosterRegistration.SerializedConfig);
+                uploadGroup.First().UploadConfig.HosterRegistration.SerializedConfig
+            );
 
             foreach (var upload in uploadGroup)
             {
-                logger.LogInformation("Checking online status for Upload {UploadId} on hoster {Hoster}",
+                logger.LogInformation(
+                    "Checking online status for Upload {UploadId} on hoster {Hoster}",
                     upload.Id,
-                    hoster.Name);
+                    hoster.Name
+                );
 
                 await UpdateOnlineStatusAsync(
                     hoster: hoster,
                     hosterConfig: hosterConfig,
                     upload: upload,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: cancellationToken
+                );
 
                 CreateNewUploadIfNeeded(upload);
 
                 await uploadStateRepository.SaveChangesAsync(cancellationToken);
 
-                logger.LogInformation("Updated online status for Upload {UploadId} to {OnlineState}",
+                logger.LogInformation(
+                    "Updated online status for Upload {UploadId} to {OnlineState}",
                     upload.Id,
-                    upload.OnlineState);
+                    upload.OnlineState
+                );
             }
         }
     }
@@ -59,26 +76,30 @@ public class UploadStateService(
         IHoster hoster,
         IHosterConfig hosterConfig,
         Upload upload,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        var filesByUrl = upload.UploadedFiles
-            .ToDictionary(f => f.HosterFileLink);
+        var filesByUrl = upload.UploadedFiles.ToDictionary(f => f.HosterFileLink);
 
         var result = await hoster.CheckFilesExistAsync(
             hosterConfig: hosterConfig,
             fileUrls: filesByUrl.Keys.ToList(),
-            cancellationToken: cancellationToken);
+            cancellationToken: cancellationToken
+        );
 
         if (!result.IsSuccess)
         {
-            logger.LogError("Failed to check file existence for Upload {UploadId}: {ErrorMessages}",
+            logger.LogError(
+                "Failed to check file existence for Upload {UploadId}: {ErrorMessages}",
                 upload.Id,
-                string.Join("; ", result.ErrorMessages));
+                string.Join("; ", result.ErrorMessages)
+            );
 
             notificationService.CreateError(
                 message: "Failed to check file existence on hoster.",
                 entity: upload,
-                selector: u => u.Upload);
+                selector: u => u.Upload
+            );
 
             return;
         }
@@ -91,17 +112,22 @@ public class UploadStateService(
             file.CheckedAt = timeProvider.GetLocalNow();
         }
 
-        var offlineFilesCount = upload.UploadedFiles.Count(f => f.OnlineState == OnlineState.Offline);
+        var offlineFilesCount = upload.UploadedFiles.Count(f =>
+            f.OnlineState == OnlineState.Offline
+        );
 
         if (offlineFilesCount > 0)
         {
-            upload.OnlineState = offlineFilesCount == upload.UploadedFiles.Count
-                ? OnlineState.Offline
-                : OnlineState.PartiallyOnline;
+            upload.OnlineState =
+                offlineFilesCount == upload.UploadedFiles.Count
+                    ? OnlineState.Offline
+                    : OnlineState.PartiallyOnline;
 
-            notificationService.CreateWarning(message: "Some files are offline on the hoster",
+            notificationService.CreateWarning(
+                message: "Some files are offline on the hoster",
                 entity: upload,
-                selector: u => u.Upload);
+                selector: u => u.Upload
+            );
         }
         else
         {
@@ -109,9 +135,13 @@ public class UploadStateService(
         }
     }
 
-    private async Task ProcessOfflineUploadsWithoutReuploadsAsync(CancellationToken cancellationToken)
+    private async Task ProcessOfflineUploadsWithoutReuploadsAsync(
+        CancellationToken cancellationToken
+    )
     {
-        var uploads = await uploadStateRepository.GetOfflineUploadsWithoutReuploadAsync(cancellationToken);
+        var uploads = await uploadStateRepository.GetOfflineUploadsWithoutReuploadAsync(
+            cancellationToken
+        );
 
         foreach (var upload in uploads)
         {
@@ -137,16 +167,19 @@ public class UploadStateService(
             OnlineState = OnlineState.Unknown,
         };
 
-        notificationService.CreateInfo(message: "Reupload scheduled due to offline files",
+        notificationService.CreateInfo(
+            message: "Reupload scheduled due to offline files",
             entity: upload,
-            selector: u => u.Upload);
+            selector: u => u.Upload
+        );
 
         uploadStateRepository.Add(newUpload);
     }
 
     private async Task CreateMissingUploadsAsync(CancellationToken cancellationToken)
     {
-        var uploadConfigsWithoutUploads = await uploadStateRepository.GetUploadConfigsWithoutUploadsAsync(cancellationToken);
+        var uploadConfigsWithoutUploads =
+            await uploadStateRepository.GetUploadConfigsWithoutUploadsAsync(cancellationToken);
 
         foreach (var uploadConfig in uploadConfigsWithoutUploads)
         {
@@ -159,11 +192,16 @@ public class UploadStateService(
             };
             uploadStateRepository.Add(upload);
 
-            notificationService.CreateInfo(message: "Initial upload created for release",
+            notificationService.CreateInfo(
+                message: "Initial upload created for release",
                 entity: upload,
-                selector: u => u.Upload);
+                selector: u => u.Upload
+            );
 
-            logger.LogInformation("Created missing upload for UploadConfig {UploadConfigId}", uploadConfig.Id);
+            logger.LogInformation(
+                "Created missing upload for UploadConfig {UploadConfigId}",
+                uploadConfig.Id
+            );
         }
 
         await uploadStateRepository.SaveChangesAsync(cancellationToken);

@@ -18,7 +18,8 @@ namespace BearCat.Infrastructure.Migrations
                 nullable: true,
                 oldClrType: typeof(string),
                 oldType: "character varying(200)",
-                oldMaxLength: 200);
+                oldMaxLength: 200
+            );
         }
 
         /// <inheritdoc />
@@ -34,7 +35,8 @@ namespace BearCat.Infrastructure.Migrations
                 oldClrType: typeof(string),
                 oldType: "character varying(200)",
                 oldMaxLength: 200,
-                oldNullable: true);
+                oldNullable: true
+            );
         }
     }
 }

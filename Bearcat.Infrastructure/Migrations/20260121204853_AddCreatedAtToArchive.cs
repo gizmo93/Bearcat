@@ -17,14 +17,13 @@ public partial class AddCreatedAtToArchive : Migration
             type: "timestamp(4) with time zone",
             precision: 4,
             nullable: false,
-            defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+            defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+        );
     }
 
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropColumn(
-            name: "CreatedAt",
-            table: "Archives");
+        migrationBuilder.DropColumn(name: "CreatedAt", table: "Archives");
     }
 }

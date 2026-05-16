@@ -27,10 +27,10 @@ public partial class UploadConfigLinkCryptersList(IDialogService dialogService)
 
     private bool isInitialized;
 
-
     protected override async Task OnInitializedAsync()
     {
-        readRepository = ScopedServices.GetRequiredService<IUploadConfigLinkCrypterReadRepository>();
+        readRepository =
+            ScopedServices.GetRequiredService<IUploadConfigLinkCrypterReadRepository>();
         await LoadDataAsync();
         isInitialized = true;
     }
@@ -50,14 +50,12 @@ public partial class UploadConfigLinkCryptersList(IDialogService dialogService)
         var parameters = new DialogParameters<CreateOrEditUploadConfigLinkCrypter>
         {
             { dlg => dlg.UploadConfigId, UploadConfigId },
-            { dlg => dlg.ReleaseName, ReleaseName }
+            { dlg => dlg.ReleaseName, ReleaseName },
         };
 
         if (config is not null)
         {
-            parameters.Add(
-                dlg => dlg.UploadConfigLinkCrypterId,
-                config.UploadConfigLinkCrypterId);
+            parameters.Add(dlg => dlg.UploadConfigLinkCrypterId, config.UploadConfigLinkCrypterId);
         }
 
         var dialogTitle = config is null
@@ -73,7 +71,8 @@ public partial class UploadConfigLinkCryptersList(IDialogService dialogService)
                 CloseOnEscapeKey = false,
                 CloseButton = true,
                 FullWidth = true,
-            });
+            }
+        );
 
         await dialog.Result;
         await LoadDataAsync();
@@ -85,7 +84,8 @@ public partial class UploadConfigLinkCryptersList(IDialogService dialogService)
             title: "Delete Link Crypter Container Config",
             message: $"Are you sure you want to delete this link crypter container config?",
             yesText: "Delete",
-            noText: "Cancel");
+            noText: "Cancel"
+        );
 
         if (result == true)
         {
@@ -100,10 +100,11 @@ public partial class UploadConfigLinkCryptersList(IDialogService dialogService)
         uploadConfigLinkCrypters = await readRepository.GetByUploadConfigIdAsync(UploadConfigId);
     }
 
-    private async Task ShowContextMenuAsync(DataGridRowClickEventArgs<UploadConfigLinkCrypterDto> arg)
+    private async Task ShowContextMenuAsync(
+        DataGridRowClickEventArgs<UploadConfigLinkCrypterDto> arg
+    )
     {
         selectedItem = arg.Item;
         await contextMenu.OpenMenuAsync(arg.MouseEventArgs);
     }
 }
-

@@ -10,7 +10,6 @@ public class UploadFileResponse
 
     public string? Details { get; set; }
 
-
     public class ResponseObject
     {
         public Upload? Upload { get; set; }
@@ -22,7 +21,6 @@ public class UploadFileResponse
     {
         [JsonPropertyName("upload_id")]
         public string UploadId { get; set; } = null!;
-
 
         public string Url { get; set; } = null!;
 

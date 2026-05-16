@@ -13,7 +13,8 @@ public static class InversionOfControl
     {
         public void AddHideCx()
         {
-            services.AddRefitClient<IHideCxApi>(
+            services
+                .AddRefitClient<IHideCxApi>(
                     new RefitSettings
                     {
                         ContentSerializer = new SystemTextJsonContentSerializer(
@@ -21,8 +22,10 @@ public static class InversionOfControl
                             {
                                 NumberHandling = JsonNumberHandling.AllowReadingFromString,
                                 PropertyNameCaseInsensitive = true,
-                            })
-                    })
+                            }
+                        ),
+                    }
+                )
                 .ConfigureHttpClient(c =>
                 {
                     c.BaseAddress = new Uri("https://api.hide.cx");

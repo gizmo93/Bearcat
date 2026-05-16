@@ -7,7 +7,8 @@ namespace Bearcat.Application.BackgroundTasks;
 
 public class ArchivingBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,
-    ILogger<ArchivingBackgroundTask> logger) : BackgroundService
+    ILogger<ArchivingBackgroundTask> logger
+) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -21,7 +22,8 @@ public class ArchivingBackgroundTask(
             }
 
             await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var archiveCreationService = scope.ServiceProvider.GetRequiredService<ArchiveCreationService>();
+            var archiveCreationService =
+                scope.ServiceProvider.GetRequiredService<ArchiveCreationService>();
             await archiveCreationService.ProcessAsync(stoppingToken);
 
             await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);

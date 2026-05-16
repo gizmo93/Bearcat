@@ -10,12 +10,14 @@ public interface IHoster
     Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 
     Task<FileExistResult> CheckFilesExistAsync(
         IHosterConfig hosterConfig,
         IReadOnlyList<string> fileUrls,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 
     IHosterConfig DeserializeHosterConfig(string serializedConfig);
 
@@ -23,7 +25,13 @@ public interface IHoster
 
     IReadOnlyList<string> ConfigurationKeys { get; }
 
-    Task<int?> GetMaximumParallelUploadsAsync(IHosterConfig hosterConfig, CancellationToken cancellationToken);
+    Task<int?> GetMaximumParallelUploadsAsync(
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    );
 
-    Task<TryLoginResult> TryLoginAsync(IHosterConfig hosterConfig, CancellationToken cancellationToken);
+    Task<TryLoginResult> TryLoginAsync(
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    );
 }

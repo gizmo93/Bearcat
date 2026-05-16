@@ -1,4 +1,5 @@
-﻿using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
+﻿using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 
 namespace Bearcat.Domain.UseCases.ManageUploadConfigs;
 
@@ -10,9 +11,10 @@ public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
         int hosterRegistrationId,
         int archiveConfigId,
         IReadOnlyList<string> linksDistributedTo,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
-        var uploadConfig = new Entities.UploadConfig
+        var uploadConfig = new UploadConfig
         {
             ReleaseId = releaseId,
             Name = name,
@@ -20,7 +22,7 @@ public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
             ArchiveConfigId = archiveConfigId,
             LinksDistributedTo = linksDistributedTo
                 .Where(c => !string.IsNullOrWhiteSpace(c))
-                .ToList()
+                .ToList(),
         };
 
         writeRepository.Add(uploadConfig);
@@ -35,11 +37,10 @@ public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
         int hosterRegistrationId,
         int archiveConfigId,
         IReadOnlyList<string> linksDistributedTo,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
-        var uploadConfig = await writeRepository.GetByIdAsync(
-            uploadConfigId,
-            cancellationToken);
+        var uploadConfig = await writeRepository.GetByIdAsync(uploadConfigId, cancellationToken);
 
         uploadConfig.Name = name;
         uploadConfig.HosterRegistrationId = hosterRegistrationId;
@@ -49,13 +50,9 @@ public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task DeleteAsync(
-        int uploadConfigId,
-        CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(int uploadConfigId, CancellationToken cancellationToken = default)
     {
-        var uploadConfig = await writeRepository.GetByIdAsync(
-            uploadConfigId,
-            cancellationToken);
+        var uploadConfig = await writeRepository.GetByIdAsync(uploadConfigId, cancellationToken);
 
         writeRepository.Remove(uploadConfig);
         await writeRepository.SaveChangesAsync(cancellationToken);

@@ -15,35 +15,32 @@ public partial class AddErrorMessagesToArchiveAndUpload : Migration
             name: "ErrorMessages",
             table: "Uploads",
             type: "text[]",
-            nullable: false);
+            nullable: false
+        );
 
         migrationBuilder.AddColumn<int>(
             name: "ArchiveState",
             table: "Archives",
             type: "integer",
             nullable: false,
-            defaultValue: 0);
+            defaultValue: 0
+        );
 
         migrationBuilder.AddColumn<List<string>>(
             name: "ErrorMessages",
             table: "Archives",
             type: "text[]",
-            nullable: false);
+            nullable: false
+        );
     }
 
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropColumn(
-            name: "ErrorMessages",
-            table: "Uploads");
+        migrationBuilder.DropColumn(name: "ErrorMessages", table: "Uploads");
 
-        migrationBuilder.DropColumn(
-            name: "ArchiveState",
-            table: "Archives");
+        migrationBuilder.DropColumn(name: "ArchiveState", table: "Archives");
 
-        migrationBuilder.DropColumn(
-            name: "ErrorMessages",
-            table: "Archives");
+        migrationBuilder.DropColumn(name: "ErrorMessages", table: "Archives");
     }
 }

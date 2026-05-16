@@ -3,17 +3,17 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.LinkCrypters;
 
-public class LinkCrypterFactory(
-    IServiceProvider serviceProvider)
-    : ILinkCrypterFactory
+public class LinkCrypterFactory(IServiceProvider serviceProvider) : ILinkCrypterFactory
 {
     public IReadOnlyList<LinkCrypterDto> GetLinkCrypters()
     {
-        return serviceProvider.GetKeyedServices<ILinkCrypter>(KeyedService.AnyKey)
+        return serviceProvider
+            .GetKeyedServices<ILinkCrypter>(KeyedService.AnyKey)
             .Select(l => new LinkCrypterDto(
                 Name: l.Name,
                 ClassName: l.GetType().Name,
-                ConfigurationKeys: l.ConfigurationKeys))
+                ConfigurationKeys: l.ConfigurationKeys
+            ))
             .ToList();
     }
 
@@ -24,7 +24,8 @@ public class LinkCrypterFactory(
 
     public IReadOnlyDictionary<string, ILinkCrypter> GetByClassName()
     {
-        return serviceProvider.GetKeyedServices<ILinkCrypter>(KeyedService.AnyKey)
+        return serviceProvider
+            .GetKeyedServices<ILinkCrypter>(KeyedService.AnyKey)
             .ToDictionary(l => l.GetType().Name, l => l);
     }
 }

@@ -8,19 +8,18 @@ public class ArchiveReadRepository(IBearcatReadDbContext dbRead) : IArchiveReadR
 {
     public async Task<ArchiveDto?> GetByIdAsync(
         int archiveId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         return await dbRead
-            .Archives
-            .Where(a => a.Id == archiveId)
+            .Archives.Where(a => a.Id == archiveId)
             .Select(a => new ArchiveDto(
                 a.Id,
                 a.ArchiveFolderPath,
                 a.CreatedAt,
-                a.ArchiveFiles.Select(af => new ArchiveDto.ArchiveFileDto(
-                        af.Id,
-                        af.FullFileName))
-                    .ToList()))
+                a.ArchiveFiles.Select(af => new ArchiveDto.ArchiveFileDto(af.Id, af.FullFileName))
+                    .ToList()
+            ))
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 }

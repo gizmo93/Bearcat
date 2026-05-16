@@ -12,7 +12,8 @@ namespace Bearcat.Website.Pages.ManageArchiveConfigs;
 public partial class CreateOrEditArchiveConfigDialog(
     IArchiverFactory archiverFactory,
     IConfiguration configuration,
-    IDialogService dialogService)
+    IDialogService dialogService
+)
 {
     [Parameter]
     public ArchiveConfigFormModel FormModel { get; set; } = null!;
@@ -28,8 +29,8 @@ public partial class CreateOrEditArchiveConfigDialog(
 
     private IReadOnlyList<ArchiverDto> archivers = [];
 
-    private ArchiverDto? SelectedArchiver => archivers.FirstOrDefault(
-        a => a.ClassName == FormModel.ArchiverName);
+    private ArchiverDto? SelectedArchiver =>
+        archivers.FirstOrDefault(a => a.ClassName == FormModel.ArchiverName);
 
     private EditContext editContext = null!;
 
@@ -60,7 +61,8 @@ public partial class CreateOrEditArchiveConfigDialog(
                 archiverName: FormModel.ArchiverName!,
                 archiveNamePrefix: FormModel.ArchiveNamePrefix!,
                 archivePassword: FormModel.ArchivePassword,
-                archiveFileSizeMb: FormModel.ArchiveFileSizeMb);
+                archiveFileSizeMb: FormModel.ArchiveFileSizeMb
+            );
         }
         else
         {
@@ -70,7 +72,8 @@ public partial class CreateOrEditArchiveConfigDialog(
                 archiveFilesBasePath: FormModel.ArchiveFilesBasePath!,
                 archiveNamePrefix: FormModel.ArchiveNamePrefix!,
                 archivePassword: FormModel.ArchivePassword,
-                archiveFileSizeMb: FormModel.ArchiveFileSizeMb);
+                archiveFileSizeMb: FormModel.ArchiveFileSizeMb
+            );
         }
 
         MudDialog.Close();
@@ -80,7 +83,10 @@ public partial class CreateOrEditArchiveConfigDialog(
     {
         var parameters = new DialogParameters<FolderSelectionDialog>
         {
-            { dlg => dlg.BaseFolderPath, configuration.GetRequiredSection("ReleaseDataDirectory").Value! }
+            {
+                dlg => dlg.BaseFolderPath,
+                configuration.GetRequiredSection("ReleaseDataDirectory").Value!
+            },
         };
 
         var dialog = await dialogService.ShowAsync<FolderSelectionDialog>(
@@ -92,7 +98,8 @@ public partial class CreateOrEditArchiveConfigDialog(
                 CloseOnEscapeKey = true,
                 CloseButton = true,
                 FullWidth = true,
-            });
+            }
+        );
 
         var result = await dialog.Result;
 
@@ -123,7 +130,10 @@ public partial class CreateOrEditArchiveConfigDialog(
 
         if (FormModel.ArchiveFileSizeMb < 0)
         {
-            messageStore.Add(() => FormModel.ArchiveFileSizeMb, "Archive file size must be zero or greater");
+            messageStore.Add(
+                () => FormModel.ArchiveFileSizeMb,
+                "Archive file size must be zero or greater"
+            );
         }
     }
 }

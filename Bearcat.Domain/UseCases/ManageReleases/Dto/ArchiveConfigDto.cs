@@ -10,11 +10,11 @@ public record ArchiveConfigDto(
     int ArchiveFileSizeMb,
     string ArchiveFileExtension,
     string Name,
-    IReadOnlyList<ArchiveConfigDto.ArchiveSummary> ArchiveSummaries)
+    IReadOnlyList<ArchiveConfigDto.ArchiveSummary> ArchiveSummaries
+)
 {
     public record ArchiveSummary(int ArchiveId, int ArchiveFileCount);
 
-    public string? ArchiveNameWithExtension => ArchiveNamePrefix is null
-        ? null
-        : $"{ArchiveNamePrefix}{ArchiveFileExtension}";
+    public string? ArchiveNameWithExtension =>
+        ArchiveNamePrefix is null ? null : $"{ArchiveNamePrefix}{ArchiveFileExtension}";
 }
