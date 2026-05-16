@@ -335,6 +335,11 @@ public class UploadFilesService(
                     ? OnlineState.PartiallyOnline
                     : OnlineState.Online;
 
+                if (!anyFailedUploads)
+                {
+                    result.Upload.UploadedAt = timeProvider.GetLocalNow();
+                }
+
                 var notificationText = anyFailedUploads
                     ? "Some files failed to upload"
                     : "All files uploaded successfully";
