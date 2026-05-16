@@ -257,8 +257,8 @@ a {
 }
 
 .bearcat-release-search-actions {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, 8.75rem);
     justify-content: flex-end;
     gap: 0.5rem;
     border-top: 1px solid color-mix(in oklch, var(--border) 72%, transparent);
@@ -268,8 +268,35 @@ a {
 .bearcat-release-search-actions :where(button) {
     min-height: 2.15rem;
     height: 2.15rem;
+    justify-content: center;
     padding-inline: 0.8rem;
     font-size: 0.8125rem;
+}
+
+.bearcat-release-search-button {
+    appearance: none !important;
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 2.25rem !important;
+    min-height: 2.25rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.45rem !important;
+    padding: 0 0.85rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+.bearcat-release-search-button:disabled,
+.bearcat-release-search-button[disabled] {
+    opacity: 1 !important;
+}
+
+.bearcat-release-search-actions :where(button svg) {
+    width: 0.875rem;
+    height: 0.875rem;
 }
 
 .bearcat-release-empty {

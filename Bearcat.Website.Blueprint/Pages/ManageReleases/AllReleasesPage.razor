@@ -1,6 +1,5 @@
 @page "/releases"
 @using Bearcat.Domain.UseCases.ManageReleases.Dto
-@using Bearcat.Domain.ValueObjects
 @inherits OwningComponentBase
 
 <PageTitle>@L["Releases"] - Bearcat</PageTitle>
@@ -20,53 +19,10 @@
         </BbButton>
     </div>
 
-    <EditForm Model="this" OnSubmit="ApplyFiltersAsync" class="bearcat-release-search">
-        <div class="bearcat-release-search-grid">
-            <BbFormFieldInput TValue="string"
-                              @bind-Value="searchTerm"
-                              Label="@L["SearchReleases"]"
-                              Placeholder="@L["ReleaseSearchPlaceholder"]" />
-
-            <BbFormFieldSelect TValue="OnlineState?"
-                               @bind-Value="selectedOnlineState"
-                               Label="@L["OnlineState"]"
-                               Options="OnlineStateOptions" />
-
-            <BbFormFieldSelect TValue="int?"
-                               @bind-Value="selectedHosterRegistrationId"
-                               Label="@L["HosterRegistration"]"
-                               Options="HosterRegistrationOptions" />
-
-            <BbFormFieldSelect TValue="string"
-                               @bind-Value="selectedArchiverName"
-                               Label="@L["Archiver"]"
-                               Options="ArchiverOptions" />
-
-            <BbFormFieldSelect TValue="int?"
-                               @bind-Value="selectedLinkCrypterRegistrationId"
-                               Label="@L["LinkCrypter"]"
-                               Options="LinkCrypterRegistrationOptions" />
-
-            <BbFormFieldInput TValue="string"
-                              @bind-Value="linksDistributedTo"
-                              Label="@L["LinksDistributedTo"]"
-                              Placeholder="@L["LinksDistributedToSearchPlaceholder"]" />
-        </div>
-
-        <div class="bearcat-release-search-actions">
-            <BbButton Type="ButtonType.Submit" Size="ButtonSize.Small">
-                <LucideIcon Name="search" class="h-4 w-4" />
-                @L["Search"]
-            </BbButton>
-            <BbButton Variant="ButtonVariant.Outline"
-                      Size="ButtonSize.Small"
-                      Disabled="@(!HasActiveFilters)"
-                      OnClick="ResetFiltersAsync">
-                <LucideIcon Name="rotate-ccw" class="h-4 w-4" />
-                @L["ResetFilters"]
-            </BbButton>
-        </div>
-    </EditForm>
+    <ReleaseSearchForm HosterRegistrations="hosterRegistrations"
+                       Archivers="archiverOptions"
+                       LinkCrypterRegistrations="linkCrypterRegistrations"
+                       OnSearch="ApplySearchAsync" />
 
     <BbDataTable TData="ReleaseDto"
                  Data="releases"
