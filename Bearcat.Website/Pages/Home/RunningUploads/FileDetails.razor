@@ -1,0 +1,60 @@
+@using Bearcat.Domain.Entities
+@using Bearcat.Domain.ValueObjects
+@using Bearcat.Website.Localization
+<section class="rounded-lg border border-border/70 bg-background">
+    <div class="border-b border-border/70 px-4 py-3">
+        <div class="flex items-center justify-between gap-3">
+            <div>
+                <p class="text-sm font-medium">@L["UploadStatus"]</p>
+                <p class="text-xs text-muted-foreground">
+                    @L["UploadStatusSubtitle", Upload.Id, Upload.UploadConfig.Name]
+                </p>
+            </div>
+
+            <BbBadge Variant="@GetSummaryVariant()">
+                @L.Localize(Upload.UploadState)
+            </BbBadge>
+        </div>
+    </div>
+
+    <BbDataTable TData="ArchiveFile"
+                 Data="Upload.Archive!.ArchiveFiles.OrderBy(a => a.FullFileName)"
+                 ShowToolbar="false"
+                 ShowPagination="@(Upload.Archive!.ArchiveFiles.Count > 10)"
+                 InitialPageSize="10"
+                 AriaLabel="@L["UploadFileStatus"]"
+                 Class="border-0">
+        <Columns>
+            <BbDataTableColumn TData="ArchiveFile" TValue="string"
+                               Header="@L["File"]"
+                               Property="@(archiveFile => archiveFile.FullFileName)"
+                               Sortable="true"
+                               Filterable="true" />
+            <BbDataTableColumn TData="ArchiveFile" TValue="string"
+                               Header="@L["Status"]"
+                               Property="@(archiveFile => GetStatusLabel(archiveFile))"
+                               Sortable="true">
+                <CellTemplate Context="archiveFile">
+                    @{
+                        var uploadedFile = Upload.UploadedFiles.FirstOrDefault(x => x.ArchiveFileId == archiveFile.Id);
+                    }
+                    @if (uploadedFile is not null)
+                    {
+                        <div class="flex items-center gap-2">
+                            <LucideIcon Name="@(uploadedFile.OnlineState == OnlineState.Online ? "circle-check" : "circle-x")"
+                                        class="@($"h-4 w-4 {(uploadedFile.OnlineState == OnlineState.Online ? "text-emerald-400" : "text-red-400")}")" />
+                            <span>@L.Localize(uploadedFile.OnlineState)</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="flex items-center gap-2 text-muted-foreground">
+                            <LucideIcon Name="upload" class="h-4 w-4" />
+                            <span>@L["Pending"]</span>
+                        </div>
+                    }
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+    </BbDataTable>
+</section>

@@ -10,7 +10,7 @@
         <Project Path="Bearcat.Application/Bearcat.Application.csproj" />
         <Project Path="Bearcat.Domain\Bearcat.Domain.csproj" />
         <Project Path="Bearcat.Infrastructure/Bearcat.Infrastructure.csproj" />
-        <Project Path="Bearcat.Website.Blueprint\Bearcat.Website.Blueprint.csproj" />
+        <Project Path="Bearcat.Website\Bearcat.Website.csproj" />
     </Folder>
     <Folder Name="/4_Plugins/">
         <Project Path="Bearcat.Archivers/Bearcat.Archivers.csproj" />

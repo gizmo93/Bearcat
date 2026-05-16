@@ -12,6 +12,6 @@
         <ProjectReference Include="..\Bearcat.Domain\Bearcat.Domain.csproj" />
         <ProjectReference Include="..\Bearcat.Hosters\Bearcat.Hosters.csproj" />
         <ProjectReference Include="..\Bearcat.LinkCrypters\Bearcat.LinkCrypters.csproj" />
-        <ProjectReference Include="..\Bearcat.Website.Blueprint\Bearcat.Website.Blueprint.csproj" />
+        <ProjectReference Include="..\Bearcat.Website\Bearcat.Website.csproj" />
     </ItemGroup>
 </Project>

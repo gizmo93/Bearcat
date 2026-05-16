@@ -1,0 +1,102 @@
+@inherits LayoutComponentBase
+@using Bearcat.Website.Shared
+@implements IDisposable
+@inject NavigationManager NavigationManager
+
+<BbSidebarProvider DefaultOpen="true" Variant="SidebarVariant.Inset">
+    <BbSidebar Class="bearcat-sidebar border-r border-border/70 bg-sidebar text-sidebar-foreground">
+        <BbSidebarHeader>
+            <BbSidebarHeaderContent>
+                <div class="flex h-12 w-12 shrink-0 items-center justify-center">
+                    <img src="_content/Bearcat.Website/bearcat.png" alt="Bearcat" class="h-12 w-12 object-contain" />
+                </div>
+                <BbSidebarHeaderInfo>
+                    <span class="truncate text-sm font-semibold">Bearcat</span>
+                </BbSidebarHeaderInfo>
+            </BbSidebarHeaderContent>
+        </BbSidebarHeader>
+
+        <BbSidebarContent>
+            <NavMenu />
+        </BbSidebarContent>
+
+        <BbSidebarFooter Class="mt-auto">
+            <div class="flex justify-center px-2 pb-3">
+                <CultureSelector />
+            </div>
+        </BbSidebarFooter>
+    </BbSidebar>
+
+    <BbSidebarInset Class="bearcat-app-inset bg-background">
+        <header class="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border/70 bg-background/90 px-4 backdrop-blur">
+            <BbSidebarTrigger />
+            <div class="min-w-0">
+                <p class="truncate text-sm font-medium">@CurrentPageTitle</p>
+                @if (!string.IsNullOrWhiteSpace(CurrentPageSubtitle))
+                {
+                    <p class="truncate text-xs text-muted-foreground">@CurrentPageSubtitle</p>
+                }
+            </div>
+        </header>
+
+        <main class="bearcat-main p-4 md:p-6">
+            <BbTooltipProvider DelayDuration="150" SkipDelayDuration="300">
+                <ErrorBoundary>
+                    <ChildContent>
+                        @Body
+                    </ChildContent>
+                    <ErrorContent>
+                        <div class="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                            @context?.Message
+                        </div>
+                    </ErrorContent>
+                </ErrorBoundary>
+            </BbTooltipProvider>
+        </main>
+    </BbSidebarInset>
+</BbSidebarProvider>
+
+<BbToastProvider Position="ToastPosition.BottomRight" ShowCountdown="true" />
+<BbDialogProvider />
+<BbPortalHost />
+
+<div id="blazor-error-ui" data-nosnippet>
+    @L["UnhandledError"]
+    <a href="." class="reload">@L["Reload"]</a>
+    <span class="dismiss">x</span>
+</div>
+
+@code {
+    private string CurrentPageTitle => GetPageTitle().Title;
+    private string CurrentPageSubtitle => GetPageTitle().Subtitle;
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += HandleLocationChanged;
+    }
+
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private (string Title, string Subtitle) GetPageTitle()
+    {
+        var path = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Split('?', '#')[0].Trim('/');
+
+        return path switch
+        {
+            "" => (L["Home"], L["WorkspaceOverview"]),
+            "hoster-registrations" => (L["HosterRegistrations"], L["CredentialsAndLoginChecks"]),
+            "link-crypter-registrations" => (L["CrypterRegistrations"], L["ContainersAndValidation"]),
+            "releases" => (L["Releases"], L["ReleaseRootsAndOnlineState"]),
+            var release when release.StartsWith("releases/", StringComparison.OrdinalIgnoreCase) => (L["ReleaseDetails"], L["ArchiveAndUploadConfiguration"]),
+            _ => ("Bearcat", string.Empty)
+        };
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= HandleLocationChanged;
+    }
+}
