@@ -1,0 +1,30 @@
+@using System.Globalization
+<!DOCTYPE html>
+<html lang="@CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <script>
+        (() => {
+            const query = window.matchMedia("(prefers-color-scheme: dark)");
+            const applyTheme = () => document.documentElement.classList.toggle("dark", query.matches);
+
+            applyTheme();
+            query.addEventListener("change", applyTheme);
+        })();
+    </script>
+    <link rel="stylesheet" href="_content/BlazorBlueprint.Components/blazorblueprint.css" />
+    <link rel="stylesheet" href="_content/Bearcat.Website/bearcat.css" />
+    <link rel="icon" type="image/png" href="_content/Bearcat.Website/favicon.png?v=2" />
+    <HeadOutlet @rendermode="InteractiveServer" />
+</head>
+
+<body>
+    <Routes @rendermode="InteractiveServer" />
+    <script type="module" src="_content/Bearcat.Website/bearcat.js?v=4"></script>
+    <script src="_framework/blazor.web.js"></script>
+</body>
+
+</html>

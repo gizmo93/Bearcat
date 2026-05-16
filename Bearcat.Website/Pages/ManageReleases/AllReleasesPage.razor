@@ -1,0 +1,170 @@
+@page "/releases"
+@using Bearcat.Domain.UseCases.ManageReleases.Dto
+@using Bearcat.Website.Localization
+@using Bearcat.Website.Shared
+@inherits OwningComponentBase
+
+<PageTitle>@L["Releases"] - Bearcat</PageTitle>
+
+<section class="bearcat-releases-page space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["Releases"]</h1>
+            <p class="text-sm text-muted-foreground">
+                @L["ReleasesIntro"]
+            </p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddReleaseDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewRelease"]
+        </BbButton>
+    </div>
+
+    <ReleaseSearchForm HosterRegistrations="hosterRegistrations"
+                       Archivers="archiverOptions"
+                       LinkCrypterRegistrations="linkCrypterRegistrations"
+                       OnSearch="ApplySearchAsync" />
+
+    <BbDataTable TData="ReleaseDto"
+                 @key="ReleasesTableKey"
+                 Data="releases"
+                 ShowToolbar="false"
+                 ShowPagination="false"
+                 InitialPageSize="@pageSize"
+                 IsLoading="isLoading"
+                 AriaLabel="@L["Releases"]"
+                 Class="bearcat-releases-table">
+        <Columns>
+            <BbDataTableColumn TData="ReleaseDto" TValue="string"
+                               Header="@L["Name"]"
+                               Property="@(release => release.Name)"
+                               Width="38%">
+                <CellTemplate Context="release">
+                    <a class="bearcat-release-list-name"
+                       href="@($"/releases/{release.ReleaseId}")">
+                        @release.Name
+                    </a>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseDto" TValue="string"
+                               Header="@L["OnlineState"]"
+                               Property="@(release => release.OnlineState.ToString())"
+                               Width="140px">
+                <CellTemplate Context="release">
+                    <OnlineStateBadge Value="@release.OnlineState" />
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseDto" TValue="string"
+                               Header="@L["ReleaseType"]"
+                               Property="@(release => release.ReleaseType.ToString())"
+                               Width="140px">
+                <CellTemplate Context="release">
+                    <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
+                        <BbTooltipTrigger>
+                            <span class="bearcat-badge-trigger">
+                                <BbBadge Variant="BadgeVariant.Outline">@L.Localize(release.ReleaseType)</BbBadge>
+                            </span>
+                        </BbTooltipTrigger>
+                        <BbTooltipContent Class="max-w-xs text-xs">
+                            @L.LocalizeDescription(release.ReleaseType)
+                        </BbTooltipContent>
+                    </BbTooltip>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseDto" TValue="string"
+                               Header="@L["FolderPath"]"
+                               Property="@(release => release.ReleaseFolderPath)"
+                               MinWidth="260px">
+                <CellTemplate Context="release">
+                    <p class="bearcat-release-list-path" title="@release.ReleaseFolderPath">
+                        @release.ReleaseFolderPath
+                    </p>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseDto" TValue="string"
+                               Header=""
+                               Property="@(release => release.Name)"
+                               Width="56px">
+                <CellTemplate Context="release">
+                    <div class="flex justify-end">
+                        <BbDropdownMenu>
+                            <BbDropdownMenuTrigger>
+                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenReleaseActions"]">
+                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                </BbButton>
+                            </BbDropdownMenuTrigger>
+                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                                <BbDropdownMenuItem Href="@($"/releases/{release.ReleaseId}")">
+                                    @L["OpenDetails"]
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await DeleteReleaseAsync(release))">
+                                    @L["DeleteRelease"]
+                                </BbDropdownMenuItem>
+                            </BbDropdownMenuContent>
+                        </BbDropdownMenu>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+        <EmptyTemplate>
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="inbox" class="h-5 w-5" />
+                <span>@L["NoReleasesFound"]</span>
+            </div>
+        </EmptyTemplate>
+    </BbDataTable>
+
+    <div class="bearcat-release-pagination">
+        <p class="text-sm text-muted-foreground">
+            @L["ReleaseResultsSummary", FirstResult, LastResult, totalCount]
+        </p>
+
+        <div class="bearcat-release-pagination-controls">
+            <label class="bearcat-page-size">
+                <span>@L["RowsPerPage"]</span>
+                <BbSelect TValue="int"
+                          @bind-Value="pageSize"
+                          @bind-Value:after="OnPageSizeChangedAsync"
+                          Options="PageSizeOptions"
+                          Class="w-24" />
+            </label>
+
+            @if (TotalPages > 1)
+            {
+                <BbPagination Class="bearcat-release-page-nav">
+                    <BbPaginationContent>
+                        <BbPaginationItem>
+                            <BbPaginationPrevious Disabled="@(CurrentPage <= 1)"
+                                                  Text="@L["Previous"]"
+                                                  OnClick="GoToPreviousPageAsync" />
+                        </BbPaginationItem>
+
+                        @foreach (var page in PaginationItems)
+                        {
+                            <BbPaginationItem>
+                                @if (page is null)
+                                {
+                                    <BbPaginationEllipsis />
+                                }
+                                else
+                                {
+                                    <BbPaginationLink IsActive="@(page == CurrentPage)"
+                                                      OnClick="@(() => GoToPageAsync(page.Value))">
+                                        @(page.Value)
+                                    </BbPaginationLink>
+                                }
+                            </BbPaginationItem>
+                        }
+
+                        <BbPaginationItem>
+                            <BbPaginationNext Disabled="@(CurrentPage >= TotalPages)"
+                                              Text="@L["Next"]"
+                                              OnClick="GoToNextPageAsync" />
+                        </BbPaginationItem>
+                    </BbPaginationContent>
+                </BbPagination>
+            }
+        </div>
+    </div>
+</section>

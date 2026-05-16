@@ -4,7 +4,7 @@ using Bearcat.Hosters.InversionOfControl;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.InversionOfControl;
 using Bearcat.LinkCrypters.InversionOfControl;
-using Bearcat.Website.Blueprint;
+using Bearcat.Website;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 

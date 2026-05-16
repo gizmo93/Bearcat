@@ -1,0 +1,107 @@
+@page "/releases/{ReleaseId:int}"
+@using Bearcat.Website.Localization
+@using Bearcat.Website.Pages.ManageArchiveConfigs
+@using Bearcat.Website.Pages.ManageUploadConfigs
+@using Bearcat.Website.Shared
+@inherits OwningComponentBase
+
+@if (!isInitialized)
+{
+    return;
+}
+
+<PageTitle>@L["Release"] - @release.Name - Bearcat</PageTitle>
+
+<section class="bearcat-release-shell">
+    <div class="bearcat-release-header">
+        <div class="min-w-0 space-y-4">
+            <div class="flex min-w-0 flex-wrap items-start justify-between gap-3">
+                <div class="min-w-0 space-y-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h1 class="bearcat-release-title font-semibold">
+                            @release.Name
+                        </h1>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
+                            <BbTooltipTrigger>
+                                <span class="bearcat-badge-trigger">
+                                    <BbBadge Variant="BadgeVariant.Outline">@L.Localize(release.ReleaseType)</BbBadge>
+                                </span>
+                            </BbTooltipTrigger>
+                            <BbTooltipContent Class="max-w-xs text-xs">
+                                @L.LocalizeDescription(release.ReleaseType)
+                            </BbTooltipContent>
+                        </BbTooltip>
+                        <OnlineStateBadge Value="release.OnlineState" />
+                    </div>
+                </div>
+
+                <BbDropdownMenu>
+                    <BbDropdownMenuTrigger>
+                        <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenReleaseActions"]">
+                            <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                        </BbButton>
+                    </BbDropdownMenuTrigger>
+                    <BbDropdownMenuContent Align="PopoverAlign.End">
+                        <BbDropdownMenuItem OnClick="DeleteReleaseAsync">
+                            @L["DeleteRelease"]
+                        </BbDropdownMenuItem>
+                    </BbDropdownMenuContent>
+                </BbDropdownMenu>
+            </div>
+        </div>
+    </div>
+
+    <div class="bearcat-release-info-bar">
+        <div class="bearcat-release-folder">
+            <LucideIcon Name="folder" class="h-4 w-4 shrink-0 text-muted-foreground" />
+            <div class="min-w-0">
+                <p class="text-xs text-muted-foreground">@L["ReleaseFolder"]</p>
+                <p class="bearcat-release-path">@release.ReleaseFolderPath</p>
+            </div>
+        </div>
+
+        <div class="bearcat-release-stats">
+            <div class="bearcat-release-kpi">
+                <span class="bearcat-release-kpi-value">@release.ActiveUploadConfigsCount</span>
+                <span class="bearcat-release-kpi-copy">
+                    <span class="bearcat-release-kpi-label">@L["UploadConfigs"]</span>
+                    <span class="bearcat-release-kpi-hint">@L["TotalConfigured"]</span>
+                </span>
+            </div>
+            <div class="bearcat-release-kpi">
+                <span class="bearcat-release-kpi-value">@release.OnlineUploadConfigsCount</span>
+                <span class="bearcat-release-kpi-copy">
+                    <span class="bearcat-release-kpi-label">@L["OnlineConfigs"]</span>
+                    <span class="bearcat-release-kpi-hint">@L["StillAvailable"]</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <BbTabs DefaultValue="archives" Class="space-y-4">
+        <BbTabsList>
+            <BbTabsTrigger Value="archives">@L["ArchiveConfigurations"]</BbTabsTrigger>
+            <BbTabsTrigger Value="upload-configs">@L["UploadConfigurations"]</BbTabsTrigger>
+            <BbTabsTrigger Value="uploads">@L["Uploads"]</BbTabsTrigger>
+        </BbTabsList>
+
+        <BbTabsContent Value="archives" Class="space-y-4">
+            <ArchiveConfigs
+                @ref="@reloadableComponents[nameof(ArchiveConfigs)]"
+                ReleaseId="ReleaseId"
+                OnChangeAffectingOtherComponents="HandleChangeAffectingOtherComponentsAsync" />
+        </BbTabsContent>
+
+        <BbTabsContent Value="upload-configs" Class="space-y-4">
+            <UploadConfigs
+                @ref="@reloadableComponents[nameof(UploadConfigs)]"
+                ReleaseId="@ReleaseId" />
+        </BbTabsContent>
+
+        <BbTabsContent Value="uploads" Class="space-y-4">
+            <ReleaseUploads ReleaseId="@ReleaseId" />
+        </BbTabsContent>
+    </BbTabs>
+</section>

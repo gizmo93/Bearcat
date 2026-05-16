@@ -1,0 +1,159 @@
+@using Bearcat.Abstractions.Archiver
+@using Bearcat.Domain.UseCases.ManageHosters.Dto
+@using Bearcat.Domain.UseCases.ManageLinkCrypters.Dto
+@using Bearcat.Domain.UseCases.ManageReleases.Dto
+@using Bearcat.Domain.ValueObjects
+@using Bearcat.Website.Localization
+<EditForm Model="this" OnSubmit="ApplyFiltersAsync" class="bearcat-release-search">
+    <div class="bearcat-release-search-grid">
+        <BbFormFieldInput TValue="string"
+                          @bind-Value="searchTerm"
+                          Label="@L["SearchReleases"]"
+                          Placeholder="@L["ReleaseSearchPlaceholder"]" />
+
+        <BbFormFieldSelect TValue="OnlineState?"
+                           @bind-Value="selectedOnlineState"
+                           Label="@L["OnlineState"]"
+                           Options="OnlineStateOptions" />
+
+        <BbFormFieldSelect TValue="int?"
+                           @bind-Value="selectedHosterRegistrationId"
+                           Label="@L["HosterRegistration"]"
+                           Options="HosterRegistrationOptions" />
+
+        <BbFormFieldSelect TValue="string"
+                           @bind-Value="selectedArchiverName"
+                           Label="@L["Archiver"]"
+                           Options="ArchiverOptions" />
+
+        <BbFormFieldSelect TValue="int?"
+                           @bind-Value="selectedLinkCrypterRegistrationId"
+                           Label="@L["LinkCrypter"]"
+                           Options="LinkCrypterRegistrationOptions" />
+
+        <BbFormFieldInput TValue="string"
+                          @bind-Value="linksDistributedTo"
+                          Label="@L["LinksDistributedTo"]"
+                          Placeholder="@L["LinksDistributedToSearchPlaceholder"]" />
+    </div>
+
+    <div class="bearcat-release-search-actions">
+        <BbButton Type="ButtonType.Submit"
+                  Size="ButtonSize.Small"
+                  Class="bearcat-release-search-button"
+                  style="@SearchButtonStyle">
+            <LucideIcon Name="search" class="h-4 w-4" />
+            @L["Search"]
+        </BbButton>
+        <BbButton Type="ButtonType.Button"
+                  Variant="ButtonVariant.Secondary"
+                  Size="ButtonSize.Small"
+                  Class="bearcat-release-search-button"
+                  style="@SearchButtonStyle"
+                  OnClick="ResetFiltersAsync">
+            <LucideIcon Name="rotate-ccw" class="h-4 w-4" />
+            @L["ResetFilters"]
+        </BbButton>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<HosterRegistrationDto> HosterRegistrations { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<ArchiverDto> Archivers { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<LinkCrypterRegistrationDto> LinkCrypterRegistrations { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<ReleaseSearchQuery> OnSearch { get; set; }
+
+    private const string SearchButtonStyle = "width: 8.75rem; min-width: 8.75rem; height: 2.25rem; min-height: 2.25rem; padding: 0 0.85rem; justify-content: center;";
+
+    private string? searchTerm;
+    private string? linksDistributedTo;
+    private OnlineState? selectedOnlineState;
+    private int? selectedHosterRegistrationId;
+    private string selectedArchiverName = string.Empty;
+    private int? selectedLinkCrypterRegistrationId;
+
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(searchTerm)
+        || !string.IsNullOrWhiteSpace(linksDistributedTo)
+        || selectedOnlineState is not null
+        || selectedHosterRegistrationId is not null
+        || !string.IsNullOrWhiteSpace(selectedArchiverName)
+        || selectedLinkCrypterRegistrationId is not null;
+
+    private IEnumerable<SelectOption<OnlineState?>> OnlineStateOptions =>
+        new SelectOption<OnlineState?>[]
+        {
+            new(null, L["AnyOnlineState"]),
+            new(OnlineState.Online, L.Localize(OnlineState.Online)),
+            new(OnlineState.PartiallyOnline, L.Localize(OnlineState.PartiallyOnline)),
+            new(OnlineState.Offline, L.Localize(OnlineState.Offline)),
+            new(OnlineState.Unknown, L.Localize(OnlineState.Unknown)),
+        };
+
+    private IEnumerable<SelectOption<int?>> HosterRegistrationOptions =>
+        new[] { new SelectOption<int?>(null, L["AnyHosterConfig"]) }.Concat(
+            HosterRegistrations.Select(h => new SelectOption<int?>(
+                h.Id,
+                $"{h.Name} ({h.HosterName})"
+            ))
+        );
+
+    private IEnumerable<SelectOption<string>> ArchiverOptions =>
+        new[] { new SelectOption<string>(string.Empty, L["AnyArchiver"]) }.Concat(
+            Archivers.Select(a => new SelectOption<string>(
+                a.ClassName,
+                $"{a.Name} ({a.FileExtension})"
+            ))
+        );
+
+    private IEnumerable<SelectOption<int?>> LinkCrypterRegistrationOptions =>
+        new[] { new SelectOption<int?>(null, L["AnyLinkCrypterConfig"]) }.Concat(
+            LinkCrypterRegistrations.Select(l => new SelectOption<int?>(
+                l.LinkCrypterRegistrationId,
+                $"{l.Name} ({l.CrypterName})"
+            ))
+        );
+
+    private async Task ApplyFiltersAsync()
+    {
+        await OnSearch.InvokeAsync(CreateQuery());
+    }
+
+    private async Task ResetFiltersAsync()
+    {
+        if (!HasActiveFilters)
+        {
+            return;
+        }
+
+        searchTerm = null;
+        linksDistributedTo = null;
+        selectedOnlineState = null;
+        selectedHosterRegistrationId = null;
+        selectedArchiverName = string.Empty;
+        selectedLinkCrypterRegistrationId = null;
+
+        await OnSearch.InvokeAsync(CreateQuery());
+    }
+
+    private ReleaseSearchQuery CreateQuery()
+    {
+        return new ReleaseSearchQuery(
+            SearchTerm: searchTerm,
+            OnlineState: selectedOnlineState,
+            HosterRegistrationId: selectedHosterRegistrationId,
+            ArchiverName: string.IsNullOrWhiteSpace(selectedArchiverName)
+                ? null
+                : selectedArchiverName,
+            LinkCrypterRegistrationId: selectedLinkCrypterRegistrationId,
+            LinksDistributedTo: linksDistributedTo
+        );
+    }
+}

@@ -1,0 +1,96 @@
+@using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Dto
+@using Bearcat.Website.Shared
+@inherits OwningComponentBase
+
+@if (!isInitialized)
+{
+    return;
+}
+
+<BbCard Class="border-border/70 shadow-sm">
+    <BbCardHeader>
+        <div class="bearcat-section-header">
+            <div>
+                <BbCardTitle class="text-base">@L["LinkCrypters"]</BbCardTitle>
+                <BbCardDescription>@L["LinkCryptersDescription"]</BbCardDescription>
+            </div>
+            <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="ShowAddDialogAsync">
+                <LucideIcon Name="plus" class="h-4 w-4" />
+                @L["Add"]
+            </BbButton>
+        </div>
+    </BbCardHeader>
+    <BbCardContent>
+        <BbDataTable TData="UploadConfigLinkCrypterDto"
+                     Data="uploadConfigLinkCrypters"
+                     ShowToolbar="false"
+                     ShowPagination="@(uploadConfigLinkCrypters.Count > 10)"
+                     InitialPageSize="10"
+                     AriaLabel="@L["UploadConfigLinkCrypters"]"
+                     Class="rounded-lg border border-border/70">
+            <Columns>
+                <BbDataTableColumn TData="UploadConfigLinkCrypterDto" TValue="string"
+                                   Header="@L["Crypter"]"
+                                   Property="@(item => item.LinkCrypterRegistrationName)"
+                                   Sortable="true"
+                                   Filterable="true">
+                    <CellTemplate Context="item">
+                        <div class="space-y-1">
+                            <p class="font-medium">@item.LinkCrypterRegistrationName</p>
+                            <p class="text-xs text-muted-foreground">@item.LinkCrypterName</p>
+                        </div>
+                    </CellTemplate>
+                </BbDataTableColumn>
+                <BbDataTableColumn TData="UploadConfigLinkCrypterDto" TValue="string"
+                                   Header="@L["Password"]"
+                                   Property="@(item => item.Password ?? string.Empty)">
+                    <CellTemplate Context="item">
+                        @if (!string.IsNullOrWhiteSpace(item.Password))
+                        {
+                            <HiddenElement>
+                                @item.Password
+                            </HiddenElement>
+                        }
+                        else
+                        {
+                            <span class="text-xs text-muted-foreground">-</span>
+                        }
+                    </CellTemplate>
+                </BbDataTableColumn>
+                <BbDataTableColumn TData="UploadConfigLinkCrypterDto" TValue="bool"
+                                   Header="@L["Active"]"
+                                   Property="@(item => item.LinkCrypterIsActive)"
+                                   Sortable="true">
+                    <CellTemplate Context="item">
+                        <BbBadge Variant="@(item.LinkCrypterIsActive ? BadgeVariant.Default : BadgeVariant.Secondary)">
+                            @(item.LinkCrypterIsActive ? L["Active"] : L["Inactive"])
+                        </BbBadge>
+                    </CellTemplate>
+                </BbDataTableColumn>
+                <BbDataTableColumn TData="UploadConfigLinkCrypterDto" TValue="string"
+                                   Header=""
+                                   Property="@(item => item.LinkCrypterRegistrationName)">
+                    <CellTemplate Context="item">
+                        <div class="flex justify-end">
+                            <BbDropdownMenu>
+                                <BbDropdownMenuTrigger>
+                                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenLinkCrypterActions"]">
+                                        <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                    </BbButton>
+                                </BbDropdownMenuTrigger>
+                                <BbDropdownMenuContent Align="PopoverAlign.End">
+                                    <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(item))">
+                                        @L["Edit"]
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuItem OnClick="@(async _ => await ShowDeleteDialogAsync(item))">
+                                        @L["Delete"]
+                                    </BbDropdownMenuItem>
+                                </BbDropdownMenuContent>
+                            </BbDropdownMenu>
+                        </div>
+                    </CellTemplate>
+                </BbDataTableColumn>
+            </Columns>
+        </BbDataTable>
+    </BbCardContent>
+</BbCard>
