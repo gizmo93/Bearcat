@@ -156,7 +156,7 @@
   <data name="NoUploadConfigurationsYet" xml:space="preserve"><value>No upload configurations yet.</value></data>
   <data name="NoUploadLinksFound" xml:space="preserve"><value>No upload links found</value></data>
   <data name="NoUploadsFound" xml:space="preserve"><value>No uploads found</value></data>
-  <data name="OnlineConfigs" xml:space="preserve"><value>Online configs</value></data>
+    <data name="OnlineConfigs" xml:space="preserve"><value>uploads online</value></data>
   <data name="OnlineState" xml:space="preserve"><value>Online state</value></data>
   <data name="OnlineState.Offline" xml:space="preserve"><value>Offline</value></data>
   <data name="OnlineState.Online" xml:space="preserve"><value>Online</value></data>
@@ -229,8 +229,7 @@
   <data name="SizePerArchiveMb" xml:space="preserve"><value>Size per archive (MB)</value></data>
   <data name="State" xml:space="preserve"><value>State</value></data>
   <data name="Status" xml:space="preserve"><value>Status</value></data>
-  <data name="StillAvailable" xml:space="preserve"><value>still available</value></data>
-  <data name="ToggleArchiveConfigDetails" xml:space="preserve"><value>Toggle archive config details</value></data>
+    <data name="ToggleArchiveConfigDetails" xml:space="preserve"><value>Toggle archive config details</value></data>
   <data name="ToggleConfigurationDetails" xml:space="preserve"><value>Toggle configuration details</value></data>
   <data name="TogglePasswordVisibility" xml:space="preserve"><value>Toggle password visibility</value></data>
   <data name="ToggleUploadConfigDetails" xml:space="preserve"><value>Toggle upload config details</value></data>
@@ -243,7 +242,7 @@
   <data name="UploadConfig" xml:space="preserve"><value>Upload config</value></data>
   <data name="UploadConfigDialogDescription" xml:space="preserve"><value>Define where archives go and keep track of distributed links.</value></data>
   <data name="UploadConfigLinkCrypters" xml:space="preserve"><value>Upload config link crypters</value></data>
-  <data name="UploadConfigs" xml:space="preserve"><value>Upload configs</value></data>
+    <data name="UploadConfigs" xml:space="preserve"><value>Total upload configs</value></data>
   <data name="UploadConfigurations" xml:space="preserve"><value>Upload configurations</value></data>
   <data name="UploadConfigurationsDescription" xml:space="preserve"><value>Hoster targets and link distribution metadata.</value></data>
   <data name="UploadFileStatus" xml:space="preserve"><value>Upload file status</value></data>
