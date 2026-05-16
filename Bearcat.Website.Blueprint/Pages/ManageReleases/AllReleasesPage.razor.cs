@@ -6,8 +6,6 @@ using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
-using Bearcat.Domain.ValueObjects;
-using Bearcat.Website.Blueprint.Localization;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,12 +26,7 @@ public partial class AllReleasesPage(
     private IReadOnlyList<ArchiverDto> archiverOptions = [];
     private IReadOnlyList<LinkCrypterRegistrationDto> linkCrypterRegistrations = [];
     private ReleaseService service = null!;
-    private string? searchTerm;
-    private string? linksDistributedTo;
-    private OnlineState? selectedOnlineState;
-    private int? selectedHosterRegistrationId;
-    private string selectedArchiverName = string.Empty;
-    private int? selectedLinkCrypterRegistrationId;
+    private ReleaseSearchQuery searchQuery = new();
     private int totalCount;
     private int pageIndex;
     private int pageSize = 10;
@@ -43,47 +36,6 @@ public partial class AllReleasesPage(
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
     private int FirstResult => totalCount == 0 ? 0 : pageIndex * pageSize + 1;
     private int LastResult => Math.Min(totalCount, (pageIndex + 1) * pageSize);
-    private bool HasActiveFilters =>
-        !string.IsNullOrWhiteSpace(searchTerm)
-        || !string.IsNullOrWhiteSpace(linksDistributedTo)
-        || selectedOnlineState is not null
-        || selectedHosterRegistrationId is not null
-        || !string.IsNullOrWhiteSpace(selectedArchiverName)
-        || selectedLinkCrypterRegistrationId is not null;
-
-    private IEnumerable<SelectOption<OnlineState?>> OnlineStateOptions =>
-        new SelectOption<OnlineState?>[]
-        {
-            new(null, L["AnyOnlineState"]),
-            new(OnlineState.Online, L.Localize(OnlineState.Online)),
-            new(OnlineState.PartiallyOnline, L.Localize(OnlineState.PartiallyOnline)),
-            new(OnlineState.Offline, L.Localize(OnlineState.Offline)),
-            new(OnlineState.Unknown, L.Localize(OnlineState.Unknown)),
-        };
-
-    private IEnumerable<SelectOption<int?>> HosterRegistrationOptions =>
-        new[] { new SelectOption<int?>(null, L["AnyHosterConfig"]) }.Concat(
-            hosterRegistrations.Select(h => new SelectOption<int?>(
-                h.Id,
-                $"{h.Name} ({h.HosterName})"
-            ))
-        );
-
-    private IEnumerable<SelectOption<string>> ArchiverOptions =>
-        new[] { new SelectOption<string>(string.Empty, L["AnyArchiver"]) }.Concat(
-            archiverOptions.Select(a => new SelectOption<string>(
-                a.ClassName,
-                $"{a.Name} ({a.FileExtension})"
-            ))
-        );
-
-    private IEnumerable<SelectOption<int?>> LinkCrypterRegistrationOptions =>
-        new[] { new SelectOption<int?>(null, L["AnyLinkCrypterConfig"]) }.Concat(
-            linkCrypterRegistrations.Select(l => new SelectOption<int?>(
-                l.LinkCrypterRegistrationId,
-                $"{l.Name} ({l.CrypterName})"
-            ))
-        );
 
     private IEnumerable<SelectOption<int>> PageSizeOptions =>
         pageSizes.Select(size => new SelectOption<int>(size, size.ToString()));
@@ -175,16 +127,11 @@ public partial class AllReleasesPage(
         try
         {
             var result = await readRepository.SearchReleasesAsync(
-                new ReleaseSearchQuery(
-                    SearchTerm: searchTerm,
-                    OnlineState: selectedOnlineState,
-                    HosterRegistrationId: selectedHosterRegistrationId,
-                    ArchiverName: selectedArchiverName,
-                    LinkCrypterRegistrationId: selectedLinkCrypterRegistrationId,
-                    LinksDistributedTo: linksDistributedTo,
-                    PageIndex: pageIndex,
-                    PageSize: pageSize
-                )
+                searchQuery with
+                {
+                    PageIndex = pageIndex,
+                    PageSize = pageSize,
+                }
             );
 
             releases = result.Items;
@@ -204,20 +151,9 @@ public partial class AllReleasesPage(
         }
     }
 
-    private async Task ApplyFiltersAsync()
+    private async Task ApplySearchAsync(ReleaseSearchQuery query)
     {
-        pageIndex = 0;
-        await RefreshReleasesAsync();
-    }
-
-    private async Task ResetFiltersAsync()
-    {
-        searchTerm = null;
-        linksDistributedTo = null;
-        selectedOnlineState = null;
-        selectedHosterRegistrationId = null;
-        selectedArchiverName = string.Empty;
-        selectedLinkCrypterRegistrationId = null;
+        searchQuery = query;
         pageIndex = 0;
         await RefreshReleasesAsync();
     }
