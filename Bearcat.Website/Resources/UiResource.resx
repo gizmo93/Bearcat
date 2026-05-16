@@ -270,4 +270,34 @@
   <data name="Workspace" xml:space="preserve"><value>Workspace</value></data>
   <data name="WorkspaceOverview" xml:space="preserve"><value>Workspace overview</value></data>
   <data name="Yes" xml:space="preserve"><value>Yes</value></data>
+  <data name="Loading" xml:space="preserve"><value>Loading</value></data>
+  <data name="Message" xml:space="preserve"><value>Message</value></data>
+  <data name="NotificationDetails" xml:space="preserve"><value>Notification details</value></data>
+  <data name="NotificationDetailsSubtitle" xml:space="preserve"><value>Message and context</value></data>
+  <data name="NotificationEntity.Archive" xml:space="preserve"><value>Archive</value></data>
+  <data name="NotificationEntity.LinkCrypterContainer" xml:space="preserve"><value>Link crypter</value></data>
+  <data name="NotificationEntity.Upload" xml:space="preserve"><value>Upload</value></data>
+  <data name="NotificationResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} notifications</value></data>
+  <data name="Notifications" xml:space="preserve"><value>Notifications</value></data>
+  <data name="NotificationsIntro" xml:space="preserve"><value>Unresolved messages from uploads, archives, and link crypters.</value></data>
+  <data name="NotificationType.Error" xml:space="preserve"><value>Error</value></data>
+  <data name="NotificationType.Info" xml:space="preserve"><value>Info</value></data>
+  <data name="NotificationType.Warning" xml:space="preserve"><value>Warning</value></data>
+  <data name="NoUnresolvedNotifications" xml:space="preserve"><value>No unresolved notifications</value></data>
+  <data name="OpenNotifications" xml:space="preserve"><value>Open notifications</value></data>
+  <data name="OpenRelatedEntity" xml:space="preserve"><value>Open related item</value></data>
+  <data name="RefreshNotifications" xml:space="preserve"><value>Refresh notifications</value></data>
+  <data name="RelatedEntity" xml:space="preserve"><value>Related item</value></data>
+  <data name="ResolveAllNotifications" xml:space="preserve"><value>Resolve all</value></data>
+  <data name="ResolveNotification" xml:space="preserve"><value>Resolve</value></data>
+  <data name="Resolved" xml:space="preserve"><value>Resolved</value></data>
+  <data name="ResolvedAt" xml:space="preserve"><value>Resolved at</value></data>
+  <data name="Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Unlinked" xml:space="preserve"><value>Unlinked</value></data>
+  <data name="UnresolvedNotifications" xml:space="preserve"><value>Unresolved notifications</value></data>
+  <data name="UnresolvedNotificationsCount" xml:space="preserve"><value>{0} unresolved</value></data>
+  <data name="NoNotificationsFound" xml:space="preserve"><value>No notifications found</value></data>
+  <data name="ShowResolvedNotifications" xml:space="preserve"><value>Show resolved</value></data>
+  <data name="Unresolved" xml:space="preserve"><value>Unresolved</value></data>
+  <data name="ViewAllNotifications" xml:space="preserve"><value>View all unresolved</value></data>
 </root>

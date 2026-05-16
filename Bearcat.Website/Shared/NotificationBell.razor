@@ -1,0 +1,77 @@
+@using Bearcat.Domain.UseCases.ManageNotifications.Dto
+@using Bearcat.Website.Localization
+
+<BbDropdownMenu Open="@isOpen" OpenChanged="HandleOpenChangedAsync">
+    <BbDropdownMenuTrigger>
+        <BbButton Variant="ButtonVariant.Ghost"
+                  Size="ButtonSize.IconSmall"
+                  AriaLabel="@L["OpenNotifications"]"
+                  Class="bearcat-notification-trigger">
+            <LucideIcon Name="bell" class="h-4 w-4" />
+            @if (unresolvedCount > 0)
+            {
+                <span class="bearcat-notification-badge">@BadgeText</span>
+            }
+        </BbButton>
+    </BbDropdownMenuTrigger>
+    <BbDropdownMenuContent Align="PopoverAlign.End" Class="bearcat-notification-menu p-0">
+        <div class="flex items-center justify-between gap-3 border-b border-border/70 px-3 py-2.5">
+            <div class="min-w-0">
+                <p class="truncate text-sm font-semibold">@L["Notifications"]</p>
+                <p class="truncate text-xs text-muted-foreground">@L["UnresolvedNotificationsCount", unresolvedCount]</p>
+            </div>
+            <BbButton Variant="ButtonVariant.Ghost"
+                      Size="ButtonSize.IconSmall"
+                      AriaLabel="@L["RefreshNotifications"]"
+                      OnClick="LoadPreviewAsync">
+                <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoadingPreview ? "animate-spin" : string.Empty)}")" />
+            </BbButton>
+        </div>
+
+        @if (isLoadingPreview)
+        {
+            <div class="px-3 py-6 text-center text-sm text-muted-foreground">@L["Loading"]</div>
+        }
+        else if (latestNotifications.Count == 0)
+        {
+            <div class="px-3 py-6 text-center text-sm text-muted-foreground">@L["NoUnresolvedNotifications"]</div>
+        }
+        else
+        {
+            <div class="max-h-[24rem] overflow-y-auto py-1">
+                @foreach (var notification in latestNotifications)
+                {
+                    <div class="bearcat-notification-preview-row">
+                        <a href="@($"/notifications/{notification.NotificationId}")" class="bearcat-notification-preview-link">
+                            <span class="flex min-w-0 items-center gap-2">
+                                <BbBadge Variant="@GetNotificationVariant(notification.NotificationType)">
+                                    @L.Localize(notification.NotificationType)
+                                </BbBadge>
+                                <span class="truncate text-xs text-muted-foreground">@notification.CreatedAt.ToString("g")</span>
+                            </span>
+                            <span class="bearcat-notification-preview-message">@notification.Message</span>
+                            @if (notification.RelatedEntity is not null)
+                            {
+                                <span class="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                                    <LucideIcon Name="@GetEntityIcon(notification.RelatedEntity.EntityType)" class="h-3.5 w-3.5 shrink-0" />
+                                    <span class="truncate">@notification.RelatedEntity.DisplayName</span>
+                                </span>
+                            }
+                        </a>
+                        <BbButton Variant="ButtonVariant.Ghost"
+                                  Size="ButtonSize.IconSmall"
+                                  AriaLabel="@L["ResolveNotification"]"
+                                  OnClick="@(() => ResolveFromPreviewAsync(notification.NotificationId))">
+                            <LucideIcon Name="check" class="h-4 w-4" />
+                        </BbButton>
+                    </div>
+                }
+            </div>
+        }
+
+        <BbDropdownMenuSeparator />
+        <BbDropdownMenuItem Href="/notifications" Class="justify-center">
+            @L["ViewAllNotifications"]
+        </BbDropdownMenuItem>
+    </BbDropdownMenuContent>
+</BbDropdownMenu>

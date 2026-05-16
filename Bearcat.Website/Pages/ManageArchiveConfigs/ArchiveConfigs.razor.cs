@@ -16,6 +16,9 @@ public partial class ArchiveConfigs(DialogService dialogService)
     public int ReleaseId { get; set; }
 
     [Parameter]
+    public int? FocusArchiveConfigId { get; set; }
+
+    [Parameter]
     public EventCallback<string> OnChangeAffectingOtherComponents { get; set; }
 
     private IReadOnlyList<ArchiveConfigDto> archiveConfigs = [];

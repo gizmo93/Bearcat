@@ -9,6 +9,8 @@ public interface INotificationService
     Task CreateInfoAsync(string message, CancellationToken cancellationToken);
     Task CreateWarningAsync(string message, CancellationToken cancellationToken);
     Task CreateErrorAsync(string message, CancellationToken cancellationToken);
+    Task ResolveAsync(int notificationId, CancellationToken cancellationToken = default);
+    Task ResolveAllAsync(CancellationToken cancellationToken = default);
 
     void CreateInfo<TEntity>(
         string message,

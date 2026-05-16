@@ -19,6 +19,9 @@ public partial class ReleaseUploads(
     [EditorRequired]
     public int ReleaseId { get; set; }
 
+    [Parameter]
+    public int? InitialUploadConfigId { get; set; }
+
     private readonly int[] pageSizes = [5, 10, 20, 50, 100];
     private IReadOnlyList<ReleaseUploadDto> uploads = [];
     private IReadOnlyList<UploadConfigDto> uploadConfigs = [];
@@ -26,6 +29,7 @@ public partial class ReleaseUploads(
     private int pageIndex;
     private int pageSize = 5;
     private int selectedUploadConfigId;
+    private int? appliedInitialUploadConfigId;
     private bool isLoading;
 
     private int CurrentPage => totalCount == 0 ? 1 : pageIndex + 1;
@@ -78,7 +82,29 @@ public partial class ReleaseUploads(
     protected override async Task OnInitializedAsync()
     {
         uploadConfigs = await uploadConfigReadRepository.GetUploadConfigsAsync(ReleaseId);
+        ApplyInitialUploadConfigFilter();
         await RefreshUploadsAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (uploadConfigs.Count == 0)
+        {
+            return;
+        }
+
+        if (appliedInitialUploadConfigId == InitialUploadConfigId)
+        {
+            return;
+        }
+
+        ApplyInitialUploadConfigFilter();
+
+        if (uploadConfigs.Count > 0)
+        {
+            pageIndex = 0;
+            await RefreshUploadsAsync();
+        }
     }
 
     private async Task RefreshUploadsAsync()
@@ -166,6 +192,12 @@ public partial class ReleaseUploads(
     {
         pageIndex = 0;
         await RefreshUploadsAsync();
+    }
+
+    private void ApplyInitialUploadConfigFilter()
+    {
+        appliedInitialUploadConfigId = InitialUploadConfigId;
+        selectedUploadConfigId = InitialUploadConfigId ?? 0;
     }
 
     private static BadgeVariant GetUploadVariant(UploadState state) =>

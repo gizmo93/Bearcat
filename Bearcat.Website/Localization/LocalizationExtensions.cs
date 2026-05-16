@@ -20,4 +20,9 @@ public static class LocalizationExtensions
 
     public static string Localize(this IStringLocalizer<UiResource> localizer, UploadState state) =>
         localizer[$"UploadState.{state}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        NotificationType type
+    ) => localizer[$"NotificationType.{type}"];
 }

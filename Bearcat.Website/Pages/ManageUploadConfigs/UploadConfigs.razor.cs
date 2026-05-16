@@ -16,6 +16,9 @@ public partial class UploadConfigs(DialogService dialogService)
     [EditorRequired]
     public int ReleaseId { get; set; }
 
+    [Parameter]
+    public int? FocusUploadConfigId { get; set; }
+
     private IReadOnlyList<UploadConfigDto> uploadConfigs = [];
     private IUploadConfigReadRepository readRepository = null!;
 
