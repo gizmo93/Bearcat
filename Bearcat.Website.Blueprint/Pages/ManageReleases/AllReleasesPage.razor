@@ -20,19 +20,65 @@
         </BbButton>
     </div>
 
+    <EditForm Model="this" OnSubmit="ApplyFiltersAsync" class="bearcat-release-search">
+        <div class="bearcat-release-search-grid">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="searchTerm"
+                              Label="@L["SearchReleases"]"
+                              Placeholder="@L["ReleaseSearchPlaceholder"]" />
+
+            <BbFormFieldSelect TValue="OnlineState?"
+                               @bind-Value="selectedOnlineState"
+                               Label="@L["OnlineState"]"
+                               Options="OnlineStateOptions" />
+
+            <BbFormFieldSelect TValue="int?"
+                               @bind-Value="selectedHosterRegistrationId"
+                               Label="@L["HosterRegistration"]"
+                               Options="HosterRegistrationOptions" />
+
+            <BbFormFieldSelect TValue="string"
+                               @bind-Value="selectedArchiverName"
+                               Label="@L["Archiver"]"
+                               Options="ArchiverOptions" />
+
+            <BbFormFieldSelect TValue="int?"
+                               @bind-Value="selectedLinkCrypterRegistrationId"
+                               Label="@L["LinkCrypter"]"
+                               Options="LinkCrypterRegistrationOptions" />
+
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="linksDistributedTo"
+                              Label="@L["LinksDistributedTo"]"
+                              Placeholder="@L["LinksDistributedToSearchPlaceholder"]" />
+        </div>
+
+        <div class="bearcat-release-search-actions">
+            <BbButton Type="ButtonType.Submit" Size="ButtonSize.Small">
+                <LucideIcon Name="search" class="h-4 w-4" />
+                @L["Search"]
+            </BbButton>
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      Disabled="@(!HasActiveFilters)"
+                      OnClick="ResetFiltersAsync">
+                <LucideIcon Name="rotate-ccw" class="h-4 w-4" />
+                @L["ResetFilters"]
+            </BbButton>
+        </div>
+    </EditForm>
+
     <BbDataTable TData="ReleaseDto"
                  Data="releases"
                  ShowToolbar="false"
-                 ShowPagination="@(releases.Count > 10)"
-                 InitialPageSize="10"
+                 ShowPagination="false"
+                 IsLoading="isLoading"
                  AriaLabel="@L["Releases"]"
                  Class="bearcat-releases-table">
         <Columns>
             <BbDataTableColumn TData="ReleaseDto" TValue="string"
                                Header="@L["Name"]"
                                Property="@(release => release.Name)"
-                               Sortable="true"
-                               Filterable="true"
                                Width="38%">
                 <CellTemplate Context="release">
                     <a class="bearcat-release-list-name"
@@ -44,7 +90,6 @@
             <BbDataTableColumn TData="ReleaseDto" TValue="string"
                                Header="@L["OnlineState"]"
                                Property="@(release => release.OnlineState.ToString())"
-                               Sortable="true"
                                Width="140px">
                 <CellTemplate Context="release">
                     <OnlineStateBadge Value="@release.OnlineState" />
@@ -53,7 +98,6 @@
             <BbDataTableColumn TData="ReleaseDto" TValue="string"
                                Header="@L["ReleaseType"]"
                                Property="@(release => release.ReleaseType.ToString())"
-                               Sortable="true"
                                Width="140px">
                 <CellTemplate Context="release">
                     <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
@@ -71,8 +115,6 @@
             <BbDataTableColumn TData="ReleaseDto" TValue="string"
                                Header="@L["FolderPath"]"
                                Property="@(release => release.ReleaseFolderPath)"
-                               Sortable="true"
-                               Filterable="true"
                                MinWidth="260px">
                 <CellTemplate Context="release">
                     <p class="bearcat-release-list-path" title="@release.ReleaseFolderPath">
@@ -105,5 +147,64 @@
                 </CellTemplate>
             </BbDataTableColumn>
         </Columns>
+        <EmptyTemplate>
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="inbox" class="h-5 w-5" />
+                <span>@L["NoReleasesFound"]</span>
+            </div>
+        </EmptyTemplate>
     </BbDataTable>
+
+    <div class="bearcat-release-pagination">
+        <p class="text-sm text-muted-foreground">
+            @L["ReleaseResultsSummary", FirstResult, LastResult, totalCount]
+        </p>
+
+        <div class="bearcat-release-pagination-controls">
+            <label class="bearcat-page-size">
+                <span>@L["RowsPerPage"]</span>
+                <BbSelect TValue="int"
+                          @bind-Value="pageSize"
+                          @bind-Value:after="OnPageSizeChangedAsync"
+                          Options="PageSizeOptions"
+                          Class="w-24" />
+            </label>
+
+            @if (TotalPages > 1)
+            {
+                <BbPagination Class="bearcat-release-page-nav">
+                    <BbPaginationContent>
+                        <BbPaginationItem>
+                            <BbPaginationPrevious Disabled="@(CurrentPage <= 1)"
+                                                  Text="@L["Previous"]"
+                                                  OnClick="GoToPreviousPageAsync" />
+                        </BbPaginationItem>
+
+                        @foreach (var page in PaginationItems)
+                        {
+                            <BbPaginationItem>
+                                @if (page is null)
+                                {
+                                    <BbPaginationEllipsis />
+                                }
+                                else
+                                {
+                                    <BbPaginationLink IsActive="@(page == CurrentPage)"
+                                                      OnClick="@(() => GoToPageAsync(page.Value))">
+                                        @(page.Value)
+                                    </BbPaginationLink>
+                                }
+                            </BbPaginationItem>
+                        }
+
+                        <BbPaginationItem>
+                            <BbPaginationNext Disabled="@(CurrentPage >= TotalPages)"
+                                              Text="@L["Next"]"
+                                              OnClick="GoToNextPageAsync" />
+                        </BbPaginationItem>
+                    </BbPaginationContent>
+                </BbPagination>
+            }
+        </div>
+    </div>
 </section>

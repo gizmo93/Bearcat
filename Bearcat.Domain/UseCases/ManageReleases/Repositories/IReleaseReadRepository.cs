@@ -1,10 +1,18 @@
-﻿using Bearcat.Domain.UseCases.ManageReleases.Dto;
+﻿using Bearcat.Abstractions.Archiver;
+using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.ManageReleases.Dto;
 
 namespace Bearcat.Domain.UseCases.ManageReleases.Repositories;
 
 public interface IReleaseReadRepository
 {
-    Task<IReadOnlyList<ReleaseDto>> GetReleasesAsync(CancellationToken cancellationToken = default);
+    Task<PagedResult<ReleaseDto>> SearchReleasesAsync(
+        ReleaseSearchQuery query,
+        CancellationToken cancellationToken = default
+    );
+
+    IReadOnlyList<ArchiverDto> GetArchiverFilterOptions();
+
     Task<ReleaseDto?> GetReleaseAsync(int releaseId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<ArchiveConfigDto>> GetArchiveConfigsAsync(
