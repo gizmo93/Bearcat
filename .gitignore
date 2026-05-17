@@ -218,6 +218,9 @@ ModelManifest.xml
 
 profile.arm.json
 
+# Local application settings
+appsettings.user.json
+
 # Local Codex project notes
 AGENTS.md
 
