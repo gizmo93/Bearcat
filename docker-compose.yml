@@ -1,6 +1,7 @@
 services:
   bearcat:
-    build: .
+    image: ${BEARCAT_IMAGE:-ghcr.io/gizmo93/bearcat:latest}
+    # Bearcat is published as amd64 because the bundled RAR binary is only available for x64 Linux.
     platform: linux/amd64
     container_name: bearcat
     ports:
@@ -11,7 +12,7 @@ services:
       - ReleaseDataDirectory=/mnt/data
       - Database__ConnectionString=Host=postgres;Database=${POSTGRES_DB:-bearcat};Username=${POSTGRES_USER:-bearcat};Password=${POSTGRES_PASSWORD:-bearcat123}
     volumes:
-        - ${RELEASES_DIR}:/mnt/data/releases
+      - ${RELEASES_DIR}:/mnt/data/releases
     depends_on:
       postgres:
         condition: service_healthy
@@ -22,7 +23,6 @@ services:
     mem_limit: ${BEARCAT_MEMORY_LIMIT:-512m}
     cpus: ${BEARCAT_CPU_LIMIT:-0.5}
     memswap_limit: 0m
-
 
   postgres:
     image: postgres:18-alpine
