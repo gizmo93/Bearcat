@@ -14,7 +14,7 @@ using Refit;
 namespace Bearcat.Hosters.Rapidgator;
 
 public class Rapidgator(
-    ApiClient apiClient,
+    IRapidgatorApiClient apiClient,
     IRapidgatorApi rapidgatorApi,
     ILogger<Rapidgator> logger
 ) : IHoster
@@ -23,6 +23,10 @@ public class Rapidgator(
 
     public IReadOnlyList<string> ConfigurationKeys =>
         [nameof(RapidgatorConfig.Username), nameof(RapidgatorConfig.Password)];
+
+    public TimeSpan UploadRetryDelay { get; set; } = TimeSpan.FromSeconds(30);
+
+    public TimeSpan UploadStatusPollDelay { get; set; } = TimeSpan.FromSeconds(5);
 
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
@@ -82,7 +86,7 @@ public class Rapidgator(
                 attempt
             );
 
-            await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+            await Task.Delay(UploadRetryDelay, cancellationToken);
         }
 
         return new UploadFileResult(
@@ -277,7 +281,7 @@ public class Rapidgator(
                 JsonSerializer.Serialize(uploadStatus.Response)
             );
 
-            await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+            await Task.Delay(UploadStatusPollDelay, cancellationToken);
         }
 
         logger.LogInformation(

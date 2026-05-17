@@ -1,0 +1,432 @@
+using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.ManageNotifications;
+using Bearcat.Domain.UseCases.ManageUploads;
+using Bearcat.Domain.ValueObjects;
+using Bearcat.Infrastructure.Database;
+using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.IntegrationTest.Utils;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Moq;
+using Shouldly;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
+
+namespace Bearcat.Domain.IntegrationTest.UseCases.ManageUploads;
+
+public class UploadStateServiceTest : BearcatIntegrationTest
+{
+    private const string HosterClassName = "TestHoster";
+    private const string SerializedHosterConfig = "{\"apiKey\":\"test\"}";
+
+    private BearcatDbContext dbContext = null!;
+    private Mock<IHoster> hosterMock = null!;
+    private Mock<IHosterConfig> hosterConfigMock = null!;
+    private Mock<IHosterFactory> hosterFactoryMock = null!;
+    private DateTime localNow;
+    private UploadStateService service = null!;
+
+    [SetUp]
+    public void Setup()
+    {
+        dbContext = Database.CreateDbContext();
+        localNow = new DateTime(2026, 5, 17, 12, 0, 0, DateTimeKind.Utc);
+
+        hosterConfigMock = new Mock<IHosterConfig>(MockBehavior.Strict);
+        hosterMock = new Mock<IHoster>(MockBehavior.Strict);
+        hosterMock.SetupGet(h => h.Name).Returns(HosterClassName);
+        hosterMock
+            .Setup(h => h.DeserializeHosterConfig(SerializedHosterConfig))
+            .Returns(hosterConfigMock.Object);
+
+        hosterFactoryMock = new Mock<IHosterFactory>(MockBehavior.Strict);
+        hosterFactoryMock.Setup(f => f.GetByName(HosterClassName)).Returns(hosterMock.Object);
+
+        service = new UploadStateService(
+            new UploadStateRepository(dbContext),
+            hosterFactoryMock.Object,
+            CreateTimeProvider(),
+            new NotificationService(new NotificationRepository(dbContext), CreateTimeProvider()),
+            Mock.Of<ILogger<UploadStateService>>()
+        );
+    }
+
+    [TearDown]
+    public async Task DisposeDbContextAsync()
+    {
+        await dbContext.DisposeAsync();
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_HosterReportsAllFilesOnline_KeepsUploadOnline()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"]
+        );
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.Is<IReadOnlyList<string>>(urls =>
+                        urls.Count == 2 && urls.Contains("https://hoster.test/1")
+                    ),
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(
+                    true,
+                    [],
+                    new Dictionary<string, bool>
+                    {
+                        ["https://hoster.test/1"] = true,
+                        ["https://hoster.test/2"] = true,
+                    }
+                )
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(upload.Id);
+        result.OnlineState.ShouldBe(OnlineState.Online);
+        result.UploadedFiles.ShouldAllBe(f => f.OnlineState == OnlineState.Online);
+        result.UploadedFiles.ShouldAllBe(f => f.CheckedAt > localNow.AddMinutes(-1));
+        hosterMock.VerifyAll();
+        hosterFactoryMock.VerifyAll();
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_HosterReportsSomeFilesOffline_MarksUploadPartiallyOnlineAndCreatesWarning()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"]
+        );
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<string>>(),
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(
+                    true,
+                    [],
+                    new Dictionary<string, bool>
+                    {
+                        ["https://hoster.test/1"] = true,
+                        ["https://hoster.test/2"] = false,
+                    }
+                )
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .Include(u => u.Notifications)
+            .SingleAsync();
+
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(upload.Id);
+        result.OnlineState.ShouldBe(OnlineState.PartiallyOnline);
+        result.UploadedFiles.Count(f => f.OnlineState == OnlineState.Offline).ShouldBe(1);
+        result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Warning);
+        result.Notifications.Single().Message.ShouldBe("Some files are offline on the hoster");
+        hosterMock.VerifyAll();
+        hosterFactoryMock.VerifyAll();
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_HosterCheckFails_CreatesErrorNotificationAndKeepsState()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<string>>(),
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(false, ["API unavailable"], new Dictionary<string, bool>())
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .Include(u => u.Notifications)
+            .SingleAsync();
+
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(upload.Id);
+        result.OnlineState.ShouldBe(OnlineState.Online);
+        result.UploadedFiles.Single().OnlineState.ShouldBe(OnlineState.Online);
+        result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Error);
+        result.Notifications.Single().Message.ShouldBe("Failed to check file existence on hoster.");
+        hosterMock.VerifyAll();
+        hosterFactoryMock.VerifyAll();
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_UploadConfigWithoutUploads_CreatesInitialWaitingForArchiveUpload()
+    {
+        // Arrange
+        var uploadConfig = await AddUploadConfigAsync(enableAutomaticReuploads: false);
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        var result = await dbContext.Uploads.Include(u => u.Notifications).SingleAsync();
+
+        result.ShouldNotBeNull();
+        result.UploadConfigId.ShouldBe(uploadConfig.Id);
+        result.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        result.OnlineState.ShouldBe(OnlineState.Unknown);
+        result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Info);
+        result.Notifications.Single().Message.ShouldBe("Initial upload created for release");
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_AutomaticReuploadIsDue_CreatesWaitingForArchiveUpload()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow.AddHours(-25),
+            uploadedFileLinks: ["https://hoster.test/1"],
+            enableAutomaticReuploads: true
+        );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
+        var reupload = result.Single(u => u.Id != upload.Id);
+
+        result.ShouldNotBeNull();
+        result.Count.ShouldBe(2);
+        reupload.UploadConfigId.ShouldBe(upload.UploadConfigId);
+        reupload.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        reupload.OnlineState.ShouldBe(OnlineState.Unknown);
+    }
+
+    [Test]
+    public async Task CreateManualReuploadAsync_OfflineUpload_CreatesWaitingForArchiveUpload()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow,
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+
+        // Act
+        var result = await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var reupload = await dbContext.Uploads.SingleAsync(u => u.Id == result);
+
+        reupload.ShouldNotBeNull();
+        reupload.UploadConfigId.ShouldBe(upload.UploadConfigId);
+        reupload.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        reupload.OnlineState.ShouldBe(OnlineState.Unknown);
+    }
+
+    [Test]
+    public async Task CreateManualReuploadAsync_OnlineUpload_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow,
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None)
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Message.ShouldBe(
+            "Manual reuploads can only be created for offline or partially online uploads."
+        );
+    }
+
+    [Test]
+    public async Task CreateManualReuploadAsync_BlockingUploadExists_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow,
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+        dbContext.Uploads.Add(
+            new Upload
+            {
+                UploadConfigId = upload.UploadConfigId,
+                CreatedAt = DateTime.UtcNow,
+                UploadState = UploadState.Pending,
+                OnlineState = OnlineState.Unknown,
+                ErrorMessages = [],
+            }
+        );
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None)
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Message.ShouldBe(
+            "A replacement upload already exists or is pending for this upload config."
+        );
+    }
+
+    private async Task<Upload> AddCompletedUploadAsync(
+        OnlineState onlineState,
+        DateTime? checkedAt,
+        IReadOnlyList<string> uploadedFileLinks,
+        bool enableAutomaticReuploads = false
+    )
+    {
+        var uploadConfig = await AddUploadConfigAsync(enableAutomaticReuploads);
+        var archive = new Archive
+        {
+            ArchiveConfigId = uploadConfig.ArchiveConfigId,
+            ArchiveFolderPath = "/tmp/archive",
+            ArchiveState = ArchiveState.Created,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveFiles = uploadedFileLinks
+                .Select(link => new ArchiveFile { FullFileName = $"{link}.rar" })
+                .ToList(),
+            Uploads = [],
+            ErrorMessages = [],
+        };
+        var upload = new Upload
+        {
+            UploadConfigId = uploadConfig.Id,
+            Archive = archive,
+            CreatedAt = DateTime.UtcNow,
+            UploadedAt = localNow.AddHours(-2),
+            UploadState = UploadState.Completed,
+            OnlineState = onlineState,
+            ErrorMessages = [],
+            UploadedFiles = [],
+        };
+
+        foreach (var fileLink in uploadedFileLinks)
+        {
+            upload.UploadedFiles.Add(
+                new UploadedFile
+                {
+                    ArchiveFile = archive.ArchiveFiles[upload.UploadedFiles.Count],
+                    HosterFileLink = fileLink,
+                    ErrorMessages = [],
+                    OnlineState = OnlineState.Online,
+                    CreatedAt = localNow.AddHours(-2),
+                    CheckedAt = checkedAt,
+                }
+            );
+        }
+
+        dbContext.Uploads.Add(upload);
+        await dbContext.SaveChangesAsync();
+
+        return upload;
+    }
+
+    private async Task<UploadConfig> AddUploadConfigAsync(bool enableAutomaticReuploads)
+    {
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Managed releases",
+            EnableAutomaticReuploads = enableAutomaticReuploads,
+            NumberOfHoursUntilReupload = 24,
+        };
+        var release = new Release
+        {
+            Name = "Bearcat.Release.001",
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = "/tmp/release",
+            ReleaseGroup = releaseGroup,
+        };
+        var archiveConfig = new ArchiveConfig
+        {
+            Release = release,
+            Name = "Main archive",
+            ArchiveFilesBasePath = "/tmp/archive",
+            ArchiverName = "zip",
+            ArchiveNamePrefix = "bearcat-release",
+            ArchivePassword = "secret",
+            ArchiveFileSizeMb = 512,
+        };
+        var hosterRegistration = new HosterRegistration
+        {
+            Name = "Hoster",
+            SerializedConfig = SerializedHosterConfig,
+            HosterClassName = HosterClassName,
+            IsActive = true,
+        };
+        var uploadConfig = new UploadConfig
+        {
+            Release = release,
+            ArchiveConfig = archiveConfig,
+            HosterRegistration = hosterRegistration,
+            Name = "Default upload",
+            LinksDistributedTo = [],
+        };
+
+        dbContext.UploadConfigs.Add(uploadConfig);
+        await dbContext.SaveChangesAsync();
+
+        return uploadConfig;
+    }
+
+    private static TimeProvider CreateTimeProvider()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["LocalTimezone"] = "UTC" })
+            .Build();
+
+        return new TimeProvider(configuration);
+    }
+}

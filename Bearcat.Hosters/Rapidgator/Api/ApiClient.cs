@@ -13,7 +13,7 @@ public class ApiClient(
     IRapidgatorApi api,
     HttpClientProvider httpClientProvider,
     ILogger<ApiClient> logger
-)
+) : IRapidgatorApiClient
 {
     private const int AuthTimeout = 400;
 

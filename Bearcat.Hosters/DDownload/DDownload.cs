@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.DDownload;
 
-public class DDownload(ApiClient apiClient, ILogger<DDownload> logger) : IHoster
+public class DDownload(IDDownloadApiClient apiClient, ILogger<DDownload> logger) : IHoster
 {
     public string Name => "ddownload";
 

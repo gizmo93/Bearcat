@@ -12,7 +12,7 @@ public class ApiClient(
     IGoFileApi api,
     HttpClientProvider httpClientProvider,
     ILogger<ApiClient> logger
-)
+) : IGoFileApiClient
 {
     private const string UploadUrl = "https://upload.gofile.io/uploadfile";
 

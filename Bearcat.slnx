@@ -18,6 +18,11 @@
         <Project Path="Bearcat.LinkCrypters/Bearcat.LinkCrypters.csproj" />
     </Folder>
     <Folder Name="/5_Tests/">
+        <Project Path="Bearcat.Archivers.IntegrationTest/Bearcat.Archivers.IntegrationTest.csproj" />
+        <Project Path="Bearcat.Domain.IntegrationTest/Bearcat.Domain.IntegrationTest.csproj" />
         <Project Path="Bearcat.Domain.UnitTest/Bearcat.Domain.UnitTest.csproj" />
+        <Project Path="Bearcat.Hosters.UnitTest/Bearcat.Hosters.UnitTest.csproj" />
+        <Project Path="Bearcat.IntegrationTest.Utils/Bearcat.IntegrationTest.Utils.csproj" />
+        <Project Path="Bearcat.LinkCrypters.UnitTest/Bearcat.LinkCrypters.UnitTest.csproj" />
     </Folder>
 </Solution>

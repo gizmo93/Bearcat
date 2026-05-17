@@ -30,7 +30,7 @@ public static class ServiceProviderConfig
                 c.Timeout = Timeout.InfiniteTimeSpan;
             });
 
-        services.AddScoped<ApiClient>();
+        services.AddScoped<IRapidgatorApiClient, ApiClient>();
         services.AddKeyedScoped<IHoster, Rapidgator>(nameof(Rapidgator));
     }
 }

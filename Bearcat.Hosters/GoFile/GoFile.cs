@@ -8,11 +8,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.GoFile;
 
-public class GoFile(ApiClient apiClient, ILogger<GoFile> logger) : IHoster
+public class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) : IHoster
 {
     public string Name => "GoFile";
 
     public IReadOnlyList<string> ConfigurationKeys => [nameof(GoFileConfig.ApiKey)];
+
+    public TimeSpan UploadRetryDelay { get; set; } = TimeSpan.FromSeconds(30);
 
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
@@ -68,7 +70,7 @@ public class GoFile(ApiClient apiClient, ILogger<GoFile> logger) : IHoster
                 error = ex.InnerException?.Message ?? ex.Message;
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+            await Task.Delay(UploadRetryDelay, cancellationToken);
         }
 
         return new UploadFileResult(

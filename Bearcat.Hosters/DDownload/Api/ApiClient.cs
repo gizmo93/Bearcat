@@ -8,6 +8,7 @@ using Bearcat.Hosters.Shared;
 namespace Bearcat.Hosters.DDownload.Api;
 
 public class ApiClient(IDDownloadApi api, HttpClientProvider httpClientProvider)
+    : IDDownloadApiClient
 {
     public const string ApiBaseUrl = "https://api-v2.ddownload.com/api";
 
