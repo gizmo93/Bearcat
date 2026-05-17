@@ -13,6 +13,7 @@ public class ArchivingBackgroundTask(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         logger.LogInformation("Starting Distribution Packing Background Task");
+        await Task.Yield();
 
         while (true)
         {

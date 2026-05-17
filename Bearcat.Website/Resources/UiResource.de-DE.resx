@@ -182,7 +182,7 @@
   <data name="Release" xml:space="preserve"><value>Release</value></data>
   <data name="ReleaseDetails" xml:space="preserve"><value>Release-Details</value></data>
   <data name="ReleaseFolder" xml:space="preserve"><value>Release-Ordner</value></data>
-  <data name="ReleaseRootsAndOnlineState" xml:space="preserve"><value>Release-Wurzeln und Online-Status</value></data>
+    <data name="ReleaseRootsAndOnlineState" xml:space="preserve"><value>Suche und verwalte Releases</value></data>
   <data name="ReleaseResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Releases</value></data>
   <data name="ReleaseSearchPlaceholder" xml:space="preserve"><value>Name oder Ordnerpfad</value></data>
   <data name="ReleaseType" xml:space="preserve"><value>Release-Typ</value></data>
@@ -191,7 +191,7 @@
   <data name="ReleaseType.Unmanaged" xml:space="preserve"><value>Unmanaged</value></data>
   <data name="ReleaseType.Unmanaged.Description" xml:space="preserve"><value>Du erstellst die Archive und Bearcat lädt sie nur hoch</value></data>
   <data name="Releases" xml:space="preserve"><value>Releases</value></data>
-  <data name="ReleasesIntro" xml:space="preserve"><value>Verwalte Release-Wurzeln und prüfe ihren aktuellen Online-Status.</value></data>
+    <data name="ReleasesIntro" xml:space="preserve"><value>Verwalte Releases und prüfe ihren aktuellen Online-Status.</value></data>
   <data name="Reload" xml:space="preserve"><value>Neu laden</value></data>
   <data name="ResetFilters" xml:space="preserve"><value>Filter zurücksetzen</value></data>
   <data name="RowsPerPage" xml:space="preserve"><value>Zeilen pro Seite</value></data>
@@ -269,8 +269,7 @@
   <data name="ViewUploadLinks" xml:space="preserve"><value>Uploadlinks anzeigen</value></data>
   <data name="Welcome" xml:space="preserve"><value>Willkommen</value></data>
   <data name="Workspace" xml:space="preserve"><value>Arbeitsbereich</value></data>
-  <data name="WorkspaceOverview" xml:space="preserve"><value>Arbeitsbereichsübersicht</value></data>
-  <data name="Yes" xml:space="preserve"><value>Ja</value></data>
+    <data name="Yes" xml:space="preserve"><value>Ja</value></data>
   <data name="Loading" xml:space="preserve"><value>Lädt</value></data>
   <data name="Message" xml:space="preserve"><value>Meldung</value></data>
   <data name="NotificationDetails" xml:space="preserve"><value>Notification-Details</value></data>
@@ -331,4 +330,14 @@
   <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>Du musst eine Release-Gruppe auswählen</value></data>
   <data name="SelectAll" xml:space="preserve"><value>Alle auswählen</value></data>
   <data name="SelectedReleaseCount" xml:space="preserve"><value>{0} Release(s) ausgewählt</value></data>
+  <data name="ApplicationConfigurationsIntro" xml:space="preserve"><value>Globale Einstellungen für App-Verhalten, das Releases und Hintergrundprozesse betrifft.</value></data>
+  <data name="ApplicationConfigurationsSubtitle" xml:space="preserve"><value>Defaults und User-Overrides</value></data>
+  <data name="ArchiveCleanup" xml:space="preserve"><value>Archiv-Aufräumen</value></data>
+  <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Steuert, wann lokale Archivordner nach abgeschlossenen Uploads entfernt werden.</value></data>
+  <data name="AutoCleanup" xml:space="preserve"><value>Automatisches Aufräumen</value></data>
+  <data name="AutoCleanupDescription" xml:space="preserve"><value>Löscht lokale Archivordner, sobald alle verknüpften Uploads einen abgeschlossenen Upload-Zeitpunkt haben.</value></data>
+  <data name="Configurations" xml:space="preserve"><value>Konfigurationen</value></data>
+  <data name="DefaultValue" xml:space="preserve"><value>Default</value></data>
+  <data name="Override" xml:space="preserve"><value>Override</value></data>
+  <data name="ResetToDefault" xml:space="preserve"><value>Auf Default zurücksetzen</value></data>
 </root>

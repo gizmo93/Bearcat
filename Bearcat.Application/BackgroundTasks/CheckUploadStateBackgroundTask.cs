@@ -14,6 +14,7 @@ public class CheckUploadStateBackgroundTask(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         logger.LogInformation("Starting Check Upload State Background Task");
+        await Task.Yield();
 
         while (true)
         {

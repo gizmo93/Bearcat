@@ -121,6 +121,9 @@ public class LinkCrypterContainerService(
             links: upload.UploadedFiles.Select(uf => uf.HosterFileLink).OrderBy(l => l).ToList(),
             cancellationToken: cancellationToken
         );
+
+        upload.LinkCrypterContainers.Add(previousContainer);
+        await repository.SaveChangesAsync(cancellationToken);
     }
 
     private async Task CreateLinkCrypterContainerAsync(
