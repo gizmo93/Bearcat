@@ -1,0 +1,6 @@
+services:
+  bearcat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${BEARCAT_LOCAL_IMAGE:-bearcat:local}
