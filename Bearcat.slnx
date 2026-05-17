@@ -17,4 +17,7 @@
         <Project Path="Bearcat.Hosters/Bearcat.Hosters.csproj" />
         <Project Path="Bearcat.LinkCrypters/Bearcat.LinkCrypters.csproj" />
     </Folder>
+    <Folder Name="/5_Tests/">
+        <Project Path="Bearcat.Domain.UnitTest/Bearcat.Domain.UnitTest.csproj" />
+    </Folder>
 </Solution>
