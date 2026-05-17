@@ -1,0 +1,49 @@
+name: Pull Request
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Build, test, and format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
+      - name: Check CSharpier formatting
+        run: dotnet csharpier check .
+
+      - name: Restore solution
+        run: dotnet restore Bearcat.slnx
+
+      - name: Build solution
+        run: dotnet build Bearcat.slnx --configuration Release --no-restore
+
+      - name: Install archive test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends p7zip-full wget
+          wget https://www.win-rar.com/fileadmin/winrar-versions/rarlinux-x64-712.tar.gz
+          tar -xzf rarlinux-x64-712.tar.gz
+          sudo cp rar/rar rar/unrar /usr/local/bin/
+          sudo chmod +x /usr/local/bin/rar /usr/local/bin/unrar
+          rm -rf rar rarlinux-x64-712.tar.gz
+
+      - name: Test solution
+        run: dotnet test Bearcat.slnx --configuration Release --no-build
