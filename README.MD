@@ -43,7 +43,11 @@ Additional documentation is kept in [`docs/`](docs/).
 
 ## Running Bearcat With Docker
 
-The repository contains a `docker-compose.yml` file and `.env` files for local Docker configuration.
+The repository contains a `docker-compose.yml` file and `.env` files for local Docker configuration. By default, Compose pulls the public image from GitHub Container Registry instead of building it locally:
+
+```text
+ghcr.io/gizmo93/bearcat:latest
+```
 
 1. Copy the example environment file:
 
@@ -56,7 +60,7 @@ The repository contains a `docker-compose.yml` file and `.env` files for local D
 3. Start the application and database:
 
    ```bash
-   docker compose up --build
+   docker compose up -d
    ```
 
 4. Open Bearcat at:
@@ -65,9 +69,28 @@ The repository contains a `docker-compose.yml` file and `.env` files for local D
    http://localhost:8080
    ```
 
-The Compose setup builds the Bearcat image, starts PostgreSQL, mounts the configured release directory, and passes the database connection string to the application. Database migrations run when the ASP.NET Core environment is `Production`; the Docker image sets `ASPNETCORE_ENVIRONMENT=Production` by default, and `docker-compose.yml` also sets it explicitly.
+To update to the newest published Bearcat image later, run:
+
+```bash
+docker compose pull bearcat
+docker compose up -d
+```
+
+The Compose setup starts Bearcat from the published image, starts PostgreSQL, mounts the configured release directory, and passes the database connection string to the application. Database migrations run when the ASP.NET Core environment is `Production`; the Docker image sets `ASPNETCORE_ENVIRONMENT=Production` by default, and `docker-compose.yml` also sets it explicitly.
 
 The Bearcat image is intentionally built and run as `linux/amd64`, including on Macs with Apple Silicon. Bearcat depends on the official RAR command line tools, and RAR does not provide an ARM64 Linux build because it is closed source. Docker containers run inside a Linux virtual machine on macOS, so the container architecture must match the available Linux RAR binary.
+
+The Compose file hardcodes `platform: linux/amd64` for Bearcat, so `docker compose up -d` and `docker compose pull bearcat` work on Apple Silicon through Docker's amd64 emulation. A direct manual pull needs the platform flag:
+
+```bash
+docker pull --platform linux/amd64 ghcr.io/gizmo93/bearcat:latest
+```
+
+If you want to build the image locally from the repository instead, use the build override:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+```
 
 ## Local development
 
