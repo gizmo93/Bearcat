@@ -13,6 +13,7 @@ public class LinkCrypterContainerBackgroundTask(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         logger.LogInformation("Starting Link Crypter Container Creation Background Task");
+        await Task.Yield();
 
         while (true)
         {

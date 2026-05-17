@@ -1,4 +1,5 @@
-﻿using Bearcat.Domain.UseCases.ManageArchiveConfigs;
+﻿using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
+using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
@@ -57,6 +58,7 @@ public static class ServiceProviderConfig
             services.AddScoped<IReleaseGroupReadRepository, ReleaseGroupRepository>();
             services.AddScoped<IReleaseGroupWriteRepository, ReleaseGroupRepository>();
             services.AddScoped<IArchiveCreationRepository, ArchiveCreationRepository>();
+            services.AddScoped<IArchiveCleanupRepository, ArchiveCleanupRepository>();
             services.AddScoped<IUploadFilesRepository, UploadFilesRepository>();
             services.AddScoped<IUploadStateRepository, UploadStateRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
@@ -64,6 +66,14 @@ public static class ServiceProviderConfig
             services.AddScoped<IReleaseReadRepository, ReleaseReadRepository>();
             services.AddScoped<IArchiveConfigWriteRepository, ArchiveConfigWriteRepository>();
             services.AddScoped<IArchiveReadRepository, ArchiveReadRepository>();
+            services.AddScoped<
+                IApplicationConfigurationOverrideReadRepository,
+                ApplicationConfigurationOverrideRepository
+            >();
+            services.AddScoped<
+                IApplicationConfigurationOverrideWriteRepository,
+                ApplicationConfigurationOverrideRepository
+            >();
             services.AddScoped<IUploadConfigReadRepository, UploadConfigReadRepository>();
             services.AddScoped<IUploadConfigWriteRepository, UploadConfigWriteRepository>();
             services.AddScoped<

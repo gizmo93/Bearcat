@@ -1,4 +1,7 @@
-﻿using Bearcat.Domain.Shared;
+﻿using Bearcat.Abstractions.Configurations;
+using Bearcat.Domain.Configurations;
+using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageHosters;
@@ -25,6 +28,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ReleaseGroupService>();
             services.AddScoped<ReleaseService>();
             services.AddScoped<ArchiveCreationService>();
+            services.AddScoped<ArchiveCleanupService>();
             services.AddScoped<UploadFilesService>();
             services.AddScoped<UploadStateService>();
             services.AddScoped<UploadStateService>();
@@ -35,6 +39,13 @@ public static class ServiceProviderConfig
             services.AddScoped<LinkCrypterService>();
             services.AddScoped<LinkCrypterContainerService>();
             services.AddScoped<UploadConfigLinkCrypterService>();
+            services.AddApplicationConfiguration<ArchiveCleanupConfiguration>();
+            services.AddSingleton<ApplicationConfigurationRegistry>();
+            services.AddScoped<
+                IApplicationConfigurationProvider,
+                ApplicationConfigurationProvider
+            >();
+            services.AddScoped<ApplicationConfigurationService>();
         }
     }
 }

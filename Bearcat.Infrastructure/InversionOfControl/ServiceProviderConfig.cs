@@ -1,4 +1,6 @@
 using Bearcat.Abstractions;
+using Bearcat.Abstractions.Configurations;
+using Bearcat.Infrastructure.Configuration;
 using Bearcat.Infrastructure.Database.InversionOfControl;
 using Bearcat.Infrastructure.FileSystem;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +16,10 @@ public static class ServiceProviderConfig
         {
             services.AddDatabase(configuration);
             services.AddScoped<IFileSystemService, FileSystemService>();
+            services.AddSingleton<
+                IApplicationConfigurationOverrideCache,
+                ApplicationConfigurationOverrideCache
+            >();
         }
     }
 }

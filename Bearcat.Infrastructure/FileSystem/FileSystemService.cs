@@ -29,4 +29,14 @@ public class FileSystemService : IFileSystemService
     {
         return File.Exists(filePath);
     }
+
+    public void DeleteDirectoryIfExists(string path)
+    {
+        if (!Directory.Exists(path))
+        {
+            return;
+        }
+
+        Directory.Delete(path, recursive: true);
+    }
 }

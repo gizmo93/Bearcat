@@ -27,4 +27,5 @@ public interface IBearcatWriteDbContext
     DbSet<LinkCrypterRegistration> LinkCrypterRegistrations { get; set; }
     DbSet<UploadConfigLinkCrypter> UploadConfigLinkCrypters { get; set; }
     DbSet<LinkCrypterContainer> LinkCrypterContainers { get; set; }
+    DbSet<ApplicationConfigurationOverride> ApplicationConfigurationOverrides { get; set; }
 }

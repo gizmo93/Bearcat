@@ -34,6 +34,9 @@ public class BearcatDbContext(DbContextOptions<BearcatDbContext> options)
 
     public DbSet<LinkCrypterContainer> LinkCrypterContainers { get; set; } = null!;
 
+    public DbSet<ApplicationConfigurationOverride> ApplicationConfigurationOverrides { get; set; } =
+        null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BearcatDbContext).Assembly);

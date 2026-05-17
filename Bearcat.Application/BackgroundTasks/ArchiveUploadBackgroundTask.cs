@@ -13,6 +13,7 @@ public class ArchiveUploadBackgroundTask(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         logger.LogInformation("Starting Distribution Upload Background Task");
+        await Task.Yield();
 
         while (true)
         {

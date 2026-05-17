@@ -87,13 +87,15 @@
 
         return path switch
         {
-            "" => (L["Home"], L["WorkspaceOverview"]),
+            "" => (L["Home"], string.Empty),
             "hoster-registrations" => (L["HosterRegistrations"], L["CredentialsAndLoginChecks"]),
             "link-crypter-registrations" => (L["CrypterRegistrations"], L["ContainersAndValidation"]),
             "notifications" => (L["Notifications"], L["UnresolvedNotifications"]),
             var notification when notification.StartsWith("notifications/", StringComparison.OrdinalIgnoreCase) => (L["NotificationDetails"], L["NotificationDetailsSubtitle"]),
             "releases" => (L["Releases"], L["ReleaseRootsAndOnlineState"]),
             var release when release.StartsWith("releases/", StringComparison.OrdinalIgnoreCase) => (L["ReleaseDetails"], L["ArchiveAndUploadConfiguration"]),
+            "configurations" => (L["Configurations"], L["ApplicationConfigurationsSubtitle"]),
+            "release-groups" => (L["ReleaseGroups"], string.Empty),
             _ => ("Bearcat", string.Empty)
         };
     }
