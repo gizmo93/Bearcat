@@ -23,6 +23,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Bearcat.Archivers\Bearcat.Archivers.csproj" />
+        <ProjectReference Include="..\..\src\Bearcat.Archivers\Bearcat.Archivers.csproj" />
     </ItemGroup>
 </Project>

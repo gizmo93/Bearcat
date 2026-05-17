@@ -6,7 +6,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Update="appsettings.user.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+        <Content
+            Update="appsettings.user.json"
+            CopyToOutputDirectory="Never"
+            CopyToPublishDirectory="Never"
+        />
     </ItemGroup>
 
     <ItemGroup>
