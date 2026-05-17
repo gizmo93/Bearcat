@@ -81,7 +81,10 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
 
             var success = !response.Contains(loginErrorMessage);
 
-            return new TryLoginResult(IsSuccess: success, ErrorMessage: loginErrorMessage);
+            return new TryLoginResult(
+                IsSuccess: success,
+                ErrorMessage: success ? null : loginErrorMessage
+            );
         }
         catch (Exception ex)
         {

@@ -32,7 +32,7 @@ public static class ServiceProviderConfig
                     c.Timeout = Timeout.InfiniteTimeSpan;
                 });
 
-            services.AddScoped<ApiClient>();
+            services.AddScoped<IGoFileApiClient, ApiClient>();
             services.AddKeyedScoped<IHoster, GoFile>(nameof(GoFile));
         }
     }

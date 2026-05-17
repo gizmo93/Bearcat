@@ -3,7 +3,6 @@
         <EnableNUnitRunner>true</EnableNUnitRunner>
         <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
         <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-        <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --ignore-exit-code 8</TestingPlatformCommandLineArguments>
         <OutputType>Exe</OutputType>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -16,6 +15,11 @@
         <PackageReference Include="NUnit" />
         <PackageReference Include="NUnit.Analyzers" />
         <PackageReference Include="NUnit3TestAdapter" />
+        <PackageReference Include="Shouldly" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Bearcat.Archivers\Bearcat.Archivers.csproj" />
     </ItemGroup>
 
     <ItemGroup>

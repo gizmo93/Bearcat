@@ -33,6 +33,10 @@ public class UploadFilesService(
 
     private Dictionary<string, SemaphoreSlim> hosterUploadSemaphores = new();
 
+    public TimeSpan UploadQueuePollDelay { get; set; } = TimeSpan.FromSeconds(10);
+
+    public TimeSpan NewPendingUploadsPollDelay { get; set; } = TimeSpan.FromSeconds(30);
+
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
         await CleanupOrphanedUploadsAsync(cancellationToken);
@@ -120,7 +124,7 @@ public class UploadFilesService(
                 );
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+            await Task.Delay(NewPendingUploadsPollDelay, cancellationToken);
         }
 
         channel.Writer.Complete();
@@ -198,7 +202,7 @@ public class UploadFilesService(
                 break;
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
+            await Task.Delay(UploadQueuePollDelay, cancellationToken);
         }
     }
 

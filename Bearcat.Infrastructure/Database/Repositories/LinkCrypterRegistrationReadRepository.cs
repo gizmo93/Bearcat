@@ -43,8 +43,8 @@ public class LinkCrypterRegistrationReadRepository(
             .Select(l => new LinkCrypterRegistrationDto(
                 l.Id,
                 l.Name,
-                cryptersByClassName[l.LinkCrypterClassName].GetType().Name,
                 l.LinkCrypterClassName,
+                cryptersByClassName[l.LinkCrypterClassName].GetType().Name,
                 l.SerializedConfig,
                 cryptersByClassName[l.LinkCrypterClassName]
                     .DeserializeConfig(l.SerializedConfig)
