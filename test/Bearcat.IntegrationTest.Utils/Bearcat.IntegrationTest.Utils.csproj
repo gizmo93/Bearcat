@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Npgsql" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+        <PackageReference Include="NUnit" />
+        <PackageReference Include="Respawn" />
+        <PackageReference Include="Testcontainers.PostgreSql" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Bearcat.Infrastructure\Bearcat.Infrastructure.csproj" />
+    </ItemGroup>
+</Project>

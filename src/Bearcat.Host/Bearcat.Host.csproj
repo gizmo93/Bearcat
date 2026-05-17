@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+    <PropertyGroup>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <RequiresAspNetWebAssets>true</RequiresAspNetWebAssets>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Update="appsettings.user.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Bearcat.Application\Bearcat.Application.csproj" />
+        <ProjectReference Include="..\Bearcat.Archivers\Bearcat.Archivers.csproj" />
+        <ProjectReference Include="..\Bearcat.Domain\Bearcat.Domain.csproj" />
+        <ProjectReference Include="..\Bearcat.Hosters\Bearcat.Hosters.csproj" />
+        <ProjectReference Include="..\Bearcat.LinkCrypters\Bearcat.LinkCrypters.csproj" />
+        <ProjectReference Include="..\Bearcat.Website\Bearcat.Website.csproj" />
+    </ItemGroup>
+</Project>
