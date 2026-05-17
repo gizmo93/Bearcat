@@ -26,7 +26,7 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
     private IReleaseReadRepository releaseReadRepository = null!;
     private ReleaseDto release = null!;
     private bool isInitialized;
-    private string activeTab = "archives";
+    private string? activeTab = "archives";
     private readonly Dictionary<string, IReloadableComponent> reloadableComponents = new();
 
     protected override void OnParametersSet()
