@@ -1,6 +1,5 @@
 <Solution>
     <Folder Name="/1_Startups/">
-        <Project Path="src/Bearcat.ConsoleApp/Bearcat.ConsoleApp.csproj" />
         <Project Path="src/Bearcat.Host/Bearcat.Host.csproj" />
     </Folder>
     <Folder Name="/2_Shared/">
