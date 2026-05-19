@@ -266,9 +266,11 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         // Assert
         (await dbContext.UploadConfigTemplates.AnyAsync()).ShouldBeFalse();
         (await dbContext.UploadConfigLinkCrypterTemplates.AnyAsync()).ShouldBeFalse();
-        (await dbContext.ArchiveConfigTemplates.AnyAsync(a =>
-            a.Id == seed.ArchiveConfigTemplateId
-        )).ShouldBeTrue();
+        (
+            await dbContext.ArchiveConfigTemplates.AnyAsync(a =>
+                a.Id == seed.ArchiveConfigTemplateId
+            )
+        ).ShouldBeTrue();
     }
 
     [Test]
@@ -304,9 +306,9 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
 
         // Assert
         (await dbContext.UploadConfigLinkCrypterTemplates.AnyAsync()).ShouldBeFalse();
-        (await dbContext.UploadConfigTemplates.AnyAsync(u =>
-            u.Id == seed.UploadConfigTemplateId
-        )).ShouldBeTrue();
+        (
+            await dbContext.UploadConfigTemplates.AnyAsync(u => u.Id == seed.UploadConfigTemplateId)
+        ).ShouldBeTrue();
     }
 
     [Test]
