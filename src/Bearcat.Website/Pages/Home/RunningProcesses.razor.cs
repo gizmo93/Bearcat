@@ -2,8 +2,10 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System.Timers;
 using Timer = System.Timers.Timer;
 
 namespace Bearcat.Website.Pages.Home;
@@ -22,25 +24,16 @@ public partial class RunningProcesses(NavigationManager navigationManager)
 
     private bool refreshInProgress;
 
+    private bool isDisposed;
+
     private Timer? refreshTimer;
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         dbRead = ScopedServices.GetRequiredService<IBearcatReadDbContext>();
+        navigationManager.LocationChanged += OnLocationChanged;
         await LoadDataAsync();
-
-        navigationManager.LocationChanged += (_, _) =>
-        {
-            if (!autoRefresh || refreshTimer is null)
-            {
-                return;
-            }
-
-            refreshTimer.Stop();
-            refreshTimer.Dispose();
-            refreshTimer = null;
-        };
     }
 
     private async Task LoadRunningUploadsAsync()
@@ -78,36 +71,42 @@ public partial class RunningProcesses(NavigationManager navigationManager)
         if (autoRefresh)
         {
             autoRefresh = false;
-
-            if (refreshTimer is null)
-            {
-                return;
-            }
-
-            refreshTimer.Stop();
-            refreshTimer.Dispose();
-            refreshTimer = null;
+            StopAutoRefreshTimer();
             return;
         }
 
         autoRefresh = true;
         refreshTimer = new Timer(TimeSpan.FromSeconds(3));
-        refreshTimer.Elapsed += async (_, _) =>
-        {
-            await InvokeAsync(async () =>
-            {
-                if (!refreshInProgress)
-                {
-                    await LoadDataAsync();
-                }
-            });
-        };
+        refreshTimer.Elapsed += OnRefreshTimerElapsed;
         refreshTimer.AutoReset = true;
         refreshTimer.Start();
     }
 
+    private async void OnRefreshTimerElapsed(object? sender, ElapsedEventArgs args)
+    {
+        try
+        {
+            await InvokeAsync(async () =>
+            {
+                if (isDisposed || refreshInProgress)
+                {
+                    return;
+                }
+
+                await LoadDataAsync();
+            });
+        }
+        catch (ObjectDisposedException) when (isDisposed) { }
+        catch (InvalidOperationException) when (isDisposed) { }
+    }
+
     private async Task LoadDataAsync()
     {
+        if (isDisposed)
+        {
+            return;
+        }
+
         refreshInProgress = true;
         StateHasChanged();
 
@@ -116,5 +115,36 @@ public partial class RunningProcesses(NavigationManager navigationManager)
 
         refreshInProgress = false;
         StateHasChanged();
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        autoRefresh = false;
+        StopAutoRefreshTimer();
+    }
+
+    private void StopAutoRefreshTimer()
+    {
+        if (refreshTimer is null)
+        {
+            return;
+        }
+
+        refreshTimer.Elapsed -= OnRefreshTimerElapsed;
+        refreshTimer.Stop();
+        refreshTimer.Dispose();
+        refreshTimer = null;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            isDisposed = true;
+            navigationManager.LocationChanged -= OnLocationChanged;
+            StopAutoRefreshTimer();
+        }
+
+        base.Dispose(disposing);
     }
 }
