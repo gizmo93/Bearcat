@@ -96,8 +96,10 @@ public partial class RunningProcesses(NavigationManager navigationManager)
                 await LoadDataAsync();
             });
         }
-        catch (ObjectDisposedException) when (isDisposed) { }
-        catch (InvalidOperationException) when (isDisposed) { }
+        catch (Exception)
+        {
+            // Make sure all errors like disposed DbContexts are caught
+        }
     }
 
     private async Task LoadDataAsync()
