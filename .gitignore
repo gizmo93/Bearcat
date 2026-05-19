@@ -228,6 +228,7 @@ AGENTS.md
 *.map
 *Resource.designer.cs
 /**/*.css
+!/src/Bearcat.Website/wwwroot/bearcat.css
 custom.aprof
 
 /src/**/App_Data/*
