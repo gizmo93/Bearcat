@@ -75,7 +75,7 @@ public partial class NotificationBell(IServiceScopeFactory serviceScopeFactory)
     {
         try
         {
-            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
             while (await timer.WaitForNextTickAsync(cancellationToken))
             {
                 await InvokeAsync(async () =>
