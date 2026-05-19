@@ -62,10 +62,12 @@ public class UploadStateService(
         CancellationToken cancellationToken = default
     )
     {
-        var upload = await uploadStateRepository.GetUploadForCancellationAsync(
-            uploadId,
-            cancellationToken
-        );
+        var upload = await uploadStateRepository.GetByIdAsync(uploadId, cancellationToken);
+
+        if (upload is null)
+        {
+            return false;
+        }
 
         if (upload.UploadState == UploadState.CancellationRequested)
         {
@@ -85,6 +87,29 @@ public class UploadStateService(
             selector: u => u.Upload
         );
 
+        await uploadStateRepository.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
+    public async Task<bool> DeleteUploadAsync(
+        int uploadId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var upload = await uploadStateRepository.GetByIdAsync(uploadId, cancellationToken);
+
+        if (upload is null)
+        {
+            return false;
+        }
+
+        if (!CanDeleteUpload(upload.UploadState))
+        {
+            return false;
+        }
+
+        uploadStateRepository.Remove(upload);
         await uploadStateRepository.SaveChangesAsync(cancellationToken);
 
         return true;
@@ -286,6 +311,13 @@ public class UploadStateService(
             )
         );
     }
+
+    private static bool CanDeleteUpload(UploadState uploadState) =>
+        uploadState
+            is UploadState.Pending
+                or UploadState.Completed
+                or UploadState.Failed
+                or UploadState.Canceled;
 
     private async Task CreateMissingUploadsAsync(CancellationToken cancellationToken)
     {

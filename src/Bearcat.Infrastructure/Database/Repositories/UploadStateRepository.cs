@@ -74,12 +74,9 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
             .FirstAsync(u => u.Id == uploadId, cancellationToken);
     }
 
-    public async Task<Upload> GetUploadForCancellationAsync(
-        int uploadId,
-        CancellationToken cancellationToken
-    )
+    public async Task<Upload?> GetByIdAsync(int uploadId, CancellationToken cancellationToken)
     {
-        return await dbWrite.Uploads.FirstAsync(u => u.Id == uploadId, cancellationToken);
+        return await dbWrite.Uploads.FirstOrDefaultAsync(u => u.Id == uploadId, cancellationToken);
     }
 
     public async Task<IReadOnlyList<UploadConfig>> GetUploadConfigsWithoutUploadsAsync(
@@ -99,5 +96,10 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
     public void Add(Upload upload)
     {
         dbWrite.Add(upload);
+    }
+
+    public void Remove(Upload upload)
+    {
+        dbWrite.Remove(upload);
     }
 }

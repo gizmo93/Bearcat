@@ -93,6 +93,8 @@
   <data name="DeleteReleaseTitle" xml:space="preserve"><value>Delete Release {0}</value></data>
   <data name="DeleteUploadConfig" xml:space="preserve"><value>Delete Upload Config</value></data>
   <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Are you sure you want to delete the upload config {0}?</value></data>
+  <data name="DeleteUpload" xml:space="preserve"><value>Delete upload</value></data>
+  <data name="DeleteUploadConfirmation" xml:space="preserve"><value>Delete upload #{0}? Its uploaded file links, containers, and notifications will also be removed.</value></data>
   <data name="Disable" xml:space="preserve"><value>Disable</value></data>
   <data name="Edit" xml:space="preserve"><value>Edit</value></data>
   <data name="EditArchiveConfiguration" xml:space="preserve"><value>Edit Archive Configuration</value></data>
@@ -321,6 +323,9 @@
   <data name="ManualReuploadCreated" xml:space="preserve"><value>Manual reupload created for upload #{0}.</value></data>
   <data name="UploadCancellationRequested" xml:space="preserve"><value>Cancellation requested for upload #{0}.</value></data>
   <data name="UploadCancellationNotAvailable" xml:space="preserve"><value>Upload #{0} can no longer be canceled.</value></data>
+  <data name="UploadActions" xml:space="preserve"><value>Upload actions</value></data>
+  <data name="UploadDeleted" xml:space="preserve"><value>Upload #{0} deleted.</value></data>
+  <data name="UploadDeleteNotAvailable" xml:space="preserve"><value>Upload #{0} can not be deleted in its current state.</value></data>
   <data name="NewReleaseGroup" xml:space="preserve"><value>New release group</value></data>
   <data name="NoReleaseGroupsFound" xml:space="preserve"><value>No release groups found</value></data>
   <data name="NoReleasesSelected" xml:space="preserve"><value>No releases selected</value></data>

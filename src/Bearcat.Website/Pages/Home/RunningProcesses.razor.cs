@@ -1,3 +1,4 @@
+using System.Timers;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -5,7 +6,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using System.Timers;
 using Timer = System.Timers.Timer;
 
 namespace Bearcat.Website.Pages.Home;
