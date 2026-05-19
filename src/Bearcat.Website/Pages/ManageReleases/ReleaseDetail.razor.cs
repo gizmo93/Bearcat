@@ -1,6 +1,7 @@
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -130,6 +131,36 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
         var service = ScopedServices.GetRequiredService<ReleaseService>();
         await service.DeleteAsync(release.ReleaseId);
         navigationManager.NavigateTo("/releases");
+    }
+
+    private async Task SaveAsTemplateAsync()
+    {
+        var result = await dialogService.PromptAsync(
+            L["SaveAsTemplate"],
+            L["SaveAsTemplateDescription"],
+            new PromptDialogOptions
+            {
+                ConfirmText = L["Save"],
+                CancelText = L["Cancel"],
+                DefaultValue = release.Name,
+                Placeholder = L["ReleaseTemplateNamePlaceholder"],
+                Required = true,
+                MaxLength = 200,
+            }
+        );
+
+        if (result.Cancelled || string.IsNullOrWhiteSpace(result.Value))
+        {
+            return;
+        }
+
+        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
+        var releaseTemplateId = await service.CreateTemplateFromReleaseAsync(
+            release.ReleaseId,
+            result.Value
+        );
+
+        navigationManager.NavigateTo($"/release-templates/{releaseTemplateId}");
     }
 
     private async Task ReloadReleaseAsync()

@@ -1,0 +1,277 @@
+@page "/release-templates/{ReleaseTemplateId:int}"
+@using Bearcat.Website.Localization
+@inherits OwningComponentBase
+
+@if (!isInitialized)
+{
+    return;
+}
+
+<PageTitle>@L["ReleaseTemplate"] - @releaseTemplate.Name - Bearcat</PageTitle>
+
+<section class="bearcat-release-shell">
+    <div class="bearcat-release-header">
+        <div class="flex min-w-0 flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0 space-y-2">
+                <h1 class="bearcat-release-title font-semibold">@releaseTemplate.Name</h1>
+                <div class="flex flex-wrap items-center gap-2">
+                    <BbBadge Variant="BadgeVariant.Outline">@L.Localize(releaseTemplate.ReleaseType)</BbBadge>
+                    <BbBadge Variant="BadgeVariant.Secondary">@releaseTemplate.ReleaseGroupName</BbBadge>
+                </div>
+            </div>
+
+            <BbDropdownMenu>
+                <BbDropdownMenuTrigger>
+                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenReleaseTemplateActions"]">
+                        <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                    </BbButton>
+                </BbDropdownMenuTrigger>
+                <BbDropdownMenuContent Align="PopoverAlign.End">
+                    <BbDropdownMenuItem OnClick="ShowEditTemplateDialogAsync">
+                        @L["Edit"]
+                    </BbDropdownMenuItem>
+                    <BbDropdownMenuItem OnClick="DeleteTemplateAsync">
+                        @L["Delete"]
+                    </BbDropdownMenuItem>
+                </BbDropdownMenuContent>
+            </BbDropdownMenu>
+        </div>
+    </div>
+
+    <div class="space-y-4">
+        <BbCard Class="border-border/70 shadow-sm">
+            <BbCardHeader>
+                <div class="bearcat-section-header">
+                    <div class="flex items-center gap-2">
+                        <LucideIcon Name="archive" class="h-4 w-4" />
+                        <div>
+                            <BbCardTitle class="text-base">@L["ArchiveConfigurations"]</BbCardTitle>
+                            <BbCardDescription>@L["ArchiveConfigTemplatesDescription"]</BbCardDescription>
+                        </div>
+                    </div>
+                    <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="ShowAddArchiveConfigDialogAsync">
+                        <LucideIcon Name="plus" class="h-4 w-4" />
+                        @L["Add"]
+                    </BbButton>
+                </div>
+            </BbCardHeader>
+            <BbCardContent>
+                @if (releaseTemplate.ArchiveConfigTemplates.Count == 0)
+                {
+                    <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                        @L["NoArchiveConfigTemplatesYet"]
+                    </div>
+                }
+                else
+                {
+                    <div class="bearcat-config-list">
+                        <div class="bearcat-config-header bearcat-template-archive-grid">
+                            <span>@L["Name"]</span>
+                            <span>@L["Archiver"]</span>
+                            <span>@L["ArchiveFilesBasePath"]</span>
+                            <span>@L["ArchiveName"]</span>
+                            <span class="text-right">@L["Actions"]</span>
+                        </div>
+                        @foreach (var config in releaseTemplate.ArchiveConfigTemplates)
+                        {
+                            <div class="bearcat-config-item">
+                                <div class="bearcat-config-row bearcat-template-archive-grid">
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-semibold">@config.Name</p>
+                                        @if (!string.IsNullOrWhiteSpace(config.ArchivePassword))
+                                        {
+                                            <p class="mt-1 text-xs text-muted-foreground">@L["PasswordProtected"]</p>
+                                        }
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="bearcat-mobile-label">@L["Archiver"]</p>
+                                        <BbBadge Variant="BadgeVariant.Outline">@config.ArchiverDisplayName</BbBadge>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="bearcat-mobile-label">@L["ArchiveFilesBasePath"]</p>
+                                        <p class="truncate text-sm" title="@config.ArchiveFilesBasePath">@config.ArchiveFilesBasePath</p>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="bearcat-mobile-label">@L["ArchiveName"]</p>
+                                        <p class="truncate text-sm">
+                                            @(config.UseReleaseNameAsArchiveName ? L["ReleaseName"] : L["RandomArchiveName"])
+                                        </p>
+                                    </div>
+                                    <div class="bearcat-config-actions">
+                                        <BbDropdownMenu>
+                                            <BbDropdownMenuTrigger>
+                                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenArchiveConfigActions"]">
+                                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                                </BbButton>
+                                            </BbDropdownMenuTrigger>
+                                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                                                <BbDropdownMenuItem OnClick="@(async _ => await ShowEditArchiveConfigDialogAsync(config))">
+                                                    @L["EditConfig"]
+                                                </BbDropdownMenuItem>
+                                                <BbDropdownMenuItem OnClick="@(async _ => await DeleteArchiveConfigTemplateAsync(config))">
+                                                    @L["DeleteConfig"]
+                                                </BbDropdownMenuItem>
+                                            </BbDropdownMenuContent>
+                                        </BbDropdownMenu>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </BbCardContent>
+        </BbCard>
+
+        <BbCard Class="border-border/70 shadow-sm">
+            <BbCardHeader>
+                <div class="bearcat-section-header">
+                    <div class="flex items-center gap-2">
+                        <LucideIcon Name="upload" class="h-4 w-4" />
+                        <div>
+                            <BbCardTitle class="text-base">@L["UploadConfigurations"]</BbCardTitle>
+                            <BbCardDescription>@L["UploadConfigTemplatesDescription"]</BbCardDescription>
+                        </div>
+                    </div>
+                    <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="ShowAddUploadConfigDialogAsync">
+                        <LucideIcon Name="plus" class="h-4 w-4" />
+                        @L["Add"]
+                    </BbButton>
+                </div>
+            </BbCardHeader>
+            <BbCardContent>
+                @if (releaseTemplate.UploadConfigTemplates.Count == 0)
+                {
+                    <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                        @L["NoUploadConfigTemplatesYet"]
+                    </div>
+                }
+                else
+                {
+                    <div class="bearcat-config-list">
+                        <div class="bearcat-config-header bearcat-template-upload-grid">
+                            <span>@L["UploadTarget"]</span>
+                            <span>@L["ArchiveConfig"]</span>
+                            <span>@L["Links"]</span>
+                            <span>@L["Crypters"]</span>
+                            <span class="text-right">@L["Actions"]</span>
+                        </div>
+                        @foreach (var config in releaseTemplate.UploadConfigTemplates)
+                        {
+                            <BbCollapsible Class="bearcat-config-item">
+                                <div class="bearcat-config-row bearcat-template-upload-grid">
+                                    <div class="min-w-0">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="text-sm font-semibold">@config.DisplayName</span>
+                                            <BbBadge Variant="BadgeVariant.Outline">@config.HosterRegistrationName</BbBadge>
+                                        </div>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="bearcat-mobile-label">@L["ArchiveConfig"]</p>
+                                        <p class="truncate text-sm font-medium" title="@config.ArchiveConfigTemplateName">@config.ArchiveConfigTemplateName</p>
+                                    </div>
+                                    <div>
+                                        <p class="bearcat-mobile-label">@L["Links"]</p>
+                                        <p class="text-sm font-medium">@config.LinksDistributedTo.Count</p>
+                                    </div>
+                                    <div>
+                                        <p class="bearcat-mobile-label">@L["Crypters"]</p>
+                                        <p class="text-sm font-medium">@config.LinkCrypterTemplates.Count</p>
+                                    </div>
+                                    <div class="bearcat-config-actions">
+                                        <BbDropdownMenu>
+                                            <BbDropdownMenuTrigger>
+                                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenUploadConfigActions"]">
+                                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                                </BbButton>
+                                            </BbDropdownMenuTrigger>
+                                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                                                <BbDropdownMenuItem OnClick="@(async _ => await ShowEditUploadConfigDialogAsync(config))">
+                                                    @L["EditConfig"]
+                                                </BbDropdownMenuItem>
+                                                <BbDropdownMenuItem OnClick="@(async _ => await DeleteUploadConfigTemplateAsync(config))">
+                                                    @L["DeleteConfig"]
+                                                </BbDropdownMenuItem>
+                                            </BbDropdownMenuContent>
+                                        </BbDropdownMenu>
+                                        <BbCollapsibleTrigger>
+                                            <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["ToggleUploadConfigDetails"]">
+                                                <LucideIcon Name="chevron-down" class="h-4 w-4" />
+                                            </BbButton>
+                                        </BbCollapsibleTrigger>
+                                    </div>
+                                </div>
+                                <BbCollapsibleContent Class="border-t border-border/70 bg-muted/5 px-4 pb-4 pt-4">
+                                    <div class="space-y-4">
+                                        @if (config.LinksDistributedTo.Count > 0)
+                                        {
+                                            <div class="space-y-2">
+                                                <p class="text-xs text-muted-foreground">@L["LinksDistributedTo"]</p>
+                                                <div class="flex flex-wrap gap-2">
+                                                    @foreach (var link in config.LinksDistributedTo)
+                                                    {
+                                                        <BbBadge Variant="BadgeVariant.Secondary">@link</BbBadge>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+
+                                        <div class="space-y-3">
+                                            <div class="bearcat-section-header">
+                                                <div class="flex items-center gap-2">
+                                                    <LucideIcon Name="shield" class="h-4 w-4" />
+                                                    <p class="text-sm font-medium">@L["LinkCrypters"]</p>
+                                                </div>
+                                                <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(async () => await ShowAddLinkCrypterDialogAsync(config))">
+                                                    <LucideIcon Name="plus" class="h-4 w-4" />
+                                                    @L["Add"]
+                                                </BbButton>
+                                            </div>
+
+                                            @if (config.LinkCrypterTemplates.Count == 0)
+                                            {
+                                                <div class="rounded-md border border-dashed border-border/70 px-3 py-4 text-sm text-muted-foreground">
+                                                    @L["NoLinkCryptersYet"]
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="grid gap-2">
+                                                    @foreach (var linkCrypter in config.LinkCrypterTemplates)
+                                                    {
+                                                        <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border/70 px-3 py-2">
+                                                            <div class="flex flex-wrap items-center gap-2">
+                                                                <BbBadge Variant="BadgeVariant.Outline">@linkCrypter.LinkCrypterRegistrationName</BbBadge>
+                                                                @if (!string.IsNullOrWhiteSpace(linkCrypter.Password))
+                                                                {
+                                                                    <span class="text-xs text-muted-foreground">@L["PasswordProtected"]</span>
+                                                                }
+                                                            </div>
+                                                            <div class="flex items-center gap-1">
+                                                                <BbButton Variant="ButtonVariant.Ghost"
+                                                                          Size="ButtonSize.IconSmall"
+                                                                          AriaLabel="@L["Edit"]"
+                                                                          OnClick="@(async () => await ShowEditLinkCrypterDialogAsync(config, linkCrypter))">
+                                                                    <LucideIcon Name="pencil" class="h-4 w-4" />
+                                                                </BbButton>
+                                                                <BbButton Variant="ButtonVariant.Ghost"
+                                                                          Size="ButtonSize.IconSmall"
+                                                                          AriaLabel="@L["Delete"]"
+                                                                          OnClick="@(async () => await DeleteLinkCrypterTemplateAsync(linkCrypter))">
+                                                                    <LucideIcon Name="trash-2" class="h-4 w-4" />
+                                                                </BbButton>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </BbCollapsibleContent>
+                            </BbCollapsible>
+                        }
+                    </div>
+                }
+            </BbCardContent>
+        </BbCard>
+    </div>
+</section>

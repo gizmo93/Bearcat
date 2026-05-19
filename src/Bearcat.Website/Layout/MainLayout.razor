@@ -94,6 +94,8 @@
             var notification when notification.StartsWith("notifications/", StringComparison.OrdinalIgnoreCase) => (L["NotificationDetails"], L["NotificationDetailsSubtitle"]),
             "releases" => (L["Releases"], L["ReleaseRootsAndOnlineState"]),
             var release when release.StartsWith("releases/", StringComparison.OrdinalIgnoreCase) => (L["ReleaseDetails"], L["ArchiveAndUploadConfiguration"]),
+            "release-templates" => (L["ReleaseTemplates"], L["ReleaseTemplatesSubtitle"]),
+            var template when template.StartsWith("release-templates/", StringComparison.OrdinalIgnoreCase) => (L["ReleaseTemplate"], L["ArchiveAndUploadConfiguration"]),
             "configurations" => (L["Configurations"], L["ApplicationConfigurationsSubtitle"]),
             "release-groups" => (L["ReleaseGroups"], string.Empty),
             _ => ("Bearcat", string.Empty)

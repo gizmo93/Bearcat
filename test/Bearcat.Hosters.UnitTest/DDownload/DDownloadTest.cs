@@ -16,14 +16,14 @@ public class DDownloadTest
 {
     private readonly List<string> temporaryFiles = [];
     private Mock<IDDownloadApiClient> apiClientMock = null!;
-    private Bearcat.Hosters.DDownload.DDownload service = null!;
+    private Hosters.DDownload.DDownload service = null!;
 
     [SetUp]
     public void SetUp()
     {
         apiClientMock = new Mock<IDDownloadApiClient>(MockBehavior.Strict);
-        var loggerMock = new Mock<ILogger<Bearcat.Hosters.DDownload.DDownload>>();
-        service = new Bearcat.Hosters.DDownload.DDownload(apiClientMock.Object, loggerMock.Object);
+        var loggerMock = new Mock<ILogger<Hosters.DDownload.DDownload>>();
+        service = new Hosters.DDownload.DDownload(apiClientMock.Object, loggerMock.Object);
     }
 
     [TearDown]

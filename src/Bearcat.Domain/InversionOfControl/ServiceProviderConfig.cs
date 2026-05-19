@@ -10,6 +10,7 @@ using Bearcat.Domain.UseCases.ManageLinkCrypters;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploads;
@@ -27,6 +28,7 @@ public static class ServiceProviderConfig
             services.AddScoped<HosterRegistrationService>();
             services.AddScoped<ReleaseGroupService>();
             services.AddScoped<ReleaseService>();
+            services.AddScoped<ReleaseTemplateService>();
             services.AddScoped<ArchiveCreationService>();
             services.AddScoped<ArchiveCleanupService>();
             services.AddScoped<UploadFilesService>();

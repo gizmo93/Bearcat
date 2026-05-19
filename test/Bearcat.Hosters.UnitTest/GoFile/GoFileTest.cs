@@ -15,14 +15,14 @@ public class GoFileTest
 {
     private readonly List<string> temporaryFiles = [];
     private Mock<IGoFileApiClient> apiClientMock = null!;
-    private Bearcat.Hosters.GoFile.GoFile service = null!;
+    private Hosters.GoFile.GoFile service = null!;
 
     [SetUp]
     public void SetUp()
     {
         apiClientMock = new Mock<IGoFileApiClient>(MockBehavior.Strict);
-        var loggerMock = new Mock<ILogger<Bearcat.Hosters.GoFile.GoFile>>();
-        service = new Bearcat.Hosters.GoFile.GoFile(apiClientMock.Object, loggerMock.Object);
+        var loggerMock = new Mock<ILogger<Hosters.GoFile.GoFile>>();
+        service = new Hosters.GoFile.GoFile(apiClientMock.Object, loggerMock.Object);
         service.UploadRetryDelay = TimeSpan.Zero;
     }
 

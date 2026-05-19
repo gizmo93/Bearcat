@@ -10,13 +10,13 @@ namespace Bearcat.LinkCrypters.UnitTest.KeepLinks;
 public class KeepLinksTest
 {
     private Mock<IKeepLinksApi> apiMock = null!;
-    private Bearcat.LinkCrypters.KeepLinks.KeepLinks service = null!;
+    private LinkCrypters.KeepLinks.KeepLinks service = null!;
 
     [SetUp]
     public void SetUp()
     {
         apiMock = new Mock<IKeepLinksApi>(MockBehavior.Strict);
-        service = new Bearcat.LinkCrypters.KeepLinks.KeepLinks(apiMock.Object);
+        service = new LinkCrypters.KeepLinks.KeepLinks(apiMock.Object);
     }
 
     [Test]

@@ -1,0 +1,97 @@
+@using Bearcat.Website.Localization
+@inherits OwningComponentBase
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldSelect TValue="int?"
+                               @bind-Value="formModel.ReleaseTemplateId"
+                               @bind-Value:after="HandleTemplateChangedAsync"
+                               Label="@L["ReleaseTemplate"]"
+                               Placeholder="@L["SelectReleaseTemplate"]"
+                               Options="ReleaseTemplateOptions" />
+
+            <div class="space-y-2">
+                <label class="text-sm font-medium">@L["ReleaseFolder"]</label>
+                <div class="bearcat-folder-field">
+                    <BbInput Value="@formModel.FolderPath" Disabled="true" Class="sm:flex-1" />
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Class="bearcat-folder-button"
+                              AriaLabel="@L["BrowseReleaseFolders"]"
+                              OnClick="OpenFolderDialogAsync">
+                        <LucideIcon Name="folder-open" class="h-4 w-4" />
+                        @L["Browse"]
+                    </BbButton>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(folderValidationMessage))
+                {
+                    <p class="text-sm text-destructive">@folderValidationMessage</p>
+                }
+            </div>
+
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="formModel.Name"
+                              Label="@L["Name"]"
+                              Placeholder="@L["NameYourRelease"]" />
+
+            @if (selectedTemplate is not null)
+            {
+                <div class="space-y-3 rounded-md border border-border/70 bg-muted/20 p-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <BbBadge Variant="BadgeVariant.Outline">@L.Localize(selectedTemplate.ReleaseType)</BbBadge>
+                        <BbBadge Variant="BadgeVariant.Secondary">@selectedTemplate.ReleaseGroupName</BbBadge>
+                    </div>
+
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <div>
+                            <p class="text-xs text-muted-foreground">@L["ArchiveConfigurations"]</p>
+                            <p class="text-sm font-medium">@selectedTemplate.ArchiveConfigTemplates.Count</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-muted-foreground">@L["UploadConfigurations"]</p>
+                            <p class="text-sm font-medium">@selectedTemplate.UploadConfigTemplates.Count</p>
+                        </div>
+                    </div>
+
+                    @if (selectedTemplate.ArchiveConfigTemplates.Count > 0)
+                    {
+                        <div class="space-y-2">
+                            <p class="text-xs text-muted-foreground">@L["ArchiveConfigurations"]</p>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach (var archiveConfig in selectedTemplate.ArchiveConfigTemplates)
+                                {
+                                    <BbBadge Variant="BadgeVariant.Outline">@archiveConfig.Name</BbBadge>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @if (selectedTemplate.UploadConfigTemplates.Count > 0)
+                    {
+                        <div class="space-y-2">
+                            <p class="text-xs text-muted-foreground">@L["UploadConfigurations"]</p>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach (var uploadConfig in selectedTemplate.UploadConfigTemplates)
+                                {
+                                    <BbBadge Variant="BadgeVariant.Secondary">@uploadConfig.DisplayName</BbBadge>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit" Disabled="@(releaseTemplates.Count == 0)">
+                @L["CreateRelease"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

@@ -7,6 +7,10 @@ public interface IBearcatReadDbContext
 {
     public DbSet<HosterRegistration> HosterRegistrations { get; set; }
     public DbSet<Release> Releases { get; set; }
+    public DbSet<ReleaseTemplate> ReleaseTemplates { get; set; }
+    public DbSet<ArchiveConfigTemplate> ArchiveConfigTemplates { get; set; }
+    public DbSet<UploadConfigTemplate> UploadConfigTemplates { get; set; }
+    public DbSet<UploadConfigLinkCrypterTemplate> UploadConfigLinkCrypterTemplates { get; set; }
     public DbSet<ReleaseGroup> ReleaseGroups { get; set; }
     public DbSet<Archive> Archives { get; set; }
     public DbSet<ArchiveConfig> ArchiveConfigs { get; set; }
