@@ -139,6 +139,52 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         result.ShouldBeFalse();
     }
 
+    [Test]
+    public async Task CreateFromTemplateAsync_ValidTemplate_PersistsReleaseWithConfigs()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync();
+
+        // Act
+        var result = await service.CreateFromTemplateAsync(
+            seed.ReleaseTemplateId,
+            "/tmp/releases/Bearcat.Release.Template",
+            null,
+            CancellationToken.None
+        );
+
+        // Assert
+        var release = await dbContext
+            .Releases.AsSplitQuery()
+            .Include(r => r.ArchiveConfigs)
+            .Include(r => r.UploadConfigs)
+                .ThenInclude(u => u.LinkCrypters)
+            .SingleAsync(r => r.Id == result);
+
+        release.Name.ShouldBe("Bearcat.Release.Template");
+        release.ReleaseFolderPath.ShouldBe("/tmp/releases/Bearcat.Release.Template");
+        release.ReleaseType.ShouldBe(ReleaseType.Managed);
+        release.ReleaseGroupId.ShouldBe(seed.ReleaseGroupId);
+
+        var archiveConfig = release.ArchiveConfigs.Single();
+        archiveConfig.Name.ShouldBe("RAR Forum A");
+        archiveConfig.ArchiveFilesBasePath.ShouldBe("/tmp/archives");
+        archiveConfig.ArchiverName.ShouldBe("rar");
+        archiveConfig.ArchivePassword.ShouldBe("archive-secret");
+        archiveConfig.ArchiveFileSizeMb.ShouldBe(1024);
+        archiveConfig.ArchiveNamePrefix.ShouldBe(release.Name);
+
+        var uploadConfig = release.UploadConfigs.Single();
+        uploadConfig.Name.ShouldBe("Primary hoster");
+        uploadConfig.HosterRegistrationId.ShouldBe(seed.HosterRegistrationId);
+        uploadConfig.ArchiveConfigId.ShouldBe(archiveConfig.Id);
+        uploadConfig.LinksDistributedTo.ShouldBe(["forum-a", "forum-b"]);
+
+        var linkCrypter = uploadConfig.LinkCrypters.Single();
+        linkCrypter.LinkCrypterRegistrationId.ShouldBe(seed.LinkCrypterRegistrationId);
+        linkCrypter.Password.ShouldBe("container-secret");
+    }
+
     private async Task<ReleaseGroup> AddReleaseGroupAsync(string name)
     {
         var releaseGroup = new ReleaseGroup
@@ -172,4 +218,77 @@ public class ReleaseServiceTest : BearcatIntegrationTest
 
         return release;
     }
+
+    private async Task<ReleaseTemplateSeed> AddReleaseTemplateAsync()
+    {
+        var releaseGroup = await AddReleaseGroupAsync("Template group");
+        var hosterRegistration = new HosterRegistration
+        {
+            Name = "Primary hoster",
+            SerializedConfig = "{}",
+            HosterClassName = "TestHoster",
+            IsActive = true,
+        };
+        var linkCrypterRegistration = new LinkCrypterRegistration
+        {
+            Name = "Main crypter",
+            LinkCrypterClassName = "TestCrypter",
+            SerializedConfig = "{}",
+            IsActive = true,
+        };
+        var releaseTemplate = new ReleaseTemplate
+        {
+            Name = "Managed template",
+            ReleaseType = ReleaseType.Managed,
+            ReleaseGroup = releaseGroup,
+            ArchiveConfigTemplates =
+            [
+                new ArchiveConfigTemplate
+                {
+                    Name = "RAR Forum A",
+                    ArchiveFilesBasePath = "/tmp/archives",
+                    ArchiverName = "rar",
+                    ArchivePassword = "archive-secret",
+                    ArchiveFileSizeMb = 1024,
+                    UseReleaseNameAsArchiveName = true,
+                },
+            ],
+        };
+        releaseTemplate.UploadConfigTemplates =
+        [
+            new UploadConfigTemplate
+            {
+                ReleaseTemplate = releaseTemplate,
+                ArchiveConfigTemplate = releaseTemplate.ArchiveConfigTemplates.Single(),
+                HosterRegistration = hosterRegistration,
+                Name = null,
+                LinksDistributedTo = ["forum-a", "", "forum-b"],
+                LinkCrypterTemplates =
+                [
+                    new UploadConfigLinkCrypterTemplate
+                    {
+                        LinkCrypterRegistration = linkCrypterRegistration,
+                        Password = "container-secret",
+                    },
+                ],
+            },
+        ];
+
+        dbContext.ReleaseTemplates.Add(releaseTemplate);
+        await dbContext.SaveChangesAsync();
+
+        return new ReleaseTemplateSeed(
+            releaseTemplate.Id,
+            releaseGroup.Id,
+            hosterRegistration.Id,
+            linkCrypterRegistration.Id
+        );
+    }
+
+    private sealed record ReleaseTemplateSeed(
+        int ReleaseTemplateId,
+        int ReleaseGroupId,
+        int HosterRegistrationId,
+        int LinkCrypterRegistrationId
+    );
 }

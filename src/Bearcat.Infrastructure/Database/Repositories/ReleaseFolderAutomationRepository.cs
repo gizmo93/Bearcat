@@ -9,9 +9,10 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 public class ReleaseFolderAutomationRepository(
     IBearcatReadDbContext dbRead,
     IBearcatWriteDbContext dbWrite
-) : IReleaseFolderAutomationReadRepository,
-    IReleaseFolderAutomationWriteRepository,
-    IAutomaticallyCreateReleasesRepository
+)
+    : IReleaseFolderAutomationReadRepository,
+        IReleaseFolderAutomationWriteRepository,
+        IAutomaticallyCreateReleasesRepository
 {
     public async Task<IReadOnlyList<ReleaseFolderAutomationDto>> GetAllAsync(
         CancellationToken cancellationToken = default
@@ -71,13 +72,13 @@ public class ReleaseFolderAutomationRepository(
             .ReleaseFolderAutomations.AsSplitQuery()
             .Where(automation => automation.IsEnabled)
             .Include(automation => automation.ReleaseTemplate)
-            .ThenInclude(template => template.ArchiveConfigTemplates)
+                .ThenInclude(template => template.ArchiveConfigTemplates)
             .Include(automation => automation.ReleaseTemplate)
-            .ThenInclude(template => template.UploadConfigTemplates)
-            .ThenInclude(uploadTemplate => uploadTemplate.HosterRegistration)
+                .ThenInclude(template => template.UploadConfigTemplates)
+                    .ThenInclude(uploadTemplate => uploadTemplate.HosterRegistration)
             .Include(automation => automation.ReleaseTemplate)
-            .ThenInclude(template => template.UploadConfigTemplates)
-            .ThenInclude(uploadTemplate => uploadTemplate.LinkCrypterTemplates)
+                .ThenInclude(template => template.UploadConfigTemplates)
+                    .ThenInclude(uploadTemplate => uploadTemplate.LinkCrypterTemplates)
             .ToListAsync(cancellationToken);
     }
 

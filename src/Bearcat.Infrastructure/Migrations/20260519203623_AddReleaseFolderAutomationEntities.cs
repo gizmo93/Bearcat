@@ -15,12 +15,24 @@ namespace BearCat.Infrastructure.Migrations
                 name: "ReleaseFolderAutomations",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    BasePath = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
-                    FolderNamePattern = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Id = table
+                        .Column<int>(type: "integer", nullable: false)
+                        .Annotation(
+                            "Npgsql:ValueGenerationStrategy",
+                            NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
+                        ),
+                    BasePath = table.Column<string>(
+                        type: "character varying(1000)",
+                        maxLength: 1000,
+                        nullable: false
+                    ),
+                    FolderNamePattern = table.Column<string>(
+                        type: "character varying(200)",
+                        maxLength: 200,
+                        nullable: true
+                    ),
                     ReleaseTemplateId = table.Column<int>(type: "integer", nullable: false),
-                    IsEnabled = table.Column<bool>(type: "boolean", nullable: false)
+                    IsEnabled = table.Column<bool>(type: "boolean", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -30,20 +42,22 @@ namespace BearCat.Infrastructure.Migrations
                         column: x => x.ReleaseTemplateId,
                         principalTable: "ReleaseTemplates",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_ReleaseFolderAutomations_ReleaseTemplateId",
                 table: "ReleaseFolderAutomations",
-                column: "ReleaseTemplateId");
+                column: "ReleaseTemplateId"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "ReleaseFolderAutomations");
+            migrationBuilder.DropTable(name: "ReleaseFolderAutomations");
         }
     }
 }

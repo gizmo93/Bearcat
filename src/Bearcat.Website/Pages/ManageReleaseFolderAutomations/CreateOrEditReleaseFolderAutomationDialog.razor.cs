@@ -28,9 +28,10 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
     private ValidationMessageStore messageStore = null!;
 
     private IEnumerable<SelectOption<int?>> ReleaseTemplateOptions =>
-        releaseTemplates.Select(template =>
-            new SelectOption<int?>(template.ReleaseTemplateId, template.Name)
-        );
+        releaseTemplates.Select(template => new SelectOption<int?>(
+            template.ReleaseTemplateId,
+            template.Name
+        ));
 
     protected override async Task OnInitializedAsync()
     {
@@ -109,7 +110,10 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
 
         if (FormModel.ReleaseTemplateId is null)
         {
-            messageStore.Add(() => FormModel.ReleaseTemplateId!, L["SelectReleaseTemplateRequired"]);
+            messageStore.Add(
+                () => FormModel.ReleaseTemplateId!,
+                L["SelectReleaseTemplateRequired"]
+            );
         }
     }
 
