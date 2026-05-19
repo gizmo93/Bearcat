@@ -1,0 +1,54 @@
+@inherits OwningComponentBase
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <div class="space-y-2">
+                <label class="text-sm font-medium">@L["ReleaseBasePath"]</label>
+                <div class="bearcat-folder-field">
+                    <BbInput @bind-Value="FormModel.BasePath" class="sm:flex-1" />
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Class="bearcat-folder-button"
+                              AriaLabel="@L["BrowseReleaseFolders"]"
+                              OnClick="OpenFolderDialogAsync">
+                        <LucideIcon Name="folder-open" class="h-4 w-4" />
+                        @L["Browse"]
+                    </BbButton>
+                </div>
+            </div>
+
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="FormModel.FolderNamePattern"
+                              Label="@L["FolderNamePattern"]"
+                              Placeholder="@L["FolderNamePatternPlaceholder"]"
+                              HelperText="@L["FolderNamePatternHelp"]" />
+
+            <BbFormFieldSelect TValue="int?"
+                               @bind-Value="FormModel.ReleaseTemplateId"
+                               Label="@L["ReleaseTemplate"]"
+                               Placeholder="@L["SelectReleaseTemplate"]"
+                               Options="ReleaseTemplateOptions" />
+
+            <div class="flex items-center gap-2">
+                <BbCheckbox @bind-Checked="FormModel.IsEnabled"
+                            Id="release-folder-automation-enabled"
+                            AriaLabel="@L["Enabled"]" />
+                <BbLabel For="release-folder-automation-enabled">
+                    @L["Enabled"]
+                </BbLabel>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

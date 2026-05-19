@@ -8,6 +8,7 @@ using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageLinkCrypters;
 using Bearcat.Domain.UseCases.ManageNotifications;
+using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
@@ -26,6 +27,8 @@ public static class ServiceProviderConfig
         public void AddDomain()
         {
             services.AddScoped<HosterRegistrationService>();
+            services.AddScoped<ReleaseFolderAutomationService>();
+            services.AddScoped<AutomaticallyCreateReleasesService>();
             services.AddScoped<ReleaseGroupService>();
             services.AddScoped<ReleaseService>();
             services.AddScoped<ReleaseTemplateService>();

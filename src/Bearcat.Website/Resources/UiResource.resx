@@ -391,6 +391,23 @@
   <data name="UploadConfigTemplatesDescription" xml:space="preserve"><value>Upload settings copied when a release is created from this template.</value></data>
   <data name="UseHosterNamePlaceholder" xml:space="preserve"><value>Use hoster name</value></data>
   <data name="UseReleaseNameAsArchiveName" xml:space="preserve"><value>Use release name as archive name</value></data>
+  <data name="AllFolders" xml:space="preserve"><value>All folders</value></data>
+  <data name="DeleteReleaseFolderAutomation" xml:space="preserve"><value>Delete release folder automation</value></data>
+  <data name="DeleteReleaseFolderAutomationConfirmation" xml:space="preserve"><value>Delete automation for {0}?</value></data>
+  <data name="EditReleaseFolderAutomation" xml:space="preserve"><value>Edit release folder automation</value></data>
+  <data name="FolderNamePattern" xml:space="preserve"><value>Folder name pattern</value></data>
+  <data name="FolderNamePatternHelp" xml:space="preserve"><value>Use simple wildcards like *1080p*. Regex is not supported.</value></data>
+  <data name="FolderNamePatternPlaceholder" xml:space="preserve"><value>*1080p*</value></data>
+  <data name="NewReleaseFolderAutomation" xml:space="preserve"><value>New folder automation</value></data>
+  <data name="NoReleaseFolderAutomationsFound" xml:space="preserve"><value>No release folder automations found</value></data>
+  <data name="OpenReleaseFolderAutomationActions" xml:space="preserve"><value>Open release folder automation actions</value></data>
+  <data name="ReleaseBasePath" xml:space="preserve"><value>Release base path</value></data>
+  <data name="ReleaseFolderAutomationDialogDescription" xml:space="preserve"><value>Scan direct subfolders of a base path and create releases from a selected template.</value></data>
+  <data name="ReleaseFolderAutomations" xml:space="preserve"><value>Folder automations</value></data>
+  <data name="ReleaseFolderAutomationsIntro" xml:space="preserve"><value>Create releases automatically from matching direct subfolders.</value></data>
+  <data name="ReleaseFolderAutomationsSubtitle" xml:space="preserve"><value>Automatic release creation</value></data>
+  <data name="SelectReleaseBaseFolder" xml:space="preserve"><value>Select release base folder</value></data>
+  <data name="SelectReleaseBaseFolderDescription" xml:space="preserve"><value>Choose the folder whose direct subfolders should be scanned.</value></data>
     <data name="RandomArchiveName" xml:space="preserve">
         <value>&lt;random-name&gt;</value>
     </data>

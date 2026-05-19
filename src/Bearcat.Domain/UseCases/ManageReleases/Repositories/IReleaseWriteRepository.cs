@@ -11,6 +11,11 @@ public interface IReleaseWriteRepository
         CancellationToken cancellationToken
     );
 
+    Task<ReleaseTemplate> GetTemplateForReleaseCreationAsync(
+        int releaseTemplateId,
+        CancellationToken cancellationToken
+    );
+
     void Add(Release release);
     void Remove(Release release);
     Task SaveChangesAsync(CancellationToken cancellationToken);

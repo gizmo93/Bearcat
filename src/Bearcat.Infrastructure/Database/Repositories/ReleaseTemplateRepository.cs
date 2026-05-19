@@ -56,11 +56,6 @@ public class ReleaseTemplateRepository(
         dbWrite.Add(releaseTemplate);
     }
 
-    public void Add(Release release)
-    {
-        dbWrite.Add(release);
-    }
-
     public void Remove(ReleaseTemplate releaseTemplate)
     {
         dbWrite.Remove(releaseTemplate);
@@ -100,22 +95,6 @@ public class ReleaseTemplateRepository(
             .ReleaseTemplates.AsSplitQuery()
             .Include(t => t.ReleaseGroup)
             .Include(t => t.ArchiveConfigTemplates)
-            .Include(t => t.UploadConfigTemplates)
-                .ThenInclude(u => u.LinkCrypterTemplates)
-            .FirstAsync(t => t.Id == releaseTemplateId, cancellationToken);
-    }
-
-    public async Task<ReleaseTemplate> GetByIdForReleaseCreationAsync(
-        int releaseTemplateId,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return await dbWrite
-            .ReleaseTemplates.AsSplitQuery()
-            .Include(t => t.ReleaseGroup)
-            .Include(t => t.ArchiveConfigTemplates)
-            .Include(t => t.UploadConfigTemplates)
-                .ThenInclude(u => u.HosterRegistration)
             .Include(t => t.UploadConfigTemplates)
                 .ThenInclude(u => u.LinkCrypterTemplates)
             .FirstAsync(t => t.Id == releaseTemplateId, cancellationToken);

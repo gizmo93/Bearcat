@@ -1,0 +1,109 @@
+@page "/release-folder-automations"
+@using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Dto
+@inherits OwningComponentBase
+
+<PageTitle>@L["ReleaseFolderAutomations"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["ReleaseFolderAutomations"]</h1>
+            <p class="text-sm text-muted-foreground">
+                @L["ReleaseFolderAutomationsIntro"]
+            </p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewReleaseFolderAutomation"]
+        </BbButton>
+    </div>
+
+    <BbDataTable TData="ReleaseFolderAutomationDto"
+                 Data="automations"
+                 ShowToolbar="false"
+                 ShowPagination="@(automations.Count > 10)"
+                 InitialPageSize="10"
+                 IsLoading="isLoading"
+                 AriaLabel="@L["ReleaseFolderAutomations"]"
+                 Class="bearcat-data-table">
+        <Columns>
+            <BbDataTableColumn TData="ReleaseFolderAutomationDto" TValue="string"
+                               Header="@L["ReleaseBasePath"]"
+                               Property="@(automation => automation.BasePath)"
+                               Width="34%">
+                <CellTemplate Context="automation">
+                    <p class="bearcat-release-list-path" title="@automation.BasePath">
+                        @automation.BasePath
+                    </p>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseFolderAutomationDto" TValue="string"
+                               Header="@L["FolderNamePattern"]"
+                               Property="@(automation => automation.FolderNamePattern ?? string.Empty)"
+                               Width="180px">
+                <CellTemplate Context="automation">
+                    @if (string.IsNullOrWhiteSpace(automation.FolderNamePattern))
+                    {
+                        <span class="text-sm text-muted-foreground">@L["AllFolders"]</span>
+                    }
+                    else
+                    {
+                        <BbBadge Variant="BadgeVariant.Outline">@automation.FolderNamePattern</BbBadge>
+                    }
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseFolderAutomationDto" TValue="string"
+                               Header="@L["ReleaseTemplate"]"
+                               Property="@(automation => automation.ReleaseTemplateName)"
+                               Width="220px">
+                <CellTemplate Context="automation">
+                    <BbBadge Variant="BadgeVariant.Secondary">@automation.ReleaseTemplateName</BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseFolderAutomationDto" TValue="bool"
+                               Header="@L["Status"]"
+                               Property="@(automation => automation.IsEnabled)"
+                               Width="130px">
+                <CellTemplate Context="automation">
+                    <BbBadge Variant="@(automation.IsEnabled ? BadgeVariant.Default : BadgeVariant.Outline)">
+                        @(automation.IsEnabled ? L["Enabled"] : L["Disabled"])
+                    </BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseFolderAutomationDto" TValue="string"
+                               Header=""
+                               Property="@(automation => automation.BasePath)"
+                               Width="56px">
+                <CellTemplate Context="automation">
+                    <div class="flex justify-end">
+                        <BbDropdownMenu>
+                            <BbDropdownMenuTrigger>
+                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenReleaseFolderAutomationActions"]">
+                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                </BbButton>
+                            </BbDropdownMenuTrigger>
+                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                                <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(automation))">
+                                    @L["Edit"]
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await ToggleEnabledAsync(automation))">
+                                    @(automation.IsEnabled ? L["Disable"] : L["Enable"])
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(automation))">
+                                    @L["Delete"]
+                                </BbDropdownMenuItem>
+                            </BbDropdownMenuContent>
+                        </BbDropdownMenu>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+        <EmptyTemplate>
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="inbox" class="h-5 w-5" />
+                <span>@L["NoReleaseFolderAutomationsFound"]</span>
+            </div>
+        </EmptyTemplate>
+    </BbDataTable>
+</section>
