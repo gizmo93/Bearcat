@@ -116,6 +116,200 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task UpdateAsync_TemplateExists_UpdatesTemplate()
+    {
+        // Arrange
+        var firstReleaseGroup = await AddReleaseGroupAsync();
+        var secondReleaseGroup = await AddReleaseGroupAsync("Updated releases");
+        var releaseTemplate = await AddReleaseTemplateAsync(firstReleaseGroup.Id);
+
+        // Act
+        await service.UpdateAsync(
+            releaseTemplate.Id,
+            "Updated template",
+            ReleaseType.Unmanaged,
+            secondReleaseGroup.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        var result = await dbContext.ReleaseTemplates.SingleAsync();
+
+        result.Name.ShouldBe("Updated template");
+        result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        result.ReleaseGroupId.ShouldBe(secondReleaseGroup.Id);
+    }
+
+    [Test]
+    public async Task DeleteAsync_TemplateExists_RemovesTemplateWithChildren()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateWithChildrenAsync();
+
+        // Act
+        await service.DeleteAsync(seed.ReleaseTemplateId, CancellationToken.None);
+
+        // Assert
+        (await dbContext.ReleaseTemplates.AnyAsync()).ShouldBeFalse();
+        (await dbContext.ArchiveConfigTemplates.AnyAsync()).ShouldBeFalse();
+        (await dbContext.UploadConfigTemplates.AnyAsync()).ShouldBeFalse();
+        (await dbContext.UploadConfigLinkCrypterTemplates.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task UpdateArchiveConfigTemplateAsync_TemplateExists_UpdatesArchiveConfigTemplate()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateWithChildrenAsync();
+
+        // Act
+        await service.UpdateArchiveConfigTemplateAsync(
+            seed.ArchiveConfigTemplateId,
+            "ZIP Forum B",
+            "/tmp/updated-archives",
+            "zip",
+            " ",
+            2048,
+            false,
+            CancellationToken.None
+        );
+
+        // Assert
+        var result = await dbContext.ArchiveConfigTemplates.SingleAsync();
+
+        result.Name.ShouldBe("ZIP Forum B");
+        result.ArchiveFilesBasePath.ShouldBe("/tmp/updated-archives");
+        result.ArchiverName.ShouldBe("zip");
+        result.ArchivePassword.ShouldBeNull();
+        result.ArchiveFileSizeMb.ShouldBe(2048);
+        result.UseReleaseNameAsArchiveName.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task DeleteArchiveConfigTemplateAsync_TemplateExists_RemovesArchiveConfigTemplate()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
+        var archiveConfigTemplateId = await service.CreateArchiveConfigTemplateAsync(
+            releaseTemplate.Id,
+            "RAR Forum A",
+            "/tmp/archives",
+            "rar",
+            "archive-secret",
+            1024,
+            true,
+            CancellationToken.None
+        );
+
+        // Act
+        await service.DeleteArchiveConfigTemplateAsync(
+            archiveConfigTemplateId,
+            CancellationToken.None
+        );
+
+        // Assert
+        (await dbContext.ArchiveConfigTemplates.AnyAsync()).ShouldBeFalse();
+        (await dbContext.ReleaseTemplates.AnyAsync()).ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task UpdateUploadConfigTemplateAsync_TemplateExists_UpdatesUploadConfigTemplate()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateWithChildrenAsync();
+        var secondHosterRegistration = await AddHosterRegistrationAsync("Second hoster");
+        var secondArchiveConfigTemplateId = await service.CreateArchiveConfigTemplateAsync(
+            seed.ReleaseTemplateId,
+            "ZIP Forum B",
+            "/tmp/second-archives",
+            "zip",
+            null,
+            2048,
+            false,
+            CancellationToken.None
+        );
+
+        // Act
+        await service.UpdateUploadConfigTemplateAsync(
+            seed.UploadConfigTemplateId,
+            "  Mirror upload  ",
+            secondHosterRegistration.Id,
+            secondArchiveConfigTemplateId,
+            [" forum-c ", "", "forum-d"],
+            CancellationToken.None
+        );
+
+        // Assert
+        var result = await dbContext.UploadConfigTemplates.SingleAsync(u =>
+            u.Id == seed.UploadConfigTemplateId
+        );
+
+        result.Name.ShouldBe("Mirror upload");
+        result.HosterRegistrationId.ShouldBe(secondHosterRegistration.Id);
+        result.ArchiveConfigTemplateId.ShouldBe(secondArchiveConfigTemplateId);
+        result.LinksDistributedTo.ShouldBe(["forum-c", "forum-d"]);
+    }
+
+    [Test]
+    public async Task DeleteUploadConfigTemplateAsync_TemplateExists_RemovesUploadConfigTemplateWithLinkCrypters()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateWithChildrenAsync();
+
+        // Act
+        await service.DeleteUploadConfigTemplateAsync(
+            seed.UploadConfigTemplateId,
+            CancellationToken.None
+        );
+
+        // Assert
+        (await dbContext.UploadConfigTemplates.AnyAsync()).ShouldBeFalse();
+        (await dbContext.UploadConfigLinkCrypterTemplates.AnyAsync()).ShouldBeFalse();
+        (await dbContext.ArchiveConfigTemplates.AnyAsync(a =>
+            a.Id == seed.ArchiveConfigTemplateId
+        )).ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task UpdateUploadConfigLinkCrypterTemplateAsync_TemplateExists_UpdatesLinkCrypterPassword()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateWithChildrenAsync();
+
+        // Act
+        await service.UpdateUploadConfigLinkCrypterTemplateAsync(
+            seed.UploadConfigLinkCrypterTemplateId,
+            " ",
+            CancellationToken.None
+        );
+
+        // Assert
+        var result = await dbContext.UploadConfigLinkCrypterTemplates.SingleAsync();
+
+        result.Password.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task DeleteUploadConfigLinkCrypterTemplateAsync_TemplateExists_RemovesLinkCrypterTemplate()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateWithChildrenAsync();
+
+        // Act
+        await service.DeleteUploadConfigLinkCrypterTemplateAsync(
+            seed.UploadConfigLinkCrypterTemplateId,
+            CancellationToken.None
+        );
+
+        // Assert
+        (await dbContext.UploadConfigLinkCrypterTemplates.AnyAsync()).ShouldBeFalse();
+        (await dbContext.UploadConfigTemplates.AnyAsync(u =>
+            u.Id == seed.UploadConfigTemplateId
+        )).ShouldBeTrue();
+    }
+
+    [Test]
     public async Task CreateTemplateFromReleaseAsync_ExistingRelease_CopiesReleaseConfiguration()
     {
         // Arrange
@@ -164,11 +358,51 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         return new ReleaseTemplateRepository(dbContext, dbContext, archiverFactory.Object);
     }
 
-    private async Task<ReleaseGroup> AddReleaseGroupAsync()
+    private async Task<ReleaseTemplateSeed> AddReleaseTemplateWithChildrenAsync()
+    {
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
+        var hosterRegistration = await AddHosterRegistrationAsync();
+        var linkCrypterRegistration = await AddLinkCrypterRegistrationAsync();
+        var archiveConfigTemplateId = await service.CreateArchiveConfigTemplateAsync(
+            releaseTemplate.Id,
+            "RAR Forum A",
+            "/tmp/archives",
+            "rar",
+            "archive-secret",
+            1024,
+            true,
+            CancellationToken.None
+        );
+        var uploadConfigTemplateId = await service.CreateUploadConfigTemplateAsync(
+            releaseTemplate.Id,
+            null,
+            hosterRegistration.Id,
+            archiveConfigTemplateId,
+            ["forum-a", "forum-b"],
+            CancellationToken.None
+        );
+        var uploadConfigLinkCrypterTemplateId =
+            await service.CreateUploadConfigLinkCrypterTemplateAsync(
+                uploadConfigTemplateId,
+                linkCrypterRegistration.Id,
+                "container-secret",
+                CancellationToken.None
+            );
+
+        return new ReleaseTemplateSeed(
+            releaseTemplate.Id,
+            archiveConfigTemplateId,
+            uploadConfigTemplateId,
+            uploadConfigLinkCrypterTemplateId
+        );
+    }
+
+    private async Task<ReleaseGroup> AddReleaseGroupAsync(string name = "Managed releases")
     {
         var releaseGroup = new ReleaseGroup
         {
-            Name = "Managed releases",
+            Name = name,
             EnableAutomaticReuploads = false,
             NumberOfHoursUntilReupload = 24,
         };
@@ -194,11 +428,13 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         return releaseTemplate;
     }
 
-    private async Task<HosterRegistration> AddHosterRegistrationAsync()
+    private async Task<HosterRegistration> AddHosterRegistrationAsync(
+        string name = "Primary hoster"
+    )
     {
         var hosterRegistration = new HosterRegistration
         {
-            Name = "Primary hoster",
+            Name = name,
             SerializedConfig = "{}",
             HosterClassName = "TestHoster",
             IsActive = true,
@@ -274,4 +510,11 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
 
         return release;
     }
+
+    private sealed record ReleaseTemplateSeed(
+        int ReleaseTemplateId,
+        int ArchiveConfigTemplateId,
+        int UploadConfigTemplateId,
+        int UploadConfigLinkCrypterTemplateId
+    );
 }

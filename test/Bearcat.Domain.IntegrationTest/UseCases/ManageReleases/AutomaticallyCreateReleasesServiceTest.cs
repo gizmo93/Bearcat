@@ -146,6 +146,45 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         notificationExists.ShouldBeFalse();
     }
 
+    [Test]
+    public async Task ProcessAsync_EnabledAutomationHasNoMatchingFolders_DoesNotCreateRelease()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.Release.720p"));
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
+
+        // Act
+        var result = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(0);
+        (await dbContext.Releases.AnyAsync()).ShouldBeFalse();
+        (await dbContext.Notifications.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_AutomationHasNoPattern_CreatesReleaseForDirectFolder()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var releaseBasePath = Directory.CreateDirectory(Path.Combine(tempRootPath, "release-base"));
+        var releaseFolder = Directory.CreateDirectory(
+            Path.Combine(releaseBasePath.FullName, "Bearcat.Release.720p")
+        );
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, releaseBasePath.FullName, null);
+
+        // Act
+        var result = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(1);
+
+        var release = await dbContext.Releases.SingleAsync();
+        release.Name.ShouldBe("Bearcat.Release.720p");
+        release.ReleaseFolderPath.ShouldBe(releaseFolder.FullName);
+    }
+
     private async Task<ReleaseTemplateSeed> AddReleaseTemplateAsync()
     {
         var archiveBasePath = Directory
