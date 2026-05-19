@@ -17,15 +17,15 @@ public class RapidgatorTest
     private readonly List<string> temporaryFiles = [];
     private Mock<IRapidgatorApiClient> apiClientMock = null!;
     private Mock<IRapidgatorApi> rapidgatorApiMock = null!;
-    private Bearcat.Hosters.Rapidgator.Rapidgator service = null!;
+    private Hosters.Rapidgator.Rapidgator service = null!;
 
     [SetUp]
     public void SetUp()
     {
         apiClientMock = new Mock<IRapidgatorApiClient>(MockBehavior.Strict);
         rapidgatorApiMock = new Mock<IRapidgatorApi>(MockBehavior.Strict);
-        var loggerMock = new Mock<ILogger<Bearcat.Hosters.Rapidgator.Rapidgator>>();
-        service = new Bearcat.Hosters.Rapidgator.Rapidgator(
+        var loggerMock = new Mock<ILogger<Hosters.Rapidgator.Rapidgator>>();
+        service = new Hosters.Rapidgator.Rapidgator(
             apiClientMock.Object,
             rapidgatorApiMock.Object,
             loggerMock.Object

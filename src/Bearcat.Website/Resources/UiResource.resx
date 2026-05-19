@@ -351,4 +351,47 @@
   <data name="DefaultValue" xml:space="preserve"><value>Default</value></data>
   <data name="Override" xml:space="preserve"><value>Override</value></data>
   <data name="ResetToDefault" xml:space="preserve"><value>Reset to default</value></data>
+  <data name="AddLinkCrypter" xml:space="preserve"><value>Add link crypter</value></data>
+  <data name="ArchiveConfigName" xml:space="preserve"><value>Archive config name</value></data>
+  <data name="ArchiveConfigNamePlaceholder" xml:space="preserve"><value>Name shown for this archive config</value></data>
+  <data name="ArchiveConfigTemplateDialogDescription" xml:space="preserve"><value>Define the archiver, archive output path, password, and archive naming behavior copied into releases.</value></data>
+  <data name="ArchiveConfigTemplatesDescription" xml:space="preserve"><value>Archive settings copied when a release is created from this template.</value></data>
+  <data name="ArchiveNamePreview" xml:space="preserve"><value>Archive name:</value></data>
+  <data name="CreateArchiveConfigTemplateFirst" xml:space="preserve"><value>Create an archive configuration template first.</value></data>
+  <data name="CreateReleaseFromTemplate" xml:space="preserve"><value>Create release from template</value></data>
+  <data name="CreateReleaseFromTemplateDescription" xml:space="preserve"><value>Select a template and release folder. The release name defaults to the folder name.</value></data>
+  <data name="DeleteArchiveConfigTemplateConfirmation" xml:space="preserve"><value>Delete archive config template {0}? Upload config templates using it will also be removed.</value></data>
+  <data name="DeleteLinkCrypterTemplateConfirmation" xml:space="preserve"><value>Delete link crypter template {0}?</value></data>
+  <data name="DeleteReleaseTemplateConfirmation" xml:space="preserve"><value>Delete release template {0}?</value></data>
+  <data name="DeleteUploadConfigTemplateConfirmation" xml:space="preserve"><value>Delete upload config template {0}?</value></data>
+  <data name="LinkCrypterTemplateDialogDescription" xml:space="preserve"><value>Choose the link crypter registration and optional container password copied into releases.</value></data>
+  <data name="NewFromTemplate" xml:space="preserve"><value>New from template</value></data>
+  <data name="NewReleaseTemplate" xml:space="preserve"><value>New release template</value></data>
+  <data name="NoArchiveConfigTemplatesYet" xml:space="preserve"><value>No archive config templates yet.</value></data>
+  <data name="NoLinkCryptersYet" xml:space="preserve"><value>No link crypters yet.</value></data>
+  <data name="NoReleaseTemplatesFound" xml:space="preserve"><value>No release templates found</value></data>
+  <data name="NoUploadConfigTemplatesYet" xml:space="preserve"><value>No upload config templates yet.</value></data>
+  <data name="OpenReleaseTemplateActions" xml:space="preserve"><value>Open release template actions</value></data>
+  <data name="PasswordProtected" xml:space="preserve"><value>Password protected</value></data>
+  <data name="ReleaseName" xml:space="preserve"><value>release name</value></data>
+  <data name="ReleaseTemplate" xml:space="preserve"><value>Release template</value></data>
+  <data name="ReleaseTemplateDialogDescription" xml:space="preserve"><value>Set the template name, release type, and release group.</value></data>
+  <data name="ReleaseTemplateNamePlaceholder" xml:space="preserve"><value>Name the release template</value></data>
+  <data name="ReleaseTemplates" xml:space="preserve"><value>Release templates</value></data>
+  <data name="ReleaseTemplatesIntro" xml:space="preserve"><value>Reusable release setup for archive, upload, and link crypter configurations.</value></data>
+  <data name="ReleaseTemplatesSubtitle" xml:space="preserve"><value>Reusable release setup</value></data>
+  <data name="SaveAsTemplate" xml:space="preserve"><value>Save as template</value></data>
+  <data name="SaveAsTemplateDescription" xml:space="preserve"><value>Create a release template from this release's current archive, upload, and link crypter configuration.</value></data>
+  <data name="SelectArchiveConfigurationRequired" xml:space="preserve"><value>You must select an archive configuration.</value></data>
+  <data name="SelectHosterRegistrationRequired" xml:space="preserve"><value>You must select a hoster registration.</value></data>
+  <data name="SelectReleaseTemplate" xml:space="preserve"><value>Select release template</value></data>
+  <data name="SelectReleaseTemplateRequired" xml:space="preserve"><value>You must select a release template.</value></data>
+  <data name="UploadConfigTemplateNameHelp" xml:space="preserve"><value>Leave empty to use the hoster registration name.</value></data>
+  <data name="UploadConfigTemplateDialogDescription" xml:space="preserve"><value>Define the hoster target, archive config, link distribution metadata, and link crypters copied into releases.</value></data>
+  <data name="UploadConfigTemplatesDescription" xml:space="preserve"><value>Upload settings copied when a release is created from this template.</value></data>
+  <data name="UseHosterNamePlaceholder" xml:space="preserve"><value>Use hoster name</value></data>
+  <data name="UseReleaseNameAsArchiveName" xml:space="preserve"><value>Use release name as archive name</value></data>
+    <data name="RandomArchiveName" xml:space="preserve">
+        <value>&lt;random-name&gt;</value>
+    </data>
 </root>

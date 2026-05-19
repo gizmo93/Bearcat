@@ -351,4 +351,47 @@
   <data name="DefaultValue" xml:space="preserve"><value>Default</value></data>
   <data name="Override" xml:space="preserve"><value>Override</value></data>
   <data name="ResetToDefault" xml:space="preserve"><value>Auf Default zurücksetzen</value></data>
+  <data name="AddLinkCrypter" xml:space="preserve"><value>Link-Crypter hinzufügen</value></data>
+  <data name="ArchiveConfigName" xml:space="preserve"><value>Archiv-Konfigurationsname</value></data>
+  <data name="ArchiveConfigNamePlaceholder" xml:space="preserve"><value>Anzeigename für diese Archiv-Konfiguration</value></data>
+  <data name="ArchiveConfigTemplateDialogDescription" xml:space="preserve"><value>Lege Archiver, Archiv-Zielordner, Passwort und Archivnamen-Verhalten fest, die in Releases kopiert werden.</value></data>
+  <data name="ArchiveConfigTemplatesDescription" xml:space="preserve"><value>Archiv-Einstellungen, die beim Erstellen eines Releases aus diesem Template kopiert werden.</value></data>
+  <data name="ArchiveNamePreview" xml:space="preserve"><value>Archivname:</value></data>
+  <data name="CreateArchiveConfigTemplateFirst" xml:space="preserve"><value>Erstelle zuerst ein Archiv-Konfigurationstemplate.</value></data>
+  <data name="CreateReleaseFromTemplate" xml:space="preserve"><value>Release aus Template erstellen</value></data>
+  <data name="CreateReleaseFromTemplateDescription" xml:space="preserve"><value>Wähle ein Template und einen Release-Ordner. Der Release-Name wird standardmässig aus dem Ordnernamen gesetzt.</value></data>
+  <data name="DeleteArchiveConfigTemplateConfirmation" xml:space="preserve"><value>Archiv-Konfigurationstemplate {0} löschen? Verwendende Upload-Konfigurationstemplates werden ebenfalls entfernt.</value></data>
+  <data name="DeleteLinkCrypterTemplateConfirmation" xml:space="preserve"><value>Link-Crypter-Template {0} löschen?</value></data>
+  <data name="DeleteReleaseTemplateConfirmation" xml:space="preserve"><value>Release-Template {0} löschen?</value></data>
+  <data name="DeleteUploadConfigTemplateConfirmation" xml:space="preserve"><value>Upload-Konfigurationstemplate {0} löschen?</value></data>
+  <data name="LinkCrypterTemplateDialogDescription" xml:space="preserve"><value>Wähle die Link-Crypter-Registrierung und ein optionales Container-Passwort, die in Releases kopiert werden.</value></data>
+  <data name="NewFromTemplate" xml:space="preserve"><value>Neu aus Template</value></data>
+  <data name="NewReleaseTemplate" xml:space="preserve"><value>Neues Release-Template</value></data>
+  <data name="NoArchiveConfigTemplatesYet" xml:space="preserve"><value>Noch keine Archiv-Konfigurationstemplates.</value></data>
+  <data name="NoLinkCryptersYet" xml:space="preserve"><value>Noch keine Link-Crypter.</value></data>
+  <data name="NoReleaseTemplatesFound" xml:space="preserve"><value>Keine Release-Templates gefunden</value></data>
+  <data name="NoUploadConfigTemplatesYet" xml:space="preserve"><value>Noch keine Upload-Konfigurationstemplates.</value></data>
+  <data name="OpenReleaseTemplateActions" xml:space="preserve"><value>Release-Template-Aktionen öffnen</value></data>
+  <data name="PasswordProtected" xml:space="preserve"><value>Passwortgeschützt</value></data>
+  <data name="ReleaseName" xml:space="preserve"><value>Release-Name</value></data>
+  <data name="ReleaseTemplate" xml:space="preserve"><value>Release-Template</value></data>
+  <data name="ReleaseTemplateDialogDescription" xml:space="preserve"><value>Lege Template-Name, Release-Typ und Release-Gruppe fest.</value></data>
+  <data name="ReleaseTemplateNamePlaceholder" xml:space="preserve"><value>Release-Template benennen</value></data>
+  <data name="ReleaseTemplates" xml:space="preserve"><value>Release-Templates</value></data>
+  <data name="ReleaseTemplatesIntro" xml:space="preserve"><value>Wiederverwendbares Release-Setup für Archiv-, Upload- und Link-Crypter-Konfigurationen.</value></data>
+  <data name="ReleaseTemplatesSubtitle" xml:space="preserve"><value>Wiederverwendbares Release-Setup</value></data>
+  <data name="SaveAsTemplate" xml:space="preserve"><value>Als Template speichern</value></data>
+  <data name="SaveAsTemplateDescription" xml:space="preserve"><value>Erstellt ein Release-Template aus der aktuellen Archiv-, Upload- und Link-Crypter-Konfiguration dieses Releases.</value></data>
+  <data name="SelectArchiveConfigurationRequired" xml:space="preserve"><value>Du musst eine Archiv-Konfiguration auswählen.</value></data>
+  <data name="SelectHosterRegistrationRequired" xml:space="preserve"><value>Du musst eine Hoster-Registrierung auswählen.</value></data>
+  <data name="SelectReleaseTemplate" xml:space="preserve"><value>Release-Template auswählen</value></data>
+  <data name="SelectReleaseTemplateRequired" xml:space="preserve"><value>Du musst ein Release-Template auswählen.</value></data>
+  <data name="UploadConfigTemplateNameHelp" xml:space="preserve"><value>Leer lassen, um den Namen der Hoster-Registrierung zu verwenden.</value></data>
+  <data name="UploadConfigTemplateDialogDescription" xml:space="preserve"><value>Lege Hoster-Ziel, Archiv-Konfiguration, Linkverteilung und Link-Crypter fest, die in Releases kopiert werden.</value></data>
+  <data name="UploadConfigTemplatesDescription" xml:space="preserve"><value>Upload-Einstellungen, die beim Erstellen eines Releases aus diesem Template kopiert werden.</value></data>
+  <data name="UseHosterNamePlaceholder" xml:space="preserve"><value>Hoster-Namen verwenden</value></data>
+  <data name="UseReleaseNameAsArchiveName" xml:space="preserve"><value>Release-Name als Archivname verwenden</value></data>
+  <data name="RandomArchiveName" xml:space="preserve">
+    <value>&lt;zufälliger-name&gt;</value>
+  </data>
 </root>

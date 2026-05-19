@@ -1,0 +1,35 @@
+@inherits OwningComponentBase
+
+@if (!isInitialized)
+{
+    return;
+}
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldSelect TValue="int?"
+                               @bind-Value="FormModel.LinkCrypterRegistrationId"
+                               Label="@L["LinkCrypter"]"
+                               Placeholder="@L["SelectLinkCrypter"]"
+                               Disabled="isEdit"
+                               Options="LinkCrypterOptions" />
+
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="FormModel.Password"
+                              Label="@L["ContainerPassword"]"
+                              Placeholder="@L["ContainerPasswordPlaceholder"]" />
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

@@ -14,13 +14,13 @@ namespace Bearcat.LinkCrypters.UnitTest.HideCx;
 public class HideCxTest
 {
     private Mock<IHideCxApi> apiMock = null!;
-    private Bearcat.LinkCrypters.HideCx.HideCx service = null!;
+    private LinkCrypters.HideCx.HideCx service = null!;
 
     [SetUp]
     public void SetUp()
     {
         apiMock = new Mock<IHideCxApi>(MockBehavior.Strict);
-        service = new Bearcat.LinkCrypters.HideCx.HideCx(apiMock.Object);
+        service = new LinkCrypters.HideCx.HideCx(apiMock.Object);
     }
 
     [Test]

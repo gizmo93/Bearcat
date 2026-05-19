@@ -7,6 +7,7 @@ using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
@@ -55,6 +56,8 @@ public static class ServiceProviderConfig
                 HosterConfigurationRepository
             >();
             services.AddScoped<IReleaseWriteRepository, ReleaseWriteRepository>();
+            services.AddScoped<IReleaseTemplateReadRepository, ReleaseTemplateRepository>();
+            services.AddScoped<IReleaseTemplateWriteRepository, ReleaseTemplateRepository>();
             services.AddScoped<IReleaseGroupReadRepository, ReleaseGroupRepository>();
             services.AddScoped<IReleaseGroupWriteRepository, ReleaseGroupRepository>();
             services.AddScoped<IArchiveCreationRepository, ArchiveCreationRepository>();

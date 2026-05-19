@@ -1,0 +1,111 @@
+@page "/release-templates"
+@using Bearcat.Domain.UseCases.ManageReleaseTemplates.Dto
+@using Bearcat.Website.Localization
+@inherits OwningComponentBase
+
+<PageTitle>@L["ReleaseTemplates"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["ReleaseTemplates"]</h1>
+            <p class="text-sm text-muted-foreground">
+                @L["ReleaseTemplatesIntro"]
+            </p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewReleaseTemplate"]
+        </BbButton>
+    </div>
+
+    <BbDataTable TData="ReleaseTemplateSummaryDto"
+                 Data="releaseTemplates"
+                 ShowToolbar="false"
+                 ShowPagination="@(releaseTemplates.Count > 10)"
+                 InitialPageSize="10"
+                 IsLoading="isLoading"
+                 AriaLabel="@L["ReleaseTemplates"]"
+                 Class="bearcat-data-table">
+        <Columns>
+            <BbDataTableColumn TData="ReleaseTemplateSummaryDto" TValue="string"
+                               Header="@L["Name"]"
+                               Property="@(template => template.Name)"
+                               Sortable="true"
+                               Width="28%">
+                <CellTemplate Context="template">
+                    <a class="bearcat-release-list-name"
+                       href="@($"/release-templates/{template.ReleaseTemplateId}")">
+                        @template.Name
+                    </a>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseTemplateSummaryDto" TValue="string"
+                               Header="@L["ReleaseType"]"
+                               Property="@(template => template.ReleaseType.ToString())"
+                               Width="150px">
+                <CellTemplate Context="template">
+                    <BbBadge Variant="BadgeVariant.Outline">@L.Localize(template.ReleaseType)</BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseTemplateSummaryDto" TValue="string"
+                               Header="@L["ReleaseGroup"]"
+                               Property="@(template => template.ReleaseGroupName)"
+                               Width="180px">
+                <CellTemplate Context="template">
+                    <BbBadge Variant="BadgeVariant.Outline">@template.ReleaseGroupName</BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseTemplateSummaryDto" TValue="int"
+                               Header="@L["ArchiveConfigurations"]"
+                               Property="@(template => template.ArchiveConfigTemplateCount)"
+                               Width="170px">
+                <CellTemplate Context="template">
+                    <BbBadge Variant="BadgeVariant.Secondary">@template.ArchiveConfigTemplateCount</BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseTemplateSummaryDto" TValue="int"
+                               Header="@L["UploadConfigurations"]"
+                               Property="@(template => template.UploadConfigTemplateCount)"
+                               Width="170px">
+                <CellTemplate Context="template">
+                    <BbBadge Variant="BadgeVariant.Secondary">@template.UploadConfigTemplateCount</BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseTemplateSummaryDto" TValue="string"
+                               Header=""
+                               Property="@(template => template.Name)"
+                               Width="56px">
+                <CellTemplate Context="template">
+                    <div class="flex justify-end">
+                        <BbDropdownMenu>
+                            <BbDropdownMenuTrigger>
+                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenReleaseTemplateActions"]">
+                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                </BbButton>
+                            </BbDropdownMenuTrigger>
+                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                                <BbDropdownMenuItem Href="@($"/release-templates/{template.ReleaseTemplateId}")">
+                                    @L["OpenDetails"]
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(template))">
+                                    @L["Edit"]
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(template))">
+                                    @L["Delete"]
+                                </BbDropdownMenuItem>
+                            </BbDropdownMenuContent>
+                        </BbDropdownMenu>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+        <EmptyTemplate>
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="inbox" class="h-5 w-5" />
+                <span>@L["NoReleaseTemplatesFound"]</span>
+            </div>
+        </EmptyTemplate>
+    </BbDataTable>
+</section>

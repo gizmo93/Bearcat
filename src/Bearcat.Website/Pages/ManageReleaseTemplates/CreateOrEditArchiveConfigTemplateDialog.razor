@@ -1,0 +1,70 @@
+@inherits OwningComponentBase
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldSelect TValue="string"
+                               @bind-Value="FormModel.ArchiverName"
+                               @bind-Value:after="SetDefaultArchiveConfigName"
+                               Label="@L["Archiver"]"
+                               Disabled="isEdit"
+                               Placeholder="@L["SelectArchiver"]"
+                               Options="archivers.Select(archiver => new SelectOption<string>(archiver.ClassName, archiver.Name))" />
+
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="FormModel.Name"
+                              Label="@L["ArchiveConfigName"]"
+                              Placeholder="@L["ArchiveConfigNamePlaceholder"]" />
+
+            <div class="space-y-2">
+                <label class="text-sm font-medium">@L["ArchiveFilesBasePath"]</label>
+                <div class="bearcat-folder-field">
+                    <BbInput @bind-Value="FormModel.ArchiveFilesBasePath" class="sm:flex-1" />
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Class="bearcat-folder-button"
+                              AriaLabel="@L["BrowseArchiveFolders"]"
+                              OnClick="OpenFolderDialogAsync">
+                        <LucideIcon Name="folder-open" class="h-4 w-4" />
+                        @L["Browse"]
+                    </BbButton>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <BbCheckbox @bind-Checked="FormModel.UseReleaseNameAsArchiveName"
+                            Id="use-release-name-as-archive-name"
+                            AriaLabel="@L["UseReleaseNameAsArchiveName"]" />
+                <BbLabel For="use-release-name-as-archive-name">
+                    @L["UseReleaseNameAsArchiveName"]
+                </BbLabel>
+            </div>
+
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="FormModel.ArchivePassword"
+                              Label="@L["ArchivePassword"]" />
+
+            <BbFormFieldNumericInput TValue="int"
+                                     @bind-Value="FormModel.ArchiveFileSizeMb"
+                                     Label="@L["ArchiveFileSizeMb"]" />
+
+            @if (SelectedArchiver is not null)
+            {
+                <div class="rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                    @L["ArchiveNamePreview"] @((FormModel.UseReleaseNameAsArchiveName ? L["ReleaseName"] : L["RandomArchiveName"]))@SelectedArchiver.FileExtension
+                </div>
+            }
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

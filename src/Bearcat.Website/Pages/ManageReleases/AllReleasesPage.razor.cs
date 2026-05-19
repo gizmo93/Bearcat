@@ -8,6 +8,7 @@ using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Website.Pages.ManageReleaseTemplates;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.Extensions.DependencyInjection;
@@ -124,6 +125,25 @@ public partial class AllReleasesPage(
             {
                 Title = L["CreateRelease"],
                 Description = L["CreateReleaseDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (!dialog.Cancelled)
+        {
+            await RefreshReleasesAsync();
+        }
+    }
+
+    private async Task ShowAddReleaseFromTemplateDialogAsync()
+    {
+        var dialog = await dialogService.OpenAsync<CreateReleaseFromTemplateDialog>(
+            new DialogOpenOptions
+            {
+                Title = L["CreateReleaseFromTemplate"],
+                Description = L["CreateReleaseFromTemplateDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
                 PreventClose = true,

@@ -1,0 +1,45 @@
+@using Bearcat.Domain.ValueObjects
+@using Bearcat.Website.Localization
+@inherits OwningComponentBase
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="FormModel.Name"
+                              Label="@L["Name"]"
+                              Placeholder="@L["ReleaseTemplateNamePlaceholder"]" />
+
+            <BbFormFieldSelect TValue="ReleaseType?"
+                               @bind-Value="FormModel.ReleaseType"
+                               Label="@L["ReleaseType"]"
+                               Placeholder="@L["SelectReleaseType"]">
+                @foreach (var releaseType in Enum.GetValues<ReleaseType>())
+                {
+                    <BbSelectItem Value="@((ReleaseType?)releaseType)" Text="@L.Localize(releaseType)" />
+                }
+            </BbFormFieldSelect>
+
+            @if (releaseGroups.Count > 0)
+            {
+                <BbFormFieldSelect TValue="int"
+                                   @bind-Value="FormModel.ReleaseGroupId"
+                                   Label="@L["ReleaseGroup"]"
+                                   Placeholder="@L["SelectReleaseGroup"]"
+                                   DisplayTextSelector="GetReleaseGroupDisplayText"
+                                   Options="ReleaseGroupOptions" />
+            }
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

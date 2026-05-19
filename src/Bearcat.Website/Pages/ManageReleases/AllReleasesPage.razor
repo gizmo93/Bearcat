@@ -15,10 +15,16 @@
             </p>
         </div>
 
-        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddReleaseDialogAsync">
-            <LucideIcon Name="plus" class="h-4 w-4" />
-            @L["NewRelease"]
-        </BbButton>
+        <div class="flex flex-wrap gap-2">
+            <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddReleaseDialogAsync">
+                <LucideIcon Name="plus" class="h-4 w-4" />
+                @L["NewRelease"]
+            </BbButton>
+            <BbButton Variant="ButtonVariant.Secondary" Class="bearcat-page-action" OnClick="ShowAddReleaseFromTemplateDialogAsync">
+                <LucideIcon Name="copy" class="h-4 w-4" />
+                @L["NewFromTemplate"]
+            </BbButton>
+        </div>
     </div>
 
     <ReleaseSearchForm HosterRegistrations="hosterRegistrations"
