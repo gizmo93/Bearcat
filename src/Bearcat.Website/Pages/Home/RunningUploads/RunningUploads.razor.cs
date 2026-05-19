@@ -1,15 +1,23 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.Home.RunningUploads;
 
-public partial class RunningUploads : ComponentBase
+public partial class RunningUploads(
+    DialogService dialogService,
+    ToastService toastService,
+    UploadStateService uploadStateService
+) : ComponentBase
 {
     [Parameter]
     [EditorRequired]
     public IReadOnlyList<Upload> Uploads { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnUploadCanceled { get; set; }
 
     private readonly HashSet<int> showDetailIds = [];
 
@@ -32,10 +40,45 @@ public partial class RunningUploads : ComponentBase
         state switch
         {
             UploadState.Uploading => BadgeVariant.Default,
+            UploadState.CancellationRequested => BadgeVariant.Secondary,
             UploadState.Pending => BadgeVariant.Secondary,
             UploadState.Failed => BadgeVariant.Destructive,
             _ => BadgeVariant.Outline,
         };
+
+    private async Task CancelUploadAsync(Upload upload)
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["CancelUpload"],
+            L["CancelUploadConfirmation", upload.Id],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["CancelUpload"],
+                CancelText = L["Close"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        var cancellationRequested = await uploadStateService.CancelUploadAsync(upload.Id);
+
+        if (cancellationRequested)
+        {
+            toastService.Success(L["UploadCancellationRequested", upload.Id]);
+            await OnUploadCanceled.InvokeAsync();
+        }
+        else
+        {
+            toastService.Error(L["UploadCancellationNotAvailable", upload.Id]);
+        }
+    }
+
+    private static bool CanCancelUpload(Upload upload) =>
+        upload.UploadState is UploadState.Pending or UploadState.Uploading;
 
     private static double GetUploadProgress(Upload upload)
     {

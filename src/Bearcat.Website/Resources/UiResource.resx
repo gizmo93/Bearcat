@@ -54,6 +54,8 @@
   <data name="BrowseReleaseFolders" xml:space="preserve"><value>Browse release folders</value></data>
   <data name="BuiltWithBlazorBlueprint" xml:space="preserve"><value>Built with BlazorBlueprint</value></data>
   <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="CancelUpload" xml:space="preserve"><value>Cancel upload</value></data>
+  <data name="CancelUploadConfirmation" xml:space="preserve"><value>Cancel upload #{0}? Running file transfers will be stopped as soon as the worker sees the request.</value></data>
   <data name="Close" xml:space="preserve"><value>Close</value></data>
   <data name="CopyAllLinks" xml:space="preserve"><value>Copy all links</value></data>
   <data name="Copied" xml:space="preserve"><value>Copied</value></data>
@@ -91,6 +93,8 @@
   <data name="DeleteReleaseTitle" xml:space="preserve"><value>Delete Release {0}</value></data>
   <data name="DeleteUploadConfig" xml:space="preserve"><value>Delete Upload Config</value></data>
   <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Are you sure you want to delete the upload config {0}?</value></data>
+  <data name="DeleteUpload" xml:space="preserve"><value>Delete upload</value></data>
+  <data name="DeleteUploadConfirmation" xml:space="preserve"><value>Delete upload #{0}? Its uploaded file links, containers, and notifications will also be removed.</value></data>
   <data name="Disable" xml:space="preserve"><value>Disable</value></data>
   <data name="Edit" xml:space="preserve"><value>Edit</value></data>
   <data name="EditArchiveConfiguration" xml:space="preserve"><value>Edit Archive Configuration</value></data>
@@ -262,6 +266,8 @@
   <data name="UploadState.Pending" xml:space="preserve"><value>Pending</value></data>
   <data name="UploadState.Uploading" xml:space="preserve"><value>Uploading</value></data>
   <data name="UploadState.WaitingForArchive" xml:space="preserve"><value>Waiting for archive</value></data>
+  <data name="UploadState.CancellationRequested" xml:space="preserve"><value>Cancel requested</value></data>
+  <data name="UploadState.Canceled" xml:space="preserve"><value>Canceled</value></data>
   <data name="UploadStatus" xml:space="preserve"><value>Upload status</value></data>
   <data name="UploadStatusSubtitle" xml:space="preserve"><value>Upload #{0} for {1}</value></data>
   <data name="UploadTarget" xml:space="preserve"><value>Upload target</value></data>
@@ -315,6 +321,11 @@
   <data name="HoursUntilReuploadHelp" xml:space="preserve"><value>Minimum 0, which schedules immediately after files are confirmed offline.</value></data>
   <data name="HoursUntilReuploadMustBeZeroOrGreater" xml:space="preserve"><value>Hours until reupload must be zero or greater.</value></data>
   <data name="ManualReuploadCreated" xml:space="preserve"><value>Manual reupload created for upload #{0}.</value></data>
+  <data name="UploadCancellationRequested" xml:space="preserve"><value>Cancellation requested for upload #{0}.</value></data>
+  <data name="UploadCancellationNotAvailable" xml:space="preserve"><value>Upload #{0} can no longer be canceled.</value></data>
+  <data name="UploadActions" xml:space="preserve"><value>Upload actions</value></data>
+  <data name="UploadDeleted" xml:space="preserve"><value>Upload #{0} deleted.</value></data>
+  <data name="UploadDeleteNotAvailable" xml:space="preserve"><value>Upload #{0} can not be deleted in its current state.</value></data>
   <data name="NewReleaseGroup" xml:space="preserve"><value>New release group</value></data>
   <data name="NoReleaseGroupsFound" xml:space="preserve"><value>No release groups found</value></data>
   <data name="NoReleasesSelected" xml:space="preserve"><value>No releases selected</value></data>

@@ -1,4 +1,3 @@
-﻿using System.Collections.Concurrent;
 using System.Threading.Channels;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
@@ -24,8 +23,6 @@ public class UploadFilesService(
 {
     private const int MaxParallelUploads = 10;
 
-    private readonly SemaphoreSlim dbContextSemaphore = new(initialCount: 1, maxCount: 1);
-
     private readonly SemaphoreSlim globalUploadSemaphore = new(
         initialCount: MaxParallelUploads,
         maxCount: MaxParallelUploads
@@ -39,12 +36,19 @@ public class UploadFilesService(
 
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
-        await CleanupOrphanedUploadsAsync(cancellationToken);
-        await ProcessPendingUploads2Async(cancellationToken);
-        DisposeSemaphores();
+        try
+        {
+            await CleanupOrphanedUploadsAsync(cancellationToken);
+            await FinalizeUnprocessedCancellationRequestsAsync(cancellationToken);
+            await ProcessPendingUploadsAsync(cancellationToken);
+        }
+        finally
+        {
+            DisposeSemaphores();
+        }
     }
 
-    private async Task ProcessPendingUploads2Async(CancellationToken cancellationToken)
+    private async Task ProcessPendingUploadsAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting processing pending uploads");
 
@@ -63,147 +67,253 @@ public class UploadFilesService(
             cancellationToken: cancellationToken
         );
 
-        var uploadQueue = new ConcurrentQueue<FileToUpload>(
-            await GetFilesToUploadAsync(
-                uploads: pendingUploads,
-                hosters: hosters,
-                cancellationToken: cancellationToken
-            )
-        );
-
+        var uploadContexts = new Dictionary<int, UploadExecutionContext>();
+        var trackedUploadIds = new HashSet<int>();
+        var runningUploadTasks = new List<Task>();
         var channel = Channel.CreateUnbounded<FileUploadCompleted>(
             options: new UnboundedChannelOptions { SingleReader = true, SingleWriter = false }
         );
 
-        var uploadResultHandlerTask = Task.Run(
-            () =>
-                HandleFileUploadResultsAsync(
-                    reader: channel.Reader,
-                    cancellationToken: cancellationToken
-                ),
-            cancellationToken
+        await AddUploadContextsAsync(
+            uploads: pendingUploads,
+            hosters: hosters,
+            uploadContexts: uploadContexts,
+            trackedUploadIds: trackedUploadIds,
+            cancellationToken: cancellationToken
         );
 
-        var uploadFilesTask = Task.Run(
-            () =>
-                UploadFilesAsync(
-                    uploadQueue: uploadQueue,
-                    resultWriter: channel.Writer,
-                    cancellationToken: cancellationToken
-                ),
-            cancellationToken
-        );
+        var nextPendingUploadCheck = DateTimeOffset.UtcNow.Add(NewPendingUploadsPollDelay);
 
-        var pendingUploadIds = pendingUploads.Select(u => u.Id).ToHashSet();
-
-        while (!uploadFilesTask.IsCompleted)
+        while (uploadContexts.Count > 0 || runningUploadTasks.Count > 0)
         {
-            var newPendingUploads = (
-                await GetPendingUploadsAsync(pendingUploadIds, cancellationToken)
-            )
-                .Where(u => !pendingUploadIds.Contains(u.Id))
-                .ToList();
-
-            var filesToUpload = await GetFilesToUploadAsync(
-                uploads: newPendingUploads,
-                hosters: hosters,
+            await HandleCancellationRequestsAsync(
+                uploadContexts: uploadContexts,
                 cancellationToken: cancellationToken
             );
 
-            foreach (var file in filesToUpload)
+            await HandleCompletedUploadTasksAsync(
+                runningUploadTasks: runningUploadTasks,
+                cancellationToken: cancellationToken
+            );
+
+            await HandleAvailableFileUploadResultsAsync(
+                reader: channel.Reader,
+                uploadContexts: uploadContexts,
+                cancellationToken: cancellationToken
+            );
+
+            await ScheduleAvailableFileUploadsAsync(
+                uploadContexts: uploadContexts,
+                runningUploadTasks: runningUploadTasks,
+                resultWriter: channel.Writer,
+                cancellationToken: cancellationToken
+            );
+
+            if (uploadContexts.Count == 0 && runningUploadTasks.Count == 0)
             {
-                uploadQueue.Enqueue(file);
-                pendingUploadIds.UnionWith(newPendingUploads.Select(u => u.Id));
+                break;
             }
 
-            if (newPendingUploads.Count > 0)
+            if (DateTimeOffset.UtcNow >= nextPendingUploadCheck)
             {
-                logger.LogInformation(
-                    "Added {NewUploadCount} new uploads to the upload queue",
-                    newPendingUploads.Count
+                var newPendingUploads = await GetPendingUploadsAsync(
+                    trackedUploadIds,
+                    cancellationToken
                 );
+
+                await AddUploadContextsAsync(
+                    uploads: newPendingUploads,
+                    hosters: hosters,
+                    uploadContexts: uploadContexts,
+                    trackedUploadIds: trackedUploadIds,
+                    cancellationToken: cancellationToken
+                );
+
+                if (newPendingUploads.Count > 0)
+                {
+                    logger.LogInformation(
+                        "Added {NewUploadCount} new uploads to the upload queue",
+                        newPendingUploads.Count
+                    );
+                }
+
+                nextPendingUploadCheck = DateTimeOffset.UtcNow.Add(NewPendingUploadsPollDelay);
             }
 
-            await Task.Delay(NewPendingUploadsPollDelay, cancellationToken);
+            await DelayQueuePollAsync(cancellationToken);
         }
 
         channel.Writer.Complete();
+        await HandleAvailableFileUploadResultsAsync(
+            reader: channel.Reader,
+            uploadContexts: uploadContexts,
+            cancellationToken: cancellationToken
+        );
 
-        await uploadResultHandlerTask;
         logger.LogInformation("Finished processing pending uploads");
     }
 
-    private async Task<List<FileToUpload>> GetFilesToUploadAsync(
+    private async Task AddUploadContextsAsync(
         IReadOnlyList<Upload> uploads,
         Dictionary<string, IHoster> hosters,
+        Dictionary<int, UploadExecutionContext> uploadContexts,
+        HashSet<int> trackedUploadIds,
         CancellationToken cancellationToken
     )
     {
         if (uploads.Count == 0)
         {
-            return [];
+            return;
         }
 
         var hosterConfigsByRegistrationId = await repository.GetConfigByHosterRegistrationId(
             cancellationToken
         );
 
-        return uploads
-            .SelectMany(u =>
-                u.Archive!.ArchiveFiles.Where(af =>
-                        u.UploadedFiles.All(uf => uf.ArchiveFileId != af.Id)
-                    )
-                    .Select(f =>
-                    {
-                        var hoster = hosters[u.UploadConfig.HosterRegistration.HosterClassName];
-                        var hosterConfig = hoster.DeserializeHosterConfig(
-                            hosterConfigsByRegistrationId[u.UploadConfig.HosterRegistrationId]
-                        );
+        foreach (var upload in uploads)
+        {
+            trackedUploadIds.Add(upload.Id);
 
-                        return new FileToUpload(
-                            Upload: u,
-                            ArchiveFile: f,
-                            Hoster: hoster,
-                            HosterConfig: hosterConfig
-                        );
-                    })
-            )
-            .ToList();
+            var hosterClassName = upload.UploadConfig.HosterRegistration.HosterClassName;
+            var hoster = hosters[hosterClassName];
+            var hosterConfig = hoster.DeserializeHosterConfig(
+                hosterConfigsByRegistrationId[upload.UploadConfig.HosterRegistrationId]
+            );
+            var context = CreateUploadContext(
+                upload: upload,
+                hoster: hoster,
+                hosterConfig: hosterConfig,
+                hosterClassName: hosterClassName,
+                cancellationToken: cancellationToken
+            );
+
+            if (context.TotalFileCount == 0)
+            {
+                context.Dispose();
+                continue;
+            }
+
+            if (TryFinalizeUpload(context))
+            {
+                continue;
+            }
+
+            upload.UploadState = UploadState.Uploading;
+            uploadContexts[upload.Id] = context;
+        }
+
+        await repository.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task UploadFilesAsync(
-        ConcurrentQueue<FileToUpload> uploadQueue,
+    private static UploadExecutionContext CreateUploadContext(
+        Upload upload,
+        IHoster hoster,
+        IHosterConfig hosterConfig,
+        string hosterClassName,
+        CancellationToken cancellationToken
+    )
+    {
+        var processedArchiveFileIds = upload
+            .UploadedFiles.Select(uf => uf.ArchiveFileId)
+            .ToHashSet();
+        var successfulFileCount = upload.UploadedFiles.Count(uf => uf.ErrorMessages.Count == 0);
+        var failedFileCount = upload.UploadedFiles.Count(uf => uf.ErrorMessages.Count > 0);
+        var context = new UploadExecutionContext(
+            upload: upload,
+            totalFileCount: upload.Archive!.ArchiveFiles.Count,
+            successfulFileCount: successfulFileCount,
+            failedFileCount: failedFileCount,
+            cancellationTokenSource: CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken
+            )
+        );
+
+        foreach (
+            var archiveFile in upload.Archive.ArchiveFiles.Where(af =>
+                !processedArchiveFileIds.Contains(af.Id)
+            )
+        )
+        {
+            context.PendingFiles.Enqueue(
+                new FileToUpload(
+                    UploadId: upload.Id,
+                    ArchiveFileId: archiveFile.Id,
+                    FullFileName: archiveFile.FullFileName,
+                    HosterClassName: hosterClassName,
+                    Hoster: hoster,
+                    HosterConfig: hosterConfig
+                )
+            );
+        }
+
+        return context;
+    }
+
+    private async Task ScheduleAvailableFileUploadsAsync(
+        Dictionary<int, UploadExecutionContext> uploadContexts,
+        List<Task> runningUploadTasks,
         ChannelWriter<FileUploadCompleted> resultWriter,
         CancellationToken cancellationToken
     )
     {
-        var runningUploadTasks = new List<Task>();
+        var scheduledAny = true;
 
-        while (true)
+        while (scheduledAny)
         {
-            while (uploadQueue.Count > 0)
+            scheduledAny = false;
+
+            foreach (var context in uploadContexts.Values.ToList())
             {
-                if (uploadQueue.TryDequeue(out var file))
+                if (context.CancellationRequested || context.PendingFiles.Count == 0)
                 {
-                    runningUploadTasks.Add(
-                        UploadFileAsync(
-                            fileToUpload: file,
-                            resultWriter: resultWriter,
-                            cancellationToken: cancellationToken
-                        )
-                    );
+                    continue;
                 }
+
+                var fileToUpload = context.PendingFiles.Peek();
+
+                if (!await globalUploadSemaphore.WaitAsync(0, cancellationToken))
+                {
+                    return;
+                }
+
+                var hosterSemaphore = hosterUploadSemaphores[fileToUpload.HosterClassName];
+
+                if (!await hosterSemaphore.WaitAsync(0, cancellationToken))
+                {
+                    globalUploadSemaphore.Release();
+                    continue;
+                }
+
+                context.PendingFiles.Dequeue();
+                context.RunningFileCount++;
+                scheduledAny = true;
+
+                runningUploadTasks.Add(
+                    Task.Run(
+                        () =>
+                            UploadFileAsync(
+                                fileToUpload: fileToUpload,
+                                context: context,
+                                hosterSemaphore: hosterSemaphore,
+                                resultWriter: resultWriter,
+                                processCancellationToken: cancellationToken
+                            ),
+                        cancellationToken
+                    )
+                );
             }
-
-            runningUploadTasks = runningUploadTasks.Where(t => !t.IsCompleted).ToList();
-
-            if (uploadQueue.Count == 0 && runningUploadTasks.Count == 0)
-            {
-                break;
-            }
-
-            await Task.Delay(UploadQueuePollDelay, cancellationToken);
         }
+    }
+
+    private async Task DelayQueuePollAsync(CancellationToken cancellationToken)
+    {
+        if (UploadQueuePollDelay == TimeSpan.Zero)
+        {
+            await Task.Yield();
+            return;
+        }
+
+        await Task.Delay(UploadQueuePollDelay, cancellationToken);
     }
 
     private async Task<List<Upload>> GetPendingUploadsAsync(
@@ -211,81 +321,83 @@ public class UploadFilesService(
         CancellationToken cancellationToken = default
     )
     {
-        await dbContextSemaphore.WaitAsync(cancellationToken);
+        var pendingUploads = await repository.GetPendingUploadsAsync(
+            uploadIdsToExclude: excludeUploadIds ?? [],
+            cancellationToken: cancellationToken
+        );
 
-        try
-        {
-            var pendingUploads = await repository.GetPendingUploadsAsync(
-                uploadIdsToExclude: excludeUploadIds ?? [],
-                cancellationToken: cancellationToken
-            );
+        var uploadsToSkip = await HandleUploadsWithMissingFilesAsync(
+            pendingUploads,
+            cancellationToken
+        );
 
-            var uploadsToSkip = await HandleUploadsWithMissingFilesAsync(
-                pendingUploads,
-                cancellationToken
-            );
-
-            return pendingUploads.Except(uploadsToSkip).ToList();
-        }
-        finally
-        {
-            dbContextSemaphore.Release();
-        }
+        return pendingUploads.Except(uploadsToSkip).ToList();
     }
 
     private async Task UploadFileAsync(
         FileToUpload fileToUpload,
+        UploadExecutionContext context,
+        SemaphoreSlim hosterSemaphore,
         ChannelWriter<FileUploadCompleted> resultWriter,
-        CancellationToken cancellationToken
+        CancellationToken processCancellationToken
     )
     {
-        var hosterSemaphore = hosterUploadSemaphores[
-            fileToUpload.Upload.UploadConfig.HosterRegistration.HosterClassName
-        ];
-        await hosterSemaphore.WaitAsync(cancellationToken);
-        await globalUploadSemaphore.WaitAsync(cancellationToken);
-
         try
         {
-            if (fileToUpload.Upload.UploadState != UploadState.Uploading)
-            {
-                fileToUpload.Upload.UploadState = UploadState.Uploading;
-                await SaveChangesAsync(cancellationToken);
-            }
-
             var fileDto = new FileDto(
-                Id: fileToUpload.ArchiveFile.Id,
-                FullFileName: fileToUpload.ArchiveFile.FullFileName
+                Id: fileToUpload.ArchiveFileId,
+                FullFileName: fileToUpload.FullFileName
             );
 
             var result = await fileToUpload.Hoster.UploadFileAsync(
                 fileDto,
                 fileToUpload.HosterConfig,
-                cancellationToken
+                context.CancellationToken
             );
 
             await resultWriter.WriteAsync(
                 new FileUploadCompleted(
-                    Upload: fileToUpload.Upload,
-                    ArchiveFile: fileToUpload.ArchiveFile,
+                    UploadId: fileToUpload.UploadId,
+                    ArchiveFileId: fileToUpload.ArchiveFileId,
+                    FullFileName: fileToUpload.FullFileName,
                     FileUrl: result.FileUrl,
                     IsSuccess: result.IsSuccess,
                     Errors: result.ErrorMessages
                 ),
-                cancellationToken
+                processCancellationToken
+            );
+        }
+        catch (OperationCanceledException) when (processCancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
+        {
+            await resultWriter.WriteAsync(
+                new FileUploadCompleted(
+                    UploadId: fileToUpload.UploadId,
+                    ArchiveFileId: fileToUpload.ArchiveFileId,
+                    FullFileName: fileToUpload.FullFileName,
+                    FileUrl: null,
+                    IsSuccess: false,
+                    Errors: [],
+                    WasCanceled: true
+                ),
+                processCancellationToken
             );
         }
         catch (Exception ex)
         {
             await resultWriter.WriteAsync(
                 new FileUploadCompleted(
-                    Upload: fileToUpload.Upload,
-                    ArchiveFile: fileToUpload.ArchiveFile,
+                    UploadId: fileToUpload.UploadId,
+                    ArchiveFileId: fileToUpload.ArchiveFileId,
+                    FullFileName: fileToUpload.FullFileName,
                     FileUrl: null,
                     IsSuccess: false,
                     Errors: new List<string> { ex.Message }
                 ),
-                cancellationToken
+                processCancellationToken
             );
         }
         finally
@@ -295,75 +407,297 @@ public class UploadFilesService(
         }
     }
 
-    private async Task HandleFileUploadResultsAsync(
+    private async Task HandleAvailableFileUploadResultsAsync(
         ChannelReader<FileUploadCompleted> reader,
+        Dictionary<int, UploadExecutionContext> uploadContexts,
         CancellationToken cancellationToken
     )
     {
-        await foreach (var result in reader.ReadAllAsync(cancellationToken))
+        while (reader.TryRead(out var result))
         {
-            logger.LogInformation(
-                "Upload for file {FilePath} for upload {UploadId} completed with IsSuccess {Success}",
-                result.ArchiveFile.FullFileName,
-                result.Upload.Id,
-                result.IsSuccess
+            await HandleFileUploadResultAsync(
+                result: result,
+                uploadContexts: uploadContexts,
+                cancellationToken: cancellationToken
             );
+        }
+    }
 
-            result.Upload.UploadedFiles.Add(
-                new UploadedFile
-                {
-                    ArchiveFile = result.ArchiveFile,
-                    ArchiveFileId = result.ArchiveFile.Id,
-                    HosterFileLink = result.FileUrl ?? string.Empty,
-                    ErrorMessages = result.Errors.ToList(),
-                    OnlineState = result.IsSuccess ? OnlineState.Online : OnlineState.Unknown,
-                    CreatedAt = timeProvider.GetLocalNow(),
-                    CheckedAt = timeProvider.GetLocalNow(),
-                }
-            );
+    private async Task HandleFileUploadResultAsync(
+        FileUploadCompleted result,
+        Dictionary<int, UploadExecutionContext> uploadContexts,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!uploadContexts.TryGetValue(result.UploadId, out var context))
+        {
+            return;
+        }
 
-            var allFilesProcessed = result.Upload.Archive!.ArchiveFiles.All(f =>
-                result.Upload.UploadedFiles.Any(uf => uf.ArchiveFileId == f.Id)
-            );
+        context.RunningFileCount--;
 
-            if (allFilesProcessed)
+        result = await ApplyCancellationRequestToResultAsync(
+            result: result,
+            context: context,
+            cancellationToken: cancellationToken
+        );
+
+        LogFileUploadResult(result);
+
+        if (!result.WasCanceled)
+        {
+            ApplyFileUploadResult(context, result);
+        }
+
+        FinalizeUploadIfReady(context, uploadContexts);
+
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<FileUploadCompleted> ApplyCancellationRequestToResultAsync(
+        FileUploadCompleted result,
+        UploadExecutionContext context,
+        CancellationToken cancellationToken
+    )
+    {
+        if (result.IsSuccess)
+        {
+            return result;
+        }
+
+        if (context.CancellationRequested)
+        {
+            return result with { WasCanceled = true };
+        }
+
+        var cancellationRequested = await repository.IsCancellationRequestedAsync(
+            result.UploadId,
+            cancellationToken
+        );
+
+        if (!cancellationRequested)
+        {
+            return result;
+        }
+
+        context.RequestCancellation();
+        return result with { WasCanceled = true };
+    }
+
+    private void LogFileUploadResult(FileUploadCompleted result)
+    {
+        logger.LogInformation(
+            "Upload for file {FilePath} for upload {UploadId} completed with IsSuccess {Success}",
+            result.FullFileName,
+            result.UploadId,
+            result.IsSuccess
+        );
+    }
+
+    private void ApplyFileUploadResult(UploadExecutionContext context, FileUploadCompleted result)
+    {
+        var archiveFile = context.Upload.Archive!.ArchiveFiles.Single(f =>
+            f.Id == result.ArchiveFileId
+        );
+
+        context.Upload.UploadedFiles.Add(
+            new UploadedFile
             {
-                var anyFailedUploads = result.Upload.UploadedFiles.Any(uf =>
-                    uf.ErrorMessages.Count > 0
-                );
+                Upload = context.Upload,
+                UploadId = context.UploadId,
+                ArchiveFile = archiveFile,
+                ArchiveFileId = result.ArchiveFileId,
+                HosterFileLink = result.FileUrl ?? string.Empty,
+                ErrorMessages = result.Errors.ToList(),
+                OnlineState = result.IsSuccess ? OnlineState.Online : OnlineState.Unknown,
+                CreatedAt = timeProvider.GetLocalNow(),
+                CheckedAt = timeProvider.GetLocalNow(),
+            }
+        );
 
-                result.Upload.UploadState = anyFailedUploads
-                    ? UploadState.Failed
-                    : UploadState.Completed;
-                result.Upload.OnlineState = anyFailedUploads
-                    ? OnlineState.PartiallyOnline
-                    : OnlineState.Online;
+        if (result is { IsSuccess: true, Errors.Count: 0 })
+        {
+            context.SuccessfulFileCount++;
+        }
+        else
+        {
+            context.FailedFileCount++;
+        }
+    }
 
-                if (!anyFailedUploads)
+    private void FinalizeUploadIfReady(
+        UploadExecutionContext context,
+        Dictionary<int, UploadExecutionContext> uploadContexts
+    )
+    {
+        if (TryFinalizeUpload(context))
+        {
+            uploadContexts.Remove(context.UploadId);
+        }
+    }
+
+    private bool TryFinalizeUpload(UploadExecutionContext context)
+    {
+        if (context.SuccessfulFileCount == context.TotalFileCount)
+        {
+            CompleteUpload(context);
+            return true;
+        }
+
+        if (context is { CancellationRequested: true, HasOpenWork: false })
+        {
+            CancelUpload(context);
+            return true;
+        }
+
+        if (context.ProcessedFileCount == context.TotalFileCount)
+        {
+            FailUpload(context);
+            return true;
+        }
+
+        return false;
+    }
+
+    private void CompleteUpload(UploadExecutionContext context)
+    {
+        context.Upload.UploadState = UploadState.Completed;
+        context.Upload.OnlineState = OnlineState.Online;
+        context.Upload.UploadedAt = timeProvider.GetLocalNow();
+
+        notificationService.CreateInfo(
+            message: "All files uploaded successfully",
+            entity: context.Upload,
+            selector: n => n.Upload
+        );
+
+        logger.LogInformation(
+            "Completed upload for Upload {UploadId} to hoster {Hoster} with state {UploadState}",
+            context.UploadId,
+            context.Upload.UploadConfig.HosterRegistration.HosterClassName,
+            context.Upload.UploadState
+        );
+
+        context.Dispose();
+    }
+
+    private void FailUpload(UploadExecutionContext context)
+    {
+        context.Upload.UploadState = UploadState.Failed;
+        context.Upload.OnlineState = OnlineState.PartiallyOnline;
+
+        notificationService.CreateError(
+            message: "Some files failed to upload",
+            entity: context.Upload,
+            selector: n => n.Upload
+        );
+
+        logger.LogInformation(
+            "Completed upload for Upload {UploadId} to hoster {Hoster} with state {UploadState}",
+            context.UploadId,
+            context.Upload.UploadConfig.HosterRegistration.HosterClassName,
+            context.Upload.UploadState
+        );
+
+        context.Dispose();
+    }
+
+    private void CancelUpload(UploadExecutionContext context)
+    {
+        context.Upload.UploadState = UploadState.Canceled;
+        context.Upload.OnlineState = OnlineState.Unknown;
+
+        notificationService.CreateInfo(
+            message: "Upload canceled",
+            entity: context.Upload,
+            selector: n => n.Upload
+        );
+
+        logger.LogInformation(
+            "Canceled upload for Upload {UploadId} to hoster {Hoster}",
+            context.UploadId,
+            context.Upload.UploadConfig.HosterRegistration.HosterClassName
+        );
+
+        context.Dispose();
+    }
+
+    private async Task HandleCompletedUploadTasksAsync(
+        List<Task> runningUploadTasks,
+        CancellationToken cancellationToken
+    )
+    {
+        var completedTasks = runningUploadTasks.Where(t => t.IsCompleted).ToList();
+
+        foreach (var task in completedTasks)
+        {
+            runningUploadTasks.Remove(task);
+
+            try
+            {
+                await task;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Unexpected error in file upload worker");
+            }
+        }
+    }
+
+    private async Task HandleCancellationRequestsAsync(
+        Dictionary<int, UploadExecutionContext> uploadContexts,
+        CancellationToken cancellationToken
+    )
+    {
+        var cancellationRequestedUploadIds =
+            await repository.GetCancellationRequestedUploadIdsAsync(cancellationToken);
+        var hasChanges = false;
+
+        foreach (var uploadId in cancellationRequestedUploadIds)
+        {
+            if (uploadContexts.TryGetValue(uploadId, out var context))
+            {
+                if (!context.CancellationRequested)
                 {
-                    result.Upload.UploadedAt = timeProvider.GetLocalNow();
+                    context.RequestCancellation();
+                    hasChanges = true;
                 }
 
-                var notificationText = anyFailedUploads
-                    ? "Some files failed to upload"
-                    : "All files uploaded successfully";
+                if (TryFinalizeUpload(context))
+                {
+                    uploadContexts.Remove(uploadId);
+                    hasChanges = true;
+                }
 
-                notificationService.Create(
-                    type: anyFailedUploads ? NotificationType.Error : NotificationType.Info,
-                    message: notificationText,
-                    entity: result.Upload,
-                    selector: n => n.Upload
-                );
-
-                logger.LogInformation(
-                    "Completed upload for Upload {UploadId} to hoster {Hoster} with state {UploadState}",
-                    result.Upload.Id,
-                    result.Upload.UploadConfig.HosterRegistration.HosterClassName,
-                    result.Upload.UploadState
-                );
+                continue;
             }
 
-            await SaveChangesAsync(cancellationToken);
+            var upload = await repository.GetUploadByIdAsync(uploadId, cancellationToken);
+
+            if (upload is null)
+            {
+                continue;
+            }
+
+            upload.UploadState = UploadState.Canceled;
+            upload.OnlineState = OnlineState.Unknown;
+
+            notificationService.CreateInfo(
+                message: "Upload canceled",
+                entity: upload,
+                selector: n => n.Upload
+            );
+
+            hasChanges = true;
+        }
+
+        if (hasChanges)
+        {
+            await repository.SaveChangesAsync(cancellationToken);
         }
     }
 
@@ -375,6 +709,35 @@ public class UploadFilesService(
         {
             logger.LogInformation("Cleaning up orphaned upload {UploadId}", upload.Id);
             upload.UploadState = UploadState.Pending;
+        }
+
+        await repository.SaveChangesAsync(cancellationToken);
+        repository.ClearChangeTracker();
+    }
+
+    private async Task FinalizeUnprocessedCancellationRequestsAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        var uploadIds = await repository.GetCancellationRequestedUploadIdsAsync(cancellationToken);
+
+        foreach (var uploadId in uploadIds)
+        {
+            var upload = await repository.GetUploadByIdAsync(uploadId, cancellationToken);
+
+            if (upload is null)
+            {
+                continue;
+            }
+
+            upload.UploadState = UploadState.Canceled;
+            upload.OnlineState = OnlineState.Unknown;
+
+            notificationService.CreateInfo(
+                message: "Upload canceled",
+                entity: upload,
+                selector: n => n.Upload
+            );
         }
 
         await repository.SaveChangesAsync(cancellationToken);
@@ -472,22 +835,8 @@ public class UploadFilesService(
         return true;
     }
 
-    private async Task SaveChangesAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            await dbContextSemaphore.WaitAsync(cancellationToken);
-            await repository.SaveChangesAsync(cancellationToken);
-        }
-        finally
-        {
-            dbContextSemaphore.Release();
-        }
-    }
-
     private void DisposeSemaphores()
     {
-        dbContextSemaphore.Dispose();
         globalUploadSemaphore.Dispose();
 
         foreach (var semaphore in hosterUploadSemaphores.Values)

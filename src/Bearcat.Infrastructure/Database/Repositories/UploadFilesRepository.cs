@@ -5,7 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
 
-public class UploadFilesRepository(IBearcatWriteDbContext dbWrite) : IUploadFilesRepository
+public class UploadFilesRepository(IBearcatWriteDbContext dbWrite, IBearcatReadDbContext dbRead)
+    : IUploadFilesRepository
 {
     public async Task<IReadOnlyList<Upload>> GetPendingUploadsAsync(
         IReadOnlySet<int> uploadIdsToExclude,
@@ -30,6 +31,42 @@ public class UploadFilesRepository(IBearcatWriteDbContext dbWrite) : IUploadFile
         return await dbWrite
             .Uploads.Where(u => u.UploadState == UploadState.Uploading)
             .ToListAsync(cancellationToken: cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<int>> GetCancellationRequestedUploadIdsAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbRead
+            .Uploads.Where(u => u.UploadState == UploadState.CancellationRequested)
+            .Select(u => u.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> IsCancellationRequestedAsync(
+        int uploadId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbRead.Uploads.AnyAsync(
+            u => u.Id == uploadId && u.UploadState == UploadState.CancellationRequested,
+            cancellationToken
+        );
+    }
+
+    public async Task<Upload?> GetUploadByIdAsync(int uploadId, CancellationToken cancellationToken)
+    {
+        var trackedUpload = dbWrite
+            .ChangeTracker.Entries<Upload>()
+            .FirstOrDefault(e => e.Entity.Id == uploadId);
+
+        if (trackedUpload is not null)
+        {
+            await trackedUpload.ReloadAsync(cancellationToken);
+            return trackedUpload.State == EntityState.Detached ? null : trackedUpload.Entity;
+        }
+
+        return await dbWrite.Uploads.FirstOrDefaultAsync(u => u.Id == uploadId, cancellationToken);
     }
 
     public async Task<IReadOnlyDictionary<int, string>> GetConfigByHosterRegistrationId(
