@@ -105,6 +105,13 @@ public class AutomaticallyCreateReleasesService(
 
     private static bool MatchesPattern(string folderPath, string? folderNamePattern)
     {
+        const string magicSynologyFolder = "@eaDir";
+
+        if (folderPath.Contains(magicSynologyFolder, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
         if (string.IsNullOrWhiteSpace(folderNamePattern))
         {
             return true;
