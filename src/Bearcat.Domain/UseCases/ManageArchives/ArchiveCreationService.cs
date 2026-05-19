@@ -120,6 +120,31 @@ public class ArchiveCreationService(
             config.ArchiverName
         );
 
+        if (!Directory.Exists(config.Release.ReleaseFolderPath))
+        {
+            logger.LogError(
+                "Release folder path {ReleaseFolderPath} does not exist for ArchiveConfig {ArchiveConfigId}",
+                config.Release.ReleaseFolderPath,
+                config.Id
+            );
+
+            foreach (var upload in uploads)
+            {
+                upload.UploadState = UploadState.Failed;
+                upload.Notifications.Add(
+                    new Notification
+                    {
+                        Message =
+                            $"Release folder path {config.Release.ReleaseFolderPath} does not exist.",
+                        CreatedAt = timeProvider.GetLocalNow(),
+                        Upload = upload,
+                    }
+                );
+            }
+            await repository.SaveChangesAsync(cancellationToken: cancellationToken);
+            return;
+        }
+
         var archiver = archiverFactory.GetByName(config.ArchiverName);
         var archiveDirectoryPath = fileSystemService.CreateTempDirectory(
             config.ArchiveFilesBasePath

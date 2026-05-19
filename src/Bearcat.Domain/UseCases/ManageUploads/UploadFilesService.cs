@@ -754,7 +754,13 @@ public class UploadFilesService(
 
         foreach (var (hosterName, hoster) in hostersByName)
         {
-            var hosterConfig = hoster.DeserializeHosterConfig(hosterConfigs[hosterName]);
+            // Skip hosters that are not in use
+            if (!hosterConfigs.TryGetValue(hosterName, out var serializedConfig))
+            {
+                continue;
+            }
+
+            var hosterConfig = hoster.DeserializeHosterConfig(serializedConfig);
 
             var maxParallelUploads =
                 await hoster.GetMaximumParallelUploadsAsync(hosterConfig, cancellationToken) ?? 1;
