@@ -391,6 +391,23 @@
   <data name="UploadConfigTemplatesDescription" xml:space="preserve"><value>Upload-Einstellungen, die beim Erstellen eines Releases aus diesem Template kopiert werden.</value></data>
   <data name="UseHosterNamePlaceholder" xml:space="preserve"><value>Hoster-Namen verwenden</value></data>
   <data name="UseReleaseNameAsArchiveName" xml:space="preserve"><value>Release-Name als Archivname verwenden</value></data>
+  <data name="AllFolders" xml:space="preserve"><value>Alle Ordner</value></data>
+  <data name="DeleteReleaseFolderAutomation" xml:space="preserve"><value>Release-Ordner-Automatisierung löschen</value></data>
+  <data name="DeleteReleaseFolderAutomationConfirmation" xml:space="preserve"><value>Automatisierung für {0} löschen?</value></data>
+  <data name="EditReleaseFolderAutomation" xml:space="preserve"><value>Release-Ordner-Automatisierung bearbeiten</value></data>
+  <data name="FolderNamePattern" xml:space="preserve"><value>Ordnernamen-Pattern</value></data>
+  <data name="FolderNamePatternHelp" xml:space="preserve"><value>Nutze einfache Wildcards wie *1080p*. Regex wird nicht unterstützt.</value></data>
+  <data name="FolderNamePatternPlaceholder" xml:space="preserve"><value>*1080p*</value></data>
+  <data name="NewReleaseFolderAutomation" xml:space="preserve"><value>Neue Ordner-Automatisierung</value></data>
+  <data name="NoReleaseFolderAutomationsFound" xml:space="preserve"><value>Keine Release-Ordner-Automatisierungen gefunden</value></data>
+  <data name="OpenReleaseFolderAutomationActions" xml:space="preserve"><value>Release-Ordner-Automatisierungsaktionen öffnen</value></data>
+  <data name="ReleaseBasePath" xml:space="preserve"><value>Release-Basispfad</value></data>
+  <data name="ReleaseFolderAutomationDialogDescription" xml:space="preserve"><value>Scannt direkte Unterordner eines Basispfads und erstellt Releases aus einem gewählten Template.</value></data>
+  <data name="ReleaseFolderAutomations" xml:space="preserve"><value>Ordner-Automatisierungen</value></data>
+  <data name="ReleaseFolderAutomationsIntro" xml:space="preserve"><value>Erstellt Releases automatisch aus passenden direkten Unterordnern.</value></data>
+  <data name="ReleaseFolderAutomationsSubtitle" xml:space="preserve"><value>Automatische Release-Erstellung</value></data>
+  <data name="SelectReleaseBaseFolder" xml:space="preserve"><value>Release-Basisordner auswählen</value></data>
+  <data name="SelectReleaseBaseFolderDescription" xml:space="preserve"><value>Wähle den Ordner, dessen direkte Unterordner gescannt werden sollen.</value></data>
   <data name="RandomArchiveName" xml:space="preserve">
     <value>&lt;zufälliger-name&gt;</value>
   </data>

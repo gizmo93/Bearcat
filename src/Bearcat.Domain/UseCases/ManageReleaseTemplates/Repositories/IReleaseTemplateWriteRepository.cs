@@ -6,8 +6,6 @@ public interface IReleaseTemplateWriteRepository
 {
     void Add(ReleaseTemplate releaseTemplate);
 
-    void Add(Release release);
-
     void Remove(ReleaseTemplate releaseTemplate);
 
     void Remove(ArchiveConfigTemplate archiveConfigTemplate);
@@ -22,11 +20,6 @@ public interface IReleaseTemplateWriteRepository
     );
 
     Task<ReleaseTemplate> GetByIdWithChildrenAsync(
-        int releaseTemplateId,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<ReleaseTemplate> GetByIdForReleaseCreationAsync(
         int releaseTemplateId,
         CancellationToken cancellationToken = default
     );

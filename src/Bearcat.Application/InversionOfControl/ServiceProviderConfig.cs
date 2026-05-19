@@ -10,6 +10,7 @@ public static class ServiceProviderConfig
         public void AddApplication()
         {
             services.AddHostedService<ConfigurationCacheRefreshBackgroundTask>();
+            services.AddHostedService<ReleaseFolderAutomationBackgroundTask>();
             services.AddHostedService<ArchivingBackgroundTask>();
             services.AddHostedService<ArchiveCleanupBackgroundTask>();
             services.AddHostedService<ArchiveUploadBackgroundTask>();

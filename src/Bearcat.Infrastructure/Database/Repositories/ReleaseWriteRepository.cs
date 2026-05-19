@@ -24,6 +24,21 @@ public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite) : IReleaseWr
         return await dbWrite.Releases.Where(r => ids.Contains(r.Id)).ToListAsync(cancellationToken);
     }
 
+    public async Task<ReleaseTemplate> GetTemplateForReleaseCreationAsync(
+        int releaseTemplateId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .ReleaseTemplates.AsSplitQuery()
+            .Include(t => t.ArchiveConfigTemplates)
+            .Include(t => t.UploadConfigTemplates)
+            .ThenInclude(u => u.HosterRegistration)
+            .Include(t => t.UploadConfigTemplates)
+            .ThenInclude(u => u.LinkCrypterTemplates)
+            .FirstAsync(t => t.Id == releaseTemplateId, cancellationToken);
+    }
+
     public void Add(Release release)
     {
         dbWrite.Add(release);

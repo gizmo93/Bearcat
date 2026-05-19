@@ -9,6 +9,7 @@ public interface IBearcatWriteDbContext
     public DbSet<HosterRegistration> HosterRegistrations { get; set; }
     public DbSet<Release> Releases { get; set; }
     public DbSet<ReleaseTemplate> ReleaseTemplates { get; set; }
+    public DbSet<ReleaseFolderAutomation> ReleaseFolderAutomations { get; set; }
     public DbSet<ArchiveConfigTemplate> ArchiveConfigTemplates { get; set; }
     public DbSet<UploadConfigTemplate> UploadConfigTemplates { get; set; }
     public DbSet<UploadConfigLinkCrypterTemplate> UploadConfigLinkCrypterTemplates { get; set; }

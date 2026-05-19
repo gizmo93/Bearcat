@@ -125,72 +125,6 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         return releaseTemplate.Id;
     }
 
-    public async Task<int> CreateReleaseFromTemplateAsync(
-        int releaseTemplateId,
-        string releaseFolderPath,
-        string? name = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var releaseTemplate = await writeRepository.GetByIdForReleaseCreationAsync(
-            releaseTemplateId,
-            cancellationToken
-        );
-        var releaseName = CleanOptional(name) ?? GetFolderName(releaseFolderPath);
-
-        var archiveConfigsByTemplateId = releaseTemplate
-            .ArchiveConfigTemplates.Select(template => new
-            {
-                template.Id,
-                Config = new ArchiveConfig
-                {
-                    Name = template.Name,
-                    ArchiveFilesBasePath = template.ArchiveFilesBasePath,
-                    ArchiverName = template.ArchiverName,
-                    ArchivePassword = template.ArchivePassword,
-                    ArchiveFileSizeMb = template.ArchiveFileSizeMb,
-                    ArchiveNamePrefix = template.UseReleaseNameAsArchiveName ? releaseName : null,
-                    Archives = [],
-                    UploadConfigs = [],
-                },
-            })
-            .ToDictionary(item => item.Id, item => item.Config);
-
-        var release = new Release
-        {
-            Name = releaseName,
-            ReleaseFolderPath = releaseFolderPath,
-            ReleaseType = releaseTemplate.ReleaseType,
-            ReleaseGroupId = releaseTemplate.ReleaseGroupId,
-            ArchiveConfigs = archiveConfigsByTemplateId.Values.ToList(),
-            UploadConfigs = [],
-        };
-
-        release.UploadConfigs = releaseTemplate
-            .UploadConfigTemplates.Select(template => new UploadConfig
-            {
-                Name = CleanOptional(template.Name) ?? template.HosterRegistration.Name,
-                HosterRegistrationId = template.HosterRegistrationId,
-                ArchiveConfig = archiveConfigsByTemplateId[template.ArchiveConfigTemplateId],
-                LinksDistributedTo = CleanLinks(template.LinksDistributedTo),
-                Uploads = [],
-                LinkCrypters = template
-                    .LinkCrypterTemplates.Select(linkCrypter => new UploadConfigLinkCrypter
-                    {
-                        LinkCrypterRegistrationId = linkCrypter.LinkCrypterRegistrationId,
-                        Password = CleanOptional(linkCrypter.Password),
-                        LinkCrypterContainers = [],
-                    })
-                    .ToList(),
-            })
-            .ToList();
-
-        writeRepository.Add(release);
-        await writeRepository.SaveChangesAsync(cancellationToken);
-
-        return release.Id;
-    }
-
     public async Task<int> CreateArchiveConfigTemplateAsync(
         int releaseTemplateId,
         string name,
@@ -385,12 +319,4 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             .ToList();
     }
 
-    private static string GetFolderName(string folderPath)
-    {
-        var normalizedPath = folderPath.TrimEnd(
-            Path.DirectorySeparatorChar,
-            Path.AltDirectorySeparatorChar
-        );
-        return Path.GetFileName(normalizedPath);
-    }
 }

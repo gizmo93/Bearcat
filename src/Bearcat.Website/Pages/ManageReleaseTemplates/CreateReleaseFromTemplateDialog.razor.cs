@@ -1,4 +1,4 @@
-using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Website.Shared;
@@ -51,8 +51,8 @@ public partial class CreateReleaseFromTemplateDialog(
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
-        var releaseId = await service.CreateReleaseFromTemplateAsync(
+        var service = ScopedServices.GetRequiredService<ReleaseService>();
+        var releaseId = await service.CreateFromTemplateAsync(
             formModel.ReleaseTemplateId!.Value,
             formModel.FolderPath,
             formModel.Name

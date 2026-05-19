@@ -5,6 +5,7 @@ using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
+using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
@@ -66,6 +67,18 @@ public static class ServiceProviderConfig
             services.AddScoped<IUploadStateRepository, UploadStateRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
             services.AddScoped<INotificationReadRepository, NotificationReadRepository>();
+            services.AddScoped<
+                IReleaseFolderAutomationReadRepository,
+                ReleaseFolderAutomationRepository
+            >();
+            services.AddScoped<
+                IReleaseFolderAutomationWriteRepository,
+                ReleaseFolderAutomationRepository
+            >();
+            services.AddScoped<
+                IAutomaticallyCreateReleasesRepository,
+                ReleaseFolderAutomationRepository
+            >();
             services.AddScoped<IReleaseReadRepository, ReleaseReadRepository>();
             services.AddScoped<IArchiveConfigWriteRepository, ArchiveConfigWriteRepository>();
             services.AddScoped<IArchiveReadRepository, ArchiveReadRepository>();
