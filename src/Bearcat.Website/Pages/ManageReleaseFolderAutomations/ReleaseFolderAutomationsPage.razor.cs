@@ -96,10 +96,7 @@ public partial class ReleaseFolderAutomationsPage(
     private async Task ToggleEnabledAsync(ReleaseFolderAutomationDto automation)
     {
         var service = ScopedServices.GetRequiredService<ReleaseFolderAutomationService>();
-        await service.SetEnabledAsync(
-            automation.ReleaseFolderAutomationId,
-            !automation.IsEnabled
-        );
+        await service.SetEnabledAsync(automation.ReleaseFolderAutomationId, !automation.IsEnabled);
         await LoadAutomationsAsync();
     }
 

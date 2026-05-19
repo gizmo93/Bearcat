@@ -33,9 +33,9 @@ public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite) : IReleaseWr
             .ReleaseTemplates.AsSplitQuery()
             .Include(t => t.ArchiveConfigTemplates)
             .Include(t => t.UploadConfigTemplates)
-            .ThenInclude(u => u.HosterRegistration)
+                .ThenInclude(u => u.HosterRegistration)
             .Include(t => t.UploadConfigTemplates)
-            .ThenInclude(u => u.LinkCrypterTemplates)
+                .ThenInclude(u => u.LinkCrypterTemplates)
             .FirstAsync(t => t.Id == releaseTemplateId, cancellationToken);
     }
 

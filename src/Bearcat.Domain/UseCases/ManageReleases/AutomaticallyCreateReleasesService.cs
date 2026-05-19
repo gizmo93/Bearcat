@@ -100,8 +100,7 @@ public class AutomaticallyCreateReleasesService(
         });
 
         var candidateGroups = await Task.WhenAll(scanTasks);
-        return candidateGroups.SelectMany(group => group)
-            .ToHashSet();
+        return candidateGroups.SelectMany(group => group).ToHashSet();
     }
 
     private static bool MatchesPattern(string folderPath, string? folderNamePattern)

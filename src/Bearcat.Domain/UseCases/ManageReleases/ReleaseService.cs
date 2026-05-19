@@ -154,7 +154,8 @@ public class ReleaseService(IReleaseWriteRepository writeRepository)
 
     private static List<string> CleanLinks(IReadOnlyList<string> links)
     {
-        return links.Where(link => !string.IsNullOrWhiteSpace(link))
+        return links
+            .Where(link => !string.IsNullOrWhiteSpace(link))
             .Select(link => link.Trim())
             .ToList();
     }

@@ -318,5 +318,4 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             .Select(link => link.Trim())
             .ToList();
     }
-
 }
