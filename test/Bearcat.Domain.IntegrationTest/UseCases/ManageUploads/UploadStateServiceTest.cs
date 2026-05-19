@@ -345,6 +345,122 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         );
     }
 
+    [Test]
+    public async Task CreateManualReuploadAsync_OnlineBlockingUploadExists_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow,
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+        dbContext.Uploads.Add(
+            new Upload
+            {
+                UploadConfigId = upload.UploadConfigId,
+                CreatedAt = DateTime.UtcNow,
+                UploadState = UploadState.Completed,
+                OnlineState = OnlineState.Online,
+                ErrorMessages = [],
+            }
+        );
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None)
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Message.ShouldBe(
+            "A replacement upload already exists or is pending for this upload config."
+        );
+    }
+
+    [Test]
+    public async Task CancelUploadAsync_UploadDoesNotExist_ReturnsFalse()
+    {
+        // Act
+        var result = await service.CancelUploadAsync(-1, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task CancelUploadAsync_UploadAlreadyHasCancellationRequested_ReturnsTrue()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Unknown,
+            checkedAt: null,
+            uploadedFileLinks: []
+        );
+        upload.UploadState = UploadState.CancellationRequested;
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.CancelUploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task CancelUploadAsync_UploadCannotBeCanceled_ReturnsFalse()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow,
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+
+        // Act
+        var result = await service.CancelUploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [TestCase(UploadState.Pending)]
+    [TestCase(UploadState.Uploading)]
+    public async Task CancelUploadAsync_UploadCanBeCanceled_RequestsCancellation(
+        UploadState uploadState
+    )
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Unknown,
+            checkedAt: null,
+            uploadedFileLinks: []
+        );
+        upload.UploadState = uploadState;
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.CancelUploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var updatedUpload = await dbContext.Uploads.Include(u => u.Notifications).SingleAsync();
+
+        result.ShouldBeTrue();
+        updatedUpload.UploadState.ShouldBe(UploadState.CancellationRequested);
+        updatedUpload.Notifications.Single().Message.ShouldBe("Upload cancellation requested");
+    }
+
+    [Test]
+    public async Task DeleteUploadAsync_UploadDoesNotExist_ReturnsFalse()
+    {
+        // Act
+        var result = await service.DeleteUploadAsync(-1, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
     [TestCase(UploadState.Pending)]
     [TestCase(UploadState.Completed)]
     [TestCase(UploadState.Failed)]
@@ -393,6 +509,91 @@ public class UploadStateServiceTest : BearcatIntegrationTest
 
         result.ShouldBeFalse();
         (await dbContext.Uploads.AnyAsync(u => u.Id == upload.Id)).ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_HosterReportsAllFilesOffline_MarksUploadOffline()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"]
+        );
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<string>>(),
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(
+                    true,
+                    [],
+                    new Dictionary<string, bool>
+                    {
+                        ["https://hoster.test/1"] = false,
+                        ["https://hoster.test/2"] = false,
+                    }
+                )
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .Include(u => u.Notifications)
+            .SingleAsync();
+
+        result.Id.ShouldBe(upload.Id);
+        result.OnlineState.ShouldBe(OnlineState.Offline);
+        result.UploadedFiles.ShouldAllBe(f => f.OnlineState == OnlineState.Offline);
+        result.Notifications.Single().Message.ShouldBe("Some files are offline on the hoster");
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_AutomaticReuploadHasNoUploadedFiles_DoesNotCreateReupload()
+    {
+        // Arrange
+        await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: null,
+            uploadedFileLinks: [],
+            enableAutomaticReuploads: true
+        );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        var uploads = await dbContext.Uploads.ToListAsync();
+
+        uploads.Count.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_AutomaticReuploadHasUncheckedFile_DoesNotCreateReupload()
+    {
+        // Arrange
+        await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: null,
+            uploadedFileLinks: ["https://hoster.test/1"],
+            enableAutomaticReuploads: true
+        );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        var uploads = await dbContext.Uploads.ToListAsync();
+
+        uploads.Count.ShouldBe(1);
     }
 
     private async Task<Upload> AddCompletedUploadAsync(
