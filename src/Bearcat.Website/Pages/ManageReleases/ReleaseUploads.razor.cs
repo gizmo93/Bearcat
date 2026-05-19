@@ -170,6 +170,70 @@ public partial class ReleaseUploads(
         await RefreshUploadsAsync();
     }
 
+    private async Task CancelUploadAsync(ReleaseUploadDto upload)
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["CancelUpload"],
+            L["CancelUploadConfirmation", upload.UploadId],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["CancelUpload"],
+                CancelText = L["Close"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        var cancellationRequested = await uploadStateService.CancelUploadAsync(upload.UploadId);
+
+        if (cancellationRequested)
+        {
+            toastService.Success(L["UploadCancellationRequested", upload.UploadId]);
+        }
+        else
+        {
+            toastService.Error(L["UploadCancellationNotAvailable", upload.UploadId]);
+        }
+
+        await RefreshUploadsAsync();
+    }
+
+    private async Task DeleteUploadAsync(ReleaseUploadDto upload)
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["DeleteUpload"],
+            L["DeleteUploadConfirmation", upload.UploadId],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        var deleted = await uploadStateService.DeleteUploadAsync(upload.UploadId);
+
+        if (deleted)
+        {
+            toastService.Success(L["UploadDeleted", upload.UploadId]);
+        }
+        else
+        {
+            toastService.Error(L["UploadDeleteNotAvailable", upload.UploadId]);
+        }
+
+        await RefreshUploadsAsync();
+    }
+
     private async Task GoToPageAsync(int page)
     {
         var nextPageIndex = Math.Clamp(page - 1, 0, TotalPages - 1);
@@ -214,6 +278,7 @@ public partial class ReleaseUploads(
         state switch
         {
             UploadState.Uploading => BadgeVariant.Default,
+            UploadState.CancellationRequested => BadgeVariant.Secondary,
             UploadState.Pending => BadgeVariant.Secondary,
             UploadState.Failed => BadgeVariant.Destructive,
             _ => BadgeVariant.Outline,
@@ -221,4 +286,14 @@ public partial class ReleaseUploads(
 
     private static bool CanCreateManualReupload(ReleaseUploadDto upload) =>
         upload.CanCreateReupload;
+
+    private static bool CanCancelUpload(ReleaseUploadDto upload) =>
+        upload.UploadState is UploadState.Pending or UploadState.Uploading;
+
+    private static bool CanDeleteUpload(ReleaseUploadDto upload) =>
+        upload.UploadState
+            is UploadState.Pending
+                or UploadState.Completed
+                or UploadState.Failed
+                or UploadState.Canceled;
 }

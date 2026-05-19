@@ -7,4 +7,6 @@ public enum UploadState
     Completed = 3,
     Failed = 4,
     Uploading = 5,
+    CancellationRequested = 6,
+    Canceled = 7,
 }

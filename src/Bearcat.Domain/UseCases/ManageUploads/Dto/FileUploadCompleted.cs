@@ -1,11 +1,11 @@
-using Bearcat.Domain.Entities;
-
 namespace Bearcat.Domain.UseCases.ManageUploads.Dto;
 
 public record FileUploadCompleted(
-    Upload Upload,
-    ArchiveFile ArchiveFile,
+    int UploadId,
+    int ArchiveFileId,
+    string FullFileName,
     string? FileUrl,
     bool IsSuccess,
-    IReadOnlyList<string> Errors
+    IReadOnlyList<string> Errors,
+    bool WasCanceled = false
 );

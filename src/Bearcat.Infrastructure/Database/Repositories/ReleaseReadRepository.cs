@@ -103,6 +103,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             UploadState.Uploading,
             UploadState.WaitingForArchive,
             UploadState.Failed,
+            UploadState.CancellationRequested,
         ];
 
         var pageSize = Math.Clamp(query.PageSize, 5, 100);
@@ -132,7 +133,8 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                 u.OnlineState,
                 u.UploadedFiles.Count(),
                 (
-                    u.OnlineState == OnlineState.Offline
+                    u.UploadState == UploadState.Canceled
+                    || u.OnlineState == OnlineState.Offline
                     || u.OnlineState == OnlineState.PartiallyOnline
                 )
                     && !u.UploadConfig.Uploads.Any(ru =>

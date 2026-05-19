@@ -59,7 +59,7 @@
                         var percentage = GetUploadProgress(upload);
                         var isExpanded = showDetailIds.Contains(upload.Id);
                     }
-                    @if (upload.UploadState is UploadState.Uploading)
+                    @if (upload.UploadState is UploadState.Uploading or UploadState.CancellationRequested)
                     {
                         <div class="flex items-center justify-end gap-3">
                             <div class="flex min-w-[9rem] items-center gap-3">
@@ -78,6 +78,22 @@
                     {
                         <span class="text-xs text-muted-foreground">-</span>
                     }
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="Upload" TValue="int"
+                               Header=""
+                               Property="@(upload => upload.Id)"
+                               Width="56px">
+                <CellTemplate Context="upload">
+                    <div class="flex justify-end">
+                        <BbButton Variant="ButtonVariant.Ghost"
+                                  Size="ButtonSize.IconSmall"
+                                  Disabled="@(!CanCancelUpload(upload))"
+                                  AriaLabel="@L["CancelUpload"]"
+                                  OnClick="@(() => CancelUploadAsync(upload))">
+                            <LucideIcon Name="ban" class="h-4 w-4" />
+                        </BbButton>
+                    </div>
                 </CellTemplate>
             </BbDataTableColumn>
         </Columns>

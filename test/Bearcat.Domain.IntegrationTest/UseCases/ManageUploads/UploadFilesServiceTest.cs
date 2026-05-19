@@ -62,7 +62,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             .Returns(new Dictionary<string, IHoster> { [HosterClassName] = hosterMock.Object });
 
         service = new UploadFilesService(
-            new UploadFilesRepository(dbContext),
+            new UploadFilesRepository(dbContext, dbContext),
             hosterFactoryMock.Object,
             new FileSystemService(),
             CreateTimeProvider(),
@@ -115,7 +115,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
                     hosterConfigMock.Object,
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -158,7 +158,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
                     hosterConfigMock.Object,
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -216,6 +216,157 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task ProcessAsync_CancellationRequestedUploadExists_MarksUploadCanceled()
+    {
+        // Arrange
+        var archiveFilePath = CreateArchiveFile("archive.part1.rar");
+        var upload = await AddUploadAsync(UploadState.CancellationRequested, [archiveFilePath]);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .Include(u => u.Notifications)
+            .SingleAsync();
+
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(upload.Id);
+        result.UploadState.ShouldBe(UploadState.Canceled);
+        result.OnlineState.ShouldBe(OnlineState.Unknown);
+        result.UploadedFiles.ShouldBeEmpty();
+        result.Notifications.Single().Message.ShouldBe("Upload canceled");
+        hosterFactoryMock.Verify(f => f.GetHostersByName(), Times.Never);
+    }
+
+    [Test]
+    public async Task ProcessAsync_CancellationRequestedDuringUpload_CancelsUpload()
+    {
+        // Arrange
+        var archiveFilePath = CreateArchiveFile("archive.part1.rar");
+        var secondArchiveFilePath = CreateArchiveFile("archive.part2.rar");
+        var upload = await AddUploadAsync(
+            UploadState.Pending,
+            [archiveFilePath, secondArchiveFilePath]
+        );
+        hosterMock
+            .Setup(h =>
+                h.UploadFileAsync(
+                    It.Is<FileDto>(f =>
+                        f.FullFileName == archiveFilePath || f.FullFileName == secondArchiveFilePath
+                    ),
+                    hosterConfigMock.Object,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(
+                async (FileDto fileDto, IHosterConfig _, CancellationToken cancellationToken) =>
+                {
+                    await using var cancellationDbContext = CreateDbContext();
+                    var uploadToCancel = await cancellationDbContext.Uploads.SingleAsync(u =>
+                        u.Id == upload.Id
+                    );
+                    uploadToCancel.UploadState = UploadState.CancellationRequested;
+                    await cancellationDbContext.SaveChangesAsync();
+
+                    await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+
+                    return new UploadFileResult(
+                        true,
+                        fileDto,
+                        [],
+                        "https://hoster.test/archive.part1.rar"
+                    );
+                }
+            );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .Include(u => u.Notifications)
+            .SingleAsync();
+
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(upload.Id);
+        result.UploadState.ShouldBe(UploadState.Canceled);
+        result.OnlineState.ShouldBe(OnlineState.Unknown);
+        result.UploadedFiles.ShouldBeEmpty();
+        result.Notifications.Select(n => n.Message).ShouldContain("Upload canceled");
+        hosterMock.Verify(
+            h =>
+                h.UploadFileAsync(
+                    It.Is<FileDto>(f =>
+                        f.FullFileName == archiveFilePath || f.FullFileName == secondArchiveFilePath
+                    ),
+                    It.IsAny<IHosterConfig>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_CancellationRequestedAfterSuccessfulFileUpload_CompletesUpload()
+    {
+        // Arrange
+        var archiveFilePath = CreateArchiveFile("archive.part1.rar");
+        var upload = await AddUploadAsync(UploadState.Pending, [archiveFilePath]);
+        hosterMock
+            .Setup(h =>
+                h.UploadFileAsync(
+                    It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
+                    hosterConfigMock.Object,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(
+                async (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
+                {
+                    await using var cancellationDbContext = CreateDbContext();
+                    var uploadToCancel = await cancellationDbContext.Uploads.SingleAsync(u =>
+                        u.Id == upload.Id
+                    );
+                    uploadToCancel.UploadState = UploadState.CancellationRequested;
+                    await cancellationDbContext.SaveChangesAsync();
+
+                    return new UploadFileResult(
+                        true,
+                        fileDto,
+                        [],
+                        "https://hoster.test/archive.part1.rar"
+                    );
+                }
+            );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .Include(u => u.Notifications)
+            .SingleAsync();
+
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(upload.Id);
+        result.UploadState.ShouldBe(UploadState.Completed);
+        result.OnlineState.ShouldBe(OnlineState.Online);
+        result
+            .UploadedFiles.Single()
+            .HosterFileLink.ShouldBe("https://hoster.test/archive.part1.rar");
+        result
+            .Notifications.Select(n => n.Message)
+            .ShouldContain("All files uploaded successfully");
+    }
+
+    [Test]
     public async Task ProcessAsync_UploadAlreadyHasOneUploadedFile_UploadsOnlyMissingArchiveFiles()
     {
         // Arrange
@@ -231,7 +382,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == missingUploadedFilePath),
                     hosterConfigMock.Object,
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -335,7 +486,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
                     hosterConfigMock.Object,
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 ),
             Times.Once
         );

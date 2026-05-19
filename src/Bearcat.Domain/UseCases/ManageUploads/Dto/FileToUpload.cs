@@ -1,11 +1,12 @@
 using Bearcat.Abstractions.Hoster;
-using Bearcat.Domain.Entities;
 
 namespace Bearcat.Domain.UseCases.ManageUploads.Dto;
 
 public record FileToUpload(
-    Upload Upload,
-    ArchiveFile ArchiveFile,
+    int UploadId,
+    int ArchiveFileId,
+    string FullFileName,
+    string HosterClassName,
     IHoster Hoster,
     IHosterConfig HosterConfig
 );

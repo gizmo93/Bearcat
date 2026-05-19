@@ -284,8 +284,33 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         // Assert
         result.ShouldNotBeNull();
         result.Message.ShouldBe(
-            "Manual reuploads can only be created for offline or partially online uploads."
+            "Manual reuploads can only be created for offline, partially online, or canceled uploads."
         );
+    }
+
+    [Test]
+    public async Task CreateManualReuploadAsync_CanceledUpload_CreatesWaitingForArchiveUpload()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Unknown,
+            checkedAt: null,
+            uploadedFileLinks: []
+        );
+        upload.UploadState = UploadState.Canceled;
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var reupload = await dbContext.Uploads.SingleAsync(u => u.Id == result);
+
+        reupload.ShouldNotBeNull();
+        reupload.UploadConfigId.ShouldBe(upload.UploadConfigId);
+        reupload.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        reupload.OnlineState.ShouldBe(OnlineState.Unknown);
     }
 
     [Test]
@@ -319,6 +344,56 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         result.Message.ShouldBe(
             "A replacement upload already exists or is pending for this upload config."
         );
+    }
+
+    [TestCase(UploadState.Pending)]
+    [TestCase(UploadState.Completed)]
+    [TestCase(UploadState.Failed)]
+    [TestCase(UploadState.Canceled)]
+    public async Task DeleteUploadAsync_AllowedState_DeletesUpload(UploadState uploadState)
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow,
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+        upload.UploadState = uploadState;
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.DeleteUploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+
+        result.ShouldBeTrue();
+        (await dbContext.Uploads.AnyAsync(u => u.Id == upload.Id)).ShouldBeFalse();
+        (await dbContext.UploadedFiles.AnyAsync(f => f.UploadId == upload.Id)).ShouldBeFalse();
+    }
+
+    [TestCase(UploadState.WaitingForArchive)]
+    [TestCase(UploadState.Uploading)]
+    [TestCase(UploadState.CancellationRequested)]
+    public async Task DeleteUploadAsync_DisallowedState_DoesNotDeleteUpload(UploadState uploadState)
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Unknown,
+            checkedAt: null,
+            uploadedFileLinks: []
+        );
+        upload.UploadState = uploadState;
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.DeleteUploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+
+        result.ShouldBeFalse();
+        (await dbContext.Uploads.AnyAsync(u => u.Id == upload.Id)).ShouldBeTrue();
     }
 
     private async Task<Upload> AddCompletedUploadAsync(

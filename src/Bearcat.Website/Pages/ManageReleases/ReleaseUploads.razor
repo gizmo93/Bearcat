@@ -94,24 +94,36 @@
             <BbDataTableColumn TData="ReleaseUploadDto" TValue="int"
                                Header=""
                                Property="@(upload => upload.UploadId)"
-                               Width="64px">
+                               Width="56px">
                 <CellTemplate Context="upload">
-                    <div class="flex justify-end gap-1">
-                        <BbButton Variant="ButtonVariant.Ghost"
-                                  Size="ButtonSize.IconSmall"
-                                  Disabled="@(!CanCreateManualReupload(upload))"
-                                  AriaLabel="@L["CreateManualReupload"]"
-                                  OnClick="@(() => CreateManualReuploadAsync(upload))">
-                            <LucideIcon Name="cloud-upload" class="h-4 w-4" />
-                        </BbButton>
-                        <BbButton Variant="ButtonVariant.Ghost"
-                                  Size="ButtonSize.IconSmall"
-                                  Disabled="@(upload.LinkCount == 0)"
-                                  AriaLabel="@L["ViewUploadLinks"]"
-                                  OnClick="@(() => ShowLinksDialogAsync(upload))">
-                            <LucideIcon Name="list" class="h-4 w-4" />
-                        </BbButton>
-                    </div>
+                    <BbDropdownMenu>
+                        <BbDropdownMenuTrigger>
+                            <BbButton Variant="ButtonVariant.Ghost"
+                                      Size="ButtonSize.IconSmall"
+                                      AriaLabel="@L["UploadActions"]">
+                                <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                            </BbButton>
+                        </BbDropdownMenuTrigger>
+                        <BbDropdownMenuContent Align="PopoverAlign.End">
+                            <BbDropdownMenuItem Disabled="@(upload.LinkCount == 0)"
+                                                OnClick="@(async _ => await ShowLinksDialogAsync(upload))">
+                                @L["ViewUploadLinks"]
+                            </BbDropdownMenuItem>
+                            <BbDropdownMenuItem Disabled="@(!CanCreateManualReupload(upload))"
+                                                OnClick="@(async _ => await CreateManualReuploadAsync(upload))">
+                                @L["CreateManualReupload"]
+                            </BbDropdownMenuItem>
+                            <BbDropdownMenuItem Disabled="@(!CanCancelUpload(upload))"
+                                                OnClick="@(async _ => await CancelUploadAsync(upload))">
+                                @L["CancelUpload"]
+                            </BbDropdownMenuItem>
+                            <BbDropdownMenuSeparator />
+                            <BbDropdownMenuItem Disabled="@(!CanDeleteUpload(upload))"
+                                                OnClick="@(async _ => await DeleteUploadAsync(upload))">
+                                @L["DeleteUpload"]
+                            </BbDropdownMenuItem>
+                        </BbDropdownMenuContent>
+                    </BbDropdownMenu>
                 </CellTemplate>
             </BbDataTableColumn>
         </Columns>
