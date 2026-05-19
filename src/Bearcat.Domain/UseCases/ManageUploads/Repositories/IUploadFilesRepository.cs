@@ -11,6 +11,11 @@ public interface IUploadFilesRepository
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     Task<IReadOnlyList<Upload>> GetOrphanedUploadsAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<int>> GetCancellationRequestedUploadIdsAsync(
+        CancellationToken cancellationToken
+    );
+    Task<bool> IsCancellationRequestedAsync(int uploadId, CancellationToken cancellationToken);
+    Task<Upload?> GetUploadByIdAsync(int uploadId, CancellationToken cancellationToken);
     void ClearChangeTracker();
 
     Task<IReadOnlyDictionary<int, string>> GetConfigByHosterRegistrationId(

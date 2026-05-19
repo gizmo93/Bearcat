@@ -54,6 +54,8 @@
   <data name="BrowseReleaseFolders" xml:space="preserve"><value>Release-Ordner durchsuchen</value></data>
   <data name="BuiltWithBlazorBlueprint" xml:space="preserve"><value>Erstellt mit BlazorBlueprint</value></data>
   <data name="Cancel" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="CancelUpload" xml:space="preserve"><value>Upload abbrechen</value></data>
+  <data name="CancelUploadConfirmation" xml:space="preserve"><value>Upload #{0} abbrechen? Laufende Dateiübertragungen werden gestoppt, sobald der Worker die Anfrage sieht.</value></data>
   <data name="Close" xml:space="preserve"><value>Schließen</value></data>
   <data name="CopyAllLinks" xml:space="preserve"><value>Alle Links kopieren</value></data>
   <data name="Copied" xml:space="preserve"><value>Kopiert</value></data>
@@ -262,6 +264,8 @@
   <data name="UploadState.Pending" xml:space="preserve"><value>Ausstehend</value></data>
   <data name="UploadState.Uploading" xml:space="preserve"><value>Lädt hoch</value></data>
   <data name="UploadState.WaitingForArchive" xml:space="preserve"><value>Wartet auf Archiv</value></data>
+  <data name="UploadState.CancellationRequested" xml:space="preserve"><value>Abbruch angefragt</value></data>
+  <data name="UploadState.Canceled" xml:space="preserve"><value>Abgebrochen</value></data>
   <data name="UploadStatus" xml:space="preserve"><value>Upload-Status</value></data>
   <data name="UploadStatusSubtitle" xml:space="preserve"><value>Upload #{0} für {1}</value></data>
   <data name="UploadTarget" xml:space="preserve"><value>Upload-Ziel</value></data>
@@ -315,6 +319,8 @@
   <data name="HoursUntilReuploadHelp" xml:space="preserve"><value>Minimum 0; dann wird direkt nach bestätigten Offline-Dateien eingeplant.</value></data>
   <data name="HoursUntilReuploadMustBeZeroOrGreater" xml:space="preserve"><value>Stunden bis Reupload muss null oder größer sein.</value></data>
   <data name="ManualReuploadCreated" xml:space="preserve"><value>Manueller Reupload für Upload #{0} erstellt.</value></data>
+  <data name="UploadCancellationRequested" xml:space="preserve"><value>Abbruch für Upload #{0} angefragt.</value></data>
+  <data name="UploadCancellationNotAvailable" xml:space="preserve"><value>Upload #{0} kann nicht mehr abgebrochen werden.</value></data>
   <data name="NewReleaseGroup" xml:space="preserve"><value>Neue Release-Gruppe</value></data>
   <data name="NoReleaseGroupsFound" xml:space="preserve"><value>Keine Release-Gruppen gefunden</value></data>
   <data name="NoReleasesSelected" xml:space="preserve"><value>Keine Releases ausgewählt</value></data>

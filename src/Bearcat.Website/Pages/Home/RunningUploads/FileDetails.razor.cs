@@ -24,6 +24,7 @@ public partial class FileDetails : ComponentBase
         Upload.UploadState switch
         {
             UploadState.Uploading => BadgeVariant.Default,
+            UploadState.CancellationRequested => BadgeVariant.Secondary,
             UploadState.Pending => BadgeVariant.Secondary,
             UploadState.Failed => BadgeVariant.Destructive,
             _ => BadgeVariant.Outline,

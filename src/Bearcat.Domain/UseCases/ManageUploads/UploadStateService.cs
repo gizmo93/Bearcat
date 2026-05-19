@@ -33,10 +33,13 @@ public class UploadStateService(
             cancellationToken
         );
 
-        if (upload.OnlineState is not OnlineState.Offline and not OnlineState.PartiallyOnline)
+        if (
+            upload.UploadState != UploadState.Canceled
+            && upload.OnlineState is not OnlineState.Offline and not OnlineState.PartiallyOnline
+        )
         {
             throw new InvalidOperationException(
-                "Manual reuploads can only be created for offline or partially online uploads."
+                "Manual reuploads can only be created for offline, partially online, or canceled uploads."
             );
         }
 
@@ -52,6 +55,39 @@ public class UploadStateService(
         await uploadStateRepository.SaveChangesAsync(cancellationToken);
 
         return newUpload.Id;
+    }
+
+    public async Task<bool> CancelUploadAsync(
+        int uploadId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var upload = await uploadStateRepository.GetUploadForCancellationAsync(
+            uploadId,
+            cancellationToken
+        );
+
+        if (upload.UploadState == UploadState.CancellationRequested)
+        {
+            return true;
+        }
+
+        if (upload.UploadState is not UploadState.Pending and not UploadState.Uploading)
+        {
+            return false;
+        }
+
+        upload.UploadState = UploadState.CancellationRequested;
+
+        notificationService.CreateInfo(
+            message: "Upload cancellation requested",
+            entity: upload,
+            selector: u => u.Upload
+        );
+
+        await uploadStateRepository.SaveChangesAsync(cancellationToken);
+
+        return true;
     }
 
     private async Task ProcessUploadStateChecksAsync(
@@ -239,6 +275,7 @@ public class UploadStateService(
             UploadState.Uploading,
             UploadState.WaitingForArchive,
             UploadState.Failed,
+            UploadState.CancellationRequested,
         ];
 
         return upload.UploadConfig.Uploads.Any(ru =>

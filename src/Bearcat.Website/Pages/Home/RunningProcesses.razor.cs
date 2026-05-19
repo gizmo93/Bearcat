@@ -57,7 +57,9 @@ public partial class RunningProcesses(NavigationManager navigationManager)
             .Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.ArchiveConfig)
             .Where(u =>
-                u.UploadState == UploadState.Pending || u.UploadState == UploadState.Uploading
+                u.UploadState == UploadState.Pending
+                || u.UploadState == UploadState.Uploading
+                || u.UploadState == UploadState.CancellationRequested
             )
             .ToListAsync();
     }

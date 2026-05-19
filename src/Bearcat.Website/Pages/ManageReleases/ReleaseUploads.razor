@@ -94,9 +94,16 @@
             <BbDataTableColumn TData="ReleaseUploadDto" TValue="int"
                                Header=""
                                Property="@(upload => upload.UploadId)"
-                               Width="64px">
+                               Width="96px">
                 <CellTemplate Context="upload">
                     <div class="flex justify-end gap-1">
+                        <BbButton Variant="ButtonVariant.Ghost"
+                                  Size="ButtonSize.IconSmall"
+                                  Disabled="@(!CanCancelUpload(upload))"
+                                  AriaLabel="@L["CancelUpload"]"
+                                  OnClick="@(() => CancelUploadAsync(upload))">
+                            <LucideIcon Name="ban" class="h-4 w-4" />
+                        </BbButton>
                         <BbButton Variant="ButtonVariant.Ghost"
                                   Size="ButtonSize.IconSmall"
                                   Disabled="@(!CanCreateManualReupload(upload))"
