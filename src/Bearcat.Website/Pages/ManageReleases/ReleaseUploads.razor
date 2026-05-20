@@ -92,6 +92,14 @@
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="ReleaseUploadDto" TValue="int"
+                               Header="@L["Containers"]"
+                               Property="@(upload => upload.ContainerCount)"
+                               Width="120px">
+                <CellTemplate Context="upload">
+                    <BbBadge Variant="BadgeVariant.Outline">@upload.ContainerCount</BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseUploadDto" TValue="int"
                                Header=""
                                Property="@(upload => upload.UploadId)"
                                Width="56px">
@@ -108,6 +116,10 @@
                             <BbDropdownMenuItem Disabled="@(upload.LinkCount == 0)"
                                                 OnClick="@(async _ => await ShowLinksDialogAsync(upload))">
                                 @L["ViewUploadLinks"]
+                            </BbDropdownMenuItem>
+                            <BbDropdownMenuItem Disabled="@(upload.ContainerCount == 0)"
+                                                OnClick="@(async _ => await ShowContainerLinksDialogAsync(upload))">
+                                @L["ViewContainerLinks"]
                             </BbDropdownMenuItem>
                             <BbDropdownMenuItem Disabled="@(!CanCreateManualReupload(upload))"
                                                 OnClick="@(async _ => await CreateManualReuploadAsync(upload))">

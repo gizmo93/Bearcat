@@ -163,6 +163,27 @@ public partial class ReleaseUploads(
         );
     }
 
+    private async Task ShowContainerLinksDialogAsync(ReleaseUploadDto upload)
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(UploadContainerLinksDialog.ReleaseId)] = ReleaseId,
+            [nameof(UploadContainerLinksDialog.UploadId)] = upload.UploadId,
+            [nameof(UploadContainerLinksDialog.UploadConfigName)] = upload.UploadConfigName,
+        };
+
+        await dialogService.OpenAsync<UploadContainerLinksDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["ContainerLinksTitle", upload.UploadId],
+                Description = L["ContainerLinksDialogDescription", upload.UploadConfigName],
+                Size = DialogSize.ExtraLarge,
+                ShowClose = true,
+            }
+        );
+    }
+
     private async Task CreateManualReuploadAsync(ReleaseUploadDto upload)
     {
         await uploadStateService.CreateManualReuploadAsync(upload.UploadId);
