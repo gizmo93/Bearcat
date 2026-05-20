@@ -18,9 +18,21 @@ public class ArchiveCleanupBackgroundTask(
         while (!stoppingToken.IsCancellationRequested)
         {
             await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var archiveCleanupService =
-                scope.ServiceProvider.GetRequiredService<ArchiveCleanupService>();
-            await archiveCleanupService.ProcessAsync(stoppingToken);
+
+            try
+            {
+                var archiveCleanupService =
+                    scope.ServiceProvider.GetRequiredService<ArchiveCleanupService>();
+                await archiveCleanupService.ProcessAsync(stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Error occurred while processing archive cleanup");
+            }
 
             await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
         }
