@@ -23,9 +23,21 @@ public class ArchivingBackgroundTask(
             }
 
             await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var archiveCreationService =
-                scope.ServiceProvider.GetRequiredService<ArchiveCreationService>();
-            await archiveCreationService.ProcessAsync(stoppingToken);
+
+            try
+            {
+                var archiveCreationService =
+                    scope.ServiceProvider.GetRequiredService<ArchiveCreationService>();
+                await archiveCreationService.ProcessAsync(stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Error occurred while processing archive creation");
+            }
 
             await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
         }

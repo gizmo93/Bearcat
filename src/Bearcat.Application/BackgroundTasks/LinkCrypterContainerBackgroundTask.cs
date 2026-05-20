@@ -25,7 +25,22 @@ public class LinkCrypterContainerBackgroundTask(
             await using var scope = serviceScopeFactory.CreateAsyncScope();
             var archiveCreationService =
                 scope.ServiceProvider.GetRequiredService<LinkCrypterContainerService>();
-            await archiveCreationService.CreateMissingLinkCrypterContainersAsync(stoppingToken);
+
+            try
+            {
+                await archiveCreationService.CreateMissingLinkCrypterContainersAsync(stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(
+                    e,
+                    "An error occurred while creating missing link crypter containers for uploads"
+                );
+            }
 
             await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
         }

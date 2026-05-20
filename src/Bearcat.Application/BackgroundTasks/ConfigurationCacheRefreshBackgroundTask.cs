@@ -16,7 +16,21 @@ public class ConfigurationCacheRefreshBackgroundTask(
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            await overrideCache.RefreshAsync(stoppingToken);
+            try
+            {
+                await overrideCache.RefreshAsync(stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(
+                    e,
+                    "An error occurred while refreshing the application configuration override cache"
+                );
+            }
             await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
         }
     }

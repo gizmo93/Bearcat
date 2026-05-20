@@ -21,10 +21,21 @@ public class ArchiveUploadBackgroundTask(
             {
                 break;
             }
-
             await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var uploadService = scope.ServiceProvider.GetRequiredService<UploadFilesService>();
-            await uploadService.ProcessAsync(stoppingToken);
+
+            try
+            {
+                var uploadService = scope.ServiceProvider.GetRequiredService<UploadFilesService>();
+                await uploadService.ProcessAsync(stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Error occurred while processing archive uploads");
+            }
 
             await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
         }

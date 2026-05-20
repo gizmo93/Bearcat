@@ -26,10 +26,22 @@ public class CheckUploadStateBackgroundTask(
             await using var scope = serviceScopeFactory.CreateAsyncScope();
             var uploadStateService = scope.ServiceProvider.GetRequiredService<UploadStateService>();
             var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
-            await uploadStateService.CheckUploadStatesAsync(
-                timeProvider.GetLocalNow(),
-                stoppingToken
-            );
+
+            try
+            {
+                await uploadStateService.CheckUploadStatesAsync(
+                    timeProvider.GetLocalNow(),
+                    stoppingToken
+                );
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Error occurred while checking upload states");
+            }
 
             await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
         }
