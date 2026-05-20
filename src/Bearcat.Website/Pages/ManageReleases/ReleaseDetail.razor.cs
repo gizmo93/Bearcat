@@ -27,7 +27,7 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
     private IReleaseReadRepository releaseReadRepository = null!;
     private ReleaseDto release = null!;
     private bool isInitialized;
-    private string? activeTab = "archives";
+    private string? activeTab = "overview";
     private readonly Dictionary<string, IReloadableComponent> reloadableComponents = new();
 
     protected override void OnParametersSet()
@@ -74,9 +74,11 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
     private static string NormalizeTab(string? tab) =>
         tab switch
         {
+            "overview" => "overview",
             "upload-configs" => "upload-configs",
             "uploads" => "uploads",
-            _ => "archives",
+            "archives" => "archives",
+            _ => "overview",
         };
 
     private async Task ShowEditReleaseDialogAsync()

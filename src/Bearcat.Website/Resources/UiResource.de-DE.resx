@@ -58,6 +58,8 @@
   <data name="CancelUploadConfirmation" xml:space="preserve"><value>Upload #{0} abbrechen? Laufende Dateiübertragungen werden gestoppt, sobald der Worker die Anfrage sieht.</value></data>
   <data name="Close" xml:space="preserve"><value>Schließen</value></data>
   <data name="CopyAllLinks" xml:space="preserve"><value>Alle Links kopieren</value></data>
+  <data name="CopyLink" xml:space="preserve"><value>Link kopieren</value></data>
+  <data name="CopyPassword" xml:space="preserve"><value>Passwort kopieren</value></data>
   <data name="Copied" xml:space="preserve"><value>Kopiert</value></data>
   <data name="CopyFailed" xml:space="preserve"><value>Kopieren fehlgeschlagen</value></data>
   <data name="CopyUploadLinksFailed" xml:space="preserve"><value>Uploadlinks konnten nicht kopiert werden.</value></data>
@@ -98,6 +100,7 @@
   <data name="DeleteReleaseTitle" xml:space="preserve"><value>Release {0} löschen</value></data>
   <data name="DeleteUploadConfig" xml:space="preserve"><value>Upload-Konfiguration löschen</value></data>
   <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Möchtest du die Upload-Konfiguration {0} wirklich löschen?</value></data>
+  <data name="DownloadLinks" xml:space="preserve"><value>Downloadlinks</value></data>
   <data name="DeleteUpload" xml:space="preserve"><value>Upload löschen</value></data>
   <data name="DeleteUploadConfirmation" xml:space="preserve"><value>Upload #{0} löschen? Zugehörige Uploadlinks, Container und Benachrichtigungen werden ebenfalls entfernt.</value></data>
   <data name="Disable" xml:space="preserve"><value>Deaktivieren</value></data>
@@ -134,6 +137,7 @@
   <data name="Id" xml:space="preserve"><value>ID</value></data>
   <data name="Inactive" xml:space="preserve"><value>Inaktiv</value></data>
   <data name="Language" xml:space="preserve"><value>Sprache</value></data>
+  <data name="LatestUpload" xml:space="preserve"><value>Letzter Upload</value></data>
   <data name="LinkCrypter" xml:space="preserve"><value>Link-Crypter</value></data>
   <data name="LinkCrypterConfigurationHelp" xml:space="preserve"><value>Gib alle benötigten Werte für den ausgewählten Link-Crypter an.</value></data>
   <data name="LinkCrypterContainerDialogDescription" xml:space="preserve"><value>Hänge einen Link-Crypter an diese Upload-Konfiguration an.</value></data>
@@ -143,6 +147,7 @@
   <data name="LinkCrypterRegistrationDeactivated" xml:space="preserve"><value>Link-Crypter-Registrierung {0} deaktiviert</value></data>
   <data name="LinkCrypterRegistrations" xml:space="preserve"><value>Link-Crypter-Registrierungen</value></data>
   <data name="LinkCrypterRegistrationsIntro" xml:space="preserve"><value>Verwalte Crypter-Konfigurationen, Aktivierungsstatus und Login-Prüfungen.</value></data>
+  <data name="LinkCrypterLinks" xml:space="preserve"><value>Link-Crypter-Links</value></data>
   <data name="LinkCrypters" xml:space="preserve"><value>Link-Crypter</value></data>
   <data name="LinkCryptersDescription" xml:space="preserve"><value>Optionale Container für verteilte Upload-Links.</value></data>
   <data name="Links" xml:space="preserve"><value>Links</value></data>
@@ -161,9 +166,12 @@
   <data name="NewRelease" xml:space="preserve"><value>Neues Release</value></data>
   <data name="Next" xml:space="preserve"><value>Weiter</value></data>
   <data name="No" xml:space="preserve"><value>Nein</value></data>
+  <data name="NoArchivePassword" xml:space="preserve"><value>Kein Archivpasswort</value></data>
   <data name="NoArchiveConfigurationsYet" xml:space="preserve"><value>Noch keine Archiv-Konfigurationen.</value></data>
   <data name="NoContainerLinksFound" xml:space="preserve"><value>Keine Containerlinks gefunden</value></data>
   <data name="NoDistributionTargets" xml:space="preserve"><value>Keine Verteilziele</value></data>
+  <data name="NoLatestUpload" xml:space="preserve"><value>Noch kein Upload</value></data>
+  <data name="NoLinkCrypterLinks" xml:space="preserve"><value>Keine Link-Crypter-Links</value></data>
   <data name="NoReleasesFound" xml:space="preserve"><value>Keine Releases gefunden</value></data>
   <data name="NoTargets" xml:space="preserve"><value>Keine Ziele</value></data>
   <data name="NoUploadConfigurationsYet" xml:space="preserve"><value>Noch keine Upload-Konfigurationen.</value></data>
@@ -346,6 +354,7 @@
   <data name="ReleaseGroupNamePlaceholder" xml:space="preserve"><value>Release-Gruppe benennen</value></data>
   <data name="ReleaseGroups" xml:space="preserve"><value>Release-Gruppen</value></data>
   <data name="ReleaseGroupsIntro" xml:space="preserve"><value>Steuere, welche Releases automatische Reuploads erstellen und wann.</value></data>
+  <data name="ReleaseOverview" xml:space="preserve"><value>Release-Übersicht</value></data>
   <data name="SelectReleaseGroup" xml:space="preserve"><value>Release-Gruppe auswählen</value></data>
   <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>Du musst eine Release-Gruppe auswählen</value></data>
   <data name="SelectAll" xml:space="preserve"><value>Alle auswählen</value></data>

@@ -463,6 +463,12 @@ a {
     opacity: 0.5;
 }
 
+.bearcat-copy-icon-button {
+    width: 2rem;
+    min-width: 2rem;
+    padding-inline: 0;
+}
+
 .bearcat-release-page-nav {
     display: flex;
     justify-content: flex-start;
@@ -902,6 +908,77 @@ a {
 
 .bearcat-upload-link:hover {
     text-decoration: underline;
+}
+
+.bearcat-release-overview-password {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bearcat-release-overview-link-copy {
+    width: 1.75rem;
+    min-width: 1.75rem;
+    min-height: 1.75rem;
+}
+
+.bearcat-release-overview-list {
+    display: grid;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+}
+
+.bearcat-release-overview-item {
+    display: grid;
+    gap: 0.85rem;
+    padding: 1rem;
+}
+
+.bearcat-release-overview-item + .bearcat-release-overview-item {
+    border-top: 1px solid var(--border);
+}
+
+.bearcat-release-overview-main {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.bearcat-release-overview-links {
+    display: grid;
+    gap: 0.5rem;
+    border-top: 1px solid color-mix(in oklch, var(--border) 70%, transparent);
+    padding-top: 0.85rem;
+}
+
+.bearcat-release-overview-link-list {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.bearcat-release-overview-password code {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--foreground);
+    font-size: 0.8125rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (min-width: 860px) {
+    .bearcat-release-overview-main {
+        grid-template-columns:
+            minmax(10rem, 1.25fr) minmax(8rem, 0.9fr) minmax(7rem, 0.7fr)
+            minmax(7rem, 0.7fr) minmax(7rem, 0.6fr) minmax(10rem, 1fr);
+        align-items: center;
+    }
+
+    .bearcat-release-overview-link-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 .bearcat-file-link-name {

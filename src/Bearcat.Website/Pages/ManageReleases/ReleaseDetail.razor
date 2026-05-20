@@ -79,6 +79,7 @@
 
     <BbTabs Value="@activeTab" ValueChanged="HandleTabChangedAsync" Class="space-y-4">
         <BbTabsList>
+            <BbTabsTrigger Value="overview">@L["ReleaseOverview"]</BbTabsTrigger>
             <BbTabsTrigger Value="archives">@L["ArchiveConfigurations"]</BbTabsTrigger>
             <BbTabsTrigger Value="upload-configs">
                 <span class="bearcat-tab-label">
@@ -93,6 +94,12 @@
                 </span>
             </BbTabsTrigger>
         </BbTabsList>
+
+        <BbTabsContent Value="overview" Class="space-y-4">
+            <ReleaseOverview
+                @ref="@reloadableComponents[nameof(ReleaseOverview)]"
+                ReleaseId="@ReleaseId" />
+        </BbTabsContent>
 
         <BbTabsContent Value="archives" Class="space-y-4">
             <ArchiveConfigs

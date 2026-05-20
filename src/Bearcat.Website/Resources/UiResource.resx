@@ -58,6 +58,8 @@
   <data name="CancelUploadConfirmation" xml:space="preserve"><value>Cancel upload #{0}? Running file transfers will be stopped as soon as the worker sees the request.</value></data>
   <data name="Close" xml:space="preserve"><value>Close</value></data>
   <data name="CopyAllLinks" xml:space="preserve"><value>Copy all links</value></data>
+  <data name="CopyLink" xml:space="preserve"><value>Copy link</value></data>
+  <data name="CopyPassword" xml:space="preserve"><value>Copy password</value></data>
   <data name="Copied" xml:space="preserve"><value>Copied</value></data>
   <data name="CopyFailed" xml:space="preserve"><value>Copy failed</value></data>
   <data name="CopyUploadLinksFailed" xml:space="preserve"><value>Upload links could not be copied.</value></data>
@@ -98,6 +100,7 @@
   <data name="DeleteReleaseTitle" xml:space="preserve"><value>Delete Release {0}</value></data>
   <data name="DeleteUploadConfig" xml:space="preserve"><value>Delete Upload Config</value></data>
   <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Are you sure you want to delete the upload config {0}?</value></data>
+  <data name="DownloadLinks" xml:space="preserve"><value>Download links</value></data>
   <data name="DeleteUpload" xml:space="preserve"><value>Delete upload</value></data>
   <data name="DeleteUploadConfirmation" xml:space="preserve"><value>Delete upload #{0}? Its uploaded file links, containers, and notifications will also be removed.</value></data>
   <data name="Disable" xml:space="preserve"><value>Disable</value></data>
@@ -134,6 +137,7 @@
   <data name="Id" xml:space="preserve"><value>Id</value></data>
   <data name="Inactive" xml:space="preserve"><value>Inactive</value></data>
   <data name="Language" xml:space="preserve"><value>Language</value></data>
+  <data name="LatestUpload" xml:space="preserve"><value>Latest upload</value></data>
   <data name="LinkCrypter" xml:space="preserve"><value>Link crypter</value></data>
   <data name="LinkCrypterConfigurationHelp" xml:space="preserve"><value>Provide all required values for the selected link crypter.</value></data>
   <data name="LinkCrypterContainerDialogDescription" xml:space="preserve"><value>Attach a link crypter to this upload configuration.</value></data>
@@ -143,6 +147,7 @@
   <data name="LinkCrypterRegistrationDeactivated" xml:space="preserve"><value>Link crypter registration {0} deactivated</value></data>
   <data name="LinkCrypterRegistrations" xml:space="preserve"><value>Link crypter registrations</value></data>
   <data name="LinkCrypterRegistrationsIntro" xml:space="preserve"><value>Manage crypter configurations, active state, and login checks.</value></data>
+  <data name="LinkCrypterLinks" xml:space="preserve"><value>Link crypter links</value></data>
   <data name="LinkCrypters" xml:space="preserve"><value>Link crypters</value></data>
   <data name="LinkCryptersDescription" xml:space="preserve"><value>Optional containers for distributed upload links.</value></data>
   <data name="Links" xml:space="preserve"><value>Links</value></data>
@@ -161,9 +166,12 @@
   <data name="NewRelease" xml:space="preserve"><value>New release</value></data>
   <data name="Next" xml:space="preserve"><value>Next</value></data>
   <data name="No" xml:space="preserve"><value>No</value></data>
+  <data name="NoArchivePassword" xml:space="preserve"><value>No archive password</value></data>
   <data name="NoArchiveConfigurationsYet" xml:space="preserve"><value>No archive configurations yet.</value></data>
   <data name="NoContainerLinksFound" xml:space="preserve"><value>No container links found</value></data>
   <data name="NoDistributionTargets" xml:space="preserve"><value>No distribution targets</value></data>
+  <data name="NoLatestUpload" xml:space="preserve"><value>No upload yet</value></data>
+  <data name="NoLinkCrypterLinks" xml:space="preserve"><value>No link crypter links</value></data>
   <data name="NoReleasesFound" xml:space="preserve"><value>No releases found</value></data>
   <data name="NoTargets" xml:space="preserve"><value>No targets</value></data>
   <data name="NoUploadConfigurationsYet" xml:space="preserve"><value>No upload configurations yet.</value></data>
@@ -346,6 +354,7 @@
   <data name="ReleaseGroupNamePlaceholder" xml:space="preserve"><value>Name the release group</value></data>
   <data name="ReleaseGroups" xml:space="preserve"><value>Release groups</value></data>
   <data name="ReleaseGroupsIntro" xml:space="preserve"><value>Control which releases create automatic reuploads and when.</value></data>
+  <data name="ReleaseOverview" xml:space="preserve"><value>Release overview</value></data>
   <data name="SelectReleaseGroup" xml:space="preserve"><value>Select release group</value></data>
   <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>You must select a release group</value></data>
   <data name="SelectAll" xml:space="preserve"><value>Select all</value></data>
