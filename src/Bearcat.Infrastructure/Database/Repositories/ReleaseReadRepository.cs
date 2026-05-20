@@ -132,6 +132,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                 u.UploadState,
                 u.OnlineState,
                 u.UploadedFiles.Count(),
+                u.LinkCrypterContainers.Count(),
                 (
                     u.UploadState == UploadState.Canceled
                     || u.OnlineState == OnlineState.Offline
@@ -205,6 +206,28 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .OrderBy(f => f.ArchiveFile.FullFileName)
             .ThenBy(f => f.Id)
             .Select(f => f.HosterFileLink)
+            .ToListAsync(cancellationToken: cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ReleaseUploadContainerLinkDto>> GetUploadContainerLinksAsync(
+        int releaseId,
+        int uploadId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .LinkCrypterContainers.Where(c =>
+                c.UploadId == uploadId && c.Upload.UploadConfig.ReleaseId == releaseId
+            )
+            .OrderBy(c => c.UploadConfigLinkCrypter.LinkCrypterRegistration.Name)
+            .ThenBy(c => c.Id)
+            .Select(c => new ReleaseUploadContainerLinkDto(
+                c.UploadConfigLinkCrypter.LinkCrypterRegistration.Name,
+                c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName,
+                c.ContainerUrl,
+                c.State,
+                c.CreatedAt
+            ))
             .ToListAsync(cancellationToken: cancellationToken);
     }
 

@@ -11,5 +11,6 @@ public record ReleaseUploadDto(
     UploadState UploadState,
     OnlineState OnlineState,
     int LinkCount,
+    int ContainerCount,
     bool CanCreateReupload
 );

@@ -1,0 +1,118 @@
+@using Bearcat.Domain.UseCases.ManageReleases.Dto
+@using Bearcat.Website.Localization
+@using Bearcat.Website.Shared
+@if (!isInitialized)
+{
+    return;
+}
+
+<div class="bearcat-archive-dialog">
+    <div class="shrink-0 space-y-3">
+        <div class="grid gap-3 sm:grid-cols-2">
+            <div class="rounded-lg border border-border/70 bg-muted/30 px-3 py-2">
+                <p class="text-xs text-muted-foreground">@L["Upload"]</p>
+                <p class="text-sm font-medium">#@UploadId</p>
+            </div>
+            <div class="rounded-lg border border-border/70 bg-muted/30 px-3 py-2">
+                <p class="text-xs text-muted-foreground">@L["UploadConfig"]</p>
+                <p class="truncate text-sm font-medium" title="@UploadConfigName">@UploadConfigName</p>
+            </div>
+        </div>
+
+        <div class="bearcat-upload-filter-row justify-end">
+            <textarea id="@CopyTextAreaId" hidden readonly>@ContainerLinksText</textarea>
+
+            <button type="button"
+                    class="bearcat-copy-button"
+                    disabled="@(ContainerLinks.Count == 0)"
+                    data-copy-target="@CopyTextAreaId"
+                    data-copy-label="@L["CopyAllLinks"]"
+                    data-copy-success-label="@L["Copied"]"
+                    data-copy-failure-label="@L["CopyFailed"]"
+                    onclick="window.bearcat.copyFromTarget(this)">
+                <LucideIcon Name="copy" class="h-4 w-4" />
+                <span class="bearcat-copy-button-label">@L["CopyAllLinks"]</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="bearcat-archive-dialog-body">
+        <BbDataTable TData="ReleaseUploadContainerLinkDto"
+                     Data="containers"
+                     ShowToolbar="false"
+                     ShowPagination="false"
+                     InitialPageSize="@Math.Max(containers.Count, 5)"
+                     IsLoading="isLoading"
+                     AriaLabel="@L["ContainerLinks"]"
+                     Class="bearcat-upload-links-table rounded-lg border border-border/70">
+            <Columns>
+                <BbDataTableColumn TData="ReleaseUploadContainerLinkDto" TValue="string"
+                                   Header="@L["Status"]"
+                                   Property="@(container => container.State.ToString())"
+                                   Width="160px">
+                    <CellTemplate Context="container">
+                        <BbBadge Variant="@GetContainerVariant(container.State)">
+                            @L.Localize(container.State)
+                        </BbBadge>
+                    </CellTemplate>
+                </BbDataTableColumn>
+                <BbDataTableColumn TData="ReleaseUploadContainerLinkDto" TValue="string"
+                                   Header="@L["LinkCrypter"]"
+                                   Property="@(container => container.LinkCrypterRegistrationName)"
+                                   Width="220px">
+                    <CellTemplate Context="container">
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-medium" title="@container.LinkCrypterRegistrationName">
+                                @container.LinkCrypterRegistrationName
+                            </p>
+                            <p class="truncate text-xs text-muted-foreground" title="@container.LinkCrypterClassName">
+                                @container.LinkCrypterClassName
+                            </p>
+                        </div>
+                    </CellTemplate>
+                </BbDataTableColumn>
+                <BbDataTableColumn TData="ReleaseUploadContainerLinkDto" TValue="string"
+                                   Header="@L["ContainerLink"]"
+                                   Property="@(container => container.ContainerUrl)"
+                                   MinWidth="300px">
+                    <CellTemplate Context="container">
+                        @if (string.IsNullOrWhiteSpace(container.ContainerUrl))
+                        {
+                            <span class="text-sm text-muted-foreground">-</span>
+                        }
+                        else
+                        {
+                            <a class="bearcat-upload-link"
+                               href="@container.ContainerUrl"
+                               target="_blank"
+                               rel="noreferrer noopener"
+                               title="@container.ContainerUrl">
+                                @container.ContainerUrl
+                            </a>
+                        }
+                    </CellTemplate>
+                </BbDataTableColumn>
+                <BbDataTableColumn TData="ReleaseUploadContainerLinkDto" TValue="DateTime"
+                                   Header="@L["CreatedAt"]"
+                                   Property="@(container => container.CreatedAt)"
+                                   Width="160px">
+                    <CellTemplate Context="container">
+                        <span class="text-sm">@container.CreatedAt.ToString("g")</span>
+                    </CellTemplate>
+                </BbDataTableColumn>
+            </Columns>
+            <EmptyTemplate>
+                <div class="bearcat-release-empty">
+                    <LucideIcon Name="inbox" class="h-5 w-5" />
+                    <span>@L["NoContainerLinksFound"]</span>
+                </div>
+            </EmptyTemplate>
+        </BbDataTable>
+    </div>
+
+    <div class="bearcat-archive-dialog-footer">
+        <BbButton Variant="ButtonVariant.Outline" OnClick="CloseAsync">
+            @L["Close"]
+        </BbButton>
+    </div>
+</div>

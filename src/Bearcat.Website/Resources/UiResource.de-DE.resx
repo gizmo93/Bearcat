@@ -67,6 +67,11 @@
   <data name="ConfigurationValueRequired" xml:space="preserve"><value>Konfiguration „{0}“ ist erforderlich</value></data>
   <data name="ContainerPassword" xml:space="preserve"><value>Container-Passwort</value></data>
   <data name="ContainerPasswordPlaceholder" xml:space="preserve"><value>Optionales Passwort für den Container setzen</value></data>
+  <data name="ContainerLink" xml:space="preserve"><value>Containerlink</value></data>
+  <data name="ContainerLinks" xml:space="preserve"><value>Containerlinks</value></data>
+  <data name="ContainerLinksDialogDescription" xml:space="preserve"><value>Link-Crypter-Container, die für Upload-Konfiguration {0} erzeugt wurden.</value></data>
+  <data name="ContainerLinksTitle" xml:space="preserve"><value>Containerlinks für Upload #{0}</value></data>
+  <data name="Containers" xml:space="preserve"><value>Container</value></data>
   <data name="ContainersAndValidation" xml:space="preserve"><value>Container und Validierung</value></data>
   <data name="CreateRelease" xml:space="preserve"><value>Release erstellen</value></data>
   <data name="CreateReleaseDescription" xml:space="preserve"><value>Lege den Release-Typ fest und wähle den Quellordner.</value></data>
@@ -132,6 +137,8 @@
   <data name="LinkCrypter" xml:space="preserve"><value>Link-Crypter</value></data>
   <data name="LinkCrypterConfigurationHelp" xml:space="preserve"><value>Gib alle benötigten Werte für den ausgewählten Link-Crypter an.</value></data>
   <data name="LinkCrypterContainerDialogDescription" xml:space="preserve"><value>Hänge einen Link-Crypter an diese Upload-Konfiguration an.</value></data>
+  <data name="LinkCrypterContainerState.Created" xml:space="preserve"><value>Erstellt</value></data>
+  <data name="LinkCrypterContainerState.CreationFailed" xml:space="preserve"><value>Erstellung fehlgeschlagen</value></data>
   <data name="LinkCrypterRegistrationActivated" xml:space="preserve"><value>Link-Crypter-Registrierung {0} aktiviert</value></data>
   <data name="LinkCrypterRegistrationDeactivated" xml:space="preserve"><value>Link-Crypter-Registrierung {0} deaktiviert</value></data>
   <data name="LinkCrypterRegistrations" xml:space="preserve"><value>Link-Crypter-Registrierungen</value></data>
@@ -155,6 +162,7 @@
   <data name="Next" xml:space="preserve"><value>Weiter</value></data>
   <data name="No" xml:space="preserve"><value>Nein</value></data>
   <data name="NoArchiveConfigurationsYet" xml:space="preserve"><value>Noch keine Archiv-Konfigurationen.</value></data>
+  <data name="NoContainerLinksFound" xml:space="preserve"><value>Keine Containerlinks gefunden</value></data>
   <data name="NoDistributionTargets" xml:space="preserve"><value>Keine Verteilziele</value></data>
   <data name="NoReleasesFound" xml:space="preserve"><value>Keine Releases gefunden</value></data>
   <data name="NoTargets" xml:space="preserve"><value>Keine Ziele</value></data>
@@ -272,6 +280,7 @@
   <data name="UploadStatusSubtitle" xml:space="preserve"><value>Upload #{0} für {1}</value></data>
   <data name="UploadTarget" xml:space="preserve"><value>Upload-Ziel</value></data>
   <data name="CheckedAt" xml:space="preserve"><value>Geprüft am</value></data>
+  <data name="ViewContainerLinks" xml:space="preserve"><value>Containerlinks anzeigen</value></data>
   <data name="ViewUploadLinks" xml:space="preserve"><value>Uploadlinks anzeigen</value></data>
   <data name="Welcome" xml:space="preserve"><value>Willkommen</value></data>
   <data name="Workspace" xml:space="preserve"><value>Arbeitsbereich</value></data>

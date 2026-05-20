@@ -37,4 +37,10 @@ public interface IReleaseReadRepository
         OnlineState? onlineState = null,
         CancellationToken cancellationToken = default
     );
+
+    Task<IReadOnlyList<ReleaseUploadContainerLinkDto>> GetUploadContainerLinksAsync(
+        int releaseId,
+        int uploadId,
+        CancellationToken cancellationToken = default
+    );
 }
