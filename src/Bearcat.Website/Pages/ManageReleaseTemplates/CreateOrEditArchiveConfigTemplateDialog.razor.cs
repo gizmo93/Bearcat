@@ -93,6 +93,7 @@ public partial class CreateOrEditArchiveConfigTemplateDialog(
             [nameof(FolderSelectionDialog.BaseFolderPath)] = configuration
                 .GetRequiredSection("ReleaseDataDirectory")
                 .Value!,
+            [nameof(FolderSelectionDialog.SelectedFolderPath)] = FormModel.ArchiveFilesBasePath,
         };
 
         var result = await dialogService.OpenAsync<FolderSelectionDialog>(

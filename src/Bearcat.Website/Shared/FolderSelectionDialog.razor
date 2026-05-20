@@ -8,16 +8,17 @@
     </div>
 
     <div class="bearcat-folder-tree">
-        <BbTreeView TItem="FolderNode"
-                    Items="filteredRootNodes"
-                    TextField="@(node => node.Name)"
-                    ValueField="@(node => node.Path)"
-                    ChildrenProperty="@(node => node.Children)"
-                    SelectionMode="TreeSelectionMode.Single"
-                    @bind-SelectedValue="selectedItem"
-                    DefaultExpandDepth="1"
-                    ShowIcons="true"
-                    AriaLabel="@L["FolderSelectionTree"]" />
+        <div class="bearcat-folder-tree-list" role="tree" aria-label="@L["FolderSelectionTree"]">
+            @foreach (var node in filteredRootNodes)
+            {
+                <FolderSelectionTreeNode Node="node"
+                                         Depth="0"
+                                         SelectedPath="@selectedItem"
+                                         ExpandedItems="expandedItems"
+                                         OnSelect="SelectFolderAsync"
+                                         OnToggle="ToggleFolderAsync" />
+            }
+        </div>
     </div>
 
     @if (!string.IsNullOrWhiteSpace(selectedItem))

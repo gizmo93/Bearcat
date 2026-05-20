@@ -69,6 +69,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         await service.UpdateAsync(
             release.Id,
             "Bearcat.Release.Updated",
+            "/tmp/release-updated",
             secondGroup.Id,
             CancellationToken.None
         );
@@ -80,7 +81,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         result.Id.ShouldBe(release.Id);
         result.Name.ShouldBe("Bearcat.Release.Updated");
         result.ReleaseGroupId.ShouldBe(secondGroup.Id);
-        result.ReleaseFolderPath.ShouldBe("/tmp/release");
+        result.ReleaseFolderPath.ShouldBe("/tmp/release-updated");
     }
 
     [Test]

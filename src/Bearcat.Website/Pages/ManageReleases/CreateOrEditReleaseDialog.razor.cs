@@ -66,6 +66,7 @@ public partial class CreateOrEditReleaseDialog(
             await service.UpdateAsync(
                 releaseId: ReleaseId.Value,
                 name: formModel.Name,
+                releaseFolderPath: formModel.FolderPath,
                 releaseGroupId: formModel.ReleaseGroupId
             );
 
@@ -96,7 +97,7 @@ public partial class CreateOrEditReleaseDialog(
             messageStore.Add(() => formModel.Name, L["NameIsRequired"]);
         }
 
-        if (!formModel.IsEdit && string.IsNullOrWhiteSpace(formModel.FolderPath))
+        if (string.IsNullOrWhiteSpace(formModel.FolderPath))
         {
             folderValidationMessage = L["SelectFolderRequired"];
             messageStore.Add(() => formModel.FolderPath, folderValidationMessage);
@@ -119,6 +120,7 @@ public partial class CreateOrEditReleaseDialog(
         var parameters = new Dictionary<string, object?>
         {
             [nameof(FolderSelectionDialog.BaseFolderPath)] = releasesPath,
+            [nameof(FolderSelectionDialog.SelectedFolderPath)] = formModel.FolderPath,
         };
 
         var result = await dialogService.OpenAsync<FolderSelectionDialog>(

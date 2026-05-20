@@ -9,18 +9,26 @@ public partial class FolderSelectionDialog(IFileSystemService fileSystemService)
     [Parameter]
     public string BaseFolderPath { get; set; } = null!;
 
+    [Parameter]
+    public string? SelectedFolderPath { get; set; }
+
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
     private string? selectedItem;
+    private HashSet<string> expandedItems = [];
     private string? searchText;
-    private List<FolderNode> rootNodes = [];
+    private List<FolderSelectionNode> rootNodes = [];
 
-    private IEnumerable<FolderNode> filteredRootNodes => FilterNodes(rootNodes, searchText);
+    private IEnumerable<FolderSelectionNode> filteredRootNodes =>
+        FilterNodes(rootNodes, searchText);
 
     protected override void OnInitialized()
     {
         rootNodes = [CreateNode(BaseFolderPath)];
+        expandedItems = [rootNodes[0].Path];
+        EnsureChildrenLoaded(rootNodes[0]);
+        InitializeSelection();
     }
 
     private async Task SaveAsync()
@@ -33,20 +41,159 @@ public partial class FolderSelectionDialog(IFileSystemService fileSystemService)
         await DialogRef.CancelAsync();
     }
 
-    private FolderNode CreateNode(string path)
+    private Task SelectFolderAsync(FolderSelectionNode node)
     {
-        return new FolderNode
-        {
-            Path = path,
-            Name = string.IsNullOrWhiteSpace(Path.GetFileName(path))
-                ? path
-                : Path.GetFileName(path),
-            Children = fileSystemService.GetFoldersInPath(path).Select(CreateNode).ToList(),
-        };
+        selectedItem = node.Path;
+        return Task.CompletedTask;
     }
 
-    private static IEnumerable<FolderNode> FilterNodes(
-        IEnumerable<FolderNode> nodes,
+    private Task ToggleFolderAsync(FolderSelectionNode node)
+    {
+        if (expandedItems.Contains(node.Path))
+        {
+            expandedItems.Remove(node.Path);
+            return Task.CompletedTask;
+        }
+
+        EnsureChildrenLoaded(node);
+        expandedItems.Add(node.Path);
+
+        return Task.CompletedTask;
+    }
+
+    private List<FolderSelectionNode> EnsureChildrenLoaded(FolderSelectionNode node)
+    {
+        if (node.ChildrenLoaded)
+        {
+            return node.Children;
+        }
+
+        node.Children = fileSystemService.GetFoldersInPath(node.Path).Select(CreateNode).ToList();
+        node.ChildrenLoaded = true;
+        node.HasChildren = node.Children.Count > 0;
+
+        return node.Children;
+    }
+
+    private void InitializeSelection()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedFolderPath))
+        {
+            return;
+        }
+
+        var selectedNode = EnsureSelectedPath(rootNodes[0], SelectedFolderPath);
+
+        if (selectedNode is null)
+        {
+            return;
+        }
+
+        EnsureChildrenLoaded(selectedNode);
+        selectedItem = selectedNode.Path;
+        expandedItems = GetAncestorPaths(selectedNode.Path).Append(rootNodes[0].Path).ToHashSet();
+    }
+
+    private FolderSelectionNode? EnsureSelectedPath(
+        FolderSelectionNode rootNode,
+        string selectedPath
+    )
+    {
+        var normalizedSelectedPath = NormalizePath(selectedPath);
+
+        if (
+            string.IsNullOrWhiteSpace(normalizedSelectedPath)
+            || !IsSameOrDescendantPath(normalizedSelectedPath, rootNode.Path)
+        )
+        {
+            return null;
+        }
+
+        var currentNode = rootNode;
+
+        while (!PathsEqual(currentNode.Path, normalizedSelectedPath))
+        {
+            var nextNode = EnsureChildrenLoaded(currentNode)
+                .FirstOrDefault(child =>
+                    IsSameOrDescendantPath(normalizedSelectedPath, child.Path)
+                );
+
+            if (nextNode is null)
+            {
+                return null;
+            }
+
+            currentNode = nextNode;
+        }
+
+        return currentNode;
+    }
+
+    private IEnumerable<string> GetAncestorPaths(string path)
+    {
+        var basePath = NormalizePath(BaseFolderPath);
+        var currentPath = NormalizePath(path);
+
+        while (!string.IsNullOrWhiteSpace(currentPath) && !PathsEqual(currentPath, basePath))
+        {
+            currentPath = Path.GetDirectoryName(currentPath);
+
+            if (string.IsNullOrWhiteSpace(currentPath))
+            {
+                yield break;
+            }
+
+            yield return currentPath;
+        }
+    }
+
+    private static bool PathsEqual(string? first, string? second)
+    {
+        return string.Equals(NormalizePath(first), NormalizePath(second), StringComparison.Ordinal);
+    }
+
+    private static bool IsSameOrDescendantPath(string path, string ancestorPath)
+    {
+        var normalizedPath = NormalizePath(path);
+        var normalizedAncestorPath = NormalizePath(ancestorPath);
+
+        if (
+            string.IsNullOrWhiteSpace(normalizedPath)
+            || string.IsNullOrWhiteSpace(normalizedAncestorPath)
+        )
+        {
+            return false;
+        }
+
+        if (string.Equals(normalizedPath, normalizedAncestorPath, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        var ancestorPrefix = normalizedAncestorPath.EndsWith(Path.DirectorySeparatorChar)
+            ? normalizedAncestorPath
+            : $"{normalizedAncestorPath}{Path.DirectorySeparatorChar}";
+
+        return normalizedPath.StartsWith(ancestorPrefix, StringComparison.Ordinal);
+    }
+
+    private static string? NormalizePath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        var fullPath = Path.GetFullPath(path);
+        var rootPath = Path.GetPathRoot(fullPath);
+
+        return string.Equals(fullPath, rootPath, StringComparison.Ordinal)
+            ? fullPath
+            : fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+    }
+
+    private static IEnumerable<FolderSelectionNode> FilterNodes(
+        IEnumerable<FolderSelectionNode> nodes,
         string? search
     )
     {
@@ -55,7 +202,7 @@ public partial class FolderSelectionDialog(IFileSystemService fileSystemService)
             return nodes;
         }
 
-        var filtered = new List<FolderNode>();
+        var filtered = new List<FolderSelectionNode>();
 
         foreach (var node in nodes)
         {
@@ -68,10 +215,12 @@ public partial class FolderSelectionDialog(IFileSystemService fileSystemService)
             }
 
             filtered.Add(
-                new FolderNode
+                new FolderSelectionNode
                 {
                     Path = node.Path,
                     Name = node.Name,
+                    HasChildren = node.HasChildren,
+                    ChildrenLoaded = true,
                     Children = matchingChildren,
                 }
             );
@@ -80,12 +229,14 @@ public partial class FolderSelectionDialog(IFileSystemService fileSystemService)
         return filtered;
     }
 
-    private sealed class FolderNode
+    private FolderSelectionNode CreateNode(string path)
     {
-        public required string Path { get; init; }
-
-        public required string Name { get; init; }
-
-        public List<FolderNode> Children { get; init; } = [];
+        return new FolderSelectionNode
+        {
+            Path = path,
+            Name = string.IsNullOrWhiteSpace(Path.GetFileName(path))
+                ? path
+                : Path.GetFileName(path),
+        };
     }
 }

@@ -1,0 +1,39 @@
+<div role="treeitem"
+     aria-expanded="@AriaExpanded"
+     aria-selected="@AriaSelected"
+     aria-level="@(Depth + 1)"
+     data-value="@Node.Path"
+     data-depth="@Depth">
+    <div class="@RowClass"
+         style="@RowStyle"
+         @onclick="SelectAsync">
+        @if (Node.HasChildren)
+        {
+            <button type="button"
+                    class="bearcat-folder-tree-toggle"
+                    style="@ToggleStyle"
+                    tabindex="-1"
+                    aria-hidden="true"
+                    @onclick="ToggleAsync"
+                    @onclick:stopPropagation="true">
+                <LucideIcon Name="chevron-right" class="@ChevronClass" />
+            </button>
+        }
+        <span class="truncate" style="@LabelStyle">@Node.Name</span>
+    </div>
+
+    @if (IsExpanded)
+    {
+        <div role="group">
+            @foreach (var child in Node.Children)
+            {
+                <FolderSelectionTreeNode Node="child"
+                                         Depth="@(Depth + 1)"
+                                         SelectedPath="@SelectedPath"
+                                         ExpandedItems="ExpandedItems"
+                                         OnSelect="OnSelect"
+                                         OnToggle="OnToggle" />
+            }
+        </div>
+    }
+</div>
