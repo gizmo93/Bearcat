@@ -48,6 +48,7 @@ public class AutomaticallyCreateReleasesService(
                 candidate.Automation.ReleaseTemplate,
                 candidate.FolderPath
             );
+            release.CreatedAt = timeProvider.GetLocalNow();
             repository.Add(release);
             existingReleaseFolderPaths.Add(candidate.FolderPath);
             createdCount++;

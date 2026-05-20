@@ -1,10 +1,11 @@
 ﻿using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ManageReleases;
 
-public class ReleaseService(IReleaseWriteRepository writeRepository)
+public class ReleaseService(IReleaseWriteRepository writeRepository, TimeProvider timeProvider)
 {
     public async Task<int> CreateAsync(
         string name,
@@ -17,6 +18,7 @@ public class ReleaseService(IReleaseWriteRepository writeRepository)
         var release = new Release
         {
             Name = name,
+            CreatedAt = timeProvider.GetLocalNow(),
             ReleaseType = releaseType,
             ReleaseGroupId = releaseGroupId,
             ReleaseFolderPath = releaseFolderPath,
@@ -83,6 +85,7 @@ public class ReleaseService(IReleaseWriteRepository writeRepository)
             cancellationToken
         );
         var release = CreateFromTemplate(releaseTemplate, releaseFolderPath, name);
+        release.CreatedAt = timeProvider.GetLocalNow();
 
         writeRepository.Add(release);
         await writeRepository.SaveChangesAsync(cancellationToken);

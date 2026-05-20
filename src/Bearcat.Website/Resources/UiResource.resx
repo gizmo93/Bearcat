@@ -348,6 +348,10 @@
   <data name="AutoCleanup" xml:space="preserve"><value>Automatic cleanup</value></data>
   <data name="AutoCleanupDescription" xml:space="preserve"><value>Delete local archive folders after all linked uploads have a completed upload timestamp.</value></data>
   <data name="Configurations" xml:space="preserve"><value>Configurations</value></data>
+  <data name="InitialUpload" xml:space="preserve"><value>Initial uploads</value></data>
+  <data name="InitialUploadDescription" xml:space="preserve"><value>Controls when the first upload is created for a newly created release.</value></data>
+  <data name="InitialUploadCooldownMinutes" xml:space="preserve"><value>Initial upload cooldown (minutes)</value></data>
+  <data name="InitialUploadCooldownMinutesDescription" xml:space="preserve"><value>Wait this many minutes after release creation before creating the first upload.</value></data>
   <data name="DefaultValue" xml:space="preserve"><value>Default</value></data>
   <data name="Override" xml:space="preserve"><value>Override</value></data>
   <data name="ResetToDefault" xml:space="preserve"><value>Reset to default</value></data>

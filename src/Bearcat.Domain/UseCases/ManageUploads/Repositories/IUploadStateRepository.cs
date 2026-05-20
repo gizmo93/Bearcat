@@ -10,6 +10,7 @@ public interface IUploadStateRepository
     );
 
     Task<IReadOnlyList<UploadConfig>> GetUploadConfigsWithoutUploadsAsync(
+        DateTime releaseCreatedBefore,
         CancellationToken cancellationToken
     );
 

@@ -10,6 +10,7 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
     {
         builder.HasKey(r => r.Id);
         builder.Property(r => r.Name).HasMaxLength(500).IsRequired();
+        builder.Property(r => r.CreatedAt).IsRequired().HasPrecision(4);
         builder.Property(r => r.ReleaseType).IsRequired();
         builder.Property(r => r.ReleaseFolderPath).HasMaxLength(1000).IsRequired();
 

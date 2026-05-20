@@ -45,6 +45,7 @@ public static class ServiceProviderConfig
             services.AddScoped<LinkCrypterContainerService>();
             services.AddScoped<UploadConfigLinkCrypterService>();
             services.AddApplicationConfiguration<ArchiveCleanupConfiguration>();
+            services.AddApplicationConfiguration<InitialUploadConfiguration>();
             services.AddSingleton<ApplicationConfigurationRegistry>();
             services.AddScoped<
                 IApplicationConfigurationProvider,

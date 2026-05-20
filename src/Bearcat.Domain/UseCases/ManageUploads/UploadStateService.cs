@@ -1,4 +1,6 @@
-﻿using Bearcat.Abstractions.Hoster;
+﻿using Bearcat.Abstractions.Configurations;
+using Bearcat.Abstractions.Hoster;
+using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
@@ -12,6 +14,7 @@ public class UploadStateService(
     IUploadStateRepository uploadStateRepository,
     IHosterFactory hosterFactory,
     TimeProvider timeProvider,
+    IApplicationConfigurationProvider configuration,
     INotificationService notificationService,
     ILogger<UploadStateService> logger
 )
@@ -19,7 +22,7 @@ public class UploadStateService(
     public async Task CheckUploadStatesAsync(DateTime localNow, CancellationToken cancellationToken)
     {
         await ProcessUploadStateChecksAsync(localNow, cancellationToken);
-        await CreateMissingUploadsAsync(cancellationToken);
+        await CreateMissingUploadsAsync(localNow, cancellationToken);
         await ProcessAutomaticReuploadsAsync(localNow, cancellationToken);
     }
 
@@ -319,10 +322,21 @@ public class UploadStateService(
                 or UploadState.Failed
                 or UploadState.Canceled;
 
-    private async Task CreateMissingUploadsAsync(CancellationToken cancellationToken)
+    private async Task CreateMissingUploadsAsync(
+        DateTime localNow,
+        CancellationToken cancellationToken
+    )
     {
+        var cooldownMinutes = Math.Max(
+            0,
+            configuration.GetValue<InitialUploadConfiguration>(c => c.CooldownMinutes)
+        );
+        var releaseCreatedBefore = localNow.AddMinutes(-cooldownMinutes);
         var uploadConfigsWithoutUploads =
-            await uploadStateRepository.GetUploadConfigsWithoutUploadsAsync(cancellationToken);
+            await uploadStateRepository.GetUploadConfigsWithoutUploadsAsync(
+                releaseCreatedBefore,
+                cancellationToken
+            );
 
         foreach (var uploadConfig in uploadConfigsWithoutUploads)
         {

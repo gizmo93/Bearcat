@@ -348,6 +348,10 @@
   <data name="AutoCleanup" xml:space="preserve"><value>Automatisches Aufräumen</value></data>
   <data name="AutoCleanupDescription" xml:space="preserve"><value>Löscht lokale Archivordner, sobald alle verknüpften Uploads einen abgeschlossenen Upload-Zeitpunkt haben.</value></data>
   <data name="Configurations" xml:space="preserve"><value>Konfigurationen</value></data>
+  <data name="InitialUpload" xml:space="preserve"><value>Initiale Uploads</value></data>
+  <data name="InitialUploadDescription" xml:space="preserve"><value>Steuert, wann der erste Upload für ein neu erstelltes Release angelegt wird.</value></data>
+  <data name="InitialUploadCooldownMinutes" xml:space="preserve"><value>Cooldown für initiale Uploads (Minuten)</value></data>
+  <data name="InitialUploadCooldownMinutesDescription" xml:space="preserve"><value>So viele Minuten nach dem Erstellen des Releases warten, bevor der erste Upload angelegt wird.</value></data>
   <data name="DefaultValue" xml:space="preserve"><value>Default</value></data>
   <data name="Override" xml:space="preserve"><value>Override</value></data>
   <data name="ResetToDefault" xml:space="preserve"><value>Auf Default zurücksetzen</value></data>

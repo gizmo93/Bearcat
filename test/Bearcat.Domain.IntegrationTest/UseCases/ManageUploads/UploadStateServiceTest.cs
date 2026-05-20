@@ -1,5 +1,8 @@
+using System.Linq.Expressions;
+using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageUploads;
@@ -44,13 +47,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         hosterFactoryMock = new Mock<IHosterFactory>(MockBehavior.Strict);
         hosterFactoryMock.Setup(f => f.GetByName(HosterClassName)).Returns(hosterMock.Object);
 
-        service = new UploadStateService(
-            new UploadStateRepository(dbContext),
-            hosterFactoryMock.Object,
-            CreateTimeProvider(),
-            new NotificationService(new NotificationRepository(dbContext), CreateTimeProvider()),
-            Mock.Of<ILogger<UploadStateService>>()
-        );
+        service = CreateService();
     }
 
     [TearDown]
@@ -214,6 +211,44 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         result.OnlineState.ShouldBe(OnlineState.Unknown);
         result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Info);
         result.Notifications.Single().Message.ShouldBe("Initial upload created for release");
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_UploadConfigWithinInitialUploadCooldown_DoesNotCreateUpload()
+    {
+        // Arrange
+        await AddUploadConfigAsync(
+            enableAutomaticReuploads: false,
+            releaseCreatedAt: localNow.AddMinutes(-4)
+        );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        var uploadExists = await dbContext.Uploads.AnyAsync();
+
+        uploadExists.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_CustomInitialUploadCooldownIsMet_CreatesUpload()
+    {
+        // Arrange
+        service = CreateService(initialUploadCooldownMinutes: 1);
+        await AddUploadConfigAsync(
+            enableAutomaticReuploads: false,
+            releaseCreatedAt: localNow.AddMinutes(-2)
+        );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        var upload = await dbContext.Uploads.SingleAsync();
+
+        upload.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        upload.OnlineState.ShouldBe(OnlineState.Unknown);
     }
 
     [Test]
@@ -649,7 +684,10 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         return upload;
     }
 
-    private async Task<UploadConfig> AddUploadConfigAsync(bool enableAutomaticReuploads)
+    private async Task<UploadConfig> AddUploadConfigAsync(
+        bool enableAutomaticReuploads,
+        DateTime? releaseCreatedAt = null
+    )
     {
         var releaseGroup = new ReleaseGroup
         {
@@ -660,6 +698,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         var release = new Release
         {
             Name = "Bearcat.Release.001",
+            CreatedAt = releaseCreatedAt ?? localNow.AddMinutes(-10),
             ReleaseType = ReleaseType.Managed,
             ReleaseFolderPath = "/tmp/release",
             ReleaseGroup = releaseGroup,
@@ -696,6 +735,18 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         return uploadConfig;
     }
 
+    private UploadStateService CreateService(int initialUploadCooldownMinutes = 5)
+    {
+        return new UploadStateService(
+            new UploadStateRepository(dbContext),
+            hosterFactoryMock.Object,
+            CreateTimeProvider(),
+            new TestApplicationConfigurationProvider(initialUploadCooldownMinutes),
+            new NotificationService(new NotificationRepository(dbContext), CreateTimeProvider()),
+            Mock.Of<ILogger<UploadStateService>>()
+        );
+    }
+
     private static TimeProvider CreateTimeProvider()
     {
         var configuration = new ConfigurationBuilder()
@@ -703,5 +754,60 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             .Build();
 
         return new TimeProvider(configuration);
+    }
+
+    private sealed class TestApplicationConfigurationProvider(int initialUploadCooldownMinutes)
+        : IApplicationConfigurationProvider
+    {
+        public TConfiguration GetConfiguration<TConfiguration>()
+            where TConfiguration : IApplicationConfiguration, new()
+        {
+            var configuration = new TConfiguration();
+
+            if (configuration is InitialUploadConfiguration initialUploadConfiguration)
+            {
+                initialUploadConfiguration.CooldownMinutes = initialUploadCooldownMinutes;
+            }
+
+            return configuration;
+        }
+
+        public bool GetValue<TConfiguration>(
+            Expression<Func<TConfiguration, bool>> propertySelector
+        )
+            where TConfiguration : IApplicationConfiguration, new()
+        {
+            return GetValue<TConfiguration, bool>(propertySelector);
+        }
+
+        public int GetValue<TConfiguration>(Expression<Func<TConfiguration, int>> propertySelector)
+            where TConfiguration : IApplicationConfiguration, new()
+        {
+            return GetValue<TConfiguration, int>(propertySelector);
+        }
+
+        public int? GetValue<TConfiguration>(
+            Expression<Func<TConfiguration, int?>> propertySelector
+        )
+            where TConfiguration : IApplicationConfiguration, new()
+        {
+            return GetValue<TConfiguration, int?>(propertySelector);
+        }
+
+        public string? GetValue<TConfiguration>(
+            Expression<Func<TConfiguration, string?>> propertySelector
+        )
+            where TConfiguration : IApplicationConfiguration, new()
+        {
+            return GetValue<TConfiguration, string?>(propertySelector);
+        }
+
+        public TValue GetValue<TConfiguration, TValue>(
+            Expression<Func<TConfiguration, TValue>> propertySelector
+        )
+            where TConfiguration : IApplicationConfiguration, new()
+        {
+            return propertySelector.Compile()(GetConfiguration<TConfiguration>());
+        }
     }
 }

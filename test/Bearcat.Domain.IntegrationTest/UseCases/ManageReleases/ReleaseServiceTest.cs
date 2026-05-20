@@ -5,7 +5,9 @@ using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Shouldly;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 
@@ -18,7 +20,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
     public void Setup()
     {
         dbContext = Database.CreateDbContext();
-        service = new ReleaseService(new ReleaseWriteRepository(dbContext));
+        service = new ReleaseService(new ReleaseWriteRepository(dbContext), CreateTimeProvider());
     }
 
     [TearDown]
@@ -49,6 +51,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         release.ShouldNotBeNull();
         release.Id.ShouldBe(result);
         release.Name.ShouldBe("Bearcat.Release.001");
+        release.CreatedAt.ShouldBeGreaterThan(default);
         release.ReleaseFolderPath.ShouldBe("/tmp/release");
         release.ReleaseType.ShouldBe(ReleaseType.Managed);
         release.ReleaseGroupId.ShouldBe(releaseGroup.Id);
@@ -162,6 +165,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             .SingleAsync(r => r.Id == result);
 
         release.Name.ShouldBe("Bearcat.Release.Template");
+        release.CreatedAt.ShouldBeGreaterThan(default);
         release.ReleaseFolderPath.ShouldBe("/tmp/releases/Bearcat.Release.Template");
         release.ReleaseType.ShouldBe(ReleaseType.Managed);
         release.ReleaseGroupId.ShouldBe(seed.ReleaseGroupId);
@@ -208,6 +212,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         var release = new Release
         {
             Name = name,
+            CreatedAt = DateTime.UtcNow,
             ReleaseType = ReleaseType.Managed,
             ReleaseFolderPath = "/tmp/release",
             ReleaseGroupId = releaseGroupId,
@@ -291,4 +296,13 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         int HosterRegistrationId,
         int LinkCrypterRegistrationId
     );
+
+    private static TimeProvider CreateTimeProvider()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["LocalTimezone"] = "UTC" })
+            .Build();
+
+        return new TimeProvider(configuration);
+    }
 }

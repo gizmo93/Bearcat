@@ -8,6 +8,8 @@ public class Release
 
     public string Name { get; set; } = null!;
 
+    public DateTime CreatedAt { get; set; }
+
     public ReleaseType ReleaseType { get; set; }
 
     public int ReleaseGroupId { get; set; }
