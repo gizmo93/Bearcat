@@ -68,6 +68,7 @@ public partial class CreateReleaseFromTemplateDialog(
         var parameters = new Dictionary<string, object?>
         {
             [nameof(FolderSelectionDialog.BaseFolderPath)] = releasesPath,
+            [nameof(FolderSelectionDialog.SelectedFolderPath)] = formModel.FolderPath,
         };
 
         var result = await dialogService.OpenAsync<FolderSelectionDialog>(

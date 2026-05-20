@@ -1096,6 +1096,53 @@ a {
     padding: 0.75rem;
 }
 
+.bearcat-folder-tree-list {
+    display: grid;
+    gap: 0;
+}
+
+.bearcat-folder-tree-node {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-width: 0;
+    width: 100%;
+    border-radius: 0.375rem;
+    padding-block: 0.25rem;
+    padding-right: 0.5rem;
+    color: var(--foreground);
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 150ms ease, color 150ms ease;
+}
+
+.bearcat-folder-tree-node:hover {
+    background-color: color-mix(in oklab, var(--accent) 50%, transparent);
+}
+
+.bearcat-folder-tree-node-selected {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+}
+
+.bearcat-folder-tree-toggle,
+.bearcat-folder-tree-toggle-spacer {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.bearcat-folder-tree-toggle {
+    border-radius: 0.25rem;
+}
+
+.bearcat-folder-tree-toggle:hover {
+    background-color: color-mix(in oklab, var(--accent) 80%, transparent);
+}
+
 .bearcat-folder-dialog-footer {
     display: flex;
     flex-shrink: 0;

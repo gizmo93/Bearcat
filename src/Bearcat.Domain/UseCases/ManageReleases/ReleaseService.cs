@@ -33,12 +33,14 @@ public class ReleaseService(IReleaseWriteRepository writeRepository, TimeProvide
     public async Task UpdateAsync(
         int releaseId,
         string name,
+        string releaseFolderPath,
         int releaseGroupId,
         CancellationToken cancellationToken = default
     )
     {
         var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
         release.Name = name;
+        release.ReleaseFolderPath = releaseFolderPath;
         release.ReleaseGroupId = releaseGroupId;
 
         await writeRepository.SaveChangesAsync(cancellationToken);

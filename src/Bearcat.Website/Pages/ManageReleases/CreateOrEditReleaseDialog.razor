@@ -23,6 +23,25 @@
                                    Options="ReleaseGroupOptions" />
             }
 
+            <div class="space-y-2">
+                <label class="text-sm font-medium">@L["ReleaseFolder"]</label>
+                <div class="bearcat-folder-field">
+                    <BbInput Value="@formModel.FolderPath" Disabled="true" Class="sm:flex-1" />
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Class="bearcat-folder-button"
+                              AriaLabel="@L["BrowseReleaseFolders"]"
+                              OnClick="OpenFolderDialogAsync">
+                        <LucideIcon Name="folder-open" class="h-4 w-4" />
+                        @L["Browse"]
+                    </BbButton>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(folderValidationMessage))
+                {
+                    <p class="text-sm text-destructive">@folderValidationMessage</p>
+                }
+            </div>
+
             @if (!formModel.IsEdit)
             {
                 <BbFormFieldSelect TValue="ReleaseType?"
@@ -34,25 +53,6 @@
                         <BbSelectItem Value="@((ReleaseType?)releaseType)" Text="@L.Localize(releaseType)" />
                     }
                 </BbFormFieldSelect>
-
-                <div class="space-y-2">
-                    <label class="text-sm font-medium">@L["ReleaseFolder"]</label>
-                    <div class="bearcat-folder-field">
-                        <BbInput Value="@formModel.FolderPath" Disabled="true" Class="sm:flex-1" />
-                        <BbButton Variant="ButtonVariant.Outline"
-                                  Size="ButtonSize.Small"
-                                  Class="bearcat-folder-button"
-                                  AriaLabel="@L["BrowseReleaseFolders"]"
-                                  OnClick="OpenFolderDialogAsync">
-                            <LucideIcon Name="folder-open" class="h-4 w-4" />
-                            @L["Browse"]
-                        </BbButton>
-                    </div>
-                    @if (!string.IsNullOrWhiteSpace(folderValidationMessage))
-                    {
-                        <p class="text-sm text-destructive">@folderValidationMessage</p>
-                    }
-                </div>
 
                 @if (formModel.ReleaseType is not null)
                 {

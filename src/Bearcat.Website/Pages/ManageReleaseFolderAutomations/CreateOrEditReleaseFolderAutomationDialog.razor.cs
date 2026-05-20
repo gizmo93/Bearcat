@@ -74,6 +74,7 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
         var parameters = new Dictionary<string, object?>
         {
             [nameof(FolderSelectionDialog.BaseFolderPath)] = releasesPath,
+            [nameof(FolderSelectionDialog.SelectedFolderPath)] = FormModel.BasePath,
         };
 
         var result = await dialogService.OpenAsync<FolderSelectionDialog>(
