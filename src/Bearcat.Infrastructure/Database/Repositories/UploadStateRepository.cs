@@ -80,11 +80,14 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
     }
 
     public async Task<IReadOnlyList<UploadConfig>> GetUploadConfigsWithoutUploadsAsync(
+        DateTime releaseCreatedBefore,
         CancellationToken cancellationToken
     )
     {
         return await dbWrite
-            .UploadConfigs.Where(u => !u.Uploads.Any())
+            .UploadConfigs.Where(u =>
+                !u.Uploads.Any() && u.Release.CreatedAt <= releaseCreatedBefore
+            )
             .ToListAsync(cancellationToken);
     }
 
