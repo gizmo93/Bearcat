@@ -99,6 +99,10 @@ a {
     min-height: calc(100dvh - 4rem);
 }
 
+.bearcat-main:focus {
+    outline: none;
+}
+
 [data-sidebar="rail"] {
     display: none;
 }
