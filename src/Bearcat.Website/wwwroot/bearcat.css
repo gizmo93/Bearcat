@@ -105,6 +105,15 @@ a {
     outline: none;
 }
 
+.bearcat-main > section {
+    width: 100%;
+    margin-inline: 0 auto !important;
+}
+
+.bearcat-main > :where(section:not(.bearcat-release-shell):not(:has(.bearcat-data-table)):not(:has(.bearcat-releases-table))) {
+    max-width: 1240px;
+}
+
 [data-sidebar="rail"] {
     display: none;
 }
@@ -150,7 +159,7 @@ a {
     max-width: 1240px;
     min-height: calc(100vh - 7rem);
     min-height: calc(100dvh - 7rem);
-    margin-inline: auto;
+    margin-inline: 0 auto;
 }
 
 .bearcat-release-header {
@@ -462,14 +471,14 @@ a {
 .bearcat-releases-page {
     width: 100%;
     max-width: 1800px;
-    margin-inline: auto;
+    margin-inline: 0 auto;
 }
 
 .bearcat-main > :where(section:has(.bearcat-data-table):not(.bearcat-release-shell)),
 .bearcat-main > :where(section:has(.bearcat-releases-table)) {
     width: 100%;
     max-width: 1800px;
-    margin-inline: auto;
+    margin-inline: 0 auto;
 }
 
 .bearcat-data-table :where(table),
