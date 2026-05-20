@@ -13,6 +13,12 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
     )
     {
         List<OnlineState> onlineStatesToCheck = [OnlineState.Online, OnlineState.PartiallyOnline];
+        List<UploadState> uploadStatesToExclude =
+        [
+            UploadState.Canceled,
+            UploadState.CancellationRequested,
+            UploadState.Failed,
+        ];
 
         var lastCheckThreshold = localNow.AddMinutes(-30);
 
@@ -26,6 +32,7 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
             .Include(u => u.UploadedFiles)
             .Where(u =>
                 onlineStatesToCheck.Contains(u.OnlineState)
+                && !uploadStatesToExclude.Contains(u.UploadState)
                 && u.UploadedFiles.Any(f => f.CheckedAt == null || f.CheckedAt < lastCheckThreshold)
             )
             .ToListAsync(cancellationToken: cancellationToken);

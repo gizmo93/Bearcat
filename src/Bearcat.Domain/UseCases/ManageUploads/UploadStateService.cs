@@ -172,7 +172,9 @@ public class UploadStateService(
         CancellationToken cancellationToken
     )
     {
-        var filesByUrl = upload.UploadedFiles.ToDictionary(f => f.HosterFileLink);
+        var filesByUrl = upload
+            .UploadedFiles.DistinctBy(h => h.HosterFileLink)
+            .ToDictionary(f => f.HosterFileLink);
 
         var result = await hoster.CheckFilesExistAsync(
             hosterConfig: hosterConfig,
