@@ -54,6 +54,111 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ReleaseOverviewUploadDto>> GetReleaseOverviewAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var uploadConfigs = await dbRead
+            .UploadConfigs.Where(c => c.ReleaseId == releaseId)
+            .OrderBy(c => c.Name)
+            .ThenBy(c => c.Id)
+            .Select(c => new ReleaseOverviewUploadConfigProjection(
+                c.Id,
+                c.Name,
+                c.HosterRegistration.Name
+            ))
+            .ToListAsync(cancellationToken: cancellationToken);
+
+        var latestUploads = await dbRead
+            .Uploads.Where(u => u.UploadConfig.ReleaseId == releaseId)
+            .GroupBy(u => u.UploadConfigId)
+            .Select(g =>
+                g.OrderByDescending(u => u.UploadedAt ?? u.CreatedAt)
+                    .ThenByDescending(u => u.Id)
+                    .Select(u => new ReleaseOverviewLatestUploadProjection(
+                        u.UploadConfigId,
+                        u.Id,
+                        u.CreatedAt,
+                        u.UploadedAt,
+                        u.UploadState,
+                        u.OnlineState,
+                        u.UploadedFiles.Count(),
+                        u.Archive == null ? null : u.Archive.ArchiveConfig.ArchivePassword
+                    ))
+                    .First()
+            )
+            .ToListAsync(cancellationToken: cancellationToken);
+
+        var uploadIds = latestUploads.Select(u => u.UploadId).ToList();
+        IReadOnlyList<ReleaseOverviewLinkCrypterLinkProjection> linkCrypterLinks =
+            uploadIds.Count == 0
+                ? []
+                : await dbRead
+                    .LinkCrypterContainers.Where(c =>
+                        uploadIds.Contains(c.UploadId)
+                        && c.Upload.UploadConfig.ReleaseId == releaseId
+                    )
+                    .OrderBy(c => c.UploadConfigLinkCrypter.LinkCrypterRegistration.Name)
+                    .ThenBy(c => c.Id)
+                    .Select(c => new ReleaseOverviewLinkCrypterLinkProjection(
+                        c.UploadId,
+                        c.Id,
+                        c.UploadConfigLinkCrypter.LinkCrypterRegistration.Name,
+                        c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName,
+                        c.ContainerUrl,
+                        c.State,
+                        c.CreatedAt
+                    ))
+                    .ToListAsync(cancellationToken: cancellationToken);
+
+        var latestUploadByConfigId = latestUploads.ToDictionary(u => u.UploadConfigId);
+        var linksByUploadId = linkCrypterLinks
+            .GroupBy(link => link.UploadId)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                    (IReadOnlyList<ReleaseOverviewLinkCrypterLinkDto>)
+                        group
+                            .Select(link => new ReleaseOverviewLinkCrypterLinkDto(
+                                link.LinkCrypterContainerId,
+                                link.LinkCrypterRegistrationName,
+                                link.LinkCrypterClassName,
+                                link.ContainerUrl,
+                                link.State,
+                                link.CreatedAt
+                            ))
+                            .ToList()
+            );
+
+        return uploadConfigs
+            .Select(config =>
+            {
+                latestUploadByConfigId.TryGetValue(config.UploadConfigId, out var upload);
+
+                IReadOnlyList<ReleaseOverviewLinkCrypterLinkDto> links =
+                    upload is not null
+                    && linksByUploadId.TryGetValue(upload.UploadId, out var uploadLinks)
+                        ? uploadLinks
+                        : [];
+
+                return new ReleaseOverviewUploadDto(
+                    config.UploadConfigId,
+                    config.UploadConfigName,
+                    config.HosterRegistrationName,
+                    upload?.UploadId,
+                    upload?.CreatedAt,
+                    upload?.UploadedAt,
+                    upload?.UploadState,
+                    upload?.OnlineState,
+                    upload?.LinkCount ?? 0,
+                    upload?.ArchivePassword,
+                    links
+                );
+            })
+            .ToList();
+    }
+
     public async Task<IReadOnlyList<ArchiveConfigDto>> GetArchiveConfigsAsync(
         int releaseId,
         CancellationToken cancellationToken
@@ -353,4 +458,31 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
     {
         return $"%{value}%";
     }
+
+    private record ReleaseOverviewUploadConfigProjection(
+        int UploadConfigId,
+        string UploadConfigName,
+        string HosterRegistrationName
+    );
+
+    private record ReleaseOverviewLatestUploadProjection(
+        int UploadConfigId,
+        int UploadId,
+        DateTime CreatedAt,
+        DateTime? UploadedAt,
+        UploadState UploadState,
+        OnlineState OnlineState,
+        int LinkCount,
+        string? ArchivePassword
+    );
+
+    private record ReleaseOverviewLinkCrypterLinkProjection(
+        int UploadId,
+        int LinkCrypterContainerId,
+        string LinkCrypterRegistrationName,
+        string LinkCrypterClassName,
+        string ContainerUrl,
+        LinkCrypterContainerState State,
+        DateTime CreatedAt
+    );
 }

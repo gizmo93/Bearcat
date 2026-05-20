@@ -1,0 +1,199 @@
+@using Bearcat.Website.Localization
+@using Bearcat.Website.Shared
+
+<section class="space-y-4">
+    <div class="bearcat-section-header">
+        <div>
+            <h2 class="text-lg font-semibold">@L["ReleaseOverview"]</h2>
+        </div>
+
+        <BbButton Variant="ButtonVariant.Outline"
+                  Size="ButtonSize.Small"
+                  Disabled="isLoading"
+                  OnClick="LoadOverviewAsync">
+            <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
+            @L["Refresh"]
+        </BbButton>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="bearcat-release-overview-list">
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="loader-circle" class="h-5 w-5 animate-spin" />
+                <span>@L["Loading"]</span>
+            </div>
+        </div>
+    }
+    else if (overviewUploads.Count == 0)
+    {
+        <div class="bearcat-release-overview-list">
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="inbox" class="h-5 w-5" />
+                <span>@L["NoUploadConfigurationsYet"]</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="bearcat-release-overview-list">
+            @foreach (var upload in overviewUploads)
+            {
+                <article class="bearcat-release-overview-item">
+                    <div class="bearcat-release-overview-main">
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-semibold" title="@upload.UploadConfigName">
+                                @upload.UploadConfigName
+                            </p>
+                            <p class="truncate text-xs text-muted-foreground" title="@upload.HosterRegistrationName">
+                                @upload.HosterRegistrationName
+                            </p>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="text-xs text-muted-foreground">@L["LatestUpload"]</p>
+                            @if (upload.UploadId is null)
+                            {
+                                <p class="text-sm text-muted-foreground">@L["NoLatestUpload"]</p>
+                            }
+                            else
+                            {
+                                <p class="text-sm font-medium">#@upload.UploadId</p>
+                                <p class="truncate text-xs text-muted-foreground">
+                                    @((upload.UploadedAt ?? upload.CreatedAt)?.ToString("g") ?? "-")
+                                </p>
+                            }
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="text-xs text-muted-foreground">@L["OnlineState"]</p>
+                            @if (upload.OnlineState is null)
+                            {
+                                <p class="text-sm text-muted-foreground">-</p>
+                            }
+                            else
+                            {
+                                <OnlineStateBadge Value="@upload.OnlineState" />
+                            }
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="text-xs text-muted-foreground">@L["State"]</p>
+                            @if (upload.UploadState is null)
+                            {
+                                <p class="text-sm text-muted-foreground">-</p>
+                            }
+                            else
+                            {
+                                <BbBadge Variant="@GetUploadVariant(upload.UploadState)">
+                                    @L.Localize(upload.UploadState.Value)
+                                </BbBadge>
+                            }
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="text-xs text-muted-foreground">@L["DownloadLinks"]</p>
+                            <BbButton Variant="ButtonVariant.Outline"
+                                      Size="ButtonSize.Small"
+                                      Disabled="@(upload.UploadId is null)"
+                                      OnClick="@(async () => await ShowLinksDialogAsync(upload))">
+                                <LucideIcon Name="external-link" class="h-4 w-4" />
+                                @upload.LinkCount
+                            </BbButton>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="text-xs text-muted-foreground">@L["ArchivePassword"]</p>
+                            @if (string.IsNullOrWhiteSpace(upload.ArchivePassword))
+                            {
+                                <p class="text-sm text-muted-foreground">@L["NoArchivePassword"]</p>
+                            }
+                            else
+                            {
+                                var copyTargetId = GetPasswordCopyTargetId(upload);
+
+                                <div class="bearcat-release-overview-password">
+                                    <code title="@upload.ArchivePassword">@upload.ArchivePassword</code>
+                                    <textarea id="@copyTargetId" hidden readonly>@upload.ArchivePassword</textarea>
+                                    <button type="button"
+                                            class="bearcat-copy-button bearcat-copy-icon-button"
+                                            aria-label="@L["CopyPassword"]"
+                                            title="@L["CopyPassword"]"
+                                            data-copy-target="@copyTargetId"
+                                            data-copy-label="@L["CopyPassword"]"
+                                            data-copy-success-label="@L["Copied"]"
+                                            data-copy-failure-label="@L["CopyFailed"]"
+                                            onclick="window.bearcat.copyFromTarget(this)">
+                                        <LucideIcon Name="copy" class="h-4 w-4" />
+                                        <span class="sr-only bearcat-copy-button-label">@L["CopyPassword"]</span>
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="bearcat-release-overview-links">
+                        <p class="text-xs font-medium text-muted-foreground">@L["LinkCrypterLinks"]</p>
+
+                        @if (upload.LinkCrypterLinks.Count == 0)
+                        {
+                            <p class="text-sm text-muted-foreground">@L["NoLinkCrypterLinks"]</p>
+                        }
+                        else
+                        {
+                            <div class="bearcat-release-overview-link-list">
+                                @foreach (var link in upload.LinkCrypterLinks)
+                                {
+                                    var copyTargetId = GetContainerCopyTargetId(upload, link);
+
+                                    <div class="bearcat-release-overview-link">
+                                        <div class="min-w-0">
+                                            <div class="flex min-w-0 flex-wrap items-center gap-2">
+                                                <span class="truncate text-sm font-medium" title="@link.LinkCrypterRegistrationName">
+                                                    @link.LinkCrypterRegistrationName
+                                                </span>
+                                                <BbBadge Variant="@GetContainerVariant(link.State)">
+                                                    @L.Localize(link.State)
+                                                </BbBadge>
+
+                                                <textarea id="@copyTargetId" hidden readonly>@link.ContainerUrl</textarea>
+                                                <button type="button"
+                                                        class="bearcat-copy-button bearcat-copy-icon-button bearcat-release-overview-link-copy"
+                                                        disabled="@string.IsNullOrWhiteSpace(link.ContainerUrl)"
+                                                        aria-label="@L["CopyLink"]"
+                                                        title="@L["CopyLink"]"
+                                                        data-copy-target="@copyTargetId"
+                                                        data-copy-label="@L["CopyLink"]"
+                                                        data-copy-success-label="@L["Copied"]"
+                                                        data-copy-failure-label="@L["CopyFailed"]"
+                                                        onclick="window.bearcat.copyFromTarget(this)">
+                                                    <LucideIcon Name="copy" class="h-4 w-4" />
+                                                    <span class="sr-only bearcat-copy-button-label">@L["CopyLink"]</span>
+                                                </button>
+                                            </div>
+
+                                            @if (string.IsNullOrWhiteSpace(link.ContainerUrl))
+                                            {
+                                                <p class="text-sm text-muted-foreground">-</p>
+                                            }
+                                            else
+                                            {
+                                                <a class="bearcat-upload-link"
+                                                   href="@link.ContainerUrl"
+                                                   target="_blank"
+                                                   rel="noreferrer noopener"
+                                                   title="@link.ContainerUrl">
+                                                    @link.ContainerUrl
+                                                </a>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>

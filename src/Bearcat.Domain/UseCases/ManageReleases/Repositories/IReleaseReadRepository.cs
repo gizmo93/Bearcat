@@ -16,6 +16,11 @@ public interface IReleaseReadRepository
 
     Task<ReleaseDto?> GetReleaseAsync(int releaseId, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<ReleaseOverviewUploadDto>> GetReleaseOverviewAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<IReadOnlyList<ArchiveConfigDto>> GetArchiveConfigsAsync(
         int releaseId,
         CancellationToken cancellationToken
