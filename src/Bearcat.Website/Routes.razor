@@ -3,6 +3,6 @@
 <Router AppAssembly="Assembly.GetExecutingAssembly()">
     <Found Context="routeData">
         <RouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        <FocusOnNavigate RouteData="routeData" Selector="[data-bearcat-route-focus]" />
     </Found>
 </Router>
