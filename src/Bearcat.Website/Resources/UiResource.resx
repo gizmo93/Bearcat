@@ -59,6 +59,7 @@
   <data name="Close" xml:space="preserve"><value>Close</value></data>
   <data name="CopyAllLinks" xml:space="preserve"><value>Copy all links</value></data>
   <data name="CopyLink" xml:space="preserve"><value>Copy link</value></data>
+  <data name="CopyNfoIntoClipboard" xml:space="preserve"><value>Copy NFO into clipboard</value></data>
   <data name="CopyPassword" xml:space="preserve"><value>Copy password</value></data>
   <data name="Copied" xml:space="preserve"><value>Copied</value></data>
   <data name="CopyFailed" xml:space="preserve"><value>Copy failed</value></data>
@@ -172,6 +173,7 @@
   <data name="NoDistributionTargets" xml:space="preserve"><value>No distribution targets</value></data>
   <data name="NoLatestUpload" xml:space="preserve"><value>No upload yet</value></data>
   <data name="NoLinkCrypterLinks" xml:space="preserve"><value>No link crypter links</value></data>
+  <data name="NoNfoFileAvailable" xml:space="preserve"><value>No NFO file available</value></data>
   <data name="NoReleasesFound" xml:space="preserve"><value>No releases found</value></data>
   <data name="NoTargets" xml:space="preserve"><value>No targets</value></data>
   <data name="NoUploadConfigurationsYet" xml:space="preserve"><value>No upload configurations yet.</value></data>
