@@ -892,6 +892,76 @@ a {
     .bearcat-upload-filter-row :where(.w-56) {
         width: 100%;
     }
+
+    .bearcat-upload-links-table {
+        overflow: visible;
+        border: 0;
+        background: transparent;
+    }
+
+    .bearcat-upload-links-table :where(.rounded-md.border) {
+        border: 0;
+        border-radius: 0;
+    }
+
+    .bearcat-upload-links-table :where(table) {
+        display: block;
+        min-width: 0;
+        table-layout: auto;
+    }
+
+    .bearcat-upload-links-table :where(thead) {
+        display: none;
+    }
+
+    .bearcat-upload-links-table :where(tbody) {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .bearcat-upload-links-table :where(tbody tr) {
+        display: grid;
+        gap: 0.5rem;
+        min-height: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        padding: 0.75rem;
+    }
+
+    .bearcat-upload-links-table :where(tbody tr:hover) {
+        background: var(--card);
+    }
+
+    .bearcat-upload-links-table :where(tbody td) {
+        display: block;
+        min-width: 0;
+        overflow: visible;
+        border: 0;
+        padding: 0;
+    }
+
+    .bearcat-upload-links-table :where(tbody td > *) {
+        min-width: 0;
+    }
+
+    .bearcat-upload-links-table :where(tbody td:nth-child(1)) {
+        justify-self: start;
+    }
+
+    .bearcat-upload-links-table :where(tbody td:nth-child(2)) {
+        color: var(--muted-foreground);
+    }
+
+    .bearcat-upload-links-table :where(tbody td:nth-child(3)),
+    .bearcat-upload-links-table :where(tbody td:nth-child(4)) {
+        width: 100%;
+    }
+
+    .bearcat-upload-links-table :where(tbody td:nth-child(4) .bearcat-file-link-name) {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
 }
 
 .bearcat-upload-link {
