@@ -1,5 +1,5 @@
 using Bearcat.Abstractions.LinkCrypter;
-using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Dto;
+using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,7 +10,7 @@ public class UploadConfigLinkCrypterReadRepository(
     ILinkCrypterFactory linkCrypterFactory
 ) : IUploadConfigLinkCrypterReadRepository
 {
-    public async Task<UploadConfigLinkCrypterDto> GetByIdAsync(
+    public async Task<UploadConfigLinkCrypterReadModel> GetByIdAsync(
         int id,
         CancellationToken cancellationToken = default
     )
@@ -21,7 +21,7 @@ public class UploadConfigLinkCrypterReadRepository(
 
         return await dbRead
             .UploadConfigLinkCrypters.Where(u => u.Id == id)
-            .Select(u => new UploadConfigLinkCrypterDto(
+            .Select(u => new UploadConfigLinkCrypterReadModel(
                 u.Id,
                 linkCrypterNamesByClassName[u.LinkCrypterRegistration.LinkCrypterClassName],
                 u.LinkCrypterRegistration.Name,
@@ -32,7 +32,7 @@ public class UploadConfigLinkCrypterReadRepository(
             .FirstAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<IReadOnlyList<UploadConfigLinkCrypterDto>> GetByUploadConfigIdAsync(
+    public async Task<IReadOnlyList<UploadConfigLinkCrypterReadModel>> GetByUploadConfigIdAsync(
         int uploadConfigId,
         CancellationToken cancellationToken = default
     )
@@ -43,7 +43,7 @@ public class UploadConfigLinkCrypterReadRepository(
 
         return await dbRead
             .UploadConfigLinkCrypters.Where(u => u.UploadConfigId == uploadConfigId)
-            .Select(u => new UploadConfigLinkCrypterDto(
+            .Select(u => new UploadConfigLinkCrypterReadModel(
                 u.Id,
                 linkCrypterNamesByClassName[u.LinkCrypterRegistration.LinkCrypterClassName],
                 u.LinkCrypterRegistration.Name,

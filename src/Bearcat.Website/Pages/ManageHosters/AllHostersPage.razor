@@ -1,6 +1,4 @@
 @page "/hoster-registrations"
-@using Bearcat.Domain.UseCases.ManageHosters.Dto
-@using Bearcat.Website.Shared
 @inherits OwningComponentBase
 
 <PageTitle>@L["HosterRegistrations"] - Bearcat</PageTitle>
@@ -20,7 +18,7 @@
         </BbButton>
     </div>
 
-    <BbDataTable TData="HosterRegistrationDto"
+    <BbDataTable TData="HosterRegistrationReadModel"
                  Data="hosters"
                  ShowToolbar="false"
                  ShowPagination="@(hosters.Count > 10)"
@@ -28,19 +26,19 @@
                  AriaLabel="@L["HosterRegistrations"]"
                  Class="bearcat-data-table bearcat-registrations-table">
         <Columns>
-            <BbDataTableColumn TData="HosterRegistrationDto" TValue="string"
+            <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"
                                Header="@L["Name"]"
                                Property="@(hoster => hoster.Name)"
                                Sortable="true"
                                Filterable="true"
                                Width="20%" />
-            <BbDataTableColumn TData="HosterRegistrationDto" TValue="string"
+            <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"
                                Header="@L["Hoster"]"
                                Property="@(hoster => hoster.HosterName)"
                                Sortable="true"
                                Filterable="true"
                                Width="16%" />
-            <BbDataTableColumn TData="HosterRegistrationDto" TValue="bool"
+            <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="bool"
                                Header="@L["Active"]"
                                Property="@(hoster => hoster.IsActive)"
                                Sortable="true"
@@ -51,7 +49,7 @@
                     </BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="HosterRegistrationDto" TValue="string"
+            <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"
                                Header="@L["Configuration"]"
                                Property="@(hoster => hoster.Name)"
                                MinWidth="280px">
@@ -97,7 +95,7 @@
                     </BbCollapsible>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="HosterRegistrationDto" TValue="string"
+            <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"
                                Header="@L["Login"]"
                                Property="@(hoster => hoster.Name)"
                                Width="120px">
@@ -107,7 +105,7 @@
                     </BbButton>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="HosterRegistrationDto" TValue="string"
+            <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"
                                Header=""
                                Property="@(hoster => hoster.Name)"
                                Width="56px">

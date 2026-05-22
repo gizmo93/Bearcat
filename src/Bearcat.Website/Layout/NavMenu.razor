@@ -1,3 +1,4 @@
+@using BlazorBlueprint.Primitives.Sheet
 @implements IDisposable
 @inject NavigationManager NavigationManager
 
@@ -69,7 +70,7 @@
     private SidebarContext? SidebarContext { get; set; }
 
     [CascadingParameter]
-    private BlazorBlueprint.Primitives.Sheet.SheetContext? SheetContext { get; set; }
+    private SheetContext? SheetContext { get; set; }
 
     protected override void OnInitialized()
     {

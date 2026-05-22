@@ -1,10 +1,10 @@
-﻿using Bearcat.Domain.UseCases.ManageHosters.Dto;
+﻿using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 
 namespace Bearcat.Domain.UseCases.ManageHosters.Repositories;
 
 public interface IHosterConfigurationReadRepository
 {
-    Task<IReadOnlyList<HosterRegistrationDto>> GetAllRegistrationsAsync(
+    Task<IReadOnlyList<HosterRegistrationReadModel>> GetAllRegistrationsAsync(
         CancellationToken cancellationToken = default
     );
 }

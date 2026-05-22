@@ -1,5 +1,5 @@
 using Bearcat.Domain.UseCases.ManageHosters;
-using Bearcat.Domain.UseCases.ManageHosters.Dto;
+using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using BlazorBlueprint.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +12,7 @@ public partial class AllHostersPage(
     ToastService toastService
 )
 {
-    private IReadOnlyList<HosterRegistrationDto> hosters = [];
+    private IReadOnlyList<HosterRegistrationReadModel> hosters = [];
     private HosterRegistrationService hosterRegistrationService = null!;
 
     protected override async Task OnInitializedAsync()
@@ -51,7 +51,7 @@ public partial class AllHostersPage(
         }
     }
 
-    private async Task ShowEditDialogAsync(HosterRegistrationDto hosterRegistration)
+    private async Task ShowEditDialogAsync(HosterRegistrationReadModel hosterRegistration)
     {
         var parameters = new Dictionary<string, object?>
         {
@@ -83,7 +83,7 @@ public partial class AllHostersPage(
         }
     }
 
-    private async Task ToggleIsActiveAsync(HosterRegistrationDto hoster)
+    private async Task ToggleIsActiveAsync(HosterRegistrationReadModel hoster)
     {
         await hosterRegistrationService.ToggleIsActiveAsync(hoster.Id);
 
@@ -95,7 +95,7 @@ public partial class AllHostersPage(
         await LoadHostersAsync();
     }
 
-    private async Task DeleteAsync(HosterRegistrationDto hoster)
+    private async Task DeleteAsync(HosterRegistrationReadModel hoster)
     {
         var result = await dialogService.ConfirmAsync(
             L["DeleteNamedItem", hoster.Name],
@@ -117,7 +117,7 @@ public partial class AllHostersPage(
         await LoadHostersAsync();
     }
 
-    private async Task TryLoginAsync(HosterRegistrationDto hoster)
+    private async Task TryLoginAsync(HosterRegistrationReadModel hoster)
     {
         await using var scope = ScopedServices.CreateAsyncScope();
         var service = scope.ServiceProvider.GetRequiredService<HosterRegistrationService>();

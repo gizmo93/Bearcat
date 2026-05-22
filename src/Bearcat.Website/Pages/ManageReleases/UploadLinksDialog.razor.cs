@@ -1,4 +1,5 @@
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
@@ -23,7 +24,7 @@ public partial class UploadLinksDialog(IReleaseReadRepository readRepository) : 
     public IDialogReference DialogRef { get; set; } = null!;
 
     private readonly int[] pageSizes = [5, 10, 20, 50, 100];
-    private IReadOnlyList<ReleaseUploadLinkDto> links = [];
+    private IReadOnlyList<ReleaseUploadLinkReadModel> links = [];
     private IReadOnlyList<string> allUploadLinks = [];
     private int totalCount;
     private int pageIndex;

@@ -1,15 +1,15 @@
-using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Dto;
+using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.ReadModels;
 
 namespace Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 
 public interface IUploadConfigLinkCrypterReadRepository
 {
-    Task<UploadConfigLinkCrypterDto> GetByIdAsync(
+    Task<UploadConfigLinkCrypterReadModel> GetByIdAsync(
         int id,
         CancellationToken cancellationToken = default
     );
 
-    Task<IReadOnlyList<UploadConfigLinkCrypterDto>> GetByUploadConfigIdAsync(
+    Task<IReadOnlyList<UploadConfigLinkCrypterReadModel>> GetByUploadConfigIdAsync(
         int uploadConfigId,
         CancellationToken cancellationToken = default
     );

@@ -1,5 +1,5 @@
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +14,7 @@ public class ReleaseFolderAutomationRepository(
         IReleaseFolderAutomationWriteRepository,
         IAutomaticallyCreateReleasesRepository
 {
-    public async Task<IReadOnlyList<ReleaseFolderAutomationDto>> GetAllAsync(
+    public async Task<IReadOnlyList<ReleaseFolderAutomationReadModel>> GetAllAsync(
         CancellationToken cancellationToken = default
     )
     {
@@ -22,7 +22,7 @@ public class ReleaseFolderAutomationRepository(
             .ReleaseFolderAutomations.OrderBy(a => a.BasePath)
             .ThenBy(a => a.FolderNamePattern)
             .ThenBy(a => a.Id)
-            .Select(a => new ReleaseFolderAutomationDto(
+            .Select(a => new ReleaseFolderAutomationReadModel(
                 a.Id,
                 a.BasePath,
                 a.FolderNamePattern,

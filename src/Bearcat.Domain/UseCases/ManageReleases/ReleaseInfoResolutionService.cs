@@ -1,6 +1,6 @@
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -18,7 +18,7 @@ public class ReleaseInfoResolutionService(
 {
     private const int MissingReleaseBatchSize = 50;
     private static readonly SemaphoreSlim ResolutionLock = new(1, 1);
-    private IReadOnlyList<ActiveNfoDatabaseRegistrationDto>? activeNfoDatabaseRegistrations;
+    private IReadOnlyList<ActiveNfoDatabaseRegistrationReadModel>? activeNfoDatabaseRegistrations;
 
     public async Task<int> ProcessMissingReleaseInfosAsync(
         CancellationToken cancellationToken = default
@@ -205,7 +205,7 @@ public class ReleaseInfoResolutionService(
     }
 
     private async Task<
-        IReadOnlyList<ActiveNfoDatabaseRegistrationDto>
+        IReadOnlyList<ActiveNfoDatabaseRegistrationReadModel>
     > GetActiveNfoDatabaseRegistrationsAsync(CancellationToken cancellationToken)
     {
         activeNfoDatabaseRegistrations ??= await repository.GetActiveNfoDatabaseRegistrationsAsync(

@@ -1,5 +1,5 @@
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
-using Bearcat.Domain.UseCases.ManageReleaseTemplates.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
@@ -23,7 +23,7 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
-    private IReadOnlyList<ReleaseTemplateSummaryDto> releaseTemplates = [];
+    private IReadOnlyList<ReleaseTemplateSummaryReadModel> releaseTemplates = [];
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
 

@@ -1,5 +1,6 @@
 @using System.Net.Http
 @using System.Net.Http.Json
+@using System.Globalization
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
@@ -11,4 +12,22 @@
 @using BlazorBlueprint.Primitives
 @using BlazorBlueprint.Icons.Lucide.Components
 @using BlazorBlueprint.Primitives.Services
+@using Bearcat.Abstractions.Archiver
+@using Bearcat.Domain.Entities
+@using Bearcat.Domain.UseCases.ManageArchives.ReadModels
+@using Bearcat.Domain.UseCases.ManageHosters.ReadModels
+@using Bearcat.Domain.UseCases.ManageLinkCrypters.ReadModels
+@using Bearcat.Domain.UseCases.ManageNfoDatabases.ReadModels
+@using Bearcat.Domain.UseCases.ManageNotifications.Dto
+@using Bearcat.Domain.UseCases.ManageNotifications.ReadModels
+@using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.ReadModels
+@using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels
+@using Bearcat.Domain.UseCases.ManageReleases.Dto
+@using Bearcat.Domain.UseCases.ManageReleases.ReadModels
+@using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels
+@using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.ReadModels
+@using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels
+@using Bearcat.Domain.ValueObjects
+@using Bearcat.Website.Localization
+@using Bearcat.Website.Shared
 @inject IStringLocalizer<UiResource> L

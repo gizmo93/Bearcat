@@ -1,6 +1,3 @@
-@using Bearcat.Domain.UseCases.ManageReleases.Dto
-@using Bearcat.Website.Localization
-@using Bearcat.Website.Shared
 <section class="space-y-4">
     <div class="bearcat-section-header">
         <div>
@@ -25,7 +22,7 @@
         </div>
     </div>
 
-    <BbDataTable TData="ReleaseUploadDto"
+    <BbDataTable TData="ReleaseUploadReadModel"
                  @key="UploadsTableKey"
                  Data="uploads"
                  ShowToolbar="false"
@@ -35,7 +32,7 @@
                  AriaLabel="@L["ReleaseUploads"]"
                  Class="bearcat-data-table bearcat-release-uploads-table">
         <Columns>
-            <BbDataTableColumn TData="ReleaseUploadDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseUploadReadModel" TValue="string"
                                Header="@L["UploadConfig"]"
                                Property="@(upload => upload.UploadConfigName)"
                                MinWidth="220px">
@@ -50,7 +47,7 @@
                     </div>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseUploadDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseUploadReadModel" TValue="string"
                                Header="@L["OnlineState"]"
                                Property="@(upload => upload.OnlineState.ToString())"
                                Width="150px">
@@ -58,7 +55,7 @@
                     <OnlineStateBadge Value="@upload.OnlineState" />
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseUploadDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseUploadReadModel" TValue="string"
                                Header="@L["State"]"
                                Property="@(upload => upload.UploadState.ToString())"
                                Width="165px">
@@ -68,7 +65,7 @@
                     </BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseUploadDto" TValue="DateTime?"
+            <BbDataTableColumn TData="ReleaseUploadReadModel" TValue="DateTime?"
                                Header="@L["UploadedAt"]"
                                Property="@(upload => upload.UploadedAt)"
                                Width="190px">
@@ -83,7 +80,7 @@
                     </div>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseUploadDto" TValue="int"
+            <BbDataTableColumn TData="ReleaseUploadReadModel" TValue="int"
                                Header="@L["Links"]"
                                Property="@(upload => upload.LinkCount)"
                                Width="110px">
@@ -91,7 +88,7 @@
                     <BbBadge Variant="BadgeVariant.Outline">@upload.LinkCount</BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseUploadDto" TValue="int"
+            <BbDataTableColumn TData="ReleaseUploadReadModel" TValue="int"
                                Header="@L["Containers"]"
                                Property="@(upload => upload.ContainerCount)"
                                Width="120px">
@@ -99,7 +96,7 @@
                     <BbBadge Variant="BadgeVariant.Outline">@upload.ContainerCount</BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseUploadDto" TValue="int"
+            <BbDataTableColumn TData="ReleaseUploadReadModel" TValue="int"
                                Header=""
                                Property="@(upload => upload.UploadId)"
                                Width="56px">

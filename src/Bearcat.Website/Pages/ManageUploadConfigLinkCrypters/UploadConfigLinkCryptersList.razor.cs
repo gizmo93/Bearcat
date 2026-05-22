@@ -1,5 +1,5 @@
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
-using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Dto;
+using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -18,7 +18,7 @@ public partial class UploadConfigLinkCryptersList(DialogService dialogService) :
     public string? ReleaseName { get; set; }
 
     private IUploadConfigLinkCrypterReadRepository readRepository = null!;
-    private IReadOnlyList<UploadConfigLinkCrypterDto> uploadConfigLinkCrypters = [];
+    private IReadOnlyList<UploadConfigLinkCrypterReadModel> uploadConfigLinkCrypters = [];
     private bool isInitialized;
 
     protected override async Task OnInitializedAsync()
@@ -34,12 +34,12 @@ public partial class UploadConfigLinkCryptersList(DialogService dialogService) :
         await ShowAddOrEditDialogAsync(null);
     }
 
-    private async Task ShowEditDialogAsync(UploadConfigLinkCrypterDto config)
+    private async Task ShowEditDialogAsync(UploadConfigLinkCrypterReadModel config)
     {
         await ShowAddOrEditDialogAsync(config);
     }
 
-    private async Task ShowAddOrEditDialogAsync(UploadConfigLinkCrypterDto? config)
+    private async Task ShowAddOrEditDialogAsync(UploadConfigLinkCrypterReadModel? config)
     {
         var parameters = new Dictionary<string, object?>
         {
@@ -75,7 +75,9 @@ public partial class UploadConfigLinkCryptersList(DialogService dialogService) :
         }
     }
 
-    private async Task ShowDeleteDialogAsync(UploadConfigLinkCrypterDto uploadConfigLinkCrypterDto)
+    private async Task ShowDeleteDialogAsync(
+        UploadConfigLinkCrypterReadModel uploadConfigLinkCrypterReadModel
+    )
     {
         var result = await dialogService.ConfirmAsync(
             L["DeleteLinkCrypterContainerConfig"],
@@ -94,7 +96,7 @@ public partial class UploadConfigLinkCryptersList(DialogService dialogService) :
         }
 
         var service = ScopedServices.GetRequiredService<UploadConfigLinkCrypterService>();
-        await service.DeleteAsync(uploadConfigLinkCrypterDto.UploadConfigLinkCrypterId);
+        await service.DeleteAsync(uploadConfigLinkCrypterReadModel.UploadConfigLinkCrypterId);
         await LoadDataAsync();
     }
 

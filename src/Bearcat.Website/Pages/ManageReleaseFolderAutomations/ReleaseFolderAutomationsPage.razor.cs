@@ -1,5 +1,5 @@
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
-using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
 using BlazorBlueprint.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +11,7 @@ public partial class ReleaseFolderAutomationsPage(
     DialogService dialogService
 )
 {
-    private IReadOnlyList<ReleaseFolderAutomationDto> automations = [];
+    private IReadOnlyList<ReleaseFolderAutomationReadModel> automations = [];
     private bool isLoading;
 
     protected override async Task OnInitializedAsync()
@@ -59,7 +59,7 @@ public partial class ReleaseFolderAutomationsPage(
         }
     }
 
-    private async Task ShowEditDialogAsync(ReleaseFolderAutomationDto automation)
+    private async Task ShowEditDialogAsync(ReleaseFolderAutomationReadModel automation)
     {
         var parameters = new Dictionary<string, object?>
         {
@@ -93,14 +93,14 @@ public partial class ReleaseFolderAutomationsPage(
         }
     }
 
-    private async Task ToggleEnabledAsync(ReleaseFolderAutomationDto automation)
+    private async Task ToggleEnabledAsync(ReleaseFolderAutomationReadModel automation)
     {
         var service = ScopedServices.GetRequiredService<ReleaseFolderAutomationService>();
         await service.SetEnabledAsync(automation.ReleaseFolderAutomationId, !automation.IsEnabled);
         await LoadAutomationsAsync();
     }
 
-    private async Task DeleteAsync(ReleaseFolderAutomationDto automation)
+    private async Task DeleteAsync(ReleaseFolderAutomationReadModel automation)
     {
         var result = await dialogService.ConfirmAsync(
             L["DeleteReleaseFolderAutomation"],

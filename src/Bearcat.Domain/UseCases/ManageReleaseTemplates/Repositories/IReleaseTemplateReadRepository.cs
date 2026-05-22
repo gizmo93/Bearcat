@@ -1,14 +1,14 @@
-using Bearcat.Domain.UseCases.ManageReleaseTemplates.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 
 public interface IReleaseTemplateReadRepository
 {
-    Task<IReadOnlyList<ReleaseTemplateSummaryDto>> GetAllAsync(
+    Task<IReadOnlyList<ReleaseTemplateSummaryReadModel>> GetAllAsync(
         CancellationToken cancellationToken = default
     );
 
-    Task<ReleaseTemplateDetailDto?> GetDetailAsync(
+    Task<ReleaseTemplateDetailReadModel?> GetDetailAsync(
         int releaseTemplateId,
         CancellationToken cancellationToken = default
     );

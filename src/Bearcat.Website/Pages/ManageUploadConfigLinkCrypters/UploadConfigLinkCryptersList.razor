@@ -1,5 +1,3 @@
-@using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Dto
-@using Bearcat.Website.Shared
 @inherits OwningComponentBase
 
 @if (!isInitialized)
@@ -21,7 +19,7 @@
         </div>
     </BbCardHeader>
     <BbCardContent>
-        <BbDataTable TData="UploadConfigLinkCrypterDto"
+        <BbDataTable TData="UploadConfigLinkCrypterReadModel"
                      Data="uploadConfigLinkCrypters"
                      ShowToolbar="false"
                      ShowPagination="@(uploadConfigLinkCrypters.Count > 10)"
@@ -29,7 +27,7 @@
                      AriaLabel="@L["UploadConfigLinkCrypters"]"
                      Class="rounded-lg border border-border/70">
             <Columns>
-                <BbDataTableColumn TData="UploadConfigLinkCrypterDto" TValue="string"
+                <BbDataTableColumn TData="UploadConfigLinkCrypterReadModel" TValue="string"
                                    Header="@L["Crypter"]"
                                    Property="@(item => item.LinkCrypterRegistrationName)"
                                    Sortable="true"
@@ -41,7 +39,7 @@
                         </div>
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="UploadConfigLinkCrypterDto" TValue="string"
+                <BbDataTableColumn TData="UploadConfigLinkCrypterReadModel" TValue="string"
                                    Header="@L["Password"]"
                                    Property="@(item => item.Password ?? string.Empty)">
                     <CellTemplate Context="item">
@@ -57,7 +55,7 @@
                         }
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="UploadConfigLinkCrypterDto" TValue="bool"
+                <BbDataTableColumn TData="UploadConfigLinkCrypterReadModel" TValue="bool"
                                    Header="@L["Active"]"
                                    Property="@(item => item.LinkCrypterIsActive)"
                                    Sortable="true">
@@ -67,7 +65,7 @@
                         </BbBadge>
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="UploadConfigLinkCrypterDto" TValue="string"
+                <BbDataTableColumn TData="UploadConfigLinkCrypterReadModel" TValue="string"
                                    Header=""
                                    Property="@(item => item.LinkCrypterRegistrationName)">
                     <CellTemplate Context="item">

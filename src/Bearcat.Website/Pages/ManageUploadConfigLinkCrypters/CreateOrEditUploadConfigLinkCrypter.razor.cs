@@ -85,12 +85,12 @@ public partial class CreateOrEditUploadConfigLinkCrypter : OwningComponentBase
             return;
         }
 
-        var configDto = await readRepository.GetByIdAsync(UploadConfigLinkCrypterId!.Value);
+        var configReadModel = await readRepository.GetByIdAsync(UploadConfigLinkCrypterId!.Value);
 
         formModel = new FormModel
         {
-            LinkCrypterRegistrationId = configDto.LinkCrypterRegistrationId,
-            Password = configDto.Password,
+            LinkCrypterRegistrationId = configReadModel.LinkCrypterRegistrationId,
+            Password = configReadModel.Password,
         };
     }
 

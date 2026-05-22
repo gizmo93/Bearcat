@@ -1,6 +1,6 @@
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.ManageNfoDatabases.Dto;
+using Bearcat.Domain.UseCases.ManageNfoDatabases.ReadModels;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,7 +12,7 @@ public class NfoDatabaseRegistrationRepository(
     INfoDatabaseFactory nfoDatabaseFactory
 ) : INfoDatabaseRegistrationReadRepository, INfoDatabaseRegistrationWriteRepository
 {
-    public async Task<IReadOnlyList<NfoDatabaseRegistrationDto>> GetAllAsync(
+    public async Task<IReadOnlyList<NfoDatabaseRegistrationReadModel>> GetAllAsync(
         CancellationToken cancellationToken = default
     )
     {
@@ -20,11 +20,11 @@ public class NfoDatabaseRegistrationRepository(
 
         return await dbRead
             .NfoDatabaseRegistrations.OrderBy(registration => registration.NfoDatabaseClassName)
-            .Select(registration => ToDto(registration, databasesByClassName))
+            .Select(registration => ToReadModel(registration, databasesByClassName))
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<NfoDatabaseRegistrationDto?> GetByIdAsync(
+    public async Task<NfoDatabaseRegistrationReadModel?> GetByIdAsync(
         int id,
         CancellationToken cancellationToken = default
     )
@@ -33,7 +33,7 @@ public class NfoDatabaseRegistrationRepository(
 
         return await dbRead
             .NfoDatabaseRegistrations.Where(registration => registration.Id == id)
-            .Select(registration => ToDto(registration, databasesByClassName))
+            .Select(registration => ToReadModel(registration, databasesByClassName))
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -88,14 +88,14 @@ public class NfoDatabaseRegistrationRepository(
         await dbWrite.SaveChangesAsync(cancellationToken);
     }
 
-    private static NfoDatabaseRegistrationDto ToDto(
+    private static NfoDatabaseRegistrationReadModel ToReadModel(
         NfoDatabaseRegistration registration,
         IReadOnlyDictionary<string, INfoDatabase> databasesByClassName
     )
     {
         var database = databasesByClassName[registration.NfoDatabaseClassName];
 
-        return new NfoDatabaseRegistrationDto(
+        return new NfoDatabaseRegistrationReadModel(
             registration.Id,
             registration.IsActive,
             database.Name,

@@ -1,5 +1,6 @@
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageNotifications.Dto;
+using Bearcat.Domain.UseCases.ManageNotifications.ReadModels;
 
 namespace Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 
@@ -7,17 +8,17 @@ public interface INotificationReadRepository
 {
     Task<int> CountUnresolvedAsync(CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<NotificationDto>> GetLatestUnresolvedAsync(
+    Task<IReadOnlyList<NotificationReadModel>> GetLatestUnresolvedAsync(
         int take,
         CancellationToken cancellationToken = default
     );
 
-    Task<NotificationDto?> GetByIdAsync(
+    Task<NotificationReadModel?> GetByIdAsync(
         int notificationId,
         CancellationToken cancellationToken = default
     );
 
-    Task<PagedResult<NotificationDto>> SearchAsync(
+    Task<PagedResult<NotificationReadModel>> SearchAsync(
         NotificationSearchQuery query,
         CancellationToken cancellationToken = default
     );

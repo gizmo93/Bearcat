@@ -1,12 +1,13 @@
 using Bearcat.Abstractions.Archiver;
-using Bearcat.Domain.UseCases.ManageHosters.Dto;
+using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
-using Bearcat.Domain.UseCases.ManageLinkCrypters.Dto;
+using Bearcat.Domain.UseCases.ManageLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
-using Bearcat.Domain.UseCases.ManageReleaseGroups.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Website.Pages.ManageReleaseTemplates;
 using BlazorBlueprint.Components;
@@ -26,11 +27,11 @@ public partial class AllReleasesPage(
 {
     private readonly int[] pageSizes = [5, 10, 20, 50, 100];
 
-    private IReadOnlyList<ReleaseDto> releases = [];
-    private IReadOnlyList<HosterRegistrationDto> hosterRegistrations = [];
+    private IReadOnlyList<ReleaseReadModel> releases = [];
+    private IReadOnlyList<HosterRegistrationReadModel> hosterRegistrations = [];
     private IReadOnlyList<ArchiverDto> archiverOptions = [];
-    private IReadOnlyList<LinkCrypterRegistrationDto> linkCrypterRegistrations = [];
-    private IReadOnlyList<ReleaseGroupDto> releaseGroups = [];
+    private IReadOnlyList<LinkCrypterRegistrationReadModel> linkCrypterRegistrations = [];
+    private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
     private readonly HashSet<int> selectedReleaseIds = [];
     private ReleaseService service = null!;
     private ReleaseSearchQuery searchQuery = new();
@@ -96,7 +97,7 @@ public partial class AllReleasesPage(
         await RefreshReleasesAsync();
     }
 
-    private async Task DeleteReleaseAsync(ReleaseDto release)
+    private async Task DeleteReleaseAsync(ReleaseReadModel release)
     {
         var result = await dialogService.ConfirmAsync(
             L["DeleteReleaseTitle", release.Name],
@@ -156,7 +157,7 @@ public partial class AllReleasesPage(
         }
     }
 
-    private async Task ShowEditReleaseDialogAsync(ReleaseDto release)
+    private async Task ShowEditReleaseDialogAsync(ReleaseReadModel release)
     {
         var parameters = new Dictionary<string, object?>
         {

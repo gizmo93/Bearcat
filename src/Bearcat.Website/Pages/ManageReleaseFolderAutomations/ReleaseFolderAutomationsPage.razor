@@ -1,5 +1,4 @@
 @page "/release-folder-automations"
-@using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Dto
 @inherits OwningComponentBase
 
 <PageTitle>@L["ReleaseFolderAutomations"] - Bearcat</PageTitle>
@@ -19,7 +18,7 @@
         </BbButton>
     </div>
 
-    <BbDataTable TData="ReleaseFolderAutomationDto"
+    <BbDataTable TData="ReleaseFolderAutomationReadModel"
                  Data="automations"
                  ShowToolbar="false"
                  ShowPagination="@(automations.Count > 10)"
@@ -28,7 +27,7 @@
                  AriaLabel="@L["ReleaseFolderAutomations"]"
                  Class="bearcat-data-table bearcat-folder-automations-table">
         <Columns>
-            <BbDataTableColumn TData="ReleaseFolderAutomationDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
                                Header="@L["ReleaseBasePath"]"
                                Property="@(automation => automation.BasePath)"
                                Width="34%">
@@ -38,7 +37,7 @@
                     </p>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseFolderAutomationDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
                                Header="@L["FolderNamePattern"]"
                                Property="@(automation => automation.FolderNamePattern ?? string.Empty)"
                                Width="180px">
@@ -53,7 +52,7 @@
                     }
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseFolderAutomationDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
                                Header="@L["ReleaseTemplate"]"
                                Property="@(automation => automation.ReleaseTemplateName)"
                                Width="220px">
@@ -61,7 +60,7 @@
                     <BbBadge Variant="BadgeVariant.Secondary">@automation.ReleaseTemplateName</BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseFolderAutomationDto" TValue="bool"
+            <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="bool"
                                Header="@L["Status"]"
                                Property="@(automation => automation.IsEnabled)"
                                Width="130px">
@@ -71,7 +70,7 @@
                     </BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseFolderAutomationDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
                                Header=""
                                Property="@(automation => automation.BasePath)"
                                Width="56px">

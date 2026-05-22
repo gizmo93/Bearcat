@@ -1,8 +1,7 @@
-using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
-using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManageReleases;
@@ -22,7 +21,7 @@ public partial class UploadContainerLinksDialog(IReleaseReadRepository readRepos
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
-    private IReadOnlyList<ReleaseUploadContainerLinkDto> containers = [];
+    private IReadOnlyList<ReleaseUploadContainerLinkReadModel> containers = [];
     private bool isInitialized;
     private bool isLoading;
 

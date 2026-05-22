@@ -1,5 +1,5 @@
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
-using Bearcat.Domain.UseCases.ManageReleaseTemplates.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -17,7 +17,7 @@ public partial class ReleaseTemplateDetail(
     [Parameter]
     public int ReleaseTemplateId { get; set; }
 
-    private ReleaseTemplateDetailDto releaseTemplate = null!;
+    private ReleaseTemplateDetailReadModel releaseTemplate = null!;
     private bool isInitialized;
 
     protected override async Task OnInitializedAsync()
@@ -121,7 +121,9 @@ public partial class ReleaseTemplateDetail(
         }
     }
 
-    private async Task ShowEditArchiveConfigDialogAsync(ArchiveConfigTemplateDto archiveConfig)
+    private async Task ShowEditArchiveConfigDialogAsync(
+        ArchiveConfigTemplateReadModel archiveConfig
+    )
     {
         var parameters = new Dictionary<string, object?>
         {
@@ -159,7 +161,9 @@ public partial class ReleaseTemplateDetail(
         }
     }
 
-    private async Task DeleteArchiveConfigTemplateAsync(ArchiveConfigTemplateDto archiveConfig)
+    private async Task DeleteArchiveConfigTemplateAsync(
+        ArchiveConfigTemplateReadModel archiveConfig
+    )
     {
         var result = await dialogService.ConfirmAsync(
             L["DeleteNamedItem", archiveConfig.Name],
@@ -220,7 +224,7 @@ public partial class ReleaseTemplateDetail(
         }
     }
 
-    private async Task ShowEditUploadConfigDialogAsync(UploadConfigTemplateDto uploadConfig)
+    private async Task ShowEditUploadConfigDialogAsync(UploadConfigTemplateReadModel uploadConfig)
     {
         var parameters = new Dictionary<string, object?>
         {
@@ -256,7 +260,7 @@ public partial class ReleaseTemplateDetail(
         }
     }
 
-    private async Task DeleteUploadConfigTemplateAsync(UploadConfigTemplateDto uploadConfig)
+    private async Task DeleteUploadConfigTemplateAsync(UploadConfigTemplateReadModel uploadConfig)
     {
         var result = await dialogService.ConfirmAsync(
             L["DeleteNamedItem", uploadConfig.DisplayName],
@@ -279,7 +283,7 @@ public partial class ReleaseTemplateDetail(
         await LoadReleaseTemplateAsync();
     }
 
-    private async Task ShowAddLinkCrypterDialogAsync(UploadConfigTemplateDto uploadConfig)
+    private async Task ShowAddLinkCrypterDialogAsync(UploadConfigTemplateReadModel uploadConfig)
     {
         var parameters = new Dictionary<string, object?>
         {
@@ -309,8 +313,8 @@ public partial class ReleaseTemplateDetail(
     }
 
     private async Task ShowEditLinkCrypterDialogAsync(
-        UploadConfigTemplateDto uploadConfig,
-        UploadConfigLinkCrypterTemplateDto linkCrypter
+        UploadConfigTemplateReadModel uploadConfig,
+        UploadConfigLinkCrypterTemplateReadModel linkCrypter
     )
     {
         var parameters = new Dictionary<string, object?>
@@ -351,7 +355,7 @@ public partial class ReleaseTemplateDetail(
     }
 
     private async Task DeleteLinkCrypterTemplateAsync(
-        UploadConfigLinkCrypterTemplateDto linkCrypter
+        UploadConfigLinkCrypterTemplateReadModel linkCrypter
     )
     {
         var result = await dialogService.ConfirmAsync(

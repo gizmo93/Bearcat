@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageNotifications.Dto;
+using Bearcat.Domain.UseCases.ManageNotifications.ReadModels;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,7 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
             .CountAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<NotificationDto>> GetLatestUnresolvedAsync(
+    public async Task<IReadOnlyList<NotificationReadModel>> GetLatestUnresolvedAsync(
         int take,
         CancellationToken cancellationToken = default
     )
@@ -30,10 +31,10 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
             .Select(ToProjection())
             .ToListAsync(cancellationToken);
 
-        return notifications.Select(ToDto).ToList();
+        return notifications.Select(ToReadModel).ToList();
     }
 
-    public async Task<NotificationDto?> GetByIdAsync(
+    public async Task<NotificationReadModel?> GetByIdAsync(
         int notificationId,
         CancellationToken cancellationToken = default
     )
@@ -43,10 +44,10 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
             .Select(ToProjection())
             .FirstOrDefaultAsync(cancellationToken);
 
-        return notification is null ? null : ToDto(notification);
+        return notification is null ? null : ToReadModel(notification);
     }
 
-    public async Task<PagedResult<NotificationDto>> SearchAsync(
+    public async Task<PagedResult<NotificationReadModel>> SearchAsync(
         NotificationSearchQuery query,
         CancellationToken cancellationToken = default
     )
@@ -70,8 +71,8 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
             .Select(ToProjection())
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<NotificationDto>(
-            notifications.Select(ToDto).ToList(),
+        return new PagedResult<NotificationReadModel>(
+            notifications.Select(ToReadModel).ToList(),
             totalCount,
             pageIndex,
             pageSize
@@ -120,9 +121,9 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
         );
     }
 
-    private static NotificationDto ToDto(NotificationProjection notification)
+    private static NotificationReadModel ToReadModel(NotificationProjection notification)
     {
-        return new NotificationDto(
+        return new NotificationReadModel(
             notification.Id,
             notification.CreatedAt,
             notification.ResolvedAt,
@@ -132,7 +133,7 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
         );
     }
 
-    private static NotificationRelatedEntityDto? CreateRelatedEntity(
+    private static NotificationRelatedEntityReadModel? CreateRelatedEntity(
         NotificationProjection notification
     )
     {
@@ -142,7 +143,7 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
             && notification.UploadReleaseId is not null
         )
         {
-            return new NotificationRelatedEntityDto(
+            return new NotificationRelatedEntityReadModel(
                 "Upload",
                 JoinDisplayName(notification.UploadReleaseName, notification.UploadConfigName),
                 $"/releases/{notification.UploadReleaseId}?tab=uploads&uploadConfigId={notification.UploadConfigId}"
@@ -155,7 +156,7 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
             && notification.ArchiveReleaseId is not null
         )
         {
-            return new NotificationRelatedEntityDto(
+            return new NotificationRelatedEntityReadModel(
                 "Archive",
                 JoinDisplayName(notification.ArchiveReleaseName, notification.ArchiveConfigName),
                 $"/releases/{notification.ArchiveReleaseId}?tab=archives&archiveConfigId={notification.ArchiveConfigId}"
@@ -168,7 +169,7 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
             && notification.LinkReleaseId is not null
         )
         {
-            return new NotificationRelatedEntityDto(
+            return new NotificationRelatedEntityReadModel(
                 "LinkCrypterContainer",
                 JoinDisplayName(
                     notification.LinkReleaseName,

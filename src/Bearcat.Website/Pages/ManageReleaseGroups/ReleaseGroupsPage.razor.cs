@@ -1,5 +1,5 @@
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
-using Bearcat.Domain.UseCases.ManageReleaseGroups.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using BlazorBlueprint.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +12,7 @@ public partial class ReleaseGroupsPage(
     ToastService toastService
 )
 {
-    private IReadOnlyList<ReleaseGroupDto> releaseGroups = [];
+    private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
     private bool isLoading;
 
     protected override async Task OnInitializedAsync()
@@ -59,7 +59,7 @@ public partial class ReleaseGroupsPage(
         }
     }
 
-    private async Task ShowEditDialogAsync(ReleaseGroupDto releaseGroup)
+    private async Task ShowEditDialogAsync(ReleaseGroupReadModel releaseGroup)
     {
         var parameters = new Dictionary<string, object?>
         {
@@ -91,7 +91,7 @@ public partial class ReleaseGroupsPage(
         }
     }
 
-    private async Task DeleteAsync(ReleaseGroupDto releaseGroup)
+    private async Task DeleteAsync(ReleaseGroupReadModel releaseGroup)
     {
         if (releaseGroup.AssignedReleaseCount > 0)
         {

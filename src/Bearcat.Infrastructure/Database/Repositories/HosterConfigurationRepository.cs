@@ -1,6 +1,6 @@
 ﻿using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.ManageHosters.Dto;
+using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,7 +12,7 @@ public class HosterConfigurationRepository(
     IHosterFactory hosterFactory
 ) : IHosterConfigurationReadRepository, IHosterConfigurationWriteRepository
 {
-    public async Task<IReadOnlyList<HosterRegistrationDto>> GetAllRegistrationsAsync(
+    public async Task<IReadOnlyList<HosterRegistrationReadModel>> GetAllRegistrationsAsync(
         CancellationToken cancellationToken = default
     )
     {
@@ -20,7 +20,7 @@ public class HosterConfigurationRepository(
 
         return await dbRead
             .HosterRegistrations.OrderBy(h => h.Name)
-            .Select(h => new HosterRegistrationDto(
+            .Select(h => new HosterRegistrationReadModel(
                 h.Id,
                 h.Name,
                 h.IsActive,

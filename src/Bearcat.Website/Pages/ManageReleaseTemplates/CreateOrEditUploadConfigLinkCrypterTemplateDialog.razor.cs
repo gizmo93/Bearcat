@@ -1,4 +1,4 @@
-using Bearcat.Domain.UseCases.ManageLinkCrypters.Dto;
+using Bearcat.Domain.UseCases.ManageLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using BlazorBlueprint.Components;
@@ -25,7 +25,7 @@ public partial class CreateOrEditUploadConfigLinkCrypterTemplateDialog(
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
-    private IReadOnlyList<LinkCrypterRegistrationDto> linkCrypterRegistrations = [];
+    private IReadOnlyList<LinkCrypterRegistrationReadModel> linkCrypterRegistrations = [];
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
     private bool isInitialized;

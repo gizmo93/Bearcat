@@ -1,4 +1,4 @@
-using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Website.Pages.ManageArchives;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -9,7 +9,7 @@ public partial class ArchiveConfigContent(DialogService dialogService)
 {
     [Parameter]
     [EditorRequired]
-    public ArchiveConfigDto Config { get; set; } = null!;
+    public ArchiveConfigReadModel Config { get; set; } = null!;
 
     private async Task ShowArchiveDialogAsync(int archiveId)
     {

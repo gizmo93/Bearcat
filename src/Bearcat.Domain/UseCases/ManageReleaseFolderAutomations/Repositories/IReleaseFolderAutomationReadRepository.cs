@@ -1,10 +1,10 @@
-using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.ReadModels;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
 
 public interface IReleaseFolderAutomationReadRepository
 {
-    Task<IReadOnlyList<ReleaseFolderAutomationDto>> GetAllAsync(
+    Task<IReadOnlyList<ReleaseFolderAutomationReadModel>> GetAllAsync(
         CancellationToken cancellationToken = default
     );
 }

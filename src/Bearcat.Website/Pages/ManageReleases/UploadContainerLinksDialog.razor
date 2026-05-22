@@ -1,6 +1,3 @@
-@using Bearcat.Domain.UseCases.ManageReleases.Dto
-@using Bearcat.Website.Localization
-@using Bearcat.Website.Shared
 @if (!isInitialized)
 {
     return;
@@ -37,7 +34,7 @@
     </div>
 
     <div class="bearcat-archive-dialog-body">
-        <BbDataTable TData="ReleaseUploadContainerLinkDto"
+        <BbDataTable TData="ReleaseUploadContainerLinkReadModel"
                      Data="containers"
                      ShowToolbar="false"
                      ShowPagination="false"
@@ -46,7 +43,7 @@
                      AriaLabel="@L["ContainerLinks"]"
                      Class="bearcat-upload-links-table rounded-lg border border-border/70">
             <Columns>
-                <BbDataTableColumn TData="ReleaseUploadContainerLinkDto" TValue="string"
+                <BbDataTableColumn TData="ReleaseUploadContainerLinkReadModel" TValue="string"
                                    Header="@L["Status"]"
                                    Property="@(container => container.State.ToString())"
                                    Width="160px">
@@ -56,7 +53,7 @@
                         </BbBadge>
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="ReleaseUploadContainerLinkDto" TValue="string"
+                <BbDataTableColumn TData="ReleaseUploadContainerLinkReadModel" TValue="string"
                                    Header="@L["LinkCrypter"]"
                                    Property="@(container => container.LinkCrypterRegistrationName)"
                                    Width="220px">
@@ -71,7 +68,7 @@
                         </div>
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="ReleaseUploadContainerLinkDto" TValue="string"
+                <BbDataTableColumn TData="ReleaseUploadContainerLinkReadModel" TValue="string"
                                    Header="@L["ContainerLink"]"
                                    Property="@(container => container.ContainerUrl)"
                                    MinWidth="300px">
@@ -92,7 +89,7 @@
                         }
                     </CellTemplate>
                 </BbDataTableColumn>
-                <BbDataTableColumn TData="ReleaseUploadContainerLinkDto" TValue="DateTime"
+                <BbDataTableColumn TData="ReleaseUploadContainerLinkReadModel" TValue="DateTime"
                                    Header="@L["CreatedAt"]"
                                    Property="@(container => container.CreatedAt)"
                                    Width="160px">

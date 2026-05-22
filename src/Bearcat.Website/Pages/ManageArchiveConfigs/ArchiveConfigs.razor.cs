@@ -1,5 +1,5 @@
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
-using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
@@ -21,7 +21,7 @@ public partial class ArchiveConfigs(DialogService dialogService)
     [Parameter]
     public EventCallback<string> OnChangeAffectingOtherComponents { get; set; }
 
-    private IReadOnlyList<ArchiveConfigDto> archiveConfigs = [];
+    private IReadOnlyList<ArchiveConfigReadModel> archiveConfigs = [];
     private IReleaseReadRepository readRepository = null!;
 
     protected override async Task OnInitializedAsync()
@@ -56,7 +56,7 @@ public partial class ArchiveConfigs(DialogService dialogService)
         }
     }
 
-    private async Task DeleteConfigAsync(ArchiveConfigDto archiveConfig)
+    private async Task DeleteConfigAsync(ArchiveConfigReadModel archiveConfig)
     {
         var result = await dialogService.ConfirmAsync(
             L["DeleteArchiveConfig"],
@@ -92,7 +92,7 @@ public partial class ArchiveConfigs(DialogService dialogService)
         );
     }
 
-    private async Task ShowEditDialogAsync(ArchiveConfigDto config)
+    private async Task ShowEditDialogAsync(ArchiveConfigReadModel config)
     {
         var parameters = new Dictionary<string, object?>
         {

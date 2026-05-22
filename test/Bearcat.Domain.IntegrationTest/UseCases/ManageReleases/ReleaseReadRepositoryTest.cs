@@ -8,6 +8,7 @@ using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Shouldly;
+using ReleaseInfo = Bearcat.Domain.Entities.ReleaseInfo;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 
@@ -35,7 +36,7 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         // Arrange
         var release = await AddReleaseAsync();
         dbContext.ReleaseInfos.Add(
-            new Domain.Entities.ReleaseInfo
+            new ReleaseInfo
             {
                 ReleaseId = release.Id,
                 NfoDatabaseClassName = "XrelNfoDatabase",
@@ -100,7 +101,7 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
     {
         // Arrange
         var release = await AddReleaseAsync();
-        var releaseInfo = new Domain.Entities.ReleaseInfo
+        var releaseInfo = new ReleaseInfo
         {
             ReleaseId = release.Id,
             NfoDatabaseClassName = "XrelNfoDatabase",

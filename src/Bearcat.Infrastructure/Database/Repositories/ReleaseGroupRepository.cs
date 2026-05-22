@@ -1,5 +1,5 @@
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.ManageReleaseGroups.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,14 +9,14 @@ public class ReleaseGroupRepository(IBearcatReadDbContext dbRead, IBearcatWriteD
     : IReleaseGroupReadRepository,
         IReleaseGroupWriteRepository
 {
-    public async Task<IReadOnlyList<ReleaseGroupDto>> GetAllAsync(
+    public async Task<IReadOnlyList<ReleaseGroupReadModel>> GetAllAsync(
         CancellationToken cancellationToken = default
     )
     {
         return await dbRead
             .ReleaseGroups.OrderBy(r => r.Name)
             .ThenBy(r => r.Id)
-            .Select(r => new ReleaseGroupDto(
+            .Select(r => new ReleaseGroupReadModel(
                 r.Id,
                 r.Name,
                 r.EnableAutomaticReuploads,
@@ -26,14 +26,14 @@ public class ReleaseGroupRepository(IBearcatReadDbContext dbRead, IBearcatWriteD
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<ReleaseGroupDto?> GetReadModelByIdAsync(
+    public async Task<ReleaseGroupReadModel?> GetReadModelByIdAsync(
         int releaseGroupId,
         CancellationToken cancellationToken = default
     )
     {
         return await dbRead
             .ReleaseGroups.Where(r => r.Id == releaseGroupId)
-            .Select(r => new ReleaseGroupDto(
+            .Select(r => new ReleaseGroupReadModel(
                 r.Id,
                 r.Name,
                 r.EnableAutomaticReuploads,

@@ -1,5 +1,5 @@
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,13 +9,13 @@ public class ReleaseInfoRepository(IBearcatReadDbContext dbRead, IBearcatWriteDb
     : IReleaseInfoRepository
 {
     public async Task<
-        IReadOnlyList<ActiveNfoDatabaseRegistrationDto>
+        IReadOnlyList<ActiveNfoDatabaseRegistrationReadModel>
     > GetActiveNfoDatabaseRegistrationsAsync(CancellationToken cancellationToken = default)
     {
         return await dbRead
             .NfoDatabaseRegistrations.Where(registration => registration.IsActive)
             .OrderBy(registration => registration.NfoDatabaseClassName)
-            .Select(registration => new ActiveNfoDatabaseRegistrationDto(
+            .Select(registration => new ActiveNfoDatabaseRegistrationReadModel(
                 registration.NfoDatabaseClassName,
                 registration.SerializedConfig
             ))

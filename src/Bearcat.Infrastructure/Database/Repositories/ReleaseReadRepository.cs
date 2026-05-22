@@ -3,6 +3,7 @@ using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,7 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactory archiverFactory)
     : IReleaseReadRepository
 {
-    public async Task<PagedResult<ReleaseDto>> SearchReleasesAsync(
+    public async Task<PagedResult<ReleaseReadModel>> SearchReleasesAsync(
         ReleaseSearchQuery query,
         CancellationToken cancellationToken = default
     )
@@ -28,10 +29,10 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .ThenBy(r => r.Id)
             .Skip(pageIndex * pageSize)
             .Take(pageSize)
-            .Select(ToReleaseDto())
+            .Select(ToReleaseReadModel())
             .ToListAsync(cancellationToken: cancellationToken);
 
-        return new PagedResult<ReleaseDto>(releases, totalCount, pageIndex, pageSize);
+        return new PagedResult<ReleaseReadModel>(releases, totalCount, pageIndex, pageSize);
     }
 
     public IReadOnlyList<ArchiverDto> GetArchiverFilterOptions()
@@ -43,18 +44,18 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .ToList();
     }
 
-    public async Task<ReleaseDto?> GetReleaseAsync(
+    public async Task<ReleaseReadModel?> GetReleaseAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     )
     {
         return await dbRead
             .Releases.Where(r => r.Id == releaseId)
-            .Select(ToReleaseDto())
+            .Select(ToReleaseReadModel())
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<IReadOnlyList<ReleaseOverviewUploadDto>> GetReleaseOverviewAsync(
+    public async Task<IReadOnlyList<ReleaseOverviewUploadReadModel>> GetReleaseOverviewAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     )
@@ -118,9 +119,9 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .ToDictionary(
                 group => group.Key,
                 group =>
-                    (IReadOnlyList<ReleaseOverviewLinkCrypterLinkDto>)
+                    (IReadOnlyList<ReleaseOverviewLinkCrypterLinkReadModel>)
                         group
-                            .Select(link => new ReleaseOverviewLinkCrypterLinkDto(
+                            .Select(link => new ReleaseOverviewLinkCrypterLinkReadModel(
                                 link.LinkCrypterContainerId,
                                 link.LinkCrypterRegistrationName,
                                 link.LinkCrypterClassName,
@@ -136,13 +137,13 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             {
                 latestUploadByConfigId.TryGetValue(config.UploadConfigId, out var upload);
 
-                IReadOnlyList<ReleaseOverviewLinkCrypterLinkDto> links =
+                IReadOnlyList<ReleaseOverviewLinkCrypterLinkReadModel> links =
                     upload is not null
                     && linksByUploadId.TryGetValue(upload.UploadId, out var uploadLinks)
                         ? uploadLinks
                         : [];
 
-                return new ReleaseOverviewUploadDto(
+                return new ReleaseOverviewUploadReadModel(
                     config.UploadConfigId,
                     config.UploadConfigName,
                     config.HosterRegistrationName,
@@ -159,7 +160,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .ToList();
     }
 
-    public async Task<IReadOnlyList<ReleaseInfoDto>> GetReleaseInfosAsync(
+    public async Task<IReadOnlyList<ReleaseInfoReadModel>> GetReleaseInfosAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     )
@@ -169,7 +170,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .Where(info => info.ReleaseId == releaseId)
             .OrderBy(info => info.NfoDatabaseClassName)
             .ThenBy(info => info.Id)
-            .Select(info => new ReleaseInfoDto(
+            .Select(info => new ReleaseInfoReadModel(
                 info.Id,
                 info.NfoDatabaseClassName,
                 info.ReleaseName,
@@ -179,12 +180,15 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                 info.VideoType,
                 info.AudioType,
                 info.ExternalInfos.OrderBy(externalInfo => externalInfo.Id)
-                    .Select(externalInfo => new ReleaseExternalInfoDto(
+                    .Select(externalInfo => new ReleaseExternalInfoReadModel(
                         externalInfo.Id,
                         externalInfo.Type,
                         externalInfo.Title,
                         externalInfo
-                            .Urls.Select(url => new ReleaseExternalInfoUrlDto(url.Type, url.Url))
+                            .Urls.Select(url => new ReleaseExternalInfoUrlReadModel(
+                                url.Type,
+                                url.Url
+                            ))
                             .ToList()
                     ))
                     .ToList()
@@ -192,7 +196,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<IReadOnlyList<ArchiveConfigDto>> GetArchiveConfigsAsync(
+    public async Task<IReadOnlyList<ArchiveConfigReadModel>> GetArchiveConfigsAsync(
         int releaseId,
         CancellationToken cancellationToken
     )
@@ -210,7 +214,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .ArchiveConfigs.AsSplitQuery()
             .Where(a => a.ReleaseId == releaseId)
             .OrderBy(a => a.ArchiverName)
-            .Select(a => new ArchiveConfigDto(
+            .Select(a => new ArchiveConfigReadModel(
                 a.Id,
                 a.ArchiveFilesBasePath,
                 a.ArchiverName,
@@ -221,7 +225,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                 fileExtensionByArchiver[a.ArchiverName],
                 a.Name,
                 a.Archives.OrderByDescending(ar => ar.Id)
-                    .Select(ar => new ArchiveConfigDto.ArchiveSummary(
+                    .Select(ar => new ArchiveConfigReadModel.ArchiveSummary(
                         ar.Id,
                         ar.ArchiveFiles.Count()
                     ))
@@ -230,7 +234,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<PagedResult<ReleaseUploadDto>> SearchUploadsAsync(
+    public async Task<PagedResult<ReleaseUploadReadModel>> SearchUploadsAsync(
         ReleaseUploadSearchQuery query,
         CancellationToken cancellationToken = default
     )
@@ -261,7 +265,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .ThenByDescending(u => u.Id)
             .Skip(pageIndex * pageSize)
             .Take(pageSize)
-            .Select(u => new ReleaseUploadDto(
+            .Select(u => new ReleaseUploadReadModel(
                 u.Id,
                 u.UploadConfig.Name,
                 u.UploadConfig.HosterRegistration.Name,
@@ -286,10 +290,10 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             ))
             .ToListAsync(cancellationToken: cancellationToken);
 
-        return new PagedResult<ReleaseUploadDto>(uploads, totalCount, pageIndex, pageSize);
+        return new PagedResult<ReleaseUploadReadModel>(uploads, totalCount, pageIndex, pageSize);
     }
 
-    public async Task<PagedResult<ReleaseUploadLinkDto>> SearchUploadLinksAsync(
+    public async Task<PagedResult<ReleaseUploadLinkReadModel>> SearchUploadLinksAsync(
         ReleaseUploadLinkSearchQuery query,
         CancellationToken cancellationToken = default
     )
@@ -313,7 +317,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .ThenBy(f => f.Id)
             .Skip(pageIndex * pageSize)
             .Take(pageSize)
-            .Select(f => new ReleaseUploadLinkDto(
+            .Select(f => new ReleaseUploadLinkReadModel(
                 f.ArchiveFile.FullFileName,
                 f.HosterFileLink,
                 f.OnlineState,
@@ -321,7 +325,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             ))
             .ToListAsync(cancellationToken: cancellationToken);
 
-        return new PagedResult<ReleaseUploadLinkDto>(links, totalCount, pageIndex, pageSize);
+        return new PagedResult<ReleaseUploadLinkReadModel>(links, totalCount, pageIndex, pageSize);
     }
 
     public async Task<IReadOnlyList<string>> GetUploadLinksAsync(
@@ -347,7 +351,9 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<IReadOnlyList<ReleaseUploadContainerLinkDto>> GetUploadContainerLinksAsync(
+    public async Task<
+        IReadOnlyList<ReleaseUploadContainerLinkReadModel>
+    > GetUploadContainerLinksAsync(
         int releaseId,
         int uploadId,
         CancellationToken cancellationToken = default
@@ -359,7 +365,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             )
             .OrderBy(c => c.UploadConfigLinkCrypter.LinkCrypterRegistration.Name)
             .ThenBy(c => c.Id)
-            .Select(c => new ReleaseUploadContainerLinkDto(
+            .Select(c => new ReleaseUploadContainerLinkReadModel(
                 c.UploadConfigLinkCrypter.LinkCrypterRegistration.Name,
                 c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName,
                 c.ContainerUrl,
@@ -369,9 +375,9 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
-    private static Expression<Func<Release, ReleaseDto>> ToReleaseDto()
+    private static Expression<Func<Release, ReleaseReadModel>> ToReleaseReadModel()
     {
-        return entity => new ReleaseDto(
+        return entity => new ReleaseReadModel(
             entity.Id,
             entity.Name,
             entity.ReleaseType,

@@ -1,10 +1,3 @@
-@using Bearcat.Abstractions.Archiver
-@using Bearcat.Domain.UseCases.ManageHosters.Dto
-@using Bearcat.Domain.UseCases.ManageLinkCrypters.Dto
-@using Bearcat.Domain.UseCases.ManageReleaseGroups.Dto
-@using Bearcat.Domain.UseCases.ManageReleases.Dto
-@using Bearcat.Domain.ValueObjects
-@using Bearcat.Website.Localization
 <EditForm Model="this" OnSubmit="ApplyFiltersAsync" class="bearcat-release-search">
     <div class="bearcat-release-search-grid">
         <BbFormFieldInput TValue="string"
@@ -65,16 +58,16 @@
 
 @code {
     [Parameter]
-    public IReadOnlyList<HosterRegistrationDto> HosterRegistrations { get; set; } = [];
+    public IReadOnlyList<HosterRegistrationReadModel> HosterRegistrations { get; set; } = [];
 
     [Parameter]
     public IReadOnlyList<ArchiverDto> Archivers { get; set; } = [];
 
     [Parameter]
-    public IReadOnlyList<LinkCrypterRegistrationDto> LinkCrypterRegistrations { get; set; } = [];
+    public IReadOnlyList<LinkCrypterRegistrationReadModel> LinkCrypterRegistrations { get; set; } = [];
 
     [Parameter]
-    public IReadOnlyList<ReleaseGroupDto> ReleaseGroups { get; set; } = [];
+    public IReadOnlyList<ReleaseGroupReadModel> ReleaseGroups { get; set; } = [];
 
     [Parameter]
     public EventCallback<ReleaseSearchQuery> OnSearch { get; set; }

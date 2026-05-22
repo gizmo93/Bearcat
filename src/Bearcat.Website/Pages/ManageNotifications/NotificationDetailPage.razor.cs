@@ -1,5 +1,5 @@
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.UseCases.ManageNotifications.Dto;
+using Bearcat.Domain.UseCases.ManageNotifications.ReadModels;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
@@ -14,7 +14,7 @@ public partial class NotificationDetailPage(NavigationManager navigationManager)
     [Parameter]
     public int NotificationId { get; set; }
 
-    private NotificationDto notification = null!;
+    private NotificationReadModel notification = null!;
     private INotificationReadRepository readRepository = null!;
     private bool isInitialized;
 
@@ -26,15 +26,15 @@ public partial class NotificationDetailPage(NavigationManager navigationManager)
 
     private async Task LoadNotificationAsync()
     {
-        var notificationDto = await readRepository.GetByIdAsync(NotificationId);
+        var notificationReadModel = await readRepository.GetByIdAsync(NotificationId);
 
-        if (notificationDto is null)
+        if (notificationReadModel is null)
         {
             navigationManager.NotFound();
             return;
         }
 
-        notification = notificationDto;
+        notification = notificationReadModel;
         isInitialized = true;
     }
 

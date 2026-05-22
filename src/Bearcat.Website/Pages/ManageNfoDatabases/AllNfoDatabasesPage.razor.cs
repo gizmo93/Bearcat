@@ -1,6 +1,6 @@
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.UseCases.ManageNfoDatabases;
-using Bearcat.Domain.UseCases.ManageNfoDatabases.Dto;
+using Bearcat.Domain.UseCases.ManageNfoDatabases.ReadModels;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
 using BlazorBlueprint.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +14,7 @@ public partial class AllNfoDatabasesPage(
     ToastService toastService
 )
 {
-    private IReadOnlyList<NfoDatabaseRegistrationDto> registrations = [];
+    private IReadOnlyList<NfoDatabaseRegistrationReadModel> registrations = [];
     private NfoDatabaseRegistrationService service = null!;
     private bool CanAddRegistration =>
         registrations.Count < nfoDatabaseFactory.GetNfoDatabases().Count;
@@ -49,7 +49,7 @@ public partial class AllNfoDatabasesPage(
         }
     }
 
-    private async Task ShowEditDialogAsync(NfoDatabaseRegistrationDto registration)
+    private async Task ShowEditDialogAsync(NfoDatabaseRegistrationReadModel registration)
     {
         var parameters = new Dictionary<string, object?>
         {
@@ -74,7 +74,7 @@ public partial class AllNfoDatabasesPage(
         }
     }
 
-    private async Task ToggleIsActiveAsync(NfoDatabaseRegistrationDto registration)
+    private async Task ToggleIsActiveAsync(NfoDatabaseRegistrationReadModel registration)
     {
         await service.ToggleIsActiveAsync(registration.Id);
 
@@ -86,7 +86,7 @@ public partial class AllNfoDatabasesPage(
         await LoadRegistrationsAsync();
     }
 
-    private async Task DeleteAsync(NfoDatabaseRegistrationDto registration)
+    private async Task DeleteAsync(NfoDatabaseRegistrationReadModel registration)
     {
         var result = await dialogService.ConfirmAsync(
             L["DeleteNamedItem", registration.NfoDatabaseName],
