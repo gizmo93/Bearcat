@@ -159,6 +159,39 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .ToList();
     }
 
+    public async Task<IReadOnlyList<ReleaseInfoDto>> GetReleaseInfosAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .ReleaseInfos.AsSplitQuery()
+            .Where(info => info.ReleaseId == releaseId)
+            .OrderBy(info => info.NfoDatabaseClassName)
+            .ThenBy(info => info.Id)
+            .Select(info => new ReleaseInfoDto(
+                info.Id,
+                info.NfoDatabaseClassName,
+                info.ReleaseName,
+                info.ReleaseDatabaseUrl,
+                info.SizeNumber,
+                info.SizeUnit,
+                info.VideoType,
+                info.AudioType,
+                info.ExternalInfos.OrderBy(externalInfo => externalInfo.Id)
+                    .Select(externalInfo => new ReleaseExternalInfoDto(
+                        externalInfo.Id,
+                        externalInfo.Type,
+                        externalInfo.Title,
+                        externalInfo
+                            .Urls.Select(url => new ReleaseExternalInfoUrlDto(url.Type, url.Url))
+                            .ToList()
+                    ))
+                    .ToList()
+            ))
+            .ToListAsync(cancellationToken: cancellationToken);
+    }
+
     public async Task<IReadOnlyList<ArchiveConfigDto>> GetArchiveConfigsAsync(
         int releaseId,
         CancellationToken cancellationToken

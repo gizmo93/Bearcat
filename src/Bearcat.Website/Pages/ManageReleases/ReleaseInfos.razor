@@ -1,0 +1,150 @@
+@using Bearcat.Domain.UseCases.ManageReleases.Dto
+@using Bearcat.Website.Localization
+
+<section class="bearcat-release-info-section space-y-4">
+    <div class="bearcat-section-header">
+        <div>
+            <h2 class="text-lg font-semibold">@L["ReleaseInfos"]</h2>
+        </div>
+
+        <BbButton Variant="ButtonVariant.Outline"
+                  Size="ButtonSize.Small"
+                  Disabled="isLoading"
+                  OnClick="LoadReleaseInfosAsync">
+            <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
+            @L["Refresh"]
+        </BbButton>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="bearcat-release-info-list">
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="loader-circle" class="h-5 w-5 animate-spin" />
+                <span>@L["Loading"]</span>
+            </div>
+        </div>
+    }
+    else if (releaseInfos.Count == 0)
+    {
+        <div class="bearcat-release-info-list">
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="database" class="h-5 w-5" />
+                <span>@L["NoReleaseInfosYet"]</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="bearcat-release-info-list">
+            @foreach (var releaseInfo in releaseInfos)
+            {
+                <article class="bearcat-release-info-item">
+                    <header class="bearcat-release-info-card-header">
+                        <div class="min-w-0 space-y-2">
+                            <div class="bearcat-release-info-source-row">
+                                <span class="bearcat-release-info-source">
+                                    <LucideIcon Name="database" class="h-3.5 w-3.5" />
+                                    @GetDatabaseDisplayName(releaseInfo.NfoDatabaseClassName)
+                                </span>
+                                @if (!string.IsNullOrWhiteSpace(releaseInfo.ReleaseDatabaseUrl))
+                                {
+                                    <a class="bearcat-release-info-source-link"
+                                       href="@releaseInfo.ReleaseDatabaseUrl"
+                                       target="_blank"
+                                       rel="noreferrer noopener"
+                                       title="@releaseInfo.ReleaseDatabaseUrl"
+                                       aria-label="@L["OpenReleaseDatabase"]">
+                                        <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
+                                    </a>
+                                }
+                            </div>
+
+                            <h3 class="bearcat-release-info-title" title="@releaseInfo.ReleaseName">
+                                @releaseInfo.ReleaseName
+                            </h3>
+                        </div>
+
+                        <dl class="bearcat-release-info-facts">
+                            <div class="bearcat-release-info-fact">
+                                <dt>
+                                    <LucideIcon Name="hard-drive" class="h-3.5 w-3.5" />
+                                    @L["Size"]
+                                </dt>
+                                <dd>@GetSizeLabel(releaseInfo)</dd>
+                            </div>
+
+                            <div class="bearcat-release-info-fact">
+                                <dt>
+                                    <LucideIcon Name="video" class="h-3.5 w-3.5" />
+                                    @L["VideoType"]
+                                </dt>
+                                <dd>@GetValueOrDash(releaseInfo.VideoType)</dd>
+                            </div>
+
+                            <div class="bearcat-release-info-fact">
+                                <dt>
+                                    <LucideIcon Name="volume-2" class="h-3.5 w-3.5" />
+                                    @L["AudioType"]
+                                </dt>
+                                <dd>@GetValueOrDash(releaseInfo.AudioType)</dd>
+                            </div>
+                        </dl>
+                    </header>
+
+                    <div class="bearcat-release-info-external">
+                        <div class="bearcat-release-info-external-heading">
+                            <LucideIcon Name="link" class="h-3.5 w-3.5" />
+                            <span>@L["ExternalInfos"]</span>
+                        </div>
+
+                        @if (releaseInfo.ExternalInfos.Count == 0)
+                        {
+                            <p class="text-sm text-muted-foreground">@L["NoExternalInfos"]</p>
+                        }
+                        else
+                        {
+                            <div class="bearcat-release-info-external-list">
+                                @foreach (var externalInfo in releaseInfo.ExternalInfos)
+                                {
+                                    <div class="bearcat-release-info-external-row">
+                                        <div class="bearcat-release-info-external-main">
+                                            <BbBadge Variant="BadgeVariant.Secondary">
+                                                @LocalizeExternalInfoType(externalInfo.Type)
+                                            </BbBadge>
+                                            <span class="bearcat-release-info-external-title" title="@externalInfo.Title">
+                                                @(externalInfo.Title ?? "-")
+                                            </span>
+                                        </div>
+
+                                        @if (externalInfo.Urls.Count == 0)
+                                        {
+                                            <p class="text-sm text-muted-foreground">@L["NoUrls"]</p>
+                                        }
+                                        else
+                                        {
+                                            <div class="bearcat-release-info-url-list">
+                                                @foreach (var url in externalInfo.Urls)
+                                                {
+                                                    <a class="bearcat-release-info-url"
+                                                       href="@url.Url"
+                                                       target="_blank"
+                                                       rel="noreferrer noopener"
+                                                       title="@url.Url"
+                                                       aria-label="@L["OpenExternalUrl"]">
+                                                        <span>@GetUrlLabel(url)</span>
+                                                        <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
+                                                    </a>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>

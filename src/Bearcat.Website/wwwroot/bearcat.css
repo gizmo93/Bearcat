@@ -1038,6 +1038,196 @@ a {
     white-space: nowrap;
 }
 
+.bearcat-release-info-section {
+    max-width: 72rem;
+}
+
+.bearcat-release-info-list {
+    display: grid;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+    box-shadow: 0 1px 2px color-mix(in oklch, var(--foreground) 7%, transparent);
+}
+
+.bearcat-release-info-item {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.bearcat-release-info-item + .bearcat-release-info-item {
+    border-top: 1px solid var(--border);
+}
+
+.bearcat-release-info-card-header {
+    display: grid;
+    gap: 1rem;
+}
+
+.bearcat-release-info-source-row {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.bearcat-release-info-source {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    gap: 0.35rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--muted) 55%, transparent);
+    color: var(--foreground);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.35rem 0.6rem;
+}
+
+.bearcat-release-info-source-link {
+    display: inline-grid;
+    width: 1.85rem;
+    height: 1.85rem;
+    place-items: center;
+    border: 1px solid color-mix(in oklch, var(--primary) 35%, var(--border));
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--primary) 8%, transparent);
+    color: var(--primary);
+}
+
+.bearcat-release-info-source-link:hover {
+    background: color-mix(in oklch, var(--primary) 14%, transparent);
+}
+
+.bearcat-release-info-title {
+    min-width: 0;
+    color: var(--foreground);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.bearcat-release-info-facts {
+    display: grid;
+    gap: 0.6rem;
+    grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+    margin: 0;
+}
+
+.bearcat-release-info-fact {
+    display: grid;
+    min-width: 0;
+    gap: 0.3rem;
+    border: 1px solid color-mix(in oklch, var(--border) 82%, transparent);
+    border-radius: var(--radius);
+    background: color-mix(in oklch, var(--muted) 35%, transparent);
+    padding: 0.65rem 0.75rem;
+}
+
+.bearcat-release-info-fact dt {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.bearcat-release-info-fact dd {
+    min-width: 0;
+    color: var(--foreground);
+    font-size: 0.95rem;
+    font-weight: 750;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.bearcat-release-info-external {
+    display: grid;
+    gap: 0.75rem;
+    border-top: 1px solid color-mix(in oklch, var(--border) 70%, transparent);
+    padding-top: 1rem;
+}
+
+.bearcat-release-info-external-heading {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--muted-foreground);
+    font-size: 0.72rem;
+    font-weight: 750;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.bearcat-release-info-external-list {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.bearcat-release-info-external-row {
+    display: grid;
+    min-width: 0;
+    gap: 0.65rem;
+    align-items: center;
+    padding-top: 0.55rem;
+}
+
+.bearcat-release-info-external-row + .bearcat-release-info-external-row {
+    border-top: 1px solid color-mix(in oklch, var(--border) 65%, transparent);
+}
+
+.bearcat-release-info-external-main {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.bearcat-release-info-external-title {
+    min-width: 0;
+    color: var(--foreground);
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+
+.bearcat-release-info-url-list {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.bearcat-release-info-url {
+    display: inline-grid;
+    max-width: 100%;
+    grid-auto-flow: column;
+    align-items: center;
+    gap: 0.35rem;
+    border: 1px solid color-mix(in oklch, var(--primary) 35%, var(--border));
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--primary) 9%, transparent);
+    color: var(--primary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    line-height: 1;
+    overflow-wrap: anywhere;
+    padding: 0.4rem 0.6rem;
+}
+
+.bearcat-release-info-url:hover {
+    background: color-mix(in oklch, var(--primary) 15%, transparent);
+}
+
 @media (min-width: 860px) {
     .bearcat-release-overview-main {
         grid-template-columns:
@@ -1048,6 +1238,15 @@ a {
 
     .bearcat-release-overview-link-list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .bearcat-release-info-card-header {
+        grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.75fr);
+        align-items: start;
+    }
+
+    .bearcat-release-info-external-row {
+        grid-template-columns: minmax(12rem, 0.55fr) minmax(0, 1fr);
     }
 }
 

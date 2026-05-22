@@ -75,6 +75,7 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
         tab switch
         {
             "overview" => "overview",
+            "release-infos" => "release-infos",
             "upload-configs" => "upload-configs",
             "uploads" => "uploads",
             "archives" => "archives",

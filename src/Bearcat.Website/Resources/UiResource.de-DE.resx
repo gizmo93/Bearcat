@@ -186,12 +186,15 @@
   <data name="NoLatestUpload" xml:space="preserve"><value>Noch kein Upload</value></data>
   <data name="NoLinkCrypterLinks" xml:space="preserve"><value>Keine Link-Crypter-Links</value></data>
   <data name="NoConfigurationRequired" xml:space="preserve"><value>Keine Konfiguration erforderlich</value></data>
+  <data name="NoExternalInfos" xml:space="preserve"><value>Keine externen Infos</value></data>
   <data name="NoNfoFileAvailable" xml:space="preserve"><value>Keine NFO-Datei verfügbar</value></data>
+  <data name="NoReleaseInfosYet" xml:space="preserve"><value>Noch keine Release-Infos.</value></data>
   <data name="NoReleasesFound" xml:space="preserve"><value>Keine Releases gefunden</value></data>
   <data name="NoTargets" xml:space="preserve"><value>Keine Ziele</value></data>
   <data name="NoUploadConfigurationsYet" xml:space="preserve"><value>Noch keine Upload-Konfigurationen.</value></data>
   <data name="NoUploadLinksFound" xml:space="preserve"><value>Keine Uploadlinks gefunden</value></data>
   <data name="NoUploadsFound" xml:space="preserve"><value>Keine Uploads gefunden</value></data>
+  <data name="NoUrls" xml:space="preserve"><value>Keine URLs</value></data>
     <data name="OnlineConfigs" xml:space="preserve"><value>Uploads online</value></data>
   <data name="OnlineState" xml:space="preserve"><value>Online-Status</value></data>
   <data name="OnlineState.Offline" xml:space="preserve"><value>Offline</value></data>
@@ -203,6 +206,8 @@
   <data name="OpenHosterActions" xml:space="preserve"><value>Hoster-Aktionen öffnen</value></data>
   <data name="OpenLinkCrypterActions" xml:space="preserve"><value>Link-Crypter-Aktionen öffnen</value></data>
   <data name="OpenNfoDatabaseActions" xml:space="preserve"><value>NFO-Datenbank-Aktionen öffnen</value></data>
+  <data name="OpenExternalUrl" xml:space="preserve"><value>Externe URL öffnen</value></data>
+  <data name="OpenReleaseDatabase" xml:space="preserve"><value>Release-Datenbank öffnen</value></data>
   <data name="OpenReleaseActions" xml:space="preserve"><value>Release-Aktionen öffnen</value></data>
   <data name="OpenUploadConfigActions" xml:space="preserve"><value>Upload-Konfigurationsaktionen öffnen</value></data>
   <data name="Password" xml:space="preserve"><value>Passwort</value></data>
@@ -218,6 +223,7 @@
   <data name="Release" xml:space="preserve"><value>Release</value></data>
   <data name="ReleaseDetails" xml:space="preserve"><value>Release-Details</value></data>
   <data name="ReleaseFolder" xml:space="preserve"><value>Release-Ordner</value></data>
+  <data name="ReleaseInfos" xml:space="preserve"><value>Release-Infos</value></data>
   <data name="ReleaseMetadataSources" xml:space="preserve"><value>Release-Metadatenquellen</value></data>
     <data name="ReleaseRootsAndOnlineState" xml:space="preserve"><value>Suche und verwalte Releases</value></data>
   <data name="ReleaseResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Releases</value></data>
@@ -306,6 +312,9 @@
   <data name="UploadStatus" xml:space="preserve"><value>Upload-Status</value></data>
   <data name="UploadStatusSubtitle" xml:space="preserve"><value>Upload #{0} für {1}</value></data>
   <data name="UploadTarget" xml:space="preserve"><value>Upload-Ziel</value></data>
+  <data name="UrlType.Imdb" xml:space="preserve"><value>IMDB</value></data>
+  <data name="UrlType.Other" xml:space="preserve"><value>Andere</value></data>
+  <data name="VideoType" xml:space="preserve"><value>Video</value></data>
   <data name="CheckedAt" xml:space="preserve"><value>Geprüft am</value></data>
   <data name="ViewContainerLinks" xml:space="preserve"><value>Containerlinks anzeigen</value></data>
   <data name="ViewUploadLinks" xml:space="preserve"><value>Uploadlinks anzeigen</value></data>
@@ -352,6 +361,15 @@
   <data name="Disabled" xml:space="preserve"><value>Deaktiviert</value></data>
   <data name="EditReleaseDescription" xml:space="preserve"><value>Release-Name und Zuordnung bearbeiten.</value></data>
   <data name="Enabled" xml:space="preserve"><value>Aktiviert</value></data>
+  <data name="AudioType" xml:space="preserve"><value>Audio</value></data>
+  <data name="ExternalInfoType.Console" xml:space="preserve"><value>Konsole</value></data>
+  <data name="ExternalInfoType.Game" xml:space="preserve"><value>Spiel</value></data>
+  <data name="ExternalInfoType.Movie" xml:space="preserve"><value>Film</value></data>
+  <data name="ExternalInfoType.Other" xml:space="preserve"><value>Andere</value></data>
+  <data name="ExternalInfoType.Software" xml:space="preserve"><value>Software</value></data>
+  <data name="ExternalInfoType.Tv" xml:space="preserve"><value>TV</value></data>
+  <data name="ExternalInfoType.Xxx" xml:space="preserve"><value>XXX</value></data>
+  <data name="ExternalInfos" xml:space="preserve"><value>Externe Infos</value></data>
   <data name="HoursCount" xml:space="preserve"><value>{0} h</value></data>
   <data name="HoursUntilReupload" xml:space="preserve"><value>Stunden bis Reupload</value></data>
   <data name="HoursUntilReuploadHelp" xml:space="preserve"><value>Minimum 0; dann wird direkt nach bestätigten Offline-Dateien eingeplant.</value></data>
