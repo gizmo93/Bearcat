@@ -16,12 +16,29 @@ public partial class ReleaseOverview(
     [EditorRequired]
     public int ReleaseId { get; set; }
 
-    private IReadOnlyList<ReleaseOverviewUploadDto> overviewUploads = [];
-    private bool isLoading;
+    [Parameter]
+    [EditorRequired]
+    public string ReleaseFolderPath { get; set; } = null!;
 
-    protected override async Task OnInitializedAsync()
+    private IReadOnlyList<ReleaseOverviewUploadDto> overviewUploads = [];
+    private string? nfoContent;
+    private bool isLoading;
+    private int? loadedReleaseId;
+    private string? loadedReleaseFolderPath;
+    private string NfoCopyTargetId => $"release-overview-nfo-{ReleaseId}";
+    private bool CanCopyNfo => !isLoading && !string.IsNullOrEmpty(nfoContent);
+    private string NfoCopyButtonTitle =>
+        CanCopyNfo ? L["CopyNfoIntoClipboard"] : L["NoNfoFileAvailable"];
+
+    protected override async Task OnParametersSetAsync()
     {
-        await LoadOverviewAsync();
+        if (
+            loadedReleaseId != ReleaseId
+            || !string.Equals(loadedReleaseFolderPath, ReleaseFolderPath, StringComparison.Ordinal)
+        )
+        {
+            await LoadOverviewAsync();
+        }
     }
 
     private async Task LoadOverviewAsync()
@@ -30,7 +47,17 @@ public partial class ReleaseOverview(
 
         try
         {
-            overviewUploads = await readRepository.GetReleaseOverviewAsync(ReleaseId);
+            nfoContent = null;
+
+            var overviewTask = readRepository.GetReleaseOverviewAsync(ReleaseId);
+            var nfoTask = GetNfoContentAsync(ReleaseFolderPath);
+
+            await Task.WhenAll(overviewTask, nfoTask);
+
+            overviewUploads = await overviewTask;
+            nfoContent = await nfoTask;
+            loadedReleaseId = ReleaseId;
+            loadedReleaseFolderPath = ReleaseFolderPath;
         }
         finally
         {
@@ -95,4 +122,53 @@ public partial class ReleaseOverview(
 
     private static string GetPasswordCopyTargetId(ReleaseOverviewUploadDto upload) =>
         $"release-overview-password-{upload.UploadId}";
+
+    private static async Task<string?> GetNfoContentAsync(string? releaseFolderPath)
+    {
+        if (string.IsNullOrWhiteSpace(releaseFolderPath))
+        {
+            return null;
+        }
+
+        try
+        {
+            var nfoPath = await Task.Run(() => FindNfoPath(releaseFolderPath));
+            if (string.IsNullOrWhiteSpace(nfoPath))
+            {
+                return null;
+            }
+
+            return await File.ReadAllTextAsync(nfoPath);
+        }
+        catch (Exception exception)
+            when (exception
+                    is IOException
+                        or UnauthorizedAccessException
+                        or NotSupportedException
+                        or ArgumentException
+            )
+        {
+            return null;
+        }
+    }
+
+    private static string? FindNfoPath(string releaseFolderPath)
+    {
+        if (!Directory.Exists(releaseFolderPath))
+        {
+            return null;
+        }
+
+        return Directory
+            .EnumerateFiles(releaseFolderPath, "*", SearchOption.TopDirectoryOnly)
+            .Where(filePath =>
+                string.Equals(
+                    Path.GetExtension(filePath),
+                    ".nfo",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault();
+    }
 }

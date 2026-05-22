@@ -98,7 +98,8 @@
         <BbTabsContent Value="overview" Class="space-y-4">
             <ReleaseOverview
                 @ref="@reloadableComponents[nameof(ReleaseOverview)]"
-                ReleaseId="@ReleaseId" />
+                ReleaseId="@ReleaseId"
+                ReleaseFolderPath="@release.ReleaseFolderPath" />
         </BbTabsContent>
 
         <BbTabsContent Value="archives" Class="space-y-4">

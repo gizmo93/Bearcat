@@ -7,13 +7,30 @@
             <h2 class="text-lg font-semibold">@L["ReleaseOverview"]</h2>
         </div>
 
-        <BbButton Variant="ButtonVariant.Outline"
-                  Size="ButtonSize.Small"
-                  Disabled="isLoading"
-                  OnClick="LoadOverviewAsync">
-            <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
-            @L["Refresh"]
-        </BbButton>
+        <div class="flex flex-wrap items-center gap-2">
+            <textarea id="@NfoCopyTargetId" hidden readonly>@nfoContent</textarea>
+            <button type="button"
+                    class="bearcat-copy-button"
+                    disabled="@(!CanCopyNfo)"
+                    aria-label="@L["CopyNfoIntoClipboard"]"
+                    title="@NfoCopyButtonTitle"
+                    data-copy-target="@NfoCopyTargetId"
+                    data-copy-label="@L["CopyNfoIntoClipboard"]"
+                    data-copy-success-label="@L["Copied"]"
+                    data-copy-failure-label="@L["CopyFailed"]"
+                    onclick="window.bearcat.copyFromTarget(this)">
+                <LucideIcon Name="clipboard-copy" class="h-4 w-4" />
+                <span class="bearcat-copy-button-label">@L["CopyNfoIntoClipboard"]</span>
+            </button>
+
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      Disabled="isLoading"
+                      OnClick="LoadOverviewAsync">
+                <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
+                @L["Refresh"]
+            </BbButton>
+        </div>
     </div>
 
     @if (isLoading)
