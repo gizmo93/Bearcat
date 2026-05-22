@@ -7,6 +7,7 @@ using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageLinkCrypters;
+using Bearcat.Domain.UseCases.ManageNfoDatabases;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
@@ -42,6 +43,7 @@ public static class ServiceProviderConfig
             services.AddScoped<TimeProvider>();
             services.AddScoped<UploadConfigService>();
             services.AddScoped<LinkCrypterService>();
+            services.AddScoped<NfoDatabaseRegistrationService>();
             services.AddScoped<LinkCrypterContainerService>();
             services.AddScoped<UploadConfigLinkCrypterService>();
             services.AddApplicationConfiguration<ArchiveCleanupConfiguration>();

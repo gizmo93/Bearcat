@@ -4,6 +4,7 @@ using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
+using Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
@@ -111,6 +112,14 @@ public static class ServiceProviderConfig
             services.AddScoped<
                 IUploadConfigLinkCrypterWriteRepository,
                 UploadConfigLinkCrypterWriteRepository
+            >();
+            services.AddScoped<
+                INfoDatabaseRegistrationReadRepository,
+                NfoDatabaseRegistrationRepository
+            >();
+            services.AddScoped<
+                INfoDatabaseRegistrationWriteRepository,
+                NfoDatabaseRegistrationRepository
             >();
         }
     }
