@@ -1,0 +1,125 @@
+@page "/background-tasks"
+@inherits OwningComponentBase
+
+<PageTitle>@L["BackgroundTasks"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["BackgroundTasks"]</h1>
+            <p class="text-sm text-muted-foreground">
+                @L["BackgroundTasksIntro"]
+            </p>
+        </div>
+
+        <BbButton Variant="ButtonVariant.Outline"
+                  Class="bearcat-page-action"
+                  OnClick="RefreshAsync"
+                  Disabled="isLoading"
+                  AriaLabel="@L["Refresh"]">
+            <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
+            @L["Refresh"]
+        </BbButton>
+    </div>
+
+    <BbDataTable TData="BackgroundTaskStateReadModel"
+                 Data="backgroundTasks"
+                 ShowToolbar="false"
+                 ShowPagination="@(backgroundTasks.Count > 10)"
+                 InitialPageSize="10"
+                 AriaLabel="@L["BackgroundTasks"]"
+                 Class="bearcat-data-table bearcat-background-tasks-table">
+        <Columns>
+            <BbDataTableColumn TData="BackgroundTaskStateReadModel" TValue="string"
+                               Header="@L["Name"]"
+                               Property="@(task => task.DisplayName)"
+                               Sortable="true"
+                               Filterable="true"
+                               MinWidth="220px" />
+            <BbDataTableColumn TData="BackgroundTaskStateReadModel" TValue="bool"
+                               Header="@L["Active"]"
+                               Property="@(task => task.IsEnabled)"
+                               Sortable="true"
+                               Width="120px">
+                <CellTemplate Context="task">
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <BbSwitch Checked="@task.IsEnabled"
+                                  CheckedChanged="@(async isEnabled => await SetIsEnabledAsync(task, isEnabled))"
+                                  Size="SwitchSize.Small"
+                                  AriaLabel="@L["SetBackgroundTaskActiveState", task.DisplayName]" />
+                        <span>@(task.IsEnabled ? L["Enabled"] : L["Disabled"])</span>
+                    </label>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="BackgroundTaskStateReadModel" TValue="string"
+                               Header="@L["Status"]"
+                               Property="@(task => GetStatusLabel(task))"
+                               Sortable="true"
+                               Width="130px">
+                <CellTemplate Context="task">
+                    <BbBadge Variant="@GetStatusVariant(task)">@GetStatusLabel(task)</BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="BackgroundTaskStateReadModel" TValue="DateTime?"
+                               Header="@L["Started"]"
+                               Property="@(task => task.LastStartedAt)"
+                               Sortable="true"
+                               Width="170px">
+                <CellTemplate Context="task">
+                    <span class="bearcat-mobile-cell-label">@L["Started"]</span>
+                    <span class="text-sm">@FormatDate(task.LastStartedAt)</span>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="BackgroundTaskStateReadModel" TValue="DateTime?"
+                               Header="@L["Finished"]"
+                               Property="@(task => task.LastFinishedAt)"
+                               Sortable="true"
+                               Width="170px">
+                <CellTemplate Context="task">
+                    <span class="bearcat-mobile-cell-label">@L["Finished"]</span>
+                    <span class="text-sm">@FormatDate(task.LastFinishedAt)</span>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="BackgroundTaskStateReadModel" TValue="string"
+                               Header="@L["Duration"]"
+                               Property="@(task => FormatDuration(task))"
+                               Width="110px">
+                <CellTemplate Context="task">
+                    <span class="bearcat-mobile-cell-label">@L["Duration"]</span>
+                    <span class="text-sm">@FormatDuration(task)</span>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="BackgroundTaskStateReadModel" TValue="string"
+                               Header="@L["LastError"]"
+                               Property="@(task => task.LastErrorMessage ?? string.Empty)"
+                               Filterable="true"
+                               MinWidth="240px">
+                <CellTemplate Context="task">
+                    <span class="bearcat-mobile-cell-label">@L["LastError"]</span>
+                    @if (string.IsNullOrWhiteSpace(task.LastErrorMessage))
+                    {
+                        <span class="text-sm text-muted-foreground">-</span>
+                    }
+                    else
+                    {
+                        <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
+                            <BbTooltipTrigger>
+                                <span class="block max-w-md truncate text-sm text-destructive">
+                                    @task.LastErrorMessage
+                                </span>
+                            </BbTooltipTrigger>
+                            <BbTooltipContent Class="max-w-sm text-xs">
+                                @task.LastErrorMessage
+                            </BbTooltipContent>
+                        </BbTooltip>
+                    }
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+        <EmptyTemplate>
+            <div class="px-4 py-8 text-sm text-muted-foreground">
+                @L["NoBackgroundTasks"]
+            </div>
+        </EmptyTemplate>
+    </BbDataTable>
+</section>

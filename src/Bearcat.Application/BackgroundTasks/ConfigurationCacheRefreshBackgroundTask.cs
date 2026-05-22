@@ -1,37 +1,25 @@
 using Bearcat.Abstractions.Configurations;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Application.BackgroundTasks;
 
 public class ConfigurationCacheRefreshBackgroundTask(
-    IApplicationConfigurationOverrideCache overrideCache,
+    IServiceScopeFactory serviceScopeFactory,
     ILogger<ConfigurationCacheRefreshBackgroundTask> logger
-) : BackgroundService
+) : BearcatBackgroundTask(serviceScopeFactory, logger)
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        logger.LogInformation("Starting Configuration Cache Refresh Background Task");
-        await Task.Yield();
+    protected override string DisplayName => "Configuration cache refresh";
 
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try
-            {
-                await overrideCache.RefreshAsync(stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (Exception e)
-            {
-                logger.LogError(
-                    e,
-                    "An error occurred while refreshing the application configuration override cache"
-                );
-            }
-            await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
-        }
+    protected override TimeSpan Interval => TimeSpan.FromMinutes(5);
+
+    protected override async Task ExecuteTickAsync(
+        IServiceProvider serviceProvider,
+        CancellationToken stoppingToken
+    )
+    {
+        var overrideCache =
+            serviceProvider.GetRequiredService<IApplicationConfigurationOverrideCache>();
+        await overrideCache.RefreshAsync(stoppingToken);
     }
 }

@@ -1,6 +1,5 @@
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Application.BackgroundTasks;
@@ -8,41 +7,19 @@ namespace Bearcat.Application.BackgroundTasks;
 public class LinkCrypterContainerBackgroundTask(
     ILogger<LinkCrypterContainerBackgroundTask> logger,
     IServiceScopeFactory serviceScopeFactory
-) : BackgroundService
+) : BearcatBackgroundTask(serviceScopeFactory, logger)
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override string DisplayName => "Link crypter container creation";
+
+    protected override TimeSpan Interval => TimeSpan.FromSeconds(20);
+
+    protected override async Task ExecuteTickAsync(
+        IServiceProvider serviceProvider,
+        CancellationToken stoppingToken
+    )
     {
-        logger.LogInformation("Starting Link Crypter Container Creation Background Task");
-        await Task.Yield();
-
-        while (true)
-        {
-            if (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-
-            await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var archiveCreationService =
-                scope.ServiceProvider.GetRequiredService<LinkCrypterContainerService>();
-
-            try
-            {
-                await archiveCreationService.CreateMissingLinkCrypterContainersAsync(stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (Exception e)
-            {
-                logger.LogError(
-                    e,
-                    "An error occurred while creating missing link crypter containers for uploads"
-                );
-            }
-
-            await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
-        }
+        var linkCrypterContainerService =
+            serviceProvider.GetRequiredService<LinkCrypterContainerService>();
+        await linkCrypterContainerService.CreateMissingLinkCrypterContainersAsync(stoppingToken);
     }
 }

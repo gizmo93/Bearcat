@@ -1,6 +1,5 @@
 using Bearcat.Domain.UseCases.ManageReleases;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Application.BackgroundTasks;
@@ -8,33 +7,18 @@ namespace Bearcat.Application.BackgroundTasks;
 public class ReleaseFolderAutomationBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,
     ILogger<ReleaseFolderAutomationBackgroundTask> logger
-) : BackgroundService
+) : BearcatBackgroundTask(serviceScopeFactory, logger)
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override string DisplayName => "Release folder automation";
+
+    protected override TimeSpan Interval => TimeSpan.FromMinutes(2);
+
+    protected override async Task ExecuteTickAsync(
+        IServiceProvider serviceProvider,
+        CancellationToken stoppingToken
+    )
     {
-        logger.LogInformation("Starting Release Folder Automation Background Task");
-        await Task.Yield();
-
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var service =
-                scope.ServiceProvider.GetRequiredService<AutomaticallyCreateReleasesService>();
-
-            try
-            {
-                await service.ProcessAsync(stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(exception, "Release folder automation scan failed");
-            }
-
-            await Task.Delay(TimeSpan.FromMinutes(2), stoppingToken);
-        }
+        var service = serviceProvider.GetRequiredService<AutomaticallyCreateReleasesService>();
+        await service.ProcessAsync(stoppingToken);
     }
 }

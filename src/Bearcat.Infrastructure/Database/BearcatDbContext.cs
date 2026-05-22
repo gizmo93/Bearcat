@@ -10,6 +10,8 @@ public class BearcatDbContext(DbContextOptions<BearcatDbContext> options)
 {
     public DbSet<HosterRegistration> HosterRegistrations { get; set; } = null!;
 
+    public DbSet<BackgroundTaskState> BackgroundTaskStates { get; set; } = null!;
+
     public DbSet<Release> Releases { get; set; } = null!;
 
     public DbSet<ReleaseTemplate> ReleaseTemplates { get; set; } = null!;
