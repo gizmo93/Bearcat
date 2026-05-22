@@ -186,12 +186,15 @@
   <data name="NoLatestUpload" xml:space="preserve"><value>No upload yet</value></data>
   <data name="NoLinkCrypterLinks" xml:space="preserve"><value>No link crypter links</value></data>
   <data name="NoConfigurationRequired" xml:space="preserve"><value>No configuration required</value></data>
+  <data name="NoExternalInfos" xml:space="preserve"><value>No external infos</value></data>
   <data name="NoNfoFileAvailable" xml:space="preserve"><value>No NFO file available</value></data>
+  <data name="NoReleaseInfosYet" xml:space="preserve"><value>No release infos yet.</value></data>
   <data name="NoReleasesFound" xml:space="preserve"><value>No releases found</value></data>
   <data name="NoTargets" xml:space="preserve"><value>No targets</value></data>
   <data name="NoUploadConfigurationsYet" xml:space="preserve"><value>No upload configurations yet.</value></data>
   <data name="NoUploadLinksFound" xml:space="preserve"><value>No upload links found</value></data>
   <data name="NoUploadsFound" xml:space="preserve"><value>No uploads found</value></data>
+  <data name="NoUrls" xml:space="preserve"><value>No URLs</value></data>
     <data name="OnlineConfigs" xml:space="preserve"><value>uploads online</value></data>
   <data name="OnlineState" xml:space="preserve"><value>Online state</value></data>
   <data name="OnlineState.Offline" xml:space="preserve"><value>Offline</value></data>
@@ -203,6 +206,8 @@
   <data name="OpenHosterActions" xml:space="preserve"><value>Open hoster actions</value></data>
   <data name="OpenLinkCrypterActions" xml:space="preserve"><value>Open link crypter actions</value></data>
   <data name="OpenNfoDatabaseActions" xml:space="preserve"><value>Open NFO database actions</value></data>
+  <data name="OpenExternalUrl" xml:space="preserve"><value>Open external URL</value></data>
+  <data name="OpenReleaseDatabase" xml:space="preserve"><value>Open release database</value></data>
   <data name="OpenReleaseActions" xml:space="preserve"><value>Open release actions</value></data>
   <data name="OpenUploadConfigActions" xml:space="preserve"><value>Open upload config actions</value></data>
   <data name="Password" xml:space="preserve"><value>Password</value></data>
@@ -218,6 +223,7 @@
   <data name="Release" xml:space="preserve"><value>Release</value></data>
   <data name="ReleaseDetails" xml:space="preserve"><value>Release details</value></data>
   <data name="ReleaseFolder" xml:space="preserve"><value>Release folder</value></data>
+  <data name="ReleaseInfos" xml:space="preserve"><value>Release infos</value></data>
     <data name="ReleaseRootsAndOnlineState" xml:space="preserve"><value>Search and manage releases</value></data>
   <data name="ReleaseResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} releases</value></data>
   <data name="ReleaseSearchPlaceholder" xml:space="preserve"><value>Name or folder path</value></data>
@@ -305,6 +311,9 @@
   <data name="UploadStatus" xml:space="preserve"><value>Upload status</value></data>
   <data name="UploadStatusSubtitle" xml:space="preserve"><value>Upload #{0} for {1}</value></data>
   <data name="UploadTarget" xml:space="preserve"><value>Upload target</value></data>
+  <data name="UrlType.Imdb" xml:space="preserve"><value>IMDB</value></data>
+  <data name="UrlType.Other" xml:space="preserve"><value>Other</value></data>
+  <data name="VideoType" xml:space="preserve"><value>Video</value></data>
   <data name="CheckedAt" xml:space="preserve"><value>Checked at</value></data>
   <data name="ViewContainerLinks" xml:space="preserve"><value>View container links</value></data>
   <data name="ViewUploadLinks" xml:space="preserve"><value>View upload links</value></data>
@@ -351,6 +360,15 @@
   <data name="Disabled" xml:space="preserve"><value>Disabled</value></data>
   <data name="EditReleaseDescription" xml:space="preserve"><value>Update the release name and assignment.</value></data>
   <data name="Enabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="AudioType" xml:space="preserve"><value>Audio</value></data>
+  <data name="ExternalInfoType.Console" xml:space="preserve"><value>Console</value></data>
+  <data name="ExternalInfoType.Game" xml:space="preserve"><value>Game</value></data>
+  <data name="ExternalInfoType.Movie" xml:space="preserve"><value>Movie</value></data>
+  <data name="ExternalInfoType.Other" xml:space="preserve"><value>Other</value></data>
+  <data name="ExternalInfoType.Software" xml:space="preserve"><value>Software</value></data>
+  <data name="ExternalInfoType.Tv" xml:space="preserve"><value>TV</value></data>
+  <data name="ExternalInfoType.Xxx" xml:space="preserve"><value>XXX</value></data>
+  <data name="ExternalInfos" xml:space="preserve"><value>External infos</value></data>
   <data name="HoursCount" xml:space="preserve"><value>{0} h</value></data>
   <data name="HoursUntilReupload" xml:space="preserve"><value>Hours until reupload</value></data>
   <data name="HoursUntilReuploadHelp" xml:space="preserve"><value>Minimum 0, which schedules immediately after files are confirmed offline.</value></data>

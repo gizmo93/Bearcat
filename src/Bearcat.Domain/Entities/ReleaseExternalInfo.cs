@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Bearcat.Abstractions.NfoDatabase;
 
 namespace Bearcat.Domain.Entities;
@@ -19,7 +20,9 @@ public class ReleaseExternalInfo
 
 public class ReleaseExternalInfoUrl
 {
+    [JsonPropertyName("type")]
     public UrlType Type { get; set; }
 
+    [JsonPropertyName("url")]
     public string Url { get; set; } = null!;
 }
