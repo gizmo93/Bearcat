@@ -465,8 +465,10 @@
   <data name="ReleaseFolderAutomations" xml:space="preserve"><value>Ordner-Automatisierungen</value></data>
   <data name="ReleaseFolderAutomationsIntro" xml:space="preserve"><value>Erstellt Releases automatisch aus passenden direkten Unterordnern.</value></data>
   <data name="ReleaseFolderAutomationsSubtitle" xml:space="preserve"><value>Automatische Release-Erstellung</value></data>
+  <data name="Registrations" xml:space="preserve"><value>Registrierungen</value></data>
   <data name="SelectReleaseBaseFolder" xml:space="preserve"><value>Release-Basisordner auswählen</value></data>
   <data name="SelectReleaseBaseFolderDescription" xml:space="preserve"><value>Wähle den Ordner, dessen direkte Unterordner gescannt werden sollen.</value></data>
+  <data name="Settings" xml:space="preserve"><value>Einstellungen</value></data>
   <data name="BackgroundTaskDisabled" xml:space="preserve"><value>{0} deaktiviert</value></data>
   <data name="BackgroundTaskEnabled" xml:space="preserve"><value>{0} aktiviert</value></data>
   <data name="BackgroundTasks" xml:space="preserve"><value>Background-Tasks</value></data>
