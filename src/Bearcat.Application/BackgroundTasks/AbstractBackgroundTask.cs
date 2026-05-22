@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Application.BackgroundTasks;
 
-public abstract class BearcatBackgroundTask(
+public abstract class AbstractBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,
     ILogger logger
 ) : BackgroundService

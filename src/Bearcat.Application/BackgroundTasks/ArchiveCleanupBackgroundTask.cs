@@ -7,7 +7,7 @@ namespace Bearcat.Application.BackgroundTasks;
 public class ArchiveCleanupBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,
     ILogger<ArchiveCleanupBackgroundTask> logger
-) : BearcatBackgroundTask(serviceScopeFactory, logger)
+) : AbstractBackgroundTask(serviceScopeFactory, logger)
 {
     protected override string DisplayName => "Archive cleanup";
 

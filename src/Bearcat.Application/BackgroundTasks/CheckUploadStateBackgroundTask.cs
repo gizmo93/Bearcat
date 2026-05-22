@@ -8,7 +8,7 @@ namespace Bearcat.Application.BackgroundTasks;
 public class CheckUploadStateBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,
     ILogger<CheckUploadStateBackgroundTask> logger
-) : BearcatBackgroundTask(serviceScopeFactory, logger)
+) : AbstractBackgroundTask(serviceScopeFactory, logger)
 {
     protected override string DisplayName => "Upload state check";
 

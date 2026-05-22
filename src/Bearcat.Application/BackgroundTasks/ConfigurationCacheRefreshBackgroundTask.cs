@@ -7,7 +7,7 @@ namespace Bearcat.Application.BackgroundTasks;
 public class ConfigurationCacheRefreshBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,
     ILogger<ConfigurationCacheRefreshBackgroundTask> logger
-) : BearcatBackgroundTask(serviceScopeFactory, logger)
+) : AbstractBackgroundTask(serviceScopeFactory, logger)
 {
     protected override string DisplayName => "Configuration cache refresh";
 

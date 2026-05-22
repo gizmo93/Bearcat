@@ -7,7 +7,7 @@ namespace Bearcat.Application.BackgroundTasks;
 public class LinkCrypterContainerBackgroundTask(
     ILogger<LinkCrypterContainerBackgroundTask> logger,
     IServiceScopeFactory serviceScopeFactory
-) : BearcatBackgroundTask(serviceScopeFactory, logger)
+) : AbstractBackgroundTask(serviceScopeFactory, logger)
 {
     protected override string DisplayName => "Link crypter container creation";
 

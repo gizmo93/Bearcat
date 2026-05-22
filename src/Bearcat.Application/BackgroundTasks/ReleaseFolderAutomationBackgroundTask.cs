@@ -7,7 +7,7 @@ namespace Bearcat.Application.BackgroundTasks;
 public class ReleaseFolderAutomationBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,
     ILogger<ReleaseFolderAutomationBackgroundTask> logger
-) : BearcatBackgroundTask(serviceScopeFactory, logger)
+) : AbstractBackgroundTask(serviceScopeFactory, logger)
 {
     protected override string DisplayName => "Release folder automation";
 
