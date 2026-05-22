@@ -32,6 +32,7 @@ public static class ServiceProviderConfig
             services.AddScoped<AutomaticallyCreateReleasesService>();
             services.AddScoped<ReleaseGroupService>();
             services.AddScoped<ReleaseService>();
+            services.AddScoped<ReleaseInfoResolutionService>();
             services.AddScoped<ReleaseTemplateService>();
             services.AddScoped<ArchiveCreationService>();
             services.AddScoped<ArchiveCleanupService>();

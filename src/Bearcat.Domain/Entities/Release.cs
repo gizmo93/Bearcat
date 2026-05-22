@@ -21,4 +21,6 @@ public class Release
     public List<ArchiveConfig> ArchiveConfigs { get; set; } = null!;
 
     public string ReleaseFolderPath { get; set; } = null!;
+
+    public List<ReleaseInfo> ReleaseInfos { get; set; } = [];
 }

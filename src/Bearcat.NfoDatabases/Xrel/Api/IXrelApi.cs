@@ -10,4 +10,11 @@ public interface IXrelApi
         [AliasAs("dirname")] string dirname,
         CancellationToken cancellationToken = default
     );
+
+    [Get("/v2/p2p/rls_info.json")]
+    [Headers("User-Agent: Bearcat/1.0")]
+    Task<ApiResponse<XrelP2pRelease>> GetP2pReleaseInfoAsync(
+        [AliasAs("dirname")] string dirname,
+        CancellationToken cancellationToken = default
+    );
 }

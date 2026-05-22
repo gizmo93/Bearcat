@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.NfoDatabases.Xrel.Api;
 
@@ -6,6 +7,9 @@ namespace Bearcat.NfoDatabases.Xrel;
 
 public class XrelNfoDatabase(XrelClient client) : INfoDatabase
 {
+    private static readonly Regex WhitespaceRegex = new(@"\s+", RegexOptions.Compiled);
+    private static readonly Regex MultipleDotsRegex = new(@"\.{2,}", RegexOptions.Compiled);
+
     public string Name => "xREL";
 
     public IReadOnlyList<string> ConfigurationKeys => [];
@@ -21,20 +25,49 @@ public class XrelNfoDatabase(XrelClient client) : INfoDatabase
             return null;
         }
 
-        var release = await client.GetReleaseInfoAsync(dirname, cancellationToken);
-        if (release is null || string.IsNullOrWhiteSpace(release.Dirname))
+        var normalizedDirname = NormalizeDirname(dirname);
+        if (string.IsNullOrWhiteSpace(normalizedDirname))
         {
             return null;
         }
 
+        var release = await client.GetReleaseInfoAsync(normalizedDirname, cancellationToken);
+        if (release is not null && !string.IsNullOrWhiteSpace(release.Dirname))
+        {
+            return MapReleaseInfo(release);
+        }
+
+        var p2pRelease = await client.GetP2pReleaseInfoAsync(normalizedDirname, cancellationToken);
+        if (p2pRelease is null || string.IsNullOrWhiteSpace(p2pRelease.Dirname))
+        {
+            return null;
+        }
+
+        return MapReleaseInfo(p2pRelease);
+    }
+
+    private static ReleaseInfo MapReleaseInfo(XrelRelease release)
+    {
         return new ReleaseInfo(
-            ReleaseName: release.Dirname,
+            ReleaseName: release.Dirname!,
             ReleaseDatabaseUrl: NormalizeXrelUrl(release.LinkHref),
             Size: release.Size is null
                 ? null
                 : new ReleaseInfoSize(release.Size.Number, release.Size.Unit),
             VideoType: release.VideoType,
             AudioType: release.AudioType,
+            ExternalInfos: MapExternalInfos(release.ExtInfo)
+        );
+    }
+
+    private static ReleaseInfo MapReleaseInfo(XrelP2pRelease release)
+    {
+        return new ReleaseInfo(
+            ReleaseName: release.Dirname!,
+            ReleaseDatabaseUrl: NormalizeXrelUrl(release.LinkHref),
+            Size: release.SizeMb is null ? null : new ReleaseInfoSize(release.SizeMb, "MB"),
+            VideoType: null,
+            AudioType: null,
             ExternalInfos: MapExternalInfos(release.ExtInfo)
         );
     }
@@ -129,5 +162,12 @@ public class XrelNfoDatabase(XrelClient client) : INfoDatabase
         }
 
         return url;
+    }
+
+    private static string NormalizeDirname(string dirname)
+    {
+        var normalized = WhitespaceRegex.Replace(dirname.Trim(), ".");
+        normalized = MultipleDotsRegex.Replace(normalized, ".");
+        return normalized.Trim('.');
     }
 }

@@ -58,6 +58,7 @@ public static class ServiceProviderConfig
                 HosterConfigurationRepository
             >();
             services.AddScoped<IReleaseWriteRepository, ReleaseWriteRepository>();
+            services.AddScoped<IReleaseInfoRepository, ReleaseInfoRepository>();
             services.AddScoped<IReleaseTemplateReadRepository, ReleaseTemplateRepository>();
             services.AddScoped<IReleaseTemplateWriteRepository, ReleaseTemplateRepository>();
             services.AddScoped<IReleaseGroupReadRepository, ReleaseGroupRepository>();

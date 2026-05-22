@@ -128,6 +128,7 @@ public class ReleaseService(IReleaseWriteRepository writeRepository, TimeProvide
             ReleaseGroupId = releaseTemplate.ReleaseGroupId,
             ArchiveConfigs = archiveConfigsByTemplateId.Values.ToList(),
             UploadConfigs = [],
+            ReleaseInfos = [],
         };
 
         release.UploadConfigs = releaseTemplate

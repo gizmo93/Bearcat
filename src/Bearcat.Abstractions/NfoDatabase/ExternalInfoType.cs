@@ -2,11 +2,11 @@ namespace Bearcat.Abstractions.NfoDatabase;
 
 public enum ExternalInfoType
 {
-    Movie,
-    Tv,
-    Game,
-    Console,
-    Software,
-    Xxx,
-    Other,
+    Movie = 1,
+    Tv = 2,
+    Game = 3,
+    Console = 4,
+    Software = 5,
+    Xxx = 6,
+    Other = 7,
 }

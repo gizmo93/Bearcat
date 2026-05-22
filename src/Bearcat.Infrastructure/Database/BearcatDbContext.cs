@@ -50,6 +50,10 @@ public class BearcatDbContext(DbContextOptions<BearcatDbContext> options)
 
     public DbSet<NfoDatabaseRegistration> NfoDatabaseRegistrations { get; set; } = null!;
 
+    public DbSet<ReleaseInfo> ReleaseInfos { get; set; } = null!;
+
+    public DbSet<ReleaseExternalInfo> ReleaseExternalInfos { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BearcatDbContext).Assembly);

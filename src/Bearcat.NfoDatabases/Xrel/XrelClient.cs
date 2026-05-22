@@ -1,6 +1,7 @@
 using System.Net;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.NfoDatabases.Xrel.Api;
+using Refit;
 
 namespace Bearcat.NfoDatabases.Xrel;
 
@@ -14,11 +15,27 @@ public class XrelClient(IXrelApi api, XrelRateLimitState rateLimitState)
         rateLimitState.ThrowIfLimited();
 
         var response = await api.GetReleaseInfoAsync(dirname, cancellationToken);
+        return HandleResponse(response);
+    }
+
+    public async Task<XrelP2pRelease?> GetP2pReleaseInfoAsync(
+        string dirname,
+        CancellationToken cancellationToken = default
+    )
+    {
+        rateLimitState.ThrowIfLimited();
+
+        var response = await api.GetP2pReleaseInfoAsync(dirname, cancellationToken);
+        return HandleResponse(response);
+    }
+
+    private TResponse? HandleResponse<TResponse>(ApiResponse<TResponse> response)
+    {
         rateLimitState.Update(response.Headers);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
-            return null;
+            return default;
         }
 
         if (response.StatusCode == HttpStatusCode.TooManyRequests)

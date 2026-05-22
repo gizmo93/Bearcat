@@ -34,4 +34,6 @@ public interface IBearcatWriteDbContext
     DbSet<LinkCrypterContainer> LinkCrypterContainers { get; set; }
     DbSet<ApplicationConfigurationOverride> ApplicationConfigurationOverrides { get; set; }
     DbSet<NfoDatabaseRegistration> NfoDatabaseRegistrations { get; set; }
+    DbSet<ReleaseInfo> ReleaseInfos { get; set; }
+    DbSet<ReleaseExternalInfo> ReleaseExternalInfos { get; set; }
 }
