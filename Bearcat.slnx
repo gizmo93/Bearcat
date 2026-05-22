@@ -23,5 +23,6 @@
         <Project Path="test/Bearcat.Hosters.UnitTest/Bearcat.Hosters.UnitTest.csproj" />
         <Project Path="test/Bearcat.IntegrationTest.Utils/Bearcat.IntegrationTest.Utils.csproj" />
         <Project Path="test/Bearcat.LinkCrypters.UnitTest/Bearcat.LinkCrypters.UnitTest.csproj" />
+        <Project Path="test/Bearcat.NfoDatabases.UnitTest/Bearcat.NfoDatabases.UnitTest.csproj" />
     </Folder>
 </Solution>
