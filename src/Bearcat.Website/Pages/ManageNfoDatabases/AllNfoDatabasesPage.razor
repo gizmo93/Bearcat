@@ -1,0 +1,141 @@
+@page "/nfo-database-registrations"
+@using Bearcat.Domain.UseCases.ManageNfoDatabases.Dto
+@using Bearcat.Website.Shared
+@inherits OwningComponentBase
+
+<PageTitle>@L["NfoDatabaseRegistrations"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["NfoDatabaseRegistrations"]</h1>
+            <p class="text-sm text-muted-foreground">
+                @L["NfoDatabaseRegistrationsIntro"]
+            </p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button"
+                  Disabled="@(!CanAddRegistration)"
+                  OnClick="ShowAddDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewNfoDatabase"]
+        </BbButton>
+    </div>
+
+    <BbDataTable TData="NfoDatabaseRegistrationDto"
+                 Data="registrations"
+                 ShowToolbar="false"
+                 ShowPagination="@(registrations.Count > 10)"
+                 InitialPageSize="10"
+                 AriaLabel="@L["NfoDatabaseRegistrations"]"
+                 Class="bearcat-data-table bearcat-registrations-table">
+        <Columns>
+            <BbDataTableColumn TData="NfoDatabaseRegistrationDto" TValue="string"
+                               Header="@L["NfoDatabase"]"
+                               Property="@(registration => registration.NfoDatabaseName)"
+                               Sortable="true"
+                               Filterable="true"
+                               Width="24%" />
+            <BbDataTableColumn TData="NfoDatabaseRegistrationDto" TValue="bool"
+                               Header="@L["Active"]"
+                               Property="@(registration => registration.IsActive)"
+                               Sortable="true"
+                               Width="110px">
+                <CellTemplate Context="registration">
+                    <BbBadge Variant="@(registration.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
+                        @(registration.IsActive ? L["Active"] : L["Inactive"])
+                    </BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="NfoDatabaseRegistrationDto" TValue="string"
+                               Header="@L["Configuration"]"
+                               Property="@(registration => registration.NfoDatabaseName)"
+                               MinWidth="280px">
+                <CellTemplate Context="registration">
+                    @if (registration.Configuration.Count == 0)
+                    {
+                        <p class="text-sm text-muted-foreground">@L["NoConfigurationRequired"]</p>
+                    }
+                    else
+                    {
+                        var previewKeys = registration.Configuration.Keys.OrderBy(key => key).Take(2).ToList();
+                        var extraCount = Math.Max(0, registration.Configuration.Count - previewKeys.Count);
+
+                        <BbCollapsible Class="bearcat-registration-config">
+                            <div class="bearcat-registration-config-summary">
+                                <div class="min-w-0">
+                                    <p class="text-sm font-medium">@L["FieldCount", registration.Configuration.Count]</p>
+                                    <p class="truncate text-xs text-muted-foreground">
+                                        @string.Join(", ", previewKeys)@(extraCount > 0 ? $" +{extraCount}" : string.Empty)
+                                    </p>
+                                </div>
+                                <BbCollapsibleTrigger>
+                                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["ToggleConfigurationDetails"]">
+                                        <LucideIcon Name="chevrons-up-down" class="h-4 w-4" />
+                                    </BbButton>
+                                </BbCollapsibleTrigger>
+                            </div>
+                            <BbCollapsibleContent>
+                                <div class="bearcat-registration-config-details">
+                                    @foreach (var config in registration.Configuration.OrderBy(config => config.Key))
+                                    {
+                                        <div class="bearcat-registration-config-row">
+                                            <p class="text-xs font-medium text-muted-foreground">@config.Key</p>
+                                            @if (IsSecretField(config.Key))
+                                            {
+                                                <HiddenElement>
+                                                    <span class="text-sm">@config.Value</span>
+                                                </HiddenElement>
+                                            }
+                                            else
+                                            {
+                                                <span class="truncate text-sm" title="@config.Value">@config.Value</span>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </BbCollapsibleContent>
+                        </BbCollapsible>
+                    }
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="NfoDatabaseRegistrationDto" TValue="string"
+                               Header=""
+                               Property="@(registration => registration.NfoDatabaseName)"
+                               Width="56px">
+                <CellTemplate Context="registration">
+                    <div class="flex justify-end">
+                        <BbDropdownMenu>
+                            <BbDropdownMenuTrigger>
+                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenNfoDatabaseActions"]">
+                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                </BbButton>
+                            </BbDropdownMenuTrigger>
+                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                                <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(registration))">
+                                    @L["EditRegistration"]
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await ToggleIsActiveAsync(registration))">
+                                    @(registration.IsActive ? L["Disable"] : L["Enable"]) @L["Registration"]
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(registration))">
+                                    @L["DeleteRegistration"]
+                                </BbDropdownMenuItem>
+                            </BbDropdownMenuContent>
+                        </BbDropdownMenu>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+    </BbDataTable>
+</section>
+
+@code {
+    private static bool IsSecretField(string key)
+    {
+        return key.Contains("password", StringComparison.OrdinalIgnoreCase)
+            || key.Contains("secret", StringComparison.OrdinalIgnoreCase)
+            || key.Contains("key", StringComparison.OrdinalIgnoreCase)
+            || key.Contains("token", StringComparison.OrdinalIgnoreCase);
+    }
+}

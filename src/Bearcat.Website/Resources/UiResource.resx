@@ -19,6 +19,7 @@
   <data name="AddCrypter" xml:space="preserve"><value>Add crypter</value></data>
   <data name="AddHoster" xml:space="preserve"><value>Add hoster</value></data>
   <data name="AddLinkCrypterContainer" xml:space="preserve"><value>Add Link Crypter Container</value></data>
+  <data name="AddNfoDatabase" xml:space="preserve"><value>Add NFO database</value></data>
   <data name="AddUploadConfig" xml:space="preserve"><value>Add Upload Config</value></data>
   <data name="ArchiveAndUploadConfiguration" xml:space="preserve"><value>Archive and upload configuration</value></data>
   <data name="ArchiveConfig" xml:space="preserve"><value>Archive config</value></data>
@@ -95,6 +96,7 @@
   <data name="DeleteLinkCrypterContainerConfigConfirmation" xml:space="preserve"><value>Are you sure you want to delete this link crypter container config?</value></data>
   <data name="DeleteLinkCrypterRegistrationConfirmation" xml:space="preserve"><value>Are you sure you want to delete link crypter registration {0}?</value></data>
   <data name="DeleteNamedItem" xml:space="preserve"><value>Delete {0}</value></data>
+  <data name="DeleteNfoDatabaseRegistrationConfirmation" xml:space="preserve"><value>Are you sure you want to delete NFO database registration {0}?</value></data>
   <data name="DeleteRegistration" xml:space="preserve"><value>Delete registration</value></data>
   <data name="DeleteRelease" xml:space="preserve"><value>Delete release</value></data>
   <data name="DeleteReleaseConfirmation" xml:space="preserve"><value>Are you sure you want to delete the release {0}?</value></data>
@@ -162,8 +164,18 @@
   <data name="NameIsRequired" xml:space="preserve"><value>Name is required</value></data>
   <data name="NameUploadConfigPlaceholder" xml:space="preserve"><value>Name the upload config</value></data>
   <data name="NameYourRelease" xml:space="preserve"><value>Name your release</value></data>
+  <data name="NfoDatabase" xml:space="preserve"><value>NFO database</value></data>
+  <data name="NfoDatabaseAlreadyRegistered" xml:space="preserve"><value>This NFO database is already registered.</value></data>
+  <data name="NfoDatabaseConfigurationHelp" xml:space="preserve"><value>Store optional credentials for the selected NFO database.</value></data>
+  <data name="NfoDatabaseDialogDescription" xml:space="preserve"><value>Enable an NFO database and store credentials if the provider requires them.</value></data>
+  <data name="NfoDatabaseRegistrationActivated" xml:space="preserve"><value>NFO database registration {0} activated</value></data>
+  <data name="NfoDatabaseRegistrationDeactivated" xml:space="preserve"><value>NFO database registration {0} deactivated</value></data>
+  <data name="NfoDatabaseRegistrations" xml:space="preserve"><value>NFO database registrations</value></data>
+  <data name="NfoDatabaseRegistrationsIntro" xml:space="preserve"><value>Enable metadata sources and keep optional API credentials in one place.</value></data>
+  <data name="NfoDatabases" xml:space="preserve"><value>NFO databases</value></data>
   <data name="NewHoster" xml:space="preserve"><value>New hoster</value></data>
   <data name="NewLinkCrypter" xml:space="preserve"><value>New link crypter</value></data>
+  <data name="NewNfoDatabase" xml:space="preserve"><value>New NFO database</value></data>
   <data name="NewRelease" xml:space="preserve"><value>New release</value></data>
   <data name="Next" xml:space="preserve"><value>Next</value></data>
   <data name="No" xml:space="preserve"><value>No</value></data>
@@ -173,6 +185,7 @@
   <data name="NoDistributionTargets" xml:space="preserve"><value>No distribution targets</value></data>
   <data name="NoLatestUpload" xml:space="preserve"><value>No upload yet</value></data>
   <data name="NoLinkCrypterLinks" xml:space="preserve"><value>No link crypter links</value></data>
+  <data name="NoConfigurationRequired" xml:space="preserve"><value>No configuration required</value></data>
   <data name="NoNfoFileAvailable" xml:space="preserve"><value>No NFO file available</value></data>
   <data name="NoReleasesFound" xml:space="preserve"><value>No releases found</value></data>
   <data name="NoTargets" xml:space="preserve"><value>No targets</value></data>
@@ -189,6 +202,7 @@
   <data name="OpenDetails" xml:space="preserve"><value>Open details</value></data>
   <data name="OpenHosterActions" xml:space="preserve"><value>Open hoster actions</value></data>
   <data name="OpenLinkCrypterActions" xml:space="preserve"><value>Open link crypter actions</value></data>
+  <data name="OpenNfoDatabaseActions" xml:space="preserve"><value>Open NFO database actions</value></data>
   <data name="OpenReleaseActions" xml:space="preserve"><value>Open release actions</value></data>
   <data name="OpenUploadConfigActions" xml:space="preserve"><value>Open upload config actions</value></data>
   <data name="Password" xml:space="preserve"><value>Password</value></data>
@@ -240,6 +254,8 @@
   <data name="SelectHosterRequired" xml:space="preserve"><value>You must select a hoster</value></data>
   <data name="SelectLinkCrypter" xml:space="preserve"><value>Select a link crypter</value></data>
   <data name="SelectLinkCrypterRequired" xml:space="preserve"><value>You need to select a link crypter.</value></data>
+  <data name="SelectNfoDatabase" xml:space="preserve"><value>Select an NFO database</value></data>
+  <data name="SelectNfoDatabaseRequired" xml:space="preserve"><value>You must select an NFO database.</value></data>
   <data name="SelectReleaseFolder" xml:space="preserve"><value>Select release folder</value></data>
   <data name="SelectReleaseFolderDescription" xml:space="preserve"><value>Choose a folder below to use as the release root.</value></data>
   <data name="SelectReleaseType" xml:space="preserve"><value>Select a release type</value></data>
@@ -398,6 +414,7 @@
   <data name="OpenReleaseTemplateActions" xml:space="preserve"><value>Open release template actions</value></data>
   <data name="PasswordProtected" xml:space="preserve"><value>Password protected</value></data>
   <data name="ReleaseName" xml:space="preserve"><value>release name</value></data>
+  <data name="ReleaseMetadataSources" xml:space="preserve"><value>Release metadata sources</value></data>
   <data name="ReleaseTemplate" xml:space="preserve"><value>Release template</value></data>
   <data name="ReleaseTemplateDialogDescription" xml:space="preserve"><value>Set the template name, release type, and release group.</value></data>
   <data name="ReleaseTemplateNamePlaceholder" xml:space="preserve"><value>Name the release template</value></data>
