@@ -7,7 +7,7 @@ namespace Bearcat.Application.BackgroundTasks;
 public class ReleaseInfoResolutionBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,
     ILogger<ReleaseInfoResolutionBackgroundTask> logger
-) : BearcatBackgroundTask(serviceScopeFactory, logger)
+) : AbstractBackgroundTask(serviceScopeFactory, logger)
 {
     protected override string DisplayName => "Release info resolution";
 

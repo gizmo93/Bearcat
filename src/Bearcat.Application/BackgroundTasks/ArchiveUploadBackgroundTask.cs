@@ -7,7 +7,7 @@ namespace Bearcat.Application.BackgroundTasks;
 public class ArchiveUploadBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,
     ILogger<ArchiveUploadBackgroundTask> logger
-) : BearcatBackgroundTask(serviceScopeFactory, logger)
+) : AbstractBackgroundTask(serviceScopeFactory, logger)
 {
     protected override string DisplayName => "Archive upload";
 

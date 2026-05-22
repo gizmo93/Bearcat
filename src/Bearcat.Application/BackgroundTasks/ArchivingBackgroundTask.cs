@@ -7,7 +7,7 @@ namespace Bearcat.Application.BackgroundTasks;
 public class ArchivingBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,
     ILogger<ArchivingBackgroundTask> logger
-) : BearcatBackgroundTask(serviceScopeFactory, logger)
+) : AbstractBackgroundTask(serviceScopeFactory, logger)
 {
     protected override string DisplayName => "Archive creation";
 
