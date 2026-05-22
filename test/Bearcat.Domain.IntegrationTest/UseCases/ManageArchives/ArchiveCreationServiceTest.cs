@@ -164,7 +164,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             .ShouldBe(["archive.part1.rar", "archive.part2.rar"]);
         result.Uploads.Single().Id.ShouldBe(upload.Id);
         result.Uploads.Single().UploadState.ShouldBe(UploadState.Pending);
-        File.Exists(Path.Combine(releaseFolderPath, "__nonce")).ShouldBeTrue();
+        File.Exists(Path.Combine(releaseFolderPath, "__nonce.txt")).ShouldBeTrue();
         archiverFactoryMock.Verify(f => f.GetByName("zip"), Times.Once);
         archiverMock.Verify(
             a =>
