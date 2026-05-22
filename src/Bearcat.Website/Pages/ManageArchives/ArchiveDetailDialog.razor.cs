@@ -1,4 +1,4 @@
-using Bearcat.Domain.UseCases.ManageArchives.Dto;
+using Bearcat.Domain.UseCases.ManageArchives.ReadModels;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -16,7 +16,7 @@ public partial class ArchiveDetailDialog(
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
-    private ArchiveDto Archive { get; set; } = null!;
+    private ArchiveReadModel Archive { get; set; } = null!;
 
     private bool isInitialized;
 

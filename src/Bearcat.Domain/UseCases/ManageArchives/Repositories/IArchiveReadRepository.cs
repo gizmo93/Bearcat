@@ -1,8 +1,11 @@
-﻿using Bearcat.Domain.UseCases.ManageArchives.Dto;
+﻿using Bearcat.Domain.UseCases.ManageArchives.ReadModels;
 
 namespace Bearcat.Domain.UseCases.ManageArchives.Repositories;
 
 public interface IArchiveReadRepository
 {
-    Task<ArchiveDto?> GetByIdAsync(int archiveId, CancellationToken cancellationToken = default);
+    Task<ArchiveReadModel?> GetByIdAsync(
+        int archiveId,
+        CancellationToken cancellationToken = default
+    );
 }

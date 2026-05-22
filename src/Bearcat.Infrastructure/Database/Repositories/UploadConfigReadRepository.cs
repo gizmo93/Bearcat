@@ -1,4 +1,4 @@
-﻿using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
+﻿using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,7 +6,7 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 
 public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadConfigReadRepository
 {
-    public async Task<IReadOnlyList<UploadConfigDto>> GetUploadConfigsAsync(
+    public async Task<IReadOnlyList<UploadConfigReadModel>> GetUploadConfigsAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     )
@@ -14,7 +14,7 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
         return await dbRead
             .UploadConfigs.Where(u => u.ReleaseId == releaseId)
             .OrderBy(u => u.Id)
-            .Select(u => new UploadConfigDto(
+            .Select(u => new UploadConfigReadModel(
                 u.Id,
                 u.Name,
                 u.HosterRegistration.Name,
@@ -27,7 +27,7 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<UploadConfigDto> GetDtoByIdAsync(
+    public async Task<UploadConfigReadModel> GetReadModelByIdAsync(
         int uploadConfigId,
         CancellationToken cancellationToken = default
     )
@@ -35,7 +35,7 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
         return await dbRead
             .UploadConfigs.Where(u => u.Id == uploadConfigId)
             .OrderBy(u => u.Id)
-            .Select(u => new UploadConfigDto(
+            .Select(u => new UploadConfigReadModel(
                 u.Id,
                 u.Name,
                 u.HosterRegistration.Name,

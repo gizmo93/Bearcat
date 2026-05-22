@@ -1,6 +1,4 @@
 @page "/notifications"
-@using Bearcat.Domain.UseCases.ManageNotifications.Dto
-@using Bearcat.Website.Localization
 @inherits OwningComponentBase
 
 <PageTitle>@L["Notifications"] - Bearcat</PageTitle>
@@ -34,7 +32,7 @@
         </div>
     </div>
 
-    <BbDataTable TData="NotificationDto"
+    <BbDataTable TData="NotificationReadModel"
                  @key="NotificationsTableKey"
                  Data="notifications"
                  ShowToolbar="false"
@@ -44,7 +42,7 @@
                  AriaLabel="@L["Notifications"]"
                  Class="bearcat-data-table">
         <Columns>
-            <BbDataTableColumn TData="NotificationDto" TValue="string"
+            <BbDataTableColumn TData="NotificationReadModel" TValue="string"
                                Header="@L["Type"]"
                                Property="@(notification => notification.NotificationType.ToString())"
                                Width="130px">
@@ -54,7 +52,7 @@
                     </BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="NotificationDto" TValue="string"
+            <BbDataTableColumn TData="NotificationReadModel" TValue="string"
                                Header="@L["Status"]"
                                Property="@(notification => notification.ResolvedAt is null ? "Unresolved" : "Resolved")"
                                Width="145px">
@@ -72,7 +70,7 @@
                     }
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="NotificationDto" TValue="string"
+            <BbDataTableColumn TData="NotificationReadModel" TValue="string"
                                Header="@L["Message"]"
                                Property="@(notification => notification.Message)"
                                MinWidth="280px">
@@ -82,7 +80,7 @@
                     </a>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="NotificationDto" TValue="string"
+            <BbDataTableColumn TData="NotificationReadModel" TValue="string"
                                Header="@L["RelatedEntity"]"
                                Property="@(notification => notification.RelatedEntity?.DisplayName ?? string.Empty)"
                                MinWidth="240px">
@@ -104,7 +102,7 @@
                     }
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="NotificationDto" TValue="DateTime"
+            <BbDataTableColumn TData="NotificationReadModel" TValue="DateTime"
                                Header="@L["CreatedAt"]"
                                Property="@(notification => notification.CreatedAt)"
                                Width="180px">
@@ -112,7 +110,7 @@
                     <span class="text-sm">@notification.CreatedAt.ToString("g")</span>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="NotificationDto" TValue="int"
+            <BbDataTableColumn TData="NotificationReadModel" TValue="int"
                                Header="@L["Actions"]"
                                Property="@(notification => notification.NotificationId)"
                                Width="130px"

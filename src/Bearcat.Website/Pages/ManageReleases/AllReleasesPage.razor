@@ -1,7 +1,4 @@
 @page "/releases"
-@using Bearcat.Domain.UseCases.ManageReleases.Dto
-@using Bearcat.Website.Localization
-@using Bearcat.Website.Shared
 @inherits OwningComponentBase
 
 <PageTitle>@L["Releases"] - Bearcat</PageTitle>
@@ -81,7 +78,7 @@
         }
     </div>
 
-    <BbDataTable TData="ReleaseDto"
+    <BbDataTable TData="ReleaseReadModel"
                  @key="ReleasesTableKey"
                  Data="releases"
                  ShowToolbar="false"
@@ -91,7 +88,7 @@
                  AriaLabel="@L["Releases"]"
                  Class="bearcat-releases-table">
         <Columns>
-            <BbDataTableColumn TData="ReleaseDto" TValue="bool"
+            <BbDataTableColumn TData="ReleaseReadModel" TValue="bool"
                                Header=""
                                Property="@(release => selectedReleaseIds.Contains(release.ReleaseId))"
                                Width="48px">
@@ -103,7 +100,7 @@
                     </div>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseReadModel" TValue="string"
                                Header="@L["Name"]"
                                Property="@(release => release.Name)"
                                Width="28%">
@@ -114,7 +111,7 @@
                     </a>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseReadModel" TValue="string"
                                Header="@L["OnlineState"]"
                                Property="@(release => release.OnlineState.ToString())"
                                Width="140px">
@@ -122,7 +119,7 @@
                     <OnlineStateBadge Value="@release.OnlineState" />
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseReadModel" TValue="string"
                                Header="@L["ReleaseType"]"
                                Property="@(release => release.ReleaseType.ToString())"
                                Width="140px">
@@ -139,7 +136,7 @@
                     </BbTooltip>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseReadModel" TValue="string"
                                Header="@L["ReleaseGroup"]"
                                Property="@(release => release.ReleaseGroupName)"
                                Width="180px">
@@ -147,7 +144,7 @@
                     <BbBadge Variant="BadgeVariant.Outline">@release.ReleaseGroupName</BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseReadModel" TValue="string"
                                Header="@L["FolderPath"]"
                                Property="@(release => release.ReleaseFolderPath)"
                                MinWidth="260px">
@@ -157,7 +154,7 @@
                     </p>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseReadModel" TValue="string"
                                Header=""
                                Property="@(release => release.Name)"
                                Width="56px">

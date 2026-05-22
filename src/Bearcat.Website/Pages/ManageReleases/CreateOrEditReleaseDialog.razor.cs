@@ -1,4 +1,4 @@
-using Bearcat.Domain.UseCases.ManageReleaseGroups.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Website.Shared;
@@ -27,7 +27,7 @@ public partial class CreateOrEditReleaseDialog(
     [Parameter]
     public int? ReleaseId { get; set; }
 
-    private IReadOnlyList<ReleaseGroupDto> releaseGroups = [];
+    private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
     private ReleaseFormModel formModel = null!;
     private EditContext editContext = null!;
     private ValidationMessageStore? messageStore;

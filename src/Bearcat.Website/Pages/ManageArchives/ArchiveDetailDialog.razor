@@ -1,4 +1,3 @@
-@using Bearcat.Domain.UseCases.ManageArchives.Dto
 @if (!isInitialized)
 {
     return;
@@ -19,7 +18,7 @@
     </div>
 
     <div class="bearcat-archive-dialog-body">
-        <BbDataTable TData="ArchiveDto.ArchiveFileDto"
+        <BbDataTable TData="ArchiveReadModel.ArchiveFileReadModel"
                      Data="Archive.Files"
                      ShowToolbar="false"
                      ShowPagination="@(Archive.Files.Count > 10)"
@@ -27,7 +26,7 @@
                      AriaLabel="@L["ArchiveFiles"]"
                      Class="rounded-lg border border-border/70">
             <Columns>
-                <BbDataTableColumn TData="ArchiveDto.ArchiveFileDto" TValue="string"
+                <BbDataTableColumn TData="ArchiveReadModel.ArchiveFileReadModel" TValue="string"
                                    Header="@L["Filename"]"
                                    Property="@(file => file.FullFileName)"
                                    Sortable="true"

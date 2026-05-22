@@ -1,42 +1,46 @@
 ﻿using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageReleases.Repositories;
 
 public interface IReleaseReadRepository
 {
-    Task<PagedResult<ReleaseDto>> SearchReleasesAsync(
+    Task<PagedResult<ReleaseReadModel>> SearchReleasesAsync(
         ReleaseSearchQuery query,
         CancellationToken cancellationToken = default
     );
 
     IReadOnlyList<ArchiverDto> GetArchiverFilterOptions();
 
-    Task<ReleaseDto?> GetReleaseAsync(int releaseId, CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<ReleaseOverviewUploadDto>> GetReleaseOverviewAsync(
+    Task<ReleaseReadModel?> GetReleaseAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     );
 
-    Task<IReadOnlyList<ReleaseInfoDto>> GetReleaseInfosAsync(
+    Task<IReadOnlyList<ReleaseOverviewUploadReadModel>> GetReleaseOverviewAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     );
 
-    Task<IReadOnlyList<ArchiveConfigDto>> GetArchiveConfigsAsync(
+    Task<IReadOnlyList<ReleaseInfoReadModel>> GetReleaseInfosAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<IReadOnlyList<ArchiveConfigReadModel>> GetArchiveConfigsAsync(
         int releaseId,
         CancellationToken cancellationToken
     );
 
-    Task<PagedResult<ReleaseUploadDto>> SearchUploadsAsync(
+    Task<PagedResult<ReleaseUploadReadModel>> SearchUploadsAsync(
         ReleaseUploadSearchQuery query,
         CancellationToken cancellationToken = default
     );
 
-    Task<PagedResult<ReleaseUploadLinkDto>> SearchUploadLinksAsync(
+    Task<PagedResult<ReleaseUploadLinkReadModel>> SearchUploadLinksAsync(
         ReleaseUploadLinkSearchQuery query,
         CancellationToken cancellationToken = default
     );
@@ -48,7 +52,7 @@ public interface IReleaseReadRepository
         CancellationToken cancellationToken = default
     );
 
-    Task<IReadOnlyList<ReleaseUploadContainerLinkDto>> GetUploadContainerLinksAsync(
+    Task<IReadOnlyList<ReleaseUploadContainerLinkReadModel>> GetUploadContainerLinksAsync(
         int releaseId,
         int uploadId,
         CancellationToken cancellationToken = default

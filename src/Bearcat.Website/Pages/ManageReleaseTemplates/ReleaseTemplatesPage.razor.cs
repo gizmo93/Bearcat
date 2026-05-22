@@ -1,5 +1,5 @@
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
-using Bearcat.Domain.UseCases.ManageReleaseTemplates.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -13,7 +13,7 @@ public partial class ReleaseTemplatesPage(
     NavigationManager navigationManager
 )
 {
-    private IReadOnlyList<ReleaseTemplateSummaryDto> releaseTemplates = [];
+    private IReadOnlyList<ReleaseTemplateSummaryReadModel> releaseTemplates = [];
     private bool isLoading;
 
     protected override async Task OnInitializedAsync()
@@ -63,7 +63,7 @@ public partial class ReleaseTemplatesPage(
         navigationManager.NavigateTo($"/release-templates/{releaseTemplateId}");
     }
 
-    private async Task ShowEditDialogAsync(ReleaseTemplateSummaryDto releaseTemplate)
+    private async Task ShowEditDialogAsync(ReleaseTemplateSummaryReadModel releaseTemplate)
     {
         var parameters = new Dictionary<string, object?>
         {
@@ -95,7 +95,7 @@ public partial class ReleaseTemplatesPage(
         }
     }
 
-    private async Task DeleteAsync(ReleaseTemplateSummaryDto releaseTemplate)
+    private async Task DeleteAsync(ReleaseTemplateSummaryReadModel releaseTemplate)
     {
         var result = await dialogService.ConfirmAsync(
             L["DeleteNamedItem", releaseTemplate.Name],

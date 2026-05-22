@@ -1,5 +1,6 @@
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageNotifications.Dto;
+using Bearcat.Domain.UseCases.ManageNotifications.ReadModels;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
@@ -10,7 +11,7 @@ namespace Bearcat.Website.Pages.ManageNotifications;
 
 public partial class NotificationsPage(NavigationManager navigationManager) : OwningComponentBase
 {
-    private IReadOnlyList<NotificationDto> notifications = [];
+    private IReadOnlyList<NotificationReadModel> notifications = [];
     private INotificationReadRepository readRepository = null!;
     private int totalCount;
     private int pageIndex;

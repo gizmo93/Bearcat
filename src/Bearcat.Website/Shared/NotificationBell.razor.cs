@@ -1,5 +1,5 @@
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.UseCases.ManageNotifications.Dto;
+using Bearcat.Domain.UseCases.ManageNotifications.ReadModels;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
@@ -13,7 +13,7 @@ public partial class NotificationBell(IServiceScopeFactory serviceScopeFactory)
         IAsyncDisposable
 {
     private readonly CancellationTokenSource pollingCancellation = new();
-    private IReadOnlyList<NotificationDto> latestNotifications = [];
+    private IReadOnlyList<NotificationReadModel> latestNotifications = [];
     private int unresolvedCount;
     private bool isOpen;
     private bool isLoadingPreview;

@@ -1,12 +1,14 @@
-using Bearcat.Domain.UseCases.ManageReleaseGroups.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 
 public interface IReleaseGroupReadRepository
 {
-    Task<IReadOnlyList<ReleaseGroupDto>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ReleaseGroupReadModel>> GetAllAsync(
+        CancellationToken cancellationToken = default
+    );
 
-    Task<ReleaseGroupDto?> GetReadModelByIdAsync(
+    Task<ReleaseGroupReadModel?> GetReadModelByIdAsync(
         int releaseGroupId,
         CancellationToken cancellationToken = default
     );

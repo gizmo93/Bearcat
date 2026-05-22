@@ -1,5 +1,5 @@
 using Bearcat.Abstractions.NfoDatabase;
-using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Microsoft.AspNetCore.Components;
 
@@ -11,7 +11,7 @@ public partial class ReleaseInfos(IReleaseReadRepository readRepository) : Compo
     [EditorRequired]
     public int ReleaseId { get; set; }
 
-    private IReadOnlyList<ReleaseInfoDto> releaseInfos = [];
+    private IReadOnlyList<ReleaseInfoReadModel> releaseInfos = [];
     private bool isLoading;
 
     protected override async Task OnInitializedAsync()
@@ -33,7 +33,7 @@ public partial class ReleaseInfos(IReleaseReadRepository readRepository) : Compo
         }
     }
 
-    private static string GetSizeLabel(ReleaseInfoDto releaseInfo)
+    private static string GetSizeLabel(ReleaseInfoReadModel releaseInfo)
     {
         if (releaseInfo.SizeNumber is null && string.IsNullOrWhiteSpace(releaseInfo.SizeUnit))
         {
@@ -59,7 +59,7 @@ public partial class ReleaseInfos(IReleaseReadRepository readRepository) : Compo
             : className;
     }
 
-    private string GetUrlLabel(ReleaseExternalInfoUrlDto url)
+    private string GetUrlLabel(ReleaseExternalInfoUrlReadModel url)
     {
         if (url.Type == UrlType.Imdb)
         {

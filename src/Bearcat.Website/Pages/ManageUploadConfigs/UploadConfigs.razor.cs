@@ -1,5 +1,5 @@
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
-using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
@@ -19,7 +19,7 @@ public partial class UploadConfigs(DialogService dialogService)
     [Parameter]
     public int? FocusUploadConfigId { get; set; }
 
-    private IReadOnlyList<UploadConfigDto> uploadConfigs = [];
+    private IReadOnlyList<UploadConfigReadModel> uploadConfigs = [];
     private IUploadConfigReadRepository readRepository = null!;
 
     protected override async Task OnInitializedAsync()
@@ -53,13 +53,13 @@ public partial class UploadConfigs(DialogService dialogService)
         }
     }
 
-    private async Task ShowEditDialogAsync(UploadConfigDto uploadConfigDto)
+    private async Task ShowEditDialogAsync(UploadConfigReadModel uploadConfigReadModel)
     {
         var parameters = new Dictionary<string, object?>
         {
             [nameof(CreateOrEditUploadConfigDialog.ReleaseId)] = ReleaseId,
             [nameof(CreateOrEditUploadConfigDialog.UploadConfigId)] =
-                uploadConfigDto.UploadConfigId,
+                uploadConfigReadModel.UploadConfigId,
         };
 
         var dialog = await dialogService.OpenAsync<CreateOrEditUploadConfigDialog>(
@@ -80,11 +80,11 @@ public partial class UploadConfigs(DialogService dialogService)
         }
     }
 
-    private async Task DeleteConfigAsync(UploadConfigDto uploadConfigDto)
+    private async Task DeleteConfigAsync(UploadConfigReadModel uploadConfigReadModel)
     {
         var result = await dialogService.ConfirmAsync(
             L["DeleteUploadConfig"],
-            L["DeleteUploadConfigConfirmation", uploadConfigDto.Name],
+            L["DeleteUploadConfigConfirmation", uploadConfigReadModel.Name],
             new ConfirmDialogOptions
             {
                 ConfirmText = L["Delete"],
@@ -99,7 +99,7 @@ public partial class UploadConfigs(DialogService dialogService)
         }
 
         var service = ScopedServices.GetRequiredService<UploadConfigService>();
-        await service.DeleteAsync(uploadConfigDto.UploadConfigId);
+        await service.DeleteAsync(uploadConfigReadModel.UploadConfigId);
         await LoadUploadConfigsAsync();
     }
 

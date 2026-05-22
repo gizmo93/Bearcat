@@ -1,5 +1,4 @@
 @page "/release-groups"
-@using Bearcat.Domain.UseCases.ManageReleaseGroups.Dto
 @inherits OwningComponentBase
 
 <PageTitle>@L["ReleaseGroups"] - Bearcat</PageTitle>
@@ -19,7 +18,7 @@
         </BbButton>
     </div>
 
-    <BbDataTable TData="ReleaseGroupDto"
+    <BbDataTable TData="ReleaseGroupReadModel"
                  Data="releaseGroups"
                  ShowToolbar="false"
                  ShowPagination="@(releaseGroups.Count > 10)"
@@ -28,12 +27,12 @@
                  AriaLabel="@L["ReleaseGroups"]"
                  Class="bearcat-data-table bearcat-release-groups-table">
         <Columns>
-            <BbDataTableColumn TData="ReleaseGroupDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseGroupReadModel" TValue="string"
                                Header="@L["Name"]"
                                Property="@(group => group.Name)"
                                Sortable="true"
                                Width="30%" />
-            <BbDataTableColumn TData="ReleaseGroupDto" TValue="bool"
+            <BbDataTableColumn TData="ReleaseGroupReadModel" TValue="bool"
                                Header="@L["AutomaticReuploads"]"
                                Property="@(group => group.EnableAutomaticReuploads)"
                                Width="190px">
@@ -43,7 +42,7 @@
                     </BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseGroupDto" TValue="int"
+            <BbDataTableColumn TData="ReleaseGroupReadModel" TValue="int"
                                Header="@L["HoursUntilReupload"]"
                                Property="@(group => group.NumberOfHoursUntilReupload)"
                                Width="190px">
@@ -51,7 +50,7 @@
                     <span class="text-sm">@L["HoursCount", group.NumberOfHoursUntilReupload]</span>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseGroupDto" TValue="int"
+            <BbDataTableColumn TData="ReleaseGroupReadModel" TValue="int"
                                Header="@L["AssignedReleases"]"
                                Property="@(group => group.AssignedReleaseCount)"
                                Width="170px">
@@ -59,7 +58,7 @@
                     <BbBadge Variant="BadgeVariant.Outline">@group.AssignedReleaseCount</BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseGroupDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseGroupReadModel" TValue="string"
                                Header=""
                                Property="@(group => group.Name)"
                                Width="56px">

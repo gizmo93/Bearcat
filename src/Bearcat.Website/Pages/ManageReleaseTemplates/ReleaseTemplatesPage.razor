@@ -1,6 +1,4 @@
 @page "/release-templates"
-@using Bearcat.Domain.UseCases.ManageReleaseTemplates.Dto
-@using Bearcat.Website.Localization
 @inherits OwningComponentBase
 
 <PageTitle>@L["ReleaseTemplates"] - Bearcat</PageTitle>
@@ -20,7 +18,7 @@
         </BbButton>
     </div>
 
-    <BbDataTable TData="ReleaseTemplateSummaryDto"
+    <BbDataTable TData="ReleaseTemplateSummaryReadModel"
                  Data="releaseTemplates"
                  ShowToolbar="false"
                  ShowPagination="@(releaseTemplates.Count > 10)"
@@ -29,7 +27,7 @@
                  AriaLabel="@L["ReleaseTemplates"]"
                  Class="bearcat-data-table bearcat-release-templates-table">
         <Columns>
-            <BbDataTableColumn TData="ReleaseTemplateSummaryDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseTemplateSummaryReadModel" TValue="string"
                                Header="@L["Name"]"
                                Property="@(template => template.Name)"
                                Sortable="true"
@@ -41,7 +39,7 @@
                     </a>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseTemplateSummaryDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseTemplateSummaryReadModel" TValue="string"
                                Header="@L["ReleaseType"]"
                                Property="@(template => template.ReleaseType.ToString())"
                                Width="150px">
@@ -49,7 +47,7 @@
                     <BbBadge Variant="BadgeVariant.Outline">@L.Localize(template.ReleaseType)</BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseTemplateSummaryDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseTemplateSummaryReadModel" TValue="string"
                                Header="@L["ReleaseGroup"]"
                                Property="@(template => template.ReleaseGroupName)"
                                Width="180px">
@@ -57,7 +55,7 @@
                     <BbBadge Variant="BadgeVariant.Outline">@template.ReleaseGroupName</BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseTemplateSummaryDto" TValue="int"
+            <BbDataTableColumn TData="ReleaseTemplateSummaryReadModel" TValue="int"
                                Header="@L["ArchiveConfigurations"]"
                                Property="@(template => template.ArchiveConfigTemplateCount)"
                                Width="170px">
@@ -65,7 +63,7 @@
                     <BbBadge Variant="BadgeVariant.Secondary">@template.ArchiveConfigTemplateCount</BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseTemplateSummaryDto" TValue="int"
+            <BbDataTableColumn TData="ReleaseTemplateSummaryReadModel" TValue="int"
                                Header="@L["UploadConfigurations"]"
                                Property="@(template => template.UploadConfigTemplateCount)"
                                Width="170px">
@@ -73,7 +71,7 @@
                     <BbBadge Variant="BadgeVariant.Secondary">@template.UploadConfigTemplateCount</BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseTemplateSummaryDto" TValue="string"
+            <BbDataTableColumn TData="ReleaseTemplateSummaryReadModel" TValue="string"
                                Header=""
                                Property="@(template => template.Name)"
                                Width="56px">

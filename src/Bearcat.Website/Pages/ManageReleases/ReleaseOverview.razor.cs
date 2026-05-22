@@ -1,4 +1,4 @@
-using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Shared;
@@ -20,7 +20,7 @@ public partial class ReleaseOverview(
     [EditorRequired]
     public string ReleaseFolderPath { get; set; } = null!;
 
-    private IReadOnlyList<ReleaseOverviewUploadDto> overviewUploads = [];
+    private IReadOnlyList<ReleaseOverviewUploadReadModel> overviewUploads = [];
     private string? nfoContent;
     private bool isLoading;
     private int? loadedReleaseId;
@@ -71,7 +71,7 @@ public partial class ReleaseOverview(
         StateHasChanged();
     }
 
-    private async Task ShowLinksDialogAsync(ReleaseOverviewUploadDto upload)
+    private async Task ShowLinksDialogAsync(ReleaseOverviewUploadReadModel upload)
     {
         if (upload.UploadId is null)
         {
@@ -116,11 +116,11 @@ public partial class ReleaseOverview(
         };
 
     private static string GetContainerCopyTargetId(
-        ReleaseOverviewUploadDto upload,
-        ReleaseOverviewLinkCrypterLinkDto link
+        ReleaseOverviewUploadReadModel upload,
+        ReleaseOverviewLinkCrypterLinkReadModel link
     ) => $"release-overview-container-{upload.UploadId}-{link.LinkCrypterContainerId}";
 
-    private static string GetPasswordCopyTargetId(ReleaseOverviewUploadDto upload) =>
+    private static string GetPasswordCopyTargetId(ReleaseOverviewUploadReadModel upload) =>
         $"release-overview-password-{upload.UploadId}";
 
     private static async Task<string?> GetNfoContentAsync(string? releaseFolderPath)

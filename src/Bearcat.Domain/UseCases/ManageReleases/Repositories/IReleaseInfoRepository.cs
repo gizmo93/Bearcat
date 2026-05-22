@@ -1,13 +1,13 @@
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 
 namespace Bearcat.Domain.UseCases.ManageReleases.Repositories;
 
 public interface IReleaseInfoRepository
 {
-    Task<IReadOnlyList<ActiveNfoDatabaseRegistrationDto>> GetActiveNfoDatabaseRegistrationsAsync(
-        CancellationToken cancellationToken = default
-    );
+    Task<
+        IReadOnlyList<ActiveNfoDatabaseRegistrationReadModel>
+    > GetActiveNfoDatabaseRegistrationsAsync(CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Release>> GetReleasesWithoutInfoAsync(
         int count,

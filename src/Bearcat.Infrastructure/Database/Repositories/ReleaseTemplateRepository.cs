@@ -1,6 +1,6 @@
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.ManageReleaseTemplates.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,14 +12,14 @@ public class ReleaseTemplateRepository(
     IArchiverFactory archiverFactory
 ) : IReleaseTemplateReadRepository, IReleaseTemplateWriteRepository
 {
-    public async Task<IReadOnlyList<ReleaseTemplateSummaryDto>> GetAllAsync(
+    public async Task<IReadOnlyList<ReleaseTemplateSummaryReadModel>> GetAllAsync(
         CancellationToken cancellationToken = default
     )
     {
         return await dbRead
             .ReleaseTemplates.OrderBy(t => t.Name)
             .ThenBy(t => t.Id)
-            .Select(t => new ReleaseTemplateSummaryDto(
+            .Select(t => new ReleaseTemplateSummaryReadModel(
                 t.Id,
                 t.Name,
                 t.ReleaseType,
@@ -32,7 +32,7 @@ public class ReleaseTemplateRepository(
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<ReleaseTemplateDetailDto?> GetDetailAsync(
+    public async Task<ReleaseTemplateDetailReadModel?> GetDetailAsync(
         int releaseTemplateId,
         CancellationToken cancellationToken = default
     )
@@ -48,7 +48,7 @@ public class ReleaseTemplateRepository(
                     .ThenInclude(l => l.LinkCrypterRegistration)
             .FirstOrDefaultAsync(t => t.Id == releaseTemplateId, cancellationToken);
 
-        return releaseTemplate is null ? null : ToDetailDto(releaseTemplate);
+        return releaseTemplate is null ? null : ToDetailReadModel(releaseTemplate);
     }
 
     public void Add(ReleaseTemplate releaseTemplate)
@@ -151,13 +151,13 @@ public class ReleaseTemplateRepository(
         await dbWrite.SaveChangesAsync(cancellationToken);
     }
 
-    private ReleaseTemplateDetailDto ToDetailDto(ReleaseTemplate releaseTemplate)
+    private ReleaseTemplateDetailReadModel ToDetailReadModel(ReleaseTemplate releaseTemplate)
     {
         var archiverNames = archiverFactory
             .GetArchivers()
             .ToDictionary(archiver => archiver.ClassName, archiver => archiver.Name);
 
-        return new ReleaseTemplateDetailDto(
+        return new ReleaseTemplateDetailReadModel(
             releaseTemplate.Id,
             releaseTemplate.Name,
             releaseTemplate.ReleaseType,
@@ -166,7 +166,7 @@ public class ReleaseTemplateRepository(
             releaseTemplate
                 .ArchiveConfigTemplates.OrderBy(a => a.Name)
                 .ThenBy(a => a.Id)
-                .Select(a => new ArchiveConfigTemplateDto(
+                .Select(a => new ArchiveConfigTemplateReadModel(
                     a.Id,
                     a.Name,
                     a.ArchiveFilesBasePath,
@@ -181,7 +181,7 @@ public class ReleaseTemplateRepository(
             releaseTemplate
                 .UploadConfigTemplates.OrderBy(u => u.Name ?? u.HosterRegistration.Name)
                 .ThenBy(u => u.Id)
-                .Select(u => new UploadConfigTemplateDto(
+                .Select(u => new UploadConfigTemplateReadModel(
                     u.Id,
                     u.Name,
                     string.IsNullOrWhiteSpace(u.Name) ? u.HosterRegistration.Name : u.Name,
@@ -194,7 +194,7 @@ public class ReleaseTemplateRepository(
                     u.LinksDistributedTo,
                     u.LinkCrypterTemplates.OrderBy(l => l.LinkCrypterRegistration.Name)
                         .ThenBy(l => l.Id)
-                        .Select(l => new UploadConfigLinkCrypterTemplateDto(
+                        .Select(l => new UploadConfigLinkCrypterTemplateReadModel(
                             l.Id,
                             l.LinkCrypterRegistrationId,
                             l.LinkCrypterRegistration.Name,

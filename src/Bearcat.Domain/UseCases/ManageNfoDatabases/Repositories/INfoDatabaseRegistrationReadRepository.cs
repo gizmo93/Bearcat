@@ -1,14 +1,14 @@
-using Bearcat.Domain.UseCases.ManageNfoDatabases.Dto;
+using Bearcat.Domain.UseCases.ManageNfoDatabases.ReadModels;
 
 namespace Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
 
 public interface INfoDatabaseRegistrationReadRepository
 {
-    Task<IReadOnlyList<NfoDatabaseRegistrationDto>> GetAllAsync(
+    Task<IReadOnlyList<NfoDatabaseRegistrationReadModel>> GetAllAsync(
         CancellationToken cancellationToken = default
     );
 
-    Task<NfoDatabaseRegistrationDto?> GetByIdAsync(
+    Task<NfoDatabaseRegistrationReadModel?> GetByIdAsync(
         int id,
         CancellationToken cancellationToken = default
     );

@@ -1,7 +1,7 @@
-using Bearcat.Domain.UseCases.ManageHosters.Dto;
+using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
-using Bearcat.Domain.UseCases.ManageReleaseTemplates.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
@@ -28,8 +28,8 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
-    private IReadOnlyList<HosterRegistrationDto> hosterRegistrations = [];
-    private IReadOnlyList<ArchiveConfigTemplateDto> archiveConfigTemplates = [];
+    private IReadOnlyList<HosterRegistrationReadModel> hosterRegistrations = [];
+    private IReadOnlyList<ArchiveConfigTemplateReadModel> archiveConfigTemplates = [];
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
     private bool isInitialized;

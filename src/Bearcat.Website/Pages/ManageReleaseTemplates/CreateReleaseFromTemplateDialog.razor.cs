@@ -1,5 +1,5 @@
 using Bearcat.Domain.UseCases.ManageReleases;
-using Bearcat.Domain.UseCases.ManageReleaseTemplates.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
@@ -22,8 +22,8 @@ public partial class CreateReleaseFromTemplateDialog(
     public IDialogReference DialogRef { get; set; } = null!;
 
     private CreateReleaseFromTemplateFormModel formModel = new();
-    private IReadOnlyList<ReleaseTemplateSummaryDto> releaseTemplates = [];
-    private ReleaseTemplateDetailDto? selectedTemplate;
+    private IReadOnlyList<ReleaseTemplateSummaryReadModel> releaseTemplates = [];
+    private ReleaseTemplateDetailReadModel? selectedTemplate;
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
     private string? folderValidationMessage;

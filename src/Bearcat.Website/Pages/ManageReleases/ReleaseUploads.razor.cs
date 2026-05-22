@@ -1,6 +1,7 @@
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
-using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
@@ -26,8 +27,8 @@ public partial class ReleaseUploads(
     public int? InitialUploadConfigId { get; set; }
 
     private readonly int[] pageSizes = [5, 10, 20, 50, 100];
-    private IReadOnlyList<ReleaseUploadDto> uploads = [];
-    private IReadOnlyList<UploadConfigDto> uploadConfigs = [];
+    private IReadOnlyList<ReleaseUploadReadModel> uploads = [];
+    private IReadOnlyList<UploadConfigReadModel> uploadConfigs = [];
     private int totalCount;
     private int pageIndex;
     private int pageSize = 5;
@@ -142,7 +143,7 @@ public partial class ReleaseUploads(
         }
     }
 
-    private async Task ShowLinksDialogAsync(ReleaseUploadDto upload)
+    private async Task ShowLinksDialogAsync(ReleaseUploadReadModel upload)
     {
         var parameters = new Dictionary<string, object?>
         {
@@ -163,7 +164,7 @@ public partial class ReleaseUploads(
         );
     }
 
-    private async Task ShowContainerLinksDialogAsync(ReleaseUploadDto upload)
+    private async Task ShowContainerLinksDialogAsync(ReleaseUploadReadModel upload)
     {
         var parameters = new Dictionary<string, object?>
         {
@@ -184,14 +185,14 @@ public partial class ReleaseUploads(
         );
     }
 
-    private async Task CreateManualReuploadAsync(ReleaseUploadDto upload)
+    private async Task CreateManualReuploadAsync(ReleaseUploadReadModel upload)
     {
         await uploadStateService.CreateManualReuploadAsync(upload.UploadId);
         toastService.Success(L["ManualReuploadCreated", upload.UploadId]);
         await RefreshUploadsAsync();
     }
 
-    private async Task CancelUploadAsync(ReleaseUploadDto upload)
+    private async Task CancelUploadAsync(ReleaseUploadReadModel upload)
     {
         var result = await dialogService.ConfirmAsync(
             L["CancelUpload"],
@@ -223,7 +224,7 @@ public partial class ReleaseUploads(
         await RefreshUploadsAsync();
     }
 
-    private async Task DeleteUploadAsync(ReleaseUploadDto upload)
+    private async Task DeleteUploadAsync(ReleaseUploadReadModel upload)
     {
         var result = await dialogService.ConfirmAsync(
             L["DeleteUpload"],
@@ -305,13 +306,13 @@ public partial class ReleaseUploads(
             _ => BadgeVariant.Outline,
         };
 
-    private static bool CanCreateManualReupload(ReleaseUploadDto upload) =>
+    private static bool CanCreateManualReupload(ReleaseUploadReadModel upload) =>
         upload.CanCreateReupload;
 
-    private static bool CanCancelUpload(ReleaseUploadDto upload) =>
+    private static bool CanCancelUpload(ReleaseUploadReadModel upload) =>
         upload.UploadState is UploadState.Pending or UploadState.Uploading;
 
-    private static bool CanDeleteUpload(ReleaseUploadDto upload) =>
+    private static bool CanDeleteUpload(ReleaseUploadReadModel upload) =>
         upload.UploadState
             is UploadState.Pending
                 or UploadState.Completed

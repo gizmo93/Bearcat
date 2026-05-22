@@ -110,7 +110,7 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
             return;
         }
 
-        var uploadConfig = await readRepository.GetDtoByIdAsync(UploadConfigId!.Value);
+        var uploadConfig = await readRepository.GetReadModelByIdAsync(UploadConfigId!.Value);
 
         formModel = new UploadConfigFormModel
         {

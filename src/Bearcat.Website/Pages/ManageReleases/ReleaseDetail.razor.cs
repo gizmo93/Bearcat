@@ -1,5 +1,5 @@
 using Bearcat.Domain.UseCases.ManageReleases;
-using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Website.Shared;
@@ -25,7 +25,7 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
     public int? FocusArchiveConfigId { get; set; }
 
     private IReleaseReadRepository releaseReadRepository = null!;
-    private ReleaseDto release = null!;
+    private ReleaseReadModel release = null!;
     private bool isInitialized;
     private string? activeTab = "overview";
     private readonly Dictionary<string, IReloadableComponent> reloadableComponents = new();
@@ -41,15 +41,15 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
 
         releaseReadRepository = ScopedServices.GetRequiredService<IReleaseReadRepository>();
 
-        var releaseDto = await releaseReadRepository.GetReleaseAsync(ReleaseId);
+        var releaseReadModel = await releaseReadRepository.GetReleaseAsync(ReleaseId);
 
-        if (releaseDto is null)
+        if (releaseReadModel is null)
         {
             navigationManager.NotFound();
             return;
         }
 
-        release = releaseDto;
+        release = releaseReadModel;
         isInitialized = true;
     }
 
@@ -169,14 +169,14 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
 
     private async Task ReloadReleaseAsync()
     {
-        var releaseDto = await releaseReadRepository.GetReleaseAsync(ReleaseId);
+        var releaseReadModel = await releaseReadRepository.GetReleaseAsync(ReleaseId);
 
-        if (releaseDto is null)
+        if (releaseReadModel is null)
         {
             navigationManager.NotFound();
             return;
         }
 
-        release = releaseDto;
+        release = releaseReadModel;
     }
 }

@@ -1,6 +1,4 @@
 @page "/nfo-database-registrations"
-@using Bearcat.Domain.UseCases.ManageNfoDatabases.Dto
-@using Bearcat.Website.Shared
 @inherits OwningComponentBase
 
 <PageTitle>@L["NfoDatabaseRegistrations"] - Bearcat</PageTitle>
@@ -22,7 +20,7 @@
         </BbButton>
     </div>
 
-    <BbDataTable TData="NfoDatabaseRegistrationDto"
+    <BbDataTable TData="NfoDatabaseRegistrationReadModel"
                  Data="registrations"
                  ShowToolbar="false"
                  ShowPagination="@(registrations.Count > 10)"
@@ -30,13 +28,13 @@
                  AriaLabel="@L["NfoDatabaseRegistrations"]"
                  Class="bearcat-data-table bearcat-registrations-table">
         <Columns>
-            <BbDataTableColumn TData="NfoDatabaseRegistrationDto" TValue="string"
+            <BbDataTableColumn TData="NfoDatabaseRegistrationReadModel" TValue="string"
                                Header="@L["NfoDatabase"]"
                                Property="@(registration => registration.NfoDatabaseName)"
                                Sortable="true"
                                Filterable="true"
                                Width="24%" />
-            <BbDataTableColumn TData="NfoDatabaseRegistrationDto" TValue="bool"
+            <BbDataTableColumn TData="NfoDatabaseRegistrationReadModel" TValue="bool"
                                Header="@L["Active"]"
                                Property="@(registration => registration.IsActive)"
                                Sortable="true"
@@ -47,7 +45,7 @@
                     </BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="NfoDatabaseRegistrationDto" TValue="string"
+            <BbDataTableColumn TData="NfoDatabaseRegistrationReadModel" TValue="string"
                                Header="@L["Configuration"]"
                                Property="@(registration => registration.NfoDatabaseName)"
                                MinWidth="280px">
@@ -99,7 +97,7 @@
                     }
                 </CellTemplate>
             </BbDataTableColumn>
-            <BbDataTableColumn TData="NfoDatabaseRegistrationDto" TValue="string"
+            <BbDataTableColumn TData="NfoDatabaseRegistrationReadModel" TValue="string"
                                Header=""
                                Property="@(registration => registration.NfoDatabaseName)"
                                Width="56px">

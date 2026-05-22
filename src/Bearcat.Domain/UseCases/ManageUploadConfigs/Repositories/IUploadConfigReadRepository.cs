@@ -1,15 +1,15 @@
-﻿using Bearcat.Domain.UseCases.ManageUploadConfigs.Dto;
+﻿using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 
 namespace Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 
 public interface IUploadConfigReadRepository
 {
-    Task<IReadOnlyList<UploadConfigDto>> GetUploadConfigsAsync(
+    Task<IReadOnlyList<UploadConfigReadModel>> GetUploadConfigsAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     );
 
-    Task<UploadConfigDto> GetDtoByIdAsync(
+    Task<UploadConfigReadModel> GetReadModelByIdAsync(
         int uploadConfigId,
         CancellationToken cancellationToken = default
     );

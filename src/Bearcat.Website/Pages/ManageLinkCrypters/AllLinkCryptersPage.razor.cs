@@ -1,5 +1,5 @@
 using Bearcat.Domain.UseCases.ManageLinkCrypters;
-using Bearcat.Domain.UseCases.ManageLinkCrypters.Dto;
+using Bearcat.Domain.UseCases.ManageLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using BlazorBlueprint.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +12,7 @@ public partial class AllLinkCryptersPage(
     ToastService toastService
 )
 {
-    private IReadOnlyList<LinkCrypterRegistrationDto> crypters = [];
+    private IReadOnlyList<LinkCrypterRegistrationReadModel> crypters = [];
     private LinkCrypterService linkCrypterService = null!;
 
     protected override async Task OnInitializedAsync()
@@ -45,7 +45,7 @@ public partial class AllLinkCryptersPage(
         }
     }
 
-    private async Task ShowEditDialogAsync(LinkCrypterRegistrationDto crypter)
+    private async Task ShowEditDialogAsync(LinkCrypterRegistrationReadModel crypter)
     {
         var parameters = new Dictionary<string, object?>
         {
@@ -71,7 +71,7 @@ public partial class AllLinkCryptersPage(
         }
     }
 
-    private async Task ToggleIsActiveAsync(LinkCrypterRegistrationDto crypter)
+    private async Task ToggleIsActiveAsync(LinkCrypterRegistrationReadModel crypter)
     {
         await linkCrypterService.ToggleIsActiveAsync(crypter.LinkCrypterRegistrationId);
 
@@ -83,7 +83,7 @@ public partial class AllLinkCryptersPage(
         await LoadCryptersAsync();
     }
 
-    private async Task DeleteAsync(LinkCrypterRegistrationDto crypter)
+    private async Task DeleteAsync(LinkCrypterRegistrationReadModel crypter)
     {
         var result = await dialogService.ConfirmAsync(
             L["DeleteNamedItem", crypter.Name],
@@ -105,7 +105,7 @@ public partial class AllLinkCryptersPage(
         await LoadCryptersAsync();
     }
 
-    private async Task TryLoginAsync(LinkCrypterRegistrationDto crypter)
+    private async Task TryLoginAsync(LinkCrypterRegistrationReadModel crypter)
     {
         var service = ScopedServices.GetRequiredService<LinkCrypterService>();
         var result = await service.TryLoginAsync(crypter.LinkCrypterRegistrationId);

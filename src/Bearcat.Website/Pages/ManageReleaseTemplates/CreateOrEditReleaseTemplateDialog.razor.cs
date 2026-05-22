@@ -1,4 +1,4 @@
-using Bearcat.Domain.UseCases.ManageReleaseGroups.Dto;
+using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using BlazorBlueprint.Components;
@@ -19,7 +19,7 @@ public partial class CreateOrEditReleaseTemplateDialog(
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
-    private IReadOnlyList<ReleaseGroupDto> releaseGroups = [];
+    private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
 

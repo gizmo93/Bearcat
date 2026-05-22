@@ -1,5 +1,5 @@
 using Bearcat.Abstractions.LinkCrypter;
-using Bearcat.Domain.UseCases.ManageLinkCrypters.Dto;
+using Bearcat.Domain.UseCases.ManageLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,14 +10,14 @@ public class LinkCrypterRegistrationReadRepository(
     ILinkCrypterFactory linkCrypterFactory
 ) : ILinkCrypterRegistrationReadRepository
 {
-    public async Task<IReadOnlyList<LinkCrypterRegistrationDto>> GetAllAsync(
+    public async Task<IReadOnlyList<LinkCrypterRegistrationReadModel>> GetAllAsync(
         CancellationToken cancellationToken = default
     )
     {
         var cryptersByClassName = linkCrypterFactory.GetByClassName();
 
         return await dbRead
-            .LinkCrypterRegistrations.Select(l => new LinkCrypterRegistrationDto(
+            .LinkCrypterRegistrations.Select(l => new LinkCrypterRegistrationReadModel(
                 l.Id,
                 l.Name,
                 l.LinkCrypterClassName,
@@ -31,7 +31,7 @@ public class LinkCrypterRegistrationReadRepository(
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<LinkCrypterRegistrationDto?> GetByIdAsync(
+    public async Task<LinkCrypterRegistrationReadModel?> GetByIdAsync(
         int id,
         CancellationToken cancellationToken = default
     )
@@ -40,7 +40,7 @@ public class LinkCrypterRegistrationReadRepository(
 
         return await dbRead
             .LinkCrypterRegistrations.Where(l => l.Id == id)
-            .Select(l => new LinkCrypterRegistrationDto(
+            .Select(l => new LinkCrypterRegistrationReadModel(
                 l.Id,
                 l.Name,
                 l.LinkCrypterClassName,
