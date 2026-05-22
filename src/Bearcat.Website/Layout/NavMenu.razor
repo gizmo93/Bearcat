@@ -2,9 +2,9 @@
 @implements IDisposable
 @inject NavigationManager NavigationManager
 
-<BbSidebarGroup>
-    <BbSidebarGroupContent>
-        <div @onclick="@((MouseEventArgs _) => CloseMobileSidebar())">
+<div @onclick="@((MouseEventArgs _) => CloseMobileSidebar())">
+    <BbSidebarGroup>
+        <BbSidebarGroupContent>
             <BbSidebarMenu>
                 <BbSidebarMenuItem>
                     <BbSidebarMenuButton Href="/" Match="NavLinkMatch.All" Tooltip="@L["Home"]">
@@ -12,6 +12,44 @@
                         <span>@L["Home"]</span>
                     </BbSidebarMenuButton>
                 </BbSidebarMenuItem>
+                <BbSidebarMenuItem>
+                    <BbSidebarMenuButton Href="/releases" Match="NavLinkMatch.Prefix" Tooltip="@L["Releases"]">
+                        <LucideIcon Name="upload" class="h-4 w-4" />
+                        <span>@L["Releases"]</span>
+                    </BbSidebarMenuButton>
+                </BbSidebarMenuItem>
+                <BbSidebarMenuItem>
+                    <BbSidebarMenuButton Href="/release-templates" Match="NavLinkMatch.Prefix" Tooltip="@L["ReleaseTemplates"]">
+                        <LucideIcon Name="copy" class="h-4 w-4" />
+                        <span>@L["ReleaseTemplates"]</span>
+                    </BbSidebarMenuButton>
+                </BbSidebarMenuItem>
+                <BbSidebarMenuItem>
+                    <BbSidebarMenuButton Href="/release-groups" Match="NavLinkMatch.Prefix" Tooltip="@L["ReleaseGroups"]">
+                        <LucideIcon Name="layers" class="h-4 w-4" />
+                        <span>@L["ReleaseGroups"]</span>
+                    </BbSidebarMenuButton>
+                </BbSidebarMenuItem>
+                <BbSidebarMenuItem>
+                    <BbSidebarMenuButton Href="/release-folder-automations" Match="NavLinkMatch.Prefix" Tooltip="@L["ReleaseFolderAutomations"]">
+                        <LucideIcon Name="folder-cog" class="h-4 w-4" />
+                        <span>@L["ReleaseFolderAutomations"]</span>
+                    </BbSidebarMenuButton>
+                </BbSidebarMenuItem>
+                <BbSidebarMenuItem>
+                    <BbSidebarMenuButton Href="/background-tasks" Match="NavLinkMatch.Prefix" Tooltip="@L["BackgroundTasks"]">
+                        <LucideIcon Name="activity" class="h-4 w-4" />
+                        <span>@L["BackgroundTasks"]</span>
+                    </BbSidebarMenuButton>
+                </BbSidebarMenuItem>
+            </BbSidebarMenu>
+        </BbSidebarGroupContent>
+    </BbSidebarGroup>
+
+    <BbSidebarGroup>
+        <BbSidebarGroupLabel>@L["Registrations"]</BbSidebarGroupLabel>
+        <BbSidebarGroupContent>
+            <BbSidebarMenu>
                 <BbSidebarMenuItem>
                     <BbSidebarMenuButton Href="/hoster-registrations" Match="NavLinkMatch.Prefix" Tooltip="@L["Hosters"]">
                         <LucideIcon Name="key-round" class="h-4 w-4" />
@@ -30,46 +68,24 @@
                         <span>@L["NfoDatabaseRegistrations"]</span>
                     </BbSidebarMenuButton>
                 </BbSidebarMenuItem>
-                <BbSidebarMenuItem>
-                    <BbSidebarMenuButton Href="/releases" Match="NavLinkMatch.Prefix" Tooltip="@L["Releases"]">
-                        <LucideIcon Name="upload" class="h-4 w-4" />
-                        <span>@L["Releases"]</span>
-                    </BbSidebarMenuButton>
-                </BbSidebarMenuItem>
-                <BbSidebarMenuItem>
-                    <BbSidebarMenuButton Href="/release-templates" Match="NavLinkMatch.Prefix" Tooltip="@L["ReleaseTemplates"]">
-                        <LucideIcon Name="copy" class="h-4 w-4" />
-                        <span>@L["ReleaseTemplates"]</span>
-                    </BbSidebarMenuButton>
-                </BbSidebarMenuItem>
-                <BbSidebarMenuItem>
-                    <BbSidebarMenuButton Href="/release-folder-automations" Match="NavLinkMatch.Prefix" Tooltip="@L["ReleaseFolderAutomations"]">
-                        <LucideIcon Name="folder-cog" class="h-4 w-4" />
-                        <span>@L["ReleaseFolderAutomations"]</span>
-                    </BbSidebarMenuButton>
-                </BbSidebarMenuItem>
-                <BbSidebarMenuItem>
-                    <BbSidebarMenuButton Href="/release-groups" Match="NavLinkMatch.Prefix" Tooltip="@L["ReleaseGroups"]">
-                        <LucideIcon Name="layers" class="h-4 w-4" />
-                        <span>@L["ReleaseGroups"]</span>
-                    </BbSidebarMenuButton>
-                </BbSidebarMenuItem>
+            </BbSidebarMenu>
+        </BbSidebarGroupContent>
+    </BbSidebarGroup>
+
+    <BbSidebarGroup>
+        <BbSidebarGroupLabel>@L["Settings"]</BbSidebarGroupLabel>
+        <BbSidebarGroupContent>
+            <BbSidebarMenu>
                 <BbSidebarMenuItem>
                     <BbSidebarMenuButton Href="/configurations" Match="NavLinkMatch.Prefix" Tooltip="@L["Configurations"]">
                         <LucideIcon Name="settings" class="h-4 w-4" />
                         <span>@L["Configurations"]</span>
                     </BbSidebarMenuButton>
                 </BbSidebarMenuItem>
-                <BbSidebarMenuItem>
-                    <BbSidebarMenuButton Href="/background-tasks" Match="NavLinkMatch.Prefix" Tooltip="@L["BackgroundTasks"]">
-                        <LucideIcon Name="activity" class="h-4 w-4" />
-                        <span>@L["BackgroundTasks"]</span>
-                    </BbSidebarMenuButton>
-                </BbSidebarMenuItem>
             </BbSidebarMenu>
-        </div>
-    </BbSidebarGroupContent>
-</BbSidebarGroup>
+        </BbSidebarGroupContent>
+    </BbSidebarGroup>
+</div>
 
 @code {
     [CascadingParameter]

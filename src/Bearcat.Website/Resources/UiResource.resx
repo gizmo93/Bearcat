@@ -465,8 +465,10 @@
   <data name="ReleaseFolderAutomations" xml:space="preserve"><value>Folder automations</value></data>
   <data name="ReleaseFolderAutomationsIntro" xml:space="preserve"><value>Create releases automatically from matching direct subfolders.</value></data>
   <data name="ReleaseFolderAutomationsSubtitle" xml:space="preserve"><value>Automatic release creation</value></data>
+  <data name="Registrations" xml:space="preserve"><value>Registrations</value></data>
   <data name="SelectReleaseBaseFolder" xml:space="preserve"><value>Select release base folder</value></data>
   <data name="SelectReleaseBaseFolderDescription" xml:space="preserve"><value>Choose the folder whose direct subfolders should be scanned.</value></data>
+  <data name="Settings" xml:space="preserve"><value>Settings</value></data>
   <data name="BackgroundTaskDisabled" xml:space="preserve"><value>{0} disabled</value></data>
   <data name="BackgroundTaskEnabled" xml:space="preserve"><value>{0} enabled</value></data>
   <data name="BackgroundTasks" xml:space="preserve"><value>Background tasks</value></data>
