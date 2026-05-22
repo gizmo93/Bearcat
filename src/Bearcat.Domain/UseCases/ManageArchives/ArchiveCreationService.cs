@@ -18,7 +18,7 @@ public class ArchiveCreationService(
     INotificationService notificationService
 )
 {
-    private const string UniqueFileName = "__nonce";
+    private const string UniqueFileName = "__nonce.txt";
 
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
