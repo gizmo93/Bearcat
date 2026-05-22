@@ -4,6 +4,7 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives;
+using Bearcat.Domain.UseCases.ManageBackgroundTasks;
 using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageLinkCrypters;
@@ -28,6 +29,7 @@ public static class ServiceProviderConfig
         public void AddDomain()
         {
             services.AddScoped<HosterRegistrationService>();
+            services.AddScoped<BackgroundTaskStateService>();
             services.AddScoped<ReleaseFolderAutomationService>();
             services.AddScoped<AutomaticallyCreateReleasesService>();
             services.AddScoped<ReleaseGroupService>();

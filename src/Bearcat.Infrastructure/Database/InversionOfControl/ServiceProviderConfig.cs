@@ -1,6 +1,7 @@
 ﻿using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
+using Bearcat.Domain.UseCases.ManageBackgroundTasks.Repositories;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
@@ -53,6 +54,11 @@ public static class ServiceProviderConfig
         private void AddRepositories()
         {
             services.AddScoped<IHosterConfigurationReadRepository, HosterConfigurationRepository>();
+            services.AddScoped<IBackgroundTaskStateReadRepository, BackgroundTaskStateRepository>();
+            services.AddScoped<
+                IBackgroundTaskStateWriteRepository,
+                BackgroundTaskStateRepository
+            >();
             services.AddScoped<
                 IHosterConfigurationWriteRepository,
                 HosterConfigurationRepository

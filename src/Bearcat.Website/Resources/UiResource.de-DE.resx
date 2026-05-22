@@ -467,6 +467,21 @@
   <data name="ReleaseFolderAutomationsSubtitle" xml:space="preserve"><value>Automatische Release-Erstellung</value></data>
   <data name="SelectReleaseBaseFolder" xml:space="preserve"><value>Release-Basisordner auswählen</value></data>
   <data name="SelectReleaseBaseFolderDescription" xml:space="preserve"><value>Wähle den Ordner, dessen direkte Unterordner gescannt werden sollen.</value></data>
+  <data name="BackgroundTaskDisabled" xml:space="preserve"><value>{0} deaktiviert</value></data>
+  <data name="BackgroundTaskEnabled" xml:space="preserve"><value>{0} aktiviert</value></data>
+  <data name="BackgroundTasks" xml:space="preserve"><value>Background-Tasks</value></data>
+  <data name="BackgroundTasksIntro" xml:space="preserve"><value>Überwache geplante Arbeiten, letzte Ausführungszeiten und Health-Status.</value></data>
+  <data name="BackgroundTasksSubtitle" xml:space="preserve"><value>Job-Health und Schalter</value></data>
+  <data name="Duration" xml:space="preserve"><value>Dauer</value></data>
+  <data name="Error" xml:space="preserve"><value>Fehler</value></data>
+  <data name="Finished" xml:space="preserve"><value>Ende</value></data>
+  <data name="LastError" xml:space="preserve"><value>Letzter Fehler</value></data>
+  <data name="NeverRun" xml:space="preserve"><value>Noch nie gelaufen</value></data>
+  <data name="NoBackgroundTasks" xml:space="preserve"><value>Noch keine Background-Tasks registriert</value></data>
+  <data name="Running" xml:space="preserve"><value>Läuft</value></data>
+  <data name="SetBackgroundTaskActiveState" xml:space="preserve"><value>Aktivierungsstatus für {0} setzen</value></data>
+  <data name="Started" xml:space="preserve"><value>Start</value></data>
+  <data name="Success" xml:space="preserve"><value>Erfolgreich</value></data>
   <data name="RandomArchiveName" xml:space="preserve">
     <value>&lt;zufälliger-name&gt;</value>
   </data>

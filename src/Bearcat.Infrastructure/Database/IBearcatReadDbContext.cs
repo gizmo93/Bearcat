@@ -6,6 +6,7 @@ namespace Bearcat.Infrastructure.Database;
 public interface IBearcatReadDbContext
 {
     public DbSet<HosterRegistration> HosterRegistrations { get; set; }
+    public DbSet<BackgroundTaskState> BackgroundTaskStates { get; set; }
     public DbSet<Release> Releases { get; set; }
     public DbSet<ReleaseTemplate> ReleaseTemplates { get; set; }
     public DbSet<ReleaseFolderAutomation> ReleaseFolderAutomations { get; set; }

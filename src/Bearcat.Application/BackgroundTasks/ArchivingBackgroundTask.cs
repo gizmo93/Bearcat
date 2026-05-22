@@ -1,6 +1,5 @@
 ﻿using Bearcat.Domain.UseCases.ManageArchives;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Application.BackgroundTasks;
@@ -8,38 +7,18 @@ namespace Bearcat.Application.BackgroundTasks;
 public class ArchivingBackgroundTask(
     IServiceScopeFactory serviceScopeFactory,
     ILogger<ArchivingBackgroundTask> logger
-) : BackgroundService
+) : BearcatBackgroundTask(serviceScopeFactory, logger)
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override string DisplayName => "Archive creation";
+
+    protected override TimeSpan Interval => TimeSpan.FromSeconds(20);
+
+    protected override async Task ExecuteTickAsync(
+        IServiceProvider serviceProvider,
+        CancellationToken stoppingToken
+    )
     {
-        logger.LogInformation("Starting Distribution Packing Background Task");
-        await Task.Yield();
-
-        while (true)
-        {
-            if (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-
-            await using var scope = serviceScopeFactory.CreateAsyncScope();
-
-            try
-            {
-                var archiveCreationService =
-                    scope.ServiceProvider.GetRequiredService<ArchiveCreationService>();
-                await archiveCreationService.ProcessAsync(stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "Error occurred while processing archive creation");
-            }
-
-            await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
-        }
+        var archiveCreationService = serviceProvider.GetRequiredService<ArchiveCreationService>();
+        await archiveCreationService.ProcessAsync(stoppingToken);
     }
 }

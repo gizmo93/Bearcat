@@ -467,6 +467,21 @@
   <data name="ReleaseFolderAutomationsSubtitle" xml:space="preserve"><value>Automatic release creation</value></data>
   <data name="SelectReleaseBaseFolder" xml:space="preserve"><value>Select release base folder</value></data>
   <data name="SelectReleaseBaseFolderDescription" xml:space="preserve"><value>Choose the folder whose direct subfolders should be scanned.</value></data>
+  <data name="BackgroundTaskDisabled" xml:space="preserve"><value>{0} disabled</value></data>
+  <data name="BackgroundTaskEnabled" xml:space="preserve"><value>{0} enabled</value></data>
+  <data name="BackgroundTasks" xml:space="preserve"><value>Background tasks</value></data>
+  <data name="BackgroundTasksIntro" xml:space="preserve"><value>Monitor scheduled work, last execution times, and health status.</value></data>
+  <data name="BackgroundTasksSubtitle" xml:space="preserve"><value>Job health and switches</value></data>
+  <data name="Duration" xml:space="preserve"><value>Duration</value></data>
+  <data name="Error" xml:space="preserve"><value>Error</value></data>
+  <data name="Finished" xml:space="preserve"><value>Finished</value></data>
+  <data name="LastError" xml:space="preserve"><value>Last error</value></data>
+  <data name="NeverRun" xml:space="preserve"><value>Never run</value></data>
+  <data name="NoBackgroundTasks" xml:space="preserve"><value>No background tasks registered yet</value></data>
+  <data name="Running" xml:space="preserve"><value>Running</value></data>
+  <data name="SetBackgroundTaskActiveState" xml:space="preserve"><value>Set active state for {0}</value></data>
+  <data name="Started" xml:space="preserve"><value>Started</value></data>
+  <data name="Success" xml:space="preserve"><value>Success</value></data>
     <data name="RandomArchiveName" xml:space="preserve">
         <value>&lt;random-name&gt;</value>
     </data>
