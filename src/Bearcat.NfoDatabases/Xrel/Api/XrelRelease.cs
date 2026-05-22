@@ -11,6 +11,13 @@ public record XrelRelease(
     [property: JsonPropertyName("ext_info")] XrelExternalInfo? ExtInfo
 );
 
+public record XrelP2pRelease(
+    [property: JsonPropertyName("dirname")] string? Dirname,
+    [property: JsonPropertyName("link_href")] string? LinkHref,
+    [property: JsonPropertyName("size_mb")] int? SizeMb,
+    [property: JsonPropertyName("ext_info")] XrelExternalInfo? ExtInfo
+);
+
 public record XrelReleaseSize(
     [property: JsonPropertyName("number")] int? Number,
     [property: JsonPropertyName("unit")] string? Unit

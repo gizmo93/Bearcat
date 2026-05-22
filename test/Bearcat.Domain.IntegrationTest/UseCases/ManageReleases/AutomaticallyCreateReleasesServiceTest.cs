@@ -1,5 +1,7 @@
+using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -7,6 +9,8 @@ using Bearcat.Infrastructure.FileSystem;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using Shouldly;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -28,6 +32,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         service = new AutomaticallyCreateReleasesService(
             new ReleaseFolderAutomationRepository(dbContext, dbContext),
             new FileSystemService(),
+            CreateReleaseInfoResolutionService(),
             CreateTimeProvider()
         );
     }
@@ -300,6 +305,22 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
             .Build();
 
         return new TimeProvider(configuration);
+    }
+
+    private static ReleaseInfoResolutionService CreateReleaseInfoResolutionService()
+    {
+        var releaseInfoRepository = new Mock<IReleaseInfoRepository>();
+        releaseInfoRepository
+            .Setup(repository =>
+                repository.GetActiveNfoDatabaseRegistrationsAsync(It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync([]);
+
+        return new ReleaseInfoResolutionService(
+            releaseInfoRepository.Object,
+            Mock.Of<INfoDatabaseFactory>(),
+            NullLogger<ReleaseInfoResolutionService>.Instance
+        );
     }
 
     private sealed record ReleaseTemplateSeed(

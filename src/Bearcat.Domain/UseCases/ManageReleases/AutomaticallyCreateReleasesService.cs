@@ -10,6 +10,7 @@ namespace Bearcat.Domain.UseCases.ManageReleases;
 public class AutomaticallyCreateReleasesService(
     IAutomaticallyCreateReleasesRepository repository,
     IFileSystemService fileSystemService,
+    ReleaseInfoResolutionService releaseInfoResolutionService,
     TimeProvider timeProvider
 )
 {
@@ -50,6 +51,7 @@ public class AutomaticallyCreateReleasesService(
             );
             release.CreatedAt = timeProvider.GetLocalNow();
             repository.Add(release);
+            await releaseInfoResolutionService.TryResolveAndSaveAsync(release, cancellationToken);
             existingReleaseFolderPaths.Add(candidate.FolderPath);
             createdCount++;
 

@@ -29,5 +29,13 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
             .HasPrincipalKey(r => r.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .HasMany(r => r.ReleaseInfos)
+            .WithOne(i => i.Release)
+            .HasForeignKey(i => i.ReleaseId)
+            .HasPrincipalKey(r => r.Id)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
