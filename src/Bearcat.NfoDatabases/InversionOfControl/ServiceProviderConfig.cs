@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.NfoDatabases.Xrel;
 using Bearcat.NfoDatabases.Xrel.Api;
+using Bearcat.NfoDatabases.Xrel.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
 
@@ -14,28 +15,7 @@ public static class ServiceProviderConfig
     {
         public void AddNfoDatabases()
         {
-            services
-                .AddRefitClient<IXrelApi>(
-                    new RefitSettings
-                    {
-                        ContentSerializer = new SystemTextJsonContentSerializer(
-                            new JsonSerializerOptions
-                            {
-                                NumberHandling = JsonNumberHandling.AllowReadingFromString,
-                                PropertyNameCaseInsensitive = true,
-                            }
-                        ),
-                    }
-                )
-                .ConfigureHttpClient(client =>
-                {
-                    client.BaseAddress = new Uri("https://xrel-api.nfos.to/");
-                });
-
-            services.AddSingleton<XrelRateLimitState>();
-            services.AddScoped<XrelClient>();
-            services.AddKeyedScoped<INfoDatabase, XrelNfoDatabase>(nameof(XrelNfoDatabase));
-            services.AddScoped<INfoDatabaseFactory, NfoDatabaseFactory>();
+            services.AddXrel();
         }
     }
 }
