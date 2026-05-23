@@ -55,7 +55,7 @@ public partial class CreateOrEditReleaseTemplateDialog(
             await service.UpdateAsync(
                 FormModel.ReleaseTemplateId.Value,
                 FormModel.Name,
-                FormModel.ReleaseType!.Value,
+                FormModel.ReleaseType,
                 FormModel.ReleaseGroupId
             );
             await DialogRef.CloseAsync(DialogResult.Ok(FormModel.ReleaseTemplateId.Value));
@@ -64,7 +64,7 @@ public partial class CreateOrEditReleaseTemplateDialog(
 
         var releaseTemplateId = await service.CreateAsync(
             FormModel.Name,
-            FormModel.ReleaseType!.Value,
+            FormModel.ReleaseType,
             FormModel.ReleaseGroupId
         );
         await DialogRef.CloseAsync(DialogResult.Ok(releaseTemplateId));
@@ -77,11 +77,6 @@ public partial class CreateOrEditReleaseTemplateDialog(
         if (string.IsNullOrWhiteSpace(FormModel.Name))
         {
             messageStore.Add(() => FormModel.Name, L["NameIsRequired"]);
-        }
-
-        if (FormModel.ReleaseType is null)
-        {
-            messageStore.Add(() => FormModel.ReleaseType!, L["SelectReleaseTypeRequired"]);
         }
 
         if (FormModel.ReleaseGroupId == 0)
