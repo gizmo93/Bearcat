@@ -106,7 +106,7 @@ public class HideCx(IHideCxApi api) : ILinkCrypter
         {
             await api.UpdateContainerAsync(
                 containerId: externalReference!,
-                request: new Api.UpdateContainer.Request { Mirrors = links },
+                request: new Api.UpdateContainer.Request { Mirrors = [links.ToArray()] },
                 apiToken: GetAuthToken(config.ApiKey),
                 cancellationToken: cancellationToken
             );
