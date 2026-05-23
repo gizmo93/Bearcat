@@ -32,11 +32,9 @@ public class ApiClient(
         var uploadUrl = await GetUploadUrlAsync(cancellationToken);
 
         using var httpClient = httpClientProvider.GetUploadClient();
-        using var multipartContent = new MultipartFormDataContent
-        {
-            { new StringContent(config.UserHash), "user" },
-            { new StreamContent(fileStream), "files", fileName },
-        };
+        using var multipartContent = new MultipartFormDataContent();
+        multipartContent.Add(new StringContent(config.UserHash), "user");
+        multipartContent.Add(new StreamContent(fileStream), "files", fileName);
 
         var httpResponse = await httpClient.PostAsync(
             uploadUrl,
