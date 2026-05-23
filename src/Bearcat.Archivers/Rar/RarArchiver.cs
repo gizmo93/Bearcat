@@ -102,6 +102,6 @@ public class RarArchiver(ILogger<RarArchiver> logger) : IArchiver
         var archiveFullPath = Path.Combine(destinationPath, archiveNamePrefix + ".rar");
         var passwordPart = !string.IsNullOrWhiteSpace(password) ? $"-p{password}" : string.Empty;
 
-        return $"a -ep1 -m0 -v{targetFileSizeMb}m {passwordPart} \"{archiveFullPath}\" \"{sourceFolderPath}\"/*";
+        return $"a -ep1 -m1 -s -v{targetFileSizeMb}m {passwordPart} \"{archiveFullPath}\" \"{sourceFolderPath}\"/*";
     }
 }

@@ -3,6 +3,7 @@ using Bearcat.Hosters.Alfafile.InversionOfControl;
 using Bearcat.Hosters.DDownload.InversionOfControl;
 using Bearcat.Hosters.GoFile.InversionOfControl;
 using Bearcat.Hosters.Keep2Share.InversionOfControl;
+using Bearcat.Hosters.Nitroflare.InversionOfControl;
 using Bearcat.Hosters.Rapidgator.InversionOfControl;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +19,7 @@ public static class ServiceProviderConfig
         services.AddDdownload();
         services.AddGoFile();
         services.AddKeep2Share();
+        services.AddNitroflare();
 
         services.AddScoped<IHosterFactory, HosterFactory>();
         services.AddHttpClient(
