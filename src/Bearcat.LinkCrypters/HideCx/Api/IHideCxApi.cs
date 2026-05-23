@@ -21,8 +21,8 @@ public interface IHideCxApi
 
     [Patch("/containers/{containerId}")]
     Task<string?> UpdateContainerAsync(
-        [Query] string containerId,
-        UpdateContainer.Request request,
+        string containerId,
+        [Body] UpdateContainer.Request request,
         [Header("Authorization")] string apiToken,
         CancellationToken cancellationToken
     );
