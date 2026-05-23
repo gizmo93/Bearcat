@@ -15,6 +15,7 @@ Currently the following OCHs are supported:
 - GoFile
 - Keep2Share
 - Alfafile
+- NitroFlare
 
 The following link crypters are supported:
 
