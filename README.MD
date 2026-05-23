@@ -9,36 +9,14 @@ Generated links can be submitted to one or more link crypters. Bearcat checks li
 
 Bearcat is a .NET 10 application built on ASP.NET Core. The frontend uses Blazor, and PostgreSQL is used as the database. The application can run locally or in Docker.
 
-## GUI
+![gui.png](docs/gui.png)
 
-<p>
-  <a href="docs/images/running-upload.png"><img src="docs/images/running-upload.png" alt="Running upload" width="260"/></a>
-  <a href="docs/images/running-archiving.png"><img src="docs/images/running-archiving.png" alt="Running archiving" width="260"/></a>
-  <a href="docs/images/releases-overview.png"><img src="docs/images/releases-overview.png" alt="Releases overview" width="260"/></a>
-</p>
-
-<p>
-  <a href="docs/images/release-detail.png"><img src="docs/images/release-detail.png" alt="Release detail" width="260"/></a>
-  <a href="docs/images/upload-configs.png"><img src="docs/images/upload-configs.png" alt="Upload configurations" width="260"/></a>
-  <a href="docs/images/release-uploads.png"><img src="docs/images/release-uploads.png" alt="Release uploads" width="260"/></a>
-</p>
-
-<p>
-  <a href="docs/images/hosters.png"><img src="docs/images/hosters.png" alt="Hoster registrations" width="260"/></a>
-  <a href="docs/images/link-crypters.png"><img src="docs/images/link-crypters.png" alt="Link crypter registrations" width="260"/></a>
-  <a href="docs/images/release-groups.png"><img src="docs/images/release-groups.png" alt="Release groups" width="260"/></a>
-</p>
-
-<p>
-  <a href="docs/images/notification-center.png"><img src="docs/images/notification-center.png" alt="Notification center" width="260"/></a>
-  <a href="docs/images/notification.png"><img src="docs/images/notification.png" alt="Notification detail" width="260"/></a>
-  <a href="docs/images/auto-archive-deletion.png"><img src="docs/images/auto-archive-deletion.png" alt="Automatic archive deletion" width="260"/></a>
-</p>
 
 ## Documentation
 
-Additional documentation is kept in [`docs/`](docs/).
+Additional documentation is kept in [`docs/`](docs/). 
 
+- [User documentation](docs/user-documentation/user-documentation.md)
 - [Development notes](docs/development.md)
 
 ## Running Bearcat With Docker
