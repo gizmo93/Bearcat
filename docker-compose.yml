@@ -5,7 +5,7 @@ services:
     platform: linux/amd64
     container_name: bearcat
     ports:
-      - "8080:8080"
+      - "${BEARCAT_PORT:-8080}:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
