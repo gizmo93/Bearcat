@@ -126,22 +126,33 @@ Typical setups are:
 - A production group with automatic reuploads enabled and a waiting time like `12` or `24` hours.
 - A priority group with a shorter waiting time for releases that should be restored quickly.
 
-## Setting up folder automations
+## Setting up release templates
 
-Folder automations create releases automatically when new folders appear below a configured base folder.
-They are useful once you have a release setup that you use again and again.
+Release templates are reusable release setups.
+They are useful when multiple releases should use the same release group, archive settings, hoster targets and link crypter settings.
 
-![folder-automations-page.png](folder-automations-page.png)
+![release-templates-page.png](release-templates-page.png)
 
-Before creating a folder automation, create a release template.
-You can do this in two ways:
+You can create a release template in two ways:
 
 - Open "Release templates" in the sidebar, click "New release template" and then add archive configurations, upload configurations and link crypters to the template.
 - Open an existing release, use the action menu in the top right and choose "Save as template".
 
-A release template stores the release type, release group, archive configurations, upload configurations and link crypter settings.
+A release template stores the release group, archive configurations, upload configurations and link crypter settings.
 When Bearcat creates a release from a template, the new release name is normally taken from the folder name.
 If an archive template is configured to use the release name as archive name, every automatically created release will get archive names based on its own folder name.
+
+![release-templates-detail.png](release-templates-detail.png)
+
+Templates can be used manually from the "Releases" page with "New from template".
+They are also required for folder automations, because the automation needs to know which archive and upload setup it should apply to newly found folders.
+
+## Setting up folder automations
+
+Folder automations create releases automatically when new folders appear below a configured base folder.
+They are useful once you have a release template that you want to apply again and again.
+
+![folder-automations-page.png](folder-automations-page.png)
 
 After the template is ready, open "Release folder automations" in the sidebar and click "New release folder automation".
 
