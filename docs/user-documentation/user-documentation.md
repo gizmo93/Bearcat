@@ -14,6 +14,7 @@ Currently the following OCHs are supported:
 - DDownload
 - GoFile
 - Keep2Share
+- Alfafile
 
 The following link crypters are supported:
 

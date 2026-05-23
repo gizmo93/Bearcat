@@ -1,4 +1,5 @@
 ﻿using Bearcat.Abstractions.Hoster;
+using Bearcat.Hosters.Alfafile.InversionOfControl;
 using Bearcat.Hosters.DDownload.InversionOfControl;
 using Bearcat.Hosters.GoFile.InversionOfControl;
 using Bearcat.Hosters.Keep2Share.InversionOfControl;
@@ -12,6 +13,7 @@ public static class ServiceProviderConfig
 {
     public static void AddHosters(this IServiceCollection services)
     {
+        services.AddAlfafile();
         services.AddRapidgator();
         services.AddDdownload();
         services.AddGoFile();
