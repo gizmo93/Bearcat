@@ -42,22 +42,9 @@
 
             @if (!formModel.IsEdit)
             {
-                <BbFormFieldSelect TValue="ReleaseType?"
-                                   @bind-Value="formModel.ReleaseType"
-                                   Label="@L["ReleaseType"]"
-                                   Placeholder="@L["SelectReleaseType"]">
-                    @foreach (var releaseType in Enum.GetValues<ReleaseType>())
-                    {
-                        <BbSelectItem Value="@((ReleaseType?)releaseType)" Text="@L.Localize(releaseType)" />
-                    }
-                </BbFormFieldSelect>
-
-                @if (formModel.ReleaseType is not null)
-                {
-                    <div class="rounded-lg border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
-                        @L.LocalizeDescription(formModel.ReleaseType.Value)
-                    </div>
-                }
+                <div class="rounded-lg border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                    @L.LocalizeDescription(formModel.ReleaseType)
+                </div>
             }
         </div>
 

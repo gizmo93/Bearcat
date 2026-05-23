@@ -6,7 +6,7 @@ public class ReleaseTemplateFormModel
 {
     public string Name { get; set; } = string.Empty;
 
-    public ReleaseType? ReleaseType { get; set; }
+    public ReleaseType ReleaseType { get; set; } = ReleaseType.Managed;
 
     public int ReleaseGroupId { get; set; }
 

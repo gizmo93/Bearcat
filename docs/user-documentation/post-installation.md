@@ -3,7 +3,7 @@
 After you started your Bearcat container, its frontend is available
 at `http://localhost:8080` (or the port you set in the .env file) and you can start setting it up.
 
-You will be greated with the start page
+You will be greeted with the start page.
 
 ![start-page.png](start-page.png)
 
@@ -13,22 +13,164 @@ In the top right corner there is a notification bell, that will show you notific
 
 ## Setting up hoster accounts
 
-To set up your hoster accounts, click om the "Hoster registrations" link in the sidebar on the left and click "New hoster".
+To set up your hoster accounts, click on the "Hoster registrations" link in the sidebar on the left and click "New hoster".
 
 ![register-hoster.png](register-hoster.png)
 
-Fill out the needed authentification informations.
-Depending on the hoster it can be username / password or an API key; check out the documentation of the Hoster on how to get these informations for your account.
+Fill out the needed authentication information.
+Depending on the hoster it can be username / password or an API key; check out the documentation of the hoster on how to get this information for your account.
 
 Save and test the connection by clicking "Try login".
 
 ![try-login.png](try-login.png)
 
 
-## Setting up link cypter accounts, and NFO databases
+## Setting up link crypter accounts, and NFO databases
 The menu option "Crypter registrations" works the same way as the "Hoster registrations", but here you can set up your accounts for link crypters, that you want to use to create link containers for your releases.
 The menu option "NFO database registrations" will (currently) only allow you to activate xrel.to.
-That's optional and doesn't need any credentials, but it's needed if you automatically want to fetch release related informations.
+That's optional and doesn't need any credentials, but it's needed if you automatically want to fetch release related information.
 
 
 ## Manually create a release
+
+To create a release yourself, click "Releases" in the sidebar and then click "New release".
+
+![manual-new-release.png](manual-new-release.png)
+![img.png](img.png)
+
+In the dialog, enter a release name and select the release folder.
+The folder picker starts in the release directory that you configured with `RELEASES_DIR` in your `.env` file.
+If you first select the folder and leave the name empty, Bearcat will use the folder name as the release name.
+
+You also need to choose a release group.
+Release groups decide if Bearcat should create automatic reuploads later, so if you do not want to use that feature yet, create a simple release group first and leave automatic reuploads disabled.
+
+Bearcat currently creates managed releases.
+That means Bearcat creates the archives and manages the uploads.
+
+After clicking "Create release", the release appears in the release list.
+Open it by clicking the release name.
+The detail page is the place where you connect all parts of the release:
+
+### Overview Tab
+... shows the latest upload per upload configuration, download links, link crypter container links, archive passwords and the NFO copy button if a `.nfo` file exists in the release folder.
+It should be kind of a quick access to all information that you might need, if you want to share that release in forum.
+![overview.png](overview.png)
+
+
+### Release infos tab
+... shows metadata fetched from the active NFO database registrations.
+![release-infos-tab.png](release-infos-tab.png)
+
+### Archive configurations tab
+... defines how Bearcat should create archive files.
+For each archive configuration, the release will be packed 1 time.
+In order to be able to upload something, you need to create at least 1 archive configuration.
+
+![archive-configurations-tab.png](archive-configurations-tab.png)
+
+### Upload configurations tab
+... defines to which hoster registration an archive configuration should be uploaded.
+You can also define, on which link crypters a containers for the upload links should be created.
+
+![upload-configurations-tab.png](upload-configurations-tab.png)
+
+### Uploads tab
+... shows the actual upload runs and lets you view links, create manual reuploads, cancel running uploads or delete finished / failed upload entries.
+![release-uploads-tab.png](release-uploads-tab.png)
+![upload-links-dialog.png](upload-links-dialog.png)
+![crypter-links-dialog.png](crypter-links-dialog.png)
+
+
+For a release, add at least one archive configuration and one upload configuration.
+
+In the "Archive configurations" tab, click "Add".
+Choose a name, the archiver, the archive file folder, an optional archive password and the target archive part size in MB.
+The archive file folder is the location where Bearcat stores the generated archive files before they are uploaded.
+The archive naming field sets the archive file prefix; the selected archiver adds its file extension automatically.
+
+In the "Upload configurations" tab, click "Add".
+Choose a name, the hoster registration and the archive configuration that should be uploaded.
+The "Links distributed to" list is optional and can be used to note where you posted or shared the links later. It allows you to find the forum thread again, where you shared the links, if they went offline.
+
+If you want Bearcat to create link crypter containers, expand the upload configuration after saving it and add one or more link crypters.
+Choose the link crypter registration and optionally set a container password.
+
+Once the release has an upload configuration, Bearcat will create the initial upload automatically after the configured cooldown time.
+The background tasks create missing archives, upload them to the selected hosters, check the online state and create link crypter containers.
+You can watch the progress on the start page, in the "Uploads" tab of the release, in the notification center and on the "Background tasks" page.
+
+## Setting up release groups
+
+Release groups are used to control automatic reuploads for multiple releases at once.
+Click "Release groups" in the sidebar and then click "New release group".
+
+![release-group-page.png](release-group-page.png)
+
+Give the group a name.
+Then decide if automatic reuploads should be enabled for releases assigned to this group.
+If automatic reuploads are disabled, Bearcat will still create initial uploads and check whether uploaded files are online, but it will not automatically schedule replacement uploads for this group.
+
+If automatic reuploads are enabled, set "Hours until reupload".
+This is the waiting time after Bearcat has confirmed that uploaded files are offline.
+For example, if you set it to `24`, Bearcat waits until the offline files have been checked for at least 24 hours before it creates a replacement upload.
+If you set it to `0`, Bearcat can schedule the replacement as soon as the files are confirmed offline.
+
+You can assign a release group when you create or edit a release.
+On the release list, you can also select multiple releases and use "Change release group" to move them together.
+This is useful when you want stricter reupload behavior for some releases and a more relaxed setup for others.
+
+Typical setups are:
+
+- A default group with automatic reuploads disabled while you are still testing Bearcat.
+- A production group with automatic reuploads enabled and a waiting time like `12` or `24` hours.
+- A priority group with a shorter waiting time for releases that should be restored quickly.
+
+## Setting up folder automations
+
+Folder automations create releases automatically when new folders appear below a configured base folder.
+They are useful once you have a release setup that you use again and again.
+
+![folder-automations-page.png](folder-automations-page.png)
+
+Before creating a folder automation, create a release template.
+You can do this in two ways:
+
+- Open "Release templates" in the sidebar, click "New release template" and then add archive configurations, upload configurations and link crypters to the template.
+- Open an existing release, use the action menu in the top right and choose "Save as template".
+
+A release template stores the release type, release group, archive configurations, upload configurations and link crypter settings.
+When Bearcat creates a release from a template, the new release name is normally taken from the folder name.
+If an archive template is configured to use the release name as archive name, every automatically created release will get archive names based on its own folder name.
+
+After the template is ready, open "Release folder automations" in the sidebar and click "New release folder automation".
+
+Set the "Release base path" to the folder that Bearcat should scan.
+Bearcat scans the direct subfolders of this path.
+It does not recursively walk through deeper folder structures for matching releases.
+
+The "Folder name pattern" is optional.
+Leave it empty if every direct subfolder should become a release.
+If you only want matching folders, use simple wildcards like `*1080p*`, `Series.*.S01*` or `*.GERMAN.*`.
+Regular expressions are not supported.
+Matching is case-insensitive.
+
+Select the release template and leave "Enabled" checked if the automation should start immediately.
+You can disable and re-enable automations later from the action menu in the automations list.
+
+The folder automation background task runs about every two minutes.
+For every matching direct subfolder, Bearcat checks whether a release with the same folder path already exists.
+If not, it creates a new release from the selected template, tries to fetch release information from the active NFO databases and adds a notification.
+The normal archive and upload background tasks then continue with archive creation, upload, online-state checks and link crypter container creation.
+
+As an example, if your release directory contains:
+
+```text
+/data/releases/incoming/
+  Movie.One.2026.1080p/
+  Movie.Two.2026.2160p/
+  Some.Other.Folder/
+```
+
+and the automation uses `/data/releases/incoming` as base path with the pattern `*1080p*`, only `Movie.One.2026.1080p` will be picked up.
+If the pattern is empty, all three direct folders are candidates.

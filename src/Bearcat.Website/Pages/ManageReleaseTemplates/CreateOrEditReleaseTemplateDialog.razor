@@ -10,16 +10,6 @@
                               Label="@L["Name"]"
                               Placeholder="@L["ReleaseTemplateNamePlaceholder"]" />
 
-            <BbFormFieldSelect TValue="ReleaseType?"
-                               @bind-Value="FormModel.ReleaseType"
-                               Label="@L["ReleaseType"]"
-                               Placeholder="@L["SelectReleaseType"]">
-                @foreach (var releaseType in Enum.GetValues<ReleaseType>())
-                {
-                    <BbSelectItem Value="@((ReleaseType?)releaseType)" Text="@L.Localize(releaseType)" />
-                }
-            </BbFormFieldSelect>
-
             @if (releaseGroups.Count > 0)
             {
                 <BbFormFieldSelect TValue="int"

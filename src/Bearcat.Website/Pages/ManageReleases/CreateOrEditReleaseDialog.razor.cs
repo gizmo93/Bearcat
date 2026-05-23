@@ -74,12 +74,10 @@ public partial class CreateOrEditReleaseDialog(
             return;
         }
 
-        var releaseType = formModel.ReleaseType!.Value;
-
         var id = await service.CreateAsync(
             name: formModel.Name,
             releaseFolderPath: formModel.FolderPath,
-            releaseType: releaseType,
+            releaseType: formModel.ReleaseType,
             releaseGroupId: formModel.ReleaseGroupId
         );
 
@@ -108,10 +106,6 @@ public partial class CreateOrEditReleaseDialog(
             messageStore.Add(() => formModel.ReleaseGroupId, L["SelectReleaseGroupRequired"]);
         }
 
-        if (!formModel.IsEdit && formModel.ReleaseType is null)
-        {
-            messageStore.Add(() => formModel.ReleaseType!, L["SelectReleaseTypeRequired"]);
-        }
     }
 
     private async Task OpenFolderDialogAsync()
