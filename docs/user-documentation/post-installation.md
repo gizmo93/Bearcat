@@ -11,6 +11,20 @@ In the middle you can see a widget that in the future will show you archives, th
 
 In the top right corner there is a notification bell, that will show you notifications about finished uploads, failed uploads and so on.
 
+Notifications are Bearcat's way to tell you that background work needs attention or that something important happened.
+They can be info messages, warnings or errors and can be linked to uploads, archives or link crypter containers.
+The bell shows the latest unresolved notifications and links to the full notification list.
+Once you have checked a notification, you can mark it as resolved so it no longer stays in the unresolved list.
+
+## Jump to what interests you
+
+- [Setting up hoster accounts](#setting-up-hoster-accounts)
+- [Setting up link crypter accounts, and NFO databases](#setting-up-link-crypter-accounts-and-nfo-databases)
+- [Manually create a release](#manually-create-a-release)
+- [Setting up release groups](#setting-up-release-groups)
+- [Setting up release templates](#setting-up-release-templates)
+- [Setting up folder automations](#setting-up-folder-automations)
+
 ## Setting up hoster accounts
 
 To set up your hoster accounts, click on the "Hoster registrations" link in the sidebar on the left and click "New hoster".
