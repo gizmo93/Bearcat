@@ -9,7 +9,7 @@ Generated links can be submitted to one or more link crypters. Bearcat checks li
 
 Bearcat is a .NET 10 application built on ASP.NET Core. The frontend uses Blazor, and PostgreSQL is used as the database. The application can run locally or in Docker.
 
-![gui.png](docs/gui.png)
+![gui.png](docs/images/gui.png)
 
 
 ## Documentation
