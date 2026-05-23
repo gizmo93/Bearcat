@@ -105,7 +105,6 @@ public partial class CreateOrEditReleaseDialog(
         {
             messageStore.Add(() => formModel.ReleaseGroupId, L["SelectReleaseGroupRequired"]);
         }
-
     }
 
     private async Task OpenFolderDialogAsync()

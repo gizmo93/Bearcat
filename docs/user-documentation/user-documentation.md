@@ -13,6 +13,7 @@ Currently the following OCHs are supported:
 - Rapidgator
 - DDownload
 - GoFile
+- Keep2Share
 
 The following link crypters are supported:
 
