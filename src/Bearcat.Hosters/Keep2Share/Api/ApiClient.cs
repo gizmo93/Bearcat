@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
+using Refit;
 
 namespace Bearcat.Hosters.Keep2Share.Api;
 
@@ -14,6 +15,8 @@ public class ApiClient(
 {
     public const string UploadHttpClientName = "Keep2ShareUploadHttpClient";
 
+    public TimeSpan RateLimitRetryDelay { get; init; } = TimeSpan.FromSeconds(5);
+
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         NumberHandling = JsonNumberHandling.AllowReadingFromString,
@@ -21,6 +24,10 @@ public class ApiClient(
     };
 
     private const int AuthTimeout = 1500;
+
+    private const int MaxParallelLinkChecks = 10;
+
+    private const int MaxLinkCheckAttempts = 3;
 
     private bool NeedsReauthentication =>
         string.IsNullOrWhiteSpace(authToken)
@@ -136,17 +143,40 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        var result = new Dictionary<string, bool>();
+        using var semaphore = new SemaphoreSlim(MaxParallelLinkChecks);
 
-        foreach (var fileUrl in fileUrls.Distinct())
+        var checkTasks = fileUrls
+            .Distinct()
+            .Select(fileUrl =>
+                CheckLinkAsync(
+                    fileUrl: fileUrl,
+                    semaphore: semaphore,
+                    cancellationToken: cancellationToken
+                )
+            )
+            .ToList();
+
+        var results = await Task.WhenAll(checkTasks);
+
+        return results.ToDictionary(result => result.FileUrl, result => result.IsOnline);
+    }
+
+    private async Task<(string FileUrl, bool IsOnline)> CheckLinkAsync(
+        string fileUrl,
+        SemaphoreSlim semaphore,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileId = TryExtractFileId(fileUrl);
+
+        if (fileId is null)
         {
-            var fileId = TryExtractFileId(fileUrl);
+            return (fileUrl, false);
+        }
 
-            if (fileId is null)
-            {
-                result[fileUrl] = false;
-                continue;
-            }
+        foreach (var attempt in Enumerable.Range(1, MaxLinkCheckAttempts))
+        {
+            await semaphore.WaitAsync(cancellationToken);
 
             try
             {
@@ -155,7 +185,25 @@ public class ApiClient(
                     cancellationToken
                 );
 
-                result[fileUrl] = response.Status == "success" && response.IsAvailable == true;
+                return (fileUrl, response is { Status: "success", IsAvailable: true });
+            }
+            catch (ApiException exception)
+                when (exception.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                logger.LogInformation(
+                    "Rate limited by Keep2Share API while checking {FileUrl}, waiting before retrying (Attempt {Attempt})",
+                    fileUrl,
+                    attempt
+                );
+            }
+            catch (HttpRequestException exception)
+                when (exception.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                logger.LogInformation(
+                    "Rate limited by Keep2Share API while checking {FileUrl}, waiting before retrying (Attempt {Attempt})",
+                    fileUrl,
+                    attempt
+                );
             }
             catch (Exception ex)
             {
@@ -164,11 +212,20 @@ public class ApiClient(
                     fileUrl,
                     ex.InnerException?.Message ?? ex.Message
                 );
-                result[fileUrl] = false;
+                return (fileUrl, false);
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+
+            if (attempt < MaxLinkCheckAttempts)
+            {
+                await Task.Delay(RateLimitRetryDelay, cancellationToken);
             }
         }
 
-        return result;
+        return (fileUrl, false);
     }
 
     private async Task<string> GetAuthTokenAsync(
