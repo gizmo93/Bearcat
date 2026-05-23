@@ -119,8 +119,10 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
     {
         var config = new Keep2ShareConfig
         {
-            EmailAddress = hosterConfig.GetValueOrDefault("Username") ?? string.Empty,
-            Password = hosterConfig.GetValueOrDefault("Password") ?? string.Empty,
+            EmailAddress =
+                hosterConfig[nameof(Keep2ShareConfig.EmailAddress)],
+            Password =
+                hosterConfig[nameof(Keep2ShareConfig.Password)],
         };
 
         return JsonSerializer.Serialize(config);
