@@ -11,7 +11,7 @@ The web UI gives you two places to control that behavior:
 Open "Background tasks" in the sidebar to see the current task list.
 Each background task runs on its own schedule and stores its last known state in the database.
 
-![background-tasks-page.png](background-tasks-page.png)
+![background-tasks-page.png](images/background-tasks-page.png)
 
 The table columns mean:
 
@@ -48,7 +48,7 @@ Only disable a task if you intentionally want to pause that part of the system, 
 Open "Configurations" in the sidebar to change global application behavior.
 Each configuration property shows its current value and its default value.
 
-![configurations-page.png](configurations-page.png)
+![configurations-page.png](images/configurations-page.png)
 
 When you change a value, Bearcat stores it as an override.
 Overridden values show an "Override" badge.

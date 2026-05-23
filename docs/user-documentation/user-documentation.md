@@ -44,3 +44,8 @@ As soon as Bearcat is running on your machine, you can start setting it up.
 [Setup after installation](post-installation.md)
 
 [Advanced configuration](advanced-configuration.md)
+
+
+## More informations
+
+[Upload lifecycle](upload-lifecycle.md)

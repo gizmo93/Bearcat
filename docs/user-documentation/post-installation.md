@@ -5,7 +5,7 @@ at `http://localhost:8080` (or the port you set in the .env file) and you can st
 
 You will be greeted with the start page.
 
-![start-page.png](start-page.png)
+![start-page.png](images/start-page.png)
 
 In the middle you can see a widget that in the future will show you archives, that currently get created and running uploads.
 
@@ -15,14 +15,14 @@ In the top right corner there is a notification bell, that will show you notific
 
 To set up your hoster accounts, click on the "Hoster registrations" link in the sidebar on the left and click "New hoster".
 
-![register-hoster.png](register-hoster.png)
+![register-hoster.png](images/register-hoster.png)
 
 Fill out the needed authentication information.
 Depending on the hoster it can be username / password or an API key; check out the documentation of the hoster on how to get this information for your account.
 
 Save and test the connection by clicking "Try login".
 
-![try-login.png](try-login.png)
+![try-login.png](images/try-login.png)
 
 
 ## Setting up link crypter accounts, and NFO databases
@@ -35,8 +35,7 @@ That's optional and doesn't need any credentials, but it's needed if you automat
 
 To create a release yourself, click "Releases" in the sidebar and then click "New release".
 
-![manual-new-release.png](manual-new-release.png)
-![img.png](img.png)
+![manual-new-release.png](images/manual-new-release.png)
 
 In the dialog, enter a release name and select the release folder.
 The folder picker starts in the release directory that you configured with `RELEASES_DIR` in your `.env` file.
@@ -52,34 +51,37 @@ After clicking "Create release", the release appears in the release list.
 Open it by clicking the release name.
 The detail page is the place where you connect all parts of the release:
 
+![release-detail-page.png](images/release-detail-page.png)
+
+
 ### Overview Tab
 ... shows the latest upload per upload configuration, download links, link crypter container links, archive passwords and the NFO copy button if a `.nfo` file exists in the release folder.
 It should be kind of a quick access to all information that you might need, if you want to share that release in forum.
-![overview.png](overview.png)
+![overview.png](images/overview.png)
 
 
 ### Release infos tab
 ... shows metadata fetched from the active NFO database registrations.
-![release-infos-tab.png](release-infos-tab.png)
+![release-infos-tab.png](images/release-infos-tab.png)
 
 ### Archive configurations tab
 ... defines how Bearcat should create archive files.
 For each archive configuration, the release will be packed 1 time.
 In order to be able to upload something, you need to create at least 1 archive configuration.
 
-![archive-configurations-tab.png](archive-configurations-tab.png)
+![archive-configurations-tab.png](images/archive-configurations-tab.png)
 
 ### Upload configurations tab
 ... defines to which hoster registration an archive configuration should be uploaded.
 You can also define, on which link crypters a containers for the upload links should be created.
 
-![upload-configurations-tab.png](upload-configurations-tab.png)
+![upload-configurations-tab.png](images/upload-configurations-tab.png)
 
 ### Uploads tab
 ... shows the actual upload runs and lets you view links, create manual reuploads, cancel running uploads or delete finished / failed upload entries.
-![release-uploads-tab.png](release-uploads-tab.png)
-![upload-links-dialog.png](upload-links-dialog.png)
-![crypter-links-dialog.png](crypter-links-dialog.png)
+![release-uploads-tab.png](images/release-uploads-tab.png)
+![upload-links-dialog.png](images/upload-links-dialog.png)
+![crypter-links-dialog.png](images/crypter-links-dialog.png)
 
 
 For a release, add at least one archive configuration and one upload configuration.
@@ -105,7 +107,7 @@ You can watch the progress on the start page, in the "Uploads" tab of the releas
 Release groups are used to control automatic reuploads for multiple releases at once.
 Click "Release groups" in the sidebar and then click "New release group".
 
-![release-group-page.png](release-group-page.png)
+![release-group-page.png](images/release-group-page.png)
 
 Give the group a name.
 Then decide if automatic reuploads should be enabled for releases assigned to this group.
@@ -131,7 +133,7 @@ Typical setups are:
 Release templates are reusable release setups.
 They are useful when multiple releases should use the same release group, archive settings, hoster targets and link crypter settings.
 
-![release-templates-page.png](release-templates-page.png)
+![release-templates-page.png](images/release-templates-page.png)
 
 You can create a release template in two ways:
 
@@ -142,7 +144,7 @@ A release template stores the release group, archive configurations, upload conf
 When Bearcat creates a release from a template, the new release name is normally taken from the folder name.
 If an archive template is configured to use the release name as archive name, every automatically created release will get archive names based on its own folder name.
 
-![release-templates-detail.png](release-templates-detail.png)
+![release-templates-detail.png](images/release-templates-detail.png)
 
 Templates can be used manually from the "Releases" page with "New from template".
 They are also required for folder automations, because the automation needs to know which archive and upload setup it should apply to newly found folders.
@@ -152,7 +154,7 @@ They are also required for folder automations, because the automation needs to k
 Folder automations create releases automatically when new folders appear below a configured base folder.
 They are useful once you have a release template that you want to apply again and again.
 
-![folder-automations-page.png](folder-automations-page.png)
+![folder-automations-page.png](images/folder-automations-page.png)
 
 After the template is ready, open "Release folder automations" in the sidebar and click "New release folder automation".
 

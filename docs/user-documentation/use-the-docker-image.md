@@ -12,7 +12,7 @@ All of these options work, however, I personally recommend OrbStack.
 It's designed to be macOS-only and thus it has the best performance and lowest memory footprint. The free version should be enough to run Bearcat.
 Bearcat is developed on macOS and I personally use OrbStack to run containers locally.
 
-![Bearcat running in OrbStack on macOS](bearcat-orbstack.png)
+![Bearcat running in OrbStack on macOS](images/bearcat-orbstack.png)
 
 ## Linux
 Docker Desktop and Rancher Desktop are also available for Linux.
