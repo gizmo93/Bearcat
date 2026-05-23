@@ -2,18 +2,7 @@
 
 This page explains what happens after you create a release and configure where it should be uploaded.
 
-The short version is:
-
-```text
-Release
-  -> upload configuration
-  -> upload record
-  -> archive
-  -> upload to hoster
-  -> online checks
-  -> optional reupload
-  -> optional link crypter container update
-```
+If you love complicated flowcharts, you can check that [one](images/upload-lifecycle.png) out:
 
 ## 1. Release and upload configuration
 
