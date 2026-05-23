@@ -36,6 +36,11 @@ If you use the provided docker compose file to run Bearcat, a PostgreSQL contain
 
 [Running Bearcat in Docker](use-the-docker-image.md)
 
+
 ## Setting it up
 
 As soon as Bearcat is running on your machine, you can start setting it up.
+
+[Setup after installation](post-installation.md)
+
+[Advanced configuration](advanced-configuration.md)
