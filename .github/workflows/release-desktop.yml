@@ -1,0 +1,228 @@
+name: Release Desktop Artifacts
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CONFIGURATION: Release
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+
+jobs:
+  package-macos:
+    name: Package macOS Apple Silicon
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore solution
+        run: dotnet restore Bearcat.slnx
+
+      - name: Restore desktop runtime projects
+        run: |
+          dotnet restore src/Bearcat.Host/Bearcat.Host.csproj --runtime osx-arm64
+          dotnet restore src/Bearcat.Desktop/Bearcat.Desktop.csproj --runtime osx-arm64
+
+      - name: Publish Bearcat.Host
+        run: >
+          dotnet publish src/Bearcat.Host/Bearcat.Host.csproj
+          --configuration "$CONFIGURATION"
+          --runtime osx-arm64
+          --self-contained true
+          --no-restore
+          --output "$RUNNER_TEMP/bearcat-host"
+          -p:PublishSingleFile=false
+          -p:ServerGarbageCollection=false
+
+      - name: Publish Bearcat.Desktop
+        run: >
+          dotnet publish src/Bearcat.Desktop/Bearcat.Desktop.csproj
+          --configuration "$CONFIGURATION"
+          --runtime osx-arm64
+          --self-contained true
+          --no-restore
+          --output "$RUNNER_TEMP/bearcat-desktop"
+          -p:PublishSingleFile=false
+
+      - name: Build app bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          app_root="$RUNNER_TEMP/Bearcat Desktop.app"
+          contents_dir="$app_root/Contents"
+          macos_dir="$contents_dir/MacOS"
+          resources_dir="$contents_dir/Resources"
+          artifact_path="$RUNNER_TEMP/Bearcat.Desktop-macos-arm64.zip"
+
+          rm -rf "$app_root"
+          mkdir -p "$macos_dir" "$resources_dir"
+
+          cp -a "$RUNNER_TEMP/bearcat-desktop/." "$macos_dir/"
+          cp -a "$RUNNER_TEMP/bearcat-host/." "$macos_dir/"
+
+          chmod +x "$macos_dir/Bearcat.Desktop" "$macos_dir/Bearcat.Host"
+
+          icon_source="src/Bearcat.Desktop/Assets/bearcat-icon.png"
+          iconset="$RUNNER_TEMP/BearcatIcon.iconset"
+          rm -rf "$iconset"
+          mkdir -p "$iconset"
+
+          sips -z 16 16 "$icon_source" --out "$iconset/icon_16x16.png" >/dev/null
+          sips -z 32 32 "$icon_source" --out "$iconset/icon_16x16@2x.png" >/dev/null
+          sips -z 32 32 "$icon_source" --out "$iconset/icon_32x32.png" >/dev/null
+          sips -z 64 64 "$icon_source" --out "$iconset/icon_32x32@2x.png" >/dev/null
+          sips -z 128 128 "$icon_source" --out "$iconset/icon_128x128.png" >/dev/null
+          sips -z 256 256 "$icon_source" --out "$iconset/icon_128x128@2x.png" >/dev/null
+          sips -z 256 256 "$icon_source" --out "$iconset/icon_256x256.png" >/dev/null
+          sips -z 512 512 "$icon_source" --out "$iconset/icon_256x256@2x.png" >/dev/null
+          sips -z 512 512 "$icon_source" --out "$iconset/icon_512x512.png" >/dev/null
+          cp "$icon_source" "$iconset/icon_512x512@2x.png"
+          iconutil -c icns "$iconset" -o "$resources_dir/bearcat-icon.icns"
+
+          version="${GITHUB_REF_NAME#v}"
+          if [ "${GITHUB_EVENT_NAME}" != "release" ] && [ "${GITHUB_REF_TYPE:-}" != "tag" ]; then
+            version="0.0.0"
+          fi
+
+          cat > "$contents_dir/Info.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleDisplayName</key>
+              <string>Bearcat Desktop</string>
+              <key>CFBundleExecutable</key>
+              <string>Bearcat.Desktop</string>
+              <key>CFBundleIconFile</key>
+              <string>bearcat-icon</string>
+              <key>CFBundleIdentifier</key>
+              <string>io.github.gizmo93.bearcat.desktop</string>
+              <key>CFBundleInfoDictionaryVersion</key>
+              <string>6.0</string>
+              <key>CFBundleName</key>
+              <string>Bearcat Desktop</string>
+              <key>CFBundlePackageType</key>
+              <string>APPL</string>
+              <key>CFBundleShortVersionString</key>
+              <string>$version</string>
+              <key>CFBundleVersion</key>
+              <string>$version</string>
+              <key>LSMinimumSystemVersion</key>
+              <string>12.0</string>
+              <key>NSHighResolutionCapable</key>
+              <true/>
+          </dict>
+          </plist>
+          EOF
+
+          ditto -c -k --sequesterRsrc --keepParent "$app_root" "$artifact_path"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bearcat.Desktop-macos-arm64
+          path: ${{ runner.temp }}/Bearcat.Desktop-macos-arm64.zip
+          if-no-files-found: error
+
+      - name: Attach artifact to GitHub release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh release upload "${{ github.event.release.tag_name }}"
+          "$RUNNER_TEMP/Bearcat.Desktop-macos-arm64.zip"
+          --clobber
+
+  package-windows:
+    name: Package Windows ${{ matrix.runtime }}
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime:
+          - win-x64
+          - win-arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore solution
+        run: dotnet restore Bearcat.slnx
+
+      - name: Restore desktop runtime projects
+        run: |
+          dotnet restore src/Bearcat.Host/Bearcat.Host.csproj --runtime ${{ matrix.runtime }}
+          dotnet restore src/Bearcat.Desktop/Bearcat.Desktop.csproj --runtime ${{ matrix.runtime }}
+
+      - name: Publish Bearcat.Host
+        run: >
+          dotnet publish src/Bearcat.Host/Bearcat.Host.csproj
+          --configuration "$env:CONFIGURATION"
+          --runtime ${{ matrix.runtime }}
+          --self-contained true
+          --no-restore
+          --output "$env:RUNNER_TEMP\bearcat-host"
+          -p:PublishSingleFile=false
+          -p:ServerGarbageCollection=false
+
+      - name: Publish Bearcat.Desktop
+        run: >
+          dotnet publish src/Bearcat.Desktop/Bearcat.Desktop.csproj
+          --configuration "$env:CONFIGURATION"
+          --runtime ${{ matrix.runtime }}
+          --self-contained true
+          --no-restore
+          --output "$env:RUNNER_TEMP\bearcat-desktop"
+          -p:PublishSingleFile=false
+
+      - name: Build package
+        shell: pwsh
+        run: |
+          $runtime = "${{ matrix.runtime }}"
+          $packageRoot = Join-Path $env:RUNNER_TEMP "Bearcat.Desktop-$runtime"
+          $artifactPath = Join-Path $env:RUNNER_TEMP "Bearcat.Desktop-$runtime.zip"
+
+          Remove-Item $packageRoot -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path $packageRoot | Out-Null
+
+          Copy-Item -Path "$env:RUNNER_TEMP\bearcat-desktop\*" -Destination $packageRoot -Recurse -Force
+          Copy-Item -Path "$env:RUNNER_TEMP\bearcat-host\*" -Destination $packageRoot -Recurse -Force
+
+          Compress-Archive -Path "$packageRoot\*" -DestinationPath $artifactPath -Force
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bearcat.Desktop-${{ matrix.runtime }}
+          path: ${{ runner.temp }}/Bearcat.Desktop-${{ matrix.runtime }}.zip
+          if-no-files-found: error
+
+      - name: Attach artifact to GitHub release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh release upload "${{ github.event.release.tag_name }}"
+          "$env:RUNNER_TEMP\Bearcat.Desktop-${{ matrix.runtime }}.zip"
+          --clobber

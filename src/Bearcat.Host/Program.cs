@@ -9,8 +9,10 @@ using Bearcat.NfoDatabases.InversionOfControl;
 using Bearcat.Website;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
+var isDesktopMode = builder.Configuration.GetValue("Bearcat:DesktopMode", false);
 
 builder.Services.AddBearcatBlueprintComponents();
 builder.Services.Configure<HostOptions>(options =>
@@ -55,7 +57,10 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+if (!isDesktopMode)
+{
+    app.UseHttpsRedirection();
+}
 
 var supportedCultures = new[] { "en-US", "de-DE" };
 var localizationOptions = new RequestLocalizationOptions()
@@ -69,6 +74,7 @@ app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+app.MapGet("/health", () => Results.Ok(new { Status = "Healthy" }));
 
 app.MapGet(
     "/culture/set",
@@ -99,7 +105,7 @@ app.MapGet(
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-if (app.Environment.IsProduction())
+if (app.Environment.IsProduction() || isDesktopMode)
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<BearcatDbContext>();

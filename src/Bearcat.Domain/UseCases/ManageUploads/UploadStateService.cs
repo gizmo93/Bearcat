@@ -172,9 +172,36 @@ public class UploadStateService(
         CancellationToken cancellationToken
     )
     {
+        var checkedAt = timeProvider.GetLocalNow();
+        var filesWithoutUrl = upload
+            .UploadedFiles.Where(f => string.IsNullOrWhiteSpace(f.HosterFileLink))
+            .ToList();
+
+        foreach (var file in filesWithoutUrl)
+        {
+            file.OnlineState = OnlineState.Offline;
+            file.CheckedAt = checkedAt;
+        }
+
+        if (filesWithoutUrl.Count > 0)
+        {
+            logger.LogWarning(
+                "Skipping {FileCount} uploaded files without hoster links for Upload {UploadId}",
+                filesWithoutUrl.Count,
+                upload.Id
+            );
+        }
+
         var filesByUrl = upload
-            .UploadedFiles.DistinctBy(h => h.HosterFileLink)
+            .UploadedFiles.Where(f => !string.IsNullOrWhiteSpace(f.HosterFileLink))
+            .DistinctBy(h => h.HosterFileLink)
             .ToDictionary(f => f.HosterFileLink);
+
+        if (filesByUrl.Count == 0)
+        {
+            upload.OnlineState = OnlineState.Offline;
+            return;
+        }
 
         var result = await hoster.CheckFilesExistAsync(
             hosterConfig: hosterConfig,
@@ -201,10 +228,20 @@ public class UploadStateService(
 
         foreach (var (url, exists) in result.StatusPerFileUrl)
         {
-            var file = filesByUrl[url];
+            if (!filesByUrl.TryGetValue(url, out var file))
+            {
+                logger.LogWarning(
+                    "Hoster {Hoster} returned an unknown file URL while checking Upload {UploadId}: {Url}",
+                    hoster.Name,
+                    upload.Id,
+                    url
+                );
+
+                continue;
+            }
 
             file.OnlineState = exists ? OnlineState.Online : OnlineState.Offline;
-            file.CheckedAt = timeProvider.GetLocalNow();
+            file.CheckedAt = checkedAt;
         }
 
         var offlineFilesCount = upload.UploadedFiles.Count(f =>

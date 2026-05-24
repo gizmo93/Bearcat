@@ -1,10 +1,11 @@
 ﻿using System.Diagnostics;
 using Bearcat.Abstractions.Archiver;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Archivers.Rar;
 
-public class RarArchiver(ILogger<RarArchiver> logger) : IArchiver
+public class RarArchiver(ILogger<RarArchiver> logger, IConfiguration configuration) : IArchiver
 {
     public string Name => "RAR";
 
@@ -31,7 +32,7 @@ public class RarArchiver(ILogger<RarArchiver> logger) : IArchiver
 
         var processStartInfo = new ProcessStartInfo
         {
-            FileName = "rar",
+            FileName = GetExecutablePath(),
             Arguments = commandLineArgs,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -108,5 +109,11 @@ public class RarArchiver(ILogger<RarArchiver> logger) : IArchiver
         var solidPart = options.UseSolidArchive ? "-s" : "-s-";
 
         return $"a -ep1 {compressionPart} {solidPart} -v{targetFileSizeMb}m {passwordPart} \"{archiveFullPath}\" \"{sourceFolderPath}\"/*";
+    }
+
+    private string GetExecutablePath()
+    {
+        var configuredPath = configuration["Archivers:RarPath"];
+        return string.IsNullOrWhiteSpace(configuredPath) ? "rar" : configuredPath;
     }
 }
