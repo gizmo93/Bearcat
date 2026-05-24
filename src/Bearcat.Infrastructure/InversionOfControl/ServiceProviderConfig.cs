@@ -17,7 +17,6 @@ public static class ServiceProviderConfig
         {
             services.AddSingleton<IEncryptionKeyProvider, FileEncryptionKeyProvider>();
             services.AddSingleton<ISecretProtector, AesGcmSecretProtector>();
-            services.AddScoped<RegistrationSecretMigration>();
             services.AddDatabase(configuration);
             services.AddScoped<IFileSystemService, FileSystemService>();
             services.AddSingleton<
