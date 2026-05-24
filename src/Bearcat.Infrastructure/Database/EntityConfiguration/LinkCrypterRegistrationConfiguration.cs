@@ -15,7 +15,7 @@ public class LinkCrypterRegistrationConfiguration
 
         builder.Property(l => l.LinkCrypterClassName).IsRequired().HasMaxLength(50);
 
-        builder.Property(l => l.SerializedConfig).IsRequired().HasMaxLength(1000);
+        builder.Property(l => l.SerializedConfig).IsRequired().HasMaxLength(4000);
 
         builder.Property(l => l.IsActive).IsRequired();
     }

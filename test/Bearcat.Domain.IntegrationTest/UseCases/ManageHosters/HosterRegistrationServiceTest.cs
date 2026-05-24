@@ -4,6 +4,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.Security;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -33,7 +34,12 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         hosterFactoryMock.Setup(f => f.GetByName(HosterClassName)).Returns(hosterMock.Object);
 
         service = new HosterRegistrationService(
-            new HosterConfigurationRepository(dbContext, dbContext, hosterFactoryMock.Object),
+            new HosterConfigurationRepository(
+                dbContext,
+                dbContext,
+                hosterFactoryMock.Object,
+                NoOpSecretProtector.Instance
+            ),
             hosterFactoryMock.Object
         );
     }

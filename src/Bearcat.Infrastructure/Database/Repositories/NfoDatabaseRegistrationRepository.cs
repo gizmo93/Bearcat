@@ -2,6 +2,7 @@ using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.ReadModels;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
+using Bearcat.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -9,7 +10,8 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 public class NfoDatabaseRegistrationRepository(
     IBearcatReadDbContext dbRead,
     IBearcatWriteDbContext dbWrite,
-    INfoDatabaseFactory nfoDatabaseFactory
+    INfoDatabaseFactory nfoDatabaseFactory,
+    ISecretProtector secretProtector
 ) : INfoDatabaseRegistrationReadRepository, INfoDatabaseRegistrationWriteRepository
 {
     public async Task<IReadOnlyList<NfoDatabaseRegistrationReadModel>> GetAllAsync(
@@ -88,19 +90,20 @@ public class NfoDatabaseRegistrationRepository(
         await dbWrite.SaveChangesAsync(cancellationToken);
     }
 
-    private static NfoDatabaseRegistrationReadModel ToReadModel(
+    private NfoDatabaseRegistrationReadModel ToReadModel(
         NfoDatabaseRegistration registration,
         IReadOnlyDictionary<string, INfoDatabase> databasesByClassName
     )
     {
         var database = databasesByClassName[registration.NfoDatabaseClassName];
+        var serializedConfig = secretProtector.Unprotect(registration.SerializedConfig);
 
         return new NfoDatabaseRegistrationReadModel(
             registration.Id,
             registration.IsActive,
             database.Name,
             registration.NfoDatabaseClassName,
-            database.DeserializeConfig(registration.SerializedConfig).ToDictionary()
+            database.DeserializeConfig(serializedConfig).ToDictionary()
         );
     }
 }

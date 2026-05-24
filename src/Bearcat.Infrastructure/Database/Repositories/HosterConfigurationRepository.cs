@@ -2,6 +2,7 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
+using Bearcat.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -9,7 +10,8 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 public class HosterConfigurationRepository(
     IBearcatReadDbContext dbRead,
     IBearcatWriteDbContext dbWrite,
-    IHosterFactory hosterFactory
+    IHosterFactory hosterFactory,
+    ISecretProtector secretProtector
 ) : IHosterConfigurationReadRepository, IHosterConfigurationWriteRepository
 {
     public async Task<IReadOnlyList<HosterRegistrationReadModel>> GetAllRegistrationsAsync(
@@ -18,19 +20,26 @@ public class HosterConfigurationRepository(
     {
         var hostersByName = hosterFactory.GetHostersByName();
 
-        return await dbRead
+        var registrations = await dbRead
             .HosterRegistrations.OrderBy(h => h.Name)
-            .Select(h => new HosterRegistrationReadModel(
-                h.Id,
-                h.Name,
-                h.IsActive,
-                hostersByName[h.HosterClassName].Name,
-                h.HosterClassName,
-                hostersByName[h.HosterClassName]
-                    .DeserializeHosterConfig(h.SerializedConfig)
-                    .ToDictionary()
-            ))
             .ToListAsync(cancellationToken: cancellationToken);
+
+        return registrations
+            .Select(h =>
+            {
+                var serializedConfig = secretProtector.Unprotect(h.SerializedConfig);
+                return new HosterRegistrationReadModel(
+                    h.Id,
+                    h.Name,
+                    h.IsActive,
+                    hostersByName[h.HosterClassName].Name,
+                    h.HosterClassName,
+                    hostersByName[h.HosterClassName]
+                        .DeserializeHosterConfig(serializedConfig)
+                        .ToDictionary()
+                );
+            })
+            .ToList();
     }
 
     public async Task<HosterRegistration> GetByIdAsync(int id, CancellationToken cancellationToken)

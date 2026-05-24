@@ -1,13 +1,30 @@
 ﻿using Bearcat.Domain.Entities;
+using Bearcat.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Bearcat.Infrastructure.Database;
 
-public class BearcatDbContext(DbContextOptions<BearcatDbContext> options)
-    : DbContext(options),
-        IBearcatReadDbContext,
-        IBearcatWriteDbContext
+public class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearcatWriteDbContext
 {
+    private readonly ISecretProtector secretProtector;
+
+    public BearcatDbContext(
+        DbContextOptions<BearcatDbContext> options,
+        ISecretProtector? secretProtector = null
+    )
+        : base(options)
+    {
+        this.secretProtector = secretProtector ?? NoOpSecretProtector.Instance;
+        ChangeTracker.Tracked += (_, eventArgs) =>
+        {
+            if (eventArgs.FromQuery)
+            {
+                UnprotectTrackedRegistrationConfiguration(eventArgs.Entry);
+            }
+        };
+    }
+
     public DbSet<HosterRegistration> HosterRegistrations { get; set; } = null!;
 
     public DbSet<BackgroundTaskState> BackgroundTaskStates { get; set; } = null!;
@@ -60,5 +77,90 @@ public class BearcatDbContext(DbContextOptions<BearcatDbContext> options)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BearcatDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        ProtectRegistrationConfigurations();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void ProtectRegistrationConfigurations()
+    {
+        foreach (var entry in ChangeTracker.Entries<HosterRegistration>())
+        {
+            ProtectAddedOrModifiedProperty(entry, registration => registration.SerializedConfig);
+        }
+
+        foreach (var entry in ChangeTracker.Entries<LinkCrypterRegistration>())
+        {
+            ProtectAddedOrModifiedProperty(entry, registration => registration.SerializedConfig);
+        }
+
+        foreach (var entry in ChangeTracker.Entries<NfoDatabaseRegistration>())
+        {
+            ProtectAddedOrModifiedProperty(entry, registration => registration.SerializedConfig);
+        }
+    }
+
+    private void UnprotectTrackedRegistrationConfiguration(EntityEntry entry)
+    {
+        switch (entry.Entity)
+        {
+            case HosterRegistration registration:
+                UnprotectProperty(
+                    entry,
+                    registration.SerializedConfig,
+                    value => registration.SerializedConfig = value
+                );
+                break;
+            case LinkCrypterRegistration registration:
+                UnprotectProperty(
+                    entry,
+                    registration.SerializedConfig,
+                    value => registration.SerializedConfig = value
+                );
+                break;
+            case NfoDatabaseRegistration registration:
+                UnprotectProperty(
+                    entry,
+                    registration.SerializedConfig,
+                    value => registration.SerializedConfig = value
+                );
+                break;
+        }
+    }
+
+    private void ProtectAddedOrModifiedProperty<TEntity>(
+        EntityEntry<TEntity> entry,
+        Func<TEntity, string> propertySelector
+    )
+        where TEntity : class
+    {
+        if (
+            entry.State != EntityState.Added
+            && !entry.Property(nameof(HosterRegistration.SerializedConfig)).IsModified
+        )
+        {
+            return;
+        }
+
+        entry.Property(nameof(HosterRegistration.SerializedConfig)).CurrentValue =
+            secretProtector.Protect(propertySelector(entry.Entity));
+    }
+
+    private void UnprotectProperty(EntityEntry entry, string currentValue, Action<string> setValue)
+    {
+        var unprotectedValue = secretProtector.Unprotect(currentValue);
+        if (unprotectedValue == currentValue)
+        {
+            return;
+        }
+
+        setValue(unprotectedValue);
+
+        var property = entry.Property(nameof(HosterRegistration.SerializedConfig));
+        property.OriginalValue = unprotectedValue;
+        property.IsModified = false;
     }
 }
