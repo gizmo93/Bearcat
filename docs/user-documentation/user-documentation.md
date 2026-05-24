@@ -31,12 +31,19 @@ The following archivers are supported:
 # Getting Started
 
 ## Running Bearcat
-Bearcat is self hosted, as such you can run it on your own machine, on a NAS or any Server, that has Docker support.
-If want to run it outside of Docker, you can also clone the repository and run the .NET application directly.
-But the recommended way is to use Docker, as it is the easiest way to get started and also ensures that you have a consistent environment across different machines.
+Bearcat is self hosted, so you can run it on your own desktop machine, on a NAS, or on a server.
 
-Bearcat uses a PostgreSQL database to store all the information about releases, hosters, link crypters and so on.
-If you use the provided docker compose file to run Bearcat, a PostgreSQL container will be started together with Bearcat and the application will automatically connect to it.
+For macOS on Apple Silicon, the preferred local setup is the Bearcat Desktop app. It runs natively on ARM and starts the web application for you. The Docker image is still useful, but it is built as `linux/amd64` because the official RAR command line tools are only available for Linux x64.
+
+For Windows, choose the setup based on where Bearcat should live. On a Windows Server or any always-on server machine, Docker is still the preferred setup as it will restart your container if it fails. For normal desktop use, the Bearcat Desktop app is the preferred setup because it makes the local web app visible through a tray icon and gives you a simple way to start and stop it.
+
+Linux and NAS setups should use Docker.
+
+Bearcat uses a PostgreSQL database to store releases, hosters, link crypters, configuration, and upload state. With Docker Compose, PostgreSQL is started together with Bearcat. With the Desktop app, you bring your own PostgreSQL server and enter the connection settings in the launcher.
+
+[Running Bearcat with the Desktop App](use-the-desktop-launcher.md)
+
+[Installing PostgreSQL for the Desktop App](install-postgresql-for-desktop.md)
 
 [Running Bearcat in Docker](use-the-docker-image.md)
 

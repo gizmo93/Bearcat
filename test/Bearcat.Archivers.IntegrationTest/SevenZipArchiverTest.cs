@@ -15,7 +15,10 @@ public class SevenZipArchiverTest
     [SetUp]
     public void Setup()
     {
-        service = new SevenZipArchiver(NullLogger<SevenZipArchiver>.Instance);
+        service = new SevenZipArchiver(
+            NullLogger<SevenZipArchiver>.Instance,
+            ArchiverTestConfiguration.Create()
+        );
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-7zip-tests-{Guid.NewGuid():N}");
         sourceFolderPath = Directory.CreateDirectory(Path.Combine(tempRootPath, "source")).FullName;
         destinationPath = Directory

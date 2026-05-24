@@ -11,6 +11,7 @@
             CopyToOutputDirectory="Never"
             CopyToPublishDirectory="Never"
         />
+        <Content Update="wwwroot/.gitkeep" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>

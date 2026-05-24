@@ -15,7 +15,10 @@ public class RarArchiverTest
     [SetUp]
     public void Setup()
     {
-        service = new RarArchiver(NullLogger<RarArchiver>.Instance);
+        service = new RarArchiver(
+            NullLogger<RarArchiver>.Instance,
+            ArchiverTestConfiguration.Create()
+        );
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-rar-tests-{Guid.NewGuid():N}");
         sourceFolderPath = Directory.CreateDirectory(Path.Combine(tempRootPath, "source")).FullName;
         destinationPath = Directory

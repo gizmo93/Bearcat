@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <Nullable>enable</Nullable>
+        <AssemblyTitle>Bearcat Desktop</AssemblyTitle>
+        <Product>Bearcat Desktop</Product>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <ApplicationIcon>Assets/bearcat-icon.ico</ApplicationIcon>
+        <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia" />
+        <PackageReference Include="Avalonia.Desktop" />
+        <PackageReference Include="Avalonia.Themes.Fluent" />
+        <PackageReference Include="Avalonia.Fonts.Inter" />
+        <PackageReference Include="Npgsql" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\bearcat-icon.png" />
+        <AvaloniaResource Include="Assets\bearcat-icon-stopped.png" />
+        <AvaloniaResource Include="Assets\bearcat-tray-icon.png" />
+        <AvaloniaResource Include="Assets\bearcat-tray-icon-stopped.png" />
+        <AvaloniaResource Include="Assets\bearcat.png" />
+        <Content Include="Assets\bearcat-icon.png" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+</Project>

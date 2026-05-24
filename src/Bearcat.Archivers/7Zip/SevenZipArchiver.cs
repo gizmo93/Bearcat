@@ -1,10 +1,12 @@
 ﻿using System.Diagnostics;
 using Bearcat.Abstractions.Archiver;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Archivers._7Zip;
 
-public class SevenZipArchiver(ILogger<SevenZipArchiver> logger) : IArchiver
+public class SevenZipArchiver(ILogger<SevenZipArchiver> logger, IConfiguration configuration)
+    : IArchiver
 {
     public string Name => "7Zip";
 
@@ -31,7 +33,7 @@ public class SevenZipArchiver(ILogger<SevenZipArchiver> logger) : IArchiver
 
         var processStartInfo = new ProcessStartInfo
         {
-            FileName = "7z",
+            FileName = GetExecutablePath(),
             Arguments = commandLineArgs,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -108,5 +110,11 @@ public class SevenZipArchiver(ILogger<SevenZipArchiver> logger) : IArchiver
         var solidPart = options.UseSolidArchive ? "-ms=on" : "-ms=off";
 
         return $"a -v{targetFileSizeMb}m {compressionPart} {solidPart} {passwordPart} \"{archiveFullPath}\" \"{sourceFolderPath}\"/*";
+    }
+
+    private string GetExecutablePath()
+    {
+        var configuredPath = configuration["Archivers:SevenZipPath"];
+        return string.IsNullOrWhiteSpace(configuredPath) ? "7z" : configuredPath;
     }
 }
