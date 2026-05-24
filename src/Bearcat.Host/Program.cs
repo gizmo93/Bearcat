@@ -113,8 +113,6 @@ if (app.Environment.IsProduction() || isDesktopMode)
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<BearcatDbContext>();
     await dbContext.Database.MigrateAsync();
-    var secretMigration = scope.ServiceProvider.GetRequiredService<RegistrationSecretMigration>();
-    await secretMigration.MigrateAsync();
 }
 
 app.Run();
