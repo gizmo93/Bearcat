@@ -18,6 +18,7 @@ Currently the following OCHs are supported:
 - NitroFlare
 - 1fichier
 - Uploady.io
+- Katfile
 
 The following link crypters are supported:
 
