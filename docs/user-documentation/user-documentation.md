@@ -20,6 +20,7 @@ Currently the following OCHs are supported:
 - Uploady.io
 - Katfile
 - Krakenfiles
+- FileQ
 
 The following link crypters are supported:
 
