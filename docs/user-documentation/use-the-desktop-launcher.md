@@ -21,6 +21,18 @@ The Desktop uses YOUR OWN PostgreSQL server. It does not install or manage Postg
 
 For PostgreSQL setup instructions, see [Installing PostgreSQL For The Desktop App](install-postgresql-for-desktop.md).
 
+## macOS Gatekeeper
+
+The macOS download is packaged as an `.app` bundle and is ad-hoc signed, because I don't have a Apple Developer License.
+This means, that per default, macOS will put the app into "quarantine" and block you from executing it.
+If macOS reports that the app is damaged after downloading it from GitHub, move the app to `/Applications`, open the Terminal and remove the quarantine attribute:
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/Bearcat Desktop.app"
+```
+
+After that, open the app again.
+
 ## Settings
 
 On first start, open the launcher settings and enter:
