@@ -78,6 +78,29 @@ It does not delete the release source folder and it does not delete files from t
 Leave automatic cleanup disabled if you want to inspect generated archive files manually or keep them as a local backup.
 Enable it if your archive folder is temporary storage and you want Bearcat to free disk space after successful uploads.
 
+## Archive repackaging
+
+"Archive repackaging" controls how Bearcat changes generated archive files when it has to create a fresh archive for an upload or reupload.
+
+The available setting is:
+
+- "Repackaging strategy" defaults to "Change archive file size by 1 MB".
+
+Bearcat always writes a random `__nonce.txt` file into the release folder before packing.
+The repackaging strategy decides how that nonce file should affect the generated archive files:
+
+| Value | UI label | Behavior |
+| --- | --- | --- |
+| `NonceOnly` | Nonce only, no compression | Packs without compression and without solid mode. Only `__nonce.txt` changes. This has the lowest CPU cost, but the lowest chance that every archive part gets a new MD5 hash. |
+| `SolidCompression` | Solid archive with compression | Packs with solid mode and compression. This is the safest option for making the nonce change affect all archive files, but it uses more CPU. |
+| `IncrementArchiveFileSize` | Change archive file size by 1 MB | Packs without compression and without solid mode, but increases the archive part size by `1` MB compared to the latest archive for the same archive configuration. This is the default. |
+
+`IncrementArchiveFileSize` stores the archive part size that was actually used on each archive.
+When Bearcat creates the next archive for the same archive configuration, it reads the latest stored value and adds `1` MB.
+For the first archive, Bearcat uses the "Archive file size (MB)" from the archive configuration.
+
+RAR and 7Zip both support all three strategies.
+
 ## Initial upload cooldown
 
 "Initial uploads" controls when Bearcat creates the first upload run for a new release.

@@ -1,5 +1,7 @@
 ﻿using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Configurations;
+using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
@@ -15,7 +17,8 @@ public class ArchiveCreationService(
     IArchiverFactory archiverFactory,
     IFileSystemService fileSystemService,
     TimeProvider timeProvider,
-    INotificationService notificationService
+    INotificationService notificationService,
+    IApplicationConfigurationProvider configurationProvider
 )
 {
     private const string UniqueFileName = "__nonce.txt";
@@ -149,6 +152,7 @@ public class ArchiveCreationService(
         var archiveDirectoryPath = fileSystemService.CreateTempDirectory(
             config.ArchiveFilesBasePath
         );
+        var archiveSettings = await ResolveArchiveSettingsAsync(config, cancellationToken);
 
         var archive = new Archive
         {
@@ -156,6 +160,7 @@ public class ArchiveCreationService(
             ArchiveFolderPath = archiveDirectoryPath,
             ArchiveFiles = [],
             ArchiveState = ArchiveState.Creating,
+            ArchiveFileSizeMb = archiveSettings.ArchiveFileSizeMb,
             CreatedAt = timeProvider.GetLocalNow(),
             Uploads = uploads.ToList(),
             ErrorMessages = [],
@@ -170,8 +175,9 @@ public class ArchiveCreationService(
             sourceFolderPath: config.Release.ReleaseFolderPath,
             destinationPath: archiveDirectoryPath,
             archiveNamePrefix: config.ArchiveNamePrefix ?? Guid.NewGuid().ToString(),
-            targetFileSizeMb: config.ArchiveFileSizeMb,
+            targetFileSizeMb: archiveSettings.ArchiveFileSizeMb,
             password: config.ArchivePassword,
+            options: archiveSettings.Options,
             cancellationToken: cancellationToken
         );
 
@@ -229,4 +235,71 @@ public class ArchiveCreationService(
             cancellationToken: cancellationToken
         );
     }
+
+    private async Task<ArchiveSettings> ResolveArchiveSettingsAsync(
+        ArchiveConfig config,
+        CancellationToken cancellationToken
+    )
+    {
+        var strategy = configurationProvider.GetValue<ArchiveRepackagingConfiguration>(c =>
+            c.Strategy
+        );
+
+        if (
+            string.Equals(
+                strategy,
+                ArchiveRepackagingStrategies.NonceOnly,
+                StringComparison.Ordinal
+            )
+        )
+        {
+            return new ArchiveSettings(
+                ArchiveFileSizeMb: config.ArchiveFileSizeMb,
+                Options: new ArchiveOptions(UseCompression: false, UseSolidArchive: false)
+            );
+        }
+
+        if (
+            string.Equals(
+                strategy,
+                ArchiveRepackagingStrategies.SolidCompression,
+                StringComparison.Ordinal
+            )
+        )
+        {
+            return new ArchiveSettings(
+                ArchiveFileSizeMb: config.ArchiveFileSizeMb,
+                Options: new ArchiveOptions(UseCompression: true, UseSolidArchive: true)
+            );
+        }
+
+        if (
+            !string.Equals(
+                strategy,
+                ArchiveRepackagingStrategies.IncrementArchiveFileSize,
+                StringComparison.Ordinal
+            )
+        )
+        {
+            logger.LogWarning(
+                "Unknown archive repackaging strategy {Strategy}. Falling back to {DefaultStrategy}.",
+                strategy,
+                ArchiveRepackagingStrategies.IncrementArchiveFileSize
+            );
+        }
+
+        var lastArchiveFileSizeMb = await repository.GetLastArchiveFileSizeMbAsync(
+            archiveConfigId: config.Id,
+            cancellationToken: cancellationToken
+        );
+
+        return new ArchiveSettings(
+            ArchiveFileSizeMb: lastArchiveFileSizeMb is null
+                ? config.ArchiveFileSizeMb
+                : lastArchiveFileSizeMb.Value + 1,
+            Options: new ArchiveOptions(UseCompression: false, UseSolidArchive: false)
+        );
+    }
+
+    private sealed record ArchiveSettings(int ArchiveFileSizeMb, ArchiveOptions Options);
 }

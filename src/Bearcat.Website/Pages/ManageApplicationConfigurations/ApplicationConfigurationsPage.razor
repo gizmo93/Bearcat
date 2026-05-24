@@ -61,7 +61,7 @@
                                         <p class="mt-1 text-xs text-muted-foreground">@L[property.Description]</p>
                                     }
                                     <p class="mt-2 text-xs text-muted-foreground">
-                                        @L["DefaultValue"]: @FormatValue(property.DefaultValue, property.ValueType)
+                                        @L["DefaultValue"]: @FormatValue(property, property.DefaultValue)
                                     </p>
                                 </div>
 
@@ -73,8 +73,21 @@
                                                       CheckedChanged="@(async value => await SaveBoolAsync(property, value))"
                                                       Size="SwitchSize.Small"
                                                       AriaLabel="@L[property.DisplayName]" />
-                                            <span>@FormatValue(property.CurrentValue, property.ValueType)</span>
+                                            <span>@FormatValue(property, property.CurrentValue)</span>
                                         </label>
+                                    }
+                                    else if (HasSelectOptions(property))
+                                    {
+                                        <BbSelect TValue="string"
+                                                  Value="@GetEditorValue(property)"
+                                                  ValueChanged="value => SetEditorValue(property, value)"
+                                                  Options="GetSelectOptions(property)"
+                                                  Class="@GetSelectClass(property)" />
+                                        <BbButton Variant="ButtonVariant.Outline"
+                                                  Size="ButtonSize.Small"
+                                                  OnClick="@(async () => await SaveEditorValueAsync(property))">
+                                            @L["Save"]
+                                        </BbButton>
                                     }
                                     else
                                     {

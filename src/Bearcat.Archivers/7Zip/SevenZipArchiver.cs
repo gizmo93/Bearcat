@@ -16,6 +16,7 @@ public class SevenZipArchiver(ILogger<SevenZipArchiver> logger) : IArchiver
         string archiveNamePrefix,
         int targetFileSizeMb,
         string? password,
+        ArchiveOptions options,
         CancellationToken cancellationToken
     )
     {
@@ -24,7 +25,8 @@ public class SevenZipArchiver(ILogger<SevenZipArchiver> logger) : IArchiver
             destinationPath: destinationPath,
             archiveNamePrefix: archiveNamePrefix,
             targetFileSizeMb: targetFileSizeMb,
-            password: password
+            password: password,
+            options: options
         );
 
         var processStartInfo = new ProcessStartInfo
@@ -96,12 +98,15 @@ public class SevenZipArchiver(ILogger<SevenZipArchiver> logger) : IArchiver
         string destinationPath,
         string archiveNamePrefix,
         int targetFileSizeMb,
-        string? password
+        string? password,
+        ArchiveOptions options
     )
     {
         var archiveFullPath = Path.Combine(destinationPath, archiveNamePrefix + ".7z");
         var passwordPart = !string.IsNullOrWhiteSpace(password) ? $"-p{password}" : string.Empty;
+        var compressionPart = options.UseCompression ? "-mx=1" : "-mx=0";
+        var solidPart = options.UseSolidArchive ? "-ms=on" : "-ms=off";
 
-        return $"a -v{targetFileSizeMb}m -mx=0 {passwordPart} \"{archiveFullPath}\" \"{sourceFolderPath}\"/*";
+        return $"a -v{targetFileSizeMb}m {compressionPart} {solidPart} {passwordPart} \"{archiveFullPath}\" \"{sourceFolderPath}\"/*";
     }
 }

@@ -115,8 +115,8 @@ public class Nitroflare(INitroflareApiClient apiClient, ILogger<Nitroflare> logg
     {
         var config = new NitroflareConfig
         {
-            UserHash = hosterConfig.GetValueOrDefault(nameof(NitroflareConfig.UserHash))
-                ?? string.Empty,
+            UserHash =
+                hosterConfig.GetValueOrDefault(nameof(NitroflareConfig.UserHash)) ?? string.Empty,
         };
 
         return JsonSerializer.Serialize(config);

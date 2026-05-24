@@ -12,6 +12,7 @@ public interface IArchiver
         string archiveNamePrefix,
         int targetFileSizeMb,
         string? password,
+        ArchiveOptions options,
         CancellationToken cancellationToken
     );
 }

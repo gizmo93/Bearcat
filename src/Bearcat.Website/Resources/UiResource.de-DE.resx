@@ -400,6 +400,13 @@
   <data name="ApplicationConfigurationsSubtitle" xml:space="preserve"><value>Defaults und User-Overrides</value></data>
   <data name="ArchiveCleanup" xml:space="preserve"><value>Archiv-Aufräumen</value></data>
   <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Steuert, wann lokale Archivordner nach abgeschlossenen Uploads entfernt werden.</value></data>
+  <data name="ArchiveRepackaging" xml:space="preserve"><value>Archiv-Repackaging</value></data>
+  <data name="ArchiveRepackagingDescription" xml:space="preserve"><value>Steuert, wie Archivdateien vor Reuploads verändert werden.</value></data>
+  <data name="ArchiveRepackagingStrategy" xml:space="preserve"><value>Repackaging-Strategie</value></data>
+  <data name="ArchiveRepackagingStrategyDescription" xml:space="preserve"><value>Erlaubte Werte: NonceOnly, SolidCompression, IncrementArchiveFileSize. Der Default erhöht die Splitgröße bei jedem neuen Archiv um 1 MB.</value></data>
+  <data name="ArchiveRepackagingStrategy.IncrementArchiveFileSize" xml:space="preserve"><value>Archivdateigröße um 1 MB verändern</value></data>
+  <data name="ArchiveRepackagingStrategy.NonceOnly" xml:space="preserve"><value>Nur Nonce, keine Kompression</value></data>
+  <data name="ArchiveRepackagingStrategy.SolidCompression" xml:space="preserve"><value>Solid Archive mit Kompression</value></data>
   <data name="AutoCleanup" xml:space="preserve"><value>Automatisches Aufräumen</value></data>
   <data name="AutoCleanupDescription" xml:space="preserve"><value>Löscht lokale Archivordner, sobald alle verknüpften Uploads einen abgeschlossenen Upload-Zeitpunkt haben.</value></data>
   <data name="Configurations" xml:space="preserve"><value>Konfigurationen</value></data>

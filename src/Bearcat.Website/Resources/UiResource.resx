@@ -399,6 +399,13 @@
   <data name="ApplicationConfigurationsSubtitle" xml:space="preserve"><value>Defaults and user overrides</value></data>
   <data name="ArchiveCleanup" xml:space="preserve"><value>Archive cleanup</value></data>
   <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Controls when local archive folders are removed after uploads finish.</value></data>
+  <data name="ArchiveRepackaging" xml:space="preserve"><value>Archive repackaging</value></data>
+  <data name="ArchiveRepackagingDescription" xml:space="preserve"><value>Controls how archive files are changed before reuploads.</value></data>
+  <data name="ArchiveRepackagingStrategy" xml:space="preserve"><value>Repackaging strategy</value></data>
+  <data name="ArchiveRepackagingStrategyDescription" xml:space="preserve"><value>Allowed values: NonceOnly, SolidCompression, IncrementArchiveFileSize. Default increases the split size by 1 MB for each new archive.</value></data>
+  <data name="ArchiveRepackagingStrategy.IncrementArchiveFileSize" xml:space="preserve"><value>Change archive file size by 1 MB</value></data>
+  <data name="ArchiveRepackagingStrategy.NonceOnly" xml:space="preserve"><value>Nonce only, no compression</value></data>
+  <data name="ArchiveRepackagingStrategy.SolidCompression" xml:space="preserve"><value>Solid archive with compression</value></data>
   <data name="AutoCleanup" xml:space="preserve"><value>Automatic cleanup</value></data>
   <data name="AutoCleanupDescription" xml:space="preserve"><value>Delete local archive folders after all linked uploads have a completed upload timestamp.</value></data>
   <data name="Configurations" xml:space="preserve"><value>Configurations</value></data>

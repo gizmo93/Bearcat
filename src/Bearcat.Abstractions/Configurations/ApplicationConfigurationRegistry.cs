@@ -72,13 +72,16 @@ public class ApplicationConfigurationRegistry
             {
                 var propertyAttribute =
                     p.GetCustomAttribute<ApplicationConfigurationPropertyAttribute>();
+                var optionsAttribute =
+                    p.GetCustomAttribute<ApplicationConfigurationOptionsAttribute>();
 
                 return new ApplicationConfigurationPropertyDefinition(
                     Name: p.Name,
                     DisplayName: propertyAttribute?.DisplayName ?? p.Name,
                     Description: propertyAttribute?.Description,
                     PropertyType: p.PropertyType,
-                    PropertyInfo: p
+                    PropertyInfo: p,
+                    Options: optionsAttribute?.Values ?? []
                 );
             })
             .OrderBy(p => p.DisplayName)
@@ -116,5 +119,6 @@ public sealed record ApplicationConfigurationPropertyDefinition(
     string DisplayName,
     string? Description,
     Type PropertyType,
-    PropertyInfo PropertyInfo
+    PropertyInfo PropertyInfo,
+    IReadOnlyList<string> Options
 );

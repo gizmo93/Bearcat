@@ -16,6 +16,8 @@ public class Archive
 
     public ArchiveState ArchiveState { get; set; }
 
+    public int ArchiveFileSizeMb { get; set; }
+
     public List<string> ErrorMessages { get; set; } = new();
 
     public List<ArchiveFile> ArchiveFiles { get; set; } = null!;

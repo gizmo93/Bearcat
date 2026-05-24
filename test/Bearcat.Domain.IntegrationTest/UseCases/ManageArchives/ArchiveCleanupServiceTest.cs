@@ -200,6 +200,7 @@ public class ArchiveCleanupServiceTest : BearcatIntegrationTest
             ArchiveConfigId = uploadConfig.ArchiveConfigId,
             ArchiveFolderPath = archiveFolderPath,
             ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 512,
             CreatedAt = DateTime.UtcNow,
             ArchiveFiles = [],
             Uploads =
