@@ -12,6 +12,7 @@ public record ReleaseOverviewUploadReadModel(
     UploadState? UploadState,
     OnlineState? OnlineState,
     int LinkCount,
+    IReadOnlyList<string> ErrorMessages,
     string? ArchivePassword,
     IReadOnlyList<ReleaseOverviewLinkCrypterLinkReadModel> LinkCrypterLinks
 );

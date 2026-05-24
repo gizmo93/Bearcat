@@ -7,5 +7,6 @@ public record ReleaseUploadContainerLinkReadModel(
     string LinkCrypterClassName,
     string ContainerUrl,
     LinkCrypterContainerState State,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    IReadOnlyList<string> Errors
 );

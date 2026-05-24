@@ -146,6 +146,11 @@
   <data name="LinkCrypterContainerDialogDescription" xml:space="preserve"><value>Attach a link crypter to this upload configuration.</value></data>
   <data name="LinkCrypterContainerState.Created" xml:space="preserve"><value>Created</value></data>
   <data name="LinkCrypterContainerState.CreationFailed" xml:space="preserve"><value>Creation failed</value></data>
+  <data name="ArchiveState.Created" xml:space="preserve"><value>Created</value></data>
+  <data name="ArchiveState.Creating" xml:space="preserve"><value>Creating</value></data>
+  <data name="ArchiveState.CreationFailed" xml:space="preserve"><value>Creation failed</value></data>
+  <data name="ArchiveState.Deleted" xml:space="preserve"><value>Deleted</value></data>
+  <data name="ArchiveState.MissingFiles" xml:space="preserve"><value>Missing files</value></data>
   <data name="LinkCrypterRegistrationActivated" xml:space="preserve"><value>Link crypter registration {0} activated</value></data>
   <data name="LinkCrypterRegistrationDeactivated" xml:space="preserve"><value>Link crypter registration {0} deactivated</value></data>
   <data name="LinkCrypterRegistrations" xml:space="preserve"><value>Link crypter registrations</value></data>
@@ -483,6 +488,7 @@
   <data name="BackgroundTasksSubtitle" xml:space="preserve"><value>Job health and switches</value></data>
   <data name="Duration" xml:space="preserve"><value>Duration</value></data>
   <data name="Error" xml:space="preserve"><value>Error</value></data>
+  <data name="Errors" xml:space="preserve"><value>Errors</value></data>
   <data name="Finished" xml:space="preserve"><value>Finished</value></data>
   <data name="LastError" xml:space="preserve"><value>Last error</value></data>
   <data name="NeverRun" xml:space="preserve"><value>Never run</value></data>
@@ -491,6 +497,7 @@
   <data name="SetBackgroundTaskActiveState" xml:space="preserve"><value>Set active state for {0}</value></data>
   <data name="Started" xml:space="preserve"><value>Started</value></data>
   <data name="Success" xml:space="preserve"><value>Success</value></data>
+  <data name="OpenArchiveDetails" xml:space="preserve"><value>Open archive details</value></data>
     <data name="RandomArchiveName" xml:space="preserve">
         <value>&lt;random-name&gt;</value>
     </data>

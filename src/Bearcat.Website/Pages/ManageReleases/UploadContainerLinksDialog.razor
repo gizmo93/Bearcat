@@ -48,9 +48,12 @@
                                    Property="@(container => container.State.ToString())"
                                    Width="160px">
                     <CellTemplate Context="container">
-                        <BbBadge Variant="@GetContainerVariant(container.State)">
-                            @L.Localize(container.State)
-                        </BbBadge>
+                        <div class="flex items-center gap-2">
+                            <BbBadge Variant="@GetContainerVariant(container.State)">
+                                @L.Localize(container.State)
+                            </BbBadge>
+                            <ErrorMessagesTooltip Messages="container.Errors" />
+                        </div>
                     </CellTemplate>
                 </BbDataTableColumn>
                 <BbDataTableColumn TData="ReleaseUploadContainerLinkReadModel" TValue="string"
