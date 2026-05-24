@@ -19,6 +19,7 @@ Currently the following OCHs are supported:
 - 1fichier
 - Uploady.io
 - Katfile
+- Krakenfiles
 
 The following link crypters are supported:
 

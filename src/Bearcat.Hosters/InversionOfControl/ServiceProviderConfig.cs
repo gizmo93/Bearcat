@@ -5,6 +5,7 @@ using Bearcat.Hosters.Fichier.InversionOfControl;
 using Bearcat.Hosters.GoFile.InversionOfControl;
 using Bearcat.Hosters.Katfile.InversionOfControl;
 using Bearcat.Hosters.Keep2Share.InversionOfControl;
+using Bearcat.Hosters.KrakenFiles.InversionOfControl;
 using Bearcat.Hosters.Nitroflare.InversionOfControl;
 using Bearcat.Hosters.Rapidgator.InversionOfControl;
 using Bearcat.Hosters.Shared;
@@ -24,6 +25,7 @@ public static class ServiceProviderConfig
         services.AddGoFile();
         services.AddKatfile();
         services.AddKeep2Share();
+        services.AddKrakenFiles();
         services.AddNitroflare();
         services.AddUploady();
 
