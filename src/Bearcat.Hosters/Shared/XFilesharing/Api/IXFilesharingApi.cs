@@ -1,25 +1,24 @@
-using Bearcat.Hosters.Shared.XFilesharing.Api;
 using Refit;
 
-namespace Bearcat.Hosters.DDownload.Api;
+namespace Bearcat.Hosters.Shared.XFilesharing.Api;
 
-public interface IDDownloadApi : IXFilesharingApi
+public interface IXFilesharingApi
 {
     [Get("/account/info")]
-    new Task<AccountInfoResponse> GetAccountInfoAsync(
+    Task<AccountInfoResponse> GetAccountInfoAsync(
         [Query] [AliasAs("key")] string apiKey,
         CancellationToken cancellationToken
     );
 
     [Get("/file/info")]
-    new Task<FileInfoResponse> GetFileInfoAsync(
+    Task<FileInfoResponse> GetFileInfoAsync(
         [Query] [AliasAs("key")] string apiKey,
         [Query] [AliasAs("file_code")] string fileCodes,
         CancellationToken cancellationToken
     );
 
     [Get("/upload/server")]
-    new Task<ApiResponse<RequestUploadResponse>> RequestUploadAsync(
+    Task<ApiResponse<RequestUploadResponse>> RequestUploadAsync(
         [Query] [AliasAs("key")] string apiKey,
         CancellationToken cancellationToken
     );

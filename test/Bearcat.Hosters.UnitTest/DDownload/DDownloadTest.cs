@@ -3,12 +3,10 @@ using System.Text.Json;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.DDownload;
 using Bearcat.Hosters.DDownload.Api;
+using Bearcat.Hosters.Shared.XFilesharing.Api;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
-using AccountInfoResponse = Bearcat.Hosters.DDownload.Api.AccountInfo.Response;
-using RequestUploadResponse = Bearcat.Hosters.DDownload.Api.RequestUpload.Response;
-using UploadFileResponse = Bearcat.Hosters.DDownload.Api.UploadFile.Response;
 
 namespace Bearcat.Hosters.UnitTest.DDownload;
 

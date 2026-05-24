@@ -1,8 +1,8 @@
 using System.Text.Json.Serialization;
 
-namespace Bearcat.Hosters.DDownload.Api.RequestUpload;
+namespace Bearcat.Hosters.Shared.XFilesharing.Api;
 
-public class Response
+public class RequestUploadResponse
 {
     [JsonPropertyName("msg")]
     public string Msg { get; set; } = null!;
