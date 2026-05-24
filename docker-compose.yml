@@ -10,8 +10,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
       - ReleaseDataDirectory=/mnt/data
+      - Bearcat__DataDirectory=/data
       - Database__ConnectionString=Host=postgres;Database=${POSTGRES_DB:-bearcat};Username=${POSTGRES_USER:-bearcat};Password=${POSTGRES_PASSWORD:-bearcat123}
     volumes:
+      - ${BEARCAT_DATA_DIR:-./bearcat-data}:/data
       - ${RELEASES_DIR}:/mnt/data/releases
     depends_on:
       postgres:

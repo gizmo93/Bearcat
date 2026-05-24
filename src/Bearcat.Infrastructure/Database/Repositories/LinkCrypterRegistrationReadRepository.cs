@@ -1,13 +1,15 @@
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
+using Bearcat.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
 
 public class LinkCrypterRegistrationReadRepository(
     IBearcatReadDbContext dbRead,
-    ILinkCrypterFactory linkCrypterFactory
+    ILinkCrypterFactory linkCrypterFactory,
+    ISecretProtector secretProtector
 ) : ILinkCrypterRegistrationReadRepository
 {
     public async Task<IReadOnlyList<LinkCrypterRegistrationReadModel>> GetAllAsync(
@@ -16,19 +18,11 @@ public class LinkCrypterRegistrationReadRepository(
     {
         var cryptersByClassName = linkCrypterFactory.GetByClassName();
 
-        return await dbRead
-            .LinkCrypterRegistrations.Select(l => new LinkCrypterRegistrationReadModel(
-                l.Id,
-                l.Name,
-                l.LinkCrypterClassName,
-                cryptersByClassName[l.LinkCrypterClassName].GetType().Name,
-                l.SerializedConfig,
-                cryptersByClassName[l.LinkCrypterClassName]
-                    .DeserializeConfig(l.SerializedConfig)
-                    .ToDictionary(),
-                l.IsActive
-            ))
-            .ToListAsync(cancellationToken);
+        var registrations = await dbRead.LinkCrypterRegistrations.ToListAsync(cancellationToken);
+
+        return registrations
+            .Select(registration => ToReadModel(registration, cryptersByClassName))
+            .ToList();
     }
 
     public async Task<LinkCrypterRegistrationReadModel?> GetByIdAsync(
@@ -38,19 +32,29 @@ public class LinkCrypterRegistrationReadRepository(
     {
         var cryptersByClassName = linkCrypterFactory.GetByClassName();
 
-        return await dbRead
+        var registration = await dbRead
             .LinkCrypterRegistrations.Where(l => l.Id == id)
-            .Select(l => new LinkCrypterRegistrationReadModel(
-                l.Id,
-                l.Name,
-                l.LinkCrypterClassName,
-                cryptersByClassName[l.LinkCrypterClassName].GetType().Name,
-                l.SerializedConfig,
-                cryptersByClassName[l.LinkCrypterClassName]
-                    .DeserializeConfig(l.SerializedConfig)
-                    .ToDictionary(),
-                l.IsActive
-            ))
             .FirstOrDefaultAsync(cancellationToken);
+
+        return registration is null ? null : ToReadModel(registration, cryptersByClassName);
+    }
+
+    private LinkCrypterRegistrationReadModel ToReadModel(
+        Domain.Entities.LinkCrypterRegistration registration,
+        IReadOnlyDictionary<string, ILinkCrypter> cryptersByClassName
+    )
+    {
+        var serializedConfig = secretProtector.Unprotect(registration.SerializedConfig);
+        var crypter = cryptersByClassName[registration.LinkCrypterClassName];
+
+        return new LinkCrypterRegistrationReadModel(
+            registration.Id,
+            registration.Name,
+            registration.LinkCrypterClassName,
+            crypter.GetType().Name,
+            serializedConfig,
+            crypter.DeserializeConfig(serializedConfig).ToDictionary(),
+            registration.IsActive
+        );
     }
 }

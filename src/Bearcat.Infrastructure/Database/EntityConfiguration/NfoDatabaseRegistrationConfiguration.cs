@@ -19,7 +19,7 @@ public class NfoDatabaseRegistrationConfiguration
         builder
             .Property(registration => registration.SerializedConfig)
             .IsRequired()
-            .HasMaxLength(2000);
+            .HasMaxLength(4000);
 
         builder.Property(registration => registration.IsActive).IsRequired();
 

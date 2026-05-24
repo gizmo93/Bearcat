@@ -4,6 +4,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageLinkCrypters;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.Security;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -36,7 +37,11 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
 
         service = new LinkCrypterService(
             new LinkCrypterRegistrationWriteRepository(dbContext),
-            new LinkCrypterRegistrationReadRepository(dbContext, linkCrypterFactoryMock.Object),
+            new LinkCrypterRegistrationReadRepository(
+                dbContext,
+                linkCrypterFactoryMock.Object,
+                NoOpSecretProtector.Instance
+            ),
             linkCrypterFactoryMock.Object
         );
     }

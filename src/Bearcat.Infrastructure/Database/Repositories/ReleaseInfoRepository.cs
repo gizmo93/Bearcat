@@ -1,12 +1,16 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
 
-public class ReleaseInfoRepository(IBearcatReadDbContext dbRead, IBearcatWriteDbContext dbWrite)
-    : IReleaseInfoRepository
+public class ReleaseInfoRepository(
+    IBearcatReadDbContext dbRead,
+    IBearcatWriteDbContext dbWrite,
+    ISecretProtector secretProtector
+) : IReleaseInfoRepository
 {
     public async Task<
         IReadOnlyList<ActiveNfoDatabaseRegistrationReadModel>
@@ -17,7 +21,7 @@ public class ReleaseInfoRepository(IBearcatReadDbContext dbRead, IBearcatWriteDb
             .OrderBy(registration => registration.NfoDatabaseClassName)
             .Select(registration => new ActiveNfoDatabaseRegistrationReadModel(
                 registration.NfoDatabaseClassName,
-                registration.SerializedConfig
+                secretProtector.Unprotect(registration.SerializedConfig)
             ))
             .ToListAsync(cancellationToken);
     }

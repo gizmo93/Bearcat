@@ -4,6 +4,7 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.Security;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -29,7 +30,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         nfoDatabaseFactoryMock = new Mock<INfoDatabaseFactory>(MockBehavior.Strict);
 
         service = new ReleaseInfoResolutionService(
-            new ReleaseInfoRepository(dbContext, dbContext),
+            new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
             nfoDatabaseFactoryMock.Object,
             new Mock<ILogger<ReleaseInfoResolutionService>>().Object
         );

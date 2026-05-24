@@ -50,6 +50,7 @@ These are the variables you need to set and what they are for:
 ### Bearcat related
 - `BEARCAT_PORT`: The port on which Bearcat web frontend will be accessible. If you don't set this, Bearcat will run at port 8080.
 - `RELEASES_DIR`: The directory on the host machine where Bearcat will look for release files to upload. This is required, as Bearcat needs to know where your release files are located. You can set it to any directory on your machine, even network folders that are mounted on the host machine, but make sure that the directory exists and that Bearcat has read and write permissions to it.
+- `BEARCAT_DATA_DIR`: The directory on the host machine where Bearcat stores application data that must survive container updates. Bearcat creates `bearcat.key` there on first start. This key is required to decrypt stored hoster, link crypter, and NFO database account configurations.
 - `BEARCAT_IMAGE`: The name of the Bearcat Docker image to use. This is optional, but it can be useful if you want to use a custom built image of Bearcat instead of the one from Docker Hub. The default value is `ghcr.io/justanotherx265/bearcat:latest`, which is the latest version of Bearcat from GitHub Container Registry. If you want to use a custom image version, you can set it there
 - `BEARCAT_CPU_LIMIT`: The CPU limit for the Bearcat container. This is optional, but it can help to prevent Bearcat from consuming too much CPU resources on your machine. You can set it to a value like `0.5` for 50% of a single CPU core, or `1` for 100% of a single CPU core.
 - `BEARCAT_MEMORY_LIMIT`: The memory limit for the Bearcat container. This is
@@ -76,4 +77,21 @@ docker compose up -d
 ```
 
 This will only recreate the container if the newer image is different from the one you already have.
-As all Bearcat data is stored in its database and you set the database data directory to a persistent location on your host machine, you won't lose any data by updating the container image.
+As Bearcat's database and application data directory are both mounted to persistent locations on your host machine, you won't lose any data by updating the container image.
+
+## Account data encryption key
+
+Bearcat stores hoster, link crypter, and NFO database account configurations encrypted in the database. The encryption key is not part of the Docker image. On first start, Bearcat creates a random key file here:
+
+```text
+${BEARCAT_DATA_DIR:-./bearcat-data}/bearcat.key
+```
+
+Keep this file. Without `bearcat.key`, Bearcat cannot decrypt the stored account configurations anymore.
+
+For backups and server moves, copy both:
+
+- the PostgreSQL data directory, usually `${POSTGRES_DATA_DIR:-./postgres-data}`
+- the Bearcat application data directory, usually `${BEARCAT_DATA_DIR:-./bearcat-data}`
+
+On the first start of a version with encrypted account data, Bearcat automatically migrates existing plaintext registration configs to encrypted values.

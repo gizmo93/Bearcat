@@ -105,6 +105,22 @@ macOS: ~/Library/Application Support/Bearcat/Desktop/settings.json
 
 The file contains the Desktop app settings, including the PostgreSQL password. Protect your operating system user account accordingly.
 
+## Where The Encryption Key Is Stored
+
+Bearcat encrypts stored hoster, link crypter, and NFO database account configurations.
+The Desktop app creates the encryption key automatically on first start.
+
+Default key locations:
+
+```text
+Windows: %APPDATA%\Bearcat\bearcat.key
+macOS: ~/Library/Application Support/Bearcat/bearcat.key
+```
+
+Back up this file together with your PostgreSQL database.
+If you move the Desktop setup to another computer, copy both the database and `bearcat.key`.
+Without `bearcat.key`, Bearcat cannot decrypt stored account configurations.
+
 ## Starting Bearcat
 
 Use `Start Bearcat` from the app window or the tray menu. When the health check succeeds, the app can open Bearcat at:

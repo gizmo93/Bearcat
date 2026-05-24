@@ -4,6 +4,7 @@ using Bearcat.Domain.InversionOfControl;
 using Bearcat.Hosters.InversionOfControl;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.InversionOfControl;
+using Bearcat.Infrastructure.Security;
 using Bearcat.LinkCrypters.InversionOfControl;
 using Bearcat.NfoDatabases.InversionOfControl;
 using Bearcat.Website;
@@ -48,6 +49,8 @@ builder.Services.AddLinkCrypters();
 builder.Services.AddNfoDatabases();
 
 var app = builder.Build();
+
+await app.Services.GetRequiredService<IEncryptionKeyProvider>().InitializeAsync();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -110,6 +113,8 @@ if (app.Environment.IsProduction() || isDesktopMode)
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<BearcatDbContext>();
     await dbContext.Database.MigrateAsync();
+    var secretMigration = scope.ServiceProvider.GetRequiredService<RegistrationSecretMigration>();
+    await secretMigration.MigrateAsync();
 }
 
 app.Run();

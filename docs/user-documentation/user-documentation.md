@@ -45,6 +45,23 @@ Linux and NAS setups should use Docker.
 
 Bearcat uses a PostgreSQL database to store releases, hosters, link crypters, configuration, and upload state. With Docker Compose, PostgreSQL is started together with Bearcat. With the Desktop app, you bring your own PostgreSQL server and enter the connection settings in the launcher.
 
+## Account data encryption and backups
+
+Bearcat encrypts hoster, link crypter, and NFO database account configurations before storing them in the database.
+The encryption key is stored outside the database in a file named `bearcat.key`.
+This key is created automatically on first start and is not part of the application release or Docker image.
+
+Back up `bearcat.key` together with the PostgreSQL database.
+If you move Bearcat to another computer or server, the database and `bearcat.key` must be moved together.
+Without this key, Bearcat can still start, but it cannot decrypt the stored account configurations.
+If `bearcat.key` is lost, the affected hoster, link crypter, and NFO database registrations must be recreated.
+
+Default key locations:
+
+- Desktop on Windows: `%APPDATA%\Bearcat\bearcat.key`
+- Desktop on macOS: `~/Library/Application Support/Bearcat/bearcat.key`
+- Docker Compose: `${BEARCAT_DATA_DIR:-./bearcat-data}/bearcat.key`
+
 [Running Bearcat with the Desktop App](use-the-desktop-launcher.md)
 
 [Installing PostgreSQL for the Desktop App](install-postgresql-for-desktop.md)

@@ -11,6 +11,7 @@ using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.FileSystem;
+using Bearcat.Infrastructure.Security;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -64,7 +65,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             .Returns(new Dictionary<string, IHoster> { [HosterClassName] = hosterMock.Object });
 
         service = new UploadFilesService(
-            new UploadFilesRepository(dbContext, dbContext),
+            new UploadFilesRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
             hosterFactoryMock.Object,
             new FileSystemService(),
             CreateTimeProvider(),

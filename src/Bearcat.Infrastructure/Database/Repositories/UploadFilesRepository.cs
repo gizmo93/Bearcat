@@ -1,12 +1,16 @@
 ﻿using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
 
-public class UploadFilesRepository(IBearcatWriteDbContext dbWrite, IBearcatReadDbContext dbRead)
-    : IUploadFilesRepository
+public class UploadFilesRepository(
+    IBearcatWriteDbContext dbWrite,
+    IBearcatReadDbContext dbRead,
+    ISecretProtector secretProtector
+) : IUploadFilesRepository
 {
     public async Task<IReadOnlyList<Upload>> GetPendingUploadsAsync(
         IReadOnlySet<int> uploadIdsToExclude,
@@ -73,9 +77,14 @@ public class UploadFilesRepository(IBearcatWriteDbContext dbWrite, IBearcatReadD
         CancellationToken cancellationToken
     )
     {
-        return await dbWrite
+        var configs = await dbWrite
             .HosterRegistrations.Where(h => h.IsActive)
             .ToDictionaryAsync(h => h.Id, h => h.SerializedConfig, cancellationToken);
+
+        return configs.ToDictionary(
+            config => config.Key,
+            config => secretProtector.Unprotect(config.Value)
+        );
     }
 
     public async Task<IReadOnlyDictionary<string, string>> GetConfigByHosterClassName(
@@ -89,7 +98,10 @@ public class UploadFilesRepository(IBearcatWriteDbContext dbWrite, IBearcatReadD
 
         return registrations
             .DistinctBy(r => r.HosterClassName)
-            .ToDictionary(r => r.HosterClassName, r => r.SerializedConfig);
+            .ToDictionary(
+                r => r.HosterClassName,
+                r => secretProtector.Unprotect(r.SerializedConfig)
+            );
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)

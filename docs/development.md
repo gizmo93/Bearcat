@@ -8,17 +8,23 @@ In development mode, `Bearcat.Host` loads an optional `appsettings.user.json` fi
 
 - `ReleaseDataDirectory`
 - `Database:ConnectionString`
+- `Bearcat:DataDirectory` or `Security:MasterKeyPath` if you want the local encryption key somewhere specific
 
 Example:
 
 ```json
 {
   "ReleaseDataDirectory": "/path/to/releases",
+  "Bearcat": {
+    "DataDirectory": "/path/to/bearcat-app-data"
+  },
   "Database": {
     "ConnectionString": "Host=localhost;Database=<local-database-name>;Username=<db-username>;Password=<db-password>"
   }
 }
 ```
+
+If no key path or data directory is configured, Bearcat stores `bearcat.key` in the operating system's application data folder.
 
 ## Tests
 
@@ -40,7 +46,7 @@ Entity Framework migrations are created from the infrastructure project:
 
 ```bash
 cd src/Bearcat.Infrastructure
-dotnet ef migrations add <migration-name>
+dotnet ef migrations add <migration-name> --startup-project .
 ```
 
 Apply migrations to the local database with:
