@@ -52,8 +52,18 @@ If archive creation succeeds, the archive becomes `Created` and the upload becom
 If archive creation fails, the archive becomes `CreationFailed` and the upload becomes `Failed`.
 
 During archive creation, Bearcat writes a small `__nonce.txt` file with a random value into the release folder before packing.
-This makes every newly created archive slightly different.
-That is important for reuploads, because the archive files get a new MD5 hash even if the actual release files did not change.
+This gives Bearcat a small, harmless file that can change between archive runs.
+That is important for reuploads, because hosters may recognize an already uploaded archive file by its MD5 hash even if you upload it again later.
+
+How strongly Bearcat changes the generated archive files is controlled by the "Archive repackaging" configuration.
+The default strategy is "Change archive file size by 1 MB".
+It creates the new archive without compression and without solid mode, but increases the archive part size by `1` MB compared to the latest archive for the same archive configuration.
+That usually changes the resulting archive parts while avoiding compression CPU cost.
+
+The other available strategies are:
+
+- "Nonce only, no compression" changes only `__nonce.txt` and packs without compression or solid mode. This has the lowest CPU cost, but the lowest chance that every archive part gets a new MD5 hash.
+- "Solid archive with compression" packs with solid mode and compression. This costs more CPU, but makes the `__nonce.txt` change affect the archive output more reliably.
 
 If "Archive cleanup" is enabled later and the archive has already been deleted locally, Bearcat cannot reuse that deleted archive for future uploads.
 In that case, a reupload will create a fresh archive if needed.

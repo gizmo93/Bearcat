@@ -13,5 +13,9 @@ public interface IArchiveCreationRepository
         int archiveConfigId,
         CancellationToken cancellationToken
     );
+    Task<int?> GetLastArchiveFileSizeMbAsync(
+        int archiveConfigId,
+        CancellationToken cancellationToken
+    );
     Task DeleteOrphanedArchivesAsync(CancellationToken cancellationToken);
 }

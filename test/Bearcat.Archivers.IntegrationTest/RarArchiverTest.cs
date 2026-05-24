@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Archiver;
 using Bearcat.Archivers.Rar;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
@@ -45,6 +46,7 @@ public class RarArchiverTest
             "archive",
             1,
             null,
+            new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
             CancellationToken.None
         );
 
@@ -72,6 +74,7 @@ public class RarArchiverTest
             "archive",
             1,
             null,
+            new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
             CancellationToken.None
         );
 

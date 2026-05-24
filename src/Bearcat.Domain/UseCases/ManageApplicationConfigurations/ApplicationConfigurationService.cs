@@ -58,7 +58,8 @@ public class ApplicationConfigurationService(
                             ValueType: property.PropertyType,
                             DefaultValue: defaultValue,
                             CurrentValue: currentValue,
-                            IsOverridden: isOverridden
+                            IsOverridden: isOverridden,
+                            Options: property.Options
                         );
                     })
                     .ToList();

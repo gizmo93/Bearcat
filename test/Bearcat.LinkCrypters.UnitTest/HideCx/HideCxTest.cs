@@ -112,7 +112,9 @@ public class HideCxTest
             .Setup(x =>
                 x.UpdateContainerAsync(
                     "external-id",
-                    It.Is<UpdateContainerRequest>(request => request.Mirrors.SequenceEqual(links)),
+                    It.Is<UpdateContainerRequest>(request =>
+                        request.Mirrors.Length == 1 && request.Mirrors[0].SequenceEqual(links)
+                    ),
                     "Bearer api-key",
                     It.IsAny<CancellationToken>()
                 )

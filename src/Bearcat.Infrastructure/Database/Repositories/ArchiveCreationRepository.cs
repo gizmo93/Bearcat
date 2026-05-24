@@ -36,6 +36,18 @@ public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite) : IArchiv
         return archiveId > 0 ? archiveId : null;
     }
 
+    public async Task<int?> GetLastArchiveFileSizeMbAsync(
+        int archiveConfigId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .Archives.Where(a => a.ArchiveConfigId == archiveConfigId)
+            .OrderByDescending(a => a.Id)
+            .Select(a => (int?)a.ArchiveFileSizeMb)
+            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+    }
+
     public async Task DeleteOrphanedArchivesAsync(CancellationToken cancellationToken)
     {
         await dbWrite

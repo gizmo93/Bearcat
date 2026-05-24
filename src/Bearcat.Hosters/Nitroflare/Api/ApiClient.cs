@@ -1,4 +1,3 @@
-using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -92,14 +91,9 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        var fileIdsByUrl = fileUrls
-            .Distinct()
-            .ToDictionary(fileUrl => fileUrl, GetFileId);
+        var fileIdsByUrl = fileUrls.Distinct().ToDictionary(fileUrl => fileUrl, GetFileId);
 
-        var result = fileIdsByUrl.ToDictionary(
-            item => item.Key,
-            _ => false
-        );
+        var result = fileIdsByUrl.ToDictionary(item => item.Key, _ => false);
 
         var validFileIds = fileIdsByUrl
             .Values.OfType<string>()
@@ -127,7 +121,9 @@ public class ApiClient(
                 continue;
             }
 
-            if (!string.Equals(response.Content.Type, "success", StringComparison.OrdinalIgnoreCase))
+            if (
+                !string.Equals(response.Content.Type, "success", StringComparison.OrdinalIgnoreCase)
+            )
             {
                 logger.LogInformation(
                     "Nitroflare file info request failed for {FileIds}: {Message}",
@@ -138,16 +134,18 @@ public class ApiClient(
                 continue;
             }
 
-            var onlineFileIds = response
-                .Content.Result?.Files?.Where(file =>
-                    string.Equals(
-                        file.Value.Status,
-                        "online",
-                        StringComparison.OrdinalIgnoreCase
+            var onlineFileIds =
+                response
+                    .Content.Result?.Files?.Where(file =>
+                        string.Equals(
+                            file.Value.Status,
+                            "online",
+                            StringComparison.OrdinalIgnoreCase
+                        )
                     )
-                )
-                .Select(file => file.Key)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase) ?? [];
+                    .Select(file => file.Key)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase)
+                ?? [];
 
             foreach (var (fileUrl, fileId) in fileIdsByUrl)
             {
@@ -171,7 +169,9 @@ public class ApiClient(
             || uri.Scheme is not ("http" or "https")
         )
         {
-            throw new HttpRequestException($"Nitroflare returned an invalid upload URL: {uploadUrl}");
+            throw new HttpRequestException(
+                $"Nitroflare returned an invalid upload URL: {uploadUrl}"
+            );
         }
 
         return uploadUrl;
@@ -193,7 +193,10 @@ public class ApiClient(
                 );
             }
 
-            throw new HttpRequestException($"Nitroflare returned an unexpected response: {content}", ex);
+            throw new HttpRequestException(
+                $"Nitroflare returned an unexpected response: {content}",
+                ex
+            );
         }
     }
 

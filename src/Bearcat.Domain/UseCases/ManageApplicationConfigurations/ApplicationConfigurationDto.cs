@@ -14,5 +14,6 @@ public sealed record ApplicationConfigurationPropertyDto(
     Type ValueType,
     object? DefaultValue,
     object? CurrentValue,
-    bool IsOverridden
+    bool IsOverridden,
+    IReadOnlyList<string> Options
 );

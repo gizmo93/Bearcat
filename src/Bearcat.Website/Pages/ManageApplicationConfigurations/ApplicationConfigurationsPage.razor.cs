@@ -1,4 +1,5 @@
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
+using BlazorBlueprint.Primitives;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageApplicationConfigurations;
@@ -88,14 +89,54 @@ public partial class ApplicationConfigurationsPage
         await LoadAsync();
     }
 
-    private string FormatValue(object? value, Type valueType)
+    private string FormatValue(ApplicationConfigurationPropertyDto property, object? value)
     {
-        if (valueType == typeof(bool))
+        if (property.ValueType == typeof(bool))
         {
             return value is true ? L["Enabled"] : L["Disabled"];
         }
 
-        return value?.ToString() ?? "-";
+        var stringValue = value?.ToString();
+
+        if (string.IsNullOrWhiteSpace(stringValue))
+        {
+            return "-";
+        }
+
+        return HasSelectOptions(property) ? FormatOptionValue(property, stringValue) : stringValue;
+    }
+
+    private static bool HasSelectOptions(ApplicationConfigurationPropertyDto property)
+    {
+        return property.ValueType == typeof(string) && property.Options.Count > 0;
+    }
+
+    private IEnumerable<SelectOption<string>> GetSelectOptions(
+        ApplicationConfigurationPropertyDto property
+    )
+    {
+        return property.Options.Select(value => new SelectOption<string>(
+            value,
+            FormatOptionValue(property, value)
+        ));
+    }
+
+    private string GetSelectClass(ApplicationConfigurationPropertyDto property)
+    {
+        var longestOptionLength = property
+            .Options.Select(option => FormatOptionValue(property, option).Length)
+            .DefaultIfEmpty(16)
+            .Max();
+        var width = Math.Clamp(longestOptionLength + 6, 16, 56) * 8;
+
+        return $"max-w-full w-[min(100%,{width}px)]";
+    }
+
+    private string FormatOptionValue(ApplicationConfigurationPropertyDto? property, string value)
+    {
+        var localizedValue = property is null ? L[value] : L[$"{property.DisplayName}.{value}"];
+
+        return localizedValue.ResourceNotFound ? value : localizedValue;
     }
 
     private static string GetEditorKey(ApplicationConfigurationPropertyDto property)

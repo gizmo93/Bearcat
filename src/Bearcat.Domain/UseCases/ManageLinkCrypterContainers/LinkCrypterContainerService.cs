@@ -124,14 +124,15 @@ public class LinkCrypterContainerService(
 
         if (!result.IsSuccess)
         {
-            notificationService.CreateError<LinkCrypterContainer>($"Failed to update link crypter container for upload {upload.Id} using link crypter config Id {linkCrypterConfig.Id} with crypter {linkCrypterConfig.LinkCrypterRegistration.Name}. Errors: {result.ErrorMessage}",
+            notificationService.CreateError<LinkCrypterContainer>(
+                $"Failed to update link crypter container for upload {upload.Id} using link crypter config Id {linkCrypterConfig.Id} with crypter {linkCrypterConfig.LinkCrypterRegistration.Name}. Errors: {result.ErrorMessage}",
                 entity: previousContainer,
                 selector: n => n.LinkCrypterContainer
             );
-            
+
             return;
         }
-        
+
         upload.LinkCrypterContainers.Add(previousContainer);
         await repository.SaveChangesAsync(cancellationToken);
     }

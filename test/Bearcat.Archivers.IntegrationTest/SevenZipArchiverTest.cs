@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Archiver;
 using Bearcat.Archivers._7Zip;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
@@ -45,6 +46,7 @@ public class SevenZipArchiverTest
             "archive",
             1,
             null,
+            new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
             CancellationToken.None
         );
 
@@ -71,6 +73,7 @@ public class SevenZipArchiverTest
             "archive",
             1,
             null,
+            new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
             CancellationToken.None
         );
 

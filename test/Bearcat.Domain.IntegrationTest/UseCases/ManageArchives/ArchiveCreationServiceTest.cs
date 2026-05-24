@@ -1,4 +1,7 @@
+using System.Linq.Expressions;
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Configurations;
+using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageNotifications;
@@ -24,6 +27,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
     private string tempRootPath = null!;
     private Mock<IArchiver> archiverMock = null!;
     private Mock<IArchiverFactory> archiverFactoryMock = null!;
+    private Mock<IApplicationConfigurationProvider> configurationProviderMock = null!;
     private ArchiveCreationService service = null!;
 
     [SetUp]
@@ -43,6 +47,14 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         archiverMock.SetupGet(a => a.FileExtension).Returns(".zip");
 
         archiverFactoryMock = new Mock<IArchiverFactory>(MockBehavior.Strict);
+        configurationProviderMock = new Mock<IApplicationConfigurationProvider>(MockBehavior.Strict);
+        configurationProviderMock
+            .Setup(p =>
+                p.GetValue<ArchiveRepackagingConfiguration>(
+                    It.IsAny<Expression<Func<ArchiveRepackagingConfiguration, string?>>>()
+                )
+            )
+            .Returns(ArchiveRepackagingStrategies.IncrementArchiveFileSize);
 
         service = new ArchiveCreationService(
             new ArchiveCreationRepository(dbContext),
@@ -50,7 +62,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             archiverFactoryMock.Object,
             new FileSystemService(),
             CreateTimeProvider(),
-            new NotificationService(new NotificationRepository(dbContext), CreateTimeProvider())
+            new NotificationService(new NotificationRepository(dbContext), CreateTimeProvider()),
+            configurationProviderMock.Object
         );
     }
 
@@ -75,6 +88,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             ArchiveConfigId = archiveConfig.Id,
             ArchiveFolderPath = Path.Combine(archiveFilesBasePath, "orphaned"),
             ArchiveState = ArchiveState.Creating,
+            ArchiveFileSizeMb = archiveConfig.ArchiveFileSizeMb,
             CreatedAt = DateTime.UtcNow,
             ArchiveFiles = [],
             Uploads = [],
@@ -104,6 +118,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                 .CreateDirectory(Path.Combine(archiveFilesBasePath, "existing"))
                 .FullName,
             ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 512,
             CreatedAt = DateTime.UtcNow,
             ArchiveFiles = [new ArchiveFile { FullFileName = "existing.part1.rar" }],
             Uploads = [],
@@ -139,6 +154,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                     "bearcat-release",
                     512,
                     "secret",
+                    It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
                     CancellationToken.None
                 )
             )
@@ -158,6 +174,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
 
         result.ShouldNotBeNull();
         result.ArchiveState.ShouldBe(ArchiveState.Created);
+        result.ArchiveFileSizeMb.ShouldBe(512);
         result.ArchiveFolderPath.ShouldStartWith(archiveFilesBasePath);
         result
             .ArchiveFiles.Select(f => f.FullFileName)
@@ -174,10 +191,96 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                     "bearcat-release",
                     512,
                     "secret",
+                    It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
                     CancellationToken.None
                 ),
             Times.Once
         );
+    }
+
+    [Test]
+    public async Task ProcessAsync_SolidCompressionStrategy_CreatesSolidCompressedArchive()
+    {
+        // Arrange
+        configurationProviderMock
+            .Setup(p =>
+                p.GetValue<ArchiveRepackagingConfiguration>(
+                    It.IsAny<Expression<Func<ArchiveRepackagingConfiguration, string?>>>()
+                )
+            )
+            .Returns(ArchiveRepackagingStrategies.SolidCompression);
+        var upload = await AddUploadWaitingForArchiveAsync();
+        archiverFactoryMock.Setup(f => f.GetByName("zip")).Returns(archiverMock.Object);
+        archiverMock
+            .Setup(a =>
+                a.ArchiveAsync(
+                    releaseFolderPath,
+                    It.Is<string>(p => p.StartsWith(archiveFilesBasePath)),
+                    "bearcat-release",
+                    512,
+                    "secret",
+                    It.Is<ArchiveOptions>(o => o.UseCompression && o.UseSolidArchive),
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(new ArchiveResult(true, ["archive.part1.rar"], null));
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Archives.Include(a => a.Uploads).SingleAsync();
+
+        result.ArchiveFileSizeMb.ShouldBe(512);
+        result.Uploads.Single().Id.ShouldBe(upload.Id);
+    }
+
+    [Test]
+    public async Task ProcessAsync_IncrementArchiveFileSizeStrategy_UsesLastArchiveFileSizePlusOne()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        dbContext.Archives.Add(
+            new Archive
+            {
+                ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+                ArchiveFolderPath = Directory
+                    .CreateDirectory(Path.Combine(archiveFilesBasePath, "previous"))
+                    .FullName,
+                ArchiveState = ArchiveState.MissingFiles,
+                ArchiveFileSizeMb = 512,
+                CreatedAt = DateTime.UtcNow,
+                ArchiveFiles = [],
+                Uploads = [],
+                ErrorMessages = [],
+            }
+        );
+        await dbContext.SaveChangesAsync();
+
+        archiverFactoryMock.Setup(f => f.GetByName("zip")).Returns(archiverMock.Object);
+        archiverMock
+            .Setup(a =>
+                a.ArchiveAsync(
+                    releaseFolderPath,
+                    It.Is<string>(p => p.StartsWith(archiveFilesBasePath)),
+                    "bearcat-release",
+                    513,
+                    "secret",
+                    It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(new ArchiveResult(true, ["archive.part1.rar"], null));
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Archives.OrderByDescending(a => a.Id).FirstAsync();
+
+        result.ArchiveFileSizeMb.ShouldBe(513);
     }
 
     [Test]
@@ -194,6 +297,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                     "bearcat-release",
                     512,
                     "secret",
+                    It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
                     CancellationToken.None
                 )
             )
@@ -227,6 +331,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                     "bearcat-release",
                     512,
                     "secret",
+                    It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
                     CancellationToken.None
                 ),
             Times.Once
@@ -258,6 +363,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                     "bearcat-release",
                     512,
                     "secret",
+                    It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
                     CancellationToken.None
                 )
             )
@@ -283,6 +389,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                     "bearcat-release",
                     512,
                     "secret",
+                    It.Is<ArchiveOptions>(o => !o.UseCompression && !o.UseSolidArchive),
                     CancellationToken.None
                 ),
             Times.Once
