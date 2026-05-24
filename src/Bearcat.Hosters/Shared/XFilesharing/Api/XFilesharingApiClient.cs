@@ -84,7 +84,7 @@ public abstract class XFilesharingApiClient<TApi>(
 
         if (uploadOptions.AddRegisteredUserTypeField)
         {
-            var userTypeContent = new StringContent("reg");
+            var userTypeContent = new StringContent(uploadOptions.UserTypeFieldValue);
             userTypeContent.Headers.ContentType = null;
             userTypeContent.Headers.ContentDisposition = new ContentDispositionHeaderValue(
                 "form-data"
