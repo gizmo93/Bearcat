@@ -100,9 +100,12 @@
                             }
                             else
                             {
-                                <BbBadge Variant="@GetUploadVariant(upload.UploadState)">
-                                    @L.Localize(upload.UploadState.Value)
-                                </BbBadge>
+                                <div class="flex items-center gap-2">
+                                    <BbBadge Variant="@GetUploadVariant(upload.UploadState)">
+                                        @L.Localize(upload.UploadState.Value)
+                                    </BbBadge>
+                                    <ErrorMessagesTooltip Messages="upload.ErrorMessages" />
+                                </div>
                             }
                         </div>
 
@@ -170,6 +173,7 @@
                                                 <BbBadge Variant="@GetContainerVariant(link.State)">
                                                     @L.Localize(link.State)
                                                 </BbBadge>
+                                                <ErrorMessagesTooltip Messages="link.Errors" />
 
                                                 <textarea id="@copyTargetId" hidden readonly>@link.ContainerUrl</textarea>
                                                 <button type="button"

@@ -85,6 +85,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                         u.UploadState,
                         u.OnlineState,
                         u.UploadedFiles.Count(),
+                        u.ErrorMessages.ToList(),
                         u.Archive == null ? null : u.Archive.ArchiveConfig.ArchivePassword
                     ))
                     .First()
@@ -109,7 +110,8 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                         c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName,
                         c.ContainerUrl,
                         c.State,
-                        c.CreatedAt
+                        c.CreatedAt,
+                        c.Errors.ToList()
                     ))
                     .ToListAsync(cancellationToken: cancellationToken);
 
@@ -127,7 +129,8 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                                 link.LinkCrypterClassName,
                                 link.ContainerUrl,
                                 link.State,
-                                link.CreatedAt
+                                link.CreatedAt,
+                                link.Errors
                             ))
                             .ToList()
             );
@@ -153,6 +156,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                     upload?.UploadState,
                     upload?.OnlineState,
                     upload?.LinkCount ?? 0,
+                    upload?.ErrorMessages ?? [],
                     upload?.ArchivePassword,
                     links
                 );
@@ -227,7 +231,10 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                 a.Archives.OrderByDescending(ar => ar.Id)
                     .Select(ar => new ArchiveConfigReadModel.ArchiveSummary(
                         ar.Id,
-                        ar.ArchiveFiles.Count()
+                        ar.CreatedAt,
+                        ar.ArchiveState,
+                        ar.ArchiveFiles.Count(),
+                        ar.ErrorMessages.ToList()
                     ))
                     .ToList()
             ))
@@ -286,7 +293,8 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                             ru.OnlineState == OnlineState.Online
                             || reuploadBlockingStates.Contains(ru.UploadState)
                         )
-                    )
+                    ),
+                u.ErrorMessages.ToList()
             ))
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -370,7 +378,8 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                 c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName,
                 c.ContainerUrl,
                 c.State,
-                c.CreatedAt
+                c.CreatedAt,
+                c.Errors.ToList()
             ))
             .ToListAsync(cancellationToken: cancellationToken);
     }
@@ -512,6 +521,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
         UploadState UploadState,
         OnlineState OnlineState,
         int LinkCount,
+        IReadOnlyList<string> ErrorMessages,
         string? ArchivePassword
     );
 
@@ -522,6 +532,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
         string LinkCrypterClassName,
         string ContainerUrl,
         LinkCrypterContainerState State,
-        DateTime CreatedAt
+        DateTime CreatedAt,
+        IReadOnlyList<string> Errors
     );
 }

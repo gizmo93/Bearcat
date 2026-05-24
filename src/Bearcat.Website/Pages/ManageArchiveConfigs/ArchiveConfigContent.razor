@@ -51,20 +51,42 @@
                          AriaLabel="@L["ArchiveSummaries"]"
                          Class="rounded-lg border border-border/70">
                 <Columns>
-                    <BbDataTableColumn TData="ArchiveConfigReadModel.ArchiveSummary" TValue="int"
-                                       Header="@L["Id"]"
-                                       Property="@(summary => summary.ArchiveId)"
-                                       Sortable="true">
+                    <BbDataTableColumn TData="ArchiveConfigReadModel.ArchiveSummary" TValue="string"
+                                       Header="@L["State"]"
+                                       Property="@(summary => summary.ArchiveState.ToString())"
+                                       Sortable="true"
+                                       Width="180px">
                         <CellTemplate Context="summary">
-                            <BbButton Variant="ButtonVariant.Link" OnClick="@(() => ShowArchiveDialogAsync(summary.ArchiveId))">
-                                @summary.ArchiveId
-                            </BbButton>
+                            <div class="flex items-center gap-2">
+                                <BbBadge Variant="@GetArchiveVariant(summary.ArchiveState)">
+                                    @L.Localize(summary.ArchiveState)
+                                </BbBadge>
+                                <ErrorMessagesTooltip Messages="summary.ErrorMessages" />
+                            </div>
                         </CellTemplate>
                     </BbDataTableColumn>
                     <BbDataTableColumn TData="ArchiveConfigReadModel.ArchiveSummary" TValue="int"
                                        Header="@L["FileCount"]"
                                        Property="@(summary => summary.ArchiveFileCount)"
-                                       Sortable="true" />
+                                       Sortable="true"
+                                       Width="130px">
+                        <CellTemplate Context="summary">
+                            <BbButton Variant="ButtonVariant.Link"
+                                      AriaLabel="@L["OpenArchiveDetails"]"
+                                      OnClick="@(() => ShowArchiveDialogAsync(summary.ArchiveId))">
+                                @summary.ArchiveFileCount
+                            </BbButton>
+                        </CellTemplate>
+                    </BbDataTableColumn>
+                    <BbDataTableColumn TData="ArchiveConfigReadModel.ArchiveSummary" TValue="DateTime"
+                                       Header="@L["CreatedAt"]"
+                                       Property="@(summary => summary.CreatedAt)"
+                                       Sortable="true"
+                                       Width="180px">
+                        <CellTemplate Context="summary">
+                            <span class="text-sm">@summary.CreatedAt.ToString("g")</span>
+                        </CellTemplate>
+                    </BbDataTableColumn>
                 </Columns>
             </BbDataTable>
         </div>

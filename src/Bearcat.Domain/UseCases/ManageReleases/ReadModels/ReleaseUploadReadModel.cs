@@ -12,5 +12,6 @@ public record ReleaseUploadReadModel(
     OnlineState OnlineState,
     int LinkCount,
     int ContainerCount,
-    bool CanCreateReupload
+    bool CanCreateReupload,
+    IReadOnlyList<string> ErrorMessages
 );

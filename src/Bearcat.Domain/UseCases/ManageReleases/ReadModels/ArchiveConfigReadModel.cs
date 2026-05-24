@@ -1,4 +1,6 @@
-﻿namespace Bearcat.Domain.UseCases.ManageReleases.ReadModels;
+﻿using Bearcat.Domain.ValueObjects;
+
+namespace Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 
 public record ArchiveConfigReadModel(
     int ArchiveConfigId,
@@ -13,7 +15,13 @@ public record ArchiveConfigReadModel(
     IReadOnlyList<ArchiveConfigReadModel.ArchiveSummary> ArchiveSummaries
 )
 {
-    public record ArchiveSummary(int ArchiveId, int ArchiveFileCount);
+    public record ArchiveSummary(
+        int ArchiveId,
+        DateTime CreatedAt,
+        ArchiveState ArchiveState,
+        int ArchiveFileCount,
+        IReadOnlyList<string> ErrorMessages
+    );
 
     public string? ArchiveNameWithExtension =>
         ArchiveNamePrefix is null ? null : $"{ArchiveNamePrefix}{ArchiveFileExtension}";

@@ -23,6 +23,11 @@ public static class LocalizationExtensions
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,
+        ArchiveState state
+    ) => localizer[$"ArchiveState.{state}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
         LinkCrypterContainerState state
     ) => localizer[$"LinkCrypterContainerState.{state}"];
 

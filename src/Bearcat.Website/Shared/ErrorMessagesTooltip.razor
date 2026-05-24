@@ -1,0 +1,34 @@
+@if (VisibleMessages.Count > 0)
+{
+    <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
+        <BbTooltipTrigger AsChild="false" Class="inline-flex">
+            <span class="inline-flex h-6 items-center gap-1 rounded-md border border-destructive/30 px-1.5 text-xs font-medium text-destructive"
+                  aria-label="@L["Errors"]">
+                <LucideIcon Name="triangle-alert" class="h-3.5 w-3.5" />
+                @if (VisibleMessages.Count > 1)
+                {
+                    <span>@VisibleMessages.Count</span>
+                }
+            </span>
+        </BbTooltipTrigger>
+        <BbTooltipContent Class="max-w-md text-xs">
+            <div class="space-y-1">
+                <p class="font-medium">@L["Errors"]</p>
+                <ul class="list-disc space-y-1 pl-4">
+                    @foreach (var message in VisibleMessages)
+                    {
+                        <li class="break-words">@message</li>
+                    }
+                </ul>
+            </div>
+        </BbTooltipContent>
+    </BbTooltip>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<string>? Messages { get; set; }
+
+    private IReadOnlyList<string> VisibleMessages =>
+        Messages?.Where(message => !string.IsNullOrWhiteSpace(message)).ToList() ?? [];
+}

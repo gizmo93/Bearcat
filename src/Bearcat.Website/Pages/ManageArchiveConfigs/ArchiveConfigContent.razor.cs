@@ -1,4 +1,5 @@
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageArchives;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -10,6 +11,16 @@ public partial class ArchiveConfigContent(DialogService dialogService)
     [Parameter]
     [EditorRequired]
     public ArchiveConfigReadModel Config { get; set; } = null!;
+
+    private static BadgeVariant GetArchiveVariant(ArchiveState state) =>
+        state switch
+        {
+            ArchiveState.Created => BadgeVariant.Default,
+            ArchiveState.CreationFailed => BadgeVariant.Destructive,
+            ArchiveState.MissingFiles => BadgeVariant.Destructive,
+            ArchiveState.Creating => BadgeVariant.Secondary,
+            _ => BadgeVariant.Outline,
+        };
 
     private async Task ShowArchiveDialogAsync(int archiveId)
     {

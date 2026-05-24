@@ -60,9 +60,12 @@
                                Property="@(upload => upload.UploadState.ToString())"
                                Width="165px">
                 <CellTemplate Context="upload">
-                    <BbBadge Variant="@GetUploadVariant(upload.UploadState)">
-                        @L.Localize(upload.UploadState)
-                    </BbBadge>
+                    <div class="flex items-center gap-2">
+                        <BbBadge Variant="@GetUploadVariant(upload.UploadState)">
+                            @L.Localize(upload.UploadState)
+                        </BbBadge>
+                        <ErrorMessagesTooltip Messages="upload.ErrorMessages" />
+                    </div>
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="ReleaseUploadReadModel" TValue="DateTime?"
