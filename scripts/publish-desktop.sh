@@ -51,13 +51,12 @@ publish_runtime() {
 
   cp -a "$staging_root/desktop/." "$output_dir/"
   cp -a "$staging_root/host/." "$output_dir/"
+  find "$output_dir" -exec touch {} +
 
   if [ "$runtime" = "osx-arm64" ]; then
     chmod +x "$output_dir/Bearcat.Desktop" "$output_dir/Bearcat.Host"
     package_macos_app "$staging_root" "$output_dir"
   fi
-
-  find "$output_dir" -exec touch {} +
 
   echo "Published desktop artifact to $output_dir"
 
@@ -95,6 +94,11 @@ package_macos_app() {
   cp -a "$staging_root/desktop/." "$macos_dir/"
   cp -a "$staging_root/host/." "$macos_dir/"
   chmod +x "$macos_dir/Bearcat.Desktop" "$macos_dir/Bearcat.Host"
+
+  if [ -d "$macos_dir/wwwroot" ]; then
+    mv "$macos_dir/wwwroot" "$resources_dir/wwwroot"
+    ln -s "../Resources/wwwroot" "$macos_dir/wwwroot"
+  fi
 
   if command -v sips >/dev/null 2>&1 && command -v iconutil >/dev/null 2>&1; then
     sips -z 16 16 "$icon_source" --out "$iconset/icon_16x16.png" >/dev/null
@@ -141,7 +145,31 @@ package_macos_app() {
 </plist>
 EOF
 
+  if command -v codesign >/dev/null 2>&1; then
+    sign_macos_app "$app_root" "$macos_dir"
+  fi
+
   echo "Published macOS app bundle to $app_root"
+}
+
+sign_macos_app() {
+  local app_root="$1"
+  local macos_dir="$2"
+
+  while IFS= read -r file_path; do
+    if ! file "$file_path" | grep -q "Mach-O"; then
+      codesign --force --sign - "$file_path"
+    fi
+  done < <(find "$macos_dir" -type f)
+
+  while IFS= read -r file_path; do
+    if file "$file_path" | grep -q "Mach-O"; then
+      codesign --force --sign - "$file_path"
+    fi
+  done < <(find "$macos_dir" -type f)
+
+  codesign --force --sign - "$app_root"
+  codesign --verify --strict --verbose=2 "$app_root"
 }
 
 for runtime in "${runtimes[@]}"; do

@@ -76,6 +76,11 @@ jobs:
 
           chmod +x "$macos_dir/Bearcat.Desktop" "$macos_dir/Bearcat.Host"
 
+          if [ -d "$macos_dir/wwwroot" ]; then
+            mv "$macos_dir/wwwroot" "$resources_dir/wwwroot"
+            ln -s "../Resources/wwwroot" "$macos_dir/wwwroot"
+          fi
+
           icon_source="src/Bearcat.Desktop/Assets/bearcat-icon.png"
           iconset="$RUNNER_TEMP/BearcatIcon.iconset"
           rm -rf "$iconset"
@@ -128,6 +133,21 @@ jobs:
           </dict>
           </plist>
           EOF
+
+          while IFS= read -r file_path; do
+            if ! file "$file_path" | grep -q "Mach-O"; then
+              codesign --force --sign - "$file_path"
+            fi
+          done < <(find "$macos_dir" -type f)
+
+          while IFS= read -r file_path; do
+            if file "$file_path" | grep -q "Mach-O"; then
+              codesign --force --sign - "$file_path"
+            fi
+          done < <(find "$macos_dir" -type f)
+
+          codesign --force --sign - "$app_root"
+          codesign --verify --strict --verbose=2 "$app_root"
 
           ditto -c -k --sequesterRsrc --keepParent "$app_root" "$artifact_path"
 

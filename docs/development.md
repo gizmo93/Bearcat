@@ -83,6 +83,6 @@ scripts/publish-desktop.sh win-arm64
 Without arguments, the script publishes all desktop runtimes: `osx-arm64`, `win-x64`, and `win-arm64`. Pass one or more runtime identifiers to publish only those targets.
 
 The script deletes the target artifact folder, restores runtime-specific assets, publishes `Bearcat.Desktop` and `Bearcat.Host` into separate staging folders, then copies both into `artifacts/desktop/<runtime>`.
-For `osx-arm64`, it also marks the native executables as executable and creates `artifacts/desktop/osx-arm64/Bearcat Desktop.app`.
+For `osx-arm64`, it also marks the native executables as executable, creates `artifacts/desktop/osx-arm64/Bearcat Desktop.app`, and ad-hoc signs the app bundle.
 
 Do not use the timestamp of `Bearcat.Desktop.exe` as the freshness check. For non-single-file .NET publishes, the `.exe` is the native app host stub; the application code is in `Bearcat.Desktop.dll`. MSBuild may preserve timestamps when copying files into the publish folder, so the local script refreshes final artifact timestamps after copying.
