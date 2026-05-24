@@ -1,8 +1,8 @@
 using System.Text.Json.Serialization;
 
-namespace Bearcat.Hosters.DDownload.Api.UploadFile;
+namespace Bearcat.Hosters.Shared.XFilesharing.Api;
 
-public class Response
+public class UploadFileResponse
 {
     [JsonPropertyName("file_status")]
     public string FileStatus { get; set; } = null!;

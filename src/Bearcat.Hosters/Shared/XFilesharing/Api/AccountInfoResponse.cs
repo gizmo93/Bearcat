@@ -1,8 +1,8 @@
 using System.Text.Json.Serialization;
 
-namespace Bearcat.Hosters.DDownload.Api.AccountInfo;
+namespace Bearcat.Hosters.Shared.XFilesharing.Api;
 
-public class Response
+public class AccountInfoResponse
 {
     [JsonPropertyName("msg")]
     public string Msg { get; set; } = null!;
@@ -11,10 +11,10 @@ public class Response
     public int Status { get; set; }
 
     [JsonPropertyName("result")]
-    public Result? Result { get; set; }
+    public AccountInfoResult? Result { get; set; }
 }
 
-public class Result
+public class AccountInfoResult
 {
     [JsonPropertyName("storage_left")]
     public string StorageLeft { get; set; } = null!;

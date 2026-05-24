@@ -1,9 +1,9 @@
 using Bearcat.Hosters.Shared.XFilesharing.Api;
 using Refit;
 
-namespace Bearcat.Hosters.DDownload.Api;
+namespace Bearcat.Hosters.Uploady.Api;
 
-public interface IDDownloadApi : IXFilesharingApi
+public interface IUploadyApi : IXFilesharingApi
 {
     [Get("/account/info")]
     new Task<AccountInfoResponse> GetAccountInfoAsync(

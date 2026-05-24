@@ -1,8 +1,8 @@
 using Bearcat.Hosters.Shared.XFilesharing;
 
-namespace Bearcat.Hosters.DDownload;
+namespace Bearcat.Hosters.Uploady;
 
-public record DDownloadConfig : IXFilesharingHosterConfig
+public record UploadyConfig : IXFilesharingHosterConfig
 {
     public string ApiKey { get; init; } = null!;
 

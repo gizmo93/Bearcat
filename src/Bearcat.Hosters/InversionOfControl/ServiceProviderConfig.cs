@@ -7,6 +7,7 @@ using Bearcat.Hosters.Keep2Share.InversionOfControl;
 using Bearcat.Hosters.Nitroflare.InversionOfControl;
 using Bearcat.Hosters.Rapidgator.InversionOfControl;
 using Bearcat.Hosters.Shared;
+using Bearcat.Hosters.Uploady.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Hosters.InversionOfControl;
@@ -22,6 +23,7 @@ public static class ServiceProviderConfig
         services.AddGoFile();
         services.AddKeep2Share();
         services.AddNitroflare();
+        services.AddUploady();
 
         services.AddScoped<IHosterFactory, HosterFactory>();
         services.AddHttpClient(
