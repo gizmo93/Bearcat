@@ -23,13 +23,13 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
 
         try
         {
-            var linksString = string.Join(',', links);
-
             var response = await api.ProtectLinkAsync(
-                apiKey: config.ApiKey,
-                linksToProtect: linksString,
-                password: password,
-                title: containerName,
+                request: CreateRequestContent(
+                    apiKey: config.ApiKey,
+                    links: links,
+                    password: password,
+                    title: containerName
+                ),
                 cancellationToken: cancellationToken
             );
 
@@ -107,12 +107,12 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
 
         try
         {
-            var linksString = string.Join(',', links);
-
             var response = await api.UpdateContainerAsync(
-                apiKey: config.ApiKey,
-                linksToProtect: linksString,
-                urlId: containerLink.Split('/').Last(),
+                request: CreateRequestContent(
+                    apiKey: config.ApiKey,
+                    links: links,
+                    urlId: containerLink.Split('/').Last()
+                ),
                 cancellationToken: cancellationToken
             );
 
@@ -127,5 +127,46 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
                 ErrorMessage: ex.InnerException?.Message ?? ex.Message
             );
         }
+    }
+
+    private static MultipartFormDataContent CreateRequestContent(
+        string apiKey,
+        IReadOnlyList<string> links,
+        string? password = null,
+        string? title = null,
+        string? urlId = null
+    )
+    {
+        var content = new MultipartFormDataContent();
+
+        AddFormField(content, "apihash", apiKey);
+        AddFormField(content, "output", "json");
+
+        AddFormField(content, "link-to-protect", string.Join(',', links));
+
+        if (!string.IsNullOrWhiteSpace(password))
+        {
+            AddFormField(content, "password", password);
+        }
+
+        if (!string.IsNullOrWhiteSpace(title))
+        {
+            AddFormField(content, "title", title);
+        }
+
+        if (!string.IsNullOrWhiteSpace(urlId))
+        {
+            AddFormField(content, "url-id", urlId);
+        }
+
+        return content;
+    }
+
+    private static void AddFormField(MultipartFormDataContent content, string name, string value)
+    {
+        var field = new StringContent(value);
+        field.Headers.ContentType = null;
+
+        content.Add(field, name);
     }
 }

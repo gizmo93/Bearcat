@@ -1,7 +1,10 @@
+using System.Net;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using Bearcat.LinkCrypters.KeepLinks;
 using Bearcat.LinkCrypters.KeepLinks.Api;
 using Moq;
+using Refit;
 using Shouldly;
 using ProtectLinksResponse = Bearcat.LinkCrypters.KeepLinks.Api.ProtectLinks.Response;
 
@@ -29,10 +32,7 @@ public class KeepLinksTest
         apiMock
             .Setup(x =>
                 x.ProtectLinkAsync(
-                    "api-key",
-                    "https://hoster.test/file-1,https://hoster.test/file-2",
-                    "password",
-                    "container-name",
+                    It.IsAny<MultipartFormDataContent>(),
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -55,6 +55,25 @@ public class KeepLinksTest
         result.ContainerLink.ShouldBe("https://keeplinks.org/p/abc");
         result.ExternalReference.ShouldBeNull();
         result.ErrorMessages.ShouldBeEmpty();
+
+        apiMock.Verify(x =>
+            x.ProtectLinkAsync(
+                It.Is<MultipartFormDataContent>(content =>
+                    HasFormValue(content, "apihash", "api-key")
+                    && HasFormValue(content, "output", "json")
+                    && HasFormValue(content, "password", "password")
+                    && HasFormValue(content, "title", "container-name")
+                    && FormValues(content, "link-to-protect")
+                        .SequenceEqual(
+                            new[]
+                            {
+                                "https://hoster.test/file-1,https://hoster.test/file-2",
+                            }
+                        )
+                ),
+                It.IsAny<CancellationToken>()
+            )
+        );
     }
 
     [Test]
@@ -66,10 +85,7 @@ public class KeepLinksTest
         apiMock
             .Setup(x =>
                 x.ProtectLinkAsync(
-                    "api-key",
-                    "https://hoster.test/file",
-                    null,
-                    "container-name",
+                    It.IsAny<MultipartFormDataContent>(),
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -90,6 +106,19 @@ public class KeepLinksTest
         result.ContainerLink.ShouldBeNull();
         result.ExternalReference.ShouldBeNull();
         result.ErrorMessages.ShouldBe(["invalid api key"]);
+
+        apiMock.Verify(x =>
+            x.ProtectLinkAsync(
+                It.Is<MultipartFormDataContent>(content =>
+                    HasFormValue(content, "apihash", "api-key")
+                    && HasFormValue(content, "title", "container-name")
+                    && FormValues(content, "link-to-protect")
+                        .SequenceEqual(new[] { "https://hoster.test/file" })
+                    && !HasFormName(content, "password")
+                ),
+                It.IsAny<CancellationToken>()
+            )
+        );
     }
 
     [Test]
@@ -102,9 +131,7 @@ public class KeepLinksTest
         apiMock
             .Setup(x =>
                 x.UpdateContainerAsync(
-                    "api-key",
-                    "https://hoster.test/file-1,https://hoster.test/file-2",
-                    "container-id",
+                    It.IsAny<MultipartFormDataContent>(),
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -123,6 +150,24 @@ public class KeepLinksTest
         result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeTrue();
         result.ErrorMessage.ShouldBeNull();
+
+        apiMock.Verify(x =>
+            x.UpdateContainerAsync(
+                It.Is<MultipartFormDataContent>(content =>
+                    HasFormValue(content, "apihash", "api-key")
+                    && HasFormValue(content, "output", "json")
+                    && HasFormValue(content, "url-id", "container-id")
+                    && FormValues(content, "link-to-protect")
+                        .SequenceEqual(
+                            new[]
+                            {
+                                "https://hoster.test/file-1,https://hoster.test/file-2",
+                            }
+                        )
+                ),
+                It.IsAny<CancellationToken>()
+            )
+        );
     }
 
     [Test]
@@ -134,9 +179,7 @@ public class KeepLinksTest
         apiMock
             .Setup(x =>
                 x.UpdateContainerAsync(
-                    "api-key",
-                    "https://hoster.test/file",
-                    "container-id",
+                    It.IsAny<MultipartFormDataContent>(),
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -155,6 +198,18 @@ public class KeepLinksTest
         result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeFalse();
         result.ErrorMessage.ShouldBe("update failed");
+
+        apiMock.Verify(x =>
+            x.UpdateContainerAsync(
+                It.Is<MultipartFormDataContent>(content =>
+                    HasFormValue(content, "apihash", "api-key")
+                    && HasFormValue(content, "url-id", "container-id")
+                    && FormValues(content, "link-to-protect")
+                        .SequenceEqual(new[] { "https://hoster.test/file" })
+                ),
+                It.IsAny<CancellationToken>()
+            )
+        );
     }
 
     [Test]
@@ -207,5 +262,108 @@ public class KeepLinksTest
         // Assert
         result.ShouldNotBeNull();
         result.ShouldBeOfType<KeepLinksConfig>().ApiKey.ShouldBe("api-key");
+    }
+
+    [Test]
+    public async Task ProtectLinkAsync_RefitSendsMultipartFormBody()
+    {
+        // Arrange
+        using var httpMessageHandler = new TestHttpMessageHandler();
+        var capturedBody = string.Empty;
+        var capturedContentType = string.Empty;
+
+        httpMessageHandler.Enqueue(async request =>
+        {
+            request.Method.ShouldBe(HttpMethod.Post);
+            request.RequestUri!.ToString().ShouldBe("https://www.keeplinks.org/api.php");
+            request.Content.ShouldNotBeNull();
+
+            capturedContentType = request.Content!.Headers.ContentType!.ToString();
+            capturedBody = await request.Content.ReadAsStringAsync();
+
+            return CreateJsonResponse("""{"p_links":"https://keeplinks.org/p/abc"}""");
+        });
+
+        var api = RestService.For<IKeepLinksApi>(
+            new HttpClient(httpMessageHandler, disposeHandler: false)
+            {
+                BaseAddress = new Uri("https://www.keeplinks.org"),
+            }
+        );
+
+        using var content = new MultipartFormDataContent();
+        AddFormField(content, "apihash", "api-key");
+        AddFormField(
+            content,
+            "link-to-protect",
+            "https://hoster.test/file-1,https://hoster.test/file-2"
+        );
+
+        // Act
+        var response = await api.ProtectLinkAsync(content, CancellationToken.None);
+
+        // Assert
+        response.ContainerLink.ShouldBe("https://keeplinks.org/p/abc");
+        capturedContentType.ShouldStartWith("multipart/form-data; boundary=");
+        capturedBody.Split("name=link-to-protect").Length.ShouldBe(2);
+        capturedBody.ShouldContain("https://hoster.test/file-1,https://hoster.test/file-2");
+        httpMessageHandler.PendingRequests.ShouldBe(0);
+    }
+
+    private static bool HasFormValue(MultipartFormDataContent content, string name, string value)
+    {
+        return FormValues(content, name).Contains(value);
+    }
+
+    private static bool HasFormName(MultipartFormDataContent content, string name)
+    {
+        return FormValues(content, name).Any();
+    }
+
+    private static IEnumerable<string> FormValues(MultipartFormDataContent content, string name)
+    {
+        return content
+            .Where(part => part.Headers.ContentDisposition?.Name?.Trim('"') == name)
+            .Select(part => part.ReadAsStringAsync().GetAwaiter().GetResult());
+    }
+
+    private static void AddFormField(MultipartFormDataContent content, string name, string value)
+    {
+        var field = new StringContent(value);
+        field.Headers.ContentType = null;
+
+        content.Add(field, name);
+    }
+
+    private static HttpResponseMessage CreateJsonResponse(string content)
+    {
+        return new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(content)
+            {
+                Headers = { ContentType = new MediaTypeHeaderValue("application/json") },
+            },
+        };
+    }
+
+    private sealed class TestHttpMessageHandler : HttpMessageHandler
+    {
+        private readonly Queue<Func<HttpRequestMessage, Task<HttpResponseMessage>>> responses = [];
+
+        public int PendingRequests => responses.Count;
+
+        public void Enqueue(Func<HttpRequestMessage, Task<HttpResponseMessage>> response)
+        {
+            responses.Enqueue(response);
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
+        {
+            responses.Count.ShouldBeGreaterThan(0);
+            return responses.Dequeue()(request);
+        }
     }
 }
