@@ -55,6 +55,7 @@ public class RarArchiverTest
 
         // Assert
         result.ShouldNotBeNull();
+        service.CanChangeHashInPlace.ShouldBeTrue();
         result.IsSuccess.ShouldBeTrue();
         result.ErrorMessages.ShouldBeNull();
         result.CreatedFileNames.ShouldNotBeEmpty();
@@ -62,6 +63,39 @@ public class RarArchiverTest
         result.CreatedFileNames.ShouldAllBe(f => f.StartsWith(destinationPath));
         result.CreatedFileNames.ShouldAllBe(f => Path.GetFileName(f).StartsWith("archive"));
         result.CreatedFileNames.ShouldAllBe(f => f.EndsWith(".rar"));
+    }
+
+    [Test]
+    public async Task ArchiveAsync_CreatedFilesHaveTrailingNullByteAdded_CanStillBeExtracted()
+    {
+        // Arrange
+        var sourceFilePath = await ArchiveExtractionTestHelper.WriteRandomSourceFileAsync(
+            sourceFolderPath
+        );
+        var extractPath = Directory.CreateDirectory(Path.Combine(tempRootPath, "extract")).FullName;
+
+        var result = await service.ArchiveAsync(
+            sourceFolderPath,
+            destinationPath,
+            "archive",
+            1,
+            null,
+            new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
+            CancellationToken.None
+        );
+
+        result.IsSuccess.ShouldBeTrue();
+        result.CreatedFileNames.Count.ShouldBeGreaterThan(1);
+
+        // Act
+        await ArchiveExtractionTestHelper.AppendNullByteToEachArchiveFileAsync(result);
+        await ArchiveExtractionTestHelper.ExtractWithRarAsync(
+            result.CreatedFileNames.Order(StringComparer.Ordinal).First(),
+            extractPath
+        );
+
+        // Assert
+        ArchiveExtractionTestHelper.ExtractedPayloadShouldMatchSource(sourceFilePath, extractPath);
     }
 
     [Test]

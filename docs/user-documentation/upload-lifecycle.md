@@ -39,6 +39,15 @@ The "Archive creation" background task looks for uploads in `WaitingForArchive` 
 For each matching upload, Bearcat checks whether there is already a finished archive for the same archive configuration.
 If such an archive exists, Bearcat assigns it to the upload and moves the upload to `Pending`.
 
+For reuploads, Bearcat also checks whether that archive has already been uploaded to the same hoster type before.
+If it has, Bearcat must make sure the archive file hashes change before uploading again.
+When the archiver supports changing hashes in place (only RAR currently), Bearcat appends a harmless trailing byte to the existing archive files before assigning the archive.
+This changes the MD5 hash while keeping the archive extractable.
+
+Not every archive format supports this safely.
+If the configured archiver does not support changing hashes in place, Bearcat does not modify the existing files and creates a fresh archive instead.
+If the reusable archive is currently used by another active upload, Bearcat waits and tries again on the next archive creation run.
+
 If no reusable archive exists, Bearcat creates a new archive from the release folder.
 The archive configuration decides:
 

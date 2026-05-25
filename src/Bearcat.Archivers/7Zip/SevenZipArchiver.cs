@@ -12,6 +12,8 @@ public class SevenZipArchiver(ILogger<SevenZipArchiver> logger, IConfiguration c
 
     public string FileExtension => ".7z";
 
+    public bool CanChangeHashInPlace => false;
+
     public async Task<ArchiveResult> ArchiveAsync(
         string sourceFolderPath,
         string destinationPath,

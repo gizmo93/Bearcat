@@ -6,6 +6,8 @@ public interface IArchiver
 
     string FileExtension { get; }
 
+    bool CanChangeHashInPlace { get; }
+
     Task<ArchiveResult> ArchiveAsync(
         string sourceFolderPath,
         string destinationPath,
