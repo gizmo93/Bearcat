@@ -70,7 +70,7 @@ public class DDownloadTest
         // Assert
         result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeTrue();
-        result.FileUrl.ShouldBe("https://www.ddownload.com/abc123");
+        result.FileUrl.ShouldBe("https://ddownload.com/abc123");
         result.ErrorMessages.ShouldBeEmpty();
     }
 
