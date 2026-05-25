@@ -11,20 +11,15 @@ public interface IKeepLinksApi
         CancellationToken cancellationToken = default
     );
 
-    [Post("/api.php?captcha=on&captchatype=Re&output=json")]
+    [Post("/api.php")]
     Task<Response> ProtectLinkAsync(
-        [Query] [AliasAs("apihash")] string apiKey,
-        [Query] [AliasAs("link-to-protect")] string linksToProtect,
-        [Query] [AliasAs("password")] string? password,
-        [Query] [AliasAs("title")] string? title,
+        [Body] MultipartFormDataContent request,
         CancellationToken cancellationToken = default
     );
 
-    [Post("/api.php?captcha=on&captchatype=Re&output=json")]
+    [Post("/api.php")]
     Task<Response> UpdateContainerAsync(
-        [Query] [AliasAs("apihash")] string apiKey,
-        [Query] [AliasAs("link-to-protect")] string linksToProtect,
-        [Query] [AliasAs("url-id")] string urlId,
+        [Body] MultipartFormDataContent request,
         CancellationToken cancellationToken = default
     );
 }
