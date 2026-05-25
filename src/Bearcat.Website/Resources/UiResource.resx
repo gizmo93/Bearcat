@@ -501,4 +501,29 @@
     <data name="RandomArchiveName" xml:space="preserve">
         <value>&lt;random-name&gt;</value>
     </data>
+  <data name="AvailableVariables" xml:space="preserve"><value>Available variables</value></data>
+  <data name="CopyForumPost" xml:space="preserve"><value>Copy forum post</value></data>
+  <data name="DeleteForumPostTemplateConfirmation" xml:space="preserve"><value>Are you sure you want to delete forum post template {0}?</value></data>
+  <data name="ForumPostTemplate" xml:space="preserve"><value>Forum post template</value></data>
+  <data name="ForumPostTemplateBodyPlaceholder" xml:space="preserve"><value>Write BBCode with {{ release.name }} variables</value></data>
+  <data name="ForumPostTemplateNamePlaceholder" xml:space="preserve"><value>Name this forum post template</value></data>
+  <data name="ForumPostTemplates" xml:space="preserve"><value>Forum post templates</value></data>
+    <data name="ForumPostTemplatesIntro" xml:space="preserve"><value>Manage e.g. BBCode templates for posting completed releases.</value></data>
+  <data name="ForumPostTemplatesSubtitle" xml:space="preserve"><value>BBCode templates and render variables</value></data>
+  <data name="NewForumPostTemplate" xml:space="preserve"><value>New forum post template</value></data>
+  <data name="NoForumPostTemplatesFound" xml:space="preserve"><value>No forum post templates found.</value></data>
+  <data name="NoVariablesFound" xml:space="preserve"><value>No variables found.</value></data>
+  <data name="Render" xml:space="preserve"><value>Render</value></data>
+  <data name="RenderedForumPost" xml:space="preserve"><value>Rendered forum post</value></data>
+  <data name="RenderForumPost" xml:space="preserve"><value>Render forum post</value></data>
+  <data name="RenderForumPostDescription" xml:space="preserve"><value>Render this release with a forum post template.</value></data>
+  <data name="RenderForumPostForRelease" xml:space="preserve"><value>Render forum post for {0}</value></data>
+  <data name="SearchVariables" xml:space="preserve"><value>Search variables</value></data>
+  <data name="SelectForumPostTemplate" xml:space="preserve"><value>Select a forum post template</value></data>
+  <data name="Template" xml:space="preserve"><value>Template</value></data>
+  <data name="Templates" xml:space="preserve"><value>Templates</value></data>
+  <data name="TemplateSyntaxValid" xml:space="preserve"><value>Template syntax is valid.</value></data>
+  <data name="ToggleTemplates" xml:space="preserve"><value>Toggle templates</value></data>
+  <data name="ToggleVariables" xml:space="preserve"><value>Toggle variables</value></data>
+  <data name="Validate" xml:space="preserve"><value>Validate</value></data>
 </root>

@@ -1,0 +1,211 @@
+@page "/forum-post-templates"
+@inherits OwningComponentBase
+
+<PageTitle>@L["ForumPostTemplates"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["ForumPostTemplates"]</h1>
+            <p class="text-sm text-muted-foreground">
+                @L["ForumPostTemplatesIntro"]
+            </p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="CreateNewAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewForumPostTemplate"]
+        </BbButton>
+    </div>
+
+    <div class="bearcat-forum-template-workspace">
+        <aside class="bearcat-forum-template-list bearcat-forum-template-desktop-panel">
+            <div class="bearcat-forum-template-panel-header">
+                <h2 class="text-lg font-semibold">@L["Templates"]</h2>
+            </div>
+
+            <div class="bearcat-forum-template-scroll">
+                @RenderTemplates()
+            </div>
+        </aside>
+
+        <main class="bearcat-forum-template-editor">
+            <div class="bearcat-forum-template-mobile-panels">
+                <BbCollapsible @bind-Open="templatesPanelOpen">
+                    <div class="bearcat-forum-template-mobile-trigger">
+                        <h2 class="text-lg font-semibold">@L["Templates"]</h2>
+                        <BbCollapsibleTrigger>
+                            <BbButton Variant="ButtonVariant.Ghost"
+                                      Size="ButtonSize.IconSmall"
+                                      AriaLabel="@L["ToggleTemplates"]">
+                                <LucideIcon Name="chevrons-up-down" class="h-4 w-4" />
+                            </BbButton>
+                        </BbCollapsibleTrigger>
+                    </div>
+                    <BbCollapsibleContent Class="bearcat-forum-template-mobile-content">
+                        <div class="bearcat-forum-template-mobile-scroll">
+                            @RenderTemplates()
+                        </div>
+                    </BbCollapsibleContent>
+                </BbCollapsible>
+            </div>
+
+            <div class="bearcat-forum-template-editor-main">
+                <EditForm Model="formModel" OnValidSubmit="SaveAsync">
+                    <div class="space-y-4">
+                        <BbFormFieldInput TValue="string"
+                                          @bind-Value="formModel.Name"
+                                          Label="@L["Name"]"
+                                          Placeholder="@L["ForumPostTemplateNamePlaceholder"]" />
+
+                        <BbFormFieldTextarea @bind-Value="formModel.TemplateBody"
+                                             Label="@L["Template"]"
+                                             Placeholder="@L["ForumPostTemplateBodyPlaceholder"]"
+                                             InputClass="min-h-[34rem] font-mono text-xs"
+                                             UpdateTiming="UpdateTiming.OnChange" />
+
+                        @if (!string.IsNullOrWhiteSpace(errorMessage))
+                        {
+                            <div class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                                @errorMessage
+                            </div>
+                        }
+
+                        @if (validationResult is not null && !validationResult.IsValid)
+                        {
+                            <div class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                                @foreach (var error in validationResult.Errors)
+                                {
+                                    <p>@error</p>
+                                }
+                            </div>
+                        }
+                        else if (validationResult is not null)
+                        {
+                            <div class="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                                @L["TemplateSyntaxValid"]
+                            </div>
+                        }
+
+                        <div class="flex flex-wrap justify-end gap-2">
+                            <BbButton Variant="ButtonVariant.Outline" OnClick="ValidateAsync">
+                                <LucideIcon Name="check" class="h-4 w-4" />
+                                @L["Validate"]
+                            </BbButton>
+                            <BbButton Variant="ButtonVariant.Outline"
+                                      Disabled="@(formModel.ForumPostTemplateId is null)"
+                                      OnClick="DeleteAsync">
+                                <LucideIcon Name="trash-2" class="h-4 w-4" />
+                                @L["Delete"]
+                            </BbButton>
+                            <BbButton Type="ButtonType.Submit">
+                                <LucideIcon Name="save" class="h-4 w-4" />
+                                @L["Save"]
+                            </BbButton>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+
+            <div class="bearcat-forum-template-mobile-panels">
+                <BbCollapsible @bind-Open="variablesPanelOpen">
+                    <div class="bearcat-forum-template-mobile-trigger">
+                        <h2 class="text-lg font-semibold">@L["AvailableVariables"]</h2>
+                        <BbCollapsibleTrigger>
+                            <BbButton Variant="ButtonVariant.Ghost"
+                                      Size="ButtonSize.IconSmall"
+                                      AriaLabel="@L["ToggleVariables"]">
+                                <LucideIcon Name="chevrons-up-down" class="h-4 w-4" />
+                            </BbButton>
+                        </BbCollapsibleTrigger>
+                    </div>
+                    <BbCollapsibleContent Class="bearcat-forum-template-mobile-content">
+                        <div class="space-y-3 pt-3">
+                            @RenderVariableSearch()
+                            <div class="bearcat-forum-template-mobile-scroll">
+                                @RenderVariables()
+                            </div>
+                        </div>
+                    </BbCollapsibleContent>
+                </BbCollapsible>
+            </div>
+
+            <aside class="bearcat-forum-template-variables bearcat-forum-template-desktop-panel">
+                <div class="bearcat-forum-template-panel-header">
+                    <h2 class="text-lg font-semibold">@L["AvailableVariables"]</h2>
+                    @RenderVariableSearch()
+                </div>
+
+                <div class="bearcat-forum-template-scroll">
+                    @RenderVariables()
+                </div>
+            </aside>
+        </main>
+    </div>
+</section>
+
+@code {
+    private RenderFragment RenderTemplates() =>
+        @<text>
+            @if (isLoading)
+            {
+                <div class="bearcat-release-empty">
+                    <LucideIcon Name="loader-circle" class="h-5 w-5 animate-spin" />
+                    <span>@L["Loading"]</span>
+                </div>
+            }
+            else if (templates.Count == 0)
+            {
+                <div class="bearcat-release-empty">
+                    <LucideIcon Name="inbox" class="h-5 w-5" />
+                    <span>@L["NoForumPostTemplatesFound"]</span>
+                </div>
+            }
+            else
+            {
+                <div class="space-y-1">
+                    @foreach (var template in templates)
+                    {
+                        <button type="button"
+                                class="@GetTemplateListItemClass(template.ForumPostTemplateId)"
+                                @onclick="@(async () => await SelectTemplateAsync(template.ForumPostTemplateId))">
+                            <span class="truncate font-medium">@template.Name</span>
+                            <span class="text-xs text-muted-foreground">@template.UpdatedAt.ToString("g")</span>
+                        </button>
+                    }
+                </div>
+            }
+        </text>;
+
+    private RenderFragment RenderVariableSearch() =>
+        @<BbFormFieldInput TValue="string"
+                           @bind-Value="variableSearchTerm"
+                           Type="InputType.Search"
+                           Placeholder="@L["SearchVariables"]"
+                           AriaLabel="@L["SearchVariables"]"
+                           InputClass="text-sm"
+                           UpdateTiming="UpdateTiming.Immediate" />;
+
+    private RenderFragment RenderVariables() =>
+        @<text>
+            @if (FilteredVariables.Count == 0)
+            {
+                <div class="bearcat-release-empty">
+                    <LucideIcon Name="search-x" class="h-5 w-5" />
+                    <span>@L["NoVariablesFound"]</span>
+                </div>
+            }
+            else
+            {
+                <div class="space-y-2">
+                    @foreach (var variable in FilteredVariables)
+                    {
+                        <div class="bearcat-forum-template-variable">
+                            <code>@variable.Path</code>
+                            <p>@variable.Description</p>
+                        </div>
+                    }
+                </div>
+            }
+        </text>;
+}

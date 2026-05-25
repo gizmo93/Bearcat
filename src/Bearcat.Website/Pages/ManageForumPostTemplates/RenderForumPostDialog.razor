@@ -1,0 +1,67 @@
+@inherits OwningComponentBase
+
+<div class="space-y-4">
+    @if (templates.Count == 0)
+    {
+        <div class="bearcat-release-empty">
+            <LucideIcon Name="inbox" class="h-5 w-5" />
+            <span>@L["NoForumPostTemplatesFound"]</span>
+        </div>
+
+        <div class="flex justify-end">
+            <BbButton Href="/forum-post-templates">
+                <LucideIcon Name="plus" class="h-4 w-4" />
+                @L["NewForumPostTemplate"]
+            </BbButton>
+        </div>
+    }
+    else
+    {
+        <BbFormFieldSelect TValue="int"
+                           Value="selectedTemplateId"
+                           ValueChanged="HandleTemplateChangedAsync"
+                           Label="@L["ForumPostTemplate"]"
+                           Placeholder="@L["SelectForumPostTemplate"]"
+                           DisplayTextSelector="GetTemplateDisplayText"
+                           Options="TemplateOptions" />
+
+        @if (renderErrors.Count > 0)
+        {
+            <div class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                @foreach (var error in renderErrors)
+                {
+                    <p>@error</p>
+                }
+            </div>
+        }
+
+        <div class="space-y-2">
+            <label class="text-sm font-medium" for="@RenderedCopyTargetId">@L["RenderedForumPost"]</label>
+            <textarea id="@RenderedCopyTargetId"
+                      class="bearcat-rendered-forum-post"
+                      readonly>@renderedContent</textarea>
+        </div>
+
+        <div class="flex flex-wrap justify-end gap-2">
+            <button type="button"
+                    class="bearcat-copy-button"
+                    disabled="@string.IsNullOrWhiteSpace(renderedContent)"
+                    data-copy-target="@RenderedCopyTargetId"
+                    data-copy-label="@L["CopyForumPost"]"
+                    data-copy-success-label="@L["Copied"]"
+                    data-copy-failure-label="@L["CopyFailed"]"
+                    onclick="window.bearcat.copyFromTarget(this)">
+                <LucideIcon Name="clipboard-copy" class="h-4 w-4" />
+                <span class="bearcat-copy-button-label">@L["CopyForumPost"]</span>
+            </button>
+
+            <BbButton Variant="ButtonVariant.Outline" Disabled="isRendering" OnClick="RenderAsync">
+                <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isRendering ? "animate-spin" : string.Empty)}")" />
+                @L["Render"]
+            </BbButton>
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CloseAsync">
+                @L["Close"]
+            </BbButton>
+        </div>
+    }
+</div>
