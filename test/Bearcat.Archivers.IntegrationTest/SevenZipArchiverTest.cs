@@ -55,12 +55,46 @@ public class SevenZipArchiverTest
 
         // Assert
         result.ShouldNotBeNull();
+        service.CanChangeHashInPlace.ShouldBeFalse();
         result.IsSuccess.ShouldBeTrue();
         result.ErrorMessages.ShouldBeNull();
         result.CreatedFileNames.ShouldNotBeEmpty();
         result.CreatedFileNames.ShouldAllBe(f => File.Exists(f));
         result.CreatedFileNames.ShouldAllBe(f => f.StartsWith(destinationPath));
         result.CreatedFileNames.ShouldAllBe(f => Path.GetFileName(f).StartsWith("archive.7z"));
+    }
+
+    [Test]
+    public async Task ArchiveAsync_SingleVolumeFileHasTrailingNullByteAdded_CanStillBeExtracted()
+    {
+        // Arrange
+        var sourceFilePath = await ArchiveExtractionTestHelper.WriteRandomSourceFileAsync(
+            sourceFolderPath
+        );
+        var extractPath = Directory.CreateDirectory(Path.Combine(tempRootPath, "extract")).FullName;
+
+        var result = await service.ArchiveAsync(
+            sourceFolderPath,
+            destinationPath,
+            "archive",
+            10,
+            null,
+            new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
+            CancellationToken.None
+        );
+
+        result.IsSuccess.ShouldBeTrue();
+        result.CreatedFileNames.Count.ShouldBe(1);
+
+        // Act
+        await ArchiveExtractionTestHelper.AppendNullByteToEachArchiveFileAsync(result);
+        await ArchiveExtractionTestHelper.ExtractWithSevenZipAsync(
+            result.CreatedFileNames.Order(StringComparer.Ordinal).First(),
+            extractPath
+        );
+
+        // Assert
+        ArchiveExtractionTestHelper.ExtractedPayloadShouldMatchSource(sourceFilePath, extractPath);
     }
 
     [Test]

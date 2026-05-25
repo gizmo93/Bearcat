@@ -15,25 +15,54 @@ public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite) : IArchiv
             .Uploads.Include(u => u.UploadConfig)
                 .ThenInclude(u => u.ArchiveConfig)
                     .ThenInclude(a => a.Release)
+            .Include(u => u.UploadConfig)
+                .ThenInclude(u => u.HosterRegistration)
             .Where(u => u.ArchiveId == null && u.UploadState == UploadState.WaitingForArchive)
             .OrderBy(u => u.Id)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<int?> GetPossibleAssignableArchiveId(
+    public async Task<Archive?> GetPossibleAssignableArchiveAsync(
         int archiveConfigId,
         CancellationToken cancellationToken
     )
     {
-        var archiveId = await dbWrite
-            .Archives.Where(a =>
+        return await dbWrite
+            .Archives.Include(a => a.ArchiveFiles)
+            .Where(a =>
                 a.ArchiveConfigId == archiveConfigId && a.ArchiveState == ArchiveState.Created
             )
             .OrderByDescending(a => a.Id)
-            .Select(a => a.Id)
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+    }
 
-        return archiveId > 0 ? archiveId : null;
+    public async Task<bool> HasCompletedUploadForHosterAsync(
+        int archiveConfigId,
+        string hosterClassName,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite.Uploads.AnyAsync(
+            u =>
+                u.UploadConfig.ArchiveConfigId == archiveConfigId
+                && u.UploadConfig.HosterRegistration.HosterClassName == hosterClassName
+                && u.UploadState == UploadState.Completed,
+            cancellationToken
+        );
+    }
+
+    public async Task<bool> HasActiveUploadAsync(int archiveId, CancellationToken cancellationToken)
+    {
+        return await dbWrite.Uploads.AnyAsync(
+            u =>
+                u.ArchiveId == archiveId
+                && (
+                    u.UploadState == UploadState.Pending
+                    || u.UploadState == UploadState.Uploading
+                    || u.UploadState == UploadState.CancellationRequested
+                ),
+            cancellationToken
+        );
     }
 
     public async Task<int?> GetLastArchiveFileSizeMbAsync(

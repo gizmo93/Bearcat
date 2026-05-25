@@ -35,29 +35,43 @@ public class ArchiveCreationService(
             cancellationToken
         );
         var archivesToCreate = new Dictionary<ArchiveConfig, List<Upload>>();
+        var uploadsByArchiveConfigId = new Dictionary<int, List<Upload>>();
+        var archiveConfigsById = new Dictionary<int, ArchiveConfig>();
 
         foreach (var upload in uploadsWithoutArchive)
         {
-            logger.LogInformation(
-                "Processing upload {UploadId} for UploadConfig {UploadConfigId} without archive",
-                upload.Id,
-                upload.UploadConfigId
+            archiveConfigsById.TryAdd(
+                upload.UploadConfig.ArchiveConfigId,
+                upload.UploadConfig.ArchiveConfig
             );
 
-            var existingArchiveCanBeAssigned = await TryAssignExistingArchiveAsync(
-                upload,
+            if (!uploadsByArchiveConfigId.TryAdd(upload.UploadConfig.ArchiveConfigId, [upload]))
+            {
+                uploadsByArchiveConfigId[upload.UploadConfig.ArchiveConfigId].Add(upload);
+            }
+        }
+
+        foreach (var (archiveConfigId, uploads) in uploadsByArchiveConfigId)
+        {
+            logger.LogInformation(
+                "Processing uploads {UploadIds} for UploadConfig {UploadConfigIds} without archive",
+                uploads.Select(u => u.Id),
+                uploads.Select(u => u.UploadConfigId)
+            );
+
+            var archiveConfig = archiveConfigsById[archiveConfigId];
+            var existingArchiveWasHandled = await TryAssignExistingArchiveAsync(
+                archiveConfig,
+                uploads,
                 cancellationToken
             );
 
-            if (existingArchiveCanBeAssigned)
+            if (existingArchiveWasHandled)
             {
                 continue;
             }
 
-            if (!archivesToCreate.TryAdd(upload.UploadConfig.ArchiveConfig, [upload]))
-            {
-                archivesToCreate[upload.UploadConfig.ArchiveConfig].Add(upload);
-            }
+            archivesToCreate.Add(archiveConfig, uploads);
         }
 
         if (archivesToCreate.Count == 0)
@@ -77,37 +91,143 @@ public class ArchiveCreationService(
     }
 
     private async Task<bool> TryAssignExistingArchiveAsync(
-        Upload upload,
+        ArchiveConfig archiveConfig,
+        IReadOnlyList<Upload> uploads,
         CancellationToken cancellationToken
     )
     {
-        var assignableArchiveId = await repository.GetPossibleAssignableArchiveId(
-            archiveConfigId: upload.UploadConfig.ArchiveConfigId,
+        var assignableArchive = await repository.GetPossibleAssignableArchiveAsync(
+            archiveConfigId: archiveConfig.Id,
             cancellationToken: cancellationToken
         );
 
-        if (assignableArchiveId is null)
+        if (assignableArchive is null)
         {
             logger.LogInformation(
-                "Could not find existing archive for upload {UploadId} with UploadConfig {UploadConfigId}",
-                upload.Id,
-                upload.UploadConfigId
+                "Could not find existing archive for ArchiveConfig {ArchiveConfigId}",
+                archiveConfig.Id
             );
 
             return false;
         }
 
-        upload.ArchiveId = assignableArchiveId;
-        upload.UploadState = UploadState.Pending;
+        var archiveNeedsHashChange = await ArchiveNeedsHashChangeAsync(
+            archiveConfig: archiveConfig,
+            uploads: uploads,
+            cancellationToken: cancellationToken
+        );
+
+        if (archiveNeedsHashChange)
+        {
+            var archiveHasActiveUpload = await repository.HasActiveUploadAsync(
+                archiveId: assignableArchive.Id,
+                cancellationToken: cancellationToken
+            );
+
+            if (archiveHasActiveUpload)
+            {
+                logger.LogInformation(
+                    "Existing archive {ArchiveId} is currently used by an active upload. Skipping {UploadCount} uploads until the next archive creation run",
+                    assignableArchive.Id,
+                    uploads.Count
+                );
+
+                return true;
+            }
+
+            var archiver = archiverFactory.GetByName(archiveConfig.ArchiverName);
+
+            if (!archiver.CanChangeHashInPlace)
+            {
+                logger.LogInformation(
+                    "Archiver {ArchiverName} does not support changing hashes in place. Creating a new archive instead of reusing archive {ArchiveId}.",
+                    archiver.Name,
+                    assignableArchive.Id
+                );
+
+                return false;
+            }
+
+            await ChangeArchiveFileHashesAsync(assignableArchive, cancellationToken);
+        }
+
+        foreach (var upload in uploads)
+        {
+            upload.ArchiveId = assignableArchive.Id;
+            upload.UploadState = UploadState.Pending;
+        }
+
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
         logger.LogInformation(
-            "Assigned existing archive {ArchiveId} to upload {UploadId}",
-            assignableArchiveId,
-            upload.Id
+            "Assigned existing archive {ArchiveId} to {UploadCount} uploads",
+            assignableArchive.Id,
+            uploads.Count
         );
 
         return true;
+    }
+
+    private async Task<bool> ArchiveNeedsHashChangeAsync(
+        ArchiveConfig archiveConfig,
+        IReadOnlyList<Upload> uploads,
+        CancellationToken cancellationToken
+    )
+    {
+        foreach (
+            var hosterClassName in uploads
+                .Select(u => u.UploadConfig.HosterRegistration.HosterClassName)
+                .Distinct(StringComparer.Ordinal)
+        )
+        {
+            if (
+                await repository.HasCompletedUploadForHosterAsync(
+                    archiveConfigId: archiveConfig.Id,
+                    hosterClassName: hosterClassName,
+                    cancellationToken: cancellationToken
+                )
+            )
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private async Task ChangeArchiveFileHashesAsync(
+        Archive archive,
+        CancellationToken cancellationToken
+    )
+    {
+        foreach (var archiveFile in archive.ArchiveFiles)
+        {
+            if (!File.Exists(archiveFile.FullFileName))
+            {
+                logger.LogWarning(
+                    "Cannot change MD5 hash for missing archive file {ArchiveFileName} in archive {ArchiveId}",
+                    archiveFile.FullFileName,
+                    archive.Id
+                );
+
+                continue;
+            }
+
+            await using var stream = new FileStream(
+                path: archiveFile.FullFileName,
+                mode: FileMode.Append,
+                access: FileAccess.Write,
+                share: FileShare.Read
+            );
+            stream.WriteByte(0);
+            await stream.FlushAsync(cancellationToken);
+        }
+
+        logger.LogInformation(
+            "Changed MD5 hash for {FileCount} archive files in existing archive {ArchiveId}",
+            archive.ArchiveFiles.Count,
+            archive.Id
+        );
     }
 
     private async Task CreateArchiveAsync(

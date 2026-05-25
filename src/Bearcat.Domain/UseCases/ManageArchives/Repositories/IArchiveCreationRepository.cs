@@ -9,10 +9,16 @@ public interface IArchiveCreationRepository
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 
     void Add(Archive archive);
-    Task<int?> GetPossibleAssignableArchiveId(
+    Task<Archive?> GetPossibleAssignableArchiveAsync(
         int archiveConfigId,
         CancellationToken cancellationToken
     );
+    Task<bool> HasCompletedUploadForHosterAsync(
+        int archiveConfigId,
+        string hosterClassName,
+        CancellationToken cancellationToken
+    );
+    Task<bool> HasActiveUploadAsync(int archiveId, CancellationToken cancellationToken);
     Task<int?> GetLastArchiveFileSizeMbAsync(
         int archiveConfigId,
         CancellationToken cancellationToken

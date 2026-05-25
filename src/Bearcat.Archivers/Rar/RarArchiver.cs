@@ -11,6 +11,8 @@ public class RarArchiver(ILogger<RarArchiver> logger, IConfiguration configurati
 
     public string FileExtension => ".rar";
 
+    public bool CanChangeHashInPlace => true;
+
     public async Task<ArchiveResult> ArchiveAsync(
         string sourceFolderPath,
         string destinationPath,
