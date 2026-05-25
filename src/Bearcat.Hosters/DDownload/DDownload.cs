@@ -9,5 +9,5 @@ public class DDownload(IDDownloadApiClient apiClient, ILogger<DDownload> logger)
 {
     public override string Name => "ddownload";
 
-    protected override string FileUrlFormat => "https://www.ddownload.com/{0}";
+    protected override string FileUrlFormat => "https://ddownload.com/{0}";
 }
