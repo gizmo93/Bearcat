@@ -81,3 +81,5 @@ As soon as Bearcat is running on your machine, you can start setting it up.
 ## More informations
 
 [Upload lifecycle](upload-lifecycle.md)
+
+[Forum post templates](forum-post-templates.md)

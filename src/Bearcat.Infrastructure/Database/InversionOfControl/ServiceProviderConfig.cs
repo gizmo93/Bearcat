@@ -2,6 +2,7 @@
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks.Repositories;
+using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
@@ -67,6 +68,8 @@ public static class ServiceProviderConfig
             services.AddScoped<IReleaseInfoRepository, ReleaseInfoRepository>();
             services.AddScoped<IReleaseTemplateReadRepository, ReleaseTemplateRepository>();
             services.AddScoped<IReleaseTemplateWriteRepository, ReleaseTemplateRepository>();
+            services.AddScoped<IForumPostTemplateReadRepository, ForumPostTemplateRepository>();
+            services.AddScoped<IForumPostTemplateWriteRepository, ForumPostTemplateRepository>();
             services.AddScoped<IReleaseGroupReadRepository, ReleaseGroupRepository>();
             services.AddScoped<IReleaseGroupWriteRepository, ReleaseGroupRepository>();
             services.AddScoped<IArchiveCreationRepository, ArchiveCreationRepository>();

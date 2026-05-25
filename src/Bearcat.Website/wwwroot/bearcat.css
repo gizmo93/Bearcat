@@ -473,6 +473,13 @@ a {
     padding-inline: 0;
 }
 
+.bearcat-release-overview-action-button {
+    box-sizing: border-box;
+    min-height: 2.25rem;
+    height: 2.25rem;
+    align-items: center;
+}
+
 .bearcat-release-page-nav {
     display: flex;
     justify-content: flex-start;
@@ -1558,6 +1565,132 @@ a {
     padding-top: 0.75rem;
 }
 
+.bearcat-forum-template-workspace {
+    display: grid;
+    gap: 1rem;
+}
+
+.bearcat-forum-template-list,
+.bearcat-forum-template-editor-main,
+.bearcat-forum-template-variables {
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--card);
+    padding: 1rem;
+}
+
+.bearcat-forum-template-panel-header {
+    display: grid;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+.bearcat-forum-template-scroll,
+.bearcat-forum-template-mobile-scroll {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 0.2rem;
+}
+
+.bearcat-forum-template-mobile-scroll {
+    max-height: min(17rem, 55vh);
+}
+
+.bearcat-forum-template-mobile-panels {
+    display: grid;
+    gap: 1rem;
+}
+
+.bearcat-forum-template-mobile-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--card);
+    padding: 0.75rem 1rem;
+}
+
+.bearcat-forum-template-mobile-trigger:has(+ [data-state="open"]) {
+    border-bottom-color: transparent;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.bearcat-forum-template-mobile-content {
+    border: 1px solid var(--border);
+    border-top: 0;
+    border-radius: 0 0 0.5rem 0.5rem;
+    background: var(--card);
+    padding: 0 1rem 1rem;
+}
+
+.bearcat-forum-template-desktop-panel {
+    display: none;
+}
+
+.bearcat-forum-template-list-item {
+    display: grid;
+    width: 100%;
+    gap: 0.15rem;
+    border-radius: 0.375rem;
+    padding: 0.65rem 0.75rem;
+    text-align: left;
+}
+
+.bearcat-forum-template-list-item:hover {
+    background: var(--accent);
+}
+
+.bearcat-forum-template-list-item-active {
+    background: var(--accent);
+    color: var(--accent-foreground);
+}
+
+.bearcat-forum-template-editor {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.bearcat-forum-template-variable {
+    display: grid;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.65rem;
+}
+
+.bearcat-forum-template-variable:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.bearcat-forum-template-variable code {
+    overflow-wrap: anywhere;
+    font-size: 0.75rem;
+}
+
+.bearcat-forum-template-variable p {
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+}
+
+.bearcat-rendered-forum-post {
+    min-height: 55vh;
+    width: 100%;
+    resize: vertical;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--background);
+    padding: 0.75rem;
+    font-family:
+        ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.75rem;
+    line-height: 1.5;
+}
+
 @media (min-width: 640px) {
     .bearcat-folder-field {
         grid-template-columns: minmax(0, 1fr) auto;
@@ -1596,6 +1729,32 @@ a {
     .bearcat-release-search-grid {
         grid-template-columns: repeat(5, minmax(0, 1fr));
         align-items: end;
+    }
+
+    .bearcat-forum-template-workspace {
+        grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+        align-items: start;
+    }
+
+    .bearcat-forum-template-editor {
+        grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+        align-items: start;
+    }
+
+    .bearcat-forum-template-mobile-panels {
+        display: none;
+    }
+
+    .bearcat-forum-template-desktop-panel {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        max-height: calc(100dvh - 14.5rem);
+        position: sticky;
+        top: 5rem;
+    }
+
+    .bearcat-forum-template-scroll {
+        max-height: none;
     }
 }
 

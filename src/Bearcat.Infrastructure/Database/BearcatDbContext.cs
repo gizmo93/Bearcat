@@ -33,6 +33,8 @@ public class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearcatWriteD
 
     public DbSet<ReleaseTemplate> ReleaseTemplates { get; set; } = null!;
 
+    public DbSet<ForumPostTemplate> ForumPostTemplates { get; set; } = null!;
+
     public DbSet<ReleaseFolderAutomation> ReleaseFolderAutomations { get; set; } = null!;
 
     public DbSet<ArchiveConfigTemplate> ArchiveConfigTemplates { get; set; } = null!;

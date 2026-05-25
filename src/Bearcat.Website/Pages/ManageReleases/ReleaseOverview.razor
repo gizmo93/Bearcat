@@ -6,9 +6,18 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      Class="bearcat-release-overview-action-button"
+                      Disabled="isLoading"
+                      OnClick="RenderForumPostAsync">
+                <LucideIcon Name="file-output" class="h-4 w-4" />
+                @L["RenderForumPost"]
+            </BbButton>
+
             <textarea id="@NfoCopyTargetId" hidden readonly>@nfoContent</textarea>
             <button type="button"
-                    class="bearcat-copy-button"
+                    class="bearcat-copy-button bearcat-release-overview-action-button"
                     disabled="@(!CanCopyNfo)"
                     aria-label="@L["CopyNfoIntoClipboard"]"
                     title="@NfoCopyButtonTitle"
@@ -23,6 +32,7 @@
 
             <BbButton Variant="ButtonVariant.Outline"
                       Size="ButtonSize.Small"
+                      Class="bearcat-release-overview-action-button"
                       Disabled="isLoading"
                       OnClick="LoadOverviewAsync">
                 <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />

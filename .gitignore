@@ -221,9 +221,6 @@ profile.arm.json
 # Local application settings
 appsettings.user.json
 
-# Local Codex project notes
-AGENTS.md
-
 # Bearcat
 *.map
 *Resource.designer.cs
@@ -241,3 +238,6 @@ custom.aprof
 
 docker-compose.override.yml
 appsettings.user.json
+
+# macOS stuff
+.DS_Store

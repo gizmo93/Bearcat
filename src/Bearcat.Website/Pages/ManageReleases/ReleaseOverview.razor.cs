@@ -1,6 +1,8 @@
+using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Pages.ManageForumPostTemplates;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -9,12 +11,17 @@ namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class ReleaseOverview(
     IReleaseReadRepository readRepository,
+    ReleaseNfoService releaseNfoService,
     DialogService dialogService
 ) : ComponentBase, IReloadableComponent
 {
     [Parameter]
     [EditorRequired]
     public int ReleaseId { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public string ReleaseName { get; set; } = null!;
 
     [Parameter]
     [EditorRequired]
@@ -50,7 +57,7 @@ public partial class ReleaseOverview(
             nfoContent = null;
 
             var overviewTask = readRepository.GetReleaseOverviewAsync(ReleaseId);
-            var nfoTask = GetNfoContentAsync(ReleaseFolderPath);
+            var nfoTask = releaseNfoService.GetNfoContentAsync(ReleaseFolderPath);
 
             await Task.WhenAll(overviewTask, nfoTask);
 
@@ -97,6 +104,25 @@ public partial class ReleaseOverview(
         );
     }
 
+    private async Task RenderForumPostAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(RenderForumPostDialog.ReleaseId)] = ReleaseId,
+        };
+
+        await dialogService.OpenAsync<RenderForumPostDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["RenderForumPostForRelease", ReleaseName],
+                Description = L["RenderForumPostDescription"],
+                Size = DialogSize.Full,
+                ShowClose = true,
+            }
+        );
+    }
+
     private static BadgeVariant GetUploadVariant(UploadState? state) =>
         state switch
         {
@@ -122,53 +148,4 @@ public partial class ReleaseOverview(
 
     private static string GetPasswordCopyTargetId(ReleaseOverviewUploadReadModel upload) =>
         $"release-overview-password-{upload.UploadId}";
-
-    private static async Task<string?> GetNfoContentAsync(string? releaseFolderPath)
-    {
-        if (string.IsNullOrWhiteSpace(releaseFolderPath))
-        {
-            return null;
-        }
-
-        try
-        {
-            var nfoPath = await Task.Run(() => FindNfoPath(releaseFolderPath));
-            if (string.IsNullOrWhiteSpace(nfoPath))
-            {
-                return null;
-            }
-
-            return await File.ReadAllTextAsync(nfoPath);
-        }
-        catch (Exception exception)
-            when (exception
-                    is IOException
-                        or UnauthorizedAccessException
-                        or NotSupportedException
-                        or ArgumentException
-            )
-        {
-            return null;
-        }
-    }
-
-    private static string? FindNfoPath(string releaseFolderPath)
-    {
-        if (!Directory.Exists(releaseFolderPath))
-        {
-            return null;
-        }
-
-        return Directory
-            .EnumerateFiles(releaseFolderPath, "*", SearchOption.TopDirectoryOnly)
-            .Where(filePath =>
-                string.Equals(
-                    Path.GetExtension(filePath),
-                    ".nfo",
-                    StringComparison.OrdinalIgnoreCase
-                )
-            )
-            .OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase)
-            .FirstOrDefault();
-    }
 }
