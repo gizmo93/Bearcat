@@ -70,8 +70,13 @@ public class ArchiveCreationService(
             {
                 continue;
             }
-
-            archivesToCreate.Add(archiveConfig, uploads);
+            
+            // We only create new archives for managed releases, for unmanaged releases ("bring your own archives")
+            // there is always an ArchiveConfig + Archive existing
+            if (uploads.First().UploadConfig.Release.ReleaseType is ReleaseType.Managed)
+            {
+                archivesToCreate.Add(archiveConfig, uploads);
+            }
         }
 
         if (archivesToCreate.Count == 0)
