@@ -22,7 +22,9 @@ public class NfoDatabaseRegistrationRepository(
 
         return await dbRead
             .NfoDatabaseRegistrations.OrderBy(registration => registration.NfoDatabaseClassName)
-            .Select(registration => ToReadModel(registration, databasesByClassName))
+            .Select(registration =>
+                ToReadModel(registration, databasesByClassName, secretProtector)
+            )
             .ToListAsync(cancellationToken);
     }
 
@@ -35,7 +37,9 @@ public class NfoDatabaseRegistrationRepository(
 
         return await dbRead
             .NfoDatabaseRegistrations.Where(registration => registration.Id == id)
-            .Select(registration => ToReadModel(registration, databasesByClassName))
+            .Select(registration =>
+                ToReadModel(registration, databasesByClassName, secretProtector)
+            )
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -90,9 +94,10 @@ public class NfoDatabaseRegistrationRepository(
         await dbWrite.SaveChangesAsync(cancellationToken);
     }
 
-    private NfoDatabaseRegistrationReadModel ToReadModel(
+    private static NfoDatabaseRegistrationReadModel ToReadModel(
         NfoDatabaseRegistration registration,
-        IReadOnlyDictionary<string, INfoDatabase> databasesByClassName
+        IReadOnlyDictionary<string, INfoDatabase> databasesByClassName,
+        ISecretProtector secretProtector
     )
     {
         var database = databasesByClassName[registration.NfoDatabaseClassName];

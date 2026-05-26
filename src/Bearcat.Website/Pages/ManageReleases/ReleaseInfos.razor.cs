@@ -1,11 +1,18 @@
 using Bearcat.Abstractions.NfoDatabase;
+using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
-public partial class ReleaseInfos(IReleaseReadRepository readRepository) : ComponentBase
+public partial class ReleaseInfos(
+    IReleaseReadRepository readRepository,
+    ReleaseInfoService releaseInfoService,
+    DialogService dialogService,
+    ToastService toastService
+) : ComponentBase
 {
     [Parameter]
     [EditorRequired]
@@ -33,6 +40,29 @@ public partial class ReleaseInfos(IReleaseReadRepository readRepository) : Compo
         }
     }
 
+    private async Task DeleteReleaseInfoAsync(ReleaseInfoReadModel releaseInfo)
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["DeleteReleaseInfoTitle"],
+            L["DeleteReleaseInfoConfirmation", releaseInfo.ReleaseName],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        await releaseInfoService.DeleteAsync(releaseInfo.ReleaseInfoId);
+        toastService.Success(L["ReleaseInfoDeleted"]);
+        await LoadReleaseInfosAsync();
+    }
+
     private static string GetSizeLabel(ReleaseInfoReadModel releaseInfo)
     {
         if (releaseInfo.SizeNumber is null && string.IsNullOrWhiteSpace(releaseInfo.SizeUnit))
@@ -45,6 +75,11 @@ public partial class ReleaseInfos(IReleaseReadRepository readRepository) : Compo
 
     private static string GetValueOrDash(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "-" : value;
+
+    private static string GetNfoFileName(ReleaseInfoReadModel releaseInfo) =>
+        string.IsNullOrWhiteSpace(releaseInfo.ReleaseNfo?.FileName)
+            ? "-"
+            : releaseInfo.ReleaseNfo.FileName;
 
     private static string GetDatabaseDisplayName(string className)
     {

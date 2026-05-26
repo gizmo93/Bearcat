@@ -11,8 +11,11 @@ public record ReleaseInfoReadModel(
     string? SizeUnit,
     string? VideoType,
     string? AudioType,
+    ReleaseNfoReadModel? ReleaseNfo,
     IReadOnlyList<ReleaseExternalInfoReadModel> ExternalInfos
 );
+
+public record ReleaseNfoReadModel(int ReleaseNfoId, string FileName, string Content);
 
 public record ReleaseExternalInfoReadModel(
     int ReleaseExternalInfoId,

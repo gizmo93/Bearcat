@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using Shouldly;
 using ReleaseInfo = Bearcat.Domain.Entities.ReleaseInfo;
+using ReleaseNfo = Bearcat.Domain.Entities.ReleaseNfo;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 
@@ -70,6 +71,11 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
                 SizeUnit = "GB",
                 VideoType = "WEB",
                 AudioType = "AC3",
+                ReleaseNfo = new ReleaseNfo
+                {
+                    FileName = "bearcat.nfo",
+                    Content = "nfo content",
+                },
                 ExternalInfos =
                 [
                     new ReleaseExternalInfo
@@ -108,6 +114,9 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         releaseInfo.SizeUnit.ShouldBe("GB");
         releaseInfo.VideoType.ShouldBe("WEB");
         releaseInfo.AudioType.ShouldBe("AC3");
+        releaseInfo.ReleaseNfo.ShouldNotBeNull();
+        releaseInfo.ReleaseNfo.FileName.ShouldBe("bearcat.nfo");
+        releaseInfo.ReleaseNfo.Content.ShouldBe("nfo content");
 
         var externalInfo = releaseInfo.ExternalInfos.Single();
         externalInfo.Type.ShouldBe(ExternalInfoType.Movie);
@@ -118,6 +127,37 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         externalInfo.Urls.ShouldContain(url =>
             url.Type == UrlType.Other && url.Url == "https://www.xrel.to/movie/123"
         );
+    }
+
+    [Test]
+    public async Task GetReleaseNfoAsync_ReleaseHasStoredNfo_ReturnsFirstStoredNfo()
+    {
+        // Arrange
+        var release = await AddReleaseAsync();
+        dbContext.ReleaseInfos.Add(
+            new ReleaseInfo
+            {
+                ReleaseId = release.Id,
+                NfoDatabaseClassName = "XrelNfoDatabase",
+                ReleaseName = "Bearcat.Release.2026-GRP",
+                ExternalInfos = [],
+                ReleaseNfo = new ReleaseNfo
+                {
+                    FileName = "bearcat.nfo",
+                    Content = "nfo content",
+                },
+            }
+        );
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetReleaseNfoAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.FileName.ShouldBe("bearcat.nfo");
+        result.Content.ShouldBe("nfo content");
     }
 
     [Test]

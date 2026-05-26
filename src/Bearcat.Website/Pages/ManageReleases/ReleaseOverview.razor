@@ -16,6 +16,17 @@
             </BbButton>
 
             <textarea id="@NfoCopyTargetId" hidden readonly>@nfoContent</textarea>
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      Class="bearcat-release-overview-action-button"
+                      Disabled="@(!CanSaveNfoFile)"
+                      AriaLabel="@L["SaveNfoFile"]"
+                      title="@NfoSaveButtonTitle"
+                      OnClick="SaveNfoFileAsync">
+                <LucideIcon Name="file-down" class="h-4 w-4" />
+                @L["SaveNfoFile"]
+            </BbButton>
+
             <button type="button"
                     class="bearcat-copy-button bearcat-release-overview-action-button"
                     disabled="@(!CanCopyNfo)"

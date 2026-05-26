@@ -101,6 +101,9 @@
   <data name="DeleteRegistration" xml:space="preserve"><value>Delete registration</value></data>
   <data name="DeleteRelease" xml:space="preserve"><value>Delete release</value></data>
   <data name="DeleteReleaseConfirmation" xml:space="preserve"><value>Are you sure you want to delete the release {0}?</value></data>
+  <data name="DeleteReleaseInfo" xml:space="preserve"><value>Delete release info</value></data>
+  <data name="DeleteReleaseInfoConfirmation" xml:space="preserve"><value>Delete release info {0}? The background task can fetch it again.</value></data>
+  <data name="DeleteReleaseInfoTitle" xml:space="preserve"><value>Delete release info</value></data>
   <data name="DeleteReleaseTitle" xml:space="preserve"><value>Delete Release {0}</value></data>
   <data name="DeleteUploadConfig" xml:space="preserve"><value>Delete Upload Config</value></data>
   <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Are you sure you want to delete the upload config {0}?</value></data>
@@ -194,6 +197,9 @@
   <data name="NoConfigurationRequired" xml:space="preserve"><value>No configuration required</value></data>
   <data name="NoExternalInfos" xml:space="preserve"><value>No external infos</value></data>
   <data name="NoNfoFileAvailable" xml:space="preserve"><value>No NFO file available</value></data>
+  <data name="NfoFileAlreadyExists" xml:space="preserve"><value>Release folder already contains an NFO file.</value></data>
+  <data name="NfoFileSaveFailed" xml:space="preserve"><value>NFO file could not be saved: {0}</value></data>
+  <data name="NfoFileSaved" xml:space="preserve"><value>NFO file {0} saved.</value></data>
   <data name="NoReleaseInfosYet" xml:space="preserve"><value>No release infos yet.</value></data>
   <data name="NoReleasesFound" xml:space="preserve"><value>No releases found</value></data>
   <data name="NoTargets" xml:space="preserve"><value>No targets</value></data>
@@ -231,7 +237,9 @@
   <data name="Release" xml:space="preserve"><value>Release</value></data>
   <data name="ReleaseDetails" xml:space="preserve"><value>Release details</value></data>
   <data name="ReleaseFolder" xml:space="preserve"><value>Release folder</value></data>
+  <data name="ReleaseFolderMissing" xml:space="preserve"><value>Release folder does not exist.</value></data>
   <data name="ReleaseInfos" xml:space="preserve"><value>Release infos</value></data>
+  <data name="ReleaseInfoDeleted" xml:space="preserve"><value>Release info deleted</value></data>
     <data name="ReleaseRootsAndOnlineState" xml:space="preserve"><value>Search and manage releases</value></data>
   <data name="ReleaseResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} releases</value></data>
   <data name="ReleaseSearchPlaceholder" xml:space="preserve"><value>Name or folder path</value></data>
@@ -253,6 +261,7 @@
   <data name="RunningUploads" xml:space="preserve"><value>Running uploads</value></data>
   <data name="RunningUploadsDescription" xml:space="preserve"><value>Upload queues, status, and per-file progress.</value></data>
   <data name="Save" xml:space="preserve"><value>Save</value></data>
+  <data name="SaveNfoFile" xml:space="preserve"><value>Save NFO file</value></data>
   <data name="Search" xml:space="preserve"><value>Search</value></data>
   <data name="SearchFolders" xml:space="preserve"><value>Search folders</value></data>
   <data name="SearchReleases" xml:space="preserve"><value>Search releases</value></data>

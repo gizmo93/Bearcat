@@ -35,8 +35,8 @@ public static class ServiceProviderConfig
             services.AddScoped<AutomaticallyCreateReleasesService>();
             services.AddScoped<ReleaseGroupService>();
             services.AddScoped<ReleaseService>();
-            services.AddScoped<ReleaseNfoService>();
             services.AddScoped<ForumPostRenderService>();
+            services.AddScoped<ReleaseInfoService>();
             services.AddScoped<ReleaseInfoResolutionService>();
             services.AddScoped<ReleaseTemplateService>();
             services.AddScoped<ForumPostTemplateService>();

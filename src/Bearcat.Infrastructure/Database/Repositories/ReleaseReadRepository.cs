@@ -183,6 +183,13 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                 info.SizeUnit,
                 info.VideoType,
                 info.AudioType,
+                info.ReleaseNfo == null
+                    ? null
+                    : new ReleaseNfoReadModel(
+                        info.ReleaseNfo.Id,
+                        info.ReleaseNfo.FileName,
+                        info.ReleaseNfo.Content
+                    ),
                 info.ExternalInfos.OrderBy(externalInfo => externalInfo.Id)
                     .Select(externalInfo => new ReleaseExternalInfoReadModel(
                         externalInfo.Id,
@@ -198,6 +205,23 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                     .ToList()
             ))
             .ToListAsync(cancellationToken: cancellationToken);
+    }
+
+    public async Task<ReleaseNfoReadModel?> GetReleaseNfoAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .ReleaseInfos.Where(info => info.ReleaseId == releaseId && info.ReleaseNfo != null)
+            .OrderBy(info => info.NfoDatabaseClassName)
+            .ThenBy(info => info.Id)
+            .Select(info => new ReleaseNfoReadModel(
+                info.ReleaseNfo!.Id,
+                info.ReleaseNfo.FileName,
+                info.ReleaseNfo.Content
+            ))
+            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 
     public async Task<IReadOnlyList<ArchiveConfigReadModel>> GetArchiveConfigsAsync(

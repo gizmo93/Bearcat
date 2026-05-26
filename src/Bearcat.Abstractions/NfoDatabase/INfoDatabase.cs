@@ -4,6 +4,8 @@ public interface INfoDatabase
 {
     string Name { get; }
 
+    int ResolutionPriority { get; }
+
     IReadOnlyList<string> ConfigurationKeys { get; }
 
     Task<ReleaseInfo?> GetReleaseInfoAsync(
