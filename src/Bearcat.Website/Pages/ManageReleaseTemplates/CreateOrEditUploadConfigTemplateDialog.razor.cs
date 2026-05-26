@@ -3,6 +3,7 @@ using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
@@ -34,6 +35,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
     private ValidationMessageStore messageStore = null!;
     private bool isInitialized;
     private bool isEdit;
+    private bool isUnmanagedReleaseTemplate;
 
     private IEnumerable<SelectOption<int?>> HosterOptions =>
         hosterRegistrations
@@ -55,6 +57,14 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
         hosterRegistrations = await hosterReadRepository.GetAllRegistrationsAsync();
         var detail = await releaseTemplateReadRepository.GetDetailAsync(ReleaseTemplateId);
         archiveConfigTemplates = detail?.ArchiveConfigTemplates ?? [];
+        isUnmanagedReleaseTemplate = detail?.ReleaseType is ReleaseType.Unmanaged;
+
+        if (isUnmanagedReleaseTemplate && FormModel.ArchiveConfigTemplateId is null)
+        {
+            FormModel.ArchiveConfigTemplateId = archiveConfigTemplates
+                .SingleOrDefault()
+                ?.ArchiveConfigTemplateId;
+        }
 
         isInitialized = true;
     }
@@ -109,7 +119,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
             );
         }
 
-        if (FormModel.ArchiveConfigTemplateId is null)
+        if (!isUnmanagedReleaseTemplate && FormModel.ArchiveConfigTemplateId is null)
         {
             messageStore.Add(
                 () => FormModel.ArchiveConfigTemplateId!,

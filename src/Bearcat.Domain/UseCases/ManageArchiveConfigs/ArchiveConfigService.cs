@@ -1,8 +1,16 @@
-﻿using Bearcat.Domain.Entities;
+﻿using Bearcat.Abstractions.Archiver;
+using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.ValueObjects;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ManageArchiveConfigs;
 
-public class ArchiveConfigService(IArchiveConfigWriteRepository writeRepository)
+public class ArchiveConfigService(
+    IArchiveConfigWriteRepository writeRepository,
+    IArchiverFactory archiverFactory,
+    TimeProvider timeProvider
+)
 {
     public async Task<int> CreateAsync(
         int releaseId,
@@ -41,6 +49,8 @@ public class ArchiveConfigService(IArchiveConfigWriteRepository writeRepository)
             );
         }
 
+        EnsureManagedRelease(archiveConfig);
+
         writeRepository.Remove(archiveConfig);
         await writeRepository.SaveChangesAsync();
     }
@@ -62,6 +72,8 @@ public class ArchiveConfigService(IArchiveConfigWriteRepository writeRepository)
             );
         }
 
+        EnsureManagedRelease(archiveConfig);
+
         archiveConfig.ArchiveFilesBasePath = archiveFilesBasePath;
         archiveConfig.ArchiveNamePrefix = archiveNamePrefix;
         archiveConfig.ArchivePassword = archivePassword;
@@ -69,5 +81,56 @@ public class ArchiveConfigService(IArchiveConfigWriteRepository writeRepository)
         archiveConfig.Name = name;
 
         await writeRepository.SaveChangesAsync();
+    }
+
+    public async Task RefreshUnmanagedArchiveAsync(
+        int archiveConfigId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var archiveConfig = await writeRepository.GetByIdAsync(
+            id: archiveConfigId,
+            cancellationToken: cancellationToken
+        );
+        if (archiveConfig == null)
+        {
+            throw new InvalidOperationException(
+                $"ArchiveConfig with ID {archiveConfigId} not found"
+            );
+        }
+
+        EnsureUnmanagedRelease(archiveConfig);
+
+        UnmanagedReleaseArchiveInitializer.RefreshArchiveConfig(
+            archiveConfig: archiveConfig,
+            archivers: archiverFactory.GetArchivers(),
+            createdAt: timeProvider.GetLocalNow()
+        );
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void EnsureManagedRelease(ArchiveConfig archiveConfig)
+    {
+        if (archiveConfig.Release.ReleaseType is ReleaseType.Managed)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(
+            "Archive configs for unmanaged releases cannot be changed."
+        );
+    }
+
+    private static void EnsureUnmanagedRelease(ArchiveConfig archiveConfig)
+    {
+        if (archiveConfig.Release.ReleaseType is ReleaseType.Unmanaged)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(
+            "Archives can only be refreshed for unmanaged releases."
+        );
     }
 }

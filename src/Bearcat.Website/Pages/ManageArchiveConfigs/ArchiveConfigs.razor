@@ -10,10 +10,13 @@
                     <BbCardDescription>@L["ArchiveConfigurationsDescription"]</BbCardDescription>
                 </div>
             </div>
-            <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="ShowAddDialogAsync">
-                <LucideIcon Name="plus" class="h-4 w-4" />
-                @L["Add"]
-            </BbButton>
+            @if (ReleaseType is ReleaseType.Managed)
+            {
+                <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="ShowAddDialogAsync">
+                    <LucideIcon Name="plus" class="h-4 w-4" />
+                    @L["Add"]
+                </BbButton>
+            }
         </div>
     </BbCardHeader>
     <BbCardContent>
@@ -26,18 +29,21 @@
         else
         {
             <div class="bearcat-config-list">
-                <div class="bearcat-config-header bearcat-archive-grid">
+                <div class="@($"bearcat-config-header {ArchiveGridClass}")">
                     <span>@L["Configuration"]</span>
                     <span>@L["Archiver"]</span>
                     <span>@L["Archives"]</span>
-                    <span>@L["Size"]</span>
-                    <span>@L["ArchiveName"]</span>
+                    @if (ReleaseType is ReleaseType.Managed)
+                    {
+                        <span>@L["Size"]</span>
+                        <span>@L["ArchiveName"]</span>
+                    }
                     <span class="text-right">@L["Actions"]</span>
                 </div>
                 @foreach (var config in archiveConfigs)
                 {
                     <BbCollapsible Class="@($"bearcat-config-item {(FocusArchiveConfigId == config.ArchiveConfigId ? "bearcat-config-item-focused" : string.Empty)}")">
-                        <div class="bearcat-config-row bearcat-archive-grid">
+                        <div class="@($"bearcat-config-row {ArchiveGridClass}")">
                             <div class="min-w-0">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span class="text-sm font-semibold">@config.Name</span>
@@ -57,34 +63,58 @@
                                 <p class="text-sm font-medium">@config.ArchiveSummaries.Count</p>
                             </div>
 
-                            <div>
-                                <p class="bearcat-mobile-label">@L["Size"]</p>
-                                <p class="text-sm font-medium">@config.ArchiveFileSizeMb MB</p>
-                            </div>
+                            @if (ReleaseType is ReleaseType.Managed)
+                            {
+                                <div>
+                                    <p class="bearcat-mobile-label">@L["Size"]</p>
+                                    <p class="text-sm font-medium">@config.ArchiveFileSizeMb MB</p>
+                                </div>
 
-                            <div class="min-w-0">
-                                <p class="bearcat-mobile-label">@L["ArchiveName"]</p>
-                                <p class="truncate text-sm font-medium" title="@(config.ArchiveNameWithExtension ?? "-")">
-                                    @(config.ArchiveNameWithExtension ?? "-")
-                                </p>
-                            </div>
+                                <div class="min-w-0">
+                                    <p class="bearcat-mobile-label">@L["ArchiveName"]</p>
+                                    <p class="truncate text-sm font-medium" title="@(config.ArchiveNameWithExtension ?? "-")">
+                                        @(config.ArchiveNameWithExtension ?? "-")
+                                    </p>
+                                </div>
+                            }
 
                             <div class="bearcat-config-actions">
-                                <BbDropdownMenu>
-                                    <BbDropdownMenuTrigger>
-                                        <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenArchiveConfigActions"]">
-                                            <LucideIcon Name="ellipsis" class="h-4 w-4" />
-                                        </BbButton>
-                                    </BbDropdownMenuTrigger>
-                                    <BbDropdownMenuContent Align="PopoverAlign.End">
-                                        <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(config))">
-                                            @L["EditConfig"]
-                                        </BbDropdownMenuItem>
-                                        <BbDropdownMenuItem OnClick="@(async _ => await DeleteConfigAsync(config))">
-                                            @L["DeleteConfig"]
-                                        </BbDropdownMenuItem>
-                                    </BbDropdownMenuContent>
-                                </BbDropdownMenu>
+                                @if (ReleaseType is ReleaseType.Managed)
+                                {
+                                    <BbDropdownMenu>
+                                        <BbDropdownMenuTrigger>
+                                            <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenArchiveConfigActions"]">
+                                                <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                            </BbButton>
+                                        </BbDropdownMenuTrigger>
+                                        <BbDropdownMenuContent Align="PopoverAlign.End">
+                                            <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(config))">
+                                                @L["EditConfig"]
+                                            </BbDropdownMenuItem>
+                                            <BbDropdownMenuItem OnClick="@(async _ => await DeleteConfigAsync(config))">
+                                                @L["DeleteConfig"]
+                                            </BbDropdownMenuItem>
+                                        </BbDropdownMenuContent>
+                                    </BbDropdownMenu>
+                                }
+                                else
+                                {
+                                    <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
+                                        <BbTooltipTrigger>
+                                            <span class="inline-flex">
+                                                <BbButton Variant="ButtonVariant.Ghost"
+                                                          Size="ButtonSize.IconSmall"
+                                                          OnClick="@(async _ => await RefreshUnmanagedArchiveAsync(config))"
+                                                          AriaLabel="@L["RefreshUnmanagedArchive"]">
+                                                    <LucideIcon Name="refresh-cw" class="h-4 w-4" />
+                                                </BbButton>
+                                            </span>
+                                        </BbTooltipTrigger>
+                                        <BbTooltipContent Class="max-w-xs text-xs">
+                                            @L["RefreshUnmanagedArchiveTooltip"]
+                                        </BbTooltipContent>
+                                    </BbTooltip>
+                                }
                                 <BbCollapsibleTrigger>
                                     <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["ToggleArchiveConfigDetails"]">
                                         <LucideIcon Name="chevron-down" class="h-4 w-4" />
@@ -93,7 +123,7 @@
                             </div>
                         </div>
                         <BbCollapsibleContent Class="border-t border-border/70 bg-muted/5 px-4 pb-4 pt-4">
-                            <ArchiveConfigContent Config="config" />
+                            <ArchiveConfigContent Config="config" ReleaseType="ReleaseType" />
                         </BbCollapsibleContent>
                     </BbCollapsible>
                 }

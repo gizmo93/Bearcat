@@ -23,7 +23,7 @@ public class UploadFilesRepository(
             .Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.HosterRegistration)
             .Include(u => u.UploadConfig)
-            .ThenInclude(uc => uc.Release)
+                .ThenInclude(uc => uc.Release)
             .Include(u => u.Archive)
                 .ThenInclude(a => a!.ArchiveFiles)
             .Where(u => !uploadIdsToExclude.Contains(u.Id) && u.UploadState == UploadState.Pending)

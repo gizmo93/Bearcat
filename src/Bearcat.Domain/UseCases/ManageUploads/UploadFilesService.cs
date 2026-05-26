@@ -816,33 +816,16 @@ public class UploadFilesService(
             return false;
         }
 
-        switch (upload.UploadConfig.Release.ReleaseType)
-        {
-            case ReleaseType.Managed:
-                await HandleMissingFilesForManagedReleaseAsync(
-                    upload,
-                    nonExistingFiles,
-                    cancellationToken
-                );
-                break;
-            case ReleaseType.Unmanaged:
-                await HandleMissingFilesForUnmanagedReleaseAsync(
-                    upload,
-                    nonExistingFiles,
-                    cancellationToken
-                );
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(upload), $"Unknown release type, {upload.UploadConfig.Release.ReleaseType}");
-        }
+        await HandleMissingFilesAsync(upload, nonExistingFiles, cancellationToken);
 
         return true;
     }
 
-    private async Task HandleMissingFilesForManagedReleaseAsync(
+    private async Task HandleMissingFilesAsync(
         Upload upload,
         IReadOnlyList<ArchiveFile> nonExistingFiles,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         logger.LogInformation(
             "The following archive files for Upload {UploadId} do not exist: {FilePaths}",
@@ -851,7 +834,7 @@ public class UploadFilesService(
         );
 
         notificationService.CreateWarning(
-            message: "The archive assigned upload has missing files, triggering re-packaging",
+            message: GetMissingFilesNotificationMessage(upload.UploadConfig.Release.ReleaseType),
             entity: upload,
             selector: n => n.Upload
         );
@@ -866,31 +849,20 @@ public class UploadFilesService(
 
         await repository.SaveChangesAsync(cancellationToken);
     }
-    
-    private async Task HandleMissingFilesForUnmanagedReleaseAsync(
-        Upload upload,
-        IReadOnlyList<ArchiveFile> nonExistingFiles,
-        CancellationToken cancellationToken)
+
+    private static string GetMissingFilesNotificationMessage(ReleaseType releaseType)
     {
-        logger.LogInformation(
-            "The following archive files for Upload {UploadId} do not exist: {FilePaths}",
-            upload.Id,
-            string.Join(", ", nonExistingFiles.Select(f => f.FullFileName))
-        );
-
-        notificationService.CreateError(
-            message: "The archive assigned upload has missing files. As it's an unmanaged release, you need to make sure that the archive files exist at the right place and trigger a manual re-upload.",
-            entity: upload,
-            selector: n => n.Upload
-        );
-        
-        // The automated process needs to stop here, until the user has provided new archive files.
-        // Then he can manually trigger a reupload for the failed upload.
-        // We also don't set the Archive state to MissingFiles, as otherwise the system wouldn't know what to do with reuploads
-        upload.UploadState = UploadState.Failed;
-        upload.ErrorMessages.Add("The archive assigned upload has missing files.");
-
-        await repository.SaveChangesAsync(cancellationToken);
+        return releaseType switch
+        {
+            ReleaseType.Managed =>
+                "The archive assigned upload has missing files, triggering re-packaging",
+            ReleaseType.Unmanaged =>
+                "The archive assigned upload has missing files. Refresh the unmanaged archive after providing the archive files.",
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(releaseType),
+                $"Unknown release type, {releaseType}"
+            ),
+        };
     }
 
     private void DisposeSemaphores()

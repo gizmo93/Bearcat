@@ -54,6 +54,36 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task CreateAsync_UnmanagedTemplate_CreatesFixedArchiveConfigTemplate()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+
+        // Act
+        var result = await service.CreateAsync(
+            "Unmanaged template",
+            ReleaseType.Unmanaged,
+            releaseGroup.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        var template = await dbContext
+            .ReleaseTemplates.Include(t => t.ArchiveConfigTemplates)
+            .SingleAsync();
+        var archiveConfigTemplate = template.ArchiveConfigTemplates.Single();
+
+        result.ShouldBeGreaterThan(0);
+        template.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        archiveConfigTemplate.Name.ShouldBe("Unmanaged archives");
+        archiveConfigTemplate.ArchiveFilesBasePath.ShouldBe("Release folder");
+        archiveConfigTemplate.ArchiverName.ShouldBe("Unmanaged");
+        archiveConfigTemplate.ArchivePassword.ShouldBeNull();
+        archiveConfigTemplate.ArchiveFileSizeMb.ShouldBe(0);
+        archiveConfigTemplate.UseReleaseNameAsArchiveName.ShouldBeFalse();
+    }
+
+    [Test]
     public async Task CreateArchiveUploadAndLinkCrypterTemplates_PersistsTemplateChildren()
     {
         // Arrange
@@ -127,7 +157,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         await service.UpdateAsync(
             releaseTemplate.Id,
             "Updated template",
-            ReleaseType.Unmanaged,
+            ReleaseType.Managed,
             secondReleaseGroup.Id,
             CancellationToken.None
         );
@@ -136,8 +166,30 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         var result = await dbContext.ReleaseTemplates.SingleAsync();
 
         result.Name.ShouldBe("Updated template");
-        result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        result.ReleaseType.ShouldBe(ReleaseType.Managed);
         result.ReleaseGroupId.ShouldBe(secondReleaseGroup.Id);
+    }
+
+    [Test]
+    public async Task UpdateAsync_ReleaseTypeChanges_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.UpdateAsync(
+                releaseTemplate.Id,
+                "Updated template",
+                ReleaseType.Unmanaged,
+                releaseGroup.Id,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        result.Message.ShouldBe("Release template type cannot be changed.");
     }
 
     [Test]
@@ -211,6 +263,129 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         // Assert
         (await dbContext.ArchiveConfigTemplates.AnyAsync()).ShouldBeFalse();
         (await dbContext.ReleaseTemplates.AnyAsync()).ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task CreateArchiveConfigTemplateAsync_UnmanagedTemplate_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplateId = await service.CreateAsync(
+            "Unmanaged template",
+            ReleaseType.Unmanaged,
+            releaseGroup.Id,
+            CancellationToken.None
+        );
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.CreateArchiveConfigTemplateAsync(
+                releaseTemplateId,
+                "RAR Forum A",
+                "/tmp/archives",
+                "rar",
+                "archive-secret",
+                1024,
+                true,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        result.Message.ShouldBe(
+            "Archive config templates for unmanaged release templates cannot be changed."
+        );
+    }
+
+    [Test]
+    public async Task UpdateArchiveConfigTemplateAsync_UnmanagedTemplate_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplateId = await service.CreateAsync(
+            "Unmanaged template",
+            ReleaseType.Unmanaged,
+            releaseGroup.Id,
+            CancellationToken.None
+        );
+        var archiveConfigTemplate = await dbContext.ArchiveConfigTemplates.SingleAsync();
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.UpdateArchiveConfigTemplateAsync(
+                archiveConfigTemplate.Id,
+                "RAR Forum A",
+                "/tmp/archives",
+                "rar",
+                "archive-secret",
+                1024,
+                true,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        releaseTemplateId.ShouldBeGreaterThan(0);
+        result.Message.ShouldBe(
+            "Archive config templates for unmanaged release templates cannot be changed."
+        );
+    }
+
+    [Test]
+    public async Task DeleteArchiveConfigTemplateAsync_UnmanagedTemplate_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        await service.CreateAsync(
+            "Unmanaged template",
+            ReleaseType.Unmanaged,
+            releaseGroup.Id,
+            CancellationToken.None
+        );
+        var archiveConfigTemplate = await dbContext.ArchiveConfigTemplates.SingleAsync();
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.DeleteArchiveConfigTemplateAsync(
+                archiveConfigTemplate.Id,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        result.Message.ShouldBe(
+            "Archive config templates for unmanaged release templates cannot be changed."
+        );
+    }
+
+    [Test]
+    public async Task CreateUploadConfigTemplateAsync_UnmanagedTemplate_UsesFixedArchiveConfigTemplate()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplateId = await service.CreateAsync(
+            "Unmanaged template",
+            ReleaseType.Unmanaged,
+            releaseGroup.Id,
+            CancellationToken.None
+        );
+        var hosterRegistration = await AddHosterRegistrationAsync();
+
+        // Act
+        await service.CreateUploadConfigTemplateAsync(
+            releaseTemplateId,
+            null,
+            hosterRegistration.Id,
+            archiveConfigTemplateId: 12345,
+            linksDistributedTo: ["forum-a"],
+            CancellationToken.None
+        );
+
+        // Assert
+        var archiveConfigTemplate = await dbContext.ArchiveConfigTemplates.SingleAsync();
+        var uploadConfigTemplate = await dbContext.UploadConfigTemplates.SingleAsync();
+
+        uploadConfigTemplate.ArchiveConfigTemplateId.ShouldBe(archiveConfigTemplate.Id);
     }
 
     [Test]

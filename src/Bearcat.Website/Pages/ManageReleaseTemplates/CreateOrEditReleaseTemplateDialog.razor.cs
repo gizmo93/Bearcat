@@ -1,6 +1,8 @@
 using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Localization;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
@@ -26,10 +28,19 @@ public partial class CreateOrEditReleaseTemplateDialog(
     private IEnumerable<SelectOption<int>> ReleaseGroupOptions =>
         releaseGroups.Select(group => new SelectOption<int>(group.ReleaseGroupId, group.Name));
 
+    private IEnumerable<SelectOption<ReleaseType>> ReleaseTypeOptions =>
+        Enum.GetValues<ReleaseType>()
+            .Select(type => new SelectOption<ReleaseType>(type, L.Localize(type)));
+
     private string GetReleaseGroupDisplayText(int releaseGroupId)
     {
         return releaseGroups.FirstOrDefault(group => group.ReleaseGroupId == releaseGroupId)?.Name
             ?? releaseGroupId.ToString();
+    }
+
+    private string GetReleaseTypeDisplayText(ReleaseType releaseType)
+    {
+        return L.Localize(releaseType);
     }
 
     protected override async Task OnInitializedAsync()

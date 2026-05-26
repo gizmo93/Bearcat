@@ -27,9 +27,11 @@ public class ArchiveConfigWriteRepository(IBearcatWriteDbContext dbWrite)
         CancellationToken cancellationToken = default
     )
     {
-        return await dbWrite.ArchiveConfigs.FirstOrDefaultAsync(
-            a => a.Id == id,
-            cancellationToken: cancellationToken
-        );
+        return await dbWrite
+            .ArchiveConfigs.AsSplitQuery()
+            .Include(a => a.Release)
+            .Include(a => a.Archives)
+                .ThenInclude(a => a.ArchiveFiles)
+            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken: cancellationToken);
     }
 }

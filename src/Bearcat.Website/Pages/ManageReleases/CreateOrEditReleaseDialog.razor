@@ -21,6 +21,13 @@
                                    Options="ReleaseGroupOptions" />
             }
 
+            <BbFormFieldSelect TValue="ReleaseType"
+                               @bind-Value="formModel.ReleaseType"
+                               Label="@L["ReleaseType"]"
+                               Disabled="formModel.IsEdit"
+                               DisplayTextSelector="GetReleaseTypeDisplayText"
+                               Options="ReleaseTypeOptions" />
+
             <div class="space-y-2">
                 <label class="text-sm font-medium">@L["ReleaseFolder"]</label>
                 <div class="bearcat-folder-field">
@@ -40,12 +47,9 @@
                 }
             </div>
 
-            @if (!formModel.IsEdit)
-            {
-                <div class="rounded-lg border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
-                    @L.LocalizeDescription(formModel.ReleaseType)
-                </div>
-            }
+            <div class="rounded-lg border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                @L.LocalizeDescription(formModel.ReleaseType)
+            </div>
         </div>
 
         <div class="flex justify-end gap-2">

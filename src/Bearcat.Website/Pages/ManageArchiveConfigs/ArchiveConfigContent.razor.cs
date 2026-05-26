@@ -12,6 +12,9 @@ public partial class ArchiveConfigContent(DialogService dialogService)
     [EditorRequired]
     public ArchiveConfigReadModel Config { get; set; } = null!;
 
+    [Parameter]
+    public ReleaseType ReleaseType { get; set; } = ReleaseType.Managed;
+
     private static BadgeVariant GetArchiveVariant(ArchiveState state) =>
         state switch
         {

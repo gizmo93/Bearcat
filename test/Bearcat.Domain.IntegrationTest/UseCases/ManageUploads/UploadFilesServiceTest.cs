@@ -214,6 +214,44 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         result.ArchiveId.ShouldBeNull();
         result.UploadState.ShouldBe(UploadState.WaitingForArchive);
         result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Warning);
+        result.Notifications.Single().Message.ShouldBe(
+            "The archive assigned upload has missing files, triggering re-packaging"
+        );
+        archive.ArchiveState.ShouldBe(ArchiveState.MissingFiles);
+        hosterFactoryMock.Verify(f => f.GetHostersByName(), Times.Never);
+    }
+
+    [Test]
+    public async Task ProcessAsync_UnmanagedArchiveFileIsMissing_MarksArchiveMissingFilesAndUploadWaitingForArchive()
+    {
+        // Arrange
+        var missingArchiveFilePath = Path.Combine(archiveFilesBasePath, "missing.part1.rar");
+        var upload = await AddUploadAsync(
+            UploadState.Pending,
+            [missingArchiveFilePath],
+            releaseType: ReleaseType.Unmanaged
+        );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Uploads.Include(u => u.Archive)
+            .Include(u => u.Notifications)
+            .SingleAsync();
+        var archive = await dbContext.Archives.SingleAsync();
+
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(upload.Id);
+        result.ArchiveId.ShouldBeNull();
+        result.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        result.ErrorMessages.ShouldBeEmpty();
+        result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Warning);
+        result.Notifications.Single().Message.ShouldBe(
+            "The archive assigned upload has missing files. Refresh the unmanaged archive after providing the archive files."
+        );
         archive.ArchiveState.ShouldBe(ArchiveState.MissingFiles);
         hosterFactoryMock.Verify(f => f.GetHostersByName(), Times.Never);
     }
@@ -905,10 +943,11 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
     private async Task<Upload> AddUploadAsync(
         UploadState uploadState,
         IReadOnlyList<string> archiveFileNames,
-        IReadOnlyList<string>? alreadyUploadedFileNames = null
+        IReadOnlyList<string>? alreadyUploadedFileNames = null,
+        ReleaseType releaseType = ReleaseType.Managed
     )
     {
-        var uploadConfig = await AddUploadConfigAsync();
+        var uploadConfig = await AddUploadConfigAsync(releaseType);
         var archive = new Archive
         {
             ArchiveConfigId = uploadConfig.ArchiveConfigId,
@@ -976,7 +1015,9 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         );
     }
 
-    private async Task<UploadConfig> AddUploadConfigAsync()
+    private async Task<UploadConfig> AddUploadConfigAsync(
+        ReleaseType releaseType = ReleaseType.Managed
+    )
     {
         var releaseGroup = new ReleaseGroup
         {
@@ -987,7 +1028,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         var release = new Release
         {
             Name = "Bearcat.Release.001",
-            ReleaseType = ReleaseType.Managed,
+            ReleaseType = releaseType,
             ReleaseFolderPath = releaseFolderPath,
             ReleaseGroup = releaseGroup,
         };

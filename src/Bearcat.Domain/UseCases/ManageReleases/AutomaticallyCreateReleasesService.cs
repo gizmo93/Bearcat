@@ -1,5 +1,6 @@
 using System.IO.Enumeration;
 using Bearcat.Abstractions;
+using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -11,7 +12,8 @@ public class AutomaticallyCreateReleasesService(
     IAutomaticallyCreateReleasesRepository repository,
     IFileSystemService fileSystemService,
     ReleaseInfoResolutionService releaseInfoResolutionService,
-    TimeProvider timeProvider
+    TimeProvider timeProvider,
+    IArchiverFactory archiverFactory
 )
 {
     private const int MaxConcurrentFolderScans = 4;
@@ -45,11 +47,18 @@ public class AutomaticallyCreateReleasesService(
                 continue;
             }
 
+            var localNow = timeProvider.GetLocalNow();
             var release = ReleaseService.CreateFromTemplate(
-                candidate.Automation.ReleaseTemplate,
-                candidate.FolderPath
+                releaseTemplate: candidate.Automation.ReleaseTemplate,
+                releaseFolderPath: candidate.FolderPath,
+                name: null,
+                releaseType: candidate.Automation.ReleaseTemplate.ReleaseType,
+                archivers: candidate.Automation.ReleaseTemplate.ReleaseType is ReleaseType.Unmanaged
+                    ? archiverFactory.GetArchivers()
+                    : [],
+                localNow: localNow
             );
-            release.CreatedAt = timeProvider.GetLocalNow();
+            release.CreatedAt = localNow;
             repository.Add(release);
             await releaseInfoResolutionService.TryResolveAndSaveAsync(release, cancellationToken);
             existingReleaseFolderPaths.Add(candidate.FolderPath);

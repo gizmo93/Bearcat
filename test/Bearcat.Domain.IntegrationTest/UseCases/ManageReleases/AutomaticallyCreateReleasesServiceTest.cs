@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases;
@@ -28,12 +29,17 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         dbContext = Database.CreateDbContext();
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempRootPath);
+        var archiverFactory = new Mock<IArchiverFactory>();
+        archiverFactory
+            .Setup(f => f.GetArchivers())
+            .Returns([new ArchiverDto("RAR", "RarArchiver", ".rar")]);
 
         service = new AutomaticallyCreateReleasesService(
             new ReleaseFolderAutomationRepository(dbContext, dbContext),
             new FileSystemService(),
             CreateReleaseInfoResolutionService(),
-            CreateTimeProvider()
+            CreateTimeProvider(),
+            archiverFactory.Object
         );
     }
 
@@ -155,7 +161,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
     public async Task ProcessAsync_EnabledAutomationHasNoMatchingFolders_DoesNotCreateRelease()
     {
         // Arrange
-        var releaseTemplate = await AddReleaseTemplateAsync();
+        var releaseTemplate = await AddReleaseTemplateAsync(ReleaseType.Unmanaged);
         Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.Release.720p"));
         await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
 
@@ -190,7 +196,49 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         release.ReleaseFolderPath.ShouldBe(releaseFolder.FullName);
     }
 
-    private async Task<ReleaseTemplateSeed> AddReleaseTemplateAsync()
+    [Test]
+    public async Task ProcessAsync_UnmanagedAutomation_CreatesReleaseWithFixedArchive()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync(ReleaseType.Unmanaged);
+        var releaseFolder = Directory.CreateDirectory(
+            Path.Combine(tempRootPath, "Bearcat.Release.Unmanaged")
+        );
+        await File.WriteAllTextAsync(Path.Combine(releaseFolder.FullName, "archive.part1.rar"), "1");
+        await File.WriteAllTextAsync(Path.Combine(releaseFolder.FullName, "archive.part2.rar"), "2");
+        await AddAutomationAsync(
+            releaseTemplate.ReleaseTemplateId,
+            tempRootPath,
+            "*Unmanaged"
+        );
+
+        // Act
+        var result = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(1);
+        var release = await dbContext
+            .Releases.AsSplitQuery()
+            .Include(r => r.ArchiveConfigs)
+                .ThenInclude(c => c.Archives)
+                    .ThenInclude(a => a.ArchiveFiles)
+            .Include(r => r.UploadConfigs)
+            .SingleAsync();
+        var archiveConfig = release.ArchiveConfigs.Single();
+        var archive = archiveConfig.Archives.Single();
+
+        release.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        archiveConfig.ArchiverName.ShouldBe("RarArchiver");
+        archiveConfig.ArchiveFilesBasePath.ShouldBe(releaseFolder.FullName);
+        archive.ArchiveFolderPath.ShouldBe(releaseFolder.FullName);
+        archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        archive.ArchiveFiles.Count.ShouldBe(2);
+        release.UploadConfigs.Single().ArchiveConfigId.ShouldBe(archiveConfig.Id);
+    }
+
+    private async Task<ReleaseTemplateSeed> AddReleaseTemplateAsync(
+        ReleaseType releaseType = ReleaseType.Managed
+    )
     {
         var archiveBasePath = Directory
             .CreateDirectory(Path.Combine(tempRootPath, "archives"))
@@ -218,7 +266,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         var releaseTemplate = new ReleaseTemplate
         {
             Name = "Managed template",
-            ReleaseType = ReleaseType.Managed,
+            ReleaseType = releaseType,
             ReleaseGroup = releaseGroup,
             ArchiveConfigTemplates =
             [

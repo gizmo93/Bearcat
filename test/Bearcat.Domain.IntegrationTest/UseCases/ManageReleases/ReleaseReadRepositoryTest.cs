@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -28,6 +29,29 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
     public async Task DisposeDbContextAsync()
     {
         await dbContext.DisposeAsync();
+    }
+
+    [Test]
+    public async Task SearchReleasesAsync_ReleaseTypeFilter_ReturnsMatchingReleases()
+    {
+        // Arrange
+        await AddReleaseAsync("Bearcat.Managed.2026-GRP", ReleaseType.Managed);
+        var unmanagedRelease = await AddReleaseAsync(
+            "Bearcat.Unmanaged.2026-GRP",
+            ReleaseType.Unmanaged
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.SearchReleasesAsync(
+            new ReleaseSearchQuery(ReleaseType: ReleaseType.Unmanaged),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        result.Items.Single().ReleaseId.ShouldBe(unmanagedRelease.Id);
+        result.Items.Single().ReleaseType.ShouldBe(ReleaseType.Unmanaged);
     }
 
     [Test]
@@ -131,21 +155,24 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         url.Url.ShouldBe("https://www.imdb.com/de/title/tt1234567");
     }
 
-    private async Task<Release> AddReleaseAsync()
+    private async Task<Release> AddReleaseAsync(
+        string name = "Bearcat.Release.2026-GRP",
+        ReleaseType releaseType = ReleaseType.Managed
+    )
     {
         var releaseGroup = new ReleaseGroup
         {
-            Name = "Release group",
+            Name = $"{name} group",
             EnableAutomaticReuploads = false,
             NumberOfHoursUntilReupload = 24,
             Releases = [],
         };
         var release = new Release
         {
-            Name = "Bearcat.Release.2026-GRP",
+            Name = name,
             CreatedAt = DateTime.UtcNow,
-            ReleaseType = ReleaseType.Managed,
-            ReleaseFolderPath = "/tmp/bearcat-release",
+            ReleaseType = releaseType,
+            ReleaseFolderPath = $"/tmp/{name}",
             ReleaseGroup = releaseGroup,
             ArchiveConfigs = [],
             UploadConfigs = [],

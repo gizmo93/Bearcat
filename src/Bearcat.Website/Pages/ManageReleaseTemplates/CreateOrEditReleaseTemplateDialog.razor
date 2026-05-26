@@ -19,6 +19,13 @@
                                    DisplayTextSelector="GetReleaseGroupDisplayText"
                                    Options="ReleaseGroupOptions" />
             }
+
+            <BbFormFieldSelect TValue="ReleaseType"
+                               @bind-Value="FormModel.ReleaseType"
+                               Label="@L["ReleaseType"]"
+                               Disabled="FormModel.IsEdit"
+                               DisplayTextSelector="GetReleaseTypeDisplayText"
+                               Options="ReleaseTypeOptions" />
         </div>
 
         <div class="flex justify-end gap-2">

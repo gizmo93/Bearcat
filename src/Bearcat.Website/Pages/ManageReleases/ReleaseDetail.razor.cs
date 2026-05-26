@@ -91,6 +91,7 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
             {
                 Name = release.Name,
                 FolderPath = release.ReleaseFolderPath,
+                ReleaseType = release.ReleaseType,
                 ReleaseGroupId = release.ReleaseGroupId,
                 IsEdit = true,
             },

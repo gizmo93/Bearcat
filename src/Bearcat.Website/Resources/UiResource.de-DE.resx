@@ -46,6 +46,7 @@
   <data name="AnyHosterConfig" xml:space="preserve"><value>Alle Hoster-Konfigurationen</value></data>
   <data name="AnyLinkCrypterConfig" xml:space="preserve"><value>Alle Link-Crypter-Konfigurationen</value></data>
   <data name="AnyReleaseGroup" xml:space="preserve"><value>Alle Release-Gruppen</value></data>
+  <data name="AnyReleaseType" xml:space="preserve"><value>Alle Release-Typen</value></data>
   <data name="AnyOnlineState" xml:space="preserve"><value>Jeder Online-Status</value></data>
   <data name="AllUploadConfigs" xml:space="preserve"><value>Alle Upload-Konfigurationen</value></data>
   <data name="AutoRefresh" xml:space="preserve"><value>Auto-Aktualisierung</value></data>
@@ -224,6 +225,8 @@
   <data name="RandomArchiveNameWillBeGenerated" xml:space="preserve"><value>Ein zufälliger Archivname wird erzeugt</value></data>
   <data name="RandomName" xml:space="preserve"><value>Zufälliger Name</value></data>
   <data name="Refresh" xml:space="preserve"><value>Aktualisieren</value></data>
+  <data name="RefreshUnmanagedArchive" xml:space="preserve"><value>Unmanaged-Archiv aktualisieren</value></data>
+  <data name="RefreshUnmanagedArchiveTooltip" xml:space="preserve"><value>Release-Ordner prüfen und Archivdateien aktualisieren</value></data>
   <data name="Registration" xml:space="preserve"><value>Registrierung</value></data>
   <data name="Release" xml:space="preserve"><value>Release</value></data>
   <data name="ReleaseDetails" xml:space="preserve"><value>Release-Details</value></data>
@@ -349,6 +352,7 @@
   <data name="Resolved" xml:space="preserve"><value>Erledigt</value></data>
   <data name="ResolvedAt" xml:space="preserve"><value>Erledigt am</value></data>
   <data name="Type" xml:space="preserve"><value>Typ</value></data>
+  <data name="UnmanagedArchiveRefreshed" xml:space="preserve"><value>Unmanaged-Archiv aktualisiert.</value></data>
   <data name="Unlinked" xml:space="preserve"><value>Nicht verknüpft</value></data>
   <data name="UnresolvedNotifications" xml:space="preserve"><value>Ungelöste Notifications</value></data>
   <data name="UnresolvedNotificationsCount" xml:space="preserve"><value>{0} ungelöst</value></data>

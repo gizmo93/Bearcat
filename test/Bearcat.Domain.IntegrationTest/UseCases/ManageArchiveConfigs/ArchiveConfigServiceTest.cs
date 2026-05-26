@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.ValueObjects;
@@ -5,7 +6,10 @@ using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Moq;
 using Shouldly;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageArchiveConfigs;
 
@@ -18,9 +22,17 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
     public void Setup()
     {
         dbContext = Database.CreateDbContext();
+        var archiverFactory = new Mock<IArchiverFactory>();
+        archiverFactory
+            .Setup(f => f.GetArchivers())
+            .Returns([new ArchiverDto("RAR", "RarArchiver", ".rar")]);
 
         var repository = new ArchiveConfigWriteRepository(dbContext);
-        service = new ArchiveConfigService(repository);
+        service = new ArchiveConfigService(
+            repository,
+            archiverFactory.Object,
+            CreateTimeProvider()
+        );
     }
 
     [TearDown]
@@ -119,6 +131,21 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task DeleteAsync_UnmanagedReleaseArchiveConfig_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var archiveConfig = await AddArchiveConfigAsync(ReleaseType.Unmanaged);
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.DeleteAsync(archiveConfig.Id)
+        );
+
+        // Assert
+        result.Message.ShouldBe("Archive configs for unmanaged releases cannot be changed.");
+    }
+
+    [Test]
     public async Task UpdateAsync_ArchiveConfigExists_UpdatesArchiveConfig()
     {
         // Arrange
@@ -195,9 +222,182 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
         result.Message.ShouldBe($"ArchiveConfig with ID {archiveConfigId} not found");
     }
 
-    private async Task<ArchiveConfig> AddArchiveConfigAsync()
+    [Test]
+    public async Task UpdateAsync_UnmanagedReleaseArchiveConfig_ThrowsInvalidOperationException()
     {
-        var releaseId = await AddReleaseAsync();
+        // Arrange
+        var archiveConfig = await AddArchiveConfigAsync(ReleaseType.Unmanaged);
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.UpdateAsync(
+                archiveConfig.Id,
+                "/new/releases",
+                "updated-prefix",
+                "new-secret",
+                "Updated archive",
+                256
+            )
+        );
+
+        // Assert
+        result.Message.ShouldBe("Archive configs for unmanaged releases cannot be changed.");
+    }
+
+    [Test]
+    public async Task RefreshUnmanagedArchiveAsync_AllArchiveFilesExist_DoesNotCreateNewArchive()
+    {
+        // Arrange
+        var releaseFolderPath = CreateReleaseFolderWithFiles(
+            "Bearcat.Release.Unmanaged.part1.rar",
+            "Bearcat.Release.Unmanaged.part2.rar"
+        );
+        var archiveConfig = await AddUnmanagedArchiveConfigAsync(
+            releaseFolderPath,
+            "Bearcat.Release.Unmanaged.part1.rar",
+            "Bearcat.Release.Unmanaged.part2.rar"
+        );
+
+        // Act
+        await service.RefreshUnmanagedArchiveAsync(archiveConfig.Id);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .ArchiveConfigs.AsSplitQuery()
+            .Include(c => c.Archives)
+            .ThenInclude(a => a.ArchiveFiles)
+            .SingleAsync(c => c.Id == archiveConfig.Id);
+        var archive = result.Archives.Single();
+
+        result.ArchiveFilesBasePath.ShouldBe(releaseFolderPath);
+        archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        archive.ArchiveFiles.Select(file => file.FullFileName).ShouldBe(
+            [
+                Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part1.rar"),
+                Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part2.rar"),
+            ]
+        );
+    }
+
+    [Test]
+    public async Task RefreshUnmanagedArchiveAsync_ArchiveFilesChanged_CreatesNewArchive()
+    {
+        // Arrange
+        var releaseFolderPath = CreateReleaseFolderWithFiles(
+            "Bearcat.Release.Unmanaged.part1.rar",
+            "Bearcat.Release.Unmanaged.part2.rar"
+        );
+        var archiveConfig = await AddUnmanagedArchiveConfigAsync(
+            releaseFolderPath,
+            "Bearcat.Release.Unmanaged.part1.rar",
+            "Bearcat.Release.Unmanaged.part2.rar"
+        );
+        File.Delete(Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part1.rar"));
+        File.Delete(Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part2.rar"));
+        File.WriteAllText(Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.rar"), "new");
+
+        // Act
+        await service.RefreshUnmanagedArchiveAsync(archiveConfig.Id);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .ArchiveConfigs.AsSplitQuery()
+            .Include(c => c.Archives)
+            .ThenInclude(a => a.ArchiveFiles)
+            .SingleAsync(c => c.Id == archiveConfig.Id);
+        var archives = result.Archives.OrderBy(a => a.Id).ToList();
+
+        archives.Count.ShouldBe(2);
+        archives[0].ArchiveState.ShouldBe(ArchiveState.Deleted);
+        archives[1].ArchiveState.ShouldBe(ArchiveState.Created);
+        archives[1].ArchiveFiles.Single().FullFileName.ShouldBe(
+            Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.rar")
+        );
+    }
+
+    [Test]
+    public async Task RefreshUnmanagedArchiveAsync_TargetHasAdditionalArchiveFiles_CreatesNewArchive()
+    {
+        // Arrange
+        var releaseFolderPath = CreateReleaseFolderWithFiles(
+            "Bearcat.Release.Unmanaged.part1.rar",
+            "Bearcat.Release.Unmanaged.part2.rar"
+        );
+        var archiveConfig = await AddUnmanagedArchiveConfigAsync(
+            releaseFolderPath,
+            "Bearcat.Release.Unmanaged.part1.rar"
+        );
+
+        // Act
+        await service.RefreshUnmanagedArchiveAsync(archiveConfig.Id);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .ArchiveConfigs.AsSplitQuery()
+            .Include(c => c.Archives)
+            .ThenInclude(a => a.ArchiveFiles)
+            .SingleAsync(c => c.Id == archiveConfig.Id);
+        var archives = result.Archives.OrderBy(a => a.Id).ToList();
+
+        archives.Count.ShouldBe(2);
+        archives[0].ArchiveState.ShouldBe(ArchiveState.Deleted);
+        archives[1].ArchiveState.ShouldBe(ArchiveState.Created);
+        archives[1].ArchiveFiles.Select(file => file.FullFileName).ShouldBe(
+            [
+                Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part1.rar"),
+                Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part2.rar"),
+            ]
+        );
+    }
+
+    [Test]
+    public async Task RefreshUnmanagedArchiveAsync_NoMatchingArchiveFiles_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var releaseFolderPath = CreateReleaseFolderWithFiles(
+            "Bearcat.Release.Unmanaged.part1.rar"
+        );
+        var archiveConfig = await AddUnmanagedArchiveConfigAsync(
+            releaseFolderPath,
+            "Bearcat.Release.Unmanaged.part1.rar"
+        );
+        File.Delete(Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part1.rar"));
+        File.WriteAllText(Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.zip"), "zip");
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.RefreshUnmanagedArchiveAsync(archiveConfig.Id)
+        );
+
+        // Assert
+        result.Message.ShouldBe(
+            $"Release folder path {releaseFolderPath} does not contain archive files for archiver RAR."
+        );
+    }
+
+    [Test]
+    public async Task RefreshUnmanagedArchiveAsync_ManagedReleaseArchiveConfig_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var archiveConfig = await AddArchiveConfigAsync();
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.RefreshUnmanagedArchiveAsync(archiveConfig.Id)
+        );
+
+        // Assert
+        result.Message.ShouldBe("Archives can only be refreshed for unmanaged releases.");
+    }
+
+    private async Task<ArchiveConfig> AddArchiveConfigAsync(
+        ReleaseType releaseType = ReleaseType.Managed
+    )
+    {
+        var releaseId = await AddReleaseAsync(releaseType);
         var archiveConfig = new ArchiveConfig
         {
             ReleaseId = releaseId,
@@ -215,7 +415,54 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
         return archiveConfig;
     }
 
-    private async Task<int> AddReleaseAsync()
+    private async Task<ArchiveConfig> AddUnmanagedArchiveConfigAsync(
+        string releaseFolderPath,
+        params string[] archiveFileNames
+    )
+    {
+        var releaseId = await AddReleaseAsync(ReleaseType.Unmanaged, releaseFolderPath);
+        var archiveConfig = new ArchiveConfig
+        {
+            ReleaseId = releaseId,
+            ArchiveFilesBasePath = releaseFolderPath,
+            ArchiverName = "RarArchiver",
+            ArchiveNamePrefix = null,
+            ArchivePassword = null,
+            Name = "RAR",
+            ArchiveFileSizeMb = 0,
+            Archives =
+            [
+                new Archive
+                {
+                    ArchiveFolderPath = releaseFolderPath,
+                    CreatedAt = DateTime.UtcNow.AddMinutes(-5),
+                    ArchiveState = ArchiveState.Created,
+                    ArchiveFileSizeMb = 0,
+                    ArchiveFiles = archiveFileNames
+                        .Select(fileName => new ArchiveFile
+                        {
+                            FullFileName = Path.Combine(releaseFolderPath, fileName),
+                        })
+                        .ToList(),
+                    Uploads = [],
+                    ErrorMessages = [],
+                    Notifications = [],
+                },
+            ],
+        };
+
+        dbContext.ArchiveConfigs.Add(archiveConfig);
+        await dbContext.SaveChangesAsync();
+
+        return archiveConfig;
+    }
+
+    private async Task<int> AddReleaseAsync(ReleaseType releaseType = ReleaseType.Managed)
+    {
+        return await AddReleaseAsync(releaseType, "/data/releases/Bearcat.Release.001");
+    }
+
+    private async Task<int> AddReleaseAsync(ReleaseType releaseType, string releaseFolderPath)
     {
         var releaseGroup = new ReleaseGroup
         {
@@ -226,8 +473,8 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
         var release = new Release
         {
             Name = "Bearcat.Release.001",
-            ReleaseType = ReleaseType.Managed,
-            ReleaseFolderPath = "/data/releases/Bearcat.Release.001",
+            ReleaseType = releaseType,
+            ReleaseFolderPath = releaseFolderPath,
             ReleaseGroup = releaseGroup,
         };
 
@@ -235,5 +482,31 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
         await dbContext.SaveChangesAsync();
 
         return release.Id;
+    }
+
+    private static string CreateReleaseFolderWithFiles(params string[] fileNames)
+    {
+        var releaseFolderPath = Path.Combine(
+            TestContext.CurrentContext.WorkDirectory,
+            "archive-config-service-test",
+            Guid.NewGuid().ToString("N")
+        );
+        Directory.CreateDirectory(releaseFolderPath);
+
+        foreach (var fileName in fileNames)
+        {
+            File.WriteAllText(Path.Combine(releaseFolderPath, fileName), fileName);
+        }
+
+        return releaseFolderPath;
+    }
+
+    private static TimeProvider CreateTimeProvider()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["LocalTimezone"] = "UTC" })
+            .Build();
+
+        return new TimeProvider(configuration);
     }
 }

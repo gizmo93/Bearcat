@@ -5,6 +5,11 @@
                           Label="@L["SearchReleases"]"
                           Placeholder="@L["ReleaseSearchPlaceholder"]" />
 
+        <BbFormFieldSelect TValue="ReleaseType?"
+                           @bind-Value="selectedReleaseType"
+                           Label="@L["ReleaseType"]"
+                           Options="ReleaseTypeOptions" />
+
         <BbFormFieldSelect TValue="OnlineState?"
                            @bind-Value="selectedOnlineState"
                            Label="@L["OnlineState"]"
@@ -76,6 +81,7 @@
 
     private string? searchTerm;
     private string? linksDistributedTo;
+    private ReleaseType? selectedReleaseType;
     private OnlineState? selectedOnlineState;
     private int? selectedHosterRegistrationId;
     private string selectedArchiverName = string.Empty;
@@ -85,6 +91,7 @@
     private bool HasActiveFilters =>
         !string.IsNullOrWhiteSpace(searchTerm)
         || !string.IsNullOrWhiteSpace(linksDistributedTo)
+        || selectedReleaseType is not null
         || selectedOnlineState is not null
         || selectedHosterRegistrationId is not null
         || !string.IsNullOrWhiteSpace(selectedArchiverName)
@@ -100,6 +107,12 @@
             new(OnlineState.Offline, L.Localize(OnlineState.Offline)),
             new(OnlineState.Unknown, L.Localize(OnlineState.Unknown)),
         };
+
+    private IEnumerable<SelectOption<ReleaseType?>> ReleaseTypeOptions =>
+        new SelectOption<ReleaseType?>[] { new(null, L["AnyReleaseType"]) }.Concat(
+            Enum.GetValues<ReleaseType>()
+                .Select(type => new SelectOption<ReleaseType?>(type, L.Localize(type)))
+        );
 
     private IEnumerable<SelectOption<int?>> HosterRegistrationOptions =>
         new[] { new SelectOption<int?>(null, L["AnyHosterConfig"]) }.Concat(
@@ -147,6 +160,7 @@
 
         searchTerm = null;
         linksDistributedTo = null;
+        selectedReleaseType = null;
         selectedOnlineState = null;
         selectedHosterRegistrationId = null;
         selectedArchiverName = string.Empty;
@@ -160,6 +174,7 @@
     {
         return new ReleaseSearchQuery(
             SearchTerm: searchTerm,
+            ReleaseType: selectedReleaseType,
             OnlineState: selectedOnlineState,
             HosterRegistrationId: selectedHosterRegistrationId,
             ArchiverName: string.IsNullOrWhiteSpace(selectedArchiverName)

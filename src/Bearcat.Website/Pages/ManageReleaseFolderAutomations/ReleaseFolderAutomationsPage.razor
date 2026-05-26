@@ -60,6 +60,14 @@
                     <BbBadge Variant="BadgeVariant.Secondary">@automation.ReleaseTemplateName</BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
+                               Header="@L["ReleaseType"]"
+                               Property="@(automation => automation.ReleaseType.ToString())"
+                               Width="140px">
+                <CellTemplate Context="automation">
+                    <BbBadge Variant="BadgeVariant.Outline">@L.Localize(automation.ReleaseType)</BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
             <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="bool"
                                Header="@L["Status"]"
                                Property="@(automation => automation.IsEnabled)"
