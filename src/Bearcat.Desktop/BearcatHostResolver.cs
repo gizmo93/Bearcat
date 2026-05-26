@@ -135,20 +135,20 @@ public sealed class ResolvedBearcatHost
 
     public ProcessStartInfo CreateStartInfo()
     {
-        if (System.IO.Path.GetExtension(path).Equals(".dll", StringComparison.OrdinalIgnoreCase))
+        if (Path.GetExtension(path).Equals(".dll", StringComparison.OrdinalIgnoreCase))
         {
             return new ProcessStartInfo
             {
                 FileName = "dotnet",
                 Arguments = Quote(path),
-                WorkingDirectory = System.IO.Path.GetDirectoryName(path)!,
+                WorkingDirectory = Path.GetDirectoryName(path)!,
             };
         }
 
         return new ProcessStartInfo
         {
             FileName = path,
-            WorkingDirectory = System.IO.Path.GetDirectoryName(path)!,
+            WorkingDirectory = Path.GetDirectoryName(path)!,
         };
     }
 
