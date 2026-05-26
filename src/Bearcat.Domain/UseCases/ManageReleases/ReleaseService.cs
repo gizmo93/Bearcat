@@ -1,11 +1,16 @@
-﻿using Bearcat.Domain.Entities;
+﻿using Bearcat.Abstractions.Archiver;
+using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ManageReleases;
 
-public class ReleaseService(IReleaseWriteRepository writeRepository, TimeProvider timeProvider)
+public class ReleaseService(
+    IReleaseWriteRepository writeRepository,
+    TimeProvider timeProvider,
+    IArchiverFactory archiverFactory
+)
 {
     public async Task<int> CreateAsync(
         string name,
@@ -15,14 +20,23 @@ public class ReleaseService(IReleaseWriteRepository writeRepository, TimeProvide
         CancellationToken cancellationToken = default
     )
     {
+        var localNow = timeProvider.GetLocalNow();
         var release = new Release
         {
             Name = name,
-            CreatedAt = timeProvider.GetLocalNow(),
+            CreatedAt = localNow,
             ReleaseType = releaseType,
             ReleaseGroupId = releaseGroupId,
             ReleaseFolderPath = releaseFolderPath,
+            ArchiveConfigs = [],
+            UploadConfigs = [],
+            ReleaseInfos = [],
         };
+
+        if (release.ReleaseType is ReleaseType.Unmanaged)
+        {
+            EnsureInitialUnmanagedArchive(release, archiverFactory.GetArchivers(), localNow);
+        }
 
         writeRepository.Add(release);
         await writeRepository.SaveChangesAsync(cancellationToken);
@@ -39,8 +53,34 @@ public class ReleaseService(IReleaseWriteRepository writeRepository, TimeProvide
     )
     {
         var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
+        var oldReleaseFolderPath = release.ReleaseFolderPath;
+
+        if (
+            release.ReleaseType is ReleaseType.Unmanaged
+            && !string.Equals(oldReleaseFolderPath, releaseFolderPath, StringComparison.Ordinal)
+        )
+        {
+            release.ReleaseFolderPath = releaseFolderPath;
+            try
+            {
+                RefreshUnmanagedArchiveConfigs(
+                    release,
+                    archiverFactory.GetArchivers(),
+                    timeProvider.GetLocalNow()
+                );
+            }
+            catch
+            {
+                release.ReleaseFolderPath = oldReleaseFolderPath;
+                throw;
+            }
+        }
+        else
+        {
+            release.ReleaseFolderPath = releaseFolderPath;
+        }
+
         release.Name = name;
-        release.ReleaseFolderPath = releaseFolderPath;
         release.ReleaseGroupId = releaseGroupId;
 
         await writeRepository.SaveChangesAsync(cancellationToken);
@@ -86,8 +126,18 @@ public class ReleaseService(IReleaseWriteRepository writeRepository, TimeProvide
             releaseTemplateId,
             cancellationToken
         );
-        var release = CreateFromTemplate(releaseTemplate, releaseFolderPath, name);
-        release.CreatedAt = timeProvider.GetLocalNow();
+        var localNow = timeProvider.GetLocalNow();
+        var release = CreateFromTemplate(
+            releaseTemplate,
+            releaseFolderPath,
+            name,
+            releaseTemplate.ReleaseType,
+            releaseTemplate.ReleaseType is ReleaseType.Unmanaged
+                ? archiverFactory.GetArchivers()
+                : [],
+            localNow
+        );
+        release.CreatedAt = localNow;
 
         writeRepository.Add(release);
         await writeRepository.SaveChangesAsync(cancellationToken);
@@ -101,42 +151,89 @@ public class ReleaseService(IReleaseWriteRepository writeRepository, TimeProvide
         string? name = null
     )
     {
-        var releaseName = CleanOptional(name) ?? GetFolderName(releaseFolderPath);
-        var archiveConfigsByTemplateId = releaseTemplate
-            .ArchiveConfigTemplates.Select(template => new
-            {
-                template.Id,
-                Config = new ArchiveConfig
-                {
-                    Name = template.Name,
-                    ArchiveFilesBasePath = template.ArchiveFilesBasePath,
-                    ArchiverName = template.ArchiverName,
-                    ArchivePassword = template.ArchivePassword,
-                    ArchiveFileSizeMb = template.ArchiveFileSizeMb,
-                    ArchiveNamePrefix = template.UseReleaseNameAsArchiveName ? releaseName : null,
-                    Archives = [],
-                    UploadConfigs = [],
-                },
-            })
-            .ToDictionary(item => item.Id, item => item.Config);
+        if (releaseTemplate.ReleaseType is ReleaseType.Unmanaged)
+        {
+            throw new InvalidOperationException(
+                "Unmanaged releases require archive files to be initialized with archiver metadata."
+            );
+        }
 
+        return CreateFromTemplate(
+            releaseTemplate,
+            releaseFolderPath,
+            name,
+            releaseTemplate.ReleaseType,
+            [],
+            DateTime.MinValue
+        );
+    }
+
+    public static Release CreateFromTemplate(
+        ReleaseTemplate releaseTemplate,
+        string releaseFolderPath,
+        string? name,
+        ReleaseType releaseType,
+        IReadOnlyList<ArchiverDto> archivers,
+        DateTime localNow
+    )
+    {
+        var releaseName = CleanOptional(name) ?? GetFolderName(releaseFolderPath);
         var release = new Release
         {
             Name = releaseName,
             ReleaseFolderPath = releaseFolderPath,
-            ReleaseType = releaseTemplate.ReleaseType,
+            ReleaseType = releaseType,
             ReleaseGroupId = releaseTemplate.ReleaseGroupId,
-            ArchiveConfigs = archiveConfigsByTemplateId.Values.ToList(),
+            ArchiveConfigs = [],
             UploadConfigs = [],
             ReleaseInfos = [],
         };
+
+        var archiveConfigsByTemplateId = new Dictionary<int, ArchiveConfig>();
+        ArchiveConfig? unmanagedArchiveConfig = null;
+
+        if (releaseType is ReleaseType.Managed)
+        {
+            archiveConfigsByTemplateId = releaseTemplate
+                .ArchiveConfigTemplates.Select(template => new
+                {
+                    template.Id,
+                    Config = new ArchiveConfig
+                    {
+                        Name = template.Name,
+                        ArchiveFilesBasePath = template.ArchiveFilesBasePath,
+                        ArchiverName = template.ArchiverName,
+                        ArchivePassword = template.ArchivePassword,
+                        ArchiveFileSizeMb = template.ArchiveFileSizeMb,
+                        ArchiveNamePrefix = template.UseReleaseNameAsArchiveName
+                            ? releaseName
+                            : null,
+                        Archives = [],
+                        UploadConfigs = [],
+                    },
+                })
+                .ToDictionary(item => item.Id, item => item.Config);
+            release.ArchiveConfigs = archiveConfigsByTemplateId.Values.ToList();
+        }
+        else
+        {
+            unmanagedArchiveConfig = UnmanagedReleaseArchiveInitializer.CreateArchiveConfig(
+                release,
+                archivers,
+                localNow
+            );
+            release.ArchiveConfigs.Add(unmanagedArchiveConfig);
+        }
 
         release.UploadConfigs = releaseTemplate
             .UploadConfigTemplates.Select(template => new UploadConfig
             {
                 Name = CleanOptional(template.Name) ?? template.HosterRegistration.Name,
                 HosterRegistrationId = template.HosterRegistrationId,
-                ArchiveConfig = archiveConfigsByTemplateId[template.ArchiveConfigTemplateId],
+                ArchiveConfig =
+                    releaseType is ReleaseType.Managed
+                        ? archiveConfigsByTemplateId[template.ArchiveConfigTemplateId]
+                        : unmanagedArchiveConfig!,
                 LinksDistributedTo = CleanLinks(template.LinksDistributedTo),
                 Uploads = [],
                 LinkCrypters = template
@@ -151,6 +248,38 @@ public class ReleaseService(IReleaseWriteRepository writeRepository, TimeProvide
             .ToList();
 
         return release;
+    }
+
+    private static void EnsureInitialUnmanagedArchive(
+        Release release,
+        IReadOnlyList<ArchiverDto> archivers,
+        DateTime localNow
+    )
+    {
+        if (release.ReleaseType is not ReleaseType.Unmanaged || release.ArchiveConfigs.Count > 0)
+        {
+            return;
+        }
+
+        release.ArchiveConfigs.Add(
+            UnmanagedReleaseArchiveInitializer.CreateArchiveConfig(release, archivers, localNow)
+        );
+    }
+
+    private static void RefreshUnmanagedArchiveConfigs(
+        Release release,
+        IReadOnlyList<ArchiverDto> archivers,
+        DateTime localNow
+    )
+    {
+        foreach (var archiveConfig in release.ArchiveConfigs)
+        {
+            UnmanagedReleaseArchiveInitializer.RefreshArchiveConfig(
+                archiveConfig,
+                archivers,
+                localNow
+            );
+        }
     }
 
     private static string? CleanOptional(string? value)

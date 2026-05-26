@@ -13,6 +13,8 @@ public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite) : IReleaseWr
             .Include(r => r.ReleaseGroup)
             .Include(r => r.UploadConfigs)
             .Include(r => r.ArchiveConfigs)
+                .ThenInclude(c => c.Archives)
+                    .ThenInclude(a => a.ArchiveFiles)
             .FirstAsync(r => r.Id == id, cancellationToken);
     }
 

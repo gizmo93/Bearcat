@@ -284,6 +284,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                 u.LinkCrypterContainers.Count(),
                 (
                     u.UploadState == UploadState.Canceled
+                    || u.UploadState == UploadState.Failed
                     || u.OnlineState == OnlineState.Offline
                     || u.OnlineState == OnlineState.PartiallyOnline
                 )
@@ -419,6 +420,11 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
         if (query.OnlineState is not null)
         {
             releases = ApplyOnlineStateFilter(releases, query.OnlineState.Value);
+        }
+
+        if (query.ReleaseType is not null)
+        {
+            releases = releases.Where(r => r.ReleaseType == query.ReleaseType.Value);
         }
 
         if (query.HosterRegistrationId is not null)

@@ -122,6 +122,7 @@ public class ReleaseTemplateRepository(
     {
         return await dbWrite
             .ArchiveConfigTemplates.Include(a => a.UploadConfigTemplates)
+            .Include(a => a.ReleaseTemplate)
             .FirstAsync(a => a.Id == archiveConfigTemplateId, cancellationToken);
     }
 
@@ -132,6 +133,8 @@ public class ReleaseTemplateRepository(
     {
         return await dbWrite
             .UploadConfigTemplates.Include(u => u.LinkCrypterTemplates)
+            .Include(u => u.ReleaseTemplate)
+                .ThenInclude(t => t.ArchiveConfigTemplates)
             .FirstAsync(u => u.Id == uploadConfigTemplateId, cancellationToken);
     }
 

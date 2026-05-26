@@ -1,3 +1,5 @@
+using Bearcat.Domain.ValueObjects;
+
 namespace Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.ReadModels;
 
 public record ReleaseFolderAutomationReadModel(
@@ -6,5 +8,6 @@ public record ReleaseFolderAutomationReadModel(
     string? FolderNamePattern,
     int ReleaseTemplateId,
     string ReleaseTemplateName,
+    ReleaseType ReleaseType,
     bool IsEnabled
 );

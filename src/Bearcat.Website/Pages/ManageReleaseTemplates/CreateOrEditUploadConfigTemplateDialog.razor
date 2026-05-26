@@ -22,11 +22,14 @@
                                Placeholder="@L["SelectHosterRegistration"]"
                                Options="HosterOptions" />
 
-            <BbFormFieldSelect TValue="int?"
-                               @bind-Value="FormModel.ArchiveConfigTemplateId"
-                               Label="@L["ArchiveConfiguration"]"
-                               Placeholder="@L["SelectArchiveConfiguration"]"
-                               Options="ArchiveConfigOptions" />
+            @if (!isUnmanagedReleaseTemplate)
+            {
+                <BbFormFieldSelect TValue="int?"
+                                   @bind-Value="FormModel.ArchiveConfigTemplateId"
+                                   Label="@L["ArchiveConfiguration"]"
+                                   Placeholder="@L["SelectArchiveConfiguration"]"
+                                   Options="ArchiveConfigOptions" />
+            }
 
             <div class="space-y-3">
                 <div class="flex items-center justify-between gap-3">

@@ -48,10 +48,13 @@
                             <BbCardDescription>@L["ArchiveConfigTemplatesDescription"]</BbCardDescription>
                         </div>
                     </div>
-                    <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="ShowAddArchiveConfigDialogAsync">
-                        <LucideIcon Name="plus" class="h-4 w-4" />
-                        @L["Add"]
-                    </BbButton>
+                    @if (releaseTemplate.ReleaseType is ReleaseType.Managed)
+                    {
+                        <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="ShowAddArchiveConfigDialogAsync">
+                            <LucideIcon Name="plus" class="h-4 w-4" />
+                            @L["Add"]
+                        </BbButton>
+                    }
                 </div>
             </BbCardHeader>
             <BbCardContent>
@@ -97,21 +100,24 @@
                                         </p>
                                     </div>
                                     <div class="bearcat-config-actions">
-                                        <BbDropdownMenu>
-                                            <BbDropdownMenuTrigger>
-                                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenArchiveConfigActions"]">
-                                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
-                                                </BbButton>
-                                            </BbDropdownMenuTrigger>
-                                            <BbDropdownMenuContent Align="PopoverAlign.End">
-                                                <BbDropdownMenuItem OnClick="@(async _ => await ShowEditArchiveConfigDialogAsync(config))">
-                                                    @L["EditConfig"]
-                                                </BbDropdownMenuItem>
-                                                <BbDropdownMenuItem OnClick="@(async _ => await DeleteArchiveConfigTemplateAsync(config))">
-                                                    @L["DeleteConfig"]
-                                                </BbDropdownMenuItem>
-                                            </BbDropdownMenuContent>
-                                        </BbDropdownMenu>
+                                        @if (releaseTemplate.ReleaseType is ReleaseType.Managed)
+                                        {
+                                            <BbDropdownMenu>
+                                                <BbDropdownMenuTrigger>
+                                                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenArchiveConfigActions"]">
+                                                        <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                                    </BbButton>
+                                                </BbDropdownMenuTrigger>
+                                                <BbDropdownMenuContent Align="PopoverAlign.End">
+                                                    <BbDropdownMenuItem OnClick="@(async _ => await ShowEditArchiveConfigDialogAsync(config))">
+                                                        @L["EditConfig"]
+                                                    </BbDropdownMenuItem>
+                                                    <BbDropdownMenuItem OnClick="@(async _ => await DeleteArchiveConfigTemplateAsync(config))">
+                                                        @L["DeleteConfig"]
+                                                    </BbDropdownMenuItem>
+                                                </BbDropdownMenuContent>
+                                            </BbDropdownMenu>
+                                        }
                                     </div>
                                 </div>
                             </div>

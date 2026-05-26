@@ -144,6 +144,29 @@ public class ArchiveCleanupServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task ProcessAsync_UnmanagedArchiveExists_DoesNotDeleteReleaseFolder()
+    {
+        // Arrange
+        var archive = await AddArchiveAsync(DateTime.UtcNow, ReleaseType.Unmanaged);
+        overrideCacheMock.SetupGet(c => c.IsInitialized).Returns(true);
+        configurationMock
+            .Setup(c => c.GetValue<ArchiveCleanupConfiguration>(a => a.AutoCleanup))
+            .Returns(true);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Archives.SingleAsync();
+
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(archive.Id);
+        result.ArchiveState.ShouldBe(ArchiveState.Created);
+        Directory.Exists(archive.ArchiveFolderPath).ShouldBeTrue();
+    }
+
+    [Test]
     public async Task ProcessAsync_DeleteDirectoryFails_KeepsArchiveCreated()
     {
         // Arrange
@@ -189,12 +212,18 @@ public class ArchiveCleanupServiceTest : BearcatIntegrationTest
         return await AddArchiveAsync(uploadedAt: DateTime.UtcNow);
     }
 
-    private async Task<Archive> AddArchiveAsync(DateTime? uploadedAt)
+    private async Task<Archive> AddArchiveAsync(
+        DateTime? uploadedAt,
+        ReleaseType releaseType = ReleaseType.Managed
+    )
     {
-        var uploadConfig = await AddUploadConfigAsync();
-        var archiveFolderPath = Directory
-            .CreateDirectory(Path.Combine(archiveFilesBasePath, Guid.NewGuid().ToString("N")))
-            .FullName;
+        var uploadConfig = await AddUploadConfigAsync(releaseType);
+        var archiveFolderPath =
+            releaseType is ReleaseType.Unmanaged
+                ? releaseFolderPath
+                : Directory
+                    .CreateDirectory(Path.Combine(archiveFilesBasePath, Guid.NewGuid().ToString("N")))
+                    .FullName;
         var archive = new Archive
         {
             ArchiveConfigId = uploadConfig.ArchiveConfigId,
@@ -224,7 +253,9 @@ public class ArchiveCleanupServiceTest : BearcatIntegrationTest
         return archive;
     }
 
-    private async Task<UploadConfig> AddUploadConfigAsync()
+    private async Task<UploadConfig> AddUploadConfigAsync(
+        ReleaseType releaseType = ReleaseType.Managed
+    )
     {
         var releaseGroup = new ReleaseGroup
         {
@@ -235,7 +266,7 @@ public class ArchiveCleanupServiceTest : BearcatIntegrationTest
         var release = new Release
         {
             Name = "Bearcat.Release.001",
-            ReleaseType = ReleaseType.Managed,
+            ReleaseType = releaseType,
             ReleaseFolderPath = releaseFolderPath,
             ReleaseGroup = releaseGroup,
         };

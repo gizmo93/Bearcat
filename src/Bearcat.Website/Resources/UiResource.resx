@@ -46,6 +46,7 @@
   <data name="AnyHosterConfig" xml:space="preserve"><value>Any hoster config</value></data>
   <data name="AnyLinkCrypterConfig" xml:space="preserve"><value>Any link crypter config</value></data>
   <data name="AnyReleaseGroup" xml:space="preserve"><value>Any release group</value></data>
+  <data name="AnyReleaseType" xml:space="preserve"><value>Any release type</value></data>
   <data name="AnyOnlineState" xml:space="preserve"><value>Any online state</value></data>
   <data name="AllUploadConfigs" xml:space="preserve"><value>All upload configs</value></data>
   <data name="AutoRefresh" xml:space="preserve"><value>Auto refresh</value></data>
@@ -224,6 +225,8 @@
   <data name="RandomArchiveNameWillBeGenerated" xml:space="preserve"><value>A random archive name will be generated</value></data>
   <data name="RandomName" xml:space="preserve"><value>Random name</value></data>
   <data name="Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="RefreshUnmanagedArchive" xml:space="preserve"><value>Refresh unmanaged archive</value></data>
+  <data name="RefreshUnmanagedArchiveTooltip" xml:space="preserve"><value>Check the release folder and refresh archive files</value></data>
   <data name="Registration" xml:space="preserve"><value>registration</value></data>
   <data name="Release" xml:space="preserve"><value>Release</value></data>
   <data name="ReleaseDetails" xml:space="preserve"><value>Release details</value></data>
@@ -348,6 +351,7 @@
   <data name="Resolved" xml:space="preserve"><value>Resolved</value></data>
   <data name="ResolvedAt" xml:space="preserve"><value>Resolved at</value></data>
   <data name="Type" xml:space="preserve"><value>Type</value></data>
+  <data name="UnmanagedArchiveRefreshed" xml:space="preserve"><value>Unmanaged archive refreshed.</value></data>
   <data name="Unlinked" xml:space="preserve"><value>Unlinked</value></data>
   <data name="UnresolvedNotifications" xml:space="preserve"><value>Unresolved notifications</value></data>
   <data name="UnresolvedNotificationsCount" xml:space="preserve"><value>{0} unresolved</value></data>

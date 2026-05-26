@@ -13,8 +13,11 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
     {
         return await dbWrite
             .Archives.Include(a => a.Uploads)
+            .Include(a => a.ArchiveConfig)
+                .ThenInclude(c => c.Release)
             .Where(a =>
                 a.ArchiveState == ArchiveState.Created
+                && a.ArchiveConfig.Release.ReleaseType == ReleaseType.Managed
                 && a.Uploads.Any()
                 && a.Uploads.All(u => u.UploadedAt != null)
             )

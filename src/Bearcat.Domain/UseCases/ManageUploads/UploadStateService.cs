@@ -38,11 +38,12 @@ public class UploadStateService(
 
         if (
             upload.UploadState != UploadState.Canceled
+            && upload.UploadState != UploadState.Failed
             && upload.OnlineState is not OnlineState.Offline and not OnlineState.PartiallyOnline
         )
         {
             throw new InvalidOperationException(
-                "Manual reuploads can only be created for offline, partially online, or canceled uploads."
+                "Manual reuploads can only be created for offline, partially online, canceled, or failed uploads."
             );
         }
 

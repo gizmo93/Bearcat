@@ -1,6 +1,7 @@
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -188,6 +189,16 @@ public partial class ReleaseTemplateDetail(
 
     private async Task ShowAddUploadConfigDialogAsync()
     {
+        if (
+            releaseTemplate.ReleaseType is ReleaseType.Unmanaged
+            && releaseTemplate.ArchiveConfigTemplates.Count == 0
+        )
+        {
+            var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
+            await service.EnsureUnmanagedArchiveConfigTemplateAsync(ReleaseTemplateId);
+            await LoadReleaseTemplateAsync();
+        }
+
         if (releaseTemplate.ArchiveConfigTemplates.Count == 0)
         {
             toastService.Error(L["CreateArchiveConfigTemplateFirst"]);

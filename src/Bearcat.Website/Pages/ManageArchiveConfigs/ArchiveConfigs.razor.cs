@@ -1,6 +1,7 @@
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -8,12 +9,15 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageArchiveConfigs;
 
-public partial class ArchiveConfigs(DialogService dialogService)
+public partial class ArchiveConfigs(DialogService dialogService, ToastService toastService)
     : OwningComponentBase,
         IReloadableComponent
 {
     [Parameter]
     public int ReleaseId { get; set; }
+
+    [Parameter]
+    public ReleaseType ReleaseType { get; set; } = ReleaseType.Managed;
 
     [Parameter]
     public int? FocusArchiveConfigId { get; set; }
@@ -23,6 +27,10 @@ public partial class ArchiveConfigs(DialogService dialogService)
 
     private IReadOnlyList<ArchiveConfigReadModel> archiveConfigs = [];
     private IReleaseReadRepository readRepository = null!;
+    private string ArchiveGridClass =>
+        ReleaseType is ReleaseType.Unmanaged
+            ? "bearcat-archive-grid-unmanaged"
+            : "bearcat-archive-grid";
 
     protected override async Task OnInitializedAsync()
     {
@@ -82,6 +90,26 @@ public partial class ArchiveConfigs(DialogService dialogService)
         await archiveConfigService.DeleteAsync(archiveConfig.ArchiveConfigId);
         await LoadArchiveConfigsAsync();
         await OnChangeAffectingOtherComponents.InvokeAsync(GetType().Name);
+    }
+
+    private async Task RefreshUnmanagedArchiveAsync(ArchiveConfigReadModel archiveConfig)
+    {
+        var archiveConfigService = ScopedServices.GetRequiredService<ArchiveConfigService>();
+
+        try
+        {
+            await archiveConfigService.RefreshUnmanagedArchiveAsync(
+                archiveConfig.ArchiveConfigId,
+                CancellationToken.None
+            );
+            toastService.Success(L["UnmanagedArchiveRefreshed"]);
+            await LoadArchiveConfigsAsync();
+            await OnChangeAffectingOtherComponents.InvokeAsync(GetType().Name);
+        }
+        catch (InvalidOperationException ex)
+        {
+            toastService.Error(ex.Message);
+        }
     }
 
     private async Task LoadArchiveConfigsAsync()

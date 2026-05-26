@@ -318,7 +318,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         // Assert
         result.ShouldNotBeNull();
         result.Message.ShouldBe(
-            "Manual reuploads can only be created for offline, partially online, or canceled uploads."
+            "Manual reuploads can only be created for offline, partially online, canceled, or failed uploads."
         );
     }
 
@@ -332,6 +332,31 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             uploadedFileLinks: []
         );
         upload.UploadState = UploadState.Canceled;
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var reupload = await dbContext.Uploads.SingleAsync(u => u.Id == result);
+
+        reupload.ShouldNotBeNull();
+        reupload.UploadConfigId.ShouldBe(upload.UploadConfigId);
+        reupload.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        reupload.OnlineState.ShouldBe(OnlineState.Unknown);
+    }
+
+    [Test]
+    public async Task CreateManualReuploadAsync_FailedUpload_CreatesWaitingForArchiveUpload()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Unknown,
+            checkedAt: null,
+            uploadedFileLinks: []
+        );
+        upload.UploadState = UploadState.Failed;
         await dbContext.SaveChangesAsync();
 
         // Act

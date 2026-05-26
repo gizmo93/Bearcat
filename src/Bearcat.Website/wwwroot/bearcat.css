@@ -1796,6 +1796,10 @@ a {
         grid-template-columns: minmax(0, 1.35fr) 120px 110px 120px minmax(0, 1fr) 84px;
     }
 
+    .bearcat-archive-grid-unmanaged {
+        grid-template-columns: minmax(0, 1.35fr) 120px 110px 84px;
+    }
+
     .bearcat-upload-grid {
         grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 100px minmax(0, 1fr) 84px;
     }
