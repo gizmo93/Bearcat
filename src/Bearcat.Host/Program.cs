@@ -10,7 +10,6 @@ using Bearcat.NfoDatabases.InversionOfControl;
 using Bearcat.Website;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 var isDesktopMode = builder.Configuration.GetValue("Bearcat:DesktopMode", false);

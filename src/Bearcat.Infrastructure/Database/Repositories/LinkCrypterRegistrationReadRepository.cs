@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.LinkCrypter;
+using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Bearcat.Infrastructure.Security;
@@ -40,7 +41,7 @@ public class LinkCrypterRegistrationReadRepository(
     }
 
     private LinkCrypterRegistrationReadModel ToReadModel(
-        Domain.Entities.LinkCrypterRegistration registration,
+        LinkCrypterRegistration registration,
         IReadOnlyDictionary<string, ILinkCrypter> cryptersByClassName
     )
     {
