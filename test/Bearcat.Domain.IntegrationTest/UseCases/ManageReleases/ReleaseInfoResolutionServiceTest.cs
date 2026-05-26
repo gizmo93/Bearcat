@@ -17,6 +17,7 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
 {
     private const string WorkingDatabaseClassName = "WorkingNfoDatabase";
+    private const string NfoProviderDatabaseClassName = "NfoProviderDatabase";
     private const string SerializedConfig = "{\"apiKey\":\"secret\"}";
 
     private BearcatDbContext dbContext = null!;
@@ -97,6 +98,92 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task ProcessMissingReleaseInfosAsync_LocalNfoFileExists_PersistsReleaseNfo()
+    {
+        // Arrange
+        var releaseFolderPath = CreateTempReleaseFolder();
+        await File.WriteAllTextAsync(
+            Path.Combine(releaseFolderPath, "bearcat.nfo"),
+            "local nfo content"
+        );
+        var release = await AddReleaseAsync("Bearcat.Local.Nfo.2026-GRP", releaseFolderPath);
+        await AddNfoDatabaseRegistrationAsync(WorkingDatabaseClassName, isActive: true);
+
+        SetupNfoDatabase(
+            WorkingDatabaseClassName,
+            "Bearcat.Local.Nfo.2026-GRP",
+            CreateReleaseInfo("Bearcat.Local.Nfo.2026-GRP")
+        );
+
+        // Act
+        var resolvedCount = await service.ProcessMissingReleaseInfosAsync(CancellationToken.None);
+
+        // Assert
+        resolvedCount.ShouldBe(1);
+
+        dbContext.ChangeTracker.Clear();
+        var persistedInfo = await dbContext
+            .ReleaseInfos.Include(info => info.ReleaseNfo)
+            .SingleAsync();
+
+        persistedInfo.ReleaseId.ShouldBe(release.Id);
+        persistedInfo.ReleaseNfo.ShouldNotBeNull();
+        persistedInfo.ReleaseNfo.FileName.ShouldBe("bearcat.nfo");
+        persistedInfo.ReleaseNfo.Content.ShouldBe("local nfo content");
+    }
+
+    [Test]
+    public async Task ProcessMissingReleaseInfosAsync_NoLocalNfo_UsesProviderAfterReleaseInfoDatabase()
+    {
+        // Arrange
+        const string xrelDatabaseClassName = "XrelNfoDatabase";
+        var release = await AddReleaseAsync("Bearcat.Remote.Nfo.2026-GRP");
+        await AddNfoDatabaseRegistrationAsync(xrelDatabaseClassName, isActive: true);
+        await AddNfoDatabaseRegistrationAsync(NfoProviderDatabaseClassName, isActive: true);
+
+        SetupNfoDatabase(
+            xrelDatabaseClassName,
+            "Bearcat.Remote.Nfo.2026-GRP",
+            CreateReleaseInfo("Bearcat.Remote.Nfo.2026-GRP")
+        );
+        var providerMock = SetupNfoProvider(
+            NfoProviderDatabaseClassName,
+            "Bearcat.Remote.Nfo.2026-GRP",
+            new Bearcat.Abstractions.NfoDatabase.ReleaseNfo(
+                "remote.nfo",
+                "remote nfo content"
+            )
+        );
+
+        // Act
+        var resolvedCount = await service.ProcessMissingReleaseInfosAsync(CancellationToken.None);
+
+        // Assert
+        resolvedCount.ShouldBe(1);
+
+        dbContext.ChangeTracker.Clear();
+        var persistedInfo = await dbContext
+            .ReleaseInfos.Include(info => info.ReleaseNfo)
+            .SingleAsync();
+
+        persistedInfo.ReleaseId.ShouldBe(release.Id);
+        persistedInfo.NfoDatabaseClassName.ShouldBe(xrelDatabaseClassName);
+        persistedInfo.ReleaseNfo.ShouldNotBeNull();
+        persistedInfo.ReleaseNfo.FileName.ShouldBe("remote.nfo");
+        persistedInfo.ReleaseNfo.Content.ShouldBe("remote nfo content");
+
+        providerMock.Verify(
+            provider =>
+                provider.GetReleaseNfoAsync(
+                    It.IsAny<INfoDatabaseConfig>(),
+                    "Bearcat.Remote.Nfo.2026-GRP",
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
     public async Task ProcessMissingReleaseInfosAsync_FirstDatabaseReturnsNull_UsesNextDatabase()
     {
         // Arrange
@@ -107,6 +194,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
 
         var emptyConfigMock = new Mock<INfoDatabaseConfig>(MockBehavior.Strict);
         var emptyDatabaseMock = new Mock<INfoDatabase>(MockBehavior.Strict);
+        emptyDatabaseMock.SetupGet(database => database.ResolutionPriority).Returns(100);
         emptyDatabaseMock
             .Setup(database => database.DeserializeConfig(SerializedConfig))
             .Returns(emptyConfigMock.Object);
@@ -170,6 +258,73 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task SaveNfoFileAsync_NoLocalNfo_WritesFileWithStoredFileName()
+    {
+        // Arrange
+        var releaseFolderPath = CreateTempReleaseFolder();
+
+        // Act
+        var result = await ReleaseNfoService.SaveNfoFileAsync(
+            releaseFolderPath,
+            "bearcat.nfo",
+            "Bearcat.Release.2026-GRP",
+            "nfo content",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(ReleaseNfoFileSaveResult.Saved);
+        var filePath = Path.Combine(releaseFolderPath, "bearcat.nfo");
+        File.Exists(filePath).ShouldBeTrue();
+        (await File.ReadAllTextAsync(filePath)).ShouldBe("nfo content");
+    }
+
+    [Test]
+    public async Task SaveNfoFileAsync_LocalNfoExists_DoesNotOverwrite()
+    {
+        // Arrange
+        var releaseFolderPath = CreateTempReleaseFolder();
+        var filePath = Path.Combine(releaseFolderPath, "existing.nfo");
+        await File.WriteAllTextAsync(filePath, "existing content");
+
+        // Act
+        var result = await ReleaseNfoService.SaveNfoFileAsync(
+            releaseFolderPath,
+            "bearcat.nfo",
+            "Bearcat.Release.2026-GRP",
+            "new content",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(ReleaseNfoFileSaveResult.AlreadyExists);
+        (await File.ReadAllTextAsync(filePath)).ShouldBe("existing content");
+        File.Exists(Path.Combine(releaseFolderPath, "bearcat.nfo")).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task SaveNfoFileAsync_StoredFileNameMissing_UsesReleaseName()
+    {
+        // Arrange
+        var releaseFolderPath = CreateTempReleaseFolder();
+
+        // Act
+        var result = await ReleaseNfoService.SaveNfoFileAsync(
+            releaseFolderPath,
+            string.Empty,
+            "Bearcat.Release.2026-GRP",
+            "nfo content",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(ReleaseNfoFileSaveResult.Saved);
+        var filePath = Path.Combine(releaseFolderPath, "Bearcat.Release.2026-GRP.nfo");
+        File.Exists(filePath).ShouldBeTrue();
+        (await File.ReadAllTextAsync(filePath)).ShouldBe("nfo content");
+    }
+
+    [Test]
     public async Task TryResolveAndSaveAsync_NewTrackedRelease_PersistsReleaseAndInfo()
     {
         // Arrange
@@ -217,6 +372,9 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         var configMock = new Mock<INfoDatabaseConfig>(MockBehavior.Strict);
         var nfoDatabaseMock = new Mock<INfoDatabase>(MockBehavior.Strict);
         nfoDatabaseMock
+            .SetupGet(database => database.ResolutionPriority)
+            .Returns(className.Equals("XrelNfoDatabase", StringComparison.Ordinal) ? 0 : 100);
+        nfoDatabaseMock
             .Setup(database => database.DeserializeConfig(SerializedConfig))
             .Returns(configMock.Object);
         nfoDatabaseMock
@@ -231,6 +389,33 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         nfoDatabaseFactoryMock.Setup(factory => factory.Get(className)).Returns(nfoDatabaseMock.Object);
 
         return nfoDatabaseMock;
+    }
+
+    private Mock<INfoProvider> SetupNfoProvider(
+        string className,
+        string expectedReleaseName,
+        Bearcat.Abstractions.NfoDatabase.ReleaseNfo? releaseNfo
+    )
+    {
+        var configMock = new Mock<INfoDatabaseConfig>(MockBehavior.Strict);
+        var nfoDatabaseMock = new Mock<INfoDatabase>(MockBehavior.Strict);
+        var providerMock = nfoDatabaseMock.As<INfoProvider>();
+        nfoDatabaseMock.SetupGet(database => database.ResolutionPriority).Returns(100);
+        nfoDatabaseMock
+            .Setup(database => database.DeserializeConfig(SerializedConfig))
+            .Returns(configMock.Object);
+        providerMock
+            .Setup(provider =>
+                provider.GetReleaseNfoAsync(
+                    configMock.Object,
+                    expectedReleaseName,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(releaseNfo);
+        nfoDatabaseFactoryMock.Setup(factory => factory.Get(className)).Returns(nfoDatabaseMock.Object);
+
+        return providerMock;
     }
 
     private async Task<NfoDatabaseRegistration> AddNfoDatabaseRegistrationAsync(
@@ -251,7 +436,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         return registration;
     }
 
-    private async Task<Release> AddReleaseAsync(string name)
+    private async Task<Release> AddReleaseAsync(string name, string? releaseFolderPath = null)
     {
         var releaseGroup = await AddReleaseGroupAsync();
         var release = new Release
@@ -259,7 +444,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             Name = name,
             CreatedAt = DateTime.UtcNow,
             ReleaseType = ReleaseType.Managed,
-            ReleaseFolderPath = $"/tmp/{name}",
+            ReleaseFolderPath = releaseFolderPath ?? $"/tmp/{name}",
             ReleaseGroupId = releaseGroup.Id,
             ArchiveConfigs = [],
             UploadConfigs = [],
@@ -269,6 +454,13 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         await dbContext.SaveChangesAsync();
 
         return release;
+    }
+
+    private static string CreateTempReleaseFolder()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"bearcat-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(path);
+        return path;
     }
 
     private async Task<ReleaseGroup> AddReleaseGroupAsync()

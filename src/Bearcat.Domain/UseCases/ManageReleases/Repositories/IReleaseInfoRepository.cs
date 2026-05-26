@@ -20,6 +20,13 @@ public interface IReleaseInfoRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<ReleaseInfo> GetReleaseInfoByIdAsync(
+        int releaseInfoId,
+        CancellationToken cancellationToken = default
+    );
+
+    void Remove(ReleaseInfo releaseInfo);
+
     void DetachPendingReleaseInfos(Release release);
 
     Task SaveChangesAsync(CancellationToken cancellationToken = default);

@@ -37,5 +37,6 @@ public interface IBearcatWriteDbContext
     DbSet<ApplicationConfigurationOverride> ApplicationConfigurationOverrides { get; set; }
     DbSet<NfoDatabaseRegistration> NfoDatabaseRegistrations { get; set; }
     DbSet<ReleaseInfo> ReleaseInfos { get; set; }
+    DbSet<ReleaseNfo> ReleaseNfos { get; set; }
     DbSet<ReleaseExternalInfo> ReleaseExternalInfos { get; set; }
 }

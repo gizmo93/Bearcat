@@ -23,4 +23,6 @@ public class ReleaseInfo
     public string? AudioType { get; set; }
 
     public List<ReleaseExternalInfo> ExternalInfos { get; set; } = [];
+
+    public ReleaseNfo? ReleaseNfo { get; set; }
 }

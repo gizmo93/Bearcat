@@ -28,5 +28,6 @@ public interface IBearcatReadDbContext
     public DbSet<ApplicationConfigurationOverride> ApplicationConfigurationOverrides { get; set; }
     public DbSet<NfoDatabaseRegistration> NfoDatabaseRegistrations { get; set; }
     public DbSet<ReleaseInfo> ReleaseInfos { get; set; }
+    public DbSet<ReleaseNfo> ReleaseNfos { get; set; }
     public DbSet<ReleaseExternalInfo> ReleaseExternalInfos { get; set; }
 }

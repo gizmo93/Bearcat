@@ -10,8 +10,7 @@ namespace Bearcat.Domain.UseCases.ManageReleases;
 
 public class ForumPostRenderService(
     IForumPostTemplateReadRepository templateReadRepository,
-    IReleaseReadRepository releaseReadRepository,
-    ReleaseNfoService releaseNfoService
+    IReleaseReadRepository releaseReadRepository
 )
 {
     public IReadOnlyList<ForumPostTemplateVariableReadModel> GetVariables()
@@ -99,7 +98,9 @@ public class ForumPostRenderService(
             cancellationToken
         );
         var infos = await releaseReadRepository.GetReleaseInfosAsync(releaseId, cancellationToken);
-        var nfo = await releaseNfoService.GetNfoContentAsync(release.ReleaseFolderPath);
+        var nfo = (
+            await releaseReadRepository.GetReleaseNfoAsync(releaseId, cancellationToken)
+        )?.Content;
 
         var infoModels = infos.Select(ToReleaseInfoModel).ToList();
         var uploadModels = new List<ForumPostTemplateUploadModel>();

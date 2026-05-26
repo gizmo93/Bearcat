@@ -1171,6 +1171,16 @@ a {
     background: color-mix(in oklch, var(--primary) 14%, transparent);
 }
 
+.bearcat-release-info-delete-button {
+    border-color: color-mix(in oklch, var(--destructive) 40%, var(--border));
+    background: color-mix(in oklch, var(--destructive) 7%, transparent);
+    color: var(--destructive);
+}
+
+.bearcat-release-info-delete-button:hover {
+    background: color-mix(in oklch, var(--destructive) 13%, transparent);
+}
+
 .bearcat-release-info-title {
     min-width: 0;
     color: var(--foreground);

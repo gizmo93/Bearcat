@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using DomainReleaseInfo = Bearcat.Domain.Entities.ReleaseInfo;
+using DomainReleaseNfo = Bearcat.Domain.Entities.ReleaseNfo;
 using NfoReleaseInfo = Bearcat.Abstractions.NfoDatabase.ReleaseInfo;
 
 namespace Bearcat.Domain.UseCases.ManageReleases;
@@ -103,12 +104,23 @@ public class ReleaseInfoResolutionService(
         CancellationToken cancellationToken = default
     )
     {
+        var registrations = await GetActiveNfoDatabaseRegistrationsAsync(cancellationToken);
+
         if (release.ReleaseInfos.Count > 0)
         {
-            return false;
-        }
+            var resolvedExistingNfo = false;
+            foreach (var releaseInfo in release.ReleaseInfos.Where(info => info.ReleaseNfo is null))
+            {
+                resolvedExistingNfo |= await TryResolveNfoAsync(
+                    release: release,
+                    releaseInfo: releaseInfo,
+                    registrations: registrations,
+                    cancellationToken: cancellationToken
+                );
+            }
 
-        var registrations = await GetActiveNfoDatabaseRegistrationsAsync(cancellationToken);
+            return resolvedExistingNfo;
+        }
 
         foreach (var registration in registrations)
         {
@@ -119,9 +131,9 @@ public class ReleaseInfoResolutionService(
                 if (
                     release.Id > 0
                     && await repository.HasReleaseInfoAsync(
-                        release.Id,
-                        registration.NfoDatabaseClassName,
-                        cancellationToken
+                        releaseId: release.Id,
+                        nfoDatabaseClassName: registration.NfoDatabaseClassName,
+                        cancellationToken: cancellationToken
                     )
                 )
                 {
@@ -131,9 +143,9 @@ public class ReleaseInfoResolutionService(
                 var nfoDatabase = nfoDatabaseFactory.Get(registration.NfoDatabaseClassName);
                 var config = nfoDatabase.DeserializeConfig(registration.SerializedConfig);
                 var releaseInfo = await nfoDatabase.GetReleaseInfoAsync(
-                    config,
-                    release.Name,
-                    cancellationToken
+                    config: config,
+                    dirname: release.Name,
+                    cancellationToken: cancellationToken
                 );
 
                 if (releaseInfo is null)
@@ -141,7 +153,14 @@ public class ReleaseInfoResolutionService(
                     continue;
                 }
 
-                release.ReleaseInfos.Add(ToEntity(registration.NfoDatabaseClassName, releaseInfo));
+                var releaseInfoEntity = ToEntity(registration.NfoDatabaseClassName, releaseInfo);
+                await TryResolveNfoAsync(
+                    release: release,
+                    releaseInfo: releaseInfoEntity,
+                    registrations: registrations,
+                    cancellationToken: cancellationToken
+                );
+                release.ReleaseInfos.Add(releaseInfoEntity);
                 logger.LogInformation(
                     "Resolved release info for release {ReleaseName} using {NfoDatabase}",
                     release.Name,
@@ -164,6 +183,77 @@ public class ReleaseInfoResolutionService(
                 logger.LogWarning(
                     exception,
                     "Failed to resolve release info for release {ReleaseName} using {NfoDatabase}",
+                    release.Name,
+                    registration.NfoDatabaseClassName
+                );
+            }
+        }
+
+        return false;
+    }
+
+    private async Task<bool> TryResolveNfoAsync(
+        Release release,
+        DomainReleaseInfo releaseInfo,
+        IReadOnlyList<ActiveNfoDatabaseRegistrationReadModel> registrations,
+        CancellationToken cancellationToken
+    )
+    {
+        var localNfo = await ReleaseNfoService.GetLocalNfoAsync(release.ReleaseFolderPath);
+        if (localNfo is not null)
+        {
+            releaseInfo.ReleaseNfo = new DomainReleaseNfo
+            {
+                FileName = localNfo.FileName,
+                Content = localNfo.Content,
+            };
+
+            return true;
+        }
+
+        foreach (var registration in registrations)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            try
+            {
+                var nfoDatabase = nfoDatabaseFactory.Get(registration.NfoDatabaseClassName);
+                if (nfoDatabase is not INfoProvider nfoProvider)
+                {
+                    continue;
+                }
+
+                var config = nfoDatabase.DeserializeConfig(registration.SerializedConfig);
+                var nfo = await nfoProvider.GetReleaseNfoAsync(
+                    config: config,
+                    dirname: releaseInfo.ReleaseName,
+                    cancellationToken: cancellationToken
+                );
+
+                if (nfo is null)
+                {
+                    continue;
+                }
+
+                releaseInfo.ReleaseNfo = new DomainReleaseNfo
+                {
+                    FileName = nfo.FileName,
+                    Content = nfo.Content,
+                };
+
+                logger.LogInformation(
+                    "Resolved NFO for release {ReleaseName} using {NfoDatabase}",
+                    release.Name,
+                    registration.NfoDatabaseClassName
+                );
+
+                return true;
+            }
+            catch (Exception exception)
+            {
+                logger.LogWarning(
+                    exception,
+                    "Failed to resolve NFO for release {ReleaseName} using {NfoDatabase}",
                     release.Name,
                     registration.NfoDatabaseClassName
                 );
@@ -208,9 +298,14 @@ public class ReleaseInfoResolutionService(
         IReadOnlyList<ActiveNfoDatabaseRegistrationReadModel>
     > GetActiveNfoDatabaseRegistrationsAsync(CancellationToken cancellationToken)
     {
-        activeNfoDatabaseRegistrations ??= await repository.GetActiveNfoDatabaseRegistrationsAsync(
-            cancellationToken
-        );
+        activeNfoDatabaseRegistrations ??= (
+            await repository.GetActiveNfoDatabaseRegistrationsAsync(cancellationToken)
+        )
+            .OrderBy(registration =>
+                nfoDatabaseFactory.Get(registration.NfoDatabaseClassName).ResolutionPriority
+            )
+            .ThenBy(registration => registration.NfoDatabaseClassName)
+            .ToList();
 
         return activeNfoDatabaseRegistrations;
     }

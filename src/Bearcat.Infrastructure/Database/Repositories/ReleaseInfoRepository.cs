@@ -33,7 +33,11 @@ public class ReleaseInfoRepository(
     {
         return await dbWrite
             .Releases.Include(release => release.ReleaseInfos)
-            .Where(release => !release.ReleaseInfos.Any())
+                .ThenInclude(info => info.ReleaseNfo)
+            .Where(release =>
+                !release.ReleaseInfos.Any()
+                || release.ReleaseInfos.Any(info => info.ReleaseNfo == null)
+            )
             .OrderBy(release => release.CreatedAt)
             .ThenBy(release => release.Id)
             .Take(count)
@@ -53,6 +57,22 @@ public class ReleaseInfoRepository(
         );
     }
 
+    public async Task<ReleaseInfo> GetReleaseInfoByIdAsync(
+        int releaseInfoId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite.ReleaseInfos.FirstAsync(
+            info => info.Id == releaseInfoId,
+            cancellationToken
+        );
+    }
+
+    public void Remove(ReleaseInfo releaseInfo)
+    {
+        dbWrite.Remove(releaseInfo);
+    }
+
     public void DetachPendingReleaseInfos(Release release)
     {
         var pendingReleaseInfos = dbWrite
@@ -66,6 +86,20 @@ public class ReleaseInfoRepository(
             .Where(entry => entry.State == EntityState.Added)
             .Select(entry => entry.Entity)
             .ToList();
+
+        var pendingReleaseNfos = dbWrite
+            .ChangeTracker.Entries<ReleaseNfo>()
+            .Where(entry => entry.State == EntityState.Added)
+            .Select(entry => entry.Entity)
+            .ToList();
+
+        foreach (var entry in dbWrite.ChangeTracker.Entries<ReleaseNfo>())
+        {
+            if (pendingReleaseNfos.Contains(entry.Entity))
+            {
+                entry.State = EntityState.Detached;
+            }
+        }
 
         foreach (var entry in dbWrite.ChangeTracker.Entries<ReleaseExternalInfo>())
         {

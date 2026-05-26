@@ -57,7 +57,7 @@ public sealed record ForumPostTemplateReleaseModel
     [ForumPostTemplateVariable("Release name.")]
     public string Name { get; init; }
 
-    [ForumPostTemplateVariable("Content of the first .nfo file in the release folder.")]
+    [ForumPostTemplateVariable("Stored NFO content for the release.")]
     public string Nfo { get; init; }
 }
 

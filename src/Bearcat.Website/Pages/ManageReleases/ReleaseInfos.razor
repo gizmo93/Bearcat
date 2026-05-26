@@ -56,6 +56,13 @@
                                         <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
                                     </a>
                                 }
+                                <button type="button"
+                                        class="bearcat-release-info-source-link bearcat-release-info-delete-button"
+                                        title="@L["DeleteReleaseInfo"]"
+                                        aria-label="@L["DeleteReleaseInfo"]"
+                                        @onclick="@(async () => await DeleteReleaseInfoAsync(releaseInfo))">
+                                    <LucideIcon Name="trash-2" class="h-3.5 w-3.5" />
+                                </button>
                             </div>
 
                             <h3 class="bearcat-release-info-title" title="@releaseInfo.ReleaseName">
@@ -86,6 +93,14 @@
                                     @L["AudioType"]
                                 </dt>
                                 <dd>@GetValueOrDash(releaseInfo.AudioType)</dd>
+                            </div>
+
+                            <div class="bearcat-release-info-fact">
+                                <dt>
+                                    <LucideIcon Name="file-text" class="h-3.5 w-3.5" />
+                                    NFO
+                                </dt>
+                                <dd>@GetNfoFileName(releaseInfo)</dd>
                             </div>
                         </dl>
                     </header>

@@ -12,6 +12,8 @@ public class XrelNfoDatabase(XrelClient client) : INfoDatabase
 
     public string Name => "xREL";
 
+    public int ResolutionPriority => 0;
+
     public IReadOnlyList<string> ConfigurationKeys => [];
 
     public async Task<ReleaseInfo?> GetReleaseInfoAsync(

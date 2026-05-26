@@ -11,7 +11,7 @@ namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class ReleaseOverview(
     IReleaseReadRepository readRepository,
-    ReleaseNfoService releaseNfoService,
+    ToastService toastService,
     DialogService dialogService
 ) : ComponentBase, IReloadableComponent
 {
@@ -28,14 +28,21 @@ public partial class ReleaseOverview(
     public string ReleaseFolderPath { get; set; } = null!;
 
     private IReadOnlyList<ReleaseOverviewUploadReadModel> overviewUploads = [];
+    private ReleaseNfoReadModel? releaseNfo;
     private string? nfoContent;
+    private bool hasLocalNfo;
     private bool isLoading;
     private int? loadedReleaseId;
     private string? loadedReleaseFolderPath;
     private string NfoCopyTargetId => $"release-overview-nfo-{ReleaseId}";
     private bool CanCopyNfo => !isLoading && !string.IsNullOrEmpty(nfoContent);
+    private bool CanSaveNfoFile => !isLoading && releaseNfo is not null && !hasLocalNfo;
     private string NfoCopyButtonTitle =>
         CanCopyNfo ? L["CopyNfoIntoClipboard"] : L["NoNfoFileAvailable"];
+    private string NfoSaveButtonTitle =>
+        releaseNfo is null ? L["NoNfoFileAvailable"]
+        : hasLocalNfo ? L["NfoFileAlreadyExists"]
+        : L["SaveNfoFile"];
 
     protected override async Task OnParametersSetAsync()
     {
@@ -54,15 +61,14 @@ public partial class ReleaseOverview(
 
         try
         {
+            releaseNfo = null;
             nfoContent = null;
+            hasLocalNfo = false;
 
-            var overviewTask = readRepository.GetReleaseOverviewAsync(ReleaseId);
-            var nfoTask = releaseNfoService.GetNfoContentAsync(ReleaseFolderPath);
-
-            await Task.WhenAll(overviewTask, nfoTask);
-
-            overviewUploads = await overviewTask;
-            nfoContent = await nfoTask;
+            overviewUploads = await readRepository.GetReleaseOverviewAsync(ReleaseId);
+            releaseNfo = await readRepository.GetReleaseNfoAsync(ReleaseId);
+            nfoContent = releaseNfo?.Content;
+            hasLocalNfo = await ReleaseNfoService.HasLocalNfoAsync(ReleaseFolderPath);
             loadedReleaseId = ReleaseId;
             loadedReleaseFolderPath = ReleaseFolderPath;
         }
@@ -76,6 +82,44 @@ public partial class ReleaseOverview(
     {
         await LoadOverviewAsync();
         StateHasChanged();
+    }
+
+    private async Task SaveNfoFileAsync()
+    {
+        if (releaseNfo is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var result = await ReleaseNfoService.SaveNfoFileAsync(
+                ReleaseFolderPath,
+                releaseNfo.FileName,
+                ReleaseName,
+                releaseNfo.Content
+            );
+
+            switch (result)
+            {
+                case ReleaseNfoFileSaveResult.Saved:
+                    hasLocalNfo = true;
+                    toastService.Success(L["NfoFileSaved", releaseNfo.FileName]);
+                    break;
+                case ReleaseNfoFileSaveResult.AlreadyExists:
+                    hasLocalNfo = true;
+                    toastService.Error(L["NfoFileAlreadyExists"]);
+                    break;
+                case ReleaseNfoFileSaveResult.ReleaseFolderMissing:
+                    toastService.Error(L["ReleaseFolderMissing"]);
+                    break;
+            }
+        }
+        catch (Exception exception)
+            when (exception is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            toastService.Error(L["NfoFileSaveFailed", exception.Message]);
+        }
     }
 
     private async Task ShowLinksDialogAsync(ReleaseOverviewUploadReadModel upload)

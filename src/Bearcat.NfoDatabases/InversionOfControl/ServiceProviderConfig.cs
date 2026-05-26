@@ -1,3 +1,4 @@
+using Bearcat.NfoDatabases.Srrdb.InversionOfControl;
 using Bearcat.NfoDatabases.Xrel.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +11,7 @@ public static class ServiceProviderConfig
         public void AddNfoDatabases()
         {
             services.AddXrel();
+            services.AddSrrdb();
         }
     }
 }

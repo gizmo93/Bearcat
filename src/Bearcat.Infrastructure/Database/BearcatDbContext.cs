@@ -73,6 +73,8 @@ public class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearcatWriteD
 
     public DbSet<ReleaseInfo> ReleaseInfos { get; set; } = null!;
 
+    public DbSet<ReleaseNfo> ReleaseNfos { get; set; } = null!;
+
     public DbSet<ReleaseExternalInfo> ReleaseExternalInfos { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
