@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Bearcat.Infrastructure.Database;
 
-public class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearcatWriteDbContext
+public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearcatWriteDbContext
 {
     private readonly ISecretProtector secretProtector;
 
