@@ -18,9 +18,9 @@ public class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearcatWriteD
         this.secretProtector = secretProtector ?? NoOpSecretProtector.Instance;
         ChangeTracker.Tracked += (_, eventArgs) =>
         {
-            if (eventArgs.FromQuery)
+            if (eventArgs is { FromQuery: true, Entry.Entity: IContainSerializedConfig entity })
             {
-                UnprotectTrackedRegistrationConfiguration(eventArgs.Entry);
+                UnprotectTrackedRegistrationConfiguration(eventArgs.Entry.Context.Entry(entity));
             }
         };
     }
@@ -91,80 +91,38 @@ public class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearcatWriteD
 
     private void ProtectRegistrationConfigurations()
     {
-        foreach (var entry in ChangeTracker.Entries<HosterRegistration>())
+        foreach (var entry in ChangeTracker.Entries<IContainSerializedConfig>())
         {
-            ProtectAddedOrModifiedProperty(entry, registration => registration.SerializedConfig);
-        }
+            if (
+                entry.State != EntityState.Added
+                || !entry.Property(c => c.SerializedConfig).IsModified
+            )
+            {
+                continue;
+            }
 
-        foreach (var entry in ChangeTracker.Entries<LinkCrypterRegistration>())
-        {
-            ProtectAddedOrModifiedProperty(entry, registration => registration.SerializedConfig);
-        }
-
-        foreach (var entry in ChangeTracker.Entries<NfoDatabaseRegistration>())
-        {
-            ProtectAddedOrModifiedProperty(entry, registration => registration.SerializedConfig);
-        }
-    }
-
-    private void UnprotectTrackedRegistrationConfiguration(EntityEntry entry)
-    {
-        switch (entry.Entity)
-        {
-            case HosterRegistration registration:
-                UnprotectProperty(
-                    entry,
-                    registration.SerializedConfig,
-                    value => registration.SerializedConfig = value
-                );
-                break;
-            case LinkCrypterRegistration registration:
-                UnprotectProperty(
-                    entry,
-                    registration.SerializedConfig,
-                    value => registration.SerializedConfig = value
-                );
-                break;
-            case NfoDatabaseRegistration registration:
-                UnprotectProperty(
-                    entry,
-                    registration.SerializedConfig,
-                    value => registration.SerializedConfig = value
-                );
-                break;
+            entry.Property(c => c.SerializedConfig).CurrentValue = secretProtector.Protect(
+                entry.Entity.SerializedConfig
+            );
         }
     }
 
-    private void ProtectAddedOrModifiedProperty<TEntity>(
-        EntityEntry<TEntity> entry,
-        Func<TEntity, string> propertySelector
+    private void UnprotectTrackedRegistrationConfiguration(
+        EntityEntry<IContainSerializedConfig> entityEntry
     )
-        where TEntity : class
     {
-        if (
-            entry.State != EntityState.Added
-            && !entry.Property(nameof(HosterRegistration.SerializedConfig)).IsModified
-        )
+        var unprotectedValue = secretProtector.Unprotect(entityEntry.Entity.SerializedConfig);
+
+        if (unprotectedValue == entityEntry.Entity.SerializedConfig)
         {
             return;
         }
 
-        entry.Property(nameof(HosterRegistration.SerializedConfig)).CurrentValue =
-            secretProtector.Protect(propertySelector(entry.Entity));
-    }
-
-    private void UnprotectProperty(EntityEntry entry, string currentValue, Action<string> setValue)
-    {
-        var unprotectedValue = secretProtector.Unprotect(currentValue);
-        if (unprotectedValue == currentValue)
-        {
-            return;
-        }
-
-        setValue(unprotectedValue);
-
-        var property = entry.Property(nameof(HosterRegistration.SerializedConfig));
-        property.OriginalValue = unprotectedValue;
+        entityEntry.Entity.SerializedConfig = secretProtector.Unprotect(
+            entityEntry.Entity.SerializedConfig
+        );
+        var property = entityEntry.Property(c => c.SerializedConfig);
+        property.OriginalValue = entityEntry.Entity.SerializedConfig;
         property.IsModified = false;
     }
 }
