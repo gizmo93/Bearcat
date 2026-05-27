@@ -107,6 +107,7 @@ public static class ReleaseNfoService
     private static string GetSafeNfoFileName(string fileName, string releaseName)
     {
         var safeFileName = Path.GetFileName(fileName);
+
         if (string.IsNullOrWhiteSpace(safeFileName))
         {
             safeFileName = Path.GetFileName(releaseName);

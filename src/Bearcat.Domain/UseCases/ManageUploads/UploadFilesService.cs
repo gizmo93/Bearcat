@@ -70,6 +70,7 @@ public class UploadFilesService(
         var uploadContexts = new Dictionary<int, UploadExecutionContext>();
         var trackedUploadIds = new HashSet<int>();
         var runningUploadTasks = new List<Task>();
+
         var channel = Channel.CreateUnbounded<FileUploadCompleted>(
             options: new UnboundedChannelOptions { SingleReader = true, SingleWriter = false }
         );
@@ -144,6 +145,7 @@ public class UploadFilesService(
         }
 
         channel.Writer.Complete();
+
         await HandleAvailableFileUploadResultsAsync(
             reader: channel.Reader,
             uploadContexts: uploadContexts,
@@ -179,6 +181,7 @@ public class UploadFilesService(
             var hosterConfig = hoster.DeserializeHosterConfig(
                 hosterConfigsByRegistrationId[upload.UploadConfig.HosterRegistrationId]
             );
+
             var context = CreateUploadContext(
                 upload: upload,
                 hoster: hoster,
@@ -216,8 +219,10 @@ public class UploadFilesService(
         var processedArchiveFileIds = upload
             .UploadedFiles.Select(uf => uf.ArchiveFileId)
             .ToHashSet();
+
         var successfulFileCount = upload.UploadedFiles.Count(uf => uf.ErrorMessages.Count == 0);
         var failedFileCount = upload.UploadedFiles.Count(uf => uf.ErrorMessages.Count > 0);
+
         var context = new UploadExecutionContext(
             upload: upload,
             totalFileCount: upload.Archive!.ArchiveFiles.Count,
@@ -550,13 +555,13 @@ public class UploadFilesService(
             return true;
         }
 
-        if (context.ProcessedFileCount == context.TotalFileCount)
+        if (context.ProcessedFileCount != context.TotalFileCount)
         {
-            FailUpload(context);
-            return true;
+            return false;
         }
 
-        return false;
+        FailUpload(context);
+        return true;
     }
 
     private void CompleteUpload(UploadExecutionContext context)
@@ -655,6 +660,7 @@ public class UploadFilesService(
     {
         var cancellationRequestedUploadIds =
             await repository.GetCancellationRequestedUploadIdsAsync(cancellationToken);
+
         var hasChanges = false;
 
         foreach (var uploadId in cancellationRequestedUploadIds)

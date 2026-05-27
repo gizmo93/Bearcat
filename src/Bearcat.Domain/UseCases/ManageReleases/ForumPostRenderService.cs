@@ -28,6 +28,7 @@ public class ForumPostRenderService(
             forumPostTemplateId,
             cancellationToken
         );
+
         if (template is null)
         {
             return new ForumPostTemplateRenderResult(
@@ -45,7 +46,8 @@ public class ForumPostRenderService(
         ForumPostTemplateRenderModel renderModel
     )
     {
-        var template = Template.Parse(templateBody ?? string.Empty);
+        var template = Template.Parse(templateBody);
+
         if (template.HasErrors)
         {
             return new ForumPostTemplateRenderResult(
@@ -65,6 +67,7 @@ public class ForumPostRenderService(
             EnableRelaxedIndexerAccess = true,
             MemberFilter = ForumPostTemplateVariableCatalog.ShouldExposeMember,
         };
+
         context.PushGlobal(scriptObject);
 
         try
@@ -97,12 +100,15 @@ public class ForumPostRenderService(
             releaseId,
             cancellationToken
         );
+
         var infos = await releaseReadRepository.GetReleaseInfosAsync(releaseId, cancellationToken);
+
         var nfo = (
             await releaseReadRepository.GetReleaseNfoAsync(releaseId, cancellationToken)
         )?.Content;
 
         var infoModels = infos.Select(ToReleaseInfoModel).ToList();
+
         var uploadModels = new List<ForumPostTemplateUploadModel>();
 
         foreach (var upload in overview)

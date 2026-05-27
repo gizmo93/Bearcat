@@ -44,6 +44,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             releaseTemplateId,
             cancellationToken
         );
+
         if (releaseTemplate.ReleaseType != releaseType)
         {
             throw new InvalidOperationException("Release template type cannot be changed.");
@@ -51,6 +52,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
 
         releaseTemplate.Name = name;
         releaseTemplate.ReleaseGroupId = releaseGroupId;
+
         EnsureUnmanagedArchiveConfigTemplate(releaseTemplate);
 
         await writeRepository.SaveChangesAsync(cancellationToken);
@@ -65,6 +67,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             releaseTemplateId,
             cancellationToken
         );
+
         writeRepository.Remove(releaseTemplate);
 
         await writeRepository.SaveChangesAsync(cancellationToken);
@@ -165,7 +168,9 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             releaseTemplateId,
             cancellationToken
         );
+
         EnsureManagedReleaseTemplate(releaseTemplate);
+
         var archiveConfigTemplate = new ArchiveConfigTemplate
         {
             Name = name,
@@ -197,6 +202,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             archiveConfigTemplateId,
             cancellationToken
         );
+
         EnsureManagedReleaseTemplate(archiveConfigTemplate.ReleaseTemplate);
 
         archiveConfigTemplate.Name = name;
@@ -218,6 +224,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             archiveConfigTemplateId,
             cancellationToken
         );
+
         EnsureManagedReleaseTemplate(archiveConfigTemplate.ReleaseTemplate);
 
         writeRepository.Remove(archiveConfigTemplate);
@@ -233,7 +240,9 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             releaseTemplateId,
             cancellationToken
         );
+
         EnsureUnmanagedArchiveConfigTemplate(releaseTemplate);
+
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 
@@ -250,11 +259,14 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             releaseTemplateId,
             cancellationToken
         );
+
         EnsureUnmanagedArchiveConfigTemplate(releaseTemplate);
+
         var archiveConfigTemplate = ResolveArchiveConfigTemplate(
             releaseTemplate,
             archiveConfigTemplateId
         );
+
         var uploadConfigTemplate = new UploadConfigTemplate
         {
             Name = CleanOptional(name),
@@ -262,12 +274,14 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             ArchiveConfigTemplateId = archiveConfigTemplate?.Id ?? archiveConfigTemplateId,
             LinksDistributedTo = CleanLinks(linksDistributedTo),
         };
+
         if (archiveConfigTemplate is not null)
         {
             uploadConfigTemplate.ArchiveConfigTemplate = archiveConfigTemplate;
         }
 
         releaseTemplate.UploadConfigTemplates.Add(uploadConfigTemplate);
+
         await writeRepository.SaveChangesAsync(cancellationToken);
 
         return uploadConfigTemplate.Id;
@@ -286,18 +300,22 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             uploadConfigTemplateId,
             cancellationToken
         );
+
         var archiveConfigTemplate = ResolveArchiveConfigTemplate(
             uploadConfigTemplate.ReleaseTemplate,
             archiveConfigTemplateId
         );
+
         uploadConfigTemplate.Name = CleanOptional(name);
         uploadConfigTemplate.HosterRegistrationId = hosterRegistrationId;
         uploadConfigTemplate.ArchiveConfigTemplateId =
             archiveConfigTemplate?.Id ?? archiveConfigTemplateId;
+
         if (archiveConfigTemplate is not null)
         {
             uploadConfigTemplate.ArchiveConfigTemplate = archiveConfigTemplate;
         }
+
         uploadConfigTemplate.LinksDistributedTo = CleanLinks(linksDistributedTo);
 
         await writeRepository.SaveChangesAsync(cancellationToken);
@@ -312,6 +330,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             uploadConfigTemplateId,
             cancellationToken
         );
+
         writeRepository.Remove(uploadConfigTemplate);
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
@@ -327,6 +346,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             uploadConfigTemplateId,
             cancellationToken
         );
+
         var linkCrypterTemplate = new UploadConfigLinkCrypterTemplate
         {
             LinkCrypterRegistrationId = linkCrypterRegistrationId,
@@ -334,6 +354,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         };
 
         uploadConfigTemplate.LinkCrypterTemplates.Add(linkCrypterTemplate);
+
         await writeRepository.SaveChangesAsync(cancellationToken);
 
         return linkCrypterTemplate.Id;
@@ -349,6 +370,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             uploadConfigLinkCrypterTemplateId,
             cancellationToken
         );
+
         linkCrypterTemplate.Password = CleanOptional(password);
 
         await writeRepository.SaveChangesAsync(cancellationToken);
@@ -363,6 +385,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             uploadConfigLinkCrypterTemplateId,
             cancellationToken
         );
+
         writeRepository.Remove(linkCrypterTemplate);
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
