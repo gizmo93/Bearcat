@@ -2,11 +2,11 @@ using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases;
-using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.FileSystem;
+using Bearcat.Infrastructure.Security;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,12 +14,17 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
+using NfoReleaseInfo = Bearcat.Abstractions.NfoDatabase.ReleaseInfo;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 
 public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
 {
+    private const string WorkingDatabaseClassName = "WorkingNfoDatabase";
+    private const string SerializedConfig = "{\"apiKey\":\"secret\"}";
+
     private BearcatDbContext dbContext = null!;
+    private Mock<INfoDatabaseFactory> nfoDatabaseFactoryMock = null!;
     private string tempRootPath = null!;
     private AutomaticallyCreateReleasesService service = null!;
 
@@ -27,6 +32,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
     public void Setup()
     {
         dbContext = Database.CreateDbContext();
+        nfoDatabaseFactoryMock = new Mock<INfoDatabaseFactory>(MockBehavior.Strict);
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempRootPath);
         var archiverFactory = new Mock<IArchiverFactory>();
@@ -129,6 +135,55 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         notification.NotificationType.ShouldBe(NotificationType.Info);
         notification.Message.ShouldBe(
             "Release 'Bearcat.Release.1080p' was created automatically from template 'Managed template'."
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_ReleaseInfoIsResolved_PersistsReleaseInfoWithCreatedRelease()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var releaseFolder = Directory.CreateDirectory(
+            Path.Combine(tempRootPath, "Bearcat.Release.1080p")
+        );
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
+        await AddNfoDatabaseRegistrationAsync(WorkingDatabaseClassName, isActive: true);
+        SetupNfoDatabase(
+            WorkingDatabaseClassName,
+            "Bearcat.Release.1080p",
+            CreateReleaseInfo("Bearcat.Release.1080p")
+        );
+
+        // Act
+        var result = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(1);
+
+        dbContext.ChangeTracker.Clear();
+        var release = await dbContext
+            .Releases.AsSplitQuery()
+            .Include(release => release.ReleaseInfos)
+                .ThenInclude(info => info.ExternalInfos)
+            .SingleAsync(release => release.ReleaseFolderPath == releaseFolder.FullName);
+
+        var releaseInfo = release.ReleaseInfos.Single();
+        releaseInfo.NfoDatabaseClassName.ShouldBe(WorkingDatabaseClassName);
+        releaseInfo.ReleaseName.ShouldBe("Bearcat.Release.1080p");
+        releaseInfo.ReleaseDatabaseUrl.ShouldBe("https://www.xrel.to/release/123");
+        releaseInfo.SizeNumber.ShouldBe(12);
+        releaseInfo.SizeUnit.ShouldBe("GB");
+        releaseInfo.VideoType.ShouldBe("WEB");
+        releaseInfo.AudioType.ShouldBe("AC3");
+
+        var externalInfo = releaseInfo.ExternalInfos.Single();
+        externalInfo.Type.ShouldBe(ExternalInfoType.Movie);
+        externalInfo.Title.ShouldBe("Bearcat Movie");
+        externalInfo.Urls.ShouldContain(
+            url => url.Type == UrlType.Imdb && url.Url == "https://www.imdb.com/de/title/tt1234567"
+        );
+        externalInfo.Urls.ShouldContain(
+            url => url.Type == UrlType.Other && url.Url == "https://www.xrel.to/movie/123"
         );
     }
 
@@ -355,19 +410,81 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         return new TimeProvider(configuration);
     }
 
-    private static ReleaseInfoResolutionService CreateReleaseInfoResolutionService()
+    private ReleaseInfoResolutionService CreateReleaseInfoResolutionService()
     {
-        var releaseInfoRepository = new Mock<IReleaseInfoRepository>();
-        releaseInfoRepository
-            .Setup(repository =>
-                repository.GetActiveNfoDatabaseRegistrationsAsync(It.IsAny<CancellationToken>())
-            )
-            .ReturnsAsync([]);
-
         return new ReleaseInfoResolutionService(
-            releaseInfoRepository.Object,
-            Mock.Of<INfoDatabaseFactory>(),
+            new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
+            nfoDatabaseFactoryMock.Object,
             NullLogger<ReleaseInfoResolutionService>.Instance
+        );
+    }
+
+    private Mock<INfoDatabase> SetupNfoDatabase(
+        string className,
+        string expectedReleaseName,
+        NfoReleaseInfo? releaseInfo
+    )
+    {
+        var configMock = new Mock<INfoDatabaseConfig>(MockBehavior.Strict);
+        var nfoDatabaseMock = new Mock<INfoDatabase>(MockBehavior.Strict);
+        nfoDatabaseMock.SetupGet(database => database.ResolutionPriority).Returns(100);
+        nfoDatabaseMock
+            .Setup(database => database.DeserializeConfig(SerializedConfig))
+            .Returns(configMock.Object);
+        nfoDatabaseMock
+            .Setup(database =>
+                database.GetReleaseInfoAsync(
+                    configMock.Object,
+                    expectedReleaseName,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(releaseInfo);
+        nfoDatabaseFactoryMock
+            .Setup(factory => factory.Get(className))
+            .Returns(nfoDatabaseMock.Object);
+
+        return nfoDatabaseMock;
+    }
+
+    private async Task<NfoDatabaseRegistration> AddNfoDatabaseRegistrationAsync(
+        string className,
+        bool isActive
+    )
+    {
+        var registration = new NfoDatabaseRegistration
+        {
+            NfoDatabaseClassName = className,
+            SerializedConfig = SerializedConfig,
+            IsActive = isActive,
+        };
+
+        dbContext.NfoDatabaseRegistrations.Add(registration);
+        await dbContext.SaveChangesAsync();
+
+        return registration;
+    }
+
+    private static NfoReleaseInfo CreateReleaseInfo(string releaseName)
+    {
+        return new NfoReleaseInfo(
+            ReleaseName: releaseName,
+            ReleaseDatabaseUrl: "https://www.xrel.to/release/123",
+            Size: new ReleaseInfoSize(12, "GB"),
+            VideoType: "WEB",
+            AudioType: "AC3",
+            ExternalInfos:
+            [
+                new ExternalInfo(
+                    Type: ExternalInfoType.Movie,
+                    Title: "Bearcat Movie",
+                    Urls:
+                    [
+                        new Url(UrlType.Imdb, "https://www.imdb.com/de/title/tt1234567"),
+                        new Url(UrlType.Other, "https://www.xrel.to/movie/123"),
+                    ]
+                ),
+            ]
         );
     }
 
