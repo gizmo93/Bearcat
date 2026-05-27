@@ -214,6 +214,7 @@ public static class UnmanagedReleaseArchiveInitializer
         var currentFileNames = archive
             .ArchiveFiles.Select(file => Path.GetFileName(file.FullFileName))
             .OrderBy(fileName => fileName, StringComparer.OrdinalIgnoreCase);
+
         var discoveredFileNames = archiveFiles
             .Select(file => Path.GetFileName(file.FullFileName))
             .OrderBy(fileName => fileName, StringComparer.OrdinalIgnoreCase);

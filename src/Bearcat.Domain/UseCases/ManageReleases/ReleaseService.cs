@@ -21,6 +21,7 @@ public class ReleaseService(
     )
     {
         var localNow = timeProvider.GetLocalNow();
+
         var release = new Release
         {
             Name = name,
@@ -53,6 +54,7 @@ public class ReleaseService(
     )
     {
         var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
+
         var oldReleaseFolderPath = release.ReleaseFolderPath;
 
         if (
@@ -126,7 +128,9 @@ public class ReleaseService(
             releaseTemplateId,
             cancellationToken
         );
+
         var localNow = timeProvider.GetLocalNow();
+
         var release = CreateFromTemplate(
             releaseTemplate,
             releaseFolderPath,
@@ -137,35 +141,13 @@ public class ReleaseService(
                 : [],
             localNow
         );
+
         release.CreatedAt = localNow;
 
         writeRepository.Add(release);
         await writeRepository.SaveChangesAsync(cancellationToken);
 
         return release.Id;
-    }
-
-    public static Release CreateFromTemplate(
-        ReleaseTemplate releaseTemplate,
-        string releaseFolderPath,
-        string? name = null
-    )
-    {
-        if (releaseTemplate.ReleaseType is ReleaseType.Unmanaged)
-        {
-            throw new InvalidOperationException(
-                "Unmanaged releases require archive files to be initialized with archiver metadata."
-            );
-        }
-
-        return CreateFromTemplate(
-            releaseTemplate,
-            releaseFolderPath,
-            name,
-            releaseTemplate.ReleaseType,
-            [],
-            DateTime.MinValue
-        );
     }
 
     public static Release CreateFromTemplate(
@@ -178,6 +160,7 @@ public class ReleaseService(
     )
     {
         var releaseName = CleanOptional(name) ?? GetFolderName(releaseFolderPath);
+
         var release = new Release
         {
             Name = releaseName,
@@ -275,9 +258,9 @@ public class ReleaseService(
         foreach (var archiveConfig in release.ArchiveConfigs)
         {
             UnmanagedReleaseArchiveInitializer.RefreshArchiveConfig(
-                archiveConfig,
-                archivers,
-                localNow
+                archiveConfig: archiveConfig,
+                archivers: archivers,
+                createdAt: localNow
             );
         }
     }

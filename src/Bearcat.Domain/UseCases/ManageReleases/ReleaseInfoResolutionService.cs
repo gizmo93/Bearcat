@@ -250,6 +250,7 @@ public class ReleaseInfoResolutionService(
     )
     {
         var localNfo = await ReleaseNfoService.GetLocalNfoAsync(release.ReleaseFolderPath);
+
         if (localNfo is not null)
         {
             releaseInfo.ReleaseNfo = new DomainReleaseNfo
@@ -268,6 +269,7 @@ public class ReleaseInfoResolutionService(
             try
             {
                 var nfoDatabase = nfoDatabaseFactory.Get(registration.NfoDatabaseClassName);
+
                 if (nfoDatabase is not INfoProvider nfoProvider)
                 {
                     continue;
