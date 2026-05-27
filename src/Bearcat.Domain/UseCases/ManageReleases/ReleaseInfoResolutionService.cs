@@ -65,41 +65,7 @@ public class ReleaseInfoResolutionService(
         }
     }
 
-    public async Task<bool> TryResolveAndSaveAsync(
-        Release release,
-        CancellationToken cancellationToken = default
-    )
-    {
-        await ResolutionLock.WaitAsync(cancellationToken);
-        try
-        {
-            if (!await TryResolveAsync(release, cancellationToken))
-            {
-                return false;
-            }
-
-            try
-            {
-                await repository.SaveChangesAsync(cancellationToken);
-                return true;
-            }
-            catch (DbUpdateException exception) when (IsDuplicateReleaseInfoException(exception))
-            {
-                repository.DetachPendingReleaseInfos(release);
-                logger.LogInformation(
-                    "Release info for release {ReleaseName} was already resolved by another worker",
-                    release.Name
-                );
-                return false;
-            }
-        }
-        finally
-        {
-            ResolutionLock.Release();
-        }
-    }
-
-    private async Task<bool> TryResolveAsync(
+    public async Task<bool> TryResolveAsync(
         Release release,
         CancellationToken cancellationToken = default
     )

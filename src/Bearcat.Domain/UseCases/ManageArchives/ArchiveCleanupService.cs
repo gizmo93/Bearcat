@@ -29,7 +29,6 @@ public class ArchiveCleanupService(
 
         if (!autoCleanupEnabled)
         {
-            logger.LogDebug("Archive cleanup is disabled");
             return;
         }
 
