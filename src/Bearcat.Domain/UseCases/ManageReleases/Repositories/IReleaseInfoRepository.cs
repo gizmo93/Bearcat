@@ -11,6 +11,8 @@ public interface IReleaseInfoRepository
 
     Task<IReadOnlyList<Release>> GetReleasesWithoutInfoAsync(
         int count,
+        DateTime lastCheckedThreshold,
+        HashSet<int> excludedReleaseIds,
         CancellationToken cancellationToken = default
     );
 

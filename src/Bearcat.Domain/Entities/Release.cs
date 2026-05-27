@@ -23,4 +23,6 @@ public class Release
     public string ReleaseFolderPath { get; set; } = null!;
 
     public List<ReleaseInfo> ReleaseInfos { get; set; } = [];
+
+    public DateTime? ReleaseInfosCheckedAt { get; set; }
 }

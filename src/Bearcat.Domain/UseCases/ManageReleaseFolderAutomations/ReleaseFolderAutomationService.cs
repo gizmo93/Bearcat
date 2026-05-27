@@ -16,7 +16,9 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
         var automation = new ReleaseFolderAutomation
         {
             BasePath = basePath.Trim(),
-            FolderNamePattern = folderNamePattern?.Trim(),
+            FolderNamePattern = string.IsNullOrWhiteSpace(folderNamePattern)
+                ? null
+                : folderNamePattern.Trim(),
             ReleaseTemplateId = releaseTemplateId,
             IsEnabled = isEnabled,
         };
@@ -42,7 +44,9 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
         );
 
         automation.BasePath = basePath.Trim();
-        automation.FolderNamePattern = folderNamePattern?.Trim();
+        automation.FolderNamePattern = string.IsNullOrWhiteSpace(folderNamePattern)
+            ? null
+            : folderNamePattern.Trim();
         automation.ReleaseTemplateId = releaseTemplateId;
         automation.IsEnabled = isEnabled;
 
