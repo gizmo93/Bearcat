@@ -12,6 +12,8 @@ public class ReleaseInfoService(IReleaseInfoRepository repository)
         );
         repository.Remove(releaseInfo);
 
+        releaseInfo.Release.ReleaseInfosCheckedAt = null;
+
         await repository.SaveChangesAsync(cancellationToken);
     }
 }

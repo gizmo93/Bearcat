@@ -28,6 +28,8 @@ public class ReleaseInfoRepository(
 
     public async Task<IReadOnlyList<Release>> GetReleasesWithoutInfoAsync(
         int count,
+        DateTime lastCheckedThreshold,
+        HashSet<int> excludedReleaseIds,
         CancellationToken cancellationToken = default
     )
     {
@@ -38,6 +40,11 @@ public class ReleaseInfoRepository(
                 !release.ReleaseInfos.Any()
                 || release.ReleaseInfos.Any(info => info.ReleaseNfo == null)
             )
+            .Where(release =>
+                release.ReleaseInfosCheckedAt == null
+                || release.ReleaseInfosCheckedAt < lastCheckedThreshold
+            )
+            .Where(release => !excludedReleaseIds.Contains(release.Id))
             .OrderBy(release => release.CreatedAt)
             .ThenBy(release => release.Id)
             .Take(count)
@@ -62,10 +69,9 @@ public class ReleaseInfoRepository(
         CancellationToken cancellationToken = default
     )
     {
-        return await dbWrite.ReleaseInfos.FirstAsync(
-            info => info.Id == releaseInfoId,
-            cancellationToken
-        );
+        return await dbWrite
+            .ReleaseInfos.Include(r => r.Release)
+            .FirstAsync(info => info.Id == releaseInfoId, cancellationToken);
     }
 
     public void Remove(ReleaseInfo releaseInfo)

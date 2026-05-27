@@ -7,10 +7,12 @@ using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.Security;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 using NfoReleaseInfo = Bearcat.Abstractions.NfoDatabase.ReleaseInfo;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 
@@ -33,7 +35,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         service = new ReleaseInfoResolutionService(
             new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
             nfoDatabaseFactoryMock.Object,
-            new Mock<ILogger<ReleaseInfoResolutionService>>().Object
+            new Mock<ILogger<ReleaseInfoResolutionService>>().Object,
+            CreateTimeProvider()
         );
     }
 
@@ -149,7 +152,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         var providerMock = SetupNfoProvider(
             NfoProviderDatabaseClassName,
             "Bearcat.Remote.Nfo.2026-GRP",
-            new Bearcat.Abstractions.NfoDatabase.ReleaseNfo(
+            new Abstractions.NfoDatabase.ReleaseNfo(
                 "remote.nfo",
                 "remote nfo content"
             )
@@ -253,6 +256,88 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         (await dbContext.ReleaseInfos.AnyAsync()).ShouldBeFalse();
         nfoDatabaseFactoryMock.Verify(
             factory => factory.Get(It.IsAny<string>()),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task ProcessMissingReleaseInfosAsync_MissingInfosAcrossBatches_MarksCheckedAndSkipsRecentlyChecked()
+    {
+        // Arrange
+        await AddNfoDatabaseRegistrationAsync(WorkingDatabaseClassName, isActive: true);
+        var recentlyCheckedAt = DateTime.UtcNow.AddHours(-1);
+        var skippedRelease = await AddReleaseAsync(
+            "Recently.Checked.Release.2026-GRP",
+            releaseInfosCheckedAt: recentlyCheckedAt
+        );
+        var unresolvedReleases = new List<Release>();
+
+        for (var i = 0; i < 50; i++)
+        {
+            unresolvedReleases.Add(await AddReleaseAsync($"Unresolved.Release.{i:00}.2026-GRP"));
+        }
+
+        var resolvedRelease = await AddReleaseAsync("Resolved.Release.2026-GRP");
+        var releaseInfosByReleaseName = unresolvedReleases
+            .Select(release => release.Name)
+            .ToDictionary(name => name, _ => (NfoReleaseInfo?)null);
+        releaseInfosByReleaseName[resolvedRelease.Name] = CreateReleaseInfo(resolvedRelease.Name);
+        var nfoDatabaseMock = SetupNfoDatabase(releaseInfosByReleaseName);
+
+        // Act
+        await service.ProcessMissingReleaseInfosAsync(CancellationToken.None);
+        await service.ProcessMissingReleaseInfosAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var releases = await dbContext
+            .Releases.Include(release => release.ReleaseInfos)
+            .ToDictionaryAsync(release => release.Name);
+
+        foreach (var release in unresolvedReleases)
+        {
+            releases[release.Name].ReleaseInfos.ShouldBeEmpty();
+            releases[release.Name].ReleaseInfosCheckedAt.ShouldNotBeNull();
+            releases[release.Name]
+                .ReleaseInfosCheckedAt.GetValueOrDefault()
+                .ShouldBeGreaterThan(release.CreatedAt);
+        }
+
+        var persistedResolvedRelease = releases[resolvedRelease.Name];
+        persistedResolvedRelease.ReleaseInfos.Single().ReleaseName.ShouldBe(resolvedRelease.Name);
+        persistedResolvedRelease.ReleaseInfosCheckedAt.ShouldNotBeNull();
+        persistedResolvedRelease
+            .ReleaseInfosCheckedAt.GetValueOrDefault()
+            .ShouldBeGreaterThan(resolvedRelease.CreatedAt);
+
+        var persistedSkippedRelease = releases[skippedRelease.Name];
+        persistedSkippedRelease.ReleaseInfos.ShouldBeEmpty();
+        persistedSkippedRelease.ReleaseInfosCheckedAt.ShouldNotBeNull();
+        persistedSkippedRelease.ReleaseInfosCheckedAt.Value.ShouldBe(
+            recentlyCheckedAt,
+            TimeSpan.FromSeconds(1)
+        );
+
+        foreach (var release in unresolvedReleases.Append(resolvedRelease))
+        {
+            nfoDatabaseMock.Verify(
+                database =>
+                    database.GetReleaseInfoAsync(
+                        It.IsAny<INfoDatabaseConfig>(),
+                        release.Name,
+                        It.IsAny<CancellationToken>()
+                    ),
+                Times.Once
+            );
+        }
+
+        nfoDatabaseMock.Verify(
+            database =>
+                database.GetReleaseInfoAsync(
+                    It.IsAny<INfoDatabaseConfig>(),
+                    skippedRelease.Name,
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Never
         );
     }
@@ -388,10 +473,41 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         return nfoDatabaseMock;
     }
 
+    private Mock<INfoDatabase> SetupNfoDatabase(
+        IReadOnlyDictionary<string, NfoReleaseInfo?> releaseInfosByReleaseName
+    )
+    {
+        var configMock = new Mock<INfoDatabaseConfig>(MockBehavior.Strict);
+        var nfoDatabaseMock = new Mock<INfoDatabase>(MockBehavior.Strict);
+        nfoDatabaseMock.SetupGet(database => database.ResolutionPriority).Returns(100);
+        nfoDatabaseMock
+            .Setup(database => database.DeserializeConfig(SerializedConfig))
+            .Returns(configMock.Object);
+        nfoDatabaseMock
+            .Setup(database =>
+                database.GetReleaseInfoAsync(
+                    configMock.Object,
+                    It.Is<string>(releaseName =>
+                        releaseInfosByReleaseName.ContainsKey(releaseName)
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                (INfoDatabaseConfig _, string releaseName, CancellationToken _) =>
+                    releaseInfosByReleaseName[releaseName]
+            );
+        nfoDatabaseFactoryMock
+            .Setup(factory => factory.Get(WorkingDatabaseClassName))
+            .Returns(nfoDatabaseMock.Object);
+
+        return nfoDatabaseMock;
+    }
+
     private Mock<INfoProvider> SetupNfoProvider(
         string className,
         string expectedReleaseName,
-        Bearcat.Abstractions.NfoDatabase.ReleaseNfo? releaseNfo
+        Abstractions.NfoDatabase.ReleaseNfo? releaseNfo
     )
     {
         var configMock = new Mock<INfoDatabaseConfig>(MockBehavior.Strict);
@@ -415,10 +531,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         return providerMock;
     }
 
-    private async Task<NfoDatabaseRegistration> AddNfoDatabaseRegistrationAsync(
-        string className,
-        bool isActive
-    )
+    private async Task AddNfoDatabaseRegistrationAsync(string className,
+        bool isActive)
     {
         var registration = new NfoDatabaseRegistration
         {
@@ -429,11 +543,13 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
 
         dbContext.NfoDatabaseRegistrations.Add(registration);
         await dbContext.SaveChangesAsync();
-
-        return registration;
     }
 
-    private async Task<Release> AddReleaseAsync(string name, string? releaseFolderPath = null)
+    private async Task<Release> AddReleaseAsync(
+        string name,
+        string? releaseFolderPath = null,
+        DateTime? releaseInfosCheckedAt = null
+    )
     {
         var releaseGroup = await AddReleaseGroupAsync();
         var release = new Release
@@ -443,6 +559,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             ReleaseType = ReleaseType.Managed,
             ReleaseFolderPath = releaseFolderPath ?? $"/tmp/{name}",
             ReleaseGroupId = releaseGroup.Id,
+            ReleaseInfosCheckedAt = releaseInfosCheckedAt,
             ArchiveConfigs = [],
             UploadConfigs = [],
         };
@@ -497,5 +614,14 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
                 ),
             ]
         );
+    }
+    
+    private static TimeProvider CreateTimeProvider()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["LocalTimezone"] = "UTC" })
+            .Build();
+
+        return new TimeProvider(configuration);
     }
 }

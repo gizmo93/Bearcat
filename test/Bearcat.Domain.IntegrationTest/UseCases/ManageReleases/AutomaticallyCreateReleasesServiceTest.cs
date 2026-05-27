@@ -415,7 +415,8 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         return new ReleaseInfoResolutionService(
             new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
             nfoDatabaseFactoryMock.Object,
-            NullLogger<ReleaseInfoResolutionService>.Instance
+            NullLogger<ReleaseInfoResolutionService>.Instance,
+            CreateTimeProvider()
         );
     }
 
