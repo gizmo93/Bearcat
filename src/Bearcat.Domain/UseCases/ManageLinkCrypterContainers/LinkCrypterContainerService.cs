@@ -108,24 +108,27 @@ public class LinkCrypterContainerService(
     )
     {
         var crypter = linkCrypterFactory.Get(
-            linkCrypterConfig.LinkCrypterRegistration.LinkCrypterClassName
+            className: linkCrypterConfig.LinkCrypterRegistration.LinkCrypterClassName
         );
         var config = crypter.DeserializeConfig(
-            linkCrypterConfig.LinkCrypterRegistration.SerializedConfig
+            serializedConfig: linkCrypterConfig.LinkCrypterRegistration.SerializedConfig
         );
 
         var result = await crypter.UpdateContainerAsync(
             linkCrypterConfig: config,
             containerLink: previousContainer.ContainerUrl,
             externalReference: previousContainer.ExternalReference,
-            links: upload.UploadedFiles.Select(uf => uf.HosterFileLink).OrderBy(l => l).ToList(),
+            links: upload
+                .UploadedFiles.Select(selector: uf => uf.HosterFileLink)
+                .OrderBy(keySelector: l => l)
+                .ToList(),
             cancellationToken: cancellationToken
         );
 
         if (!result.IsSuccess)
         {
-            notificationService.CreateError<LinkCrypterContainer>(
-                $"Failed to update link crypter container for upload {upload.Id} using link crypter config Id {linkCrypterConfig.Id} with crypter {linkCrypterConfig.LinkCrypterRegistration.Name}. Errors: {result.ErrorMessage}",
+            notificationService.CreateError(
+                message: $"Failed to update link crypter container for upload {upload.Id} using link crypter config Id {linkCrypterConfig.Id} with crypter {linkCrypterConfig.LinkCrypterRegistration.Name}. Errors: {result.ErrorMessage}",
                 entity: previousContainer,
                 selector: n => n.LinkCrypterContainer
             );
@@ -133,8 +136,8 @@ public class LinkCrypterContainerService(
             return;
         }
 
-        upload.LinkCrypterContainers.Add(previousContainer);
-        await repository.SaveChangesAsync(cancellationToken);
+        upload.LinkCrypterContainers.Add(item: previousContainer);
+        await repository.SaveChangesAsync(cancellationToken: cancellationToken);
     }
 
     private async Task CreateLinkCrypterContainerAsync(

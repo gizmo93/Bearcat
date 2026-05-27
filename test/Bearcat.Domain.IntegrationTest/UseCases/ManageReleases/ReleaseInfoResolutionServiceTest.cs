@@ -325,7 +325,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task TryResolveAndSaveAsync_NewTrackedRelease_PersistsReleaseAndInfo()
+    public async Task TryResolve_NewTrackedRelease_AddsReleaseInfoToRelease()
     {
         // Arrange
         var releaseGroup = await AddReleaseGroupAsync();
@@ -350,17 +350,14 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         );
 
         // Act
-        var resolved = await service.TryResolveAndSaveAsync(release, CancellationToken.None);
+        var resolved = await service.TryResolveAsync(release, CancellationToken.None);
 
         // Assert
         resolved.ShouldBeTrue();
+        var releaseInfo = release.ReleaseInfos.SingleOrDefault();
 
-        dbContext.ChangeTracker.Clear();
-        var persistedRelease = await dbContext
-            .Releases.Include(entity => entity.ReleaseInfos)
-            .SingleAsync(entity => entity.Name == "New.Tracked.Release.2026-GRP");
-
-        persistedRelease.ReleaseInfos.Single().ReleaseName.ShouldBe("New.Tracked.Release.2026-GRP");
+        releaseInfo.ShouldNotBeNull();
+        releaseInfo.ReleaseName.ShouldBe("New.Tracked.Release.2026-GRP");
     }
 
     private Mock<INfoDatabase> SetupNfoDatabase(

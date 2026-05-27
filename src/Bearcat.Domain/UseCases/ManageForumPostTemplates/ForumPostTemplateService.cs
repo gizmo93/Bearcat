@@ -16,7 +16,7 @@ public class ForumPostTemplateService(IForumPostTemplateWriteRepository writeRep
         var now = DateTime.UtcNow;
         var template = new ForumPostTemplate
         {
-            Name = CleanRequired(name),
+            Name = name.Trim(),
             TemplateBody = templateBody ?? string.Empty,
             CreatedAt = now,
             UpdatedAt = now,
@@ -36,7 +36,7 @@ public class ForumPostTemplateService(IForumPostTemplateWriteRepository writeRep
     )
     {
         var template = await writeRepository.GetByIdAsync(forumPostTemplateId, cancellationToken);
-        template.Name = CleanRequired(name);
+        template.Name = name.Trim();
         template.TemplateBody = templateBody ?? string.Empty;
         template.UpdatedAt = DateTime.UtcNow;
 
@@ -57,13 +57,8 @@ public class ForumPostTemplateService(IForumPostTemplateWriteRepository writeRep
     {
         var template = Template.Parse(templateBody ?? string.Empty);
         return new ForumPostTemplateValidationResult(
-            !template.HasErrors,
-            template.Messages.Select(message => message.ToString()).ToList()
+            IsValid: !template.HasErrors,
+            Errors: template.Messages.Select(message => message.ToString()).ToList()
         );
-    }
-
-    private static string CleanRequired(string value)
-    {
-        return value.Trim();
     }
 }

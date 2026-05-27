@@ -259,14 +259,10 @@ public class ArchiveCreationService(
             foreach (var upload in uploads)
             {
                 upload.UploadState = UploadState.Failed;
-                upload.Notifications.Add(
-                    new Notification
-                    {
-                        Message =
-                            $"Release folder path {config.Release.ReleaseFolderPath} does not exist.",
-                        CreatedAt = timeProvider.GetLocalNow(),
-                        Upload = upload,
-                    }
+                notificationService.CreateError(
+                    message: $"Release folder path {config.Release.ReleaseFolderPath} does not exist.",
+                    entity: upload,
+                    selector: n => n.Upload
                 );
             }
             await repository.SaveChangesAsync(cancellationToken: cancellationToken);

@@ -15,8 +15,8 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
     {
         var automation = new ReleaseFolderAutomation
         {
-            BasePath = CleanRequired(basePath),
-            FolderNamePattern = CleanOptional(folderNamePattern),
+            BasePath = basePath.Trim(),
+            FolderNamePattern = folderNamePattern?.Trim(),
             ReleaseTemplateId = releaseTemplateId,
             IsEnabled = isEnabled,
         };
@@ -41,8 +41,8 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
             cancellationToken
         );
 
-        automation.BasePath = CleanRequired(basePath);
-        automation.FolderNamePattern = CleanOptional(folderNamePattern);
+        automation.BasePath = basePath.Trim();
+        automation.FolderNamePattern = folderNamePattern?.Trim();
         automation.ReleaseTemplateId = releaseTemplateId;
         automation.IsEnabled = isEnabled;
 
@@ -76,15 +76,5 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
         repository.Remove(automation);
 
         await repository.SaveChangesAsync(cancellationToken);
-    }
-
-    private static string CleanRequired(string value)
-    {
-        return value.Trim();
-    }
-
-    private static string? CleanOptional(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }

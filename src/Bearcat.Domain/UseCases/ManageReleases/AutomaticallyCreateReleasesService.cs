@@ -2,6 +2,7 @@ using System.IO.Enumeration;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -42,37 +43,16 @@ public class AutomaticallyCreateReleasesService(
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (existingReleaseFolderPaths.Contains(candidate.FolderPath))
+            var created = await CreateReleaseAsync(
+                candidate: candidate,
+                existingReleaseFolderPaths: existingReleaseFolderPaths,
+                cancellationToken: cancellationToken
+            );
+
+            if (created)
             {
-                continue;
+                createdCount++;
             }
-
-            var localNow = timeProvider.GetLocalNow();
-            var release = ReleaseService.CreateFromTemplate(
-                releaseTemplate: candidate.Automation.ReleaseTemplate,
-                releaseFolderPath: candidate.FolderPath,
-                name: null,
-                releaseType: candidate.Automation.ReleaseTemplate.ReleaseType,
-                archivers: candidate.Automation.ReleaseTemplate.ReleaseType is ReleaseType.Unmanaged
-                    ? archiverFactory.GetArchivers()
-                    : [],
-                localNow: localNow
-            );
-            release.CreatedAt = localNow;
-            repository.Add(release);
-            await releaseInfoResolutionService.TryResolveAndSaveAsync(release, cancellationToken);
-            existingReleaseFolderPaths.Add(candidate.FolderPath);
-            createdCount++;
-
-            repository.Add(
-                new Notification
-                {
-                    CreatedAt = timeProvider.GetLocalNow(),
-                    NotificationType = NotificationType.Info,
-                    Message =
-                        $"Release '{release.Name}' was created automatically from template '{candidate.Automation.ReleaseTemplate.Name}'.",
-                }
-            );
         }
 
         if (createdCount > 0)
@@ -81,6 +61,48 @@ public class AutomaticallyCreateReleasesService(
         }
 
         return createdCount;
+    }
+
+    private async Task<bool> CreateReleaseAsync(
+        ReleaseFolderCandidate candidate,
+        HashSet<string> existingReleaseFolderPaths,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!existingReleaseFolderPaths.Add(candidate.FolderPath))
+        {
+            return false;
+        }
+
+        var localNow = timeProvider.GetLocalNow();
+
+        var release = ReleaseService.CreateFromTemplate(
+            releaseTemplate: candidate.Automation.ReleaseTemplate,
+            releaseFolderPath: candidate.FolderPath,
+            name: null,
+            releaseType: candidate.Automation.ReleaseTemplate.ReleaseType,
+            archivers: candidate.Automation.ReleaseTemplate.ReleaseType is ReleaseType.Unmanaged
+                ? archiverFactory.GetArchivers()
+                : [],
+            localNow: localNow
+        );
+
+        release.CreatedAt = localNow;
+
+        await releaseInfoResolutionService.TryResolveAsync(release, cancellationToken);
+
+        repository.Add(release);
+        repository.Add(
+            new Notification
+            {
+                CreatedAt = timeProvider.GetLocalNow(),
+                NotificationType = NotificationType.Info,
+                Message =
+                    $"Release '{release.Name}' was created automatically from template '{candidate.Automation.ReleaseTemplate.Name}'.",
+            }
+        );
+
+        return true;
     }
 
     private async Task<IReadOnlySet<ReleaseFolderCandidate>> GetCandidateFoldersAsync(
