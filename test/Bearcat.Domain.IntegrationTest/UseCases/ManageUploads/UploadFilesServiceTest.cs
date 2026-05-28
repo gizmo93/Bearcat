@@ -151,6 +151,30 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task ProcessAsync_PendingUploadWithInactiveHosterRegistration_DoesNotProcessUpload()
+    {
+        // Arrange
+        var archiveFilePath = CreateArchiveFile("archive.part1.rar");
+        var upload = await AddUploadAsync(
+            UploadState.Pending,
+            [archiveFilePath],
+            hosterIsActive: false
+        );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+
+        result.Id.ShouldBe(upload.Id);
+        result.UploadState.ShouldBe(UploadState.Pending);
+        result.UploadedFiles.ShouldBeEmpty();
+        hosterFactoryMock.Verify(f => f.GetHostersByName(), Times.Never);
+    }
+
+    [Test]
     public async Task ProcessAsync_HosterUploadFails_MarksUploadFailedAndCreatesErrorNotification()
     {
         // Arrange
@@ -944,10 +968,11 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         UploadState uploadState,
         IReadOnlyList<string> archiveFileNames,
         IReadOnlyList<string>? alreadyUploadedFileNames = null,
-        ReleaseType releaseType = ReleaseType.Managed
+        ReleaseType releaseType = ReleaseType.Managed,
+        bool hosterIsActive = true
     )
     {
-        var uploadConfig = await AddUploadConfigAsync(releaseType);
+        var uploadConfig = await AddUploadConfigAsync(releaseType, hosterIsActive);
         var archive = new Archive
         {
             ArchiveConfigId = uploadConfig.ArchiveConfigId,
@@ -1016,7 +1041,8 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
     }
 
     private async Task<UploadConfig> AddUploadConfigAsync(
-        ReleaseType releaseType = ReleaseType.Managed
+        ReleaseType releaseType = ReleaseType.Managed,
+        bool hosterIsActive = true
     )
     {
         var releaseGroup = new ReleaseGroup
@@ -1047,7 +1073,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             Name = "Hoster",
             SerializedConfig = SerializedHosterConfig,
             HosterClassName = HosterClassName,
-            IsActive = true,
+            IsActive = hosterIsActive,
         };
         var uploadConfig = new UploadConfig
         {

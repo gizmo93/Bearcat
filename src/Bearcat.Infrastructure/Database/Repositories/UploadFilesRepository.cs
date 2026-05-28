@@ -26,7 +26,11 @@ public class UploadFilesRepository(
                 .ThenInclude(uc => uc.Release)
             .Include(u => u.Archive)
                 .ThenInclude(a => a!.ArchiveFiles)
-            .Where(u => !uploadIdsToExclude.Contains(u.Id) && u.UploadState == UploadState.Pending)
+            .Where(u =>
+                !uploadIdsToExclude.Contains(u.Id)
+                && u.UploadState == UploadState.Pending
+                && u.UploadConfig.HosterRegistration.IsActive
+            )
             .ToListAsync(cancellationToken);
     }
 

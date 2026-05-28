@@ -104,6 +104,31 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task CheckUploadStatesAsync_InactiveHosterRegistration_DoesNotCheckUploadState()
+    {
+        // Arrange
+        var checkedAt = localNow.AddHours(-1);
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: checkedAt,
+            uploadedFileLinks: ["https://hoster.test/1"],
+            hosterIsActive: false
+        );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+
+        result.Id.ShouldBe(upload.Id);
+        result.OnlineState.ShouldBe(OnlineState.Online);
+        result.UploadedFiles.Single().CheckedAt.ShouldBe(checkedAt);
+        hosterFactoryMock.Verify(f => f.GetByName(It.IsAny<string>()), Times.Never);
+    }
+
+    [Test]
     public async Task CheckUploadStatesAsync_HosterReportsSomeFilesOffline_MarksUploadPartiallyOnlineAndCreatesWarning()
     {
         // Arrange
@@ -214,6 +239,21 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task CheckUploadStatesAsync_InactiveHosterRegistrationWithoutUploads_DoesNotCreateInitialUpload()
+    {
+        // Arrange
+        await AddUploadConfigAsync(enableAutomaticReuploads: false, hosterIsActive: false);
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        var uploadExists = await dbContext.Uploads.AnyAsync();
+
+        uploadExists.ShouldBeFalse();
+    }
+
+    [Test]
     public async Task CheckUploadStatesAsync_UploadConfigWithinInitialUploadCooldown_DoesNotCreateUpload()
     {
         // Arrange
@@ -275,6 +315,84 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         reupload.UploadConfigId.ShouldBe(upload.UploadConfigId);
         reupload.UploadState.ShouldBe(UploadState.WaitingForArchive);
         reupload.OnlineState.ShouldBe(OnlineState.Unknown);
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_InactiveHosterRegistrationAutomaticReuploadIsDue_DoesNotCreateReupload()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow.AddHours(-25),
+            uploadedFileLinks: ["https://hoster.test/1"],
+            enableAutomaticReuploads: true,
+            hosterIsActive: false
+        );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        var uploads = await dbContext.Uploads.ToListAsync();
+
+        uploads.Count.ShouldBe(1);
+        uploads.Single().Id.ShouldBe(upload.Id);
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_CanceledUploadIsDueForAutomaticReupload_DoesNotCreateReupload()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow.AddHours(-25),
+            uploadedFileLinks: ["https://hoster.test/1"],
+            enableAutomaticReuploads: true
+        );
+        upload.UploadState = UploadState.Canceled;
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        var uploads = await dbContext.Uploads.ToListAsync();
+
+        uploads.Count.ShouldBe(1);
+        uploads.Single().Id.ShouldBe(upload.Id);
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_OfflineUploadWithCanceledReupload_DoesNotCreateAnotherReupload()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow.AddHours(-25),
+            uploadedFileLinks: ["https://hoster.test/1"],
+            enableAutomaticReuploads: true
+        );
+        var canceledReupload = new Upload
+        {
+            UploadConfigId = upload.UploadConfigId,
+            CreatedAt = localNow.AddHours(-24),
+            UploadedAt = null,
+            UploadState = UploadState.Canceled,
+            OnlineState = OnlineState.Unknown,
+            UploadedFiles = [],
+            ErrorMessages = [],
+        };
+        dbContext.Uploads.Add(canceledReupload);
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        var uploads = await dbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
+
+        uploads.Count.ShouldBe(2);
+        uploads.Select(u => u.Id).ShouldBe([upload.Id, canceledReupload.Id]);
     }
 
     [Test]
@@ -660,10 +778,11 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         OnlineState onlineState,
         DateTime? checkedAt,
         IReadOnlyList<string> uploadedFileLinks,
-        bool enableAutomaticReuploads = false
+        bool enableAutomaticReuploads = false,
+        bool hosterIsActive = true
     )
     {
-        var uploadConfig = await AddUploadConfigAsync(enableAutomaticReuploads);
+        var uploadConfig = await AddUploadConfigAsync(enableAutomaticReuploads, hosterIsActive);
         var archive = new Archive
         {
             ArchiveConfigId = uploadConfig.ArchiveConfigId,
@@ -711,6 +830,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
 
     private async Task<UploadConfig> AddUploadConfigAsync(
         bool enableAutomaticReuploads,
+        bool hosterIsActive = true,
         DateTime? releaseCreatedAt = null
     )
     {
@@ -743,7 +863,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             Name = "Hoster",
             SerializedConfig = SerializedHosterConfig,
             HosterClassName = HosterClassName,
-            IsActive = true,
+            IsActive = hosterIsActive,
         };
         var uploadConfig = new UploadConfig
         {

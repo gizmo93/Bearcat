@@ -52,11 +52,9 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
         CancellationToken cancellationToken = default
     )
     {
-        return await dbRead.HosterRegistrations.ToDictionaryAsync(
-            h => h.Id,
-            h => h.Name,
-            cancellationToken: cancellationToken
-        );
+        return await dbRead
+            .HosterRegistrations.Where(h => h.IsActive)
+            .ToDictionaryAsync(h => h.Id, h => h.Name, cancellationToken: cancellationToken);
     }
 
     public async Task<IReadOnlyDictionary<int, string>> GetArchiveConfigOptionsAsync(

@@ -33,6 +33,7 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
             .Where(u =>
                 onlineStatesToCheck.Contains(u.OnlineState)
                 && !uploadStatesToExclude.Contains(u.UploadState)
+                && u.UploadConfig.HosterRegistration.IsActive
                 && u.UploadedFiles.Any(f => f.CheckedAt == null || f.CheckedAt < lastCheckThreshold)
             )
             .ToListAsync(cancellationToken: cancellationToken);
@@ -62,9 +63,13 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
                     u.OnlineState == OnlineState.Offline
                     || u.OnlineState == OnlineState.PartiallyOnline
                 )
+                && u.UploadState == UploadState.Completed
+                && u.UploadConfig.HosterRegistration.IsActive
                 && u.UploadConfig.Release.ReleaseGroup.EnableAutomaticReuploads
                 && !u.UploadConfig.Uploads.Any(ru =>
-                    ru.OnlineState == OnlineState.Online || pendingStates.Contains(ru.UploadState)
+                    ru.OnlineState == OnlineState.Online
+                    || pendingStates.Contains(ru.UploadState)
+                    || (ru.Id > u.Id && ru.UploadState == UploadState.Canceled)
                 )
             )
             .ToListAsync(cancellationToken: cancellationToken);
@@ -93,7 +98,9 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
     {
         return await dbWrite
             .UploadConfigs.Where(u =>
-                !u.Uploads.Any() && u.Release.CreatedAt <= releaseCreatedBefore
+                !u.Uploads.Any()
+                && u.HosterRegistration.IsActive
+                && u.Release.CreatedAt <= releaseCreatedBefore
             )
             .ToListAsync(cancellationToken);
     }

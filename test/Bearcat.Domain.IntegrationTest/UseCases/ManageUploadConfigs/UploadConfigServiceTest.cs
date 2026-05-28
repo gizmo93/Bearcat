@@ -101,6 +101,25 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
         result.ShouldBeFalse();
     }
 
+    [Test]
+    public async Task GetHosterRegistrationOptionsAsync_InactiveHosterRegistration_ExcludesInactiveOption()
+    {
+        // Arrange
+        var activeSeed = await AddUploadConfigDependenciesAsync("Active", hosterIsActive: true);
+        var inactiveSeed = await AddUploadConfigDependenciesAsync(
+            "Inactive",
+            hosterIsActive: false
+        );
+        var readRepository = new UploadConfigReadRepository(dbContext);
+
+        // Act
+        var result = await readRepository.GetHosterRegistrationOptionsAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldContainKey(activeSeed.HosterRegistrationId);
+        result.ShouldNotContainKey(inactiveSeed.HosterRegistrationId);
+    }
+
     private async Task<UploadConfig> AddUploadConfigAsync(UploadConfigSeed seed)
     {
         var uploadConfig = new UploadConfig
@@ -118,7 +137,10 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
         return uploadConfig;
     }
 
-    private async Task<UploadConfigSeed> AddUploadConfigDependenciesAsync(string suffix = "First")
+    private async Task<UploadConfigSeed> AddUploadConfigDependenciesAsync(
+        string suffix = "First",
+        bool hosterIsActive = true
+    )
     {
         var releaseGroup = new ReleaseGroup
         {
@@ -148,7 +170,7 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
             Name = $"{suffix} hoster",
             SerializedConfig = "{}",
             HosterClassName = "TestHoster",
-            IsActive = true,
+            IsActive = hosterIsActive,
         };
 
         dbContext.ArchiveConfigs.Add(archiveConfig);

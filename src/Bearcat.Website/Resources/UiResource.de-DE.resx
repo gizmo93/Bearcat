@@ -29,8 +29,8 @@
   <data name="ArchiveConfigurations" xml:space="preserve"><value>Archiv-Konfigurationen</value></data>
   <data name="ArchiveConfigurationsDescription" xml:space="preserve"><value>Archiver-Setup und erzeugte Archivhistorie.</value></data>
   <data name="ArchiveDetailDescription" xml:space="preserve"><value>Erzeugte Archivdateien und Metadaten.</value></data>
-  <data name="ArchiveFileSizeMb" xml:space="preserve"><value>Archivdateigröße (MB)</value></data>
-  <data name="ArchiveFileSizeMustBeZeroOrGreater" xml:space="preserve"><value>Die Archivdateigröße muss null oder größer sein</value></data>
+    <data name="ArchiveFileSizeMb" xml:space="preserve"><value>Archivdateigrösse (MB)</value></data>
+    <data name="ArchiveFileSizeMustBeZeroOrGreater" xml:space="preserve"><value>Die Archivdateigrösse muss null oder grösser sein</value></data>
   <data name="ArchiveFiles" xml:space="preserve"><value>Archivdateien</value></data>
   <data name="ArchiveFilesBasePath" xml:space="preserve"><value>Basispfad der Archivdateien</value></data>
   <data name="ArchiveFilesFolder" xml:space="preserve"><value>Ordner für Archivdateien</value></data>
@@ -58,7 +58,7 @@
   <data name="Cancel" xml:space="preserve"><value>Abbrechen</value></data>
   <data name="CancelUpload" xml:space="preserve"><value>Upload abbrechen</value></data>
   <data name="CancelUploadConfirmation" xml:space="preserve"><value>Upload #{0} abbrechen? Laufende Dateiübertragungen werden gestoppt, sobald der Worker die Anfrage sieht.</value></data>
-  <data name="Close" xml:space="preserve"><value>Schließen</value></data>
+    <data name="Close" xml:space="preserve"><value>Schliessen</value></data>
   <data name="CopyAllLinks" xml:space="preserve"><value>Alle Links kopieren</value></data>
   <data name="CopyLink" xml:space="preserve"><value>Link kopieren</value></data>
   <data name="CopyNfoIntoClipboard" xml:space="preserve"><value>NFO in die Zwischenablage kopieren</value></data>
@@ -128,7 +128,7 @@
   <data name="FolderPath" xml:space="preserve"><value>Ordnerpfad</value></data>
   <data name="FolderSelectionTree" xml:space="preserve"><value>Ordnerauswahlbaum</value></data>
   <data name="Home" xml:space="preserve"><value>Home</value></data>
-  <data name="HomeIntro" xml:space="preserve"><value>Behalte Uploads und Archivarbeiten an einem Ort im Blick.</value></data>
+    <data name="HomeIntro" xml:space="preserve"><value>Überwache laufende Archiverstellungen und Uploads</value></data>
   <data name="Hoster" xml:space="preserve"><value>Hoster</value></data>
   <data name="HosterConfigurationHelp" xml:space="preserve"><value>Gib die benötigten Werte für den ausgewählten Hoster an.</value></data>
   <data name="HosterDialogDescription" xml:space="preserve"><value>Speichere Hoster-Zugangsdaten und Konfigurationen für Uploads.</value></data>
@@ -180,7 +180,7 @@
   <data name="NfoDatabaseRegistrationActivated" xml:space="preserve"><value>NFO-Datenbank-Registrierung {0} aktiviert</value></data>
   <data name="NfoDatabaseRegistrationDeactivated" xml:space="preserve"><value>NFO-Datenbank-Registrierung {0} deaktiviert</value></data>
   <data name="NfoDatabaseRegistrations" xml:space="preserve"><value>NFO-Datenbank-Registrierungen</value></data>
-  <data name="NfoDatabaseRegistrationsIntro" xml:space="preserve"><value>Aktiviere Metadatenquellen und verwalte optionale API-Zugangsdaten zentral.</value></data>
+    <data name="NfoDatabaseRegistrationsIntro" xml:space="preserve"><value>Aktiviere und verwalte Metadatenquellen</value></data>
   <data name="NfoDatabases" xml:space="preserve"><value>NFO-Datenbanken</value></data>
   <data name="NewHoster" xml:space="preserve"><value>Neuer Hoster</value></data>
   <data name="NewLinkCrypter" xml:space="preserve"><value>Neuer Link-Crypter</value></data>
@@ -287,9 +287,9 @@
   <data name="Selected" xml:space="preserve"><value>Ausgewählt</value></data>
   <data name="ShowFileColumn" xml:space="preserve"><value>Datei anzeigen</value></data>
   <data name="ShowHiddenContent" xml:space="preserve"><value>Verborgenen Inhalt anzeigen</value></data>
-  <data name="ShowHiddenContentConfirmation" xml:space="preserve"><value>Möchtest du diesen verborgenen Inhalt wirklich anzeigen?</value></data>
-  <data name="Size" xml:space="preserve"><value>Größe</value></data>
-  <data name="SizePerArchiveMb" xml:space="preserve"><value>Größe pro Archiv (MB)</value></data>
+    <data name="ShowHiddenContentConfirmation" xml:space="preserve"><value>Möchtest du diesen versteckten Inhalt wirklich anzeigen?</value></data>
+    <data name="Size" xml:space="preserve"><value>Grösse</value></data>
+    <data name="SizePerArchiveMb" xml:space="preserve"><value>Grösse pro Archiv (MB)</value></data>
   <data name="State" xml:space="preserve"><value>Status</value></data>
   <data name="Status" xml:space="preserve"><value>Status</value></data>
     <data name="ToggleArchiveConfigDetails" xml:space="preserve"><value>Archiv-Konfigurationsdetails umschalten</value></data>
@@ -336,7 +336,6 @@
   <data name="ViewContainerLinks" xml:space="preserve"><value>Containerlinks anzeigen</value></data>
   <data name="ViewUploadLinks" xml:space="preserve"><value>Uploadlinks anzeigen</value></data>
   <data name="Welcome" xml:space="preserve"><value>Willkommen</value></data>
-  <data name="Workspace" xml:space="preserve"><value>Arbeitsbereich</value></data>
     <data name="Yes" xml:space="preserve"><value>Ja</value></data>
   <data name="Loading" xml:space="preserve"><value>Lädt</value></data>
   <data name="Message" xml:space="preserve"><value>Meldung</value></data>
@@ -371,7 +370,7 @@
   <data name="ViewAllNotifications" xml:space="preserve"><value>Alle ungelösten anzeigen</value></data>
   <data name="AssignedReleases" xml:space="preserve"><value>Zugewiesene Releases</value></data>
   <data name="AutomaticReuploads" xml:space="preserve"><value>Automatische Reuploads</value></data>
-  <data name="AutomaticReuploadsHelp" xml:space="preserve"><value>Erstellt Ersatz-Uploads automatisch, wenn geprüfte Offline-Dateien alt genug sind.</value></data>
+    <data name="AutomaticReuploadsHelp" xml:space="preserve"><value>Erstellt Ersatz-Uploads automatisch, wenn Links lange genug offline sind.</value></data>
   <data name="ChangeReleaseGroup" xml:space="preserve"><value>Gruppe ändern</value></data>
   <data name="CreateManualReupload" xml:space="preserve"><value>Manuellen Reupload erstellen</value></data>
   <data name="DeleteReleaseGroupConfirmation" xml:space="preserve"><value>Möchtest du die Release-Gruppe {0} wirklich löschen?</value></data>
@@ -390,8 +389,8 @@
   <data name="ExternalInfos" xml:space="preserve"><value>Externe Infos</value></data>
   <data name="HoursCount" xml:space="preserve"><value>{0} h</value></data>
   <data name="HoursUntilReupload" xml:space="preserve"><value>Stunden bis Reupload</value></data>
-  <data name="HoursUntilReuploadHelp" xml:space="preserve"><value>Minimum 0; dann wird direkt nach bestätigten Offline-Dateien eingeplant.</value></data>
-  <data name="HoursUntilReuploadMustBeZeroOrGreater" xml:space="preserve"><value>Stunden bis Reupload muss null oder größer sein.</value></data>
+    <data name="HoursUntilReuploadHelp" xml:space="preserve"><value>Minimum 0; lädt Offline Links so schnell wie möglich wieder hoch.</value></data>
+    <data name="HoursUntilReuploadMustBeZeroOrGreater" xml:space="preserve"><value>Stunden bis Reupload muss null oder grösser sein.</value></data>
   <data name="ManualReuploadCreated" xml:space="preserve"><value>Manueller Reupload für Upload #{0} erstellt.</value></data>
   <data name="UploadCancellationRequested" xml:space="preserve"><value>Abbruch für Upload #{0} angefragt.</value></data>
   <data name="UploadCancellationNotAvailable" xml:space="preserve"><value>Upload #{0} kann nicht mehr abgebrochen werden.</value></data>
@@ -414,31 +413,31 @@
   <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>Du musst eine Release-Gruppe auswählen</value></data>
   <data name="SelectAll" xml:space="preserve"><value>Alle auswählen</value></data>
   <data name="SelectedReleaseCount" xml:space="preserve"><value>{0} Release(s) ausgewählt</value></data>
-  <data name="ApplicationConfigurationsIntro" xml:space="preserve"><value>Globale Einstellungen für App-Verhalten, das Releases und Hintergrundprozesse betrifft.</value></data>
+    <data name="ApplicationConfigurationsIntro" xml:space="preserve"><value>Globale Einstellungen für App-Verhalten, für Releases und Hintergrundprozesse.</value></data>
   <data name="ApplicationConfigurationsSubtitle" xml:space="preserve"><value>Defaults und User-Overrides</value></data>
   <data name="ArchiveCleanup" xml:space="preserve"><value>Archiv-Aufräumen</value></data>
   <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Steuert, wann lokale Archivordner nach abgeschlossenen Uploads entfernt werden.</value></data>
   <data name="ArchiveRepackaging" xml:space="preserve"><value>Archiv-Repackaging</value></data>
   <data name="ArchiveRepackagingDescription" xml:space="preserve"><value>Steuert, wie Archivdateien vor Reuploads verändert werden.</value></data>
   <data name="ArchiveRepackagingStrategy" xml:space="preserve"><value>Repackaging-Strategie</value></data>
-  <data name="ArchiveRepackagingStrategyDescription" xml:space="preserve"><value>Erlaubte Werte: NonceOnly, SolidCompression, IncrementArchiveFileSize. Der Default erhöht die Splitgröße bei jedem neuen Archiv um 1 MB.</value></data>
-  <data name="ArchiveRepackagingStrategy.IncrementArchiveFileSize" xml:space="preserve"><value>Archivdateigröße um 1 MB verändern</value></data>
+    <data name="ArchiveRepackagingStrategyDescription" xml:space="preserve"><value>Erlaubte Werte: NonceOnly, SolidCompression, IncrementArchiveFileSize. Der Default erhöht die Grösse pro Part bei jedem neuen Archiv um 1 MB.</value></data>
+    <data name="ArchiveRepackagingStrategy.IncrementArchiveFileSize" xml:space="preserve"><value>Archivdateigrösse um 1 MB verändern</value></data>
   <data name="ArchiveRepackagingStrategy.NonceOnly" xml:space="preserve"><value>Nur Nonce, keine Kompression</value></data>
   <data name="ArchiveRepackagingStrategy.SolidCompression" xml:space="preserve"><value>Solid Archive mit Kompression</value></data>
   <data name="AutoCleanup" xml:space="preserve"><value>Automatisches Aufräumen</value></data>
-  <data name="AutoCleanupDescription" xml:space="preserve"><value>Löscht lokale Archivordner, sobald alle verknüpften Uploads einen abgeschlossenen Upload-Zeitpunkt haben.</value></data>
+    <data name="AutoCleanupDescription" xml:space="preserve"><value>Löscht lokale Archivordner, sobald alle verknüpften Uploads erfolgreich hochgeladen wurden.</value></data>
   <data name="Configurations" xml:space="preserve"><value>Konfigurationen</value></data>
   <data name="InitialUpload" xml:space="preserve"><value>Initiale Uploads</value></data>
   <data name="InitialUploadDescription" xml:space="preserve"><value>Steuert, wann der erste Upload für ein neu erstelltes Release angelegt wird.</value></data>
   <data name="InitialUploadCooldownMinutes" xml:space="preserve"><value>Cooldown für initiale Uploads (Minuten)</value></data>
-  <data name="InitialUploadCooldownMinutesDescription" xml:space="preserve"><value>So viele Minuten nach dem Erstellen des Releases warten, bevor der erste Upload angelegt wird.</value></data>
+    <data name="InitialUploadCooldownMinutesDescription" xml:space="preserve"><value>So viele Minuten nach dem Erstellen des Releases warten, bevor der erste Upload gestartet wird.</value></data>
   <data name="DefaultValue" xml:space="preserve"><value>Default</value></data>
   <data name="Override" xml:space="preserve"><value>Override</value></data>
   <data name="ResetToDefault" xml:space="preserve"><value>Auf Default zurücksetzen</value></data>
   <data name="AddLinkCrypter" xml:space="preserve"><value>Link-Crypter hinzufügen</value></data>
   <data name="ArchiveConfigName" xml:space="preserve"><value>Archiv-Konfigurationsname</value></data>
   <data name="ArchiveConfigNamePlaceholder" xml:space="preserve"><value>Anzeigename für diese Archiv-Konfiguration</value></data>
-  <data name="ArchiveConfigTemplateDialogDescription" xml:space="preserve"><value>Lege Archiver, Archiv-Zielordner, Passwort und Archivnamen-Verhalten fest, die in Releases kopiert werden.</value></data>
+    <data name="ArchiveConfigTemplateDialogDescription" xml:space="preserve"><value>Lege Archiver, Archiv-Zielordner, Passwort und Archivnamen-Verhalten fest</value></data>
   <data name="ArchiveConfigTemplatesDescription" xml:space="preserve"><value>Archiv-Einstellungen, die beim Erstellen eines Releases aus diesem Template kopiert werden.</value></data>
   <data name="ArchiveNamePreview" xml:space="preserve"><value>Archivname:</value></data>
   <data name="CreateArchiveConfigTemplateFirst" xml:space="preserve"><value>Erstelle zuerst ein Archiv-Konfigurationstemplate.</value></data>
@@ -471,8 +470,8 @@
   <data name="SelectReleaseTemplate" xml:space="preserve"><value>Release-Template auswählen</value></data>
   <data name="SelectReleaseTemplateRequired" xml:space="preserve"><value>Du musst ein Release-Template auswählen.</value></data>
   <data name="UploadConfigTemplateNameHelp" xml:space="preserve"><value>Leer lassen, um den Namen der Hoster-Registrierung zu verwenden.</value></data>
-  <data name="UploadConfigTemplateDialogDescription" xml:space="preserve"><value>Lege Hoster-Ziel, Archiv-Konfiguration, Linkverteilung und Link-Crypter fest, die in Releases kopiert werden.</value></data>
-  <data name="UploadConfigTemplatesDescription" xml:space="preserve"><value>Upload-Einstellungen, die beim Erstellen eines Releases aus diesem Template kopiert werden.</value></data>
+    <data name="UploadConfigTemplateDialogDescription" xml:space="preserve"><value>Lege Hoster, Archiv-Konfiguration, Linkverteilung und Link-Crypter fest</value></data>
+    <data name="UploadConfigTemplatesDescription" xml:space="preserve"><value>Upload-Einstellungen, die verwendet werden</value></data>
   <data name="UseHosterNamePlaceholder" xml:space="preserve"><value>Hoster-Namen verwenden</value></data>
   <data name="UseReleaseNameAsArchiveName" xml:space="preserve"><value>Release-Name als Archivname verwenden</value></data>
   <data name="AllFolders" xml:space="preserve"><value>Alle Ordner</value></data>
@@ -486,7 +485,7 @@
   <data name="NoReleaseFolderAutomationsFound" xml:space="preserve"><value>Keine Release-Ordner-Automatisierungen gefunden</value></data>
   <data name="OpenReleaseFolderAutomationActions" xml:space="preserve"><value>Release-Ordner-Automatisierungsaktionen öffnen</value></data>
   <data name="ReleaseBasePath" xml:space="preserve"><value>Release-Basispfad</value></data>
-  <data name="ReleaseFolderAutomationDialogDescription" xml:space="preserve"><value>Scannt direkte Unterordner eines Basispfads und erstellt Releases aus einem gewählten Template.</value></data>
+    <data name="ReleaseFolderAutomationDialogDescription" xml:space="preserve"><value>Scannt direkte Unterordner eines Pfads und erstellt Releases aus einem gewählten Template.</value></data>
   <data name="ReleaseFolderAutomations" xml:space="preserve"><value>Ordner-Automatisierungen</value></data>
   <data name="ReleaseFolderAutomationsIntro" xml:space="preserve"><value>Erstellt Releases automatisch aus passenden direkten Unterordnern.</value></data>
   <data name="ReleaseFolderAutomationsSubtitle" xml:space="preserve"><value>Automatische Release-Erstellung</value></data>
@@ -497,8 +496,8 @@
   <data name="BackgroundTaskDisabled" xml:space="preserve"><value>{0} deaktiviert</value></data>
   <data name="BackgroundTaskEnabled" xml:space="preserve"><value>{0} aktiviert</value></data>
   <data name="BackgroundTasks" xml:space="preserve"><value>Background-Tasks</value></data>
-  <data name="BackgroundTasksIntro" xml:space="preserve"><value>Überwache geplante Arbeiten, letzte Ausführungszeiten und Health-Status.</value></data>
-  <data name="BackgroundTasksSubtitle" xml:space="preserve"><value>Job-Health und Schalter</value></data>
+    <data name="BackgroundTasksIntro" xml:space="preserve"><value>Hintergrundtasks, letzte Ausführungszeiten und Status</value></data>
+    <data name="BackgroundTasksSubtitle" xml:space="preserve"><value>Task Ausführungsstatus</value></data>
   <data name="Duration" xml:space="preserve"><value>Dauer</value></data>
   <data name="Error" xml:space="preserve"><value>Fehler</value></data>
   <data name="Errors" xml:space="preserve"><value>Fehler</value></data>
@@ -522,7 +521,7 @@
   <data name="ForumPostTemplateNamePlaceholder" xml:space="preserve"><value>Namen für diese Forenpost-Vorlage eingeben</value></data>
   <data name="ForumPostTemplates" xml:space="preserve"><value>Forenpost-Vorlagen</value></data>
     <data name="ForumPostTemplatesIntro" xml:space="preserve"><value>Verwalte zB BBCode-Vorlagen zum Posten fertiger Releases.</value></data>
-  <data name="ForumPostTemplatesSubtitle" xml:space="preserve"><value>BBCode-Vorlagen und Render-Variablen</value></data>
+    <data name="ForumPostTemplatesSubtitle" xml:space="preserve"><value>BBCode-Vorlagen mit dynamischem Inhalt</value></data>
   <data name="NewForumPostTemplate" xml:space="preserve"><value>Neue Forenpost-Vorlage</value></data>
   <data name="NoForumPostTemplatesFound" xml:space="preserve"><value>Keine Forenpost-Vorlagen gefunden.</value></data>
   <data name="NoVariablesFound" xml:space="preserve"><value>Keine Variablen gefunden.</value></data>
