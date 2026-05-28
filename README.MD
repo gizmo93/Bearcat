@@ -14,7 +14,7 @@ Bearcat is a .NET 10 application built on ASP.NET Core. The frontend uses Blazor
 
 ## Documentation
 
-- [User documentation](docs/user-documentation/user-documentation.md)
+- [User documentation](https://gizmo93.github.io/Bearcat)
 - [Development notes](docs/development.md)
 
 ## Running Bearcat With Docker

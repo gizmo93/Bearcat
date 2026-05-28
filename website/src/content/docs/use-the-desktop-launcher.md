@@ -1,12 +1,17 @@
-# Running Bearcat With The Desktop App
+---
+title: "Desktop App"
+description: "Run Bearcat locally on Windows or macOS with the desktop launcher."
+---
 
-The Bearcat Desktop app is a small Windows and macOS helper app. It does not replace the web application. It starts Bearcat locally, keeps it visible through a tray icon, opens the web UI in your browser, and stops Bearcat when you quit the app.
+Bearcat is a Web Application that runs in your Browser.
 
-This is the preferred local setup for macOS on Apple Silicon because the Desktop app runs natively on ARM. The Docker image is still available, but it is built as `linux/amd64` because the official RAR command line tools are only available for Linux x64.
+But to make it easier for you to start and stop it if you want to run it on your Windows or macOS machine, Bearcat offers a small Launcher App, that starts Bearcat, keeps it visible through a tray icon, opens the web UI in your browser, and stops Bearcat when you quit the app.
+
+This is my recommended local setup for macOS on Apple Silicon because the Desktop app runs natively on ARM and helps you to get the most out of your fast Apple Silicon Mac.
 
 On Windows, use the Desktop app for local desktop use. Use Docker for Windows Server or other always-on server deployments.
 
-The Desktop uses YOUR OWN PostgreSQL server. It does not install or manage PostgreSQL for you.
+The Desktop uses YOUR OWN PostgreSQL server. It does not ship with PostgreSQL.
 
 | macOS | Windows |
 | --- | --- |
@@ -15,13 +20,18 @@ The Desktop uses YOUR OWN PostgreSQL server. It does not install or manage Postg
 ## Requirements
 
 - PostgreSQL 18 running locally or on a reachable machine
-- RAR command line executable
+- RAR command line executable (on Windows this comes with WinRAR)
 - 7z command line executable
 - A release data directory on your local machine
 
-For PostgreSQL setup instructions, see [Installing PostgreSQL For The Desktop App](install-postgresql-for-desktop.md).
+For PostgreSQL setup instructions, see [Installing PostgreSQL For The Desktop App](/Bearcat/install-postgresql-for-desktop/).
 
-## macOS Gatekeeper
+## Downloading the newest release
+You can get the latest release of the Desktop app from the [GitHub releases page](https://github.com/gizmo93/Bearcat/releases).
+![download-desktop-app.png](images/download-desktop-app.png)
+
+
+### macOS Gatekeeper
 
 The macOS download is packaged as an `.app` bundle and is ad-hoc signed, because I don't have a Apple Developer License.
 This means, that per default, macOS will put the app into "quarantine" and block you from executing it.

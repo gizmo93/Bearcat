@@ -1,0 +1,101 @@
+---
+title: "Bearcat User Guide"
+description: "Learn how to install, configure, and operate Bearcat for self-hosted one-click-hoster upload management."
+template: splash
+hero:
+  title: "Bearcat"
+  tagline: "Automatic archive creation and uploads for one-click hosters."
+  image:
+    file: ../../assets/bearcat-archive-hero.png
+    alt: "Bearcat holding a RAR archive upload"
+  actions:
+    - text: "Getting started"
+      link: "/Bearcat/#getting-started"
+---
+
+import { CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
+
+## What is Bearcat?
+Bearcat (Binturong) is not only a fluffy animal that lives in south east asia and smells like popcorn, but also a self-hosted upload manager for one-click hosters. 
+
+It can do the following things for you:
+
+- Automatically pack your release files into RAR or 7zip
+- Upload your archive files to one-click hosters like Rapidgator, Nitroflare, and more
+- Check the state of your uploads and trigger automatic re-uploads if something is offline
+- Fetch additional release infos from databases like xrel or Srrdb
+- Generate forum-ready BBCode for your release posts, including links, NFO content, and more
+
+![GUI](images/gui.png)
+
+<Aside type="tip">
+	Bearcat is self-hosted: you run it on your own desktop machine, NAS, or server and keep control of the database, account configuration, and release data.
+</Aside>
+
+## Can I also bring my own archives and let Bearcat just upload them?
+Yes, you can!
+You can either bring your own archives or let Bearcat pack your release files for you.
+[Click here to learn more about release types](/Bearcat/release-types/).
+
+## Which hosters and linkcrypters are supported?
+
+Hosters:
+
+- Rapidgator
+- DDownload
+- GoFile
+- Keep2Share
+- Alfafile
+- NitroFlare
+- 1fichier
+- Uploady.io
+- Katfile
+- Krakenfiles
+- FileQ
+
+Link crypters:
+
+- Hide.cx
+- Keeplinks
+
+
+## Installing & running Bearcat 
+
+<CardGrid>
+	<LinkCard
+		title="Desktop app"
+		description="Run Bearcat locally on Windows or macOS with the launcher."
+		href="/Bearcat/use-the-desktop-launcher/"
+	/>
+	<LinkCard
+		title="Docker container"
+		description="Host Bearcat on Linux, NAS devices, servers, Windows, or macOS."
+		href="/Bearcat/use-the-docker-image/"
+	/>
+	<LinkCard
+		title="Initial setup"
+		description="Connect accounts, configure templates, and create your first release."
+		href="/Bearcat/post-installation/"
+	/>
+</CardGrid>
+
+
+## Learn more
+
+<CardGrid>
+	<LinkCard
+		title="Upload lifecycle"
+		description="See how releases move from archives to upload checks and reuploads."
+		href="/Bearcat/upload-lifecycle/"
+	/>
+	<LinkCard
+		title="Forum post templates"
+		description="Generate forum-ready BBCode from release data, NFO content, and links."
+		href="/Bearcat/forum-post-templates/"
+	/>
+	<LinkCard
+		title="Advanced configuration"
+		description="Tune background tasks and global behavior once the basics are running."
+		href="/Bearcat/advanced-configuration/"
+	/>
+</CardGrid>

@@ -35,6 +35,21 @@ jobs:
       - name: Build solution
         run: dotnet build Bearcat.slnx --configuration Release --no-restore
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install docs dependencies
+        run: npm ci
+        working-directory: website
+
+      - name: Build docs website
+        run: npm run build
+        working-directory: website
+
       - name: Install archive test dependencies
         run: |
           sudo apt-get update

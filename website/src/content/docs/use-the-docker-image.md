@@ -1,4 +1,7 @@
-# Hosting as a Docker container
+---
+title: "Docker Container"
+description: "Host Bearcat with Docker on Linux, NAS devices, servers, Windows, or macOS."
+---
 
 Docker is the recommended setup for Linux, NAS, and server deployments. It is also a good choice for Windows Server or any always-on machine where Bearcat should run in the background, as Docker will make sure your container gets restarted if it crashes.
 

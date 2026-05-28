@@ -1,4 +1,7 @@
-# Initial setup
+---
+title: "Initial Setup"
+description: "Configure hoster accounts, release groups, release templates, and folder automations after installation."
+---
 
 After you started your Bearcat container, its frontend is available
 at `http://localhost:8080` (or the port you set in the .env file) and you can start setting it up.
@@ -15,15 +18,6 @@ Notifications are Bearcat's way to tell you that background work needs attention
 They can be info messages, warnings or errors and can be linked to uploads, archives or link crypter containers.
 The bell shows the latest unresolved notifications and links to the full notification list.
 Once you have checked a notification, you can mark it as resolved so it no longer stays in the unresolved list.
-
-## Jump to what interests you
-
-- [Setting up hoster accounts](#setting-up-hoster-accounts)
-- [Setting up link crypter accounts, and NFO databases](#setting-up-link-crypter-accounts-and-nfo-databases)
-- [Manually create a release](#manually-create-a-release)
-- [Setting up release groups](#setting-up-release-groups)
-- [Setting up release templates](#setting-up-release-templates)
-- [Setting up folder automations](#setting-up-folder-automations)
 
 ## Setting up hoster accounts
 
@@ -65,8 +59,8 @@ After clicking "Create release", the release appears in the release list.
 Open it by clicking the release name.
 The detail page is the place where you connect all parts of the release:
 
+## The release detail page
 ![release-detail-page.png](images/release-detail-page.png)
-
 
 ### Overview Tab
 ... shows the latest upload per upload configuration, download links, link crypter container links, archive passwords and the NFO copy button if a `.nfo` file exists in the release folder.
@@ -98,13 +92,16 @@ You can also define, on which link crypters a containers for the upload links sh
 ![crypter-links-dialog.png](images/crypter-links-dialog.png)
 
 
+## Create archive- and upload configurations 
 For a release, add at least one archive configuration and one upload configuration.
 
+### Archive configuration
 In the "Archive configurations" tab, click "Add".
 Choose a name, the archiver, the archive file folder, an optional archive password and the target archive part size in MB.
 The archive file folder is the location where Bearcat stores the generated archive files before they are uploaded.
 The archive naming field sets the archive file prefix; the selected archiver adds its file extension automatically.
 
+### Upload configuration
 In the "Upload configurations" tab, click "Add".
 Choose a name, the hoster registration and the archive configuration that should be uploaded.
 The "Links distributed to" list is optional and can be used to note where you posted or shared the links later. It allows you to find the forum thread again, where you shared the links, if they went offline.

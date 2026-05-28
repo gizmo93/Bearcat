@@ -1,8 +1,11 @@
-# Upload lifecycle
+---
+title: "Upload Lifecycle"
+description: "Understand how Bearcat creates, uploads, checks, and refreshes release archives."
+---
 
 This page explains what happens after you create a release and configure where it should be uploaded.
 
-If you love complicated flowcharts, you can check that [one](images/upload-lifecycle.png) out:
+If you love complicated flowcharts, [this is the whole upload lifecycle](/Bearcat/images/upload-lifecycle.png).
 
 ## 1. Release and upload configuration
 

@@ -1,4 +1,7 @@
-# Advanced configuration
+---
+title: "Advanced Configuration"
+description: "Tune background tasks, upload checks, and global Bearcat behavior."
+---
 
 Bearcat does most work in background tasks.
 The web UI gives you two places to control that behavior:
@@ -6,7 +9,7 @@ The web UI gives you two places to control that behavior:
 - "Background tasks" shows scheduled work, health and enable / disable switches.
 - "Configurations" contains global settings that affect background work.
 
-## Background tasks UI
+## Background tasks
 
 Open "Background tasks" in the sidebar to see the current task list.
 Each background task runs on its own schedule and stores its last known state in the database.
@@ -30,7 +33,7 @@ Use the "Refresh" button to reload the latest state.
 Most tasks should stay enabled during normal operation.
 Only disable a task if you intentionally want to pause that part of the system, for example while debugging a failing hoster account or while doing maintenance on a storage folder.
 
-## Available background tasks
+### Available background tasks
 
 | Task | Runs | What it does |
 | --- | ---: | --- |
@@ -43,9 +46,9 @@ Only disable a task if you intentionally want to pause that part of the system, 
 | Upload state check | Every 20 seconds | Checks whether uploaded files are still online, creates initial upload records after the configured cooldown and schedules automatic reuploads when release group rules allow it. |
 | Link crypter container creation | Every 20 seconds | Creates missing link crypter containers for completed uploads that have link crypter configurations. |
 
-## Configuration UI
+## Configurations
 
-Open "Configurations" in the sidebar to change global application behavior.
+Open "Configurations"   in the sidebar to change global application behavior.
 Each configuration property shows its current value and its default value.
 
 ![configurations-page.png](images/configurations-page.png)
@@ -57,7 +60,7 @@ Use the reset button next to a property to remove the override and return to the
 Configuration changes are stored in the database.
 They survive container restarts.
 
-## Archive cleanup
+### Archive cleanup
 
 "Archive cleanup" controls whether Bearcat removes local archive folders after uploads finish.
 
@@ -78,7 +81,7 @@ It does not delete the release source folder and it does not delete files from t
 Leave automatic cleanup disabled if you want to inspect generated archive files manually or keep them as a local backup.
 Enable it if your archive folder is temporary storage and you want Bearcat to free disk space after successful uploads.
 
-## Archive repackaging
+### Archive repackaging
 
 "Archive repackaging" controls how Bearcat changes generated archive files when it has to create a fresh archive for an upload or reupload.
 
@@ -101,7 +104,7 @@ For the first archive, Bearcat uses the "Archive file size (MB)" from the archiv
 
 RAR and 7Zip both support all three strategies.
 
-## Initial upload cooldown
+### Initial upload cooldown
 
 "Initial uploads" controls when Bearcat creates the first upload run for a new release.
 

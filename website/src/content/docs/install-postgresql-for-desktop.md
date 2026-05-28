@@ -1,6 +1,11 @@
-# Installing PostgreSQL For The Desktop App
+---
+title: "PostgreSQL for Desktop"
+description: "Install and configure PostgreSQL for the Bearcat Desktop app."
+---
 
-The Bearcat Desktop app needs a PostgreSQL server. It does not install or manage PostgreSQL for you.
+The Bearcat Desktop app needs a PostgreSQL database to store its data.
+
+It does not ship with PostgreSQL, so you need to install it on your own.
 
 Use PostgreSQL 18. Older PostgreSQL versions are currently untested.
 

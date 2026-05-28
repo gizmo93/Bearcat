@@ -1,4 +1,7 @@
-# Forum post templates
+---
+title: "Forum Post Templates"
+description: "Use BBCode and Scriban placeholders to prepare forum posts from release data."
+---
 
 Forum post templates help you prepare the text that you want to paste into a forum after a release is ready.
 Most forums accept BBCode, so a template can contain normal BBCode and placeholders that Bearcat replaces with data from the selected release.
