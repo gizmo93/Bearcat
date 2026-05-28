@@ -19,7 +19,7 @@ Bearcat is a .NET 10 application built on ASP.NET Core. The frontend uses Blazor
 
 ## Running Bearcat With Docker
 
-Check the [user documentation](docs/user-documentation/use-the-docker-image.md) for instructions on how to run Bearcat with Docker.
+Check the [user documentation](https://gizmo93.github.io/Bearcat/use-the-docker-image/) for instructions on how to run Bearcat with Docker.
 
 ## Local development
 

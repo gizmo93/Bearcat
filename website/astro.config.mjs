@@ -3,6 +3,8 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightThemeNova from 'starlight-theme-nova';
 
+const isGitHubActionsBuild = process.env.GITHUB_ACTIONS === 'true';
+
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://gizmo93.github.io',
@@ -26,9 +28,13 @@ export default defineConfig({
 			},
 			favicon: '/favicon.png',
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/gizmo93/Bearcat' }],
-			editLink: {
-				baseUrl: 'https://github.com/gizmo93/Bearcat/edit/main/website/',
-			},
+			...(isGitHubActionsBuild
+				? {}
+				: {
+						editLink: {
+							baseUrl: 'https://github.com/gizmo93/Bearcat/edit/main/website/',
+						},
+					}),
 			sidebar: [
 				{
 					label: 'Start',
