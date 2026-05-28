@@ -25,9 +25,9 @@ public class ApiClient(
 
     private const int AuthTimeout = 1500;
 
-    private const int MaxParallelLinkChecks = 10;
+    private const int MaxFilesInfoBatchSize = 100;
 
-    private const int MaxLinkCheckAttempts = 3;
+    private const int MaxFilesInfoAttempts = 3;
 
     private bool NeedsReauthentication =>
         string.IsNullOrWhiteSpace(authToken)
@@ -139,60 +139,68 @@ public class ApiClient(
     }
 
     public async Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
+        Keep2ShareConfig config,
         IReadOnlyList<string> fileUrls,
         CancellationToken cancellationToken
     )
     {
-        using var semaphore = new SemaphoreSlim(MaxParallelLinkChecks);
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+        var statusPerFileUrl = fileUrls.Distinct().ToDictionary(fileUrl => fileUrl, _ => false);
 
-        var checkTasks = fileUrls
-            .Distinct()
-            .Select(fileUrl =>
-                CheckLinkAsync(
-                    fileUrl: fileUrl,
-                    semaphore: semaphore,
-                    cancellationToken: cancellationToken
-                )
-            )
-            .ToList();
+        var fileUrlsByFileId = statusPerFileUrl
+            .Keys.Select(fileUrl => new { FileUrl = fileUrl, FileId = TryExtractFileId(fileUrl) })
+            .Where(file => file.FileId is not null)
+            .GroupBy(file => file.FileId!)
+            .ToDictionary(group => group.Key, group => group.Select(file => file.FileUrl).ToList());
 
-        var results = await Task.WhenAll(checkTasks);
+        foreach (var fileIdBatch in fileUrlsByFileId.Keys.Chunk(MaxFilesInfoBatchSize))
+        {
+            var response = await GetFilesInfoAsync(token, fileIdBatch, cancellationToken);
 
-        return results.ToDictionary(result => result.FileUrl, result => result.IsOnline);
+            if (response.Status != "success")
+            {
+                throw new HttpRequestException(
+                    $"Keep2Share files info request failed with status={response.Status}, code={response.Code}, errorCode={response.ErrorCode?.ToString() ?? "null"}, message={response.Message ?? "null"}"
+                );
+            }
+
+            foreach (var file in response.Files.Where(file => file.Id is not null))
+            {
+                if (!fileUrlsByFileId.TryGetValue(file.Id, out var urls))
+                {
+                    continue;
+                }
+
+                foreach (var url in urls)
+                {
+                    statusPerFileUrl[url] = file.IsAvailable == true;
+                }
+            }
+        }
+
+        return statusPerFileUrl;
     }
 
-    private async Task<(string FileUrl, bool IsOnline)> CheckLinkAsync(
-        string fileUrl,
-        SemaphoreSlim semaphore,
+    private async Task<GetFilesInfoResponse> GetFilesInfoAsync(
+        string token,
+        IReadOnlyList<string> fileIds,
         CancellationToken cancellationToken
     )
     {
-        var fileId = TryExtractFileId(fileUrl);
-
-        if (fileId is null)
+        foreach (var attempt in Enumerable.Range(1, MaxFilesInfoAttempts))
         {
-            return (fileUrl, false);
-        }
-
-        foreach (var attempt in Enumerable.Range(1, MaxLinkCheckAttempts))
-        {
-            await semaphore.WaitAsync(cancellationToken);
-
             try
             {
-                var response = await api.GetFileStatusAsync(
-                    new FileStatusRequest(fileId),
+                return await api.GetFilesInfoAsync(
+                    new GetFilesInfoRequest(token, fileIds),
                     cancellationToken
                 );
-
-                return (fileUrl, response is { Status: "success", IsAvailable: true });
             }
             catch (ApiException exception)
                 when (exception.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 logger.LogInformation(
-                    "Rate limited by Keep2Share API while checking {FileUrl}, waiting before retrying (Attempt {Attempt})",
-                    fileUrl,
+                    "Rate limited by Keep2Share API while checking file batch, waiting before retrying (Attempt {Attempt})",
                     attempt
                 );
             }
@@ -200,32 +208,18 @@ public class ApiClient(
                 when (exception.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 logger.LogInformation(
-                    "Rate limited by Keep2Share API while checking {FileUrl}, waiting before retrying (Attempt {Attempt})",
-                    fileUrl,
+                    "Rate limited by Keep2Share API while checking file batch, waiting before retrying (Attempt {Attempt})",
                     attempt
                 );
             }
-            catch (Exception ex)
-            {
-                logger.LogWarning(
-                    "Failed to check Keep2Share link {FileUrl}: {Message}",
-                    fileUrl,
-                    ex.InnerException?.Message ?? ex.Message
-                );
-                return (fileUrl, false);
-            }
-            finally
-            {
-                semaphore.Release();
-            }
 
-            if (attempt < MaxLinkCheckAttempts)
+            if (attempt < MaxFilesInfoAttempts)
             {
                 await Task.Delay(RateLimitRetryDelay, cancellationToken);
             }
         }
 
-        return (fileUrl, false);
+        throw new HttpRequestException("Rate limited by Keep2Share API while checking file batch");
     }
 
     private async Task<string> GetAuthTokenAsync(

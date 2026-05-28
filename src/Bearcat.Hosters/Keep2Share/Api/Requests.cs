@@ -16,3 +16,8 @@ public record UploadFormDataRequest(
 );
 
 public record FileStatusRequest([property: JsonPropertyName("id")] string Id);
+
+public record GetFilesInfoRequest(
+    [property: JsonPropertyName("auth_token")] string AuthToken,
+    [property: JsonPropertyName("ids")] IReadOnlyList<string> Ids
+);

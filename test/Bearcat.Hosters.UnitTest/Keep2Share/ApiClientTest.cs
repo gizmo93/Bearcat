@@ -1,4 +1,5 @@
 using System.Net;
+using Bearcat.Hosters.Keep2Share;
 using Bearcat.Hosters.Keep2Share.Api;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
@@ -30,48 +31,111 @@ public class ApiClientTest
     }
 
     [Test]
-    public async Task CheckLinksAsync_ManyLinks_ChecksUpToTenLinksInParallel()
+    public async Task CheckLinksAsync_ApiReturnsFileInfos_MapsStatusesToOriginalUrls()
     {
         // Arrange
-        var fileUrls = Enumerable
-            .Range(1, 25)
-            .Select(index => $"https://k2s.cc/file/file-{index}")
-            .ToList();
-        var currentParallelRequests = 0;
-        var maximumParallelRequests = 0;
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
+        var fileUrls = new[]
+        {
+            "https://k2s.cc/file/online-id",
+            "https://k2s.cc/file/offline-id",
+            "https://k2s.cc/file/missing-id",
+            "not-a-url",
+        };
 
         apiMock
-            .Setup(x => x.GetFileStatusAsync(It.IsAny<FileStatusRequest>(), It.IsAny<CancellationToken>()))
-            .Returns(async () =>
-            {
-                var current = Interlocked.Increment(ref currentParallelRequests);
-                UpdateMaximum(ref maximumParallelRequests, current);
+            .Setup(x => x.LoginAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new LoginResponse
+                {
+                    Status = "success",
+                    Code = (int)HttpStatusCode.OK,
+                    AuthToken = "auth-token",
+                }
+            );
 
-                await Task.Delay(25);
-
-                Interlocked.Decrement(ref currentParallelRequests);
-
-                return new FileStatusResponse { Status = "success", IsAvailable = true };
-            });
+        apiMock
+            .Setup(x =>
+                x.GetFilesInfoAsync(
+                    It.Is<GetFilesInfoRequest>(request =>
+                        request.AuthToken == "auth-token"
+                        && request.Ids.Count == 3
+                        && request.Ids.Contains("online-id")
+                        && request.Ids.Contains("offline-id")
+                        && request.Ids.Contains("missing-id")
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new GetFilesInfoResponse
+                {
+                    Status = "success",
+                    Code = (int)HttpStatusCode.OK,
+                    Files =
+                    [
+                        new GetFilesInfoResponse.FileInfo
+                        {
+                            Id = "online-id",
+                            IsAvailable = true,
+                        },
+                        new GetFilesInfoResponse.FileInfo
+                        {
+                            Id = "offline-id",
+                            IsAvailable = false,
+                        },
+                        new GetFilesInfoResponse.FileInfo
+                        {
+                            Id = "missing-id",
+                            IsAvailable = null,
+                        },
+                    ],
+                }
+            );
 
         // Act
-        var result = await apiClient.CheckLinksAsync(fileUrls, CancellationToken.None);
+        var result = await apiClient.CheckLinksAsync(config, fileUrls, CancellationToken.None);
 
         // Assert
-        result.Count.ShouldBe(25);
-        result.Values.ShouldAllBe(isOnline => isOnline);
-        maximumParallelRequests.ShouldBe(10);
+        result[fileUrls[0]].ShouldBeTrue();
+        result[fileUrls[1]].ShouldBeFalse();
+        result[fileUrls[2]].ShouldBeFalse();
+        result[fileUrls[3]].ShouldBeFalse();
+        apiMock.Verify(
+            x => x.GetFileStatusAsync(It.IsAny<FileStatusRequest>(), It.IsAny<CancellationToken>()),
+            Times.Never
+        );
     }
 
     [Test]
-    public async Task CheckLinksAsync_TooManyRequests_RetriesLink()
+    public async Task CheckLinksAsync_TooManyRequests_RetriesBatch()
     {
         // Arrange
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
         var fileUrl = "https://k2s.cc/file/file-1";
         var calls = 0;
 
         apiMock
-            .Setup(x => x.GetFileStatusAsync(It.IsAny<FileStatusRequest>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.LoginAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new LoginResponse
+                {
+                    Status = "success",
+                    Code = (int)HttpStatusCode.OK,
+                    AuthToken = "auth-token",
+                }
+            );
+
+        apiMock
+            .Setup(x => x.GetFilesInfoAsync(It.IsAny<GetFilesInfoRequest>(), It.IsAny<CancellationToken>()))
             .Returns(() =>
             {
                 calls++;
@@ -86,28 +150,28 @@ public class ApiClientTest
                 }
 
                 return Task.FromResult(
-                    new FileStatusResponse { Status = "success", IsAvailable = true }
+                    new GetFilesInfoResponse
+                    {
+                        Status = "success",
+                        Code = (int)HttpStatusCode.OK,
+                        Files =
+                        [
+                            new GetFilesInfoResponse.FileInfo
+                            {
+                                Id = "file-1",
+                                IsAvailable = true,
+                            },
+                        ],
+                    }
                 );
             });
 
         // Act
-        var result = await apiClient.CheckLinksAsync([fileUrl], CancellationToken.None);
+        var result = await apiClient.CheckLinksAsync(config, [fileUrl], CancellationToken.None);
 
         // Assert
         result[fileUrl].ShouldBeTrue();
         calls.ShouldBe(2);
     }
 
-    private static void UpdateMaximum(ref int maximum, int current)
-    {
-        var initialMaximum = maximum;
-
-        while (
-            current > initialMaximum
-            && Interlocked.CompareExchange(ref maximum, current, initialMaximum) != initialMaximum
-        )
-        {
-            initialMaximum = maximum;
-        }
-    }
 }

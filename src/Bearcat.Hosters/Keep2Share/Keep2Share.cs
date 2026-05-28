@@ -87,9 +87,15 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
         CancellationToken cancellationToken
     )
     {
+        var config = hosterConfig.As<Keep2ShareConfig>();
+
         try
         {
-            var statusPerFileUrl = await apiClient.CheckLinksAsync(fileUrls, cancellationToken);
+            var statusPerFileUrl = await apiClient.CheckLinksAsync(
+                config,
+                fileUrls,
+                cancellationToken
+            );
 
             return new FileExistResult(
                 IsSuccess: true,

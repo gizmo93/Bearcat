@@ -22,6 +22,7 @@ public interface IKeep2ShareApiClient
     );
 
     Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
+        Keep2ShareConfig config,
         IReadOnlyList<string> fileUrls,
         CancellationToken cancellationToken
     );

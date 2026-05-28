@@ -137,7 +137,7 @@ public class Keep2ShareTest
         };
 
         apiClientMock
-            .Setup(x => x.CheckLinksAsync(fileUrls, It.IsAny<CancellationToken>()))
+            .Setup(x => x.CheckLinksAsync(config, fileUrls, It.IsAny<CancellationToken>()))
             .ReturnsAsync(
                 new Dictionary<string, bool> { [fileUrls[0]] = true, [fileUrls[1]] = false }
             );
@@ -161,7 +161,7 @@ public class Keep2ShareTest
         var fileUrls = new[] { "http://k2s.cc/file/file-code" };
 
         apiClientMock
-            .Setup(x => x.CheckLinksAsync(fileUrls, It.IsAny<CancellationToken>()))
+            .Setup(x => x.CheckLinksAsync(config, fileUrls, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("keep2share unavailable"));
 
         // Act

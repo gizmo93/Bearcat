@@ -27,4 +27,10 @@ public interface IKeep2ShareApi
         [Body] FileStatusRequest request,
         CancellationToken cancellationToken
     );
+
+    [Post("/getFilesInfo")]
+    Task<GetFilesInfoResponse> GetFilesInfoAsync(
+        [Body] GetFilesInfoRequest request,
+        CancellationToken cancellationToken
+    );
 }
