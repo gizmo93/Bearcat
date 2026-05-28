@@ -10,6 +10,9 @@ public interface IKeep2ShareApi
         CancellationToken cancellationToken
     );
 
+    [Post("/requestReCaptcha")]
+    Task<CaptchaChallengeResponse> RequestReCaptchaAsync(CancellationToken cancellationToken);
+
     [Post("/accountInfo")]
     Task<AccountInfoResponse> GetAccountInfoAsync(
         [Body] AuthenticatedRequest request,

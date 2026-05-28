@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.Keep2Share;
 using Bearcat.Hosters.Keep2Share.Api;
 using Microsoft.Extensions.Logging;
@@ -122,6 +123,28 @@ public class Keep2ShareTest
                     It.IsAny<CancellationToken>()
                 ),
             Times.Never
+        );
+    }
+
+    [Test]
+    public async Task UploadFileAsync_CaptchaRequired_RethrowsWithoutRetrying()
+    {
+        // Arrange
+        var filePath = CreateTemporaryFile("upload-content");
+        var fileDto = new FileDto(Id: 19, FullFileName: filePath);
+        var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
+
+        apiClientMock
+            .Setup(x => x.RequestUploadAsync(config, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new CaptchaVerificationRequiredException("Captcha required", 400, 2));
+
+        // Act + Assert
+        await Should.ThrowAsync<CaptchaVerificationRequiredException>(
+            () => service.UploadFileAsync(fileDto, config, CancellationToken.None)
+        );
+        apiClientMock.Verify(
+            x => x.RequestUploadAsync(config, It.IsAny<CancellationToken>()),
+            Times.Once
         );
     }
 

@@ -1,4 +1,5 @@
 using System.Net;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.Keep2Share;
 using Bearcat.Hosters.Keep2Share.Api;
 using Bearcat.Hosters.Shared;
@@ -174,4 +175,49 @@ public class ApiClientTest
         calls.ShouldBe(2);
     }
 
+    [Test]
+    public async Task RequestUploadAsync_UploadFormReturnsCaptchaError_ThrowsCaptchaRequired()
+    {
+        // Arrange
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
+
+        apiMock
+            .Setup(x => x.LoginAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new LoginResponse
+                {
+                    Status = "success",
+                    Code = (int)HttpStatusCode.OK,
+                    AuthToken = "auth-token",
+                }
+            );
+
+        apiMock
+            .Setup(x =>
+                x.GetUploadFormDataAsync(
+                    It.IsAny<UploadFormDataRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new UploadFormDataResponse
+                {
+                    Status = "error",
+                    Code = (int)HttpStatusCode.BadRequest,
+                    ErrorCode = 2,
+                    Message = "Invalid request params",
+                }
+            );
+
+        // Act + Assert
+        var exception = await Should.ThrowAsync<CaptchaVerificationRequiredException>(
+            () => apiClient.RequestUploadAsync(config, CancellationToken.None)
+        );
+        exception.Code.ShouldBe((int)HttpStatusCode.BadRequest);
+        exception.ErrorCode.ShouldBe(2);
+    }
 }

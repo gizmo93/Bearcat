@@ -10,6 +10,8 @@ public class HosterRegistration : IContainSerializedConfig
 
     public bool IsActive { get; set; }
 
+    public bool RequiresCaptchaVerification { get; set; }
+
     public required string HosterClassName { get; set; }
 
     public List<UploadConfig> UploadConfigs { get; set; } = null!;

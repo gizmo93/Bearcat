@@ -127,9 +127,38 @@ public partial class AllHostersPage(
         if (result.IsSuccess)
         {
             toastService.Success(L["LoginSuccessful", hoster.Name]);
+            await LoadHostersAsync();
             return;
         }
 
         toastService.Error(L["LoginFailed", hoster.Name, result.ErrorMessage ?? string.Empty]);
+        await LoadHostersAsync();
+    }
+
+    private async Task ShowCaptchaDialogAsync(HosterRegistrationReadModel hoster)
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(CaptchaVerificationDialog.HosterRegistrationId)] = hoster.Id,
+            [nameof(CaptchaVerificationDialog.HosterRegistrationName)] = hoster.Name,
+        };
+
+        var dialog = await dialogService.OpenAsync<CaptchaVerificationDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["SolveCaptcha"],
+                Description = hoster.Name,
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (!dialog.Cancelled)
+        {
+            toastService.Success($"Captcha verification for {hoster.Name} completed.");
+            await LoadHostersAsync();
+        }
     }
 }

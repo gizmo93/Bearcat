@@ -3,6 +3,7 @@ using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
@@ -64,13 +65,19 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             .Setup(f => f.GetHostersByName())
             .Returns(new Dictionary<string, IHoster> { [HosterClassName] = hosterMock.Object });
 
+        var notificationService = new NotificationService(
+            new NotificationRepository(dbContext),
+            CreateTimeProvider()
+        );
+
         service = new UploadFilesService(
             new UploadFilesRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
             hosterFactoryMock.Object,
             new FileSystemService(),
             CreateTimeProvider(),
             Mock.Of<ILogger<UploadFilesService>>(),
-            new NotificationService(new NotificationRepository(dbContext), CreateTimeProvider())
+            notificationService,
+            new HosterCaptchaVerificationService(notificationService)
         )
         {
             UploadQueuePollDelay = TimeSpan.Zero,
@@ -919,13 +926,19 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
     {
         // Arrange
         var repository = new MissingCancellationUploadRepository();
+        var notificationService = new NotificationService(
+            new NotificationRepository(dbContext),
+            CreateTimeProvider()
+        );
+
         var serviceWithMissingUpload = new UploadFilesService(
             repository,
             hosterFactoryMock.Object,
             new FileSystemService(),
             CreateTimeProvider(),
             Mock.Of<ILogger<UploadFilesService>>(),
-            new NotificationService(new NotificationRepository(dbContext), CreateTimeProvider())
+            notificationService,
+            new HosterCaptchaVerificationService(notificationService)
         )
         {
             UploadQueuePollDelay = TimeSpan.Zero,

@@ -1,6 +1,8 @@
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 using Refit;
@@ -44,18 +46,64 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        var response = await api.LoginAsync(
-            new LoginRequest(config.EmailAddress, config.Password),
+        return await LoginAsync(
+            config,
+            null,
+            null,
+            throwOnCaptchaRequired: true,
+            cancellationToken
+        );
+    }
+
+    public async Task<CaptchaChallengeResult> RequestCaptchaChallengeAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await api.RequestReCaptchaAsync(cancellationToken);
+
+        if (
+            response.Status == "success"
+            && !string.IsNullOrWhiteSpace(response.Challenge)
+            && !string.IsNullOrWhiteSpace(response.CaptchaUrl)
+        )
+        {
+            return new CaptchaChallengeResult(
+                IsSuccess: true,
+                Challenge: response.Challenge,
+                CaptchaUrl: response.CaptchaUrl
+            );
+        }
+
+        return new CaptchaChallengeResult(
+            IsSuccess: false,
+            ErrorMessage: response.Message
+                ?? $"Keep2Share captcha challenge request failed with status={response.Status}, code={response.Code}, errorCode={response.ErrorCode?.ToString() ?? "null"}"
+        );
+    }
+
+    public async Task<TryLoginResult> VerifyCaptchaAsync(
+        Keep2ShareConfig config,
+        string challenge,
+        string response,
+        CancellationToken cancellationToken
+    )
+    {
+        var loginResponse = await LoginAsync(
+            config,
+            challenge,
+            response,
+            throwOnCaptchaRequired: false,
             cancellationToken
         );
 
-        if (response.Status == "success" && !string.IsNullOrWhiteSpace(response.AuthToken))
-        {
-            authToken = response.AuthToken;
-            lastAuthTime = DateTime.UtcNow;
-        }
-
-        return response;
+        return new TryLoginResult(
+            IsSuccess: loginResponse.Status == "success"
+                && loginResponse.Code == (int)HttpStatusCode.OK,
+            ErrorMessage: loginResponse.Status == "success"
+                ? null
+                : loginResponse.Message
+                    ?? $"Keep2Share login failed with status={loginResponse.Status}, code={loginResponse.Code}, errorCode={loginResponse.ErrorCode?.ToString() ?? "null"}"
+        );
     }
 
     public async Task<AccountInfoResponse> GetAccountInfoAsync(
@@ -73,10 +121,20 @@ public class ApiClient(
     )
     {
         var token = await GetAuthTokenAsync(config, cancellationToken);
-        var response = await api.GetUploadFormDataAsync(
-            new UploadFormDataRequest(token),
-            cancellationToken
-        );
+        UploadFormDataResponse response;
+
+        try
+        {
+            response = await api.GetUploadFormDataAsync(
+                new UploadFormDataRequest(token),
+                cancellationToken
+            );
+        }
+        catch (ApiException ex)
+        {
+            ThrowIfCaptchaVerificationRequired(ex);
+            throw;
+        }
 
         if (
             response.Status != "success"
@@ -84,6 +142,8 @@ public class ApiClient(
             || string.IsNullOrWhiteSpace(response.FileField)
         )
         {
+            ThrowIfCaptchaVerificationRequired(response.Code, response.ErrorCode, response.Message);
+
             throw new HttpRequestException(
                 response.Message
                     ?? $"Keep2Share upload form request failed with status {response.Status}"
@@ -159,6 +219,12 @@ public class ApiClient(
 
             if (response.Status != "success")
             {
+                ThrowIfCaptchaVerificationRequired(
+                    response.Code,
+                    response.ErrorCode,
+                    response.Message
+                );
+
                 throw new HttpRequestException(
                     $"Keep2Share files info request failed with status={response.Status}, code={response.Code}, errorCode={response.ErrorCode?.ToString() ?? "null"}, message={response.Message ?? "null"}"
                 );
@@ -203,6 +269,11 @@ public class ApiClient(
                     "Rate limited by Keep2Share API while checking file batch, waiting before retrying (Attempt {Attempt})",
                     attempt
                 );
+            }
+            catch (ApiException exception)
+            {
+                ThrowIfCaptchaVerificationRequired(exception);
+                throw;
             }
             catch (HttpRequestException exception)
                 when (exception.StatusCode == HttpStatusCode.TooManyRequests)
@@ -254,6 +325,132 @@ public class ApiClient(
         finally
         {
             authSemaphore.Release();
+        }
+    }
+
+    private async Task<LoginResponse> LoginAsync(
+        Keep2ShareConfig config,
+        string? reCaptchaChallenge,
+        string? reCaptchaResponse,
+        bool throwOnCaptchaRequired,
+        CancellationToken cancellationToken
+    )
+    {
+        LoginResponse? response = null;
+
+        try
+        {
+            response = await api.LoginAsync(
+                new LoginRequest(
+                    config.EmailAddress,
+                    config.Password,
+                    reCaptchaChallenge,
+                    reCaptchaResponse
+                ),
+                cancellationToken
+            );
+        }
+        catch (ApiException ex)
+            when (TryDeserializeLoginResponse(ex, out response)
+                || ex.StatusCode == HttpStatusCode.NotAcceptable
+            )
+        {
+            response ??= new LoginResponse
+            {
+                Status = "error",
+                Code = (int)ex.StatusCode,
+                Message = ex.Message,
+            };
+        }
+
+        if (response.Status == "success" && !string.IsNullOrWhiteSpace(response.AuthToken))
+        {
+            authToken = response.AuthToken;
+            lastAuthTime = DateTime.UtcNow;
+            return response;
+        }
+
+        if (
+            throwOnCaptchaRequired
+            && IsCaptchaVerificationRequired(response.Code, response.ErrorCode)
+        )
+        {
+            throw new CaptchaVerificationRequiredException(
+                response.Message ?? "Keep2Share requires captcha verification.",
+                response.Code,
+                response.ErrorCode
+            );
+        }
+
+        return response;
+    }
+
+    private static void ThrowIfCaptchaVerificationRequired(ApiException exception)
+    {
+        if (TryDeserializeLoginResponse(exception, out var response))
+        {
+            var code = response!.Code != 0 ? response.Code : (int)exception.StatusCode;
+
+            ThrowIfCaptchaVerificationRequired(code, response.ErrorCode, response.Message);
+            return;
+        }
+
+        if (exception.StatusCode == HttpStatusCode.NotAcceptable)
+        {
+            throw new CaptchaVerificationRequiredException(
+                "Keep2Share requires captcha verification.",
+                (int)exception.StatusCode
+            );
+        }
+    }
+
+    private static void ThrowIfCaptchaVerificationRequired(
+        int code,
+        int? errorCode,
+        string? message
+    )
+    {
+        if (!IsCaptchaVerificationRequired(code, errorCode))
+        {
+            return;
+        }
+
+        throw new CaptchaVerificationRequiredException(
+            message ?? "Keep2Share requires captcha verification.",
+            code,
+            errorCode
+        );
+    }
+
+    private static bool IsCaptchaVerificationRequired(int code, int? errorCode)
+    {
+        return code == (int)HttpStatusCode.NotAcceptable && errorCode is null or 33
+            || code == (int)HttpStatusCode.BadRequest && errorCode == 2;
+    }
+
+    private static bool TryDeserializeLoginResponse(
+        ApiException exception,
+        out LoginResponse? response
+    )
+    {
+        response = null;
+
+        if (string.IsNullOrWhiteSpace(exception.Content))
+        {
+            return false;
+        }
+
+        try
+        {
+            response = JsonSerializer.Deserialize<LoginResponse>(
+                exception.Content,
+                JsonSerializerOptions
+            );
+            return response is not null;
+        }
+        catch (JsonException)
+        {
+            return false;
         }
     }
 

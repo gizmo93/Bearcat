@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Keep2Share.Api;
@@ -9,7 +10,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.Keep2Share;
 
-public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logger) : IHoster
+public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logger)
+    : IHoster,
+        ISupportCaptchaVerification
 {
     private const int MaxParallelUploads = 10;
 
@@ -60,6 +63,11 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
             }
             catch (Exception ex)
             {
+                if (ex is CaptchaVerificationRequiredException)
+                {
+                    throw;
+                }
+
                 logger.LogError(
                     "Upload attempt {Attempt} failed for file {FileName}: {Message}",
                     attempt,
@@ -105,6 +113,11 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
         }
         catch (Exception ex)
         {
+            if (ex is CaptchaVerificationRequiredException)
+            {
+                throw;
+            }
+
             return new FileExistResult(
                 IsSuccess: false,
                 ErrorMessages: [ex.InnerException?.Message ?? ex.Message],
@@ -158,11 +171,40 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
         }
         catch (Exception ex)
         {
+            if (ex is CaptchaVerificationRequiredException)
+            {
+                throw;
+            }
+
             return new TryLoginResult(
                 IsSuccess: false,
                 ErrorMessage: ex.InnerException?.Message ?? ex.Message
             );
         }
+    }
+
+    public async Task<CaptchaChallengeResult> RequestCaptchaChallengeAsync(
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        return await apiClient.RequestCaptchaChallengeAsync(cancellationToken);
+    }
+
+    public async Task<TryLoginResult> VerifyCaptchaAsync(
+        IHosterConfig hosterConfig,
+        string challenge,
+        string response,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<Keep2ShareConfig>();
+        return await apiClient.VerifyCaptchaAsync(
+            config: config,
+            challenge: challenge,
+            response: response,
+            cancellationToken: cancellationToken
+        );
     }
 
     private async Task<UploadFileResponse> UploadFileInternalAsync(

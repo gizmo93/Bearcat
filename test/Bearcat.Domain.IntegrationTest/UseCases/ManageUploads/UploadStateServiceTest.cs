@@ -4,6 +4,7 @@ using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
@@ -882,12 +883,18 @@ public class UploadStateServiceTest : BearcatIntegrationTest
 
     private UploadStateService CreateService(int initialUploadCooldownMinutes = 5)
     {
+        var notificationService = new NotificationService(
+            new NotificationRepository(dbContext),
+            CreateTimeProvider()
+        );
+
         return new UploadStateService(
             new UploadStateRepository(dbContext),
             hosterFactoryMock.Object,
             CreateTimeProvider(),
             new TestApplicationConfigurationProvider(initialUploadCooldownMinutes),
-            new NotificationService(new NotificationRepository(dbContext), CreateTimeProvider()),
+            notificationService,
+            new HosterCaptchaVerificationService(notificationService),
             Mock.Of<ILogger<UploadStateService>>()
         );
     }

@@ -1,13 +1,16 @@
 ﻿using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 
 namespace Bearcat.Domain.UseCases.ManageHosters;
 
 public class HosterRegistrationService(
     IHosterConfigurationWriteRepository writeRepository,
-    IHosterFactory hosterFactory
+    IHosterFactory hosterFactory,
+    HosterCaptchaVerificationService captchaVerificationService
 )
 {
     public async Task<int> RegisterHosterAsync(
@@ -72,6 +75,102 @@ public class HosterRegistrationService(
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         var hoster = hosterFactory.GetByName(registration.HosterClassName);
         var config = hoster.DeserializeHosterConfig(registration.SerializedConfig);
-        return await hoster.TryLoginAsync(config, cancellationToken);
+
+        try
+        {
+            var result = await hoster.TryLoginAsync(config, cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                captchaVerificationService.Clear(registration, activate: false);
+                await writeRepository.SaveChangesAsync(cancellationToken);
+            }
+
+            return result;
+        }
+        catch (CaptchaVerificationRequiredException ex)
+        {
+            await MarkCaptchaVerificationRequiredAsync(registration, ex.Message, cancellationToken);
+
+            return new TryLoginResult(IsSuccess: false, ErrorMessage: ex.Message);
+        }
+    }
+
+    public async Task<CaptchaChallengeResult> RequestCaptchaChallengeAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
+        var (hoster, captchaHoster) = GetCaptchaHoster(registration);
+        var config = hoster.DeserializeHosterConfig(registration.SerializedConfig);
+
+        return await captchaHoster.RequestCaptchaChallengeAsync(config, cancellationToken);
+    }
+
+    public async Task<TryLoginResult> VerifyCaptchaAsync(
+        int id,
+        string challenge,
+        string response,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
+        var (hoster, captchaHoster) = GetCaptchaHoster(registration);
+        var config = hoster.DeserializeHosterConfig(registration.SerializedConfig);
+        var result = await captchaHoster.VerifyCaptchaAsync(
+            config,
+            challenge,
+            response,
+            cancellationToken
+        );
+
+        if (result.IsSuccess)
+        {
+            captchaVerificationService.Clear(registration, activate: true);
+            await writeRepository.SaveChangesAsync(cancellationToken);
+        }
+
+        return result;
+    }
+
+    public async Task MarkCaptchaVerificationRequiredAsync(
+        int id,
+        string message,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
+        await MarkCaptchaVerificationRequiredAsync(registration, message, cancellationToken);
+    }
+
+    private (IHoster Hoster, ISupportCaptchaVerification CaptchaHoster) GetCaptchaHoster(
+        HosterRegistration registration
+    )
+    {
+        var hoster = hosterFactory.GetByName(registration.HosterClassName);
+
+        var captchaHoster =
+            hoster as ISupportCaptchaVerification
+            ?? throw new InvalidOperationException(
+                $"Hoster {hoster.Name} does not support captcha verification."
+            );
+
+        return (hoster, captchaHoster);
+    }
+
+    private async Task MarkCaptchaVerificationRequiredAsync(
+        HosterRegistration registration,
+        string message,
+        CancellationToken cancellationToken
+    )
+    {
+        await captchaVerificationService.MarkRequiredAsync(
+            registration,
+            message,
+            cancellationToken
+        );
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
     }
 }

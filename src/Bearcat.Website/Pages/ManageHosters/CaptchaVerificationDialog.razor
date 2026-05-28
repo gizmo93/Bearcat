@@ -1,0 +1,53 @@
+@inherits OwningComponentBase
+
+<div class="bearcat-captcha-dialog">
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="bearcat-captcha-error">
+            @errorMessage
+        </div>
+    }
+
+    <div class="bearcat-captcha-actions">
+        <BbButton Variant="ButtonVariant.Outline"
+                  Size="ButtonSize.Small"
+                  Disabled="@isRequestingChallenge"
+                  OnClick="RequestChallengeAsync">
+            <LucideIcon Name="refresh-cw" class="h-4 w-4" />
+            @(isRequestingChallenge ? L["RequestingChallenge"] : L["RequestChallenge"])
+        </BbButton>
+
+        @if (!string.IsNullOrWhiteSpace(captchaUrl))
+        {
+            <a href="@captchaUrl"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="bearcat-captcha-link">
+                <LucideIcon Name="external-link" class="h-4 w-4" />
+                @L["OpenCaptchaPage"]
+            </a>
+        }
+    </div>
+
+    <div class="bearcat-captcha-field">
+        <label for="keep2share-captcha-challenge">Challenge</label>
+        <input id="keep2share-captcha-challenge"
+               value="@challenge"
+               readonly />
+    </div>
+
+    <div class="bearcat-captcha-field">
+        <label for="keep2share-captcha-response">@L["CaptchaCode"]</label>
+        <textarea id="keep2share-captcha-response"
+                  @bind="captchaResponse"></textarea>
+    </div>
+
+    <div class="bearcat-captcha-footer">
+        <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+            @L["Cancel"]
+        </BbButton>
+        <BbButton Disabled="@(!CanSubmit || isSubmitting)" OnClick="SubmitAsync">
+            @(isSubmitting ? L["VerifyingCaptcha"] : L["Unlock"])
+        </BbButton>
+    </div>
+</div>

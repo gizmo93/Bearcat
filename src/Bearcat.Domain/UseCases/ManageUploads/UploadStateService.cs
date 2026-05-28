@@ -1,5 +1,7 @@
 ﻿using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
@@ -16,6 +18,7 @@ public class UploadStateService(
     TimeProvider timeProvider,
     IApplicationConfigurationProvider configuration,
     INotificationService notificationService,
+    HosterCaptchaVerificationService captchaVerificationService,
     ILogger<UploadStateService> logger
 )
 {
@@ -204,11 +207,21 @@ public class UploadStateService(
             return;
         }
 
-        var result = await hoster.CheckFilesExistAsync(
-            hosterConfig: hosterConfig,
-            fileUrls: filesByUrl.Keys.ToList(),
-            cancellationToken: cancellationToken
-        );
+        FileExistResult result;
+
+        try
+        {
+            result = await hoster.CheckFilesExistAsync(
+                hosterConfig: hosterConfig,
+                fileUrls: filesByUrl.Keys.ToList(),
+                cancellationToken: cancellationToken
+            );
+        }
+        catch (CaptchaVerificationRequiredException ex)
+        {
+            captchaVerificationService.MarkRequired(upload, ex.Message);
+            return;
+        }
 
         if (!result.IsSuccess)
         {

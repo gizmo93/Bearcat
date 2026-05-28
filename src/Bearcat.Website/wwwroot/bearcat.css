@@ -521,6 +521,120 @@ a {
     min-height: 4rem;
 }
 
+.bearcat-hoster-login-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.bearcat-captcha-action-button {
+    width: auto !important;
+    min-width: 6.75rem;
+    padding-inline: 0.7rem !important;
+    justify-content: center;
+    gap: 0.4rem;
+    box-shadow: 0 0 0 1px color-mix(in oklch, var(--destructive) 28%, transparent),
+        0 0 18px color-mix(in oklch, var(--destructive) 24%, transparent);
+}
+
+.bearcat-captcha-action-button span {
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+
+.bearcat-captcha-dialog {
+    display: grid;
+    gap: 1rem;
+}
+
+.bearcat-captcha-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.bearcat-captcha-link {
+    display: inline-flex;
+    min-height: 2.25rem;
+    align-items: center;
+    gap: 0.45rem;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 0.125rem);
+    color: var(--foreground);
+    padding: 0.4rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.bearcat-captcha-link:hover {
+    background: var(--accent);
+}
+
+.bearcat-captcha-field {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.bearcat-captcha-field label {
+    color: var(--foreground);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.bearcat-captcha-field input,
+.bearcat-captcha-field textarea {
+    width: 100%;
+    border: 1px solid var(--input);
+    border-radius: calc(var(--radius) - 0.125rem);
+    background: var(--background);
+    color: var(--foreground);
+    padding: 0.55rem 0.75rem;
+    font: inherit;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    outline: none;
+}
+
+.bearcat-captcha-field input {
+    min-height: 2.5rem;
+}
+
+.bearcat-captcha-field input[readonly] {
+    color: var(--muted-foreground);
+}
+
+.bearcat-captcha-field textarea {
+    min-height: 7rem;
+    resize: vertical;
+}
+
+.bearcat-captcha-field :where(input, textarea):focus {
+    border-color: var(--ring);
+    box-shadow: 0 0 0 2px color-mix(in oklch, var(--ring) 22%, transparent);
+}
+
+.bearcat-captcha-error {
+    border: 1px solid color-mix(in oklch, var(--destructive) 42%, transparent);
+    border-radius: calc(var(--radius) - 0.125rem);
+    background: color-mix(in oklch, var(--destructive) 12%, transparent);
+    color: var(--destructive);
+    padding: 0.6rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.35;
+}
+
+.bearcat-captcha-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding-top: 0.25rem;
+}
+
 .bearcat-release-list-name {
     display: -webkit-box;
     overflow: hidden;

@@ -538,4 +538,13 @@
   <data name="ToggleTemplates" xml:space="preserve"><value>Toggle templates</value></data>
   <data name="ToggleVariables" xml:space="preserve"><value>Toggle variables</value></data>
   <data name="Validate" xml:space="preserve"><value>Validate</value></data>
+  <data name="CaptchaCode" xml:space="preserve"><value>Captcha code</value></data>
+  <data name="CaptchaRequired" xml:space="preserve"><value>Captcha required</value></data>
+  <data name="OpenCaptchaPage" xml:space="preserve"><value>Open captcha page</value></data>
+  <data name="RequestChallenge" xml:space="preserve"><value>Get challenge</value></data>
+  <data name="RequestingChallenge" xml:space="preserve"><value>Getting challenge...</value></data>
+  <data name="SolveCaptcha" xml:space="preserve"><value>Solve captcha</value></data>
+  <data name="SolveCaptchaShort" xml:space="preserve"><value>Captcha</value></data>
+  <data name="Unlock" xml:space="preserve"><value>Unlock</value></data>
+  <data name="VerifyingCaptcha" xml:space="preserve"><value>Verifying...</value></data>
 </root>

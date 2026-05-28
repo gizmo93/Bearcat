@@ -4,7 +4,13 @@ namespace Bearcat.Hosters.Keep2Share.Api;
 
 public record LoginRequest(
     [property: JsonPropertyName("username")] string Username,
-    [property: JsonPropertyName("password")] string Password
+    [property: JsonPropertyName("password")] string Password,
+    [property: JsonPropertyName("re_captcha_challenge")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        string? ReCaptchaChallenge = null,
+    [property: JsonPropertyName("re_captcha_response")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        string? ReCaptchaResponse = null
 );
 
 public record AuthenticatedRequest([property: JsonPropertyName("auth_token")] string AuthToken);

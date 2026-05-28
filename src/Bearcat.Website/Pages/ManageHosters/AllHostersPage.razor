@@ -42,11 +42,20 @@
                                Header="@L["Active"]"
                                Property="@(hoster => hoster.IsActive)"
                                Sortable="true"
-                               Width="110px">
+                               Width="150px">
                 <CellTemplate Context="hoster">
-                    <BbBadge Variant="@(hoster.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
-                        @(hoster.IsActive ? L["Active"] : L["Inactive"])
-                    </BbBadge>
+                    @if (hoster.RequiresCaptchaVerification)
+                    {
+                        <BbBadge Variant="BadgeVariant.Destructive">
+                            @L["CaptchaRequired"]
+                        </BbBadge>
+                    }
+                    else
+                    {
+                        <BbBadge Variant="@(hoster.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
+                            @(hoster.IsActive ? L["Active"] : L["Inactive"])
+                        </BbBadge>
+                    }
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"
@@ -98,11 +107,25 @@
             <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"
                                Header="@L["Login"]"
                                Property="@(hoster => hoster.Name)"
-                               Width="120px">
+                               Width="260px">
                 <CellTemplate Context="hoster">
-                    <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => TryLoginAsync(hoster))">
-                        @L["TryLogin"]
-                    </BbButton>
+                    <div class="bearcat-hoster-login-actions">
+                        <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => TryLoginAsync(hoster))">
+                            @L["TryLogin"]
+                        </BbButton>
+                        @if (hoster is { SupportsCaptchaVerification: true, RequiresCaptchaVerification: true })
+                        {
+                            <BbButton Class="bearcat-captcha-action-button"
+                                      Variant="ButtonVariant.Destructive"
+                                      Size="ButtonSize.IconSmall"
+                                      AriaLabel="@L["SolveCaptcha"]"
+                                      title="@L["SolveCaptcha"]"
+                                      OnClick="@(() => ShowCaptchaDialogAsync(hoster))">
+                                <LucideIcon Name="shield-alert" class="h-4 w-4" />
+                                <span>@L["SolveCaptchaShort"]</span>
+                            </BbButton>
+                        }
+                    </div>
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"

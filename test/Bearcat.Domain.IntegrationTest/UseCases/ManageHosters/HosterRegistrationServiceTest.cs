@@ -1,6 +1,8 @@
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -21,6 +23,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
     private Mock<IHoster> hosterMock = null!;
     private Mock<IHosterConfig> hosterConfigMock = null!;
     private Mock<IHosterFactory> hosterFactoryMock = null!;
+    private Mock<INotificationService> notificationServiceMock = null!;
     private HosterRegistrationService service = null!;
 
     [SetUp]
@@ -30,6 +33,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         hosterConfigMock = new Mock<IHosterConfig>(MockBehavior.Strict);
         hosterMock = new Mock<IHoster>(MockBehavior.Strict);
         hosterFactoryMock = new Mock<IHosterFactory>(MockBehavior.Strict);
+        notificationServiceMock = new Mock<INotificationService>(MockBehavior.Strict);
 
         hosterFactoryMock.Setup(f => f.GetByName(HosterClassName)).Returns(hosterMock.Object);
 
@@ -40,7 +44,41 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
                 hosterFactoryMock.Object,
                 NoOpSecretProtector.Instance
             ),
-            hosterFactoryMock.Object
+            hosterFactoryMock.Object,
+            new HosterCaptchaVerificationService(notificationServiceMock.Object)
+        );
+    }
+
+    [Test]
+    public async Task TryLoginAsync_CaptchaRequired_MarksRegistrationInactiveAndRequiresCaptcha()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync(isActive: true);
+        hosterMock
+            .Setup(h => h.DeserializeHosterConfig(SerializedConfig))
+            .Returns(hosterConfigMock.Object);
+        hosterMock
+            .Setup(h => h.TryLoginAsync(hosterConfigMock.Object, CancellationToken.None))
+            .ThrowsAsync(new CaptchaVerificationRequiredException("Captcha required", 400, 2));
+        notificationServiceMock
+            .Setup(n => n.CreateWarningAsync(It.IsAny<string>(), CancellationToken.None))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await service.TryLoginAsync(registration.Id, CancellationToken.None);
+
+        // Assert
+        var updatedRegistration = await dbContext.HosterRegistrations.SingleAsync();
+        result.IsSuccess.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe("Captcha required");
+        updatedRegistration.IsActive.ShouldBeFalse();
+        updatedRegistration.RequiresCaptchaVerification.ShouldBeTrue();
+        notificationServiceMock.Verify(
+            n => n.CreateWarningAsync(
+                It.Is<string>(message => message.Contains("Captcha required")),
+                CancellationToken.None
+            ),
+            Times.Once
         );
     }
 

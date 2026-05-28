@@ -28,15 +28,17 @@ public class HosterConfigurationRepository(
             .Select(h =>
             {
                 var serializedConfig = secretProtector.Unprotect(h.SerializedConfig);
+                var hoster = hostersByName[h.HosterClassName];
+
                 return new HosterRegistrationReadModel(
                     h.Id,
                     h.Name,
                     h.IsActive,
-                    hostersByName[h.HosterClassName].Name,
+                    h.RequiresCaptchaVerification,
+                    hoster is ISupportCaptchaVerification,
+                    hoster.Name,
                     h.HosterClassName,
-                    hostersByName[h.HosterClassName]
-                        .DeserializeHosterConfig(serializedConfig)
-                        .ToDictionary()
+                    hoster.DeserializeHosterConfig(serializedConfig).ToDictionary()
                 );
             })
             .ToList();

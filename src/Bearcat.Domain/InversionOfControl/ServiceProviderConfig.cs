@@ -46,6 +46,7 @@ public static class ServiceProviderConfig
             services.AddScoped<UploadStateService>();
             services.AddScoped<UploadStateService>();
             services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<HosterCaptchaVerificationService>();
             services.AddScoped<ArchiveConfigService>();
             services.AddScoped<TimeProvider>();
             services.AddScoped<UploadConfigService>();

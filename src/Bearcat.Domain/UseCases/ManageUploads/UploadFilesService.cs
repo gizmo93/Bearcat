@@ -2,6 +2,7 @@ using System.Threading.Channels;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
@@ -18,7 +19,8 @@ public class UploadFilesService(
     IFileSystemService fileSystemService,
     TimeProvider timeProvider,
     ILogger<UploadFilesService> logger,
-    INotificationService notificationService
+    INotificationService notificationService,
+    HosterCaptchaVerificationService captchaVerificationService
 )
 {
     private const int MaxParallelUploads = 10;
@@ -375,6 +377,24 @@ public class UploadFilesService(
         catch (OperationCanceledException) when (processCancellationToken.IsCancellationRequested)
         {
             throw;
+        }
+        catch (CaptchaVerificationRequiredException ex)
+        {
+            captchaVerificationService.MarkRequired(context.Upload, ex.Message);
+            context.RequestCancellation();
+
+            await resultWriter.WriteAsync(
+                new FileUploadCompleted(
+                    UploadId: fileToUpload.UploadId,
+                    ArchiveFileId: fileToUpload.ArchiveFileId,
+                    FullFileName: fileToUpload.FullFileName,
+                    FileUrl: null,
+                    IsSuccess: false,
+                    Errors: [ex.Message],
+                    WasCanceled: true
+                ),
+                processCancellationToken
+            );
         }
         catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
         {
