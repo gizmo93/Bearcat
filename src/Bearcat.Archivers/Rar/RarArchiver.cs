@@ -109,8 +109,9 @@ public class RarArchiver(ILogger<RarArchiver> logger, IConfiguration configurati
         var passwordPart = !string.IsNullOrWhiteSpace(password) ? $"-p{password}" : string.Empty;
         var compressionPart = options.UseCompression ? "-m1" : "-m0";
         var solidPart = options.UseSolidArchive ? "-s" : "-s-";
+        var sourceArchivePath = Path.TrimEndingDirectorySeparator(sourceFolderPath);
 
-        return $"a -ep1 {compressionPart} {solidPart} -v{targetFileSizeMb}m {passwordPart} \"{archiveFullPath}\" \"{sourceFolderPath}\"/*";
+        return $"a -ep1 {compressionPart} {solidPart} -v{targetFileSizeMb}m {passwordPart} \"{archiveFullPath}\" \"{sourceArchivePath}\"";
     }
 
     private string GetExecutablePath()

@@ -44,7 +44,7 @@ public class RarArchiverTest
 
         // Act
         var result = await service.ArchiveAsync(
-            sourceFolderPath,
+            sourceFolderPath + Path.DirectorySeparatorChar,
             destinationPath,
             "archive",
             1,
@@ -63,6 +63,40 @@ public class RarArchiverTest
         result.CreatedFileNames.ShouldAllBe(f => f.StartsWith(destinationPath));
         result.CreatedFileNames.ShouldAllBe(f => Path.GetFileName(f).StartsWith("archive"));
         result.CreatedFileNames.ShouldAllBe(f => f.EndsWith(".rar"));
+    }
+
+    [Test]
+    public async Task ArchiveAsync_SourceFolderContainsFiles_ExtractsIntoSourceFolderName()
+    {
+        // Arrange
+        const string fileName = "release.nfo";
+        await File.WriteAllTextAsync(Path.Combine(sourceFolderPath, fileName), "release");
+        var extractPath = Directory.CreateDirectory(Path.Combine(tempRootPath, "extract")).FullName;
+
+        var result = await service.ArchiveAsync(
+            sourceFolderPath + Path.DirectorySeparatorChar,
+            destinationPath,
+            "archive",
+            1,
+            null,
+            new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
+            CancellationToken.None
+        );
+
+        result.IsSuccess.ShouldBeTrue();
+
+        // Act
+        await ArchiveExtractionTestHelper.ExtractWithRarAsync(
+            result.CreatedFileNames.Order(StringComparer.Ordinal).First(),
+            extractPath
+        );
+
+        // Assert
+        ArchiveExtractionTestHelper.ExtractedFolderShouldMatchSourceFolder(
+            sourceFolderPath,
+            extractPath,
+            fileName
+        );
     }
 
     [Test]

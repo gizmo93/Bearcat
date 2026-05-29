@@ -66,10 +66,31 @@ public static class ArchiveExtractionTestHelper
         string extractPath
     )
     {
-        var extractedFilePath = Path.Combine(extractPath, Path.GetFileName(sourceFilePath));
+        var sourceFolderName = Path.GetFileName(Path.GetDirectoryName(sourceFilePath));
+        var extractedFilePath = Path.Combine(
+            extractPath,
+            sourceFolderName!,
+            Path.GetFileName(sourceFilePath)
+        );
 
         File.Exists(extractedFilePath).ShouldBeTrue();
         File.ReadAllBytes(extractedFilePath).ShouldBe(File.ReadAllBytes(sourceFilePath));
+    }
+
+    public static void ExtractedFolderShouldMatchSourceFolder(
+        string sourceFolderPath,
+        string extractPath,
+        string fileName
+    )
+    {
+        var sourceFolderName = Path.GetFileName(Path.TrimEndingDirectorySeparator(sourceFolderPath));
+        var extractedFolderPath = Path.Combine(extractPath, sourceFolderName);
+        var extractedFilePath = Path.Combine(extractedFolderPath, fileName);
+
+        Directory.Exists(extractedFolderPath).ShouldBeTrue();
+        File.Exists(extractedFilePath).ShouldBeTrue();
+        File.ReadAllText(extractedFilePath)
+            .ShouldBe(File.ReadAllText(Path.Combine(sourceFolderPath, fileName)));
     }
 
     private static async Task RunProcessAsync(

@@ -110,8 +110,9 @@ public class SevenZipArchiver(ILogger<SevenZipArchiver> logger, IConfiguration c
         var passwordPart = !string.IsNullOrWhiteSpace(password) ? $"-p{password}" : string.Empty;
         var compressionPart = options.UseCompression ? "-mx=1" : "-mx=0";
         var solidPart = options.UseSolidArchive ? "-ms=on" : "-ms=off";
+        var sourceArchivePath = Path.TrimEndingDirectorySeparator(sourceFolderPath);
 
-        return $"a -v{targetFileSizeMb}m {compressionPart} {solidPart} {passwordPart} \"{archiveFullPath}\" \"{sourceFolderPath}\"/*";
+        return $"a -v{targetFileSizeMb}m {compressionPart} {solidPart} {passwordPart} \"{archiveFullPath}\" \"{sourceArchivePath}\"";
     }
 
     private string GetExecutablePath()
