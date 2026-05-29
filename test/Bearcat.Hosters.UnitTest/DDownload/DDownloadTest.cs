@@ -38,7 +38,7 @@ public class DDownloadTest
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
-        var fileDto = new FileDto(Id: 17, FullFileName: filePath);
+        var fileDto = new FileDto(Id: 17, FullFileName: filePath, UploadId: 117);
         var config = new DDownloadConfig { ApiKey = "api-key" };
 
         apiClientMock
@@ -79,7 +79,7 @@ public class DDownloadTest
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
-        var fileDto = new FileDto(Id: 18, FullFileName: filePath);
+        var fileDto = new FileDto(Id: 18, FullFileName: filePath, UploadId: 118);
         var config = new DDownloadConfig { ApiKey = "api-key" };
 
         apiClientMock

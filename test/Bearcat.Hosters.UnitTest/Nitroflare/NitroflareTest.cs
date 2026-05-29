@@ -37,7 +37,7 @@ public class NitroflareTest
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
-        var fileDto = new FileDto(Id: 41, FullFileName: filePath);
+        var fileDto = new FileDto(Id: 41, FullFileName: filePath, UploadId: 141);
         var config = new NitroflareConfig { UserHash = "user-hash" };
 
         apiClientMock

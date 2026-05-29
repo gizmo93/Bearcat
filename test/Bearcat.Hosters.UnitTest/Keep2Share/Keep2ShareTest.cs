@@ -39,7 +39,7 @@ public class Keep2ShareTest
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
-        var fileDto = new FileDto(Id: 17, FullFileName: filePath);
+        var fileDto = new FileDto(Id: 17, FullFileName: filePath, UploadId: 117);
         var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
         var uploadFormData = new UploadFormDataResponse
         {
@@ -91,7 +91,7 @@ public class Keep2ShareTest
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
-        var fileDto = new FileDto(Id: 18, FullFileName: filePath);
+        var fileDto = new FileDto(Id: 18, FullFileName: filePath, UploadId: 118);
         var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
 
         apiClientMock
@@ -131,7 +131,7 @@ public class Keep2ShareTest
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
-        var fileDto = new FileDto(Id: 19, FullFileName: filePath);
+        var fileDto = new FileDto(Id: 19, FullFileName: filePath, UploadId: 119);
         var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
 
         apiClientMock

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Bearcat.Hosters.GoFile.Api.UploadFile;
+namespace Bearcat.Hosters.GoFile.Api.CreateFolder;
 
 public class Response
 {
@@ -14,8 +14,5 @@ public class Response
 public class Data
 {
     [JsonPropertyName("id")]
-    public string? Id { get; set; }
-
-    [JsonPropertyName("downloadPage")]
-    public string DownloadUrl { get; set; } = null!;
+    public string Id { get; set; } = null!;
 }

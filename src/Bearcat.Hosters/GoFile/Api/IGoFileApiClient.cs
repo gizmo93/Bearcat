@@ -10,6 +10,13 @@ public interface IGoFileApiClient
         string apiKey,
         Stream fileStream,
         string fileName,
+        string folderId,
+        CancellationToken cancellationToken
+    );
+
+    Task<string> CreateUploadFolderIdAsync(
+        string apiKey,
+        string folderName,
         CancellationToken cancellationToken
     );
 

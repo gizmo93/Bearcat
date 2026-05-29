@@ -1,3 +1,3 @@
 namespace Bearcat.Abstractions.Hoster.Dto;
 
-public record FileDto(int Id, string FullFileName);
+public record FileDto(int Id, string FullFileName, int UploadId);

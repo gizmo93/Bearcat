@@ -43,7 +43,7 @@ public class AlfafileTest
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
-        var fileDto = new FileDto(Id: 17, FullFileName: filePath);
+        var fileDto = new FileDto(Id: 17, FullFileName: filePath, UploadId: 117);
         var config = new AlfafileConfig { Username = "user@example.test", Password = "password" };
         var uploadRequest = CreateUploadResponse(
             uploadId: "upload-id",
@@ -94,7 +94,7 @@ public class AlfafileTest
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
-        var fileDto = new FileDto(Id: 18, FullFileName: filePath);
+        var fileDto = new FileDto(Id: 18, FullFileName: filePath, UploadId: 118);
         var config = new AlfafileConfig { Username = "user@example.test", Password = "password" };
         var failedRequest = new UploadFileResponse
         {

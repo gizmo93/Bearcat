@@ -41,7 +41,7 @@ public class FichierTest
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
-        var fileDto = new FileDto(Id: 31, FullFileName: filePath);
+        var fileDto = new FileDto(Id: 31, FullFileName: filePath, UploadId: 131);
         var config = new FichierConfig { ApiKey = "api-key" };
 
         apiClientMock
@@ -83,7 +83,7 @@ public class FichierTest
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
-        var fileDto = new FileDto(Id: 32, FullFileName: filePath);
+        var fileDto = new FileDto(Id: 32, FullFileName: filePath, UploadId: 132);
         var config = new FichierConfig { ApiKey = "api-key" };
 
         apiClientMock

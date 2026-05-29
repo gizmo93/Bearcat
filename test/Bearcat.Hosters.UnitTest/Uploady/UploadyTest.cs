@@ -38,7 +38,7 @@ public class UploadyTest
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
-        var fileDto = new FileDto(Id: 17, FullFileName: filePath);
+        var fileDto = new FileDto(Id: 17, FullFileName: filePath, UploadId: 117);
         var config = new UploadyConfig { ApiKey = "api-key" };
 
         apiClientMock

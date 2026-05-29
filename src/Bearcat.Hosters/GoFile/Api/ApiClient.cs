@@ -14,7 +14,17 @@ public class ApiClient(
     ILogger<ApiClient> logger
 ) : IGoFileApiClient
 {
+    public TimeSpan RateLimitRetryDelay { get; init; } = TimeSpan.FromSeconds(10);
+
+    public TimeSpan FileCheckTimeout { get; init; } = TimeSpan.FromSeconds(30);
+
     private const string UploadUrl = "https://upload.gofile.io/uploadfile";
+
+    private const int MaxParallelLinkChecks = 5;
+
+    private const int MaxLinkCheckAttempts = 3;
+
+    private const string WebsiteToken = "4fd6sg89d7s6";
 
     public async Task<Response> GetAccountAsync(
         string apiKey,
@@ -28,6 +38,7 @@ public class ApiClient(
         string apiKey,
         Stream fileStream,
         string fileName,
+        string folderId,
         CancellationToken cancellationToken
     )
     {
@@ -38,7 +49,11 @@ public class ApiClient(
 
         var fileContent = new StreamContent(fileStream);
 
-        var multipartContent = new MultipartFormDataContent { { fileContent, "file", fileName } };
+        var multipartContent = new MultipartFormDataContent
+        {
+            { fileContent, "file", fileName },
+            { new StringContent(folderId), "folderId" },
+        };
 
         request.Content = multipartContent;
 
@@ -50,6 +65,60 @@ public class ApiClient(
         return JsonSerializer.Deserialize<UploadFile.Response>(responseContent)!;
     }
 
+    public async Task<string> CreateUploadFolderIdAsync(
+        string apiKey,
+        string folderName,
+        CancellationToken cancellationToken
+    )
+    {
+        var apiToken = GetAuthorizationHeader(apiKey);
+        var account = await api.GetAccountAsync(apiToken, cancellationToken);
+
+        if (
+            !string.Equals(account.Status, "ok", StringComparison.OrdinalIgnoreCase)
+            || string.IsNullOrWhiteSpace(account.Data?.Id)
+        )
+        {
+            throw new HttpRequestException(
+                $"GoFile account lookup failed with status {account.Status}"
+            );
+        }
+
+        var accountInfos = await api.GetAccountInfosAsync(
+            account.Data.Id,
+            apiToken,
+            cancellationToken
+        );
+
+        if (
+            !string.Equals(accountInfos.Status, "ok", StringComparison.OrdinalIgnoreCase)
+            || string.IsNullOrWhiteSpace(accountInfos.Data?.RootFolder)
+        )
+        {
+            throw new HttpRequestException(
+                $"GoFile account info lookup failed with status {accountInfos.Status}"
+            );
+        }
+
+        var folder = await api.CreateFolderAsync(
+            apiToken,
+            new CreateFolder.Request(accountInfos.Data.RootFolder, folderName),
+            cancellationToken
+        );
+
+        if (
+            !string.Equals(folder.Status, "ok", StringComparison.OrdinalIgnoreCase)
+            || string.IsNullOrWhiteSpace(folder.Data?.Id)
+        )
+        {
+            throw new HttpRequestException(
+                $"GoFile folder creation failed with status {folder.Status}"
+            );
+        }
+
+        return folder.Data.Id;
+    }
+
     public async Task<
         IReadOnlyDictionary<string, (bool IsOnline, string? ErrorMessage)>
     > CheckOnlineStatusAsync(
@@ -58,11 +127,12 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        using var semaphore = new SemaphoreSlim(3);
+        using var semaphore = new SemaphoreSlim(MaxParallelLinkChecks);
 
         var apiToken = GetAuthorizationHeader(apiKey);
 
         var checkOnlineStatusTasks = fileUrls
+            .Distinct()
             .Select(fileUrl =>
                 CheckFileOnlineStatusAsync(
                     fileUrl: fileUrl,
@@ -94,22 +164,51 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        foreach (var attempt in Enumerable.Range(1, 3))
+        var fileId = TryExtractFileId(fileUrl);
+
+        if (fileId is null)
+        {
+            return (fileUrl, IsOnline: false, ErrorMessage: "Invalid GoFile URL");
+        }
+
+        foreach (var attempt in Enumerable.Range(1, MaxLinkCheckAttempts))
         {
             await semaphore.WaitAsync(cancellationToken);
 
             try
             {
-                var fileId = fileUrl.Split("/").Last();
-                var response = await api.GetOnlineStatusAsync(
+                using var timeoutCancellationTokenSource =
+                    CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                timeoutCancellationTokenSource.CancelAfter(FileCheckTimeout);
+
+                var response = await api.GetFileInfoAsync(
                     fileId: fileId,
                     apiToken: apiToken,
-                    cancellationToken: cancellationToken
+                    websiteToken: WebsiteToken,
+                    cancellationToken: timeoutCancellationTokenSource.Token
                 );
 
-                var isOnline = response.Status != "error-notFound";
+                var isOnline =
+                    string.Equals(response.Status, "ok", StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(
+                        response.Data?.Type,
+                        "file",
+                        StringComparison.OrdinalIgnoreCase
+                    );
 
                 return (fileUrl, isOnline, null);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                return (
+                    FileUrl: fileUrl,
+                    IsOnline: false,
+                    ErrorMessage: $"GoFile file check timed out after {FormatTimeout(FileCheckTimeout)}"
+                );
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (ApiException exception)
                 when (exception.StatusCode == HttpStatusCode.Unauthorized)
@@ -134,10 +233,10 @@ public class ApiClient(
                 when (exception.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 logger.LogInformation(
-                    "Rate limited by GoFile API, waiting 5 seconds before retrying (Attempt {Attempt})",
+                    "Rate limited by GoFile API while checking {FileUrl}, waiting before retrying (Attempt {Attempt})",
+                    fileUrl,
                     attempt
                 );
-                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
             }
             catch (Exception exception)
             {
@@ -151,13 +250,34 @@ public class ApiClient(
             {
                 semaphore.Release();
             }
+
+            if (attempt < MaxLinkCheckAttempts)
+            {
+                await Task.Delay(RateLimitRetryDelay, cancellationToken);
+            }
         }
 
         return (fileUrl, IsOnline: false, ErrorMessage: "Max retry attempts reached");
     }
 
+    private static string? TryExtractFileId(string fileUrl)
+    {
+        var fileId = fileUrl
+            .Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .LastOrDefault();
+
+        return string.IsNullOrWhiteSpace(fileId) ? null : fileId;
+    }
+
     private static string GetAuthorizationHeader(string apiToken)
     {
         return $"Bearer {apiToken}";
+    }
+
+    private static string FormatTimeout(TimeSpan timeout)
+    {
+        return timeout.TotalSeconds >= 1
+            ? $"{timeout.TotalSeconds:0} seconds"
+            : $"{timeout.TotalMilliseconds:0} milliseconds";
     }
 }

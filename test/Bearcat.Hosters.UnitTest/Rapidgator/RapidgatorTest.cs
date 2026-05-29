@@ -48,7 +48,7 @@ public class RapidgatorTest
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
-        var fileDto = new FileDto(Id: 42, FullFileName: filePath);
+        var fileDto = new FileDto(Id: 42, FullFileName: filePath, UploadId: 142);
         var config = new RapidgatorConfig { Username = "user", Password = "password" };
 
         apiClientMock
@@ -136,7 +136,7 @@ public class RapidgatorTest
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
-        var fileDto = new FileDto(Id: 43, FullFileName: filePath);
+        var fileDto = new FileDto(Id: 43, FullFileName: filePath, UploadId: 143);
         var config = new RapidgatorConfig { Username = "user", Password = "password" };
 
         apiClientMock

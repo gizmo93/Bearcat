@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Bearcat.Hosters.GoFile.Api.UploadFile;
+namespace Bearcat.Hosters.GoFile.Api.GetFileInfo;
 
 public class Response
 {
@@ -14,8 +14,8 @@ public class Response
 public class Data
 {
     [JsonPropertyName("id")]
-    public string? Id { get; set; }
+    public string Id { get; set; } = null!;
 
-    [JsonPropertyName("downloadPage")]
-    public string DownloadUrl { get; set; } = null!;
+    [JsonPropertyName("type")]
+    public string Type { get; set; } = null!;
 }

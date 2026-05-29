@@ -18,10 +18,18 @@ public interface IGoFileApi
         CancellationToken cancellationToken = default
     );
 
-    [Get("/contents/{fileId}?contentFilter=&page=1&pageSize=10&sortField=name&sortDirection=1")]
-    Task<GetOnlineStatus.Response> GetOnlineStatusAsync(
+    [Post("/contents/createFolder")]
+    Task<CreateFolder.Response> CreateFolderAsync(
+        [Header("Authorization")] string apiToken,
+        [Body] CreateFolder.Request request,
+        CancellationToken cancellationToken = default
+    );
+
+    [Get("/contents/{fileId}")]
+    Task<GetFileInfo.Response> GetFileInfoAsync(
         string fileId,
         [Header("Authorization")] string apiToken,
+        [Header("X-Website-Token")] string websiteToken,
         CancellationToken cancellationToken = default
     );
 }

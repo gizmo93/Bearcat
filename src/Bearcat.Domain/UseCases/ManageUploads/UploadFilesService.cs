@@ -353,7 +353,8 @@ public class UploadFilesService(
         {
             var fileDto = new FileDto(
                 Id: fileToUpload.ArchiveFileId,
-                FullFileName: fileToUpload.FullFileName
+                FullFileName: fileToUpload.FullFileName,
+                UploadId: fileToUpload.UploadId
             );
 
             var result = await fileToUpload.Hoster.UploadFileAsync(
