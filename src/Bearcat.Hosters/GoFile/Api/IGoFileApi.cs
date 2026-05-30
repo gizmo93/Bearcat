@@ -25,6 +25,16 @@ public interface IGoFileApi
         CancellationToken cancellationToken = default
     );
 
+    [Get("/contents/{folderId}")]
+    Task<GetContent.Response> GetContentAsync(
+        string folderId,
+        [Header("Authorization")] string apiToken,
+        [Query] string? contentFilter = null,
+        [Query] string? sortField = null,
+        [Query] int? sortDirection = null,
+        CancellationToken cancellationToken = default
+    );
+
     [Get("/contents/{fileId}")]
     Task<GetFileInfo.Response> GetFileInfoAsync(
         string fileId,

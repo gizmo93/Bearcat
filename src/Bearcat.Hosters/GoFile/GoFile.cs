@@ -1,6 +1,4 @@
-using System.Collections.Concurrent;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
@@ -10,17 +8,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.GoFile;
 
-public partial class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) : IHoster
+public class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) : IHosterWithFolders
 {
     public string Name => "GoFile";
 
     public IReadOnlyList<string> ConfigurationKeys => [nameof(GoFileConfig.ApiKey)];
 
     public TimeSpan UploadRetryDelay { get; set; } = TimeSpan.FromSeconds(30);
-
-    private readonly ConcurrentDictionary<string, string> uploadFolderIds = new();
-
-    private readonly ConcurrentDictionary<string, SemaphoreSlim> uploadFolderLocks = new();
 
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
@@ -32,8 +26,16 @@ public partial class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) 
 
         var error = string.Empty;
         var fileName = Path.GetFileName(fileDto.FullFileName);
-        var uploadFolderName = GetUploadFolderName(fileName);
-        var uploadFolderKey = GetUploadFolderKey(fileDto);
+
+        if (string.IsNullOrWhiteSpace(fileDto.FolderId))
+        {
+            return new UploadFileResult(
+                IsSuccess: false,
+                FileDto: fileDto,
+                ErrorMessages: ["GoFile upload requires a folder id"],
+                FileUrl: null
+            );
+        }
 
         foreach (var attempt in Enumerable.Range(1, 3))
         {
@@ -45,19 +47,12 @@ public partial class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) 
                     attempt
                 );
 
-                var folderId = await GetOrCreateUploadFolderIdAsync(
-                    apiKey: config.ApiKey,
-                    folderKey: uploadFolderKey,
-                    folderName: uploadFolderName,
-                    cancellationToken: cancellationToken
-                );
-
                 await using var stream = File.OpenRead(fileDto.FullFileName);
                 var response = await apiClient.UploadFileAsync(
                     apiKey: config.ApiKey,
                     fileStream: stream,
                     fileName: fileName,
-                    folderId: folderId,
+                    folderId: fileDto.FolderId,
                     cancellationToken: cancellationToken
                 );
 
@@ -129,6 +124,21 @@ public partial class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) 
         );
     }
 
+    public async Task<string> CreateFolderAsync(
+        string folderName,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<GoFileConfig>();
+
+        return await apiClient.CreateUploadFolderIdAsync(
+            apiKey: config.ApiKey,
+            folderName: folderName,
+            cancellationToken: cancellationToken
+        );
+    }
+
     public IHosterConfig DeserializeHosterConfig(string serializedConfig)
     {
         return JsonSerializer.Deserialize<GoFileConfig>(serializedConfig)!;
@@ -173,74 +183,6 @@ public partial class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) 
             );
         }
     }
-
-    private async Task<string> GetOrCreateUploadFolderIdAsync(
-        string apiKey,
-        string folderKey,
-        string folderName,
-        CancellationToken cancellationToken
-    )
-    {
-        var cacheKey = $"{apiKey}|{folderKey}";
-
-        if (uploadFolderIds.TryGetValue(cacheKey, out var cachedFolderId))
-        {
-            return cachedFolderId;
-        }
-
-        var folderLock = uploadFolderLocks.GetOrAdd(cacheKey, _ => new SemaphoreSlim(1, 1));
-
-        await folderLock.WaitAsync(cancellationToken);
-
-        try
-        {
-            if (uploadFolderIds.TryGetValue(cacheKey, out cachedFolderId))
-            {
-                return cachedFolderId;
-            }
-
-            var folderId = await apiClient.CreateUploadFolderIdAsync(
-                apiKey: apiKey,
-                folderName: folderName,
-                cancellationToken: cancellationToken
-            );
-
-            uploadFolderIds[cacheKey] = folderId;
-
-            return folderId;
-        }
-        finally
-        {
-            folderLock.Release();
-        }
-    }
-
-    private static string GetUploadFolderKey(FileDto fileDto)
-    {
-        return fileDto.UploadId.ToString();
-    }
-
-    private static string GetUploadFolderName(string fileName)
-    {
-        var rarMatch = RarPartFileNameRegex().Match(fileName);
-
-        if (rarMatch.Success)
-        {
-            return rarMatch.Groups["base"].Value;
-        }
-
-        var sevenZipMatch = SevenZipPartFileNameRegex().Match(fileName);
-
-        return sevenZipMatch.Success
-            ? sevenZipMatch.Groups["base"].Value
-            : Path.GetFileNameWithoutExtension(fileName);
-    }
-
-    [GeneratedRegex(@"^(?<base>.+)\.part\d+\.rar$", RegexOptions.IgnoreCase)]
-    private static partial Regex RarPartFileNameRegex();
-
-    [GeneratedRegex(@"^(?<base>.+)\.7z\.\d+$", RegexOptions.IgnoreCase)]
-    private static partial Regex SevenZipPartFileNameRegex();
 
     private static string GetFileUrl(Api.UploadFile.Data data)
     {

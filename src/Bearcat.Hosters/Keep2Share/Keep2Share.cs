@@ -11,8 +11,7 @@ using Microsoft.Extensions.Logging;
 namespace Bearcat.Hosters.Keep2Share;
 
 public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logger)
-    : IHoster,
-        ISupportCaptchaVerification
+    : IHosterWithCaptchaVerification
 {
     private const int MaxParallelUploads = 10;
 

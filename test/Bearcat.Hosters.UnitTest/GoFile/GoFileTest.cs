@@ -40,18 +40,13 @@ public class GoFileTest
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content", "release.part01.rar");
-        var fileDto = new FileDto(Id: 23, FullFileName: filePath, UploadId: 42);
+        var fileDto = new FileDto(
+            Id: 23,
+            FullFileName: filePath,
+            UploadId: 42,
+            FolderId: "folder-id"
+        );
         var config = new GoFileConfig { ApiKey = "api-key" };
-
-        apiClientMock
-            .Setup(x =>
-                x.CreateUploadFolderIdAsync(
-                    "api-key",
-                    "release",
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync("folder-id");
 
         apiClientMock
             .Setup(x =>
@@ -86,114 +81,47 @@ public class GoFileTest
     }
 
     [Test]
-    public async Task UploadFileAsync_SevenZipPart_UsesBaseArchiveNameForFolder()
+    public async Task CreateFolderAsync_Config_CreatesFolderWithApiKey()
     {
         // Arrange
-        var filePath = CreateTemporaryFile("upload-content", "large_file.txt.7z.001");
-        var fileDto = new FileDto(Id: 25, FullFileName: filePath, UploadId: 43);
         var config = new GoFileConfig { ApiKey = "api-key" };
 
         apiClientMock
             .Setup(x =>
                 x.CreateUploadFolderIdAsync(
                     "api-key",
-                    "large_file.txt",
+                    "release_upload",
                     It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync("folder-id");
 
-        apiClientMock
-            .Setup(x =>
-                x.UploadFileAsync(
-                    "api-key",
-                    It.IsAny<Stream>(),
-                    Path.GetFileName(filePath),
-                    "folder-id",
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                new UploadFileResponse
-                {
-                    Status = "ok",
-                    Data = new UploadFileData
-                    {
-                        Id = "file-id",
-                        DownloadUrl = "https://gofile.io/d/folder-id",
-                    },
-                }
-            );
+        // Act
+        var result = await service.CreateFolderAsync(
+            "release_upload",
+            config,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("folder-id");
+    }
+
+    [Test]
+    public async Task UploadFileAsync_MissingFolderId_ReturnsFailureWithoutApiCall()
+    {
+        // Arrange
+        var filePath = CreateTemporaryFile("upload-content", "release.part01.rar");
+        var fileDto = new FileDto(Id: 26, FullFileName: filePath, UploadId: 44);
+        var config = new GoFileConfig { ApiKey = "api-key" };
 
         // Act
         var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
 
         // Assert
-        result.IsSuccess.ShouldBeTrue();
-    }
-
-    [Test]
-    public async Task UploadFileAsync_SameUploadId_ReusesCreatedFolder()
-    {
-        // Arrange
-        var firstFilePath = CreateTemporaryFile("first", "release.part01.rar");
-        var secondFilePath = CreateTemporaryFile("second", "release.part02.rar");
-        var config = new GoFileConfig { ApiKey = "api-key" };
-
-        apiClientMock
-            .Setup(x =>
-                x.CreateUploadFolderIdAsync(
-                    "api-key",
-                    "release",
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync("folder-id");
-
-        apiClientMock
-            .Setup(x =>
-                x.UploadFileAsync(
-                    "api-key",
-                    It.IsAny<Stream>(),
-                    It.IsAny<string>(),
-                    "folder-id",
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                new UploadFileResponse
-                {
-                    Status = "ok",
-                    Data = new UploadFileData
-                    {
-                        Id = "file-id",
-                        DownloadUrl = "https://gofile.io/d/folder-id",
-                    },
-                }
-            );
-
-        // Act
-        await service.UploadFileAsync(
-            new FileDto(Id: 26, FullFileName: firstFilePath, UploadId: 44),
-            config,
-            CancellationToken.None
-        );
-        await service.UploadFileAsync(
-            new FileDto(Id: 27, FullFileName: secondFilePath, UploadId: 44),
-            config,
-            CancellationToken.None
-        );
-
-        // Assert
-        apiClientMock.Verify(
-            x =>
-                x.CreateUploadFolderIdAsync(
-                    "api-key",
-                    "release",
-                    It.IsAny<CancellationToken>()
-                ),
-            Times.Once
-        );
+        result.IsSuccess.ShouldBeFalse();
+        result.ErrorMessages.ShouldBe(["GoFile upload requires a folder id"]);
+        apiClientMock.VerifyNoOtherCalls();
     }
 
     [Test]
@@ -201,18 +129,13 @@ public class GoFileTest
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content", "release.part01.rar");
-        var fileDto = new FileDto(Id: 24, FullFileName: filePath, UploadId: 45);
+        var fileDto = new FileDto(
+            Id: 24,
+            FullFileName: filePath,
+            UploadId: 45,
+            FolderId: "folder-id"
+        );
         var config = new GoFileConfig { ApiKey = "api-key" };
-
-        apiClientMock
-            .Setup(x =>
-                x.CreateUploadFolderIdAsync(
-                    "api-key",
-                    "release",
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync("folder-id");
 
         apiClientMock
             .Setup(x =>

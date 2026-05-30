@@ -100,6 +100,18 @@ public class ApiClient(
             );
         }
 
+        var existingFolderId = await GetExistingRootFolderIdAsync(
+            rootFolderId: accountInfos.Data.RootFolder,
+            folderName: folderName,
+            apiToken: apiToken,
+            cancellationToken: cancellationToken
+        );
+
+        if (existingFolderId is not null)
+        {
+            return existingFolderId;
+        }
+
         var folder = await api.CreateFolderAsync(
             apiToken,
             new CreateFolder.Request(accountInfos.Data.RootFolder, folderName),
@@ -117,6 +129,37 @@ public class ApiClient(
         }
 
         return folder.Data.Id;
+    }
+
+    private async Task<string?> GetExistingRootFolderIdAsync(
+        string rootFolderId,
+        string folderName,
+        string apiToken,
+        CancellationToken cancellationToken
+    )
+    {
+        var rootFolder = await api.GetContentAsync(
+            folderId: rootFolderId,
+            apiToken: apiToken,
+            contentFilter: folderName,
+            sortField: "createTime",
+            sortDirection: 1,
+            cancellationToken: cancellationToken
+        );
+
+        if (!string.Equals(rootFolder.Status, "ok", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new HttpRequestException(
+                $"GoFile root folder lookup failed with status {rootFolder.Status}"
+            );
+        }
+
+        return rootFolder
+            .Data?.Children.Values.FirstOrDefault(content =>
+                string.Equals(content.Type, "folder", StringComparison.OrdinalIgnoreCase)
+                && string.Equals(content.Name, folderName, StringComparison.Ordinal)
+            )
+            ?.Id;
     }
 
     public async Task<

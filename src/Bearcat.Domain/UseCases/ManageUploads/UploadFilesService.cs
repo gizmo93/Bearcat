@@ -184,7 +184,7 @@ public class UploadFilesService(
                 hosterConfigsByRegistrationId[upload.UploadConfig.HosterRegistrationId]
             );
 
-            var context = CreateUploadContext(
+            var context = await CreateUploadContextAsync(
                 upload: upload,
                 hoster: hoster,
                 hosterConfig: hosterConfig,
@@ -210,7 +210,7 @@ public class UploadFilesService(
         await repository.SaveChangesAsync(cancellationToken);
     }
 
-    private static UploadExecutionContext CreateUploadContext(
+    private static async Task<UploadExecutionContext> CreateUploadContextAsync(
         Upload upload,
         IHoster hoster,
         IHosterConfig hosterConfig,
@@ -225,9 +225,21 @@ public class UploadFilesService(
         var successfulFileCount = upload.UploadedFiles.Count(uf => uf.ErrorMessages.Count == 0);
         var failedFileCount = upload.UploadedFiles.Count(uf => uf.ErrorMessages.Count > 0);
 
+        var archiveFilesToUpload = upload
+            .Archive!.ArchiveFiles.Where(af => !processedArchiveFileIds.Contains(af.Id))
+            .ToList();
+
+        var folderId = await CreateUploadFolderIdAsync(
+            upload: upload,
+            hoster: hoster,
+            hosterConfig: hosterConfig,
+            hasFilesToUpload: archiveFilesToUpload.Count > 0,
+            cancellationToken: cancellationToken
+        );
+
         var context = new UploadExecutionContext(
             upload: upload,
-            totalFileCount: upload.Archive!.ArchiveFiles.Count,
+            totalFileCount: upload.Archive.ArchiveFiles.Count,
             successfulFileCount: successfulFileCount,
             failedFileCount: failedFileCount,
             cancellationTokenSource: CancellationTokenSource.CreateLinkedTokenSource(
@@ -235,17 +247,14 @@ public class UploadFilesService(
             )
         );
 
-        foreach (
-            var archiveFile in upload.Archive.ArchiveFiles.Where(af =>
-                !processedArchiveFileIds.Contains(af.Id)
-            )
-        )
+        foreach (var archiveFile in archiveFilesToUpload)
         {
             context.PendingFiles.Enqueue(
                 new FileToUpload(
                     UploadId: upload.Id,
                     ArchiveFileId: archiveFile.Id,
                     FullFileName: archiveFile.FullFileName,
+                    FolderId: folderId,
                     HosterClassName: hosterClassName,
                     Hoster: hoster,
                     HosterConfig: hosterConfig
@@ -254,6 +263,24 @@ public class UploadFilesService(
         }
 
         return context;
+    }
+
+    private static async Task<string?> CreateUploadFolderIdAsync(
+        Upload upload,
+        IHoster hoster,
+        IHosterConfig hosterConfig,
+        bool hasFilesToUpload,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!hasFilesToUpload || hoster is not IHosterWithFolders folderHoster)
+        {
+            return null;
+        }
+
+        var folderName = $"{upload.UploadConfig.Release.Name}_UploadId_{upload.Id}";
+
+        return await folderHoster.CreateFolderAsync(folderName, hosterConfig, cancellationToken);
     }
 
     private async Task ScheduleAvailableFileUploadsAsync(
@@ -354,7 +381,8 @@ public class UploadFilesService(
             var fileDto = new FileDto(
                 Id: fileToUpload.ArchiveFileId,
                 FullFileName: fileToUpload.FullFileName,
-                UploadId: fileToUpload.UploadId
+                UploadId: fileToUpload.UploadId,
+                FolderId: fileToUpload.FolderId
             );
 
             var result = await fileToUpload.Hoster.UploadFileAsync(

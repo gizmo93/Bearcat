@@ -28,6 +28,8 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
     private const string HosterClassName = "TestHoster";
     private const string SerializedHosterConfig = "{\"apiKey\":\"test\"}";
 
+    public interface IFolderHoster : IHosterWithFolders { }
+
     private BearcatDbContext dbContext = null!;
     private Mock<IHoster> hosterMock = null!;
     private Mock<IHosterConfig> hosterConfigMock = null!;
@@ -155,6 +157,93 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Info);
         result.Notifications.Single().Message.ShouldBe("All files uploaded successfully");
         VerifyUploadPipelineCalled(archiveFilePath);
+    }
+
+    [Test]
+    public async Task ProcessAsync_HosterSupportsFolders_CreatesOneFolderAndPassesFolderIdToFiles()
+    {
+        // Arrange
+        var firstArchiveFilePath = CreateArchiveFile("archive.part1.rar");
+        var secondArchiveFilePath = CreateArchiveFile("archive.part2.rar");
+        var upload = await AddUploadAsync(
+            UploadState.Pending,
+            [firstArchiveFilePath, secondArchiveFilePath]
+        );
+        var folderHosterMock = new Mock<IFolderHoster>(MockBehavior.Strict);
+
+        folderHosterMock
+            .Setup(h => h.DeserializeHosterConfig(SerializedHosterConfig))
+            .Returns(hosterConfigMock.Object);
+        folderHosterMock
+            .Setup(h =>
+                h.GetMaximumParallelUploadsAsync(hosterConfigMock.Object, CancellationToken.None)
+            )
+            .ReturnsAsync(2);
+        folderHosterMock
+            .Setup(h =>
+                h.CreateFolderAsync(
+                    $"Bearcat.Release.001_UploadId_{upload.Id}",
+                    hosterConfigMock.Object,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync("folder-id");
+        folderHosterMock
+            .Setup(h =>
+                h.UploadFileAsync(
+                    It.Is<FileDto>(f =>
+                        (
+                            f.FullFileName == firstArchiveFilePath
+                            || f.FullFileName == secondArchiveFilePath
+                        ) && f.FolderId == "folder-id"
+                    ),
+                    hosterConfigMock.Object,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
+                    new UploadFileResult(
+                        true,
+                        fileDto,
+                        [],
+                        $"https://hoster.test/{Path.GetFileName(fileDto.FullFileName)}"
+                    )
+            );
+
+        hosterFactoryMock
+            .Setup(f => f.GetHostersByName())
+            .Returns(
+                new Dictionary<string, IHoster> { [HosterClassName] = folderHosterMock.Object }
+            );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+
+        result.UploadState.ShouldBe(UploadState.Completed);
+        result.UploadedFiles.Count.ShouldBe(2);
+        folderHosterMock.Verify(
+            h =>
+                h.CreateFolderAsync(
+                    $"Bearcat.Release.001_UploadId_{upload.Id}",
+                    hosterConfigMock.Object,
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+        folderHosterMock.Verify(
+            h =>
+                h.UploadFileAsync(
+                    It.Is<FileDto>(f => f.FolderId == "folder-id"),
+                    hosterConfigMock.Object,
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Exactly(2)
+        );
     }
 
     [Test]

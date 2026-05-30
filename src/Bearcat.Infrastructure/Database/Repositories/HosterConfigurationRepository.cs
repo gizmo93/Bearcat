@@ -35,7 +35,7 @@ public class HosterConfigurationRepository(
                     h.Name,
                     h.IsActive,
                     h.RequiresCaptchaVerification,
-                    hoster is ISupportCaptchaVerification,
+                    hoster is IHosterWithCaptchaVerification,
                     hoster.Name,
                     h.HosterClassName,
                     hoster.DeserializeHosterConfig(serializedConfig).ToDictionary()

@@ -6,6 +6,7 @@ public record FileToUpload(
     int UploadId,
     int ArchiveFileId,
     string FullFileName,
+    string? FolderId,
     string HosterClassName,
     IHoster Hoster,
     IHosterConfig HosterConfig

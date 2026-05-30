@@ -32,6 +32,134 @@ public class ApiClientTest
     }
 
     [Test]
+    public async Task CreateUploadFolderIdAsync_ExistingRootFolderWithName_ReturnsExistingFolderId()
+    {
+        // Arrange
+        SetupAccountRootFolder();
+        apiMock
+            .Setup(x =>
+                x.GetContentAsync(
+                    "root-folder-id",
+                    "Bearer api-key",
+                    "release-folder",
+                    "createTime",
+                    1,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new Bearcat.Hosters.GoFile.Api.GetContent.Response
+                {
+                    Status = "ok",
+                    Data = new Bearcat.Hosters.GoFile.Api.GetContent.Data
+                    {
+                        Children = new Dictionary<string, Bearcat.Hosters.GoFile.Api.GetContent.Content>
+                        {
+                            ["file-id"] = new()
+                            {
+                                Id = "file-id",
+                                Name = "release-folder",
+                                Type = "file",
+                            },
+                            ["folder-id"] = new()
+                            {
+                                Id = "folder-id",
+                                Name = "release-folder",
+                                Type = "folder",
+                            },
+                        },
+                    },
+                }
+            );
+
+        // Act
+        var result = await apiClient.CreateUploadFolderIdAsync(
+            "api-key",
+            "release-folder",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("folder-id");
+        apiMock.Verify(
+            x =>
+                x.CreateFolderAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<Bearcat.Hosters.GoFile.Api.CreateFolder.Request>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task CreateUploadFolderIdAsync_NoExistingRootFolderWithName_CreatesFolder()
+    {
+        // Arrange
+        SetupAccountRootFolder();
+        apiMock
+            .Setup(x =>
+                x.GetContentAsync(
+                    "root-folder-id",
+                    "Bearer api-key",
+                    "release-folder",
+                    "createTime",
+                    1,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new Bearcat.Hosters.GoFile.Api.GetContent.Response
+                {
+                    Status = "ok",
+                    Data = new Bearcat.Hosters.GoFile.Api.GetContent.Data
+                    {
+                        Children = new Dictionary<string, Bearcat.Hosters.GoFile.Api.GetContent.Content>
+                        {
+                            ["other-folder-id"] = new()
+                            {
+                                Id = "other-folder-id",
+                                Name = "other-folder",
+                                Type = "folder",
+                            },
+                        },
+                    },
+                }
+            );
+        apiMock
+            .Setup(x =>
+                x.CreateFolderAsync(
+                    "Bearer api-key",
+                    It.Is<Bearcat.Hosters.GoFile.Api.CreateFolder.Request>(request =>
+                        request.ParentFolderId == "root-folder-id"
+                        && request.FolderName == "release-folder"
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new Bearcat.Hosters.GoFile.Api.CreateFolder.Response
+                {
+                    Status = "ok",
+                    Data = new Bearcat.Hosters.GoFile.Api.CreateFolder.Data
+                    {
+                        Id = "created-folder-id",
+                    },
+                }
+            );
+
+        // Act
+        var result = await apiClient.CreateUploadFolderIdAsync(
+            "api-key",
+            "release-folder",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("created-folder-id");
+    }
+
+    [Test]
     public async Task CheckOnlineStatusAsync_ManyLinks_ChecksUpToFiveLinksInParallel()
     {
         // Arrange
@@ -196,6 +324,41 @@ public class ApiClientTest
         // Assert
         result[fileUrl].IsOnline.ShouldBeFalse();
         result[fileUrl].ErrorMessage.ShouldBe("GoFile file check timed out after 10 milliseconds");
+    }
+
+    private void SetupAccountRootFolder()
+    {
+        apiMock
+            .Setup(x => x.GetAccountAsync("Bearer api-key", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new Bearcat.Hosters.GoFile.Api.GetAccountId.Response
+                {
+                    Status = "ok",
+                    Data = new Bearcat.Hosters.GoFile.Api.GetAccountId.Data
+                    {
+                        Id = "account-id",
+                    },
+                }
+            );
+        apiMock
+            .Setup(x =>
+                x.GetAccountInfosAsync(
+                    "account-id",
+                    "Bearer api-key",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new Bearcat.Hosters.GoFile.Api.GetAccountInfos.Response
+                {
+                    Status = "ok",
+                    Data = new Bearcat.Hosters.GoFile.Api.GetAccountInfos.Data
+                    {
+                        Id = "account-id",
+                        RootFolder = "root-folder-id",
+                    },
+                }
+            );
     }
 
     private static void UpdateMaximum(ref int maximum, int current)

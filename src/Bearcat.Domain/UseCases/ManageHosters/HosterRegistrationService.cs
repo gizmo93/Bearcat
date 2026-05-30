@@ -144,14 +144,14 @@ public class HosterRegistrationService(
         await MarkCaptchaVerificationRequiredAsync(registration, message, cancellationToken);
     }
 
-    private (IHoster Hoster, ISupportCaptchaVerification CaptchaHoster) GetCaptchaHoster(
+    private (IHoster Hoster, IHosterWithCaptchaVerification CaptchaHoster) GetCaptchaHoster(
         HosterRegistration registration
     )
     {
         var hoster = hosterFactory.GetByName(registration.HosterClassName);
 
         var captchaHoster =
-            hoster as ISupportCaptchaVerification
+            hoster as IHosterWithCaptchaVerification
             ?? throw new InvalidOperationException(
                 $"Hoster {hoster.Name} does not support captcha verification."
             );

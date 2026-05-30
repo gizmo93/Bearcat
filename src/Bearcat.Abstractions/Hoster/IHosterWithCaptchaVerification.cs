@@ -2,7 +2,7 @@
 
 namespace Bearcat.Abstractions.Hoster;
 
-public interface ISupportCaptchaVerification
+public interface IHosterWithCaptchaVerification : IHoster
 {
     Task<CaptchaChallengeResult> RequestCaptchaChallengeAsync(
         IHosterConfig hosterConfig,
