@@ -21,4 +21,17 @@ public interface IKrakenFilesApi
         [Query] int perPage,
         CancellationToken cancellationToken
     );
+
+    [Get("/api/folder")]
+    Task<FolderListResponse> ListFoldersAsync(
+        [Header("X-AUTH-TOKEN")] string apiToken,
+        CancellationToken cancellationToken
+    );
+
+    [Post("/api/folder")]
+    Task<FolderCreateResponse> CreateFolderAsync(
+        [Header("X-AUTH-TOKEN")] string apiToken,
+        [Body] CreateFolderRequest request,
+        CancellationToken cancellationToken
+    );
 }

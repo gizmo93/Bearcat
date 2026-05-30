@@ -6,6 +6,13 @@ public interface IKrakenFilesApiClient
         KrakenFilesConfig config,
         Stream stream,
         string fileName,
+        string? folderId,
+        CancellationToken cancellationToken
+    );
+
+    Task<string> CreateFolderAsync(
+        KrakenFilesConfig config,
+        string folderName,
         CancellationToken cancellationToken
     );
 

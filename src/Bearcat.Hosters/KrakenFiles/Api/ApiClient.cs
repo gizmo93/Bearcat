@@ -27,6 +27,7 @@ public class ApiClient(
         KrakenFilesConfig config,
         Stream stream,
         string fileName,
+        string? folderId,
         CancellationToken cancellationToken
     )
     {
@@ -50,6 +51,11 @@ public class ApiClient(
             new StringContent(uploadServer.Data.ServerAccessToken),
             "serverAccessToken"
         );
+
+        if (!string.IsNullOrWhiteSpace(folderId))
+        {
+            multipartContent.Add(new StringContent(folderId), "folderId");
+        }
 
         var fileContent = new StreamContent(stream);
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
@@ -91,6 +97,39 @@ public class ApiClient(
         }
 
         return response;
+    }
+
+    public async Task<string> CreateFolderAsync(
+        KrakenFilesConfig config,
+        string folderName,
+        CancellationToken cancellationToken
+    )
+    {
+        var existingFolderId = await GetFolderIdAsync(config.ApiKey, folderName, cancellationToken);
+
+        if (existingFolderId is not null)
+        {
+            return existingFolderId;
+        }
+
+        var createResponse = await api.CreateFolderAsync(
+            config.ApiKey,
+            new CreateFolderRequest(folderName),
+            cancellationToken
+        );
+
+        if (createResponse.Status != (int)HttpStatusCode.OK)
+        {
+            throw new HttpRequestException(
+                createResponse.Data?.Message
+                    ?? $"KrakenFiles folder creation failed with status {createResponse.Status}"
+            );
+        }
+
+        var createdFolderId = await GetFolderIdAsync(config.ApiKey, folderName, cancellationToken);
+
+        return createdFolderId
+            ?? throw new HttpRequestException("KrakenFiles folder creation returned no folder id");
     }
 
     public async Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
@@ -163,6 +202,31 @@ public class ApiClient(
         {
             semaphore.Release();
         }
+    }
+
+    private async Task<string?> GetFolderIdAsync(
+        string apiKey,
+        string folderName,
+        CancellationToken cancellationToken
+    )
+    {
+        var folderList = await api.ListFoldersAsync(apiKey, cancellationToken);
+
+        if (folderList.Status != (int)HttpStatusCode.OK)
+        {
+            throw new HttpRequestException(
+                folderList.Message
+                    ?? $"KrakenFiles folder list failed with status {folderList.Status}"
+            );
+        }
+
+        return folderList
+            .Data?.FirstOrDefault(folder =>
+                string.Equals(folder.Name, folderName, StringComparison.Ordinal)
+                && string.IsNullOrWhiteSpace(folder.ParentId)
+                && !string.IsNullOrWhiteSpace(folder.Id)
+            )
+            ?.Id;
     }
 
     private static string? TryExtractFileHash(string fileUrl)

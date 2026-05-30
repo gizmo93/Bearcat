@@ -1,3 +1,5 @@
+using System.Net;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.KrakenFiles;
 using Bearcat.Hosters.KrakenFiles.Api;
 using Microsoft.Extensions.Logging;
@@ -18,6 +20,79 @@ public class KrakenFilesTest
         var loggerMock = new Mock<ILogger<Hosters.KrakenFiles.KrakenFiles>>();
         service = new Hosters.KrakenFiles.KrakenFiles(apiClientMock.Object, loggerMock.Object);
         service.UploadRetryDelay = TimeSpan.Zero;
+    }
+
+    [Test]
+    public async Task UploadFileAsync_FolderId_PassesFolderIdToApiClient()
+    {
+        // Arrange
+        var config = new KrakenFilesConfig { ApiKey = "api-key" };
+        var filePath = Path.GetTempFileName();
+        await File.WriteAllTextAsync(filePath, "content");
+        var fileDto = new FileDto(
+            Id: 17,
+            FullFileName: filePath,
+            UploadId: 117,
+            FolderId: "folder-id"
+        );
+
+        apiClientMock
+            .Setup(x =>
+                x.UploadFileAsync(
+                    config,
+                    It.IsAny<Stream>(),
+                    Path.GetFileName(filePath),
+                    "folder-id",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new UploadFileResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Data = new UploadFileData
+                    {
+                        Url = "https://krakenfiles.com/view/hash/file.bin",
+                    },
+                }
+            );
+
+        try
+        {
+            // Act
+            var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+
+            // Assert
+            result.IsSuccess.ShouldBeTrue();
+            result.FileUrl.ShouldBe("https://krakenfiles.com/view/hash/file.bin");
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
+    }
+
+    [Test]
+    public async Task CreateFolderAsync_Config_CreatesFolderWithApiClient()
+    {
+        // Arrange
+        var config = new KrakenFilesConfig { ApiKey = "api-key" };
+
+        apiClientMock
+            .Setup(x =>
+                x.CreateFolderAsync(config, "release-folder", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync("folder-id");
+
+        // Act
+        var result = await service.CreateFolderAsync(
+            "release-folder",
+            config,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("folder-id");
     }
 
     [Test]
