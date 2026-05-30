@@ -95,6 +95,39 @@ a {
     min-height: 100vh;
 }
 
+.bearcat-app-header {
+    border-color: color-mix(in oklch, var(--border) 78%, transparent) !important;
+    background: transparent;
+    box-shadow: none;
+    transition:
+        background-color 160ms ease,
+        border-color 160ms ease,
+        box-shadow 160ms ease,
+        backdrop-filter 160ms ease;
+}
+
+.bearcat-app-header-scrolled {
+    background: color-mix(in oklch, var(--background) 80%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(145%);
+    backdrop-filter: blur(18px) saturate(145%);
+    box-shadow: 0 12px 28px rgb(15 23 42 / 0.06);
+}
+
+.dark .bearcat-app-header {
+    border-color: color-mix(in oklch, var(--border) 82%, transparent) !important;
+}
+
+.dark .bearcat-app-header-scrolled {
+    background: color-mix(in oklch, var(--background) 76%, transparent);
+    box-shadow: 0 14px 30px rgb(0 0 0 / 0.24);
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .bearcat-app-header-scrolled {
+        background: var(--background);
+    }
+}
+
 .bearcat-main {
     min-width: 0;
     min-height: calc(100vh - 4rem);

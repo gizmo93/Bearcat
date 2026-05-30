@@ -57,7 +57,26 @@ export async function copyFromTarget(button) {
     }
 }
 
+function updateScrollAwareHeader() {
+    const header = document.querySelector(".bearcat-app-header");
+    if (!header) {
+        return;
+    }
+
+    header.classList.toggle("bearcat-app-header-scrolled", window.scrollY > 2);
+}
+
+function initScrollAwareHeader() {
+    updateScrollAwareHeader();
+
+    window.addEventListener("scroll", updateScrollAwareHeader, { passive: true });
+    window.addEventListener("resize", updateScrollAwareHeader);
+}
+
+initScrollAwareHeader();
+
 window.bearcat = {
     copyFromTarget,
     copyText,
+    updateScrollAwareHeader,
 };
