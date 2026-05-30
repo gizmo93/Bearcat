@@ -22,6 +22,12 @@ public class ReleaseInfo
 
     public string? AudioType { get; set; }
 
+    public string? Genre { get; set; }
+
+    public string? Description { get; set; }
+
+    public string? CoverUrl { get; set; }
+
     public List<ReleaseExternalInfo> ExternalInfos { get; set; } = [];
 
     public ReleaseNfo? ReleaseNfo { get; set; }

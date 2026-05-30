@@ -17,4 +17,18 @@ public interface IXrelApi
         [AliasAs("dirname")] string dirname,
         CancellationToken cancellationToken = default
     );
+
+    [Get("/v2/ext_info/info.json")]
+    [Headers("User-Agent: Bearcat/1.0")]
+    Task<ApiResponse<XrelExternalInfoDetails>> GetExternalInfoDetailsAsync(
+        [AliasAs("id")] string id,
+        CancellationToken cancellationToken = default
+    );
+
+    [Get("/v2/ext_info/media.json")]
+    [Headers("User-Agent: Bearcat/1.0")]
+    Task<ApiResponse<IReadOnlyList<XrelExternalInfoMedia>>> GetExternalInfoMediaAsync(
+        [AliasAs("id")] string id,
+        CancellationToken cancellationToken = default
+    );
 }

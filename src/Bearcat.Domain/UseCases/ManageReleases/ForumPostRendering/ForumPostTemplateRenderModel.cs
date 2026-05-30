@@ -71,6 +71,8 @@ public sealed record ForumPostTemplateReleaseInfoModel
         string sizeUnit,
         string videoType,
         string audioType,
+        string genre,
+        string description,
         ForumPostTemplateMediaInfoModel video,
         ForumPostTemplateMediaInfoModel audio,
         IReadOnlyList<ForumPostTemplateExternalInfoModel> externalInfos
@@ -83,6 +85,8 @@ public sealed record ForumPostTemplateReleaseInfoModel
         SizeUnit = sizeUnit;
         VideoType = videoType;
         AudioType = audioType;
+        Genre = genre;
+        Description = description;
         Video = video;
         Audio = audio;
         ExternalInfos = externalInfos;
@@ -97,6 +101,8 @@ public sealed record ForumPostTemplateReleaseInfoModel
             sizeUnit: string.Empty,
             videoType: string.Empty,
             audioType: string.Empty,
+            genre: string.Empty,
+            description: string.Empty,
             video: ForumPostTemplateMediaInfoModel.Empty,
             audio: ForumPostTemplateMediaInfoModel.Empty,
             externalInfos: []
@@ -122,6 +128,12 @@ public sealed record ForumPostTemplateReleaseInfoModel
 
     [ForumPostTemplateVariable("Audio type.")]
     public string AudioType { get; init; }
+
+    [ForumPostTemplateVariable("Genre.")]
+    public string Genre { get; init; }
+
+    [ForumPostTemplateVariable("Description or plot.")]
+    public string Description { get; init; }
 
     [ForumPostTemplateVariable("Video metadata.", IncludeChildren = true)]
     public ForumPostTemplateMediaInfoModel Video { get; init; }

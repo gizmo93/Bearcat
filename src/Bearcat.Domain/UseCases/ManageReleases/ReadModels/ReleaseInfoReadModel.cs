@@ -11,6 +11,9 @@ public record ReleaseInfoReadModel(
     string? SizeUnit,
     string? VideoType,
     string? AudioType,
+    string? Genre,
+    string? Description,
+    string? CoverUrl,
     ReleaseNfoReadModel? ReleaseNfo,
     IReadOnlyList<ReleaseExternalInfoReadModel> ExternalInfos
 );

@@ -185,6 +185,8 @@ public class ForumPostRenderService(
             sizeUnit: info.SizeUnit ?? string.Empty,
             videoType: info.VideoType ?? string.Empty,
             audioType: info.AudioType ?? string.Empty,
+            genre: info.Genre ?? string.Empty,
+            description: info.Description ?? string.Empty,
             video: new ForumPostTemplateMediaInfoModel(
                 type: info.VideoType ?? string.Empty,
                 format: info.VideoType ?? string.Empty

@@ -78,15 +78,18 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         persistedInfo.SizeUnit.ShouldBe("GB");
         persistedInfo.VideoType.ShouldBe("WEB");
         persistedInfo.AudioType.ShouldBe("AC3");
+        persistedInfo.Genre.ShouldBe("Drama, Sci-Fi");
+        persistedInfo.Description.ShouldBe("Bearcat plot");
+        persistedInfo.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_cover/movie123.JPG");
 
         var externalInfo = persistedInfo.ExternalInfos.Single();
         externalInfo.Type.ShouldBe(ExternalInfoType.Movie);
         externalInfo.Title.ShouldBe("Bearcat Movie");
-        externalInfo.Urls.ShouldContain(
-            url => url.Type == UrlType.Imdb && url.Url == "https://www.imdb.com/de/title/tt1234567"
+        externalInfo.Urls.ShouldContain(url =>
+            url.Type == UrlType.Imdb && url.Url == "https://www.imdb.com/de/title/tt1234567"
         );
-        externalInfo.Urls.ShouldContain(
-            url => url.Type == UrlType.Other && url.Url == "https://www.xrel.to/movie/123"
+        externalInfo.Urls.ShouldContain(url =>
+            url.Type == UrlType.Other && url.Url == "https://www.xrel.to/movie/123"
         );
 
         nfoDatabaseMock.Verify(
@@ -152,10 +155,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         var providerMock = SetupNfoProvider(
             NfoProviderDatabaseClassName,
             "Bearcat.Remote.Nfo.2026-GRP",
-            new Abstractions.NfoDatabase.ReleaseNfo(
-                "remote.nfo",
-                "remote nfo content"
-            )
+            new Abstractions.NfoDatabase.ReleaseNfo("remote.nfo", "remote nfo content")
         );
 
         // Act
@@ -254,10 +254,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         // Assert
         resolvedCount.ShouldBe(0);
         (await dbContext.ReleaseInfos.AnyAsync()).ShouldBeFalse();
-        nfoDatabaseFactoryMock.Verify(
-            factory => factory.Get(It.IsAny<string>()),
-            Times.Never
-        );
+        nfoDatabaseFactoryMock.Verify(factory => factory.Get(It.IsAny<string>()), Times.Never);
     }
 
     [Test]
@@ -468,7 +465,9 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
                 )
             )
             .ReturnsAsync(releaseInfo);
-        nfoDatabaseFactoryMock.Setup(factory => factory.Get(className)).Returns(nfoDatabaseMock.Object);
+        nfoDatabaseFactoryMock
+            .Setup(factory => factory.Get(className))
+            .Returns(nfoDatabaseMock.Object);
 
         return nfoDatabaseMock;
     }
@@ -526,13 +525,14 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
                 )
             )
             .ReturnsAsync(releaseNfo);
-        nfoDatabaseFactoryMock.Setup(factory => factory.Get(className)).Returns(nfoDatabaseMock.Object);
+        nfoDatabaseFactoryMock
+            .Setup(factory => factory.Get(className))
+            .Returns(nfoDatabaseMock.Object);
 
         return providerMock;
     }
 
-    private async Task AddNfoDatabaseRegistrationAsync(string className,
-        bool isActive)
+    private async Task AddNfoDatabaseRegistrationAsync(string className, bool isActive)
     {
         var registration = new NfoDatabaseRegistration
         {
@@ -601,6 +601,9 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             Size: new ReleaseInfoSize(12, "GB"),
             VideoType: "WEB",
             AudioType: "AC3",
+            Genre: "Drama, Sci-Fi",
+            Description: "Bearcat plot",
+            CoverUrl: "https://uploads2.xrel.to/img_cover/movie123.JPG",
             ExternalInfos:
             [
                 new ExternalInfo(
@@ -615,7 +618,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             ]
         );
     }
-    
+
     private static TimeProvider CreateTimeProvider()
     {
         var configuration = new ConfigurationBuilder()

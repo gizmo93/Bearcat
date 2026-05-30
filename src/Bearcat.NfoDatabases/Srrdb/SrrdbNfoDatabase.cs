@@ -50,6 +50,9 @@ public class SrrdbNfoDatabase(SrrdbClient client) : INfoDatabase, INfoProvider
             Size: GetSize(details),
             VideoType: null,
             AudioType: null,
+            Genre: null,
+            Description: null,
+            CoverUrl: null,
             ExternalInfos: MapExternalInfos(imdb)
         );
     }

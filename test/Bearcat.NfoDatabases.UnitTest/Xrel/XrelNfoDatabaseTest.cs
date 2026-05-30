@@ -39,11 +39,57 @@ public class XrelNfoDatabaseTest
                         AudioType: "AC3",
                         ExtInfo: new XrelExternalInfo(
                             Type: "movie",
+                            Id: "movie123",
                             Title: "Movie Release",
                             LinkHref: "//www.xrel.to/movie/123/Movie-Release.html",
                             Uris: ["imdb:tt1234567", "https://metadata.test/movie"]
                         )
                     )
+                )
+            );
+        apiMock
+            .Setup(api =>
+                api.GetExternalInfoDetailsAsync("movie123", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    HttpStatusCode.OK,
+                    new XrelExternalInfoDetails(
+                        Type: "movie",
+                        Id: "movie123",
+                        Title: "Movie Release",
+                        LinkHref: "https://www.xrel.to/movie/123/Movie-Release.html",
+                        Genre: "Drama, Sci-Fi",
+                        CoverUrl: "//uploads2.xrel.to/img_cover/movie123.JPG",
+                        Uris: ["imdb:tt1234567"],
+                        Externals:
+                        [
+                            new XrelExternalInfoExternal(
+                                Plot: "Movie &quot;plot&quot;<br />\n<br />\nSecond line"
+                            ),
+                        ]
+                    )
+                )
+            );
+        apiMock
+            .Setup(api => api.GetExternalInfoMediaAsync("movie123", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse<IReadOnlyList<XrelExternalInfoMedia>>(
+                    HttpStatusCode.OK,
+                    [
+                        new XrelExternalInfoMedia(
+                            Type: "video",
+                            Description: "Trailer",
+                            UrlFull: null,
+                            UrlThumb: "https://uploads2.xrel.to/img_mediathek_thumb/video.JPG"
+                        ),
+                        new XrelExternalInfoMedia(
+                            Type: "image",
+                            Description: "Poster",
+                            UrlFull: "//uploads2.xrel.to/img_mediathek/movie123.JPG",
+                            UrlThumb: "https://uploads2.xrel.to/img_mediathek_thumb/movie123.JPG"
+                        ),
+                    ]
                 )
             );
 
@@ -61,22 +107,34 @@ public class XrelNfoDatabaseTest
         result.Size.ShouldBe(new ReleaseInfoSize(42, "GB"));
         result.VideoType.ShouldBe("WEB");
         result.AudioType.ShouldBe("AC3");
+        result.Genre.ShouldBe("Drama, Sci-Fi");
+        result.Description.ShouldBe("Movie \"plot\"\n\nSecond line");
+        result.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_mediathek/movie123.JPG");
 
         var externalInfo = result.ExternalInfos.Single();
         externalInfo.Type.ShouldBe(ExternalInfoType.Movie);
         externalInfo.Title.ShouldBe("Movie Release");
-        externalInfo.Urls.ShouldContain(
-            url => url.Type == UrlType.Other && url.Value == "https://www.xrel.to/movie/123/Movie-Release.html"
+        externalInfo.Urls.ShouldContain(url =>
+            url.Type == UrlType.Other
+            && url.Value == "https://www.xrel.to/movie/123/Movie-Release.html"
         );
-        externalInfo.Urls.ShouldContain(
-            url => url.Type == UrlType.Imdb && url.Value == "https://www.imdb.com/de/title/tt1234567"
+        externalInfo.Urls.ShouldContain(url =>
+            url.Type == UrlType.Imdb && url.Value == "https://www.imdb.com/de/title/tt1234567"
         );
-        externalInfo.Urls.ShouldContain(
-            url => url.Type == UrlType.Other && url.Value == "https://metadata.test/movie"
+        externalInfo.Urls.ShouldContain(url =>
+            url.Type == UrlType.Other && url.Value == "https://metadata.test/movie"
         );
         apiMock.Verify(
             api => api.GetP2pReleaseInfoAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never
+        );
+        apiMock.Verify(
+            api => api.GetExternalInfoDetailsAsync("movie123", It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+        apiMock.Verify(
+            api => api.GetExternalInfoMediaAsync("movie123", It.IsAny<CancellationToken>()),
+            Times.Once
         );
     }
 
@@ -91,10 +149,7 @@ public class XrelNfoDatabaseTest
             .ReturnsAsync(CreateApiResponse<XrelRelease>(HttpStatusCode.NotFound));
         apiMock
             .Setup(api =>
-                api.GetP2pReleaseInfoAsync(
-                    "P2P.Release.2026-GRP",
-                    It.IsAny<CancellationToken>()
-                )
+                api.GetP2pReleaseInfoAsync("P2P.Release.2026-GRP", It.IsAny<CancellationToken>())
             )
             .ReturnsAsync(
                 CreateApiResponse(
@@ -105,11 +160,44 @@ public class XrelNfoDatabaseTest
                         SizeMb: 11900,
                         ExtInfo: new XrelExternalInfo(
                             Type: "movie",
+                            Id: "movie42",
                             Title: "P2P Release",
                             LinkHref: "https://www.xrel.to/movie/42/P2P-Release.html",
                             Uris: ["imdb:tt7654321"]
                         )
                     )
+                )
+            );
+        apiMock
+            .Setup(api => api.GetExternalInfoDetailsAsync("movie42", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse(
+                    HttpStatusCode.OK,
+                    new XrelExternalInfoDetails(
+                        Type: "movie",
+                        Id: "movie42",
+                        Title: "P2P Release",
+                        LinkHref: "https://www.xrel.to/movie/42/P2P-Release.html",
+                        Genre: "Action",
+                        CoverUrl: "https://uploads2.xrel.to/img_cover/movie42.JPG",
+                        Uris: ["imdb:tt7654321"],
+                        Externals: []
+                    )
+                )
+            );
+        apiMock
+            .Setup(api => api.GetExternalInfoMediaAsync("movie42", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse<IReadOnlyList<XrelExternalInfoMedia>>(
+                    HttpStatusCode.OK,
+                    [
+                        new XrelExternalInfoMedia(
+                            Type: "image",
+                            Description: "Poster",
+                            UrlFull: "https://uploads2.xrel.to/img_mediathek/movie42.JPG",
+                            UrlThumb: "https://uploads2.xrel.to/img_mediathek_thumb/movie42.JPG"
+                        ),
+                    ]
                 )
             );
 
@@ -127,9 +215,13 @@ public class XrelNfoDatabaseTest
         result.Size.ShouldBe(new ReleaseInfoSize(11900, "MB"));
         result.VideoType.ShouldBeNull();
         result.AudioType.ShouldBeNull();
-        result.ExternalInfos.Single().Urls.ShouldContain(
-            url => url.Type == UrlType.Imdb && url.Value == "https://www.imdb.com/de/title/tt7654321"
-        );
+        result.Genre.ShouldBe("Action");
+        result.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_mediathek/movie42.JPG");
+        result
+            .ExternalInfos.Single()
+            .Urls.ShouldContain(url =>
+                url.Type == UrlType.Imdb && url.Value == "https://www.imdb.com/de/title/tt7654321"
+            );
     }
 
     [Test]
@@ -175,13 +267,8 @@ public class XrelNfoDatabaseTest
             );
 
         // Act
-        var exception = await Should.ThrowAsync<NfoDatabaseRateLimitExceededException>(
-            () =>
-                service.GetReleaseInfoAsync(
-                    new XrelConfig(),
-                    "Limited Release",
-                    CancellationToken.None
-                )
+        var exception = await Should.ThrowAsync<NfoDatabaseRateLimitExceededException>(() =>
+            service.GetReleaseInfoAsync(new XrelConfig(), "Limited Release", CancellationToken.None)
         );
 
         // Assert

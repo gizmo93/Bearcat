@@ -6,5 +6,8 @@ public record ReleaseInfo(
     ReleaseInfoSize? Size,
     string? VideoType,
     string? AudioType,
+    string? Genre,
+    string? Description,
+    string? CoverUrl,
     IReadOnlyList<ExternalInfo> ExternalInfos
 );

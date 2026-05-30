@@ -29,6 +29,7 @@ public partial class ReleaseOverview(
 
     private IReadOnlyList<ReleaseOverviewUploadReadModel> overviewUploads = [];
     private ReleaseNfoReadModel? releaseNfo;
+    private string? coverUrl;
     private string? nfoContent;
     private bool hasLocalNfo;
     private bool isLoading;
@@ -43,6 +44,8 @@ public partial class ReleaseOverview(
         releaseNfo is null ? L["NoNfoFileAvailable"]
         : hasLocalNfo ? L["NfoFileAlreadyExists"]
         : L["SaveNfoFile"];
+    private string CoverDownloadUrl => $"/releases/{ReleaseId}/cover";
+    private string CoverDownloadFileName => GetCoverDownloadFileName();
 
     protected override async Task OnParametersSetAsync()
     {
@@ -62,10 +65,15 @@ public partial class ReleaseOverview(
         try
         {
             releaseNfo = null;
+            coverUrl = null;
             nfoContent = null;
             hasLocalNfo = false;
 
             overviewUploads = await readRepository.GetReleaseOverviewAsync(ReleaseId);
+            var releaseInfos = await readRepository.GetReleaseInfosAsync(ReleaseId);
+            coverUrl = releaseInfos
+                .Select(info => info.CoverUrl)
+                .FirstOrDefault(url => !string.IsNullOrWhiteSpace(url));
             releaseNfo = await readRepository.GetReleaseNfoAsync(ReleaseId);
             nfoContent = releaseNfo?.Content;
             hasLocalNfo = await ReleaseNfoService.HasLocalNfoAsync(ReleaseFolderPath);
@@ -192,4 +200,28 @@ public partial class ReleaseOverview(
 
     private static string GetPasswordCopyTargetId(ReleaseOverviewUploadReadModel upload) =>
         $"release-overview-password-{upload.UploadId}";
+
+    private string GetCoverDownloadFileName()
+    {
+        if (Uri.TryCreate(coverUrl, UriKind.Absolute, out var uri))
+        {
+            var fileName = Path.GetFileName(uri.LocalPath);
+            if (!string.IsNullOrWhiteSpace(fileName))
+            {
+                return fileName;
+            }
+        }
+
+        return $"{SanitizeFileName(ReleaseName)}-cover.jpg";
+    }
+
+    private static string SanitizeFileName(string value)
+    {
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var sanitized = new string(
+            value.Select(character => invalidChars.Contains(character) ? '_' : character).ToArray()
+        );
+
+        return string.IsNullOrWhiteSpace(sanitized) ? "release" : sanitized;
+    }
 }

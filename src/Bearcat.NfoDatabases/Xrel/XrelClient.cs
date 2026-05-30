@@ -29,6 +29,28 @@ public class XrelClient(IXrelApi api, XrelRateLimitState rateLimitState)
         return HandleResponse(response);
     }
 
+    public async Task<XrelExternalInfoDetails?> GetExternalInfoDetailsAsync(
+        string id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        rateLimitState.ThrowIfLimited();
+
+        var response = await api.GetExternalInfoDetailsAsync(id, cancellationToken);
+        return HandleResponse(response);
+    }
+
+    public async Task<IReadOnlyList<XrelExternalInfoMedia>> GetExternalInfoMediaAsync(
+        string id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        rateLimitState.ThrowIfLimited();
+
+        var response = await api.GetExternalInfoMediaAsync(id, cancellationToken);
+        return HandleResponse(response) ?? [];
+    }
+
     private TResponse? HandleResponse<TResponse>(ApiResponse<TResponse> response)
     {
         rateLimitState.Update(response.Headers);

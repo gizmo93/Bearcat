@@ -97,6 +97,14 @@
 
                             <div class="bearcat-release-info-fact">
                                 <dt>
+                                    <LucideIcon Name="tags" class="h-3.5 w-3.5" />
+                                    @L["Genre"]
+                                </dt>
+                                <dd>@GetValueOrDash(releaseInfo.Genre)</dd>
+                            </div>
+
+                            <div class="bearcat-release-info-fact">
+                                <dt>
                                     <LucideIcon Name="file-text" class="h-3.5 w-3.5" />
                                     NFO
                                 </dt>
@@ -104,6 +112,17 @@
                             </div>
                         </dl>
                     </header>
+
+                    @if (!string.IsNullOrWhiteSpace(releaseInfo.Description))
+                    {
+                        <div class="bearcat-release-info-description">
+                            <div class="bearcat-release-info-external-heading">
+                                <LucideIcon Name="align-left" class="h-3.5 w-3.5" />
+                                <span>@L["Description"]</span>
+                            </div>
+                            <p>@releaseInfo.Description</p>
+                        </div>
+                    }
 
                     <div class="bearcat-release-info-external">
                         <div class="bearcat-release-info-external-heading">

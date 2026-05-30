@@ -183,6 +183,9 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                 info.SizeUnit,
                 info.VideoType,
                 info.AudioType,
+                info.Genre,
+                info.Description,
+                info.CoverUrl,
                 info.ReleaseNfo == null
                     ? null
                     : new ReleaseNfoReadModel(

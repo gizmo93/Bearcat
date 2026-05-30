@@ -9,6 +9,11 @@ public static class ServiceProviderConfig
     {
         services.AddBlazorBlueprintComponents();
         services.AddLocalization(options => options.ResourcesPath = "Resources");
+        services.AddHttpClient("cover-download");
+        services
+            .AddControllers()
+            .AddApplicationPart(typeof(ServiceProviderConfig).Assembly)
+            .AddControllersAsServices();
         return services;
     }
 }

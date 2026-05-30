@@ -16,6 +16,18 @@
             </BbButton>
 
             <textarea id="@NfoCopyTargetId" hidden readonly>@nfoContent</textarea>
+            @if (!string.IsNullOrWhiteSpace(coverUrl))
+            {
+                <a class="bearcat-copy-button bearcat-release-overview-action-button"
+                   href="@CoverDownloadUrl"
+                   download="@CoverDownloadFileName"
+                   title="@L["DownloadCover"]"
+                   aria-label="@L["DownloadCover"]">
+                    <LucideIcon Name="image-down" class="h-4 w-4" />
+                    <span>@L["DownloadCover"]</span>
+                </a>
+            }
+
             <BbButton Variant="ButtonVariant.Outline"
                       Size="ButtonSize.Small"
                       Class="bearcat-release-overview-action-button"

@@ -108,8 +108,10 @@
   <data name="DeleteUploadConfig" xml:space="preserve"><value>Upload-Konfiguration löschen</value></data>
   <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Möchtest du die Upload-Konfiguration {0} wirklich löschen?</value></data>
   <data name="DownloadLinks" xml:space="preserve"><value>Downloadlinks</value></data>
+  <data name="DownloadCover" xml:space="preserve"><value>Cover herunterladen</value></data>
   <data name="DeleteUpload" xml:space="preserve"><value>Upload löschen</value></data>
   <data name="DeleteUploadConfirmation" xml:space="preserve"><value>Upload #{0} löschen? Zugehörige Uploadlinks, Container und Benachrichtigungen werden ebenfalls entfernt.</value></data>
+  <data name="Description" xml:space="preserve"><value>Beschreibung</value></data>
   <data name="Disable" xml:space="preserve"><value>Deaktivieren</value></data>
   <data name="Edit" xml:space="preserve"><value>Bearbeiten</value></data>
   <data name="EditArchiveConfiguration" xml:space="preserve"><value>Archiv-Konfiguration bearbeiten</value></data>
@@ -130,6 +132,7 @@
   <data name="Home" xml:space="preserve"><value>Home</value></data>
     <data name="HomeIntro" xml:space="preserve"><value>Überwache laufende Archiverstellungen und Uploads</value></data>
   <data name="Hoster" xml:space="preserve"><value>Hoster</value></data>
+  <data name="Genre" xml:space="preserve"><value>Genre</value></data>
   <data name="HosterConfigurationHelp" xml:space="preserve"><value>Gib die benötigten Werte für den ausgewählten Hoster an.</value></data>
   <data name="HosterDialogDescription" xml:space="preserve"><value>Speichere Hoster-Zugangsdaten und Konfigurationen für Uploads.</value></data>
   <data name="HosterRegistration" xml:space="preserve"><value>Hoster-Registrierung</value></data>

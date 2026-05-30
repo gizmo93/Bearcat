@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Bearcat.Abstractions.NfoDatabase;
@@ -5,11 +6,8 @@ using Bearcat.NfoDatabases.Xrel.Api;
 
 namespace Bearcat.NfoDatabases.Xrel;
 
-public class XrelNfoDatabase(XrelClient client) : INfoDatabase
+public partial class XrelNfoDatabase(XrelClient client) : INfoDatabase
 {
-    private static readonly Regex WhitespaceRegex = new(@"\s+", RegexOptions.Compiled);
-    private static readonly Regex MultipleDotsRegex = new(@"\.{2,}", RegexOptions.Compiled);
-
     public string Name => "xREL";
 
     public int ResolutionPriority => 0;
@@ -36,7 +34,11 @@ public class XrelNfoDatabase(XrelClient client) : INfoDatabase
         var release = await client.GetReleaseInfoAsync(normalizedDirname, cancellationToken);
         if (release is not null && !string.IsNullOrWhiteSpace(release.Dirname))
         {
-            return MapReleaseInfo(release);
+            var externalInfoEnrichment = await GetExternalInfoEnrichmentAsync(
+                release.ExtInfo,
+                cancellationToken
+            );
+            return MapReleaseInfo(release, externalInfoEnrichment);
         }
 
         var p2pRelease = await client.GetP2pReleaseInfoAsync(normalizedDirname, cancellationToken);
@@ -45,33 +47,11 @@ public class XrelNfoDatabase(XrelClient client) : INfoDatabase
             return null;
         }
 
-        return MapReleaseInfo(p2pRelease);
-    }
-
-    private static ReleaseInfo MapReleaseInfo(XrelRelease release)
-    {
-        return new ReleaseInfo(
-            ReleaseName: release.Dirname!,
-            ReleaseDatabaseUrl: NormalizeXrelUrl(release.LinkHref),
-            Size: release.Size is null
-                ? null
-                : new ReleaseInfoSize(release.Size.Number, release.Size.Unit),
-            VideoType: release.VideoType,
-            AudioType: release.AudioType,
-            ExternalInfos: MapExternalInfos(release.ExtInfo)
+        var p2pExternalInfoEnrichment = await GetExternalInfoEnrichmentAsync(
+            p2pRelease.ExtInfo,
+            cancellationToken
         );
-    }
-
-    private static ReleaseInfo MapReleaseInfo(XrelP2pRelease release)
-    {
-        return new ReleaseInfo(
-            ReleaseName: release.Dirname!,
-            ReleaseDatabaseUrl: NormalizeXrelUrl(release.LinkHref),
-            Size: release.SizeMb is null ? null : new ReleaseInfoSize(release.SizeMb, "MB"),
-            VideoType: null,
-            AudioType: null,
-            ExternalInfos: MapExternalInfos(release.ExtInfo)
-        );
+        return MapReleaseInfo(p2pRelease, p2pExternalInfoEnrichment);
     }
 
     public string SerializeConfig(IReadOnlyDictionary<string, string> config)
@@ -82,6 +62,67 @@ public class XrelNfoDatabase(XrelClient client) : INfoDatabase
     public INfoDatabaseConfig DeserializeConfig(string serializedConfig)
     {
         return new XrelConfig();
+    }
+
+    private async Task<XrelExternalInfoEnrichment?> GetExternalInfoEnrichmentAsync(
+        XrelExternalInfo? externalInfo,
+        CancellationToken cancellationToken
+    )
+    {
+        if (string.IsNullOrWhiteSpace(externalInfo?.Id))
+        {
+            return null;
+        }
+
+        var details = await client.GetExternalInfoDetailsAsync(externalInfo.Id, cancellationToken);
+        var media = await client.GetExternalInfoMediaAsync(externalInfo.Id, cancellationToken);
+        var coverUrl = media.FirstOrDefault(IsImageMedia)?.UrlFull;
+
+        return new XrelExternalInfoEnrichment(
+            Genre: NullIfWhiteSpace(details?.Genre),
+            Description: NormalizeDescription(
+                details?.Externals?.FirstOrDefault(d => !string.IsNullOrWhiteSpace(d.Plot))?.Plot
+            ),
+            CoverUrl: NormalizeXrelUrl(coverUrl)
+        );
+    }
+
+    private static ReleaseInfo MapReleaseInfo(
+        XrelRelease release,
+        XrelExternalInfoEnrichment? externalInfoEnrichment
+    )
+    {
+        return new ReleaseInfo(
+            ReleaseName: release.Dirname!,
+            ReleaseDatabaseUrl: NormalizeXrelUrl(release.LinkHref),
+            Size: release.Size is null
+                ? null
+                : new ReleaseInfoSize(release.Size.Number, release.Size.Unit),
+            VideoType: release.VideoType,
+            AudioType: release.AudioType,
+            Genre: externalInfoEnrichment?.Genre,
+            Description: externalInfoEnrichment?.Description,
+            CoverUrl: externalInfoEnrichment?.CoverUrl,
+            ExternalInfos: MapExternalInfos(release.ExtInfo)
+        );
+    }
+
+    private static ReleaseInfo MapReleaseInfo(
+        XrelP2pRelease release,
+        XrelExternalInfoEnrichment? externalInfoEnrichment
+    )
+    {
+        return new ReleaseInfo(
+            ReleaseName: release.Dirname!,
+            ReleaseDatabaseUrl: NormalizeXrelUrl(release.LinkHref),
+            Size: release.SizeMb is null ? null : new ReleaseInfoSize(release.SizeMb, "MB"),
+            VideoType: null,
+            AudioType: null,
+            Genre: externalInfoEnrichment?.Genre,
+            Description: externalInfoEnrichment?.Description,
+            CoverUrl: externalInfoEnrichment?.CoverUrl,
+            ExternalInfos: MapExternalInfos(release.ExtInfo)
+        );
     }
 
     private static IReadOnlyList<ExternalInfo> MapExternalInfos(XrelExternalInfo? externalInfo)
@@ -132,6 +173,12 @@ public class XrelNfoDatabase(XrelClient client) : INfoDatabase
         return new Url(UrlType.Other, uri);
     }
 
+    private static bool IsImageMedia(XrelExternalInfoMedia media)
+    {
+        return media.Type?.Equals("image", StringComparison.OrdinalIgnoreCase) == true
+            && !string.IsNullOrWhiteSpace(media.UrlFull);
+    }
+
     private static ExternalInfoType MapExternalInfoType(string? type)
     {
         return type?.ToLowerInvariant() switch
@@ -166,10 +213,52 @@ public class XrelNfoDatabase(XrelClient client) : INfoDatabase
         return url;
     }
 
+    private static string? NullIfWhiteSpace(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value;
+    }
+
+    private static string? NormalizeDescription(string? description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            return null;
+        }
+
+        var normalized = HtmlBreakRegex().Replace(description, "\n");
+        normalized = HtmlTagRegex().Replace(normalized, string.Empty);
+        normalized = WebUtility.HtmlDecode(normalized);
+        normalized = normalized.ReplaceLineEndings("\n").Trim();
+        normalized = MultipleEmptyLinesRegex().Replace(normalized, "\n\n");
+
+        return NullIfWhiteSpace(normalized);
+    }
+
     private static string NormalizeDirname(string dirname)
     {
-        var normalized = WhitespaceRegex.Replace(dirname.Trim(), ".");
-        normalized = MultipleDotsRegex.Replace(normalized, ".");
+        var normalized = WhitespaceRegex().Replace(dirname.Trim(), ".");
+        normalized = MultipleDotsRegex().Replace(normalized, ".");
         return normalized.Trim('.');
     }
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex WhitespaceRegex();
+
+    [GeneratedRegex(@"\.{2,}")]
+    private static partial Regex MultipleDotsRegex();
+
+    [GeneratedRegex(@"<\s*br\s*/?\s*>", RegexOptions.IgnoreCase)]
+    private static partial Regex HtmlBreakRegex();
+
+    [GeneratedRegex(@"<[^>]+>")]
+    private static partial Regex HtmlTagRegex();
+
+    [GeneratedRegex(@"\n{3,}")]
+    private static partial Regex MultipleEmptyLinesRegex();
+
+    private sealed record XrelExternalInfoEnrichment(
+        string? Genre,
+        string? Description,
+        string? CoverUrl
+    );
 }

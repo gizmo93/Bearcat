@@ -71,11 +71,10 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
                 SizeUnit = "GB",
                 VideoType = "WEB",
                 AudioType = "AC3",
-                ReleaseNfo = new ReleaseNfo
-                {
-                    FileName = "bearcat.nfo",
-                    Content = "nfo content",
-                },
+                Genre = "Drama, Sci-Fi",
+                Description = "Bearcat plot",
+                CoverUrl = "https://uploads2.xrel.to/img_cover/movie123.JPG",
+                ReleaseNfo = new ReleaseNfo { FileName = "bearcat.nfo", Content = "nfo content" },
                 ExternalInfos =
                 [
                     new ReleaseExternalInfo
@@ -114,6 +113,9 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         releaseInfo.SizeUnit.ShouldBe("GB");
         releaseInfo.VideoType.ShouldBe("WEB");
         releaseInfo.AudioType.ShouldBe("AC3");
+        releaseInfo.Genre.ShouldBe("Drama, Sci-Fi");
+        releaseInfo.Description.ShouldBe("Bearcat plot");
+        releaseInfo.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_cover/movie123.JPG");
         releaseInfo.ReleaseNfo.ShouldNotBeNull();
         releaseInfo.ReleaseNfo.FileName.ShouldBe("bearcat.nfo");
         releaseInfo.ReleaseNfo.Content.ShouldBe("nfo content");
@@ -141,11 +143,7 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
                 NfoDatabaseClassName = "XrelNfoDatabase",
                 ReleaseName = "Bearcat.Release.2026-GRP",
                 ExternalInfos = [],
-                ReleaseNfo = new ReleaseNfo
-                {
-                    FileName = "bearcat.nfo",
-                    Content = "nfo content",
-                },
+                ReleaseNfo = new ReleaseNfo { FileName = "bearcat.nfo", Content = "nfo content" },
             }
         );
         await dbContext.SaveChangesAsync();
@@ -179,9 +177,10 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
             """[{"type":1,"url":"https://www.imdb.com/de/title/tt1234567"}]""";
         await dbContext.Database.ExecuteSqlInterpolatedAsync(
             $"""
-             INSERT INTO "ReleaseExternalInfos" ("ReleaseInfoId", "Title", "Type", "Urls")
-             VALUES ({releaseInfo.Id}, {"Legacy Movie"}, {(int)ExternalInfoType.Movie}, {legacyUrlsJson}::jsonb)
-             """
+            INSERT INTO "ReleaseExternalInfos" ("ReleaseInfoId", "Title", "Type", "Urls")
+            VALUES ({releaseInfo.Id}, {"Legacy Movie"}, {(int)
+                ExternalInfoType.Movie}, {legacyUrlsJson}::jsonb)
+            """
         );
         dbContext.ChangeTracker.Clear();
 

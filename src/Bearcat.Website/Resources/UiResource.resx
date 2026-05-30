@@ -108,8 +108,10 @@
   <data name="DeleteUploadConfig" xml:space="preserve"><value>Delete Upload Config</value></data>
   <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Are you sure you want to delete the upload config {0}?</value></data>
   <data name="DownloadLinks" xml:space="preserve"><value>Download links</value></data>
+  <data name="DownloadCover" xml:space="preserve"><value>Download cover</value></data>
   <data name="DeleteUpload" xml:space="preserve"><value>Delete upload</value></data>
   <data name="DeleteUploadConfirmation" xml:space="preserve"><value>Delete upload #{0}? Its uploaded file links, containers, and notifications will also be removed.</value></data>
+  <data name="Description" xml:space="preserve"><value>Description</value></data>
   <data name="Disable" xml:space="preserve"><value>Disable</value></data>
   <data name="Edit" xml:space="preserve"><value>Edit</value></data>
   <data name="EditArchiveConfiguration" xml:space="preserve"><value>Edit Archive Configuration</value></data>
@@ -130,6 +132,7 @@
   <data name="Home" xml:space="preserve"><value>Home</value></data>
     <data name="HomeIntro" xml:space="preserve"><value>Monitor running archive creations and uploads</value></data>
   <data name="Hoster" xml:space="preserve"><value>Hoster</value></data>
+  <data name="Genre" xml:space="preserve"><value>Genre</value></data>
   <data name="HosterConfigurationHelp" xml:space="preserve"><value>Provide the required values for the selected hoster.</value></data>
   <data name="HosterDialogDescription" xml:space="preserve"><value>Save hoster credentials and configuration for uploads.</value></data>
   <data name="HosterRegistration" xml:space="preserve"><value>Hoster registration</value></data>

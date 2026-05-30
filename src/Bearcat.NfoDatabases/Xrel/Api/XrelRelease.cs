@@ -25,7 +25,28 @@ public record XrelReleaseSize(
 
 public record XrelExternalInfo(
     [property: JsonPropertyName("type")] string? Type,
+    [property: JsonPropertyName("id")] string? Id,
     [property: JsonPropertyName("title")] string? Title,
     [property: JsonPropertyName("link_href")] string? LinkHref,
     [property: JsonPropertyName("uris")] IReadOnlyList<string>? Uris
+);
+
+public record XrelExternalInfoDetails(
+    [property: JsonPropertyName("type")] string? Type,
+    [property: JsonPropertyName("id")] string? Id,
+    [property: JsonPropertyName("title")] string? Title,
+    [property: JsonPropertyName("link_href")] string? LinkHref,
+    [property: JsonPropertyName("genre")] string? Genre,
+    [property: JsonPropertyName("cover_url")] string? CoverUrl,
+    [property: JsonPropertyName("uris")] IReadOnlyList<string>? Uris,
+    [property: JsonPropertyName("externals")] IReadOnlyList<XrelExternalInfoExternal>? Externals
+);
+
+public record XrelExternalInfoExternal([property: JsonPropertyName("plot")] string? Plot);
+
+public record XrelExternalInfoMedia(
+    [property: JsonPropertyName("type")] string? Type,
+    [property: JsonPropertyName("description")] string? Description,
+    [property: JsonPropertyName("url_full")] string? UrlFull,
+    [property: JsonPropertyName("url_thumb")] string? UrlThumb
 );

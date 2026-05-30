@@ -13,8 +13,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
-using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 using NfoReleaseInfo = Bearcat.Abstractions.NfoDatabase.ReleaseInfo;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 
@@ -175,15 +175,18 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         releaseInfo.SizeUnit.ShouldBe("GB");
         releaseInfo.VideoType.ShouldBe("WEB");
         releaseInfo.AudioType.ShouldBe("AC3");
+        releaseInfo.Genre.ShouldBe("Drama, Sci-Fi");
+        releaseInfo.Description.ShouldBe("Bearcat plot");
+        releaseInfo.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_cover/movie123.JPG");
 
         var externalInfo = releaseInfo.ExternalInfos.Single();
         externalInfo.Type.ShouldBe(ExternalInfoType.Movie);
         externalInfo.Title.ShouldBe("Bearcat Movie");
-        externalInfo.Urls.ShouldContain(
-            url => url.Type == UrlType.Imdb && url.Url == "https://www.imdb.com/de/title/tt1234567"
+        externalInfo.Urls.ShouldContain(url =>
+            url.Type == UrlType.Imdb && url.Url == "https://www.imdb.com/de/title/tt1234567"
         );
-        externalInfo.Urls.ShouldContain(
-            url => url.Type == UrlType.Other && url.Url == "https://www.xrel.to/movie/123"
+        externalInfo.Urls.ShouldContain(url =>
+            url.Type == UrlType.Other && url.Url == "https://www.xrel.to/movie/123"
         );
     }
 
@@ -259,13 +262,15 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         var releaseFolder = Directory.CreateDirectory(
             Path.Combine(tempRootPath, "Bearcat.Release.Unmanaged")
         );
-        await File.WriteAllTextAsync(Path.Combine(releaseFolder.FullName, "archive.part1.rar"), "1");
-        await File.WriteAllTextAsync(Path.Combine(releaseFolder.FullName, "archive.part2.rar"), "2");
-        await AddAutomationAsync(
-            releaseTemplate.ReleaseTemplateId,
-            tempRootPath,
-            "*Unmanaged"
+        await File.WriteAllTextAsync(
+            Path.Combine(releaseFolder.FullName, "archive.part1.rar"),
+            "1"
         );
+        await File.WriteAllTextAsync(
+            Path.Combine(releaseFolder.FullName, "archive.part2.rar"),
+            "2"
+        );
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*Unmanaged");
 
         // Act
         var result = await service.ProcessAsync(CancellationToken.None);
@@ -474,6 +479,9 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
             Size: new ReleaseInfoSize(12, "GB"),
             VideoType: "WEB",
             AudioType: "AC3",
+            Genre: "Drama, Sci-Fi",
+            Description: "Bearcat plot",
+            CoverUrl: "https://uploads2.xrel.to/img_cover/movie123.JPG",
             ExternalInfos:
             [
                 new ExternalInfo(
