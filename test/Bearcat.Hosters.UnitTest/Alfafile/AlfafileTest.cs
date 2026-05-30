@@ -62,6 +62,7 @@ public class AlfafileTest
                     Path.GetFileName(filePath),
                     new FileInfo(filePath).Length,
                     "61d7464d09ca6098f561542ce138214a",
+                    null,
                     config,
                     It.IsAny<CancellationToken>()
                 )
@@ -90,6 +91,56 @@ public class AlfafileTest
     }
 
     [Test]
+    public async Task UploadFileAsync_FolderId_PassesFolderIdToUploadRequest()
+    {
+        // Arrange
+        var filePath = CreateTemporaryFile("upload-content");
+        var fileDto = new FileDto(
+            Id: 19,
+            FullFileName: filePath,
+            UploadId: 119,
+            FolderId: "folder-id"
+        );
+        var config = new AlfafileConfig { Username = "user@example.test", Password = "password" };
+        var uploadRequest = CreateUploadResponse(
+            uploadId: "upload-id",
+            state: UploadStates.Done,
+            fileUrl: "http://alfafile.net/file/GH"
+        );
+
+        apiClientMock
+            .Setup(x =>
+                x.RequestUploadFileAsync(
+                    Path.GetFileName(filePath),
+                    new FileInfo(filePath).Length,
+                    "61d7464d09ca6098f561542ce138214a",
+                    "folder-id",
+                    config,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(uploadRequest);
+
+        // Act
+        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        apiClientMock.Verify(
+            x =>
+                x.RequestUploadFileAsync(
+                    Path.GetFileName(filePath),
+                    new FileInfo(filePath).Length,
+                    "61d7464d09ca6098f561542ce138214a",
+                    "folder-id",
+                    config,
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
     public async Task UploadFileAsync_RequestUploadFails_ReturnsFailureAndRetriesThreeTimes()
     {
         // Arrange
@@ -108,6 +159,7 @@ public class AlfafileTest
                     Path.GetFileName(filePath),
                     new FileInfo(filePath).Length,
                     "61d7464d09ca6098f561542ce138214a",
+                    null,
                     config,
                     It.IsAny<CancellationToken>()
                 )
@@ -132,6 +184,7 @@ public class AlfafileTest
                     Path.GetFileName(filePath),
                     new FileInfo(filePath).Length,
                     "61d7464d09ca6098f561542ce138214a",
+                    null,
                     config,
                     It.IsAny<CancellationToken>()
                 ),
@@ -227,6 +280,29 @@ public class AlfafileTest
 
         // Assert
         result.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task CreateFolderAsync_Config_CreatesFolderWithApiClient()
+    {
+        // Arrange
+        var config = new AlfafileConfig { Username = "user@example.test", Password = "password" };
+
+        apiClientMock
+            .Setup(x =>
+                x.CreateFolderAsync(config, "release-folder", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync("folder-id");
+
+        // Act
+        var result = await service.CreateFolderAsync(
+            "release-folder",
+            config,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("folder-id");
     }
 
     [Test]

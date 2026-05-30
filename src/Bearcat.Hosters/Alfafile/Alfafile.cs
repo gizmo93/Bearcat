@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.Alfafile;
 
-public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger) : IHoster
+public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger) : IHosterWithFolders
 {
     public string Name => "Alfafile";
 
@@ -123,6 +123,17 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger) : 
         return response.Response?.User.Upload.NbPipes;
     }
 
+    public async Task<string> CreateFolderAsync(
+        string folderName,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<AlfafileConfig>();
+
+        return await apiClient.CreateFolderAsync(config, folderName, cancellationToken);
+    }
+
     public async Task<TryLoginResult> TryLoginAsync(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken
@@ -160,6 +171,7 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger) : 
             name: Path.GetFileName(fileDto.FullFileName),
             size: stream.Length,
             hash: await CreateMd5HashAsync(stream, cancellationToken),
+            folderId: fileDto.FolderId,
             config: config,
             cancellationToken: cancellationToken
         );

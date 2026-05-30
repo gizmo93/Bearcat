@@ -9,7 +9,14 @@ public interface IAlfafileApiClient
         string name,
         long size,
         string hash,
+        string? folderId,
         AlfafileConfig config,
+        CancellationToken cancellationToken
+    );
+
+    Task<string> CreateFolderAsync(
+        AlfafileConfig config,
+        string folderName,
         CancellationToken cancellationToken
     );
 

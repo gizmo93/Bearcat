@@ -2,6 +2,7 @@ using System.Net;
 using Bearcat.Hosters.Alfafile;
 using Bearcat.Hosters.Alfafile.Api;
 using Bearcat.Hosters.Alfafile.Api.File;
+using Bearcat.Hosters.Alfafile.Api.Folder;
 using Bearcat.Hosters.Alfafile.Api.User;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
@@ -49,6 +50,160 @@ public class ApiClientTest
         {
             RateLimitRetryDelay = TimeSpan.Zero,
         };
+    }
+
+    [Test]
+    public async Task RequestUploadFileAsync_FolderId_PassesFolderIdToApi()
+    {
+        // Arrange
+        apiMock
+            .Setup(x =>
+                x.RequestUploadFileAsync(
+                    "auth-token",
+                    "archive.part01.rar",
+                    1024,
+                    "hash",
+                    "folder-id",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new UploadFileResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Response = new UploadFileResponse.ResponseObject
+                    {
+                        Upload = new UploadFileResponse.Upload { UploadId = "upload-id" },
+                    },
+                }
+            );
+
+        // Act
+        var result = await apiClient.RequestUploadFileAsync(
+            "archive.part01.rar",
+            1024,
+            "hash",
+            "folder-id",
+            config,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Status.ShouldBe((int)HttpStatusCode.OK);
+    }
+
+    [Test]
+    public async Task CreateFolderAsync_CreatedFolder_ReturnsFolderId()
+    {
+        // Arrange
+        apiMock
+            .Setup(x =>
+                x.CreateFolderAsync(
+                    "auth-token",
+                    "release-folder",
+                    null,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new FolderResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Response = new FolderResponse.ResponseObject
+                    {
+                        Folder = new FolderResponse.Folder
+                        {
+                            FolderId = "created-folder-id",
+                            Name = "release-folder",
+                        },
+                    },
+                }
+            );
+
+        // Act
+        var result = await apiClient.CreateFolderAsync(
+            config,
+            "release-folder",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("created-folder-id");
+        apiMock.Verify(
+            x =>
+                x.GetFolderInfoAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task CreateFolderAsync_FolderNameConflict_ReturnsExistingRootFolderId()
+    {
+        // Arrange
+        apiMock
+            .Setup(x =>
+                x.CreateFolderAsync(
+                    "auth-token",
+                    "release-folder",
+                    null,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new FolderResponse
+                {
+                    Status = (int)HttpStatusCode.Conflict,
+                    Details = "Conflict. Folder with the same name already exists",
+                }
+            );
+
+        apiMock
+            .Setup(x =>
+                x.GetFolderInfoAsync(
+                    "auth-token",
+                    null,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new FolderResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Response = new FolderResponse.ResponseObject
+                    {
+                        Folder = new FolderResponse.Folder
+                        {
+                            Folders =
+                            [
+                                new FolderResponse.Folder
+                                {
+                                    FolderId = "other-folder-id",
+                                    Name = "other-folder",
+                                },
+                                new FolderResponse.Folder
+                                {
+                                    FolderId = "existing-folder-id",
+                                    Name = "release-folder",
+                                },
+                            ],
+                        },
+                    },
+                }
+            );
+
+        // Act
+        var result = await apiClient.CreateFolderAsync(
+            config,
+            "release-folder",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("existing-folder-id");
     }
 
     [Test]

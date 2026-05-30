@@ -3,6 +3,7 @@ using System.Security.Authentication;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Hosters.Alfafile.Api.File;
+using Bearcat.Hosters.Alfafile.Api.Folder;
 using Bearcat.Hosters.Alfafile.Api.User;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Shared;
@@ -45,6 +46,7 @@ public class ApiClient(
         string name,
         long size,
         string hash,
+        string? folderId,
         AlfafileConfig config,
         CancellationToken cancellationToken
     )
@@ -56,8 +58,48 @@ public class ApiClient(
             name: name,
             size: size,
             hash: hash,
+            folderId: folderId,
             cancellationToken: cancellationToken
         );
+    }
+
+    public async Task<string> CreateFolderAsync(
+        AlfafileConfig config,
+        string folderName,
+        CancellationToken cancellationToken
+    )
+    {
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+
+        var createdFolder = await api.CreateFolderAsync(
+            token: token,
+            name: folderName,
+            folderId: null,
+            cancellationToken: cancellationToken
+        );
+
+        if (createdFolder.Status == (int)HttpStatusCode.Conflict)
+        {
+            var existingFolderId = await GetFolderIdAsync(token, folderName, cancellationToken);
+
+            return existingFolderId
+                ?? throw new HttpRequestException(
+                    $"Alfafile folder already exists but was not found in root folder: {folderName}"
+                );
+        }
+
+        if (
+            !((HttpStatusCode)createdFolder.Status).IsSuccessStatusCode
+            || string.IsNullOrWhiteSpace(createdFolder.Response?.Folder?.FolderId)
+        )
+        {
+            throw new HttpRequestException(
+                createdFolder.Details
+                    ?? $"Alfafile folder creation failed with status {createdFolder.Status}"
+            );
+        }
+
+        return createdFolder.Response.Folder.FolderId;
     }
 
     public async Task<UploadFileResponse> UploadFileAsync(
@@ -226,6 +268,33 @@ public class ApiClient(
         }
 
         return response.Content;
+    }
+
+    private async Task<string?> GetFolderIdAsync(
+        string token,
+        string folderName,
+        CancellationToken cancellationToken
+    )
+    {
+        var rootFolder = await api.GetFolderInfoAsync(
+            token: token,
+            folderId: null,
+            cancellationToken: cancellationToken
+        );
+
+        if (!((HttpStatusCode)rootFolder.Status).IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                rootFolder.Details ?? $"Alfafile folder info failed with status {rootFolder.Status}"
+            );
+        }
+
+        return rootFolder
+            .Response?.Folder?.Folders.FirstOrDefault(folder =>
+                string.Equals(folder.Name, folderName, StringComparison.Ordinal)
+                && !string.IsNullOrWhiteSpace(folder.FolderId)
+            )
+            ?.FolderId;
     }
 
     private async Task<string> GetAuthTokenAsync(
