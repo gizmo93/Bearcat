@@ -1,5 +1,5 @@
-<BbDropdownMenu Open="@isOpen" OpenChanged="HandleOpenChangedAsync">
-    <BbDropdownMenuTrigger>
+<BbPopover Open="@isOpen" OpenChanged="HandleOpenChangedAsync">
+    <BbPopoverTrigger>
         <BbButton Variant="ButtonVariant.Ghost"
                   Size="ButtonSize.IconSmall"
                   AriaLabel="@L["OpenNotifications"]"
@@ -10,8 +10,8 @@
                 <span class="bearcat-notification-badge">@BadgeText</span>
             }
         </BbButton>
-    </BbDropdownMenuTrigger>
-    <BbDropdownMenuContent Align="PopoverAlign.End" Class="bearcat-notification-menu p-0">
+    </BbPopoverTrigger>
+    <BbPopoverContent Align="PopoverAlign.End" Offset="8" Class="bearcat-notification-menu p-0">
         <div class="flex items-center justify-between gap-3 border-b border-border/70 px-3 py-2.5">
             <div class="min-w-0">
                 <p class="truncate text-sm font-semibold">@L["Notifications"]</p>
@@ -66,9 +66,10 @@
             </div>
         }
 
-        <BbDropdownMenuSeparator />
-        <BbDropdownMenuItem Href="/notifications" Class="justify-center">
-            @L["ViewAllNotifications"]
-        </BbDropdownMenuItem>
-    </BbDropdownMenuContent>
-</BbDropdownMenu>
+        <div class="border-t border-border/70 p-1">
+            <a href="/notifications" class="bearcat-notification-view-all">
+                @L["ViewAllNotifications"]
+            </a>
+        </div>
+    </BbPopoverContent>
+</BbPopover>

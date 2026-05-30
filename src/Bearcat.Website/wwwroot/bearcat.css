@@ -296,6 +296,7 @@ a {
 
 .bearcat-notification-trigger {
     position: relative;
+    touch-action: manipulation;
 }
 
 .bearcat-notification-badge {
@@ -312,6 +313,7 @@ a {
     font-size: 0.65rem;
     font-weight: 700;
     line-height: 0.95rem;
+    pointer-events: none;
     text-align: center;
 }
 
@@ -348,6 +350,28 @@ a {
     line-height: 1.25rem;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+}
+
+.bearcat-notification-view-all {
+    display: flex;
+    min-height: 2.15rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: calc(var(--radius) - 2px);
+    padding-inline: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.bearcat-notification-view-all:hover {
+    background: var(--accent);
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .bearcat-notification-trigger {
+        min-width: 2.75rem !important;
+        min-height: 2.75rem !important;
+    }
 }
 
 .bearcat-config-item-focused {
