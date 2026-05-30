@@ -70,10 +70,8 @@ public partial class ReleaseOverview(
             hasLocalNfo = false;
 
             overviewUploads = await readRepository.GetReleaseOverviewAsync(ReleaseId);
-            var releaseInfos = await readRepository.GetReleaseInfosAsync(ReleaseId);
-            coverUrl = releaseInfos
-                .Select(info => info.CoverUrl)
-                .FirstOrDefault(url => !string.IsNullOrWhiteSpace(url));
+            var releaseInfo = await readRepository.GetReleaseInfoAsync(ReleaseId);
+            coverUrl = releaseInfo?.CoverUrl;
             releaseNfo = await readRepository.GetReleaseNfoAsync(ReleaseId);
             nfoContent = releaseNfo?.Content;
             hasLocalNfo = await ReleaseNfoService.HasLocalNfoAsync(ReleaseFolderPath);

@@ -56,7 +56,7 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task GetReleaseInfosAsync_ReleaseHasInfo_ReturnsTypedReadModel()
+    public async Task GetReleaseInfoAsync_ReleaseHasInfo_ReturnsTypedReadModel()
     {
         // Arrange
         var release = await AddReleaseAsync();
@@ -102,10 +102,10 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         dbContext.ChangeTracker.Clear();
 
         // Act
-        var result = await repository.GetReleaseInfosAsync(release.Id, CancellationToken.None);
+        var result = await repository.GetReleaseInfoAsync(release.Id, CancellationToken.None);
 
         // Assert
-        var releaseInfo = result.Single();
+        var releaseInfo = result.ShouldNotBeNull();
         releaseInfo.NfoDatabaseClassName.ShouldBe("XrelNfoDatabase");
         releaseInfo.ReleaseName.ShouldBe("Bearcat.Release.2026-GRP");
         releaseInfo.ReleaseDatabaseUrl.ShouldBe("https://www.xrel.to/release/123");
@@ -159,7 +159,7 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task GetReleaseInfosAsync_UrlsUseLegacyJsonShape_ReturnsTypedUrls()
+    public async Task GetReleaseInfoAsync_UrlsUseLegacyJsonShape_ReturnsTypedUrls()
     {
         // Arrange
         var release = await AddReleaseAsync();
@@ -185,10 +185,10 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         dbContext.ChangeTracker.Clear();
 
         // Act
-        var result = await repository.GetReleaseInfosAsync(release.Id, CancellationToken.None);
+        var result = await repository.GetReleaseInfoAsync(release.Id, CancellationToken.None);
 
         // Assert
-        var url = result.Single().ExternalInfos.Single().Urls.Single();
+        var url = result.ShouldNotBeNull().ExternalInfos.Single().Urls.Single();
 
         url.Type.ShouldBe(UrlType.Imdb);
         url.Url.ShouldBe("https://www.imdb.com/de/title/tt1234567");

@@ -5,13 +5,11 @@ public sealed record ForumPostTemplateRenderModel
     public ForumPostTemplateRenderModel(
         ForumPostTemplateReleaseModel release,
         ForumPostTemplateReleaseInfoModel releaseInfo,
-        IReadOnlyList<ForumPostTemplateReleaseInfoModel> releaseInfos,
         IReadOnlyList<ForumPostTemplateUploadModel> uploads
     )
     {
         Release = release;
         ReleaseInfo = releaseInfo;
-        ReleaseInfos = releaseInfos;
         Uploads = uploads;
     }
 
@@ -19,7 +17,6 @@ public sealed record ForumPostTemplateRenderModel
         new(
             release: ForumPostTemplateReleaseModel.Empty,
             releaseInfo: ForumPostTemplateReleaseInfoModel.Empty,
-            releaseInfos: [],
             uploads: []
         );
 
@@ -28,13 +25,6 @@ public sealed record ForumPostTemplateRenderModel
 
     [ForumPostTemplateVariable("First resolved release info.", IncludeChildren = true)]
     public ForumPostTemplateReleaseInfoModel ReleaseInfo { get; init; }
-
-    [ForumPostTemplateVariable(
-        "Loop over all resolved release infos.",
-        LoopVariable = "info",
-        ElementType = typeof(ForumPostTemplateReleaseInfoModel)
-    )]
-    public IReadOnlyList<ForumPostTemplateReleaseInfoModel> ReleaseInfos { get; init; }
 
     [ForumPostTemplateVariable(
         "Loop over upload configurations.",

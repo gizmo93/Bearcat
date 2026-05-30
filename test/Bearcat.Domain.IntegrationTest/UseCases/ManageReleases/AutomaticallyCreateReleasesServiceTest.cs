@@ -163,11 +163,11 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         dbContext.ChangeTracker.Clear();
         var release = await dbContext
             .Releases.AsSplitQuery()
-            .Include(release => release.ReleaseInfos)
-                .ThenInclude(info => info.ExternalInfos)
+            .Include(release => release.ReleaseInfo)
+                .ThenInclude(info => info!.ExternalInfos)
             .SingleAsync(release => release.ReleaseFolderPath == releaseFolder.FullName);
 
-        var releaseInfo = release.ReleaseInfos.Single();
+        var releaseInfo = release.ReleaseInfo.ShouldNotBeNull();
         releaseInfo.NfoDatabaseClassName.ShouldBe(WorkingDatabaseClassName);
         releaseInfo.ReleaseName.ShouldBe("Bearcat.Release.1080p");
         releaseInfo.ReleaseDatabaseUrl.ShouldBe("https://www.xrel.to/release/123");

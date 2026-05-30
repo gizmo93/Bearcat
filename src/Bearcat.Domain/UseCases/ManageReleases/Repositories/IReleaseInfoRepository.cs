@@ -16,11 +16,7 @@ public interface IReleaseInfoRepository
         CancellationToken cancellationToken = default
     );
 
-    Task<bool> HasReleaseInfoAsync(
-        int releaseId,
-        string nfoDatabaseClassName,
-        CancellationToken cancellationToken = default
-    );
+    Task<bool> HasReleaseInfoAsync(int releaseId, CancellationToken cancellationToken = default);
 
     Task<ReleaseInfo> GetReleaseInfoByIdAsync(
         int releaseInfoId,
@@ -29,7 +25,7 @@ public interface IReleaseInfoRepository
 
     void Remove(ReleaseInfo releaseInfo);
 
-    void DetachPendingReleaseInfos(Release release);
+    void DetachPendingReleaseInfo(Release release);
 
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

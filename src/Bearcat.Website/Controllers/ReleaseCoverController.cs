@@ -16,13 +16,11 @@ public class ReleaseCoverController(
         CancellationToken cancellationToken = default
     )
     {
-        var releaseInfos = await releaseReadRepository.GetReleaseInfosAsync(
+        var releaseInfo = await releaseReadRepository.GetReleaseInfoAsync(
             releaseId,
             cancellationToken
         );
-        var coverUrl = releaseInfos
-            .Select(info => info.CoverUrl)
-            .FirstOrDefault(url => !string.IsNullOrWhiteSpace(url));
+        var coverUrl = releaseInfo?.CoverUrl;
 
         if (string.IsNullOrWhiteSpace(coverUrl))
         {

@@ -22,7 +22,7 @@ public class Release
 
     public string ReleaseFolderPath { get; set; } = null!;
 
-    public List<ReleaseInfo> ReleaseInfos { get; set; } = [];
+    public ReleaseInfo? ReleaseInfo { get; set; }
 
-    public DateTime? ReleaseInfosCheckedAt { get; set; }
+    public DateTime? ReleaseInfoCheckedAt { get; set; }
 }

@@ -164,7 +164,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             .ToList();
     }
 
-    public async Task<IReadOnlyList<ReleaseInfoReadModel>> GetReleaseInfosAsync(
+    public async Task<ReleaseInfoReadModel?> GetReleaseInfoAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     )
@@ -172,8 +172,6 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
         return await dbRead
             .ReleaseInfos.AsSplitQuery()
             .Where(info => info.ReleaseId == releaseId)
-            .OrderBy(info => info.NfoDatabaseClassName)
-            .ThenBy(info => info.Id)
             .Select(info => new ReleaseInfoReadModel(
                 info.Id,
                 info.NfoDatabaseClassName,
@@ -207,7 +205,7 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
                     ))
                     .ToList()
             ))
-            .ToListAsync(cancellationToken: cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 
     public async Task<ReleaseNfoReadModel?> GetReleaseNfoAsync(

@@ -265,7 +265,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         var recentlyCheckedAt = DateTime.UtcNow.AddHours(-1);
         var skippedRelease = await AddReleaseAsync(
             "Recently.Checked.Release.2026-GRP",
-            releaseInfosCheckedAt: recentlyCheckedAt
+            releaseInfoCheckedAt: recentlyCheckedAt
         );
         var unresolvedReleases = new List<Release>();
 
@@ -288,29 +288,30 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         // Assert
         dbContext.ChangeTracker.Clear();
         var releases = await dbContext
-            .Releases.Include(release => release.ReleaseInfos)
+            .Releases.Include(release => release.ReleaseInfo)
             .ToDictionaryAsync(release => release.Name);
 
         foreach (var release in unresolvedReleases)
         {
-            releases[release.Name].ReleaseInfos.ShouldBeEmpty();
-            releases[release.Name].ReleaseInfosCheckedAt.ShouldNotBeNull();
+            releases[release.Name].ReleaseInfo.ShouldBeNull();
+            releases[release.Name].ReleaseInfoCheckedAt.ShouldNotBeNull();
             releases[release.Name]
-                .ReleaseInfosCheckedAt.GetValueOrDefault()
+                .ReleaseInfoCheckedAt.GetValueOrDefault()
                 .ShouldBeGreaterThan(release.CreatedAt);
         }
 
         var persistedResolvedRelease = releases[resolvedRelease.Name];
-        persistedResolvedRelease.ReleaseInfos.Single().ReleaseName.ShouldBe(resolvedRelease.Name);
-        persistedResolvedRelease.ReleaseInfosCheckedAt.ShouldNotBeNull();
+        persistedResolvedRelease.ReleaseInfo.ShouldNotBeNull();
+        persistedResolvedRelease.ReleaseInfo.ReleaseName.ShouldBe(resolvedRelease.Name);
+        persistedResolvedRelease.ReleaseInfoCheckedAt.ShouldNotBeNull();
         persistedResolvedRelease
-            .ReleaseInfosCheckedAt.GetValueOrDefault()
+            .ReleaseInfoCheckedAt.GetValueOrDefault()
             .ShouldBeGreaterThan(resolvedRelease.CreatedAt);
 
         var persistedSkippedRelease = releases[skippedRelease.Name];
-        persistedSkippedRelease.ReleaseInfos.ShouldBeEmpty();
-        persistedSkippedRelease.ReleaseInfosCheckedAt.ShouldNotBeNull();
-        persistedSkippedRelease.ReleaseInfosCheckedAt.Value.ShouldBe(
+        persistedSkippedRelease.ReleaseInfo.ShouldBeNull();
+        persistedSkippedRelease.ReleaseInfoCheckedAt.ShouldNotBeNull();
+        persistedSkippedRelease.ReleaseInfoCheckedAt.Value.ShouldBe(
             recentlyCheckedAt,
             TimeSpan.FromSeconds(1)
         );
@@ -436,7 +437,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
 
         // Assert
         resolved.ShouldBeTrue();
-        var releaseInfo = release.ReleaseInfos.SingleOrDefault();
+        var releaseInfo = release.ReleaseInfo;
 
         releaseInfo.ShouldNotBeNull();
         releaseInfo.ReleaseName.ShouldBe("New.Tracked.Release.2026-GRP");
@@ -548,7 +549,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     private async Task<Release> AddReleaseAsync(
         string name,
         string? releaseFolderPath = null,
-        DateTime? releaseInfosCheckedAt = null
+        DateTime? releaseInfoCheckedAt = null
     )
     {
         var releaseGroup = await AddReleaseGroupAsync();
@@ -559,7 +560,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             ReleaseType = ReleaseType.Managed,
             ReleaseFolderPath = releaseFolderPath ?? $"/tmp/{name}",
             ReleaseGroupId = releaseGroup.Id,
-            ReleaseInfosCheckedAt = releaseInfosCheckedAt,
+            ReleaseInfoCheckedAt = releaseInfoCheckedAt,
             ArchiveConfigs = [],
             UploadConfigs = [],
         };

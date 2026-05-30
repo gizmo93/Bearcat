@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
-public partial class ReleaseInfos(
+public partial class ReleaseInfoPanel(
     IReleaseReadRepository readRepository,
     ReleaseInfoService releaseInfoService,
     DialogService dialogService,
@@ -18,21 +18,21 @@ public partial class ReleaseInfos(
     [EditorRequired]
     public int ReleaseId { get; set; }
 
-    private IReadOnlyList<ReleaseInfoReadModel> releaseInfos = [];
+    private ReleaseInfoReadModel? releaseInfo;
     private bool isLoading;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadReleaseInfosAsync();
+        await LoadReleaseInfoAsync();
     }
 
-    private async Task LoadReleaseInfosAsync()
+    private async Task LoadReleaseInfoAsync()
     {
         isLoading = true;
 
         try
         {
-            releaseInfos = await readRepository.GetReleaseInfosAsync(ReleaseId);
+            releaseInfo = await readRepository.GetReleaseInfoAsync(ReleaseId);
         }
         finally
         {
@@ -60,7 +60,7 @@ public partial class ReleaseInfos(
 
         await releaseInfoService.DeleteAsync(releaseInfo.ReleaseInfoId);
         toastService.Success(L["ReleaseInfoDeleted"]);
-        await LoadReleaseInfosAsync();
+        await LoadReleaseInfoAsync();
     }
 
     private static string GetSizeLabel(ReleaseInfoReadModel releaseInfo)

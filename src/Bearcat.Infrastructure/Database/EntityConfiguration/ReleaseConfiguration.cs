@@ -13,7 +13,7 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
         builder.Property(r => r.CreatedAt).IsRequired().HasPrecision(4);
         builder.Property(r => r.ReleaseType).IsRequired();
         builder.Property(r => r.ReleaseFolderPath).HasMaxLength(1000).IsRequired();
-        builder.Property(r => r.ReleaseInfosCheckedAt).HasPrecision(4).IsRequired(false);
+        builder.Property(r => r.ReleaseInfoCheckedAt).HasPrecision(4).IsRequired(false);
 
         builder
             .HasMany(r => r.ArchiveConfigs)
@@ -32,10 +32,10 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder
-            .HasMany(r => r.ReleaseInfos)
+            .HasOne(r => r.ReleaseInfo)
             .WithOne(i => i.Release)
-            .HasForeignKey(i => i.ReleaseId)
-            .HasPrincipalKey(r => r.Id)
+            .HasForeignKey<ReleaseInfo>(i => i.ReleaseId)
+            .HasPrincipalKey<Release>(r => r.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
     }

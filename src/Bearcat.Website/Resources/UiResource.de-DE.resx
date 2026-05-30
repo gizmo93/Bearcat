@@ -203,7 +203,7 @@
   <data name="NfoFileAlreadyExists" xml:space="preserve"><value>Im Release-Ordner liegt bereits eine NFO-Datei.</value></data>
   <data name="NfoFileSaveFailed" xml:space="preserve"><value>NFO-Datei konnte nicht gespeichert werden: {0}</value></data>
   <data name="NfoFileSaved" xml:space="preserve"><value>NFO-Datei {0} gespeichert.</value></data>
-  <data name="NoReleaseInfosYet" xml:space="preserve"><value>Noch keine Release-Infos.</value></data>
+  <data name="NoReleaseInfoYet" xml:space="preserve"><value>Noch keine Release-Info.</value></data>
   <data name="NoReleasesFound" xml:space="preserve"><value>Keine Releases gefunden</value></data>
   <data name="NoTargets" xml:space="preserve"><value>Keine Ziele</value></data>
   <data name="NoUploadConfigurationsYet" xml:space="preserve"><value>Noch keine Upload-Konfigurationen.</value></data>
@@ -241,7 +241,7 @@
   <data name="ReleaseDetails" xml:space="preserve"><value>Release-Details</value></data>
   <data name="ReleaseFolder" xml:space="preserve"><value>Release-Ordner</value></data>
   <data name="ReleaseFolderMissing" xml:space="preserve"><value>Der Release-Ordner existiert nicht.</value></data>
-  <data name="ReleaseInfos" xml:space="preserve"><value>Release-Infos</value></data>
+  <data name="ReleaseInfo" xml:space="preserve"><value>Release-Info</value></data>
   <data name="ReleaseInfoDeleted" xml:space="preserve"><value>Release-Info gelöscht</value></data>
   <data name="ReleaseMetadataSources" xml:space="preserve"><value>Release-Metadatenquellen</value></data>
     <data name="ReleaseRootsAndOnlineState" xml:space="preserve"><value>Suche und verwalte Releases</value></data>

@@ -101,13 +101,11 @@ public class ForumPostRenderService(
             cancellationToken
         );
 
-        var infos = await releaseReadRepository.GetReleaseInfosAsync(releaseId, cancellationToken);
+        var info = await releaseReadRepository.GetReleaseInfoAsync(releaseId, cancellationToken);
 
         var nfo = (
             await releaseReadRepository.GetReleaseNfoAsync(releaseId, cancellationToken)
         )?.Content;
-
-        var infoModels = infos.Select(ToReleaseInfoModel).ToList();
 
         var uploadModels = new List<ForumPostTemplateUploadModel>();
 
@@ -118,8 +116,9 @@ public class ForumPostRenderService(
 
         return new ForumPostTemplateRenderModel(
             release: ToReleaseModel(release, nfo),
-            releaseInfo: infoModels.FirstOrDefault() ?? ForumPostTemplateReleaseInfoModel.Empty,
-            releaseInfos: infoModels,
+            releaseInfo: info is null
+                ? ForumPostTemplateReleaseInfoModel.Empty
+                : ToReleaseInfoModel(info),
             uploads: uploadModels
         );
     }

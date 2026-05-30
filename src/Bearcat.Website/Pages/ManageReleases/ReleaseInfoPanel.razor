@@ -2,13 +2,13 @@
 <section class="bearcat-release-info-section space-y-4">
     <div class="bearcat-section-header">
         <div>
-            <h2 class="text-lg font-semibold">@L["ReleaseInfos"]</h2>
+            <h2 class="text-lg font-semibold">@L["ReleaseInfo"]</h2>
         </div>
 
         <BbButton Variant="ButtonVariant.Outline"
                   Size="ButtonSize.Small"
                   Disabled="isLoading"
-                  OnClick="LoadReleaseInfosAsync">
+                  OnClick="LoadReleaseInfoAsync">
             <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
             @L["Refresh"]
         </BbButton>
@@ -23,21 +23,19 @@
             </div>
         </div>
     }
-    else if (releaseInfos.Count == 0)
+    else if (releaseInfo is null)
     {
         <div class="bearcat-release-info-list">
             <div class="bearcat-release-empty">
                 <LucideIcon Name="database" class="h-5 w-5" />
-                <span>@L["NoReleaseInfosYet"]</span>
+                <span>@L["NoReleaseInfoYet"]</span>
             </div>
         </div>
     }
     else
     {
         <div class="bearcat-release-info-list">
-            @foreach (var releaseInfo in releaseInfos)
-            {
-                <article class="bearcat-release-info-item">
+            <article class="bearcat-release-info-item">
                     <header class="bearcat-release-info-card-header">
                         <div class="min-w-0 space-y-2">
                             <div class="bearcat-release-info-source-row">
@@ -175,8 +173,7 @@
                             </div>
                         }
                     </div>
-                </article>
-            }
+            </article>
         </div>
     }
 </section>

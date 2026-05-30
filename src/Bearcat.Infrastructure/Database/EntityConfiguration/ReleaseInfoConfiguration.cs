@@ -22,7 +22,7 @@ public class ReleaseInfoConfiguration : IEntityTypeConfiguration<ReleaseInfo>
         builder.Property(info => info.Description).IsRequired(false);
         builder.Property(info => info.CoverUrl).IsRequired(false).HasMaxLength(1000);
 
-        builder.HasIndex(info => new { info.ReleaseId, info.NfoDatabaseClassName }).IsUnique();
+        builder.HasIndex(info => info.ReleaseId).IsUnique();
 
         builder
             .HasMany(info => info.ExternalInfos)

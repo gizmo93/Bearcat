@@ -25,7 +25,7 @@ public interface IReleaseReadRepository
         CancellationToken cancellationToken = default
     );
 
-    Task<IReadOnlyList<ReleaseInfoReadModel>> GetReleaseInfosAsync(
+    Task<ReleaseInfoReadModel?> GetReleaseInfoAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     );

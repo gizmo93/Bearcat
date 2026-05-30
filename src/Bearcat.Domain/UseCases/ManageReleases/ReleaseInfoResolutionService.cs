@@ -72,7 +72,7 @@ public class ReleaseInfoResolutionService(
         CancellationToken cancellationToken = default
     )
     {
-        var releaseInfosAttached = await TryResolveAndAttachReleaseInfosAsync(
+        var releaseInfoAttached = await TryResolveAndAttachReleaseInfoAsync(
             release: release,
             registrations: registrations,
             cancellationToken: cancellationToken
@@ -84,9 +84,9 @@ public class ReleaseInfoResolutionService(
             cancellationToken: cancellationToken
         );
 
-        release.ReleaseInfosCheckedAt = timeProvider.GetLocalNow();
+        release.ReleaseInfoCheckedAt = timeProvider.GetLocalNow();
 
-        return releaseInfosAttached || nfoAttached;
+        return releaseInfoAttached || nfoAttached;
     }
 
     private async Task<bool> TryResolveAndAttachNfoAsync(
@@ -95,30 +95,38 @@ public class ReleaseInfoResolutionService(
         CancellationToken cancellationToken
     )
     {
-        foreach (var releaseInfo in release.ReleaseInfos.Where(info => info.ReleaseNfo is null))
+        if (release.ReleaseInfo is null || release.ReleaseInfo.ReleaseNfo is not null)
         {
-            if (
-                await TryResolveNfoAsync(
-                    release: release,
-                    releaseInfo: releaseInfo,
-                    registrations: registrations,
-                    cancellationToken: cancellationToken
-                )
+            return false;
+        }
+
+        var releaseInfo = release.ReleaseInfo;
+        if (
+            await TryResolveNfoAsync(
+                release: release,
+                releaseInfo: releaseInfo,
+                registrations: registrations,
+                cancellationToken: cancellationToken
             )
-            {
-                return true;
-            }
+        )
+        {
+            return true;
         }
 
         return false;
     }
 
-    private async Task<bool> TryResolveAndAttachReleaseInfosAsync(
+    private async Task<bool> TryResolveAndAttachReleaseInfoAsync(
         Release release,
         IReadOnlyList<ActiveNfoDatabaseRegistrationReadModel> registrations,
         CancellationToken cancellationToken
     )
     {
+        if (release.ReleaseInfo is not null)
+        {
+            return false;
+        }
+
         foreach (var registration in registrations)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -127,11 +135,7 @@ public class ReleaseInfoResolutionService(
             {
                 if (
                     release.Id > 0
-                    && await repository.HasReleaseInfoAsync(
-                        releaseId: release.Id,
-                        nfoDatabaseClassName: registration.NfoDatabaseClassName,
-                        cancellationToken: cancellationToken
-                    )
+                    && await repository.HasReleaseInfoAsync(release.Id, cancellationToken)
                 )
                 {
                     return false;
@@ -154,7 +158,7 @@ public class ReleaseInfoResolutionService(
 
                 var releaseInfoEntity = ToEntity(registration.NfoDatabaseClassName, releaseInfo);
 
-                release.ReleaseInfos.Add(releaseInfoEntity);
+                release.ReleaseInfo = releaseInfoEntity;
 
                 logger.LogInformation(
                     "Resolved release info for release {ReleaseName} using {NfoDatabase}",
@@ -231,7 +235,7 @@ public class ReleaseInfoResolutionService(
             }
             catch (DbUpdateException exception) when (IsDuplicateReleaseInfoException(exception))
             {
-                repository.DetachPendingReleaseInfos(release);
+                repository.DetachPendingReleaseInfo(release);
                 logger.LogInformation(
                     "Release info for release {ReleaseName} was already resolved by another worker",
                     release.Name
@@ -371,7 +375,7 @@ public class ReleaseInfoResolutionService(
             is PostgresException
             {
                 SqlState: PostgresErrorCodes.UniqueViolation,
-                ConstraintName: "IX_ReleaseInfos_ReleaseId_NfoDatabaseClassName",
+                ConstraintName: "IX_ReleaseInfos_ReleaseId",
             };
     }
 }

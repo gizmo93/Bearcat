@@ -34,15 +34,12 @@ public class ReleaseInfoRepository(
     )
     {
         return await dbWrite
-            .Releases.Include(release => release.ReleaseInfos)
-                .ThenInclude(info => info.ReleaseNfo)
+            .Releases.Include(release => release.ReleaseInfo)
+                .ThenInclude(info => info!.ReleaseNfo)
+            .Where(release => release.ReleaseInfo == null || release.ReleaseInfo.ReleaseNfo == null)
             .Where(release =>
-                !release.ReleaseInfos.Any()
-                || release.ReleaseInfos.Any(info => info.ReleaseNfo == null)
-            )
-            .Where(release =>
-                release.ReleaseInfosCheckedAt == null
-                || release.ReleaseInfosCheckedAt < lastCheckedThreshold
+                release.ReleaseInfoCheckedAt == null
+                || release.ReleaseInfoCheckedAt < lastCheckedThreshold
             )
             .Where(release => !excludedReleaseIds.Contains(release.Id))
             .OrderBy(release => release.CreatedAt)
@@ -53,13 +50,11 @@ public class ReleaseInfoRepository(
 
     public async Task<bool> HasReleaseInfoAsync(
         int releaseId,
-        string nfoDatabaseClassName,
         CancellationToken cancellationToken = default
     )
     {
         return await dbRead.ReleaseInfos.AnyAsync(
-            info =>
-                info.ReleaseId == releaseId && info.NfoDatabaseClassName == nfoDatabaseClassName,
+            info => info.ReleaseId == releaseId,
             cancellationToken
         );
     }
@@ -79,7 +74,7 @@ public class ReleaseInfoRepository(
         dbWrite.Remove(releaseInfo);
     }
 
-    public void DetachPendingReleaseInfos(Release release)
+    public void DetachPendingReleaseInfo(Release release)
     {
         var pendingReleaseInfos = dbWrite
             .ChangeTracker.Entries<ReleaseInfo>()
@@ -123,7 +118,10 @@ public class ReleaseInfoRepository(
             }
         }
 
-        release.ReleaseInfos.RemoveAll(info => pendingReleaseInfos.Contains(info));
+        if (release.ReleaseInfo is not null && pendingReleaseInfos.Contains(release.ReleaseInfo))
+        {
+            release.ReleaseInfo = null;
+        }
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)

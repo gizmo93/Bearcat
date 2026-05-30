@@ -31,7 +31,6 @@ public class ReleaseService(
             ReleaseFolderPath = releaseFolderPath,
             ArchiveConfigs = [],
             UploadConfigs = [],
-            ReleaseInfos = [],
         };
 
         if (release.ReleaseType is ReleaseType.Unmanaged)
@@ -169,7 +168,6 @@ public class ReleaseService(
             ReleaseGroupId = releaseTemplate.ReleaseGroupId,
             ArchiveConfigs = [],
             UploadConfigs = [],
-            ReleaseInfos = [],
         };
 
         var archiveConfigsByTemplateId = new Dictionary<int, ArchiveConfig>();
