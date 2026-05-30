@@ -17,7 +17,7 @@ public class Rapidgator(
     IRapidgatorApiClient apiClient,
     IRapidgatorApi rapidgatorApi,
     ILogger<Rapidgator> logger
-) : IHoster
+) : IHosterWithFolders
 {
     public string Name => "Rapidgator";
 
@@ -193,6 +193,21 @@ public class Rapidgator(
         }
     }
 
+    public async Task<string> CreateFolderAsync(
+        string folderName,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<RapidgatorConfig>();
+
+        return await apiClient.CreateFolderAsync(
+            folderName: folderName,
+            config: config,
+            cancellationToken: cancellationToken
+        );
+    }
+
     private async Task<UploadFileResult> UploadFileInternalAsync(
         FileDto fileDto,
         RapidgatorConfig config,
@@ -205,6 +220,7 @@ public class Rapidgator(
             name: Path.GetFileName(fileDto.FullFileName),
             size: stream.Length,
             hash: await CreateMd5HashAsync(stream, cancellationToken),
+            folderId: fileDto.FolderId,
             config: config,
             cancellationToken: cancellationToken
         );

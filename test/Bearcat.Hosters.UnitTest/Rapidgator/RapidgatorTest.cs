@@ -48,7 +48,12 @@ public class RapidgatorTest
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
-        var fileDto = new FileDto(Id: 42, FullFileName: filePath, UploadId: 142);
+        var fileDto = new FileDto(
+            Id: 42,
+            FullFileName: filePath,
+            UploadId: 142,
+            FolderId: "folder-id"
+        );
         var config = new RapidgatorConfig { Username = "user", Password = "password" };
 
         apiClientMock
@@ -57,6 +62,7 @@ public class RapidgatorTest
                     Path.GetFileName(filePath),
                     new FileInfo(filePath).Length,
                     It.IsAny<string>(),
+                    "folder-id",
                     config,
                     It.IsAny<CancellationToken>()
                 )
@@ -145,6 +151,7 @@ public class RapidgatorTest
                     Path.GetFileName(filePath),
                     new FileInfo(filePath).Length,
                     It.IsAny<string>(),
+                    null,
                     config,
                     It.IsAny<CancellationToken>()
                 )
@@ -183,6 +190,7 @@ public class RapidgatorTest
                     Path.GetFileName(filePath),
                     new FileInfo(filePath).Length,
                     It.IsAny<string>(),
+                    null,
                     config,
                     It.IsAny<CancellationToken>()
                 ),
@@ -198,6 +206,29 @@ public class RapidgatorTest
                 ),
             Times.Never
         );
+    }
+
+    [Test]
+    public async Task CreateFolderAsync_Config_CreatesFolderWithApiClient()
+    {
+        // Arrange
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+
+        apiClientMock
+            .Setup(x =>
+                x.CreateFolderAsync("release-folder", config, It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync("folder-id");
+
+        // Act
+        var result = await service.CreateFolderAsync(
+            "release-folder",
+            config,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("folder-id");
     }
 
     [Test]

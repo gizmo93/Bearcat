@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Rapidgator.Api.File;
+using Bearcat.Hosters.Rapidgator.Api.Folder;
 using Bearcat.Hosters.Rapidgator.Api.User;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
@@ -31,6 +32,7 @@ public class ApiClient(
         string name,
         long size,
         string hash,
+        string? folderId,
         RapidgatorConfig config,
         CancellationToken cancellationToken
     )
@@ -41,8 +43,49 @@ public class ApiClient(
             name: name,
             size: size,
             hash: hash,
+            folderId: folderId,
             cancellationToken: cancellationToken
         );
+    }
+
+    public async Task<string> CreateFolderAsync(
+        string folderName,
+        RapidgatorConfig config,
+        CancellationToken cancellationToken
+    )
+    {
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+        var rootFolder = await api.GetFolderInfoAsync(
+            token: token,
+            folderId: null,
+            cancellationToken: cancellationToken
+        );
+
+        EnsureFolderResponseSucceeded(rootFolder, "Rapidgator root folder lookup failed");
+
+        var existingFolder = rootFolder
+            .Response!.Folder!.Folders.Where(folder =>
+                string.Equals(folder.Name, folderName, StringComparison.Ordinal)
+            )
+            .OrderBy(folder => folder.Created)
+            .ThenBy(folder => folder.FolderId, StringComparer.Ordinal)
+            .FirstOrDefault();
+
+        if (existingFolder is not null)
+        {
+            return existingFolder.FolderId;
+        }
+
+        var createdFolder = await api.CreateFolderAsync(
+            token: token,
+            name: folderName,
+            folderId: rootFolder.Response.Folder.FolderId,
+            cancellationToken: cancellationToken
+        );
+
+        EnsureFolderResponseSucceeded(createdFolder, "Rapidgator folder creation failed");
+
+        return createdFolder.Response!.Folder!.FolderId;
     }
 
     public async Task<UploadFileResponse> UploadFileAsync(
@@ -155,6 +198,17 @@ public class ApiClient(
         finally
         {
             authSemaphore.Release();
+        }
+    }
+
+    private static void EnsureFolderResponseSucceeded(FolderResponse response, string message)
+    {
+        if (
+            response.Status != (int)HttpStatusCode.OK
+            || string.IsNullOrWhiteSpace(response.Response?.Folder?.FolderId)
+        )
+        {
+            throw new HttpRequestException($"{message}: {response.Details}");
         }
     }
 

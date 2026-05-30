@@ -8,6 +8,7 @@ public interface IRapidgatorApiClient
         string name,
         long size,
         string hash,
+        string? folderId,
         RapidgatorConfig config,
         CancellationToken cancellationToken
     );
@@ -28,6 +29,12 @@ public interface IRapidgatorApiClient
     Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
         RapidgatorConfig config,
         IReadOnlyList<string> links,
+        CancellationToken cancellationToken
+    );
+
+    Task<string> CreateFolderAsync(
+        string folderName,
+        RapidgatorConfig config,
         CancellationToken cancellationToken
     );
 }

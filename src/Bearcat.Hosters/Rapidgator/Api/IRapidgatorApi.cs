@@ -1,4 +1,5 @@
 ﻿using Bearcat.Hosters.Rapidgator.Api.File;
+using Bearcat.Hosters.Rapidgator.Api.Folder;
 using Bearcat.Hosters.Rapidgator.Api.User;
 using Refit;
 
@@ -25,6 +26,22 @@ public interface IRapidgatorApi
         [Query] string name,
         [Query] long size,
         [Query] string hash,
+        [Query] [AliasAs("folder_id")] string? folderId,
+        CancellationToken cancellationToken
+    );
+
+    [Post("/api/v2/folder/create")]
+    Task<FolderResponse> CreateFolderAsync(
+        [Query] string token,
+        [Query] string name,
+        [Query] [AliasAs("folder_id")] string? folderId,
+        CancellationToken cancellationToken
+    );
+
+    [Get("/api/v2/folder/info")]
+    Task<FolderResponse> GetFolderInfoAsync(
+        [Query] string token,
+        [Query] [AliasAs("folder_id")] string? folderId,
         CancellationToken cancellationToken
     );
 

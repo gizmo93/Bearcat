@@ -13,9 +13,6 @@ public class Response
 
 public class Data
 {
-    [JsonPropertyName("id")]
-    public string Id { get; set; } = null!;
-
     [JsonPropertyName("children")]
     public Dictionary<string, Content> Children { get; set; } = [];
 }
