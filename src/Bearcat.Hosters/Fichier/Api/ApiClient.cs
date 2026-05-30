@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Hosters.Fichier.Api.File;
+using Bearcat.Hosters.Fichier.Api.Folder;
 using Bearcat.Hosters.Fichier.Api.Upload;
 using Bearcat.Hosters.Fichier.Api.User;
 using Bearcat.Hosters.Shared;
@@ -26,7 +27,7 @@ public class ApiClient(
 
     private const int MaxLinkCheckAttempts = 3;
 
-    private const string RootFolderId = "0";
+    private const int RootFolderId = 0;
 
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
@@ -40,6 +41,7 @@ public class ApiClient(
         FichierConfig config,
         Stream stream,
         string fileName,
+        string? folderId,
         CancellationToken cancellationToken
     )
     {
@@ -50,7 +52,14 @@ public class ApiClient(
             throw new HttpRequestException("1fichier did not return a valid upload server");
         }
 
-        await UploadToServerAsync(config, uploadServer, stream, fileName, cancellationToken);
+        await UploadToServerAsync(
+            config,
+            uploadServer,
+            stream,
+            fileName,
+            folderId,
+            cancellationToken
+        );
 
         var endUploadResponse = await EndUploadAsync(uploadServer, cancellationToken);
 
@@ -64,6 +73,43 @@ public class ApiClient(
         }
 
         return endUploadResponse;
+    }
+
+    public async Task<string> CreateFolderAsync(
+        FichierConfig config,
+        string folderName,
+        CancellationToken cancellationToken
+    )
+    {
+        var authorization = GetAuthorizationHeader(config.ApiKey);
+        var rootFolder = await api.GetFolderListAsync(
+            authorization,
+            new FolderListRequest { FolderId = RootFolderId },
+            cancellationToken
+        );
+
+        EnsureOk(rootFolder.Status, rootFolder.Message, "1fichier folder list failed");
+
+        var existingFolder = rootFolder.SubFolders.FirstOrDefault(folder =>
+            string.Equals(folder.Name, folderName, StringComparison.Ordinal)
+            && folder.Id is not null
+        );
+
+        if (existingFolder is not null)
+        {
+            return existingFolder.Id!.Value.ToString();
+        }
+
+        var createdFolder = await api.CreateFolderAsync(
+            authorization,
+            new CreateFolderRequest { Name = folderName, FolderId = RootFolderId },
+            cancellationToken
+        );
+
+        EnsureOk(createdFolder.Status, createdFolder.Message, "1fichier folder creation failed");
+
+        return createdFolder.FolderId?.ToString()
+            ?? throw new HttpRequestException("1fichier folder creation returned no folder id");
     }
 
     public async Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
@@ -118,6 +164,7 @@ public class ApiClient(
         GetUploadServerResponse uploadServer,
         Stream stream,
         string fileName,
+        string? folderId,
         CancellationToken cancellationToken
     )
     {
@@ -131,7 +178,7 @@ public class ApiClient(
         request.Content = new FichierUploadContent(
             stream: stream,
             fileName: fileName,
-            folderId: RootFolderId
+            folderId: ParseFolderId(folderId)
         );
 
         using var response = await httpClient.SendAsync(
@@ -301,6 +348,31 @@ public class ApiClient(
         return $"Bearer {apiKey}";
     }
 
+    private static int ParseFolderId(string? folderId)
+    {
+        if (string.IsNullOrWhiteSpace(folderId))
+        {
+            return RootFolderId;
+        }
+
+        return int.TryParse(folderId, out var parsedFolderId)
+            ? parsedFolderId
+            : throw new ArgumentException(
+                $"Invalid 1fichier folder id: {folderId}",
+                nameof(folderId)
+            );
+    }
+
+    private static void EnsureOk(string? status, string? message, string errorPrefix)
+    {
+        if (!string.Equals(status, "OK", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new HttpRequestException(
+                $"{errorPrefix}: {message ?? status ?? "unknown error"}"
+            );
+        }
+    }
+
     private static bool IsValidUploadId(string uploadId)
     {
         return !string.IsNullOrWhiteSpace(uploadId)
@@ -315,7 +387,7 @@ public class ApiClient(
         private readonly byte[] prefixBytes;
         private readonly byte[] suffixBytes;
 
-        public FichierUploadContent(Stream stream, string fileName, string folderId)
+        public FichierUploadContent(Stream stream, string fileName, int folderId)
         {
             this.stream = stream;
             boundary = "------------------------" + Guid.NewGuid().ToString("N")[..16];

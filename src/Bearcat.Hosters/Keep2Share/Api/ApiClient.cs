@@ -374,7 +374,9 @@ public class ApiClient(
             );
         }
 
-        foreach (var (folder, index) in response.FoldersList.Select((folder, index) => (folder, index)))
+        foreach (
+            var (folder, index) in response.FoldersList.Select((folder, index) => (folder, index))
+        )
         {
             if (
                 FolderNameMatches(folder, folderName)

@@ -9,6 +9,13 @@ public interface IFichierApiClient
         FichierConfig config,
         Stream stream,
         string fileName,
+        string? folderId,
+        CancellationToken cancellationToken
+    );
+
+    Task<string> CreateFolderAsync(
+        FichierConfig config,
+        string folderName,
         CancellationToken cancellationToken
     );
 

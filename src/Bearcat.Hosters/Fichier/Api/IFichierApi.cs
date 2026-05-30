@@ -1,4 +1,5 @@
 using Bearcat.Hosters.Fichier.Api.File;
+using Bearcat.Hosters.Fichier.Api.Folder;
 using Bearcat.Hosters.Fichier.Api.User;
 using Refit;
 
@@ -17,6 +18,20 @@ public interface IFichierApi
     Task<ApiResponse<UserInfoResponse>> GetUserInfoAsync(
         [Header("Authorization")] string authorization,
         [Body] UserInfoRequest request,
+        CancellationToken cancellationToken
+    );
+
+    [Post("/folder/ls.cgi")]
+    Task<FolderListResponse> GetFolderListAsync(
+        [Header("Authorization")] string authorization,
+        [Body] FolderListRequest request,
+        CancellationToken cancellationToken
+    );
+
+    [Post("/folder/mkdir.cgi")]
+    Task<CreateFolderResponse> CreateFolderAsync(
+        [Header("Authorization")] string authorization,
+        [Body] CreateFolderRequest request,
         CancellationToken cancellationToken
     );
 }

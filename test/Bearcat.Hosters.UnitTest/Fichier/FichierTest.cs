@@ -50,6 +50,7 @@ public class FichierTest
                     config,
                     It.IsAny<Stream>(),
                     Path.GetFileName(filePath),
+                    null,
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -79,6 +80,62 @@ public class FichierTest
     }
 
     [Test]
+    public async Task UploadFileAsync_FolderId_PassesFolderIdToApiClient()
+    {
+        // Arrange
+        var filePath = CreateTemporaryFile("upload-content");
+        var fileDto = new FileDto(
+            Id: 33,
+            FullFileName: filePath,
+            UploadId: 133,
+            FolderId: "12345"
+        );
+        var config = new FichierConfig { ApiKey = "api-key" };
+
+        apiClientMock
+            .Setup(x =>
+                x.UploadFileAsync(
+                    config,
+                    It.IsAny<Stream>(),
+                    Path.GetFileName(filePath),
+                    "12345",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new EndUploadResponse
+                {
+                    Links =
+                    [
+                        new EndUploadResponse.UploadedLink
+                        {
+                            Download = "https://1fichier.com/?download",
+                            Filename = Path.GetFileName(filePath),
+                            Size = "14",
+                        },
+                    ],
+                }
+            );
+
+        // Act
+        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        apiClientMock.Verify(
+            x =>
+                x.UploadFileAsync(
+                    config,
+                    It.IsAny<Stream>(),
+                    Path.GetFileName(filePath),
+                    "12345",
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
     public async Task UploadFileAsync_ApiUploadThrows_ReturnsFailureAndRetriesThreeTimes()
     {
         // Arrange
@@ -92,6 +149,7 @@ public class FichierTest
                     config,
                     It.IsAny<Stream>(),
                     Path.GetFileName(filePath),
+                    null,
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -111,10 +169,34 @@ public class FichierTest
                     config,
                     It.IsAny<Stream>(),
                     Path.GetFileName(filePath),
+                    null,
                     It.IsAny<CancellationToken>()
                 ),
             Times.Exactly(3)
         );
+    }
+
+    [Test]
+    public async Task CreateFolderAsync_Config_CreatesFolderWithApiClient()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+
+        apiClientMock
+            .Setup(x =>
+                x.CreateFolderAsync(config, "release-folder", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync("12345");
+
+        // Act
+        var result = await service.CreateFolderAsync(
+            "release-folder",
+            config,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("12345");
     }
 
     [Test]

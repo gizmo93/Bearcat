@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.Fichier;
 
-public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger) : IHoster
+public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger) : IHosterWithFolders
 {
     public string Name => "1fichier";
 
@@ -40,6 +40,7 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger) : IHo
                     config: config,
                     stream: stream,
                     fileName: Path.GetFileName(fileDto.FullFileName),
+                    folderId: fileDto.FolderId,
                     cancellationToken: cancellationToken
                 );
 
@@ -134,6 +135,17 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger) : IHo
     )
     {
         return Task.FromResult<int?>(3);
+    }
+
+    public async Task<string> CreateFolderAsync(
+        string folderName,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<FichierConfig>();
+
+        return await apiClient.CreateFolderAsync(config, folderName, cancellationToken);
     }
 
     public async Task<TryLoginResult> TryLoginAsync(

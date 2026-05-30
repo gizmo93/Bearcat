@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using Bearcat.Hosters.Fichier;
 using Bearcat.Hosters.Fichier.Api;
+using Bearcat.Hosters.Fichier.Api.Folder;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -116,6 +117,7 @@ public class ApiClientTest
             config,
             stream,
             "archive.part01.rar",
+            null,
             CancellationToken.None
         );
 
@@ -130,6 +132,168 @@ public class ApiClientTest
         capturedUploadBody.ShouldNotContain("filename*=");
         capturedUploadBody.ShouldNotContain("Content-Type: application/octet-stream");
         httpMessageHandler.PendingRequests.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task UploadFileAsync_FolderId_SendsFolderIdAsDid()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+        var capturedUploadBody = string.Empty;
+
+        SetupSuccessfulUpload(capturedBody => capturedUploadBody = capturedBody);
+
+        await using var stream = new MemoryStream("upload-content"u8.ToArray());
+
+        // Act
+        await apiClient.UploadFileAsync(
+            config,
+            stream,
+            "archive.part01.rar",
+            "12345",
+            CancellationToken.None
+        );
+
+        // Assert
+        capturedUploadBody.ShouldContain("Content-Disposition: form-data; name=\"did\"\r\n\r\n12345");
+        httpMessageHandler.PendingRequests.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task CreateFolderAsync_ExistingRootFolderWithName_ReturnsExistingFolderId()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+        apiMock
+            .Setup(x =>
+                x.GetFolderListAsync(
+                    "Bearer api-key",
+                    It.Is<FolderListRequest>(request => request.FolderId == 0),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new FolderListResponse
+                {
+                    Status = "OK",
+                    FolderId = 0,
+                    SubFolders =
+                    [
+                        new FolderListResponse.Folder { Id = 222, Name = "other-folder" },
+                        new FolderListResponse.Folder { Id = 123, Name = "release-folder" },
+                    ],
+                }
+            );
+
+        // Act
+        var result = await apiClient.CreateFolderAsync(
+            config,
+            "release-folder",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("123");
+        apiMock.Verify(
+            x =>
+                x.CreateFolderAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<CreateFolderRequest>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task CreateFolderAsync_NoExistingRootFolderWithName_CreatesFolder()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+        apiMock
+            .Setup(x =>
+                x.GetFolderListAsync(
+                    "Bearer api-key",
+                    It.Is<FolderListRequest>(request => request.FolderId == 0),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new FolderListResponse
+                {
+                    Status = "OK",
+                    FolderId = 0,
+                    SubFolders =
+                    [
+                        new FolderListResponse.Folder { Id = 222, Name = "other-folder" },
+                    ],
+                }
+            );
+        apiMock
+            .Setup(x =>
+                x.CreateFolderAsync(
+                    "Bearer api-key",
+                    It.Is<CreateFolderRequest>(request =>
+                        request.Name == "release-folder" && request.FolderId == 0
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new CreateFolderResponse
+                {
+                    Status = "OK",
+                    FolderId = 123,
+                    Name = "release-folder",
+                }
+            );
+
+        // Act
+        var result = await apiClient.CreateFolderAsync(
+            config,
+            "release-folder",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("123");
+    }
+
+    private void SetupSuccessfulUpload(Action<string> captureUploadBody)
+    {
+        httpMessageHandler.Enqueue(_ =>
+        {
+            return Task.FromResult(CreateJsonResponse("""{"id":"Upload1234","url":"up1.1fichier.test"}"""));
+        });
+
+        httpMessageHandler.Enqueue(async request =>
+        {
+            captureUploadBody(await request.Content!.ReadAsStringAsync());
+
+            var response = new HttpResponseMessage(HttpStatusCode.Redirect);
+            response.Headers.Location = new Uri("/end.pl?xid=Upload1234", UriKind.Relative);
+            return response;
+        });
+
+        httpMessageHandler.Enqueue(_ =>
+        {
+            return Task.FromResult(
+                CreateJsonResponse(
+                    """
+                    {
+                      "incoming": 0,
+                      "links": [
+                        {
+                          "download": "https://1fichier.com/?abc",
+                          "filename": "archive.part01.rar",
+                          "size": "14"
+                        }
+                      ]
+                    }
+                    """
+                )
+            );
+        });
     }
 
     private static HttpResponseMessage CreateJsonResponse(string content)
