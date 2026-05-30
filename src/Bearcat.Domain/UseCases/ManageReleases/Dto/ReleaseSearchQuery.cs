@@ -11,6 +11,9 @@ public record ReleaseSearchQuery(
     int? LinkCrypterRegistrationId = null,
     int? ReleaseGroupId = null,
     string? LinksDistributedTo = null,
+    string? DownloadLink = null,
+    string? ArchiveFileName = null,
+    string? UploadId = null,
     int PageIndex = 0,
     int PageSize = 10
 );

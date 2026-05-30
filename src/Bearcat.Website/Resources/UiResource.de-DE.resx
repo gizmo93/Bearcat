@@ -21,6 +21,7 @@
   <data name="AddLinkCrypterContainer" xml:space="preserve"><value>Link-Crypter-Container hinzufügen</value></data>
   <data name="AddNfoDatabase" xml:space="preserve"><value>NFO-Datenbank hinzufügen</value></data>
   <data name="AddUploadConfig" xml:space="preserve"><value>Upload-Konfiguration hinzufügen</value></data>
+  <data name="AdvancedSearch" xml:space="preserve"><value>Erweiterte Suche</value></data>
   <data name="ArchiveAndUploadConfiguration" xml:space="preserve"><value>Archiv- und Upload-Konfiguration</value></data>
   <data name="ArchiveConfig" xml:space="preserve"><value>Archiv-Konfig.</value></data>
   <data name="ArchiveConfigRequired" xml:space="preserve"><value>Archiv-Konfiguration ist erforderlich.</value></data>
@@ -107,8 +108,10 @@
   <data name="DeleteReleaseTitle" xml:space="preserve"><value>Release {0} löschen</value></data>
   <data name="DeleteUploadConfig" xml:space="preserve"><value>Upload-Konfiguration löschen</value></data>
   <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Möchtest du die Upload-Konfiguration {0} wirklich löschen?</value></data>
-  <data name="DownloadLinks" xml:space="preserve"><value>Downloadlinks</value></data>
   <data name="DownloadCover" xml:space="preserve"><value>Cover herunterladen</value></data>
+  <data name="DownloadLink" xml:space="preserve"><value>Downloadlink</value></data>
+  <data name="DownloadLinkSearchPlaceholder" xml:space="preserve"><value>Teil eines Links einfügen</value></data>
+  <data name="DownloadLinks" xml:space="preserve"><value>Downloadlinks</value></data>
   <data name="DeleteUpload" xml:space="preserve"><value>Upload löschen</value></data>
   <data name="DeleteUploadConfirmation" xml:space="preserve"><value>Upload #{0} löschen? Zugehörige Uploadlinks, Container und Benachrichtigungen werden ebenfalls entfernt.</value></data>
   <data name="Description" xml:space="preserve"><value>Beschreibung</value></data>
@@ -257,6 +260,8 @@
   <data name="Reload" xml:space="preserve"><value>Neu laden</value></data>
   <data name="ResetFilters" xml:space="preserve"><value>Filter zurücksetzen</value></data>
   <data name="RowsPerPage" xml:space="preserve"><value>Zeilen pro Seite</value></data>
+  <data name="RarFile" xml:space="preserve"><value>RAR-Datei</value></data>
+  <data name="RarFileSearchPlaceholder" xml:space="preserve"><value>Dateiname oder Pfad</value></data>
   <data name="RunningAndPendingUploads" xml:space="preserve"><value>Laufende und ausstehende Uploads</value></data>
   <data name="RunningArchives" xml:space="preserve"><value>Laufende Archive</value></data>
   <data name="RunningArchivesDescription" xml:space="preserve"><value>Archive, die gerade erstellt werden.</value></data>
@@ -317,8 +322,10 @@
   <data name="UploadLinks" xml:space="preserve"><value>Uploadlinks</value></data>
   <data name="UploadLinksCopied" xml:space="preserve"><value>{0} Uploadlinks kopiert.</value></data>
   <data name="UploadLinksDialogDescription" xml:space="preserve"><value>Links, die für Upload-Konfiguration {0} erzeugt wurden.</value></data>
-  <data name="UploadLinksTitle" xml:space="preserve"><value>Links für Upload #{0}</value></data>
   <data name="UploadedAt" xml:space="preserve"><value>Hochgeladen am</value></data>
+  <data name="UploadId" xml:space="preserve"><value>UploadId</value></data>
+  <data name="UploadIdSearchPlaceholder" xml:space="preserve"><value>z.B. 123 oder #123</value></data>
+  <data name="UploadLinksTitle" xml:space="preserve"><value>Links für Upload #{0}</value></data>
   <data name="Uploads" xml:space="preserve"><value>Uploads</value></data>
   <data name="UploadResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Uploads</value></data>
   <data name="ReleaseUploads" xml:space="preserve"><value>Release-Uploads</value></data>

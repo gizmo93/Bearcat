@@ -41,6 +41,38 @@
                           Placeholder="@L["LinksDistributedToSearchPlaceholder"]" />
     </div>
 
+    <div class="bearcat-release-search-advanced">
+        <BbButton Type="ButtonType.Button"
+                  Variant="ButtonVariant.Ghost"
+                  Size="ButtonSize.Small"
+                  Class="@AdvancedSearchToggleClass"
+                  OnClick="ToggleAdvancedSearch">
+            <LucideIcon Name="sliders-horizontal" class="h-4 w-4" />
+            @L["AdvancedSearch"]
+            <LucideIcon Name="chevron-down" class="@AdvancedSearchChevronClass" />
+        </BbButton>
+
+        @if (showAdvancedSearch)
+        {
+            <div class="bearcat-release-search-grid bearcat-release-search-advanced-grid">
+                <BbFormFieldInput TValue="string"
+                                  @bind-Value="downloadLink"
+                                  Label="@L["DownloadLink"]"
+                                  Placeholder="@L["DownloadLinkSearchPlaceholder"]" />
+
+                <BbFormFieldInput TValue="string"
+                                  @bind-Value="archiveFileName"
+                                  Label="@L["RarFile"]"
+                                  Placeholder="@L["RarFileSearchPlaceholder"]" />
+
+                <BbFormFieldInput TValue="string"
+                                  @bind-Value="uploadId"
+                                  Label="@L["UploadId"]"
+                                  Placeholder="@L["UploadIdSearchPlaceholder"]" />
+            </div>
+        }
+    </div>
+
     <div class="bearcat-release-search-actions">
         <BbButton Type="ButtonType.Submit"
                   Size="ButtonSize.Small"
@@ -81,22 +113,42 @@
 
     private string? searchTerm;
     private string? linksDistributedTo;
+    private string? downloadLink;
+    private string? archiveFileName;
+    private string? uploadId;
     private ReleaseType? selectedReleaseType;
     private OnlineState? selectedOnlineState;
     private int? selectedHosterRegistrationId;
     private string selectedArchiverName = string.Empty;
     private int? selectedLinkCrypterRegistrationId;
     private int selectedReleaseGroupId;
+    private bool showAdvancedSearch;
 
     private bool HasActiveFilters =>
         !string.IsNullOrWhiteSpace(searchTerm)
         || !string.IsNullOrWhiteSpace(linksDistributedTo)
+        || HasActiveAdvancedFilters
         || selectedReleaseType is not null
         || selectedOnlineState is not null
         || selectedHosterRegistrationId is not null
         || !string.IsNullOrWhiteSpace(selectedArchiverName)
         || selectedLinkCrypterRegistrationId is not null
         || selectedReleaseGroupId != 0;
+
+    private bool HasActiveAdvancedFilters =>
+        !string.IsNullOrWhiteSpace(downloadLink)
+        || !string.IsNullOrWhiteSpace(archiveFileName)
+        || !string.IsNullOrWhiteSpace(uploadId);
+
+    private string AdvancedSearchToggleClass =>
+        HasActiveAdvancedFilters
+            ? "bearcat-release-search-advanced-toggle bearcat-release-search-advanced-toggle-active"
+            : "bearcat-release-search-advanced-toggle";
+
+    private string AdvancedSearchChevronClass =>
+        showAdvancedSearch
+            ? "h-4 w-4 bearcat-release-search-advanced-chevron bearcat-release-search-advanced-chevron-open"
+            : "h-4 w-4 bearcat-release-search-advanced-chevron";
 
     private IEnumerable<SelectOption<OnlineState?>> OnlineStateOptions =>
         new SelectOption<OnlineState?>[]
@@ -160,14 +212,23 @@
 
         searchTerm = null;
         linksDistributedTo = null;
+        downloadLink = null;
+        archiveFileName = null;
+        uploadId = null;
         selectedReleaseType = null;
         selectedOnlineState = null;
         selectedHosterRegistrationId = null;
         selectedArchiverName = string.Empty;
         selectedLinkCrypterRegistrationId = null;
         selectedReleaseGroupId = 0;
+        showAdvancedSearch = false;
 
         await OnSearch.InvokeAsync(CreateQuery());
+    }
+
+    private void ToggleAdvancedSearch()
+    {
+        showAdvancedSearch = !showAdvancedSearch;
     }
 
     private ReleaseSearchQuery CreateQuery()
@@ -182,7 +243,10 @@
                 : selectedArchiverName,
             LinkCrypterRegistrationId: selectedLinkCrypterRegistrationId,
             ReleaseGroupId: selectedReleaseGroupId == 0 ? null : selectedReleaseGroupId,
-            LinksDistributedTo: linksDistributedTo
+            LinksDistributedTo: linksDistributedTo,
+            DownloadLink: downloadLink,
+            ArchiveFileName: archiveFileName,
+            UploadId: uploadId
         );
     }
 }

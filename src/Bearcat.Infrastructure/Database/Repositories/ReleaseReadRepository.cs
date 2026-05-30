@@ -494,6 +494,51 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
             );
         }
 
+        var downloadLink = Normalize(query.DownloadLink);
+        if (downloadLink is not null)
+        {
+            var pattern = ToContainsPattern(downloadLink);
+            releases = releases.Where(r =>
+                r.UploadConfigs.Any(u =>
+                    u.Uploads.Any(upload =>
+                        upload.UploadedFiles.Any(file =>
+                            EF.Functions.ILike(file.HosterFileLink, pattern)
+                        )
+                    )
+                )
+            );
+        }
+
+        var archiveFileName = Normalize(query.ArchiveFileName);
+        if (archiveFileName is not null)
+        {
+            var pattern = ToContainsPattern(archiveFileName);
+            releases = releases.Where(r =>
+                r.ArchiveConfigs.Any(config =>
+                    config.Archives.Any(archive =>
+                        archive.ArchiveFiles.Any(file =>
+                            EF.Functions.ILike(file.FullFileName, pattern)
+                        )
+                    )
+                )
+            );
+        }
+
+        var uploadId = Normalize(query.UploadId)?.TrimStart('#');
+        if (uploadId is not null)
+        {
+            if (!int.TryParse(uploadId, out var parsedUploadId))
+            {
+                return releases.Where(_ => false);
+            }
+
+            releases = releases.Where(r =>
+                r.UploadConfigs.Any(config =>
+                    config.Uploads.Any(upload => upload.Id == parsedUploadId)
+                )
+            );
+        }
+
         return releases;
     }
 

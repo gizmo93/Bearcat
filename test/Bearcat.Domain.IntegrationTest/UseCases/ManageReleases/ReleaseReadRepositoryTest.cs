@@ -56,6 +56,75 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task SearchReleasesAsync_DownloadLinkFilter_ReturnsMatchingRelease()
+    {
+        // Arrange
+        await AddReleaseAsync("Bearcat.Other.2026-GRP");
+        var matchingRelease = await AddReleaseWithUploadedFileAsync(
+            "Bearcat.DownloadLink.2026-GRP",
+            "Bearcat.DownloadLink.2026-GRP.part01.rar",
+            "https://hoster.example/files/abc123"
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.SearchReleasesAsync(
+            new ReleaseSearchQuery(DownloadLink: "files/abc123"),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        result.Items.Single().ReleaseId.ShouldBe(matchingRelease.Release.Id);
+    }
+
+    [Test]
+    public async Task SearchReleasesAsync_ArchiveFileNameFilter_ReturnsMatchingRelease()
+    {
+        // Arrange
+        await AddReleaseAsync("Bearcat.Other.2026-GRP");
+        var matchingRelease = await AddReleaseWithUploadedFileAsync(
+            "Bearcat.ArchiveFile.2026-GRP",
+            "Bearcat.ArchiveFile.2026-GRP.part02.rar",
+            "https://hoster.example/files/archive"
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.SearchReleasesAsync(
+            new ReleaseSearchQuery(ArchiveFileName: "part02.rar"),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        result.Items.Single().ReleaseId.ShouldBe(matchingRelease.Release.Id);
+    }
+
+    [Test]
+    public async Task SearchReleasesAsync_UploadIdFilter_ReturnsMatchingRelease()
+    {
+        // Arrange
+        await AddReleaseAsync("Bearcat.Other.2026-GRP");
+        var matchingRelease = await AddReleaseWithUploadedFileAsync(
+            "Bearcat.UploadId.2026-GRP",
+            "Bearcat.UploadId.2026-GRP.part01.rar",
+            "https://hoster.example/files/upload"
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.SearchReleasesAsync(
+            new ReleaseSearchQuery(UploadId: $"#{matchingRelease.Upload.Id}"),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        result.Items.Single().ReleaseId.ShouldBe(matchingRelease.Release.Id);
+    }
+
+    [Test]
     public async Task GetReleaseInfoAsync_ReleaseHasInfo_ReturnsTypedReadModel()
     {
         // Arrange
@@ -221,5 +290,92 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         await dbContext.SaveChangesAsync();
 
         return release;
+    }
+
+    private async Task<(Release Release, Upload Upload)> AddReleaseWithUploadedFileAsync(
+        string releaseName,
+        string archiveFileName,
+        string downloadLink
+    )
+    {
+        var release = await AddReleaseAsync(releaseName);
+        var archiveConfig = new ArchiveConfig
+        {
+            ReleaseId = release.Id,
+            Name = $"{releaseName} archive",
+            ArchiveFilesBasePath = "/tmp/archives",
+            ArchiverName = "RarArchiver",
+            ArchiveFileSizeMb = 100,
+            Archives = [],
+            UploadConfigs = [],
+        };
+        var hosterRegistration = new HosterRegistration
+        {
+            Name = $"{releaseName} hoster",
+            SerializedConfig = "{}",
+            HosterClassName = "ExampleHoster",
+            IsActive = true,
+            UploadConfigs = [],
+        };
+        var uploadConfig = new UploadConfig
+        {
+            ReleaseId = release.Id,
+            ArchiveConfig = archiveConfig,
+            HosterRegistration = hosterRegistration,
+            Name = $"{releaseName} upload",
+            LinksDistributedTo = [],
+            LinkCrypters = [],
+            Uploads = [],
+        };
+        var archive = new Archive
+        {
+            ArchiveConfig = archiveConfig,
+            ArchiveFolderPath = "/tmp/archives",
+            CreatedAt = DateTime.UtcNow,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 100,
+            ArchiveFiles = [],
+            Uploads = [],
+            Notifications = [],
+        };
+        var archiveFile = new ArchiveFile
+        {
+            Archive = archive,
+            FullFileName = archiveFileName,
+            UploadedFiles = [],
+        };
+        var upload = new Upload
+        {
+            UploadConfig = uploadConfig,
+            Archive = archive,
+            CreatedAt = DateTime.UtcNow,
+            UploadedAt = DateTime.UtcNow,
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Online,
+            UploadedFiles = [],
+            LinkCrypterContainers = [],
+            Notifications = [],
+        };
+        var uploadedFile = new UploadedFile
+        {
+            Upload = upload,
+            ArchiveFile = archiveFile,
+            HosterFileLink = downloadLink,
+            OnlineState = OnlineState.Online,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        dbContext.AddRange(
+            archiveConfig,
+            hosterRegistration,
+            uploadConfig,
+            archive,
+            archiveFile,
+            upload,
+            uploadedFile
+        );
+        await dbContext.SaveChangesAsync();
+
+        return (release, upload);
     }
 }
