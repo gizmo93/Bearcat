@@ -53,7 +53,7 @@ public class Keep2ShareTest
         };
 
         apiClientMock
-            .Setup(x => x.RequestUploadAsync(config, It.IsAny<CancellationToken>()))
+            .Setup(x => x.RequestUploadAsync(config, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(uploadFormData);
 
         apiClientMock
@@ -87,6 +87,64 @@ public class Keep2ShareTest
     }
 
     [Test]
+    public async Task UploadFileAsync_FolderId_RequestsUploadFormForFolder()
+    {
+        // Arrange
+        var filePath = CreateTemporaryFile("upload-content");
+        var fileDto = new FileDto(
+            Id: 20,
+            FullFileName: filePath,
+            UploadId: 120,
+            FolderId: "folder-id"
+        );
+        var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
+        var uploadFormData = new UploadFormDataResponse
+        {
+            Status = "success",
+            Code = (int)HttpStatusCode.OK,
+            FormAction = "https://upload.keep2share.test",
+            FileField = "file",
+            FormData = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
+                """{"ajax":true,"signature":"signature"}"""
+            )!,
+        };
+
+        apiClientMock
+            .Setup(x => x.RequestUploadAsync(config, "folder-id", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(uploadFormData);
+
+        apiClientMock
+            .Setup(x =>
+                x.UploadFileAsync(
+                    uploadFormData,
+                    It.IsAny<Stream>(),
+                    Path.GetFileName(filePath),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new UploadFileResponse
+                {
+                    Status = "success",
+                    Success = true,
+                    StatusCode = (int)HttpStatusCode.OK,
+                    UserFileId = "file-id",
+                    Link = "http://k2s.cc/file/file-id",
+                }
+            );
+
+        // Act
+        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        apiClientMock.Verify(
+            x => x.RequestUploadAsync(config, "folder-id", It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Test]
     public async Task UploadFileAsync_RequestUploadFails_ReturnsFailureAndRetriesThreeTimes()
     {
         // Arrange
@@ -95,7 +153,7 @@ public class Keep2ShareTest
         var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
 
         apiClientMock
-            .Setup(x => x.RequestUploadAsync(config, It.IsAny<CancellationToken>()))
+            .Setup(x => x.RequestUploadAsync(config, null, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("temporary upload error"));
 
         // Act
@@ -111,7 +169,7 @@ public class Keep2ShareTest
             "temporary upload error",
         ]);
         apiClientMock.Verify(
-            x => x.RequestUploadAsync(config, It.IsAny<CancellationToken>()),
+            x => x.RequestUploadAsync(config, null, It.IsAny<CancellationToken>()),
             Times.Exactly(3)
         );
         apiClientMock.Verify(
@@ -135,7 +193,7 @@ public class Keep2ShareTest
         var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
 
         apiClientMock
-            .Setup(x => x.RequestUploadAsync(config, It.IsAny<CancellationToken>()))
+            .Setup(x => x.RequestUploadAsync(config, null, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new CaptchaVerificationRequiredException("Captcha required", 400, 2));
 
         // Act + Assert
@@ -143,9 +201,32 @@ public class Keep2ShareTest
             () => service.UploadFileAsync(fileDto, config, CancellationToken.None)
         );
         apiClientMock.Verify(
-            x => x.RequestUploadAsync(config, It.IsAny<CancellationToken>()),
+            x => x.RequestUploadAsync(config, null, It.IsAny<CancellationToken>()),
             Times.Once
         );
+    }
+
+    [Test]
+    public async Task CreateFolderAsync_Config_CreatesFolderWithApiClient()
+    {
+        // Arrange
+        var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
+
+        apiClientMock
+            .Setup(x =>
+                x.CreateFolderAsync(config, "release-folder", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync("folder-id");
+
+        // Act
+        var result = await service.CreateFolderAsync(
+            "release-folder",
+            config,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("folder-id");
     }
 
     [Test]

@@ -22,6 +22,13 @@ public interface IKeep2ShareApiClient
 
     Task<UploadFormDataResponse> RequestUploadAsync(
         Keep2ShareConfig config,
+        string? parentId,
+        CancellationToken cancellationToken
+    );
+
+    Task<string> CreateFolderAsync(
+        Keep2ShareConfig config,
+        string folderName,
         CancellationToken cancellationToken
     );
 

@@ -25,6 +25,18 @@ public interface IKeep2ShareApi
         CancellationToken cancellationToken
     );
 
+    [Post("/getFoldersList")]
+    Task<FolderListResponse> GetFoldersListAsync(
+        [Body] FolderListRequest request,
+        CancellationToken cancellationToken
+    );
+
+    [Post("/createFolder")]
+    Task<CreateFolderResponse> CreateFolderAsync(
+        [Body] CreateFolderRequest request,
+        CancellationToken cancellationToken
+    );
+
     [Post("/getFileStatus")]
     Task<FileStatusResponse> GetFileStatusAsync(
         [Body] FileStatusRequest request,

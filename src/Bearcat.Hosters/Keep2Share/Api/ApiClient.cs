@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 using Refit;
@@ -117,6 +118,7 @@ public class ApiClient(
 
     public async Task<UploadFormDataResponse> RequestUploadAsync(
         Keep2ShareConfig config,
+        string? parentId,
         CancellationToken cancellationToken
     )
     {
@@ -126,7 +128,7 @@ public class ApiClient(
         try
         {
             response = await api.GetUploadFormDataAsync(
-                new UploadFormDataRequest(token),
+                new UploadFormDataRequest(token, parentId),
                 cancellationToken
             );
         }
@@ -151,6 +153,54 @@ public class ApiClient(
         }
 
         return response;
+    }
+
+    public async Task<string> CreateFolderAsync(
+        Keep2ShareConfig config,
+        string folderName,
+        CancellationToken cancellationToken
+    )
+    {
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+        var existingFolderId = await GetFolderIdAsync(token, folderName, cancellationToken);
+
+        if (existingFolderId is not null)
+        {
+            return existingFolderId;
+        }
+
+        CreateFolderResponse response;
+
+        try
+        {
+            response = await api.CreateFolderAsync(
+                new CreateFolderRequest(
+                    AuthToken: token,
+                    Name: folderName,
+                    Parent: "/",
+                    Access: "public"
+                ),
+                cancellationToken
+            );
+        }
+        catch (ApiException ex)
+        {
+            ThrowIfCaptchaVerificationRequired(ex);
+            throw;
+        }
+
+        if (response.Status != "success" || !((HttpStatusCode)response.Code).IsSuccessStatusCode)
+        {
+            ThrowIfCaptchaVerificationRequired(response.Code, null, response.Message);
+
+            throw new HttpRequestException(
+                response.Message
+                    ?? $"Keep2Share folder creation failed with status={response.Status}, code={response.Code}"
+            );
+        }
+
+        return response.Id
+            ?? throw new HttpRequestException("Keep2Share folder creation returned no folder id");
     }
 
     public async Task<UploadFileResponse> UploadFileAsync(
@@ -291,6 +341,58 @@ public class ApiClient(
         }
 
         throw new HttpRequestException("Rate limited by Keep2Share API while checking file batch");
+    }
+
+    private async Task<string?> GetFolderIdAsync(
+        string token,
+        string folderName,
+        CancellationToken cancellationToken
+    )
+    {
+        FolderListResponse response;
+
+        try
+        {
+            response = await api.GetFoldersListAsync(
+                new FolderListRequest(token),
+                cancellationToken
+            );
+        }
+        catch (ApiException ex)
+        {
+            ThrowIfCaptchaVerificationRequired(ex);
+            throw;
+        }
+
+        if (response.Status != "success" || !((HttpStatusCode)response.Code).IsSuccessStatusCode)
+        {
+            ThrowIfCaptchaVerificationRequired(response.Code, null, response.Message);
+
+            throw new HttpRequestException(
+                response.Message
+                    ?? $"Keep2Share folder list failed with status={response.Status}, code={response.Code}"
+            );
+        }
+
+        foreach (var (folder, index) in response.FoldersList.Select((folder, index) => (folder, index)))
+        {
+            if (
+                FolderNameMatches(folder, folderName)
+                && response.FoldersIds.Count > index
+                && !string.IsNullOrWhiteSpace(response.FoldersIds[index])
+            )
+            {
+                return response.FoldersIds[index];
+            }
+        }
+
+        return null;
+    }
+
+    private static bool FolderNameMatches(string actualName, string expectedName)
+    {
+        return string.Equals(actualName, expectedName, StringComparison.Ordinal)
+            || string.Equals(actualName, $"/{expectedName}", StringComparison.Ordinal);
     }
 
     private async Task<string> GetAuthTokenAsync(

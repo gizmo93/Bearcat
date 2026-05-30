@@ -32,6 +32,161 @@ public class ApiClientTest
     }
 
     [Test]
+    public async Task RequestUploadAsync_ParentId_PassesParentIdToApi()
+    {
+        // Arrange
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
+
+        SetupLogin();
+
+        apiMock
+            .Setup(x =>
+                x.GetUploadFormDataAsync(
+                    It.Is<UploadFormDataRequest>(request =>
+                        request.AuthToken == "auth-token" && request.ParentId == "folder-id"
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new UploadFormDataResponse
+                {
+                    Status = "success",
+                    Code = (int)HttpStatusCode.OK,
+                    FormAction = "https://upload.keep2share.test",
+                    FileField = "file",
+                }
+            );
+
+        // Act
+        var result = await apiClient.RequestUploadAsync(
+            config,
+            "folder-id",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.FormAction.ShouldBe("https://upload.keep2share.test");
+    }
+
+    [Test]
+    public async Task CreateFolderAsync_ExistingRootFolderWithName_ReturnsExistingFolderId()
+    {
+        // Arrange
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
+
+        SetupLogin();
+
+        apiMock
+            .Setup(x =>
+                x.GetFoldersListAsync(
+                    It.Is<FolderListRequest>(request =>
+                        request.AuthToken == "auth-token" && request.ParentId == null
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new FolderListResponse
+                {
+                    Status = "success",
+                    Code = (int)HttpStatusCode.OK,
+                    FoldersList = ["/other-folder", "/release-folder"],
+                    FoldersIds = ["other-folder-id", "existing-folder-id"],
+                }
+            );
+
+        // Act
+        var result = await apiClient.CreateFolderAsync(
+            config,
+            "release-folder",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("existing-folder-id");
+        apiMock.Verify(
+            x =>
+                x.CreateFolderAsync(
+                    It.IsAny<CreateFolderRequest>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task CreateFolderAsync_NoExistingRootFolderWithName_CreatesFolder()
+    {
+        // Arrange
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
+
+        SetupLogin();
+
+        apiMock
+            .Setup(x =>
+                x.GetFoldersListAsync(
+                    It.Is<FolderListRequest>(request =>
+                        request.AuthToken == "auth-token" && request.ParentId == null
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new FolderListResponse
+                {
+                    Status = "success",
+                    Code = (int)HttpStatusCode.OK,
+                    FoldersList = ["/other-folder"],
+                    FoldersIds = ["other-folder-id"],
+                }
+            );
+
+        apiMock
+            .Setup(x =>
+                x.CreateFolderAsync(
+                    It.Is<CreateFolderRequest>(request =>
+                        request.AuthToken == "auth-token"
+                        && request.Name == "release-folder"
+                        && request.Parent == "/"
+                        && request.Access == "public"
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new CreateFolderResponse
+                {
+                    Status = "success",
+                    Code = (int)HttpStatusCode.OK,
+                    Id = "created-folder-id",
+                }
+            );
+
+        // Act
+        var result = await apiClient.CreateFolderAsync(
+            config,
+            "release-folder",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("created-folder-id");
+    }
+
+    [Test]
     public async Task CheckLinksAsync_ApiReturnsFileInfos_MapsStatusesToOriginalUrls()
     {
         // Arrange
@@ -48,16 +203,7 @@ public class ApiClientTest
             "not-a-url",
         };
 
-        apiMock
-            .Setup(x => x.LoginAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(
-                new LoginResponse
-                {
-                    Status = "success",
-                    Code = (int)HttpStatusCode.OK,
-                    AuthToken = "auth-token",
-                }
-            );
+        SetupLogin();
 
         apiMock
             .Setup(x =>
@@ -124,16 +270,7 @@ public class ApiClientTest
         var fileUrl = "https://k2s.cc/file/file-1";
         var calls = 0;
 
-        apiMock
-            .Setup(x => x.LoginAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(
-                new LoginResponse
-                {
-                    Status = "success",
-                    Code = (int)HttpStatusCode.OK,
-                    AuthToken = "auth-token",
-                }
-            );
+        SetupLogin();
 
         apiMock
             .Setup(x => x.GetFilesInfoAsync(It.IsAny<GetFilesInfoRequest>(), It.IsAny<CancellationToken>()))
@@ -198,10 +335,7 @@ public class ApiClientTest
 
         apiMock
             .Setup(x =>
-                x.GetUploadFormDataAsync(
-                    It.IsAny<UploadFormDataRequest>(),
-                    It.IsAny<CancellationToken>()
-                )
+                x.GetUploadFormDataAsync(It.IsAny<UploadFormDataRequest>(), It.IsAny<CancellationToken>())
             )
             .ReturnsAsync(
                 new UploadFormDataResponse
@@ -215,9 +349,23 @@ public class ApiClientTest
 
         // Act + Assert
         var exception = await Should.ThrowAsync<CaptchaVerificationRequiredException>(
-            () => apiClient.RequestUploadAsync(config, CancellationToken.None)
+            () => apiClient.RequestUploadAsync(config, null, CancellationToken.None)
         );
         exception.Code.ShouldBe((int)HttpStatusCode.BadRequest);
         exception.ErrorCode.ShouldBe(2);
+    }
+
+    private void SetupLogin()
+    {
+        apiMock
+            .Setup(x => x.LoginAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new LoginResponse
+                {
+                    Status = "success",
+                    Code = (int)HttpStatusCode.OK,
+                    AuthToken = "auth-token",
+                }
+            );
     }
 }

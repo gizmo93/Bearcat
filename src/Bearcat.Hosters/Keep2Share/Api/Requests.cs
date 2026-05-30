@@ -17,8 +17,23 @@ public record AuthenticatedRequest([property: JsonPropertyName("auth_token")] st
 
 public record UploadFormDataRequest(
     [property: JsonPropertyName("auth_token")] string AuthToken,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [property: JsonPropertyName("parent_id")] string? ParentId = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [property: JsonPropertyName("preferred_node")] string? PreferredNode = null
+);
+
+public record FolderListRequest(
+    [property: JsonPropertyName("auth_token")] string AuthToken,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [property: JsonPropertyName("parent_id")] string? ParentId = null
+);
+
+public record CreateFolderRequest(
+    [property: JsonPropertyName("auth_token")] string AuthToken,
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("parent")] string Parent,
+    [property: JsonPropertyName("access")] string Access
 );
 
 public record FileStatusRequest([property: JsonPropertyName("id")] string Id);

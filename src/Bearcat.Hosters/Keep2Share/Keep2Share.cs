@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 namespace Bearcat.Hosters.Keep2Share;
 
 public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logger)
-    : IHosterWithCaptchaVerification
+    : IHosterWithCaptchaVerification, IHosterWithFolders
 {
     private const int MaxParallelUploads = 10;
 
@@ -152,6 +152,17 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
         return Task.FromResult<int?>(MaxParallelUploads);
     }
 
+    public async Task<string> CreateFolderAsync(
+        string folderName,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<Keep2ShareConfig>();
+
+        return await apiClient.CreateFolderAsync(config, folderName, cancellationToken);
+    }
+
     public async Task<TryLoginResult> TryLoginAsync(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken
@@ -212,7 +223,11 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
         CancellationToken cancellationToken
     )
     {
-        var uploadFormData = await apiClient.RequestUploadAsync(config, cancellationToken);
+        var uploadFormData = await apiClient.RequestUploadAsync(
+            config,
+            fileDto.FolderId,
+            cancellationToken
+        );
 
         await using var stream = File.OpenRead(fileDto.FullFileName);
 
