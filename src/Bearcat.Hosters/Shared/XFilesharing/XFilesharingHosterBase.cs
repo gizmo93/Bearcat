@@ -13,7 +13,7 @@ namespace Bearcat.Hosters.Shared.XFilesharing;
 public abstract class XFilesharingHosterBase<TConfig>(
     IXFilesharingApiClient apiClient,
     ILogger logger
-) : IHoster
+) : IHosterWithFolders
     where TConfig : IXFilesharingHosterConfig
 {
     public abstract string Name { get; }
@@ -172,6 +172,21 @@ public abstract class XFilesharingHosterBase<TConfig>(
         }
     }
 
+    public async Task<string> CreateFolderAsync(
+        string folderName,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<TConfig>();
+
+        return await apiClient.CreateFolderAsync(
+            apiKey: config.ApiKey,
+            folderName: folderName,
+            cancellationToken: cancellationToken
+        );
+    }
+
     protected virtual string BuildFileUrl(string fileCode)
     {
         return string.Format(CultureInfo.InvariantCulture, FileUrlFormat, fileCode);
@@ -233,6 +248,16 @@ public abstract class XFilesharingHosterBase<TConfig>(
         if (string.IsNullOrWhiteSpace(uploadResponse.FileCode))
         {
             throw new InvalidOperationException("Upload response is missing file code");
+        }
+
+        if (!string.IsNullOrWhiteSpace(fileDto.FolderId))
+        {
+            await apiClient.SetFileFolderAsync(
+                apiKey: config.ApiKey,
+                fileCode: uploadResponse.FileCode,
+                folderId: fileDto.FolderId,
+                cancellationToken: cancellationToken
+            );
         }
 
         return uploadResponse;

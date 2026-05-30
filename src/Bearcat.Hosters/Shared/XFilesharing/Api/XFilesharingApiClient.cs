@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Hosters.Extensions;
 
 namespace Bearcat.Hosters.Shared.XFilesharing.Api;
 
@@ -129,6 +130,72 @@ public abstract class XFilesharingApiClient<TApi>(
         return response.First();
     }
 
+    public async Task<string> CreateFolderAsync(
+        string apiKey,
+        string folderName,
+        CancellationToken cancellationToken
+    )
+    {
+        var rootFolder = await api.GetFolderListAsync(
+            apiKey: apiKey,
+            folderId: null,
+            cancellationToken: cancellationToken
+        );
+
+        EnsureSuccess(rootFolder.Status, rootFolder.Msg, "XFilesharing folder list failed");
+
+        var existingFolder = rootFolder.Result?.Folders.FirstOrDefault(folder =>
+            string.Equals(folder.Name, folderName, StringComparison.Ordinal)
+        );
+
+        if (existingFolder is not null)
+        {
+            return existingFolder.FolderId;
+        }
+
+        var createdFolder = await api.CreateFolderAsync(
+            apiKey: apiKey,
+            name: folderName,
+            cancellationToken: cancellationToken
+        );
+
+        EnsureSuccess(
+            createdFolder.Status,
+            createdFolder.Msg,
+            "XFilesharing folder creation failed"
+        );
+
+        if (string.IsNullOrWhiteSpace(createdFolder.Result?.FolderId))
+        {
+            throw new InvalidOperationException(
+                $"{nameof(GetType)} folder creation returned no folder id"
+            );
+        }
+
+        return createdFolder.Result.FolderId;
+    }
+
+    public async Task SetFileFolderAsync(
+        string apiKey,
+        string fileCode,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await api.SetFileFolderAsync(
+            apiKey: apiKey,
+            fileCode: fileCode,
+            folderId: folderId,
+            cancellationToken: cancellationToken
+        );
+
+        EnsureSuccess(
+            response.Status,
+            response.Msg,
+            $"{nameof(GetType)} file folder update failed"
+        );
+    }
+
     private string PrepareUploadUrl(string uploadUrl)
     {
         if (uploadOptions.AddUploadTypeQueryString)
@@ -140,5 +207,13 @@ public abstract class XFilesharingApiClient<TApi>(
         return uploadOptions.ForceHttpUploadScheme
             ? uploadUrl.Replace("https://", "http://", StringComparison.OrdinalIgnoreCase)
             : uploadUrl;
+    }
+
+    private static void EnsureSuccess(int status, string? message, string errorPrefix)
+    {
+        if (!((HttpStatusCode)status).IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException($"{errorPrefix}: {message}");
+        }
     }
 }

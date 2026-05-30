@@ -25,4 +25,17 @@ public interface IXFilesharingApiClient
         string sessionId,
         CancellationToken cancellationToken
     );
+
+    Task<string> CreateFolderAsync(
+        string apiKey,
+        string folderName,
+        CancellationToken cancellationToken
+    );
+
+    Task SetFileFolderAsync(
+        string apiKey,
+        string fileCode,
+        string folderId,
+        CancellationToken cancellationToken
+    );
 }

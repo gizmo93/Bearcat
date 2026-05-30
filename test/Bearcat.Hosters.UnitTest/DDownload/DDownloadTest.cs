@@ -75,6 +75,89 @@ public class DDownloadTest
     }
 
     [Test]
+    public async Task UploadFileAsync_FolderIdProvided_MovesUploadedFileToFolder()
+    {
+        // Arrange
+        var filePath = CreateTemporaryFile("upload-content");
+        var fileDto = new FileDto(
+            Id: 19,
+            FullFileName: filePath,
+            UploadId: 119,
+            FolderId: "folder-id"
+        );
+        var config = new DDownloadConfig { ApiKey = "api-key" };
+
+        apiClientMock
+            .Setup(x => x.RequestUploadAsync("api-key", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new RequestUploadResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    UploadUrl = "https://upload.ddownload.test",
+                    SessionId = "session-id",
+                }
+            );
+        apiClientMock
+            .Setup(x =>
+                x.UploadFileAsync(
+                    It.IsAny<Stream>(),
+                    Path.GetFileName(filePath),
+                    "https://upload.ddownload.test",
+                    "session-id",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(new UploadFileResponse { FileCode = "abc123", FileStatus = "OK" });
+        apiClientMock
+            .Setup(x =>
+                x.SetFileFolderAsync(
+                    "api-key",
+                    "abc123",
+                    "folder-id",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        apiClientMock.Verify(
+            x =>
+                x.SetFileFolderAsync(
+                    "api-key",
+                    "abc123",
+                    "folder-id",
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task CreateFolderAsync_Config_CreatesFolderWithApiClient()
+    {
+        // Arrange
+        var config = new DDownloadConfig { ApiKey = "api-key" };
+
+        apiClientMock
+            .Setup(x => x.CreateFolderAsync("api-key", "release-folder", It.IsAny<CancellationToken>()))
+            .ReturnsAsync("folder-id");
+
+        // Act
+        var result = await service.CreateFolderAsync(
+            "release-folder",
+            config,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("folder-id");
+    }
+
+    [Test]
     public async Task UploadFileAsync_RequestUploadFails_ReturnsFailureAndRetriesThreeTimes()
     {
         // Arrange
