@@ -1,5 +1,6 @@
 ﻿using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Security;
@@ -217,7 +218,12 @@ public class UploadStateService(
         {
             result = await hoster.CheckFilesExistAsync(
                 hosterConfig: hosterConfig,
-                fileUrls: filesByUrl.Keys.ToList(),
+                files: filesByUrl
+                    .Values.Select(file => new FileUrlToCheckDto(
+                        Url: file.HosterFileLink,
+                        ExternalId: file.ExternalId
+                    ))
+                    .ToList(),
                 cancellationToken: cancellationToken
             );
         }

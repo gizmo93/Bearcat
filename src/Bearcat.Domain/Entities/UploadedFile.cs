@@ -16,6 +16,8 @@ public class UploadedFile
 
     public string HosterFileLink { get; set; } = null!;
 
+    public string? ExternalId { get; set; }
+
     public List<string> ErrorMessages { get; set; } = [];
 
     public OnlineState OnlineState { get; set; }

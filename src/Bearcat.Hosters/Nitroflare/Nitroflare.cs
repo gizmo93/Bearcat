@@ -79,10 +79,12 @@ public class Nitroflare(INitroflareApiClient apiClient, ILogger<Nitroflare> logg
 
     public async Task<FileExistResult> CheckFilesExistAsync(
         IHosterConfig hosterConfig,
-        IReadOnlyList<string> fileUrls,
+        IReadOnlyList<FileUrlToCheckDto> files,
         CancellationToken cancellationToken
     )
     {
+        var fileUrls = files.Select(file => file.Url).ToList();
+
         try
         {
             var statusPerFileUrl = await apiClient.CheckLinksAsync(fileUrls, cancellationToken);

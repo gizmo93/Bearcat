@@ -15,7 +15,7 @@ public interface IHoster
 
     Task<FileExistResult> CheckFilesExistAsync(
         IHosterConfig hosterConfig,
-        IReadOnlyList<string> fileUrls,
+        IReadOnlyList<FileUrlToCheckDto> files,
         CancellationToken cancellationToken
     );
 

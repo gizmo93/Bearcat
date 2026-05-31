@@ -94,7 +94,7 @@ public class UploadyTest
             .ReturnsAsync(new Dictionary<string, bool> { ["online-code"] = true });
 
         // Act
-        var result = await service.CheckFilesExistAsync(config, [fileUrl], CancellationToken.None);
+        var result = await service.CheckFilesExistAsync(config, [new FileUrlToCheckDto(fileUrl, null)], CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();

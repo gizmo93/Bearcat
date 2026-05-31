@@ -78,11 +78,12 @@ public abstract class XFilesharingHosterBase<TConfig>(
 
     public async Task<FileExistResult> CheckFilesExistAsync(
         IHosterConfig hosterConfig,
-        IReadOnlyList<string> fileUrls,
+        IReadOnlyList<FileUrlToCheckDto> files,
         CancellationToken cancellationToken
     )
     {
         var config = hosterConfig.As<TConfig>();
+        var fileUrls = files.Select(file => file.Url).ToList();
 
         var fileUrlByFileCode = fileUrls
             .Distinct()

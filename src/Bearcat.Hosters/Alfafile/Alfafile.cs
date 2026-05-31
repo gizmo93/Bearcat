@@ -63,11 +63,12 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger) : 
 
     public async Task<FileExistResult> CheckFilesExistAsync(
         IHosterConfig hosterConfig,
-        IReadOnlyList<string> fileUrls,
+        IReadOnlyList<FileUrlToCheckDto> files,
         CancellationToken cancellationToken
     )
     {
         var config = hosterConfig.As<AlfafileConfig>();
+        var fileUrls = files.Select(file => file.Url).ToList();
 
         try
         {

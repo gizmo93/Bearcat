@@ -36,6 +36,8 @@ public class UploadFilesService(
 
     public TimeSpan NewPendingUploadsPollDelay { get; set; } = TimeSpan.FromSeconds(30);
 
+    public TimeSpan FileUploadTimeout { get; set; } = Timeout.InfiniteTimeSpan;
+
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
         try
@@ -376,6 +378,14 @@ public class UploadFilesService(
         CancellationToken processCancellationToken
     )
     {
+        using var fileUploadCancellationTokenSource =
+            CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken);
+
+        if (FileUploadTimeout != Timeout.InfiniteTimeSpan)
+        {
+            fileUploadCancellationTokenSource.CancelAfter(FileUploadTimeout);
+        }
+
         try
         {
             var fileDto = new FileDto(
@@ -388,7 +398,7 @@ public class UploadFilesService(
             var result = await fileToUpload.Hoster.UploadFileAsync(
                 fileDto,
                 fileToUpload.HosterConfig,
-                context.CancellationToken
+                fileUploadCancellationTokenSource.Token
             );
 
             await resultWriter.WriteAsync(
@@ -397,6 +407,7 @@ public class UploadFilesService(
                     ArchiveFileId: fileToUpload.ArchiveFileId,
                     FullFileName: fileToUpload.FullFileName,
                     FileUrl: result.FileUrl,
+                    ExternalId: result.ExternalId,
                     IsSuccess: result.IsSuccess,
                     Errors: result.ErrorMessages
                 ),
@@ -406,6 +417,34 @@ public class UploadFilesService(
         catch (OperationCanceledException) when (processCancellationToken.IsCancellationRequested)
         {
             throw;
+        }
+        catch (OperationCanceledException)
+            when (fileUploadCancellationTokenSource.IsCancellationRequested
+                && !context.CancellationToken.IsCancellationRequested
+                && !processCancellationToken.IsCancellationRequested
+            )
+        {
+            var message = $"Upload timed out after {FormatTimeout(FileUploadTimeout)}";
+
+            logger.LogWarning(
+                "Upload for file {FilePath} for upload {UploadId} timed out after {Timeout}",
+                fileToUpload.FullFileName,
+                fileToUpload.UploadId,
+                FormatTimeout(FileUploadTimeout)
+            );
+
+            await resultWriter.WriteAsync(
+                new FileUploadCompleted(
+                    UploadId: fileToUpload.UploadId,
+                    ArchiveFileId: fileToUpload.ArchiveFileId,
+                    FullFileName: fileToUpload.FullFileName,
+                    FileUrl: null,
+                    ExternalId: null,
+                    IsSuccess: false,
+                    Errors: [message]
+                ),
+                processCancellationToken
+            );
         }
         catch (CaptchaVerificationRequiredException ex)
         {
@@ -418,6 +457,7 @@ public class UploadFilesService(
                     ArchiveFileId: fileToUpload.ArchiveFileId,
                     FullFileName: fileToUpload.FullFileName,
                     FileUrl: null,
+                    ExternalId: null,
                     IsSuccess: false,
                     Errors: [ex.Message],
                     WasCanceled: true
@@ -433,6 +473,7 @@ public class UploadFilesService(
                     ArchiveFileId: fileToUpload.ArchiveFileId,
                     FullFileName: fileToUpload.FullFileName,
                     FileUrl: null,
+                    ExternalId: null,
                     IsSuccess: false,
                     Errors: [],
                     WasCanceled: true
@@ -448,6 +489,7 @@ public class UploadFilesService(
                     ArchiveFileId: fileToUpload.ArchiveFileId,
                     FullFileName: fileToUpload.FullFileName,
                     FileUrl: null,
+                    ExternalId: null,
                     IsSuccess: false,
                     Errors: new List<string> { ex.Message }
                 ),
@@ -459,6 +501,31 @@ public class UploadFilesService(
             globalUploadSemaphore.Release();
             hosterSemaphore.Release();
         }
+    }
+
+    private static string FormatTimeout(TimeSpan timeout)
+    {
+        if (timeout == Timeout.InfiniteTimeSpan)
+        {
+            return "infinite";
+        }
+
+        if (timeout.TotalSeconds < 1)
+        {
+            return $"{timeout.TotalMilliseconds:0}ms";
+        }
+
+        if (timeout.TotalMinutes < 1)
+        {
+            return $"{timeout.TotalSeconds:0.#}s";
+        }
+
+        if (timeout.TotalHours < 1)
+        {
+            return $"{timeout.TotalMinutes:0.#}m";
+        }
+
+        return $"{timeout.TotalHours:0.#}h";
     }
 
     private async Task HandleAvailableFileUploadResultsAsync(
@@ -562,6 +629,7 @@ public class UploadFilesService(
                 ArchiveFile = archiveFile,
                 ArchiveFileId = result.ArchiveFileId,
                 HosterFileLink = result.FileUrl ?? string.Empty,
+                ExternalId = result.ExternalId,
                 ErrorMessages = result.Errors.ToList(),
                 OnlineState = result.IsSuccess ? OnlineState.Online : OnlineState.Unknown,
                 CreatedAt = timeProvider.GetLocalNow(),

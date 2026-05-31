@@ -247,7 +247,7 @@ public class Keep2ShareTest
             );
 
         // Act
-        var result = await service.CheckFilesExistAsync(config, fileUrls, CancellationToken.None);
+        var result = await service.CheckFilesExistAsync(config, fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(), CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
@@ -269,7 +269,7 @@ public class Keep2ShareTest
             .ThrowsAsync(new InvalidOperationException("keep2share unavailable"));
 
         // Act
-        var result = await service.CheckFilesExistAsync(config, fileUrls, CancellationToken.None);
+        var result = await service.CheckFilesExistAsync(config, fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(), CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();

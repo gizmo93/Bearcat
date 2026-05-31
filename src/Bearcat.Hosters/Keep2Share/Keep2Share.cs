@@ -91,11 +91,12 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
 
     public async Task<FileExistResult> CheckFilesExistAsync(
         IHosterConfig hosterConfig,
-        IReadOnlyList<string> fileUrls,
+        IReadOnlyList<FileUrlToCheckDto> files,
         CancellationToken cancellationToken
     )
     {
         var config = hosterConfig.As<Keep2ShareConfig>();
+        var fileUrls = files.Select(file => file.Url).ToList();
 
         try
         {

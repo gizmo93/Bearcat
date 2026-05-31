@@ -132,7 +132,13 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             )
             .ReturnsAsync(
                 (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
-                    new UploadFileResult(true, fileDto, [], "https://hoster.test/archive.part1.rar")
+                    new UploadFileResult(
+                        true,
+                        fileDto,
+                        [],
+                        "https://hoster.test/archive.part1.rar",
+                        "external-file-id"
+                    )
             );
 
         // Act
@@ -153,6 +159,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         result
             .UploadedFiles.Single()
             .HosterFileLink.ShouldBe("https://hoster.test/archive.part1.rar");
+        result.UploadedFiles.Single().ExternalId.ShouldBe("external-file-id");
         result.UploadedFiles.Single().OnlineState.ShouldBe(OnlineState.Online);
         result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Info);
         result.Notifications.Single().Message.ShouldBe("All files uploaded successfully");
@@ -309,6 +316,42 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Error);
         result.Notifications.Single().Message.ShouldBe("Some files failed to upload");
         VerifyUploadPipelineCalled(archiveFilePath);
+    }
+
+    [Test]
+    public async Task ProcessAsync_HosterUploadHangs_TimesOutFileAndFailsUpload()
+    {
+        // Arrange
+        var archiveFilePath = CreateArchiveFile("archive.part1.rar");
+        var upload = await AddUploadAsync(UploadState.Pending, [archiveFilePath]);
+        service.FileUploadTimeout = TimeSpan.FromMilliseconds(20);
+
+        hosterMock
+            .Setup(h =>
+                h.UploadFileAsync(
+                    It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
+                    hosterConfigMock.Object,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(
+                async (FileDto fileDto, IHosterConfig _, CancellationToken cancellationToken) =>
+                {
+                    await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                    return new UploadFileResult(true, fileDto, [], "https://hoster.test/file");
+                }
+            );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+
+        result.Id.ShouldBe(upload.Id);
+        result.UploadState.ShouldBe(UploadState.Failed);
+        result.UploadedFiles.Single().ErrorMessages.Single().ShouldContain("timed out");
     }
 
     [Test]
@@ -993,6 +1036,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             ArchiveFileId: 100,
             FullFileName: "/tmp/archive.part1.rar",
             FileUrl: null,
+            ExternalId: null,
             IsSuccess: false,
             Errors: ["Ignored"]
         );

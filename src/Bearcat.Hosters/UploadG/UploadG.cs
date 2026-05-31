@@ -3,16 +3,18 @@ using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Extensions;
-using Bearcat.Hosters.Fichier.Api;
+using Bearcat.Hosters.UploadG.Api;
 using Microsoft.Extensions.Logging;
 
-namespace Bearcat.Hosters.Fichier;
+namespace Bearcat.Hosters.UploadG;
 
-public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger) : IHosterWithFolders
+public class UploadG(IUploadGApiClient apiClient, ILogger<UploadG> logger) : IHosterWithFolders
 {
-    public string Name => "1fichier";
+    private const int MaxParallelUploads = 10;
 
-    public IReadOnlyList<string> ConfigurationKeys => [nameof(FichierConfig.ApiKey)];
+    public string Name => "UploadG.com";
+
+    public IReadOnlyList<string> ConfigurationKeys => [nameof(UploadGConfig.ApiKey)];
 
     public TimeSpan UploadRetryDelay { get; set; } = TimeSpan.FromSeconds(30);
 
@@ -22,50 +24,64 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger) : IHo
         CancellationToken cancellationToken
     )
     {
-        var config = hosterConfig.As<FichierConfig>();
+        var config = hosterConfig.As<UploadGConfig>();
         var errors = new List<string>();
+        var fileInfo = new FileInfo(fileDto.FullFileName);
 
         foreach (var attempt in Enumerable.Range(1, 3))
         {
             try
             {
                 logger.LogInformation(
-                    "Uploading file {FileName} to 1fichier (Attempt {Attempt})",
+                    "Uploading file {FilePath} to UploadG (Attempt {Attempt})",
                     fileDto.FullFileName,
                     attempt
                 );
 
                 await using var stream = File.OpenRead(fileDto.FullFileName);
-                var response = await apiClient.UploadFileAsync(
+                var uploadResponse = await apiClient.UploadFileAsync(
                     config: config,
                     stream: stream,
-                    fileName: Path.GetFileName(fileDto.FullFileName),
+                    fileName: fileInfo.Name,
                     folderId: fileDto.FolderId,
+                    fileSize: fileInfo.Length,
                     cancellationToken: cancellationToken
                 );
 
-                var uploadedLink = response.Links.FirstOrDefault();
-
-                if (uploadedLink is not null)
+                if (uploadResponse.FileEntry is null)
                 {
-                    return new UploadFileResult(
-                        IsSuccess: true,
-                        FileDto: fileDto,
-                        ErrorMessages: [],
-                        FileUrl: uploadedLink.Download
-                    );
+                    throw new HttpRequestException("UploadG upload returned no file entry");
                 }
+
+                var fileUrl = await apiClient.GetOrCreateShareableLinkAsync(
+                    config: config,
+                    entryId: uploadResponse.FileEntry.Id,
+                    cancellationToken: cancellationToken
+                );
+
+                return new UploadFileResult(
+                    IsSuccess: true,
+                    FileDto: fileDto,
+                    ErrorMessages: [],
+                    FileUrl: fileUrl,
+                    ExternalId: uploadResponse.FileEntry.Id.ToString()
+                );
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex)
             {
+                var message = ex.InnerException?.Message ?? ex.Message;
                 logger.LogError(
-                    "Upload attempt {Attempt} failed for file {FileName}: {Message}",
-                    attempt,
+                    "Error while uploading file {FilePath} to UploadG on attempt {Attempt}: {ErrorMessage}",
                     fileDto.FullFileName,
-                    ex.InnerException?.Message ?? ex.Message
+                    attempt,
+                    message
                 );
 
-                errors.Add(ex.InnerException?.Message ?? ex.Message);
+                errors.Add(message);
             }
 
             await Task.Delay(UploadRetryDelay, cancellationToken);
@@ -85,15 +101,14 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger) : IHo
         CancellationToken cancellationToken
     )
     {
-        var config = hosterConfig.As<FichierConfig>();
-        var fileUrls = files.Select(file => file.Url).ToList();
+        var config = hosterConfig.As<UploadGConfig>();
 
         try
         {
             var statusPerFileUrl = await apiClient.CheckLinksAsync(
-                config,
-                fileUrls,
-                cancellationToken
+                config: config,
+                files: files,
+                cancellationToken: cancellationToken
             );
 
             return new FileExistResult(
@@ -114,17 +129,17 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger) : IHo
 
     public IHosterConfig DeserializeHosterConfig(string serializedConfig)
     {
-        var config = JsonSerializer.Deserialize<FichierConfig>(serializedConfig);
+        var config = JsonSerializer.Deserialize<UploadGConfig>(serializedConfig);
 
         return config
-            ?? throw new InvalidOperationException("Failed to deserialize 1fichier config");
+            ?? throw new InvalidOperationException("Failed to deserialize UploadG config");
     }
 
     public string SerializeHosterConfig(Dictionary<string, string> hosterConfig)
     {
-        var config = new FichierConfig
+        var config = new UploadGConfig
         {
-            ApiKey = hosterConfig.GetValueOrDefault(nameof(FichierConfig.ApiKey)) ?? string.Empty,
+            ApiKey = hosterConfig.GetValueOrDefault(nameof(UploadGConfig.ApiKey)) ?? string.Empty,
         };
 
         return JsonSerializer.Serialize(config);
@@ -135,7 +150,7 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger) : IHo
         CancellationToken cancellationToken
     )
     {
-        return Task.FromResult<int?>(3);
+        return Task.FromResult<int?>(MaxParallelUploads);
     }
 
     public async Task<string> CreateFolderAsync(
@@ -144,7 +159,7 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger) : IHo
         CancellationToken cancellationToken
     )
     {
-        var config = hosterConfig.As<FichierConfig>();
+        var config = hosterConfig.As<UploadGConfig>();
 
         return await apiClient.CreateFolderAsync(config, folderName, cancellationToken);
     }
@@ -154,18 +169,15 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger) : IHo
         CancellationToken cancellationToken
     )
     {
-        var config = hosterConfig.As<FichierConfig>();
+        var config = hosterConfig.As<UploadGConfig>();
 
         try
         {
-            var response = await apiClient.GetUserInfoAsync(config, cancellationToken);
-            var isSuccess =
-                !string.Equals(response.Status, "KO", StringComparison.OrdinalIgnoreCase)
-                && !string.IsNullOrWhiteSpace(response.Email);
+            var success = await apiClient.IsApiKeyValidAsync(config, cancellationToken);
 
             return new TryLoginResult(
-                IsSuccess: isSuccess,
-                ErrorMessage: isSuccess ? null : response.Message ?? response.Status
+                IsSuccess: success,
+                ErrorMessage: success ? null : "Invalid credentials"
             );
         }
         catch (Exception ex)

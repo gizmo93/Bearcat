@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
@@ -67,12 +68,19 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             checkedAt: localNow.AddHours(-1),
             uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"]
         );
+        upload.UploadedFiles[0].ExternalId = "external-1";
+        await dbContext.SaveChangesAsync();
+
         hosterMock
             .Setup(h =>
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
-                    It.Is<IReadOnlyList<string>>(urls =>
-                        urls.Count == 2 && urls.Contains("https://hoster.test/1")
+                    It.Is<IReadOnlyList<FileUrlToCheckDto>>(files =>
+                        files.Count == 2
+                        && files.Any(file =>
+                            file.Url == "https://hoster.test/1"
+                            && file.ExternalId == "external-1"
+                        )
                     ),
                     CancellationToken.None
                 )
@@ -143,7 +151,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             .Setup(h =>
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
-                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
                     CancellationToken.None
                 )
             )
@@ -192,7 +200,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             .Setup(h =>
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
-                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
                     CancellationToken.None
                 )
             )
@@ -704,7 +712,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             .Setup(h =>
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
-                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
                     CancellationToken.None
                 )
             )

@@ -99,11 +99,12 @@ public class Rapidgator(
 
     public async Task<FileExistResult> CheckFilesExistAsync(
         IHosterConfig hosterConfig,
-        IReadOnlyList<string> fileUrls,
+        IReadOnlyList<FileUrlToCheckDto> files,
         CancellationToken cancellationToken
     )
     {
         var config = hosterConfig.As<RapidgatorConfig>();
+        var fileUrls = files.Select(file => file.Url).ToList();
 
         try
         {

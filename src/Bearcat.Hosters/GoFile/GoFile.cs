@@ -95,11 +95,12 @@ public class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) : IHoste
 
     public async Task<FileExistResult> CheckFilesExistAsync(
         IHosterConfig hosterConfig,
-        IReadOnlyList<string> fileUrls,
+        IReadOnlyList<FileUrlToCheckDto> files,
         CancellationToken cancellationToken
     )
     {
         var config = hosterConfig.As<GoFileConfig>();
+        var fileUrls = files.Select(file => file.Url).ToList();
 
         var result = await apiClient.CheckOnlineStatusAsync(
             fileUrls: fileUrls,

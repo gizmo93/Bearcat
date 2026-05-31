@@ -232,7 +232,7 @@ public class DDownloadTest
             );
 
         // Act
-        var result = await service.CheckFilesExistAsync(config, fileUrls, CancellationToken.None);
+        var result = await service.CheckFilesExistAsync(config, fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(), CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
@@ -260,7 +260,7 @@ public class DDownloadTest
             .ThrowsAsync(new InvalidOperationException("ddownload unavailable"));
 
         // Act
-        var result = await service.CheckFilesExistAsync(config, fileUrls, CancellationToken.None);
+        var result = await service.CheckFilesExistAsync(config, fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(), CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();

@@ -81,11 +81,12 @@ public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> l
 
     public async Task<FileExistResult> CheckFilesExistAsync(
         IHosterConfig hosterConfig,
-        IReadOnlyList<string> fileUrls,
+        IReadOnlyList<FileUrlToCheckDto> files,
         CancellationToken cancellationToken
     )
     {
         var config = hosterConfig.As<KrakenFilesConfig>();
+        var fileUrls = files.Select(file => file.Url).ToList();
 
         try
         {

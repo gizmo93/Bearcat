@@ -10,6 +10,7 @@ using Bearcat.Hosters.KrakenFiles.InversionOfControl;
 using Bearcat.Hosters.Nitroflare.InversionOfControl;
 using Bearcat.Hosters.Rapidgator.InversionOfControl;
 using Bearcat.Hosters.Shared;
+using Bearcat.Hosters.UploadG.InversionOfControl;
 using Bearcat.Hosters.Uploady.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -29,6 +30,7 @@ public static class ServiceProviderConfig
         services.AddKeep2Share();
         services.AddKrakenFiles();
         services.AddNitroflare();
+        services.AddUploadG();
         services.AddUploady();
 
         services.AddScoped<IHosterFactory, HosterFactory>();
