@@ -33,3 +33,4 @@ If an unmanaged upload finds that local archive files are missing, Bearcat marks
 Bearcat does not repack unmanaged releases because it does not have the raw files.
 
 After you restore or replace the archive files, either change the release folder to the place where the new archives are located or use the unmanaged archive refresh action so Bearcat can use them for pending reuploads.
+![unmanaged-releases-refresh-folder.png](images/unmanaged-releases-refresh-folder.png)

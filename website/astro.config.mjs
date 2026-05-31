@@ -71,6 +71,12 @@ export default defineConfig({
 						{ label: 'Forum Post Templates', slug: 'forum-post-templates' },
 					],
 				},
+                {
+                    label: 'Special hoster related topics',
+                    items: [
+                        { label: 'Keep2Share', slug: 'keep2share' }
+                    ],
+                },
 			],
 		}),
 	],
