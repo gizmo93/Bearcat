@@ -86,6 +86,11 @@ public partial class CreateOrEditDialog
             return;
         }
 
+        if (IsEditMode)
+        {
+            return;
+        }
+
         var missingKeys = SelectedCrypter
             .ConfigurationKeys.Where(key =>
                 string.IsNullOrWhiteSpace(formModel.Configuration.GetValueOrDefault(key))
@@ -121,10 +126,6 @@ public partial class CreateOrEditDialog
         {
             Name = registration.Name,
             ClassName = registration.LinkCrypterClassName,
-            Configuration = registration.Configuration.ToDictionary(
-                kvp => kvp.Key,
-                kvp => kvp.Value
-            ),
         };
     }
 

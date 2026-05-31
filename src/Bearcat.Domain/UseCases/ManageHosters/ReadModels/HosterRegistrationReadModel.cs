@@ -7,6 +7,5 @@ public record HosterRegistrationReadModel(
     bool RequiresCaptchaVerification,
     bool SupportsCaptchaVerification,
     string HosterName,
-    string FullClassName,
-    IReadOnlyDictionary<string, string> Configuration
+    string FullClassName
 );

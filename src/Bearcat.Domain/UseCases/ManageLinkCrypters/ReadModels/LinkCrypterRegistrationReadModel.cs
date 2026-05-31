@@ -5,7 +5,5 @@ public record LinkCrypterRegistrationReadModel(
     string Name,
     string LinkCrypterClassName,
     string CrypterName,
-    string SerializedConfig,
-    IReadOnlyDictionary<string, string> Configuration,
     bool IsActive
 );

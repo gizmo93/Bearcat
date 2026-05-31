@@ -6,6 +6,7 @@ using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.Security;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -47,7 +48,8 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             Mock.Of<ILogger<LinkCrypterContainerService>>(),
             linkCrypterFactoryMock.Object,
             CreateTimeProvider(),
-            new NotificationService(new NotificationRepository(dbContext), CreateTimeProvider())
+            new NotificationService(new NotificationRepository(dbContext), CreateTimeProvider()),
+            NoOpSecretProtector.Instance
         );
     }
 

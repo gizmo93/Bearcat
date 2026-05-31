@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Bearcat.Abstractions.Security;
 
 namespace Bearcat.Infrastructure.Security;
 

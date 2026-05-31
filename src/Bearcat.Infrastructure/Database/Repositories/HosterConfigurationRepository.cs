@@ -2,7 +2,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
-using Bearcat.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -10,8 +9,7 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 public class HosterConfigurationRepository(
     IBearcatReadDbContext dbRead,
     IBearcatWriteDbContext dbWrite,
-    IHosterFactory hosterFactory,
-    ISecretProtector secretProtector
+    IHosterFactory hosterFactory
 ) : IHosterConfigurationReadRepository, IHosterConfigurationWriteRepository
 {
     public async Task<IReadOnlyList<HosterRegistrationReadModel>> GetAllRegistrationsAsync(
@@ -21,13 +19,21 @@ public class HosterConfigurationRepository(
         var hostersByName = hosterFactory.GetHostersByName();
 
         var registrations = await dbRead
-            .HosterRegistrations.OrderBy(h => h.Name)
+            .HosterRegistrations.AsNoTracking()
+            .OrderBy(h => h.Name)
+            .Select(h => new
+            {
+                h.Id,
+                h.Name,
+                h.IsActive,
+                h.RequiresCaptchaVerification,
+                h.HosterClassName,
+            })
             .ToListAsync(cancellationToken: cancellationToken);
 
         return registrations
             .Select(h =>
             {
-                var serializedConfig = secretProtector.Unprotect(h.SerializedConfig);
                 var hoster = hostersByName[h.HosterClassName];
 
                 return new HosterRegistrationReadModel(
@@ -37,8 +43,7 @@ public class HosterConfigurationRepository(
                     h.RequiresCaptchaVerification,
                     hoster is IHosterWithCaptchaVerification,
                     hoster.Name,
-                    h.HosterClassName,
-                    hoster.DeserializeHosterConfig(serializedConfig).ToDictionary()
+                    h.HosterClassName
                 );
             })
             .ToList();

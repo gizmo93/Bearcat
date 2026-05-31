@@ -1,6 +1,7 @@
 ﻿using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
@@ -10,7 +11,8 @@ namespace Bearcat.Domain.UseCases.ManageHosters;
 public class HosterRegistrationService(
     IHosterConfigurationWriteRepository writeRepository,
     IHosterFactory hosterFactory,
-    HosterCaptchaVerificationService captchaVerificationService
+    HosterCaptchaVerificationService captchaVerificationService,
+    ISecretProtector secretProtector
 )
 {
     public async Task<int> RegisterHosterAsync(
@@ -28,7 +30,7 @@ public class HosterRegistrationService(
         {
             Name = name,
             IsActive = isActive,
-            SerializedConfig = serializedConfig,
+            SerializedConfig = secretProtector.Protect(serializedConfig),
             HosterClassName = hosterClassName,
         };
 
@@ -60,9 +62,20 @@ public class HosterRegistrationService(
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         var hoster = hosterFactory.GetByName(registration.HosterClassName);
+        var serializedConfig = secretProtector.Unprotect(registration.SerializedConfig);
+        var mergedConfiguration = new Dictionary<string, string>(
+            hoster.DeserializeHosterConfig(serializedConfig).ToDictionary()
+        );
 
         registration.Name = name;
-        registration.SerializedConfig = hoster.SerializeHosterConfig(configuration);
+        foreach (var (key, value) in configuration)
+        {
+            mergedConfiguration[key] = value;
+        }
+
+        registration.SerializedConfig = secretProtector.Protect(
+            hoster.SerializeHosterConfig(mergedConfiguration)
+        );
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
@@ -74,7 +87,9 @@ public class HosterRegistrationService(
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         var hoster = hosterFactory.GetByName(registration.HosterClassName);
-        var config = hoster.DeserializeHosterConfig(registration.SerializedConfig);
+        var config = hoster.DeserializeHosterConfig(
+            secretProtector.Unprotect(registration.SerializedConfig)
+        );
 
         try
         {
@@ -103,7 +118,9 @@ public class HosterRegistrationService(
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         var (hoster, captchaHoster) = GetCaptchaHoster(registration);
-        var config = hoster.DeserializeHosterConfig(registration.SerializedConfig);
+        var config = hoster.DeserializeHosterConfig(
+            secretProtector.Unprotect(registration.SerializedConfig)
+        );
 
         return await captchaHoster.RequestCaptchaChallengeAsync(config, cancellationToken);
     }
@@ -117,7 +134,9 @@ public class HosterRegistrationService(
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         var (hoster, captchaHoster) = GetCaptchaHoster(registration);
-        var config = hoster.DeserializeHosterConfig(registration.SerializedConfig);
+        var config = hoster.DeserializeHosterConfig(
+            secretProtector.Unprotect(registration.SerializedConfig)
+        );
         var result = await captchaHoster.VerifyCaptchaAsync(
             config,
             challenge,

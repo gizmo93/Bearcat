@@ -37,12 +37,8 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
 
         service = new LinkCrypterService(
             new LinkCrypterRegistrationWriteRepository(dbContext),
-            new LinkCrypterRegistrationReadRepository(
-                dbContext,
-                linkCrypterFactoryMock.Object,
-                NoOpSecretProtector.Instance
-            ),
-            linkCrypterFactoryMock.Object
+            linkCrypterFactoryMock.Object,
+            NoOpSecretProtector.Instance
         );
     }
 
@@ -103,7 +99,19 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
         var registration = await AddLinkCrypterRegistrationAsync(isActive: true);
         var configuration = new Dictionary<string, string> { ["apiKey"] = "updated" };
         linkCrypterMock
-            .Setup(c => c.SerializeConfig(configuration))
+            .Setup(c => c.DeserializeConfig(SerializedConfig))
+            .Returns(linkCrypterConfigMock.Object);
+        linkCrypterConfigMock
+            .Setup(c => c.ToDictionary())
+            .Returns(new Dictionary<string, string> { ["apiKey"] = "secret" });
+        linkCrypterMock
+            .Setup(c =>
+                c.SerializeConfig(
+                    It.Is<IReadOnlyDictionary<string, string>>(config =>
+                        config["apiKey"] == "updated"
+                    )
+                )
+            )
             .Returns("{\"apiKey\":\"updated\"}");
 
         // Act
@@ -123,7 +131,15 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
         result.SerializedConfig.ShouldBe("{\"apiKey\":\"updated\"}");
         result.LinkCrypterClassName.ShouldBe(LinkCrypterClassName);
         linkCrypterFactoryMock.Verify(f => f.Get(LinkCrypterClassName), Times.Once);
-        linkCrypterMock.Verify(c => c.SerializeConfig(configuration), Times.Once);
+        linkCrypterMock.Verify(
+            c =>
+                c.SerializeConfig(
+                    It.Is<IReadOnlyDictionary<string, string>>(config =>
+                        config["apiKey"] == "updated"
+                    )
+                ),
+            Times.Once
+        );
     }
 
     [Test]
@@ -132,20 +148,9 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
         // Arrange
         var registration = await AddLinkCrypterRegistrationAsync(isActive: true);
         var loginResult = new TryLoginResult(true);
-        linkCrypterFactoryMock
-            .Setup(f => f.GetByClassName())
-            .Returns(
-                new Dictionary<string, ILinkCrypter>
-                {
-                    [LinkCrypterClassName] = linkCrypterMock.Object,
-                }
-            );
         linkCrypterMock
             .Setup(c => c.DeserializeConfig(SerializedConfig))
             .Returns(linkCrypterConfigMock.Object);
-        linkCrypterConfigMock
-            .Setup(c => c.ToDictionary())
-            .Returns(new Dictionary<string, string> { ["apiKey"] = "secret" });
         linkCrypterMock
             .Setup(c => c.TryLoginAsync(linkCrypterConfigMock.Object, CancellationToken.None))
             .ReturnsAsync(loginResult);
@@ -156,9 +161,8 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
         // Assert
         result.ShouldNotBeNull();
         result.ShouldBe(loginResult);
-        linkCrypterFactoryMock.Verify(f => f.GetByClassName(), Times.Once);
         linkCrypterFactoryMock.Verify(f => f.Get(LinkCrypterClassName), Times.Once);
-        linkCrypterMock.Verify(c => c.DeserializeConfig(SerializedConfig), Times.AtLeastOnce);
+        linkCrypterMock.Verify(c => c.DeserializeConfig(SerializedConfig), Times.Once);
         linkCrypterMock.Verify(
             c => c.TryLoginAsync(linkCrypterConfigMock.Object, CancellationToken.None),
             Times.Once

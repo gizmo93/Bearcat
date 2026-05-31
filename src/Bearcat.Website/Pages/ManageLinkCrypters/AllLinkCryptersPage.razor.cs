@@ -107,15 +107,19 @@ public partial class AllLinkCryptersPage(
 
     private async Task TryLoginAsync(LinkCrypterRegistrationReadModel crypter)
     {
-        var service = ScopedServices.GetRequiredService<LinkCrypterService>();
+        await using var scope = ScopedServices.CreateAsyncScope();
+        var service = scope.ServiceProvider.GetRequiredService<LinkCrypterService>();
+
         var result = await service.TryLoginAsync(crypter.LinkCrypterRegistrationId);
 
         if (result.IsSuccess)
         {
             toastService.Success(L["LoginSuccessful", crypter.Name]);
+            await LoadCryptersAsync();
             return;
         }
 
         toastService.Error(L["LoginFailed", crypter.Name, result.ErrorMessage ?? string.Empty]);
+        await LoadCryptersAsync();
     }
 }

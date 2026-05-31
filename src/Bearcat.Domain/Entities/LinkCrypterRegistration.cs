@@ -1,6 +1,6 @@
 namespace Bearcat.Domain.Entities;
 
-public class LinkCrypterRegistration : IContainSerializedConfig
+public class LinkCrypterRegistration
 {
     public int Id { get; set; }
 

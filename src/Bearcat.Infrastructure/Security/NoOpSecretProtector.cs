@@ -1,3 +1,5 @@
+using Bearcat.Abstractions.Security;
+
 namespace Bearcat.Infrastructure.Security;
 
 public sealed class NoOpSecretProtector : ISecretProtector

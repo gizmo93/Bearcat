@@ -10,6 +10,7 @@ using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.Security;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -895,7 +896,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             new TestApplicationConfigurationProvider(initialUploadCooldownMinutes),
             notificationService,
             new HosterCaptchaVerificationService(notificationService),
-            Mock.Of<ILogger<UploadStateService>>()
+            Mock.Of<ILogger<UploadStateService>>(),
+            NoOpSecretProtector.Instance
         );
     }
 

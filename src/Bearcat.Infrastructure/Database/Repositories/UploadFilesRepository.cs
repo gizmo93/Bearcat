@@ -1,7 +1,7 @@
-﻿using Bearcat.Domain.Entities;
+﻿using Bearcat.Abstractions.Security;
+using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
-using Bearcat.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;

@@ -1,6 +1,6 @@
 namespace Bearcat.Domain.Entities;
 
-public class NfoDatabaseRegistration : IContainSerializedConfig
+public class NfoDatabaseRegistration
 {
     public int Id { get; set; }
 

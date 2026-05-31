@@ -2,6 +2,7 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
@@ -19,7 +20,8 @@ public class UploadStateService(
     IApplicationConfigurationProvider configuration,
     INotificationService notificationService,
     HosterCaptchaVerificationService captchaVerificationService,
-    ILogger<UploadStateService> logger
+    ILogger<UploadStateService> logger,
+    ISecretProtector secretProtector
 )
 {
     public async Task CheckUploadStatesAsync(DateTime localNow, CancellationToken cancellationToken)
@@ -140,7 +142,9 @@ public class UploadStateService(
         {
             var hoster = hosterFactory.GetByName(uploadGroup.Key);
             var hosterConfig = hoster.DeserializeHosterConfig(
-                uploadGroup.First().UploadConfig.HosterRegistration.SerializedConfig
+                secretProtector.Unprotect(
+                    uploadGroup.First().UploadConfig.HosterRegistration.SerializedConfig
+                )
             );
 
             foreach (var upload in uploadGroup)

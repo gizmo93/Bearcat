@@ -92,6 +92,11 @@ public partial class CreateOrEditDialog
             return;
         }
 
+        if (IsEditMode)
+        {
+            return;
+        }
+
         var missingKeys = SelectedNfoDatabase
             .ConfigurationKeys.Where(key =>
                 string.IsNullOrWhiteSpace(formModel.Configuration.GetValueOrDefault(key))
@@ -123,14 +128,7 @@ public partial class CreateOrEditDialog
             return;
         }
 
-        formModel = new RegistrationFormModel
-        {
-            ClassName = registration.NfoDatabaseClassName,
-            Configuration = registration.Configuration.ToDictionary(
-                kvp => kvp.Key,
-                kvp => kvp.Value
-            ),
-        };
+        formModel = new RegistrationFormModel { ClassName = registration.NfoDatabaseClassName };
     }
 
     private async Task InitializeNfoDatabasesAsync()

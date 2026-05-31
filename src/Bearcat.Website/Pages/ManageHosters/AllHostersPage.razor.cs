@@ -58,7 +58,6 @@ public partial class AllHostersPage(
             [nameof(AddOrEditHoster.FormModel)] = new HosterFormModel
             {
                 Name = hosterRegistration.Name,
-                Configuration = hosterRegistration.Configuration.ToDictionary(),
                 FullClassName = hosterRegistration.FullClassName,
                 IsEdit = true,
                 HosterRegistrationId = hosterRegistration.Id,

@@ -86,6 +86,11 @@ public partial class AddOrEditHoster(
             return;
         }
 
+        if (FormModel.IsEdit)
+        {
+            return;
+        }
+
         var missingConfigs = selectedHoster
             .ConfigurationKeys.Where(key =>
                 string.IsNullOrWhiteSpace(FormModel.Configuration.GetValueOrDefault(key))

@@ -1,4 +1,4 @@
-namespace Bearcat.Infrastructure.Security;
+namespace Bearcat.Abstractions.Security;
 
 public interface ISecretProtector
 {

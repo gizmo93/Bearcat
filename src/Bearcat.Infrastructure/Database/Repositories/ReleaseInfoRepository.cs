@@ -1,7 +1,7 @@
+using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
-using Bearcat.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;

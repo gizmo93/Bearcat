@@ -1,6 +1,6 @@
 ﻿namespace Bearcat.Domain.Entities;
 
-public class HosterRegistration : IContainSerializedConfig
+public class HosterRegistration
 {
     public int Id { get; set; }
 

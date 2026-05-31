@@ -2,7 +2,6 @@ using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.ReadModels;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
-using Bearcat.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -10,8 +9,7 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 public class NfoDatabaseRegistrationRepository(
     IBearcatReadDbContext dbRead,
     IBearcatWriteDbContext dbWrite,
-    INfoDatabaseFactory nfoDatabaseFactory,
-    ISecretProtector secretProtector
+    INfoDatabaseFactory nfoDatabaseFactory
 ) : INfoDatabaseRegistrationReadRepository, INfoDatabaseRegistrationWriteRepository
 {
     public async Task<IReadOnlyList<NfoDatabaseRegistrationReadModel>> GetAllAsync(
@@ -21,10 +19,9 @@ public class NfoDatabaseRegistrationRepository(
         var databasesByClassName = nfoDatabaseFactory.GetByClassName();
 
         return await dbRead
-            .NfoDatabaseRegistrations.OrderBy(registration => registration.NfoDatabaseClassName)
-            .Select(registration =>
-                ToReadModel(registration, databasesByClassName, secretProtector)
-            )
+            .NfoDatabaseRegistrations.AsNoTracking()
+            .OrderBy(registration => registration.NfoDatabaseClassName)
+            .Select(registration => ToReadModel(registration, databasesByClassName))
             .ToListAsync(cancellationToken);
     }
 
@@ -35,12 +32,11 @@ public class NfoDatabaseRegistrationRepository(
     {
         var databasesByClassName = nfoDatabaseFactory.GetByClassName();
 
-        return await dbRead
+        var registration = await dbRead
             .NfoDatabaseRegistrations.Where(registration => registration.Id == id)
-            .Select(registration =>
-                ToReadModel(registration, databasesByClassName, secretProtector)
-            )
             .FirstOrDefaultAsync(cancellationToken);
+
+        return registration is null ? null : ToReadModel(registration, databasesByClassName);
     }
 
     public async Task<bool> ExistsForClassNameAsync(
@@ -96,19 +92,16 @@ public class NfoDatabaseRegistrationRepository(
 
     private static NfoDatabaseRegistrationReadModel ToReadModel(
         NfoDatabaseRegistration registration,
-        IReadOnlyDictionary<string, INfoDatabase> databasesByClassName,
-        ISecretProtector secretProtector
+        IReadOnlyDictionary<string, INfoDatabase> databasesByClassName
     )
     {
         var database = databasesByClassName[registration.NfoDatabaseClassName];
-        var serializedConfig = secretProtector.Unprotect(registration.SerializedConfig);
 
         return new NfoDatabaseRegistrationReadModel(
             registration.Id,
             registration.IsActive,
             database.Name,
-            registration.NfoDatabaseClassName,
-            database.DeserializeConfig(serializedConfig).ToDictionary()
+            registration.NfoDatabaseClassName
         );
     }
 }

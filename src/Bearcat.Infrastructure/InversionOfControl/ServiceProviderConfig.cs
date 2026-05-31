@@ -1,5 +1,6 @@
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Configurations;
+using Bearcat.Abstractions.Security;
 using Bearcat.Infrastructure.Configuration;
 using Bearcat.Infrastructure.Database.InversionOfControl;
 using Bearcat.Infrastructure.FileSystem;

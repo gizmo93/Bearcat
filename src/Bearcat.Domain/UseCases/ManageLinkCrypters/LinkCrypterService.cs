@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.LinkCrypter.Results;
+using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 
@@ -7,8 +8,8 @@ namespace Bearcat.Domain.UseCases.ManageLinkCrypters;
 
 public class LinkCrypterService(
     ILinkCrypterRegistrationWriteRepository repository,
-    ILinkCrypterRegistrationReadRepository readRepository,
-    ILinkCrypterFactory linkCrypterFactory
+    ILinkCrypterFactory linkCrypterFactory,
+    ISecretProtector secretProtector
 )
 {
     public async Task CreateAsync(
@@ -26,7 +27,7 @@ public class LinkCrypterService(
         {
             Name = name,
             LinkCrypterClassName = className,
-            SerializedConfig = serializedConfig,
+            SerializedConfig = secretProtector.Protect(serializedConfig),
             IsActive = true,
         };
 
@@ -52,11 +53,20 @@ public class LinkCrypterService(
         var registration = await repository.GetByIdAsync(id, cancellationToken);
 
         var crypter = linkCrypterFactory.Get(registration.LinkCrypterClassName);
+        var serializedConfig = secretProtector.Unprotect(registration.SerializedConfig);
+        var mergedConfiguration = new Dictionary<string, string>(
+            crypter.DeserializeConfig(serializedConfig).ToDictionary()
+        );
 
-        var serializedConfig = crypter.SerializeConfig(configuration);
+        foreach (var (key, value) in configuration)
+        {
+            mergedConfiguration[key] = value;
+        }
 
         registration.Name = name;
-        registration.SerializedConfig = serializedConfig;
+        registration.SerializedConfig = secretProtector.Protect(
+            crypter.SerializeConfig(mergedConfiguration)
+        );
 
         await repository.SaveChangesAsync(cancellationToken);
     }
@@ -75,9 +85,12 @@ public class LinkCrypterService(
         CancellationToken cancellationToken = default
     )
     {
-        var registration = await readRepository.GetByIdAsync(id, cancellationToken);
-        var crypter = linkCrypterFactory.Get(registration!.LinkCrypterClassName);
-        var config = crypter.DeserializeConfig(registration.SerializedConfig);
+        var registration = await repository.GetByIdAsync(id, cancellationToken);
+
+        var crypter = linkCrypterFactory.Get(registration.LinkCrypterClassName);
+        var config = crypter.DeserializeConfig(
+            secretProtector.Unprotect(registration.SerializedConfig)
+        );
 
         return await crypter.TryLoginAsync(config, cancellationToken);
     }

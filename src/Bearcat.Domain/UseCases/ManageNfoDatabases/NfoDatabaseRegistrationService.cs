@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.NfoDatabase;
+using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
 
@@ -6,7 +7,8 @@ namespace Bearcat.Domain.UseCases.ManageNfoDatabases;
 
 public class NfoDatabaseRegistrationService(
     INfoDatabaseRegistrationWriteRepository repository,
-    INfoDatabaseFactory nfoDatabaseFactory
+    INfoDatabaseFactory nfoDatabaseFactory,
+    ISecretProtector secretProtector
 )
 {
     public async Task CreateAsync(
@@ -29,7 +31,7 @@ public class NfoDatabaseRegistrationService(
         var registration = new NfoDatabaseRegistration
         {
             NfoDatabaseClassName = className,
-            SerializedConfig = nfoDatabase.SerializeConfig(configuration),
+            SerializedConfig = secretProtector.Protect(nfoDatabase.SerializeConfig(configuration)),
             IsActive = true,
         };
 
@@ -45,8 +47,19 @@ public class NfoDatabaseRegistrationService(
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
         var nfoDatabase = nfoDatabaseFactory.Get(registration.NfoDatabaseClassName);
+        var serializedConfig = secretProtector.Unprotect(registration.SerializedConfig);
+        var mergedConfiguration = new Dictionary<string, string>(
+            nfoDatabase.DeserializeConfig(serializedConfig).ToDictionary()
+        );
 
-        registration.SerializedConfig = nfoDatabase.SerializeConfig(configuration);
+        foreach (var (key, value) in configuration)
+        {
+            mergedConfiguration[key] = value;
+        }
+
+        registration.SerializedConfig = secretProtector.Protect(
+            nfoDatabase.SerializeConfig(mergedConfiguration)
+        );
 
         await repository.SaveChangesAsync(cancellationToken);
     }

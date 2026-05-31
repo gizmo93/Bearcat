@@ -59,52 +59,6 @@
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"
-                               Header="@L["Configuration"]"
-                               Property="@(hoster => hoster.Name)"
-                               MinWidth="280px">
-                <CellTemplate Context="hoster">
-                    @{
-                        var previewKeys = hoster.Configuration.Keys.OrderBy(key => key).Take(2).ToList();
-                        var extraCount = Math.Max(0, hoster.Configuration.Count - previewKeys.Count);
-                    }
-                    <BbCollapsible Class="bearcat-registration-config">
-                        <div class="bearcat-registration-config-summary">
-                            <div class="min-w-0">
-                                <p class="text-sm font-medium">@L["FieldCount", hoster.Configuration.Count]</p>
-                                <p class="truncate text-xs text-muted-foreground">
-                                    @string.Join(", ", previewKeys)@(extraCount > 0 ? $" +{extraCount}" : string.Empty)
-                                </p>
-                            </div>
-                            <BbCollapsibleTrigger>
-                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["ToggleConfigurationDetails"]">
-                                    <LucideIcon Name="chevrons-up-down" class="h-4 w-4" />
-                                </BbButton>
-                            </BbCollapsibleTrigger>
-                        </div>
-                        <BbCollapsibleContent>
-                            <div class="bearcat-registration-config-details">
-                                @foreach (var config in hoster.Configuration.OrderBy(config => config.Key))
-                                {
-                                    <div class="bearcat-registration-config-row">
-                                        <p class="text-xs font-medium text-muted-foreground">@config.Key</p>
-                                        @if (string.Equals(config.Key, "password", StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            <HiddenElement>
-                                                <span class="text-sm">@config.Value</span>
-                                            </HiddenElement>
-                                        }
-                                        else
-                                        {
-                                            <span class="truncate text-sm" title="@config.Value">@config.Value</span>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        </BbCollapsibleContent>
-                    </BbCollapsible>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"
                                Header="@L["Login"]"
                                Property="@(hoster => hoster.Name)"
                                Width="260px">

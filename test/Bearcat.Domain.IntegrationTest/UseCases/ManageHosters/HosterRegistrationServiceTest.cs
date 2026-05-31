@@ -41,11 +41,11 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
             new HosterConfigurationRepository(
                 dbContext,
                 dbContext,
-                hosterFactoryMock.Object,
-                NoOpSecretProtector.Instance
+                hosterFactoryMock.Object
             ),
             hosterFactoryMock.Object,
-            new HosterCaptchaVerificationService(notificationServiceMock.Object)
+            new HosterCaptchaVerificationService(notificationServiceMock.Object),
+            NoOpSecretProtector.Instance
         );
     }
 
@@ -142,7 +142,17 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         var registration = await AddHosterRegistrationAsync(isActive: true);
         var configuration = new Dictionary<string, string> { ["apiKey"] = "updated" };
         hosterMock
-            .Setup(h => h.SerializeHosterConfig(configuration))
+            .Setup(h => h.DeserializeHosterConfig(SerializedConfig))
+            .Returns(hosterConfigMock.Object);
+        hosterConfigMock
+            .Setup(c => c.ToDictionary())
+            .Returns(new Dictionary<string, string> { ["apiKey"] = "secret" });
+        hosterMock
+            .Setup(h =>
+                h.SerializeHosterConfig(
+                    It.Is<Dictionary<string, string>>(config => config["apiKey"] == "updated")
+                )
+            )
             .Returns("{\"apiKey\":\"updated\"}");
 
         // Act
@@ -162,7 +172,13 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         result.SerializedConfig.ShouldBe("{\"apiKey\":\"updated\"}");
         result.HosterClassName.ShouldBe(HosterClassName);
         hosterFactoryMock.Verify(f => f.GetByName(HosterClassName), Times.Once);
-        hosterMock.Verify(h => h.SerializeHosterConfig(configuration), Times.Once);
+        hosterMock.Verify(
+            h =>
+                h.SerializeHosterConfig(
+                    It.Is<Dictionary<string, string>>(config => config["apiKey"] == "updated")
+                ),
+            Times.Once
+        );
     }
 
     [Test]

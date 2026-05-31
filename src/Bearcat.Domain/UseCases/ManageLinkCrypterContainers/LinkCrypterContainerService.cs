@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.LinkCrypter;
+using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
@@ -13,7 +14,8 @@ public class LinkCrypterContainerService(
     ILogger<LinkCrypterContainerService> logger,
     ILinkCrypterFactory linkCrypterFactory,
     TimeProvider timeProvider,
-    INotificationService notificationService
+    INotificationService notificationService,
+    ISecretProtector secretProtector
 )
 {
     public async Task CreateMissingLinkCrypterContainersAsync(CancellationToken cancellationToken)
@@ -111,7 +113,9 @@ public class LinkCrypterContainerService(
             className: linkCrypterConfig.LinkCrypterRegistration.LinkCrypterClassName
         );
         var config = crypter.DeserializeConfig(
-            serializedConfig: linkCrypterConfig.LinkCrypterRegistration.SerializedConfig
+            serializedConfig: secretProtector.Unprotect(
+                linkCrypterConfig.LinkCrypterRegistration.SerializedConfig
+            )
         );
 
         var result = await crypter.UpdateContainerAsync(
@@ -150,7 +154,7 @@ public class LinkCrypterContainerService(
             linkCrypterConfig.LinkCrypterRegistration.LinkCrypterClassName
         );
         var config = crypter.DeserializeConfig(
-            linkCrypterConfig.LinkCrypterRegistration.SerializedConfig
+            secretProtector.Unprotect(linkCrypterConfig.LinkCrypterRegistration.SerializedConfig)
         );
 
         var fileUrls = upload.UploadedFiles.Select(f => f.HosterFileLink).OrderBy(l => l).ToList();
