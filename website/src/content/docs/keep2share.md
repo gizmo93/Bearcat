@@ -4,7 +4,7 @@ title: "Keep2Share"
 
 ## "Unicorn" captcha challenges
 
-Keep2Share might require you to resolve captaches from time to time, if you are accessing it from a "not trustworthy" IP address.
+Keep2Share might require you to resolve captchas from time to time, if you are accessing it from a "not trustworthy" IP address.
 In this case, all API calls fail until you resolved that captcha.
 
 Bearcat will handle these errors by sending you a notification telling you to resolve a captcha challenge and automatically disable the hoster configuration to avoid getting the IP address banned.
