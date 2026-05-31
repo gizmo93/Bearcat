@@ -31,6 +31,10 @@ public class ContainerResponse
     public string? Name { get; set; }
 }
 
+// Currently needed:
+// The filecrypt API docs say, createV2 returns
+// "container": [{ ... }], but it actually returns "container": { ... }
+// In order to not crash if they suddenly change the API we keep that as a safety net.
 public class ContainerResponseListJsonConverter : JsonConverter<List<ContainerResponse>>
 {
     public override List<ContainerResponse>? Read(
