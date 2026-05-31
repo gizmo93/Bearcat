@@ -126,6 +126,7 @@ public class HideCxTest
             config,
             "https://hide.cx/container",
             "external-id",
+            null,
             links,
             CancellationToken.None
         );
@@ -158,6 +159,7 @@ public class HideCxTest
             config,
             "https://hide.cx/container",
             "external-id",
+            null,
             ["https://hoster.test/file"],
             CancellationToken.None
         );

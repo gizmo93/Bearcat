@@ -182,6 +182,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
                     linkCrypterConfigMock.Object,
                     "https://crypter.test/existing",
                     "external-1",
+                    "container-secret",
                     It.Is<IReadOnlyList<string>>(links =>
                         links.SequenceEqual(
                             new[] { "https://hoster.test/new-a", "https://hoster.test/new-b" }

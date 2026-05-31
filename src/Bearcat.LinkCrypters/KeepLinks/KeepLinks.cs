@@ -99,6 +99,7 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
         ILinkCrypterConfig linkCrypterConfig,
         string containerLink,
         string? externalReference,
+        string? password,
         IReadOnlyList<string> links,
         CancellationToken cancellationToken = default
     )
@@ -111,6 +112,7 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
                 request: CreateRequestContent(
                     apiKey: config.ApiKey,
                     links: links,
+                    password: password,
                     urlId: containerLink.Split('/').Last()
                 ),
                 cancellationToken: cancellationToken

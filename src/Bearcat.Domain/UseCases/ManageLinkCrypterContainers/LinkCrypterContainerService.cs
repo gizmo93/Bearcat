@@ -122,6 +122,7 @@ public class LinkCrypterContainerService(
             linkCrypterConfig: config,
             containerLink: previousContainer.ContainerUrl,
             externalReference: previousContainer.ExternalReference,
+            password: linkCrypterConfig.Password,
             links: upload
                 .UploadedFiles.Select(selector: uf => uf.HosterFileLink)
                 .OrderBy(keySelector: l => l)

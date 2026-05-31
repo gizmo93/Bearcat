@@ -20,6 +20,7 @@ public interface ILinkCrypter
         ILinkCrypterConfig linkCrypterConfig,
         string containerLink,
         string? externalReference,
+        string? password,
         IReadOnlyList<string> links,
         CancellationToken cancellationToken = default
     );

@@ -142,6 +142,7 @@ public class KeepLinksTest
             config,
             "https://keeplinks.org/p/container-id",
             null,
+            "password",
             links,
             CancellationToken.None
         );
@@ -156,6 +157,7 @@ public class KeepLinksTest
                 It.Is<MultipartFormDataContent>(content =>
                     HasFormValue(content, "apihash", "api-key")
                     && HasFormValue(content, "output", "json")
+                    && HasFormValue(content, "password", "password")
                     && HasFormValue(content, "url-id", "container-id")
                     && FormValues(content, "link-to-protect")
                         .SequenceEqual(
@@ -189,6 +191,7 @@ public class KeepLinksTest
         var result = await service.UpdateContainerAsync(
             config,
             "https://keeplinks.org/p/container-id",
+            null,
             null,
             ["https://hoster.test/file"],
             CancellationToken.None
