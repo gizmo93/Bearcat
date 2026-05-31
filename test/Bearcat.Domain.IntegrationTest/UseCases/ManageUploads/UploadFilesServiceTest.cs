@@ -167,6 +167,68 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task ProcessAsync_PendingUploadForOneHoster_DoesNotRequestParallelLimitForUnusedHoster()
+    {
+        // Arrange
+        const string unusedHosterClassName = "UnusedHoster";
+        const string unusedSerializedHosterConfig = "{\"apiKey\":\"unused\"}";
+
+        var archiveFilePath = CreateArchiveFile("archive.part1.rar");
+        await AddUploadAsync(UploadState.Pending, [archiveFilePath]);
+        await AddUploadConfigAsync(
+            hosterClassName: unusedHosterClassName,
+            serializedHosterConfig: unusedSerializedHosterConfig
+        );
+
+        var unusedHosterMock = new Mock<IHoster>(MockBehavior.Strict);
+
+        hosterFactoryMock
+            .Setup(f => f.GetHostersByName())
+            .Returns(
+                new Dictionary<string, IHoster>
+                {
+                    [HosterClassName] = hosterMock.Object,
+                    [unusedHosterClassName] = unusedHosterMock.Object,
+                }
+            );
+        hosterMock
+            .Setup(h =>
+                h.UploadFileAsync(
+                    It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
+                    hosterConfigMock.Object,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
+                    new UploadFileResult(
+                        true,
+                        fileDto,
+                        [],
+                        "https://hoster.test/archive.part1.rar"
+                    )
+            );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        VerifyUploadPipelineCalled(archiveFilePath);
+        unusedHosterMock.Verify(
+            h => h.DeserializeHosterConfig(unusedSerializedHosterConfig),
+            Times.Never
+        );
+        unusedHosterMock.Verify(
+            h =>
+                h.GetMaximumParallelUploadsAsync(
+                    It.IsAny<IHosterConfig>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
     public async Task ProcessAsync_HosterSupportsFolders_CreatesOneFolderAndPassesFolderIdToFiles()
     {
         // Arrange
@@ -1115,10 +1177,17 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         IReadOnlyList<string> archiveFileNames,
         IReadOnlyList<string>? alreadyUploadedFileNames = null,
         ReleaseType releaseType = ReleaseType.Managed,
-        bool hosterIsActive = true
+        bool hosterIsActive = true,
+        string hosterClassName = HosterClassName,
+        string serializedHosterConfig = SerializedHosterConfig
     )
     {
-        var uploadConfig = await AddUploadConfigAsync(releaseType, hosterIsActive);
+        var uploadConfig = await AddUploadConfigAsync(
+            releaseType,
+            hosterIsActive,
+            hosterClassName,
+            serializedHosterConfig
+        );
         var archive = new Archive
         {
             ArchiveConfigId = uploadConfig.ArchiveConfigId,
@@ -1188,7 +1257,9 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
 
     private async Task<UploadConfig> AddUploadConfigAsync(
         ReleaseType releaseType = ReleaseType.Managed,
-        bool hosterIsActive = true
+        bool hosterIsActive = true,
+        string hosterClassName = HosterClassName,
+        string serializedHosterConfig = SerializedHosterConfig
     )
     {
         var releaseGroup = new ReleaseGroup
@@ -1217,8 +1288,8 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         var hosterRegistration = new HosterRegistration
         {
             Name = "Hoster",
-            SerializedConfig = SerializedHosterConfig,
-            HosterClassName = HosterClassName,
+            SerializedConfig = serializedHosterConfig,
+            HosterClassName = hosterClassName,
             IsActive = hosterIsActive,
         };
         var uploadConfig = new UploadConfig

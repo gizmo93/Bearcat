@@ -66,7 +66,11 @@ public class UploadFilesService(
 
         var hosters = hosterFactory.GetHostersByName().ToDictionary();
 
-        await SetMaxParallelUploadsPerHosterSemaphoresAsync(
+        await EnsureMaxParallelUploadsPerHosterSemaphoresAsync(
+            pendingUploads
+                .Select(u => u.UploadConfig.HosterRegistration.HosterClassName)
+                .Distinct()
+                .ToList(),
             hostersByName: hosters,
             cancellationToken: cancellationToken
         );
@@ -124,6 +128,15 @@ public class UploadFilesService(
                 var newPendingUploads = await GetPendingUploadsAsync(
                     trackedUploadIds,
                     cancellationToken
+                );
+
+                await EnsureMaxParallelUploadsPerHosterSemaphoresAsync(
+                    newPendingUploads
+                        .Select(u => u.UploadConfig.HosterRegistration.HosterClassName)
+                        .Distinct()
+                        .ToList(),
+                    hostersByName: hosters,
+                    cancellationToken: cancellationToken
                 );
 
                 await AddUploadContextsAsync(
@@ -842,31 +855,39 @@ public class UploadFilesService(
         repository.ClearChangeTracker();
     }
 
-    private async Task SetMaxParallelUploadsPerHosterSemaphoresAsync(
+    private async Task EnsureMaxParallelUploadsPerHosterSemaphoresAsync(
+        IReadOnlyList<string> hosterClassNames,
         Dictionary<string, IHoster> hostersByName,
         CancellationToken cancellationToken
     )
     {
-        var hosterConfigs = await repository.GetConfigByHosterClassName(cancellationToken);
-        var result = new Dictionary<string, SemaphoreSlim>();
-
-        foreach (var (hosterName, hoster) in hostersByName)
+        if (hosterClassNames.Count == 0 || hosterClassNames.All(hosterUploadSemaphores.ContainsKey))
         {
-            // Skip hosters that are not in use
+            return;
+        }
+
+        var hosterConfigs = await repository.GetConfigByHosterClassName(cancellationToken);
+
+        foreach (var hosterName in hosterClassNames)
+        {
+            if (hosterUploadSemaphores.ContainsKey(hosterName))
+            {
+                continue;
+            }
+
             if (!hosterConfigs.TryGetValue(hosterName, out var serializedConfig))
             {
                 continue;
             }
 
+            var hoster = hostersByName[hosterName];
             var hosterConfig = hoster.DeserializeHosterConfig(serializedConfig);
 
             var maxParallelUploads =
                 await hoster.GetMaximumParallelUploadsAsync(hosterConfig, cancellationToken) ?? 1;
 
-            result[hosterName] = new SemaphoreSlim(maxParallelUploads);
+            hosterUploadSemaphores[hosterName] = new SemaphoreSlim(maxParallelUploads);
         }
-
-        hosterUploadSemaphores = result;
     }
 
     private async Task<List<Upload>> HandleUploadsWithMissingFilesAsync(
