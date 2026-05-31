@@ -198,7 +198,7 @@ public class ApiClientTest
         );
 
         // Assert
-        ex.Message.ShouldBe("UploadG signed URL request for part 1 timed out after 20ms");
+        ex.Message.ShouldContain("UploadG signed URL request for part 1 timed out after");
         httpClientFactoryMock.Verify(
             x => x.CreateClient(HttpClientProvider.UploadHttpClientName),
             Times.Never

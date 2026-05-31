@@ -13,20 +13,14 @@ public enum ReleaseNfoFileSaveResult
 
 public static class ReleaseNfoService
 {
-    public static async Task<bool> HasLocalNfoAsync(
-        string? releaseFolderPath,
-        CancellationToken cancellationToken = default
-    )
+    public static bool HasLocalNfo(string? releaseFolderPath)
     {
         if (string.IsNullOrWhiteSpace(releaseFolderPath))
         {
             return false;
         }
 
-        return await Task.Run(
-            () => !string.IsNullOrWhiteSpace(FindNfoPath(releaseFolderPath)),
-            cancellationToken
-        );
+        return !string.IsNullOrWhiteSpace(FindNfoPath(releaseFolderPath));
     }
 
     public static async Task<NfoReleaseNfo?> GetLocalNfoAsync(string? releaseFolderPath)
@@ -38,7 +32,7 @@ public static class ReleaseNfoService
 
         try
         {
-            var nfoPath = await Task.Run(() => FindNfoPath(releaseFolderPath));
+            var nfoPath = FindNfoPath(releaseFolderPath);
             if (string.IsNullOrWhiteSpace(nfoPath))
             {
                 return null;

@@ -74,7 +74,7 @@ public partial class ReleaseOverview(
             coverUrl = releaseInfo?.CoverUrl;
             releaseNfo = await readRepository.GetReleaseNfoAsync(ReleaseId);
             nfoContent = releaseNfo?.Content;
-            hasLocalNfo = await ReleaseNfoService.HasLocalNfoAsync(ReleaseFolderPath);
+            hasLocalNfo = ReleaseNfoService.HasLocalNfo(ReleaseFolderPath);
             loadedReleaseId = ReleaseId;
             loadedReleaseFolderPath = ReleaseFolderPath;
         }

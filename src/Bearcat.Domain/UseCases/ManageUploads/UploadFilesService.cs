@@ -338,16 +338,12 @@ public class UploadFilesService(
                 scheduledAny = true;
 
                 runningUploadTasks.Add(
-                    Task.Run(
-                        () =>
-                            UploadFileAsync(
-                                fileToUpload: fileToUpload,
-                                context: context,
-                                hosterSemaphore: hosterSemaphore,
-                                resultWriter: resultWriter,
-                                processCancellationToken: cancellationToken
-                            ),
-                        cancellationToken
+                    UploadFileAsync(
+                        fileToUpload: fileToUpload,
+                        context: context,
+                        hosterSemaphore: hosterSemaphore,
+                        resultWriter: resultWriter,
+                        processCancellationToken: cancellationToken
                     )
                 );
             }
