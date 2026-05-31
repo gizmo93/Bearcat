@@ -102,6 +102,30 @@ public class UploadStateService(
         return true;
     }
 
+    public async Task<bool> ResumeUploadAsync(
+        int uploadId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var upload = await uploadStateRepository.GetByIdAsync(uploadId, cancellationToken);
+
+        if (upload is null)
+        {
+            return false;
+        }
+
+        if (upload.UploadState != UploadState.Canceled)
+        {
+            return false;
+        }
+
+        upload.UploadState = UploadState.Pending;
+
+        await uploadStateRepository.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
     public async Task<bool> DeleteUploadAsync(
         int uploadId,
         CancellationToken cancellationToken = default

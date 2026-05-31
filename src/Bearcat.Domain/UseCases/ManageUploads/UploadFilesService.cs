@@ -396,9 +396,9 @@ public class UploadFilesService(
             );
 
             var result = await fileToUpload.Hoster.UploadFileAsync(
-                fileDto,
-                fileToUpload.HosterConfig,
-                fileUploadCancellationTokenSource.Token
+                fileDto: fileDto,
+                hosterConfig: fileToUpload.HosterConfig,
+                cancellationToken: fileUploadCancellationTokenSource.Token
             );
 
             await resultWriter.WriteAsync(
@@ -424,13 +424,13 @@ public class UploadFilesService(
                 && !processCancellationToken.IsCancellationRequested
             )
         {
-            var message = $"Upload timed out after {FormatTimeout(FileUploadTimeout)}";
+            var message = $"Upload timed out after {FileUploadTimeout.Seconds} seconds";
 
             logger.LogWarning(
-                "Upload for file {FilePath} for upload {UploadId} timed out after {Timeout}",
+                "Upload for file {FilePath} for upload {UploadId} timed out after {Timeout} seconds",
                 fileToUpload.FullFileName,
                 fileToUpload.UploadId,
-                FormatTimeout(FileUploadTimeout)
+                FileUploadTimeout.Seconds
             );
 
             await resultWriter.WriteAsync(
@@ -501,31 +501,6 @@ public class UploadFilesService(
             globalUploadSemaphore.Release();
             hosterSemaphore.Release();
         }
-    }
-
-    private static string FormatTimeout(TimeSpan timeout)
-    {
-        if (timeout == Timeout.InfiniteTimeSpan)
-        {
-            return "infinite";
-        }
-
-        if (timeout.TotalSeconds < 1)
-        {
-            return $"{timeout.TotalMilliseconds:0}ms";
-        }
-
-        if (timeout.TotalMinutes < 1)
-        {
-            return $"{timeout.TotalSeconds:0.#}s";
-        }
-
-        if (timeout.TotalHours < 1)
-        {
-            return $"{timeout.TotalMinutes:0.#}m";
-        }
-
-        return $"{timeout.TotalHours:0.#}h";
     }
 
     private async Task HandleAvailableFileUploadResultsAsync(

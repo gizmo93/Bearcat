@@ -129,6 +129,10 @@
                                                 OnClick="@(async _ => await CancelUploadAsync(upload))">
                                 @L["CancelUpload"]
                             </BbDropdownMenuItem>
+                            <BbDropdownMenuItem Disabled="@(!CanResumeUpload(upload))"
+                                                OnClick="@(async _ => await ResumeUploadAsync(upload))">
+                                @L["ResumeUpload"]
+                            </BbDropdownMenuItem>
                             <BbDropdownMenuSeparator />
                             <BbDropdownMenuItem Disabled="@(!CanDeleteUpload(upload))"
                                                 OnClick="@(async _ => await DeleteUploadAsync(upload))">

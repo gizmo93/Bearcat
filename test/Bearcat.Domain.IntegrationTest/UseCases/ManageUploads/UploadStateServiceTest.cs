@@ -640,6 +640,68 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task ResumeUploadAsync_UploadDoesNotExist_ReturnsFalse()
+    {
+        // Act
+        var result = await service.ResumeUploadAsync(-1, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ResumeUploadAsync_CanceledUpload_SetsUploadPending()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Unknown,
+            checkedAt: null,
+            uploadedFileLinks: []
+        );
+        upload.UploadState = UploadState.Canceled;
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.ResumeUploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var updatedUpload = await dbContext.Uploads.SingleAsync();
+
+        result.ShouldBeTrue();
+        updatedUpload.UploadState.ShouldBe(UploadState.Pending);
+    }
+
+    [TestCase(UploadState.Pending)]
+    [TestCase(UploadState.Uploading)]
+    [TestCase(UploadState.Completed)]
+    [TestCase(UploadState.Failed)]
+    [TestCase(UploadState.CancellationRequested)]
+    public async Task ResumeUploadAsync_NonCanceledUpload_ReturnsFalseAndKeepsState(
+        UploadState uploadState
+    )
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Unknown,
+            checkedAt: null,
+            uploadedFileLinks: []
+        );
+        upload.UploadState = uploadState;
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.ResumeUploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var updatedUpload = await dbContext.Uploads.SingleAsync();
+
+        result.ShouldBeFalse();
+        updatedUpload.UploadState.ShouldBe(uploadState);
+    }
+
+    [Test]
     public async Task DeleteUploadAsync_UploadDoesNotExist_ReturnsFalse()
     {
         // Act

@@ -224,6 +224,22 @@ public partial class ReleaseUploads(
         await RefreshUploadsAsync();
     }
 
+    private async Task ResumeUploadAsync(ReleaseUploadReadModel upload)
+    {
+        var resumed = await uploadStateService.ResumeUploadAsync(upload.UploadId);
+
+        if (resumed)
+        {
+            toastService.Success(L["UploadResumed", upload.UploadId]);
+        }
+        else
+        {
+            toastService.Error(L["UploadResumeNotAvailable", upload.UploadId]);
+        }
+
+        await RefreshUploadsAsync();
+    }
+
     private async Task DeleteUploadAsync(ReleaseUploadReadModel upload)
     {
         var result = await dialogService.ConfirmAsync(
@@ -311,6 +327,9 @@ public partial class ReleaseUploads(
 
     private static bool CanCancelUpload(ReleaseUploadReadModel upload) =>
         upload.UploadState is UploadState.Pending or UploadState.Uploading;
+
+    private static bool CanResumeUpload(ReleaseUploadReadModel upload) =>
+        upload.UploadState is UploadState.Canceled;
 
     private static bool CanDeleteUpload(ReleaseUploadReadModel upload) =>
         upload.UploadState
