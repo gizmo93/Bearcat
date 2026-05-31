@@ -162,7 +162,7 @@ public class LinkCrypterContainerService(
 
         var result = await crypter.CreateContainerAsync(
             linkCrypterConfig: config,
-            containerName: Guid.NewGuid().ToString(),
+            containerName: upload.UploadConfig.Release.Name,
             password: linkCrypterConfig.Password,
             links: fileUrls,
             cancellationToken: cancellationToken

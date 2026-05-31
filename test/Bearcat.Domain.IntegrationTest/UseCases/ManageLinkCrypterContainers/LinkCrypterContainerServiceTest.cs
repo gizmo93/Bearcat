@@ -68,7 +68,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             .Setup(c =>
                 c.CreateContainerAsync(
                     linkCrypterConfigMock.Object,
-                    It.IsAny<string>(),
+                    "Bearcat.Release.001",
                     "container-secret",
                     It.Is<IReadOnlyList<string>>(links =>
                         links.SequenceEqual(

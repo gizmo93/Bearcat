@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.LinkCrypter;
+using Bearcat.LinkCrypters.FileCrypt.InversionOfControl;
 using Bearcat.LinkCrypters.HideCx.InversionOfControl;
 using Bearcat.LinkCrypters.KeepLinks.InversionOfControl;
 using Bearcat.LinkCrypters.ToLinkTo.InversionOfControl;
@@ -12,6 +13,7 @@ public static class ServiceProviderConfig
     {
         public void AddLinkCrypters()
         {
+            services.AddFileCrypt();
             services.AddHideCx();
             services.AddKeepLinks();
             services.AddToLinkTo();

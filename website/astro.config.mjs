@@ -77,6 +77,12 @@ export default defineConfig({
                         { label: 'Keep2Share', slug: 'keep2share' }
                     ],
                 },
+                {
+                    label: 'Special link crypter related topics',
+                    items: [
+                        { label: 'filecrypt.cc', slug: 'filecrypt' }
+                    ],
+                },
 			],
 		}),
 	],
