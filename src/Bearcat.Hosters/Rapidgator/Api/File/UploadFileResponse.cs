@@ -14,6 +14,8 @@ public class UploadFileResponse
     {
         public Upload? Upload { get; set; }
 
+        public File? File { get; set; }
+
         public int State { get; set; }
     }
 

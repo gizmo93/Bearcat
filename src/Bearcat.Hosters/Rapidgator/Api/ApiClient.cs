@@ -48,6 +48,22 @@ public class ApiClient(
         );
     }
 
+    public async Task<UploadFileResponse> ChangeFileModeAsync(
+        RapidgatorConfig config,
+        string fileId,
+        UploadMode mode,
+        CancellationToken cancellationToken
+    )
+    {
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+        return await api.ChangeFileModeAsync(
+            token: token,
+            fileId: fileId,
+            mode: (int)mode,
+            cancellationToken: cancellationToken
+        );
+    }
+
     public async Task<string> CreateFolderAsync(
         string folderName,
         RapidgatorConfig config,

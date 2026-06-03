@@ -30,6 +30,14 @@ public interface IRapidgatorApi
         CancellationToken cancellationToken
     );
 
+    [Post("/api/v2/file/change_mode")]
+    Task<UploadFileResponse> ChangeFileModeAsync(
+        [Query] string token,
+        [Query] [AliasAs("file_id")] string fileId,
+        [Query] int mode,
+        CancellationToken cancellationToken
+    );
+
     [Post("/api/v2/folder/create")]
     Task<FolderResponse> CreateFolderAsync(
         [Query] string token,

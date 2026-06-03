@@ -44,6 +44,12 @@ public class RapidgatorTest
     }
 
     [Test]
+    public void SupportsPremiumOnlyDownloads_ReturnsTrue()
+    {
+        service.SupportsPremiumOnlyDownloads.ShouldBeTrue();
+    }
+
+    [Test]
     public async Task UploadFileAsync_UploadCompletes_ReturnsShortenedFileUrl()
     {
         // Arrange
@@ -135,6 +141,142 @@ public class RapidgatorTest
         result.IsSuccess.ShouldBeTrue();
         result.FileUrl.ShouldBe("https://rapidgator.net/file/file-id");
         result.ErrorMessages.ShouldBeEmpty();
+        apiClientMock.Verify(
+            x =>
+                x.ChangeFileModeAsync(
+                    It.IsAny<RapidgatorConfig>(),
+                    It.IsAny<string>(),
+                    It.IsAny<UploadMode>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task UploadFileAsync_PremiumOnlyDownload_RequestsPremiumOnlyMode()
+    {
+        // Arrange
+        var filePath = CreateTemporaryFile("upload-content");
+        var fileDto = new FileDto(
+            Id: 44,
+            FullFileName: filePath,
+            UploadId: 144,
+            PremiumOnlyDownload: true
+        );
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+
+        apiClientMock
+            .Setup(x =>
+                x.RequestUploadFileAsync(
+                    Path.GetFileName(filePath),
+                    new FileInfo(filePath).Length,
+                    It.IsAny<string>(),
+                    null,
+                    config,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new UploadFileResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Response = new UploadFileResponse.ResponseObject
+                    {
+                        Upload = new UploadFileResponse.Upload
+                        {
+                            UploadId = "upload-id",
+                            Url = "https://upload.rapidgator.test",
+                            State = UploadStates.Uploading,
+                        },
+                    },
+                }
+            );
+
+        apiClientMock
+            .Setup(x =>
+                x.UploadFileAsync(
+                    "https://upload.rapidgator.test",
+                    It.IsAny<Stream>(),
+                    Path.GetFileName(filePath),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new UploadFileResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Response = new UploadFileResponse.ResponseObject
+                    {
+                        Upload = new UploadFileResponse.Upload { UploadId = "upload-id" },
+                    },
+                }
+            );
+
+        apiClientMock
+            .Setup(x => x.GetUploadInfoAsync(config, "upload-id", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new UploadFileResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Response = new UploadFileResponse.ResponseObject
+                    {
+                        Upload = new UploadFileResponse.Upload
+                        {
+                            UploadId = "upload-id",
+                            State = UploadStates.Done,
+                            File = new UploadFileResponse.File
+                            {
+                                FileId = "file-id",
+                                Name = Path.GetFileName(filePath),
+                                Url =
+                                    $"https://rapidgator.net/file/file-id/{Path.GetFileName(filePath)}.html",
+                            },
+                        },
+                    },
+                }
+            );
+
+        apiClientMock
+            .Setup(x =>
+                x.ChangeFileModeAsync(
+                    config,
+                    "file-id",
+                    UploadMode.PremiumOnly,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new UploadFileResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Response = new UploadFileResponse.ResponseObject
+                    {
+                        File = new UploadFileResponse.File
+                        {
+                            FileId = "file-id",
+                            Mode = 1,
+                            ModeLabel = "Premium only",
+                        },
+                    },
+                }
+            );
+
+        // Act
+        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        apiClientMock.Verify(
+            x =>
+                x.ChangeFileModeAsync(
+                    config,
+                    "file-id",
+                    UploadMode.PremiumOnly,
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
     }
 
     [Test]

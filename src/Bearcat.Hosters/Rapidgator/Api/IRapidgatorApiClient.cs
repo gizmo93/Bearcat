@@ -13,6 +13,13 @@ public interface IRapidgatorApiClient
         CancellationToken cancellationToken
     );
 
+    Task<UploadFileResponse> ChangeFileModeAsync(
+        RapidgatorConfig config,
+        string fileId,
+        UploadMode mode,
+        CancellationToken cancellationToken
+    );
+
     Task<UploadFileResponse> UploadFileAsync(
         string uploadUrl,
         Stream stream,

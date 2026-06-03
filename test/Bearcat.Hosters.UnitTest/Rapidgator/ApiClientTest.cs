@@ -177,6 +177,49 @@ public class ApiClientTest
         result.ShouldBeSameAs(expectedResponse);
     }
 
+    [Test]
+    public async Task ChangeFileModeAsync_Mode_PassesNumericModeToApi()
+    {
+        // Arrange
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+        var expectedResponse = new UploadFileResponse
+        {
+            Status = (int)HttpStatusCode.OK,
+            Response = new UploadFileResponse.ResponseObject
+            {
+                File = new UploadFileResponse.File
+                {
+                    FileId = "file-id",
+                    Mode = 1,
+                    ModeLabel = "Premium only",
+                },
+            },
+        };
+
+        SetupLogin();
+        apiMock
+            .Setup(x =>
+                x.ChangeFileModeAsync(
+                    "token",
+                    "file-id",
+                    1,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(expectedResponse);
+
+        // Act
+        var result = await apiClient.ChangeFileModeAsync(
+            config: config,
+            fileId: "file-id",
+            mode: UploadMode.PremiumOnly,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeSameAs(expectedResponse);
+    }
+
     private void SetupLogin()
     {
         apiMock

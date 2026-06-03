@@ -21,7 +21,7 @@ public class Rapidgator(
 {
     public string Name => "Rapidgator";
 
-    public bool SupportsPremiumOnlyDownloads => false;
+    public bool SupportsPremiumOnlyDownloads => true;
 
     public IReadOnlyList<string> ConfigurationKeys =>
         [nameof(RapidgatorConfig.Username), nameof(RapidgatorConfig.Password)];
@@ -312,9 +312,41 @@ public class Rapidgator(
         var errors = new List<string?> { uploadResult.Details, uploadStatus?.Details }
             .OfType<string>()
             .ToList();
+        var changeModeSucceeded = true;
+
+        if (
+            uploadStatus?.Response?.Upload?.State == UploadStates.Done
+            && fileDto.PremiumOnlyDownload
+        )
+        {
+            var fileId = uploadStatus.Response.Upload.File?.FileId;
+            if (string.IsNullOrWhiteSpace(fileId))
+            {
+                changeModeSucceeded = false;
+                errors.Add("Failed to change Rapidgator file mode: missing file id");
+            }
+            else
+            {
+                var changeModeResponse = await apiClient.ChangeFileModeAsync(
+                    config: config,
+                    fileId: fileId,
+                    mode: UploadMode.PremiumOnly,
+                    cancellationToken: cancellationToken
+                );
+
+                if (!((HttpStatusCode)changeModeResponse.Status).IsSuccessStatusCode)
+                {
+                    changeModeSucceeded = false;
+                    errors.Add(
+                        changeModeResponse.Details ?? "Failed to change Rapidgator file mode"
+                    );
+                }
+            }
+        }
 
         return new UploadFileResult(
-            IsSuccess: uploadStatus?.Response?.Upload?.State == UploadStates.Done,
+            IsSuccess: uploadStatus?.Response?.Upload?.State == UploadStates.Done
+                && changeModeSucceeded,
             FileDto: fileDto,
             ErrorMessages: errors,
             FileUrl: ShortenFileUrl(
