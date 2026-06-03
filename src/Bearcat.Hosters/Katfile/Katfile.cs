@@ -11,6 +11,8 @@ public class Katfile(IKatfileApiClient apiClient, ILogger<Katfile> logger)
 
     protected override string FileUrlFormat => "https://katfile.com/{0}.html";
 
+    public override bool SupportsPremiumOnlyDownloads => false;
+
     protected override string? ExtractFileCode(string fileUrl)
     {
         if (!Uri.TryCreate(fileUrl, UriKind.Absolute, out var uri))

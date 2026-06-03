@@ -44,4 +44,12 @@ public interface IXFilesharingApi
         [Query] [AliasAs("fld_id")] string folderId,
         CancellationToken cancellationToken
     );
+
+    [Get("/file/set_property")]
+    Task<StatusResponse> SetFilePropertiesAsync(
+        [Query] [AliasAs("key")] string apiKey,
+        [Query] [AliasAs("file_code")] string fileCode,
+        [Query] [AliasAs("premium_only")] int? premiumOnly,
+        CancellationToken cancellationToken
+    );
 }

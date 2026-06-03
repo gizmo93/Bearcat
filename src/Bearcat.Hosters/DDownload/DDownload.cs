@@ -10,4 +10,6 @@ public class DDownload(IDDownloadApiClient apiClient, ILogger<DDownload> logger)
     public override string Name => "ddownload";
 
     protected override string FileUrlFormat => "https://ddownload.com/{0}";
+
+    public override bool SupportsPremiumOnlyDownloads => true;
 }

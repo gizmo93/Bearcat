@@ -196,6 +196,27 @@ public abstract class XFilesharingApiClient<TApi>(
         );
     }
 
+    public async Task SetFilePropertiesAsync(
+        string apiKey,
+        string fileCode,
+        bool premiumOnly,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await api.SetFilePropertiesAsync(
+            apiKey: apiKey,
+            fileCode: fileCode,
+            premiumOnly: premiumOnly ? 1 : 0,
+            cancellationToken: cancellationToken
+        );
+
+        EnsureSuccess(
+            response.Status,
+            response.Msg,
+            $"{nameof(GetType)} file properties update failed"
+        );
+    }
+
     private string PrepareUploadUrl(string uploadUrl)
     {
         if (uploadOptions.AddUploadTypeQueryString)

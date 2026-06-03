@@ -186,4 +186,41 @@ public class ApiClientTest
             Times.Once
         );
     }
+
+    [Test]
+    public async Task SetFilePropertiesAsync_PremiumOnly_PassesNumericPremiumOnlyFlagToApi()
+    {
+        // Arrange
+        var xfilesharingApiMock = apiMock.As<IXFilesharingApi>();
+        xfilesharingApiMock
+            .Setup(x =>
+                x.SetFilePropertiesAsync(
+                    "api-key",
+                    "file-code",
+                    1,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(new StatusResponse { Status = (int)HttpStatusCode.OK });
+
+        // Act
+        await apiClient.SetFilePropertiesAsync(
+            "api-key",
+            "file-code",
+            premiumOnly: true,
+            CancellationToken.None
+        );
+
+        // Assert
+        xfilesharingApiMock.Verify(
+            x =>
+                x.SetFilePropertiesAsync(
+                    "api-key",
+                    "file-code",
+                    1,
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
 }

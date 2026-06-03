@@ -9,6 +9,8 @@ public class FileQ(IFileQApiClient apiClient, ILogger<FileQ> logger)
 {
     public override string Name => "fileq.net";
 
+    public override bool SupportsPremiumOnlyDownloads => false;
+
     protected override string FileUrlFormat => "https://fileq.net/{0}";
 
     protected override string? ExtractFileCode(string fileUrl)

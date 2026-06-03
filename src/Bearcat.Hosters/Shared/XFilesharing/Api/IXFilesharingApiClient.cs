@@ -38,4 +38,11 @@ public interface IXFilesharingApiClient
         string folderId,
         CancellationToken cancellationToken
     );
+
+    Task SetFilePropertiesAsync(
+        string apiKey,
+        string fileCode,
+        bool premiumOnly,
+        CancellationToken cancellationToken
+    );
 }

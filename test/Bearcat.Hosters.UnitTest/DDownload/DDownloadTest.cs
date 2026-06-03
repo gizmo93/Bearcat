@@ -34,6 +34,12 @@ public class DDownloadTest
     }
 
     [Test]
+    public void SupportsPremiumOnlyDownloads_ReturnsTrue()
+    {
+        service.SupportsPremiumOnlyDownloads.ShouldBeTrue();
+    }
+
+    [Test]
     public async Task UploadFileAsync_ApiUploadSucceeds_ReturnsDownloadUrl()
     {
         // Arrange
@@ -130,6 +136,70 @@ public class DDownloadTest
                     "api-key",
                     "abc123",
                     "folder-id",
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task UploadFileAsync_PremiumOnlyDownload_SetsFilePremiumOnlyProperty()
+    {
+        // Arrange
+        var filePath = CreateTemporaryFile("upload-content");
+        var fileDto = new FileDto(
+            Id: 20,
+            FullFileName: filePath,
+            UploadId: 120,
+            PremiumOnlyDownload: true
+        );
+        var config = new DDownloadConfig { ApiKey = "api-key" };
+
+        apiClientMock
+            .Setup(x => x.RequestUploadAsync("api-key", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new RequestUploadResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    UploadUrl = "https://upload.ddownload.test",
+                    SessionId = "session-id",
+                }
+            );
+
+        apiClientMock
+            .Setup(x =>
+                x.UploadFileAsync(
+                    It.IsAny<Stream>(),
+                    Path.GetFileName(filePath),
+                    "https://upload.ddownload.test",
+                    "session-id",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(new UploadFileResponse { FileCode = "abc123", FileStatus = "OK" });
+
+        apiClientMock
+            .Setup(x =>
+                x.SetFilePropertiesAsync(
+                    "api-key",
+                    "abc123",
+                    true,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        apiClientMock.Verify(
+            x =>
+                x.SetFilePropertiesAsync(
+                    "api-key",
+                    "abc123",
+                    true,
                     It.IsAny<CancellationToken>()
                 ),
             Times.Once

@@ -18,7 +18,7 @@ public abstract class XFilesharingHosterBase<TConfig>(
 {
     public abstract string Name { get; }
 
-    public bool SupportsPremiumOnlyDownloads => false;
+    public abstract bool SupportsPremiumOnlyDownloads { get; }
 
     public IReadOnlyList<string> ConfigurationKeys => [nameof(IXFilesharingHosterConfig.ApiKey)];
 
@@ -259,6 +259,16 @@ public abstract class XFilesharingHosterBase<TConfig>(
                 apiKey: config.ApiKey,
                 fileCode: uploadResponse.FileCode,
                 folderId: fileDto.FolderId,
+                cancellationToken: cancellationToken
+            );
+        }
+
+        if (fileDto.PremiumOnlyDownload)
+        {
+            await apiClient.SetFilePropertiesAsync(
+                apiKey: config.ApiKey,
+                fileCode: uploadResponse.FileCode,
+                premiumOnly: true,
                 cancellationToken: cancellationToken
             );
         }
