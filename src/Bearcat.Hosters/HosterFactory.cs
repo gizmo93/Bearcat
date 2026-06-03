@@ -19,7 +19,8 @@ public class HosterFactory(IServiceProvider serviceProvider) : IHosterFactory
             .Select(h => new HosterDto(
                 Name: h.Name,
                 HosterClassName: h.GetType().Name,
-                ConfigurationKeys: h.ConfigurationKeys
+                ConfigurationKeys: h.ConfigurationKeys,
+                SupportsPremiumOnlyDownloads: h.SupportsPremiumOnlyDownloads
             ))
             .ToList();
     }

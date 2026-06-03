@@ -8,6 +8,7 @@ public record UploadConfigTemplateReadModel(
     string HosterRegistrationName,
     int ArchiveConfigTemplateId,
     string ArchiveConfigTemplateName,
+    bool PremiumOnlyDownload,
     IReadOnlyList<string> LinksDistributedTo,
     IReadOnlyList<UploadConfigLinkCrypterTemplateReadModel> LinkCrypterTemplates
 );

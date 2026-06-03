@@ -167,6 +167,53 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task ProcessAsync_PremiumOnlyUpload_PassesPremiumOnlyDownloadToHoster()
+    {
+        // Arrange
+        var archiveFilePath = CreateArchiveFile("archive.part1.rar");
+        await AddUploadAsync(
+            UploadState.Pending,
+            [archiveFilePath],
+            premiumOnlyDownload: true
+        );
+        hosterMock
+            .Setup(h =>
+                h.UploadFileAsync(
+                    It.Is<FileDto>(f =>
+                        f.FullFileName == archiveFilePath && f.PremiumOnlyDownload
+                    ),
+                    hosterConfigMock.Object,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
+                    new UploadFileResult(
+                        true,
+                        fileDto,
+                        [],
+                        "https://hoster.test/archive.part1.rar"
+                    )
+            );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        hosterMock.Verify(
+            h =>
+                h.UploadFileAsync(
+                    It.Is<FileDto>(f =>
+                        f.FullFileName == archiveFilePath && f.PremiumOnlyDownload
+                    ),
+                    hosterConfigMock.Object,
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
     public async Task ProcessAsync_PendingUploadForOneHoster_DoesNotRequestParallelLimitForUnusedHoster()
     {
         // Arrange
@@ -1179,7 +1226,8 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         ReleaseType releaseType = ReleaseType.Managed,
         bool hosterIsActive = true,
         string hosterClassName = HosterClassName,
-        string serializedHosterConfig = SerializedHosterConfig
+        string serializedHosterConfig = SerializedHosterConfig,
+        bool premiumOnlyDownload = false
     )
     {
         var uploadConfig = await AddUploadConfigAsync(
@@ -1207,6 +1255,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             CreatedAt = DateTime.UtcNow,
             UploadState = uploadState,
             OnlineState = OnlineState.Unknown,
+            PremiumOnlyDownload = premiumOnlyDownload,
             ErrorMessages = [],
             UploadedFiles = [],
         };

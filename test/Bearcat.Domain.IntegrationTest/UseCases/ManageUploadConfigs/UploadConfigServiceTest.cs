@@ -39,6 +39,7 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
             "Default upload",
             seed.HosterRegistrationId,
             seed.ArchiveConfigId,
+            true,
             ["forum-a", "", " ", "forum-b"],
             CancellationToken.None
         );
@@ -53,6 +54,7 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
         uploadConfig.HosterRegistrationId.ShouldBe(seed.HosterRegistrationId);
         uploadConfig.ArchiveConfigId.ShouldBe(seed.ArchiveConfigId);
         uploadConfig.Name.ShouldBe("Default upload");
+        uploadConfig.PremiumOnlyDownload.ShouldBeTrue();
         uploadConfig.LinksDistributedTo.ShouldBe(["forum-a", "forum-b"]);
     }
 
@@ -70,6 +72,7 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
             "Updated upload",
             secondSeed.HosterRegistrationId,
             secondSeed.ArchiveConfigId,
+            true,
             ["forum-c", ""],
             CancellationToken.None
         );
@@ -82,6 +85,7 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
         result.Name.ShouldBe("Updated upload");
         result.HosterRegistrationId.ShouldBe(secondSeed.HosterRegistrationId);
         result.ArchiveConfigId.ShouldBe(secondSeed.ArchiveConfigId);
+        result.PremiumOnlyDownload.ShouldBeTrue();
         result.LinksDistributedTo.ShouldBe(["forum-c", ""]);
     }
 

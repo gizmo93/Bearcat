@@ -12,6 +12,8 @@ public class Nitroflare(INitroflareApiClient apiClient, ILogger<Nitroflare> logg
 {
     public string Name => "Nitroflare";
 
+    public bool SupportsPremiumOnlyDownloads => false;
+
     public IReadOnlyList<string> ConfigurationKeys => [nameof(NitroflareConfig.UserHash)];
 
     private TimeSpan UploadRetryDelay { get; } = TimeSpan.FromSeconds(30);

@@ -211,6 +211,7 @@ public class ReleaseService(
             {
                 Name = CleanOptional(template.Name) ?? template.HosterRegistration.Name,
                 HosterRegistrationId = template.HosterRegistrationId,
+                PremiumOnlyDownload = template.PremiumOnlyDownload,
                 ArchiveConfig =
                     releaseType is ReleaseType.Managed
                         ? archiveConfigsByTemplateId[template.ArchiveConfigTemplateId]

@@ -21,6 +21,8 @@ public class Rapidgator(
 {
     public string Name => "Rapidgator";
 
+    public bool SupportsPremiumOnlyDownloads => false;
+
     public IReadOnlyList<string> ConfigurationKeys =>
         [nameof(RapidgatorConfig.Username), nameof(RapidgatorConfig.Password)];
 

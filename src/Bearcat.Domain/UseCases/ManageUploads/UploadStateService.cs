@@ -350,6 +350,7 @@ public class UploadStateService(
             UploadedAt = null,
             UploadState = UploadState.WaitingForArchive,
             OnlineState = OnlineState.Unknown,
+            PremiumOnlyDownload = upload.UploadConfig.PremiumOnlyDownload,
         };
 
         notificationService.CreateInfo(
@@ -433,6 +434,7 @@ public class UploadStateService(
                 CreatedAt = timeProvider.GetLocalNow(),
                 UploadState = UploadState.WaitingForArchive,
                 OnlineState = OnlineState.Unknown,
+                PremiumOnlyDownload = uploadConfig.PremiumOnlyDownload,
             };
             uploadStateRepository.Add(upload);
 

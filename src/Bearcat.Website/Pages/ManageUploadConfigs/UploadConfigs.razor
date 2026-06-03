@@ -41,6 +41,10 @@
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span class="text-sm font-semibold">@config.Name</span>
                                     <BbBadge Variant="BadgeVariant.Outline">@config.HosterRegistrationName</BbBadge>
+                                    @if (config.PremiumOnlyDownload)
+                                    {
+                                        <BbBadge Variant="BadgeVariant.Secondary">@L["PremiumOnlyDownload"]</BbBadge>
+                                    }
                                 </div>
                                 <p class="mt-1 text-xs text-muted-foreground">@L["HosterTarget"]</p>
                             </div>

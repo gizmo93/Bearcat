@@ -248,6 +248,7 @@ public partial class ReleaseTemplateDetail(
                     Name = uploadConfig.Name,
                     HosterRegistrationId = uploadConfig.HosterRegistrationId,
                     ArchiveConfigTemplateId = uploadConfig.ArchiveConfigTemplateId,
+                    PremiumOnlyDownload = uploadConfig.PremiumOnlyDownload,
                     LinksDistributedTo = uploadConfig.LinksDistributedTo.ToList(),
                     IsEdit = true,
                 },

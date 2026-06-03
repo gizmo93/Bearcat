@@ -168,6 +168,10 @@
                                         <div class="flex flex-wrap items-center gap-2">
                                             <span class="text-sm font-semibold">@config.DisplayName</span>
                                             <BbBadge Variant="BadgeVariant.Outline">@config.HosterRegistrationName</BbBadge>
+                                            @if (config.PremiumOnlyDownload)
+                                            {
+                                                <BbBadge Variant="BadgeVariant.Secondary">@L["PremiumOnlyDownload"]</BbBadge>
+                                            }
                                         </div>
                                     </div>
                                     <div class="min-w-0">

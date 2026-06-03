@@ -18,6 +18,8 @@ public class UploadConfigTemplate
 
     public string? Name { get; set; }
 
+    public bool PremiumOnlyDownload { get; set; }
+
     public List<string> LinksDistributedTo { get; set; } = [];
 
     public List<UploadConfigLinkCrypterTemplate> LinkCrypterTemplates { get; set; } = [];

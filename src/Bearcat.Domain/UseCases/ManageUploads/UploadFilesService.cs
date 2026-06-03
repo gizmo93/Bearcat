@@ -401,7 +401,8 @@ public class UploadFilesService(
                 Id: fileToUpload.ArchiveFileId,
                 FullFileName: fileToUpload.FullFileName,
                 UploadId: fileToUpload.UploadId,
-                FolderId: fileToUpload.FolderId
+                FolderId: fileToUpload.FolderId,
+                PremiumOnlyDownload: context.Upload.PremiumOnlyDownload
             );
 
             var result = await fileToUpload.Hoster.UploadFileAsync(

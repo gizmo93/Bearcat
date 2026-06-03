@@ -108,6 +108,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
             " ",
             hosterRegistration.Id,
             archiveConfigTemplateId,
+            true,
             ["forum-a", "", "forum-b"],
             CancellationToken.None
         );
@@ -138,6 +139,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         uploadConfigTemplate.Name.ShouldBeNull();
         uploadConfigTemplate.HosterRegistrationId.ShouldBe(hosterRegistration.Id);
         uploadConfigTemplate.ArchiveConfigTemplateId.ShouldBe(archiveConfigTemplateId);
+        uploadConfigTemplate.PremiumOnlyDownload.ShouldBeTrue();
         uploadConfigTemplate.LinksDistributedTo.ShouldBe(["forum-a", "forum-b"]);
 
         var linkCrypterTemplate = uploadConfigTemplate.LinkCrypterTemplates.Single();
@@ -377,6 +379,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
             null,
             hosterRegistration.Id,
             archiveConfigTemplateId: 12345,
+            premiumOnlyDownload: true,
             linksDistributedTo: ["forum-a"],
             CancellationToken.None
         );
@@ -386,6 +389,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         var uploadConfigTemplate = await dbContext.UploadConfigTemplates.SingleAsync();
 
         uploadConfigTemplate.ArchiveConfigTemplateId.ShouldBe(archiveConfigTemplate.Id);
+        uploadConfigTemplate.PremiumOnlyDownload.ShouldBeTrue();
     }
 
     [Test]
@@ -411,6 +415,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
             "  Mirror upload  ",
             secondHosterRegistration.Id,
             secondArchiveConfigTemplateId,
+            true,
             [" forum-c ", "", "forum-d"],
             CancellationToken.None
         );
@@ -423,6 +428,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         result.Name.ShouldBe("Mirror upload");
         result.HosterRegistrationId.ShouldBe(secondHosterRegistration.Id);
         result.ArchiveConfigTemplateId.ShouldBe(secondArchiveConfigTemplateId);
+        result.PremiumOnlyDownload.ShouldBeTrue();
         result.LinksDistributedTo.ShouldBe(["forum-c", "forum-d"]);
     }
 
@@ -521,6 +527,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
 
         var uploadConfigTemplate = template.UploadConfigTemplates.Single();
         uploadConfigTemplate.Name.ShouldBeNull();
+        uploadConfigTemplate.PremiumOnlyDownload.ShouldBeTrue();
         uploadConfigTemplate.LinksDistributedTo.ShouldBe(["forum-a", "forum-b"]);
         uploadConfigTemplate.ArchiveConfigTemplateId.ShouldBe(archiveConfigTemplate.Id);
         uploadConfigTemplate.LinkCrypterTemplates.Single().Password.ShouldBe("container-secret");
@@ -556,6 +563,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
             null,
             hosterRegistration.Id,
             archiveConfigTemplateId,
+            true,
             ["forum-a", "forum-b"],
             CancellationToken.None
         );
@@ -670,6 +678,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
                 Name = hosterRegistration.Name,
                 HosterRegistrationId = hosterRegistration.Id,
                 ArchiveConfig = release.ArchiveConfigs.Single(),
+                PremiumOnlyDownload = true,
                 LinksDistributedTo = ["forum-a", "forum-b"],
                 LinkCrypters =
                 [

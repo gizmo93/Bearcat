@@ -16,6 +16,8 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger) : 
 {
     public string Name => "Alfafile";
 
+    public bool SupportsPremiumOnlyDownloads => false;
+
     public IReadOnlyList<string> ConfigurationKeys =>
         [nameof(AlfafileConfig.Username), nameof(AlfafileConfig.Password)];
 

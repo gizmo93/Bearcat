@@ -18,6 +18,8 @@ public abstract class XFilesharingHosterBase<TConfig>(
 {
     public abstract string Name { get; }
 
+    public bool SupportsPremiumOnlyDownloads => false;
+
     public IReadOnlyList<string> ConfigurationKeys => [nameof(IXFilesharingHosterConfig.ApiKey)];
 
     protected abstract string FileUrlFormat { get; }

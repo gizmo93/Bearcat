@@ -76,6 +76,10 @@
                                 @foreach (var uploadConfig in selectedTemplate.UploadConfigTemplates)
                                 {
                                     <BbBadge Variant="BadgeVariant.Secondary">@uploadConfig.DisplayName</BbBadge>
+                                    @if (uploadConfig.PremiumOnlyDownload)
+                                    {
+                                        <BbBadge Variant="BadgeVariant.Outline">@L["PremiumOnlyDownload"]</BbBadge>
+                                    }
                                 }
                             </div>
                         </div>

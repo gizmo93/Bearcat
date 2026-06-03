@@ -18,9 +18,17 @@
 
             <BbFormFieldSelect TValue="int?"
                                @bind-Value="FormModel.HosterRegistrationId"
+                               @bind-Value:after="OnHosterRegistrationChanged"
                                Label="@L["HosterRegistration"]"
                                Placeholder="@L["SelectHosterRegistration"]"
                                Options="HosterOptions" />
+
+            @if (CanUsePremiumOnlyDownload)
+            {
+                <BbFormFieldSwitch @bind-Checked="FormModel.PremiumOnlyDownload"
+                                   Label="@L["PremiumOnlyDownload"]"
+                                   HelperText="@L["PremiumOnlyDownloadHelp"]" />
+            }
 
             @if (!isUnmanagedReleaseTemplate)
             {

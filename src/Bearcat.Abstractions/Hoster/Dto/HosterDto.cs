@@ -3,5 +3,6 @@
 public record HosterDto(
     string Name,
     string HosterClassName,
-    IReadOnlyList<string> ConfigurationKeys
+    IReadOnlyList<string> ConfigurationKeys,
+    bool SupportsPremiumOnlyDownloads
 );

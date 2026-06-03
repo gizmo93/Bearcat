@@ -34,7 +34,10 @@ public static class ServiceProviderConfig
                     var connectionString = configuration
                         .GetRequiredSection("Database:ConnectionString")
                         .Value;
-                    builder.UseNpgsql(connectionString);
+                    builder.UseNpgsql(
+                        connectionString,
+                        opts => opts.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+                    );
                 },
                 ServiceLifetime.Transient
             );

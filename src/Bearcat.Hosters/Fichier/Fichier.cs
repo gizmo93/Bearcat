@@ -12,6 +12,8 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger) : IHo
 {
     public string Name => "1fichier";
 
+    public bool SupportsPremiumOnlyDownloads => false;
+
     public IReadOnlyList<string> ConfigurationKeys => [nameof(FichierConfig.ApiKey)];
 
     public TimeSpan UploadRetryDelay { get; set; } = TimeSpan.FromSeconds(30);

@@ -22,6 +22,8 @@ public class Upload
 
     public OnlineState OnlineState { get; set; }
 
+    public bool PremiumOnlyDownload { get; set; }
+
     public List<UploadedFile> UploadedFiles { get; set; } = null!;
 
     public List<string> ErrorMessages { get; set; } = [];

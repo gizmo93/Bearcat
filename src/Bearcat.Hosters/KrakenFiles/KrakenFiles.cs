@@ -16,6 +16,8 @@ public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> l
 
     public string Name => "KrakenFiles";
 
+    public bool SupportsPremiumOnlyDownloads => false;
+
     public IReadOnlyList<string> ConfigurationKeys => [nameof(KrakenFilesConfig.ApiKey)];
 
     public TimeSpan UploadRetryDelay { get; set; } = TimeSpan.FromSeconds(30);

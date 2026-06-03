@@ -559,5 +559,7 @@
   <data name="SolveCaptcha" xml:space="preserve"><value>Captcha lösen</value></data>
   <data name="SolveCaptchaShort" xml:space="preserve"><value>Captcha</value></data>
   <data name="Unlock" xml:space="preserve"><value>Freischalten</value></data>
+  <data name="PremiumOnlyDownload" xml:space="preserve"><value>Premium only</value></data>
+  <data name="PremiumOnlyDownloadHelp" xml:space="preserve"><value>Nur Premium-Benutzer können Dateien herunterladen, die mit dieser Konfiguration hochgeladen wurden.</value></data>
   <data name="VerifyingCaptcha" xml:space="preserve"><value>Prüfe...</value></data>
 </root>

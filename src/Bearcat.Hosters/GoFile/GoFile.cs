@@ -12,6 +12,8 @@ public class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) : IHoste
 {
     public string Name => "GoFile";
 
+    public bool SupportsPremiumOnlyDownloads => false;
+
     public IReadOnlyList<string> ConfigurationKeys => [nameof(GoFileConfig.ApiKey)];
 
     public TimeSpan UploadRetryDelay { get; set; } = TimeSpan.FromSeconds(30);

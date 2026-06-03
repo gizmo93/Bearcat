@@ -136,6 +136,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
                 )
                     ? null
                     : config.Name,
+                PremiumOnlyDownload = config.PremiumOnlyDownload,
                 LinksDistributedTo = CleanLinks(config.LinksDistributedTo),
                 LinkCrypterTemplates = config
                     .LinkCrypters.Select(linkCrypter => new UploadConfigLinkCrypterTemplate
@@ -251,6 +252,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         string? name,
         int hosterRegistrationId,
         int archiveConfigTemplateId,
+        bool premiumOnlyDownload,
         IReadOnlyList<string> linksDistributedTo,
         CancellationToken cancellationToken = default
     )
@@ -272,6 +274,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             Name = CleanOptional(name),
             HosterRegistrationId = hosterRegistrationId,
             ArchiveConfigTemplateId = archiveConfigTemplate?.Id ?? archiveConfigTemplateId,
+            PremiumOnlyDownload = premiumOnlyDownload,
             LinksDistributedTo = CleanLinks(linksDistributedTo),
         };
 
@@ -292,6 +295,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         string? name,
         int hosterRegistrationId,
         int archiveConfigTemplateId,
+        bool premiumOnlyDownload,
         IReadOnlyList<string> linksDistributedTo,
         CancellationToken cancellationToken = default
     )
@@ -310,6 +314,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         uploadConfigTemplate.HosterRegistrationId = hosterRegistrationId;
         uploadConfigTemplate.ArchiveConfigTemplateId =
             archiveConfigTemplate?.Id ?? archiveConfigTemplateId;
+        uploadConfigTemplate.PremiumOnlyDownload = premiumOnlyDownload;
 
         if (archiveConfigTemplate is not null)
         {

@@ -39,6 +39,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
 
     private IEnumerable<SelectOption<int?>> HosterOptions =>
         hosterRegistrations
+            .Where(hoster => hoster.IsActive || hoster.Id == FormModel.HosterRegistrationId)
             .OrderBy(hoster => hoster.Name)
             .Select(hoster => new SelectOption<int?>(hoster.Id, hoster.Name));
 
@@ -46,6 +47,16 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
         archiveConfigTemplates
             .OrderBy(config => config.Name)
             .Select(config => new SelectOption<int?>(config.ArchiveConfigTemplateId, config.Name));
+
+    private HosterRegistrationReadModel? SelectedHosterRegistration =>
+        FormModel.HosterRegistrationId is null
+            ? null
+            : hosterRegistrations.FirstOrDefault(hoster =>
+                hoster.Id == FormModel.HosterRegistrationId
+            );
+
+    private bool CanUsePremiumOnlyDownload =>
+        SelectedHosterRegistration?.SupportsPremiumOnlyDownloads is true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -66,6 +77,8 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
                 ?.ArchiveConfigTemplateId;
         }
 
+        ResetPremiumOnlyDownloadIfUnsupported();
+
         isInitialized = true;
     }
 
@@ -80,6 +93,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
                 FormModel.Name,
                 FormModel.HosterRegistrationId!.Value,
                 FormModel.ArchiveConfigTemplateId!.Value,
+                CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
                 FormModel.LinksDistributedTo
             );
         }
@@ -90,6 +104,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
                 FormModel.Name,
                 FormModel.HosterRegistrationId!.Value,
                 FormModel.ArchiveConfigTemplateId!.Value,
+                CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
                 FormModel.LinksDistributedTo
             );
         }
@@ -105,6 +120,19 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
     private void DeleteLinkDistributedTo(int index)
     {
         FormModel.LinksDistributedTo.RemoveAt(index);
+    }
+
+    private void OnHosterRegistrationChanged()
+    {
+        ResetPremiumOnlyDownloadIfUnsupported();
+    }
+
+    private void ResetPremiumOnlyDownloadIfUnsupported()
+    {
+        if (!CanUsePremiumOnlyDownload)
+        {
+            FormModel.PremiumOnlyDownload = false;
+        }
     }
 
     private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs args)

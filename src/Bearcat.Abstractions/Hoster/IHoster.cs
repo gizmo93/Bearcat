@@ -7,6 +7,8 @@ public interface IHoster
 {
     string Name { get; }
 
+    bool SupportsPremiumOnlyDownloads { get; }
+
     Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,

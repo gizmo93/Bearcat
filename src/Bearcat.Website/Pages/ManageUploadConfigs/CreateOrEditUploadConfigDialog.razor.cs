@@ -1,6 +1,9 @@
+using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
+using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using BlazorBlueprint.Components;
+using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,17 +26,36 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
     private UploadConfigFormModel formModel = null!;
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
-    private IReadOnlyDictionary<int, string> hosterRegistrationOptions = null!;
+    private IReadOnlyList<HosterRegistrationReadModel> hosterRegistrations = [];
     private IReadOnlyDictionary<int, string> archiveConfigOptions = null!;
     private bool isInitialized;
+
+    private IEnumerable<SelectOption<int?>> HosterRegistrationOptions =>
+        hosterRegistrations
+            .Where(hoster => hoster.IsActive || hoster.Id == formModel.HosterRegistrationId)
+            .OrderBy(hoster => hoster.Name)
+            .Select(hoster => new SelectOption<int?>(hoster.Id, hoster.Name));
+
+    private HosterRegistrationReadModel? SelectedHosterRegistration =>
+        formModel.HosterRegistrationId is null
+            ? null
+            : hosterRegistrations.FirstOrDefault(hoster =>
+                hoster.Id == formModel.HosterRegistrationId
+            );
+
+    private bool CanUsePremiumOnlyDownload =>
+        SelectedHosterRegistration?.SupportsPremiumOnlyDownloads is true;
 
     protected override async Task OnInitializedAsync()
     {
         readRepository = ScopedServices.GetRequiredService<IUploadConfigReadRepository>();
+        var hosterReadRepository =
+            ScopedServices.GetRequiredService<IHosterConfigurationReadRepository>();
 
         await InitializeFormModelAsync();
-        hosterRegistrationOptions = await readRepository.GetHosterRegistrationOptionsAsync();
+        hosterRegistrations = await hosterReadRepository.GetAllRegistrationsAsync();
         archiveConfigOptions = await readRepository.GetArchiveConfigOptionsAsync(ReleaseId);
+        ResetPremiumOnlyDownloadIfUnsupported();
 
         editContext = new EditContext(formModel);
         messageStore = new ValidationMessageStore(editContext);
@@ -52,6 +74,7 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
                 name: formModel.Name!,
                 hosterRegistrationId: formModel.HosterRegistrationId!.Value,
                 archiveConfigId: formModel.ArchiveConfigId!.Value,
+                premiumOnlyDownload: CanUsePremiumOnlyDownload && formModel.PremiumOnlyDownload,
                 linksDistributedTo: formModel.LinksDistributedTo
             );
         }
@@ -62,6 +85,7 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
                 name: formModel.Name!,
                 hosterRegistrationId: formModel.HosterRegistrationId!.Value,
                 archiveConfigId: formModel.ArchiveConfigId!.Value,
+                premiumOnlyDownload: CanUsePremiumOnlyDownload && formModel.PremiumOnlyDownload,
                 linksDistributedTo: formModel.LinksDistributedTo
             );
         }
@@ -102,6 +126,19 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
         formModel.LinksDistributedTo.Add(string.Empty);
     }
 
+    private void OnHosterRegistrationChanged()
+    {
+        ResetPremiumOnlyDownloadIfUnsupported();
+    }
+
+    private void ResetPremiumOnlyDownloadIfUnsupported()
+    {
+        if (!CanUsePremiumOnlyDownload)
+        {
+            formModel.PremiumOnlyDownload = false;
+        }
+    }
+
     private async Task InitializeFormModelAsync()
     {
         if (!IsEdit)
@@ -117,6 +154,7 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
             Name = uploadConfig.Name,
             HosterRegistrationId = uploadConfig.HosterRegistrationId,
             ArchiveConfigId = uploadConfig.ArchiveConfigId,
+            PremiumOnlyDownload = uploadConfig.PremiumOnlyDownload,
             LinksDistributedTo = uploadConfig.LinksDistributedTo.ToList(),
         };
     }

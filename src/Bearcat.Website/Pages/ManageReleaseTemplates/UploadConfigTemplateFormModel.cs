@@ -8,6 +8,8 @@ public class UploadConfigTemplateFormModel
 
     public int? ArchiveConfigTemplateId { get; set; }
 
+    public bool PremiumOnlyDownload { get; set; }
+
     public List<string> LinksDistributedTo { get; set; } = [];
 
     public bool IsEdit { get; set; }

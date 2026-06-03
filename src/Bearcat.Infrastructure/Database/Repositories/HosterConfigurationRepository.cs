@@ -42,6 +42,7 @@ public class HosterConfigurationRepository(
                     h.IsActive,
                     h.RequiresCaptchaVerification,
                     hoster is IHosterWithCaptchaVerification,
+                    hoster.SupportsPremiumOnlyDownloads,
                     hoster.Name,
                     h.HosterClassName
                 );

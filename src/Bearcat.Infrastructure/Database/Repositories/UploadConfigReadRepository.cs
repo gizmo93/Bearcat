@@ -22,6 +22,7 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
                 u.ArchiveConfigId,
                 u.ArchiveConfig.Name,
                 u.Release.Name,
+                u.PremiumOnlyDownload,
                 u.LinksDistributedTo
             ))
             .ToListAsync(cancellationToken: cancellationToken);
@@ -43,6 +44,7 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
                 u.ArchiveConfigId,
                 u.ArchiveConfig.Name,
                 u.Release.Name,
+                u.PremiumOnlyDownload,
                 u.LinksDistributedTo
             ))
             .FirstAsync(cancellationToken: cancellationToken);

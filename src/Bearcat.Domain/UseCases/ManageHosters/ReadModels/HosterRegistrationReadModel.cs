@@ -6,6 +6,7 @@ public record HosterRegistrationReadModel(
     bool IsActive,
     bool RequiresCaptchaVerification,
     bool SupportsCaptchaVerification,
+    bool SupportsPremiumOnlyDownloads,
     string HosterName,
     string FullClassName
 );

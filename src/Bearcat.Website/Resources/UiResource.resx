@@ -559,5 +559,7 @@
   <data name="SolveCaptcha" xml:space="preserve"><value>Solve captcha</value></data>
   <data name="SolveCaptchaShort" xml:space="preserve"><value>Captcha</value></data>
   <data name="Unlock" xml:space="preserve"><value>Unlock</value></data>
+  <data name="PremiumOnlyDownload" xml:space="preserve"><value>Premium only</value></data>
+  <data name="PremiumOnlyDownloadHelp" xml:space="preserve"><value>Only premium users can download files uploaded with this configuration.</value></data>
   <data name="VerifyingCaptcha" xml:space="preserve"><value>Verifying...</value></data>
 </root>

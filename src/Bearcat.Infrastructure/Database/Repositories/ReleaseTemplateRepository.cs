@@ -194,6 +194,7 @@ public class ReleaseTemplateRepository(
                     releaseTemplate
                         .ArchiveConfigTemplates.First(a => a.Id == u.ArchiveConfigTemplateId)
                         .Name,
+                    u.PremiumOnlyDownload,
                     u.LinksDistributedTo,
                     u.LinkCrypterTemplates.OrderBy(l => l.LinkCrypterRegistration.Name)
                         .ThenBy(l => l.Id)

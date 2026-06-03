@@ -18,6 +18,8 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
 
     public string Name => "Keep2Share";
 
+    public bool SupportsPremiumOnlyDownloads => false;
+
     public IReadOnlyList<string> ConfigurationKeys =>
         [nameof(Keep2ShareConfig.EmailAddress), nameof(Keep2ShareConfig.Password)];
 
