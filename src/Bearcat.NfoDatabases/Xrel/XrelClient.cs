@@ -53,7 +53,7 @@ public class XrelClient(IXrelApi api, XrelRateLimitState rateLimitState)
 
     private TResponse? HandleResponse<TResponse>(ApiResponse<TResponse> response)
     {
-        rateLimitState.Update(response.Headers);
+        rateLimitState.Update(response.Headers!);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
