@@ -3,13 +3,14 @@ using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.Home.RunningUploads;
 
 public partial class RunningUploads(
     DialogService dialogService,
     ToastService toastService,
-    UploadStateService uploadStateService
+    IServiceScopeFactory serviceScopeFactory
 ) : ComponentBase
 {
     [Parameter]
@@ -64,6 +65,8 @@ public partial class RunningUploads(
             return;
         }
 
+        await using var scope = serviceScopeFactory.CreateAsyncScope();
+        var uploadStateService = scope.ServiceProvider.GetRequiredService<UploadStateService>();
         var cancellationRequested = await uploadStateService.CancelUploadAsync(upload.Id);
 
         if (cancellationRequested)

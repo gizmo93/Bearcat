@@ -8,6 +8,7 @@ using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
@@ -15,7 +16,7 @@ public partial class ReleaseUploads(
     IReleaseReadRepository readRepository,
     IUploadConfigReadRepository uploadConfigReadRepository,
     DialogService dialogService,
-    UploadStateService uploadStateService,
+    IServiceScopeFactory serviceScopeFactory,
     ToastService toastService
 ) : ComponentBase
 {
@@ -187,6 +188,8 @@ public partial class ReleaseUploads(
 
     private async Task CreateManualReuploadAsync(ReleaseUploadReadModel upload)
     {
+        await using var scope = serviceScopeFactory.CreateAsyncScope();
+        var uploadStateService = scope.ServiceProvider.GetRequiredService<UploadStateService>();
         await uploadStateService.CreateManualReuploadAsync(upload.UploadId);
         toastService.Success(L["ManualReuploadCreated", upload.UploadId]);
         await RefreshUploadsAsync();
@@ -210,6 +213,8 @@ public partial class ReleaseUploads(
             return;
         }
 
+        await using var scope = serviceScopeFactory.CreateAsyncScope();
+        var uploadStateService = scope.ServiceProvider.GetRequiredService<UploadStateService>();
         var cancellationRequested = await uploadStateService.CancelUploadAsync(upload.UploadId);
 
         if (cancellationRequested)
@@ -226,6 +231,8 @@ public partial class ReleaseUploads(
 
     private async Task ResumeUploadAsync(ReleaseUploadReadModel upload)
     {
+        await using var scope = serviceScopeFactory.CreateAsyncScope();
+        var uploadStateService = scope.ServiceProvider.GetRequiredService<UploadStateService>();
         var resumed = await uploadStateService.ResumeUploadAsync(upload.UploadId);
 
         if (resumed)
@@ -258,6 +265,8 @@ public partial class ReleaseUploads(
             return;
         }
 
+        await using var scope = serviceScopeFactory.CreateAsyncScope();
+        var uploadStateService = scope.ServiceProvider.GetRequiredService<UploadStateService>();
         var deleted = await uploadStateService.DeleteUploadAsync(upload.UploadId);
 
         if (deleted)
