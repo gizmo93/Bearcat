@@ -22,6 +22,14 @@ public class FileCryptTest
     }
 
     [Test]
+    public void SupportedSettings_FileCryptApiSettings_ReturnsDocumentedOptions()
+    {
+        service.SupportsCaptcha.ShouldBeTrue();
+        service.SupportsContainerDownload.ShouldBeTrue();
+        service.SupportsClickAndLoad.ShouldBeTrue();
+    }
+
+    [Test]
     public async Task CreateContainerAsync_ApiCreatesContainer_ReturnsContainerLinkAndExternalReference()
     {
         // Arrange
@@ -82,6 +90,59 @@ public class FileCryptTest
                     && HasFormValue(content, "allow_links", "1")
                     && HasFormValue(content, "mirror_1[0][0]", "https://hoster.test/file-1")
                     && HasFormValue(content, "mirror_1[0][1]", "https://hoster.test/file-2")
+                ),
+                It.IsAny<CancellationToken>()
+            )
+        );
+    }
+
+    [Test]
+    public async Task CreateContainerAsync_DisabledSettings_SendsDisabledFileCryptOptions()
+    {
+        // Arrange
+        var config = new FileCryptConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x =>
+                x.SendAsync(It.IsAny<FormUrlEncodedContent>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                new Response
+                {
+                    State = 1,
+                    Container =
+                    [
+                        new ContainerResponse
+                        {
+                            Link = "https://filecrypt.cc/Container/60598C0844.html",
+                            Name = "container-name",
+                        },
+                    ],
+                }
+            );
+
+        // Act
+        var result = await service.CreateContainerAsync(
+            config,
+            "container-name",
+            null,
+            ["https://hoster.test/file"],
+            enableCaptcha: false,
+            enableContainerDownload: false,
+            enableClickAndLoad: false,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        apiMock.Verify(x =>
+            x.SendAsync(
+                It.Is<FormUrlEncodedContent>(content =>
+                    HasFormValue(content, "captcha", "0")
+                    && HasFormValue(content, "allow_cnl", "0")
+                    && HasFormValue(content, "allow_dlc", "0")
+                    && HasFormValue(content, "allow_links", "1")
                 ),
                 It.IsAny<CancellationToken>()
             )
@@ -174,8 +235,54 @@ public class FileCryptTest
                     && HasFormValue(content, "container_id", "60598C0844")
                     && HasFormValue(content, "name", "container-name")
                     && HasFormValue(content, "password", "password")
+                    && HasFormValue(content, "captcha", "1")
+                    && HasFormValue(content, "allow_cnl", "1")
+                    && HasFormValue(content, "allow_dlc", "1")
+                    && HasFormValue(content, "allow_links", "1")
                     && HasFormValue(content, "mirror_1[0][0]", "https://hoster.test/file-1")
                     && HasFormValue(content, "mirror_1[0][1]", "https://hoster.test/file-2")
+                ),
+                It.IsAny<CancellationToken>()
+            )
+        );
+    }
+
+    [Test]
+    public async Task UpdateContainerAsync_DisabledSettings_SendsDisabledFileCryptOptions()
+    {
+        // Arrange
+        var config = new FileCryptConfig { ApiKey = "api-key" };
+        var externalReference = """{"ContainerId":"60598C0844","Name":"container-name"}""";
+
+        apiMock
+            .Setup(x =>
+                x.SendAsync(It.IsAny<FormUrlEncodedContent>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(new Response { State = 1 });
+
+        // Act
+        var result = await service.UpdateContainerAsync(
+            config,
+            "https://filecrypt.cc/Container/60598C0844.html",
+            externalReference,
+            null,
+            ["https://hoster.test/file"],
+            enableCaptcha: false,
+            enableContainerDownload: false,
+            enableClickAndLoad: false,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        apiMock.Verify(x =>
+            x.SendAsync(
+                It.Is<FormUrlEncodedContent>(content =>
+                    HasFormValue(content, "captcha", "0")
+                    && HasFormValue(content, "allow_cnl", "0")
+                    && HasFormValue(content, "allow_dlc", "0")
+                    && HasFormValue(content, "allow_links", "1")
                 ),
                 It.IsAny<CancellationToken>()
             )
