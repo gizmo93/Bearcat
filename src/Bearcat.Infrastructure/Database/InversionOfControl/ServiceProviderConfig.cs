@@ -1,4 +1,5 @@
-﻿using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
+﻿using Bearcat.Domain.UseCases.Dashboard.Repositories;
+using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks.Repositories;
@@ -57,6 +58,7 @@ public static class ServiceProviderConfig
 
         private void AddRepositories()
         {
+            services.AddScoped<IDashboardReadRepository, DashboardReadRepository>();
             services.AddScoped<IHosterConfigurationReadRepository, HosterConfigurationRepository>();
             services.AddScoped<IBackgroundTaskStateReadRepository, BackgroundTaskStateRepository>();
             services.AddScoped<

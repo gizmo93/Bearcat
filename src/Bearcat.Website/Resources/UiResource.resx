@@ -93,6 +93,8 @@
   <data name="CrypterRegistrations" xml:space="preserve"><value>Crypter registrations</value></data>
   <data name="Crypters" xml:space="preserve"><value>Crypters</value></data>
   <data name="CurrentlyNothingRunning" xml:space="preserve"><value>Currently nothing is running.</value></data>
+  <data name="Dashboard" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="DateRange" xml:space="preserve"><value>Date range</value></data>
   <data name="Delete" xml:space="preserve"><value>Delete</value></data>
   <data name="DeleteArchiveConfig" xml:space="preserve"><value>Delete archive config</value></data>
   <data name="DeleteArchiveConfigConfirmation" xml:space="preserve"><value>Are you sure you want to delete the archive config {0} (Archiver: {1})?</value></data>
@@ -234,6 +236,7 @@
   <data name="OpenReleaseDatabase" xml:space="preserve"><value>Open release database</value></data>
   <data name="OpenReleaseActions" xml:space="preserve"><value>Open release actions</value></data>
   <data name="OpenUploadConfigActions" xml:space="preserve"><value>Open upload config actions</value></data>
+  <data name="OtherHosters" xml:space="preserve"><value>Other hosters</value></data>
   <data name="Password" xml:space="preserve"><value>Password</value></data>
   <data name="PauseRefresh" xml:space="preserve"><value>Pause refresh</value></data>
   <data name="Pending" xml:space="preserve"><value>Pending</value></data>
@@ -328,6 +331,8 @@
   <data name="UploadLinksCopied" xml:space="preserve"><value>{0} upload links copied.</value></data>
   <data name="UploadLinksDialogDescription" xml:space="preserve"><value>Links generated for upload configuration {0}.</value></data>
   <data name="UploadedAt" xml:space="preserve"><value>Uploaded at</value></data>
+  <data name="UploadsPerDay" xml:space="preserve"><value>Uploads per day</value></data>
+  <data name="UploadsPerDayByHoster" xml:space="preserve"><value>Completed uploads split by hoster.</value></data>
   <data name="UploadId" xml:space="preserve"><value>UploadId</value></data>
   <data name="UploadIdSearchPlaceholder" xml:space="preserve"><value>e.g. 123 or #123</value></data>
   <data name="UploadLinksTitle" xml:space="preserve"><value>Upload #{0} links</value></data>

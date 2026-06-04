@@ -20,6 +20,26 @@
     --border: oklch(0.89 0.01 264);
     --input: oklch(0.91 0.01 264);
     --ring: oklch(0.58 0.2 282);
+    --chart-1: oklch(0.56 0.19 258);
+    --chart-2: oklch(0.6 0.16 150);
+    --chart-3: oklch(0.68 0.18 46);
+    --chart-4: oklch(0.61 0.2 330);
+    --chart-5: oklch(0.57 0.15 205);
+    --chart-6: oklch(0.58 0.2 24);
+    --chart-7: oklch(0.52 0.15 292);
+    --chart-8: oklch(0.63 0.13 188);
+    --chart-9: oklch(0.64 0.17 96);
+    --chart-10: oklch(0.5 0.18 232);
+    --chart-11: oklch(0.66 0.15 12);
+    --chart-12: oklch(0.54 0.18 318);
+    --chart-13: oklch(0.49 0.13 172);
+    --chart-14: oklch(0.7 0.14 78);
+    --chart-15: oklch(0.55 0.16 278);
+    --chart-16: oklch(0.62 0.11 215);
+    --chart-17: oklch(0.59 0.18 350);
+    --chart-18: oklch(0.53 0.14 132);
+    --chart-19: oklch(0.65 0.16 36);
+    --chart-20: oklch(0.48 0.12 245);
     --sidebar: oklch(0.97 0.004 264);
     --sidebar-foreground: oklch(0.18 0.02 264);
     --sidebar-accent: oklch(0.93 0.015 270);
@@ -48,6 +68,26 @@
     --border: oklch(0.29 0.02 264);
     --input: oklch(0.24 0.02 264);
     --ring: oklch(0.71 0.19 282);
+    --chart-1: oklch(0.72 0.17 258);
+    --chart-2: oklch(0.74 0.15 150);
+    --chart-3: oklch(0.77 0.16 62);
+    --chart-4: oklch(0.73 0.18 330);
+    --chart-5: oklch(0.72 0.14 205);
+    --chart-6: oklch(0.74 0.18 24);
+    --chart-7: oklch(0.71 0.15 292);
+    --chart-8: oklch(0.75 0.12 188);
+    --chart-9: oklch(0.78 0.15 96);
+    --chart-10: oklch(0.69 0.16 232);
+    --chart-11: oklch(0.77 0.14 12);
+    --chart-12: oklch(0.72 0.17 318);
+    --chart-13: oklch(0.7 0.12 172);
+    --chart-14: oklch(0.8 0.13 78);
+    --chart-15: oklch(0.72 0.15 278);
+    --chart-16: oklch(0.74 0.1 215);
+    --chart-17: oklch(0.74 0.17 350);
+    --chart-18: oklch(0.71 0.13 132);
+    --chart-19: oklch(0.78 0.15 36);
+    --chart-20: oklch(0.68 0.11 245);
     --sidebar: oklch(0.17 0.02 264);
     --sidebar-foreground: oklch(0.92 0.01 264);
     --sidebar-accent: oklch(0.23 0.03 270);
@@ -591,6 +631,46 @@ a {
     width: 100%;
     max-width: 1800px;
     margin-inline: 0 auto;
+}
+
+.bearcat-dashboard-page {
+    width: 100%;
+    max-width: 1800px;
+    margin-inline: 0 auto;
+}
+
+.bearcat-dashboard-chart {
+    min-height: 32rem;
+    border-radius: var(--radius) !important;
+}
+
+.bearcat-dashboard-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.bearcat-dashboard-filter {
+    display: grid;
+    gap: 0.35rem;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1rem;
+}
+
+.bearcat-dashboard-date-range {
+    min-width: min(18rem, calc(100vw - 2rem));
+    min-height: 2.5rem !important;
+    height: 2.5rem !important;
+    justify-content: flex-start !important;
+}
+
+.bearcat-dashboard-refresh {
+    min-height: 2.5rem !important;
+    height: 2.5rem !important;
+    justify-content: center;
 }
 
 .bearcat-main > :where(section:has(.bearcat-data-table):not(.bearcat-release-shell)),
@@ -1983,6 +2063,15 @@ a {
 
     .bearcat-page-action {
         align-self: flex-start;
+    }
+
+    .bearcat-dashboard-actions {
+        flex-direction: row;
+        align-items: flex-end;
+    }
+
+    .bearcat-dashboard-actions .bearcat-dashboard-refresh {
+        align-self: flex-end;
     }
 
     .bearcat-release-pagination {

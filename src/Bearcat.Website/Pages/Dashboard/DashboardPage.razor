@@ -1,0 +1,66 @@
+@page "/dashboard"
+@inherits OwningComponentBase
+
+<PageTitle>@L["Dashboard"] - Bearcat</PageTitle>
+
+<section class="bearcat-dashboard-page space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["Dashboard"]</h1>
+        </div>
+
+        <div class="bearcat-dashboard-actions">
+            <div class="bearcat-dashboard-filter">
+                <span>@L["DateRange"]</span>
+                <BbDateRangePicker Value="@dateRange"
+                                   ValueChanged="OnDateRangeChangedAsync"
+                                   DateFormat="d"
+                                   FirstDayOfWeek="DayOfWeek.Monday"
+                                   Class="bearcat-dashboard-date-range" />
+            </div>
+
+            <BbButton Variant="ButtonVariant.Outline"
+                      Class="bearcat-page-action bearcat-dashboard-refresh"
+                      OnClick="RefreshAsync"
+                      Disabled="isLoading"
+                      AriaLabel="@L["Refresh"]">
+                <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
+                @L["Refresh"]
+            </BbButton>
+        </div>
+    </div>
+
+    <BbChartContainer Class="bearcat-dashboard-chart">
+        <div class="mb-4 flex flex-col gap-1">
+            <h2 class="text-lg font-semibold tracking-tight">@L["UploadsPerDay"]</h2>
+            <p class="text-sm text-muted-foreground">@L["UploadsPerDayByHoster"]</p>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="flex h-80 items-center justify-center text-sm text-muted-foreground">
+                <LucideIcon Name="loader-circle" class="mr-2 h-4 w-4 animate-spin" />
+                @L["Loading"]
+            </div>
+        }
+        else if (chartRows.Count == 0 || chartSeries.Count == 0)
+        {
+            <div class="flex h-80 items-center justify-center text-sm text-muted-foreground">
+                @L["NoUploadsFound"]
+            </div>
+        }
+        else
+        {
+            <BbBarChart Data="@chartRows" Config="@chartConfig" Height="420px">
+                <BbXAxis DataKey="@DateKey" />
+                <BbYAxis />
+                <BbChartTooltip />
+                <BbChartLegend />
+                @foreach (var series in chartSeries)
+                {
+                    <BbBar DataKey="@series.DataKey" Name="@series.Name" Stacked="true" />
+                }
+            </BbBarChart>
+        }
+    </BbChartContainer>
+</section>
