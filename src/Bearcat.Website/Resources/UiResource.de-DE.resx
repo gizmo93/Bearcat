@@ -256,6 +256,8 @@
   <data name="ReleaseInfo" xml:space="preserve"><value>Release-Info</value></data>
   <data name="ReleaseInfoDeleted" xml:space="preserve"><value>Release-Info gelöscht</value></data>
   <data name="ReleaseMetadataSources" xml:space="preserve"><value>Release-Metadatenquellen</value></data>
+  <data name="ReleaseOnlineStateDistribution" xml:space="preserve"><value>Release-Online-Status</value></data>
+  <data name="ReleaseOnlineStateDistributionDescription" xml:space="preserve"><value>Gesamtanzahl der Releases nach aktuellem Online-Status.</value></data>
     <data name="ReleaseRootsAndOnlineState" xml:space="preserve"><value>Suche und verwalte Releases</value></data>
   <data name="ReleaseResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Releases</value></data>
   <data name="ReleaseSearchPlaceholder" xml:space="preserve"><value>Name oder Ordnerpfad</value></data>
@@ -316,6 +318,7 @@
   <data name="ToggleUploadDetails" xml:space="preserve"><value>Upload-Details umschalten</value></data>
   <data name="ToggleVisibility" xml:space="preserve"><value>Sichtbarkeit umschalten</value></data>
   <data name="TotalConfigured" xml:space="preserve"><value>insgesamt konfiguriert</value></data>
+  <data name="TotalReleases" xml:space="preserve"><value>Releases gesamt</value></data>
   <data name="TryLogin" xml:space="preserve"><value>Login testen</value></data>
   <data name="UnhandledError" xml:space="preserve"><value>Ein unbehandelter Fehler ist aufgetreten.</value></data>
   <data name="Upload" xml:space="preserve"><value>Upload</value></data>

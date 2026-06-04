@@ -1,6 +1,7 @@
 using System.Globalization;
 using Bearcat.Domain.UseCases.Dashboard.ReadModels;
 using Bearcat.Domain.UseCases.Dashboard.Repositories;
+using Bearcat.Website.Localization;
 using BlazorBlueprint.Components;
 
 namespace Bearcat.Website.Pages.Dashboard;
@@ -13,8 +14,10 @@ public partial class DashboardPage(IDashboardReadRepository readRepository)
 
     private readonly List<ChartRow> chartRows = [];
     private readonly List<ChartSeries> chartSeries = [];
+    private readonly List<ReleaseStatusChartRow> releaseStatusRows = [];
     private ChartConfig chartConfig = ChartConfig.Create();
     private DateRange? dateRange = GetCurrentWeekDateRange();
+    private int totalReleaseCount;
     private bool isLoading;
 
     protected override async Task OnInitializedAsync()
@@ -51,7 +54,12 @@ public partial class DashboardPage(IDashboardReadRepository readRepository)
                 uploadedTo,
                 CancellationToken.None
             );
+            var releaseSummary = await readRepository.GetReleaseOnlineStateSummaryAsync(
+                CancellationToken.None
+            );
+
             UpdateChart(uploads);
+            UpdateReleaseStatusChart(releaseSummary);
         }
         finally
         {
@@ -136,7 +144,22 @@ public partial class DashboardPage(IDashboardReadRepository readRepository)
         );
     }
 
+    private void UpdateReleaseStatusChart(ReleaseOnlineStateSummaryReadModel releaseSummary)
+    {
+        totalReleaseCount = releaseSummary.TotalReleaseCount;
+        releaseStatusRows.Clear();
+
+        foreach (var count in releaseSummary.Counts.Where(count => count.ReleaseCount > 0))
+        {
+            releaseStatusRows.Add(
+                new ReleaseStatusChartRow(L.Localize(count.OnlineState), count.ReleaseCount)
+            );
+        }
+    }
+
     private sealed record ChartSeries(string DataKey, string Name);
+
+    private sealed record ReleaseStatusChartRow(string Name, int Value);
 
     private sealed class ChartRow
     {

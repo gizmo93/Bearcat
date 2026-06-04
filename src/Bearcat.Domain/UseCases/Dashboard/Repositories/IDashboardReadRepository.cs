@@ -9,4 +9,8 @@ public interface IDashboardReadRepository
         DateOnly? uploadedTo = null,
         CancellationToken cancellationToken = default
     );
+
+    Task<ReleaseOnlineStateSummaryReadModel> GetReleaseOnlineStateSummaryAsync(
+        CancellationToken cancellationToken = default
+    );
 }

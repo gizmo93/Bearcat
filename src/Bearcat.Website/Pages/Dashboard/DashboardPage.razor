@@ -10,15 +10,6 @@
         </div>
 
         <div class="bearcat-dashboard-actions">
-            <div class="bearcat-dashboard-filter">
-                <span>@L["DateRange"]</span>
-                <BbDateRangePicker Value="@dateRange"
-                                   ValueChanged="OnDateRangeChangedAsync"
-                                   DateFormat="d"
-                                   FirstDayOfWeek="DayOfWeek.Monday"
-                                   Class="bearcat-dashboard-date-range" />
-            </div>
-
             <BbButton Variant="ButtonVariant.Outline"
                       Class="bearcat-page-action bearcat-dashboard-refresh"
                       OnClick="RefreshAsync"
@@ -30,37 +21,84 @@
         </div>
     </div>
 
-    <BbChartContainer Class="bearcat-dashboard-chart">
-        <div class="mb-4 flex flex-col gap-1">
-            <h2 class="text-lg font-semibold tracking-tight">@L["UploadsPerDay"]</h2>
-            <p class="text-sm text-muted-foreground">@L["UploadsPerDayByHoster"]</p>
-        </div>
+    <div class="bearcat-dashboard-chart-grid">
+        <BbChartContainer Class="bearcat-dashboard-chart bearcat-dashboard-upload-chart">
+            <div class="bearcat-dashboard-card-header">
+                <div class="flex flex-col gap-1">
+                    <h2 class="text-lg font-semibold tracking-tight">@L["UploadsPerDay"]</h2>
+                    <p class="text-sm text-muted-foreground">@L["UploadsPerDayByHoster"]</p>
+                </div>
 
-        @if (isLoading)
-        {
-            <div class="flex h-80 items-center justify-center text-sm text-muted-foreground">
-                <LucideIcon Name="loader-circle" class="mr-2 h-4 w-4 animate-spin" />
-                @L["Loading"]
+                <div class="bearcat-dashboard-filter">
+                    <span>@L["DateRange"]</span>
+                    <BbDateRangePicker Value="@dateRange"
+                                       ValueChanged="OnDateRangeChangedAsync"
+                                       DateFormat="d"
+                                       FirstDayOfWeek="DayOfWeek.Monday"
+                                       Class="bearcat-dashboard-date-range" />
+                </div>
             </div>
-        }
-        else if (chartRows.Count == 0 || chartSeries.Count == 0)
-        {
-            <div class="flex h-80 items-center justify-center text-sm text-muted-foreground">
-                @L["NoUploadsFound"]
+
+            @if (isLoading)
+            {
+                <div class="flex h-80 items-center justify-center text-sm text-muted-foreground">
+                    <LucideIcon Name="loader-circle" class="mr-2 h-4 w-4 animate-spin" />
+                    @L["Loading"]
+                </div>
+            }
+            else if (chartRows.Count == 0 || chartSeries.Count == 0)
+            {
+                <div class="flex h-80 items-center justify-center text-sm text-muted-foreground">
+                    @L["NoUploadsFound"]
+                </div>
+            }
+            else
+            {
+                <BbBarChart Data="@chartRows" Config="@chartConfig" Height="420px">
+                    <BbXAxis DataKey="@DateKey" />
+                    <BbYAxis />
+                    <BbChartTooltip />
+                    <BbChartLegend />
+                    @foreach (var series in chartSeries)
+                    {
+                        <BbBar DataKey="@series.DataKey" Name="@series.Name" Stacked="true" />
+                    }
+                </BbBarChart>
+            }
+        </BbChartContainer>
+
+        <BbChartContainer Class="bearcat-dashboard-chart bearcat-dashboard-release-status-chart">
+            <div class="mb-4 flex flex-col gap-1">
+                <h2 class="text-lg font-semibold tracking-tight">@L["ReleaseOnlineStateDistribution"]</h2>
+                <p class="text-sm text-muted-foreground">@L["ReleaseOnlineStateDistributionDescription"]</p>
             </div>
-        }
-        else
-        {
-            <BbBarChart Data="@chartRows" Config="@chartConfig" Height="420px">
-                <BbXAxis DataKey="@DateKey" />
-                <BbYAxis />
-                <BbChartTooltip />
-                <BbChartLegend />
-                @foreach (var series in chartSeries)
-                {
-                    <BbBar DataKey="@series.DataKey" Name="@series.Name" Stacked="true" />
-                }
-            </BbBarChart>
-        }
-    </BbChartContainer>
+
+            @if (isLoading)
+            {
+                <div class="flex h-80 items-center justify-center text-sm text-muted-foreground">
+                    <LucideIcon Name="loader-circle" class="mr-2 h-4 w-4 animate-spin" />
+                    @L["Loading"]
+                </div>
+            }
+            else if (releaseStatusRows.Count == 0)
+            {
+                <div class="flex h-80 items-center justify-center text-sm text-muted-foreground">
+                    @L["NoReleasesFound"]
+                </div>
+            }
+            else
+            {
+                <BbPieChart Data="@releaseStatusRows" Height="360px">
+                    <BbChartTooltip />
+                    <BbChartLegend />
+                    <BbPie DataKey="Value"
+                           NameKey="Name"
+                           InnerRadius="58"
+                           OuterRadius="78">
+                        <BbCenterLabel Value="@totalReleaseCount.ToString("N0")" Title="@L["TotalReleases"]" />
+                    </BbPie>
+                </BbPieChart>
+            }
+        </BbChartContainer>
+    </div>
 </section>
