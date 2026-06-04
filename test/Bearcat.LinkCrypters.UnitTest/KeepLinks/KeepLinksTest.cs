@@ -23,6 +23,14 @@ public class KeepLinksTest
     }
 
     [Test]
+    public void SupportedSettings_KeepLinksApiSettings_ReturnsDocumentedOptions()
+    {
+        service.SupportsCaptcha.ShouldBeTrue();
+        service.SupportsContainerDownload.ShouldBeTrue();
+        service.SupportsClickAndLoad.ShouldBeFalse();
+    }
+
+    [Test]
     public async Task CreateContainerAsync_ApiProtectsLinks_ReturnsContainerLink()
     {
         // Arrange
@@ -66,6 +74,9 @@ public class KeepLinksTest
                     && HasFormValue(content, "output", "json")
                     && HasFormValue(content, "password", "password")
                     && HasFormValue(content, "title", "container-name")
+                    && HasFormValue(content, "captcha", "on")
+                    && HasFormValue(content, "captchatype", "Re")
+                    && HasFormValue(content, "dlc", "on")
                     && FormValues(content, "link-to-protect")
                         .SequenceEqual(
                             new[]
@@ -73,6 +84,50 @@ public class KeepLinksTest
                                 "https://hoster.test/file-1,https://hoster.test/file-2",
                             }
                         )
+                ),
+                It.IsAny<CancellationToken>()
+            )
+        );
+    }
+
+    [Test]
+    public async Task CreateContainerAsync_DisabledSettings_OmitsOptionalKeepLinksFields()
+    {
+        // Arrange
+        var config = new KeepLinksConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x =>
+                x.ProtectLinkAsync(
+                    It.IsAny<MultipartFormDataContent>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new ProtectLinksResponse { ContainerLink = "https://keeplinks.org/p/abc" }
+            );
+
+        // Act
+        var result = await service.CreateContainerAsync(
+            config,
+            "container-name",
+            null,
+            ["https://hoster.test/file"],
+            enableCaptcha: false,
+            enableContainerDownload: false,
+            enableClickAndLoad: false,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        apiMock.Verify(x =>
+            x.ProtectLinkAsync(
+                It.Is<MultipartFormDataContent>(content =>
+                    !HasFormName(content, "captcha")
+                    && !HasFormName(content, "captchatype")
+                    && !HasFormName(content, "dlc")
                 ),
                 It.IsAny<CancellationToken>()
             )
@@ -168,6 +223,9 @@ public class KeepLinksTest
                     && HasFormValue(content, "output", "json")
                     && HasFormValue(content, "password", "password")
                     && HasFormValue(content, "url-id", "container-id")
+                    && HasFormValue(content, "captcha", "on")
+                    && HasFormValue(content, "captchatype", "Re")
+                    && HasFormValue(content, "dlc", "on")
                     && FormValues(content, "link-to-protect")
                         .SequenceEqual(
                             new[]
@@ -175,6 +233,49 @@ public class KeepLinksTest
                                 "https://hoster.test/file-1,https://hoster.test/file-2",
                             }
                         )
+                ),
+                It.IsAny<CancellationToken>()
+            )
+        );
+    }
+
+    [Test]
+    public async Task UpdateContainerAsync_DisabledSettings_OmitsOptionalKeepLinksFields()
+    {
+        // Arrange
+        var config = new KeepLinksConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x =>
+                x.UpdateContainerAsync(
+                    It.IsAny<MultipartFormDataContent>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(new ProtectLinksResponse());
+
+        // Act
+        var result = await service.UpdateContainerAsync(
+            config,
+            "https://keeplinks.org/p/container-id",
+            null,
+            null,
+            ["https://hoster.test/file"],
+            enableCaptcha: false,
+            enableContainerDownload: false,
+            enableClickAndLoad: false,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        apiMock.Verify(x =>
+            x.UpdateContainerAsync(
+                It.Is<MultipartFormDataContent>(content =>
+                    !HasFormName(content, "captcha")
+                    && !HasFormName(content, "captchatype")
+                    && !HasFormName(content, "dlc")
                 ),
                 It.IsAny<CancellationToken>()
             )

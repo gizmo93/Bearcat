@@ -15,7 +15,7 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
 
     public bool SupportsContainerDownload => true;
 
-    public bool SupportsClickAndLoad => true;
+    public bool SupportsClickAndLoad => false;
 
     public async Task<CreateContainerResult> CreateContainerAsync(
         ILinkCrypterConfig linkCrypterConfig,
@@ -37,7 +37,9 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
                     apiKey: config.ApiKey,
                     links: links,
                     password: password,
-                    title: containerName
+                    title: containerName,
+                    enableCaptcha: enableCaptcha,
+                    enableContainerDownload: enableContainerDownload
                 ),
                 cancellationToken: cancellationToken
             );
@@ -125,7 +127,9 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
                     apiKey: config.ApiKey,
                     links: links,
                     password: password,
-                    urlId: containerLink.Split('/').Last()
+                    urlId: containerLink.Split('/').Last(),
+                    enableCaptcha: enableCaptcha,
+                    enableContainerDownload: enableContainerDownload
                 ),
                 cancellationToken: cancellationToken
             );
@@ -148,7 +152,9 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
         IReadOnlyList<string> links,
         string? password = null,
         string? title = null,
-        string? urlId = null
+        string? urlId = null,
+        bool enableCaptcha = true,
+        bool enableContainerDownload = true
     )
     {
         var content = new MultipartFormDataContent();
@@ -171,6 +177,17 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
         if (!string.IsNullOrWhiteSpace(urlId))
         {
             AddFormField(content, "url-id", urlId);
+        }
+
+        if (enableCaptcha)
+        {
+            AddFormField(content, "captcha", "on");
+            AddFormField(content, "captchatype", "Re");
+        }
+
+        if (enableContainerDownload)
+        {
+            AddFormField(content, "dlc", "on");
         }
 
         return content;
