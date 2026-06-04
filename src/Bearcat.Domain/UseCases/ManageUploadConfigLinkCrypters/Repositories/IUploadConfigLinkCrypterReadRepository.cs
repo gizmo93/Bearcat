@@ -14,7 +14,7 @@ public interface IUploadConfigLinkCrypterReadRepository
         CancellationToken cancellationToken = default
     );
 
-    Task<IReadOnlyDictionary<int, string>> GetLinkCrypterOptionsAsync(
+    Task<IReadOnlyList<LinkCrypterOptionReadModel>> GetLinkCrypterOptionsAsync(
         CancellationToken cancellationToken = default
     );
 }

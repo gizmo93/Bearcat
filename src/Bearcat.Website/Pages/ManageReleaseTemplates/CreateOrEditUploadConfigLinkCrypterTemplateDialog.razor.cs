@@ -31,6 +31,19 @@ public partial class CreateOrEditUploadConfigLinkCrypterTemplateDialog(
     private bool isInitialized;
     private bool isEdit;
 
+    private LinkCrypterRegistrationReadModel? SelectedLinkCrypterRegistration =>
+        FormModel.LinkCrypterRegistrationId is null
+            ? null
+            : linkCrypterRegistrations.FirstOrDefault(linkCrypter =>
+                linkCrypter.LinkCrypterRegistrationId == FormModel.LinkCrypterRegistrationId.Value
+            );
+
+    private bool CanUseCaptcha => SelectedLinkCrypterRegistration?.SupportsCaptcha is true;
+    private bool CanUseContainerDownload =>
+        SelectedLinkCrypterRegistration?.SupportsContainerDownload is true;
+    private bool CanUseClickAndLoad =>
+        SelectedLinkCrypterRegistration?.SupportsClickAndLoad is true;
+
     private IEnumerable<SelectOption<int?>> LinkCrypterOptions =>
         linkCrypterRegistrations
             .OrderBy(linkCrypter => linkCrypter.Name)
@@ -58,7 +71,10 @@ public partial class CreateOrEditUploadConfigLinkCrypterTemplateDialog(
         {
             await service.UpdateUploadConfigLinkCrypterTemplateAsync(
                 UploadConfigLinkCrypterTemplateId!.Value,
-                FormModel.Password
+                FormModel.Password,
+                CanUseCaptcha && FormModel.EnableCaptcha,
+                CanUseContainerDownload && FormModel.EnableContainerDownload,
+                CanUseClickAndLoad && FormModel.EnableClickAndLoad
             );
         }
         else
@@ -66,7 +82,10 @@ public partial class CreateOrEditUploadConfigLinkCrypterTemplateDialog(
             await service.CreateUploadConfigLinkCrypterTemplateAsync(
                 UploadConfigTemplateId,
                 FormModel.LinkCrypterRegistrationId!.Value,
-                FormModel.Password
+                FormModel.Password,
+                CanUseCaptcha && FormModel.EnableCaptcha,
+                CanUseContainerDownload && FormModel.EnableContainerDownload,
+                CanUseClickAndLoad && FormModel.EnableClickAndLoad
             );
         }
 
@@ -84,6 +103,13 @@ public partial class CreateOrEditUploadConfigLinkCrypterTemplateDialog(
                 L["SelectLinkCrypterRequired"]
             );
         }
+    }
+
+    private void OnLinkCrypterRegistrationChanged()
+    {
+        FormModel.EnableCaptcha = CanUseCaptcha;
+        FormModel.EnableContainerDownload = CanUseContainerDownload;
+        FormModel.EnableClickAndLoad = CanUseClickAndLoad;
     }
 
     private async Task CancelAsync()

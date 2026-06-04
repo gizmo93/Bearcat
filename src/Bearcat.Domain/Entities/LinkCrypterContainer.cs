@@ -20,6 +20,12 @@ public class LinkCrypterContainer
 
     public string? Password { get; set; }
 
+    public bool EnableCaptcha { get; set; } = true;
+
+    public bool EnableContainerDownload { get; set; } = true;
+
+    public bool EnableClickAndLoad { get; set; } = true;
+
     public LinkCrypterContainerState State { get; set; }
 
     public List<string> Errors { get; set; } = new();

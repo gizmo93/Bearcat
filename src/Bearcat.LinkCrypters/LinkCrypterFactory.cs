@@ -12,7 +12,10 @@ public class LinkCrypterFactory(IServiceProvider serviceProvider) : ILinkCrypter
             .Select(l => new LinkCrypterDto(
                 Name: l.Name,
                 ClassName: l.GetType().Name,
-                ConfigurationKeys: l.ConfigurationKeys
+                ConfigurationKeys: l.ConfigurationKeys,
+                SupportsCaptcha: l.SupportsCaptcha,
+                SupportsContainerDownload: l.SupportsContainerDownload,
+                SupportsClickAndLoad: l.SupportsClickAndLoad
             ))
             .ToList();
     }

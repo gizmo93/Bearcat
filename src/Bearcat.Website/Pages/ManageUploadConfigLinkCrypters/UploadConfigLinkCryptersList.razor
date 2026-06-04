@@ -55,6 +55,36 @@
                         }
                     </CellTemplate>
                 </BbDataTableColumn>
+                <BbDataTableColumn TData="UploadConfigLinkCrypterReadModel" TValue="string"
+                                   Header="@L["LinkCrypterSettings"]"
+                                   Property="@(item => item.LinkCrypterRegistrationName)">
+                    <CellTemplate Context="item">
+                        <div class="flex flex-wrap gap-1">
+                            @if (item.SupportsCaptcha)
+                            {
+                                <BbBadge Variant="@(item.EnableCaptcha ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                    @L["Captcha"]: @(item.EnableCaptcha ? L["Enabled"] : L["Disabled"])
+                                </BbBadge>
+                            }
+                            @if (item.SupportsContainerDownload)
+                            {
+                                <BbBadge Variant="@(item.EnableContainerDownload ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                    @L["ContainerDownload"]: @(item.EnableContainerDownload ? L["Enabled"] : L["Disabled"])
+                                </BbBadge>
+                            }
+                            @if (item.SupportsClickAndLoad)
+                            {
+                                <BbBadge Variant="@(item.EnableClickAndLoad ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                    @L["ClickAndLoad"]: @(item.EnableClickAndLoad ? L["Enabled"] : L["Disabled"])
+                                </BbBadge>
+                            }
+                            @if (!item.SupportsCaptcha && !item.SupportsContainerDownload && !item.SupportsClickAndLoad)
+                            {
+                                <span class="text-xs text-muted-foreground">-</span>
+                            }
+                        </div>
+                    </CellTemplate>
+                </BbDataTableColumn>
                 <BbDataTableColumn TData="UploadConfigLinkCrypterReadModel" TValue="bool"
                                    Header="@L["Active"]"
                                    Property="@(item => item.LinkCrypterIsActive)"

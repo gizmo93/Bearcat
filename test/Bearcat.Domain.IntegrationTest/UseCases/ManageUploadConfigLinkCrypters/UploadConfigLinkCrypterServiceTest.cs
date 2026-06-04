@@ -40,7 +40,7 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
             seed.UploadConfigId,
             seed.LinkCrypterRegistrationId,
             "secret",
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -50,6 +50,9 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
         result.UploadConfigId.ShouldBe(seed.UploadConfigId);
         result.LinkCrypterRegistrationId.ShouldBe(seed.LinkCrypterRegistrationId);
         result.Password.ShouldBe("secret");
+        result.EnableCaptcha.ShouldBeTrue();
+        result.EnableContainerDownload.ShouldBeTrue();
+        result.EnableClickAndLoad.ShouldBeTrue();
     }
 
     [Test]
@@ -63,7 +66,7 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
             seed.UploadConfigId,
             seed.LinkCrypterRegistrationId,
             " ",
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -80,7 +83,11 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
         var linkCrypter = await AddUploadConfigLinkCrypterAsync("old-secret");
 
         // Act
-        await service.UpdateAsync(linkCrypter.Id, "new-secret", CancellationToken.None);
+        await service.UpdateAsync(
+            linkCrypter.Id,
+            "new-secret",
+            cancellationToken: CancellationToken.None
+        );
 
         // Assert
         var result = await dbContext.UploadConfigLinkCrypters.SingleAsync();
@@ -97,7 +104,7 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
         var linkCrypter = await AddUploadConfigLinkCrypterAsync("old-secret");
 
         // Act
-        await service.UpdateAsync(linkCrypter.Id, "", CancellationToken.None);
+        await service.UpdateAsync(linkCrypter.Id, "", cancellationToken: CancellationToken.None);
 
         // Assert
         var result = await dbContext.UploadConfigLinkCrypters.SingleAsync();

@@ -12,6 +12,7 @@
         <div class="space-y-4">
             <BbFormFieldSelect TValue="int?"
                                @bind-Value="FormModel.LinkCrypterRegistrationId"
+                               @bind-Value:after="OnLinkCrypterRegistrationChanged"
                                Label="@L["LinkCrypter"]"
                                Placeholder="@L["SelectLinkCrypter"]"
                                Disabled="isEdit"
@@ -21,6 +22,24 @@
                               @bind-Value="FormModel.Password"
                               Label="@L["ContainerPassword"]"
                               Placeholder="@L["ContainerPasswordPlaceholder"]" />
+
+            @if (CanUseCaptcha)
+            {
+                <BbFormFieldSwitch @bind-Checked="FormModel.EnableCaptcha"
+                                   Label="@L["Captcha"]" />
+            }
+
+            @if (CanUseContainerDownload)
+            {
+                <BbFormFieldSwitch @bind-Checked="FormModel.EnableContainerDownload"
+                                   Label="@L["ContainerDownload"]" />
+            }
+
+            @if (CanUseClickAndLoad)
+            {
+                <BbFormFieldSwitch @bind-Checked="FormModel.EnableClickAndLoad"
+                                   Label="@L["ClickAndLoad"]" />
+            }
         </div>
 
         <div class="flex justify-end gap-2">

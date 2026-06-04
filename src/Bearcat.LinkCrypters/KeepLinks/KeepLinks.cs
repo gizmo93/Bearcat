@@ -11,11 +11,20 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
     public string Name => "keeplinks.org";
     public List<string> ConfigurationKeys => [nameof(KeepLinksConfig.ApiKey)];
 
+    public bool SupportsCaptcha => true;
+
+    public bool SupportsContainerDownload => true;
+
+    public bool SupportsClickAndLoad => true;
+
     public async Task<CreateContainerResult> CreateContainerAsync(
         ILinkCrypterConfig linkCrypterConfig,
         string containerName,
         string? password,
         IReadOnlyList<string> links,
+        bool enableCaptcha = true,
+        bool enableContainerDownload = true,
+        bool enableClickAndLoad = true,
         CancellationToken cancellationToken = default
     )
     {
@@ -101,6 +110,9 @@ public class KeepLinks(IKeepLinksApi api) : ILinkCrypter
         string? externalReference,
         string? password,
         IReadOnlyList<string> links,
+        bool enableCaptcha = true,
+        bool enableContainerDownload = true,
+        bool enableClickAndLoad = true,
         CancellationToken cancellationToken = default
     )
     {

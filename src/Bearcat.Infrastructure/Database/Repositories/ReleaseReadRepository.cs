@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
@@ -10,8 +11,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
 
-public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactory archiverFactory)
-    : IReleaseReadRepository
+public class ReleaseReadRepository(
+    IBearcatReadDbContext dbRead,
+    IArchiverFactory archiverFactory,
+    ILinkCrypterFactory linkCrypterFactory
+) : IReleaseReadRepository
 {
     public async Task<PagedResult<ReleaseReadModel>> SearchReleasesAsync(
         ReleaseSearchQuery query,
@@ -393,21 +397,46 @@ public class ReleaseReadRepository(IBearcatReadDbContext dbRead, IArchiverFactor
         CancellationToken cancellationToken = default
     )
     {
-        return await dbRead
+        var linkCryptersByClassName = linkCrypterFactory
+            .GetLinkCrypters()
+            .ToDictionary(l => l.ClassName);
+
+        var containers = dbRead
             .LinkCrypterContainers.Where(c =>
                 c.UploadId == uploadId && c.Upload.UploadConfig.ReleaseId == releaseId
             )
             .OrderBy(c => c.UploadConfigLinkCrypter.LinkCrypterRegistration.Name)
-            .ThenBy(c => c.Id)
-            .Select(c => new ReleaseUploadContainerLinkReadModel(
-                c.UploadConfigLinkCrypter.LinkCrypterRegistration.Name,
-                c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName,
-                c.ContainerUrl,
-                c.State,
-                c.CreatedAt,
-                c.Errors.ToList()
-            ))
+            .ThenBy(c => c.Id);
+
+        return await SelectContainerLinkReadModels(containers, linkCryptersByClassName)
             .ToListAsync(cancellationToken: cancellationToken);
+    }
+
+    private static IQueryable<ReleaseUploadContainerLinkReadModel> SelectContainerLinkReadModels(
+        IQueryable<LinkCrypterContainer> containers,
+        IReadOnlyDictionary<string, LinkCrypterDto> linkCryptersByClassName
+    )
+    {
+        return containers.Select(c => new ReleaseUploadContainerLinkReadModel(
+            c.UploadConfigLinkCrypter.LinkCrypterRegistration.Name,
+            c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName,
+            c.ContainerUrl,
+            c.State,
+            c.CreatedAt,
+            c.EnableCaptcha,
+            c.EnableContainerDownload,
+            c.EnableClickAndLoad,
+            linkCryptersByClassName[
+                c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName
+            ].SupportsCaptcha,
+            linkCryptersByClassName[
+                c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName
+            ].SupportsContainerDownload,
+            linkCryptersByClassName[
+                c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName
+            ].SupportsClickAndLoad,
+            c.Errors.ToList()
+        ));
     }
 
     private static Expression<Func<Release, ReleaseReadModel>> ToReleaseReadModel()

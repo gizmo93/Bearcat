@@ -12,6 +12,9 @@ public class UploadConfigLinkCryperConfiguration : IEntityTypeConfiguration<Uplo
         builder.Property(u => u.UploadConfigId).IsRequired();
         builder.Property(u => u.LinkCrypterRegistrationId).IsRequired();
         builder.Property(u => u.Password).IsRequired(false).HasMaxLength(100);
+        builder.Property(u => u.EnableCaptcha).IsRequired();
+        builder.Property(u => u.EnableContainerDownload).IsRequired();
+        builder.Property(u => u.EnableClickAndLoad).IsRequired();
 
         builder
             .HasMany(l => l.LinkCrypterContainers)

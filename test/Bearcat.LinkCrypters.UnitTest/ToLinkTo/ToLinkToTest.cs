@@ -47,7 +47,10 @@ public class ToLinkToTest
             "container-name",
             "password",
             links,
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -64,9 +67,9 @@ public class ToLinkToTest
                     && request.Body.Title == "container-name"
                     && request.Body.Links == "https://hoster.test/file-1;https://hoster.test/file-2"
                     && request.Body.Options.Web
-                    && !request.Body.Options.Container
+                    && request.Body.Options.Container
                     && request.Body.Options.ClickAndLoad
-                    && !request.Body.Options.Captcha
+                    && request.Body.Options.Captcha
                     && !request.Body.Options.CaptchaText
                     && request.Body.Options.Password == "password"
                 ),
@@ -96,7 +99,10 @@ public class ToLinkToTest
             "container-name",
             null,
             ["https://hoster.test/file"],
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -148,7 +154,10 @@ public class ToLinkToTest
             "folder-id",
             "password",
             links,
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -198,7 +207,10 @@ public class ToLinkToTest
             null,
             null,
             ["https://hoster.test/file"],
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -236,7 +248,10 @@ public class ToLinkToTest
             null,
             null,
             ["https://hoster.test/file"],
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert

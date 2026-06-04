@@ -143,6 +143,9 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
                     {
                         LinkCrypterRegistrationId = linkCrypter.LinkCrypterRegistrationId,
                         Password = CleanOptional(linkCrypter.Password),
+                        EnableCaptcha = linkCrypter.EnableCaptcha,
+                        EnableContainerDownload = linkCrypter.EnableContainerDownload,
+                        EnableClickAndLoad = linkCrypter.EnableClickAndLoad,
                     })
                     .ToList(),
             })
@@ -344,6 +347,9 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         int uploadConfigTemplateId,
         int linkCrypterRegistrationId,
         string? password,
+        bool enableCaptcha,
+        bool enableContainerDownload,
+        bool enableClickAndLoad,
         CancellationToken cancellationToken = default
     )
     {
@@ -356,6 +362,9 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         {
             LinkCrypterRegistrationId = linkCrypterRegistrationId,
             Password = CleanOptional(password),
+            EnableCaptcha = enableCaptcha,
+            EnableContainerDownload = enableContainerDownload,
+            EnableClickAndLoad = enableClickAndLoad,
         };
 
         uploadConfigTemplate.LinkCrypterTemplates.Add(linkCrypterTemplate);
@@ -368,6 +377,9 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
     public async Task UpdateUploadConfigLinkCrypterTemplateAsync(
         int uploadConfigLinkCrypterTemplateId,
         string? password,
+        bool enableCaptcha,
+        bool enableContainerDownload,
+        bool enableClickAndLoad,
         CancellationToken cancellationToken = default
     )
     {
@@ -377,6 +389,9 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         );
 
         linkCrypterTemplate.Password = CleanOptional(password);
+        linkCrypterTemplate.EnableCaptcha = enableCaptcha;
+        linkCrypterTemplate.EnableContainerDownload = enableContainerDownload;
+        linkCrypterTemplate.EnableClickAndLoad = enableClickAndLoad;
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }

@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
@@ -23,7 +24,11 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
     public void Setup()
     {
         dbContext = Database.CreateDbContext();
-        repository = new ReleaseReadRepository(dbContext, Mock.Of<IArchiverFactory>());
+        repository = new ReleaseReadRepository(
+            dbContext,
+            Mock.Of<IArchiverFactory>(),
+            Mock.Of<ILinkCrypterFactory>()
+        );
     }
 
     [TearDown]

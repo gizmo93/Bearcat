@@ -8,5 +8,11 @@ public record ReleaseUploadContainerLinkReadModel(
     string ContainerUrl,
     LinkCrypterContainerState State,
     DateTime CreatedAt,
+    bool EnableCaptcha,
+    bool EnableContainerDownload,
+    bool EnableClickAndLoad,
+    bool SupportsCaptcha,
+    bool SupportsContainerDownload,
+    bool SupportsClickAndLoad,
     IReadOnlyList<string> Errors
 );

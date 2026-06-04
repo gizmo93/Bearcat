@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
@@ -9,7 +10,8 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 public class ReleaseTemplateRepository(
     IBearcatReadDbContext dbRead,
     IBearcatWriteDbContext dbWrite,
-    IArchiverFactory archiverFactory
+    IArchiverFactory archiverFactory,
+    ILinkCrypterFactory linkCrypterFactory
 ) : IReleaseTemplateReadRepository, IReleaseTemplateWriteRepository
 {
     public async Task<IReadOnlyList<ReleaseTemplateSummaryReadModel>> GetAllAsync(
@@ -159,6 +161,9 @@ public class ReleaseTemplateRepository(
         var archiverNames = archiverFactory
             .GetArchivers()
             .ToDictionary(archiver => archiver.ClassName, archiver => archiver.Name);
+        var linkCryptersByClassName = linkCrypterFactory
+            .GetLinkCrypters()
+            .ToDictionary(linkCrypter => linkCrypter.ClassName);
 
         return new ReleaseTemplateDetailReadModel(
             releaseTemplate.Id,
@@ -202,8 +207,22 @@ public class ReleaseTemplateRepository(
                             l.Id,
                             l.LinkCrypterRegistrationId,
                             l.LinkCrypterRegistration.Name,
-                            l.LinkCrypterRegistration.LinkCrypterClassName,
-                            l.Password
+                            linkCryptersByClassName[
+                                l.LinkCrypterRegistration.LinkCrypterClassName
+                            ].Name,
+                            l.Password,
+                            l.EnableCaptcha,
+                            l.EnableContainerDownload,
+                            l.EnableClickAndLoad,
+                            linkCryptersByClassName[
+                                l.LinkCrypterRegistration.LinkCrypterClassName
+                            ].SupportsCaptcha,
+                            linkCryptersByClassName[
+                                l.LinkCrypterRegistration.LinkCrypterClassName
+                            ].SupportsContainerDownload,
+                            linkCryptersByClassName[
+                                l.LinkCrypterRegistration.LinkCrypterClassName
+                            ].SupportsClickAndLoad
                         ))
                         .ToList()
                 ))

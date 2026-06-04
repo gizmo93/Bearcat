@@ -41,40 +41,33 @@
                      InitialPageSize="@Math.Max(containers.Count, 5)"
                      IsLoading="isLoading"
                      AriaLabel="@L["ContainerLinks"]"
-                     Class="bearcat-upload-links-table rounded-lg border border-border/70">
+                     Class="bearcat-upload-links-table bearcat-container-links-table rounded-lg border border-border/70">
             <Columns>
-                <BbDataTableColumn TData="ReleaseUploadContainerLinkReadModel" TValue="string"
-                                   Header="@L["Status"]"
-                                   Property="@(container => container.State.ToString())"
-                                   Width="160px">
-                    <CellTemplate Context="container">
-                        <div class="flex items-center gap-2">
-                            <BbBadge Variant="@GetContainerVariant(container.State)">
-                                @L.Localize(container.State)
-                            </BbBadge>
-                            <ErrorMessagesTooltip Messages="container.Errors" />
-                        </div>
-                    </CellTemplate>
-                </BbDataTableColumn>
                 <BbDataTableColumn TData="ReleaseUploadContainerLinkReadModel" TValue="string"
                                    Header="@L["LinkCrypter"]"
                                    Property="@(container => container.LinkCrypterRegistrationName)"
-                                   Width="220px">
+                                   Width="190px">
                     <CellTemplate Context="container">
-                        <div class="min-w-0">
+                        <div class="grid min-w-0 gap-2">
                             <p class="truncate text-sm font-medium" title="@container.LinkCrypterRegistrationName">
                                 @container.LinkCrypterRegistrationName
                             </p>
                             <p class="truncate text-xs text-muted-foreground" title="@container.LinkCrypterClassName">
                                 @container.LinkCrypterClassName
                             </p>
+                            <div class="flex items-center gap-2">
+                                <BbBadge Variant="@GetContainerVariant(container.State)">
+                                    @L.Localize(container.State)
+                                </BbBadge>
+                                <ErrorMessagesTooltip Messages="container.Errors" />
+                            </div>
                         </div>
                     </CellTemplate>
                 </BbDataTableColumn>
                 <BbDataTableColumn TData="ReleaseUploadContainerLinkReadModel" TValue="string"
                                    Header="@L["ContainerLink"]"
                                    Property="@(container => container.ContainerUrl)"
-                                   MinWidth="300px">
+                                   MinWidth="420px">
                     <CellTemplate Context="container">
                         @if (string.IsNullOrWhiteSpace(container.ContainerUrl))
                         {
@@ -82,7 +75,7 @@
                         }
                         else
                         {
-                            <a class="bearcat-upload-link"
+                            <a class="bearcat-upload-link bearcat-container-link"
                                href="@container.ContainerUrl"
                                target="_blank"
                                rel="noreferrer noopener"
@@ -90,6 +83,43 @@
                                 @container.ContainerUrl
                             </a>
                         }
+                    </CellTemplate>
+                </BbDataTableColumn>
+                <BbDataTableColumn TData="ReleaseUploadContainerLinkReadModel" TValue="string"
+                                   Header="@L["LinkCrypterSettings"]"
+                                   Property="@(container => container.LinkCrypterRegistrationName)"
+                                   Width="140px">
+                    <CellTemplate Context="container">
+                        <div class="bearcat-container-link-settings">
+                            @if (container.SupportsCaptcha)
+                            {
+                                <div class="bearcat-container-link-setting">
+                                    <span class="bearcat-container-link-setting-dot @(container.EnableCaptcha ? "is-enabled" : "is-disabled")"></span>
+                                    <span>@L["Captcha"]</span>
+                                    <span class="text-muted-foreground">@(container.EnableCaptcha ? L["Enabled"] : L["Disabled"])</span>
+                                </div>
+                            }
+                            @if (container.SupportsContainerDownload)
+                            {
+                                <div class="bearcat-container-link-setting">
+                                    <span class="bearcat-container-link-setting-dot @(container.EnableContainerDownload ? "is-enabled" : "is-disabled")"></span>
+                                    <span>@L["ContainerDownloadShort"]</span>
+                                    <span class="text-muted-foreground">@(container.EnableContainerDownload ? L["Enabled"] : L["Disabled"])</span>
+                                </div>
+                            }
+                            @if (container.SupportsClickAndLoad)
+                            {
+                                <div class="bearcat-container-link-setting">
+                                    <span class="bearcat-container-link-setting-dot @(container.EnableClickAndLoad ? "is-enabled" : "is-disabled")"></span>
+                                    <span>@L["ClickAndLoadShort"]</span>
+                                    <span class="text-muted-foreground">@(container.EnableClickAndLoad ? L["Enabled"] : L["Disabled"])</span>
+                                </div>
+                            }
+                            @if (!container.SupportsCaptcha && !container.SupportsContainerDownload && !container.SupportsClickAndLoad)
+                            {
+                                <span class="text-sm text-muted-foreground">-</span>
+                            }
+                        </div>
                     </CellTemplate>
                 </BbDataTableColumn>
                 <BbDataTableColumn TData="ReleaseUploadContainerLinkReadModel" TValue="DateTime"

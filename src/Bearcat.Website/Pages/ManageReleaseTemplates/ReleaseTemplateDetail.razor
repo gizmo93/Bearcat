@@ -254,6 +254,24 @@
                                                                 {
                                                                     <span class="text-xs text-muted-foreground">@L["PasswordProtected"]</span>
                                                                 }
+                                                                @if (linkCrypter.SupportsCaptcha)
+                                                                {
+                                                                    <BbBadge Variant="@(linkCrypter.EnableCaptcha ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                                                        @L["Captcha"]: @(linkCrypter.EnableCaptcha ? L["Enabled"] : L["Disabled"])
+                                                                    </BbBadge>
+                                                                }
+                                                                @if (linkCrypter.SupportsContainerDownload)
+                                                                {
+                                                                    <BbBadge Variant="@(linkCrypter.EnableContainerDownload ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                                                        @L["ContainerDownloadShort"]: @(linkCrypter.EnableContainerDownload ? L["Enabled"] : L["Disabled"])
+                                                                    </BbBadge>
+                                                                }
+                                                                @if (linkCrypter.SupportsClickAndLoad)
+                                                                {
+                                                                    <BbBadge Variant="@(linkCrypter.EnableClickAndLoad ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                                                        @L["ClickAndLoadShort"]: @(linkCrypter.EnableClickAndLoad ? L["Enabled"] : L["Disabled"])
+                                                                    </BbBadge>
+                                                                }
                                                             </div>
                                                             <div class="flex items-center gap-1">
                                                                 <BbButton Variant="ButtonVariant.Ghost"

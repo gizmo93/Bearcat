@@ -9,6 +9,9 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
         int uploadConfigId,
         int linkCrypterRegistrationId,
         string? password,
+        bool enableCaptcha = true,
+        bool enableContainerDownload = true,
+        bool enableClickAndLoad = true,
         CancellationToken cancellationToken = default
     )
     {
@@ -17,6 +20,9 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
             UploadConfigId = uploadConfigId,
             LinkCrypterRegistrationId = linkCrypterRegistrationId,
             Password = CleanPassword(password),
+            EnableCaptcha = enableCaptcha,
+            EnableContainerDownload = enableContainerDownload,
+            EnableClickAndLoad = enableClickAndLoad,
         };
 
         repository.Add(uploadConfigLinkCrypter);
@@ -33,11 +39,17 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
     public async Task UpdateAsync(
         int id,
         string? password,
+        bool enableCaptcha = true,
+        bool enableContainerDownload = true,
+        bool enableClickAndLoad = true,
         CancellationToken cancellationToken = default
     )
     {
         var uploadConfigLinkCrypter = await repository.GetByIdAsync(id, cancellationToken);
         uploadConfigLinkCrypter.Password = CleanPassword(password);
+        uploadConfigLinkCrypter.EnableCaptcha = enableCaptcha;
+        uploadConfigLinkCrypter.EnableContainerDownload = enableContainerDownload;
+        uploadConfigLinkCrypter.EnableClickAndLoad = enableClickAndLoad;
         await repository.SaveChangesAsync(cancellationToken);
     }
 

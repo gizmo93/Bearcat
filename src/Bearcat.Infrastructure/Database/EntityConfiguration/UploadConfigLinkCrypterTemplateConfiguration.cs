@@ -12,6 +12,9 @@ public class UploadConfigLinkCrypterTemplateConfiguration
         builder.HasKey(l => l.Id);
         builder.Property(l => l.LinkCrypterRegistrationId).IsRequired();
         builder.Property(l => l.Password).IsRequired(false).HasMaxLength(100);
+        builder.Property(l => l.EnableCaptcha).IsRequired();
+        builder.Property(l => l.EnableContainerDownload).IsRequired();
+        builder.Property(l => l.EnableClickAndLoad).IsRequired();
 
         builder
             .HasOne(l => l.LinkCrypterRegistration)

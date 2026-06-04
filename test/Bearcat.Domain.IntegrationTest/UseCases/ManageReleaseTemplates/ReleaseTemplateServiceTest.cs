@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.ValueObjects;
@@ -116,6 +117,9 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
             uploadConfigTemplateId,
             linkCrypterRegistration.Id,
             "container-secret",
+            true,
+            true,
+            true,
             CancellationToken.None
         );
 
@@ -145,6 +149,9 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         var linkCrypterTemplate = uploadConfigTemplate.LinkCrypterTemplates.Single();
         linkCrypterTemplate.LinkCrypterRegistrationId.ShouldBe(linkCrypterRegistration.Id);
         linkCrypterTemplate.Password.ShouldBe("container-secret");
+        linkCrypterTemplate.EnableCaptcha.ShouldBeTrue();
+        linkCrypterTemplate.EnableContainerDownload.ShouldBeTrue();
+        linkCrypterTemplate.EnableClickAndLoad.ShouldBeTrue();
     }
 
     [Test]
@@ -464,6 +471,9 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         await service.UpdateUploadConfigLinkCrypterTemplateAsync(
             seed.UploadConfigLinkCrypterTemplateId,
             " ",
+            true,
+            true,
+            true,
             CancellationToken.None
         );
 
@@ -471,6 +481,9 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         var result = await dbContext.UploadConfigLinkCrypterTemplates.SingleAsync();
 
         result.Password.ShouldBeNull();
+        result.EnableCaptcha.ShouldBeTrue();
+        result.EnableContainerDownload.ShouldBeTrue();
+        result.EnableClickAndLoad.ShouldBeTrue();
     }
 
     [Test]
@@ -539,7 +552,16 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         archiverFactory
             .Setup(factory => factory.GetArchivers())
             .Returns([new ArchiverDto("RAR", "rar", ".rar")]);
-        return new ReleaseTemplateRepository(dbContext, dbContext, archiverFactory.Object);
+        var linkCrypterFactory = new Mock<ILinkCrypterFactory>();
+        linkCrypterFactory
+            .Setup(factory => factory.GetLinkCrypters())
+            .Returns([new LinkCrypterDto("Test crypter", "TestCrypter", [], true, true, true)]);
+        return new ReleaseTemplateRepository(
+            dbContext,
+            dbContext,
+            archiverFactory.Object,
+            linkCrypterFactory.Object
+        );
     }
 
     private async Task<ReleaseTemplateSeed> AddReleaseTemplateWithChildrenAsync()
@@ -572,6 +594,9 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
                 uploadConfigTemplateId,
                 linkCrypterRegistration.Id,
                 "container-secret",
+                true,
+                true,
+                true,
                 CancellationToken.None
             );
 

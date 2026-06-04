@@ -13,11 +13,20 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
 
     public List<string> ConfigurationKeys => [nameof(ToLinkToConfig.ApiKey)];
 
+    public bool SupportsCaptcha => true;
+
+    public bool SupportsContainerDownload => true;
+
+    public bool SupportsClickAndLoad => true;
+
     public async Task<CreateContainerResult> CreateContainerAsync(
         ILinkCrypterConfig linkCrypterConfig,
         string containerName,
         string? password,
         IReadOnlyList<string> links,
+        bool enableCaptcha = true,
+        bool enableContainerDownload = true,
+        bool enableClickAndLoad = true,
         CancellationToken cancellationToken = default
     )
     {
@@ -33,7 +42,12 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
                     {
                         Title = containerName,
                         Links = CreateLinksValue(links),
-                        Options = CreateFolderOptions(password),
+                        Options = CreateFolderOptions(
+                            password,
+                            enableCaptcha,
+                            enableContainerDownload,
+                            enableClickAndLoad
+                        ),
                     },
                 },
                 cancellationToken: cancellationToken
@@ -66,6 +80,9 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
         string? externalReference,
         string? password,
         IReadOnlyList<string> links,
+        bool enableCaptcha = true,
+        bool enableContainerDownload = true,
+        bool enableClickAndLoad = true,
         CancellationToken cancellationToken = default
     )
     {
@@ -86,7 +103,12 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
                         Folder = folder,
                         Title = folder,
                         Links = CreateLinksValue(links),
-                        Options = CreateFolderOptions(password),
+                        Options = CreateFolderOptions(
+                            password,
+                            enableCaptcha,
+                            enableContainerDownload,
+                            enableClickAndLoad
+                        ),
                     },
                 },
                 cancellationToken: cancellationToken
@@ -154,14 +176,19 @@ public class ToLinkTo(IToLinkToApi api) : ILinkCrypter
         }
     }
 
-    private static FolderOptions CreateFolderOptions(string? password)
+    private static FolderOptions CreateFolderOptions(
+        string? password,
+        bool enableCaptcha,
+        bool enableContainerDownload,
+        bool enableClickAndLoad
+    )
     {
         return new FolderOptions
         {
             Web = true,
-            Container = false,
-            ClickAndLoad = true,
-            Captcha = false,
+            Container = enableContainerDownload,
+            ClickAndLoad = enableClickAndLoad,
+            Captcha = enableCaptcha,
             CaptchaText = false,
             Password = password ?? string.Empty,
         };

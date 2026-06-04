@@ -123,6 +123,9 @@ public class LinkCrypterContainerService(
             containerLink: previousContainer.ContainerUrl,
             externalReference: previousContainer.ExternalReference,
             password: linkCrypterConfig.Password,
+            enableCaptcha: linkCrypterConfig.EnableCaptcha,
+            enableContainerDownload: linkCrypterConfig.EnableContainerDownload,
+            enableClickAndLoad: linkCrypterConfig.EnableClickAndLoad,
             links: upload
                 .UploadedFiles.Select(selector: uf => uf.HosterFileLink)
                 .OrderBy(keySelector: l => l)
@@ -164,6 +167,9 @@ public class LinkCrypterContainerService(
             linkCrypterConfig: config,
             containerName: upload.UploadConfig.Release.Name,
             password: linkCrypterConfig.Password,
+            enableCaptcha: linkCrypterConfig.EnableCaptcha,
+            enableContainerDownload: linkCrypterConfig.EnableContainerDownload,
+            enableClickAndLoad: linkCrypterConfig.EnableClickAndLoad,
             links: fileUrls,
             cancellationToken: cancellationToken
         );
@@ -175,6 +181,9 @@ public class LinkCrypterContainerService(
             ExternalReference = result.ExternalReference,
             ContainerUrl = result.ContainerLink ?? string.Empty,
             Password = linkCrypterConfig.Password,
+            EnableCaptcha = linkCrypterConfig.EnableCaptcha,
+            EnableContainerDownload = linkCrypterConfig.EnableContainerDownload,
+            EnableClickAndLoad = linkCrypterConfig.EnableClickAndLoad,
             Errors = result.ErrorMessages.ToList(),
             CreatedAt = timeProvider.GetLocalNow(),
             State = result.IsSuccess

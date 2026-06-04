@@ -37,7 +37,10 @@ public class LinkCrypterRegistrationReadRepository(
                     registration.Name,
                     registration.LinkCrypterClassName,
                     crypter.GetType().Name,
-                    registration.IsActive
+                    registration.IsActive,
+                    crypter.SupportsCaptcha,
+                    crypter.SupportsContainerDownload,
+                    crypter.SupportsClickAndLoad
                 );
             })
             .ToList();
@@ -74,7 +77,10 @@ public class LinkCrypterRegistrationReadRepository(
             registration.Name,
             registration.LinkCrypterClassName,
             crypter.GetType().Name,
-            registration.IsActive
+            registration.IsActive,
+            crypter.SupportsCaptcha,
+            crypter.SupportsContainerDownload,
+            crypter.SupportsClickAndLoad
         );
     }
 }

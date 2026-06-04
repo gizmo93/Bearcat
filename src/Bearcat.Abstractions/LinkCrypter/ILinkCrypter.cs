@@ -8,11 +8,20 @@ public interface ILinkCrypter
 
     List<string> ConfigurationKeys { get; }
 
+    bool SupportsCaptcha { get; }
+
+    bool SupportsContainerDownload { get; }
+
+    bool SupportsClickAndLoad { get; }
+
     Task<CreateContainerResult> CreateContainerAsync(
         ILinkCrypterConfig linkCrypterConfig,
         string containerName,
         string? password,
         IReadOnlyList<string> links,
+        bool enableCaptcha = true,
+        bool enableContainerDownload = true,
+        bool enableClickAndLoad = true,
         CancellationToken cancellationToken = default
     );
 
@@ -22,6 +31,9 @@ public interface ILinkCrypter
         string? externalReference,
         string? password,
         IReadOnlyList<string> links,
+        bool enableCaptcha = true,
+        bool enableContainerDownload = true,
+        bool enableClickAndLoad = true,
         CancellationToken cancellationToken = default
     );
 

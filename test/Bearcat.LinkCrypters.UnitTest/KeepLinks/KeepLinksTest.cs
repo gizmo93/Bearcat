@@ -46,7 +46,10 @@ public class KeepLinksTest
             "container-name",
             "password",
             links,
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -97,7 +100,10 @@ public class KeepLinksTest
             "container-name",
             null,
             ["https://hoster.test/file"],
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -144,7 +150,10 @@ public class KeepLinksTest
             null,
             "password",
             links,
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -194,7 +203,10 @@ public class KeepLinksTest
             null,
             null,
             ["https://hoster.test/file"],
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert

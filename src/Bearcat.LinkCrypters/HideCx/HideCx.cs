@@ -13,11 +13,20 @@ public class HideCx(IHideCxApi api) : ILinkCrypter
 
     public List<string> ConfigurationKeys => [nameof(HideCxConfig.ApiKey)];
 
+    public bool SupportsCaptcha => false;
+
+    public bool SupportsContainerDownload => false;
+
+    public bool SupportsClickAndLoad => false;
+
     public async Task<CreateContainerResult> CreateContainerAsync(
         ILinkCrypterConfig linkCrypterConfig,
         string containerName,
         string? password,
         IReadOnlyList<string> links,
+        bool enableCaptcha = true,
+        bool enableContainerDownload = true,
+        bool enableClickAndLoad = true,
         CancellationToken cancellationToken = default
     )
     {
@@ -98,6 +107,9 @@ public class HideCx(IHideCxApi api) : ILinkCrypter
         string? externalReference,
         string? password,
         IReadOnlyList<string> links,
+        bool enableCaptcha = true,
+        bool enableContainerDownload = true,
+        bool enableClickAndLoad = true,
         CancellationToken cancellationToken = default
     )
     {

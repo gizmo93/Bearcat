@@ -15,6 +15,9 @@ public class LinkCrypterContainerConfiguration : IEntityTypeConfiguration<LinkCr
         builder.Property(l => l.ContainerUrl).IsRequired().HasMaxLength(200);
         builder.Property(l => l.State).IsRequired();
         builder.Property(l => l.Password).IsRequired(false).HasMaxLength(100);
+        builder.Property(l => l.EnableCaptcha).IsRequired();
+        builder.Property(l => l.EnableContainerDownload).IsRequired();
+        builder.Property(l => l.EnableClickAndLoad).IsRequired();
         builder.Property(l => l.Errors).IsRequired();
         builder.Property(l => l.CreatedAt).IsRequired().HasPrecision(4);
     }

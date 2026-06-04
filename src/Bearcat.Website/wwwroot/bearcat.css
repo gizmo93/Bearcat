@@ -1263,6 +1263,37 @@ a {
     text-decoration: underline;
 }
 
+.bearcat-container-link-settings {
+    display: grid;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.bearcat-container-link-setting {
+    display: inline-grid;
+    grid-template-columns: auto auto auto;
+    align-items: center;
+    gap: 0.3rem;
+    justify-content: start;
+    min-width: 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.25;
+}
+
+.bearcat-container-link-setting-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: var(--muted-foreground);
+    opacity: 0.45;
+}
+
+.bearcat-container-link-setting-dot.is-enabled {
+    background: var(--primary);
+    opacity: 1;
+}
+
 .bearcat-release-overview-password {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -1584,6 +1615,10 @@ a {
 .bearcat-upload-links-table :where(th, td) {
     min-width: 0;
     overflow: hidden;
+}
+
+.bearcat-container-links-table :where(th, td) {
+    vertical-align: middle;
 }
 
 .bearcat-registration-config {

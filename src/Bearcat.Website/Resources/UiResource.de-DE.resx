@@ -67,6 +67,9 @@
   <data name="Copied" xml:space="preserve"><value>Kopiert</value></data>
   <data name="CopyFailed" xml:space="preserve"><value>Kopieren fehlgeschlagen</value></data>
   <data name="CopyUploadLinksFailed" xml:space="preserve"><value>Uploadlinks konnten nicht kopiert werden.</value></data>
+  <data name="Captcha" xml:space="preserve"><value>Captcha</value></data>
+  <data name="ClickAndLoad" xml:space="preserve"><value>Click'n'Load</value></data>
+  <data name="ClickAndLoadShort" xml:space="preserve"><value>CNL</value></data>
   <data name="Configuration" xml:space="preserve"><value>Konfiguration</value></data>
   <data name="ConfigurationNamePlaceholder" xml:space="preserve"><value>Namen für die Konfiguration eingeben</value></data>
   <data name="ConfigurationValueMustBeProvided" xml:space="preserve"><value>Du musst einen Wert für „{0}“ angeben</value></data>
@@ -74,6 +77,8 @@
   <data name="ContainerPassword" xml:space="preserve"><value>Container-Passwort</value></data>
   <data name="ContainerPasswordPlaceholder" xml:space="preserve"><value>Optionales Passwort für den Container setzen</value></data>
   <data name="ContainerLink" xml:space="preserve"><value>Containerlink</value></data>
+  <data name="ContainerDownload" xml:space="preserve"><value>Container-Download</value></data>
+  <data name="ContainerDownloadShort" xml:space="preserve"><value>DLC</value></data>
   <data name="ContainerLinks" xml:space="preserve"><value>Containerlinks</value></data>
   <data name="ContainerLinksDialogDescription" xml:space="preserve"><value>Link-Crypter-Container, die für Upload-Konfiguration {0} erzeugt wurden.</value></data>
   <data name="ContainerLinksTitle" xml:space="preserve"><value>Containerlinks für Upload #{0}</value></data>
@@ -165,6 +170,7 @@
   <data name="LinkCrypterRegistrationDeactivated" xml:space="preserve"><value>Link-Crypter-Registrierung {0} deaktiviert</value></data>
   <data name="LinkCrypterRegistrations" xml:space="preserve"><value>Link-Crypter-Registrierungen</value></data>
   <data name="LinkCrypterRegistrationsIntro" xml:space="preserve"><value>Verwalte Crypter-Konfigurationen, Aktivierungsstatus und Login-Prüfungen.</value></data>
+  <data name="LinkCrypterSettings" xml:space="preserve"><value>Einstellungen</value></data>
   <data name="LinkCrypterLinks" xml:space="preserve"><value>Link-Crypter-Links</value></data>
   <data name="LinkCrypters" xml:space="preserve"><value>Link-Crypter</value></data>
   <data name="LinkCryptersDescription" xml:space="preserve"><value>Optionale Container für verteilte Upload-Links.</value></data>

@@ -343,6 +343,9 @@ public partial class ReleaseTemplateDetail(
                 {
                     LinkCrypterRegistrationId = linkCrypter.LinkCrypterRegistrationId,
                     Password = linkCrypter.Password,
+                    EnableCaptcha = linkCrypter.EnableCaptcha,
+                    EnableContainerDownload = linkCrypter.EnableContainerDownload,
+                    EnableClickAndLoad = linkCrypter.EnableClickAndLoad,
                     IsEdit = true,
                 },
         };

@@ -223,6 +223,9 @@ public class ReleaseService(
                     {
                         LinkCrypterRegistrationId = linkCrypter.LinkCrypterRegistrationId,
                         Password = CleanOptional(linkCrypter.Password),
+                        EnableCaptcha = linkCrypter.EnableCaptcha,
+                        EnableContainerDownload = linkCrypter.EnableContainerDownload,
+                        EnableClickAndLoad = linkCrypter.EnableClickAndLoad,
                         LinkCrypterContainers = [],
                     })
                     .ToList(),

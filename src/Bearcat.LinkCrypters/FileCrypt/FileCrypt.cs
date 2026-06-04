@@ -12,11 +12,20 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
 
     public List<string> ConfigurationKeys => [nameof(FileCryptConfig.ApiKey)];
 
+    public bool SupportsCaptcha => true;
+
+    public bool SupportsContainerDownload => true;
+
+    public bool SupportsClickAndLoad => true;
+
     public async Task<CreateContainerResult> CreateContainerAsync(
         ILinkCrypterConfig linkCrypterConfig,
         string containerName,
         string? password,
         IReadOnlyList<string> links,
+        bool enableCaptcha = true,
+        bool enableContainerDownload = true,
+        bool enableClickAndLoad = true,
         CancellationToken cancellationToken = default
     )
     {
@@ -25,7 +34,15 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
         try
         {
             var response = await api.SendAsync(
-                CreateContainerRequestContent(config.ApiKey, containerName, password, links),
+                CreateContainerRequestContent(
+                    config.ApiKey,
+                    containerName,
+                    password,
+                    enableCaptcha,
+                    enableContainerDownload,
+                    enableClickAndLoad,
+                    links
+                ),
                 cancellationToken
             );
 
@@ -67,6 +84,9 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
         string? externalReference,
         string? password,
         IReadOnlyList<string> links,
+        bool enableCaptcha = true,
+        bool enableContainerDownload = true,
+        bool enableClickAndLoad = true,
         CancellationToken cancellationToken = default
     )
     {
@@ -81,6 +101,9 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
                     containerId: reference.ContainerId,
                     containerName: reference.Name ?? reference.ContainerId,
                     password: password,
+                    enableCaptcha: enableCaptcha,
+                    enableContainerDownload: enableContainerDownload,
+                    enableClickAndLoad: enableClickAndLoad,
                     links: links
                 ),
                 cancellationToken
@@ -146,6 +169,9 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
         string apiKey,
         string containerName,
         string? password,
+        bool enableCaptcha,
+        bool enableContainerDownload,
+        bool enableClickAndLoad,
         IReadOnlyList<string> links
     )
     {
@@ -154,6 +180,9 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
             sub: "createV2",
             containerName: containerName,
             password: password,
+            enableCaptcha: enableCaptcha,
+            enableContainerDownload: enableContainerDownload,
+            enableClickAndLoad: enableClickAndLoad,
             links: links
         );
 
@@ -165,6 +194,9 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
         string containerId,
         string containerName,
         string? password,
+        bool enableCaptcha,
+        bool enableContainerDownload,
+        bool enableClickAndLoad,
         IReadOnlyList<string> links
     )
     {
@@ -173,6 +205,9 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
             sub: "editV2",
             containerName: containerName,
             password: password,
+            enableCaptcha: enableCaptcha,
+            enableContainerDownload: enableContainerDownload,
+            enableClickAndLoad: enableClickAndLoad,
             links: links
         );
         values.Add(new KeyValuePair<string, string>("container_id", containerId));
@@ -185,6 +220,9 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
         string sub,
         string containerName,
         string? password,
+        bool enableCaptcha,
+        bool enableContainerDownload,
+        bool enableClickAndLoad,
         IReadOnlyList<string> links
     )
     {
@@ -194,9 +232,9 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
             new("fn", "containerV2"),
             new("sub", sub),
             new("name", containerName),
-            new("captcha", "0"),
-            new("allow_cnl", "1"),
-            new("allow_dlc", "1"),
+            new("captcha", ToApiBool(enableCaptcha)),
+            new("allow_cnl", ToApiBool(enableClickAndLoad)),
+            new("allow_dlc", ToApiBool(enableContainerDownload)),
             new("allow_links", "1"),
         };
 
@@ -211,6 +249,8 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
 
         return values;
     }
+
+    private static string ToApiBool(bool value) => value ? "1" : "0";
 
     private static FormUrlEncodedContent CreateApiKeyRequestContent(string apiKey)
     {

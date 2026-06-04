@@ -5,5 +5,11 @@ public record UploadConfigLinkCrypterTemplateReadModel(
     int LinkCrypterRegistrationId,
     string LinkCrypterRegistrationName,
     string LinkCrypterName,
-    string? Password
+    string? Password,
+    bool EnableCaptcha,
+    bool EnableContainerDownload,
+    bool EnableClickAndLoad,
+    bool SupportsCaptcha,
+    bool SupportsContainerDownload,
+    bool SupportsClickAndLoad
 );

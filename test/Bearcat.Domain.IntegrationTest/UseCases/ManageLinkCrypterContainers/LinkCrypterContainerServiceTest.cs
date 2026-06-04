@@ -75,6 +75,9 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
                             new[] { "https://hoster.test/a", "https://hoster.test/b" }
                         )
                     ),
+                    true,
+                    true,
+                    true,
                     CancellationToken.None
                 )
             )
@@ -94,6 +97,9 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         result.ContainerUrl.ShouldBe("https://crypter.test/container");
         result.ExternalReference.ShouldBe("abc");
         result.Password.ShouldBe("container-secret");
+        result.EnableCaptcha.ShouldBeTrue();
+        result.EnableContainerDownload.ShouldBeTrue();
+        result.EnableClickAndLoad.ShouldBeTrue();
         result.State.ShouldBe(LinkCrypterContainerState.Created);
         result.Errors.ShouldBeEmpty();
         linkCrypterFactoryMock.Verify(f => f.Get(LinkCrypterClassName), Times.Once);
@@ -112,6 +118,9 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
                     It.IsAny<string>(),
                     "container-secret",
                     It.IsAny<IReadOnlyList<string>>(),
+                    true,
+                    true,
+                    true,
                     CancellationToken.None
                 )
             )
@@ -188,6 +197,9 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
                             new[] { "https://hoster.test/new-a", "https://hoster.test/new-b" }
                         )
                     ),
+                    true,
+                    true,
+                    true,
                     CancellationToken.None
                 )
             )

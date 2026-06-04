@@ -53,7 +53,10 @@ public class FileCryptTest
             "container-name",
             "password",
             links,
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -73,7 +76,7 @@ public class FileCryptTest
                     && HasFormValue(content, "sub", "createV2")
                     && HasFormValue(content, "name", "container-name")
                     && HasFormValue(content, "password", "password")
-                    && HasFormValue(content, "captcha", "0")
+                    && HasFormValue(content, "captcha", "1")
                     && HasFormValue(content, "allow_cnl", "1")
                     && HasFormValue(content, "allow_dlc", "1")
                     && HasFormValue(content, "allow_links", "1")
@@ -103,7 +106,10 @@ public class FileCryptTest
             "container-name",
             null,
             ["https://hoster.test/file"],
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -148,7 +154,10 @@ public class FileCryptTest
             externalReference,
             "password",
             links,
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -192,7 +201,10 @@ public class FileCryptTest
             "60598C0844",
             null,
             ["https://hoster.test/file"],
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -229,7 +241,10 @@ public class FileCryptTest
             null,
             null,
             ["https://hoster.test/file"],
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert

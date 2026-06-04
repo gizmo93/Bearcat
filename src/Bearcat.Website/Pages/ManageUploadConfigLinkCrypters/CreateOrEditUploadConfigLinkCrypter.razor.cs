@@ -1,4 +1,5 @@
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
+using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -21,14 +22,27 @@ public partial class CreateOrEditUploadConfigLinkCrypter : OwningComponentBase
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
-    private IReadOnlyDictionary<int, string> linkCrypterOptions = new Dictionary<int, string>();
+    private IReadOnlyList<LinkCrypterOptionReadModel> linkCrypterOptions = [];
     private bool isInitialized;
     private FormModel formModel = new();
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
     private IUploadConfigLinkCrypterReadRepository readRepository = null!;
+    private UploadConfigLinkCrypterReadModel? configReadModel;
 
     private bool IsEdit => UploadConfigLinkCrypterId.HasValue;
+
+    private LinkCrypterOptionReadModel? SelectedLinkCrypterOption =>
+        formModel.LinkCrypterRegistrationId is null
+            ? null
+            : linkCrypterOptions.FirstOrDefault(option =>
+                option.LinkCrypterRegistrationId == formModel.LinkCrypterRegistrationId.Value
+            );
+
+    private bool CanUseCaptcha => SelectedLinkCrypterOption?.SupportsCaptcha is true;
+    private bool CanUseContainerDownload =>
+        SelectedLinkCrypterOption?.SupportsContainerDownload is true;
+    private bool CanUseClickAndLoad => SelectedLinkCrypterOption?.SupportsClickAndLoad is true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -50,14 +64,24 @@ public partial class CreateOrEditUploadConfigLinkCrypter : OwningComponentBase
         var service = ScopedServices.GetRequiredService<UploadConfigLinkCrypterService>();
         if (IsEdit)
         {
-            await service.UpdateAsync(UploadConfigLinkCrypterId!.Value, formModel.Password);
+            await service.UpdateAsync(
+                UploadConfigLinkCrypterId!.Value,
+                formModel.Password,
+                CanUseCaptcha && formModel.EnableCaptcha,
+                CanUseContainerDownload && formModel.EnableContainerDownload,
+                CanUseClickAndLoad && formModel.EnableClickAndLoad
+            );
         }
         else
         {
             await service.CreateAsync(
                 uploadConfigId: UploadConfigId,
                 linkCrypterRegistrationId: formModel.LinkCrypterRegistrationId!.Value,
-                password: formModel.Password
+                password: formModel.Password,
+                enableCaptcha: CanUseCaptcha && formModel.EnableCaptcha,
+                enableContainerDownload: CanUseContainerDownload
+                    && formModel.EnableContainerDownload,
+                enableClickAndLoad: CanUseClickAndLoad && formModel.EnableClickAndLoad
             );
         }
 
@@ -77,6 +101,13 @@ public partial class CreateOrEditUploadConfigLinkCrypter : OwningComponentBase
         }
     }
 
+    private void OnLinkCrypterRegistrationChanged()
+    {
+        formModel.EnableCaptcha = CanUseCaptcha;
+        formModel.EnableContainerDownload = CanUseContainerDownload;
+        formModel.EnableClickAndLoad = CanUseClickAndLoad;
+    }
+
     private async Task InitializeFormModelAsync()
     {
         if (!IsEdit)
@@ -85,12 +116,34 @@ public partial class CreateOrEditUploadConfigLinkCrypter : OwningComponentBase
             return;
         }
 
-        var configReadModel = await readRepository.GetByIdAsync(UploadConfigLinkCrypterId!.Value);
+        configReadModel = await readRepository.GetByIdAsync(UploadConfigLinkCrypterId!.Value);
+
+        if (
+            linkCrypterOptions.All(option =>
+                option.LinkCrypterRegistrationId != configReadModel.LinkCrypterRegistrationId
+            )
+        )
+        {
+            linkCrypterOptions = linkCrypterOptions
+                .Append(
+                    new LinkCrypterOptionReadModel(
+                        configReadModel.LinkCrypterRegistrationId,
+                        configReadModel.LinkCrypterRegistrationName,
+                        configReadModel.SupportsCaptcha,
+                        configReadModel.SupportsContainerDownload,
+                        configReadModel.SupportsClickAndLoad
+                    )
+                )
+                .ToList();
+        }
 
         formModel = new FormModel
         {
             LinkCrypterRegistrationId = configReadModel.LinkCrypterRegistrationId,
             Password = configReadModel.Password,
+            EnableCaptcha = configReadModel.EnableCaptcha,
+            EnableContainerDownload = configReadModel.EnableContainerDownload,
+            EnableClickAndLoad = configReadModel.EnableClickAndLoad,
         };
     }
 

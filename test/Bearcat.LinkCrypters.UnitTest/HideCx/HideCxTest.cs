@@ -57,7 +57,10 @@ public class HideCxTest
             "container-name",
             "password",
             links,
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -90,7 +93,10 @@ public class HideCxTest
             "container-name",
             null,
             ["https://hoster.test/file"],
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -128,7 +134,10 @@ public class HideCxTest
             "external-id",
             null,
             links,
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -161,7 +170,10 @@ public class HideCxTest
             "external-id",
             null,
             ["https://hoster.test/file"],
-            CancellationToken.None
+            enableCaptcha: true,
+            enableContainerDownload: true,
+            enableClickAndLoad: true,
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
