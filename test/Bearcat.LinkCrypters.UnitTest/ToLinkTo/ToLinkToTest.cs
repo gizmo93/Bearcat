@@ -26,6 +26,14 @@ public class ToLinkToTest
     }
 
     [Test]
+    public void SupportedSettings_ToLinkToApiSettings_ReturnsDocumentedOptions()
+    {
+        service.SupportsCaptcha.ShouldBeTrue();
+        service.SupportsContainerDownload.ShouldBeTrue();
+        service.SupportsClickAndLoad.ShouldBeTrue();
+    }
+
+    [Test]
     public async Task CreateContainerAsync_ApiCreatesFolder_ReturnsContainerLink()
     {
         // Arrange
@@ -72,6 +80,50 @@ public class ToLinkToTest
                     && request.Body.Options.Captcha
                     && !request.Body.Options.CaptchaText
                     && request.Body.Options.Password == "password"
+                ),
+                It.IsAny<CancellationToken>()
+            )
+        );
+    }
+
+    [Test]
+    public async Task CreateContainerAsync_DisabledSettings_SendsDisabledFolderOptions()
+    {
+        // Arrange
+        var config = new ToLinkToConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x =>
+                x.CreateFolderAsync(
+                    It.IsAny<ApiRequest<CreateFolderRequestBody>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(CreateSuccessResponse("https://tolink.to/f/fo587f92cc4c213"));
+
+        // Act
+        var result = await service.CreateContainerAsync(
+            config,
+            "container-name",
+            null,
+            ["https://hoster.test/file"],
+            enableCaptcha: false,
+            enableContainerDownload: false,
+            enableClickAndLoad: false,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        apiMock.Verify(x =>
+            x.CreateFolderAsync(
+                It.Is<ApiRequest<CreateFolderRequestBody>>(request =>
+                    request.Body.Options.Web
+                    && !request.Body.Options.Container
+                    && !request.Body.Options.ClickAndLoad
+                    && !request.Body.Options.Captcha
+                    && !request.Body.Options.CaptchaText
                 ),
                 It.IsAny<CancellationToken>()
             )
@@ -172,7 +224,62 @@ public class ToLinkToTest
                     && request.Body.Folder == "folder-id"
                     && request.Body.Title == "folder-id"
                     && request.Body.Links == "https://hoster.test/file-1;https://hoster.test/file-2"
+                    && request.Body.Options.Container
+                    && request.Body.Options.ClickAndLoad
+                    && request.Body.Options.Captcha
+                    && !request.Body.Options.CaptchaText
                     && request.Body.Options.Password == "password"
+                ),
+                It.IsAny<CancellationToken>()
+            )
+        );
+    }
+
+    [Test]
+    public async Task UpdateContainerAsync_DisabledSettings_SendsDisabledFolderOptions()
+    {
+        // Arrange
+        var config = new ToLinkToConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x =>
+                x.EditFolderAsync(
+                    It.IsAny<ApiRequest<EditFolderRequestBody>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                CreateSuccessResponse(new EditFolderResponseBody
+                {
+                    Affected = 1,
+                    Folder = "folder-id",
+                })
+            );
+
+        // Act
+        var result = await service.UpdateContainerAsync(
+            config,
+            "https://tolink.to/f/fo587f92cc4c213",
+            "folder-id",
+            null,
+            ["https://hoster.test/file"],
+            enableCaptcha: false,
+            enableContainerDownload: false,
+            enableClickAndLoad: false,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        apiMock.Verify(x =>
+            x.EditFolderAsync(
+                It.Is<ApiRequest<EditFolderRequestBody>>(request =>
+                    request.Body.Options.Web
+                    && !request.Body.Options.Container
+                    && !request.Body.Options.ClickAndLoad
+                    && !request.Body.Options.Captcha
+                    && !request.Body.Options.CaptchaText
                 ),
                 It.IsAny<CancellationToken>()
             )
@@ -389,6 +496,9 @@ public class ToLinkToTest
         capturedContentType.ShouldBe("application/json; charset=utf-8");
         capturedBody.ShouldContain("\"apikey\":\"api-key\"");
         capturedBody.ShouldContain("\"links\":\"https://hoster.test/file-1;https://hoster.test/file-2\"");
+        capturedBody.ShouldContain("\"container\":false");
+        capturedBody.ShouldContain("\"cln\":true");
+        capturedBody.ShouldContain("\"captcha\":false");
         capturedBody.ShouldContain("\"captcha_text\":false");
         httpMessageHandler.PendingRequests.ShouldBe(0);
     }
