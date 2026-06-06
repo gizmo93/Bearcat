@@ -6,10 +6,11 @@ using Bearcat.Website.Localization;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
-public partial class UploadLinksDialog(IReleaseReadRepository readRepository) : ComponentBase
+public partial class UploadLinksDialog(IServiceScopeFactory serviceScopeFactory)
 {
     [Parameter]
     public int ReleaseId { get; set; }
@@ -102,6 +103,8 @@ public partial class UploadLinksDialog(IReleaseReadRepository readRepository) : 
 
         try
         {
+            await using var scope = serviceScopeFactory.CreateAsyncScope();
+            var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
             var result = await readRepository.SearchUploadLinksAsync(
                 new ReleaseUploadLinkSearchQuery(
                     ReleaseId,
@@ -166,6 +169,8 @@ public partial class UploadLinksDialog(IReleaseReadRepository readRepository) : 
 
     private async Task RefreshAllUploadLinksAsync()
     {
+        await using var scope = serviceScopeFactory.CreateAsyncScope();
+        var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
         allUploadLinks = await readRepository.GetUploadLinksAsync(
             ReleaseId,
             UploadId,

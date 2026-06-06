@@ -1,0 +1,34 @@
+@inherits OwningComponentBase
+
+@if (!isInitialized)
+{
+    return;
+}
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="formModel.Name"
+                              Label="@L["Name"]"
+                              Placeholder="@L["NameImageUploadConfigPlaceholder"]" />
+
+            <BbFormFieldSelect TValue="int?"
+                               @bind-Value="formModel.ImageHosterRegistrationId"
+                               Label="@L["ImageHosterRegistration"]"
+                               Placeholder="@L["SelectImageHosterRegistration"]"
+                               Options="ImageHosterRegistrationOptions" />
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

@@ -2244,6 +2244,10 @@ a {
         grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 90px 90px 84px;
     }
 
+    .bearcat-image-upload-config-grid {
+        grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 84px;
+    }
+
     .bearcat-mobile-label {
         display: none;
     }

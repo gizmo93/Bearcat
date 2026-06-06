@@ -6,6 +6,8 @@ using Bearcat.Domain.UseCases.ManageBackgroundTasks.Repositories;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageImageHosters.Repositories;
+using Bearcat.Domain.UseCases.ManageImageUploadConfigs.Repositories;
+using Bearcat.Domain.UseCases.ManageImageUploads.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
@@ -65,6 +67,7 @@ public static class ServiceProviderConfig
                 IImageHosterRegistrationReadRepository,
                 ImageHosterRegistrationReadRepository
             >();
+            services.AddScoped<IImageUploadConfigReadRepository, ImageUploadConfigReadRepository>();
             services.AddScoped<IBackgroundTaskStateReadRepository, BackgroundTaskStateRepository>();
             services.AddScoped<
                 IBackgroundTaskStateWriteRepository,
@@ -78,6 +81,11 @@ public static class ServiceProviderConfig
                 IImageHosterRegistrationWriteRepository,
                 ImageHosterRegistrationWriteRepository
             >();
+            services.AddScoped<
+                IImageUploadConfigWriteRepository,
+                ImageUploadConfigWriteRepository
+            >();
+            services.AddScoped<IImageUploadRepository, ImageUploadRepository>();
             services.AddScoped<IReleaseWriteRepository, ReleaseWriteRepository>();
             services.AddScoped<IReleaseInfoRepository, ReleaseInfoRepository>();
             services.AddScoped<IReleaseTemplateReadRepository, ReleaseTemplateRepository>();

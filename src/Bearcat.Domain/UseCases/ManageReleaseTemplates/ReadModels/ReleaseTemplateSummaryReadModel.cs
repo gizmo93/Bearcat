@@ -10,5 +10,6 @@ public record ReleaseTemplateSummaryReadModel(
     string ReleaseGroupName,
     int ArchiveConfigTemplateCount,
     int UploadConfigTemplateCount,
+    int ImageUploadConfigTemplateCount,
     int LinkCrypterTemplateCount
 );

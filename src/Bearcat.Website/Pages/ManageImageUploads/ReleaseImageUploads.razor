@@ -1,0 +1,81 @@
+<section class="space-y-4">
+    <div class="bearcat-section-header">
+        <div>
+            <h2 class="text-lg font-semibold">@L["ImageUploads"]</h2>
+        </div>
+
+        <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="RefreshImageUploadsAsync">
+            <LucideIcon Name="refresh-cw" class="h-4 w-4" />
+            @L["Refresh"]
+        </BbButton>
+    </div>
+
+    <BbDataTable TData="ReleaseImageUploadReadModel"
+                 Data="imageUploads"
+                 ShowToolbar="false"
+                 ShowPagination="false"
+                 IsLoading="isLoading"
+                 AriaLabel="@L["ImageUploads"]"
+                 Class="bearcat-data-table">
+        <Columns>
+            <BbDataTableColumn TData="ReleaseImageUploadReadModel" TValue="string"
+                               Header="@L["ImageUploadConfig"]"
+                               Property="@(upload => upload.ImageUploadConfigName)"
+                               MinWidth="220px">
+                <CellTemplate Context="upload">
+                    <div class="min-w-0">
+                        <p class="truncate text-sm font-medium">@upload.ImageUploadConfigName</p>
+                        <p class="truncate text-xs text-muted-foreground">@upload.ImageHosterRegistrationName</p>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseImageUploadReadModel" TValue="string"
+                               Header="@L["State"]"
+                               Property="@(upload => upload.UploadState.ToString())"
+                               Width="165px">
+                <CellTemplate Context="upload">
+                    <div class="flex items-center gap-2">
+                        <BbBadge Variant="@GetUploadVariant(upload.UploadState)">
+                            @L.Localize(upload.UploadState)
+                        </BbBadge>
+                        <ErrorMessagesTooltip Messages="upload.ErrorMessages" />
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseImageUploadReadModel" TValue="DateTime?"
+                               Header="@L["UploadedAt"]"
+                               Property="@(upload => upload.UploadedAt)"
+                               Width="190px">
+                <CellTemplate Context="upload">
+                    <div class="min-w-0">
+                        <p class="truncate text-sm font-medium">
+                            @(upload.UploadedAt?.ToString("g") ?? "-")
+                        </p>
+                        <p class="truncate text-xs text-muted-foreground">
+                            @L["CreatedAt"]: @upload.CreatedAt.ToString("g")
+                        </p>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseImageUploadReadModel" TValue="int"
+                               Header="@L["Urls"]"
+                               Property="@(upload => upload.UrlCount)"
+                               Width="110px">
+                <CellTemplate Context="upload">
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Disabled="@(upload.UrlCount == 0)"
+                              OnClick="@(() => ShowUrlsDialogAsync(upload))">
+                        @upload.UrlCount
+                    </BbButton>
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+        <EmptyTemplate>
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="image-off" class="h-5 w-5" />
+                <span>@L["NoImageUploadsFound"]</span>
+            </div>
+        </EmptyTemplate>
+    </BbDataTable>
+</section>

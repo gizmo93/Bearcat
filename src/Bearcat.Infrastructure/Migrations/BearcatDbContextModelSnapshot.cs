@@ -350,6 +350,115 @@ namespace BearCat.Infrastructure.Migrations
                     b.ToTable("ImageHosterRegistrations");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.ImageUpload", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.PrimitiveCollection<string>("ErrorMessages")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("ImageUploadConfigId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UploadState")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UploadedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImageUploadConfigId");
+
+                    b.ToTable("ImageUploads");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ImageUploadConfig", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ImageHosterRegistrationId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ReleaseId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImageHosterRegistrationId");
+
+                    b.HasIndex("ReleaseId");
+
+                    b.ToTable("ImageUploadConfigs");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ImageUploadConfigTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ImageHosterRegistrationId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ReleaseTemplateId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImageHosterRegistrationId");
+
+                    b.HasIndex("ReleaseTemplateId");
+
+                    b.ToTable("ImageUploadConfigTemplates");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ImageUploadUrl", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ImageSize")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ImageUploadId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImageUploadId");
+
+                    b.ToTable("ImageUploadUrls");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterContainer", b =>
                 {
                     b.Property<int>("Id")
@@ -1027,6 +1136,66 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("Archive");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.ImageUpload", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.ImageUploadConfig", "ImageUploadConfig")
+                        .WithMany("ImageUploads")
+                        .HasForeignKey("ImageUploadConfigId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImageUploadConfig");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ImageUploadConfig", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.ImageHosterRegistration", "ImageHosterRegistration")
+                        .WithMany("ImageUploadConfigs")
+                        .HasForeignKey("ImageHosterRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
+                        .WithMany("ImageUploadConfigs")
+                        .HasForeignKey("ReleaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImageHosterRegistration");
+
+                    b.Navigation("Release");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ImageUploadConfigTemplate", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.ImageHosterRegistration", "ImageHosterRegistration")
+                        .WithMany("ImageUploadConfigTemplates")
+                        .HasForeignKey("ImageHosterRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseTemplate", "ReleaseTemplate")
+                        .WithMany("ImageUploadConfigTemplates")
+                        .HasForeignKey("ReleaseTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImageHosterRegistration");
+
+                    b.Navigation("ReleaseTemplate");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ImageUploadUrl", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.ImageUpload", "ImageUpload")
+                        .WithMany("ImageUrls")
+                        .HasForeignKey("ImageUploadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImageUpload");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterContainer", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.UploadConfigLinkCrypter", "UploadConfigLinkCrypter")
@@ -1323,6 +1492,23 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("UploadConfigs");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.ImageHosterRegistration", b =>
+                {
+                    b.Navigation("ImageUploadConfigTemplates");
+
+                    b.Navigation("ImageUploadConfigs");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ImageUpload", b =>
+                {
+                    b.Navigation("ImageUrls");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ImageUploadConfig", b =>
+                {
+                    b.Navigation("ImageUploads");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterContainer", b =>
                 {
                     b.Navigation("Notifications");
@@ -1331,6 +1517,8 @@ namespace BearCat.Infrastructure.Migrations
             modelBuilder.Entity("Bearcat.Domain.Entities.Release", b =>
                 {
                     b.Navigation("ArchiveConfigs");
+
+                    b.Navigation("ImageUploadConfigs");
 
                     b.Navigation("ReleaseInfo");
 
@@ -1352,6 +1540,8 @@ namespace BearCat.Infrastructure.Migrations
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseTemplate", b =>
                 {
                     b.Navigation("ArchiveConfigTemplates");
+
+                    b.Navigation("ImageUploadConfigTemplates");
 
                     b.Navigation("UploadConfigTemplates");
                 });

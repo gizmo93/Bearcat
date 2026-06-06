@@ -11,4 +11,8 @@ public class ImageHosterRegistration
     public string SerializedConfig { get; set; } = null!;
 
     public bool IsActive { get; set; }
+
+    public List<ImageUploadConfig> ImageUploadConfigs { get; set; } = [];
+
+    public List<ImageUploadConfigTemplate> ImageUploadConfigTemplates { get; set; } = [];
 }

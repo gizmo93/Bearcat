@@ -105,7 +105,7 @@ public class ImgBbTest
     {
         // Arrange
         var config = new ImgBbConfig { ApiKey = "api-key" };
-        Stream? uploadedImageStream = null;
+        long? uploadedImageStreamLength = null;
 
         apiClientMock
             .Setup(api =>
@@ -119,7 +119,7 @@ public class ImgBbTest
                 )
             )
             .Callback<string, Stream, string, string?, int?, CancellationToken>(
-                (_, imageStream, _, _, _, _) => uploadedImageStream = imageStream
+                (_, imageStream, _, _, _, _) => uploadedImageStreamLength = imageStream.Length
             )
             .ReturnsAsync(
                 new UploadResponse
@@ -139,7 +139,7 @@ public class ImgBbTest
         // Assert
         result.IsSuccess.ShouldBeTrue();
         result.ErrorMessage.ShouldBeNull();
-        uploadedImageStream.ShouldNotBeNull();
-        uploadedImageStream.Length.ShouldBeGreaterThan(0);
+        uploadedImageStreamLength.ShouldNotBeNull();
+        uploadedImageStreamLength.Value.ShouldBeGreaterThan(0);
     }
 }

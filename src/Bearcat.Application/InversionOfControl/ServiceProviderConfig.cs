@@ -15,6 +15,7 @@ public static class ServiceProviderConfig
             services.AddHostedService<ArchivingBackgroundTask>();
             services.AddHostedService<ArchiveCleanupBackgroundTask>();
             services.AddHostedService<ArchiveUploadBackgroundTask>();
+            services.AddHostedService<ImageUploadBackgroundTask>();
             services.AddHostedService<CheckUploadStateBackgroundTask>();
             services.AddHostedService<LinkCrypterContainerBackgroundTask>();
         }

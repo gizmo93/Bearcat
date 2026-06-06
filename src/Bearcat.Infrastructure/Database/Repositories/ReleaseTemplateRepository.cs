@@ -29,6 +29,7 @@ public class ReleaseTemplateRepository(
                 t.ReleaseGroup.Name,
                 t.ArchiveConfigTemplates.Count(),
                 t.UploadConfigTemplates.Count(),
+                t.ImageUploadConfigTemplates.Count(),
                 t.UploadConfigTemplates.SelectMany(u => u.LinkCrypterTemplates).Count()
             ))
             .ToListAsync(cancellationToken);
@@ -48,6 +49,8 @@ public class ReleaseTemplateRepository(
             .Include(t => t.UploadConfigTemplates)
                 .ThenInclude(u => u.LinkCrypterTemplates)
                     .ThenInclude(l => l.LinkCrypterRegistration)
+            .Include(t => t.ImageUploadConfigTemplates)
+                .ThenInclude(i => i.ImageHosterRegistration)
             .FirstOrDefaultAsync(t => t.Id == releaseTemplateId, cancellationToken);
 
         return releaseTemplate is null ? null : ToDetailReadModel(releaseTemplate);
@@ -71,6 +74,11 @@ public class ReleaseTemplateRepository(
     public void Remove(UploadConfigTemplate uploadConfigTemplate)
     {
         dbWrite.Remove(uploadConfigTemplate);
+    }
+
+    public void Remove(ImageUploadConfigTemplate imageUploadConfigTemplate)
+    {
+        dbWrite.Remove(imageUploadConfigTemplate);
     }
 
     public void Remove(UploadConfigLinkCrypterTemplate linkCrypterTemplate)
@@ -99,6 +107,7 @@ public class ReleaseTemplateRepository(
             .Include(t => t.ArchiveConfigTemplates)
             .Include(t => t.UploadConfigTemplates)
                 .ThenInclude(u => u.LinkCrypterTemplates)
+            .Include(t => t.ImageUploadConfigTemplates)
             .FirstAsync(t => t.Id == releaseTemplateId, cancellationToken);
     }
 
@@ -114,6 +123,8 @@ public class ReleaseTemplateRepository(
                 .ThenInclude(u => u.HosterRegistration)
             .Include(r => r.UploadConfigs)
                 .ThenInclude(u => u.LinkCrypters)
+            .Include(r => r.ImageUploadConfigs)
+                .ThenInclude(i => i.ImageHosterRegistration)
             .FirstAsync(r => r.Id == releaseId, cancellationToken);
     }
 
@@ -147,6 +158,17 @@ public class ReleaseTemplateRepository(
     {
         return await dbWrite.UploadConfigLinkCrypterTemplates.FirstAsync(
             l => l.Id == uploadConfigLinkCrypterTemplateId,
+            cancellationToken
+        );
+    }
+
+    public async Task<ImageUploadConfigTemplate> GetImageUploadConfigTemplateAsync(
+        int imageUploadConfigTemplateId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite.ImageUploadConfigTemplates.FirstAsync(
+            template => template.Id == imageUploadConfigTemplateId,
             cancellationToken
         );
     }
@@ -225,6 +247,17 @@ public class ReleaseTemplateRepository(
                             ].SupportsClickAndLoad
                         ))
                         .ToList()
+                ))
+                .ToList(),
+            releaseTemplate
+                .ImageUploadConfigTemplates.OrderBy(i => i.Name ?? i.ImageHosterRegistration.Name)
+                .ThenBy(i => i.Id)
+                .Select(i => new ImageUploadConfigTemplateReadModel(
+                    i.Id,
+                    i.Name,
+                    string.IsNullOrWhiteSpace(i.Name) ? i.ImageHosterRegistration.Name : i.Name,
+                    i.ImageHosterRegistrationId,
+                    i.ImageHosterRegistration.Name
                 ))
                 .ToList()
         );

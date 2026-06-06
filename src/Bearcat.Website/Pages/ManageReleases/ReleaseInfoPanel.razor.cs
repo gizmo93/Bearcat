@@ -4,14 +4,14 @@ using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class ReleaseInfoPanel(
-    IReleaseReadRepository readRepository,
-    ReleaseInfoService releaseInfoService,
     DialogService dialogService,
-    ToastService toastService
+    ToastService toastService,
+    IServiceScopeFactory serviceScopeFactory
 ) : ComponentBase
 {
     [Parameter]
@@ -32,6 +32,8 @@ public partial class ReleaseInfoPanel(
 
         try
         {
+            await using var scope = serviceScopeFactory.CreateAsyncScope();
+            var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
             releaseInfo = await readRepository.GetReleaseInfoAsync(ReleaseId);
         }
         finally
@@ -58,7 +60,12 @@ public partial class ReleaseInfoPanel(
             return;
         }
 
-        await releaseInfoService.DeleteAsync(releaseInfo.ReleaseInfoId);
+        await using (var scope = serviceScopeFactory.CreateAsyncScope())
+        {
+            var releaseInfoService = scope.ServiceProvider.GetRequiredService<ReleaseInfoService>();
+            await releaseInfoService.DeleteAsync(releaseInfo.ReleaseInfoId);
+        }
+
         toastService.Success(L["ReleaseInfoDeleted"]);
         await LoadReleaseInfoAsync();
     }

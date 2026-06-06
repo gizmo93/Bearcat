@@ -1,5 +1,7 @@
 @page "/releases/{ReleaseId:int}"
 @using Bearcat.Website.Pages.ManageArchiveConfigs
+@using Bearcat.Website.Pages.ManageImageUploadConfigs
+@using Bearcat.Website.Pages.ManageImageUploads
 @using Bearcat.Website.Pages.ManageUploadConfigs
 @inherits OwningComponentBase
 
@@ -86,10 +88,20 @@
                     <span class="bearcat-tab-meta">@release.ActiveUploadConfigsCount</span>
                 </span>
             </BbTabsTrigger>
+            <BbTabsTrigger Value="image-upload-configs">
+                <span class="bearcat-tab-label">
+                    <span>@L["ImageUploadConfigurations"]</span>
+                </span>
+            </BbTabsTrigger>
             <BbTabsTrigger Value="uploads">
                 <span class="bearcat-tab-label">
                     <span>@L["Uploads"]</span>
                     <span class="bearcat-tab-meta">@release.OnlineUploadConfigsCount @L["OnlineState.Online"]</span>
+                </span>
+            </BbTabsTrigger>
+            <BbTabsTrigger Value="image-uploads">
+                <span class="bearcat-tab-label">
+                    <span>@L["ImageUploads"]</span>
                 </span>
             </BbTabsTrigger>
         </BbTabsList>
@@ -122,8 +134,16 @@
                 FocusUploadConfigId="@FocusUploadConfigId" />
         </BbTabsContent>
 
+        <BbTabsContent Value="image-upload-configs" Class="space-y-4">
+            <ImageUploadConfigs ReleaseId="@ReleaseId" />
+        </BbTabsContent>
+
         <BbTabsContent Value="uploads" Class="space-y-4">
             <ReleaseUploads ReleaseId="@ReleaseId" InitialUploadConfigId="@FocusUploadConfigId" />
+        </BbTabsContent>
+
+        <BbTabsContent Value="image-uploads" Class="space-y-4">
+            <ReleaseImageUploads ReleaseId="@ReleaseId" />
         </BbTabsContent>
     </BbTabs>
 </section>

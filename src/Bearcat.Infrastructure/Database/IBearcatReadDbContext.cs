@@ -7,6 +7,10 @@ public interface IBearcatReadDbContext
 {
     public DbSet<HosterRegistration> HosterRegistrations { get; set; }
     public DbSet<ImageHosterRegistration> ImageHosterRegistrations { get; set; }
+    public DbSet<ImageUploadConfig> ImageUploadConfigs { get; set; }
+    public DbSet<ImageUpload> ImageUploads { get; set; }
+    public DbSet<ImageUploadUrl> ImageUploadUrls { get; set; }
+    public DbSet<ImageUploadConfigTemplate> ImageUploadConfigTemplates { get; set; }
     public DbSet<BackgroundTaskState> BackgroundTaskStates { get; set; }
     public DbSet<Release> Releases { get; set; }
     public DbSet<ReleaseTemplate> ReleaseTemplates { get; set; }

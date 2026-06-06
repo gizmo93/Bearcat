@@ -31,6 +31,7 @@ public class ReleaseService(
             ReleaseFolderPath = releaseFolderPath,
             ArchiveConfigs = [],
             UploadConfigs = [],
+            ImageUploadConfigs = [],
         };
 
         if (release.ReleaseType is ReleaseType.Unmanaged)
@@ -168,6 +169,7 @@ public class ReleaseService(
             ReleaseGroupId = releaseTemplate.ReleaseGroupId,
             ArchiveConfigs = [],
             UploadConfigs = [],
+            ImageUploadConfigs = [],
         };
 
         var archiveConfigsByTemplateId = new Dictionary<int, ArchiveConfig>();
@@ -229,6 +231,15 @@ public class ReleaseService(
                         LinkCrypterContainers = [],
                     })
                     .ToList(),
+            })
+            .ToList();
+
+        release.ImageUploadConfigs = releaseTemplate
+            .ImageUploadConfigTemplates.Select(template => new ImageUploadConfig
+            {
+                Name = CleanOptional(template.Name) ?? template.ImageHosterRegistration.Name,
+                ImageHosterRegistrationId = template.ImageHosterRegistrationId,
+                ImageUploads = [],
             })
             .ToList();
 

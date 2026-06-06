@@ -13,8 +13,6 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class ReleaseUploads(
-    IReleaseReadRepository readRepository,
-    IUploadConfigReadRepository uploadConfigReadRepository,
     DialogService dialogService,
     IServiceScopeFactory serviceScopeFactory,
     ToastService toastService
@@ -86,6 +84,9 @@ public partial class ReleaseUploads(
 
     protected override async Task OnInitializedAsync()
     {
+        await using var scope = serviceScopeFactory.CreateAsyncScope();
+        var uploadConfigReadRepository =
+            scope.ServiceProvider.GetRequiredService<IUploadConfigReadRepository>();
         uploadConfigs = await uploadConfigReadRepository.GetUploadConfigsAsync(ReleaseId);
         ApplyInitialUploadConfigFilter();
         await RefreshUploadsAsync();
@@ -118,6 +119,8 @@ public partial class ReleaseUploads(
 
         try
         {
+            await using var scope = serviceScopeFactory.CreateAsyncScope();
+            var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
             var result = await readRepository.SearchUploadsAsync(
                 new ReleaseUploadSearchQuery(
                     ReleaseId,

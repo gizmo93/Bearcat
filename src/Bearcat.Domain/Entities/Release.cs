@@ -18,6 +18,8 @@ public class Release
 
     public List<UploadConfig> UploadConfigs { get; set; } = null!;
 
+    public List<ImageUploadConfig> ImageUploadConfigs { get; set; } = [];
+
     public List<ArchiveConfig> ArchiveConfigs { get; set; } = null!;
 
     public string ReleaseFolderPath { get; set; } = null!;

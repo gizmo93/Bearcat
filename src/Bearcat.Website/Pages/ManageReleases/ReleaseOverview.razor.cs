@@ -6,13 +6,14 @@ using Bearcat.Website.Pages.ManageForumPostTemplates;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class ReleaseOverview(
-    IReleaseReadRepository readRepository,
     ToastService toastService,
-    DialogService dialogService
+    DialogService dialogService,
+    IServiceScopeFactory serviceScopeFactory
 ) : ComponentBase, IReloadableComponent
 {
     [Parameter]
@@ -64,6 +65,9 @@ public partial class ReleaseOverview(
 
         try
         {
+            await using var scope = serviceScopeFactory.CreateAsyncScope();
+            var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
+
             releaseNfo = null;
             coverUrl = null;
             nfoContent = null;

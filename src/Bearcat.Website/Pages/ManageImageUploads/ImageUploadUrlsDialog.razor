@@ -1,0 +1,33 @@
+<div class="space-y-4">
+    @if (urls.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+            @L["NoImageUploadUrlsFound"]
+        </div>
+    }
+    else
+    {
+        <BbDataTable TData="ReleaseImageUploadUrlReadModel"
+                     Data="urls"
+                     ShowToolbar="false"
+                     ShowPagination="false"
+                     AriaLabel="@L["ImageUploadUrls"]"
+                     Class="bearcat-data-table">
+            <Columns>
+                <BbDataTableColumn TData="ReleaseImageUploadUrlReadModel" TValue="string"
+                                   Header="@L["ImageSize"]"
+                                   Property="@(url => url.ImageSize.ToString())"
+                                   Width="150px" />
+                <BbDataTableColumn TData="ReleaseImageUploadUrlReadModel" TValue="string"
+                                   Header="@L["Url"]"
+                                   Property="@(url => url.Url)">
+                    <CellTemplate Context="url">
+                        <a href="@url.Url" target="_blank" rel="noopener noreferrer" class="break-all text-sm underline">
+                            @url.Url
+                        </a>
+                    </CellTemplate>
+                </BbDataTableColumn>
+            </Columns>
+        </BbDataTable>
+    }
+</div>

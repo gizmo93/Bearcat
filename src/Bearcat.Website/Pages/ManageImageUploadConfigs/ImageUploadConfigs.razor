@@ -1,0 +1,69 @@
+<BbCard Class="border-border/70 shadow-sm">
+    <BbCardHeader>
+        <div class="bearcat-section-header">
+            <div class="flex items-center gap-2">
+                <LucideIcon Name="image-up" class="h-4 w-4" />
+                <div>
+                    <BbCardTitle class="text-base">@L["ImageUploadConfigurations"]</BbCardTitle>
+                    <BbCardDescription>@L["ImageUploadConfigurationsDescription"]</BbCardDescription>
+                </div>
+            </div>
+            <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="ShowAddDialogAsync">
+                <LucideIcon Name="plus" class="h-4 w-4" />
+                @L["Add"]
+            </BbButton>
+        </div>
+    </BbCardHeader>
+    <BbCardContent>
+        @if (imageUploadConfigs.Count == 0)
+        {
+            <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                @L["NoImageUploadConfigurationsYet"]
+            </div>
+        }
+        else
+        {
+            <div class="bearcat-config-list">
+                <div class="bearcat-config-header bearcat-upload-grid">
+                    <span>@L["ImageUploadTarget"]</span>
+                    <span>@L["ImageHosterRegistration"]</span>
+                    <span>@L["ImageUploads"]</span>
+                    <span class="text-right">@L["Actions"]</span>
+                </div>
+                @foreach (var config in imageUploadConfigs)
+                {
+                    <div class="bearcat-config-item">
+                        <div class="bearcat-config-row bearcat-upload-grid">
+                            <div class="min-w-0">
+                                <span class="text-sm font-semibold">@config.Name</span>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-medium">@config.ImageHosterRegistrationName</p>
+                            </div>
+                            <div>
+                                <BbBadge Variant="BadgeVariant.Outline">@config.ImageUploadCount</BbBadge>
+                            </div>
+                            <div class="bearcat-config-actions">
+                                <BbDropdownMenu>
+                                    <BbDropdownMenuTrigger>
+                                        <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenImageUploadConfigActions"]">
+                                            <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                        </BbButton>
+                                    </BbDropdownMenuTrigger>
+                                    <BbDropdownMenuContent Align="PopoverAlign.End">
+                                        <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(config))">
+                                            @L["EditConfig"]
+                                        </BbDropdownMenuItem>
+                                        <BbDropdownMenuItem OnClick="@(async _ => await DeleteConfigAsync(config))">
+                                            @L["DeleteConfig"]
+                                        </BbDropdownMenuItem>
+                                    </BbDropdownMenuContent>
+                                </BbDropdownMenu>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </BbCardContent>
+</BbCard>

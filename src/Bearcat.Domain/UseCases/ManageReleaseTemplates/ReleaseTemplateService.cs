@@ -151,6 +151,20 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             })
             .ToList();
 
+        releaseTemplate.ImageUploadConfigTemplates = release
+            .ImageUploadConfigs.Select(config => new ImageUploadConfigTemplate
+            {
+                ImageHosterRegistrationId = config.ImageHosterRegistrationId,
+                Name = string.Equals(
+                    config.Name,
+                    config.ImageHosterRegistration.Name,
+                    StringComparison.Ordinal
+                )
+                    ? null
+                    : config.Name,
+            })
+            .ToList();
+
         writeRepository.Add(releaseTemplate);
         await writeRepository.SaveChangesAsync(cancellationToken);
 
@@ -340,6 +354,62 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         );
 
         writeRepository.Remove(uploadConfigTemplate);
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<int> CreateImageUploadConfigTemplateAsync(
+        int releaseTemplateId,
+        string? name,
+        int imageHosterRegistrationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var releaseTemplate = await writeRepository.GetByIdWithChildrenAsync(
+            releaseTemplateId,
+            cancellationToken
+        );
+
+        var imageUploadConfigTemplate = new ImageUploadConfigTemplate
+        {
+            Name = CleanOptional(name),
+            ImageHosterRegistrationId = imageHosterRegistrationId,
+        };
+
+        releaseTemplate.ImageUploadConfigTemplates.Add(imageUploadConfigTemplate);
+        await writeRepository.SaveChangesAsync(cancellationToken);
+
+        return imageUploadConfigTemplate.Id;
+    }
+
+    public async Task UpdateImageUploadConfigTemplateAsync(
+        int imageUploadConfigTemplateId,
+        string? name,
+        int imageHosterRegistrationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var imageUploadConfigTemplate = await writeRepository.GetImageUploadConfigTemplateAsync(
+            imageUploadConfigTemplateId,
+            cancellationToken
+        );
+
+        imageUploadConfigTemplate.Name = CleanOptional(name);
+        imageUploadConfigTemplate.ImageHosterRegistrationId = imageHosterRegistrationId;
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteImageUploadConfigTemplateAsync(
+        int imageUploadConfigTemplateId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var imageUploadConfigTemplate = await writeRepository.GetImageUploadConfigTemplateAsync(
+            imageUploadConfigTemplateId,
+            cancellationToken
+        );
+
+        writeRepository.Remove(imageUploadConfigTemplate);
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 

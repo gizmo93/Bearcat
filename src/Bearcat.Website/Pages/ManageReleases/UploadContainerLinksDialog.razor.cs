@@ -3,11 +3,11 @@ using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
-public partial class UploadContainerLinksDialog(IReleaseReadRepository readRepository)
-    : ComponentBase
+public partial class UploadContainerLinksDialog(IServiceScopeFactory serviceScopeFactory)
 {
     [Parameter]
     public int ReleaseId { get; set; }
@@ -40,6 +40,8 @@ public partial class UploadContainerLinksDialog(IReleaseReadRepository readRepos
 
         try
         {
+            await using var scope = serviceScopeFactory.CreateAsyncScope();
+            var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
             containers = await readRepository.GetUploadContainerLinksAsync(ReleaseId, UploadId);
         }
         finally

@@ -300,5 +300,72 @@
                 }
             </BbCardContent>
         </BbCard>
+
+        <BbCard Class="border-border/70 shadow-sm">
+            <BbCardHeader>
+                <div class="bearcat-section-header">
+                    <div class="flex items-center gap-2">
+                        <LucideIcon Name="image" class="h-4 w-4" />
+                        <div>
+                            <BbCardTitle class="text-base">@L["ImageUploadConfigurations"]</BbCardTitle>
+                            <BbCardDescription>@L["ImageUploadConfigTemplatesDescription"]</BbCardDescription>
+                        </div>
+                    </div>
+                    <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="ShowAddImageUploadConfigDialogAsync">
+                        <LucideIcon Name="plus" class="h-4 w-4" />
+                        @L["Add"]
+                    </BbButton>
+                </div>
+            </BbCardHeader>
+            <BbCardContent>
+                @if (releaseTemplate.ImageUploadConfigTemplates.Count == 0)
+                {
+                    <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                        @L["NoImageUploadConfigTemplatesYet"]
+                    </div>
+                }
+                else
+                {
+                    <div class="bearcat-config-list">
+                        <div class="bearcat-config-header bearcat-image-upload-config-grid">
+                            <span>@L["ImageUploadTarget"]</span>
+                            <span>@L["ImageHosterRegistration"]</span>
+                            <span class="text-right">@L["Actions"]</span>
+                        </div>
+                        @foreach (var config in releaseTemplate.ImageUploadConfigTemplates)
+                        {
+                            <div class="bearcat-config-item">
+                                <div class="bearcat-config-row bearcat-image-upload-config-grid">
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-semibold">@config.DisplayName</p>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="bearcat-mobile-label">@L["ImageHosterRegistration"]</p>
+                                        <BbBadge Variant="BadgeVariant.Outline">@config.ImageHosterRegistrationName</BbBadge>
+                                    </div>
+                                    <div class="bearcat-config-actions">
+                                        <BbDropdownMenu>
+                                            <BbDropdownMenuTrigger>
+                                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenImageUploadConfigActions"]">
+                                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                                </BbButton>
+                                            </BbDropdownMenuTrigger>
+                                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                                                <BbDropdownMenuItem OnClick="@(async _ => await ShowEditImageUploadConfigDialogAsync(config))">
+                                                    @L["EditConfig"]
+                                                </BbDropdownMenuItem>
+                                                <BbDropdownMenuItem OnClick="@(async _ => await DeleteImageUploadConfigTemplateAsync(config))">
+                                                    @L["DeleteConfig"]
+                                                </BbDropdownMenuItem>
+                                            </BbDropdownMenuContent>
+                                        </BbDropdownMenu>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </BbCardContent>
+        </BbCard>
     </div>
 </section>

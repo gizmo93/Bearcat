@@ -295,6 +295,97 @@ public partial class ReleaseTemplateDetail(
         await LoadReleaseTemplateAsync();
     }
 
+    private async Task ShowAddImageUploadConfigDialogAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(CreateOrEditImageUploadConfigTemplateDialog.ReleaseTemplateId)] =
+                ReleaseTemplateId,
+            [nameof(CreateOrEditImageUploadConfigTemplateDialog.FormModel)] =
+                new ImageUploadConfigTemplateFormModel(),
+        };
+
+        var dialog = await dialogService.OpenAsync<CreateOrEditImageUploadConfigTemplateDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["AddImageUploadConfig"],
+                Description = L["ImageUploadConfigTemplateDialogDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (!dialog.Cancelled)
+        {
+            await LoadReleaseTemplateAsync();
+        }
+    }
+
+    private async Task ShowEditImageUploadConfigDialogAsync(
+        ImageUploadConfigTemplateReadModel imageUploadConfig
+    )
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(CreateOrEditImageUploadConfigTemplateDialog.ReleaseTemplateId)] =
+                ReleaseTemplateId,
+            [nameof(CreateOrEditImageUploadConfigTemplateDialog.ImageUploadConfigTemplateId)] =
+                imageUploadConfig.ImageUploadConfigTemplateId,
+            [nameof(CreateOrEditImageUploadConfigTemplateDialog.FormModel)] =
+                new ImageUploadConfigTemplateFormModel
+                {
+                    Name = imageUploadConfig.Name,
+                    ImageHosterRegistrationId = imageUploadConfig.ImageHosterRegistrationId,
+                },
+        };
+
+        var dialog = await dialogService.OpenAsync<CreateOrEditImageUploadConfigTemplateDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["EditNamedItem", imageUploadConfig.DisplayName],
+                Description = L["ImageUploadConfigTemplateDialogDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (!dialog.Cancelled)
+        {
+            await LoadReleaseTemplateAsync();
+        }
+    }
+
+    private async Task DeleteImageUploadConfigTemplateAsync(
+        ImageUploadConfigTemplateReadModel imageUploadConfig
+    )
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["DeleteNamedItem", imageUploadConfig.DisplayName],
+            L["DeleteImageUploadConfigTemplateConfirmation", imageUploadConfig.DisplayName],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
+        await service.DeleteImageUploadConfigTemplateAsync(
+            imageUploadConfig.ImageUploadConfigTemplateId
+        );
+        await LoadReleaseTemplateAsync();
+    }
+
     private async Task ShowAddLinkCrypterDialogAsync(UploadConfigTemplateReadModel uploadConfig)
     {
         var parameters = new Dictionary<string, object?>

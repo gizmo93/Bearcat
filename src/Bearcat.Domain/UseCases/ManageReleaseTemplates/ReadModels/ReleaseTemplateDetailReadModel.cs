@@ -9,5 +9,6 @@ public record ReleaseTemplateDetailReadModel(
     int ReleaseGroupId,
     string ReleaseGroupName,
     IReadOnlyList<ArchiveConfigTemplateReadModel> ArchiveConfigTemplates,
-    IReadOnlyList<UploadConfigTemplateReadModel> UploadConfigTemplates
+    IReadOnlyList<UploadConfigTemplateReadModel> UploadConfigTemplates,
+    IReadOnlyList<ImageUploadConfigTemplateReadModel> ImageUploadConfigTemplates
 );
