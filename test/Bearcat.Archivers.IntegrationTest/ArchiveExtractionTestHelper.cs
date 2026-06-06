@@ -61,10 +61,7 @@ public static class ArchiveExtractionTestHelper
         );
     }
 
-    public static void ExtractedPayloadShouldMatchSource(
-        string sourceFilePath,
-        string extractPath
-    )
+    public static void ExtractedPayloadShouldMatchSource(string sourceFilePath, string extractPath)
     {
         var sourceFolderName = Path.GetFileName(Path.GetDirectoryName(sourceFilePath));
         var extractedFilePath = Path.Combine(
@@ -83,7 +80,9 @@ public static class ArchiveExtractionTestHelper
         string fileName
     )
     {
-        var sourceFolderName = Path.GetFileName(Path.TrimEndingDirectorySeparator(sourceFolderPath));
+        var sourceFolderName = Path.GetFileName(
+            Path.TrimEndingDirectorySeparator(sourceFolderPath)
+        );
         var extractedFolderPath = Path.Combine(extractPath, sourceFolderName);
         var extractedFilePath = Path.Combine(extractedFolderPath, fileName);
 

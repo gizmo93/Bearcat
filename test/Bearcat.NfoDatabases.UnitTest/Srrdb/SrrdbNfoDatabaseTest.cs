@@ -81,16 +81,18 @@ public class SrrdbNfoDatabaseTest
         );
         result.Size.ShouldBe(new ReleaseInfoSize(700, "MB"));
         result.ExternalInfos.Single().Title.ShouldBe("Movie Release");
-        result.ExternalInfos.Single().Urls.Single().Value.ShouldBe(
-            "https://www.imdb.com/title/tt1234567"
-        );
+        result
+            .ExternalInfos.Single()
+            .Urls.Single()
+            .Value.ShouldBe("https://www.imdb.com/title/tt1234567");
     }
 
     [Test]
     public async Task GetReleaseNfoAsync_NfoFound_DownloadsText()
     {
         // Arrange
-        const string nfoUrl = "https://www.srrdb.com/download/file/Movie.Release.2026-GRP/movie.nfo";
+        const string nfoUrl =
+            "https://www.srrdb.com/download/file/Movie.Release.2026-GRP/movie.nfo";
         apiMock
             .Setup(api => api.GetNfoAsync("Movie.Release.2026-GRP", It.IsAny<CancellationToken>()))
             .ReturnsAsync(
@@ -140,7 +142,10 @@ public class SrrdbNfoDatabaseTest
         return new HttpClient(handlerMock.Object);
     }
 
-    private static ApiResponse<T> CreateApiResponse<T>(HttpStatusCode statusCode, T? content = default)
+    private static ApiResponse<T> CreateApiResponse<T>(
+        HttpStatusCode statusCode,
+        T? content = default
+    )
     {
         return new ApiResponse<T>(
             new HttpResponseMessage(statusCode),

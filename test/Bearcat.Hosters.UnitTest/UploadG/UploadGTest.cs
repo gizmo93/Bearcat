@@ -55,9 +55,7 @@ public class UploadGTest
             );
 
         apiClientMock
-            .Setup(x =>
-                x.GetOrCreateShareableLinkAsync(config, 19, It.IsAny<CancellationToken>())
-            )
+            .Setup(x => x.GetOrCreateShareableLinkAsync(config, 19, It.IsAny<CancellationToken>()))
             .ReturnsAsync("https://uploadg.com/drive/s/hash-value");
 
         try
@@ -111,9 +109,7 @@ public class UploadGTest
             );
 
         apiClientMock
-            .Setup(x =>
-                x.GetOrCreateShareableLinkAsync(config, 19, It.IsAny<CancellationToken>())
-            )
+            .Setup(x => x.GetOrCreateShareableLinkAsync(config, 19, It.IsAny<CancellationToken>()))
             .ReturnsAsync("https://uploadg.com/drive/s/hash-value");
 
         try

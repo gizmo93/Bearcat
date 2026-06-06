@@ -31,7 +31,9 @@ public class ApiClientTest
         var loggerMock = new Mock<ILogger<ApiClient>>();
 
         apiMock
-            .Setup(x => x.LoginAsync(config.Username, config.Password, It.IsAny<CancellationToken>()))
+            .Setup(x =>
+                x.LoginAsync(config.Username, config.Password, It.IsAny<CancellationToken>())
+            )
             .ReturnsAsync(
                 CreateApiResponse(
                     new LoginResponse
@@ -162,13 +164,7 @@ public class ApiClientTest
             );
 
         apiMock
-            .Setup(x =>
-                x.GetFolderInfoAsync(
-                    "auth-token",
-                    null,
-                    It.IsAny<CancellationToken>()
-                )
-            )
+            .Setup(x => x.GetFolderInfoAsync("auth-token", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(
                 new FolderResponse
                 {
@@ -218,7 +214,9 @@ public class ApiClientTest
         var maximumParallelRequests = 0;
 
         apiMock
-            .Setup(x => x.GetFileInfoAsync("auth-token", It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(x =>
+                x.GetFileInfoAsync("auth-token", It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
             .Returns(async () =>
             {
                 var current = Interlocked.Increment(ref currentParallelRequests);
@@ -232,7 +230,10 @@ public class ApiClientTest
                     new FileInfoResponse
                     {
                         Status = (int)HttpStatusCode.OK,
-                        Response = new FileInfoResponse.ResponseObject { File = new UploadedFile() },
+                        Response = new FileInfoResponse.ResponseObject
+                        {
+                            File = new UploadedFile(),
+                        },
                     }
                 );
             });
@@ -262,10 +263,7 @@ public class ApiClientTest
                 if (calls == 1)
                 {
                     return Task.FromResult(
-                        CreateApiResponse(
-                            new FileInfoResponse(),
-                            HttpStatusCode.TooManyRequests
-                        )
+                        CreateApiResponse(new FileInfoResponse(), HttpStatusCode.TooManyRequests)
                     );
                 }
 

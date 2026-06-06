@@ -266,18 +266,18 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
         var result = await dbContext
             .ArchiveConfigs.AsSplitQuery()
             .Include(c => c.Archives)
-            .ThenInclude(a => a.ArchiveFiles)
+                .ThenInclude(a => a.ArchiveFiles)
             .SingleAsync(c => c.Id == archiveConfig.Id);
         var archive = result.Archives.Single();
 
         result.ArchiveFilesBasePath.ShouldBe(releaseFolderPath);
         archive.ArchiveState.ShouldBe(ArchiveState.Created);
-        archive.ArchiveFiles.Select(file => file.FullFileName).ShouldBe(
-            [
+        archive
+            .ArchiveFiles.Select(file => file.FullFileName)
+            .ShouldBe([
                 Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part1.rar"),
                 Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part2.rar"),
-            ]
-        );
+            ]);
     }
 
     [Test]
@@ -305,16 +305,18 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
         var result = await dbContext
             .ArchiveConfigs.AsSplitQuery()
             .Include(c => c.Archives)
-            .ThenInclude(a => a.ArchiveFiles)
+                .ThenInclude(a => a.ArchiveFiles)
             .SingleAsync(c => c.Id == archiveConfig.Id);
         var archives = result.Archives.OrderBy(a => a.Id).ToList();
 
         archives.Count.ShouldBe(2);
         archives[0].ArchiveState.ShouldBe(ArchiveState.Deleted);
         archives[1].ArchiveState.ShouldBe(ArchiveState.Created);
-        archives[1].ArchiveFiles.Single().FullFileName.ShouldBe(
-            Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.rar")
-        );
+        archives[1]
+            .ArchiveFiles.Single()
+            .FullFileName.ShouldBe(
+                Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.rar")
+            );
     }
 
     [Test]
@@ -338,28 +340,26 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
         var result = await dbContext
             .ArchiveConfigs.AsSplitQuery()
             .Include(c => c.Archives)
-            .ThenInclude(a => a.ArchiveFiles)
+                .ThenInclude(a => a.ArchiveFiles)
             .SingleAsync(c => c.Id == archiveConfig.Id);
         var archives = result.Archives.OrderBy(a => a.Id).ToList();
 
         archives.Count.ShouldBe(2);
         archives[0].ArchiveState.ShouldBe(ArchiveState.Deleted);
         archives[1].ArchiveState.ShouldBe(ArchiveState.Created);
-        archives[1].ArchiveFiles.Select(file => file.FullFileName).ShouldBe(
-            [
+        archives[1]
+            .ArchiveFiles.Select(file => file.FullFileName)
+            .ShouldBe([
                 Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part1.rar"),
                 Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part2.rar"),
-            ]
-        );
+            ]);
     }
 
     [Test]
     public async Task RefreshUnmanagedArchiveAsync_NoMatchingArchiveFiles_ThrowsInvalidOperationException()
     {
         // Arrange
-        var releaseFolderPath = CreateReleaseFolderWithFiles(
-            "Bearcat.Release.Unmanaged.part1.rar"
-        );
+        var releaseFolderPath = CreateReleaseFolderWithFiles("Bearcat.Release.Unmanaged.part1.rar");
         var archiveConfig = await AddUnmanagedArchiveConfigAsync(
             releaseFolderPath,
             "Bearcat.Release.Unmanaged.part1.rar"

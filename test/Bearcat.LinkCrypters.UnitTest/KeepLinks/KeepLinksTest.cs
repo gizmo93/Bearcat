@@ -79,10 +79,7 @@ public class KeepLinksTest
                     && HasFormValue(content, "dlc", "on")
                     && FormValues(content, "link-to-protect")
                         .SequenceEqual(
-                            new[]
-                            {
-                                "https://hoster.test/file-1,https://hoster.test/file-2",
-                            }
+                            new[] { "https://hoster.test/file-1,https://hoster.test/file-2" }
                         )
                 ),
                 It.IsAny<CancellationToken>()
@@ -228,10 +225,7 @@ public class KeepLinksTest
                     && HasFormValue(content, "dlc", "on")
                     && FormValues(content, "link-to-protect")
                         .SequenceEqual(
-                            new[]
-                            {
-                                "https://hoster.test/file-1,https://hoster.test/file-2",
-                            }
+                            new[] { "https://hoster.test/file-1,https://hoster.test/file-2" }
                         )
                 ),
                 It.IsAny<CancellationToken>()

@@ -192,11 +192,9 @@ public class ToLinkToTest
                 )
             )
             .ReturnsAsync(
-                CreateSuccessResponse(new EditFolderResponseBody
-                {
-                    Affected = 1,
-                    Folder = "folder-id",
-                })
+                CreateSuccessResponse(
+                    new EditFolderResponseBody { Affected = 1, Folder = "folder-id" }
+                )
             );
 
         // Act
@@ -249,11 +247,9 @@ public class ToLinkToTest
                 )
             )
             .ReturnsAsync(
-                CreateSuccessResponse(new EditFolderResponseBody
-                {
-                    Affected = 1,
-                    Folder = "folder-id",
-                })
+                CreateSuccessResponse(
+                    new EditFolderResponseBody { Affected = 1, Folder = "folder-id" }
+                )
             );
 
         // Act
@@ -300,11 +296,9 @@ public class ToLinkToTest
                 )
             )
             .ReturnsAsync(
-                CreateSuccessResponse(new EditFolderResponseBody
-                {
-                    Affected = 1,
-                    Folder = "fo587f92cc4c213",
-                })
+                CreateSuccessResponse(
+                    new EditFolderResponseBody { Affected = 1, Folder = "fo587f92cc4c213" }
+                )
             );
 
         // Act
@@ -375,10 +369,7 @@ public class ToLinkToTest
 
         apiMock
             .Setup(x =>
-                x.PingAsync(
-                    It.IsAny<ApiRequest<PingRequestBody>>(),
-                    It.IsAny<CancellationToken>()
-                )
+                x.PingAsync(It.IsAny<ApiRequest<PingRequestBody>>(), It.IsAny<CancellationToken>())
             )
             .ReturnsAsync(CreateSuccessResponse("Pong"));
 
@@ -408,10 +399,7 @@ public class ToLinkToTest
 
         apiMock
             .Setup(x =>
-                x.PingAsync(
-                    It.IsAny<ApiRequest<PingRequestBody>>(),
-                    It.IsAny<CancellationToken>()
-                )
+                x.PingAsync(It.IsAny<ApiRequest<PingRequestBody>>(), It.IsAny<CancellationToken>())
             )
             .ReturnsAsync(CreateErrorResponse<string>("invalid api key"));
 
@@ -495,7 +483,9 @@ public class ToLinkToTest
         response.Response.Body.ShouldBe("https://tolink.to/f/folder-id");
         capturedContentType.ShouldBe("application/json; charset=utf-8");
         capturedBody.ShouldContain("\"apikey\":\"api-key\"");
-        capturedBody.ShouldContain("\"links\":\"https://hoster.test/file-1;https://hoster.test/file-2\"");
+        capturedBody.ShouldContain(
+            "\"links\":\"https://hoster.test/file-1;https://hoster.test/file-2\""
+        );
         capturedBody.ShouldContain("\"container\":false");
         capturedBody.ShouldContain("\"cln\":true");
         capturedBody.ShouldContain("\"captcha\":false");

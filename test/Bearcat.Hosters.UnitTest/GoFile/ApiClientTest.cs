@@ -53,7 +53,10 @@ public class ApiClientTest
                     Status = "ok",
                     Data = new Bearcat.Hosters.GoFile.Api.GetContent.Data
                     {
-                        Children = new Dictionary<string, Bearcat.Hosters.GoFile.Api.GetContent.Content>
+                        Children = new Dictionary<
+                            string,
+                            Bearcat.Hosters.GoFile.Api.GetContent.Content
+                        >
                         {
                             ["file-id"] = new()
                             {
@@ -114,7 +117,10 @@ public class ApiClientTest
                     Status = "ok",
                     Data = new Bearcat.Hosters.GoFile.Api.GetContent.Data
                     {
-                        Children = new Dictionary<string, Bearcat.Hosters.GoFile.Api.GetContent.Content>
+                        Children = new Dictionary<
+                            string,
+                            Bearcat.Hosters.GoFile.Api.GetContent.Content
+                        >
                         {
                             ["other-folder-id"] = new()
                             {
@@ -334,10 +340,7 @@ public class ApiClientTest
                 new Bearcat.Hosters.GoFile.Api.GetAccountId.Response
                 {
                     Status = "ok",
-                    Data = new Bearcat.Hosters.GoFile.Api.GetAccountId.Data
-                    {
-                        Id = "account-id",
-                    },
+                    Data = new Bearcat.Hosters.GoFile.Api.GetAccountId.Data { Id = "account-id" },
                 }
             );
         apiMock

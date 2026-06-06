@@ -122,11 +122,7 @@ public class ApiClientTest
             );
         xfilesharingApiMock
             .Setup(x =>
-                x.CreateFolderAsync(
-                    "api-key",
-                    "release-folder",
-                    It.IsAny<CancellationToken>()
-                )
+                x.CreateFolderAsync("api-key", "release-folder", It.IsAny<CancellationToken>())
             )
             .ReturnsAsync(
                 new FolderCreateResponse
@@ -194,12 +190,7 @@ public class ApiClientTest
         var xfilesharingApiMock = apiMock.As<IXFilesharingApi>();
         xfilesharingApiMock
             .Setup(x =>
-                x.SetFilePropertiesAsync(
-                    "api-key",
-                    "file-code",
-                    1,
-                    It.IsAny<CancellationToken>()
-                )
+                x.SetFilePropertiesAsync("api-key", "file-code", 1, It.IsAny<CancellationToken>())
             )
             .ReturnsAsync(new StatusResponse { Status = (int)HttpStatusCode.OK });
 
@@ -213,13 +204,7 @@ public class ApiClientTest
 
         // Assert
         xfilesharingApiMock.Verify(
-            x =>
-                x.SetFilePropertiesAsync(
-                    "api-key",
-                    "file-code",
-                    1,
-                    It.IsAny<CancellationToken>()
-                ),
+            x => x.SetFilePropertiesAsync("api-key", "file-code", 1, It.IsAny<CancellationToken>()),
             Times.Once
         );
     }

@@ -47,10 +47,7 @@ public class ImgBbTest
                         Id = "image-id",
                         DeleteUrl = "https://ibb.co/delete",
                         Image = new UploadedImage { Url = "https://i.ibb.co/full.jpg" },
-                        Thumbnail = new UploadedImage
-                        {
-                            Url = "https://i.ibb.co/thumb.jpg",
-                        },
+                        Thumbnail = new UploadedImage { Url = "https://i.ibb.co/thumb.jpg" },
                         Medium = new UploadedImage { Url = "https://i.ibb.co/medium.jpg" },
                     },
                 }
@@ -64,13 +61,11 @@ public class ImgBbTest
         result.ExternalId.ShouldBe("image-id");
         result.DeleteUrl.ShouldBe("https://ibb.co/delete");
         result.ErrorMessages.ShouldBeEmpty();
-        result.ImageUrls.ShouldBe(
-            [
-                new ImageUrl(ImageSize.Full, "https://i.ibb.co/full.jpg"),
-                new ImageUrl(ImageSize.Thumbnail, "https://i.ibb.co/thumb.jpg"),
-                new ImageUrl(ImageSize.Medium, "https://i.ibb.co/medium.jpg"),
-            ]
-        );
+        result.ImageUrls.ShouldBe([
+            new ImageUrl(ImageSize.Full, "https://i.ibb.co/full.jpg"),
+            new ImageUrl(ImageSize.Thumbnail, "https://i.ibb.co/thumb.jpg"),
+            new ImageUrl(ImageSize.Medium, "https://i.ibb.co/medium.jpg"),
+        ]);
     }
 
     [Test]

@@ -132,12 +132,12 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         release.ReleaseFolderPath.ShouldBe(newReleaseFolderPath);
         archive.ArchiveFolderPath.ShouldBe(newReleaseFolderPath);
         archive.ArchiveState.ShouldBe(ArchiveState.Created);
-        archive.ArchiveFiles.Select(f => f.FullFileName).ShouldBe(
-            [
+        archive
+            .ArchiveFiles.Select(f => f.FullFileName)
+            .ShouldBe([
                 Path.Combine(newReleaseFolderPath, "Bearcat.Release.Unmanaged.part1.rar"),
                 Path.Combine(newReleaseFolderPath, "Bearcat.Release.Unmanaged.part2.rar"),
-            ]
-        );
+            ]);
     }
 
     [Test]
@@ -180,9 +180,11 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         archives[0].ArchiveState.ShouldBe(ArchiveState.Deleted);
         archives[1].ArchiveState.ShouldBe(ArchiveState.Created);
         archives[1].ArchiveFolderPath.ShouldBe(newReleaseFolderPath);
-        archives[1].ArchiveFiles.Single().FullFileName.ShouldBe(
-            Path.Combine(newReleaseFolderPath, "Bearcat.Release.Unmanaged.rar")
-        );
+        archives[1]
+            .ArchiveFiles.Single()
+            .FullFileName.ShouldBe(
+                Path.Combine(newReleaseFolderPath, "Bearcat.Release.Unmanaged.rar")
+            );
     }
 
     [Test]
@@ -235,12 +237,12 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         archives[1].ArchiveState.ShouldBe(ArchiveState.Deleted);
         archives[2].ArchiveState.ShouldBe(ArchiveState.Created);
         archives[2].ArchiveFolderPath.ShouldBe(oldReleaseFolderPath);
-        archives[2].ArchiveFiles.Select(file => file.FullFileName).ShouldBe(
-            [
+        archives[2]
+            .ArchiveFiles.Select(file => file.FullFileName)
+            .ShouldBe([
                 Path.Combine(oldReleaseFolderPath, "Bearcat.Release.Unmanaged.part1.rar"),
                 Path.Combine(oldReleaseFolderPath, "Bearcat.Release.Unmanaged.part2.rar"),
-            ]
-        );
+            ]);
     }
 
     [Test]
@@ -423,9 +425,12 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         archive.ArchiveFolderPath.ShouldBe(releaseFolderPath);
         archive.ArchiveState.ShouldBe(ArchiveState.Created);
         archive.ArchiveFileSizeMb.ShouldBe(0);
-        archive.ArchiveFiles.Select(f => Path.GetFileName(f.FullFileName)).ShouldBe(
-            ["Bearcat.Release.Unmanaged.part1.rar", "Bearcat.Release.Unmanaged.part2.rar"]
-        );
+        archive
+            .ArchiveFiles.Select(f => Path.GetFileName(f.FullFileName))
+            .ShouldBe([
+                "Bearcat.Release.Unmanaged.part1.rar",
+                "Bearcat.Release.Unmanaged.part2.rar",
+            ]);
     }
 
     private async Task<ReleaseGroup> AddReleaseGroupAsync(string name)
@@ -532,10 +537,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
 
     private static string CreateReleaseFolderWithArchives(string releaseName)
     {
-        return CreateReleaseFolderWithFiles(
-            $"{releaseName}.part1.rar",
-            $"{releaseName}.part2.rar"
-        );
+        return CreateReleaseFolderWithFiles($"{releaseName}.part1.rar", $"{releaseName}.part2.rar");
     }
 
     private static string CreateReleaseFolderWithFiles(params string[] fileNames)
