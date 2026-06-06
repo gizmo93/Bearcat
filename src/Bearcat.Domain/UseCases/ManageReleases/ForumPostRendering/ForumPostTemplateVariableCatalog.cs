@@ -9,7 +9,33 @@ public static class ForumPostTemplateVariableCatalog
 {
     public static IReadOnlyList<ForumPostTemplateVariableReadModel> GetVariables()
     {
-        return GetVariables(typeof(ForumPostTemplateRenderModel), null).ToList();
+        var variables = GetVariables(typeof(ForumPostTemplateRenderModel), null).ToList();
+        variables.Add(
+            new ForumPostTemplateVariableReadModel(
+                "{{ imagelinks.<image_upload_config_name>.full }}",
+                "Full image URL by image upload configuration name. The configuration name is normalized to lower snake case."
+            )
+        );
+        variables.Add(
+            new ForumPostTemplateVariableReadModel(
+                "{{ imagelinks.<image_upload_config_name>.medium }}",
+                "Medium image URL by image upload configuration name."
+            )
+        );
+        variables.Add(
+            new ForumPostTemplateVariableReadModel(
+                "{{ imagelinks.<image_upload_config_name>.thumbnail }}",
+                "Thumbnail image URL by image upload configuration name."
+            )
+        );
+        variables.Add(
+            new ForumPostTemplateVariableReadModel(
+                "{{ imagelinks[\"Image Upload Config Name\"].full }}",
+                "Full image URL using the original image upload configuration name."
+            )
+        );
+
+        return variables;
     }
 
     public static bool ShouldExposeMember(MemberInfo member)

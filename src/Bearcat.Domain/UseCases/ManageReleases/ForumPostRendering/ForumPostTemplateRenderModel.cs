@@ -1,5 +1,16 @@
 namespace Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 
+using Scriban.Runtime;
+
+public sealed record ForumPostTemplateRenderContext(
+    ForumPostTemplateRenderModel RenderModel,
+    ScriptObject ImageLinks
+)
+{
+    public static ForumPostTemplateRenderContext Empty { get; } =
+        new(ForumPostTemplateRenderModel.Empty, new ScriptObject());
+}
+
 public sealed record ForumPostTemplateRenderModel
 {
     public ForumPostTemplateRenderModel(

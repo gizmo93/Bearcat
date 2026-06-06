@@ -25,8 +25,8 @@ public class ForumPostRenderService(
     )
     {
         var template = await templateReadRepository.GetDetailAsync(
-            forumPostTemplateId,
-            cancellationToken
+            forumPostTemplateId: forumPostTemplateId,
+            cancellationToken: cancellationToken
         );
 
         if (template is null)
@@ -37,13 +37,13 @@ public class ForumPostRenderService(
             );
         }
 
-        var renderModel = await BuildRenderModelAsync(releaseId, cancellationToken);
-        return await RenderBodyAsync(template.TemplateBody, renderModel);
+        var renderContext = await BuildRenderContextAsync(releaseId, cancellationToken);
+        return await RenderBodyAsync(template.TemplateBody, renderContext);
     }
 
     private async Task<ForumPostTemplateRenderResult> RenderBodyAsync(
         string templateBody,
-        ForumPostTemplateRenderModel renderModel
+        ForumPostTemplateRenderContext renderContext
     )
     {
         var template = Template.Parse(templateBody);
@@ -57,7 +57,13 @@ public class ForumPostRenderService(
         }
 
         var scriptObject = new ScriptObject();
-        scriptObject.Import(renderModel, ForumPostTemplateVariableCatalog.ShouldExposeMember);
+
+        scriptObject.Import(
+            renderContext.RenderModel,
+            ForumPostTemplateVariableCatalog.ShouldExposeMember
+        );
+
+        scriptObject["imagelinks"] = renderContext.ImageLinks;
 
         var context = new TemplateContext
         {
@@ -85,20 +91,26 @@ public class ForumPostRenderService(
         }
     }
 
-    private async Task<ForumPostTemplateRenderModel> BuildRenderModelAsync(
+    private async Task<ForumPostTemplateRenderContext> BuildRenderContextAsync(
         int releaseId,
         CancellationToken cancellationToken
     )
     {
         var release = await releaseReadRepository.GetReleaseAsync(releaseId, cancellationToken);
+
         if (release is null)
         {
-            return ForumPostTemplateRenderModel.Empty;
+            return ForumPostTemplateRenderContext.Empty;
         }
 
         var overview = await releaseReadRepository.GetReleaseOverviewAsync(
-            releaseId,
-            cancellationToken
+            releaseId: releaseId,
+            cancellationToken: cancellationToken
+        );
+
+        var imageUploads = await releaseReadRepository.GetReleaseOverviewImageUploadsAsync(
+            releaseId: releaseId,
+            cancellationToken: cancellationToken
         );
 
         var info = await releaseReadRepository.GetReleaseInfoAsync(releaseId, cancellationToken);
@@ -114,12 +126,15 @@ public class ForumPostRenderService(
             uploadModels.Add(await ToUploadModelAsync(releaseId, upload, cancellationToken));
         }
 
-        return new ForumPostTemplateRenderModel(
-            release: ToReleaseModel(release, nfo),
-            releaseInfo: info is null
-                ? ForumPostTemplateReleaseInfoModel.Empty
-                : ToReleaseInfoModel(info),
-            uploads: uploadModels
+        return new ForumPostTemplateRenderContext(
+            RenderModel: new ForumPostTemplateRenderModel(
+                release: ToReleaseModel(release, nfo),
+                releaseInfo: info is null
+                    ? ForumPostTemplateReleaseInfoModel.Empty
+                    : ToReleaseInfoModel(info),
+                uploads: uploadModels
+            ),
+            ImageLinks: ToImageLinksScriptObject(imageUploads)
         );
     }
 
@@ -196,5 +211,82 @@ public class ForumPostRenderService(
             ),
             externalInfos: externalInfos
         );
+    }
+
+    private static ScriptObject ToImageLinksScriptObject(
+        IReadOnlyList<ReleaseOverviewImageUploadReadModel> imageUploads
+    )
+    {
+        var imageLinks = new ScriptObject();
+
+        foreach (var imageUpload in imageUploads)
+        {
+            var configLinks = new ScriptObject();
+
+            foreach (var imageUrl in imageUpload.ImageUrls)
+            {
+                configLinks[NormalizeScriptKey(imageUrl.ImageSize.ToString())] = imageUrl.Url;
+            }
+
+            var normalizedConfigName = NormalizeScriptKey(imageUpload.ImageUploadConfigName);
+
+            AddImageUploadConfigLinks(
+                imageLinks: imageLinks,
+                key: normalizedConfigName,
+                configLinks: configLinks
+            );
+
+            if (
+                !string.Equals(
+                    normalizedConfigName,
+                    imageUpload.ImageUploadConfigName,
+                    StringComparison.Ordinal
+                )
+            )
+            {
+                AddImageUploadConfigLinks(
+                    imageLinks: imageLinks,
+                    key: imageUpload.ImageUploadConfigName,
+                    configLinks: configLinks
+                );
+            }
+        }
+
+        return imageLinks;
+    }
+
+    private static void AddImageUploadConfigLinks(
+        ScriptObject imageLinks,
+        string key,
+        ScriptObject configLinks
+    )
+    {
+        imageLinks.TryAdd(key, configLinks);
+    }
+
+    private static string NormalizeScriptKey(string value)
+    {
+        var builder = new System.Text.StringBuilder(value.Length);
+
+        foreach (var character in value.Trim())
+        {
+            if (char.IsLetterOrDigit(character))
+            {
+                builder.Append(char.ToLowerInvariant(character));
+            }
+            else if (builder.Length > 0 && builder[^1] != '_')
+            {
+                builder.Append('_');
+            }
+        }
+
+        var normalized = builder.ToString().Trim('_');
+
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return "_";
+        }
+
+        return char.IsDigit(normalized[0]) ? $"_{normalized}" : normalized;
     }
 }
