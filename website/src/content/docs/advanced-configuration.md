@@ -43,6 +43,7 @@ Only disable a task if you intentionally want to pause that part of the system, 
 | Archive creation | Every 20 seconds | Creates missing archives for uploads that are waiting for an archive. If a matching archive already exists, it can reuse it instead of creating a new one. |
 | Archive cleanup | Every 30 minutes | Deletes local archive folders after their linked uploads have completed, if automatic archive cleanup is enabled in "Configurations". |
 | Archive upload | Every 20 seconds | Uploads pending archive files to the configured hosters and updates upload progress and final upload state. |
+| Image upload | Every 30 seconds | Uploads release cover images to configured image hosters when a cover image URL is available. |
 | Upload state check | Every 20 seconds | Checks whether uploaded files are still online, creates initial upload records after the configured cooldown and schedules automatic reuploads when release group rules allow it. |
 | Link crypter container creation | Every 20 seconds | Creates missing link crypter containers for completed uploads that have link crypter configurations. |
 

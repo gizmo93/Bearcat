@@ -38,6 +38,15 @@ The menu option "Crypter registrations" works the same way as the "Hoster regist
 The menu option "NFO database registrations" will (currently) only allow you to activate xrel.to.
 That's optional and doesn't need any credentials, but it's needed if you automatically want to fetch release related information.
 
+## Setting up image hoster accounts
+
+Some forums do not let you attach image files directly to a post.
+They only allow image links from supported image hosters.
+Bearcat can upload release cover images to an image hoster and make the returned links available in the release overview and in forum post templates.
+
+Open "Image hoster registrations" in the sidebar and click "New image hoster".
+Choose the image hoster and enter the required account information.
+
 
 ## Manually create a release
 
@@ -63,7 +72,7 @@ The detail page is the place where you connect all parts of the release:
 ![release-detail-page.png](images/release-detail-page.png)
 
 ### Overview Tab
-... shows the latest upload per upload configuration, download links, link crypter container links, archive passwords and the NFO copy button if a `.nfo` file exists in the release folder.
+... shows the latest upload per upload configuration, download links, link crypter container links, image links, archive passwords and the NFO copy button if a `.nfo` file exists in the release folder.
 It should be kind of a quick access to all information that you might need, if you want to share that release in forum.
 ![overview.png](images/overview.png)
 
@@ -91,6 +100,24 @@ You can also define, on which link crypters a containers for the upload links sh
 ![upload-links-dialog.png](images/upload-links-dialog.png)
 ![crypter-links-dialog.png](images/crypter-links-dialog.png)
 
+### Image upload configurations tab
+... defines to which image hoster registration the release cover should be uploaded.
+This is separate from the normal file upload configuration.
+
+![image-upload-config.png](images/image-upload-config.png)
+
+Bearcat only uploads an image when the release has a cover image URL.
+The cover URL normally comes from the release information that Bearcat fetched from an active NFO database registration.
+If no cover image is known for the release, there is nothing to upload and no image links will be created.
+
+### Image uploads tab
+... shows the image upload runs and the image URLs returned by the image hoster.
+
+![image-uploads.png](images/image-uploads.png)
+
+Depending on the image hoster, Bearcat may receive different image sizes, for example full size, medium size or thumbnail.
+The same links are also shown compactly in the release "Overview" tab, so you can copy them quickly when preparing a forum post.
+
 
 ## Create archive- and upload configurations 
 For a release, add at least one archive configuration and one upload configuration.
@@ -112,6 +139,16 @@ Choose the link crypter registration and optionally set a container password.
 Once the release has an upload configuration, Bearcat will create the initial upload automatically after the configured cooldown time.
 The background tasks create missing archives, upload them to the selected hosters, check the online state and create link crypter containers.
 You can watch the progress on the start page, in the "Uploads" tab of the release, in the notification center and on the "Background tasks" page.
+
+### Image upload configuration
+In the "Image upload configurations" tab, click "Add".
+Choose a name and the image hoster registration that should receive the release cover.
+
+The name is important if you want to use the image links in forum post templates.
+For example, a configuration named `ImgBB Cover` can be used as `imagelinks.imgbb_cover.full` in a template.
+
+Bearcat uploads the cover image automatically once a cover URL exists for the release.
+If the release information does not contain a cover URL, Bearcat simply skips the image upload.
 
 ## Setting up release groups
 
@@ -151,7 +188,7 @@ You can create a release template in two ways:
 - Open "Release templates" in the sidebar, click "New release template" and then add archive configurations, upload configurations and link crypters to the template.
 - Open an existing release, use the action menu in the top right and choose "Save as template".
 
-A release template stores the release group, archive configurations, upload configurations and link crypter settings.
+A release template stores the release group, archive configurations, upload configurations, image upload configurations and link crypter settings.
 When Bearcat creates a release from a template, the new release name is normally taken from the folder name.
 If an archive template is configured to use the release name as archive name, every automatically created release will get archive names based on its own folder name.
 

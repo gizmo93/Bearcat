@@ -12,6 +12,7 @@ This is useful when your posts should always follow the same structure, for exam
 - language, size and media information
 - NFO content inside a spoiler block
 - download sections for Rapidgator, DDownload or other upload configurations
+- cover image links from the image hosters, that you have configured
 - link crypter container links
 
 ![forum-post-templates-page.png](images/forum-post-templates-page.png)
@@ -42,6 +43,13 @@ Size: {{ release_info.size }}
 
 {{ end }}
 [/CENTER]
+```
+
+If you upload cover images to an image hoster, you can also place the cover directly in the post.
+For example, if your image upload configuration is named `ImgBB Cover`:
+
+```text
+[IMG]{{ imagelinks.imgbb_cover.full }}[/IMG]
 ```
 
 Click "Validate" to check the template syntax.
@@ -107,6 +115,38 @@ Inside `upload.link_crypters`, these variables are available:
 | `{{ crypter.container_link }}` | Generated container URL. |
 | `{{ crypter.created_at }}` | Container creation date. |
 
+## Image links
+
+Image links are available through `imagelinks`.
+Use the name of the image upload configuration and the image size you want to use.
+
+For this short form, Bearcat turns the configuration name into a template-friendly name:
+
+- spaces become `_`
+- letters become lowercase
+- punctuation is removed or replaced
+
+So an image upload configuration named `ImgBB Cover` becomes `imgbb_cover`.
+
+Common examples:
+
+| Variable | Description |
+| --- | --- |
+| `{{ imagelinks.imgbb_cover.full }}` | Full image URL for the `ImgBB Cover` image upload configuration. |
+| `{{ imagelinks.imgbb_cover.medium }}` | Medium image URL, if the image hoster returned one. |
+| `{{ imagelinks.imgbb_cover.thumbnail }}` | Thumbnail URL, if the image hoster returned one. |
+
+You can also use the original configuration name:
+
+```text
+{{ imagelinks["ImgBB Cover"].full }}
+```
+
+That is useful if you are not sure how the name will be normalized.
+
+Bearcat can only render image links after the cover image was uploaded.
+If a release has no cover image, or the image upload has not completed yet, the value stays empty.
+
 ## Scriban basics
 
 Bearcat uses Scriban syntax for placeholders.
@@ -142,8 +182,11 @@ Check out the [Scriban documentation](https://scriban.github.io/docs/language/) 
 Name upload configurations like you want them to appear in the forum post, for example `Rapidgator` or `DDownload`.
 That makes `{{ upload.name }}` useful directly in the rendered output.
 
+Name image upload configurations clearly, for example `ImgBB Cover`.
+That makes the template variable easy to read later: `{{ imagelinks.imgbb_cover.full }}`.
+
 Render the post only after the release has completed uploads and link crypter containers.
-Before that, upload and container variables may still be empty.
+Before that, upload, container and image link variables may still be empty.
 
 Keep forum-specific formatting in separate templates if you post to multiple forums.
 Different forums often support slightly different BBCode variants.
