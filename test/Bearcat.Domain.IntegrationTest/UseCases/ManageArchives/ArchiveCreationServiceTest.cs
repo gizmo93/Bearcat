@@ -49,7 +49,9 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
 
         archiverFactoryMock = new Mock<IArchiverFactory>(MockBehavior.Strict);
         archiverFactoryMock.Setup(f => f.GetByName("zip")).Returns(archiverMock.Object);
-        configurationProviderMock = new Mock<IApplicationConfigurationProvider>(MockBehavior.Strict);
+        configurationProviderMock = new Mock<IApplicationConfigurationProvider>(
+            MockBehavior.Strict
+        );
         configurationProviderMock
             .Setup(p =>
                 p.GetValue<ArchiveRepackagingConfiguration>(

@@ -38,11 +38,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         hosterFactoryMock.Setup(f => f.GetByName(HosterClassName)).Returns(hosterMock.Object);
 
         service = new HosterRegistrationService(
-            new HosterConfigurationRepository(
-                dbContext,
-                dbContext,
-                hosterFactoryMock.Object
-            ),
+            new HosterConfigurationRepository(dbContext, dbContext, hosterFactoryMock.Object),
             hosterFactoryMock.Object,
             new HosterCaptchaVerificationService(notificationServiceMock.Object),
             NoOpSecretProtector.Instance
@@ -74,10 +70,11 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         updatedRegistration.IsActive.ShouldBeFalse();
         updatedRegistration.RequiresCaptchaVerification.ShouldBeTrue();
         notificationServiceMock.Verify(
-            n => n.CreateWarningAsync(
-                It.Is<string>(message => message.Contains("Captcha required")),
-                CancellationToken.None
-            ),
+            n =>
+                n.CreateWarningAsync(
+                    It.Is<string>(message => message.Contains("Captcha required")),
+                    CancellationToken.None
+                ),
             Times.Once
         );
     }

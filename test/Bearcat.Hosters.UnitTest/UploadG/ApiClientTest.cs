@@ -136,9 +136,9 @@ public class ApiClientTest
         result.FileEntry?.Id.ShouldBe(17);
         httpMessageHandler.Request.ShouldNotBeNull();
         httpMessageHandler.Request!.Method.ShouldBe(HttpMethod.Put);
-        httpMessageHandler.Request.RequestUri?.ToString().ShouldBe(
-            "https://uploads.uploadg.test/part-1"
-        );
+        httpMessageHandler
+            .Request.RequestUri?.ToString()
+            .ShouldBe("https://uploads.uploadg.test/part-1");
         httpMessageHandler.Request.Content?.Headers.ContentType.ShouldBeNull();
         httpMessageHandler.Request.Content?.Headers.ContentLength.ShouldBe(3);
         httpMessageHandler.Body.ShouldBe([1, 2, 3]);
@@ -358,8 +358,7 @@ public class ApiClientTest
         );
     }
 
-    private sealed class TestHttpMessageHandler(HttpResponseMessage response)
-        : HttpMessageHandler
+    private sealed class TestHttpMessageHandler(HttpResponseMessage response) : HttpMessageHandler
     {
         public HttpRequestMessage? Request { get; private set; }
 

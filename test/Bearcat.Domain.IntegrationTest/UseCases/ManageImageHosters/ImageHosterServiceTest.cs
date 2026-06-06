@@ -53,7 +53,9 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
     {
         // Arrange
         var configuration = new Dictionary<string, string> { ["apiKey"] = "secret" };
-        imageHosterMock.Setup(hoster => hoster.SerializeConfig(configuration)).Returns(SerializedConfig);
+        imageHosterMock
+            .Setup(hoster => hoster.SerializeConfig(configuration))
+            .Returns(SerializedConfig);
 
         // Act
         await service.CreateAsync(

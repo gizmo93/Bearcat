@@ -115,10 +115,7 @@ public class ApiClientTest
         result.ShouldBe("existing-folder-id");
         apiMock.Verify(
             x =>
-                x.CreateFolderAsync(
-                    It.IsAny<CreateFolderRequest>(),
-                    It.IsAny<CancellationToken>()
-                ),
+                x.CreateFolderAsync(It.IsAny<CreateFolderRequest>(), It.IsAny<CancellationToken>()),
             Times.Never
         );
     }
@@ -225,21 +222,13 @@ public class ApiClientTest
                     Code = (int)HttpStatusCode.OK,
                     Files =
                     [
-                        new GetFilesInfoResponse.FileInfo
-                        {
-                            Id = "online-id",
-                            IsAvailable = true,
-                        },
+                        new GetFilesInfoResponse.FileInfo { Id = "online-id", IsAvailable = true },
                         new GetFilesInfoResponse.FileInfo
                         {
                             Id = "offline-id",
                             IsAvailable = false,
                         },
-                        new GetFilesInfoResponse.FileInfo
-                        {
-                            Id = "missing-id",
-                            IsAvailable = null,
-                        },
+                        new GetFilesInfoResponse.FileInfo { Id = "missing-id", IsAvailable = null },
                     ],
                 }
             );
@@ -273,7 +262,9 @@ public class ApiClientTest
         SetupLogin();
 
         apiMock
-            .Setup(x => x.GetFilesInfoAsync(It.IsAny<GetFilesInfoRequest>(), It.IsAny<CancellationToken>()))
+            .Setup(x =>
+                x.GetFilesInfoAsync(It.IsAny<GetFilesInfoRequest>(), It.IsAny<CancellationToken>())
+            )
             .Returns(() =>
             {
                 calls++;
@@ -294,11 +285,7 @@ public class ApiClientTest
                         Code = (int)HttpStatusCode.OK,
                         Files =
                         [
-                            new GetFilesInfoResponse.FileInfo
-                            {
-                                Id = "file-1",
-                                IsAvailable = true,
-                            },
+                            new GetFilesInfoResponse.FileInfo { Id = "file-1", IsAvailable = true },
                         ],
                     }
                 );
@@ -335,7 +322,10 @@ public class ApiClientTest
 
         apiMock
             .Setup(x =>
-                x.GetUploadFormDataAsync(It.IsAny<UploadFormDataRequest>(), It.IsAny<CancellationToken>())
+                x.GetUploadFormDataAsync(
+                    It.IsAny<UploadFormDataRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ReturnsAsync(
                 new UploadFormDataResponse
@@ -348,8 +338,8 @@ public class ApiClientTest
             );
 
         // Act + Assert
-        var exception = await Should.ThrowAsync<CaptchaVerificationRequiredException>(
-            () => apiClient.RequestUploadAsync(config, null, CancellationToken.None)
+        var exception = await Should.ThrowAsync<CaptchaVerificationRequiredException>(() =>
+            apiClient.RequestUploadAsync(config, null, CancellationToken.None)
         );
         exception.Code.ShouldBe((int)HttpStatusCode.BadRequest);
         exception.ErrorCode.ShouldBe(2);

@@ -190,7 +190,11 @@ public class GoFileTest
             );
 
         // Act
-        var result = await service.CheckFilesExistAsync(config, fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(), CancellationToken.None);
+        var result = await service.CheckFilesExistAsync(
+            config,
+            fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(),
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();

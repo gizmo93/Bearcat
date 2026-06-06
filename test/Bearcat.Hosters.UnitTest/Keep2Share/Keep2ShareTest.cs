@@ -40,7 +40,11 @@ public class Keep2ShareTest
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
         var fileDto = new FileDto(Id: 17, FullFileName: filePath, UploadId: 117);
-        var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
         var uploadFormData = new UploadFormDataResponse
         {
             Status = "success",
@@ -97,7 +101,11 @@ public class Keep2ShareTest
             UploadId: 120,
             FolderId: "folder-id"
         );
-        var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
         var uploadFormData = new UploadFormDataResponse
         {
             Status = "success",
@@ -150,7 +158,11 @@ public class Keep2ShareTest
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
         var fileDto = new FileDto(Id: 18, FullFileName: filePath, UploadId: 118);
-        var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
 
         apiClientMock
             .Setup(x => x.RequestUploadAsync(config, null, It.IsAny<CancellationToken>()))
@@ -190,15 +202,19 @@ public class Keep2ShareTest
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
         var fileDto = new FileDto(Id: 19, FullFileName: filePath, UploadId: 119);
-        var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
 
         apiClientMock
             .Setup(x => x.RequestUploadAsync(config, null, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new CaptchaVerificationRequiredException("Captcha required", 400, 2));
 
         // Act + Assert
-        await Should.ThrowAsync<CaptchaVerificationRequiredException>(
-            () => service.UploadFileAsync(fileDto, config, CancellationToken.None)
+        await Should.ThrowAsync<CaptchaVerificationRequiredException>(() =>
+            service.UploadFileAsync(fileDto, config, CancellationToken.None)
         );
         apiClientMock.Verify(
             x => x.RequestUploadAsync(config, null, It.IsAny<CancellationToken>()),
@@ -210,7 +226,11 @@ public class Keep2ShareTest
     public async Task CreateFolderAsync_Config_CreatesFolderWithApiClient()
     {
         // Arrange
-        var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
 
         apiClientMock
             .Setup(x =>
@@ -233,7 +253,11 @@ public class Keep2ShareTest
     public async Task CheckFilesExistAsync_ApiReturnsStatuses_ReturnsStatuses()
     {
         // Arrange
-        var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
         var fileUrls = new[]
         {
             "http://k2s.cc/file/online-code",
@@ -247,7 +271,11 @@ public class Keep2ShareTest
             );
 
         // Act
-        var result = await service.CheckFilesExistAsync(config, fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(), CancellationToken.None);
+        var result = await service.CheckFilesExistAsync(
+            config,
+            fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(),
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();
@@ -261,7 +289,11 @@ public class Keep2ShareTest
     public async Task CheckFilesExistAsync_ApiThrows_ReturnsFailure()
     {
         // Arrange
-        var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
         var fileUrls = new[] { "http://k2s.cc/file/file-code" };
 
         apiClientMock
@@ -269,7 +301,11 @@ public class Keep2ShareTest
             .ThrowsAsync(new InvalidOperationException("keep2share unavailable"));
 
         // Act
-        var result = await service.CheckFilesExistAsync(config, fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(), CancellationToken.None);
+        var result = await service.CheckFilesExistAsync(
+            config,
+            fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(),
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();
@@ -282,7 +318,11 @@ public class Keep2ShareTest
     public async Task TryLoginAsync_LoginReturnsOk_ReturnsSuccess()
     {
         // Arrange
-        var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
 
         apiClientMock
             .Setup(x => x.LoginAsync(config, It.IsAny<CancellationToken>()))
@@ -308,7 +348,11 @@ public class Keep2ShareTest
     public async Task TryLoginAsync_LoginReturnsError_ReturnsFailure()
     {
         // Arrange
-        var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
 
         apiClientMock
             .Setup(x => x.LoginAsync(config, It.IsAny<CancellationToken>()))
@@ -335,7 +379,11 @@ public class Keep2ShareTest
     public async Task GetMaximumParallelUploadsAsync_Config_ReturnsStaticLimit()
     {
         // Arrange
-        var config = new Keep2ShareConfig { EmailAddress = "user@example.test", Password = "password" };
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
 
         // Act
         var result = await service.GetMaximumParallelUploadsAsync(config, CancellationToken.None);
@@ -365,8 +413,7 @@ public class Keep2ShareTest
     public void UploadFormDataResponse_FormDataContainsBoolean_DeserializesFormData()
     {
         // Arrange
-        const string rawJson =
-            """
+        const string rawJson = """
             {
               "status": "success",
               "code": 200,

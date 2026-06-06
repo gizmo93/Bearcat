@@ -80,15 +80,15 @@ public class NitroflareTest
         apiClientMock
             .Setup(x => x.CheckLinksAsync(fileUrls, It.IsAny<CancellationToken>()))
             .ReturnsAsync(
-                new Dictionary<string, bool>
-                {
-                    [fileUrls[0]] = true,
-                    [fileUrls[1]] = false,
-                }
+                new Dictionary<string, bool> { [fileUrls[0]] = true, [fileUrls[1]] = false }
             );
 
         // Act
-        var result = await service.CheckFilesExistAsync(config, fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(), CancellationToken.None);
+        var result = await service.CheckFilesExistAsync(
+            config,
+            fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(),
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();
@@ -110,7 +110,11 @@ public class NitroflareTest
             .ThrowsAsync(new InvalidOperationException("link check failed"));
 
         // Act
-        var result = await service.CheckFilesExistAsync(config, fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(), CancellationToken.None);
+        var result = await service.CheckFilesExistAsync(
+            config,
+            fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(),
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();

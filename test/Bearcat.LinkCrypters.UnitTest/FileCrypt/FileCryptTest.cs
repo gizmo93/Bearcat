@@ -458,14 +458,12 @@ public class FileCryptTest
             }
         );
 
-        using var content = new FormUrlEncodedContent(
-            [
-                new KeyValuePair<string, string>("api_key", "api-key"),
-                new KeyValuePair<string, string>("fn", "containerV2"),
-                new KeyValuePair<string, string>("sub", "createV2"),
-                new KeyValuePair<string, string>("mirror_1[0][0]", "https://hoster.test/file"),
-            ]
-        );
+        using var content = new FormUrlEncodedContent([
+            new KeyValuePair<string, string>("api_key", "api-key"),
+            new KeyValuePair<string, string>("fn", "containerV2"),
+            new KeyValuePair<string, string>("sub", "createV2"),
+            new KeyValuePair<string, string>("mirror_1[0][0]", "https://hoster.test/file"),
+        ]);
 
         // Act
         var response = await api.SendAsync(content, CancellationToken.None);

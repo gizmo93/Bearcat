@@ -78,8 +78,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                     It.Is<IReadOnlyList<FileUrlToCheckDto>>(files =>
                         files.Count == 2
                         && files.Any(file =>
-                            file.Url == "https://hoster.test/1"
-                            && file.ExternalId == "external-1"
+                            file.Url == "https://hoster.test/1" && file.ExternalId == "external-1"
                         )
                     ),
                     CancellationToken.None

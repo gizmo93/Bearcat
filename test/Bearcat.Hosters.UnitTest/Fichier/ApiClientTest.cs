@@ -53,9 +53,9 @@ public class ApiClientTest
         httpMessageHandler.Enqueue(async request =>
         {
             request.Method.ShouldBe(HttpMethod.Get);
-            request.RequestUri!.ToString().ShouldBe(
-                "https://api.1fichier.com/v1/upload/get_upload_server.cgi"
-            );
+            request
+                .RequestUri!.ToString()
+                .ShouldBe("https://api.1fichier.com/v1/upload/get_upload_server.cgi");
             request.Headers.Authorization.ShouldNotBeNull();
             request.Headers.Authorization!.Scheme.ShouldBe("Bearer");
             request.Headers.Authorization.Parameter.ShouldBe("api-key");
@@ -68,9 +68,9 @@ public class ApiClientTest
         httpMessageHandler.Enqueue(async request =>
         {
             request.Method.ShouldBe(HttpMethod.Post);
-            request.RequestUri!.ToString().ShouldBe(
-                "https://up1.1fichier.test/upload.cgi?id=Upload1234"
-            );
+            request
+                .RequestUri!.ToString()
+                .ShouldBe("https://up1.1fichier.test/upload.cgi?id=Upload1234");
             request.Headers.Authorization.ShouldNotBeNull();
             request.Headers.Authorization!.Scheme.ShouldBe("Bearer");
             request.Headers.Authorization.Parameter.ShouldBe("api-key");
@@ -86,9 +86,9 @@ public class ApiClientTest
         httpMessageHandler.Enqueue(request =>
         {
             request.Method.ShouldBe(HttpMethod.Get);
-            request.RequestUri!.ToString().ShouldBe(
-                "https://up1.1fichier.test/end.pl?xid=Upload1234"
-            );
+            request
+                .RequestUri!.ToString()
+                .ShouldBe("https://up1.1fichier.test/end.pl?xid=Upload1234");
             request.Headers.TryGetValues("JSON", out var jsonHeaderValues).ShouldBeTrue();
             jsonHeaderValues!.Single().ShouldBe("1");
 
@@ -155,7 +155,9 @@ public class ApiClientTest
         );
 
         // Assert
-        capturedUploadBody.ShouldContain("Content-Disposition: form-data; name=\"did\"\r\n\r\n12345");
+        capturedUploadBody.ShouldContain(
+            "Content-Disposition: form-data; name=\"did\"\r\n\r\n12345"
+        );
         httpMessageHandler.PendingRequests.ShouldBe(0);
     }
 
@@ -263,7 +265,9 @@ public class ApiClientTest
     {
         httpMessageHandler.Enqueue(_ =>
         {
-            return Task.FromResult(CreateJsonResponse("""{"id":"Upload1234","url":"up1.1fichier.test"}"""));
+            return Task.FromResult(
+                CreateJsonResponse("""{"id":"Upload1234","url":"up1.1fichier.test"}""")
+            );
         });
 
         httpMessageHandler.Enqueue(async request =>

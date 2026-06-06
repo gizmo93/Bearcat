@@ -28,10 +28,7 @@ public class ForumPostRenderServiceTest : BearcatIntegrationTest
             Mock.Of<ILinkCrypterFactory>()
         );
 
-        service = new ForumPostRenderService(
-            forumPostTemplateRepository,
-            releaseReadRepository
-        );
+        service = new ForumPostRenderService(forumPostTemplateRepository, releaseReadRepository);
     }
 
     [TearDown]
@@ -62,9 +59,7 @@ public class ForumPostRenderServiceTest : BearcatIntegrationTest
 
         // Assert
         result.Errors.ShouldBeEmpty();
-        result.Content.ShouldBe(
-            "https://img.example/full.jpg|https://img.example/thumb.jpg"
-        );
+        result.Content.ShouldBe("https://img.example/full.jpg|https://img.example/thumb.jpg");
     }
 
     private async Task<Release> AddReleaseAsync()

@@ -180,12 +180,7 @@ public class DDownloadTest
 
         apiClientMock
             .Setup(x =>
-                x.SetFilePropertiesAsync(
-                    "api-key",
-                    "abc123",
-                    true,
-                    It.IsAny<CancellationToken>()
-                )
+                x.SetFilePropertiesAsync("api-key", "abc123", true, It.IsAny<CancellationToken>())
             )
             .Returns(Task.CompletedTask);
 
@@ -195,13 +190,7 @@ public class DDownloadTest
         // Assert
         result.IsSuccess.ShouldBeTrue();
         apiClientMock.Verify(
-            x =>
-                x.SetFilePropertiesAsync(
-                    "api-key",
-                    "abc123",
-                    true,
-                    It.IsAny<CancellationToken>()
-                ),
+            x => x.SetFilePropertiesAsync("api-key", "abc123", true, It.IsAny<CancellationToken>()),
             Times.Once
         );
     }
@@ -213,7 +202,9 @@ public class DDownloadTest
         var config = new DDownloadConfig { ApiKey = "api-key" };
 
         apiClientMock
-            .Setup(x => x.CreateFolderAsync("api-key", "release-folder", It.IsAny<CancellationToken>()))
+            .Setup(x =>
+                x.CreateFolderAsync("api-key", "release-folder", It.IsAny<CancellationToken>())
+            )
             .ReturnsAsync("folder-id");
 
         // Act
@@ -302,7 +293,11 @@ public class DDownloadTest
             );
 
         // Act
-        var result = await service.CheckFilesExistAsync(config, fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(), CancellationToken.None);
+        var result = await service.CheckFilesExistAsync(
+            config,
+            fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(),
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();
@@ -330,7 +325,11 @@ public class DDownloadTest
             .ThrowsAsync(new InvalidOperationException("ddownload unavailable"));
 
         // Act
-        var result = await service.CheckFilesExistAsync(config, fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(), CancellationToken.None);
+        var result = await service.CheckFilesExistAsync(
+            config,
+            fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(),
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();

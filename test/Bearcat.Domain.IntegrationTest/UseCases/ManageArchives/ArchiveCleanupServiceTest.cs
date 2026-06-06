@@ -222,7 +222,9 @@ public class ArchiveCleanupServiceTest : BearcatIntegrationTest
             releaseType is ReleaseType.Unmanaged
                 ? releaseFolderPath
                 : Directory
-                    .CreateDirectory(Path.Combine(archiveFilesBasePath, Guid.NewGuid().ToString("N")))
+                    .CreateDirectory(
+                        Path.Combine(archiveFilesBasePath, Guid.NewGuid().ToString("N"))
+                    )
                     .FullName;
         var archive = new Archive
         {

@@ -198,14 +198,7 @@ public class ApiClientTest
 
         SetupLogin();
         apiMock
-            .Setup(x =>
-                x.ChangeFileModeAsync(
-                    "token",
-                    "file-id",
-                    1,
-                    It.IsAny<CancellationToken>()
-                )
-            )
+            .Setup(x => x.ChangeFileModeAsync("token", "file-id", 1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResponse);
 
         // Act

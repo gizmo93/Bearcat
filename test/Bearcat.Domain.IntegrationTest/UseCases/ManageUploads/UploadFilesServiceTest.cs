@@ -171,29 +171,18 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
     {
         // Arrange
         var archiveFilePath = CreateArchiveFile("archive.part1.rar");
-        await AddUploadAsync(
-            UploadState.Pending,
-            [archiveFilePath],
-            premiumOnlyDownload: true
-        );
+        await AddUploadAsync(UploadState.Pending, [archiveFilePath], premiumOnlyDownload: true);
         hosterMock
             .Setup(h =>
                 h.UploadFileAsync(
-                    It.Is<FileDto>(f =>
-                        f.FullFileName == archiveFilePath && f.PremiumOnlyDownload
-                    ),
+                    It.Is<FileDto>(f => f.FullFileName == archiveFilePath && f.PremiumOnlyDownload),
                     hosterConfigMock.Object,
                     It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
                 (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
-                    new UploadFileResult(
-                        true,
-                        fileDto,
-                        [],
-                        "https://hoster.test/archive.part1.rar"
-                    )
+                    new UploadFileResult(true, fileDto, [], "https://hoster.test/archive.part1.rar")
             );
 
         // Act
@@ -203,9 +192,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         hosterMock.Verify(
             h =>
                 h.UploadFileAsync(
-                    It.Is<FileDto>(f =>
-                        f.FullFileName == archiveFilePath && f.PremiumOnlyDownload
-                    ),
+                    It.Is<FileDto>(f => f.FullFileName == archiveFilePath && f.PremiumOnlyDownload),
                     hosterConfigMock.Object,
                     It.IsAny<CancellationToken>()
                 ),
@@ -248,12 +235,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             )
             .ReturnsAsync(
                 (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
-                    new UploadFileResult(
-                        true,
-                        fileDto,
-                        [],
-                        "https://hoster.test/archive.part1.rar"
-                    )
+                    new UploadFileResult(true, fileDto, [], "https://hoster.test/archive.part1.rar")
             );
 
         // Act
@@ -311,7 +293,8 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                         (
                             f.FullFileName == firstArchiveFilePath
                             || f.FullFileName == secondArchiveFilePath
-                        ) && f.FolderId == "folder-id"
+                        )
+                        && f.FolderId == "folder-id"
                     ),
                     hosterConfigMock.Object,
                     It.IsAny<CancellationToken>()
@@ -486,9 +469,11 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         result.ArchiveId.ShouldBeNull();
         result.UploadState.ShouldBe(UploadState.WaitingForArchive);
         result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Warning);
-        result.Notifications.Single().Message.ShouldBe(
-            "The archive assigned upload has missing files, triggering re-packaging"
-        );
+        result
+            .Notifications.Single()
+            .Message.ShouldBe(
+                "The archive assigned upload has missing files, triggering re-packaging"
+            );
         archive.ArchiveState.ShouldBe(ArchiveState.MissingFiles);
         hosterFactoryMock.Verify(f => f.GetHostersByName(), Times.Never);
     }
@@ -521,9 +506,11 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         result.UploadState.ShouldBe(UploadState.WaitingForArchive);
         result.ErrorMessages.ShouldBeEmpty();
         result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Warning);
-        result.Notifications.Single().Message.ShouldBe(
-            "The archive assigned upload has missing files. Refresh the unmanaged archive after providing the archive files."
-        );
+        result
+            .Notifications.Single()
+            .Message.ShouldBe(
+                "The archive assigned upload has missing files. Refresh the unmanaged archive after providing the archive files."
+            );
         archive.ArchiveState.ShouldBe(ArchiveState.MissingFiles);
         hosterFactoryMock.Verify(f => f.GetHostersByName(), Times.Never);
     }

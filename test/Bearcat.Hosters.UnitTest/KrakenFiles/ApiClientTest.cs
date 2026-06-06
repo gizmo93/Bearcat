@@ -218,11 +218,7 @@ public class ApiClientTest
 
         apiMock
             .Setup(x =>
-                x.GetFileAsync(
-                    "bearcat-login-check",
-                    "api-key",
-                    It.IsAny<CancellationToken>()
-                )
+                x.GetFileAsync("bearcat-login-check", "api-key", It.IsAny<CancellationToken>())
             )
             .ReturnsAsync(CreateApiResponse<FileResponse>(HttpStatusCode.NotFound));
 
@@ -241,11 +237,7 @@ public class ApiClientTest
 
         apiMock
             .Setup(x =>
-                x.GetFileAsync(
-                    "bearcat-login-check",
-                    "api-key",
-                    It.IsAny<CancellationToken>()
-                )
+                x.GetFileAsync("bearcat-login-check", "api-key", It.IsAny<CancellationToken>())
             )
             .ReturnsAsync(CreateApiResponse<FileResponse>(HttpStatusCode.Unauthorized));
 
@@ -256,7 +248,10 @@ public class ApiClientTest
         result.ShouldBeFalse();
     }
 
-    private static ApiResponse<T> CreateApiResponse<T>(HttpStatusCode statusCode, T? content = default)
+    private static ApiResponse<T> CreateApiResponse<T>(
+        HttpStatusCode statusCode,
+        T? content = default
+    )
     {
         return new ApiResponse<T>(
             new HttpResponseMessage(statusCode),
@@ -266,8 +261,7 @@ public class ApiClientTest
         );
     }
 
-    private sealed class TestHttpMessageHandler(HttpResponseMessage response)
-        : HttpMessageHandler
+    private sealed class TestHttpMessageHandler(HttpResponseMessage response) : HttpMessageHandler
     {
         public string? RequestContent { get; private set; }
 
