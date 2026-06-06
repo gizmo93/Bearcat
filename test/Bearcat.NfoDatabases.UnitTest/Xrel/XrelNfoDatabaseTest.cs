@@ -60,7 +60,7 @@ public class XrelNfoDatabaseTest
                         Title: "Movie Release",
                         LinkHref: "https://www.xrel.to/movie/123/Movie-Release.html",
                         Genre: "Drama, Sci-Fi",
-                        CoverUrl: "//uploads2.xrel.to/img_cover/movie123.JPG",
+                        CoverUrl: "https://uploads2.xrel.to/img_cover/movie123.JPG",
                         Uris: ["imdb:tt1234567"],
                         Externals:
                         [
@@ -109,7 +109,7 @@ public class XrelNfoDatabaseTest
         result.AudioType.ShouldBe("AC3");
         result.Genre.ShouldBe("Drama, Sci-Fi");
         result.Description.ShouldBe("Movie \"plot\"\n\nSecond line");
-        result.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_mediathek/movie123.JPG");
+        result.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_cover/movie123-full.JPG");
 
         var externalInfo = result.ExternalInfos.Single();
         externalInfo.Type.ShouldBe(ExternalInfoType.Movie);
@@ -216,7 +216,7 @@ public class XrelNfoDatabaseTest
         result.VideoType.ShouldBeNull();
         result.AudioType.ShouldBeNull();
         result.Genre.ShouldBe("Action");
-        result.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_mediathek/movie42.JPG");
+        result.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_cover/movie42-full.JPG");
         result
             .ExternalInfos.Single()
             .Urls.ShouldContain(url =>

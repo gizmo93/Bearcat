@@ -75,15 +75,18 @@ public partial class XrelNfoDatabase(XrelClient client) : INfoDatabase
         }
 
         var details = await client.GetExternalInfoDetailsAsync(externalInfo.Id, cancellationToken);
+
         var media = await client.GetExternalInfoMediaAsync(externalInfo.Id, cancellationToken);
-        var coverUrl = media.FirstOrDefault(IsImageMedia)?.UrlFull;
+        var coverUrl = details?.CoverUrl is not null
+            ? ToFullCoverUrl(details.CoverUrl)
+            : NormalizeXrelUrl(media?.FirstOrDefault(IsImageMedia)?.UrlFull);
 
         return new XrelExternalInfoEnrichment(
             Genre: NullIfWhiteSpace(details?.Genre),
             Description: NormalizeDescription(
                 details?.Externals?.FirstOrDefault(d => !string.IsNullOrWhiteSpace(d.Plot))?.Plot
             ),
-            CoverUrl: NormalizeXrelUrl(coverUrl)
+            CoverUrl: coverUrl
         );
     }
 
@@ -152,6 +155,19 @@ public partial class XrelNfoDatabase(XrelClient client) : INfoDatabase
                 Urls: urls.DistinctBy(url => url.Value).ToList()
             ),
         ];
+    }
+
+    private static string? ToFullCoverUrl(string? coverUrl)
+    {
+        if (string.IsNullOrWhiteSpace(coverUrl))
+        {
+            return null;
+        }
+
+        var urlParts = coverUrl.Split('.');
+        var fileExtension = urlParts[^1];
+
+        return $"{string.Join('.', urlParts[..^1])}-full.{fileExtension}";
     }
 
     private static Url? MapUri(string? uri)
