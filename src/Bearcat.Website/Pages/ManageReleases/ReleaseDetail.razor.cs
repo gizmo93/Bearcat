@@ -77,7 +77,9 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
             "overview" => "overview",
             "release-infos" => "release-infos",
             "upload-configs" => "upload-configs",
+            "image-upload-configs" => "image-upload-configs",
             "uploads" => "uploads",
+            "image-uploads" => "image-uploads",
             "archives" => "archives",
             _ => "overview",
         };
