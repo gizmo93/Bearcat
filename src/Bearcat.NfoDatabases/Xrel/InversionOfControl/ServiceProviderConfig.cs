@@ -30,6 +30,10 @@ public static class ServiceProviderConfig
             });
 
         services.AddSingleton<XrelRateLimitState>();
+        services.AddHttpClient(
+            XrelNfoDatabase.CoverHttpClientName,
+            client => client.Timeout = TimeSpan.FromSeconds(10)
+        );
         services.AddScoped<XrelClient>();
         services.AddKeyedScoped<INfoDatabase, XrelNfoDatabase>(nameof(XrelNfoDatabase));
         services.AddScoped<INfoDatabaseFactory, NfoDatabaseFactory>();

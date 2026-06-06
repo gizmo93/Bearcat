@@ -6,8 +6,11 @@ using Bearcat.NfoDatabases.Xrel.Api;
 
 namespace Bearcat.NfoDatabases.Xrel;
 
-public partial class XrelNfoDatabase(XrelClient client) : INfoDatabase
+public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpClientFactory)
+    : INfoDatabase
 {
+    public const string CoverHttpClientName = "xrel-cover";
+
     public string Name => "xREL";
 
     public int ResolutionPriority => 0;
@@ -77,9 +80,13 @@ public partial class XrelNfoDatabase(XrelClient client) : INfoDatabase
         var details = await client.GetExternalInfoDetailsAsync(externalInfo.Id, cancellationToken);
 
         var media = await client.GetExternalInfoMediaAsync(externalInfo.Id, cancellationToken);
-        var coverUrl = details?.CoverUrl is not null
-            ? ToFullCoverUrl(details.CoverUrl)
-            : NormalizeXrelUrl(media?.FirstOrDefault(IsImageMedia)?.UrlFull);
+        var mediaCoverUrl = NormalizeXrelUrl(media.FirstOrDefault(IsImageMedia)?.UrlFull);
+
+        var coverUrl = await ResolveCoverUrlAsync(
+            detailsCoverUrl: details?.CoverUrl,
+            mediaCoverUrl: mediaCoverUrl,
+            cancellationToken: cancellationToken
+        );
 
         return new XrelExternalInfoEnrichment(
             Genre: NullIfWhiteSpace(details?.Genre),
@@ -168,6 +175,75 @@ public partial class XrelNfoDatabase(XrelClient client) : INfoDatabase
         var fileExtension = urlParts[^1];
 
         return $"{string.Join('.', urlParts[..^1])}-full.{fileExtension}";
+    }
+
+    private async Task<string?> ResolveCoverUrlAsync(
+        string? detailsCoverUrl,
+        string? mediaCoverUrl,
+        CancellationToken cancellationToken
+    )
+    {
+        if (string.IsNullOrWhiteSpace(detailsCoverUrl))
+        {
+            return mediaCoverUrl;
+        }
+
+        var fullCoverUrl = ToFullCoverUrl(detailsCoverUrl);
+        if (
+            !string.IsNullOrWhiteSpace(fullCoverUrl)
+            && await CoverUrlExistsAsync(fullCoverUrl, cancellationToken)
+        )
+        {
+            return fullCoverUrl;
+        }
+
+        return mediaCoverUrl ?? NormalizeXrelUrl(detailsCoverUrl);
+    }
+
+    private async Task<bool> CoverUrlExistsAsync(
+        string coverUrl,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!Uri.TryCreate(coverUrl, UriKind.Absolute, out var uri))
+        {
+            return false;
+        }
+
+        var httpClient = httpClientFactory.CreateClient(CoverHttpClientName);
+        return await UrlExistsAsync(
+            httpClient: httpClient,
+            uri: uri,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private static async Task<bool> UrlExistsAsync(
+        HttpClient httpClient,
+        Uri uri,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.UserAgent.ParseAdd("Bearcat/1.0");
+            using var response = await httpClient.SendAsync(
+                request: request,
+                completionOption: HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken: cancellationToken
+            );
+
+            return response.IsSuccessStatusCode;
+        }
+        catch (HttpRequestException)
+        {
+            return false;
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return false;
+        }
     }
 
     private static Url? MapUri(string? uri)

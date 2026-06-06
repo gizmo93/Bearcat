@@ -11,13 +11,21 @@ namespace Bearcat.NfoDatabases.UnitTest.Xrel;
 public class XrelNfoDatabaseTest
 {
     private Mock<IXrelApi> apiMock = null!;
+    private Mock<IHttpClientFactory> httpClientFactoryMock = null!;
     private XrelNfoDatabase service = null!;
 
     [SetUp]
     public void SetUp()
     {
         apiMock = new Mock<IXrelApi>(MockBehavior.Strict);
-        service = new XrelNfoDatabase(new XrelClient(apiMock.Object, new XrelRateLimitState()));
+        httpClientFactoryMock = new Mock<IHttpClientFactory>(MockBehavior.Strict);
+        httpClientFactoryMock
+            .Setup(factory => factory.CreateClient(XrelNfoDatabase.CoverHttpClientName))
+            .Returns(() => CreateCoverHttpClient(_ => new HttpResponseMessage(HttpStatusCode.OK)));
+        service = new XrelNfoDatabase(
+            new XrelClient(apiMock.Object, new XrelRateLimitState()),
+            httpClientFactoryMock.Object
+        );
     }
 
     [Test]
@@ -280,6 +288,92 @@ public class XrelNfoDatabaseTest
         );
     }
 
+    [Test]
+    public async Task GetReleaseInfoAsync_FullCoverUrlMissing_UsesMediaCoverUrl()
+    {
+        // Arrange
+        var checkedCoverUrls = new List<string>();
+        httpClientFactoryMock.Reset();
+        httpClientFactoryMock
+            .Setup(factory => factory.CreateClient(XrelNfoDatabase.CoverHttpClientName))
+            .Returns(() =>
+                CreateCoverHttpClient(request =>
+                {
+                    checkedCoverUrls.Add(request.RequestUri!.ToString());
+                    return new HttpResponseMessage(HttpStatusCode.NotFound);
+                })
+            );
+        apiMock
+            .Setup(api =>
+                api.GetReleaseInfoAsync("Movie.Release.2026-GRP", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    HttpStatusCode.OK,
+                    new XrelRelease(
+                        Dirname: "Movie.Release.2026-GRP",
+                        LinkHref: "/release/123/Movie-Release.html",
+                        Size: new XrelReleaseSize(42, "GB"),
+                        VideoType: "WEB",
+                        AudioType: "AC3",
+                        ExtInfo: new XrelExternalInfo(
+                            Type: "movie",
+                            Id: "movie123",
+                            Title: "Movie Release",
+                            LinkHref: "//www.xrel.to/movie/123/Movie-Release.html",
+                            Uris: []
+                        )
+                    )
+                )
+            );
+        apiMock
+            .Setup(api =>
+                api.GetExternalInfoDetailsAsync("movie123", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    HttpStatusCode.OK,
+                    new XrelExternalInfoDetails(
+                        Type: "movie",
+                        Id: "movie123",
+                        Title: "Movie Release",
+                        LinkHref: "https://www.xrel.to/movie/123/Movie-Release.html",
+                        Genre: "Drama",
+                        CoverUrl: "https://uploads2.xrel.to/img_cover/movie123.JPG",
+                        Uris: [],
+                        Externals: []
+                    )
+                )
+            );
+        apiMock
+            .Setup(api => api.GetExternalInfoMediaAsync("movie123", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse<IReadOnlyList<XrelExternalInfoMedia>>(
+                    HttpStatusCode.OK,
+                    [
+                        new XrelExternalInfoMedia(
+                            Type: "image",
+                            Description: "Poster",
+                            UrlFull: "//uploads2.xrel.to/img_mediathek/movie123.JPG",
+                            UrlThumb: "https://uploads2.xrel.to/img_mediathek_thumb/movie123.JPG"
+                        ),
+                    ]
+                )
+            );
+
+        // Act
+        var result = await service.GetReleaseInfoAsync(
+            new XrelConfig(),
+            "Movie Release 2026-GRP",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_mediathek/movie123.JPG");
+        checkedCoverUrls.ShouldBe(["https://uploads2.xrel.to/img_cover/movie123-full.JPG"]);
+    }
+
     private static ApiResponse<T> CreateApiResponse<T>(
         HttpStatusCode statusCode,
         T? content = default,
@@ -293,5 +387,25 @@ public class XrelNfoDatabaseTest
         }
 
         return new ApiResponse<T>(response, content!, new RefitSettings(), error: null);
+    }
+
+    private static HttpClient CreateCoverHttpClient(
+        Func<HttpRequestMessage, HttpResponseMessage> responseFactory
+    )
+    {
+        return new HttpClient(new DelegateHttpMessageHandler(responseFactory));
+    }
+
+    private sealed class DelegateHttpMessageHandler(
+        Func<HttpRequestMessage, HttpResponseMessage> responseFactory
+    ) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
+        {
+            return Task.FromResult(responseFactory(request));
+        }
     }
 }
