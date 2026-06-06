@@ -29,6 +29,7 @@ public partial class ReleaseOverview(
     public string ReleaseFolderPath { get; set; } = null!;
 
     private IReadOnlyList<ReleaseOverviewUploadReadModel> overviewUploads = [];
+    private IReadOnlyList<ReleaseOverviewImageUploadReadModel> overviewImageUploads = [];
     private ReleaseNfoReadModel? releaseNfo;
     private string? coverUrl;
     private string? nfoContent;
@@ -74,6 +75,9 @@ public partial class ReleaseOverview(
             hasLocalNfo = false;
 
             overviewUploads = await readRepository.GetReleaseOverviewAsync(ReleaseId);
+            overviewImageUploads = await readRepository.GetReleaseOverviewImageUploadsAsync(
+                ReleaseId
+            );
             var releaseInfo = await readRepository.GetReleaseInfoAsync(ReleaseId);
             coverUrl = releaseInfo?.CoverUrl;
             releaseNfo = await readRepository.GetReleaseNfoAsync(ReleaseId);
@@ -202,6 +206,20 @@ public partial class ReleaseOverview(
 
     private static string GetPasswordCopyTargetId(ReleaseOverviewUploadReadModel upload) =>
         $"release-overview-password-{upload.UploadId}";
+
+    private static string GetImageUrlsCopyTargetId(
+        ReleaseOverviewImageUploadReadModel imageUpload
+    ) =>
+        $"release-overview-image-urls-{imageUpload.ImageUploadConfigId}-{imageUpload.ImageUploadId}";
+
+    private static string GetImageUrlCopyTargetId(
+        ReleaseOverviewImageUploadReadModel imageUpload,
+        ReleaseOverviewImageUploadUrlReadModel imageUrl
+    ) =>
+        $"release-overview-image-url-{imageUpload.ImageUploadConfigId}-{imageUpload.ImageUploadId}-{imageUrl.ImageSize}";
+
+    private static string GetImageUrlsText(ReleaseOverviewImageUploadReadModel imageUpload) =>
+        string.Join(Environment.NewLine, imageUpload.ImageUrls.Select(url => url.Url));
 
     private string GetCoverDownloadFileName()
     {

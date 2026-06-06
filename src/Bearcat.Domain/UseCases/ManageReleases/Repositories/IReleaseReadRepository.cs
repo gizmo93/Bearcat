@@ -26,6 +26,11 @@ public interface IReleaseReadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyList<ReleaseOverviewImageUploadReadModel>> GetReleaseOverviewImageUploadsAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<ReleaseInfoReadModel?> GetReleaseInfoAsync(
         int releaseId,
         CancellationToken cancellationToken = default

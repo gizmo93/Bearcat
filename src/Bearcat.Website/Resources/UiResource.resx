@@ -61,6 +61,7 @@
   <data name="CancelUploadConfirmation" xml:space="preserve"><value>Cancel upload #{0}? Running file transfers will be stopped as soon as the worker sees the request.</value></data>
   <data name="Close" xml:space="preserve"><value>Close</value></data>
   <data name="CopyAllLinks" xml:space="preserve"><value>Copy all links</value></data>
+  <data name="CopyImageUrls" xml:space="preserve"><value>Copy image URLs</value></data>
   <data name="CopyLink" xml:space="preserve"><value>Copy link</value></data>
   <data name="CopyNfoIntoClipboard" xml:space="preserve"><value>Copy NFO into clipboard</value></data>
   <data name="CopyPassword" xml:space="preserve"><value>Copy password</value></data>

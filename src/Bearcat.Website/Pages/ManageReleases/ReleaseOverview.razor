@@ -247,4 +247,109 @@
             }
         </div>
     }
+
+    @if (!isLoading && overviewImageUploads.Count > 0)
+    {
+        <div class="bearcat-release-overview-images">
+            <div class="bearcat-release-overview-images-header">
+                <div class="flex items-center gap-2">
+                    <LucideIcon Name="image" class="h-4 w-4" />
+                    <h3 class="text-sm font-semibold">@L["ImageUploads"]</h3>
+                </div>
+            </div>
+
+            <div class="bearcat-release-overview-image-list">
+                @foreach (var imageUpload in overviewImageUploads)
+                {
+                    var imageUrlsCopyTargetId = GetImageUrlsCopyTargetId(imageUpload);
+
+                    <article class="bearcat-release-overview-image-item">
+                        <div class="bearcat-release-overview-image-main">
+                            <div class="min-w-0">
+                                <div class="flex min-w-0 flex-wrap items-center gap-2">
+                                    <span class="truncate text-sm font-semibold" title="@imageUpload.ImageUploadConfigName">
+                                        @imageUpload.ImageUploadConfigName
+                                    </span>
+                                    <BbBadge Variant="BadgeVariant.Outline">@imageUpload.ImageHosterRegistrationName</BbBadge>
+                                </div>
+                                @if (imageUpload.UploadedAt is not null || imageUpload.CreatedAt is not null)
+                                {
+                                    <p class="truncate text-xs text-muted-foreground">
+                                        @((imageUpload.UploadedAt ?? imageUpload.CreatedAt)?.ToString("g"))
+                                    </p>
+                                }
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                @if (imageUpload.UploadState is null)
+                                {
+                                    <BbBadge Variant="BadgeVariant.Outline">@L["NoLatestUpload"]</BbBadge>
+                                }
+                                else
+                                {
+                                    <BbBadge Variant="@GetUploadVariant(imageUpload.UploadState)">
+                                        @L.Localize(imageUpload.UploadState.Value)
+                                    </BbBadge>
+                                    <ErrorMessagesTooltip Messages="imageUpload.ErrorMessages" />
+                                }
+
+                                <textarea id="@imageUrlsCopyTargetId" hidden readonly>@GetImageUrlsText(imageUpload)</textarea>
+                                <button type="button"
+                                        class="bearcat-copy-button bearcat-copy-icon-button"
+                                        disabled="@(imageUpload.ImageUrls.Count == 0)"
+                                        aria-label="@L["CopyImageUrls"]"
+                                        title="@L["CopyImageUrls"]"
+                                        data-copy-target="@imageUrlsCopyTargetId"
+                                        data-copy-label="@L["CopyImageUrls"]"
+                                        data-copy-success-label="@L["Copied"]"
+                                        data-copy-failure-label="@L["CopyFailed"]"
+                                        onclick="window.bearcat.copyFromTarget(this)">
+                                    <LucideIcon Name="copy" class="h-4 w-4" />
+                                    <span class="sr-only bearcat-copy-button-label">@L["CopyImageUrls"]</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        @if (imageUpload.ImageUrls.Count == 0)
+                        {
+                            <p class="text-sm text-muted-foreground">@L["NoImageUploadUrlsFound"]</p>
+                        }
+                        else
+                        {
+                            <div class="bearcat-release-overview-image-url-list">
+                                @foreach (var imageUrl in imageUpload.ImageUrls)
+                                {
+                                    var imageUrlCopyTargetId = GetImageUrlCopyTargetId(imageUpload, imageUrl);
+
+                                    <div class="bearcat-release-overview-image-url">
+                                        <BbBadge Variant="BadgeVariant.Secondary">@imageUrl.ImageSize</BbBadge>
+                                        <a class="bearcat-upload-link"
+                                           href="@imageUrl.Url"
+                                           target="_blank"
+                                           rel="noreferrer noopener"
+                                           title="@imageUrl.Url">
+                                            @imageUrl.Url
+                                        </a>
+                                        <textarea id="@imageUrlCopyTargetId" hidden readonly>@imageUrl.Url</textarea>
+                                        <button type="button"
+                                                class="bearcat-copy-button bearcat-copy-icon-button bearcat-release-overview-link-copy"
+                                                aria-label="@L["CopyLink"]"
+                                                title="@L["CopyLink"]"
+                                                data-copy-target="@imageUrlCopyTargetId"
+                                                data-copy-label="@L["CopyLink"]"
+                                                data-copy-success-label="@L["Copied"]"
+                                                data-copy-failure-label="@L["CopyFailed"]"
+                                                onclick="window.bearcat.copyFromTarget(this)">
+                                            <LucideIcon Name="copy" class="h-4 w-4" />
+                                            <span class="sr-only bearcat-copy-button-label">@L["CopyLink"]</span>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </article>
+                }
+            </div>
+        </div>
+    }
 </section>

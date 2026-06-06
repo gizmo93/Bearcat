@@ -61,6 +61,7 @@
   <data name="CancelUploadConfirmation" xml:space="preserve"><value>Upload #{0} abbrechen? Laufende Dateiübertragungen werden gestoppt, sobald der Worker die Anfrage sieht.</value></data>
     <data name="Close" xml:space="preserve"><value>Schliessen</value></data>
   <data name="CopyAllLinks" xml:space="preserve"><value>Alle Links kopieren</value></data>
+  <data name="CopyImageUrls" xml:space="preserve"><value>Bild-URLs kopieren</value></data>
   <data name="CopyLink" xml:space="preserve"><value>Link kopieren</value></data>
   <data name="CopyNfoIntoClipboard" xml:space="preserve"><value>NFO in die Zwischenablage kopieren</value></data>
   <data name="CopyPassword" xml:space="preserve"><value>Passwort kopieren</value></data>

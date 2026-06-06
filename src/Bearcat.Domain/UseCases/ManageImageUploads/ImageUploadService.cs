@@ -28,7 +28,7 @@ public class ImageUploadService(
     private async Task ProcessPendingImageUploadsAsync(CancellationToken cancellationToken)
     {
         var pendingUploads = await repository.GetPendingImageUploadsAsync(cancellationToken);
-        
+
         if (pendingUploads.Count == 0)
         {
             return;

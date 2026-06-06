@@ -1448,6 +1448,54 @@ a {
     gap: 0.65rem;
 }
 
+.bearcat-release-overview-images {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.bearcat-release-overview-images-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.bearcat-release-overview-image-list {
+    display: grid;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+}
+
+.bearcat-release-overview-image-item {
+    display: grid;
+    gap: 0.65rem;
+    padding: 0.85rem 1rem;
+}
+
+.bearcat-release-overview-image-item + .bearcat-release-overview-image-item {
+    border-top: 1px solid var(--border);
+}
+
+.bearcat-release-overview-image-main {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.bearcat-release-overview-image-url-list {
+    display: grid;
+    gap: 0.4rem;
+}
+
+.bearcat-release-overview-image-url {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
 .bearcat-release-overview-password code {
     display: block;
     min-width: 0;
@@ -1684,6 +1732,11 @@ a {
 
     .bearcat-release-overview-link-list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .bearcat-release-overview-image-main {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
     }
 
     .bearcat-release-info-card-header {

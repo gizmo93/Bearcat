@@ -169,6 +169,71 @@ public class ReleaseReadRepository(
             .ToList();
     }
 
+    public async Task<
+        IReadOnlyList<ReleaseOverviewImageUploadReadModel>
+    > GetReleaseOverviewImageUploadsAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var imageUploadConfigs = await dbRead
+            .ImageUploadConfigs.Where(c => c.ReleaseId == releaseId)
+            .OrderBy(c => c.Name)
+            .ThenBy(c => c.Id)
+            .Select(c => new
+            {
+                ImageUploadConfigId = c.Id,
+                ImageUploadConfigName = c.Name,
+                c.ImageHosterRegistration.Name,
+                LatestImageUpload = c
+                    .ImageUploads.OrderByDescending(upload => upload.UploadedAt ?? upload.CreatedAt)
+                    .ThenByDescending(upload => upload.Id)
+                    .Select(upload => new
+                    {
+                        ImageUploadId = upload.Id,
+                        upload.CreatedAt,
+                        upload.UploadedAt,
+                        upload.UploadState,
+                        ErrorMessages = upload.ErrorMessages.ToList(),
+                        ImageUrls = upload
+                            .ImageUrls.OrderBy(url => url.ImageSize)
+                            .ThenBy(url => url.Id)
+                            .Select(url => new { url.ImageSize, url.Url })
+                            .ToList(),
+                    })
+                    .FirstOrDefault(),
+            })
+            .ToListAsync(cancellationToken);
+
+        return imageUploadConfigs
+            .Select(config =>
+            {
+                var upload = config.LatestImageUpload;
+
+                var urls = upload is not null
+                    ? upload
+                        .ImageUrls.Select(url => new ReleaseOverviewImageUploadUrlReadModel(
+                            url.ImageSize,
+                            url.Url
+                        ))
+                        .ToList()
+                    : [];
+
+                return new ReleaseOverviewImageUploadReadModel(
+                    ImageUploadConfigId: config.ImageUploadConfigId,
+                    ImageUploadConfigName: config.ImageUploadConfigName,
+                    ImageHosterRegistrationName: config.Name,
+                    ImageUploadId: upload?.ImageUploadId,
+                    CreatedAt: upload?.CreatedAt,
+                    UploadedAt: upload?.UploadedAt,
+                    UploadState: upload?.UploadState,
+                    ErrorMessages: upload?.ErrorMessages ?? [],
+                    ImageUrls: urls
+                );
+            })
+            .ToList();
+    }
+
     public async Task<ReleaseInfoReadModel?> GetReleaseInfoAsync(
         int releaseId,
         CancellationToken cancellationToken = default
