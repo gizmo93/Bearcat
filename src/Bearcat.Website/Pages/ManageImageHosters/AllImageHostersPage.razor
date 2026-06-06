@@ -1,0 +1,91 @@
+@page "/image-hoster-registrations"
+@inherits OwningComponentBase
+
+<PageTitle>@L["ImageHosterRegistrations"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["ImageHosterRegistrations"]</h1>
+            <p class="text-sm text-muted-foreground">
+                @L["ImageHosterRegistrationsIntro"]
+            </p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewImageHoster"]
+        </BbButton>
+    </div>
+
+    <BbDataTable TData="ImageHosterRegistrationReadModel"
+                 Data="imageHosters"
+                 ShowToolbar="false"
+                 ShowPagination="@(imageHosters.Count > 10)"
+                 InitialPageSize="10"
+                 AriaLabel="@L["ImageHosterRegistrations"]"
+                 Class="bearcat-data-table bearcat-registrations-table">
+        <Columns>
+            <BbDataTableColumn TData="ImageHosterRegistrationReadModel" TValue="string"
+                               Header="@L["Name"]"
+                               Property="@(imageHoster => imageHoster.Name)"
+                               Sortable="true"
+                               Filterable="true"
+                               Width="20%" />
+            <BbDataTableColumn TData="ImageHosterRegistrationReadModel" TValue="string"
+                               Header="@L["ImageHoster"]"
+                               Property="@(imageHoster => imageHoster.ImageHosterName)"
+                               Sortable="true"
+                               Filterable="true"
+                               Width="16%" />
+            <BbDataTableColumn TData="ImageHosterRegistrationReadModel" TValue="bool"
+                               Header="@L["Active"]"
+                               Property="@(imageHoster => imageHoster.IsActive)"
+                               Sortable="true"
+                               Width="110px">
+                <CellTemplate Context="imageHoster">
+                    <BbBadge Variant="@(imageHoster.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
+                        @(imageHoster.IsActive ? L["Active"] : L["Inactive"])
+                    </BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ImageHosterRegistrationReadModel" TValue="string"
+                               Header="@L["Login"]"
+                               Property="@(imageHoster => imageHoster.Name)"
+                               Width="120px">
+                <CellTemplate Context="imageHoster">
+                    <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => TryLoginAsync(imageHoster))">
+                        @L["TryLogin"]
+                    </BbButton>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ImageHosterRegistrationReadModel" TValue="string"
+                               Header=""
+                               Property="@(imageHoster => imageHoster.Name)"
+                               Width="56px">
+                <CellTemplate Context="imageHoster">
+                    <div class="flex justify-end">
+                        <BbDropdownMenu>
+                            <BbDropdownMenuTrigger>
+                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenImageHosterActions"]">
+                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                </BbButton>
+                            </BbDropdownMenuTrigger>
+                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                                <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(imageHoster))">
+                                    @L["EditRegistration"]
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await ToggleIsActiveAsync(imageHoster))">
+                                    @(imageHoster.IsActive ? L["Disable"] : L["Enable"]) 
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(imageHoster))">
+                                    @L["DeleteRegistration"]
+                                </BbDropdownMenuItem>
+                            </BbDropdownMenuContent>
+                        </BbDropdownMenu>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+    </BbDataTable>
+</section>

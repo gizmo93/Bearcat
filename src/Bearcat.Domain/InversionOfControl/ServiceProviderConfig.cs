@@ -7,6 +7,7 @@ using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates;
 using Bearcat.Domain.UseCases.ManageHosters;
+using Bearcat.Domain.UseCases.ManageImageHosters;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageLinkCrypters;
 using Bearcat.Domain.UseCases.ManageNfoDatabases;
@@ -30,6 +31,7 @@ public static class ServiceProviderConfig
         public void AddDomain()
         {
             services.AddScoped<HosterRegistrationService>();
+            services.AddScoped<ImageHosterService>();
             services.AddScoped<BackgroundTaskStateService>();
             services.AddScoped<ReleaseFolderAutomationService>();
             services.AddScoped<AutomaticallyCreateReleasesService>();

@@ -15,6 +15,7 @@
     <Folder Name="/4_Plugins/">
         <Project Path="src/Bearcat.Archivers/Bearcat.Archivers.csproj" />
         <Project Path="src/Bearcat.Hosters/Bearcat.Hosters.csproj" />
+        <Project Path="src/Bearcat.ImageHosters/Bearcat.ImageHosters.csproj" />
         <Project Path="src/Bearcat.LinkCrypters/Bearcat.LinkCrypters.csproj" />
         <Project Path="src/Bearcat.NfoDatabases/Bearcat.NfoDatabases.csproj" />
     </Folder>
@@ -22,6 +23,7 @@
         <Project Path="test/Bearcat.Archivers.IntegrationTest/Bearcat.Archivers.IntegrationTest.csproj" />
         <Project Path="test/Bearcat.Domain.IntegrationTest/Bearcat.Domain.IntegrationTest.csproj" />
         <Project Path="test/Bearcat.Hosters.UnitTest/Bearcat.Hosters.UnitTest.csproj" />
+        <Project Path="test/Bearcat.ImageHosters.UnitTest/Bearcat.ImageHosters.UnitTest.csproj" />
         <Project Path="test/Bearcat.IntegrationTest.Utils/Bearcat.IntegrationTest.Utils.csproj" />
         <Project Path="test/Bearcat.LinkCrypters.UnitTest/Bearcat.LinkCrypters.UnitTest.csproj" />
         <Project Path="test/Bearcat.NfoDatabases.UnitTest/Bearcat.NfoDatabases.UnitTest.csproj" />

@@ -10,6 +10,8 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<HosterRegistration> HosterRegistrations { get; set; } = null!;
 
+    public DbSet<ImageHosterRegistration> ImageHosterRegistrations { get; set; } = null!;
+
     public DbSet<BackgroundTaskState> BackgroundTaskStates { get; set; } = null!;
 
     public DbSet<Release> Releases { get; set; } = null!;

@@ -319,6 +319,37 @@ namespace BearCat.Infrastructure.Migrations
                     b.ToTable("HosterRegistrations");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.ImageHosterRegistration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ImageHosterClassName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("SerializedConfig")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ImageHosterRegistrations");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterContainer", b =>
                 {
                     b.Property<int>("Id")

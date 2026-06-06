@@ -5,6 +5,7 @@ using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks.Repositories;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
+using Bearcat.Domain.UseCases.ManageImageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
@@ -60,6 +61,10 @@ public static class ServiceProviderConfig
         {
             services.AddScoped<IDashboardReadRepository, DashboardReadRepository>();
             services.AddScoped<IHosterConfigurationReadRepository, HosterConfigurationRepository>();
+            services.AddScoped<
+                IImageHosterRegistrationReadRepository,
+                ImageHosterRegistrationReadRepository
+            >();
             services.AddScoped<IBackgroundTaskStateReadRepository, BackgroundTaskStateRepository>();
             services.AddScoped<
                 IBackgroundTaskStateWriteRepository,
@@ -68,6 +73,10 @@ public static class ServiceProviderConfig
             services.AddScoped<
                 IHosterConfigurationWriteRepository,
                 HosterConfigurationRepository
+            >();
+            services.AddScoped<
+                IImageHosterRegistrationWriteRepository,
+                ImageHosterRegistrationWriteRepository
             >();
             services.AddScoped<IReleaseWriteRepository, ReleaseWriteRepository>();
             services.AddScoped<IReleaseInfoRepository, ReleaseInfoRepository>();

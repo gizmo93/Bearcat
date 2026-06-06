@@ -100,6 +100,7 @@
   <data name="DeleteArchiveConfigConfirmation" xml:space="preserve"><value>Möchtest du die Archiv-Konfiguration {0} wirklich löschen (Archiver: {1})?</value></data>
   <data name="DeleteConfig" xml:space="preserve"><value>Konfiguration löschen</value></data>
   <data name="DeleteHosterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Hoster-Registrierung {0} wirklich löschen? Dadurch werden auch Uploads entfernt, die zu dieser Registrierung gehören.</value></data>
+  <data name="DeleteImageHosterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Bildhoster-Registrierung {0} wirklich löschen?</value></data>
   <data name="DeleteLink" xml:space="preserve"><value>Link löschen</value></data>
   <data name="DeleteLinkCrypterContainerConfig" xml:space="preserve"><value>Link-Crypter-Container-Konfiguration löschen</value></data>
   <data name="DeleteLinkCrypterContainerConfigConfirmation" xml:space="preserve"><value>Möchtest du diese Link-Crypter-Container-Konfiguration wirklich löschen?</value></data>
@@ -155,6 +156,16 @@
   <data name="HosterTarget" xml:space="preserve"><value>Hoster-Ziel</value></data>
   <data name="Hosters" xml:space="preserve"><value>Hoster</value></data>
   <data name="Id" xml:space="preserve"><value>ID</value></data>
+  <data name="ImageHoster" xml:space="preserve"><value>Bildhoster</value></data>
+  <data name="AddImageHoster" xml:space="preserve"><value>Bildhoster hinzufügen</value></data>
+  <data name="ImageHosterConfigurationHelp" xml:space="preserve"><value>Gib die API-Zugangsdaten für den ausgewählten Bildhoster an.</value></data>
+  <data name="ImageHosterDialogDescription" xml:space="preserve"><value>Füge Bildhoster-Zugangsdaten hinzu.</value></data>
+  <data name="ImageHosterRegistrationActivated" xml:space="preserve"><value>Bildhoster-Registrierung {0} aktiviert</value></data>
+  <data name="ImageHosterRegistrationDeactivated" xml:space="preserve"><value>Bildhoster-Registrierung {0} deaktiviert</value></data>
+  <data name="ImageHosterRegistrations" xml:space="preserve"><value>Bildhoster-Registrierungen</value></data>
+  <data name="ImageHosterRegistrationsIntro" xml:space="preserve"><value>Verwalte Bildhoster-API-Keys und prüfe, ob das Login funktioniert</value></data>
+  <data name="ImageHosters" xml:space="preserve"><value>Bildhoster</value></data>
+  <data name="ImageUploadsAndValidation" xml:space="preserve"><value>Bild-Uploads und Validierung</value></data>
   <data name="Inactive" xml:space="preserve"><value>Inaktiv</value></data>
   <data name="Language" xml:space="preserve"><value>Sprache</value></data>
   <data name="LatestUpload" xml:space="preserve"><value>Letzter Upload</value></data>
@@ -197,6 +208,7 @@
     <data name="NfoDatabaseRegistrationsIntro" xml:space="preserve"><value>Aktiviere und verwalte Metadatenquellen</value></data>
   <data name="NfoDatabases" xml:space="preserve"><value>NFO-Datenbanken</value></data>
   <data name="NewHoster" xml:space="preserve"><value>Neuer Hoster</value></data>
+  <data name="NewImageHoster" xml:space="preserve"><value>Neuer Bildhoster</value></data>
   <data name="NewLinkCrypter" xml:space="preserve"><value>Neuer Link-Crypter</value></data>
   <data name="NewNfoDatabase" xml:space="preserve"><value>Neue NFO-Datenbank</value></data>
   <data name="NewRelease" xml:space="preserve"><value>Neues Release</value></data>
@@ -230,6 +242,7 @@
   <data name="OpenArchiveConfigActions" xml:space="preserve"><value>Aktionen für Archiv-Konfiguration öffnen</value></data>
   <data name="OpenDetails" xml:space="preserve"><value>Details öffnen</value></data>
   <data name="OpenHosterActions" xml:space="preserve"><value>Hoster-Aktionen öffnen</value></data>
+  <data name="OpenImageHosterActions" xml:space="preserve"><value>Aktionen öffnen</value></data>
   <data name="OpenLinkCrypterActions" xml:space="preserve"><value>Link-Crypter-Aktionen öffnen</value></data>
   <data name="OpenNfoDatabaseActions" xml:space="preserve"><value>NFO-Datenbank-Aktionen öffnen</value></data>
   <data name="OpenExternalUrl" xml:space="preserve"><value>Externe URL öffnen</value></data>
@@ -295,6 +308,8 @@
   <data name="SelectHoster" xml:space="preserve"><value>Hoster auswählen</value></data>
   <data name="SelectHosterRegistration" xml:space="preserve"><value>Hoster-Registrierung auswählen</value></data>
   <data name="SelectHosterRequired" xml:space="preserve"><value>Du musst einen Hoster auswählen</value></data>
+  <data name="SelectImageHoster" xml:space="preserve"><value>Bildhoster auswählen</value></data>
+  <data name="SelectImageHosterRequired" xml:space="preserve"><value>Du musst einen Bildhoster auswählen.</value></data>
   <data name="SelectLinkCrypter" xml:space="preserve"><value>Link-Crypter auswählen</value></data>
   <data name="SelectLinkCrypterRequired" xml:space="preserve"><value>Du musst einen Link-Crypter auswählen.</value></data>
   <data name="SelectNfoDatabase" xml:space="preserve"><value>NFO-Datenbank auswählen</value></data>

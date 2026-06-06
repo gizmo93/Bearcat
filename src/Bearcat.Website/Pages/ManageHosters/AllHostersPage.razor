@@ -99,7 +99,7 @@
                                     @L["EditRegistration"]
                                 </BbDropdownMenuItem>
                                 <BbDropdownMenuItem OnClick="@(async _ => await ToggleIsActiveAsync(hoster))">
-                                    @(hoster.IsActive ? L["Disable"] : L["Enable"]) @L["Registration"]
+                                    @(hoster.IsActive ? L["Disable"] : L["Enable"])
                                 </BbDropdownMenuItem>
                                 <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(hoster))">
                                     @L["DeleteRegistration"]
