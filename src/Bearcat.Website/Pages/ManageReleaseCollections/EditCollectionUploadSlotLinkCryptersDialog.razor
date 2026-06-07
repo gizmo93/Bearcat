@@ -5,68 +5,84 @@
     return;
 }
 
-<div class="space-y-6">
+<div class="space-y-4">
     <div class="space-y-1">
         <p class="text-sm font-medium">@SlotName</p>
         <p class="text-sm text-muted-foreground">@L["SharedLinkCryptersDialogHelp"]</p>
     </div>
 
-    @if (linkCrypterOptions.Count == 0)
-    {
-        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
-            @L["NoLinkCryptersFound"]
-        </div>
-    }
-    else
-    {
-        <div class="space-y-3">
-            @foreach (var option in linkCrypterOptions)
-            {
-                <div class="space-y-4 rounded-md border border-border/70 px-3 py-3">
-                    <div class="flex items-center gap-2">
-                        <BbCheckbox @bind-Checked="option.IsSelected"
-                                    Id="@($"shared-link-crypter-{option.LinkCrypterRegistrationId}")"
-                                    AriaLabel="@option.Name" />
-                        <BbLabel For="@($"shared-link-crypter-{option.LinkCrypterRegistrationId}")">
-                            @option.Name
-                        </BbLabel>
-                    </div>
-
-                    @if (option.IsSelected)
-                    {
-                        <div class="grid gap-4 md:grid-cols-2">
-                            <BbFormFieldInput TValue="string"
-                                              @bind-Value="option.Password"
-                                              Label="@L["ContainerPassword"]"
-                                              Placeholder="@L["ContainerPasswordPlaceholder"]" />
-
-                            <div class="space-y-3">
-                                @if (option.SupportsCaptcha)
-                                {
-                                    <BbFormFieldSwitch @bind-Checked="option.EnableCaptcha"
-                                                       Label="@L["Captcha"]" />
-                                }
-
-                                @if (option.SupportsContainerDownload)
-                                {
-                                    <BbFormFieldSwitch @bind-Checked="option.EnableContainerDownload"
-                                                       Label="@L["ContainerDownload"]" />
-                                }
-
-                                @if (option.SupportsClickAndLoad)
-                                {
-                                    <BbFormFieldSwitch @bind-Checked="option.EnableClickAndLoad"
-                                                       Label="@L["ClickAndLoad"]" />
-                                }
-                            </div>
+    <BbScrollArea MaxHeight="22rem"
+                  Type="ScrollAreaType.Always"
+                  ViewportClass="pr-1">
+        @if (linkCrypterOptions.Count == 0)
+        {
+            <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                @L["NoLinkCryptersFound"]
+            </div>
+        }
+        else
+        {
+            <div class="space-y-2">
+                @foreach (var option in linkCrypterOptions)
+                {
+                    <div class="rounded-md border border-border/70 px-3 py-2">
+                        <div class="flex items-center gap-2">
+                            <BbCheckbox @bind-Checked="option.IsSelected"
+                                        Id="@($"shared-link-crypter-{option.LinkCrypterRegistrationId}")"
+                                        AriaLabel="@option.Name" />
+                            <BbLabel For="@($"shared-link-crypter-{option.LinkCrypterRegistrationId}")">
+                                @option.Name
+                            </BbLabel>
                         </div>
-                    }
-                </div>
-            }
-        </div>
-    }
 
-    <div class="flex justify-end gap-2">
+                        @if (option.IsSelected)
+                        {
+                            <div class="mt-3 grid gap-3 md:grid-cols-2">
+                                <BbFormFieldInput TValue="string"
+                                                  @bind-Value="option.Password"
+                                                  Label="@L["ContainerPassword"]"
+                                                  Placeholder="@L["ContainerPasswordPlaceholder"]" />
+
+                                <div class="grid content-end gap-2 sm:grid-cols-3 md:grid-cols-1">
+                                    @if (option.SupportsCaptcha)
+                                    {
+                                        <label class="flex items-center justify-between gap-3 rounded-md border border-border/70 px-3 py-2 text-sm">
+                                            <span>@L["Captcha"]</span>
+                                            <BbSwitch @bind-Checked="option.EnableCaptcha"
+                                                      Size="SwitchSize.Small"
+                                                      AriaLabel="@L["Captcha"]" />
+                                        </label>
+                                    }
+
+                                    @if (option.SupportsContainerDownload)
+                                    {
+                                        <label class="flex items-center justify-between gap-3 rounded-md border border-border/70 px-3 py-2 text-sm">
+                                            <span>@L["ContainerDownload"]</span>
+                                            <BbSwitch @bind-Checked="option.EnableContainerDownload"
+                                                      Size="SwitchSize.Small"
+                                                      AriaLabel="@L["ContainerDownload"]" />
+                                        </label>
+                                    }
+
+                                    @if (option.SupportsClickAndLoad)
+                                    {
+                                        <label class="flex items-center justify-between gap-3 rounded-md border border-border/70 px-3 py-2 text-sm">
+                                            <span>@L["ClickAndLoad"]</span>
+                                            <BbSwitch @bind-Checked="option.EnableClickAndLoad"
+                                                      Size="SwitchSize.Small"
+                                                      AriaLabel="@L["ClickAndLoad"]" />
+                                        </label>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </BbScrollArea>
+
+    <div class="flex justify-end gap-2 border-t border-border/70 pt-4">
         <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
             @L["Cancel"]
         </BbButton>
