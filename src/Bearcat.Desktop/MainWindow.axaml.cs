@@ -193,10 +193,20 @@ public partial class MainWindow : Window
 
     private void UpdateStatus()
     {
-        var status =
-            isBusy ? TrayAppStatus.Working
-            : hostProcess.IsRunning ? TrayAppStatus.Running
-            : TrayAppStatus.Stopped;
+        TrayAppStatus status;
+        
+        if (isBusy)
+        {
+            status = TrayAppStatus.Working;
+        }
+        else if (hostProcess.IsRunning)
+        {
+            status = TrayAppStatus.Running;
+        }
+        else
+        {
+            status = TrayAppStatus.Stopped;
+        }
 
         StatusTextBlock.Text = status.ToDisplayText();
         updateTrayStatus?.Invoke(status);

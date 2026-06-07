@@ -13,10 +13,20 @@ public static class DesktopBrowser
         }
         catch
         {
-            var fallback =
-                OperatingSystem.IsMacOS() ? new ProcessStartInfo("open", url)
-                : OperatingSystem.IsWindows() ? new ProcessStartInfo("cmd", $"/c start {url}")
-                : new ProcessStartInfo("xdg-open", url);
+            ProcessStartInfo fallback;
+            
+            if(OperatingSystem.IsMacOS())
+            {
+                fallback = new ProcessStartInfo("open", url);
+            }
+            else if(OperatingSystem.IsWindows())
+            {
+                fallback = new ProcessStartInfo("cmd", $"/c start {url}");
+            }
+            else
+            {
+                fallback = new ProcessStartInfo("xdg-open", url);
+            }
 
             Process.Start(fallback);
         }

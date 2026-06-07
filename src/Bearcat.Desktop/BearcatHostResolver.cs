@@ -31,21 +31,18 @@ public static class BearcatHostResolver
         var baseDirectory = AppContext.BaseDirectory;
         var executableName = OperatingSystem.IsWindows() ? "Bearcat.Host.exe" : "Bearcat.Host";
 
-        foreach (
-            var candidate in new[]
+        var existingDllPath = new[]
             {
-                Path.Combine(baseDirectory, executableName),
-                Path.Combine(baseDirectory, "Bearcat.Host.dll"),
+                Path.Combine(baseDirectory, executableName), Path.Combine(baseDirectory, "Bearcat.Host.dll"),
             }
-        )
+            .FirstOrDefault(File.Exists);
+
+        if (existingDllPath is not null)
         {
-            if (File.Exists(candidate))
-            {
-                return ResolvedBearcatHost.FromFile(
-                    candidate,
-                    ShouldUseDevelopmentEnvironment(candidate)
-                );
-            }
+            return ResolvedBearcatHost.FromFile(
+                path: existingDllPath,
+                useDevelopmentEnvironment: ShouldUseDevelopmentEnvironment(existingDllPath)
+            );
         }
 
         var currentDirectory = new DirectoryInfo(baseDirectory);
