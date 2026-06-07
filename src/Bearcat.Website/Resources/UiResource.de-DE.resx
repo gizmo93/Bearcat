@@ -622,6 +622,7 @@
   <data name="Back" xml:space="preserve"><value>Zurück</value></data>
   <data name="CollectionUploadGroupName" xml:space="preserve"><value>Gruppenname</value></data>
   <data name="CollectionUploadGroupNameRequired" xml:space="preserve"><value>Der Gruppenname ist erforderlich.</value></data>
+  <data name="CollectionContainer" xml:space="preserve"><value>Collection-Container</value></data>
   <data name="CollectionUploadSlot" xml:space="preserve"><value>Collection-Container</value></data>
   <data name="CollectionUploadSlotExpectedArchivePasswordRequired" xml:space="preserve"><value>Das erwartete Archivpasswort ist für diese Passwortregel nötig.</value></data>
   <data name="CollectionUploadSlotHelp" xml:space="preserve"><value>Teilt passende Uploads aus derselben Release-Collection.</value></data>

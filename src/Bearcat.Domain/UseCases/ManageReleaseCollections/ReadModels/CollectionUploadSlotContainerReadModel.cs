@@ -1,14 +1,13 @@
 using Bearcat.Domain.ValueObjects;
 
-namespace Bearcat.Domain.UseCases.ManageReleases.ReadModels;
+namespace Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 
-public record ReleaseOverviewLinkCrypterLinkReadModel(
+public record CollectionUploadSlotContainerReadModel(
     int LinkCrypterContainerId,
     string LinkCrypterRegistrationName,
-    string LinkCrypterClassName,
     string ContainerUrl,
-    LinkCrypterContainerScope Scope,
     LinkCrypterContainerState State,
     DateTime CreatedAt,
+    int SourceUploadCount,
     IReadOnlyList<string> Errors
 );

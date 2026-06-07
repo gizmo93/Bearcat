@@ -102,6 +102,38 @@ public class ReleaseCollectionRepository(
             return null;
         }
 
+        var containersByUploadSlotId = await dbRead
+            .LinkCrypterContainers.Where(container =>
+                container.Scope == LinkCrypterContainerScope.ReleaseCollection
+                && container.CollectionUploadSlotId != null
+                && container.CollectionUploadSlot!.ReleaseCollectionId == releaseCollectionId
+            )
+            .OrderBy(container => container.LinkCrypterRegistration.Name)
+            .ThenBy(container => container.Id)
+            .Select(container => new
+            {
+                CollectionUploadSlotId = container.CollectionUploadSlotId!.Value,
+                Container = new CollectionUploadSlotContainerReadModel(
+                    container.Id,
+                    container.LinkCrypterRegistration.Name,
+                    container.ContainerUrl,
+                    container.State,
+                    container.CreatedAt,
+                    container.SourceUploads.Count,
+                    container.Errors.ToList()
+                ),
+            })
+            .ToListAsync(cancellationToken);
+
+        var containersBySlotId = containersByUploadSlotId
+            .GroupBy(container => container.CollectionUploadSlotId)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                    (IReadOnlyList<CollectionUploadSlotContainerReadModel>)
+                        group.Select(container => container.Container).ToList()
+            );
+
         return new ReleaseCollectionDetailReadModel(
             collection.Id,
             collection.Name,
@@ -120,7 +152,10 @@ public class ReleaseCollectionRepository(
                     slot.PasswordPolicy,
                     slot.ExpectedArchivePassword,
                     slot.UploadConfigs.Count,
-                    GetSharedLinkCrypters(slot)
+                    GetSharedLinkCrypters(slot),
+                    containersBySlotId.TryGetValue(slot.Id, out var containers)
+                        ? containers
+                        : []
                 ))
                 .ToList(),
             collection

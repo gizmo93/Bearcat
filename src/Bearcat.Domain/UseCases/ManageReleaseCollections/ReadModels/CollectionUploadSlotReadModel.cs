@@ -10,5 +10,6 @@ public record CollectionUploadSlotReadModel(
     CollectionUploadSlotPasswordPolicy PasswordPolicy,
     string? ExpectedArchivePassword,
     int UploadConfigCount,
-    IReadOnlyList<CollectionUploadSlotLinkCrypterReadModel> SharedLinkCrypters
+    IReadOnlyList<CollectionUploadSlotLinkCrypterReadModel> SharedLinkCrypters,
+    IReadOnlyList<CollectionUploadSlotContainerReadModel> Containers
 );

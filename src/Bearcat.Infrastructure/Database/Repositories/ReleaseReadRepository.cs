@@ -99,28 +99,56 @@ public class ReleaseReadRepository(
 
         var uploadIds = latestUploads.Select(u => u.UploadId).ToList();
         IReadOnlyList<ReleaseOverviewLinkCrypterLinkProjection> linkCrypterLinks =
-            uploadIds.Count == 0
-                ? []
-                : await dbRead
-                    .LinkCrypterContainers.Where(c =>
+            [];
+
+        if (uploadIds.Count > 0)
+        {
+            var releaseContainerLinks = await dbRead
+                .LinkCrypterContainers.Where(c =>
                         c.Scope == LinkCrypterContainerScope.Release
                         && c.UploadId != null
                         && uploadIds.Contains(c.UploadId.Value)
                         && c.Upload!.UploadConfig.ReleaseId == releaseId
                     )
-                    .OrderBy(c => c.UploadConfigLinkCrypter!.LinkCrypterRegistration.Name)
-                    .ThenBy(c => c.Id)
-                    .Select(c => new ReleaseOverviewLinkCrypterLinkProjection(
+                .Select(c => new ReleaseOverviewLinkCrypterLinkProjection(
                         c.UploadId!.Value,
                         c.Id,
-                        c.UploadConfigLinkCrypter!.LinkCrypterRegistration.Name,
-                        c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName,
+                        c.LinkCrypterRegistration.Name,
+                        c.LinkCrypterRegistration.LinkCrypterClassName,
                         c.ContainerUrl,
+                        c.Scope,
                         c.State,
                         c.CreatedAt,
                         c.Errors.ToList()
                     ))
-                    .ToListAsync(cancellationToken: cancellationToken);
+                .ToListAsync(cancellationToken: cancellationToken);
+
+            var collectionContainerLinks = await dbRead
+                .LinkCrypterContainerSourceUploads.Where(source =>
+                    uploadIds.Contains(source.UploadId)
+                    && source.Upload.UploadConfig.ReleaseId == releaseId
+                    && source.LinkCrypterContainer.Scope
+                        == LinkCrypterContainerScope.ReleaseCollection
+                )
+                .Select(source => new ReleaseOverviewLinkCrypterLinkProjection(
+                    source.UploadId,
+                    source.LinkCrypterContainer.Id,
+                    source.LinkCrypterContainer.LinkCrypterRegistration.Name,
+                    source.LinkCrypterContainer.LinkCrypterRegistration.LinkCrypterClassName,
+                    source.LinkCrypterContainer.ContainerUrl,
+                    source.LinkCrypterContainer.Scope,
+                    source.LinkCrypterContainer.State,
+                    source.LinkCrypterContainer.CreatedAt,
+                    source.LinkCrypterContainer.Errors.ToList()
+                ))
+                .ToListAsync(cancellationToken: cancellationToken);
+
+            linkCrypterLinks = releaseContainerLinks
+                .Concat(collectionContainerLinks)
+                .OrderBy(link => link.LinkCrypterRegistrationName)
+                .ThenBy(link => link.LinkCrypterContainerId)
+                .ToList();
+        }
 
         var latestUploadByConfigId = latestUploads.ToDictionary(u => u.UploadConfigId);
         var linksByUploadId = linkCrypterLinks
@@ -135,6 +163,7 @@ public class ReleaseReadRepository(
                                 link.LinkCrypterRegistrationName,
                                 link.LinkCrypterClassName,
                                 link.ContainerUrl,
+                                link.Scope,
                                 link.State,
                                 link.CreatedAt,
                                 link.Errors
@@ -378,7 +407,12 @@ public class ReleaseReadRepository(
                 u.UploadState,
                 u.OnlineState,
                 u.UploadedFiles.Count,
-                u.LinkCrypterContainers.Count,
+                u.LinkCrypterContainers.Count
+                    + dbRead.LinkCrypterContainerSourceUploads.Count(source =>
+                        source.UploadId == u.Id
+                        && source.LinkCrypterContainer.Scope
+                            == LinkCrypterContainerScope.ReleaseCollection
+                    ),
                 (
                     u.UploadState == UploadState.Canceled
                     || u.UploadState == UploadState.Failed
@@ -469,17 +503,54 @@ public class ReleaseReadRepository(
             .GetLinkCrypters()
             .ToDictionary(l => l.ClassName);
 
-        var containers = dbRead
+        var containers = await dbRead
             .LinkCrypterContainers.Where(c =>
                 c.Scope == LinkCrypterContainerScope.Release
                 && c.UploadId == uploadId
                 && c.Upload!.UploadConfig.ReleaseId == releaseId
             )
-            .OrderBy(c => c.UploadConfigLinkCrypter!.LinkCrypterRegistration.Name)
-            .ThenBy(c => c.Id);
-
-        return await SelectContainerLinkReadModels(containers, linkCryptersByClassName)
+            .Select(c => new ReleaseUploadContainerLinkProjection(
+                c.LinkCrypterRegistration.Name,
+                c.LinkCrypterRegistration.LinkCrypterClassName,
+                c.ContainerUrl,
+                c.Scope,
+                c.State,
+                c.CreatedAt,
+                c.EnableCaptcha,
+                c.EnableContainerDownload,
+                c.EnableClickAndLoad,
+                c.Errors.ToList()
+            ))
             .ToListAsync(cancellationToken: cancellationToken);
+
+        var collectionContainers = await dbRead
+            .LinkCrypterContainerSourceUploads.Where(source =>
+                source.UploadId == uploadId
+                && source.Upload.UploadConfig.ReleaseId == releaseId
+                && source.LinkCrypterContainer.Scope == LinkCrypterContainerScope.ReleaseCollection
+            )
+            .Select(source => new ReleaseUploadContainerLinkProjection(
+                source.LinkCrypterContainer.LinkCrypterRegistration.Name,
+                source.LinkCrypterContainer.LinkCrypterRegistration.LinkCrypterClassName,
+                source.LinkCrypterContainer.ContainerUrl,
+                source.LinkCrypterContainer.Scope,
+                source.LinkCrypterContainer.State,
+                source.LinkCrypterContainer.CreatedAt,
+                source.LinkCrypterContainer.EnableCaptcha,
+                source.LinkCrypterContainer.EnableContainerDownload,
+                source.LinkCrypterContainer.EnableClickAndLoad,
+                source.LinkCrypterContainer.Errors.ToList()
+            ))
+            .ToListAsync(cancellationToken: cancellationToken);
+
+        return SelectContainerLinkReadModels(
+            containers
+                .Concat(collectionContainers)
+                .OrderBy(container => container.LinkCrypterRegistrationName)
+                .ThenBy(container => container.CreatedAt)
+                .ToList(),
+            linkCryptersByClassName
+        );
     }
 
     public async Task<IReadOnlyList<ReleaseImageUploadReadModel>> GetImageUploadsAsync(
@@ -521,31 +592,27 @@ public class ReleaseReadRepository(
             .ToListAsync(cancellationToken);
     }
 
-    private static IQueryable<ReleaseUploadContainerLinkReadModel> SelectContainerLinkReadModels(
-        IQueryable<LinkCrypterContainer> containers,
+    private static IReadOnlyList<ReleaseUploadContainerLinkReadModel> SelectContainerLinkReadModels(
+        IReadOnlyList<ReleaseUploadContainerLinkProjection> containers,
         IReadOnlyDictionary<string, LinkCrypterDto> linkCryptersByClassName
     )
     {
         return containers.Select(c => new ReleaseUploadContainerLinkReadModel(
-            c.UploadConfigLinkCrypter!.LinkCrypterRegistration.Name,
-            c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName,
+            c.LinkCrypterRegistrationName,
+            c.LinkCrypterClassName,
             c.ContainerUrl,
+            c.Scope,
             c.State,
             c.CreatedAt,
             c.EnableCaptcha,
             c.EnableContainerDownload,
             c.EnableClickAndLoad,
-            linkCryptersByClassName[
-                c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName
-            ].SupportsCaptcha,
-            linkCryptersByClassName[
-                c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName
-            ].SupportsContainerDownload,
-            linkCryptersByClassName[
-                c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName
-            ].SupportsClickAndLoad,
+            linkCryptersByClassName[c.LinkCrypterClassName].SupportsCaptcha,
+            linkCryptersByClassName[c.LinkCrypterClassName].SupportsContainerDownload,
+            linkCryptersByClassName[c.LinkCrypterClassName].SupportsClickAndLoad,
             c.Errors.ToList()
-        ));
+        ))
+            .ToList();
     }
 
     private static Expression<Func<Release, ReleaseReadModel>> ToReleaseReadModel()
@@ -745,8 +812,22 @@ public class ReleaseReadRepository(
         string LinkCrypterRegistrationName,
         string LinkCrypterClassName,
         string ContainerUrl,
+        LinkCrypterContainerScope Scope,
         LinkCrypterContainerState State,
         DateTime CreatedAt,
+        IReadOnlyList<string> Errors
+    );
+
+    private sealed record ReleaseUploadContainerLinkProjection(
+        string LinkCrypterRegistrationName,
+        string LinkCrypterClassName,
+        string ContainerUrl,
+        LinkCrypterContainerScope Scope,
+        LinkCrypterContainerState State,
+        DateTime CreatedAt,
+        bool EnableCaptcha,
+        bool EnableContainerDownload,
+        bool EnableClickAndLoad,
         IReadOnlyList<string> Errors
     );
 }

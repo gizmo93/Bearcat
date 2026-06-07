@@ -1,5 +1,6 @@
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
+using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
@@ -66,4 +67,12 @@ public partial class ReleaseCollectionDetail(
             await LoadReleaseCollectionAsync();
         }
     }
+
+    private static BadgeVariant GetContainerVariant(LinkCrypterContainerState state) =>
+        state switch
+        {
+            LinkCrypterContainerState.Created => BadgeVariant.Default,
+            LinkCrypterContainerState.CreationFailed => BadgeVariant.Destructive,
+            _ => BadgeVariant.Outline,
+        };
 }

@@ -205,6 +205,12 @@
                                                 <BbBadge Variant="@GetContainerVariant(link.State)">
                                                     @L.Localize(link.State)
                                                 </BbBadge>
+                                                @if (link.Scope is LinkCrypterContainerScope.ReleaseCollection)
+                                                {
+                                                    <BbBadge Variant="BadgeVariant.Secondary">
+                                                        @L["CollectionContainer"]
+                                                    </BbBadge>
+                                                }
                                                 <ErrorMessagesTooltip Messages="link.Errors" />
 
                                                 <textarea id="@copyTargetId" hidden readonly>@link.ContainerUrl</textarea>
