@@ -123,6 +123,7 @@ public class ReleaseCollectionAssignmentService(
             )
             .GroupBy(linkCrypter => linkCrypter.LinkCrypterRegistrationId)
             .ToDictionary(group => group.Key, group => group.First());
+        
         var currentLinkCryptersByRegistrationId = uploadConfig
             .LinkCrypters.Where(linkCrypter =>
                 linkCrypter.ContainerScope == LinkCrypterContainerScope.ReleaseCollection
@@ -155,6 +156,7 @@ public class ReleaseCollectionAssignmentService(
                         LinkCrypterContainers = [],
                     }
                 );
+                
                 continue;
             }
 

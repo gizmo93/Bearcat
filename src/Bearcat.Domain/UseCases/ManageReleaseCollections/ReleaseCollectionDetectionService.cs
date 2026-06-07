@@ -63,13 +63,14 @@ public static partial class ReleaseCollectionDetectionService
         var keyTemplate = string.IsNullOrWhiteSpace(releaseTemplate.ReleaseCollectionKeyTemplate)
             ? "{title}.S{season}.{variant}"
             : releaseTemplate.ReleaseCollectionKeyTemplate;
+        
         var nameTemplate = string.IsNullOrWhiteSpace(releaseTemplate.ReleaseCollectionNameTemplate)
             ? "{title}.S{season}.{variant}"
             : releaseTemplate.ReleaseCollectionNameTemplate;
 
         return new ReleaseCollectionDetectionResult(
-            NormalizeKey(RenderTemplate(keyTemplate, replacements)),
-            NormalizeSpaces(RenderTemplate(nameTemplate, replacements))
+            Key: NormalizeKey(RenderTemplate(keyTemplate, replacements)),
+            Name: NormalizeSpaces(RenderTemplate(nameTemplate, replacements))
         );
     }
 
@@ -129,10 +130,10 @@ public static partial class ReleaseCollectionDetectionService
 
         return new ReleaseCollectionDetectionResult(
             NormalizeKey(
-                RenderTemplate(releaseTemplate.ReleaseCollectionKeyTemplate, replacements)
+                RenderTemplate(template: releaseTemplate.ReleaseCollectionKeyTemplate, replacements: replacements)
             ),
             NormalizeSpaces(
-                RenderTemplate(releaseTemplate.ReleaseCollectionNameTemplate, replacements)
+                RenderTemplate(template: releaseTemplate.ReleaseCollectionNameTemplate, replacements: replacements)
             )
         );
     }
@@ -148,8 +149,11 @@ public static partial class ReleaseCollectionDetectionService
         foreach (Match match in TemplateTokenRegex().Matches(template))
         {
             result.Append(template.AsSpan(position, match.Index - position));
+            
             var token = match.Groups["token"].Value;
+            
             result.Append(replacements.GetValueOrDefault(token, string.Empty));
+            
             position = match.Index + match.Length;
         }
 
