@@ -94,17 +94,29 @@ public class ReleaseInfoRepository(
             .Select(entry => entry.Entity)
             .ToList();
 
-        foreach (var entry in dbWrite.ChangeTracker.Entries<ReleaseNfo>().Where(e => pendingReleaseNfos.Contains(e.Entity)))
+        foreach (
+            var entry in dbWrite
+                .ChangeTracker.Entries<ReleaseNfo>()
+                .Where(e => pendingReleaseNfos.Contains(e.Entity))
+        )
         {
             entry.State = EntityState.Detached;
         }
 
-        foreach (var entry in dbWrite.ChangeTracker.Entries<ReleaseExternalInfo>().Where(e => pendingExternalInfos.Contains(e.Entity)))
+        foreach (
+            var entry in dbWrite
+                .ChangeTracker.Entries<ReleaseExternalInfo>()
+                .Where(e => pendingExternalInfos.Contains(e.Entity))
+        )
         {
             entry.State = EntityState.Detached;
         }
 
-        foreach (var entry in dbWrite.ChangeTracker.Entries<ReleaseInfo>().Where(e => pendingReleaseInfos.Contains(e.Entity)))
+        foreach (
+            var entry in dbWrite
+                .ChangeTracker.Entries<ReleaseInfo>()
+                .Where(e => pendingReleaseInfos.Contains(e.Entity))
+        )
         {
             entry.State = EntityState.Detached;
         }

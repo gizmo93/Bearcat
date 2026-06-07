@@ -425,9 +425,11 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         );
     }
 
-    private void SetupNfoDatabase(string className,
+    private void SetupNfoDatabase(
+        string className,
         string expectedReleaseName,
-        NfoReleaseInfo? releaseInfo)
+        NfoReleaseInfo? releaseInfo
+    )
     {
         var configMock = new Mock<INfoDatabaseConfig>(MockBehavior.Strict);
         var nfoDatabaseMock = new Mock<INfoDatabase>(MockBehavior.Strict);

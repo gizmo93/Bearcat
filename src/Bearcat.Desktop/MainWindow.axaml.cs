@@ -194,7 +194,7 @@ public partial class MainWindow : Window
     private void UpdateStatus()
     {
         TrayAppStatus status;
-        
+
         if (isBusy)
         {
             status = TrayAppStatus.Working;

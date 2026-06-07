@@ -107,7 +107,7 @@ public partial class BackgroundTasksPage(
         {
             < 1 => "< 1s",
             < 60 => $"{duration.TotalSeconds:0}s",
-            _ => $"{duration.TotalMinutes:0.#}m"
+            _ => $"{duration.TotalMinutes:0.#}m",
         };
     }
 

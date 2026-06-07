@@ -281,9 +281,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
 
         EnsureUnmanagedArchiveConfigTemplate(releaseTemplate);
 
-        var archiveConfigTemplate = ResolveArchiveConfigTemplate(
-            releaseTemplate
-        );
+        var archiveConfigTemplate = ResolveArchiveConfigTemplate(releaseTemplate);
 
         var uploadConfigTemplate = new UploadConfigTemplate
         {

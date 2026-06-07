@@ -32,10 +32,10 @@ public static class BearcatHostResolver
         var executableName = OperatingSystem.IsWindows() ? "Bearcat.Host.exe" : "Bearcat.Host";
 
         var existingDllPath = new[]
-            {
-                Path.Combine(baseDirectory, executableName), Path.Combine(baseDirectory, "Bearcat.Host.dll"),
-            }
-            .FirstOrDefault(File.Exists);
+        {
+            Path.Combine(baseDirectory, executableName),
+            Path.Combine(baseDirectory, "Bearcat.Host.dll"),
+        }.FirstOrDefault(File.Exists);
 
         if (existingDllPath is not null)
         {

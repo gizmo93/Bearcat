@@ -14,12 +14,12 @@ public static class DesktopBrowser
         catch
         {
             ProcessStartInfo fallback;
-            
-            if(OperatingSystem.IsMacOS())
+
+            if (OperatingSystem.IsMacOS())
             {
                 fallback = new ProcessStartInfo("open", url);
             }
-            else if(OperatingSystem.IsWindows())
+            else if (OperatingSystem.IsWindows())
             {
                 fallback = new ProcessStartInfo("cmd", $"/c start {url}");
             }

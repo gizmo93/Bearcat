@@ -12,7 +12,7 @@ public static class LocalizationExtensions
         this IStringLocalizer<UiResource> localizer,
         ReleaseType releaseType
     ) => localizer[$"ReleaseType.{releaseType}"];
-    
+
     public static string Localize(this IStringLocalizer<UiResource> localizer, UploadState state) =>
         localizer[$"UploadState.{state}"];
 

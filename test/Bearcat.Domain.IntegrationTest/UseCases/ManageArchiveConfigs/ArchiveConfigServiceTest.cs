@@ -295,7 +295,10 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
         );
         File.Delete(Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part1.rar"));
         File.Delete(Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part2.rar"));
-        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.rar"), "new");
+        await File.WriteAllTextAsync(
+            Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.rar"),
+            "new"
+        );
 
         // Act
         await service.RefreshUnmanagedArchiveAsync(archiveConfig.Id);
@@ -365,7 +368,10 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
             "Bearcat.Release.Unmanaged.part1.rar"
         );
         File.Delete(Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part1.rar"));
-        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.zip"), "zip");
+        await File.WriteAllTextAsync(
+            Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.zip"),
+            "zip"
+        );
 
         // Act
         var result = await Should.ThrowAsync<InvalidOperationException>(async () =>

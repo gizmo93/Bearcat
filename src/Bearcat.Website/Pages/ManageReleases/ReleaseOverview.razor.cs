@@ -50,11 +50,9 @@ public partial class ReleaseOverview(
             return L["NoNfoFileAvailable"];
         }
 
-        return hasLocalNfo
-            ? L["NfoFileAlreadyExists"]
-            : L["SaveNfoFile"];
+        return hasLocalNfo ? L["NfoFileAlreadyExists"] : L["SaveNfoFile"];
     }
-    
+
     private string CoverDownloadUrl => $"/releases/{ReleaseId}/cover";
     private string CoverDownloadFileName => GetCoverDownloadFileName();
 
