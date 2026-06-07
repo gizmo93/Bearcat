@@ -7,22 +7,6 @@ namespace Bearcat.Domain.UseCases.ManageReleaseCollections;
 
 public static partial class ReleaseCollectionDetectionService
 {
-    private static readonly IReadOnlySet<string> VideoExtensions = new HashSet<string>(
-        StringComparer.OrdinalIgnoreCase
-    )
-    {
-        ".avi",
-        ".m2ts",
-        ".m4v",
-        ".mkv",
-        ".mov",
-        ".mp4",
-        ".mpeg",
-        ".mpg",
-        ".ts",
-        ".wmv",
-    };
-
     public static ReleaseCollectionDetectionResult? Detect(
         string releaseName,
         ReleaseTemplate releaseTemplate
@@ -102,13 +86,12 @@ public static partial class ReleaseCollectionDetectionService
             return null;
         }
 
-        var cleanReleaseName = StripKnownVideoExtension(releaseName.Trim());
         Match match;
 
         try
         {
             match = Regex.Match(
-                cleanReleaseName,
+                releaseName.Trim(),
                 releaseTemplate.ReleaseCollectionPattern,
                 RegexOptions.IgnoreCase,
                 TimeSpan.FromMilliseconds(250)
@@ -171,15 +154,6 @@ public static partial class ReleaseCollectionDetectionService
         return result.ToString();
     }
 
-    private static string StripKnownVideoExtension(string releaseName)
-    {
-        var extension = Path.GetExtension(releaseName);
-
-        return VideoExtensions.Contains(extension)
-            ? releaseName[..^extension.Length]
-            : releaseName;
-    }
-
     private static string NormalizeDisplayTitle(string value)
     {
         return NormalizeSpaces(value.Replace('.', ' ').Replace('_', ' '));
@@ -210,5 +184,4 @@ public static partial class ReleaseCollectionDetectionService
 
     [GeneratedRegex(@"[._\s-]+")]
     private static partial Regex KeySeparatorRegex();
-
 }
