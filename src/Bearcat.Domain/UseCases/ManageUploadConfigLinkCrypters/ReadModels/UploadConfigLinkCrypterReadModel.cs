@@ -15,5 +15,6 @@ public record UploadConfigLinkCrypterReadModel(
     bool EnableClickAndLoad,
     bool SupportsCaptcha,
     bool SupportsContainerDownload,
-    bool SupportsClickAndLoad
+    bool SupportsClickAndLoad,
+    int? ReleaseCollectionId
 );

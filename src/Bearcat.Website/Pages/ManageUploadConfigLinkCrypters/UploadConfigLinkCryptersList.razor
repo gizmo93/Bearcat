@@ -34,12 +34,7 @@
                                    Filterable="true">
                     <CellTemplate Context="item">
                         <div class="space-y-1">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <p class="font-medium">@item.LinkCrypterRegistrationName</p>
-                                <BbBadge Variant="@(item.ContainerScope is LinkCrypterContainerScope.ReleaseCollection ? BadgeVariant.Secondary : BadgeVariant.Outline)">
-                                    @L.Localize(item.ContainerScope)
-                                </BbBadge>
-                            </div>
+                            <p class="font-medium">@item.LinkCrypterRegistrationName</p>
                             <p class="text-xs text-muted-foreground">@item.LinkCrypterName</p>
                         </div>
                     </CellTemplate>
@@ -107,7 +102,17 @@
                         <div class="flex justify-end">
                             @if (item.ContainerScope is LinkCrypterContainerScope.ReleaseCollection)
                             {
-                                <span class="text-xs text-muted-foreground">@L["ManagedByReleaseCollection"]</span>
+                                @if (item.ReleaseCollectionId is not null)
+                                {
+                                    <a class="text-xs font-medium text-primary underline-offset-4 hover:underline"
+                                       href="@($"/release-collections/{item.ReleaseCollectionId}")">
+                                        @L["ManagedByReleaseCollection"]
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-xs text-muted-foreground">@L["ManagedByReleaseCollection"]</span>
+                                }
                             }
                             else
                             {

@@ -33,6 +33,10 @@ public class UploadConfigLinkCrypterReadRepository(
                 u.EnableCaptcha,
                 u.EnableContainerDownload,
                 u.EnableClickAndLoad,
+                ReleaseCollectionId =
+                    u.UploadConfig.CollectionUploadSlot == null
+                        ? null
+                        : (int?)u.UploadConfig.CollectionUploadSlot.ReleaseCollectionId,
             })
             .FirstAsync(cancellationToken: cancellationToken);
 
@@ -51,7 +55,8 @@ public class UploadConfigLinkCrypterReadRepository(
             item.EnableClickAndLoad,
             linkCrypter.SupportsCaptcha,
             linkCrypter.SupportsContainerDownload,
-            linkCrypter.SupportsClickAndLoad
+            linkCrypter.SupportsClickAndLoad,
+            item.ReleaseCollectionId
         );
     }
 
@@ -78,6 +83,10 @@ public class UploadConfigLinkCrypterReadRepository(
                 u.EnableCaptcha,
                 u.EnableContainerDownload,
                 u.EnableClickAndLoad,
+                ReleaseCollectionId =
+                    u.UploadConfig.CollectionUploadSlot == null
+                        ? null
+                        : (int?)u.UploadConfig.CollectionUploadSlot.ReleaseCollectionId,
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -99,7 +108,8 @@ public class UploadConfigLinkCrypterReadRepository(
                     item.EnableClickAndLoad,
                     linkCrypter.SupportsCaptcha,
                     linkCrypter.SupportsContainerDownload,
-                    linkCrypter.SupportsClickAndLoad
+                    linkCrypter.SupportsClickAndLoad,
+                    item.ReleaseCollectionId
                 );
             })
             .ToList();

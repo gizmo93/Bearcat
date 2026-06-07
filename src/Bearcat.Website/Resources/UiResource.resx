@@ -201,7 +201,7 @@
   <data name="LinkCrypterRegistrations" xml:space="preserve"><value>Link crypter registrations</value></data>
   <data name="LinkCrypterRegistrationsIntro" xml:space="preserve"><value>Manage crypter configurations, active state, and login checks.</value></data>
   <data name="LinkCrypterSettings" xml:space="preserve"><value>Settings</value></data>
-  <data name="ManagedByReleaseCollection" xml:space="preserve"><value>Managed by release collection</value></data>
+  <data name="ManagedByReleaseCollection" xml:space="preserve"><value>Managed on collection page</value></data>
   <data name="LinkCrypterLinks" xml:space="preserve"><value>Link crypter links</value></data>
   <data name="LinkCrypters" xml:space="preserve"><value>Link crypters</value></data>
   <data name="LinkCryptersDescription" xml:space="preserve"><value>Optional containers for distributed upload links.</value></data>

@@ -201,7 +201,7 @@
   <data name="LinkCrypterRegistrations" xml:space="preserve"><value>Link-Crypter-Registrierungen</value></data>
   <data name="LinkCrypterRegistrationsIntro" xml:space="preserve"><value>Verwalte Crypter-Konfigurationen, Aktivierungsstatus und Login-Prüfungen.</value></data>
   <data name="LinkCrypterSettings" xml:space="preserve"><value>Einstellungen</value></data>
-  <data name="ManagedByReleaseCollection" xml:space="preserve"><value>In Release Collection verwaltet</value></data>
+  <data name="ManagedByReleaseCollection" xml:space="preserve"><value>Auf Collection-Seite verwaltet</value></data>
   <data name="LinkCrypterLinks" xml:space="preserve"><value>Link-Crypter-Links</value></data>
   <data name="LinkCrypters" xml:space="preserve"><value>Link-Crypter</value></data>
   <data name="LinkCryptersDescription" xml:space="preserve"><value>Optionale Container für verteilte Upload-Links.</value></data>
