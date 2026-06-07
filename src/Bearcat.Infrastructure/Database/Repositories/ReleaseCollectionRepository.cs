@@ -145,25 +145,9 @@ public class ReleaseCollectionRepository(
         );
     }
 
-    public async Task<CollectionUploadSlot> GetUploadSlotForSharedLinkCrypterUpdateAsync(
-        int collectionUploadSlotId,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return await dbWrite
-            .CollectionUploadSlots.Include(slot => slot.UploadConfigs)
-                .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
-            .FirstAsync(slot => slot.Id == collectionUploadSlotId, cancellationToken);
-    }
-
     public void Add(ReleaseCollection releaseCollection)
     {
         dbWrite.Add(releaseCollection);
-    }
-
-    public void Remove(UploadConfigLinkCrypter uploadConfigLinkCrypter)
-    {
-        dbWrite.Remove(uploadConfigLinkCrypter);
     }
 
     public void Remove(ReleaseCollection releaseCollection)

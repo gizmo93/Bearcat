@@ -15,14 +15,7 @@ public interface IReleaseCollectionWriteRepository
         CancellationToken cancellationToken = default
     );
 
-    Task<CollectionUploadSlot> GetUploadSlotForSharedLinkCrypterUpdateAsync(
-        int collectionUploadSlotId,
-        CancellationToken cancellationToken = default
-    );
-
     void Add(ReleaseCollection releaseCollection);
-
-    void Remove(UploadConfigLinkCrypter uploadConfigLinkCrypter);
 
     void Remove(ReleaseCollection releaseCollection);
 

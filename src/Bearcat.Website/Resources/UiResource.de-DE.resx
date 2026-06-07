@@ -515,7 +515,7 @@
   <data name="DeleteLinkCrypterTemplateConfirmation" xml:space="preserve"><value>Link-Crypter-Template {0} löschen?</value></data>
   <data name="DeleteReleaseTemplateConfirmation" xml:space="preserve"><value>Release-Template {0} löschen?</value></data>
   <data name="DeleteUploadConfigTemplateConfirmation" xml:space="preserve"><value>Upload-Konfigurationstemplate {0} löschen?</value></data>
-  <data name="LinkCrypterTemplateDialogDescription" xml:space="preserve"><value>Wähle die Link-Crypter-Registrierung und ein optionales Container-Passwort, die in Releases kopiert werden.</value></data>
+  <data name="LinkCrypterTemplateDialogDescription" xml:space="preserve"><value>Wähle, wo Bearcat Container erstellt und welche Einstellungen in Releases kopiert werden.</value></data>
   <data name="NewFromTemplate" xml:space="preserve"><value>Neu aus Template</value></data>
   <data name="NewReleaseTemplate" xml:space="preserve"><value>Neues Release-Template</value></data>
   <data name="NoArchiveConfigTemplatesYet" xml:space="preserve"><value>Noch keine Archiv-Konfigurationstemplates.</value></data>
@@ -633,10 +633,10 @@
   <data name="CollectionUploadSlotPasswordPolicy.Ignore" xml:space="preserve"><value>Ignorieren</value></data>
   <data name="CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue" xml:space="preserve"><value>Muss erwartetem Wert entsprechen</value></data>
   <data name="CollectionUploadSlotPasswordPolicy.MustMatchAcrossReleases" xml:space="preserve"><value>Muss über Releases übereinstimmen</value></data>
-  <data name="ContainerScope" xml:space="preserve"><value>Container-Scope</value></data>
+  <data name="ContainerScope" xml:space="preserve"><value>Container erstellen für</value></data>
   <data name="ExpectedArchivePassword" xml:space="preserve"><value>Erwartetes Archivpasswort</value></data>
-  <data name="LinkCrypterContainerScope.Release" xml:space="preserve"><value>Release</value></data>
-  <data name="LinkCrypterContainerScope.ReleaseCollection" xml:space="preserve"><value>Release-Collection</value></data>
+  <data name="LinkCrypterContainerScope.Release" xml:space="preserve"><value>Jedes Release einzeln</value></data>
+  <data name="LinkCrypterContainerScope.ReleaseCollection" xml:space="preserve"><value>Die ganze Release-Collection</value></data>
   <data name="NoReleaseCollectionsFound" xml:space="preserve"><value>Keine Release-Collections gefunden</value></data>
   <data name="NoCollectionUploadSlotsFound" xml:space="preserve"><value>Keine Upload-Slots gefunden</value></data>
   <data name="OpenReleaseCollectionActions" xml:space="preserve"><value>Release-Collection-Aktionen öffnen</value></data>
@@ -662,10 +662,6 @@
   <data name="SearchReleaseCollections" xml:space="preserve"><value>Collections suchen</value></data>
   <data name="SharedLinkCrypters" xml:space="preserve"><value>Container erstellen bei</value></data>
   <data name="NoSharedLinkCrypters" xml:space="preserve"><value>Keiner</value></data>
-  <data name="EditSharedLinkCrypters" xml:space="preserve"><value>Link-Crypter auswählen</value></data>
-  <data name="SharedLinkCryptersDialogDescription" xml:space="preserve"><value>Wähle, wo Bearcat für diese Upload-Gruppe einen gemeinsamen Container erstellen soll.</value></data>
-  <data name="SharedLinkCryptersDialogHelp" xml:space="preserve"><value>Diese Auswahl gilt für alle Upload-Konfigurationen dieser Gruppe.</value></data>
-  <data name="NoLinkCryptersFound" xml:space="preserve"><value>Keine Link-Crypter gefunden</value></data>
   <data name="UseReleaseCollections" xml:space="preserve"><value>Release-Collections verwenden</value></data>
   <data name="UseCollectionUploadSlot" xml:space="preserve"><value>Diese Upload-Konfiguration über die Collection teilen</value></data>
   <data name="UseCollectionUploadSlotHelp" xml:space="preserve"><value>Erzeugt einen gemeinsamen Collection-Container für diese Gruppe.</value></data>
