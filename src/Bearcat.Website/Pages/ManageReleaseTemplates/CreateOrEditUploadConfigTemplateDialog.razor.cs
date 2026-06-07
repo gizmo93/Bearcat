@@ -1,3 +1,4 @@
+using System.Text;
 using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
@@ -37,6 +38,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
     private bool isInitialized;
     private bool isEdit;
     private bool isUnmanagedReleaseTemplate;
+    private bool usesReleaseCollections;
 
     private IEnumerable<SelectOption<int?>> HosterOptions =>
         hosterRegistrations
@@ -66,6 +68,27 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
     private bool CanUsePremiumOnlyDownload =>
         SelectedHosterRegistration?.SupportsPremiumOnlyDownloads is true;
 
+    private bool UseCollectionUploadSlot
+    {
+        get =>
+            !string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotKey)
+            || !string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotName);
+        set
+        {
+            if (value)
+            {
+                if (string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotName))
+                {
+                    FormModel.CollectionUploadSlotName = GetDefaultCollectionUploadGroupName();
+                }
+
+                return;
+            }
+
+            ClearCollectionUploadSlot();
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         editContext = new EditContext(FormModel);
@@ -77,6 +100,15 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
         var detail = await releaseTemplateReadRepository.GetDetailAsync(ReleaseTemplateId);
         archiveConfigTemplates = detail?.ArchiveConfigTemplates ?? [];
         isUnmanagedReleaseTemplate = detail?.ReleaseType is ReleaseType.Unmanaged;
+        usesReleaseCollections = detail?.UseReleaseCollections is true;
+
+        if (
+            string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotName)
+            && !string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotKey)
+        )
+        {
+            FormModel.CollectionUploadSlotName = FormModel.CollectionUploadSlotKey;
+        }
 
         if (isUnmanagedReleaseTemplate && FormModel.ArchiveConfigTemplateId is null)
         {
@@ -92,6 +124,8 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
 
     private async Task SaveAsync()
     {
+        PrepareCollectionUploadSlotForSave();
+
         var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
 
         if (isEdit)
@@ -174,6 +208,20 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
         }
 
         if (
+            usesReleaseCollections
+            && UseCollectionUploadSlot
+            && string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotName)
+        )
+        {
+            messageStore.Add(
+                () => FormModel.CollectionUploadSlotName!,
+                L["CollectionUploadGroupNameRequired"]
+            );
+        }
+
+        if (
+            UseCollectionUploadSlot
+            &&
             FormModel.CollectionUploadSlotPasswordPolicy
                 is CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue
             && string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotExpectedArchivePassword)
@@ -189,5 +237,77 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
     private async Task CancelAsync()
     {
         await DialogRef.CancelAsync();
+    }
+
+    private void PrepareCollectionUploadSlotForSave()
+    {
+        if (!usesReleaseCollections || !UseCollectionUploadSlot)
+        {
+            ClearCollectionUploadSlot();
+            return;
+        }
+
+        FormModel.CollectionUploadSlotName = FormModel.CollectionUploadSlotName?.Trim();
+
+        if (string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotKey))
+        {
+            FormModel.CollectionUploadSlotKey = CreateStableKey(FormModel.CollectionUploadSlotName);
+        }
+
+        if (
+            FormModel.CollectionUploadSlotPasswordPolicy
+            is not CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue
+        )
+        {
+            FormModel.CollectionUploadSlotExpectedArchivePassword = null;
+        }
+    }
+
+    private void ClearCollectionUploadSlot()
+    {
+        FormModel.CollectionUploadSlotKey = null;
+        FormModel.CollectionUploadSlotName = null;
+        FormModel.CollectionUploadSlotIsRequired = false;
+        FormModel.CollectionUploadSlotPasswordPolicy = CollectionUploadSlotPasswordPolicy.Ignore;
+        FormModel.CollectionUploadSlotExpectedArchivePassword = null;
+    }
+
+    private string GetDefaultCollectionUploadGroupName()
+    {
+        if (!string.IsNullOrWhiteSpace(FormModel.Name))
+        {
+            return FormModel.Name.Trim();
+        }
+
+        return SelectedHosterRegistration?.Name ?? string.Empty;
+    }
+
+    private static string CreateStableKey(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var keyBuilder = new StringBuilder(value.Length);
+        var lastWasSeparator = true;
+
+        foreach (var character in value.Trim().ToLowerInvariant())
+        {
+            if (char.IsLetterOrDigit(character))
+            {
+                keyBuilder.Append(character);
+                lastWasSeparator = false;
+                continue;
+            }
+
+            if (!lastWasSeparator)
+            {
+                keyBuilder.Append('-');
+                lastWasSeparator = true;
+            }
+        }
+
+        return keyBuilder.ToString().Trim('-');
     }
 }

@@ -619,12 +619,15 @@
   <data name="VerifyingCaptcha" xml:space="preserve"><value>Prüfe...</value></data>
   <data name="AllReleaseGroups" xml:space="preserve"><value>Alle Release-Gruppen</value></data>
   <data name="Back" xml:space="preserve"><value>Zurück</value></data>
-  <data name="CollectionUploadSlot" xml:space="preserve"><value>Collection-Upload-Slot</value></data>
+  <data name="CollectionUploadGroupName" xml:space="preserve"><value>Gruppenname</value></data>
+  <data name="CollectionUploadGroupNameRequired" xml:space="preserve"><value>Der Gruppenname ist erforderlich.</value></data>
+  <data name="CollectionUploadSlot" xml:space="preserve"><value>Collection-Container</value></data>
   <data name="CollectionUploadSlotExpectedArchivePasswordRequired" xml:space="preserve"><value>Das erwartete Archivpasswort ist für diese Passwortregel nötig.</value></data>
-  <data name="CollectionUploadSlotHelp" xml:space="preserve"><value>Ordne diese Upload-Konfiguration optional einem stabilen Collection-Slot zu.</value></data>
+  <data name="CollectionUploadSlotHelp" xml:space="preserve"><value>Teilt passende Uploads aus derselben Release-Collection.</value></data>
   <data name="CollectionUploadSlotKey" xml:space="preserve"><value>Slot-Key</value></data>
   <data name="CollectionUploadSlotName" xml:space="preserve"><value>Slot-Name</value></data>
-  <data name="CollectionUploadSlotNamePlaceholder" xml:space="preserve"><value>Forum A Rapidgator mit Passwort</value></data>
+  <data name="CollectionUploadSlotNamePlaceholder" xml:space="preserve"><value>Rapidgator mit Passwort</value></data>
+  <data name="CollectionUploadSlotRequired" xml:space="preserve"><value>Bei jedem Release erwartet</value></data>
   <data name="CollectionUploadSlots" xml:space="preserve"><value>Upload-Slots</value></data>
   <data name="CollectionUploadSlotsDescription" xml:space="preserve"><value>Fachliche Upload-Rollen, die Releases in dieser Collection erfüllen.</value></data>
   <data name="CollectionUploadSlotPasswordPolicy.Ignore" xml:space="preserve"><value>Ignorieren</value></data>
@@ -658,4 +661,6 @@
   <data name="Required" xml:space="preserve"><value>Erforderlich</value></data>
   <data name="SearchReleaseCollections" xml:space="preserve"><value>Collections suchen</value></data>
   <data name="UseReleaseCollections" xml:space="preserve"><value>Release-Collections verwenden</value></data>
+  <data name="UseCollectionUploadSlot" xml:space="preserve"><value>Diese Upload-Konfiguration über die Collection teilen</value></data>
+  <data name="UseCollectionUploadSlotHelp" xml:space="preserve"><value>Erzeugt einen gemeinsamen Collection-Container für diese Gruppe.</value></data>
 </root>

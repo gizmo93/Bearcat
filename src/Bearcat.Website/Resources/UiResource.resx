@@ -619,12 +619,15 @@
   <data name="VerifyingCaptcha" xml:space="preserve"><value>Verifying...</value></data>
   <data name="AllReleaseGroups" xml:space="preserve"><value>All release groups</value></data>
   <data name="Back" xml:space="preserve"><value>Back</value></data>
-  <data name="CollectionUploadSlot" xml:space="preserve"><value>Collection upload slot</value></data>
+  <data name="CollectionUploadGroupName" xml:space="preserve"><value>Group name</value></data>
+  <data name="CollectionUploadGroupNameRequired" xml:space="preserve"><value>Group name is required.</value></data>
+  <data name="CollectionUploadSlot" xml:space="preserve"><value>Collection container</value></data>
   <data name="CollectionUploadSlotExpectedArchivePasswordRequired" xml:space="preserve"><value>Expected archive password is required for this password policy.</value></data>
-  <data name="CollectionUploadSlotHelp" xml:space="preserve"><value>Optionally assign this upload configuration to a stable collection slot.</value></data>
+  <data name="CollectionUploadSlotHelp" xml:space="preserve"><value>Share matching uploads from the same release collection.</value></data>
   <data name="CollectionUploadSlotKey" xml:space="preserve"><value>Slot key</value></data>
   <data name="CollectionUploadSlotName" xml:space="preserve"><value>Slot name</value></data>
-  <data name="CollectionUploadSlotNamePlaceholder" xml:space="preserve"><value>Forum A Rapidgator passworded</value></data>
+  <data name="CollectionUploadSlotNamePlaceholder" xml:space="preserve"><value>Rapidgator passworded</value></data>
+  <data name="CollectionUploadSlotRequired" xml:space="preserve"><value>Expected on every release</value></data>
   <data name="CollectionUploadSlots" xml:space="preserve"><value>Upload slots</value></data>
   <data name="CollectionUploadSlotsDescription" xml:space="preserve"><value>Semantic upload roles expected across releases in this collection.</value></data>
   <data name="CollectionUploadSlotPasswordPolicy.Ignore" xml:space="preserve"><value>Ignore</value></data>
@@ -658,4 +661,6 @@
   <data name="Required" xml:space="preserve"><value>Required</value></data>
   <data name="SearchReleaseCollections" xml:space="preserve"><value>Search collections</value></data>
   <data name="UseReleaseCollections" xml:space="preserve"><value>Use release collections</value></data>
+  <data name="UseCollectionUploadSlot" xml:space="preserve"><value>Share this upload config across the collection</value></data>
+  <data name="UseCollectionUploadSlotHelp" xml:space="preserve"><value>Creates one shared collection container for this group.</value></data>
 </root>
