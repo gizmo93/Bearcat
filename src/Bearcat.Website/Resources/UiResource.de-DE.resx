@@ -629,7 +629,7 @@
   <data name="CollectionUploadSlotNamePlaceholder" xml:space="preserve"><value>Rapidgator mit Passwort</value></data>
   <data name="CollectionUploadSlotRequired" xml:space="preserve"><value>Bei jedem Release erwartet</value></data>
   <data name="CollectionUploadSlots" xml:space="preserve"><value>Upload-Slots</value></data>
-  <data name="CollectionUploadSlotsDescription" xml:space="preserve"><value>Fachliche Upload-Rollen, die Releases in dieser Collection erfüllen.</value></data>
+  <data name="CollectionUploadSlotsDescription" xml:space="preserve"><value>Upload-Gruppen, die Links aus mehreren Releases in gemeinsamen Containern sammeln können.</value></data>
   <data name="CollectionUploadSlotPasswordPolicy.Ignore" xml:space="preserve"><value>Ignorieren</value></data>
   <data name="CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue" xml:space="preserve"><value>Muss erwartetem Wert entsprechen</value></data>
   <data name="CollectionUploadSlotPasswordPolicy.MustMatchAcrossReleases" xml:space="preserve"><value>Muss über Releases übereinstimmen</value></data>
