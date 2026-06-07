@@ -93,18 +93,17 @@ public class ReleaseReadRepository(
                         u.OnlineState,
                         LinkCount = u.UploadedFiles.Count,
                         ErrorMessages = u.ErrorMessages.ToList(),
-                        ArchivePassword =
-                            u.Archive == null ? null : u.Archive.ArchiveConfig.ArchivePassword,
+                        ArchivePassword = u.Archive == null
+                            ? null
+                            : u.Archive.ArchiveConfig.ArchivePassword,
                     })
                     .First()
             )
             .ToListAsync(cancellationToken: cancellationToken);
 
         var uploadIds = latestUploads.Select(u => u.UploadId).ToList();
-        var linksByUploadId = new Dictionary<
-            int,
-            IReadOnlyList<ReleaseOverviewLinkCrypterLinkReadModel>
-        >();
+        var linksByUploadId =
+            new Dictionary<int, IReadOnlyList<ReleaseOverviewLinkCrypterLinkReadModel>>();
 
         if (uploadIds.Count > 0)
         {
@@ -140,10 +139,14 @@ public class ReleaseReadRepository(
                 {
                     source.UploadId,
                     LinkCrypterContainerId = source.LinkCrypterContainer.Id,
-                    LinkCrypterRegistrationName =
-                        source.LinkCrypterContainer.LinkCrypterRegistration.Name,
-                    LinkCrypterClassName =
-                        source.LinkCrypterContainer.LinkCrypterRegistration.LinkCrypterClassName,
+                    LinkCrypterRegistrationName = source
+                        .LinkCrypterContainer
+                        .LinkCrypterRegistration
+                        .Name,
+                    LinkCrypterClassName = source
+                        .LinkCrypterContainer
+                        .LinkCrypterRegistration
+                        .LinkCrypterClassName,
                     source.LinkCrypterContainer.ContainerUrl,
                     source.LinkCrypterContainer.Scope,
                     source.LinkCrypterContainer.State,
@@ -161,7 +164,8 @@ public class ReleaseReadRepository(
                     group => group.Key,
                     group =>
                         (IReadOnlyList<ReleaseOverviewLinkCrypterLinkReadModel>)
-                            group.Select(link => new ReleaseOverviewLinkCrypterLinkReadModel(
+                            group
+                                .Select(link => new ReleaseOverviewLinkCrypterLinkReadModel(
                                     LinkCrypterContainerId: link.LinkCrypterContainerId,
                                     LinkCrypterRegistrationName: link.LinkCrypterRegistrationName,
                                     LinkCrypterClassName: link.LinkCrypterClassName,
@@ -538,10 +542,14 @@ public class ReleaseReadRepository(
             )
             .Select(source => new
             {
-                LinkCrypterRegistrationName =
-                    source.LinkCrypterContainer.LinkCrypterRegistration.Name,
-                LinkCrypterClassName =
-                    source.LinkCrypterContainer.LinkCrypterRegistration.LinkCrypterClassName,
+                LinkCrypterRegistrationName = source
+                    .LinkCrypterContainer
+                    .LinkCrypterRegistration
+                    .Name,
+                LinkCrypterClassName = source
+                    .LinkCrypterContainer
+                    .LinkCrypterRegistration
+                    .LinkCrypterClassName,
                 source.LinkCrypterContainer.ContainerUrl,
                 source.LinkCrypterContainer.Scope,
                 source.LinkCrypterContainer.State,
