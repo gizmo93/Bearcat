@@ -5,7 +5,6 @@
 namespace Bearcat.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    [Migration("20260607143000_ExpandLinkCrypterContainerExternalReference")]
     public partial class ExpandLinkCrypterContainerExternalReference : Migration
     {
         /// <inheritdoc />
@@ -19,8 +18,7 @@ namespace Bearcat.Infrastructure.Migrations
                 oldClrType: typeof(string),
                 oldType: "character varying(100)",
                 oldMaxLength: 100,
-                oldNullable: true
-            );
+                oldNullable: true);
         }
 
         /// <inheritdoc />
@@ -34,8 +32,7 @@ namespace Bearcat.Infrastructure.Migrations
                 nullable: true,
                 oldClrType: typeof(string),
                 oldType: "text",
-                oldNullable: true
-            );
+                oldNullable: true);
         }
     }
 }
