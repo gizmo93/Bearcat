@@ -184,6 +184,7 @@ public class ReleaseCollectionService(
         var settingsByRegistrationId = linkCrypterSettings
             .GroupBy(settings => settings.LinkCrypterRegistrationId)
             .ToDictionary(group => group.Key, group => group.Last());
+        
         var uploadSlot = await writeRepository.GetUploadSlotForSharedLinkCrypterUpdateAsync(
             collectionUploadSlotId,
             cancellationToken
@@ -199,12 +200,9 @@ public class ReleaseCollectionService(
 
     private static string CleanRequired(string value, string parameterName)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            throw new ArgumentException("Value is required.", parameterName);
-        }
-
-        return value.Trim();
+        return string.IsNullOrWhiteSpace(value)
+            ? throw new ArgumentException("Value is required.", parameterName)
+            : value.Trim();
     }
 
     private void SyncCollectionScopedLinkCrypters(
@@ -275,11 +273,13 @@ public class ReleaseCollectionService(
                 continue;
             }
 
-            if (!lastWasSeparator)
+            if (lastWasSeparator)
             {
-                keyBuilder.Append('-');
-                lastWasSeparator = true;
+                continue;
             }
+
+            keyBuilder.Append('-');
+            lastWasSeparator = true;
         }
 
         return keyBuilder.ToString().Trim('-');
