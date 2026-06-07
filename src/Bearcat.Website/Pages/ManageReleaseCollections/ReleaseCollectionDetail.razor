@@ -52,7 +52,7 @@
                 else
                 {
                     <div class="bearcat-config-list">
-                        <div class="bearcat-config-header grid grid-cols-[minmax(0,1fr)_180px_120px_120px] gap-4">
+                        <div class="bearcat-config-header bearcat-collection-slots-grid">
                             <span>@L["Name"]</span>
                             <span>@L["PasswordPolicy"]</span>
                             <span>@L["Required"]</span>
@@ -61,7 +61,7 @@
                         @foreach (var slot in releaseCollection.UploadSlots)
                         {
                             <div class="bearcat-config-item">
-                                <div class="grid gap-3 px-4 py-3 md:grid-cols-[minmax(0,1fr)_180px_120px_120px] md:items-center">
+                                <div class="bearcat-config-row bearcat-collection-slots-grid">
                                     <div class="min-w-0">
                                         <p class="truncate text-sm font-semibold" title="@slot.Name">@slot.Name</p>
                                         <p class="mt-1 truncate text-xs text-muted-foreground" title="@slot.Key">@slot.Key</p>
@@ -110,7 +110,7 @@
                 else
                 {
                     <div class="bearcat-config-list">
-                        <div class="bearcat-config-header grid grid-cols-[minmax(0,1fr)_140px_180px] gap-4">
+                        <div class="bearcat-config-header bearcat-collection-releases-grid">
                             <span>@L["Name"]</span>
                             <span>@L["ReleaseType"]</span>
                             <span>@L["CreatedAt"]</span>
@@ -118,7 +118,7 @@
                         @foreach (var release in releaseCollection.Releases)
                         {
                             <div class="bearcat-config-item">
-                                <div class="grid gap-3 px-4 py-3 md:grid-cols-[minmax(0,1fr)_140px_180px] md:items-center">
+                                <div class="bearcat-config-row bearcat-collection-releases-grid">
                                     <a class="bearcat-release-list-name"
                                        href="@($"/releases/{release.ReleaseId}")">
                                         @release.Name

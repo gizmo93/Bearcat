@@ -2301,6 +2301,14 @@ a {
         grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 84px;
     }
 
+    .bearcat-collection-slots-grid {
+        grid-template-columns: minmax(0, 1fr) 180px 120px 140px;
+    }
+
+    .bearcat-collection-releases-grid {
+        grid-template-columns: minmax(0, 1fr) 140px 180px;
+    }
+
     .bearcat-mobile-label {
         display: none;
     }
