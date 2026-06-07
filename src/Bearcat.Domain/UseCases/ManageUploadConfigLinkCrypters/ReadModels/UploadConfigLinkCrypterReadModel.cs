@@ -1,3 +1,5 @@
+using Bearcat.Domain.ValueObjects;
+
 namespace Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.ReadModels;
 
 public record UploadConfigLinkCrypterReadModel(
@@ -6,6 +8,7 @@ public record UploadConfigLinkCrypterReadModel(
     string LinkCrypterRegistrationName,
     int LinkCrypterRegistrationId,
     string? Password,
+    LinkCrypterContainerScope ContainerScope,
     bool LinkCrypterIsActive,
     bool EnableCaptcha,
     bool EnableContainerDownload,

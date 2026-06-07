@@ -34,7 +34,12 @@
                                    Filterable="true">
                     <CellTemplate Context="item">
                         <div class="space-y-1">
-                            <p class="font-medium">@item.LinkCrypterRegistrationName</p>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <p class="font-medium">@item.LinkCrypterRegistrationName</p>
+                                <BbBadge Variant="@(item.ContainerScope is LinkCrypterContainerScope.ReleaseCollection ? BadgeVariant.Secondary : BadgeVariant.Outline)">
+                                    @L.Localize(item.ContainerScope)
+                                </BbBadge>
+                            </div>
                             <p class="text-xs text-muted-foreground">@item.LinkCrypterName</p>
                         </div>
                     </CellTemplate>
@@ -100,21 +105,28 @@
                                    Property="@(item => item.LinkCrypterRegistrationName)">
                     <CellTemplate Context="item">
                         <div class="flex justify-end">
-                            <BbDropdownMenu>
-                                <BbDropdownMenuTrigger>
-                                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenLinkCrypterActions"]">
-                                        <LucideIcon Name="ellipsis" class="h-4 w-4" />
-                                    </BbButton>
-                                </BbDropdownMenuTrigger>
-                                <BbDropdownMenuContent Align="PopoverAlign.End">
-                                    <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(item))">
-                                        @L["Edit"]
-                                    </BbDropdownMenuItem>
-                                    <BbDropdownMenuItem OnClick="@(async _ => await ShowDeleteDialogAsync(item))">
-                                        @L["Delete"]
-                                    </BbDropdownMenuItem>
-                                </BbDropdownMenuContent>
-                            </BbDropdownMenu>
+                            @if (item.ContainerScope is LinkCrypterContainerScope.ReleaseCollection)
+                            {
+                                <span class="text-xs text-muted-foreground">@L["ManagedByReleaseTemplate"]</span>
+                            }
+                            else
+                            {
+                                <BbDropdownMenu>
+                                    <BbDropdownMenuTrigger>
+                                        <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenLinkCrypterActions"]">
+                                            <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                        </BbButton>
+                                    </BbDropdownMenuTrigger>
+                                    <BbDropdownMenuContent Align="PopoverAlign.End">
+                                        <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(item))">
+                                            @L["Edit"]
+                                        </BbDropdownMenuItem>
+                                        <BbDropdownMenuItem OnClick="@(async _ => await ShowDeleteDialogAsync(item))">
+                                            @L["Delete"]
+                                        </BbDropdownMenuItem>
+                                    </BbDropdownMenuContent>
+                                </BbDropdownMenu>
+                            }
                         </div>
                     </CellTemplate>
                 </BbDataTableColumn>
