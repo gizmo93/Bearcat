@@ -102,9 +102,13 @@ public partial class BackgroundTasksPage(
         }
 
         var duration = task.LastFinishedAt.Value - task.LastStartedAt.Value;
-        return duration.TotalSeconds < 1 ? "< 1s"
-            : duration.TotalMinutes < 1 ? $"{duration.TotalSeconds:0}s"
-            : $"{duration.TotalMinutes:0.#}m";
+
+        return duration.TotalSeconds switch
+        {
+            < 1 => "< 1s",
+            < 60 => $"{duration.TotalSeconds:0}s",
+            _ => $"{duration.TotalMinutes:0.#}m"
+        };
     }
 
     private static bool IsRunning(BackgroundTaskStateReadModel task)

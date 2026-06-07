@@ -66,7 +66,7 @@ public partial class FolderSelectionTreeNode : ComponentBase
         + " align-items: center;"
         + " justify-content: center;";
 
-    private string LabelStyle => "display: block; min-width: 0;";
+    private static string LabelStyle => "display: block; min-width: 0;";
 
     private static string FormatRem(double value)
     {

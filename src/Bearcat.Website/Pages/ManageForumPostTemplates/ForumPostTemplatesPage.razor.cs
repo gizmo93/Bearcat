@@ -10,7 +10,6 @@ namespace Bearcat.Website.Pages.ManageForumPostTemplates;
 public partial class ForumPostTemplatesPage(
     IForumPostTemplateReadRepository readRepository,
     ForumPostTemplateService service,
-    ForumPostRenderService renderService,
     DialogService dialogService
 )
 {
@@ -45,7 +44,7 @@ public partial class ForumPostTemplatesPage(
 
     protected override async Task OnInitializedAsync()
     {
-        variables = renderService.GetVariables();
+        variables = ForumPostRenderService.GetVariables();
         await LoadTemplatesAsync(selectFirst: true);
     }
 

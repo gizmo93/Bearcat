@@ -42,10 +42,19 @@ public partial class ReleaseOverview(
     private bool CanSaveNfoFile => !isLoading && releaseNfo is not null && !hasLocalNfo;
     private string NfoCopyButtonTitle =>
         CanCopyNfo ? L["CopyNfoIntoClipboard"] : L["NoNfoFileAvailable"];
-    private string NfoSaveButtonTitle =>
-        releaseNfo is null ? L["NoNfoFileAvailable"]
-        : hasLocalNfo ? L["NfoFileAlreadyExists"]
-        : L["SaveNfoFile"];
+
+    private string GetNfoSaveButtonTitle()
+    {
+        if (releaseNfo is null)
+        {
+            return L["NoNfoFileAvailable"];
+        }
+
+        return hasLocalNfo
+            ? L["NfoFileAlreadyExists"]
+            : L["SaveNfoFile"];
+    }
+    
     private string CoverDownloadUrl => $"/releases/{ReleaseId}/cover";
     private string CoverDownloadFileName => GetCoverDownloadFileName();
 
