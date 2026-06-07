@@ -60,6 +60,7 @@ public abstract class XFilesharingHosterBase<TConfig>(
                 var message = ex.InnerException?.Message ?? ex.Message;
 
                 logger.LogError(
+                    ex,
                     message: "Upload attempt {Attempt} failed for file {FileName}: {Message}",
                     attempt,
                     fileDto.FullFileName,

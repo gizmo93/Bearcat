@@ -316,6 +316,7 @@ public class ApiClient(
                 when (exception.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 logger.LogInformation(
+                    exception,
                     "Rate limited by Keep2Share API while checking file batch, waiting before retrying (Attempt {Attempt})",
                     attempt
                 );
@@ -329,6 +330,7 @@ public class ApiClient(
                 when (exception.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 logger.LogInformation(
+                    exception,
                     "Rate limited by Keep2Share API while checking file batch, waiting before retrying (Attempt {Attempt})",
                     attempt
                 );

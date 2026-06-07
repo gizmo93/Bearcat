@@ -77,6 +77,7 @@ public class UploadG(IUploadGApiClient apiClient, ILogger<UploadG> logger) : IHo
             {
                 var message = ex.InnerException?.Message ?? ex.Message;
                 logger.LogError(
+                    ex,
                     "Error while uploading file {FilePath} to UploadG on attempt {Attempt}: {ErrorMessage}",
                     fileDto.FullFileName,
                     attempt,

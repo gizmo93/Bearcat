@@ -61,6 +61,7 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger) : IHo
             catch (Exception ex)
             {
                 logger.LogError(
+                    ex,
                     "Upload attempt {Attempt} failed for file {FileName}: {Message}",
                     attempt,
                     fileDto.FullFileName,

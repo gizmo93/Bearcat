@@ -385,6 +385,7 @@ public class ApiClient(
         catch (Exception ex)
         {
             logger.LogWarning(
+                ex,
                 "Failed to check UploadG link {FileUrl}: {Message}",
                 fileUrl,
                 ex.InnerException?.Message ?? ex.Message

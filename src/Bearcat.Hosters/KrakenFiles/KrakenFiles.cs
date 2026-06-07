@@ -61,6 +61,7 @@ public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> l
             catch (Exception ex)
             {
                 logger.LogError(
+                    ex,
                     "Error while uploading file {FilePath} to KrakenFiles on attempt {Attempt}: {ErrorMessage}",
                     fileDto.FullFileName,
                     attempt,

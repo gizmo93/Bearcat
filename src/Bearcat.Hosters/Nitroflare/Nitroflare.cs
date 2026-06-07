@@ -59,6 +59,7 @@ public class Nitroflare(INitroflareApiClient apiClient, ILogger<Nitroflare> logg
             catch (Exception ex)
             {
                 logger.LogError(
+                    ex,
                     "Error while uploading file {FilePath} to Nitroflare on attempt {Attempt}: {ErrorMessage}",
                     fileDto.FullFileName,
                     attempt,

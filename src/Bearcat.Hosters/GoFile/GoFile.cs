@@ -75,6 +75,7 @@ public class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) : IHoste
             catch (Exception ex)
             {
                 logger.LogError(
+                    ex,
                     "Error while uploading file {FilePath} to GoFile on attempt {Attempt}: {ErrorMessage}",
                     fileDto.FullFileName,
                     attempt,
