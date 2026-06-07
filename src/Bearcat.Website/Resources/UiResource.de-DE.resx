@@ -629,8 +629,9 @@
   <data name="CollectionUploadSlotKeyAlreadyExists" xml:space="preserve"><value>In dieser Collection gibt es bereits einen Upload-Slot mit diesem Namen.</value></data>
   <data name="CollectionUploadSlotKeyCouldNotBeDerived" xml:space="preserve"><value>Der Slot-Name muss mindestens einen Buchstaben oder eine Zahl enthalten.</value></data>
   <data name="CollectionUploadSlotKey" xml:space="preserve"><value>Slot-Key</value></data>
-  <data name="CollectionUploadSlotManualHelp" xml:space="preserve"><value>Bearcat nutzt diese Gruppe, um passende Uploads in gemeinsamen Collection-Containern zu sammeln.</value></data>
-  <data name="CollectionUploadSlotName" xml:space="preserve"><value>Slot-Name</value></data>
+  <data name="CollectionUploadSlotArchiveConfigHelp" xml:space="preserve"><value>Wähle, welche Archive hochgeladen werden sollen.</value></data>
+  <data name="CollectionUploadSlotManualHelp" xml:space="preserve"><value>Erstellt pro Release eine neue Upload-Konfiguration mit dem gewählten Hoster.</value></data>
+  <data name="CollectionUploadSlotName" xml:space="preserve"><value>Name der Upload-Gruppe</value></data>
   <data name="CollectionUploadSlotNamePlaceholder" xml:space="preserve"><value>Rapidgator mit Passwort</value></data>
   <data name="CollectionUploadSlotRequired" xml:space="preserve"><value>Bei jedem Release erwartet</value></data>
   <data name="CollectionUploadSlots" xml:space="preserve"><value>Upload-Slots</value></data>
@@ -644,7 +645,7 @@
   <data name="LinkCrypterContainerScope.ReleaseCollection" xml:space="preserve"><value>Die ganze Release-Collection</value></data>
   <data name="NoReleaseCollectionsFound" xml:space="preserve"><value>Keine Release-Collections gefunden</value></data>
   <data name="NoCollectionUploadSlotsFound" xml:space="preserve"><value>Keine Upload-Slots gefunden</value></data>
-  <data name="CreateCollectionUploadSlotDialogDescription" xml:space="preserve"><value>Füge eine Upload-Gruppe für gemeinsame Collection-Container hinzu.</value></data>
+  <data name="CreateCollectionUploadSlotDialogDescription" xml:space="preserve"><value>Erstellt pro Release eine neue Upload-Konfiguration mit dem gewählten Hoster.</value></data>
   <data name="DeleteCollectionUploadSlot" xml:space="preserve"><value>Upload-Slot löschen</value></data>
   <data name="DeleteCollectionUploadSlotConfirmation" xml:space="preserve"><value>Upload-Slot {0} löschen? Dadurch werden {1} Upload-Konfigurationen, {2} Uploads und {3} erzeugte Containerlinks aus der Datenbank entfernt.</value></data>
   <data name="NewCollectionUploadSlot" xml:space="preserve"><value>Neuer Upload-Slot</value></data>

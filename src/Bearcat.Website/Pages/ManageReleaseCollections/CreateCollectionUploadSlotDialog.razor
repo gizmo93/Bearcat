@@ -1,5 +1,10 @@
 @inherits OwningComponentBase
 
+@if (!isInitialized)
+{
+    return;
+}
+
 <EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
     <DataAnnotationsValidator />
 
@@ -10,6 +15,29 @@
                               Label="@L["CollectionUploadSlotName"]"
                               Placeholder="@L["CollectionUploadSlotNamePlaceholder"]"
                               HelperText="@L["CollectionUploadSlotManualHelp"]" />
+
+            <div class="grid gap-4 md:grid-cols-2">
+                <BbFormFieldSelect TValue="int?"
+                                   @bind-Value="FormModel.HosterRegistrationId"
+                                   @bind-Value:after="OnHosterRegistrationChanged"
+                                   Label="@L["HosterRegistration"]"
+                                   Placeholder="@L["SelectHosterRegistration"]"
+                                   Options="HosterRegistrationOptions" />
+
+                <BbFormFieldSelect TValue="string"
+                                   @bind-Value="FormModel.ArchiveConfigName"
+                                   Label="@L["ArchiveConfiguration"]"
+                                   Placeholder="@L["SelectArchiveConfiguration"]"
+                                   Options="ArchiveConfigOptions"
+                                   HelperText="@L["CollectionUploadSlotArchiveConfigHelp"]" />
+            </div>
+
+            @if (CanUsePremiumOnlyDownload)
+            {
+                <BbFormFieldSwitch @bind-Checked="FormModel.PremiumOnlyDownload"
+                                   Label="@L["PremiumOnlyDownload"]"
+                                   HelperText="@L["PremiumOnlyDownloadHelp"]" />
+            }
 
             <div class="grid gap-4 md:grid-cols-2">
                 <BbFormFieldSelect TValue="CollectionUploadSlotPasswordPolicy"

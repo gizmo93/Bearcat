@@ -1,5 +1,9 @@
 using System.Text;
+using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
+using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
+using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
+using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
 using BlazorBlueprint.Components;
@@ -10,7 +14,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleaseCollections;
 
-public partial class CreateCollectionUploadSlotDialog : OwningComponentBase
+public partial class CreateCollectionUploadSlotDialog(
+    IHosterConfigurationReadRepository hosterReadRepository,
+    IReleaseCollectionReadRepository releaseCollectionReadRepository
+) : OwningComponentBase
 {
     [Parameter]
     public CollectionUploadSlotFormModel FormModel { get; set; } = new();
@@ -23,6 +30,9 @@ public partial class CreateCollectionUploadSlotDialog : OwningComponentBase
 
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
+    private IReadOnlyList<HosterRegistrationReadModel> hosterRegistrations = [];
+    private IReadOnlyList<CollectionArchiveConfigOptionReadModel> archiveConfigOptions = [];
+    private bool isInitialized;
 
     private IEnumerable<SelectOption<CollectionUploadSlotPasswordPolicy>> PasswordPolicyOptions =>
         Enum.GetValues<CollectionUploadSlotPasswordPolicy>()
@@ -31,11 +41,36 @@ public partial class CreateCollectionUploadSlotDialog : OwningComponentBase
                 L.Localize(policy)
             ));
 
-    protected override void OnInitialized()
+    private IEnumerable<SelectOption<int?>> HosterRegistrationOptions =>
+        hosterRegistrations
+            .Where(hoster => hoster.IsActive || hoster.Id == FormModel.HosterRegistrationId)
+            .OrderBy(hoster => hoster.Name)
+            .Select(hoster => new SelectOption<int?>(hoster.Id, hoster.Name));
+
+    private IEnumerable<SelectOption<string>> ArchiveConfigOptions =>
+        archiveConfigOptions.Select(config => new SelectOption<string>(config.Name, config.Name));
+
+    private HosterRegistrationReadModel? SelectedHosterRegistration =>
+        FormModel.HosterRegistrationId is null
+            ? null
+            : hosterRegistrations.FirstOrDefault(hoster =>
+                hoster.Id == FormModel.HosterRegistrationId
+            );
+
+    private bool CanUsePremiumOnlyDownload =>
+        SelectedHosterRegistration?.SupportsPremiumOnlyDownloads is true;
+
+    protected override async Task OnInitializedAsync()
     {
+        hosterRegistrations = await hosterReadRepository.GetAllRegistrationsAsync();
+        archiveConfigOptions = await releaseCollectionReadRepository.GetArchiveConfigOptionsAsync(
+            FormModel.ReleaseCollectionId
+        );
+
         editContext = new EditContext(FormModel);
         messageStore = new ValidationMessageStore(editContext);
         editContext.OnValidationRequested += HandleValidationRequested;
+        isInitialized = true;
     }
 
     private async Task SaveAsync()
@@ -44,6 +79,9 @@ public partial class CreateCollectionUploadSlotDialog : OwningComponentBase
         var id = await service.CreateUploadSlotAsync(
             FormModel.ReleaseCollectionId,
             FormModel.Name,
+            FormModel.HosterRegistrationId!.Value,
+            FormModel.ArchiveConfigName!,
+            CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
             FormModel.IsRequired,
             FormModel.PasswordPolicy,
             FormModel.ExpectedArchivePassword
@@ -60,6 +98,19 @@ public partial class CreateCollectionUploadSlotDialog : OwningComponentBase
         {
             messageStore.Add(() => FormModel.Name, L["NameIsRequired"]);
             return;
+        }
+
+        if (FormModel.HosterRegistrationId is null)
+        {
+            messageStore.Add(
+                () => FormModel.HosterRegistrationId!,
+                L["HosterRegistrationRequired"]
+            );
+        }
+
+        if (string.IsNullOrWhiteSpace(FormModel.ArchiveConfigName))
+        {
+            messageStore.Add(() => FormModel.ArchiveConfigName!, L["ArchiveConfigRequired"]);
         }
 
         var key = CreateStableKey(FormModel.Name);
@@ -82,6 +133,14 @@ public partial class CreateCollectionUploadSlotDialog : OwningComponentBase
                 () => FormModel.ExpectedArchivePassword!,
                 L["CollectionUploadSlotExpectedArchivePasswordRequired"]
             );
+        }
+    }
+
+    private void OnHosterRegistrationChanged()
+    {
+        if (!CanUsePremiumOnlyDownload)
+        {
+            FormModel.PremiumOnlyDownload = false;
         }
     }
 

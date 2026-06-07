@@ -1,6 +1,6 @@
+using System.Text;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
-using System.Text;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -66,6 +66,9 @@ public class ReleaseCollectionService(
     public async Task<int> CreateUploadSlotAsync(
         int releaseCollectionId,
         string name,
+        int hosterRegistrationId,
+        string archiveConfigName,
+        bool premiumOnlyDownload,
         bool isRequired,
         CollectionUploadSlotPasswordPolicy passwordPolicy,
         string? expectedArchivePassword,
@@ -92,6 +95,23 @@ public class ReleaseCollectionService(
             throw new InvalidOperationException("A collection upload slot with this key already exists.");
         }
 
+        var releaseCount = await writeRepository.GetReleaseCountAsync(
+            releaseCollectionId,
+            cancellationToken
+        );
+        var archiveConfigTargets = await writeRepository.GetArchiveConfigTargetsAsync(
+            releaseCollectionId,
+            CleanRequired(archiveConfigName, nameof(archiveConfigName)),
+            cancellationToken
+        );
+
+        if (releaseCount == 0 || archiveConfigTargets.Count != releaseCount)
+        {
+            throw new InvalidOperationException(
+                "The selected archive configuration must exist on every release in the collection."
+            );
+        }
+
         var uploadSlot = new CollectionUploadSlot
         {
             ReleaseCollectionId = releaseCollectionId,
@@ -104,6 +124,23 @@ public class ReleaseCollectionService(
                     ? CleanRequired(expectedArchivePassword ?? string.Empty, nameof(expectedArchivePassword))
                     : null,
         };
+
+        foreach (var target in archiveConfigTargets)
+        {
+            uploadSlot.UploadConfigs.Add(
+                new UploadConfig
+                {
+                    ReleaseId = target.ReleaseId,
+                    ArchiveConfigId = target.ArchiveConfigId,
+                    HosterRegistrationId = hosterRegistrationId,
+                    Name = cleanedName,
+                    PremiumOnlyDownload = premiumOnlyDownload,
+                    LinksDistributedTo = [],
+                    LinkCrypters = [],
+                    Uploads = [],
+                }
+            );
+        }
 
         writeRepository.Add(uploadSlot);
         await writeRepository.SaveChangesAsync(cancellationToken);

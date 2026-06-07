@@ -262,6 +262,30 @@ public class ReleaseCollectionRepository(
         );
     }
 
+    public async Task<IReadOnlyList<CollectionArchiveConfigOptionReadModel>> GetArchiveConfigOptionsAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var releaseCount = await dbRead.Releases.CountAsync(
+            release => release.ReleaseCollectionId == releaseCollectionId,
+            cancellationToken
+        );
+
+        if (releaseCount == 0)
+        {
+            return [];
+        }
+
+        return await dbRead
+            .ArchiveConfigs.Where(config => config.Release.ReleaseCollectionId == releaseCollectionId)
+            .GroupBy(config => config.Name)
+            .Where(group => group.Select(config => config.ReleaseId).Distinct().Count() == releaseCount)
+            .OrderBy(group => group.Key)
+            .Select(group => new CollectionArchiveConfigOptionReadModel(group.Key, releaseCount))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<ReleaseCollection> GetByIdAsync(
         int releaseCollectionId,
         CancellationToken cancellationToken = default
@@ -304,6 +328,35 @@ public class ReleaseCollectionRepository(
             slot => slot.ReleaseCollectionId == releaseCollectionId && slot.Key == key,
             cancellationToken
         );
+    }
+
+    public async Task<int> GetReleaseCountAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite.Releases.CountAsync(
+            release => release.ReleaseCollectionId == releaseCollectionId,
+            cancellationToken
+        );
+    }
+
+    public async Task<IReadOnlyList<CollectionReleaseArchiveConfigTarget>> GetArchiveConfigTargetsAsync(
+        int releaseCollectionId,
+        string archiveConfigName,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .ArchiveConfigs.Where(config =>
+                config.Release.ReleaseCollectionId == releaseCollectionId
+                && config.Name == archiveConfigName
+            )
+            .Select(config => new CollectionReleaseArchiveConfigTarget(
+                config.ReleaseId,
+                config.Id
+            ))
+            .ToListAsync(cancellationToken);
     }
 
     public void Add(ReleaseCollection releaseCollection)

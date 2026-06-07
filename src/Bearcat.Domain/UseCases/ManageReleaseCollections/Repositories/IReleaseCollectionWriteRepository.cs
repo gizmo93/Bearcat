@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 
@@ -28,6 +29,17 @@ public interface IReleaseCollectionWriteRepository
     Task<bool> UploadSlotKeyExistsAsync(
         int releaseCollectionId,
         string key,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<int> GetReleaseCountAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<IReadOnlyList<CollectionReleaseArchiveConfigTarget>> GetArchiveConfigTargetsAsync(
+        int releaseCollectionId,
+        string archiveConfigName,
         CancellationToken cancellationToken = default
     );
 

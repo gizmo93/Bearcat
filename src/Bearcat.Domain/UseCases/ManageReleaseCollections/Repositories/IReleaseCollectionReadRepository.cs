@@ -15,4 +15,9 @@ public interface IReleaseCollectionReadRepository
         int releaseCollectionId,
         CancellationToken cancellationToken = default
     );
+
+    Task<IReadOnlyList<CollectionArchiveConfigOptionReadModel>> GetArchiveConfigOptionsAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    );
 }

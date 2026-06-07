@@ -8,6 +8,12 @@ public class CollectionUploadSlotFormModel
 
     public string Name { get; set; } = string.Empty;
 
+    public int? HosterRegistrationId { get; set; }
+
+    public string ArchiveConfigName { get; set; } = string.Empty;
+
+    public bool PremiumOnlyDownload { get; set; }
+
     public bool IsRequired { get; set; }
 
     public CollectionUploadSlotPasswordPolicy PasswordPolicy { get; set; } =
