@@ -2,6 +2,7 @@ using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Pages.ManageReleases;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,6 +38,33 @@ public partial class ReleaseCollectionDetail(
 
         releaseCollection = detail;
         isInitialized = true;
+    }
+
+    private async Task ShowLatestUploadLinksDialogAsync(ReleaseCollectionReleaseReadModel release)
+    {
+        if (release.LatestUploadId is null)
+        {
+            return;
+        }
+
+        var uploadConfigName = release.LatestUploadConfigName ?? release.Name;
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(UploadLinksDialog.ReleaseId)] = release.ReleaseId,
+            [nameof(UploadLinksDialog.UploadId)] = release.LatestUploadId.Value,
+            [nameof(UploadLinksDialog.UploadConfigName)] = uploadConfigName,
+        };
+
+        await dialogService.OpenAsync<UploadLinksDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["UploadLinksTitle", release.LatestUploadId.Value],
+                Description = L["UploadLinksDialogDescription", uploadConfigName],
+                Size = DialogSize.Full,
+                ShowClose = true,
+            }
+        );
     }
 
     private async Task ShowCreateUploadSlotDialogAsync()

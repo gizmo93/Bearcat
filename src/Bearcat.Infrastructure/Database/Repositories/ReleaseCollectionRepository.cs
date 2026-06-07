@@ -204,23 +204,42 @@ public class ReleaseCollectionRepository(
                         group.Select(container => container.Container).ToList()
             );
 
+        var latestUploads = await dbRead
+            .Uploads.Where(upload => upload.UploadConfig.Release.ReleaseCollectionId == releaseCollectionId)
+            .GroupBy(upload => upload.UploadConfig.ReleaseId)
+            .Select(group =>
+                group.OrderByDescending(upload => upload.UploadedAt ?? upload.CreatedAt)
+                    .ThenByDescending(upload => upload.Id)
+                    .Select(upload => new
+                    {
+                        ReleaseId = upload.UploadConfig.ReleaseId,
+                        UploadId = upload.Id,
+                        UploadConfigName = upload.UploadConfig.Name,
+                    })
+                    .First()
+            )
+            .ToListAsync(cancellationToken);
+
+        var latestUploadsByReleaseId = latestUploads.ToDictionary(upload => upload.ReleaseId);
+
         var releases = await dbRead
             .Releases.Where(release => release.ReleaseCollectionId == releaseCollectionId)
             .OrderBy(release => release.Name)
             .ThenBy(release => release.Id)
-            .Select(release => new ReleaseCollectionReleaseReadModel(
+            .Select(release => new
+            {
                 release.Id,
                 release.Name,
                 release.ReleaseType,
                 release.CreatedAt,
-                release.UploadConfigs.Count,
-                release
+                ActiveUploadConfigsCount = release.UploadConfigs.Count,
+                OnlineUploadConfigsCount = release
                     .UploadConfigs.Where(uploadConfig =>
                         uploadConfig.Uploads.Any(upload => upload.OnlineState == OnlineState.Online)
                     )
                     .Distinct()
-                    .Count()
-            ))
+                    .Count(),
+            })
             .ToListAsync(cancellationToken);
 
         return new ReleaseCollectionDetailReadModel(
@@ -259,6 +278,22 @@ public class ReleaseCollectionRepository(
                 })
                 .ToList(),
             releases
+                .Select(release =>
+                {
+                    latestUploadsByReleaseId.TryGetValue(release.Id, out var latestUpload);
+
+                    return new ReleaseCollectionReleaseReadModel(
+                        release.Id,
+                        release.Name,
+                        release.ReleaseType,
+                        release.CreatedAt,
+                        release.ActiveUploadConfigsCount,
+                        release.OnlineUploadConfigsCount,
+                        latestUpload?.UploadId,
+                        latestUpload?.UploadConfigName
+                    );
+                })
+                .ToList()
         );
     }
 

@@ -211,6 +211,7 @@
                             <span>@L["OnlineState"]</span>
                             <span>@L["ReleaseType"]</span>
                             <span>@L["CreatedAt"]</span>
+                            <span class="text-right">@L["Actions"]</span>
                         </div>
                         @foreach (var release in releaseCollection.Releases)
                         {
@@ -231,6 +232,22 @@
                                     <div>
                                         <p class="bearcat-mobile-label">@L["CreatedAt"]</p>
                                         <span class="text-sm">@release.CreatedAt.ToString("g")</span>
+                                    </div>
+                                    <div class="bearcat-config-actions">
+                                        <p class="bearcat-mobile-label">@L["Actions"]</p>
+                                        @if (release.LatestUploadId is null)
+                                        {
+                                            <span class="text-xs text-muted-foreground">@L["NoLatestUpload"]</span>
+                                        }
+                                        else
+                                        {
+                                            <BbButton Variant="ButtonVariant.Ghost"
+                                                      Size="ButtonSize.IconSmall"
+                                                      AriaLabel="@L["ViewUploadLinks"]"
+                                                      OnClick="@(async () => await ShowLatestUploadLinksDialogAsync(release))">
+                                                <LucideIcon Name="list" class="h-4 w-4" />
+                                            </BbButton>
+                                        }
                                     </div>
                                 </div>
                             </div>

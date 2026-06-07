@@ -2363,7 +2363,7 @@ a {
     }
 
     .bearcat-collection-releases-grid {
-        grid-template-columns: minmax(0, 1fr) 140px 140px 180px;
+        grid-template-columns: minmax(0, 1fr) 140px 140px 180px 96px;
     }
 
     .bearcat-mobile-label {
