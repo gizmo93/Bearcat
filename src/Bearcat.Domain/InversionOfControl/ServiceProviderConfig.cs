@@ -41,6 +41,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ReleaseFolderAutomationService>();
             services.AddScoped<AutomaticallyCreateReleasesService>();
             services.AddScoped<ReleaseCollectionService>();
+            services.AddScoped<ReleaseCollectionAssignmentService>();
             services.AddScoped<ReleaseGroupService>();
             services.AddScoped<ReleaseService>();
             services.AddScoped<ForumPostRenderService>();

@@ -13,6 +13,11 @@ public static class LocalizationExtensions
         ReleaseType releaseType
     ) => localizer[$"ReleaseType.{releaseType}"];
 
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        ReleaseCollectionDetectionMode mode
+    ) => localizer[$"ReleaseCollectionDetectionMode.{mode}"];
+
     public static string Localize(this IStringLocalizer<UiResource> localizer, UploadState state) =>
         localizer[$"UploadState.{state}"];
 

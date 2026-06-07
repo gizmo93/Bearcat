@@ -27,6 +27,12 @@ public class ReleaseTemplateRepository(
                 t.ReleaseType,
                 t.ReleaseGroupId,
                 t.ReleaseGroup.Name,
+                t.UseReleaseCollections,
+                t.ReleaseCollectionDetectionMode,
+                t.IgnoreLanguageInReleaseCollectionName,
+                t.ReleaseCollectionPattern,
+                t.ReleaseCollectionKeyTemplate,
+                t.ReleaseCollectionNameTemplate,
                 t.ArchiveConfigTemplates.Count,
                 t.UploadConfigTemplates.Count,
                 t.ImageUploadConfigTemplates.Count,
@@ -193,6 +199,12 @@ public class ReleaseTemplateRepository(
             releaseTemplate.ReleaseType,
             releaseTemplate.ReleaseGroupId,
             releaseTemplate.ReleaseGroup.Name,
+            releaseTemplate.UseReleaseCollections,
+            releaseTemplate.ReleaseCollectionDetectionMode,
+            releaseTemplate.IgnoreLanguageInReleaseCollectionName,
+            releaseTemplate.ReleaseCollectionPattern,
+            releaseTemplate.ReleaseCollectionKeyTemplate,
+            releaseTemplate.ReleaseCollectionNameTemplate,
             releaseTemplate
                 .ArchiveConfigTemplates.OrderBy(a => a.Name)
                 .ThenBy(a => a.Id)

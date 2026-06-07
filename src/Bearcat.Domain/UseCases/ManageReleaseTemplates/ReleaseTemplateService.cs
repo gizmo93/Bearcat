@@ -10,10 +10,38 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
     private const string UnmanagedArchiveFilesBasePath = "Release folder";
     private const string UnmanagedArchiverName = "Unmanaged";
 
+    public Task<int> CreateAsync(
+        string name,
+        ReleaseType releaseType,
+        int releaseGroupId,
+        CancellationToken cancellationToken
+    )
+    {
+        return CreateAsync(
+            name,
+            releaseType,
+            releaseGroupId,
+            useReleaseCollections: false,
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            ignoreLanguageInReleaseCollectionName: true,
+            releaseCollectionPattern: null,
+            releaseCollectionKeyTemplate: null,
+            releaseCollectionNameTemplate: null,
+            cancellationToken: cancellationToken
+        );
+    }
+
     public async Task<int> CreateAsync(
         string name,
         ReleaseType releaseType,
         int releaseGroupId,
+        bool useReleaseCollections = false,
+        ReleaseCollectionDetectionMode releaseCollectionDetectionMode =
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+        bool ignoreLanguageInReleaseCollectionName = true,
+        string? releaseCollectionPattern = null,
+        string? releaseCollectionKeyTemplate = null,
+        string? releaseCollectionNameTemplate = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -22,6 +50,14 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             Name = name,
             ReleaseType = releaseType,
             ReleaseGroupId = releaseGroupId,
+            UseReleaseCollections = useReleaseCollections,
+            ReleaseCollectionDetectionMode = useReleaseCollections
+                ? releaseCollectionDetectionMode
+                : ReleaseCollectionDetectionMode.Disabled,
+            IgnoreLanguageInReleaseCollectionName = ignoreLanguageInReleaseCollectionName,
+            ReleaseCollectionPattern = CleanOptional(releaseCollectionPattern),
+            ReleaseCollectionKeyTemplate = CleanOptional(releaseCollectionKeyTemplate),
+            ReleaseCollectionNameTemplate = CleanOptional(releaseCollectionNameTemplate),
         };
 
         EnsureUnmanagedArchiveConfigTemplate(releaseTemplate);
@@ -32,11 +68,41 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         return releaseTemplate.Id;
     }
 
+    public Task UpdateAsync(
+        int releaseTemplateId,
+        string name,
+        ReleaseType releaseType,
+        int releaseGroupId,
+        CancellationToken cancellationToken
+    )
+    {
+        return UpdateAsync(
+            releaseTemplateId,
+            name,
+            releaseType,
+            releaseGroupId,
+            useReleaseCollections: false,
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            ignoreLanguageInReleaseCollectionName: true,
+            releaseCollectionPattern: null,
+            releaseCollectionKeyTemplate: null,
+            releaseCollectionNameTemplate: null,
+            cancellationToken: cancellationToken
+        );
+    }
+
     public async Task UpdateAsync(
         int releaseTemplateId,
         string name,
         ReleaseType releaseType,
         int releaseGroupId,
+        bool useReleaseCollections = false,
+        ReleaseCollectionDetectionMode releaseCollectionDetectionMode =
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+        bool ignoreLanguageInReleaseCollectionName = true,
+        string? releaseCollectionPattern = null,
+        string? releaseCollectionKeyTemplate = null,
+        string? releaseCollectionNameTemplate = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -52,6 +118,15 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
 
         releaseTemplate.Name = name;
         releaseTemplate.ReleaseGroupId = releaseGroupId;
+        releaseTemplate.UseReleaseCollections = useReleaseCollections;
+        releaseTemplate.ReleaseCollectionDetectionMode = useReleaseCollections
+            ? releaseCollectionDetectionMode
+            : ReleaseCollectionDetectionMode.Disabled;
+        releaseTemplate.IgnoreLanguageInReleaseCollectionName =
+            ignoreLanguageInReleaseCollectionName;
+        releaseTemplate.ReleaseCollectionPattern = CleanOptional(releaseCollectionPattern);
+        releaseTemplate.ReleaseCollectionKeyTemplate = CleanOptional(releaseCollectionKeyTemplate);
+        releaseTemplate.ReleaseCollectionNameTemplate = CleanOptional(releaseCollectionNameTemplate);
 
         EnsureUnmanagedArchiveConfigTemplate(releaseTemplate);
 

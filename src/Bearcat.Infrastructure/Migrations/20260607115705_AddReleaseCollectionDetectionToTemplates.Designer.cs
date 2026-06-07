@@ -4,17 +4,20 @@ using System.Collections.Generic;
 using Bearcat.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace BearCat.Infrastructure.Migrations
+namespace Bearcat.Infrastructure.Migrations
 {
     [DbContext(typeof(BearcatDbContext))]
-    partial class BearcatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260607115705_AddReleaseCollectionDetectionToTemplates")]
+    partial class AddReleaseCollectionDetectionToTemplates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

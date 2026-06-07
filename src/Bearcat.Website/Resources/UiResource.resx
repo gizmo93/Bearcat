@@ -628,6 +628,17 @@
   <data name="ReleaseCollectionsIntro" xml:space="preserve"><value>Find grouped releases such as seasons or multi-part distributions.</value></data>
   <data name="ReleaseCollectionsSubtitle" xml:space="preserve"><value>Grouped release distribution</value></data>
   <data name="ReleaseCollectionSubtitle" xml:space="preserve"><value>Grouped releases</value></data>
+  <data name="ReleaseCollectionDetectionMode" xml:space="preserve"><value>Collection detection</value></data>
+  <data name="ReleaseCollectionDetectionMode.CustomRegex" xml:space="preserve"><value>Custom regex</value></data>
+  <data name="ReleaseCollectionDetectionMode.SeriesEpisodePattern" xml:space="preserve"><value>Series episode pattern</value></data>
+  <data name="ReleaseCollectionKeyTemplate" xml:space="preserve"><value>Collection key template</value></data>
+  <data name="ReleaseCollectionKeyTemplateRequired" xml:space="preserve"><value>Collection key template is required for custom regex detection.</value></data>
+  <data name="ReleaseCollectionNameTemplate" xml:space="preserve"><value>Collection name template</value></data>
+  <data name="ReleaseCollectionNameTemplateRequired" xml:space="preserve"><value>Collection name template is required for custom regex detection.</value></data>
+  <data name="ReleaseCollectionPattern" xml:space="preserve"><value>Collection regex pattern</value></data>
+  <data name="ReleaseCollectionPatternRequired" xml:space="preserve"><value>Collection regex pattern is required for custom regex detection.</value></data>
   <data name="Reset" xml:space="preserve"><value>Reset</value></data>
   <data name="SearchReleaseCollections" xml:space="preserve"><value>Search collections</value></data>
+  <data name="IgnoreLanguageInReleaseCollectionName" xml:space="preserve"><value>Ignore language in collection name</value></data>
+  <data name="UseReleaseCollections" xml:space="preserve"><value>Use release collections</value></data>
 </root>

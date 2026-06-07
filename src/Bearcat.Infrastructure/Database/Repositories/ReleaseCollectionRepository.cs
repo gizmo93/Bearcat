@@ -11,6 +11,18 @@ public class ReleaseCollectionRepository(IBearcatReadDbContext dbRead, IBearcatW
     : IReleaseCollectionReadRepository,
         IReleaseCollectionWriteRepository
 {
+    public async Task<ReleaseCollection?> GetByReleaseGroupAndKeyAsync(
+        int releaseGroupId,
+        string key,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite.ReleaseCollections.FirstOrDefaultAsync(
+            collection => collection.ReleaseGroupId == releaseGroupId && collection.Key == key,
+            cancellationToken
+        );
+    }
+
     public async Task<PagedResult<ReleaseCollectionReadModel>> SearchAsync(
         ReleaseCollectionSearchQuery query,
         CancellationToken cancellationToken = default

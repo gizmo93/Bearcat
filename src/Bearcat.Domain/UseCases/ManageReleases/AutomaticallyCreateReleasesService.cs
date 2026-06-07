@@ -3,6 +3,7 @@ using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -14,7 +15,8 @@ public class AutomaticallyCreateReleasesService(
     IFileSystemService fileSystemService,
     ReleaseInfoResolutionService releaseInfoResolutionService,
     TimeProvider timeProvider,
-    IArchiverFactory archiverFactory
+    IArchiverFactory archiverFactory,
+    ReleaseCollectionAssignmentService? releaseCollectionAssignmentService = null
 )
 {
     private const int MaxConcurrentFolderScans = 4;
@@ -88,6 +90,15 @@ public class AutomaticallyCreateReleasesService(
         );
 
         release.CreatedAt = localNow;
+
+        if (releaseCollectionAssignmentService is not null)
+        {
+            await releaseCollectionAssignmentService.AssignFromTemplateAsync(
+                release,
+                candidate.Automation.ReleaseTemplate,
+                cancellationToken
+            );
+        }
 
         await releaseInfoResolutionService.TryResolveAsync(release, cancellationToken);
 

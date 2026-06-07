@@ -10,6 +10,19 @@ public class ReleaseTemplateFormModel
 
     public int ReleaseGroupId { get; set; }
 
+    public bool UseReleaseCollections { get; set; }
+
+    public ReleaseCollectionDetectionMode ReleaseCollectionDetectionMode { get; set; } =
+        ReleaseCollectionDetectionMode.SeriesEpisodePattern;
+
+    public bool IgnoreLanguageInReleaseCollectionName { get; set; } = true;
+
+    public string? ReleaseCollectionPattern { get; set; }
+
+    public string? ReleaseCollectionKeyTemplate { get; set; }
+
+    public string? ReleaseCollectionNameTemplate { get; set; }
+
     public bool IsEdit { get; set; }
 
     public int? ReleaseTemplateId { get; set; }

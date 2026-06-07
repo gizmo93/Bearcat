@@ -50,6 +50,13 @@ public partial class ReleaseTemplateDetail(
                 Name = releaseTemplate.Name,
                 ReleaseType = releaseTemplate.ReleaseType,
                 ReleaseGroupId = releaseTemplate.ReleaseGroupId,
+                UseReleaseCollections = releaseTemplate.UseReleaseCollections,
+                ReleaseCollectionDetectionMode = releaseTemplate.ReleaseCollectionDetectionMode,
+                IgnoreLanguageInReleaseCollectionName =
+                    releaseTemplate.IgnoreLanguageInReleaseCollectionName,
+                ReleaseCollectionPattern = releaseTemplate.ReleaseCollectionPattern,
+                ReleaseCollectionKeyTemplate = releaseTemplate.ReleaseCollectionKeyTemplate,
+                ReleaseCollectionNameTemplate = releaseTemplate.ReleaseCollectionNameTemplate,
                 IsEdit = true,
             },
         };

@@ -14,6 +14,18 @@ public class ReleaseTemplate
 
     public ReleaseGroup ReleaseGroup { get; set; } = null!;
 
+    public bool UseReleaseCollections { get; set; }
+
+    public ReleaseCollectionDetectionMode ReleaseCollectionDetectionMode { get; set; }
+
+    public bool IgnoreLanguageInReleaseCollectionName { get; set; } = true;
+
+    public string? ReleaseCollectionPattern { get; set; }
+
+    public string? ReleaseCollectionKeyTemplate { get; set; }
+
+    public string? ReleaseCollectionNameTemplate { get; set; }
+
     public List<ArchiveConfigTemplate> ArchiveConfigTemplates { get; set; } = [];
 
     public List<UploadConfigTemplate> UploadConfigTemplates { get; set; } = [];
