@@ -21,7 +21,7 @@ public class ReleaseGroupRepository(IBearcatReadDbContext dbRead, IBearcatWriteD
                 r.Name,
                 r.EnableAutomaticReuploads,
                 r.NumberOfHoursUntilReupload,
-                r.Releases.Count()
+                r.Releases.Count
             ))
             .ToListAsync(cancellationToken);
     }
@@ -38,7 +38,7 @@ public class ReleaseGroupRepository(IBearcatReadDbContext dbRead, IBearcatWriteD
                 r.Name,
                 r.EnableAutomaticReuploads,
                 r.NumberOfHoursUntilReupload,
-                r.Releases.Count()
+                r.Releases.Count
             ))
             .FirstOrDefaultAsync(cancellationToken);
     }

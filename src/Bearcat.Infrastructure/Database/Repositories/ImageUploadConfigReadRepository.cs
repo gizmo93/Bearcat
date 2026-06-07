@@ -21,7 +21,7 @@ public class ImageUploadConfigReadRepository(IBearcatReadDbContext dbRead)
                 config.ImageHosterRegistrationId,
                 config.ImageHosterRegistration.Name,
                 config.Release.Name,
-                config.ImageUploads.Count()
+                config.ImageUploads.Count
             ))
             .ToListAsync(cancellationToken);
     }
@@ -39,7 +39,7 @@ public class ImageUploadConfigReadRepository(IBearcatReadDbContext dbRead)
                 config.ImageHosterRegistrationId,
                 config.ImageHosterRegistration.Name,
                 config.Release.Name,
-                config.ImageUploads.Count()
+                config.ImageUploads.Count
             ))
             .FirstAsync(cancellationToken);
     }

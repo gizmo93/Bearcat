@@ -89,7 +89,7 @@ public class ReleaseReadRepository(
                         u.UploadedAt,
                         u.UploadState,
                         u.OnlineState,
-                        u.UploadedFiles.Count(),
+                        u.UploadedFiles.Count,
                         u.ErrorMessages.ToList(),
                         u.Archive == null ? null : u.Archive.ArchiveConfig.ArchivePassword
                     ))
@@ -328,7 +328,7 @@ public class ReleaseReadRepository(
                         ar.Id,
                         ar.CreatedAt,
                         ar.ArchiveState,
-                        ar.ArchiveFiles.Count(),
+                        ar.ArchiveFiles.Count,
                         ar.ErrorMessages.ToList()
                     ))
                     .ToList()
@@ -375,8 +375,8 @@ public class ReleaseReadRepository(
                 u.UploadedAt,
                 u.UploadState,
                 u.OnlineState,
-                u.UploadedFiles.Count(),
-                u.LinkCrypterContainers.Count(),
+                u.UploadedFiles.Count,
+                u.LinkCrypterContainers.Count,
                 (
                     u.UploadState == UploadState.Canceled
                     || u.UploadState == UploadState.Failed
@@ -494,7 +494,7 @@ public class ReleaseReadRepository(
                 upload.CreatedAt,
                 upload.UploadedAt,
                 upload.UploadState,
-                upload.ImageUrls.Count(),
+                upload.ImageUrls.Count,
                 upload.ErrorMessages.ToList()
             ))
             .ToListAsync(cancellationToken);
@@ -553,7 +553,7 @@ public class ReleaseReadRepository(
             entity.ReleaseGroupId,
             entity.ReleaseGroup.Name,
             entity.ReleaseFolderPath,
-            entity.UploadConfigs.Count(),
+            entity.UploadConfigs.Count,
             entity
                 .UploadConfigs.Where(uc => uc.Uploads.Any(u => u.OnlineState == OnlineState.Online))
                 .Distinct()
@@ -686,7 +686,7 @@ public class ReleaseReadRepository(
             OnlineState.Unknown => releases.Where(r => !r.UploadConfigs.Any()),
             OnlineState.Online => releases.Where(r =>
                 r.UploadConfigs.Any()
-                && r.UploadConfigs.Count()
+                && r.UploadConfigs.Count
                     == r.UploadConfigs.Count(uc =>
                         uc.Uploads.Any(u => u.OnlineState == OnlineState.Online)
                     )
@@ -717,13 +717,13 @@ public class ReleaseReadRepository(
         return $"%{value}%";
     }
 
-    private record ReleaseOverviewUploadConfigProjection(
+    private sealed record ReleaseOverviewUploadConfigProjection(
         int UploadConfigId,
         string UploadConfigName,
         string HosterRegistrationName
     );
 
-    private record ReleaseOverviewLatestUploadProjection(
+    private sealed record ReleaseOverviewLatestUploadProjection(
         int UploadConfigId,
         int UploadId,
         DateTime CreatedAt,
@@ -735,7 +735,7 @@ public class ReleaseReadRepository(
         string? ArchivePassword
     );
 
-    private record ReleaseOverviewLinkCrypterLinkProjection(
+    private sealed record ReleaseOverviewLinkCrypterLinkProjection(
         int UploadId,
         int LinkCrypterContainerId,
         string LinkCrypterRegistrationName,
