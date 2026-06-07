@@ -10,7 +10,10 @@ public class ReleaseCollectionAssignmentService(
     TimeProvider timeProvider
 )
 {
-    private readonly Dictionary<ReleaseCollectionCacheKey, ReleaseCollection> releaseCollectionsByKey = [];
+    private readonly Dictionary<
+        ReleaseCollectionCacheKey,
+        ReleaseCollection
+    > releaseCollectionsByKey = [];
 
     public async Task AssignFromTemplateAsync(
         Release release,

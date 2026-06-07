@@ -138,8 +138,8 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
         );
 
         // Act
-        var exception = await Should.ThrowAsync<InvalidOperationException>(
-            async () => await service.DeleteAsync(linkCrypter.Id, CancellationToken.None)
+        var exception = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.DeleteAsync(linkCrypter.Id, CancellationToken.None)
         );
 
         // Assert
@@ -161,16 +161,15 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
         );
 
         // Act
-        var exception = await Should.ThrowAsync<InvalidOperationException>(
-            async () =>
-                await service.UpdateAsync(
-                    linkCrypter.Id,
-                    "changed",
-                    enableCaptcha: false,
-                    enableContainerDownload: false,
-                    enableClickAndLoad: false,
-                    cancellationToken: CancellationToken.None
-                )
+        var exception = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.UpdateAsync(
+                linkCrypter.Id,
+                "changed",
+                enableCaptcha: false,
+                enableContainerDownload: false,
+                enableClickAndLoad: false,
+                cancellationToken: CancellationToken.None
+            )
         );
 
         // Assert

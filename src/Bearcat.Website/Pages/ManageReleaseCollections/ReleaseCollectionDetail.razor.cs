@@ -75,8 +75,8 @@ public partial class ReleaseCollectionDetail(
             {
                 ReleaseCollectionId = ReleaseCollectionId,
             },
-            [nameof(CreateCollectionUploadSlotDialog.ExistingSlotKeys)] = releaseCollection.UploadSlots
-                .Select(slot => slot.Key)
+            [nameof(CreateCollectionUploadSlotDialog.ExistingSlotKeys)] = releaseCollection
+                .UploadSlots.Select(slot => slot.Key)
                 .ToList(),
         };
 

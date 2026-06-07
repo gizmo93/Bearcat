@@ -221,8 +221,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
 
         if (
             UseCollectionUploadSlot
-            &&
-            FormModel.CollectionUploadSlotPasswordPolicy
+            && FormModel.CollectionUploadSlotPasswordPolicy
                 is CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue
             && string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotExpectedArchivePassword)
         )

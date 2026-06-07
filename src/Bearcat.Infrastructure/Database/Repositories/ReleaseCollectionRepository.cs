@@ -114,7 +114,9 @@ public class ReleaseCollectionRepository(
                 slot.PasswordPolicy,
                 slot.ExpectedArchivePassword,
                 UploadConfigCount = slot.UploadConfigs.Count,
-                UploadCount = slot.UploadConfigs.SelectMany(uploadConfig => uploadConfig.Uploads).Count(),
+                UploadCount = slot
+                    .UploadConfigs.SelectMany(uploadConfig => uploadConfig.Uploads)
+                    .Count(),
             })
             .ToListAsync(cancellationToken);
 
@@ -145,13 +147,16 @@ public class ReleaseCollectionRepository(
                 group => group.Key,
                 group =>
                     (IReadOnlyList<CollectionUploadSlotLinkCrypterReadModel>)
-                        group.GroupBy(linkCrypter => new
+                        group
+                            .GroupBy(linkCrypter => new
                             {
                                 linkCrypter.LinkCrypterRegistrationId,
                                 linkCrypter.LinkCrypterRegistrationName,
                                 linkCrypter.IsActive,
                             })
-                            .OrderBy(linkCrypterGroup => linkCrypterGroup.Key.LinkCrypterRegistrationName)
+                            .OrderBy(linkCrypterGroup =>
+                                linkCrypterGroup.Key.LinkCrypterRegistrationName
+                            )
                             .Select(linkCrypterGroup =>
                             {
                                 var settings = linkCrypterGroup
@@ -205,10 +210,13 @@ public class ReleaseCollectionRepository(
             );
 
         var latestUploads = await dbRead
-            .Uploads.Where(upload => upload.UploadConfig.Release.ReleaseCollectionId == releaseCollectionId)
+            .Uploads.Where(upload =>
+                upload.UploadConfig.Release.ReleaseCollectionId == releaseCollectionId
+            )
             .GroupBy(upload => upload.UploadConfig.ReleaseId)
             .Select(group =>
-                group.OrderByDescending(upload => upload.UploadedAt ?? upload.CreatedAt)
+                group
+                    .OrderByDescending(upload => upload.UploadedAt ?? upload.CreatedAt)
                     .ThenByDescending(upload => upload.Id)
                     .Select(upload => new
                     {
@@ -297,7 +305,9 @@ public class ReleaseCollectionRepository(
         );
     }
 
-    public async Task<IReadOnlyList<CollectionArchiveConfigOptionReadModel>> GetArchiveConfigOptionsAsync(
+    public async Task<
+        IReadOnlyList<CollectionArchiveConfigOptionReadModel>
+    > GetArchiveConfigOptionsAsync(
         int releaseCollectionId,
         CancellationToken cancellationToken = default
     )
@@ -313,9 +323,13 @@ public class ReleaseCollectionRepository(
         }
 
         return await dbRead
-            .ArchiveConfigs.Where(config => config.Release.ReleaseCollectionId == releaseCollectionId)
+            .ArchiveConfigs.Where(config =>
+                config.Release.ReleaseCollectionId == releaseCollectionId
+            )
             .GroupBy(config => config.Name)
-            .Where(group => group.Select(config => config.ReleaseId).Distinct().Count() == releaseCount)
+            .Where(group =>
+                group.Select(config => config.ReleaseId).Distinct().Count() == releaseCount
+            )
             .OrderBy(group => group.Key)
             .Select(group => new CollectionArchiveConfigOptionReadModel(group.Key, releaseCount))
             .ToListAsync(cancellationToken);
@@ -376,7 +390,9 @@ public class ReleaseCollectionRepository(
         );
     }
 
-    public async Task<IReadOnlyList<CollectionReleaseArchiveConfigTarget>> GetArchiveConfigTargetsAsync(
+    public async Task<
+        IReadOnlyList<CollectionReleaseArchiveConfigTarget>
+    > GetArchiveConfigTargetsAsync(
         int releaseCollectionId,
         string archiveConfigName,
         CancellationToken cancellationToken = default
@@ -387,10 +403,7 @@ public class ReleaseCollectionRepository(
                 config.Release.ReleaseCollectionId == releaseCollectionId
                 && config.Name == archiveConfigName
             )
-            .Select(config => new CollectionReleaseArchiveConfigTarget(
-                config.ReleaseId,
-                config.Id
-            ))
+            .Select(config => new CollectionReleaseArchiveConfigTarget(config.ReleaseId, config.Id))
             .ToListAsync(cancellationToken);
     }
 
@@ -428,5 +441,4 @@ public class ReleaseCollectionRepository(
     {
         await dbWrite.SaveChangesAsync(cancellationToken);
     }
-
 }

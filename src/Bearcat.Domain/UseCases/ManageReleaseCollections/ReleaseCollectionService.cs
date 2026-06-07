@@ -81,7 +81,10 @@ public class ReleaseCollectionService(
         var key = CreateStableKey(cleanedName);
         if (string.IsNullOrWhiteSpace(key))
         {
-            throw new ArgumentException("Value must contain at least one letter or digit.", nameof(name));
+            throw new ArgumentException(
+                "Value must contain at least one letter or digit.",
+                nameof(name)
+            );
         }
 
         if (
@@ -92,7 +95,9 @@ public class ReleaseCollectionService(
             )
         )
         {
-            throw new InvalidOperationException("A collection upload slot with this key already exists.");
+            throw new InvalidOperationException(
+                "A collection upload slot with this key already exists."
+            );
         }
 
         var releaseCount = await writeRepository.GetReleaseCountAsync(
@@ -121,7 +126,10 @@ public class ReleaseCollectionService(
             PasswordPolicy = passwordPolicy,
             ExpectedArchivePassword =
                 passwordPolicy is CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue
-                    ? CleanRequired(expectedArchivePassword ?? string.Empty, nameof(expectedArchivePassword))
+                    ? CleanRequired(
+                        expectedArchivePassword ?? string.Empty,
+                        nameof(expectedArchivePassword)
+                    )
                     : null,
         };
 
@@ -219,8 +227,8 @@ public class ReleaseCollectionService(
             writeRepository.Remove(linkCrypter);
         }
 
-        var existingLinkCryptersByRegistrationId = sharedLinkCrypters.ToDictionary(
-            linkCrypter => linkCrypter.LinkCrypterRegistrationId
+        var existingLinkCryptersByRegistrationId = sharedLinkCrypters.ToDictionary(linkCrypter =>
+            linkCrypter.LinkCrypterRegistrationId
         );
 
         foreach (var settings in settingsByRegistrationId.Values)

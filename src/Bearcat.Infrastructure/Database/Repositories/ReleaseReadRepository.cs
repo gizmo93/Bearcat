@@ -98,29 +98,28 @@ public class ReleaseReadRepository(
             .ToListAsync(cancellationToken: cancellationToken);
 
         var uploadIds = latestUploads.Select(u => u.UploadId).ToList();
-        IReadOnlyList<ReleaseOverviewLinkCrypterLinkProjection> linkCrypterLinks =
-            [];
+        IReadOnlyList<ReleaseOverviewLinkCrypterLinkProjection> linkCrypterLinks = [];
 
         if (uploadIds.Count > 0)
         {
             var releaseContainerLinks = await dbRead
                 .LinkCrypterContainers.Where(c =>
-                        c.Scope == LinkCrypterContainerScope.Release
-                        && c.UploadId != null
-                        && uploadIds.Contains(c.UploadId.Value)
-                        && c.Upload!.UploadConfig.ReleaseId == releaseId
-                    )
+                    c.Scope == LinkCrypterContainerScope.Release
+                    && c.UploadId != null
+                    && uploadIds.Contains(c.UploadId.Value)
+                    && c.Upload!.UploadConfig.ReleaseId == releaseId
+                )
                 .Select(c => new ReleaseOverviewLinkCrypterLinkProjection(
-                        c.UploadId!.Value,
-                        c.Id,
-                        c.LinkCrypterRegistration.Name,
-                        c.LinkCrypterRegistration.LinkCrypterClassName,
-                        c.ContainerUrl,
-                        c.Scope,
-                        c.State,
-                        c.CreatedAt,
-                        c.Errors.ToList()
-                    ))
+                    c.UploadId!.Value,
+                    c.Id,
+                    c.LinkCrypterRegistration.Name,
+                    c.LinkCrypterRegistration.LinkCrypterClassName,
+                    c.ContainerUrl,
+                    c.Scope,
+                    c.State,
+                    c.CreatedAt,
+                    c.Errors.ToList()
+                ))
                 .ToListAsync(cancellationToken: cancellationToken);
 
             var collectionContainerLinks = await dbRead
@@ -597,21 +596,22 @@ public class ReleaseReadRepository(
         IReadOnlyDictionary<string, LinkCrypterDto> linkCryptersByClassName
     )
     {
-        return containers.Select(c => new ReleaseUploadContainerLinkReadModel(
-            c.LinkCrypterRegistrationName,
-            c.LinkCrypterClassName,
-            c.ContainerUrl,
-            c.Scope,
-            c.State,
-            c.CreatedAt,
-            c.EnableCaptcha,
-            c.EnableContainerDownload,
-            c.EnableClickAndLoad,
-            linkCryptersByClassName[c.LinkCrypterClassName].SupportsCaptcha,
-            linkCryptersByClassName[c.LinkCrypterClassName].SupportsContainerDownload,
-            linkCryptersByClassName[c.LinkCrypterClassName].SupportsClickAndLoad,
-            c.Errors.ToList()
-        ))
+        return containers
+            .Select(c => new ReleaseUploadContainerLinkReadModel(
+                c.LinkCrypterRegistrationName,
+                c.LinkCrypterClassName,
+                c.ContainerUrl,
+                c.Scope,
+                c.State,
+                c.CreatedAt,
+                c.EnableCaptcha,
+                c.EnableContainerDownload,
+                c.EnableClickAndLoad,
+                linkCryptersByClassName[c.LinkCrypterClassName].SupportsCaptcha,
+                linkCryptersByClassName[c.LinkCrypterClassName].SupportsContainerDownload,
+                linkCryptersByClassName[c.LinkCrypterClassName].SupportsClickAndLoad,
+                c.Errors.ToList()
+            ))
             .ToList();
     }
 

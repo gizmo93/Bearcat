@@ -20,7 +20,7 @@ public partial class EditCollectionUploadSlotLinkCryptersDialog(
 
     [Parameter]
     public IReadOnlyList<CollectionUploadSlotLinkCrypterReadModel> SharedLinkCrypters { get; set; } =
-        [];
+    [];
 
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
@@ -30,8 +30,8 @@ public partial class EditCollectionUploadSlotLinkCryptersDialog(
 
     protected override async Task OnInitializedAsync()
     {
-        var selectedLinkCryptersByRegistrationId = SharedLinkCrypters.ToDictionary(
-            linkCrypter => linkCrypter.LinkCrypterRegistrationId
+        var selectedLinkCryptersByRegistrationId = SharedLinkCrypters.ToDictionary(linkCrypter =>
+            linkCrypter.LinkCrypterRegistrationId
         );
         var registrations = await linkCrypterRegistrationReadRepository.GetAllAsync();
 

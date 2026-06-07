@@ -33,10 +33,9 @@ public class UploadConfigLinkCrypterReadRepository(
                 u.EnableCaptcha,
                 u.EnableContainerDownload,
                 u.EnableClickAndLoad,
-                ReleaseCollectionId =
-                    u.UploadConfig.CollectionUploadSlot == null
-                        ? null
-                        : (int?)u.UploadConfig.CollectionUploadSlot.ReleaseCollectionId,
+                ReleaseCollectionId = u.UploadConfig.CollectionUploadSlot == null
+                    ? null
+                    : (int?)u.UploadConfig.CollectionUploadSlot.ReleaseCollectionId,
             })
             .FirstAsync(cancellationToken: cancellationToken);
 
@@ -83,10 +82,9 @@ public class UploadConfigLinkCrypterReadRepository(
                 u.EnableCaptcha,
                 u.EnableContainerDownload,
                 u.EnableClickAndLoad,
-                ReleaseCollectionId =
-                    u.UploadConfig.CollectionUploadSlot == null
-                        ? null
-                        : (int?)u.UploadConfig.CollectionUploadSlot.ReleaseCollectionId,
+                ReleaseCollectionId = u.UploadConfig.CollectionUploadSlot == null
+                    ? null
+                    : (int?)u.UploadConfig.CollectionUploadSlot.ReleaseCollectionId,
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
