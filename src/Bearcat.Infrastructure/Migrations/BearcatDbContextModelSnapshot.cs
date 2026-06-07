@@ -532,8 +532,7 @@ namespace BearCat.Infrastructure.Migrations
                         .HasColumnType("text[]");
 
                     b.Property<string>("ExternalReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text");
 
                     b.Property<int>("LinkCrypterRegistrationId")
                         .HasColumnType("integer");
