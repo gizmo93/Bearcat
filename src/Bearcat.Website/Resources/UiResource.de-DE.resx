@@ -663,6 +663,10 @@
   <data name="SearchReleaseCollections" xml:space="preserve"><value>Collections suchen</value></data>
   <data name="SharedLinkCrypters" xml:space="preserve"><value>Container erstellen bei</value></data>
   <data name="NoSharedLinkCrypters" xml:space="preserve"><value>Keiner</value></data>
+  <data name="EditSharedLinkCrypters" xml:space="preserve"><value>Container-Link-Crypter bearbeiten</value></data>
+  <data name="SharedLinkCryptersDialogDescription" xml:space="preserve"><value>Verwalte die Link-Crypter und Einstellungen für die gemeinsamen Container dieser Upload-Gruppe.</value></data>
+  <data name="SharedLinkCryptersDialogHelp" xml:space="preserve"><value>Änderungen werden auf alle Upload-Konfigurationen dieser Collection-Upload-Gruppe angewendet.</value></data>
+  <data name="NoLinkCryptersFound" xml:space="preserve"><value>Keine Link-Crypter gefunden</value></data>
   <data name="UseReleaseCollections" xml:space="preserve"><value>Release-Collections verwenden</value></data>
   <data name="UseCollectionUploadSlot" xml:space="preserve"><value>Diese Upload-Konfiguration über die Collection teilen</value></data>
   <data name="UseCollectionUploadSlotHelp" xml:space="preserve"><value>Erzeugt einen gemeinsamen Collection-Container für diese Gruppe.</value></data>

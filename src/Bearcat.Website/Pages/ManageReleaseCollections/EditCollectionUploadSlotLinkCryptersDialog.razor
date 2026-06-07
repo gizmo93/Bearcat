@@ -1,0 +1,77 @@
+@inherits OwningComponentBase
+
+@if (!isInitialized)
+{
+    return;
+}
+
+<div class="space-y-6">
+    <div class="space-y-1">
+        <p class="text-sm font-medium">@SlotName</p>
+        <p class="text-sm text-muted-foreground">@L["SharedLinkCryptersDialogHelp"]</p>
+    </div>
+
+    @if (linkCrypterOptions.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+            @L["NoLinkCryptersFound"]
+        </div>
+    }
+    else
+    {
+        <div class="space-y-3">
+            @foreach (var option in linkCrypterOptions)
+            {
+                <div class="space-y-4 rounded-md border border-border/70 px-3 py-3">
+                    <div class="flex items-center gap-2">
+                        <BbCheckbox @bind-Checked="option.IsSelected"
+                                    Id="@($"shared-link-crypter-{option.LinkCrypterRegistrationId}")"
+                                    AriaLabel="@option.Name" />
+                        <BbLabel For="@($"shared-link-crypter-{option.LinkCrypterRegistrationId}")">
+                            @option.Name
+                        </BbLabel>
+                    </div>
+
+                    @if (option.IsSelected)
+                    {
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <BbFormFieldInput TValue="string"
+                                              @bind-Value="option.Password"
+                                              Label="@L["ContainerPassword"]"
+                                              Placeholder="@L["ContainerPasswordPlaceholder"]" />
+
+                            <div class="space-y-3">
+                                @if (option.SupportsCaptcha)
+                                {
+                                    <BbFormFieldSwitch @bind-Checked="option.EnableCaptcha"
+                                                       Label="@L["Captcha"]" />
+                                }
+
+                                @if (option.SupportsContainerDownload)
+                                {
+                                    <BbFormFieldSwitch @bind-Checked="option.EnableContainerDownload"
+                                                       Label="@L["ContainerDownload"]" />
+                                }
+
+                                @if (option.SupportsClickAndLoad)
+                                {
+                                    <BbFormFieldSwitch @bind-Checked="option.EnableClickAndLoad"
+                                                       Label="@L["ClickAndLoad"]" />
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    <div class="flex justify-end gap-2">
+        <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+            @L["Cancel"]
+        </BbButton>
+        <BbButton OnClick="SaveAsync">
+            @L["Save"]
+        </BbButton>
+    </div>
+</div>

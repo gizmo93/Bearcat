@@ -1,11 +1,13 @@
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
+using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManageReleaseCollections;
 
 public partial class ReleaseCollectionDetail(
     IReleaseCollectionReadRepository readRepository,
+    DialogService dialogService,
     NavigationManager navigationManager
 )
 {
@@ -32,5 +34,36 @@ public partial class ReleaseCollectionDetail(
 
         releaseCollection = detail;
         isInitialized = true;
+    }
+
+    private async Task ShowEditSharedLinkCryptersDialogAsync(
+        CollectionUploadSlotReadModel uploadSlot
+    )
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(EditCollectionUploadSlotLinkCryptersDialog.CollectionUploadSlotId)] =
+                uploadSlot.CollectionUploadSlotId,
+            [nameof(EditCollectionUploadSlotLinkCryptersDialog.SlotName)] = uploadSlot.Name,
+            [nameof(EditCollectionUploadSlotLinkCryptersDialog.SharedLinkCrypters)] =
+                uploadSlot.SharedLinkCrypters,
+        };
+
+        var dialog = await dialogService.OpenAsync<EditCollectionUploadSlotLinkCryptersDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["EditSharedLinkCrypters"],
+                Description = L["SharedLinkCryptersDialogDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (!dialog.Cancelled)
+        {
+            await LoadReleaseCollectionAsync();
+        }
     }
 }

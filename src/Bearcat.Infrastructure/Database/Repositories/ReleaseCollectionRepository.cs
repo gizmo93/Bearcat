@@ -21,6 +21,8 @@ public class ReleaseCollectionRepository(
     {
         return await dbWrite
             .ReleaseCollections.Include(collection => collection.UploadSlots)
+                .ThenInclude(slot => slot.UploadConfigs)
+                    .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
             .FirstOrDefaultAsync(
                 collection => collection.ReleaseGroupId == releaseGroupId && collection.Key == key,
                 cancellationToken
@@ -145,9 +147,25 @@ public class ReleaseCollectionRepository(
         );
     }
 
+    public async Task<CollectionUploadSlot> GetUploadSlotForSharedLinkCrypterUpdateAsync(
+        int collectionUploadSlotId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .CollectionUploadSlots.Include(slot => slot.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
+            .FirstAsync(slot => slot.Id == collectionUploadSlotId, cancellationToken);
+    }
+
     public void Add(ReleaseCollection releaseCollection)
     {
         dbWrite.Add(releaseCollection);
+    }
+
+    public void Remove(UploadConfigLinkCrypter uploadConfigLinkCrypter)
+    {
+        dbWrite.Remove(uploadConfigLinkCrypter);
     }
 
     public void Remove(ReleaseCollection releaseCollection)
@@ -176,12 +194,21 @@ public class ReleaseCollectionRepository(
                 linkCrypter.LinkCrypterRegistration.IsActive,
             })
             .OrderBy(group => group.Key.Name)
-            .Select(group => new CollectionUploadSlotLinkCrypterReadModel(
-                group.Key.LinkCrypterRegistrationId,
-                group.Key.Name,
-                group.Key.IsActive,
-                group.Count()
-            ))
+            .Select(group =>
+            {
+                var settings = group.First();
+
+                return new CollectionUploadSlotLinkCrypterReadModel(
+                    group.Key.LinkCrypterRegistrationId,
+                    group.Key.Name,
+                    group.Key.IsActive,
+                    settings.Password,
+                    settings.EnableCaptcha,
+                    settings.EnableContainerDownload,
+                    settings.EnableClickAndLoad,
+                    group.Count()
+                );
+            })
             .ToList();
     }
 }

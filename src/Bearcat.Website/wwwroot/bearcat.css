@@ -2302,7 +2302,7 @@ a {
     }
 
     .bearcat-collection-slots-grid {
-        grid-template-columns: minmax(0, 1fr) minmax(160px, 0.75fr) 150px 110px 120px;
+        grid-template-columns: minmax(0, 1fr) minmax(160px, 0.75fr) 150px 110px 120px 84px;
     }
 
     .bearcat-collection-releases-grid {
