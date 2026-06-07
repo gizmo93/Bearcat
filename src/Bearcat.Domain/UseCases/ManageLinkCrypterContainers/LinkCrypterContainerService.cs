@@ -49,14 +49,29 @@ public class LinkCrypterContainerService(
         var missingConfigs = upload
             .UploadConfig.LinkCrypters.Where(l =>
                 l.LinkCrypterRegistration.IsActive
-                && !upload
-                    .LinkCrypterContainers.Select(c => c.UploadConfigLinkCrypterId)
-                    .Contains(l.Id)
+                && (
+                    (
+                        l.ContainerScope == LinkCrypterContainerScope.Release
+                        && !upload
+                            .LinkCrypterContainers.Select(c => c.UploadConfigLinkCrypterId)
+                            .Contains(l.Id)
+                    )
+                    || (
+                        l.ContainerScope == LinkCrypterContainerScope.ReleaseCollection
+                        && upload.UploadConfig.CollectionUploadSlotId is not null
+                    )
+                )
             )
             .ToList();
 
         foreach (var linkCrypterConfig in missingConfigs)
         {
+            if (linkCrypterConfig.ContainerScope is LinkCrypterContainerScope.ReleaseCollection)
+            {
+                await ProcessCollectionUploadAsync(upload, linkCrypterConfig, cancellationToken);
+                continue;
+            }
+
             var previousContainer = upload
                 .UploadConfig.Uploads.Where(u =>
                     u.Id < upload.Id
@@ -100,6 +115,77 @@ public class LinkCrypterContainerService(
                 cancellationToken: cancellationToken
             );
         }
+    }
+
+    private async Task ProcessCollectionUploadAsync(
+        Upload upload,
+        UploadConfigLinkCrypter linkCrypterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        if (upload.UploadConfig.CollectionUploadSlotId is null)
+        {
+            return;
+        }
+
+        var container = await repository.GetCollectionContainerAsync(
+            upload.UploadConfig.CollectionUploadSlotId.Value,
+            linkCrypterConfig.LinkCrypterRegistrationId,
+            cancellationToken
+        );
+
+        if (container?.SourceUploads.Any(source => source.UploadId == upload.Id) is true)
+        {
+            return;
+        }
+
+        var collectionUploads = await repository.GetCompletedOnlineUploadsByCollectionSlotAsync(
+            upload.UploadConfig.CollectionUploadSlotId.Value,
+            linkCrypterConfig.LinkCrypterRegistrationId,
+            cancellationToken
+        );
+
+        if (collectionUploads.Count == 0)
+        {
+            return;
+        }
+
+        var collectionLinkCrypterConfigs = collectionUploads
+            .SelectMany(collectionUpload =>
+                collectionUpload.UploadConfig.LinkCrypters.Where(config =>
+                    config.ContainerScope == LinkCrypterContainerScope.ReleaseCollection
+                    && config.LinkCrypterRegistrationId == linkCrypterConfig.LinkCrypterRegistrationId
+                    && config.LinkCrypterRegistration.IsActive
+                )
+            )
+            .ToList();
+
+        if (!HaveSameContainerSettings(collectionLinkCrypterConfigs))
+        {
+            logger.LogWarning(
+                "Skipping collection link crypter container for upload slot {CollectionUploadSlotId} and link crypter registration {LinkCrypterRegistrationId} because settings differ across upload configs",
+                upload.UploadConfig.CollectionUploadSlotId.Value,
+                linkCrypterConfig.LinkCrypterRegistrationId
+            );
+            return;
+        }
+
+        if (container is null)
+        {
+            await CreateCollectionLinkCrypterContainerAsync(
+                collectionUploads,
+                collectionLinkCrypterConfigs[0],
+                cancellationToken
+            );
+            return;
+        }
+
+        await UpdateCollectionLinkCrypterContainerAsync(
+            container,
+            collectionUploads,
+            collectionLinkCrypterConfigs[0],
+            cancellationToken
+        );
     }
 
     private async Task UpdateLinkCrypterContainerAsync(
@@ -148,6 +234,61 @@ public class LinkCrypterContainerService(
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
     }
 
+    private async Task UpdateCollectionLinkCrypterContainerAsync(
+        LinkCrypterContainer container,
+        IReadOnlyList<Upload> uploads,
+        UploadConfigLinkCrypter linkCrypterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var crypter = linkCrypterFactory.Get(
+            className: linkCrypterConfig.LinkCrypterRegistration.LinkCrypterClassName
+        );
+        var config = crypter.DeserializeConfig(
+            serializedConfig: secretProtector.Unprotect(
+                linkCrypterConfig.LinkCrypterRegistration.SerializedConfig
+            )
+        );
+
+        var links = GetUploadLinks(uploads);
+        var result = await crypter.UpdateContainerAsync(
+            linkCrypterConfig: config,
+            containerLink: container.ContainerUrl,
+            externalReference: container.ExternalReference,
+            password: linkCrypterConfig.Password,
+            enableCaptcha: linkCrypterConfig.EnableCaptcha,
+            enableContainerDownload: linkCrypterConfig.EnableContainerDownload,
+            enableClickAndLoad: linkCrypterConfig.EnableClickAndLoad,
+            links: links,
+            cancellationToken: cancellationToken
+        );
+
+        container.Password = linkCrypterConfig.Password;
+        container.EnableCaptcha = linkCrypterConfig.EnableCaptcha;
+        container.EnableContainerDownload = linkCrypterConfig.EnableContainerDownload;
+        container.EnableClickAndLoad = linkCrypterConfig.EnableClickAndLoad;
+        container.Errors = string.IsNullOrWhiteSpace(result.ErrorMessage)
+            ? []
+            : [result.ErrorMessage];
+        container.State = result.IsSuccess
+            ? LinkCrypterContainerState.Created
+            : LinkCrypterContainerState.CreationFailed;
+
+        if (!result.IsSuccess)
+        {
+            notificationService.CreateError(
+                message: $"Failed to update collection link crypter container {container.Id} using link crypter config Id {linkCrypterConfig.Id} with crypter {linkCrypterConfig.LinkCrypterRegistration.Name}. Errors: {result.ErrorMessage}",
+                entity: container,
+                selector: n => n.LinkCrypterContainer
+            );
+
+            return;
+        }
+
+        SyncSourceUploads(container, uploads);
+        await repository.SaveChangesAsync(cancellationToken: cancellationToken);
+    }
+
     private async Task CreateLinkCrypterContainerAsync(
         Upload upload,
         UploadConfigLinkCrypter linkCrypterConfig,
@@ -176,7 +317,9 @@ public class LinkCrypterContainerService(
 
         var container = new LinkCrypterContainer
         {
+            Scope = LinkCrypterContainerScope.Release,
             UploadConfigLinkCrypter = linkCrypterConfig,
+            LinkCrypterRegistrationId = linkCrypterConfig.LinkCrypterRegistrationId,
             Upload = upload,
             ExternalReference = result.ExternalReference,
             ContainerUrl = result.ContainerLink ?? string.Empty,
@@ -217,5 +360,109 @@ public class LinkCrypterContainerService(
 
         repository.Add(container);
         await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task CreateCollectionLinkCrypterContainerAsync(
+        IReadOnlyList<Upload> uploads,
+        UploadConfigLinkCrypter linkCrypterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var firstUpload = uploads[0];
+        var slot = firstUpload.UploadConfig.CollectionUploadSlot!;
+        var crypter = linkCrypterFactory.Get(
+            linkCrypterConfig.LinkCrypterRegistration.LinkCrypterClassName
+        );
+        var config = crypter.DeserializeConfig(
+            secretProtector.Unprotect(linkCrypterConfig.LinkCrypterRegistration.SerializedConfig)
+        );
+
+        var result = await crypter.CreateContainerAsync(
+            linkCrypterConfig: config,
+            containerName: $"{slot.ReleaseCollection.Name} - {slot.Name}",
+            password: linkCrypterConfig.Password,
+            enableCaptcha: linkCrypterConfig.EnableCaptcha,
+            enableContainerDownload: linkCrypterConfig.EnableContainerDownload,
+            enableClickAndLoad: linkCrypterConfig.EnableClickAndLoad,
+            links: GetUploadLinks(uploads),
+            cancellationToken: cancellationToken
+        );
+
+        var container = new LinkCrypterContainer
+        {
+            Scope = LinkCrypterContainerScope.ReleaseCollection,
+            CollectionUploadSlotId = slot.Id,
+            LinkCrypterRegistrationId = linkCrypterConfig.LinkCrypterRegistrationId,
+            ExternalReference = result.ExternalReference,
+            ContainerUrl = result.ContainerLink ?? string.Empty,
+            Password = linkCrypterConfig.Password,
+            EnableCaptcha = linkCrypterConfig.EnableCaptcha,
+            EnableContainerDownload = linkCrypterConfig.EnableContainerDownload,
+            EnableClickAndLoad = linkCrypterConfig.EnableClickAndLoad,
+            Errors = result.ErrorMessages.ToList(),
+            CreatedAt = timeProvider.GetLocalNow(),
+            State = result.IsSuccess
+                ? LinkCrypterContainerState.Created
+                : LinkCrypterContainerState.CreationFailed,
+        };
+
+        SyncSourceUploads(container, uploads);
+
+        if (!result.IsSuccess)
+        {
+            notificationService.CreateError(
+                message: $"Failed to create collection link crypter container for upload slot {slot.Id} using link crypter {linkCrypterConfig.Id}. Errors: {string.Join("; ", result.ErrorMessages)}",
+                entity: container,
+                selector: n => n.LinkCrypterContainer
+            );
+        }
+
+        repository.Add(container);
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    private static bool HaveSameContainerSettings(
+        IReadOnlyList<UploadConfigLinkCrypter> linkCrypterConfigs
+    )
+    {
+        if (linkCrypterConfigs.Count == 0)
+        {
+            return false;
+        }
+
+        var first = linkCrypterConfigs[0];
+
+        return linkCrypterConfigs.All(config =>
+            config.LinkCrypterRegistrationId == first.LinkCrypterRegistrationId
+            && string.Equals(config.Password, first.Password, StringComparison.Ordinal)
+            && config.EnableCaptcha == first.EnableCaptcha
+            && config.EnableContainerDownload == first.EnableContainerDownload
+            && config.EnableClickAndLoad == first.EnableClickAndLoad
+        );
+    }
+
+    private static List<string> GetUploadLinks(IReadOnlyList<Upload> uploads)
+    {
+        return uploads
+            .SelectMany(upload => upload.UploadedFiles.Select(file => file.HosterFileLink))
+            .Distinct()
+            .OrderBy(link => link)
+            .ToList();
+    }
+
+    private static void SyncSourceUploads(LinkCrypterContainer container, IReadOnlyList<Upload> uploads)
+    {
+        var existingUploadIds = container.SourceUploads.Select(source => source.UploadId).ToHashSet();
+
+        foreach (var upload in uploads.Where(upload => !existingUploadIds.Contains(upload.Id)))
+        {
+            container.SourceUploads.Add(
+                new LinkCrypterContainerSourceUpload
+                {
+                    LinkCrypterContainer = container,
+                    UploadId = upload.Id,
+                }
+            );
+        }
     }
 }

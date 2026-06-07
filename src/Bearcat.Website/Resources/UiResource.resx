@@ -630,7 +630,10 @@
   <data name="CollectionUploadSlotPasswordPolicy.Ignore" xml:space="preserve"><value>Ignore</value></data>
   <data name="CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue" xml:space="preserve"><value>Must equal expected value</value></data>
   <data name="CollectionUploadSlotPasswordPolicy.MustMatchAcrossReleases" xml:space="preserve"><value>Must match across releases</value></data>
+  <data name="ContainerScope" xml:space="preserve"><value>Container scope</value></data>
   <data name="ExpectedArchivePassword" xml:space="preserve"><value>Expected archive password</value></data>
+  <data name="LinkCrypterContainerScope.Release" xml:space="preserve"><value>Release</value></data>
+  <data name="LinkCrypterContainerScope.ReleaseCollection" xml:space="preserve"><value>Release collection</value></data>
   <data name="NoReleaseCollectionsFound" xml:space="preserve"><value>No release collections found</value></data>
   <data name="NoCollectionUploadSlotsFound" xml:space="preserve"><value>No upload slots found</value></data>
   <data name="OpenReleaseCollectionActions" xml:space="preserve"><value>Open release collection actions</value></data>

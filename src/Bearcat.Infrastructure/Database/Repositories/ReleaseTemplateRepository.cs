@@ -249,6 +249,7 @@ public class ReleaseTemplateRepository(
                             linkCryptersByClassName[
                                 l.LinkCrypterRegistration.LinkCrypterClassName
                             ].Name,
+                            l.ContainerScope,
                             l.Password,
                             l.EnableCaptcha,
                             l.EnableContainerDownload,

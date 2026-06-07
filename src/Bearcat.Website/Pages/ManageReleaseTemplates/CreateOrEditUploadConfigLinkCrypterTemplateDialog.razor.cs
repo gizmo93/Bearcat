@@ -1,6 +1,8 @@
 using Bearcat.Domain.UseCases.ManageLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Localization;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
@@ -52,6 +54,10 @@ public partial class CreateOrEditUploadConfigLinkCrypterTemplateDialog(
                 linkCrypter.Name
             ));
 
+    private IEnumerable<SelectOption<LinkCrypterContainerScope>> ContainerScopeOptions =>
+        Enum.GetValues<LinkCrypterContainerScope>()
+            .Select(scope => new SelectOption<LinkCrypterContainerScope>(scope, L.Localize(scope)));
+
     protected override async Task OnInitializedAsync()
     {
         editContext = new EditContext(FormModel);
@@ -74,7 +80,8 @@ public partial class CreateOrEditUploadConfigLinkCrypterTemplateDialog(
                 FormModel.Password,
                 CanUseCaptcha && FormModel.EnableCaptcha,
                 CanUseContainerDownload && FormModel.EnableContainerDownload,
-                CanUseClickAndLoad && FormModel.EnableClickAndLoad
+                CanUseClickAndLoad && FormModel.EnableClickAndLoad,
+                FormModel.ContainerScope
             );
         }
         else
@@ -85,7 +92,8 @@ public partial class CreateOrEditUploadConfigLinkCrypterTemplateDialog(
                 FormModel.Password,
                 CanUseCaptcha && FormModel.EnableCaptcha,
                 CanUseContainerDownload && FormModel.EnableContainerDownload,
-                CanUseClickAndLoad && FormModel.EnableClickAndLoad
+                CanUseClickAndLoad && FormModel.EnableClickAndLoad,
+                FormModel.ContainerScope
             );
         }
 

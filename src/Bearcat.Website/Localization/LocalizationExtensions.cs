@@ -38,6 +38,11 @@ public static class LocalizationExtensions
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,
+        LinkCrypterContainerScope scope
+    ) => localizer[$"LinkCrypterContainerScope.{scope}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
         NotificationType type
     ) => localizer[$"NotificationType.{type}"];
 

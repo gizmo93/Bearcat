@@ -1,3 +1,5 @@
+using Bearcat.Domain.ValueObjects;
+
 namespace Bearcat.Domain.Entities;
 
 public class UploadConfigLinkCrypter
@@ -11,6 +13,8 @@ public class UploadConfigLinkCrypter
     public int LinkCrypterRegistrationId { get; set; }
 
     public LinkCrypterRegistration LinkCrypterRegistration { get; set; } = null!;
+
+    public LinkCrypterContainerScope ContainerScope { get; set; }
 
     public string? Password { get; set; }
 

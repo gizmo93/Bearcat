@@ -446,8 +446,9 @@ public partial class ReleaseTemplateDetail(
             [nameof(CreateOrEditUploadConfigLinkCrypterTemplateDialog.FormModel)] =
                 new UploadConfigLinkCrypterTemplateFormModel
                 {
-                    LinkCrypterRegistrationId = linkCrypter.LinkCrypterRegistrationId,
-                    Password = linkCrypter.Password,
+                        LinkCrypterRegistrationId = linkCrypter.LinkCrypterRegistrationId,
+                        ContainerScope = linkCrypter.ContainerScope,
+                        Password = linkCrypter.Password,
                     EnableCaptcha = linkCrypter.EnableCaptcha,
                     EnableContainerDownload = linkCrypter.EnableContainerDownload,
                     EnableClickAndLoad = linkCrypter.EnableClickAndLoad,

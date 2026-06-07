@@ -103,15 +103,17 @@ public class ReleaseReadRepository(
                 ? []
                 : await dbRead
                     .LinkCrypterContainers.Where(c =>
-                        uploadIds.Contains(c.UploadId)
-                        && c.Upload.UploadConfig.ReleaseId == releaseId
+                        c.Scope == LinkCrypterContainerScope.Release
+                        && c.UploadId != null
+                        && uploadIds.Contains(c.UploadId.Value)
+                        && c.Upload!.UploadConfig.ReleaseId == releaseId
                     )
-                    .OrderBy(c => c.UploadConfigLinkCrypter.LinkCrypterRegistration.Name)
+                    .OrderBy(c => c.UploadConfigLinkCrypter!.LinkCrypterRegistration.Name)
                     .ThenBy(c => c.Id)
                     .Select(c => new ReleaseOverviewLinkCrypterLinkProjection(
-                        c.UploadId,
+                        c.UploadId!.Value,
                         c.Id,
-                        c.UploadConfigLinkCrypter.LinkCrypterRegistration.Name,
+                        c.UploadConfigLinkCrypter!.LinkCrypterRegistration.Name,
                         c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName,
                         c.ContainerUrl,
                         c.State,
@@ -469,9 +471,11 @@ public class ReleaseReadRepository(
 
         var containers = dbRead
             .LinkCrypterContainers.Where(c =>
-                c.UploadId == uploadId && c.Upload.UploadConfig.ReleaseId == releaseId
+                c.Scope == LinkCrypterContainerScope.Release
+                && c.UploadId == uploadId
+                && c.Upload!.UploadConfig.ReleaseId == releaseId
             )
-            .OrderBy(c => c.UploadConfigLinkCrypter.LinkCrypterRegistration.Name)
+            .OrderBy(c => c.UploadConfigLinkCrypter!.LinkCrypterRegistration.Name)
             .ThenBy(c => c.Id);
 
         return await SelectContainerLinkReadModels(containers, linkCryptersByClassName)
@@ -523,7 +527,7 @@ public class ReleaseReadRepository(
     )
     {
         return containers.Select(c => new ReleaseUploadContainerLinkReadModel(
-            c.UploadConfigLinkCrypter.LinkCrypterRegistration.Name,
+            c.UploadConfigLinkCrypter!.LinkCrypterRegistration.Name,
             c.UploadConfigLinkCrypter.LinkCrypterRegistration.LinkCrypterClassName,
             c.ContainerUrl,
             c.State,

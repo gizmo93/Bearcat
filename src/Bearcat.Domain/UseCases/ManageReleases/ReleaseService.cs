@@ -239,6 +239,7 @@ public class ReleaseService(
                     .LinkCrypterTemplates.Select(linkCrypter => new UploadConfigLinkCrypter
                     {
                         LinkCrypterRegistrationId = linkCrypter.LinkCrypterRegistrationId,
+                        ContainerScope = linkCrypter.ContainerScope,
                         Password = CleanOptional(linkCrypter.Password),
                         EnableCaptcha = linkCrypter.EnableCaptcha,
                         EnableContainerDownload = linkCrypter.EnableContainerDownload,

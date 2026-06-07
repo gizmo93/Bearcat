@@ -217,6 +217,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
                     .LinkCrypters.Select(linkCrypter => new UploadConfigLinkCrypterTemplate
                     {
                         LinkCrypterRegistrationId = linkCrypter.LinkCrypterRegistrationId,
+                        ContainerScope = linkCrypter.ContainerScope,
                         Password = CleanOptional(linkCrypter.Password),
                         EnableCaptcha = linkCrypter.EnableCaptcha,
                         EnableContainerDownload = linkCrypter.EnableContainerDownload,
@@ -567,6 +568,29 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         bool enableCaptcha,
         bool enableContainerDownload,
         bool enableClickAndLoad,
+        CancellationToken cancellationToken
+    )
+    {
+        return await CreateUploadConfigLinkCrypterTemplateAsync(
+            uploadConfigTemplateId,
+            linkCrypterRegistrationId,
+            password,
+            enableCaptcha,
+            enableContainerDownload,
+            enableClickAndLoad,
+            LinkCrypterContainerScope.Release,
+            cancellationToken
+        );
+    }
+
+    public async Task<int> CreateUploadConfigLinkCrypterTemplateAsync(
+        int uploadConfigTemplateId,
+        int linkCrypterRegistrationId,
+        string? password,
+        bool enableCaptcha,
+        bool enableContainerDownload,
+        bool enableClickAndLoad,
+        LinkCrypterContainerScope containerScope = LinkCrypterContainerScope.Release,
         CancellationToken cancellationToken = default
     )
     {
@@ -578,6 +602,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         var linkCrypterTemplate = new UploadConfigLinkCrypterTemplate
         {
             LinkCrypterRegistrationId = linkCrypterRegistrationId,
+            ContainerScope = containerScope,
             Password = CleanOptional(password),
             EnableCaptcha = enableCaptcha,
             EnableContainerDownload = enableContainerDownload,
@@ -597,6 +622,27 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         bool enableCaptcha,
         bool enableContainerDownload,
         bool enableClickAndLoad,
+        CancellationToken cancellationToken
+    )
+    {
+        await UpdateUploadConfigLinkCrypterTemplateAsync(
+            uploadConfigLinkCrypterTemplateId,
+            password,
+            enableCaptcha,
+            enableContainerDownload,
+            enableClickAndLoad,
+            LinkCrypterContainerScope.Release,
+            cancellationToken
+        );
+    }
+
+    public async Task UpdateUploadConfigLinkCrypterTemplateAsync(
+        int uploadConfigLinkCrypterTemplateId,
+        string? password,
+        bool enableCaptcha,
+        bool enableContainerDownload,
+        bool enableClickAndLoad,
+        LinkCrypterContainerScope containerScope = LinkCrypterContainerScope.Release,
         CancellationToken cancellationToken = default
     )
     {
@@ -606,6 +652,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         );
 
         linkCrypterTemplate.Password = CleanOptional(password);
+        linkCrypterTemplate.ContainerScope = containerScope;
         linkCrypterTemplate.EnableCaptcha = enableCaptcha;
         linkCrypterTemplate.EnableContainerDownload = enableContainerDownload;
         linkCrypterTemplate.EnableClickAndLoad = enableClickAndLoad;

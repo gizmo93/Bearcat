@@ -31,7 +31,7 @@ public class UploadConfiguration : IEntityTypeConfiguration<Upload>
             .WithOne(l => l.Upload)
             .HasForeignKey(l => l.UploadId)
             .HasPrincipalKey(u => u.Id)
-            .IsRequired()
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -104,20 +104,24 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
             n.ArchiveId == null ? null : n.Archive!.ArchiveConfig.Release.Name,
             n.LinkCrypterContainerId,
             n.LinkCrypterContainerId == null
+            || n.LinkCrypterContainer!.UploadConfigLinkCrypterId == null
                 ? null
-                : n.LinkCrypterContainer!.UploadConfigLinkCrypter.UploadConfigId,
+                : n.LinkCrypterContainer!.UploadConfigLinkCrypter!.UploadConfigId,
+            n.LinkCrypterContainerId == null
+            || n.LinkCrypterContainer!.UploadConfigLinkCrypterId == null
+                ? null
+                : n.LinkCrypterContainer!.UploadConfigLinkCrypter!.UploadConfig.Name,
+            n.LinkCrypterContainerId == null
+            || n.LinkCrypterContainer!.UploadConfigLinkCrypterId == null
+                ? null
+                : n.LinkCrypterContainer!.UploadConfigLinkCrypter!.UploadConfig.ReleaseId,
+            n.LinkCrypterContainerId == null
+            || n.LinkCrypterContainer!.UploadConfigLinkCrypterId == null
+                ? null
+                : n.LinkCrypterContainer!.UploadConfigLinkCrypter!.UploadConfig.Release.Name,
             n.LinkCrypterContainerId == null
                 ? null
-                : n.LinkCrypterContainer!.UploadConfigLinkCrypter.UploadConfig.Name,
-            n.LinkCrypterContainerId == null
-                ? null
-                : n.LinkCrypterContainer!.UploadConfigLinkCrypter.UploadConfig.ReleaseId,
-            n.LinkCrypterContainerId == null
-                ? null
-                : n.LinkCrypterContainer!.UploadConfigLinkCrypter.UploadConfig.Release.Name,
-            n.LinkCrypterContainerId == null
-                ? null
-                : n.LinkCrypterContainer!.UploadConfigLinkCrypter.LinkCrypterRegistration.Name
+                : n.LinkCrypterContainer!.LinkCrypterRegistration.Name
         );
     }
 
