@@ -12,12 +12,7 @@ public static class LocalizationExtensions
         this IStringLocalizer<UiResource> localizer,
         ReleaseType releaseType
     ) => localizer[$"ReleaseType.{releaseType}"];
-
-    public static string LocalizeDescription(
-        this IStringLocalizer<UiResource> localizer,
-        ReleaseType releaseType
-    ) => localizer[$"ReleaseType.{releaseType}.Description"];
-
+    
     public static string Localize(this IStringLocalizer<UiResource> localizer, UploadState state) =>
         localizer[$"UploadState.{state}"];
 
@@ -35,4 +30,9 @@ public static class LocalizationExtensions
         this IStringLocalizer<UiResource> localizer,
         NotificationType type
     ) => localizer[$"NotificationType.{type}"];
+
+    public static string LocalizeDescription(
+        this IStringLocalizer<UiResource> localizer,
+        ReleaseType releaseType
+    ) => localizer[$"ReleaseType.{releaseType}.Description"];
 }
