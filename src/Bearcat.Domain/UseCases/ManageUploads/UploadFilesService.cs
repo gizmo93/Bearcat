@@ -30,7 +30,7 @@ public class UploadFilesService(
         maxCount: MaxParallelUploads
     );
 
-    private Dictionary<string, SemaphoreSlim> hosterUploadSemaphores = new();
+    private readonly Dictionary<string, SemaphoreSlim> hosterUploadSemaphores = new();
 
     public TimeSpan UploadQueuePollDelay { get; set; } = TimeSpan.FromSeconds(10);
 
@@ -428,7 +428,7 @@ public class UploadFilesService(
         {
             throw;
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
             when (fileUploadCancellationTokenSource.IsCancellationRequested
                 && !context.CancellationToken.IsCancellationRequested
                 && !processCancellationToken.IsCancellationRequested
@@ -437,6 +437,7 @@ public class UploadFilesService(
             var message = $"Upload timed out after {FileUploadTimeout.Seconds} seconds";
 
             logger.LogWarning(
+                ex,
                 "Upload for file {FilePath} for upload {UploadId} timed out after {Timeout} seconds",
                 fileToUpload.FullFileName,
                 fileToUpload.UploadId,

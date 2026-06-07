@@ -237,6 +237,7 @@ public class ReleaseInfoResolutionService(
             {
                 repository.DetachPendingReleaseInfo(release);
                 logger.LogInformation(
+                    exception,
                     "Release info for release {ReleaseName} was already resolved by another worker",
                     release.Name
                 );

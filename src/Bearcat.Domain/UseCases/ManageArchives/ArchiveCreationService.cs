@@ -205,13 +205,13 @@ public class ArchiveCreationService(
         CancellationToken cancellationToken
     )
     {
-        foreach (var archiveFile in archive.ArchiveFiles)
+        foreach (var fullFileName in archive.ArchiveFiles.Select(af => af.FullFileName))
         {
-            if (!File.Exists(archiveFile.FullFileName))
+            if (!File.Exists(fullFileName))
             {
                 logger.LogWarning(
                     "Cannot change MD5 hash for missing archive file {ArchiveFileName} in archive {ArchiveId}",
-                    archiveFile.FullFileName,
+                    fullFileName,
                     archive.Id
                 );
 
@@ -219,7 +219,7 @@ public class ArchiveCreationService(
             }
 
             await using var stream = new FileStream(
-                path: archiveFile.FullFileName,
+                path: fullFileName,
                 mode: FileMode.Append,
                 access: FileAccess.Write,
                 share: FileShare.Read

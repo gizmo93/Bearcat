@@ -330,12 +330,9 @@ public class UploadStateService(
             .OfType<Upload>()
             .ToList();
 
-        foreach (var upload in uploads)
+        foreach (var upload in uploads.Where(u => IsAutomaticReuploadDue(u, localNow)))
         {
-            if (IsAutomaticReuploadDue(upload, localNow))
-            {
-                CreateNewUpload(upload, "Automatic reupload scheduled due to offline files");
-            }
+            CreateNewUpload(upload, "Automatic reupload scheduled due to offline files");
         }
 
         await uploadStateRepository.SaveChangesAsync(cancellationToken);

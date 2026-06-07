@@ -282,8 +282,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         EnsureUnmanagedArchiveConfigTemplate(releaseTemplate);
 
         var archiveConfigTemplate = ResolveArchiveConfigTemplate(
-            releaseTemplate,
-            archiveConfigTemplateId
+            releaseTemplate
         );
 
         var uploadConfigTemplate = new UploadConfigTemplate
@@ -323,8 +322,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         );
 
         var archiveConfigTemplate = ResolveArchiveConfigTemplate(
-            uploadConfigTemplate.ReleaseTemplate,
-            archiveConfigTemplateId
+            uploadConfigTemplate.ReleaseTemplate
         );
 
         uploadConfigTemplate.Name = CleanOptional(name);
@@ -498,8 +496,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
     }
 
     private static ArchiveConfigTemplate? ResolveArchiveConfigTemplate(
-        ReleaseTemplate releaseTemplate,
-        int archiveConfigTemplateId
+        ReleaseTemplate releaseTemplate
     )
     {
         if (releaseTemplate.ReleaseType is ReleaseType.Managed)
