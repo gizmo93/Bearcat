@@ -18,11 +18,11 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
     )
     {
         return CreateAsync(
-            name,
-            releaseType,
-            releaseGroupId,
+            name: name,
+            releaseType: releaseType,
+            releaseGroupId: releaseGroupId,
             useReleaseCollections: false,
-            ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            releaseCollectionDetectionMode: ReleaseCollectionDetectionMode.SeriesEpisodePattern,
             releaseCollectionPattern: null,
             releaseCollectionKeyTemplate: null,
             releaseCollectionNameTemplate: null,
@@ -119,7 +119,9 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             : ReleaseCollectionDetectionMode.Disabled;
         releaseTemplate.ReleaseCollectionPattern = CleanOptional(releaseCollectionPattern);
         releaseTemplate.ReleaseCollectionKeyTemplate = CleanOptional(releaseCollectionKeyTemplate);
-        releaseTemplate.ReleaseCollectionNameTemplate = CleanOptional(releaseCollectionNameTemplate);
+        releaseTemplate.ReleaseCollectionNameTemplate = CleanOptional(
+            releaseCollectionNameTemplate
+        );
 
         EnsureUnmanagedArchiveConfigTemplate(releaseTemplate);
 
@@ -469,7 +471,8 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         uploadConfigTemplate.CollectionUploadSlotKey = CleanOptional(collectionUploadSlotKey);
         uploadConfigTemplate.CollectionUploadSlotName = CleanOptional(collectionUploadSlotName);
         uploadConfigTemplate.CollectionUploadSlotIsRequired = collectionUploadSlotIsRequired;
-        uploadConfigTemplate.CollectionUploadSlotPasswordPolicy = collectionUploadSlotPasswordPolicy;
+        uploadConfigTemplate.CollectionUploadSlotPasswordPolicy =
+            collectionUploadSlotPasswordPolicy;
         uploadConfigTemplate.CollectionUploadSlotExpectedArchivePassword = CleanOptional(
             collectionUploadSlotExpectedArchivePassword
         );

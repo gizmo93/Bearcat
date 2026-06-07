@@ -15,35 +15,40 @@ namespace Bearcat.Infrastructure.Migrations
                 table: "ReleaseTemplates",
                 type: "integer",
                 nullable: false,
-                defaultValue: 0);
+                defaultValue: 0
+            );
 
             migrationBuilder.AddColumn<string>(
                 name: "ReleaseCollectionKeyTemplate",
                 table: "ReleaseTemplates",
                 type: "character varying(500)",
                 maxLength: 500,
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.AddColumn<string>(
                 name: "ReleaseCollectionNameTemplate",
                 table: "ReleaseTemplates",
                 type: "character varying(500)",
                 maxLength: 500,
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.AddColumn<string>(
                 name: "ReleaseCollectionPattern",
                 table: "ReleaseTemplates",
                 type: "character varying(1000)",
                 maxLength: 1000,
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.AddColumn<bool>(
                 name: "UseReleaseCollections",
                 table: "ReleaseTemplates",
                 type: "boolean",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: false
+            );
         }
 
         /// <inheritdoc />
@@ -51,23 +56,25 @@ namespace Bearcat.Infrastructure.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "ReleaseCollectionDetectionMode",
-                table: "ReleaseTemplates");
+                table: "ReleaseTemplates"
+            );
 
             migrationBuilder.DropColumn(
                 name: "ReleaseCollectionKeyTemplate",
-                table: "ReleaseTemplates");
+                table: "ReleaseTemplates"
+            );
 
             migrationBuilder.DropColumn(
                 name: "ReleaseCollectionNameTemplate",
-                table: "ReleaseTemplates");
+                table: "ReleaseTemplates"
+            );
 
             migrationBuilder.DropColumn(
                 name: "ReleaseCollectionPattern",
-                table: "ReleaseTemplates");
+                table: "ReleaseTemplates"
+            );
 
-            migrationBuilder.DropColumn(
-                name: "UseReleaseCollections",
-                table: "ReleaseTemplates");
+            migrationBuilder.DropColumn(name: "UseReleaseCollections", table: "ReleaseTemplates");
         }
     }
 }

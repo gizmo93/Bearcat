@@ -250,7 +250,12 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
                 )
             )
             .ReturnsAsync(
-                new CreateContainerResult(true, "https://crypter.test/collection", "collection-1", [])
+                new CreateContainerResult(
+                    true,
+                    "https://crypter.test/collection",
+                    "collection-1",
+                    []
+                )
             );
 
         // Act
@@ -322,7 +327,9 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             Scope = LinkCrypterContainerScope.Release,
             Upload = previousUpload,
             UploadConfigLinkCrypterId = uploadConfigLinkCrypterId,
-            LinkCrypterRegistrationId = uploadConfig.LinkCrypters.Single().LinkCrypterRegistrationId,
+            LinkCrypterRegistrationId = uploadConfig
+                .LinkCrypters.Single()
+                .LinkCrypterRegistrationId,
             ContainerUrl = "https://crypter.test/existing",
             ExternalReference = "external-1",
             Password = "container-secret",

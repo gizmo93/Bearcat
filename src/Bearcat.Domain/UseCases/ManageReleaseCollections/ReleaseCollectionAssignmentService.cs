@@ -15,7 +15,10 @@ public class ReleaseCollectionAssignmentService(
         CancellationToken cancellationToken = default
     )
     {
-        var detectionResult = ReleaseCollectionDetectionService.Detect(release.Name, releaseTemplate);
+        var detectionResult = ReleaseCollectionDetectionService.Detect(
+            release.Name,
+            releaseTemplate
+        );
 
         if (detectionResult is null)
         {
@@ -49,22 +52,18 @@ public class ReleaseCollectionAssignmentService(
         var uploadConfigPairs = uploadConfigTemplates
             .Zip(
                 release.UploadConfigs,
-                (template, uploadConfig) => new
-                {
-                    Template = template,
-                    UploadConfig = uploadConfig,
-                }
+                (uploadConfigTemplate, uploadConfig) => (uploadConfigTemplate, uploadConfig)
             )
             .ToList();
 
-        foreach (var pair in uploadConfigPairs)
+        foreach (var (uploadConfigTemplate, uploadConfig) in uploadConfigPairs)
         {
-            if (string.IsNullOrWhiteSpace(pair.Template.CollectionUploadSlotKey))
+            if (string.IsNullOrWhiteSpace(uploadConfigTemplate.CollectionUploadSlotKey))
             {
                 continue;
             }
 
-            var slotKey = pair.Template.CollectionUploadSlotKey.Trim();
+            var slotKey = uploadConfigTemplate.CollectionUploadSlotKey.Trim();
             var slot = releaseCollection.UploadSlots.FirstOrDefault(existingSlot =>
                 string.Equals(existingSlot.Key, slotKey, StringComparison.Ordinal)
             );
@@ -74,21 +73,21 @@ public class ReleaseCollectionAssignmentService(
                 slot = new CollectionUploadSlot
                 {
                     Key = slotKey,
-                    Name = string.IsNullOrWhiteSpace(pair.Template.CollectionUploadSlotName)
+                    Name = string.IsNullOrWhiteSpace(uploadConfigTemplate.CollectionUploadSlotName)
                         ? slotKey
-                        : pair.Template.CollectionUploadSlotName.Trim(),
-                    IsRequired = pair.Template.CollectionUploadSlotIsRequired,
-                    PasswordPolicy = pair.Template.CollectionUploadSlotPasswordPolicy,
+                        : uploadConfigTemplate.CollectionUploadSlotName.Trim(),
+                    IsRequired = uploadConfigTemplate.CollectionUploadSlotIsRequired,
+                    PasswordPolicy = uploadConfigTemplate.CollectionUploadSlotPasswordPolicy,
                     ExpectedArchivePassword = string.IsNullOrWhiteSpace(
-                        pair.Template.CollectionUploadSlotExpectedArchivePassword
+                        uploadConfigTemplate.CollectionUploadSlotExpectedArchivePassword
                     )
                         ? null
-                        : pair.Template.CollectionUploadSlotExpectedArchivePassword.Trim(),
+                        : uploadConfigTemplate.CollectionUploadSlotExpectedArchivePassword.Trim(),
                 };
                 releaseCollection.UploadSlots.Add(slot);
             }
 
-            pair.UploadConfig.CollectionUploadSlot = slot;
+            uploadConfig.CollectionUploadSlot = slot;
         }
     }
 }

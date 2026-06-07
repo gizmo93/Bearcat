@@ -33,12 +33,7 @@ public partial class ReleaseCollectionsPage(
 
     private IEnumerable<SelectOption<int?>> ReleaseGroupOptions =>
         new[] { new SelectOption<int?>(null, L["AllReleaseGroups"]) }.Concat(
-            releaseGroups.Select(group =>
-                new SelectOption<int?>(
-                    group.ReleaseGroupId,
-                    group.Name
-                )
-            )
+            releaseGroups.Select(group => new SelectOption<int?>(group.ReleaseGroupId, group.Name))
         );
 
     private IEnumerable<SelectOption<int>> PageSizeOptions =>

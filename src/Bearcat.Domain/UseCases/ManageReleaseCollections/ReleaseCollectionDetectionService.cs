@@ -14,7 +14,8 @@ public static partial class ReleaseCollectionDetectionService
     {
         if (
             !releaseTemplate.UseReleaseCollections
-            || releaseTemplate.ReleaseCollectionDetectionMode is ReleaseCollectionDetectionMode.Disabled
+            || releaseTemplate.ReleaseCollectionDetectionMode
+                is ReleaseCollectionDetectionMode.Disabled
             || string.IsNullOrWhiteSpace(releaseName)
         )
         {
@@ -127,7 +128,9 @@ public static partial class ReleaseCollectionDetectionService
         }
 
         return new ReleaseCollectionDetectionResult(
-            NormalizeKey(RenderTemplate(releaseTemplate.ReleaseCollectionKeyTemplate, replacements)),
+            NormalizeKey(
+                RenderTemplate(releaseTemplate.ReleaseCollectionKeyTemplate, replacements)
+            ),
             NormalizeSpaces(
                 RenderTemplate(releaseTemplate.ReleaseCollectionNameTemplate, replacements)
             )
@@ -166,14 +169,15 @@ public static partial class ReleaseCollectionDetectionService
 
     private static string NormalizeKey(string value)
     {
-        var key = KeySeparatorRegex()
-            .Replace(value.Trim().ToLowerInvariant(), ".")
-            .Trim('.');
+        var key = KeySeparatorRegex().Replace(value.Trim().ToLowerInvariant(), ".").Trim('.');
 
         return SpaceRegex().Replace(key, ".");
     }
 
-    [GeneratedRegex(@"^(?<title>.+?)[._ -]+S(?<season>\d{1,2})E(?<episode>\d{1,3})(?<rest>.*)$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(
+        @"^(?<title>.+?)[._ -]+S(?<season>\d{1,2})E(?<episode>\d{1,3})(?<rest>.*)$",
+        RegexOptions.IgnoreCase
+    )]
     private static partial Regex SeriesEpisodeRegex();
 
     [GeneratedRegex(@"\{(?<token>[^{}]+)\}")]

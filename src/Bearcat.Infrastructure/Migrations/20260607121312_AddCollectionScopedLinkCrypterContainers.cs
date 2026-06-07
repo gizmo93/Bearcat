@@ -15,14 +15,16 @@ namespace Bearcat.Infrastructure.Migrations
                 table: "UploadConfigLinkCrypterTemplates",
                 type: "integer",
                 nullable: false,
-                defaultValue: 0);
+                defaultValue: 0
+            );
 
             migrationBuilder.AddColumn<int>(
                 name: "ContainerScope",
                 table: "UploadConfigLinkCrypters",
                 type: "integer",
                 nullable: false,
-                defaultValue: 0);
+                defaultValue: 0
+            );
 
             migrationBuilder.AlterColumn<int>(
                 name: "UploadId",
@@ -30,7 +32,8 @@ namespace Bearcat.Infrastructure.Migrations
                 type: "integer",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "integer");
+                oldType: "integer"
+            );
 
             migrationBuilder.AlterColumn<int>(
                 name: "UploadConfigLinkCrypterId",
@@ -38,27 +41,31 @@ namespace Bearcat.Infrastructure.Migrations
                 type: "integer",
                 nullable: true,
                 oldClrType: typeof(int),
-                oldType: "integer");
+                oldType: "integer"
+            );
 
             migrationBuilder.AddColumn<int>(
                 name: "CollectionUploadSlotId",
                 table: "LinkCrypterContainers",
                 type: "integer",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.AddColumn<int>(
                 name: "LinkCrypterRegistrationId",
                 table: "LinkCrypterContainers",
                 type: "integer",
                 nullable: false,
-                defaultValue: 0);
+                defaultValue: 0
+            );
 
             migrationBuilder.AddColumn<int>(
                 name: "Scope",
                 table: "LinkCrypterContainers",
                 type: "integer",
                 nullable: false,
-                defaultValue: 0);
+                defaultValue: 0
+            );
 
             migrationBuilder.Sql(
                 """
@@ -74,24 +81,30 @@ namespace Bearcat.Infrastructure.Migrations
                 columns: table => new
                 {
                     LinkCrypterContainerId = table.Column<int>(type: "integer", nullable: false),
-                    UploadId = table.Column<int>(type: "integer", nullable: false)
+                    UploadId = table.Column<int>(type: "integer", nullable: false),
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_LinkCrypterContainerSourceUploads", x => new { x.LinkCrypterContainerId, x.UploadId });
+                    table.PrimaryKey(
+                        "PK_LinkCrypterContainerSourceUploads",
+                        x => new { x.LinkCrypterContainerId, x.UploadId }
+                    );
                     table.ForeignKey(
                         name: "FK_LinkCrypterContainerSourceUploads_LinkCrypterContainers_Lin~",
                         column: x => x.LinkCrypterContainerId,
                         principalTable: "LinkCrypterContainers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Cascade
+                    );
                     table.ForeignKey(
                         name: "FK_LinkCrypterContainerSourceUploads_Uploads_UploadId",
                         column: x => x.UploadId,
                         principalTable: "Uploads",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.Sql(
                 """
@@ -106,17 +119,20 @@ namespace Bearcat.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_LinkCrypterContainers_CollectionUploadSlotId",
                 table: "LinkCrypterContainers",
-                column: "CollectionUploadSlotId");
+                column: "CollectionUploadSlotId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_LinkCrypterContainers_LinkCrypterRegistrationId",
                 table: "LinkCrypterContainers",
-                column: "LinkCrypterRegistrationId");
+                column: "LinkCrypterRegistrationId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_LinkCrypterContainerSourceUploads_UploadId",
                 table: "LinkCrypterContainerSourceUploads",
-                column: "UploadId");
+                column: "UploadId"
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_LinkCrypterContainers_CollectionUploadSlots_CollectionUploa~",
@@ -124,7 +140,8 @@ namespace Bearcat.Infrastructure.Migrations
                 column: "CollectionUploadSlotId",
                 principalTable: "CollectionUploadSlots",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_LinkCrypterContainers_LinkCrypterRegistrations_LinkCrypterR~",
@@ -132,7 +149,8 @@ namespace Bearcat.Infrastructure.Migrations
                 column: "LinkCrypterRegistrationId",
                 principalTable: "LinkCrypterRegistrations",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade
+            );
         }
 
         /// <inheritdoc />
@@ -140,14 +158,15 @@ namespace Bearcat.Infrastructure.Migrations
         {
             migrationBuilder.DropForeignKey(
                 name: "FK_LinkCrypterContainers_CollectionUploadSlots_CollectionUploa~",
-                table: "LinkCrypterContainers");
+                table: "LinkCrypterContainers"
+            );
 
             migrationBuilder.DropForeignKey(
                 name: "FK_LinkCrypterContainers_LinkCrypterRegistrations_LinkCrypterR~",
-                table: "LinkCrypterContainers");
+                table: "LinkCrypterContainers"
+            );
 
-            migrationBuilder.DropTable(
-                name: "LinkCrypterContainerSourceUploads");
+            migrationBuilder.DropTable(name: "LinkCrypterContainerSourceUploads");
 
             migrationBuilder.Sql(
                 """
@@ -160,31 +179,32 @@ namespace Bearcat.Infrastructure.Migrations
 
             migrationBuilder.DropIndex(
                 name: "IX_LinkCrypterContainers_CollectionUploadSlotId",
-                table: "LinkCrypterContainers");
+                table: "LinkCrypterContainers"
+            );
 
             migrationBuilder.DropIndex(
                 name: "IX_LinkCrypterContainers_LinkCrypterRegistrationId",
-                table: "LinkCrypterContainers");
+                table: "LinkCrypterContainers"
+            );
 
             migrationBuilder.DropColumn(
                 name: "ContainerScope",
-                table: "UploadConfigLinkCrypterTemplates");
+                table: "UploadConfigLinkCrypterTemplates"
+            );
 
-            migrationBuilder.DropColumn(
-                name: "ContainerScope",
-                table: "UploadConfigLinkCrypters");
+            migrationBuilder.DropColumn(name: "ContainerScope", table: "UploadConfigLinkCrypters");
 
             migrationBuilder.DropColumn(
                 name: "CollectionUploadSlotId",
-                table: "LinkCrypterContainers");
+                table: "LinkCrypterContainers"
+            );
 
             migrationBuilder.DropColumn(
                 name: "LinkCrypterRegistrationId",
-                table: "LinkCrypterContainers");
+                table: "LinkCrypterContainers"
+            );
 
-            migrationBuilder.DropColumn(
-                name: "Scope",
-                table: "LinkCrypterContainers");
+            migrationBuilder.DropColumn(name: "Scope", table: "LinkCrypterContainers");
 
             migrationBuilder.AlterColumn<int>(
                 name: "UploadId",
@@ -194,7 +214,8 @@ namespace Bearcat.Infrastructure.Migrations
                 defaultValue: 0,
                 oldClrType: typeof(int),
                 oldType: "integer",
-                oldNullable: true);
+                oldNullable: true
+            );
 
             migrationBuilder.AlterColumn<int>(
                 name: "UploadConfigLinkCrypterId",
@@ -204,7 +225,8 @@ namespace Bearcat.Infrastructure.Migrations
                 defaultValue: 0,
                 oldClrType: typeof(int),
                 oldType: "integer",
-                oldNullable: true);
+                oldNullable: true
+            );
         }
     }
 }

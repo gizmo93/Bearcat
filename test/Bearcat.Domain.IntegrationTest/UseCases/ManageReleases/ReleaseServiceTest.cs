@@ -403,8 +403,8 @@ public class ReleaseServiceTest : BearcatIntegrationTest
     {
         // Arrange
         var seed = await AddReleaseTemplateAsync();
-        var releaseTemplate = await dbContext.ReleaseTemplates
-            .Include(template => template.UploadConfigTemplates)
+        var releaseTemplate = await dbContext
+            .ReleaseTemplates.Include(template => template.UploadConfigTemplates)
             .SingleAsync(template => template.Id == seed.ReleaseTemplateId);
 
         releaseTemplate.UseReleaseCollections = true;
@@ -437,9 +437,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             .SingleAsync(release => release.Id == result);
 
         release.ReleaseCollection.ShouldNotBeNull();
-        release.ReleaseCollection.Name.ShouldBe(
-            "Hostage.S01.German.AC3.DL.1080p.Web.x265-FuN.mkv"
-        );
+        release.ReleaseCollection.Name.ShouldBe("Hostage.S01.German.AC3.DL.1080p.Web.x265-FuN.mkv");
         release.ReleaseCollection.UploadSlots.Count.ShouldBe(1);
 
         var uploadSlot = release.ReleaseCollection.UploadSlots.Single();

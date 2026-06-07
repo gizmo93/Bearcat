@@ -68,7 +68,11 @@ public class LinkCrypterContainerService(
         {
             if (linkCrypterConfig.ContainerScope is LinkCrypterContainerScope.ReleaseCollection)
             {
-                await ProcessCollectionUploadAsync(upload, linkCrypterConfig, cancellationToken);
+                await ProcessCollectionUploadAsync(
+                    upload: upload,
+                    linkCrypterConfig: linkCrypterConfig,
+                    cancellationToken: cancellationToken
+                );
                 continue;
             }
 
@@ -129,9 +133,9 @@ public class LinkCrypterContainerService(
         }
 
         var container = await repository.GetCollectionContainerAsync(
-            upload.UploadConfig.CollectionUploadSlotId.Value,
-            linkCrypterConfig.LinkCrypterRegistrationId,
-            cancellationToken
+            collectionUploadSlotId: upload.UploadConfig.CollectionUploadSlotId.Value,
+            linkCrypterRegistrationId: linkCrypterConfig.LinkCrypterRegistrationId,
+            cancellationToken: cancellationToken
         );
 
         if (container?.SourceUploads.Any(source => source.UploadId == upload.Id) is true)
@@ -140,9 +144,9 @@ public class LinkCrypterContainerService(
         }
 
         var collectionUploads = await repository.GetCompletedOnlineUploadsByCollectionSlotAsync(
-            upload.UploadConfig.CollectionUploadSlotId.Value,
-            linkCrypterConfig.LinkCrypterRegistrationId,
-            cancellationToken
+            collectionUploadSlotId: upload.UploadConfig.CollectionUploadSlotId.Value,
+            linkCrypterRegistrationId: linkCrypterConfig.LinkCrypterRegistrationId,
+            cancellationToken: cancellationToken
         );
 
         if (collectionUploads.Count == 0)
@@ -154,7 +158,8 @@ public class LinkCrypterContainerService(
             .SelectMany(collectionUpload =>
                 collectionUpload.UploadConfig.LinkCrypters.Where(config =>
                     config.ContainerScope == LinkCrypterContainerScope.ReleaseCollection
-                    && config.LinkCrypterRegistrationId == linkCrypterConfig.LinkCrypterRegistrationId
+                    && config.LinkCrypterRegistrationId
+                        == linkCrypterConfig.LinkCrypterRegistrationId
                     && config.LinkCrypterRegistration.IsActive
                 )
             )
@@ -173,18 +178,18 @@ public class LinkCrypterContainerService(
         if (container is null)
         {
             await CreateCollectionLinkCrypterContainerAsync(
-                collectionUploads,
-                collectionLinkCrypterConfigs[0],
-                cancellationToken
+                uploads: collectionUploads,
+                linkCrypterConfig: collectionLinkCrypterConfigs[0],
+                cancellationToken: cancellationToken
             );
             return;
         }
 
         await UpdateCollectionLinkCrypterContainerAsync(
-            container,
-            collectionUploads,
-            collectionLinkCrypterConfigs[0],
-            cancellationToken
+            container: container,
+            uploads: collectionUploads,
+            linkCrypterConfig: collectionLinkCrypterConfigs[0],
+            cancellationToken: cancellationToken
         );
     }
 
@@ -450,9 +455,14 @@ public class LinkCrypterContainerService(
             .ToList();
     }
 
-    private static void SyncSourceUploads(LinkCrypterContainer container, IReadOnlyList<Upload> uploads)
+    private static void SyncSourceUploads(
+        LinkCrypterContainer container,
+        IReadOnlyList<Upload> uploads
+    )
     {
-        var existingUploadIds = container.SourceUploads.Select(source => source.UploadId).ToHashSet();
+        var existingUploadIds = container
+            .SourceUploads.Select(source => source.UploadId)
+            .ToHashSet();
 
         foreach (var upload in uploads.Where(upload => !existingUploadIds.Contains(upload.Id)))
         {

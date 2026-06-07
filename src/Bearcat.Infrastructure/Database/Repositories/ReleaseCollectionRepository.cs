@@ -7,9 +7,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
 
-public class ReleaseCollectionRepository(IBearcatReadDbContext dbRead, IBearcatWriteDbContext dbWrite)
-    : IReleaseCollectionReadRepository,
-        IReleaseCollectionWriteRepository
+public class ReleaseCollectionRepository(
+    IBearcatReadDbContext dbRead,
+    IBearcatWriteDbContext dbWrite
+) : IReleaseCollectionReadRepository, IReleaseCollectionWriteRepository
 {
     public async Task<ReleaseCollection?> GetByReleaseGroupAndKeyAsync(
         int releaseGroupId,

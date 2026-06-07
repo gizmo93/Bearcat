@@ -8,7 +8,8 @@ public class UploadConfigLinkCrypterTemplateFormModel
 
     public string? Password { get; set; }
 
-    public LinkCrypterContainerScope ContainerScope { get; set; } = LinkCrypterContainerScope.Release;
+    public LinkCrypterContainerScope ContainerScope { get; set; } =
+        LinkCrypterContainerScope.Release;
 
     public bool EnableCaptcha { get; set; } = true;
 

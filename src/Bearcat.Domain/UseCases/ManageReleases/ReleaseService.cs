@@ -68,9 +68,9 @@ public class ReleaseService(
             try
             {
                 RefreshUnmanagedArchiveConfigs(
-                    release,
-                    archiverFactory.GetArchivers(),
-                    timeProvider.GetLocalNow()
+                    release: release,
+                    archivers: archiverFactory.GetArchivers(),
+                    localNow: timeProvider.GetLocalNow()
                 );
             }
             catch

@@ -32,7 +32,9 @@ public partial class CreateOrEditReleaseTemplateDialog(
         Enum.GetValues<ReleaseType>()
             .Select(type => new SelectOption<ReleaseType>(type, L.Localize(type)));
 
-    private IEnumerable<SelectOption<ReleaseCollectionDetectionMode>> ReleaseCollectionDetectionModeOptions =>
+    private IEnumerable<
+        SelectOption<ReleaseCollectionDetectionMode>
+    > ReleaseCollectionDetectionModeOptions =>
         new[]
         {
             ReleaseCollectionDetectionMode.SeriesEpisodePattern,
@@ -114,7 +116,8 @@ public partial class CreateOrEditReleaseTemplateDialog(
 
         if (
             FormModel.UseReleaseCollections
-            && FormModel.ReleaseCollectionDetectionMode is ReleaseCollectionDetectionMode.CustomRegex
+            && FormModel.ReleaseCollectionDetectionMode
+                is ReleaseCollectionDetectionMode.CustomRegex
         )
         {
             if (string.IsNullOrWhiteSpace(FormModel.ReleaseCollectionPattern))
