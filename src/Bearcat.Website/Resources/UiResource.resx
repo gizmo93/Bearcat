@@ -630,7 +630,6 @@
   <data name="CollectionUploadSlotKeyCouldNotBeDerived" xml:space="preserve"><value>The slot name must contain at least one letter or digit.</value></data>
   <data name="CollectionUploadSlotKey" xml:space="preserve"><value>Slot key</value></data>
   <data name="CollectionUploadSlotArchiveConfigHelp" xml:space="preserve"><value>Choose which archives should be uploaded.</value></data>
-  <data name="CollectionUploadSlotManualHelp" xml:space="preserve"><value>Creates one upload configuration per release with the selected hoster.</value></data>
   <data name="CollectionUploadSlotName" xml:space="preserve"><value>Upload group name</value></data>
   <data name="CollectionUploadSlotNamePlaceholder" xml:space="preserve"><value>Rapidgator passworded</value></data>
   <data name="CollectionUploadSlotRequired" xml:space="preserve"><value>Expected on every release</value></data>
