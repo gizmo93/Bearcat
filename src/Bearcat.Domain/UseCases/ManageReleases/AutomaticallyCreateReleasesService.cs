@@ -16,7 +16,7 @@ public class AutomaticallyCreateReleasesService(
     ReleaseInfoResolutionService releaseInfoResolutionService,
     TimeProvider timeProvider,
     IArchiverFactory archiverFactory,
-    ReleaseCollectionAssignmentService? releaseCollectionAssignmentService = null
+    ReleaseCollectionAssignmentService releaseCollectionAssignmentService
 )
 {
     private const int MaxConcurrentFolderScans = 4;
@@ -91,14 +91,11 @@ public class AutomaticallyCreateReleasesService(
 
         release.CreatedAt = localNow;
 
-        if (releaseCollectionAssignmentService is not null)
-        {
-            await releaseCollectionAssignmentService.AssignFromTemplateAsync(
-                release,
-                candidate.Automation.ReleaseTemplate,
-                cancellationToken
-            );
-        }
+        await releaseCollectionAssignmentService.AssignFromTemplateAsync(
+            release,
+            candidate.Automation.ReleaseTemplate,
+            cancellationToken
+        );
 
         await releaseInfoResolutionService.TryResolveAsync(release, cancellationToken);
 

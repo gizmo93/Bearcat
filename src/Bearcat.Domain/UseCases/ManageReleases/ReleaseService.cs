@@ -11,7 +11,7 @@ public class ReleaseService(
     IReleaseWriteRepository writeRepository,
     TimeProvider timeProvider,
     IArchiverFactory archiverFactory,
-    ReleaseCollectionAssignmentService? releaseCollectionAssignmentService = null
+    ReleaseCollectionAssignmentService releaseCollectionAssignmentService
 )
 {
     public async Task<int> CreateAsync(
@@ -127,33 +127,30 @@ public class ReleaseService(
     )
     {
         var releaseTemplate = await writeRepository.GetTemplateForReleaseCreationAsync(
-            releaseTemplateId,
-            cancellationToken
+            releaseTemplateId: releaseTemplateId,
+            cancellationToken: cancellationToken
         );
 
         var localNow = timeProvider.GetLocalNow();
 
         var release = CreateFromTemplate(
-            releaseTemplate,
-            releaseFolderPath,
-            name,
-            releaseTemplate.ReleaseType,
-            releaseTemplate.ReleaseType is ReleaseType.Unmanaged
+            releaseTemplate: releaseTemplate,
+            releaseFolderPath: releaseFolderPath,
+            name: name,
+            releaseType: releaseTemplate.ReleaseType,
+            archivers: releaseTemplate.ReleaseType is ReleaseType.Unmanaged
                 ? archiverFactory.GetArchivers()
                 : [],
-            localNow
+            localNow: localNow
         );
 
         release.CreatedAt = localNow;
 
-        if (releaseCollectionAssignmentService is not null)
-        {
-            await releaseCollectionAssignmentService.AssignFromTemplateAsync(
-                release,
-                releaseTemplate,
-                cancellationToken
-            );
-        }
+        await releaseCollectionAssignmentService.AssignFromTemplateAsync(
+            release: release,
+            releaseTemplate: releaseTemplate,
+            cancellationToken: cancellationToken
+        );
 
         writeRepository.Add(release);
         await writeRepository.SaveChangesAsync(cancellationToken);

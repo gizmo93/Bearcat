@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -45,7 +46,11 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
             new FileSystemService(),
             CreateReleaseInfoResolutionService(),
             CreateTimeProvider(),
-            archiverFactory.Object
+            archiverFactory.Object,
+            new ReleaseCollectionAssignmentService(
+                new ReleaseCollectionRepository(dbContext, dbContext),
+                CreateTimeProvider()
+            )
         );
     }
 
