@@ -114,6 +114,7 @@ public class ReleaseCollectionRepository(
                 slot.PasswordPolicy,
                 slot.ExpectedArchivePassword,
                 UploadConfigCount = slot.UploadConfigs.Count,
+                UploadCount = slot.UploadConfigs.SelectMany(uploadConfig => uploadConfig.Uploads).Count(),
             })
             .ToListAsync(cancellationToken);
 
@@ -251,6 +252,7 @@ public class ReleaseCollectionRepository(
                         slot.PasswordPolicy,
                         slot.ExpectedArchivePassword,
                         slot.UploadConfigCount,
+                        slot.UploadCount,
                         sharedLinkCrypters,
                         containers
                     );
@@ -282,9 +284,46 @@ public class ReleaseCollectionRepository(
             .FirstAsync(slot => slot.Id == collectionUploadSlotId, cancellationToken);
     }
 
+    public async Task<CollectionUploadSlot> GetUploadSlotForDeleteAsync(
+        int collectionUploadSlotId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .CollectionUploadSlots.Include(slot => slot.UploadConfigs)
+            .FirstAsync(slot => slot.Id == collectionUploadSlotId, cancellationToken);
+    }
+
+    public async Task<bool> UploadSlotKeyExistsAsync(
+        int releaseCollectionId,
+        string key,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite.CollectionUploadSlots.AnyAsync(
+            slot => slot.ReleaseCollectionId == releaseCollectionId && slot.Key == key,
+            cancellationToken
+        );
+    }
+
     public void Add(ReleaseCollection releaseCollection)
     {
         dbWrite.Add(releaseCollection);
+    }
+
+    public void Add(CollectionUploadSlot uploadSlot)
+    {
+        dbWrite.Add(uploadSlot);
+    }
+
+    public void Remove(CollectionUploadSlot uploadSlot)
+    {
+        dbWrite.Remove(uploadSlot);
+    }
+
+    public void Remove(UploadConfig uploadConfig)
+    {
+        dbWrite.Remove(uploadConfig);
     }
 
     public void Remove(UploadConfigLinkCrypter uploadConfigLinkCrypter)

@@ -40,6 +40,12 @@
                             <BbCardDescription>@L["CollectionUploadSlotsDescription"]</BbCardDescription>
                         </div>
                     </div>
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              OnClick="ShowCreateUploadSlotDialogAsync">
+                        <LucideIcon Name="plus" class="h-4 w-4" />
+                        @L["NewCollectionUploadSlot"]
+                    </BbButton>
                 </div>
             </BbCardHeader>
             <BbCardContent>
@@ -106,6 +112,12 @@
                                                   AriaLabel="@L["EditSharedLinkCrypters"]"
                                                   OnClick="@(async () => await ShowEditSharedLinkCryptersDialogAsync(slot))">
                                             <LucideIcon Name="pencil" class="h-4 w-4" />
+                                        </BbButton>
+                                        <BbButton Variant="ButtonVariant.Ghost"
+                                                  Size="ButtonSize.IconSmall"
+                                                  AriaLabel="@L["DeleteCollectionUploadSlot"]"
+                                                  OnClick="@(async () => await DeleteUploadSlotAsync(slot))">
+                                            <LucideIcon Name="trash-2" class="h-4 w-4 text-destructive" />
                                         </BbButton>
                                     </div>
                                 </div>

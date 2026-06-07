@@ -1,0 +1,49 @@
+@inherits OwningComponentBase
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="FormModel.Name"
+                              Label="@L["CollectionUploadSlotName"]"
+                              Placeholder="@L["CollectionUploadSlotNamePlaceholder"]"
+                              HelperText="@L["CollectionUploadSlotManualHelp"]" />
+
+            <div class="grid gap-4 md:grid-cols-2">
+                <BbFormFieldSelect TValue="CollectionUploadSlotPasswordPolicy"
+                                   @bind-Value="FormModel.PasswordPolicy"
+                                   Label="@L["PasswordPolicy"]"
+                                   Options="PasswordPolicyOptions" />
+
+                <div class="flex items-end pb-2">
+                    <div class="flex items-center gap-2">
+                        <BbCheckbox @bind-Checked="FormModel.IsRequired"
+                                    Id="collection-upload-slot-required"
+                                    AriaLabel="@L["CollectionUploadSlotRequired"]" />
+                        <BbLabel For="collection-upload-slot-required">
+                            @L["CollectionUploadSlotRequired"]
+                        </BbLabel>
+                    </div>
+                </div>
+            </div>
+
+            @if (FormModel.PasswordPolicy is CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue)
+            {
+                <BbFormFieldInput TValue="string"
+                                  @bind-Value="FormModel.ExpectedArchivePassword"
+                                  Label="@L["ExpectedArchivePassword"]" />
+            }
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

@@ -1,8 +1,10 @@
+using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleaseCollections;
 
@@ -37,6 +39,37 @@ public partial class ReleaseCollectionDetail(
         isInitialized = true;
     }
 
+    private async Task ShowCreateUploadSlotDialogAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(CreateCollectionUploadSlotDialog.FormModel)] = new CollectionUploadSlotFormModel
+            {
+                ReleaseCollectionId = ReleaseCollectionId,
+            },
+            [nameof(CreateCollectionUploadSlotDialog.ExistingSlotKeys)] = releaseCollection.UploadSlots
+                .Select(slot => slot.Key)
+                .ToList(),
+        };
+
+        var dialog = await dialogService.OpenAsync<CreateCollectionUploadSlotDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["NewCollectionUploadSlot"],
+                Description = L["CreateCollectionUploadSlotDialogDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (!dialog.Cancelled)
+        {
+            await LoadReleaseCollectionAsync();
+        }
+    }
+
     private async Task ShowEditSharedLinkCryptersDialogAsync(
         CollectionUploadSlotReadModel uploadSlot
     )
@@ -66,6 +99,35 @@ public partial class ReleaseCollectionDetail(
         {
             await LoadReleaseCollectionAsync();
         }
+    }
+
+    private async Task DeleteUploadSlotAsync(CollectionUploadSlotReadModel uploadSlot)
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["DeleteNamedItem", uploadSlot.Name],
+            L[
+                "DeleteCollectionUploadSlotConfirmation",
+                uploadSlot.Name,
+                uploadSlot.UploadConfigCount,
+                uploadSlot.UploadCount,
+                uploadSlot.Containers.Count
+            ],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        var service = ScopedServices.GetRequiredService<ReleaseCollectionService>();
+        await service.DeleteUploadSlotAsync(uploadSlot.CollectionUploadSlotId);
+        await LoadReleaseCollectionAsync();
     }
 
     private static BadgeVariant GetContainerVariant(LinkCrypterContainerState state) =>

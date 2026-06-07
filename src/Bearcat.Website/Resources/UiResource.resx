@@ -626,7 +626,10 @@
   <data name="CollectionUploadSlot" xml:space="preserve"><value>Collection container</value></data>
   <data name="CollectionUploadSlotExpectedArchivePasswordRequired" xml:space="preserve"><value>Expected archive password is required for this password policy.</value></data>
   <data name="CollectionUploadSlotHelp" xml:space="preserve"><value>Share matching uploads from the same release collection.</value></data>
+  <data name="CollectionUploadSlotKeyAlreadyExists" xml:space="preserve"><value>An upload slot with this name already exists in this collection.</value></data>
+  <data name="CollectionUploadSlotKeyCouldNotBeDerived" xml:space="preserve"><value>The slot name must contain at least one letter or digit.</value></data>
   <data name="CollectionUploadSlotKey" xml:space="preserve"><value>Slot key</value></data>
+  <data name="CollectionUploadSlotManualHelp" xml:space="preserve"><value>Bearcat uses this group to collect matching uploads in shared collection containers.</value></data>
   <data name="CollectionUploadSlotName" xml:space="preserve"><value>Slot name</value></data>
   <data name="CollectionUploadSlotNamePlaceholder" xml:space="preserve"><value>Rapidgator passworded</value></data>
   <data name="CollectionUploadSlotRequired" xml:space="preserve"><value>Expected on every release</value></data>
@@ -641,6 +644,10 @@
   <data name="LinkCrypterContainerScope.ReleaseCollection" xml:space="preserve"><value>The whole release collection</value></data>
   <data name="NoReleaseCollectionsFound" xml:space="preserve"><value>No release collections found</value></data>
   <data name="NoCollectionUploadSlotsFound" xml:space="preserve"><value>No upload slots found</value></data>
+  <data name="CreateCollectionUploadSlotDialogDescription" xml:space="preserve"><value>Add an upload group for shared collection containers.</value></data>
+  <data name="DeleteCollectionUploadSlot" xml:space="preserve"><value>Delete upload slot</value></data>
+  <data name="DeleteCollectionUploadSlotConfirmation" xml:space="preserve"><value>Delete upload slot {0}? This removes {1} upload configurations, {2} uploads and {3} generated container links from the database.</value></data>
+  <data name="NewCollectionUploadSlot" xml:space="preserve"><value>New upload slot</value></data>
   <data name="OpenReleaseCollectionActions" xml:space="preserve"><value>Open release collection actions</value></data>
   <data name="PasswordPolicy" xml:space="preserve"><value>Password policy</value></data>
   <data name="ReleaseCollection" xml:space="preserve"><value>Release collection</value></data>

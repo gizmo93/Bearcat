@@ -20,7 +20,24 @@ public interface IReleaseCollectionWriteRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<CollectionUploadSlot> GetUploadSlotForDeleteAsync(
+        int collectionUploadSlotId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<bool> UploadSlotKeyExistsAsync(
+        int releaseCollectionId,
+        string key,
+        CancellationToken cancellationToken = default
+    );
+
     void Add(ReleaseCollection releaseCollection);
+
+    void Add(CollectionUploadSlot uploadSlot);
+
+    void Remove(CollectionUploadSlot uploadSlot);
+
+    void Remove(UploadConfig uploadConfig);
 
     void Remove(UploadConfigLinkCrypter uploadConfigLinkCrypter);
 

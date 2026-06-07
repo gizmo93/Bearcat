@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using System.Text;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -59,6 +60,73 @@ public class ReleaseCollectionService(
         );
         writeRepository.Remove(releaseCollection);
 
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<int> CreateUploadSlotAsync(
+        int releaseCollectionId,
+        string name,
+        bool isRequired,
+        CollectionUploadSlotPasswordPolicy passwordPolicy,
+        string? expectedArchivePassword,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await writeRepository.GetByIdAsync(releaseCollectionId, cancellationToken);
+
+        var cleanedName = CleanRequired(name, nameof(name));
+        var key = CreateStableKey(cleanedName);
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("Value must contain at least one letter or digit.", nameof(name));
+        }
+
+        if (
+            await writeRepository.UploadSlotKeyExistsAsync(
+                releaseCollectionId,
+                key,
+                cancellationToken
+            )
+        )
+        {
+            throw new InvalidOperationException("A collection upload slot with this key already exists.");
+        }
+
+        var uploadSlot = new CollectionUploadSlot
+        {
+            ReleaseCollectionId = releaseCollectionId,
+            Key = key,
+            Name = cleanedName,
+            IsRequired = isRequired,
+            PasswordPolicy = passwordPolicy,
+            ExpectedArchivePassword =
+                passwordPolicy is CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue
+                    ? CleanRequired(expectedArchivePassword ?? string.Empty, nameof(expectedArchivePassword))
+                    : null,
+        };
+
+        writeRepository.Add(uploadSlot);
+        await writeRepository.SaveChangesAsync(cancellationToken);
+
+        return uploadSlot.Id;
+    }
+
+    public async Task DeleteUploadSlotAsync(
+        int collectionUploadSlotId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var uploadSlot = await writeRepository.GetUploadSlotForDeleteAsync(
+            collectionUploadSlotId,
+            cancellationToken
+        );
+
+        foreach (var uploadConfig in uploadSlot.UploadConfigs.ToList())
+        {
+            writeRepository.Remove(uploadConfig);
+        }
+
+        writeRepository.Remove(uploadSlot);
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 
@@ -146,5 +214,29 @@ public class ReleaseCollectionService(
     private static string? CleanOptional(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static string CreateStableKey(string value)
+    {
+        var keyBuilder = new StringBuilder(value.Length);
+        var lastWasSeparator = true;
+
+        foreach (var character in value.Trim().ToLowerInvariant())
+        {
+            if (char.IsLetterOrDigit(character))
+            {
+                keyBuilder.Append(character);
+                lastWasSeparator = false;
+                continue;
+            }
+
+            if (!lastWasSeparator)
+            {
+                keyBuilder.Append('-');
+                lastWasSeparator = true;
+            }
+        }
+
+        return keyBuilder.ToString().Trim('-');
     }
 }
