@@ -117,4 +117,4 @@ if (app.Environment.IsProduction() || isDesktopMode)
     await dbContext.Database.MigrateAsync();
 }
 
-app.Run();
+await app.RunAsync();
