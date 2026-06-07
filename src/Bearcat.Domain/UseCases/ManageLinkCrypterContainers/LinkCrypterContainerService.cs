@@ -235,7 +235,8 @@ public class LinkCrypterContainerService(
             return;
         }
 
-        upload.LinkCrypterContainers.Add(item: previousContainer);
+        previousContainer.Upload = upload;
+        previousContainer.UploadId = upload.Id;
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
     }
 

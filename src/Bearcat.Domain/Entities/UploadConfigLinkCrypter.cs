@@ -14,7 +14,8 @@ public class UploadConfigLinkCrypter
 
     public LinkCrypterRegistration LinkCrypterRegistration { get; set; } = null!;
 
-    public LinkCrypterContainerScope ContainerScope { get; set; }
+    public LinkCrypterContainerScope ContainerScope { get; set; } =
+        LinkCrypterContainerScope.Release;
 
     public string? Password { get; set; }
 
