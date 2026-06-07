@@ -40,23 +40,10 @@
 
             @if (FormModel.UseReleaseCollections)
             {
-                <div class="grid gap-4 md:grid-cols-2">
-                    <BbFormFieldSelect TValue="ReleaseCollectionDetectionMode"
-                                       @bind-Value="FormModel.ReleaseCollectionDetectionMode"
-                                       Label="@L["ReleaseCollectionDetectionMode"]"
-                                       Options="ReleaseCollectionDetectionModeOptions" />
-
-                    <div class="flex items-end pb-2">
-                        <div class="flex items-center gap-2">
-                            <BbCheckbox @bind-Checked="FormModel.IgnoreLanguageInReleaseCollectionName"
-                                        Id="ignore-release-collection-language"
-                                        AriaLabel="@L["IgnoreLanguageInReleaseCollectionName"]" />
-                            <BbLabel For="ignore-release-collection-language">
-                                @L["IgnoreLanguageInReleaseCollectionName"]
-                            </BbLabel>
-                        </div>
-                    </div>
-                </div>
+                <BbFormFieldSelect TValue="ReleaseCollectionDetectionMode"
+                                   @bind-Value="FormModel.ReleaseCollectionDetectionMode"
+                                   Label="@L["ReleaseCollectionDetectionMode"]"
+                                   Options="ReleaseCollectionDetectionModeOptions" />
 
                 <div class="grid gap-4 md:grid-cols-2">
                     <BbFormFieldInput TValue="string"
@@ -67,7 +54,7 @@
                     <BbFormFieldInput TValue="string"
                                       @bind-Value="FormModel.ReleaseCollectionNameTemplate"
                                       Label="@L["ReleaseCollectionNameTemplate"]"
-                                      Placeholder="{title:dotToSpace} S{season} {variant}" />
+                                      Placeholder="{title}.S{season}.{variant}" />
                 </div>
 
                 @if (FormModel.ReleaseCollectionDetectionMode is ReleaseCollectionDetectionMode.CustomRegex)

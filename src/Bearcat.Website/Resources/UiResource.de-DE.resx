@@ -657,6 +657,5 @@
   <data name="Reset" xml:space="preserve"><value>Zurücksetzen</value></data>
   <data name="Required" xml:space="preserve"><value>Erforderlich</value></data>
   <data name="SearchReleaseCollections" xml:space="preserve"><value>Collections suchen</value></data>
-  <data name="IgnoreLanguageInReleaseCollectionName" xml:space="preserve"><value>Sprache im Collection-Namen ignorieren</value></data>
   <data name="UseReleaseCollections" xml:space="preserve"><value>Release-Collections verwenden</value></data>
 </root>

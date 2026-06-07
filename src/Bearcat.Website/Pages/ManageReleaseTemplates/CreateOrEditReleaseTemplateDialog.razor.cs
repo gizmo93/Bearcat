@@ -77,7 +77,6 @@ public partial class CreateOrEditReleaseTemplateDialog(
                 FormModel.ReleaseGroupId,
                 FormModel.UseReleaseCollections,
                 FormModel.ReleaseCollectionDetectionMode,
-                FormModel.IgnoreLanguageInReleaseCollectionName,
                 FormModel.ReleaseCollectionPattern,
                 FormModel.ReleaseCollectionKeyTemplate,
                 FormModel.ReleaseCollectionNameTemplate
@@ -92,7 +91,6 @@ public partial class CreateOrEditReleaseTemplateDialog(
             FormModel.ReleaseGroupId,
             FormModel.UseReleaseCollections,
             FormModel.ReleaseCollectionDetectionMode,
-            FormModel.IgnoreLanguageInReleaseCollectionName,
             FormModel.ReleaseCollectionPattern,
             FormModel.ReleaseCollectionKeyTemplate,
             FormModel.ReleaseCollectionNameTemplate

@@ -23,7 +23,6 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             releaseGroupId,
             useReleaseCollections: false,
             ReleaseCollectionDetectionMode.SeriesEpisodePattern,
-            ignoreLanguageInReleaseCollectionName: true,
             releaseCollectionPattern: null,
             releaseCollectionKeyTemplate: null,
             releaseCollectionNameTemplate: null,
@@ -38,7 +37,6 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         bool useReleaseCollections = false,
         ReleaseCollectionDetectionMode releaseCollectionDetectionMode =
             ReleaseCollectionDetectionMode.SeriesEpisodePattern,
-        bool ignoreLanguageInReleaseCollectionName = true,
         string? releaseCollectionPattern = null,
         string? releaseCollectionKeyTemplate = null,
         string? releaseCollectionNameTemplate = null,
@@ -54,7 +52,6 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             ReleaseCollectionDetectionMode = useReleaseCollections
                 ? releaseCollectionDetectionMode
                 : ReleaseCollectionDetectionMode.Disabled,
-            IgnoreLanguageInReleaseCollectionName = ignoreLanguageInReleaseCollectionName,
             ReleaseCollectionPattern = CleanOptional(releaseCollectionPattern),
             ReleaseCollectionKeyTemplate = CleanOptional(releaseCollectionKeyTemplate),
             ReleaseCollectionNameTemplate = CleanOptional(releaseCollectionNameTemplate),
@@ -83,7 +80,6 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             releaseGroupId,
             useReleaseCollections: false,
             ReleaseCollectionDetectionMode.SeriesEpisodePattern,
-            ignoreLanguageInReleaseCollectionName: true,
             releaseCollectionPattern: null,
             releaseCollectionKeyTemplate: null,
             releaseCollectionNameTemplate: null,
@@ -99,7 +95,6 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         bool useReleaseCollections = false,
         ReleaseCollectionDetectionMode releaseCollectionDetectionMode =
             ReleaseCollectionDetectionMode.SeriesEpisodePattern,
-        bool ignoreLanguageInReleaseCollectionName = true,
         string? releaseCollectionPattern = null,
         string? releaseCollectionKeyTemplate = null,
         string? releaseCollectionNameTemplate = null,
@@ -122,8 +117,6 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         releaseTemplate.ReleaseCollectionDetectionMode = useReleaseCollections
             ? releaseCollectionDetectionMode
             : ReleaseCollectionDetectionMode.Disabled;
-        releaseTemplate.IgnoreLanguageInReleaseCollectionName =
-            ignoreLanguageInReleaseCollectionName;
         releaseTemplate.ReleaseCollectionPattern = CleanOptional(releaseCollectionPattern);
         releaseTemplate.ReleaseCollectionKeyTemplate = CleanOptional(releaseCollectionKeyTemplate);
         releaseTemplate.ReleaseCollectionNameTemplate = CleanOptional(releaseCollectionNameTemplate);

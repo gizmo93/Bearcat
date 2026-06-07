@@ -14,7 +14,6 @@ public class ReleaseTemplateConfiguration : IEntityTypeConfiguration<ReleaseTemp
         builder.Property(t => t.ReleaseGroupId).IsRequired();
         builder.Property(t => t.UseReleaseCollections).IsRequired();
         builder.Property(t => t.ReleaseCollectionDetectionMode).IsRequired();
-        builder.Property(t => t.IgnoreLanguageInReleaseCollectionName).IsRequired();
         builder.Property(t => t.ReleaseCollectionPattern).IsRequired(false).HasMaxLength(1000);
         builder
             .Property(t => t.ReleaseCollectionKeyTemplate)

@@ -410,7 +410,6 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         releaseTemplate.UseReleaseCollections = true;
         releaseTemplate.ReleaseCollectionDetectionMode =
             ReleaseCollectionDetectionMode.SeriesEpisodePattern;
-        releaseTemplate.IgnoreLanguageInReleaseCollectionName = true;
         releaseTemplate.UploadConfigTemplates.Single().CollectionUploadSlotKey =
             "forum-a-rg-passworded";
         releaseTemplate.UploadConfigTemplates.Single().CollectionUploadSlotName =
@@ -438,7 +437,9 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             .SingleAsync(release => release.Id == result);
 
         release.ReleaseCollection.ShouldNotBeNull();
-        release.ReleaseCollection.Name.ShouldBe("Hostage S01 AC3.DL.1080p.Web.x265-FuN");
+        release.ReleaseCollection.Name.ShouldBe(
+            "Hostage.S01.German.AC3.DL.1080p.Web.x265-FuN.mkv"
+        );
         release.ReleaseCollection.UploadSlots.Count.ShouldBe(1);
 
         var uploadSlot = release.ReleaseCollection.UploadSlots.Single();

@@ -52,8 +52,6 @@ public partial class ReleaseTemplateDetail(
                 ReleaseGroupId = releaseTemplate.ReleaseGroupId,
                 UseReleaseCollections = releaseTemplate.UseReleaseCollections,
                 ReleaseCollectionDetectionMode = releaseTemplate.ReleaseCollectionDetectionMode,
-                IgnoreLanguageInReleaseCollectionName =
-                    releaseTemplate.IgnoreLanguageInReleaseCollectionName,
                 ReleaseCollectionPattern = releaseTemplate.ReleaseCollectionPattern,
                 ReleaseCollectionKeyTemplate = releaseTemplate.ReleaseCollectionKeyTemplate,
                 ReleaseCollectionNameTemplate = releaseTemplate.ReleaseCollectionNameTemplate,

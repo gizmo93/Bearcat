@@ -15,8 +15,6 @@ public class ReleaseTemplateFormModel
     public ReleaseCollectionDetectionMode ReleaseCollectionDetectionMode { get; set; } =
         ReleaseCollectionDetectionMode.SeriesEpisodePattern;
 
-    public bool IgnoreLanguageInReleaseCollectionName { get; set; } = true;
-
     public string? ReleaseCollectionPattern { get; set; }
 
     public string? ReleaseCollectionKeyTemplate { get; set; }

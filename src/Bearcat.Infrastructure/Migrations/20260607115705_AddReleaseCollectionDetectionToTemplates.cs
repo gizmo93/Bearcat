@@ -10,13 +10,6 @@ namespace Bearcat.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<bool>(
-                name: "IgnoreLanguageInReleaseCollectionName",
-                table: "ReleaseTemplates",
-                type: "boolean",
-                nullable: false,
-                defaultValue: false);
-
             migrationBuilder.AddColumn<int>(
                 name: "ReleaseCollectionDetectionMode",
                 table: "ReleaseTemplates",
@@ -56,10 +49,6 @@ namespace Bearcat.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "IgnoreLanguageInReleaseCollectionName",
-                table: "ReleaseTemplates");
-
             migrationBuilder.DropColumn(
                 name: "ReleaseCollectionDetectionMode",
                 table: "ReleaseTemplates");

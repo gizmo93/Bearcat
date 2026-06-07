@@ -10,7 +10,6 @@ public record ReleaseTemplateSummaryReadModel(
     string ReleaseGroupName,
     bool UseReleaseCollections,
     ReleaseCollectionDetectionMode ReleaseCollectionDetectionMode,
-    bool IgnoreLanguageInReleaseCollectionName,
     string? ReleaseCollectionPattern,
     string? ReleaseCollectionKeyTemplate,
     string? ReleaseCollectionNameTemplate,

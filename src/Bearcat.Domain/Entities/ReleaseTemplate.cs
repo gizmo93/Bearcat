@@ -18,8 +18,6 @@ public class ReleaseTemplate
 
     public ReleaseCollectionDetectionMode ReleaseCollectionDetectionMode { get; set; }
 
-    public bool IgnoreLanguageInReleaseCollectionName { get; set; } = true;
-
     public string? ReleaseCollectionPattern { get; set; }
 
     public string? ReleaseCollectionKeyTemplate { get; set; }

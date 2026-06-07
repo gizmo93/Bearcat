@@ -7,20 +7,6 @@ namespace Bearcat.Domain.UseCases.ManageReleaseCollections;
 
 public static partial class ReleaseCollectionDetectionService
 {
-    private static readonly IReadOnlySet<string> Languages = new HashSet<string>(
-        StringComparer.OrdinalIgnoreCase
-    )
-    {
-        "Deutsch",
-        "English",
-        "Englisch",
-        "French",
-        "German",
-        "Italian",
-        "Multi",
-        "Spanish",
-    };
-
     private static readonly IReadOnlySet<string> VideoExtensions = new HashSet<string>(
         StringComparer.OrdinalIgnoreCase
     )
@@ -70,8 +56,7 @@ public static partial class ReleaseCollectionDetectionService
         ReleaseTemplate releaseTemplate
     )
     {
-        var cleanReleaseName = StripKnownVideoExtension(releaseName.Trim());
-        var match = SeriesEpisodeRegex().Match(cleanReleaseName);
+        var match = SeriesEpisodeRegex().Match(releaseName.Trim());
 
         if (!match.Success)
         {
@@ -81,11 +66,6 @@ public static partial class ReleaseCollectionDetectionService
         var title = match.Groups["title"].Value.Trim('.', '_', '-', ' ');
         var season = match.Groups["season"].Value.PadLeft(2, '0');
         var variant = match.Groups["rest"].Value.Trim('.', '_', '-', ' ');
-
-        if (releaseTemplate.IgnoreLanguageInReleaseCollectionName)
-        {
-            variant = RemoveLeadingLanguage(variant);
-        }
 
         var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -99,7 +79,7 @@ public static partial class ReleaseCollectionDetectionService
             ? "{title}.S{season}.{variant}"
             : releaseTemplate.ReleaseCollectionKeyTemplate;
         var nameTemplate = string.IsNullOrWhiteSpace(releaseTemplate.ReleaseCollectionNameTemplate)
-            ? "{title:dotToSpace} S{season} {variant}"
+            ? "{title}.S{season}.{variant}"
             : releaseTemplate.ReleaseCollectionNameTemplate;
 
         return new ReleaseCollectionDetectionResult(
@@ -200,23 +180,6 @@ public static partial class ReleaseCollectionDetectionService
             : releaseName;
     }
 
-    private static string RemoveLeadingLanguage(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return string.Empty;
-        }
-
-        var match = LeadingTokenRegex().Match(value);
-
-        if (!match.Success || !Languages.Contains(match.Groups["token"].Value))
-        {
-            return value;
-        }
-
-        return value[match.Length..].Trim('.', '_', '-', ' ');
-    }
-
     private static string NormalizeDisplayTitle(string value)
     {
         return NormalizeSpaces(value.Replace('.', ' ').Replace('_', ' '));
@@ -241,9 +204,6 @@ public static partial class ReleaseCollectionDetectionService
 
     [GeneratedRegex(@"\{(?<token>[^{}]+)\}")]
     private static partial Regex TemplateTokenRegex();
-
-    [GeneratedRegex(@"^(?<token>[^._ -]+)[._ -]+")]
-    private static partial Regex LeadingTokenRegex();
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex SpaceRegex();
