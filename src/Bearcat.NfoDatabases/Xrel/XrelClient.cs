@@ -18,7 +18,7 @@ public class XrelClient(IXrelApi api, XrelRateLimitState rateLimitState)
         return HandleResponse(response);
     }
 
-    public async Task<XrelP2pRelease?> GetP2pReleaseInfoAsync(
+    public async Task<XrelP2PRelease?> GetP2pReleaseInfoAsync(
         string dirname,
         CancellationToken cancellationToken = default
     )
