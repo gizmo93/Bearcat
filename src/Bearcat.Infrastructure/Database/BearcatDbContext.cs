@@ -24,6 +24,8 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<Release> Releases { get; set; } = null!;
 
+    public DbSet<ReleaseCollection> ReleaseCollections { get; set; } = null!;
+
     public DbSet<ReleaseTemplate> ReleaseTemplates { get; set; } = null!;
 
     public DbSet<ForumPostTemplate> ForumPostTemplates { get; set; } = null!;

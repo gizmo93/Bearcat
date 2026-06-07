@@ -16,6 +16,10 @@ public class Release
 
     public ReleaseGroup ReleaseGroup { get; set; } = null!;
 
+    public int? ReleaseCollectionId { get; set; }
+
+    public ReleaseCollection? ReleaseCollection { get; set; }
+
     public List<UploadConfig> UploadConfigs { get; set; } = null!;
 
     public List<ImageUploadConfig> ImageUploadConfigs { get; set; } = [];

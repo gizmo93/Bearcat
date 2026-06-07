@@ -12,6 +12,7 @@ using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
+using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
@@ -113,6 +114,8 @@ public static class ServiceProviderConfig
                 ReleaseFolderAutomationRepository
             >();
             services.AddScoped<IReleaseReadRepository, ReleaseReadRepository>();
+            services.AddScoped<IReleaseCollectionReadRepository, ReleaseCollectionRepository>();
+            services.AddScoped<IReleaseCollectionWriteRepository, ReleaseCollectionRepository>();
             services.AddScoped<IArchiveConfigWriteRepository, ArchiveConfigWriteRepository>();
             services.AddScoped<IArchiveReadRepository, ArchiveReadRepository>();
             services.AddScoped<

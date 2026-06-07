@@ -14,6 +14,7 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
         builder.Property(r => r.ReleaseType).IsRequired();
         builder.Property(r => r.ReleaseFolderPath).HasMaxLength(1000).IsRequired();
         builder.Property(r => r.ReleaseInfoCheckedAt).HasPrecision(4).IsRequired(false);
+        builder.Property(r => r.ReleaseCollectionId).IsRequired(false);
 
         builder
             .HasMany(r => r.ArchiveConfigs)

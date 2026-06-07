@@ -1,0 +1,84 @@
+@page "/release-collections/{ReleaseCollectionId:int}"
+@inherits OwningComponentBase
+
+@if (!isInitialized)
+{
+    return;
+}
+
+<PageTitle>@L["ReleaseCollection"] - @releaseCollection.Name - Bearcat</PageTitle>
+
+<section class="bearcat-release-shell">
+    <div class="bearcat-release-header">
+        <div class="flex min-w-0 flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0 space-y-2">
+                <h1 class="bearcat-release-title font-semibold">@releaseCollection.Name</h1>
+                <div class="flex flex-wrap items-center gap-2">
+                    <BbBadge Variant="BadgeVariant.Outline">@releaseCollection.ReleaseGroupName</BbBadge>
+                    <BbBadge Variant="BadgeVariant.Secondary">@releaseCollection.Releases.Count @L["Releases"]</BbBadge>
+                </div>
+                <p class="truncate text-sm text-muted-foreground" title="@releaseCollection.Key">
+                    @releaseCollection.Key
+                </p>
+            </div>
+
+            <BbButton Variant="ButtonVariant.Outline" Href="/release-collections">
+                <LucideIcon Name="arrow-left" class="h-4 w-4" />
+                @L["Back"]
+            </BbButton>
+        </div>
+    </div>
+
+    <div class="space-y-4">
+        <BbCard Class="border-border/70 shadow-sm">
+            <BbCardHeader>
+                <div class="bearcat-section-header">
+                    <div class="flex items-center gap-2">
+                        <LucideIcon Name="upload" class="h-4 w-4" />
+                        <div>
+                            <BbCardTitle class="text-base">@L["Releases"]</BbCardTitle>
+                            <BbCardDescription>@L["ReleaseCollectionReleasesDescription"]</BbCardDescription>
+                        </div>
+                    </div>
+                </div>
+            </BbCardHeader>
+            <BbCardContent>
+                @if (releaseCollection.Releases.Count == 0)
+                {
+                    <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                        @L["NoReleasesFound"]
+                    </div>
+                }
+                else
+                {
+                    <div class="bearcat-config-list">
+                        <div class="bearcat-config-header grid grid-cols-[minmax(0,1fr)_140px_180px] gap-4">
+                            <span>@L["Name"]</span>
+                            <span>@L["ReleaseType"]</span>
+                            <span>@L["CreatedAt"]</span>
+                        </div>
+                        @foreach (var release in releaseCollection.Releases)
+                        {
+                            <div class="bearcat-config-item">
+                                <div class="grid gap-3 px-4 py-3 md:grid-cols-[minmax(0,1fr)_140px_180px] md:items-center">
+                                    <a class="bearcat-release-list-name"
+                                       href="@($"/releases/{release.ReleaseId}")">
+                                        @release.Name
+                                    </a>
+                                    <div>
+                                        <p class="bearcat-mobile-label">@L["ReleaseType"]</p>
+                                        <BbBadge Variant="BadgeVariant.Outline">@L.Localize(release.ReleaseType)</BbBadge>
+                                    </div>
+                                    <div>
+                                        <p class="bearcat-mobile-label">@L["CreatedAt"]</p>
+                                        <span class="text-sm">@release.CreatedAt.ToString("g")</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </BbCardContent>
+        </BbCard>
+    </div>
+</section>

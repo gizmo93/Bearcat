@@ -617,4 +617,17 @@
   <data name="PremiumOnlyDownload" xml:space="preserve"><value>Premium only</value></data>
   <data name="PremiumOnlyDownloadHelp" xml:space="preserve"><value>Nur Premium-Benutzer können Dateien herunterladen, die mit dieser Konfiguration hochgeladen wurden.</value></data>
   <data name="VerifyingCaptcha" xml:space="preserve"><value>Prüfe...</value></data>
+  <data name="AllReleaseGroups" xml:space="preserve"><value>Alle Release-Gruppen</value></data>
+  <data name="Back" xml:space="preserve"><value>Zurück</value></data>
+  <data name="NoReleaseCollectionsFound" xml:space="preserve"><value>Keine Release-Collections gefunden</value></data>
+  <data name="OpenReleaseCollectionActions" xml:space="preserve"><value>Release-Collection-Aktionen öffnen</value></data>
+  <data name="ReleaseCollection" xml:space="preserve"><value>Release-Collection</value></data>
+  <data name="ReleaseCollectionReleasesDescription" xml:space="preserve"><value>Releases, die dieser Collection zugeordnet sind.</value></data>
+  <data name="ReleaseCollectionResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Collections</value></data>
+  <data name="ReleaseCollections" xml:space="preserve"><value>Release-Collections</value></data>
+  <data name="ReleaseCollectionsIntro" xml:space="preserve"><value>Finde gruppierte Releases wie Staffeln oder mehrteilige Veröffentlichungen.</value></data>
+  <data name="ReleaseCollectionsSubtitle" xml:space="preserve"><value>Gruppierte Release-Verteilung</value></data>
+  <data name="ReleaseCollectionSubtitle" xml:space="preserve"><value>Gruppierte Releases</value></data>
+  <data name="Reset" xml:space="preserve"><value>Zurücksetzen</value></data>
+  <data name="SearchReleaseCollections" xml:space="preserve"><value>Collections suchen</value></data>
 </root>

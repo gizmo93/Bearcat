@@ -617,4 +617,17 @@
   <data name="PremiumOnlyDownload" xml:space="preserve"><value>Premium only</value></data>
   <data name="PremiumOnlyDownloadHelp" xml:space="preserve"><value>Only premium users can download files uploaded with this configuration.</value></data>
   <data name="VerifyingCaptcha" xml:space="preserve"><value>Verifying...</value></data>
+  <data name="AllReleaseGroups" xml:space="preserve"><value>All release groups</value></data>
+  <data name="Back" xml:space="preserve"><value>Back</value></data>
+  <data name="NoReleaseCollectionsFound" xml:space="preserve"><value>No release collections found</value></data>
+  <data name="OpenReleaseCollectionActions" xml:space="preserve"><value>Open release collection actions</value></data>
+  <data name="ReleaseCollection" xml:space="preserve"><value>Release collection</value></data>
+  <data name="ReleaseCollectionReleasesDescription" xml:space="preserve"><value>Releases assigned to this collection.</value></data>
+  <data name="ReleaseCollectionResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} collections</value></data>
+  <data name="ReleaseCollections" xml:space="preserve"><value>Release collections</value></data>
+  <data name="ReleaseCollectionsIntro" xml:space="preserve"><value>Find grouped releases such as seasons or multi-part distributions.</value></data>
+  <data name="ReleaseCollectionsSubtitle" xml:space="preserve"><value>Grouped release distribution</value></data>
+  <data name="ReleaseCollectionSubtitle" xml:space="preserve"><value>Grouped releases</value></data>
+  <data name="Reset" xml:space="preserve"><value>Reset</value></data>
+  <data name="SearchReleaseCollections" xml:space="preserve"><value>Search collections</value></data>
 </root>
