@@ -43,6 +43,7 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger) : 
             catch (Exception ex)
             {
                 logger.LogError(
+                    ex,
                     "Upload attempt {Attempt} failed for file {FileName}: {Message}",
                     attempt,
                     fileDto.FullFileName,

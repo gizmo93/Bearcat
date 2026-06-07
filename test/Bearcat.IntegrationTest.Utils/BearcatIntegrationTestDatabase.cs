@@ -97,6 +97,11 @@ public sealed class BearcatIntegrationTestDatabase : IAsyncDisposable
     {
         ThrowIfDisposed();
 
+        return CreateStartedDbContext();
+    }
+
+    private BearcatDbContext CreateStartedDbContext()
+    {
         var options = new DbContextOptionsBuilder<BearcatDbContext>()
             .UseNpgsql(ConnectionString)
             .Options;
@@ -155,7 +160,7 @@ public sealed class BearcatIntegrationTestDatabase : IAsyncDisposable
     {
         await postgreSqlContainer.StartAsync(cancellationToken);
 
-        await using var dbContext = CreateDbContext();
+        await using var dbContext = CreateStartedDbContext();
         await dbContext.Database.MigrateAsync(cancellationToken);
 
         await using var connection = new NpgsqlConnection(ConnectionString);

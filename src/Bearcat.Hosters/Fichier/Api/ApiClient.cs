@@ -320,6 +320,7 @@ public class ApiClient(
                 when (exception.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 logger.LogInformation(
+                    exception,
                     "Rate limited by 1fichier API while checking {FileUrl}, waiting before retrying (Attempt {Attempt})",
                     fileUrl,
                     attempt

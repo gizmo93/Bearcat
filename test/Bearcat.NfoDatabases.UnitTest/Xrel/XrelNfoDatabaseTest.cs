@@ -162,7 +162,7 @@ public class XrelNfoDatabaseTest
             .ReturnsAsync(
                 CreateApiResponse(
                     HttpStatusCode.OK,
-                    new XrelP2pRelease(
+                    new XrelP2PRelease(
                         Dirname: "P2P.Release.2026-GRP",
                         LinkHref: "https://www.xrel.to/p2p/42-P2P-Release/nfo.html",
                         SizeMb: 11900,
@@ -243,7 +243,7 @@ public class XrelNfoDatabaseTest
             .Setup(api =>
                 api.GetP2pReleaseInfoAsync("Unknown.Release", It.IsAny<CancellationToken>())
             )
-            .ReturnsAsync(CreateApiResponse<XrelP2pRelease>(HttpStatusCode.NotFound));
+            .ReturnsAsync(CreateApiResponse<XrelP2PRelease>(HttpStatusCode.NotFound));
 
         // Act
         var result = await service.GetReleaseInfoAsync(

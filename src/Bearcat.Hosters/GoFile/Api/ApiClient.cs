@@ -261,6 +261,7 @@ public class ApiClient(
                 if (notPremiumError)
                 {
                     logger.LogInformation(
+                        exception,
                         "GoFile API returned notPremium error. Assuming all files are online"
                     );
                     return (fileUrl, IsOnline: true, ErrorMessage: null);
@@ -276,6 +277,7 @@ public class ApiClient(
                 when (exception.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 logger.LogInformation(
+                    exception,
                     "Rate limited by GoFile API while checking {FileUrl}, waiting before retrying (Attempt {Attempt})",
                     fileUrl,
                     attempt

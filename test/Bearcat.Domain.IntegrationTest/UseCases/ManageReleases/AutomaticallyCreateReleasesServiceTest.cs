@@ -425,7 +425,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         );
     }
 
-    private Mock<INfoDatabase> SetupNfoDatabase(
+    private void SetupNfoDatabase(
         string className,
         string expectedReleaseName,
         NfoReleaseInfo? releaseInfo
@@ -449,8 +449,6 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         nfoDatabaseFactoryMock
             .Setup(factory => factory.Get(className))
             .Returns(nfoDatabaseMock.Object);
-
-        return nfoDatabaseMock;
     }
 
     private async Task<NfoDatabaseRegistration> AddNfoDatabaseRegistrationAsync(

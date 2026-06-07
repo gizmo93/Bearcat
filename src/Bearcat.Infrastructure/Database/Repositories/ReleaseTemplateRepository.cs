@@ -27,9 +27,9 @@ public class ReleaseTemplateRepository(
                 t.ReleaseType,
                 t.ReleaseGroupId,
                 t.ReleaseGroup.Name,
-                t.ArchiveConfigTemplates.Count(),
-                t.UploadConfigTemplates.Count(),
-                t.ImageUploadConfigTemplates.Count(),
+                t.ArchiveConfigTemplates.Count,
+                t.UploadConfigTemplates.Count,
+                t.ImageUploadConfigTemplates.Count,
                 t.UploadConfigTemplates.SelectMany(u => u.LinkCrypterTemplates).Count()
             ))
             .ToListAsync(cancellationToken);

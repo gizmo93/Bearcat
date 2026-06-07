@@ -13,7 +13,7 @@ public class ForumPostRenderService(
     IReleaseReadRepository releaseReadRepository
 )
 {
-    public IReadOnlyList<ForumPostTemplateVariableReadModel> GetVariables()
+    public static IReadOnlyList<ForumPostTemplateVariableReadModel> GetVariables()
     {
         return ForumPostTemplateVariableCatalog.GetVariables();
     }

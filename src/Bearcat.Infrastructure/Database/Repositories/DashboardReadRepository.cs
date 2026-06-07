@@ -59,7 +59,7 @@ public class DashboardReadRepository(IBearcatReadDbContext dbRead) : IDashboardR
         var releases = await dbRead
             .Releases.Select(release => new
             {
-                ActiveUploadConfigsCount = release.UploadConfigs.Count(),
+                ActiveUploadConfigsCount = release.UploadConfigs.Count,
                 OnlineUploadConfigsCount = release
                     .UploadConfigs.Where(uploadConfig =>
                         uploadConfig.Uploads.Any(upload => upload.OnlineState == OnlineState.Online)

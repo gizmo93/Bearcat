@@ -118,7 +118,7 @@ public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpC
     }
 
     private static ReleaseInfo MapReleaseInfo(
-        XrelP2pRelease release,
+        XrelP2PRelease release,
         XrelExternalInfoEnrichment? externalInfoEnrichment
     )
     {

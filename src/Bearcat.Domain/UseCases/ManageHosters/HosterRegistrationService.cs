@@ -97,7 +97,7 @@ public class HosterRegistrationService(
 
             if (result.IsSuccess)
             {
-                captchaVerificationService.Clear(registration, activate: false);
+                HosterCaptchaVerificationService.Clear(registration, activate: false);
                 await writeRepository.SaveChangesAsync(cancellationToken);
             }
 
@@ -146,7 +146,7 @@ public class HosterRegistrationService(
 
         if (result.IsSuccess)
         {
-            captchaVerificationService.Clear(registration, activate: true);
+            HosterCaptchaVerificationService.Clear(registration, activate: true);
             await writeRepository.SaveChangesAsync(cancellationToken);
         }
 

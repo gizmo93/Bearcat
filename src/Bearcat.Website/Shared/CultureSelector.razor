@@ -13,7 +13,7 @@
 </div>
 
 @code {
-    private string CurrentCulture => CultureInfo.CurrentUICulture.Name switch
+    private static string CurrentCulture => CultureInfo.CurrentUICulture.Name switch
     {
         "de-DE" => "de-DE",
         _ => "en-US",

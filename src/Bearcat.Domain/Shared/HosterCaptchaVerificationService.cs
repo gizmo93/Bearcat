@@ -30,7 +30,7 @@ public class HosterCaptchaVerificationService(INotificationService notificationS
         );
     }
 
-    public void Clear(HosterRegistration registration, bool activate)
+    public static void Clear(HosterRegistration registration, bool activate)
     {
         registration.RequiresCaptchaVerification = false;
         registration.IsActive = activate || registration.IsActive;

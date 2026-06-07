@@ -71,6 +71,7 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
                 }
 
                 logger.LogError(
+                    ex,
                     "Upload attempt {Attempt} failed for file {FileName}: {Message}",
                     attempt,
                     fileDto.FullFileName,

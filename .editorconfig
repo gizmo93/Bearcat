@@ -60,6 +60,20 @@ dotnet_naming_symbols.constant_fields.required_modifiers          = const
 # C# Coding Conventions       #
 ###############################
 [*.cs]
+dotnet_diagnostic.SHANE001.severity = error
+dotnet_diagnostic.SHANE002.severity = error
+dotnet_diagnostic.SHANE003.severity = none
+dotnet_diagnostic.S1075.severity = none
+dotnet_diagnostic.S108.severity = none
+dotnet_diagnostic.S2094.severity = none
+dotnet_diagnostic.S6608.severity = none
+dotnet_diagnostic.S1994.severity = none
+dotnet_diagnostic.S927.severity = none
+dotnet_diagnostic.S2365.severity = none
+dotnet_diagnostic.S4144.severity = none
+dotnet_diagnostic.S3220.severity = none
+dotnet_diagnostic.S2365.severity = none
+
 # var preferences
 csharp_style_namespace_declarations = file_scoped:warning
 csharp_style_var_for_built_in_types = true:silent
@@ -116,7 +130,6 @@ csharp_space_between_method_call_empty_parameter_list_parentheses = false
 # Wrapping preferences
 csharp_preserve_single_line_statements = false
 csharp_preserve_single_line_blocks = true
-dotnet_diagnostic.NonAsyncEFCoreMethodsUsageAnalyzer.severity = error
 ###############################
 # VB Coding Conventions       #
 ###############################

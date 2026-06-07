@@ -53,6 +53,7 @@ public class Rapidgator(
             catch (RetryException ex)
             {
                 logger.LogWarning(
+                    ex,
                     "Retryable error occurred on attempt {Attempt} for file {FileName}: {Error}",
                     attempt,
                     fileDto.FullFileName,
@@ -64,6 +65,7 @@ public class Rapidgator(
             catch (HttpRequestException ex)
             {
                 logger.LogError(
+                    ex,
                     "HTTP request failed on attempt {Attempt} for file {FileName}: {Message}",
                     attempt,
                     fileDto.FullFileName,
@@ -75,6 +77,7 @@ public class Rapidgator(
             catch (ApiException ex) when (ex.StatusCode == HttpStatusCode.ServiceUnavailable)
             {
                 logger.LogError(
+                    ex,
                     "Service unavailable on attempt {Attempt} for file {FileName}: {Message}",
                     attempt,
                     fileDto.FullFileName,
@@ -280,6 +283,7 @@ public class Rapidgator(
             catch (ApiException ex)
             {
                 logger.LogWarning(
+                    ex,
                     "Failed to get upload status for file {FileName}: {Message}",
                     fileDto.FullFileName,
                     ex.InnerException?.Message ?? ex.Message
