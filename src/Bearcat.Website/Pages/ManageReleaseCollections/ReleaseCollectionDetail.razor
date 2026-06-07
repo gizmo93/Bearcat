@@ -196,6 +196,7 @@
                     <div class="bearcat-config-list">
                         <div class="bearcat-config-header bearcat-collection-releases-grid">
                             <span>@L["Name"]</span>
+                            <span>@L["OnlineState"]</span>
                             <span>@L["ReleaseType"]</span>
                             <span>@L["CreatedAt"]</span>
                         </div>
@@ -207,6 +208,10 @@
                                        href="@($"/releases/{release.ReleaseId}")">
                                         @release.Name
                                     </a>
+                                    <div>
+                                        <p class="bearcat-mobile-label">@L["OnlineState"]</p>
+                                        <OnlineStateBadge Value="@release.OnlineState" />
+                                    </div>
                                     <div>
                                         <p class="bearcat-mobile-label">@L["ReleaseType"]</p>
                                         <BbBadge Variant="BadgeVariant.Outline">@L.Localize(release.ReleaseType)</BbBadge>
