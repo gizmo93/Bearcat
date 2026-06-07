@@ -18,6 +18,11 @@ public static class LocalizationExtensions
         ReleaseCollectionDetectionMode mode
     ) => localizer[$"ReleaseCollectionDetectionMode.{mode}"];
 
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        CollectionUploadSlotPasswordPolicy policy
+    ) => localizer[$"CollectionUploadSlotPasswordPolicy.{policy}"];
+
     public static string Localize(this IStringLocalizer<UiResource> localizer, UploadState state) =>
         localizer[$"UploadState.{state}"];
 

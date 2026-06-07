@@ -349,6 +349,37 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         CancellationToken cancellationToken = default
     )
     {
+        return await CreateUploadConfigTemplateAsync(
+            releaseTemplateId,
+            name,
+            hosterRegistrationId,
+            archiveConfigTemplateId,
+            premiumOnlyDownload,
+            linksDistributedTo,
+            collectionUploadSlotKey: null,
+            collectionUploadSlotName: null,
+            collectionUploadSlotIsRequired: false,
+            collectionUploadSlotPasswordPolicy: CollectionUploadSlotPasswordPolicy.Ignore,
+            collectionUploadSlotExpectedArchivePassword: null,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<int> CreateUploadConfigTemplateAsync(
+        int releaseTemplateId,
+        string? name,
+        int hosterRegistrationId,
+        int archiveConfigTemplateId,
+        bool premiumOnlyDownload,
+        IReadOnlyList<string> linksDistributedTo,
+        string? collectionUploadSlotKey,
+        string? collectionUploadSlotName,
+        bool collectionUploadSlotIsRequired,
+        CollectionUploadSlotPasswordPolicy collectionUploadSlotPasswordPolicy,
+        string? collectionUploadSlotExpectedArchivePassword,
+        CancellationToken cancellationToken = default
+    )
+    {
         var releaseTemplate = await writeRepository.GetByIdWithChildrenAsync(
             releaseTemplateId,
             cancellationToken
@@ -364,6 +395,13 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             HosterRegistrationId = hosterRegistrationId,
             ArchiveConfigTemplateId = archiveConfigTemplate?.Id ?? archiveConfigTemplateId,
             PremiumOnlyDownload = premiumOnlyDownload,
+            CollectionUploadSlotKey = CleanOptional(collectionUploadSlotKey),
+            CollectionUploadSlotName = CleanOptional(collectionUploadSlotName),
+            CollectionUploadSlotIsRequired = collectionUploadSlotIsRequired,
+            CollectionUploadSlotPasswordPolicy = collectionUploadSlotPasswordPolicy,
+            CollectionUploadSlotExpectedArchivePassword = CleanOptional(
+                collectionUploadSlotExpectedArchivePassword
+            ),
             LinksDistributedTo = CleanLinks(linksDistributedTo),
         };
 
@@ -389,6 +427,37 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         CancellationToken cancellationToken = default
     )
     {
+        await UpdateUploadConfigTemplateAsync(
+            uploadConfigTemplateId,
+            name,
+            hosterRegistrationId,
+            archiveConfigTemplateId,
+            premiumOnlyDownload,
+            linksDistributedTo,
+            collectionUploadSlotKey: null,
+            collectionUploadSlotName: null,
+            collectionUploadSlotIsRequired: false,
+            collectionUploadSlotPasswordPolicy: CollectionUploadSlotPasswordPolicy.Ignore,
+            collectionUploadSlotExpectedArchivePassword: null,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task UpdateUploadConfigTemplateAsync(
+        int uploadConfigTemplateId,
+        string? name,
+        int hosterRegistrationId,
+        int archiveConfigTemplateId,
+        bool premiumOnlyDownload,
+        IReadOnlyList<string> linksDistributedTo,
+        string? collectionUploadSlotKey,
+        string? collectionUploadSlotName,
+        bool collectionUploadSlotIsRequired,
+        CollectionUploadSlotPasswordPolicy collectionUploadSlotPasswordPolicy,
+        string? collectionUploadSlotExpectedArchivePassword,
+        CancellationToken cancellationToken = default
+    )
+    {
         var uploadConfigTemplate = await writeRepository.GetUploadConfigTemplateAsync(
             uploadConfigTemplateId,
             cancellationToken
@@ -403,6 +472,13 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         uploadConfigTemplate.ArchiveConfigTemplateId =
             archiveConfigTemplate?.Id ?? archiveConfigTemplateId;
         uploadConfigTemplate.PremiumOnlyDownload = premiumOnlyDownload;
+        uploadConfigTemplate.CollectionUploadSlotKey = CleanOptional(collectionUploadSlotKey);
+        uploadConfigTemplate.CollectionUploadSlotName = CleanOptional(collectionUploadSlotName);
+        uploadConfigTemplate.CollectionUploadSlotIsRequired = collectionUploadSlotIsRequired;
+        uploadConfigTemplate.CollectionUploadSlotPasswordPolicy = collectionUploadSlotPasswordPolicy;
+        uploadConfigTemplate.CollectionUploadSlotExpectedArchivePassword = CleanOptional(
+            collectionUploadSlotExpectedArchivePassword
+        );
 
         if (archiveConfigTemplate is not null)
         {

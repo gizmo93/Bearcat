@@ -14,6 +14,7 @@ public interface IBearcatReadDbContext
     public DbSet<BackgroundTaskState> BackgroundTaskStates { get; set; }
     public DbSet<Release> Releases { get; set; }
     public DbSet<ReleaseCollection> ReleaseCollections { get; set; }
+    public DbSet<CollectionUploadSlot> CollectionUploadSlots { get; set; }
     public DbSet<ReleaseTemplate> ReleaseTemplates { get; set; }
     public DbSet<ForumPostTemplate> ForumPostTemplates { get; set; }
     public DbSet<ReleaseFolderAutomation> ReleaseFolderAutomations { get; set; }

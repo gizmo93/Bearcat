@@ -11,6 +11,7 @@ public class UploadConfigConfiguration : IEntityTypeConfiguration<UploadConfig>
         builder.HasKey(u => u.Id);
         builder.Property(u => u.HosterRegistrationId).IsRequired();
         builder.Property(u => u.ArchiveConfigId).IsRequired();
+        builder.Property(u => u.CollectionUploadSlotId).IsRequired(false);
         builder.Property(u => u.Name).HasMaxLength(200).IsRequired();
         builder.Property(u => u.PremiumOnlyDownload).IsRequired();
         builder.Property(u => u.LinksDistributedTo);
@@ -38,5 +39,13 @@ public class UploadConfigConfiguration : IEntityTypeConfiguration<UploadConfig>
             .HasPrincipalKey(u => u.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .HasOne(u => u.CollectionUploadSlot)
+            .WithMany(s => s.UploadConfigs)
+            .HasForeignKey(u => u.CollectionUploadSlotId)
+            .HasPrincipalKey(s => s.Id)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

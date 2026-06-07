@@ -15,4 +15,6 @@ public class ReleaseCollection
     public DateTime CreatedAt { get; set; }
 
     public List<Release> Releases { get; set; } = [];
+
+    public List<CollectionUploadSlot> UploadSlots { get; set; } = [];
 }

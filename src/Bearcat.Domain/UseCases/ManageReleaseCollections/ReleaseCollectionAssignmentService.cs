@@ -41,5 +41,45 @@ public class ReleaseCollectionAssignmentService(
         }
 
         release.ReleaseCollection = releaseCollection;
+
+        var uploadConfigTemplates = releaseTemplate
+            .UploadConfigTemplates.OrderBy(template => template.Id)
+            .ToList();
+
+        for (var index = 0; index < uploadConfigTemplates.Count && index < release.UploadConfigs.Count; index++)
+        {
+            var uploadConfigTemplate = uploadConfigTemplates[index];
+
+            if (string.IsNullOrWhiteSpace(uploadConfigTemplate.CollectionUploadSlotKey))
+            {
+                continue;
+            }
+
+            var slotKey = uploadConfigTemplate.CollectionUploadSlotKey.Trim();
+            var slot = releaseCollection.UploadSlots.FirstOrDefault(existingSlot =>
+                string.Equals(existingSlot.Key, slotKey, StringComparison.Ordinal)
+            );
+
+            if (slot is null)
+            {
+                slot = new CollectionUploadSlot
+                {
+                    Key = slotKey,
+                    Name = string.IsNullOrWhiteSpace(uploadConfigTemplate.CollectionUploadSlotName)
+                        ? slotKey
+                        : uploadConfigTemplate.CollectionUploadSlotName.Trim(),
+                    IsRequired = uploadConfigTemplate.CollectionUploadSlotIsRequired,
+                    PasswordPolicy = uploadConfigTemplate.CollectionUploadSlotPasswordPolicy,
+                    ExpectedArchivePassword = string.IsNullOrWhiteSpace(
+                        uploadConfigTemplate.CollectionUploadSlotExpectedArchivePassword
+                    )
+                        ? null
+                        : uploadConfigTemplate.CollectionUploadSlotExpectedArchivePassword.Trim(),
+                };
+                releaseCollection.UploadSlots.Add(slot);
+            }
+
+            release.UploadConfigs[index].CollectionUploadSlot = slot;
+        }
     }
 }

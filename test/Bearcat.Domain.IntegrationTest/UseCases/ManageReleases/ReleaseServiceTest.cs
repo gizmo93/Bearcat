@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -29,7 +30,11 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         service = new ReleaseService(
             new ReleaseWriteRepository(dbContext),
             CreateTimeProvider(),
-            archiverFactory.Object
+            archiverFactory.Object,
+            new ReleaseCollectionAssignmentService(
+                new ReleaseCollectionRepository(dbContext, dbContext),
+                CreateTimeProvider()
+            )
         );
     }
 
@@ -391,6 +396,60 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         var linkCrypter = uploadConfig.LinkCrypters.Single();
         linkCrypter.LinkCrypterRegistrationId.ShouldBe(seed.LinkCrypterRegistrationId);
         linkCrypter.Password.ShouldBe("container-secret");
+    }
+
+    [Test]
+    public async Task CreateFromTemplateAsync_TemplateUsesCollectionSlots_AssignsReleaseAndUploadSlot()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync();
+        var releaseTemplate = await dbContext.ReleaseTemplates
+            .Include(template => template.UploadConfigTemplates)
+            .SingleAsync(template => template.Id == seed.ReleaseTemplateId);
+
+        releaseTemplate.UseReleaseCollections = true;
+        releaseTemplate.ReleaseCollectionDetectionMode =
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern;
+        releaseTemplate.IgnoreLanguageInReleaseCollectionName = true;
+        releaseTemplate.UploadConfigTemplates.Single().CollectionUploadSlotKey =
+            "forum-a-rg-passworded";
+        releaseTemplate.UploadConfigTemplates.Single().CollectionUploadSlotName =
+            "Forum A Rapidgator passworded";
+        releaseTemplate.UploadConfigTemplates.Single().CollectionUploadSlotIsRequired = true;
+        releaseTemplate.UploadConfigTemplates.Single().CollectionUploadSlotPasswordPolicy =
+            CollectionUploadSlotPasswordPolicy.MustMatchAcrossReleases;
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.CreateFromTemplateAsync(
+            seed.ReleaseTemplateId,
+            "/tmp/releases/Hostage.S01E01.German.AC3.DL.1080p.Web.x265-FuN.mkv",
+            null,
+            CancellationToken.None
+        );
+
+        // Assert
+        var release = await dbContext
+            .Releases.AsSplitQuery()
+            .Include(release => release.ReleaseCollection)
+                .ThenInclude(collection => collection!.UploadSlots)
+            .Include(release => release.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.CollectionUploadSlot)
+            .SingleAsync(release => release.Id == result);
+
+        release.ReleaseCollection.ShouldNotBeNull();
+        release.ReleaseCollection.Name.ShouldBe("Hostage S01 AC3.DL.1080p.Web.x265-FuN");
+        release.ReleaseCollection.UploadSlots.Count.ShouldBe(1);
+
+        var uploadSlot = release.ReleaseCollection.UploadSlots.Single();
+        uploadSlot.Key.ShouldBe("forum-a-rg-passworded");
+        uploadSlot.Name.ShouldBe("Forum A Rapidgator passworded");
+        uploadSlot.IsRequired.ShouldBeTrue();
+        uploadSlot.PasswordPolicy.ShouldBe(
+            CollectionUploadSlotPasswordPolicy.MustMatchAcrossReleases
+        );
+
+        release.UploadConfigs.Single().CollectionUploadSlotId.ShouldBe(uploadSlot.Id);
     }
 
     [Test]

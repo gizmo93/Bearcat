@@ -219,8 +219,12 @@ public class ReleaseService(
             release.ArchiveConfigs.Add(unmanagedArchiveConfig);
         }
 
-        release.UploadConfigs = releaseTemplate
-            .UploadConfigTemplates.Select(template => new UploadConfig
+        var uploadConfigTemplates = releaseTemplate
+            .UploadConfigTemplates.OrderBy(template => template.Id)
+            .ToList();
+
+        release.UploadConfigs = uploadConfigTemplates
+            .Select(template => new UploadConfig
             {
                 Name = CleanOptional(template.Name) ?? template.HosterRegistration.Name,
                 HosterRegistrationId = template.HosterRegistrationId,

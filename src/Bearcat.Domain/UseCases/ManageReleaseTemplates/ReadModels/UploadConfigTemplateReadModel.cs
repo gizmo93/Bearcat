@@ -1,3 +1,5 @@
+using Bearcat.Domain.ValueObjects;
+
 namespace Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 
 public record UploadConfigTemplateReadModel(
@@ -9,6 +11,11 @@ public record UploadConfigTemplateReadModel(
     int ArchiveConfigTemplateId,
     string ArchiveConfigTemplateName,
     bool PremiumOnlyDownload,
+    string? CollectionUploadSlotKey,
+    string? CollectionUploadSlotName,
+    bool CollectionUploadSlotIsRequired,
+    CollectionUploadSlotPasswordPolicy CollectionUploadSlotPasswordPolicy,
+    string? CollectionUploadSlotExpectedArchivePassword,
     IReadOnlyList<string> LinksDistributedTo,
     IReadOnlyList<UploadConfigLinkCrypterTemplateReadModel> LinkCrypterTemplates
 );

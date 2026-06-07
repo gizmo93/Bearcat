@@ -7,5 +7,6 @@ public record ReleaseCollectionDetailReadModel(
     int ReleaseGroupId,
     string ReleaseGroupName,
     DateTime CreatedAt,
+    IReadOnlyList<CollectionUploadSlotReadModel> UploadSlots,
     IReadOnlyList<ReleaseCollectionReleaseReadModel> Releases
 );

@@ -619,8 +619,22 @@
   <data name="VerifyingCaptcha" xml:space="preserve"><value>Prüfe...</value></data>
   <data name="AllReleaseGroups" xml:space="preserve"><value>Alle Release-Gruppen</value></data>
   <data name="Back" xml:space="preserve"><value>Zurück</value></data>
+  <data name="CollectionUploadSlot" xml:space="preserve"><value>Collection-Upload-Slot</value></data>
+  <data name="CollectionUploadSlotExpectedArchivePasswordRequired" xml:space="preserve"><value>Das erwartete Archivpasswort ist für diese Passwortregel nötig.</value></data>
+  <data name="CollectionUploadSlotHelp" xml:space="preserve"><value>Ordne diese Upload-Konfiguration optional einem stabilen Collection-Slot zu.</value></data>
+  <data name="CollectionUploadSlotKey" xml:space="preserve"><value>Slot-Key</value></data>
+  <data name="CollectionUploadSlotName" xml:space="preserve"><value>Slot-Name</value></data>
+  <data name="CollectionUploadSlotNamePlaceholder" xml:space="preserve"><value>Forum A Rapidgator mit Passwort</value></data>
+  <data name="CollectionUploadSlots" xml:space="preserve"><value>Upload-Slots</value></data>
+  <data name="CollectionUploadSlotsDescription" xml:space="preserve"><value>Fachliche Upload-Rollen, die Releases in dieser Collection erfüllen.</value></data>
+  <data name="CollectionUploadSlotPasswordPolicy.Ignore" xml:space="preserve"><value>Ignorieren</value></data>
+  <data name="CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue" xml:space="preserve"><value>Muss erwartetem Wert entsprechen</value></data>
+  <data name="CollectionUploadSlotPasswordPolicy.MustMatchAcrossReleases" xml:space="preserve"><value>Muss über Releases übereinstimmen</value></data>
+  <data name="ExpectedArchivePassword" xml:space="preserve"><value>Erwartetes Archivpasswort</value></data>
   <data name="NoReleaseCollectionsFound" xml:space="preserve"><value>Keine Release-Collections gefunden</value></data>
+  <data name="NoCollectionUploadSlotsFound" xml:space="preserve"><value>Keine Upload-Slots gefunden</value></data>
   <data name="OpenReleaseCollectionActions" xml:space="preserve"><value>Release-Collection-Aktionen öffnen</value></data>
+  <data name="PasswordPolicy" xml:space="preserve"><value>Passwortregel</value></data>
   <data name="ReleaseCollection" xml:space="preserve"><value>Release-Collection</value></data>
   <data name="ReleaseCollectionReleasesDescription" xml:space="preserve"><value>Releases, die dieser Collection zugeordnet sind.</value></data>
   <data name="ReleaseCollectionResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Collections</value></data>
@@ -638,6 +652,7 @@
   <data name="ReleaseCollectionPattern" xml:space="preserve"><value>Collection-Regex-Pattern</value></data>
   <data name="ReleaseCollectionPatternRequired" xml:space="preserve"><value>Das Collection-Regex-Pattern ist für eigenes Regex nötig.</value></data>
   <data name="Reset" xml:space="preserve"><value>Zurücksetzen</value></data>
+  <data name="Required" xml:space="preserve"><value>Erforderlich</value></data>
   <data name="SearchReleaseCollections" xml:space="preserve"><value>Collections suchen</value></data>
   <data name="IgnoreLanguageInReleaseCollectionName" xml:space="preserve"><value>Sprache im Collection-Namen ignorieren</value></data>
   <data name="UseReleaseCollections" xml:space="preserve"><value>Release-Collections verwenden</value></data>

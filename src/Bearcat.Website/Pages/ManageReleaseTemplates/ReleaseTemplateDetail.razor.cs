@@ -256,6 +256,13 @@ public partial class ReleaseTemplateDetail(
                     HosterRegistrationId = uploadConfig.HosterRegistrationId,
                     ArchiveConfigTemplateId = uploadConfig.ArchiveConfigTemplateId,
                     PremiumOnlyDownload = uploadConfig.PremiumOnlyDownload,
+                    CollectionUploadSlotKey = uploadConfig.CollectionUploadSlotKey,
+                    CollectionUploadSlotName = uploadConfig.CollectionUploadSlotName,
+                    CollectionUploadSlotIsRequired = uploadConfig.CollectionUploadSlotIsRequired,
+                    CollectionUploadSlotPasswordPolicy =
+                        uploadConfig.CollectionUploadSlotPasswordPolicy,
+                    CollectionUploadSlotExpectedArchivePassword =
+                        uploadConfig.CollectionUploadSlotExpectedArchivePassword,
                     LinksDistributedTo = uploadConfig.LinksDistributedTo.ToList(),
                     IsEdit = true,
                 },

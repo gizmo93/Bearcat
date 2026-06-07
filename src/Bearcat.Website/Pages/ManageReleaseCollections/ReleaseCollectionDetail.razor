@@ -34,6 +34,64 @@
             <BbCardHeader>
                 <div class="bearcat-section-header">
                     <div class="flex items-center gap-2">
+                        <LucideIcon Name="rows-3" class="h-4 w-4" />
+                        <div>
+                            <BbCardTitle class="text-base">@L["CollectionUploadSlots"]</BbCardTitle>
+                            <BbCardDescription>@L["CollectionUploadSlotsDescription"]</BbCardDescription>
+                        </div>
+                    </div>
+                </div>
+            </BbCardHeader>
+            <BbCardContent>
+                @if (releaseCollection.UploadSlots.Count == 0)
+                {
+                    <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                        @L["NoCollectionUploadSlotsFound"]
+                    </div>
+                }
+                else
+                {
+                    <div class="bearcat-config-list">
+                        <div class="bearcat-config-header grid grid-cols-[minmax(0,1fr)_180px_120px_120px] gap-4">
+                            <span>@L["Name"]</span>
+                            <span>@L["PasswordPolicy"]</span>
+                            <span>@L["Required"]</span>
+                            <span>@L["UploadConfigurations"]</span>
+                        </div>
+                        @foreach (var slot in releaseCollection.UploadSlots)
+                        {
+                            <div class="bearcat-config-item">
+                                <div class="grid gap-3 px-4 py-3 md:grid-cols-[minmax(0,1fr)_180px_120px_120px] md:items-center">
+                                    <div class="min-w-0">
+                                        <p class="truncate text-sm font-semibold" title="@slot.Name">@slot.Name</p>
+                                        <p class="mt-1 truncate text-xs text-muted-foreground" title="@slot.Key">@slot.Key</p>
+                                    </div>
+                                    <div>
+                                        <p class="bearcat-mobile-label">@L["PasswordPolicy"]</p>
+                                        <BbBadge Variant="BadgeVariant.Outline">@L.Localize(slot.PasswordPolicy)</BbBadge>
+                                    </div>
+                                    <div>
+                                        <p class="bearcat-mobile-label">@L["Required"]</p>
+                                        <BbBadge Variant="@(slot.IsRequired ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                            @(slot.IsRequired ? L["Yes"] : L["No"])
+                                        </BbBadge>
+                                    </div>
+                                    <div>
+                                        <p class="bearcat-mobile-label">@L["UploadConfigurations"]</p>
+                                        <span class="text-sm font-medium">@slot.UploadConfigCount</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </BbCardContent>
+        </BbCard>
+
+        <BbCard Class="border-border/70 shadow-sm">
+            <BbCardHeader>
+                <div class="bearcat-section-header">
+                    <div class="flex items-center gap-2">
                         <LucideIcon Name="upload" class="h-4 w-4" />
                         <div>
                             <BbCardTitle class="text-base">@L["Releases"]</BbCardTitle>

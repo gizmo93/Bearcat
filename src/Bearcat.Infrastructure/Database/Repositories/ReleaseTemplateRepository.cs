@@ -234,6 +234,11 @@ public class ReleaseTemplateRepository(
                         .ArchiveConfigTemplates.First(a => a.Id == u.ArchiveConfigTemplateId)
                         .Name,
                     u.PremiumOnlyDownload,
+                    u.CollectionUploadSlotKey,
+                    u.CollectionUploadSlotName,
+                    u.CollectionUploadSlotIsRequired,
+                    u.CollectionUploadSlotPasswordPolicy,
+                    u.CollectionUploadSlotExpectedArchivePassword,
                     u.LinksDistributedTo,
                     u.LinkCrypterTemplates.OrderBy(l => l.LinkCrypterRegistration.Name)
                         .ThenBy(l => l.Id)

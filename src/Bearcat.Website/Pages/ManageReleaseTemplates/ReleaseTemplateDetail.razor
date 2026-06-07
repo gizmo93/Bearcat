@@ -172,6 +172,12 @@
                                             {
                                                 <BbBadge Variant="BadgeVariant.Secondary">@L["PremiumOnlyDownload"]</BbBadge>
                                             }
+                                            @if (!string.IsNullOrWhiteSpace(config.CollectionUploadSlotKey))
+                                            {
+                                                <BbBadge Variant="BadgeVariant.Secondary">
+                                                    @config.CollectionUploadSlotKey
+                                                </BbBadge>
+                                            }
                                         </div>
                                     </div>
                                     <div class="min-w-0">

@@ -26,6 +26,8 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<ReleaseCollection> ReleaseCollections { get; set; } = null!;
 
+    public DbSet<CollectionUploadSlot> CollectionUploadSlots { get; set; } = null!;
+
     public DbSet<ReleaseTemplate> ReleaseTemplates { get; set; } = null!;
 
     public DbSet<ForumPostTemplate> ForumPostTemplates { get; set; } = null!;

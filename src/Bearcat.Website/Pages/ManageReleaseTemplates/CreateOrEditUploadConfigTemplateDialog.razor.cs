@@ -4,6 +4,7 @@ using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Localization;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
@@ -47,6 +48,13 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
         archiveConfigTemplates
             .OrderBy(config => config.Name)
             .Select(config => new SelectOption<int?>(config.ArchiveConfigTemplateId, config.Name));
+
+    private IEnumerable<SelectOption<CollectionUploadSlotPasswordPolicy>> PasswordPolicyOptions =>
+        Enum.GetValues<CollectionUploadSlotPasswordPolicy>()
+            .Select(policy => new SelectOption<CollectionUploadSlotPasswordPolicy>(
+                policy,
+                L.Localize(policy)
+            ));
 
     private HosterRegistrationReadModel? SelectedHosterRegistration =>
         FormModel.HosterRegistrationId is null
@@ -94,7 +102,12 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
                 FormModel.HosterRegistrationId!.Value,
                 FormModel.ArchiveConfigTemplateId!.Value,
                 CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
-                FormModel.LinksDistributedTo
+                FormModel.LinksDistributedTo,
+                FormModel.CollectionUploadSlotKey,
+                FormModel.CollectionUploadSlotName,
+                FormModel.CollectionUploadSlotIsRequired,
+                FormModel.CollectionUploadSlotPasswordPolicy,
+                FormModel.CollectionUploadSlotExpectedArchivePassword
             );
         }
         else
@@ -105,7 +118,12 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
                 FormModel.HosterRegistrationId!.Value,
                 FormModel.ArchiveConfigTemplateId!.Value,
                 CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
-                FormModel.LinksDistributedTo
+                FormModel.LinksDistributedTo,
+                FormModel.CollectionUploadSlotKey,
+                FormModel.CollectionUploadSlotName,
+                FormModel.CollectionUploadSlotIsRequired,
+                FormModel.CollectionUploadSlotPasswordPolicy,
+                FormModel.CollectionUploadSlotExpectedArchivePassword
             );
         }
 
@@ -152,6 +170,18 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
             messageStore.Add(
                 () => FormModel.ArchiveConfigTemplateId!,
                 L["SelectArchiveConfigurationRequired"]
+            );
+        }
+
+        if (
+            FormModel.CollectionUploadSlotPasswordPolicy
+                is CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue
+            && string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotExpectedArchivePassword)
+        )
+        {
+            messageStore.Add(
+                () => FormModel.CollectionUploadSlotExpectedArchivePassword!,
+                L["CollectionUploadSlotExpectedArchivePasswordRequired"]
             );
         }
     }

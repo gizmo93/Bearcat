@@ -17,10 +17,12 @@ public class ReleaseCollectionRepository(IBearcatReadDbContext dbRead, IBearcatW
         CancellationToken cancellationToken = default
     )
     {
-        return await dbWrite.ReleaseCollections.FirstOrDefaultAsync(
-            collection => collection.ReleaseGroupId == releaseGroupId && collection.Key == key,
-            cancellationToken
-        );
+        return await dbWrite
+            .ReleaseCollections.Include(collection => collection.UploadSlots)
+            .FirstOrDefaultAsync(
+                collection => collection.ReleaseGroupId == releaseGroupId && collection.Key == key,
+                cancellationToken
+            );
     }
 
     public async Task<PagedResult<ReleaseCollectionReadModel>> SearchAsync(
@@ -86,6 +88,19 @@ public class ReleaseCollectionRepository(IBearcatReadDbContext dbRead, IBearcatW
                 collection.ReleaseGroupId,
                 collection.ReleaseGroup.Name,
                 collection.CreatedAt,
+                collection
+                    .UploadSlots.OrderBy(slot => slot.Name)
+                    .ThenBy(slot => slot.Id)
+                    .Select(slot => new CollectionUploadSlotReadModel(
+                        slot.Id,
+                        slot.Key,
+                        slot.Name,
+                        slot.IsRequired,
+                        slot.PasswordPolicy,
+                        slot.ExpectedArchivePassword,
+                        slot.UploadConfigs.Count
+                    ))
+                    .ToList(),
                 collection
                     .Releases.OrderBy(release => release.Name)
                     .ThenBy(release => release.Id)

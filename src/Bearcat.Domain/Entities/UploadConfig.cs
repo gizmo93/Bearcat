@@ -14,6 +14,10 @@ public class UploadConfig
 
     public ArchiveConfig ArchiveConfig { get; set; } = null!;
 
+    public int? CollectionUploadSlotId { get; set; }
+
+    public CollectionUploadSlot? CollectionUploadSlot { get; set; }
+
     public HosterRegistration HosterRegistration { get; set; } = null!;
 
     public string Name { get; set; } = null!;
