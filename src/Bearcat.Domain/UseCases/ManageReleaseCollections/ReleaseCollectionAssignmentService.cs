@@ -9,6 +9,8 @@ public class ReleaseCollectionAssignmentService(
     TimeProvider timeProvider
 )
 {
+    private readonly Dictionary<ReleaseCollectionCacheKey, ReleaseCollection> releaseCollectionsByKey = [];
+
     public async Task AssignFromTemplateAsync(
         Release release,
         ReleaseTemplate releaseTemplate,
@@ -25,22 +27,32 @@ public class ReleaseCollectionAssignmentService(
             return;
         }
 
-        var releaseCollection = await writeRepository.GetByReleaseGroupAndKeyAsync(
+        var cacheKey = new ReleaseCollectionCacheKey(
             releaseTemplate.ReleaseGroupId,
-            detectionResult.Key,
-            cancellationToken
+            detectionResult.Key
         );
 
-        if (releaseCollection is null)
+        if (!releaseCollectionsByKey.TryGetValue(cacheKey, out var releaseCollection))
         {
-            releaseCollection = new ReleaseCollection
+            releaseCollection = await writeRepository.GetByReleaseGroupAndKeyAsync(
+                releaseTemplate.ReleaseGroupId,
+                detectionResult.Key,
+                cancellationToken
+            );
+
+            if (releaseCollection is null)
             {
-                ReleaseGroupId = releaseTemplate.ReleaseGroupId,
-                Key = detectionResult.Key,
-                Name = detectionResult.Name,
-                CreatedAt = timeProvider.GetLocalNow(),
-            };
-            writeRepository.Add(releaseCollection);
+                releaseCollection = new ReleaseCollection
+                {
+                    ReleaseGroupId = releaseTemplate.ReleaseGroupId,
+                    Key = detectionResult.Key,
+                    Name = detectionResult.Name,
+                    CreatedAt = timeProvider.GetLocalNow(),
+                };
+                writeRepository.Add(releaseCollection);
+            }
+
+            releaseCollectionsByKey[cacheKey] = releaseCollection;
         }
 
         release.ReleaseCollection = releaseCollection;
@@ -90,4 +102,6 @@ public class ReleaseCollectionAssignmentService(
             uploadConfig.CollectionUploadSlot = slot;
         }
     }
+
+    private sealed record ReleaseCollectionCacheKey(int ReleaseGroupId, string Key);
 }

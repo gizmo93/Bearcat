@@ -196,6 +196,55 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task ProcessAsync_MultipleEpisodesInSameTick_ReusesPendingReleaseCollection()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var template = await dbContext.ReleaseTemplates.SingleAsync(template =>
+            template.Id == releaseTemplate.ReleaseTemplateId
+        );
+        template.UseReleaseCollections = true;
+        template.ReleaseCollectionDetectionMode =
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern;
+        await dbContext.SaveChangesAsync();
+
+        Directory.CreateDirectory(
+            Path.Combine(
+                tempRootPath,
+                "Bodies.2023.S01E01.German.DL.EAC3.1080p.DV.HDR.NF.WEB.H265-ZeroTwo"
+            )
+        );
+        Directory.CreateDirectory(
+            Path.Combine(
+                tempRootPath,
+                "Bodies.2023.S01E02.German.DL.EAC3.1080p.DV.HDR.NF.WEB.H265-ZeroTwo"
+            )
+        );
+        Directory.CreateDirectory(
+            Path.Combine(
+                tempRootPath,
+                "Bodies.2023.S01E03.German.DL.EAC3.1080p.DV.HDR.NF.WEB.H265-ZeroTwo"
+            )
+        );
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "Bodies.*");
+
+        // Act
+        var result = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(3);
+
+        var releaseCollection = await dbContext
+            .ReleaseCollections.Include(collection => collection.Releases)
+            .SingleAsync();
+
+        releaseCollection.Key.ShouldBe(
+            "bodies.2023.s01.german.dl.eac3.1080p.dv.hdr.nf.web.h265.zerotwo"
+        );
+        releaseCollection.Releases.Count.ShouldBe(3);
+    }
+
+    [Test]
     public async Task ProcessAsync_AutomationIsDisabled_DoesNotCreateRelease()
     {
         // Arrange
