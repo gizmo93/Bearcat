@@ -3,7 +3,7 @@
         <Description>Bearcat</Description>
         <TargetFramework>net10.0</TargetFramework>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <NoWarn>S2365,S3220</NoWarn>
+        <NoWarn>S2365,S3220,S1450</NoWarn>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference
