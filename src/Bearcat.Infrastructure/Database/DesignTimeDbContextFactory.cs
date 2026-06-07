@@ -13,7 +13,9 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<BearcatDbC
 
         // Dummy credentials when creating migrations using dotnet-ef
         optionsBuilder.UseNpgsql(
+#pragma warning disable S2068
             "Host=localhost;Database=bearcat;Username=postgres;Password=postgres"
+#pragma warning restore S2068
         );
         return new BearcatDbContext(optionsBuilder.Options);
     }
