@@ -660,6 +660,12 @@
   <data name="Reset" xml:space="preserve"><value>Zurücksetzen</value></data>
   <data name="Required" xml:space="preserve"><value>Erforderlich</value></data>
   <data name="SearchReleaseCollections" xml:space="preserve"><value>Collections suchen</value></data>
+  <data name="SharedLinkCrypters" xml:space="preserve"><value>Container erstellen bei</value></data>
+  <data name="NoSharedLinkCrypters" xml:space="preserve"><value>Keiner</value></data>
+  <data name="EditSharedLinkCrypters" xml:space="preserve"><value>Link-Crypter auswählen</value></data>
+  <data name="SharedLinkCryptersDialogDescription" xml:space="preserve"><value>Wähle, wo Bearcat für diese Upload-Gruppe einen gemeinsamen Container erstellen soll.</value></data>
+  <data name="SharedLinkCryptersDialogHelp" xml:space="preserve"><value>Diese Auswahl gilt für alle Upload-Konfigurationen dieser Gruppe.</value></data>
+  <data name="NoLinkCryptersFound" xml:space="preserve"><value>Keine Link-Crypter gefunden</value></data>
   <data name="UseReleaseCollections" xml:space="preserve"><value>Release-Collections verwenden</value></data>
   <data name="UseCollectionUploadSlot" xml:space="preserve"><value>Diese Upload-Konfiguration über die Collection teilen</value></data>
   <data name="UseCollectionUploadSlotHelp" xml:space="preserve"><value>Erzeugt einen gemeinsamen Collection-Container für diese Gruppe.</value></data>

@@ -54,9 +54,11 @@
                     <div class="bearcat-config-list">
                         <div class="bearcat-config-header bearcat-collection-slots-grid">
                             <span>@L["Name"]</span>
+                            <span>@L["SharedLinkCrypters"]</span>
                             <span>@L["PasswordPolicy"]</span>
                             <span>@L["Required"]</span>
                             <span>@L["UploadConfigurations"]</span>
+                            <span class="text-right">@L["Actions"]</span>
                         </div>
                         @foreach (var slot in releaseCollection.UploadSlots)
                         {
@@ -65,6 +67,24 @@
                                     <div class="min-w-0">
                                         <p class="truncate text-sm font-semibold" title="@slot.Name">@slot.Name</p>
                                         <p class="mt-1 truncate text-xs text-muted-foreground" title="@slot.Key">@slot.Key</p>
+                                    </div>
+                                    <div>
+                                        <p class="bearcat-mobile-label">@L["SharedLinkCrypters"]</p>
+                                        @if (slot.SharedLinkCrypters.Count == 0)
+                                        {
+                                            <span class="text-sm text-muted-foreground">@L["NoSharedLinkCrypters"]</span>
+                                        }
+                                        else
+                                        {
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach (var linkCrypter in slot.SharedLinkCrypters)
+                                                {
+                                                    <BbBadge Variant="@(linkCrypter.IsActive ? BadgeVariant.Secondary : BadgeVariant.Outline)">
+                                                        @linkCrypter.LinkCrypterRegistrationName
+                                                    </BbBadge>
+                                                }
+                                            </div>
+                                        }
                                     </div>
                                     <div>
                                         <p class="bearcat-mobile-label">@L["PasswordPolicy"]</p>
@@ -79,6 +99,14 @@
                                     <div>
                                         <p class="bearcat-mobile-label">@L["UploadConfigurations"]</p>
                                         <span class="text-sm font-medium">@slot.UploadConfigCount</span>
+                                    </div>
+                                    <div class="bearcat-config-actions">
+                                        <BbButton Variant="ButtonVariant.Ghost"
+                                                  Size="ButtonSize.IconSmall"
+                                                  AriaLabel="@L["EditSharedLinkCrypters"]"
+                                                  OnClick="@(async () => await ShowEditSharedLinkCryptersDialogAsync(slot))">
+                                            <LucideIcon Name="pencil" class="h-4 w-4" />
+                                        </BbButton>
                                     </div>
                                 </div>
                             </div>

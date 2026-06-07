@@ -3,6 +3,7 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -80,40 +81,57 @@ public class ReleaseCollectionRepository(
         CancellationToken cancellationToken = default
     )
     {
-        return await dbRead
-            .ReleaseCollections.Where(collection => collection.Id == releaseCollectionId)
-            .Select(collection => new ReleaseCollectionDetailReadModel(
-                collection.Id,
-                collection.Name,
-                collection.Key,
-                collection.ReleaseGroupId,
-                collection.ReleaseGroup.Name,
-                collection.CreatedAt,
-                collection
-                    .UploadSlots.OrderBy(slot => slot.Name)
-                    .ThenBy(slot => slot.Id)
-                    .Select(slot => new CollectionUploadSlotReadModel(
-                        slot.Id,
-                        slot.Key,
-                        slot.Name,
-                        slot.IsRequired,
-                        slot.PasswordPolicy,
-                        slot.ExpectedArchivePassword,
-                        slot.UploadConfigs.Count
-                    ))
-                    .ToList(),
-                collection
-                    .Releases.OrderBy(release => release.Name)
-                    .ThenBy(release => release.Id)
-                    .Select(release => new ReleaseCollectionReleaseReadModel(
-                        release.Id,
-                        release.Name,
-                        release.ReleaseType,
-                        release.CreatedAt
-                    ))
-                    .ToList()
-            ))
-            .FirstOrDefaultAsync(cancellationToken);
+        var collection = await dbRead
+            .ReleaseCollections.AsNoTracking()
+            .AsSplitQuery()
+            .Include(collection => collection.ReleaseGroup)
+            .Include(collection => collection.UploadSlots)
+                .ThenInclude(slot => slot.UploadConfigs)
+                    .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
+                        .ThenInclude(linkCrypter => linkCrypter.LinkCrypterRegistration)
+            .Include(collection => collection.Releases)
+            .FirstOrDefaultAsync(
+                collection => collection.Id == releaseCollectionId,
+                cancellationToken
+            );
+
+        if (collection is null)
+        {
+            return null;
+        }
+
+        return new ReleaseCollectionDetailReadModel(
+            collection.Id,
+            collection.Name,
+            collection.Key,
+            collection.ReleaseGroupId,
+            collection.ReleaseGroup.Name,
+            collection.CreatedAt,
+            collection
+                .UploadSlots.OrderBy(slot => slot.Name)
+                .ThenBy(slot => slot.Id)
+                .Select(slot => new CollectionUploadSlotReadModel(
+                    slot.Id,
+                    slot.Key,
+                    slot.Name,
+                    slot.IsRequired,
+                    slot.PasswordPolicy,
+                    slot.ExpectedArchivePassword,
+                    slot.UploadConfigs.Count,
+                    GetSharedLinkCrypters(slot)
+                ))
+                .ToList(),
+            collection
+                .Releases.OrderBy(release => release.Name)
+                .ThenBy(release => release.Id)
+                .Select(release => new ReleaseCollectionReleaseReadModel(
+                    release.Id,
+                    release.Name,
+                    release.ReleaseType,
+                    release.CreatedAt
+                ))
+                .ToList()
+        );
     }
 
     public async Task<ReleaseCollection> GetByIdAsync(
@@ -127,9 +145,25 @@ public class ReleaseCollectionRepository(
         );
     }
 
+    public async Task<CollectionUploadSlot> GetUploadSlotForSharedLinkCrypterUpdateAsync(
+        int collectionUploadSlotId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .CollectionUploadSlots.Include(slot => slot.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
+            .FirstAsync(slot => slot.Id == collectionUploadSlotId, cancellationToken);
+    }
+
     public void Add(ReleaseCollection releaseCollection)
     {
         dbWrite.Add(releaseCollection);
+    }
+
+    public void Remove(UploadConfigLinkCrypter uploadConfigLinkCrypter)
+    {
+        dbWrite.Remove(uploadConfigLinkCrypter);
     }
 
     public void Remove(ReleaseCollection releaseCollection)
@@ -140,5 +174,30 @@ public class ReleaseCollectionRepository(
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await dbWrite.SaveChangesAsync(cancellationToken);
+    }
+
+    private static IReadOnlyList<CollectionUploadSlotLinkCrypterReadModel> GetSharedLinkCrypters(
+        CollectionUploadSlot slot
+    )
+    {
+        return slot
+            .UploadConfigs.SelectMany(uploadConfig => uploadConfig.LinkCrypters)
+            .Where(linkCrypter =>
+                linkCrypter.ContainerScope == LinkCrypterContainerScope.ReleaseCollection
+            )
+            .GroupBy(linkCrypter => new
+            {
+                linkCrypter.LinkCrypterRegistrationId,
+                linkCrypter.LinkCrypterRegistration.Name,
+                linkCrypter.LinkCrypterRegistration.IsActive,
+            })
+            .OrderBy(group => group.Key.Name)
+            .Select(group => new CollectionUploadSlotLinkCrypterReadModel(
+                group.Key.LinkCrypterRegistrationId,
+                group.Key.Name,
+                group.Key.IsActive,
+                group.Count()
+            ))
+            .ToList();
     }
 }
