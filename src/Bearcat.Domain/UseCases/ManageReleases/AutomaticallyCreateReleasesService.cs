@@ -2,7 +2,6 @@ using System.IO.Enumeration;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -41,6 +40,7 @@ public class AutomaticallyCreateReleasesService(
         );
 
         var createdCount = 0;
+
         foreach (var candidate in candidates)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -92,14 +92,15 @@ public class AutomaticallyCreateReleasesService(
         release.CreatedAt = localNow;
 
         await releaseCollectionAssignmentService.AssignFromTemplateAsync(
-            release,
-            candidate.Automation.ReleaseTemplate,
-            cancellationToken
+            release: release,
+            releaseTemplate: candidate.Automation.ReleaseTemplate,
+            cancellationToken: cancellationToken
         );
 
         await releaseInfoResolutionService.TryResolveAsync(release, cancellationToken);
 
         repository.Add(release);
+
         repository.Add(
             new Notification
             {

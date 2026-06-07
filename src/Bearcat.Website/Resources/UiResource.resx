@@ -654,8 +654,8 @@
   <data name="ReleaseCollectionReleasesDescription" xml:space="preserve"><value>Releases assigned to this collection.</value></data>
   <data name="ReleaseCollectionResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} collections</value></data>
   <data name="ReleaseCollections" xml:space="preserve"><value>Release collections</value></data>
-  <data name="ReleaseCollectionsIntro" xml:space="preserve"><value>Find grouped releases such as seasons or multi-part distributions.</value></data>
-  <data name="ReleaseCollectionsSubtitle" xml:space="preserve"><value>Grouped release distribution</value></data>
+  <data name="ReleaseCollectionsIntro" xml:space="preserve"><value>Find and manage grouped releases such as seasons of TV shows</value></data>
+  <data name="ReleaseCollectionsSubtitle" xml:space="preserve"><value>Grouped releases</value></data>
   <data name="ReleaseCollectionSubtitle" xml:space="preserve"><value>Grouped releases</value></data>
   <data name="ReleaseCollectionDetectionMode" xml:space="preserve"><value>Collection detection</value></data>
   <data name="ReleaseCollectionDetectionMode.CustomRegex" xml:space="preserve"><value>Custom regex</value></data>

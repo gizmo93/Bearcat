@@ -465,14 +465,18 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
 
         uploadConfigTemplate.Name = CleanOptional(name);
         uploadConfigTemplate.HosterRegistrationId = hosterRegistrationId;
+
         uploadConfigTemplate.ArchiveConfigTemplateId =
             archiveConfigTemplate?.Id ?? archiveConfigTemplateId;
+
         uploadConfigTemplate.PremiumOnlyDownload = premiumOnlyDownload;
         uploadConfigTemplate.CollectionUploadSlotKey = CleanOptional(collectionUploadSlotKey);
         uploadConfigTemplate.CollectionUploadSlotName = CleanOptional(collectionUploadSlotName);
         uploadConfigTemplate.CollectionUploadSlotIsRequired = collectionUploadSlotIsRequired;
+
         uploadConfigTemplate.CollectionUploadSlotPasswordPolicy =
             collectionUploadSlotPasswordPolicy;
+
         uploadConfigTemplate.CollectionUploadSlotExpectedArchivePassword = CleanOptional(
             collectionUploadSlotExpectedArchivePassword
         );
@@ -568,14 +572,14 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
     )
     {
         return await CreateUploadConfigLinkCrypterTemplateAsync(
-            uploadConfigTemplateId,
-            linkCrypterRegistrationId,
-            password,
-            enableCaptcha,
-            enableContainerDownload,
-            enableClickAndLoad,
-            LinkCrypterContainerScope.Release,
-            cancellationToken
+            uploadConfigTemplateId: uploadConfigTemplateId,
+            linkCrypterRegistrationId: linkCrypterRegistrationId,
+            password: password,
+            enableCaptcha: enableCaptcha,
+            enableContainerDownload: enableContainerDownload,
+            enableClickAndLoad: enableClickAndLoad,
+            containerScope: LinkCrypterContainerScope.Release,
+            cancellationToken: cancellationToken
         );
     }
 
@@ -622,13 +626,13 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
     )
     {
         await UpdateUploadConfigLinkCrypterTemplateAsync(
-            uploadConfigLinkCrypterTemplateId,
-            password,
-            enableCaptcha,
-            enableContainerDownload,
-            enableClickAndLoad,
-            LinkCrypterContainerScope.Release,
-            cancellationToken
+            uploadConfigLinkCrypterTemplateId: uploadConfigLinkCrypterTemplateId,
+            password: password,
+            enableCaptcha: enableCaptcha,
+            enableContainerDownload: enableContainerDownload,
+            enableClickAndLoad: enableClickAndLoad,
+            containerScope: LinkCrypterContainerScope.Release,
+            cancellationToken: cancellationToken
         );
     }
 

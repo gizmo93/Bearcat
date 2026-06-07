@@ -2,7 +2,7 @@ namespace Bearcat.Domain.ValueObjects;
 
 public enum ReleaseCollectionDetectionMode
 {
-    Disabled = 0,
-    SeriesEpisodePattern = 1,
-    CustomRegex = 2,
+    Disabled = 1,
+    SeriesEpisodePattern = 2,
+    CustomRegex = 3,
 }

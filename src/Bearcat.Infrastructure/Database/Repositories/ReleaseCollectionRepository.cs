@@ -71,10 +71,10 @@ public class ReleaseCollectionRepository(
             .ToListAsync(cancellationToken);
 
         return new PagedResult<ReleaseCollectionReadModel>(
-            items,
-            totalCount,
-            query.PageIndex,
-            query.PageSize
+            Items: items,
+            TotalCount: totalCount,
+            PageIndex: query.PageIndex,
+            PageSize: query.PageSize
         );
     }
 
@@ -146,35 +146,38 @@ public class ReleaseCollectionRepository(
             .ToDictionary(
                 group => group.Key,
                 group =>
-                    (IReadOnlyList<CollectionUploadSlotLinkCrypterReadModel>)
-                        group
-                            .GroupBy(linkCrypter => new
-                            {
-                                linkCrypter.LinkCrypterRegistrationId,
-                                linkCrypter.LinkCrypterRegistrationName,
-                                linkCrypter.IsActive,
-                            })
-                            .OrderBy(linkCrypterGroup =>
-                                linkCrypterGroup.Key.LinkCrypterRegistrationName
-                            )
-                            .Select(linkCrypterGroup =>
-                            {
-                                var settings = linkCrypterGroup
-                                    .OrderBy(linkCrypter => linkCrypter.UploadConfigId)
-                                    .First();
+                    group
+                        .GroupBy(linkCrypter => new
+                        {
+                            linkCrypter.LinkCrypterRegistrationId,
+                            linkCrypter.LinkCrypterRegistrationName,
+                            linkCrypter.IsActive,
+                        })
+                        .OrderBy(linkCrypterGroup =>
+                            linkCrypterGroup.Key.LinkCrypterRegistrationName
+                        )
+                        .Select(linkCrypterGroup =>
+                        {
+                            var settings = linkCrypterGroup
+                                .OrderBy(linkCrypter => linkCrypter.UploadConfigId)
+                                .First();
 
-                                return new CollectionUploadSlotLinkCrypterReadModel(
-                                    linkCrypterGroup.Key.LinkCrypterRegistrationId,
-                                    linkCrypterGroup.Key.LinkCrypterRegistrationName,
-                                    linkCrypterGroup.Key.IsActive,
-                                    settings.Password,
-                                    settings.EnableCaptcha,
-                                    settings.EnableContainerDownload,
-                                    settings.EnableClickAndLoad,
-                                    linkCrypterGroup.Count()
-                                );
-                            })
-                            .ToList()
+                            return new CollectionUploadSlotLinkCrypterReadModel(
+                                LinkCrypterRegistrationId: linkCrypterGroup
+                                    .Key
+                                    .LinkCrypterRegistrationId,
+                                LinkCrypterRegistrationName: linkCrypterGroup
+                                    .Key
+                                    .LinkCrypterRegistrationName,
+                                IsActive: linkCrypterGroup.Key.IsActive,
+                                Password: settings.Password,
+                                EnableCaptcha: settings.EnableCaptcha,
+                                EnableContainerDownload: settings.EnableContainerDownload,
+                                EnableClickAndLoad: settings.EnableClickAndLoad,
+                                UploadConfigCount: linkCrypterGroup.Count()
+                            );
+                        })
+                        .ToList()
             );
 
         var containersByUploadSlotId = await dbRead
@@ -204,9 +207,7 @@ public class ReleaseCollectionRepository(
             .GroupBy(container => container.CollectionUploadSlotId)
             .ToDictionary(
                 group => group.Key,
-                group =>
-                    (IReadOnlyList<CollectionUploadSlotContainerReadModel>)
-                        group.Select(container => container.Container).ToList()
+                group => group.Select(container => container.Container).ToList()
             );
 
         var latestUploads = await dbRead
@@ -251,13 +252,13 @@ public class ReleaseCollectionRepository(
             .ToListAsync(cancellationToken);
 
         return new ReleaseCollectionDetailReadModel(
-            collection.Id,
-            collection.Name,
-            collection.Key,
-            collection.ReleaseGroupId,
-            collection.ReleaseGroupName,
-            collection.CreatedAt,
-            uploadSlots
+            ReleaseCollectionId: collection.Id,
+            Name: collection.Name,
+            Key: collection.Key,
+            ReleaseGroupId: collection.ReleaseGroupId,
+            ReleaseGroupName: collection.ReleaseGroupName,
+            CreatedAt: collection.CreatedAt,
+            UploadSlots: uploadSlots
                 .Select(slot =>
                 {
                     var sharedLinkCrypters = sharedLinkCryptersBySlotId.TryGetValue(
@@ -272,33 +273,33 @@ public class ReleaseCollectionRepository(
                         : [];
 
                     return new CollectionUploadSlotReadModel(
-                        slot.Id,
-                        slot.Key,
-                        slot.Name,
-                        slot.IsRequired,
-                        slot.PasswordPolicy,
-                        slot.ExpectedArchivePassword,
-                        slot.UploadConfigCount,
-                        slot.UploadCount,
-                        sharedLinkCrypters,
-                        containers
+                        CollectionUploadSlotId: slot.Id,
+                        Key: slot.Key,
+                        Name: slot.Name,
+                        IsRequired: slot.IsRequired,
+                        PasswordPolicy: slot.PasswordPolicy,
+                        ExpectedArchivePassword: slot.ExpectedArchivePassword,
+                        UploadConfigCount: slot.UploadConfigCount,
+                        UploadCount: slot.UploadCount,
+                        SharedLinkCrypters: sharedLinkCrypters,
+                        Containers: containers
                     );
                 })
                 .ToList(),
-            releases
+            Releases: releases
                 .Select(release =>
                 {
                     latestUploadsByReleaseId.TryGetValue(release.Id, out var latestUpload);
 
                     return new ReleaseCollectionReleaseReadModel(
-                        release.Id,
-                        release.Name,
-                        release.ReleaseType,
-                        release.CreatedAt,
-                        release.ActiveUploadConfigsCount,
-                        release.OnlineUploadConfigsCount,
-                        latestUpload?.UploadId,
-                        latestUpload?.UploadConfigName
+                        ReleaseId: release.Id,
+                        Name: release.Name,
+                        ReleaseType: release.ReleaseType,
+                        CreatedAt: release.CreatedAt,
+                        ActiveUploadConfigsCount: release.ActiveUploadConfigsCount,
+                        OnlineUploadConfigsCount: release.OnlineUploadConfigsCount,
+                        LatestUploadId: latestUpload?.UploadId,
+                        LatestUploadConfigName: latestUpload?.UploadConfigName
                     );
                 })
                 .ToList()

@@ -2,7 +2,7 @@ namespace Bearcat.Domain.ValueObjects;
 
 public enum CollectionUploadSlotPasswordPolicy
 {
-    Ignore = 0,
-    MustMatchAcrossReleases = 1,
-    MustEqualExpectedValue = 2,
+    Ignore = 1,
+    MustMatchAcrossReleases = 2,
+    MustEqualExpectedValue = 3,
 }
