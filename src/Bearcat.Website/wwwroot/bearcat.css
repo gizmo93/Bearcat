@@ -1887,6 +1887,53 @@ a {
     gap: 0.25rem;
 }
 
+.bearcat-collection-containers {
+    border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--muted) 34%, transparent);
+    padding: 0.75rem 1rem 1rem;
+}
+
+.bearcat-collection-containers-title {
+    margin: 0 0 0.5rem;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.bearcat-collection-container-list {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    background: var(--background);
+}
+
+.bearcat-collection-container-row {
+    display: grid;
+    gap: 0.35rem;
+    padding: 0.65rem 0.75rem;
+    border-top: 1px solid var(--border);
+}
+
+.bearcat-collection-container-row:first-child {
+    border-top: 0;
+}
+
+.bearcat-collection-container-meta {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.bearcat-collection-container-link {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .bearcat-mobile-label {
     margin: 0 0 0.25rem;
     color: var(--muted-foreground);
@@ -2303,6 +2350,16 @@ a {
 
     .bearcat-collection-slots-grid {
         grid-template-columns: minmax(0, 1fr) minmax(160px, 0.75fr) 150px 110px 120px 84px;
+    }
+
+    .bearcat-collection-containers {
+        padding-left: calc(1rem + min(28%, 23rem));
+    }
+
+    .bearcat-collection-container-row {
+        grid-template-columns: minmax(15rem, 0.55fr) minmax(0, 1fr);
+        align-items: center;
+        gap: 1rem;
     }
 
     .bearcat-collection-releases-grid {

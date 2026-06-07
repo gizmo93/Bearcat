@@ -85,46 +85,6 @@
                                                 }
                                             </div>
                                         }
-
-                                        @if (slot.Containers.Count > 0)
-                                        {
-                                            <div class="mt-3 space-y-2">
-                                                <p class="text-xs font-medium text-muted-foreground">@L["ContainerLinks"]</p>
-                                                <div class="space-y-2">
-                                                    @foreach (var container in slot.Containers)
-                                                    {
-                                                        <div class="rounded-md border border-border/70 px-3 py-2">
-                                                            <div class="flex min-w-0 flex-wrap items-center gap-2">
-                                                                <span class="truncate text-sm font-medium" title="@container.LinkCrypterRegistrationName">
-                                                                    @container.LinkCrypterRegistrationName
-                                                                </span>
-                                                                <BbBadge Variant="@GetContainerVariant(container.State)">
-                                                                    @L.Localize(container.State)
-                                                                </BbBadge>
-                                                                <BbBadge Variant="BadgeVariant.Outline">
-                                                                    @container.SourceUploadCount @L["Uploads"]
-                                                                </BbBadge>
-                                                                <ErrorMessagesTooltip Messages="container.Errors" />
-                                                            </div>
-                                                            @if (string.IsNullOrWhiteSpace(container.ContainerUrl))
-                                                            {
-                                                                <p class="mt-1 text-sm text-muted-foreground">-</p>
-                                                            }
-                                                            else
-                                                            {
-                                                                <a class="bearcat-upload-link mt-1"
-                                                                   href="@container.ContainerUrl"
-                                                                   target="_blank"
-                                                                   rel="noreferrer noopener"
-                                                                   title="@container.ContainerUrl">
-                                                                    @container.ContainerUrl
-                                                                </a>
-                                                            }
-                                                        </div>
-                                                    }
-                                                </div>
-                                            </div>
-                                        }
                                     </div>
                                     <div>
                                         <p class="bearcat-mobile-label">@L["PasswordPolicy"]</p>
@@ -149,6 +109,62 @@
                                         </BbButton>
                                     </div>
                                 </div>
+                                @if (slot.Containers.Count > 0)
+                                {
+                                    <div class="bearcat-collection-containers">
+                                        <p class="bearcat-collection-containers-title">@L["ContainerLinks"]</p>
+                                        <div class="bearcat-collection-container-list">
+                                            @foreach (var container in slot.Containers)
+                                            {
+                                                var copyTargetId = $"release-collection-container-{ReleaseCollectionId}-{container.LinkCrypterContainerId}";
+
+                                                <div class="bearcat-collection-container-row">
+                                                    <div class="bearcat-collection-container-meta">
+                                                        <span class="truncate text-sm font-medium" title="@container.LinkCrypterRegistrationName">
+                                                            @container.LinkCrypterRegistrationName
+                                                        </span>
+                                                        <BbBadge Variant="@GetContainerVariant(container.State)">
+                                                            @L.Localize(container.State)
+                                                        </BbBadge>
+                                                        <BbBadge Variant="BadgeVariant.Outline">
+                                                            @container.SourceUploadCount @L["Uploads"]
+                                                        </BbBadge>
+                                                        <ErrorMessagesTooltip Messages="container.Errors" />
+                                                    </div>
+                                                    @if (string.IsNullOrWhiteSpace(container.ContainerUrl))
+                                                    {
+                                                        <span class="text-sm text-muted-foreground">-</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="bearcat-collection-container-link">
+                                                            <a class="bearcat-upload-link"
+                                                               href="@container.ContainerUrl"
+                                                               target="_blank"
+                                                               rel="noreferrer noopener"
+                                                               title="@container.ContainerUrl">
+                                                                @container.ContainerUrl
+                                                            </a>
+                                                            <textarea id="@copyTargetId" hidden readonly>@container.ContainerUrl</textarea>
+                                                            <button type="button"
+                                                                    class="bearcat-copy-button bearcat-copy-icon-button"
+                                                                    aria-label="@L["CopyLink"]"
+                                                                    title="@L["CopyLink"]"
+                                                                    data-copy-target="@copyTargetId"
+                                                                    data-copy-label="@L["CopyLink"]"
+                                                                    data-copy-success-label="@L["Copied"]"
+                                                                    data-copy-failure-label="@L["CopyFailed"]"
+                                                                    onclick="window.bearcat.copyFromTarget(this)">
+                                                                <LucideIcon Name="copy" class="h-4 w-4" />
+                                                                <span class="sr-only bearcat-copy-button-label">@L["CopyLink"]</span>
+                                                            </button>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
                             </div>
                         }
                     </div>
