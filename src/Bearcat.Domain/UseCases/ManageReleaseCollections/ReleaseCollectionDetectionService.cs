@@ -115,14 +115,8 @@ public static partial class ReleaseCollectionDetectionService
             templateValues[$"{groupName}:dotToSpace"] = ReplaceDotsWithSpaces(groupValue);
         }
 
-        var key = RenderTemplate(
-            releaseTemplate.ReleaseCollectionKeyTemplate,
-            templateValues
-        );
-        var name = RenderTemplate(
-            releaseTemplate.ReleaseCollectionNameTemplate,
-            templateValues
-        );
+        var key = RenderTemplate(releaseTemplate.ReleaseCollectionKeyTemplate, templateValues);
+        var name = RenderTemplate(releaseTemplate.ReleaseCollectionNameTemplate, templateValues);
 
         return new ReleaseCollectionDetectionResult(NormalizeKey(key), NormalizeSpaces(name));
     }
@@ -132,14 +126,15 @@ public static partial class ReleaseCollectionDetectionService
         IReadOnlyDictionary<string, string> templateValues
     )
     {
-        return TemplateTokenRegex().Replace(
-            template,
-            match =>
-            {
-                var token = match.Groups["token"].Value;
-                return templateValues.TryGetValue(token, out var value) ? value : string.Empty;
-            }
-        );
+        return TemplateTokenRegex()
+            .Replace(
+                template,
+                match =>
+                {
+                    var token = match.Groups["token"].Value;
+                    return templateValues.TryGetValue(token, out var value) ? value : string.Empty;
+                }
+            );
     }
 
     private static Match? MatchCustomPattern(string releaseName, string pattern)

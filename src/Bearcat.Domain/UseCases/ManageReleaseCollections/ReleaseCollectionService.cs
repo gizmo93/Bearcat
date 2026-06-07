@@ -184,7 +184,7 @@ public class ReleaseCollectionService(
         var settingsByRegistrationId = linkCrypterSettings
             .GroupBy(settings => settings.LinkCrypterRegistrationId)
             .ToDictionary(group => group.Key, group => group.Last());
-        
+
         var uploadSlot = await writeRepository.GetUploadSlotForSharedLinkCrypterUpdateAsync(
             collectionUploadSlotId,
             cancellationToken
