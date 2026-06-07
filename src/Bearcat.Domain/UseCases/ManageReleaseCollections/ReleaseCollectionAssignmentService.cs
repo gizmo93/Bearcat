@@ -46,16 +46,25 @@ public class ReleaseCollectionAssignmentService(
             .UploadConfigTemplates.OrderBy(template => template.Id)
             .ToList();
 
-        for (var index = 0; index < uploadConfigTemplates.Count && index < release.UploadConfigs.Count; index++)
-        {
-            var uploadConfigTemplate = uploadConfigTemplates[index];
+        var uploadConfigPairs = uploadConfigTemplates
+            .Zip(
+                release.UploadConfigs,
+                (template, uploadConfig) => new
+                {
+                    Template = template,
+                    UploadConfig = uploadConfig,
+                }
+            )
+            .ToList();
 
-            if (string.IsNullOrWhiteSpace(uploadConfigTemplate.CollectionUploadSlotKey))
+        foreach (var pair in uploadConfigPairs)
+        {
+            if (string.IsNullOrWhiteSpace(pair.Template.CollectionUploadSlotKey))
             {
                 continue;
             }
 
-            var slotKey = uploadConfigTemplate.CollectionUploadSlotKey.Trim();
+            var slotKey = pair.Template.CollectionUploadSlotKey.Trim();
             var slot = releaseCollection.UploadSlots.FirstOrDefault(existingSlot =>
                 string.Equals(existingSlot.Key, slotKey, StringComparison.Ordinal)
             );
@@ -65,21 +74,21 @@ public class ReleaseCollectionAssignmentService(
                 slot = new CollectionUploadSlot
                 {
                     Key = slotKey,
-                    Name = string.IsNullOrWhiteSpace(uploadConfigTemplate.CollectionUploadSlotName)
+                    Name = string.IsNullOrWhiteSpace(pair.Template.CollectionUploadSlotName)
                         ? slotKey
-                        : uploadConfigTemplate.CollectionUploadSlotName.Trim(),
-                    IsRequired = uploadConfigTemplate.CollectionUploadSlotIsRequired,
-                    PasswordPolicy = uploadConfigTemplate.CollectionUploadSlotPasswordPolicy,
+                        : pair.Template.CollectionUploadSlotName.Trim(),
+                    IsRequired = pair.Template.CollectionUploadSlotIsRequired,
+                    PasswordPolicy = pair.Template.CollectionUploadSlotPasswordPolicy,
                     ExpectedArchivePassword = string.IsNullOrWhiteSpace(
-                        uploadConfigTemplate.CollectionUploadSlotExpectedArchivePassword
+                        pair.Template.CollectionUploadSlotExpectedArchivePassword
                     )
                         ? null
-                        : uploadConfigTemplate.CollectionUploadSlotExpectedArchivePassword.Trim(),
+                        : pair.Template.CollectionUploadSlotExpectedArchivePassword.Trim(),
                 };
                 releaseCollection.UploadSlots.Add(slot);
             }
 
-            release.UploadConfigs[index].CollectionUploadSlot = slot;
+            pair.UploadConfig.CollectionUploadSlot = slot;
         }
     }
 }
