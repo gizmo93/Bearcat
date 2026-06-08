@@ -27,6 +27,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
     private Mock<ILinkCrypterConfig> linkCrypterConfigMock = null!;
     private Mock<ILinkCrypterFactory> linkCrypterFactoryMock = null!;
     private LinkCrypterContainerService service = null!;
+    private CollectionLinkCrypterContainerService collectionContainerService = null!;
 
     [SetUp]
     public void Setup()
@@ -43,13 +44,29 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             .Setup(f => f.Get(LinkCrypterClassName))
             .Returns(linkCrypterMock.Object);
 
+        var repository = new LinkCrypterContainerCreationWriteRepository(dbContext);
+        var notificationService = new NotificationService(
+            new NotificationRepository(dbContext),
+            CreateTimeProvider()
+        );
+
+        collectionContainerService = new CollectionLinkCrypterContainerService(
+            repository,
+            Mock.Of<ILogger<CollectionLinkCrypterContainerService>>(),
+            linkCrypterFactoryMock.Object,
+            CreateTimeProvider(),
+            notificationService,
+            NoOpSecretProtector.Instance
+        );
+
         service = new LinkCrypterContainerService(
-            new LinkCrypterContainerCreationWriteRepository(dbContext),
+            repository,
             Mock.Of<ILogger<LinkCrypterContainerService>>(),
             linkCrypterFactoryMock.Object,
             CreateTimeProvider(),
-            new NotificationService(new NotificationRepository(dbContext), CreateTimeProvider()),
-            NoOpSecretProtector.Instance
+            notificationService,
+            NoOpSecretProtector.Instance,
+            collectionContainerService
         );
     }
 
@@ -328,7 +345,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             )
             .ReturnsAsync(new UpdateContainerResult(true, null));
 
-        await service.UpdateCollectionContainersAsync(
+        await collectionContainerService.UpdateContainersAsync(
             seed.CollectionUploadSlotId,
             CancellationToken.None
         );
@@ -363,7 +380,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         uploadConfigs[1].ArchiveConfig.ArchivePassword = "different";
         await dbContext.SaveChangesAsync();
 
-        await service.UpdateCollectionContainersAsync(
+        await collectionContainerService.UpdateContainersAsync(
             seed.CollectionUploadSlotId,
             CancellationToken.None
         );
@@ -393,7 +410,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         dbContext.UploadConfigLinkCrypters.RemoveRange(linkCrypters);
         await dbContext.SaveChangesAsync();
 
-        await service.UpdateCollectionContainersAsync(
+        await collectionContainerService.UpdateContainersAsync(
             seed.CollectionUploadSlotId,
             CancellationToken.None
         );

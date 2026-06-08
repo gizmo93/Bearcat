@@ -100,7 +100,7 @@ public class ReleaseCollectionAssignmentService(
             {
                 CollectionLinkCrypterSync.ApplyToNewUploadConfig(
                     uploadConfig,
-                    CollectionLinkCrypterSync.GetSettings(slot)
+                    CollectionLinkCrypterSync.GetSettingsFromSlot(slot)
                 );
             }
 

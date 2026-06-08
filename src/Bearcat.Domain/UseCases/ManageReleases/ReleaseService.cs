@@ -188,7 +188,7 @@ public class ReleaseService(
         DateTime localNow
     )
     {
-        var releaseName = CleanOptional(name) ?? GetFolderName(releaseFolderPath);
+        var releaseName = CleanOptional(name) ?? FolderPathHelper.GetFolderName(releaseFolderPath);
 
         var release = new Release
         {
@@ -330,14 +330,5 @@ public class ReleaseService(
             .Where(link => !string.IsNullOrWhiteSpace(link))
             .Select(link => link.Trim())
             .ToList();
-    }
-
-    private static string GetFolderName(string folderPath)
-    {
-        var normalizedPath = folderPath.TrimEnd(
-            Path.DirectorySeparatorChar,
-            Path.AltDirectorySeparatorChar
-        );
-        return Path.GetFileName(normalizedPath);
     }
 }

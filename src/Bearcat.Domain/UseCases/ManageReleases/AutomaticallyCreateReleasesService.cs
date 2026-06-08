@@ -164,18 +164,9 @@ public class AutomaticallyCreateReleasesService(
 
         return FileSystemName.MatchesSimpleExpression(
             folderNamePattern,
-            GetFolderName(folderPath),
+            FolderPathHelper.GetFolderName(folderPath),
             ignoreCase: true
         );
-    }
-
-    private static string GetFolderName(string folderPath)
-    {
-        var normalizedPath = folderPath.TrimEnd(
-            Path.DirectorySeparatorChar,
-            Path.AltDirectorySeparatorChar
-        );
-        return Path.GetFileName(normalizedPath);
     }
 
     private sealed record ReleaseFolderCandidate(

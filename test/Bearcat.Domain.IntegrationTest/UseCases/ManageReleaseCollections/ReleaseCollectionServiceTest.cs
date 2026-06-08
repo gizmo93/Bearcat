@@ -29,13 +29,13 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         repository = new ReleaseCollectionRepository(dbContext, dbContext);
         service = new ReleaseCollectionService(
             repository,
-            new LinkCrypterContainerService(
+            new CollectionLinkCrypterContainerService(
                 new LinkCrypterContainerCreationWriteRepository(dbContext),
                 Microsoft
                     .Extensions
                     .Logging
                     .Abstractions
-                    .NullLogger<LinkCrypterContainerService>
+                    .NullLogger<CollectionLinkCrypterContainerService>
                     .Instance,
                 new Moq.Mock<Bearcat.Abstractions.LinkCrypter.ILinkCrypterFactory>().Object,
                 CreateTimeProvider(),

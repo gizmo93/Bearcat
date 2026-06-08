@@ -10,7 +10,7 @@ namespace Bearcat.Domain.UseCases.ManageReleaseCollections;
 
 public class ReleaseCollectionService(
     IReleaseCollectionWriteRepository writeRepository,
-    LinkCrypterContainerService linkCrypterContainerService,
+    CollectionLinkCrypterContainerService collectionContainerService,
     TimeProvider timeProvider
 )
 {
@@ -190,7 +190,9 @@ public class ReleaseCollectionService(
         CancellationToken cancellationToken = default
     )
     {
-        var settingsByRegistrationId = CollectionLinkCrypterSync.GetSettings(linkCrypterSettings);
+        var settingsByRegistrationId = CollectionLinkCrypterSync.NormalizeSettings(
+            linkCrypterSettings
+        );
 
         var uploadSlot = await writeRepository.GetUploadSlotForSharedLinkCrypterUpdateAsync(
             collectionUploadSlotId,
@@ -208,7 +210,7 @@ public class ReleaseCollectionService(
 
         await writeRepository.SaveChangesAsync(cancellationToken);
 
-        await linkCrypterContainerService.UpdateCollectionContainersAsync(
+        await collectionContainerService.UpdateContainersAsync(
             collectionUploadSlotId,
             cancellationToken
         );

@@ -7,9 +7,10 @@ namespace Bearcat.Domain.UseCases.ManageReleaseCollections;
 
 public static class CollectionLinkCrypterSync
 {
-    public static IReadOnlyDictionary<int, CollectionUploadSlotLinkCrypterSettings> GetSettings(
-        CollectionUploadSlot slot
-    )
+    public static IReadOnlyDictionary<
+        int,
+        CollectionUploadSlotLinkCrypterSettings
+    > GetSettingsFromSlot(CollectionUploadSlot slot)
     {
         return slot
             .UploadConfigs.SelectMany(uploadConfig => uploadConfig.LinkCrypters)
@@ -23,9 +24,10 @@ public static class CollectionLinkCrypterSync
             );
     }
 
-    public static IReadOnlyDictionary<int, CollectionUploadSlotLinkCrypterSettings> GetSettings(
-        IReadOnlyCollection<CollectionUploadSlotLinkCrypterSettings> settings
-    )
+    public static IReadOnlyDictionary<
+        int,
+        CollectionUploadSlotLinkCrypterSettings
+    > NormalizeSettings(IReadOnlyCollection<CollectionUploadSlotLinkCrypterSettings> settings)
     {
         return settings
             .GroupBy(item => item.LinkCrypterRegistrationId)
