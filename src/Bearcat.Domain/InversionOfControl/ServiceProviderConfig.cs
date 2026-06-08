@@ -49,6 +49,10 @@ public static class ServiceProviderConfig
             services.AddScoped<ArchiveCreationService>();
             services.AddScoped<ArchiveCleanupService>();
             services.AddScoped<UploadFilesService>();
+            services.AddScoped<UploadFinalizationService>();
+            services.AddScoped<FileUploadExecutionService>();
+            services.AddScoped<MissingFileValidationService>();
+            services.AddScoped<UploadConcurrencyService>();
             services.AddScoped<UploadStateService>();
             services.AddScoped<UploadStateService>();
             services.AddScoped<INotificationService, NotificationService>();
