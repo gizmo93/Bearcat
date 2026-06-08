@@ -127,13 +127,14 @@ public class ForumPostRenderService(
         }
 
         return new ForumPostTemplateRenderContext(
-            RenderModel: new ForumPostTemplateRenderModel(
-                release: ToReleaseModel(release, nfo),
-                releaseInfo: info is null
+            RenderModel: new ForumPostTemplateRenderModel
+            {
+                Release = ToReleaseModel(release, nfo),
+                ReleaseInfo = info is null
                     ? ForumPostTemplateReleaseInfoModel.Empty
                     : ToReleaseInfoModel(info),
-                uploads: uploadModels
-            ),
+                Uploads = uploadModels,
+            },
             ImageLinks: ToImageLinksScriptObject(imageUploads)
         );
     }
@@ -153,21 +154,23 @@ public class ForumPostRenderService(
             );
 
         var linkCrypters = upload
-            .LinkCrypterLinks.Select(link => new ForumPostTemplateLinkCrypterModel(
-                name: link.LinkCrypterRegistrationName,
-                containerLink: link.ContainerUrl,
-                createdAt: link.CreatedAt
-            ))
+            .LinkCrypterLinks.Select(link => new ForumPostTemplateLinkCrypterModel
+            {
+                Name = link.LinkCrypterRegistrationName,
+                ContainerLink = link.ContainerUrl,
+                CreatedAt = link.CreatedAt,
+            })
             .ToList();
 
-        return new ForumPostTemplateUploadModel(
-            name: upload.UploadConfigName,
-            hosterName: upload.HosterRegistrationName,
-            uploadedAt: upload.UploadedAt,
-            archivePassword: upload.ArchivePassword ?? string.Empty,
-            links: directLinks,
-            linkCrypters: linkCrypters
-        );
+        return new ForumPostTemplateUploadModel
+        {
+            Name = upload.UploadConfigName,
+            HosterName = upload.HosterRegistrationName,
+            UploadedAt = upload.UploadedAt,
+            ArchivePassword = upload.ArchivePassword ?? string.Empty,
+            Links = directLinks,
+            LinkCrypters = linkCrypters,
+        };
     }
 
     private static ForumPostTemplateReleaseModel ToReleaseModel(
@@ -175,7 +178,7 @@ public class ForumPostRenderService(
         string? nfo
     )
     {
-        return new ForumPostTemplateReleaseModel(name: release.Name, nfo: nfo ?? string.Empty);
+        return new ForumPostTemplateReleaseModel { Name = release.Name, Nfo = nfo ?? string.Empty };
     }
 
     private static ForumPostTemplateReleaseInfoModel ToReleaseInfoModel(ReleaseInfoReadModel info)
@@ -183,34 +186,39 @@ public class ForumPostRenderService(
         var size = info.SizeNumber is null
             ? string.Empty
             : $"{info.SizeNumber} {info.SizeUnit}".Trim();
+
         var externalInfos = info
-            .ExternalInfos.Select(externalInfo => new ForumPostTemplateExternalInfoModel(
-                type: externalInfo.Type.ToString(),
-                title: externalInfo.Title ?? string.Empty,
-                urls: externalInfo.Urls.Select(url => url.Url).ToList()
-            ))
+            .ExternalInfos.Select(externalInfo => new ForumPostTemplateExternalInfoModel
+            {
+                Type = externalInfo.Type.ToString(),
+                Title = externalInfo.Title ?? string.Empty,
+                Urls = externalInfo.Urls.Select(url => url.Url).ToList(),
+            })
             .ToList();
 
-        return new ForumPostTemplateReleaseInfoModel(
-            releaseName: info.ReleaseName,
-            databaseUrl: info.ReleaseDatabaseUrl ?? string.Empty,
-            size: size,
-            sizeNumber: info.SizeNumber,
-            sizeUnit: info.SizeUnit ?? string.Empty,
-            videoType: info.VideoType ?? string.Empty,
-            audioType: info.AudioType ?? string.Empty,
-            genre: info.Genre ?? string.Empty,
-            description: info.Description ?? string.Empty,
-            video: new ForumPostTemplateMediaInfoModel(
-                type: info.VideoType ?? string.Empty,
-                format: info.VideoType ?? string.Empty
-            ),
-            audio: new ForumPostTemplateMediaInfoModel(
-                type: info.AudioType ?? string.Empty,
-                format: info.AudioType ?? string.Empty
-            ),
-            externalInfos: externalInfos
-        );
+        return new ForumPostTemplateReleaseInfoModel
+        {
+            ReleaseName = info.ReleaseName,
+            DatabaseUrl = info.ReleaseDatabaseUrl ?? string.Empty,
+            Size = size,
+            SizeNumber = info.SizeNumber,
+            SizeUnit = info.SizeUnit ?? string.Empty,
+            VideoType = info.VideoType ?? string.Empty,
+            AudioType = info.AudioType ?? string.Empty,
+            Genre = info.Genre ?? string.Empty,
+            Description = info.Description ?? string.Empty,
+            Video = new ForumPostTemplateMediaInfoModel
+            {
+                Type = info.VideoType ?? string.Empty,
+                Format = info.VideoType ?? string.Empty,
+            },
+            Audio = new ForumPostTemplateMediaInfoModel
+            {
+                Type = info.AudioType ?? string.Empty,
+                Format = info.AudioType ?? string.Empty,
+            },
+            ExternalInfos = externalInfos,
+        };
     }
 
     private static ScriptObject ToImageLinksScriptObject(
