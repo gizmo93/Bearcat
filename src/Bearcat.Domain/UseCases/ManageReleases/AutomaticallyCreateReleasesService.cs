@@ -78,7 +78,7 @@ public class AutomaticallyCreateReleasesService(
 
         var localNow = timeProvider.GetLocalNow();
 
-        var release = ReleaseService.CreateFromTemplate(
+        var releaseData = ReleaseService.CreateFromTemplateData(
             releaseTemplate: candidate.Automation.ReleaseTemplate,
             releaseFolderPath: candidate.FolderPath,
             name: null,
@@ -88,12 +88,14 @@ public class AutomaticallyCreateReleasesService(
                 : [],
             localNow: localNow
         );
+        var release = releaseData.Release;
 
         release.CreatedAt = localNow;
 
         await releaseCollectionAssignmentService.AssignFromTemplateAsync(
             release: release,
             releaseTemplate: candidate.Automation.ReleaseTemplate,
+            uploadConfigMatches: releaseData.UploadConfigMatches,
             cancellationToken: cancellationToken
         );
 

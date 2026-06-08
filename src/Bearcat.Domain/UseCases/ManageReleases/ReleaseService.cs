@@ -133,7 +133,7 @@ public class ReleaseService(
 
         var localNow = timeProvider.GetLocalNow();
 
-        var release = CreateFromTemplate(
+        var releaseData = CreateFromTemplateData(
             releaseTemplate: releaseTemplate,
             releaseFolderPath: releaseFolderPath,
             name: name,
@@ -143,12 +143,14 @@ public class ReleaseService(
                 : [],
             localNow: localNow
         );
+        var release = releaseData.Release;
 
         release.CreatedAt = localNow;
 
         await releaseCollectionAssignmentService.AssignFromTemplateAsync(
             release: release,
             releaseTemplate: releaseTemplate,
+            uploadConfigMatches: releaseData.UploadConfigMatches,
             cancellationToken: cancellationToken
         );
 
@@ -159,6 +161,25 @@ public class ReleaseService(
     }
 
     public static Release CreateFromTemplate(
+        ReleaseTemplate releaseTemplate,
+        string releaseFolderPath,
+        string? name,
+        ReleaseType releaseType,
+        IReadOnlyList<ArchiverDto> archivers,
+        DateTime localNow
+    )
+    {
+        return CreateFromTemplateData(
+            releaseTemplate,
+            releaseFolderPath,
+            name,
+            releaseType,
+            archivers,
+            localNow
+        ).Release;
+    }
+
+    public static ReleaseFromTemplateData CreateFromTemplateData(
         ReleaseTemplate releaseTemplate,
         string releaseFolderPath,
         string? name,
@@ -220,8 +241,12 @@ public class ReleaseService(
             .UploadConfigTemplates.OrderBy(template => template.Id)
             .ToList();
 
-        release.UploadConfigs = uploadConfigTemplates
-            .Select(template => new UploadConfig
+        var uploadConfigMatches = new List<ReleaseUploadConfigMatch>(uploadConfigTemplates.Count);
+        release.UploadConfigs = [];
+
+        foreach (var template in uploadConfigTemplates)
+        {
+            var uploadConfig = new UploadConfig
             {
                 Name = CleanOptional(template.Name) ?? template.HosterRegistration.Name,
                 HosterRegistrationId = template.HosterRegistrationId,
@@ -244,8 +269,11 @@ public class ReleaseService(
                         LinkCrypterContainers = [],
                     })
                     .ToList(),
-            })
-            .ToList();
+            };
+
+            release.UploadConfigs.Add(uploadConfig);
+            uploadConfigMatches.Add(new ReleaseUploadConfigMatch(template, uploadConfig));
+        }
 
         release.ImageUploadConfigs = releaseTemplate
             .ImageUploadConfigTemplates.Select(template => new ImageUploadConfig
@@ -256,7 +284,7 @@ public class ReleaseService(
             })
             .ToList();
 
-        return release;
+        return new ReleaseFromTemplateData(release, uploadConfigMatches);
     }
 
     private static void EnsureInitialUnmanagedArchive(

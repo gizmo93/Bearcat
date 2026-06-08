@@ -1,9 +1,13 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
+using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
+using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.Security;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -23,7 +27,26 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
     {
         dbContext = Database.CreateDbContext();
         repository = new ReleaseCollectionRepository(dbContext, dbContext);
-        service = new ReleaseCollectionService(repository, CreateTimeProvider());
+        service = new ReleaseCollectionService(
+            repository,
+            new LinkCrypterContainerService(
+                new LinkCrypterContainerCreationWriteRepository(dbContext),
+                Microsoft
+                    .Extensions
+                    .Logging
+                    .Abstractions
+                    .NullLogger<LinkCrypterContainerService>
+                    .Instance,
+                new Moq.Mock<Bearcat.Abstractions.LinkCrypter.ILinkCrypterFactory>().Object,
+                CreateTimeProvider(),
+                new NotificationService(
+                    new NotificationRepository(dbContext),
+                    CreateTimeProvider()
+                ),
+                NoOpSecretProtector.Instance
+            ),
+            CreateTimeProvider()
+        );
     }
 
     [TearDown]
@@ -177,6 +200,12 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         await assignmentService.AssignFromTemplateAsync(
             release,
             releaseTemplate,
+            [
+                new ReleaseUploadConfigMatch(
+                    releaseTemplate.UploadConfigTemplates.Single(),
+                    release.UploadConfigs.Single()
+                ),
+            ],
             CancellationToken.None
         );
 

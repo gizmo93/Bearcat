@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
+using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -18,6 +19,7 @@ public class ReleaseCollectionAssignmentService(
     public async Task AssignFromTemplateAsync(
         Release release,
         ReleaseTemplate releaseTemplate,
+        IReadOnlyList<ReleaseUploadConfigMatch> uploadConfigMatches,
         CancellationToken cancellationToken = default
     )
     {
@@ -61,19 +63,11 @@ public class ReleaseCollectionAssignmentService(
 
         release.ReleaseCollection = releaseCollection;
 
-        var uploadConfigTemplates = releaseTemplate
-            .UploadConfigTemplates.OrderBy(template => template.Id)
-            .ToList();
-
-        var uploadConfigPairs = uploadConfigTemplates
-            .Zip(
-                release.UploadConfigs,
-                (uploadConfigTemplate, uploadConfig) => (uploadConfigTemplate, uploadConfig)
-            )
-            .ToList();
-
-        foreach (var (uploadConfigTemplate, uploadConfig) in uploadConfigPairs)
+        foreach (var match in uploadConfigMatches)
         {
+            var uploadConfigTemplate = match.UploadConfigTemplate;
+            var uploadConfig = match.UploadConfig;
+
             if (string.IsNullOrWhiteSpace(uploadConfigTemplate.CollectionUploadSlotKey))
             {
                 continue;
@@ -104,66 +98,17 @@ public class ReleaseCollectionAssignmentService(
             }
             else
             {
-                SyncCollectionScopedLinkCrypters(uploadConfig, slot);
+                CollectionLinkCrypterSync.ApplyToNewUploadConfig(
+                    uploadConfig,
+                    CollectionLinkCrypterSync.GetSettings(slot)
+                );
             }
 
             uploadConfig.CollectionUploadSlot = slot;
-        }
-    }
-
-    private static void SyncCollectionScopedLinkCrypters(
-        UploadConfig uploadConfig,
-        CollectionUploadSlot slot
-    )
-    {
-        var slotSettingsByRegistrationId = slot
-            .UploadConfigs.SelectMany(existingUploadConfig => existingUploadConfig.LinkCrypters)
-            .Where(linkCrypter =>
-                linkCrypter.ContainerScope == LinkCrypterContainerScope.ReleaseCollection
-            )
-            .GroupBy(linkCrypter => linkCrypter.LinkCrypterRegistrationId)
-            .ToDictionary(group => group.Key, group => group.First());
-
-        var currentLinkCryptersByRegistrationId = uploadConfig
-            .LinkCrypters.Where(linkCrypter =>
-                linkCrypter.ContainerScope == LinkCrypterContainerScope.ReleaseCollection
-            )
-            .ToDictionary(linkCrypter => linkCrypter.LinkCrypterRegistrationId);
-
-        uploadConfig.LinkCrypters.RemoveAll(linkCrypter =>
-            linkCrypter.ContainerScope == LinkCrypterContainerScope.ReleaseCollection
-            && !slotSettingsByRegistrationId.ContainsKey(linkCrypter.LinkCrypterRegistrationId)
-        );
-
-        foreach (var settings in slotSettingsByRegistrationId.Values)
-        {
-            if (
-                !currentLinkCryptersByRegistrationId.TryGetValue(
-                    settings.LinkCrypterRegistrationId,
-                    out var linkCrypter
-                )
-            )
+            if (!slot.UploadConfigs.Contains(uploadConfig))
             {
-                uploadConfig.LinkCrypters.Add(
-                    new UploadConfigLinkCrypter
-                    {
-                        LinkCrypterRegistrationId = settings.LinkCrypterRegistrationId,
-                        ContainerScope = LinkCrypterContainerScope.ReleaseCollection,
-                        Password = settings.Password,
-                        EnableCaptcha = settings.EnableCaptcha,
-                        EnableContainerDownload = settings.EnableContainerDownload,
-                        EnableClickAndLoad = settings.EnableClickAndLoad,
-                        LinkCrypterContainers = [],
-                    }
-                );
-
-                continue;
+                slot.UploadConfigs.Add(uploadConfig);
             }
-
-            linkCrypter.Password = settings.Password;
-            linkCrypter.EnableCaptcha = settings.EnableCaptcha;
-            linkCrypter.EnableContainerDownload = settings.EnableContainerDownload;
-            linkCrypter.EnableClickAndLoad = settings.EnableClickAndLoad;
         }
     }
 

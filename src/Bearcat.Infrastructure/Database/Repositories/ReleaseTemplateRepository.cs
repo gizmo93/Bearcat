@@ -125,6 +125,8 @@ public class ReleaseTemplateRepository(
             .Releases.AsSplitQuery()
             .Include(r => r.ArchiveConfigs)
             .Include(r => r.UploadConfigs)
+                .ThenInclude(u => u.CollectionUploadSlot)
+            .Include(r => r.UploadConfigs)
                 .ThenInclude(u => u.HosterRegistration)
             .Include(r => r.UploadConfigs)
                 .ThenInclude(u => u.LinkCrypters)

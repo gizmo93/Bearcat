@@ -207,6 +207,15 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
                     ? null
                     : config.Name,
                 PremiumOnlyDownload = config.PremiumOnlyDownload,
+                CollectionUploadSlotKey = config.CollectionUploadSlot?.Key,
+                CollectionUploadSlotName = config.CollectionUploadSlot?.Name,
+                CollectionUploadSlotIsRequired = config.CollectionUploadSlot?.IsRequired ?? false,
+                CollectionUploadSlotPasswordPolicy =
+                    config.CollectionUploadSlot?.PasswordPolicy
+                    ?? CollectionUploadSlotPasswordPolicy.Ignore,
+                CollectionUploadSlotExpectedArchivePassword = config
+                    .CollectionUploadSlot
+                    ?.ExpectedArchivePassword,
                 LinksDistributedTo = CleanLinks(config.LinksDistributedTo),
                 LinkCrypterTemplates = config
                     .LinkCrypters.Select(linkCrypter => new UploadConfigLinkCrypterTemplate

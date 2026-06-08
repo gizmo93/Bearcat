@@ -56,50 +56,35 @@ public class LinkCrypterContainerCreationWriteRepository(IBearcatWriteDbContext 
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<LinkCrypterContainer?> GetCollectionContainerAsync(
+    public async Task<CollectionUploadSlot> GetCollectionUploadSlotAsync(
         int collectionUploadSlotId,
-        int linkCrypterRegistrationId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .CollectionUploadSlots.AsSplitQuery()
+            .Include(slot => slot.ReleaseCollection)
+            .Include(slot => slot.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.ArchiveConfig)
+            .Include(slot => slot.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
+                    .ThenInclude(linkCrypter => linkCrypter.LinkCrypterRegistration)
+            .Include(slot => slot.UploadConfigs)
+                .ThenInclude(uploadConfig => uploadConfig.Uploads)
+                    .ThenInclude(upload => upload.UploadedFiles)
+            .FirstAsync(slot => slot.Id == collectionUploadSlotId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<LinkCrypterContainer>> GetCollectionContainersAsync(
+        int collectionUploadSlotId,
         CancellationToken cancellationToken
     )
     {
         return await dbWrite
             .LinkCrypterContainers.Include(container => container.SourceUploads)
-            .FirstOrDefaultAsync(
-                container =>
-                    container.Scope == LinkCrypterContainerScope.ReleaseCollection
-                    && container.CollectionUploadSlotId == collectionUploadSlotId
-                    && container.LinkCrypterRegistrationId == linkCrypterRegistrationId,
-                cancellationToken
-            );
-    }
-
-    public async Task<IReadOnlyList<Upload>> GetCompletedOnlineUploadsByCollectionSlotAsync(
-        int collectionUploadSlotId,
-        int linkCrypterRegistrationId,
-        CancellationToken cancellationToken
-    )
-    {
-        return await dbWrite
-            .Uploads.AsSplitQuery()
-            .Include(upload => upload.UploadedFiles)
-            .Include(upload => upload.UploadConfig)
-                .ThenInclude(config => config.Release)
-            .Include(upload => upload.UploadConfig)
-                .ThenInclude(config => config.CollectionUploadSlot)
-                    .ThenInclude(slot => slot!.ReleaseCollection)
-            .Include(upload => upload.UploadConfig)
-                .ThenInclude(config => config.LinkCrypters)
-                    .ThenInclude(linkCrypter => linkCrypter.LinkCrypterRegistration)
-            .Where(upload =>
-                upload.UploadState == UploadState.Completed
-                && upload.OnlineState == OnlineState.Online
-                && upload.UploadedFiles.Any()
-                && upload.UploadConfig.CollectionUploadSlotId == collectionUploadSlotId
-                && upload.UploadConfig.LinkCrypters.Any(linkCrypter =>
-                    linkCrypter.ContainerScope == LinkCrypterContainerScope.ReleaseCollection
-                    && linkCrypter.LinkCrypterRegistrationId == linkCrypterRegistrationId
-                    && linkCrypter.LinkCrypterRegistration.IsActive
-                )
+            .Where(container =>
+                container.Scope == LinkCrypterContainerScope.ReleaseCollection
+                && container.CollectionUploadSlotId == collectionUploadSlotId
             )
             .ToListAsync(cancellationToken);
     }
@@ -107,6 +92,11 @@ public class LinkCrypterContainerCreationWriteRepository(IBearcatWriteDbContext 
     public void Add(LinkCrypterContainer container)
     {
         dbWrite.Add(container);
+    }
+
+    public void Remove(LinkCrypterContainer container)
+    {
+        dbWrite.Remove(container);
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
