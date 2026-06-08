@@ -68,26 +68,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
     private bool CanUsePremiumOnlyDownload =>
         SelectedHosterRegistration?.SupportsPremiumOnlyDownloads is true;
 
-    private bool UseCollectionUploadSlot
-    {
-        get =>
-            !string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotKey)
-            || !string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotName);
-        set
-        {
-            if (value)
-            {
-                if (string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotName))
-                {
-                    FormModel.CollectionUploadSlotName = GetDefaultCollectionUploadGroupName();
-                }
-
-                return;
-            }
-
-            ClearCollectionUploadSlot();
-        }
-    }
+    private bool useCollectionUploadSlot;
 
     protected override async Task OnInitializedAsync()
     {
@@ -102,6 +83,11 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
         isUnmanagedReleaseTemplate = detail?.ReleaseType is ReleaseType.Unmanaged;
         usesReleaseCollections =
             detail?.ReleaseCollectionDetectionMode is not ReleaseCollectionDetectionMode.Disabled;
+
+        useCollectionUploadSlot =
+            usesReleaseCollections
+            || !string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotKey)
+            || !string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotName);
 
         if (
             string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotName)
@@ -178,6 +164,11 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
     private void OnHosterRegistrationChanged()
     {
         ResetPremiumOnlyDownloadIfUnsupported();
+
+        if (usesReleaseCollections && string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotName))
+        {
+            FormModel.CollectionUploadSlotName = GetDefaultCollectionUploadGroupName();
+        }
     }
 
     private void ResetPremiumOnlyDownloadIfUnsupported()
@@ -210,7 +201,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
 
         if (
             usesReleaseCollections
-            && UseCollectionUploadSlot
+            && useCollectionUploadSlot
             && string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotName)
         )
         {
@@ -221,7 +212,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
         }
 
         if (
-            UseCollectionUploadSlot
+            useCollectionUploadSlot
             && FormModel.CollectionUploadSlotPasswordPolicy
                 is CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue
             && string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotExpectedArchivePassword)
@@ -241,7 +232,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
 
     private void PrepareCollectionUploadSlotForSave()
     {
-        if (!usesReleaseCollections || !UseCollectionUploadSlot)
+        if (!usesReleaseCollections || !useCollectionUploadSlot)
         {
             ClearCollectionUploadSlot();
             return;

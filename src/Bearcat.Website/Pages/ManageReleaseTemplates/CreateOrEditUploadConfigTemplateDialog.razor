@@ -8,8 +8,8 @@
 <EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
     <DataAnnotationsValidator />
 
-    <div class="space-y-6">
-        <div class="space-y-4">
+    <div class="bearcat-upload-config-dialog">
+        <div class="bearcat-upload-config-dialog-body space-y-4">
             <BbFormFieldInput TValue="string"
                               @bind-Value="FormModel.Name"
                               Label="@L["Name"]"
@@ -42,41 +42,39 @@
             @if (usesReleaseCollections)
             {
                 <div class="space-y-4 rounded-md border border-border/70 p-4">
-                    <BbFormFieldSwitch @bind-Checked="UseCollectionUploadSlot"
-                                       Label="@L["UseCollectionUploadSlot"]"
-                                       HelperText="@L["UseCollectionUploadSlotHelp"]" />
+                    <div>
+                        <p class="text-sm font-medium">@L["UseCollectionUploadSlot"]</p>
+                        <p class="text-xs text-muted-foreground">@L["UseCollectionUploadSlotHelp"]</p>
+                    </div>
 
-                    @if (UseCollectionUploadSlot)
-                    {
-                        <BbFormFieldInput TValue="string"
-                                          @bind-Value="FormModel.CollectionUploadSlotName"
-                                          Label="@L["CollectionUploadGroupName"]"
-                                          Placeholder="@L["CollectionUploadSlotNamePlaceholder"]" />
+                    <BbFormFieldInput TValue="string"
+                                      @bind-Value="FormModel.CollectionUploadSlotName"
+                                      Label="@L["CollectionUploadGroupName"]"
+                                      Placeholder="@L["CollectionUploadSlotNamePlaceholder"]" />
 
-                        <div class="grid gap-4 md:grid-cols-2">
-                            <BbFormFieldSelect TValue="CollectionUploadSlotPasswordPolicy"
-                                               @bind-Value="FormModel.CollectionUploadSlotPasswordPolicy"
-                                               Label="@L["PasswordPolicy"]"
-                                               Options="PasswordPolicyOptions" />
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <BbFormFieldSelect TValue="CollectionUploadSlotPasswordPolicy"
+                                           @bind-Value="FormModel.CollectionUploadSlotPasswordPolicy"
+                                           Label="@L["PasswordPolicy"]"
+                                           Options="PasswordPolicyOptions" />
 
-                            <div class="flex items-end pb-2">
-                                <div class="flex items-center gap-2">
-                                    <BbCheckbox @bind-Checked="FormModel.CollectionUploadSlotIsRequired"
-                                                Id="collection-upload-slot-required"
-                                                AriaLabel="@L["CollectionUploadSlotRequired"]" />
-                                    <BbLabel For="collection-upload-slot-required">
-                                        @L["CollectionUploadSlotRequired"]
-                                    </BbLabel>
-                                </div>
+                        <div class="flex items-end pb-2">
+                            <div class="flex items-center gap-2">
+                                <BbCheckbox @bind-Checked="FormModel.CollectionUploadSlotIsRequired"
+                                            Id="collection-upload-slot-required"
+                                            AriaLabel="@L["CollectionUploadSlotRequired"]" />
+                                <BbLabel For="collection-upload-slot-required">
+                                    @L["CollectionUploadSlotRequired"]
+                                </BbLabel>
                             </div>
                         </div>
+                    </div>
 
-                        @if (FormModel.CollectionUploadSlotPasswordPolicy is CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue)
-                        {
-                            <BbFormFieldInput TValue="string"
-                                              @bind-Value="FormModel.CollectionUploadSlotExpectedArchivePassword"
-                                              Label="@L["ExpectedArchivePassword"]" />
-                        }
+                    @if (FormModel.CollectionUploadSlotPasswordPolicy is CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue)
+                    {
+                        <BbFormFieldInput TValue="string"
+                                          @bind-Value="FormModel.CollectionUploadSlotExpectedArchivePassword"
+                                          Label="@L["ExpectedArchivePassword"]" />
                     }
                 </div>
             }
@@ -110,7 +108,7 @@
             </div>
         </div>
 
-        <div class="flex justify-end gap-2">
+        <div class="bearcat-upload-config-dialog-footer">
             <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
                 @L["Cancel"]
             </BbButton>
