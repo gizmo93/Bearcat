@@ -39,6 +39,48 @@
                                    Options="ArchiveConfigOptions" />
             }
 
+            @if (usesReleaseCollections)
+            {
+                <div class="space-y-4 rounded-md border border-border/70 p-4">
+                    <BbFormFieldSwitch @bind-Checked="UseCollectionUploadSlot"
+                                       Label="@L["UseCollectionUploadSlot"]"
+                                       HelperText="@L["UseCollectionUploadSlotHelp"]" />
+
+                    @if (UseCollectionUploadSlot)
+                    {
+                        <BbFormFieldInput TValue="string"
+                                          @bind-Value="FormModel.CollectionUploadSlotName"
+                                          Label="@L["CollectionUploadGroupName"]"
+                                          Placeholder="@L["CollectionUploadSlotNamePlaceholder"]" />
+
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <BbFormFieldSelect TValue="CollectionUploadSlotPasswordPolicy"
+                                               @bind-Value="FormModel.CollectionUploadSlotPasswordPolicy"
+                                               Label="@L["PasswordPolicy"]"
+                                               Options="PasswordPolicyOptions" />
+
+                            <div class="flex items-end pb-2">
+                                <div class="flex items-center gap-2">
+                                    <BbCheckbox @bind-Checked="FormModel.CollectionUploadSlotIsRequired"
+                                                Id="collection-upload-slot-required"
+                                                AriaLabel="@L["CollectionUploadSlotRequired"]" />
+                                    <BbLabel For="collection-upload-slot-required">
+                                        @L["CollectionUploadSlotRequired"]
+                                    </BbLabel>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (FormModel.CollectionUploadSlotPasswordPolicy is CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue)
+                        {
+                            <BbFormFieldInput TValue="string"
+                                              @bind-Value="FormModel.CollectionUploadSlotExpectedArchivePassword"
+                                              Label="@L["ExpectedArchivePassword"]" />
+                        }
+                    }
+                </div>
+            }
+
             <div class="space-y-3">
                 <div class="flex items-center justify-between gap-3">
                     <div>

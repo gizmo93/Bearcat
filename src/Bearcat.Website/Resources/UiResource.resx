@@ -201,6 +201,7 @@
   <data name="LinkCrypterRegistrations" xml:space="preserve"><value>Link crypter registrations</value></data>
   <data name="LinkCrypterRegistrationsIntro" xml:space="preserve"><value>Manage crypter configurations, active state, and login checks.</value></data>
   <data name="LinkCrypterSettings" xml:space="preserve"><value>Settings</value></data>
+  <data name="ManagedByReleaseCollection" xml:space="preserve"><value>Managed on collection page</value></data>
   <data name="LinkCrypterLinks" xml:space="preserve"><value>Link crypter links</value></data>
   <data name="LinkCrypters" xml:space="preserve"><value>Link crypters</value></data>
   <data name="LinkCryptersDescription" xml:space="preserve"><value>Optional containers for distributed upload links.</value></data>
@@ -514,7 +515,7 @@
   <data name="DeleteLinkCrypterTemplateConfirmation" xml:space="preserve"><value>Delete link crypter template {0}?</value></data>
   <data name="DeleteReleaseTemplateConfirmation" xml:space="preserve"><value>Delete release template {0}?</value></data>
   <data name="DeleteUploadConfigTemplateConfirmation" xml:space="preserve"><value>Delete upload config template {0}?</value></data>
-  <data name="LinkCrypterTemplateDialogDescription" xml:space="preserve"><value>Choose the link crypter registration and optional container password copied into releases.</value></data>
+  <data name="LinkCrypterTemplateDialogDescription" xml:space="preserve"><value>Choose where Bearcat creates containers and which settings are copied into releases.</value></data>
   <data name="NewFromTemplate" xml:space="preserve"><value>New from template</value></data>
   <data name="NewReleaseTemplate" xml:space="preserve"><value>New release template</value></data>
   <data name="NoArchiveConfigTemplatesYet" xml:space="preserve"><value>No archive config templates yet.</value></data>
@@ -617,4 +618,72 @@
   <data name="PremiumOnlyDownload" xml:space="preserve"><value>Premium only</value></data>
   <data name="PremiumOnlyDownloadHelp" xml:space="preserve"><value>Only premium users can download files uploaded with this configuration.</value></data>
   <data name="VerifyingCaptcha" xml:space="preserve"><value>Verifying...</value></data>
+  <data name="AllReleaseGroups" xml:space="preserve"><value>All release groups</value></data>
+  <data name="Back" xml:space="preserve"><value>Back</value></data>
+  <data name="CollectionUploadGroupName" xml:space="preserve"><value>Group name</value></data>
+  <data name="CollectionUploadGroupNameRequired" xml:space="preserve"><value>Group name is required.</value></data>
+  <data name="CollectionContainer" xml:space="preserve"><value>Collection container</value></data>
+  <data name="CollectionUploadSlot" xml:space="preserve"><value>Collection container</value></data>
+  <data name="CollectionUploadSlotExpectedArchivePasswordRequired" xml:space="preserve"><value>Expected archive password is required for this password policy.</value></data>
+  <data name="CollectionUploadSlotHelp" xml:space="preserve"><value>Share matching uploads from the same release collection.</value></data>
+  <data name="CollectionUploadSlotKeyAlreadyExists" xml:space="preserve"><value>An upload slot with this name already exists in this collection.</value></data>
+  <data name="CollectionUploadSlotKeyCouldNotBeDerived" xml:space="preserve"><value>The slot name must contain at least one letter or digit.</value></data>
+  <data name="CollectionUploadSlotKey" xml:space="preserve"><value>Slot key</value></data>
+  <data name="CollectionUploadSlotArchiveConfigHelp" xml:space="preserve"><value>Choose which archives should be uploaded.</value></data>
+  <data name="CollectionUploadSlotName" xml:space="preserve"><value>Upload group name</value></data>
+  <data name="CollectionUploadSlotNamePlaceholder" xml:space="preserve"><value>Rapidgator passworded</value></data>
+  <data name="CollectionUploadSlotRequired" xml:space="preserve"><value>Expected on every release</value></data>
+  <data name="CollectionUploadSlots" xml:space="preserve"><value>Upload slots</value></data>
+  <data name="CollectionUploadSlotsDescription" xml:space="preserve"><value>Upload groups that can collect links from multiple releases into shared containers.</value></data>
+  <data name="CollectionUploadSlotPasswordPolicy.Ignore" xml:space="preserve"><value>Ignore</value></data>
+  <data name="CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue" xml:space="preserve"><value>Must equal expected value</value></data>
+  <data name="CollectionUploadSlotPasswordPolicy.MustMatchAcrossReleases" xml:space="preserve"><value>Must match across releases</value></data>
+  <data name="ContainerScope" xml:space="preserve"><value>Create container for</value></data>
+  <data name="ExpectedArchivePassword" xml:space="preserve"><value>Expected archive password</value></data>
+  <data name="LinkCrypterContainerScope.Release" xml:space="preserve"><value>Each release separately</value></data>
+  <data name="LinkCrypterContainerScope.ReleaseCollection" xml:space="preserve"><value>The whole release collection</value></data>
+  <data name="NoReleaseCollectionsFound" xml:space="preserve"><value>No release collections found</value></data>
+  <data name="NoCollectionUploadSlotsFound" xml:space="preserve"><value>No upload slots found</value></data>
+  <data name="CreateCollectionUploadSlotDialogDescription" xml:space="preserve"><value>Create one upload configuration per release with the selected hoster.</value></data>
+  <data name="DeleteCollectionUploadSlot" xml:space="preserve"><value>Delete upload slot</value></data>
+  <data name="DeleteCollectionUploadSlotConfirmation" xml:space="preserve"><value>Delete upload slot {0}? This removes {1} upload configurations, {2} uploads and {3} generated container links from the database.</value></data>
+  <data name="NewCollectionUploadSlot" xml:space="preserve"><value>New upload slot</value></data>
+  <data name="OpenReleaseCollectionActions" xml:space="preserve"><value>Open release collection actions</value></data>
+  <data name="PasswordPolicy" xml:space="preserve"><value>Password policy</value></data>
+  <data name="ReleaseCollection" xml:space="preserve"><value>Release collection</value></data>
+  <data name="ReleaseCollectionReleasesDescription" xml:space="preserve"><value>Releases assigned to this collection.</value></data>
+  <data name="ReleaseCollectionResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} collections</value></data>
+  <data name="ReleaseCollections" xml:space="preserve"><value>Release collections</value></data>
+  <data name="ReleaseCollectionsIntro" xml:space="preserve"><value>Find and manage grouped releases such as seasons of TV shows</value></data>
+  <data name="ReleaseCollectionsSubtitle" xml:space="preserve"><value>Grouped releases</value></data>
+  <data name="ReleaseCollectionSubtitle" xml:space="preserve"><value>Grouped releases</value></data>
+  <data name="ReleaseCollectionDetectionMode" xml:space="preserve"><value>Collection detection</value></data>
+  <data name="ReleaseCollectionDetectionMode.CustomRegex" xml:space="preserve"><value>Custom regex</value></data>
+  <data name="ReleaseCollectionDetectionMode.SeriesEpisodePattern" xml:space="preserve"><value>Series episode pattern</value></data>
+  <data name="ReleaseCollectionKeyTemplate" xml:space="preserve"><value>Collection key template</value></data>
+  <data name="ReleaseCollectionKeyTemplateRequired" xml:space="preserve"><value>Collection key template is required for custom regex detection.</value></data>
+  <data name="ReleaseCollectionNameTemplate" xml:space="preserve"><value>Collection name template</value></data>
+  <data name="ReleaseCollectionNameTemplateRequired" xml:space="preserve"><value>Collection name template is required for custom regex detection.</value></data>
+  <data name="ReleaseCollectionPattern" xml:space="preserve"><value>Collection regex pattern</value></data>
+  <data name="ReleaseCollectionPatternRequired" xml:space="preserve"><value>Collection regex pattern is required for custom regex detection.</value></data>
+  <data name="Reset" xml:space="preserve"><value>Reset</value></data>
+  <data name="Required" xml:space="preserve"><value>Required</value></data>
+  <data name="SearchReleaseCollections" xml:space="preserve"><value>Search collections</value></data>
+  <data name="SharedLinkCrypters" xml:space="preserve"><value>Create containers on</value></data>
+  <data name="NoSharedLinkCrypters" xml:space="preserve"><value>None</value></data>
+  <data name="EditSharedLinkCrypters" xml:space="preserve"><value>Edit container link crypters</value></data>
+  <data name="SharedLinkCryptersDialogDescription" xml:space="preserve"><value>Manage the link crypters and settings used for the shared containers in this upload group.</value></data>
+  <data name="SharedLinkCryptersDialogHelp" xml:space="preserve"><value>Changes are applied to all upload configurations in this collection upload group.</value></data>
+  <data name="NoLinkCryptersFound" xml:space="preserve"><value>No link crypters found</value></data>
+  <data name="UseReleaseCollections" xml:space="preserve"><value>Use release collections</value></data>
+  <data name="UseCollectionUploadSlot" xml:space="preserve"><value>Share this upload config across the collection</value></data>
+  <data name="UseCollectionUploadSlotHelp" xml:space="preserve"><value>Creates one shared collection container for this group.</value></data>
+  <data name="AddRelease" xml:space="preserve"><value>Add release</value></data>
+  <data name="AddReleaseToCollectionDescription" xml:space="preserve"><value>Search for a release in the same release group to add to this collection.</value></data>
+  <data name="SearchRelease" xml:space="preserve"><value>Search</value></data>
+  <data name="SearchReleasePlaceholder" xml:space="preserve"><value>Search by release name</value></data>
+  <data name="NoAvailableReleasesFound" xml:space="preserve"><value>No available releases found.</value></data>
+  <data name="RemoveFromCollection" xml:space="preserve"><value>Remove from collection</value></data>
+  <data name="RemoveReleaseFromCollectionConfirmation" xml:space="preserve"><value>Remove {0} from this collection? Upload configurations created by collection upload slots will be deleted.</value></data>
+  <data name="Remove" xml:space="preserve"><value>Remove</value></data>
 </root>

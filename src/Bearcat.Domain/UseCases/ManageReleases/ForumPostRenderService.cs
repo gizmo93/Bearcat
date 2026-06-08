@@ -1,3 +1,4 @@
+using System.Text;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
@@ -274,7 +275,7 @@ public class ForumPostRenderService(
 
     private static string NormalizeScriptKey(string value)
     {
-        var builder = new System.Text.StringBuilder(value.Length);
+        var builder = new StringBuilder(value.Length);
 
         foreach (var character in value.Trim())
         {

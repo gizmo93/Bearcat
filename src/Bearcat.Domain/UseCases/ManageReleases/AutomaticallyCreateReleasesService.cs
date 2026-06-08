@@ -2,7 +2,7 @@ using System.IO.Enumeration;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -14,7 +14,8 @@ public class AutomaticallyCreateReleasesService(
     IFileSystemService fileSystemService,
     ReleaseInfoResolutionService releaseInfoResolutionService,
     TimeProvider timeProvider,
-    IArchiverFactory archiverFactory
+    IArchiverFactory archiverFactory,
+    ReleaseCollectionAssignmentService releaseCollectionAssignmentService
 )
 {
     private const int MaxConcurrentFolderScans = 4;
@@ -39,6 +40,7 @@ public class AutomaticallyCreateReleasesService(
         );
 
         var createdCount = 0;
+
         foreach (var candidate in candidates)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -76,7 +78,7 @@ public class AutomaticallyCreateReleasesService(
 
         var localNow = timeProvider.GetLocalNow();
 
-        var release = ReleaseService.CreateFromTemplate(
+        var releaseData = ReleaseService.CreateFromTemplateData(
             releaseTemplate: candidate.Automation.ReleaseTemplate,
             releaseFolderPath: candidate.FolderPath,
             name: null,
@@ -86,12 +88,21 @@ public class AutomaticallyCreateReleasesService(
                 : [],
             localNow: localNow
         );
+        var release = releaseData.Release;
 
         release.CreatedAt = localNow;
+
+        await releaseCollectionAssignmentService.AssignFromTemplateAsync(
+            release: release,
+            releaseTemplate: candidate.Automation.ReleaseTemplate,
+            uploadConfigMatches: releaseData.UploadConfigMatches,
+            cancellationToken: cancellationToken
+        );
 
         await releaseInfoResolutionService.TryResolveAsync(release, cancellationToken);
 
         repository.Add(release);
+
         repository.Add(
             new Notification
             {
@@ -153,18 +164,9 @@ public class AutomaticallyCreateReleasesService(
 
         return FileSystemName.MatchesSimpleExpression(
             folderNamePattern,
-            GetFolderName(folderPath),
+            FolderPathHelper.GetFolderName(folderPath),
             ignoreCase: true
         );
-    }
-
-    private static string GetFolderName(string folderPath)
-    {
-        var normalizedPath = folderPath.TrimEnd(
-            Path.DirectorySeparatorChar,
-            Path.AltDirectorySeparatorChar
-        );
-        return Path.GetFileName(normalizedPath);
     }
 
     private sealed record ReleaseFolderCandidate(

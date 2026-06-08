@@ -13,6 +13,14 @@ public class UploadConfigTemplateConfiguration : IEntityTypeConfiguration<Upload
         builder.Property(u => u.ArchiveConfigTemplateId).IsRequired();
         builder.Property(u => u.Name).IsRequired(false).HasMaxLength(200);
         builder.Property(u => u.PremiumOnlyDownload).IsRequired();
+        builder.Property(u => u.CollectionUploadSlotKey).IsRequired(false).HasMaxLength(200);
+        builder.Property(u => u.CollectionUploadSlotName).IsRequired(false).HasMaxLength(200);
+        builder.Property(u => u.CollectionUploadSlotIsRequired).IsRequired();
+        builder.Property(u => u.CollectionUploadSlotPasswordPolicy).IsRequired();
+        builder
+            .Property(u => u.CollectionUploadSlotExpectedArchivePassword)
+            .IsRequired(false)
+            .HasMaxLength(100);
         builder.Property(u => u.LinksDistributedTo);
 
         builder

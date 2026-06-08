@@ -1,5 +1,6 @@
-using Bearcat.Hosters.GoFile.Api.GetAccountId;
+using Bearcat.Hosters.GoFile.Api.CreateFolder;
 using Refit;
+using Response = Bearcat.Hosters.GoFile.Api.GetAccountId.Response;
 
 namespace Bearcat.Hosters.GoFile.Api;
 
@@ -21,7 +22,7 @@ public interface IGoFileApi
     [Post("/contents/createFolder")]
     Task<CreateFolder.Response> CreateFolderAsync(
         [Header("Authorization")] string apiToken,
-        [Body] CreateFolder.Request request,
+        [Body] Request request,
         CancellationToken cancellationToken = default
     );
 

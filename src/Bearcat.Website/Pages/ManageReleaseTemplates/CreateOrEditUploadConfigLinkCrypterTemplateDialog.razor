@@ -23,6 +23,11 @@
                               Label="@L["ContainerPassword"]"
                               Placeholder="@L["ContainerPasswordPlaceholder"]" />
 
+            <BbFormFieldSelect TValue="LinkCrypterContainerScope"
+                               @bind-Value="FormModel.ContainerScope"
+                               Label="@L["ContainerScope"]"
+                               Options="ContainerScopeOptions" />
+
             @if (CanUseCaptcha)
             {
                 <BbFormFieldSwitch @bind-Checked="FormModel.EnableCaptcha"

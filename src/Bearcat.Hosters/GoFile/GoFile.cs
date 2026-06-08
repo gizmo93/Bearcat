@@ -4,6 +4,7 @@ using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.GoFile.Api;
+using Bearcat.Hosters.GoFile.Api.UploadFile;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.GoFile;
@@ -188,7 +189,7 @@ public class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) : IHoste
         }
     }
 
-    private static string GetFileUrl(Api.UploadFile.Data data)
+    private static string GetFileUrl(Data data)
     {
         return string.IsNullOrWhiteSpace(data.Id)
             ? data.DownloadUrl

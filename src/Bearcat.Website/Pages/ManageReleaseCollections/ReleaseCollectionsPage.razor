@@ -1,0 +1,171 @@
+@page "/release-collections"
+@inherits OwningComponentBase
+
+<PageTitle>@L["ReleaseCollections"] - Bearcat</PageTitle>
+
+<section class="bearcat-releases-page space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["ReleaseCollections"]</h1>
+            <p class="text-sm text-muted-foreground">
+                @L["ReleaseCollectionsIntro"]
+            </p>
+        </div>
+    </div>
+
+    <div class="rounded-md border border-border/70 bg-card p-4">
+        <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(12rem,18rem)_auto] md:items-end">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="searchTerm"
+                              Label="@L["Search"]"
+                              Placeholder="@L["SearchReleaseCollections"]" />
+
+            <BbFormFieldSelect TValue="int?"
+                               @bind-Value="selectedReleaseGroupId"
+                               Label="@L["ReleaseGroup"]"
+                               Options="ReleaseGroupOptions" />
+
+            <div class="flex flex-wrap gap-2">
+                <BbButton Variant="ButtonVariant.Secondary" OnClick="ApplySearchAsync">
+                    <LucideIcon Name="search" class="h-4 w-4" />
+                    @L["Search"]
+                </BbButton>
+                <BbButton Variant="ButtonVariant.Outline" OnClick="ResetSearchAsync">
+                    <LucideIcon Name="rotate-ccw" class="h-4 w-4" />
+                    @L["Reset"]
+                </BbButton>
+            </div>
+        </div>
+    </div>
+
+    <BbDataTable TData="ReleaseCollectionReadModel"
+                 @key="CollectionsTableKey"
+                 Data="releaseCollections"
+                 ShowToolbar="false"
+                 ShowPagination="false"
+                 InitialPageSize="@pageSize"
+                 IsLoading="isLoading"
+                 AriaLabel="@L["ReleaseCollections"]"
+                 Class="bearcat-data-table bearcat-release-templates-table">
+        <Columns>
+            <BbDataTableColumn TData="ReleaseCollectionReadModel" TValue="string"
+                               Header="@L["Name"]"
+                               Property="@(collection => collection.Name)"
+                               Width="32%">
+                <CellTemplate Context="collection">
+                    <a class="bearcat-release-list-name"
+                       href="@($"/release-collections/{collection.ReleaseCollectionId}")">
+                        @collection.Name
+                    </a>
+                    <p class="mt-1 truncate text-xs text-muted-foreground" title="@collection.Key">
+                        @collection.Key
+                    </p>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseCollectionReadModel" TValue="string"
+                               Header="@L["ReleaseGroup"]"
+                               Property="@(collection => collection.ReleaseGroupName)"
+                               Width="180px">
+                <CellTemplate Context="collection">
+                    <BbBadge Variant="BadgeVariant.Outline">@collection.ReleaseGroupName</BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseCollectionReadModel" TValue="int"
+                               Header="@L["Releases"]"
+                               Property="@(collection => collection.ReleaseCount)"
+                               Width="140px">
+                <CellTemplate Context="collection">
+                    <BbBadge Variant="BadgeVariant.Secondary">@collection.ReleaseCount</BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseCollectionReadModel" TValue="DateTime"
+                               Header="@L["CreatedAt"]"
+                               Property="@(collection => collection.CreatedAt)"
+                               Width="180px">
+                <CellTemplate Context="collection">
+                    <span class="text-sm">@collection.CreatedAt.ToString("g")</span>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseCollectionReadModel" TValue="string"
+                               Header=""
+                               Property="@(collection => collection.Name)"
+                               Width="56px">
+                <CellTemplate Context="collection">
+                    <div class="flex justify-end">
+                        <BbDropdownMenu>
+                            <BbDropdownMenuTrigger>
+                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenReleaseCollectionActions"]">
+                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                </BbButton>
+                            </BbDropdownMenuTrigger>
+                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                                <BbDropdownMenuItem Href="@($"/release-collections/{collection.ReleaseCollectionId}")">
+                                    @L["OpenDetails"]
+                                </BbDropdownMenuItem>
+                            </BbDropdownMenuContent>
+                        </BbDropdownMenu>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+        <EmptyTemplate>
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="inbox" class="h-5 w-5" />
+                <span>@L["NoReleaseCollectionsFound"]</span>
+            </div>
+        </EmptyTemplate>
+    </BbDataTable>
+
+    <div class="bearcat-release-pagination">
+        <p class="text-sm text-muted-foreground">
+            @L["ReleaseCollectionResultsSummary", FirstResult, LastResult, totalCount]
+        </p>
+
+        <div class="bearcat-release-pagination-controls">
+            <label class="bearcat-page-size">
+                <span>@L["RowsPerPage"]</span>
+                <BbSelect TValue="int"
+                          @bind-Value="pageSize"
+                          @bind-Value:after="OnPageSizeChangedAsync"
+                          Options="PageSizeOptions"
+                          Class="w-24" />
+            </label>
+
+            @if (TotalPages > 1)
+            {
+                <BbPagination Class="bearcat-release-page-nav">
+                    <BbPaginationContent>
+                        <BbPaginationItem>
+                            <BbPaginationPrevious Disabled="@(CurrentPage <= 1)"
+                                                  Text="@L["Previous"]"
+                                                  OnClick="GoToPreviousPageAsync" />
+                        </BbPaginationItem>
+
+                        @foreach (var page in PaginationItems)
+                        {
+                            <BbPaginationItem>
+                                @if (page is null)
+                                {
+                                    <BbPaginationEllipsis />
+                                }
+                                else
+                                {
+                                    <BbPaginationLink IsActive="@(page == CurrentPage)"
+                                                      OnClick="@(() => GoToPageAsync(page.Value))">
+                                        @(page.Value)
+                                    </BbPaginationLink>
+                                }
+                            </BbPaginationItem>
+                        }
+
+                        <BbPaginationItem>
+                            <BbPaginationNext Disabled="@(CurrentPage >= TotalPages)"
+                                              Text="@L["Next"]"
+                                              OnClick="GoToNextPageAsync" />
+                        </BbPaginationItem>
+                    </BbPaginationContent>
+                </BbPagination>
+            }
+        </div>
+    </div>
+</section>

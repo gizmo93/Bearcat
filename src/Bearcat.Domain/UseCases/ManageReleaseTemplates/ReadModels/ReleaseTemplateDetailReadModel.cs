@@ -8,6 +8,10 @@ public record ReleaseTemplateDetailReadModel(
     ReleaseType ReleaseType,
     int ReleaseGroupId,
     string ReleaseGroupName,
+    ReleaseCollectionDetectionMode ReleaseCollectionDetectionMode,
+    string? ReleaseCollectionPattern,
+    string? ReleaseCollectionKeyTemplate,
+    string? ReleaseCollectionNameTemplate,
     IReadOnlyList<ArchiveConfigTemplateReadModel> ArchiveConfigTemplates,
     IReadOnlyList<UploadConfigTemplateReadModel> UploadConfigTemplates,
     IReadOnlyList<ImageUploadConfigTemplateReadModel> ImageUploadConfigTemplates

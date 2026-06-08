@@ -3,7 +3,6 @@ using System.Security.Authentication;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Hosters.Alfafile.Api.File;
-using Bearcat.Hosters.Alfafile.Api.Folder;
 using Bearcat.Hosters.Alfafile.Api.User;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Shared;

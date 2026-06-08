@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.NfoDatabases.Srrdb;
 using Bearcat.NfoDatabases.Srrdb.Api;
@@ -135,7 +136,7 @@ public class SrrdbNfoDatabaseTest
             .ReturnsAsync(
                 new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(content)),
+                    Content = new ByteArrayContent(Encoding.UTF8.GetBytes(content)),
                 }
             );
 

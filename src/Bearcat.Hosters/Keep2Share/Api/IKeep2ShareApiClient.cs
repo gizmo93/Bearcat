@@ -1,6 +1,6 @@
-namespace Bearcat.Hosters.Keep2Share.Api;
-
 using Bearcat.Abstractions.Hoster.Results;
+
+namespace Bearcat.Hosters.Keep2Share.Api;
 
 public interface IKeep2ShareApiClient
 {

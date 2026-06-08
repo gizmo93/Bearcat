@@ -28,10 +28,14 @@ public class UploadConfigLinkCrypterReadRepository(
                 LinkCrypterRegistrationName = u.LinkCrypterRegistration.Name,
                 u.LinkCrypterRegistrationId,
                 u.Password,
+                u.ContainerScope,
                 LinkCrypterIsActive = u.LinkCrypterRegistration.IsActive,
                 u.EnableCaptcha,
                 u.EnableContainerDownload,
                 u.EnableClickAndLoad,
+                ReleaseCollectionId = u.UploadConfig.CollectionUploadSlot == null
+                    ? null
+                    : (int?)u.UploadConfig.CollectionUploadSlot.ReleaseCollectionId,
             })
             .FirstAsync(cancellationToken: cancellationToken);
 
@@ -43,13 +47,15 @@ public class UploadConfigLinkCrypterReadRepository(
             item.LinkCrypterRegistrationName,
             item.LinkCrypterRegistrationId,
             item.Password,
+            item.ContainerScope,
             item.LinkCrypterIsActive,
             item.EnableCaptcha,
             item.EnableContainerDownload,
             item.EnableClickAndLoad,
             linkCrypter.SupportsCaptcha,
             linkCrypter.SupportsContainerDownload,
-            linkCrypter.SupportsClickAndLoad
+            linkCrypter.SupportsClickAndLoad,
+            item.ReleaseCollectionId
         );
     }
 
@@ -71,10 +77,14 @@ public class UploadConfigLinkCrypterReadRepository(
                 LinkCrypterRegistrationName = u.LinkCrypterRegistration.Name,
                 u.LinkCrypterRegistrationId,
                 u.Password,
+                u.ContainerScope,
                 LinkCrypterIsActive = u.LinkCrypterRegistration.IsActive,
                 u.EnableCaptcha,
                 u.EnableContainerDownload,
                 u.EnableClickAndLoad,
+                ReleaseCollectionId = u.UploadConfig.CollectionUploadSlot == null
+                    ? null
+                    : (int?)u.UploadConfig.CollectionUploadSlot.ReleaseCollectionId,
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -89,13 +99,15 @@ public class UploadConfigLinkCrypterReadRepository(
                     item.LinkCrypterRegistrationName,
                     item.LinkCrypterRegistrationId,
                     item.Password,
+                    item.ContainerScope,
                     item.LinkCrypterIsActive,
                     item.EnableCaptcha,
                     item.EnableContainerDownload,
                     item.EnableClickAndLoad,
                     linkCrypter.SupportsCaptcha,
                     linkCrypter.SupportsContainerDownload,
-                    linkCrypter.SupportsClickAndLoad
+                    linkCrypter.SupportsClickAndLoad,
+                    item.ReleaseCollectionId
                 );
             })
             .ToList();

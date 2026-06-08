@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
+using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 
@@ -32,6 +33,7 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         var uploadConfigLinkCrypter = await repository.GetByIdAsync(id, cancellationToken);
+        EnsureCanManageFromUploadConfig(uploadConfigLinkCrypter);
         repository.Remove(uploadConfigLinkCrypter);
         await repository.SaveChangesAsync(cancellationToken);
     }
@@ -46,6 +48,7 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
     )
     {
         var uploadConfigLinkCrypter = await repository.GetByIdAsync(id, cancellationToken);
+        EnsureCanManageFromUploadConfig(uploadConfigLinkCrypter);
         uploadConfigLinkCrypter.Password = CleanPassword(password);
         uploadConfigLinkCrypter.EnableCaptcha = enableCaptcha;
         uploadConfigLinkCrypter.EnableContainerDownload = enableContainerDownload;
@@ -56,5 +59,17 @@ public class UploadConfigLinkCrypterService(IUploadConfigLinkCrypterWriteReposit
     private static string? CleanPassword(string? password)
     {
         return string.IsNullOrWhiteSpace(password) ? null : password;
+    }
+
+    private static void EnsureCanManageFromUploadConfig(
+        UploadConfigLinkCrypter uploadConfigLinkCrypter
+    )
+    {
+        if (uploadConfigLinkCrypter.ContainerScope is LinkCrypterContainerScope.ReleaseCollection)
+        {
+            throw new InvalidOperationException(
+                "Collection scoped link crypters are managed through release templates."
+            );
+        }
     }
 }

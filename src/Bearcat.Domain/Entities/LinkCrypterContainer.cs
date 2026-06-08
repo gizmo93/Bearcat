@@ -6,13 +6,23 @@ public class LinkCrypterContainer
 {
     public int Id { get; set; }
 
-    public int UploadConfigLinkCrypterId { get; set; }
+    public LinkCrypterContainerScope Scope { get; set; }
 
-    public UploadConfigLinkCrypter UploadConfigLinkCrypter { get; set; } = null!;
+    public int? UploadConfigLinkCrypterId { get; set; }
 
-    public int UploadId { get; set; }
+    public UploadConfigLinkCrypter? UploadConfigLinkCrypter { get; set; }
 
-    public Upload Upload { get; set; } = null!;
+    public int? UploadId { get; set; }
+
+    public Upload? Upload { get; set; }
+
+    public int? CollectionUploadSlotId { get; set; }
+
+    public CollectionUploadSlot? CollectionUploadSlot { get; set; }
+
+    public int LinkCrypterRegistrationId { get; set; }
+
+    public LinkCrypterRegistration LinkCrypterRegistration { get; set; } = null!;
 
     public string? ExternalReference { get; set; }
 
@@ -31,6 +41,8 @@ public class LinkCrypterContainer
     public List<string> Errors { get; set; } = new();
 
     public DateTime CreatedAt { get; set; }
+
+    public List<LinkCrypterContainerSourceUpload> SourceUploads { get; set; } = [];
 
     public List<Notification> Notifications { get; set; } = null!;
 }

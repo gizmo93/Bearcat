@@ -27,6 +27,10 @@ public class ReleaseTemplateRepository(
                 t.ReleaseType,
                 t.ReleaseGroupId,
                 t.ReleaseGroup.Name,
+                t.ReleaseCollectionDetectionMode,
+                t.ReleaseCollectionPattern,
+                t.ReleaseCollectionKeyTemplate,
+                t.ReleaseCollectionNameTemplate,
                 t.ArchiveConfigTemplates.Count,
                 t.UploadConfigTemplates.Count,
                 t.ImageUploadConfigTemplates.Count,
@@ -120,6 +124,8 @@ public class ReleaseTemplateRepository(
             .Releases.AsSplitQuery()
             .Include(r => r.ArchiveConfigs)
             .Include(r => r.UploadConfigs)
+                .ThenInclude(u => u.CollectionUploadSlot)
+            .Include(r => r.UploadConfigs)
                 .ThenInclude(u => u.HosterRegistration)
             .Include(r => r.UploadConfigs)
                 .ThenInclude(u => u.LinkCrypters)
@@ -193,6 +199,10 @@ public class ReleaseTemplateRepository(
             releaseTemplate.ReleaseType,
             releaseTemplate.ReleaseGroupId,
             releaseTemplate.ReleaseGroup.Name,
+            releaseTemplate.ReleaseCollectionDetectionMode,
+            releaseTemplate.ReleaseCollectionPattern,
+            releaseTemplate.ReleaseCollectionKeyTemplate,
+            releaseTemplate.ReleaseCollectionNameTemplate,
             releaseTemplate
                 .ArchiveConfigTemplates.OrderBy(a => a.Name)
                 .ThenBy(a => a.Id)
@@ -222,6 +232,11 @@ public class ReleaseTemplateRepository(
                         .ArchiveConfigTemplates.First(a => a.Id == u.ArchiveConfigTemplateId)
                         .Name,
                     u.PremiumOnlyDownload,
+                    u.CollectionUploadSlotKey,
+                    u.CollectionUploadSlotName,
+                    u.CollectionUploadSlotIsRequired,
+                    u.CollectionUploadSlotPasswordPolicy,
+                    u.CollectionUploadSlotExpectedArchivePassword,
                     u.LinksDistributedTo,
                     u.LinkCrypterTemplates.OrderBy(l => l.LinkCrypterRegistration.Name)
                         .ThenBy(l => l.Id)
@@ -232,6 +247,7 @@ public class ReleaseTemplateRepository(
                             linkCryptersByClassName[
                                 l.LinkCrypterRegistration.LinkCrypterClassName
                             ].Name,
+                            l.ContainerScope,
                             l.Password,
                             l.EnableCaptcha,
                             l.EnableContainerDownload,

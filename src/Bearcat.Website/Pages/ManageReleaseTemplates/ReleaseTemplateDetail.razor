@@ -172,6 +172,12 @@
                                             {
                                                 <BbBadge Variant="BadgeVariant.Secondary">@L["PremiumOnlyDownload"]</BbBadge>
                                             }
+                                            @if (!string.IsNullOrWhiteSpace(config.CollectionUploadSlotName))
+                                            {
+                                                <BbBadge Variant="BadgeVariant.Secondary">
+                                                    @config.CollectionUploadSlotName
+                                                </BbBadge>
+                                            }
                                         </div>
                                     </div>
                                     <div class="min-w-0">
@@ -250,6 +256,7 @@
                                                         <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border/70 px-3 py-2">
                                                             <div class="flex flex-wrap items-center gap-2">
                                                                 <BbBadge Variant="BadgeVariant.Outline">@linkCrypter.LinkCrypterRegistrationName</BbBadge>
+                                                                <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(linkCrypter.ContainerScope)</BbBadge>
                                                                 @if (!string.IsNullOrWhiteSpace(linkCrypter.Password))
                                                                 {
                                                                     <span class="text-xs text-muted-foreground">@L["PasswordProtected"]</span>

@@ -1,5 +1,6 @@
 ﻿using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -9,7 +10,8 @@ namespace Bearcat.Domain.UseCases.ManageReleases;
 public class ReleaseService(
     IReleaseWriteRepository writeRepository,
     TimeProvider timeProvider,
-    IArchiverFactory archiverFactory
+    IArchiverFactory archiverFactory,
+    ReleaseCollectionAssignmentService releaseCollectionAssignmentService
 )
 {
     public async Task<int> CreateAsync(
@@ -66,9 +68,9 @@ public class ReleaseService(
             try
             {
                 RefreshUnmanagedArchiveConfigs(
-                    release,
-                    archiverFactory.GetArchivers(),
-                    timeProvider.GetLocalNow()
+                    release: release,
+                    archivers: archiverFactory.GetArchivers(),
+                    localNow: timeProvider.GetLocalNow()
                 );
             }
             catch
@@ -125,24 +127,32 @@ public class ReleaseService(
     )
     {
         var releaseTemplate = await writeRepository.GetTemplateForReleaseCreationAsync(
-            releaseTemplateId,
-            cancellationToken
+            releaseTemplateId: releaseTemplateId,
+            cancellationToken: cancellationToken
         );
 
         var localNow = timeProvider.GetLocalNow();
 
-        var release = CreateFromTemplate(
-            releaseTemplate,
-            releaseFolderPath,
-            name,
-            releaseTemplate.ReleaseType,
-            releaseTemplate.ReleaseType is ReleaseType.Unmanaged
+        var releaseData = CreateFromTemplateData(
+            releaseTemplate: releaseTemplate,
+            releaseFolderPath: releaseFolderPath,
+            name: name,
+            releaseType: releaseTemplate.ReleaseType,
+            archivers: releaseTemplate.ReleaseType is ReleaseType.Unmanaged
                 ? archiverFactory.GetArchivers()
                 : [],
-            localNow
+            localNow: localNow
         );
+        var release = releaseData.Release;
 
         release.CreatedAt = localNow;
+
+        await releaseCollectionAssignmentService.AssignFromTemplateAsync(
+            release: release,
+            releaseTemplate: releaseTemplate,
+            uploadConfigMatches: releaseData.UploadConfigMatches,
+            cancellationToken: cancellationToken
+        );
 
         writeRepository.Add(release);
         await writeRepository.SaveChangesAsync(cancellationToken);
@@ -159,7 +169,26 @@ public class ReleaseService(
         DateTime localNow
     )
     {
-        var releaseName = CleanOptional(name) ?? GetFolderName(releaseFolderPath);
+        return CreateFromTemplateData(
+            releaseTemplate,
+            releaseFolderPath,
+            name,
+            releaseType,
+            archivers,
+            localNow
+        ).Release;
+    }
+
+    public static ReleaseFromTemplateData CreateFromTemplateData(
+        ReleaseTemplate releaseTemplate,
+        string releaseFolderPath,
+        string? name,
+        ReleaseType releaseType,
+        IReadOnlyList<ArchiverDto> archivers,
+        DateTime localNow
+    )
+    {
+        var releaseName = CleanOptional(name) ?? FolderPathHelper.GetFolderName(releaseFolderPath);
 
         var release = new Release
         {
@@ -208,8 +237,16 @@ public class ReleaseService(
             release.ArchiveConfigs.Add(unmanagedArchiveConfig);
         }
 
-        release.UploadConfigs = releaseTemplate
-            .UploadConfigTemplates.Select(template => new UploadConfig
+        var uploadConfigTemplates = releaseTemplate
+            .UploadConfigTemplates.OrderBy(template => template.Id)
+            .ToList();
+
+        var uploadConfigMatches = new List<ReleaseUploadConfigMatch>(uploadConfigTemplates.Count);
+        release.UploadConfigs = [];
+
+        foreach (var template in uploadConfigTemplates)
+        {
+            var uploadConfig = new UploadConfig
             {
                 Name = CleanOptional(template.Name) ?? template.HosterRegistration.Name,
                 HosterRegistrationId = template.HosterRegistrationId,
@@ -224,6 +261,7 @@ public class ReleaseService(
                     .LinkCrypterTemplates.Select(linkCrypter => new UploadConfigLinkCrypter
                     {
                         LinkCrypterRegistrationId = linkCrypter.LinkCrypterRegistrationId,
+                        ContainerScope = linkCrypter.ContainerScope,
                         Password = CleanOptional(linkCrypter.Password),
                         EnableCaptcha = linkCrypter.EnableCaptcha,
                         EnableContainerDownload = linkCrypter.EnableContainerDownload,
@@ -231,8 +269,11 @@ public class ReleaseService(
                         LinkCrypterContainers = [],
                     })
                     .ToList(),
-            })
-            .ToList();
+            };
+
+            release.UploadConfigs.Add(uploadConfig);
+            uploadConfigMatches.Add(new ReleaseUploadConfigMatch(template, uploadConfig));
+        }
 
         release.ImageUploadConfigs = releaseTemplate
             .ImageUploadConfigTemplates.Select(template => new ImageUploadConfig
@@ -243,7 +284,7 @@ public class ReleaseService(
             })
             .ToList();
 
-        return release;
+        return new ReleaseFromTemplateData(release, uploadConfigMatches);
     }
 
     private static void EnsureInitialUnmanagedArchive(
@@ -289,14 +330,5 @@ public class ReleaseService(
             .Where(link => !string.IsNullOrWhiteSpace(link))
             .Select(link => link.Trim())
             .ToList();
-    }
-
-    private static string GetFolderName(string folderPath)
-    {
-        var normalizedPath = folderPath.TrimEnd(
-            Path.DirectorySeparatorChar,
-            Path.AltDirectorySeparatorChar
-        );
-        return Path.GetFileName(normalizedPath);
     }
 }

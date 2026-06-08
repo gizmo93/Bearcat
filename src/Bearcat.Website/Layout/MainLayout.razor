@@ -98,6 +98,8 @@
             var release when release.StartsWith("releases/", StringComparison.OrdinalIgnoreCase) => (L["ReleaseDetails"], L["ArchiveAndUploadConfiguration"]),
             "release-templates" => (L["ReleaseTemplates"], L["ReleaseTemplatesSubtitle"]),
             var template when template.StartsWith("release-templates/", StringComparison.OrdinalIgnoreCase) => (L["ReleaseTemplate"], L["ArchiveAndUploadConfiguration"]),
+            "release-collections" => (L["ReleaseCollections"], L["ReleaseCollectionsSubtitle"]),
+            var collection when collection.StartsWith("release-collections/", StringComparison.OrdinalIgnoreCase) => (L["ReleaseCollection"], L["ReleaseCollectionSubtitle"]),
             "forum-post-templates" => (L["ForumPostTemplates"], L["ForumPostTemplatesSubtitle"]),
             "release-folder-automations" => (L["ReleaseFolderAutomations"], L["ReleaseFolderAutomationsSubtitle"]),
             "configurations" => (L["Configurations"], L["ApplicationConfigurationsSubtitle"]),

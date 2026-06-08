@@ -4,7 +4,6 @@ using Bearcat.ImageHosters.ImgBb;
 using Bearcat.ImageHosters.ImgBb.Api;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using NUnit.Framework;
 using Shouldly;
 
 namespace Bearcat.ImageHosters.UnitTest.ImgBb;

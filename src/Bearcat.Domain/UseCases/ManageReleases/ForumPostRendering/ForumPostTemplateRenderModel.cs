@@ -1,6 +1,6 @@
-namespace Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
-
 using Scriban.Runtime;
+
+namespace Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 
 public sealed record ForumPostTemplateRenderContext(
     ForumPostTemplateRenderModel RenderModel,

@@ -59,6 +59,12 @@
                                 <BbBadge Variant="@GetContainerVariant(container.State)">
                                     @L.Localize(container.State)
                                 </BbBadge>
+                                @if (container.Scope is LinkCrypterContainerScope.ReleaseCollection)
+                                {
+                                    <BbBadge Variant="BadgeVariant.Secondary">
+                                        @L["CollectionContainer"]
+                                    </BbBadge>
+                                }
                                 <ErrorMessagesTooltip Messages="container.Errors" />
                             </div>
                         </div>

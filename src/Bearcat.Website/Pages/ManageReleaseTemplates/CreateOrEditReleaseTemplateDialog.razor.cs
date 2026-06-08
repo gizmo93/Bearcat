@@ -32,6 +32,15 @@ public partial class CreateOrEditReleaseTemplateDialog(
         Enum.GetValues<ReleaseType>()
             .Select(type => new SelectOption<ReleaseType>(type, L.Localize(type)));
 
+    private IEnumerable<
+        SelectOption<ReleaseCollectionDetectionMode>
+    > ReleaseCollectionDetectionModeOptions =>
+        new[]
+        {
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            ReleaseCollectionDetectionMode.CustomRegex,
+        }.Select(mode => new SelectOption<ReleaseCollectionDetectionMode>(mode, L.Localize(mode)));
+
     private string GetReleaseGroupDisplayText(int releaseGroupId)
     {
         return releaseGroups.FirstOrDefault(group => group.ReleaseGroupId == releaseGroupId)?.Name
@@ -61,13 +70,21 @@ public partial class CreateOrEditReleaseTemplateDialog(
     {
         var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
 
+        var detectionMode = FormModel.UseReleaseCollections
+            ? FormModel.ReleaseCollectionDetectionMode
+            : ReleaseCollectionDetectionMode.Disabled;
+
         if (FormModel.IsEdit && FormModel.ReleaseTemplateId is not null)
         {
             await service.UpdateAsync(
                 FormModel.ReleaseTemplateId.Value,
                 FormModel.Name,
                 FormModel.ReleaseType,
-                FormModel.ReleaseGroupId
+                FormModel.ReleaseGroupId,
+                detectionMode,
+                FormModel.ReleaseCollectionPattern,
+                FormModel.ReleaseCollectionKeyTemplate,
+                FormModel.ReleaseCollectionNameTemplate
             );
             await DialogRef.CloseAsync(DialogResult.Ok(FormModel.ReleaseTemplateId.Value));
             return;
@@ -76,7 +93,11 @@ public partial class CreateOrEditReleaseTemplateDialog(
         var releaseTemplateId = await service.CreateAsync(
             FormModel.Name,
             FormModel.ReleaseType,
-            FormModel.ReleaseGroupId
+            FormModel.ReleaseGroupId,
+            detectionMode,
+            FormModel.ReleaseCollectionPattern,
+            FormModel.ReleaseCollectionKeyTemplate,
+            FormModel.ReleaseCollectionNameTemplate
         );
         await DialogRef.CloseAsync(DialogResult.Ok(releaseTemplateId));
     }
@@ -93,6 +114,37 @@ public partial class CreateOrEditReleaseTemplateDialog(
         if (FormModel.ReleaseGroupId == 0)
         {
             messageStore.Add(() => FormModel.ReleaseGroupId, L["SelectReleaseGroupRequired"]);
+        }
+
+        if (
+            FormModel.UseReleaseCollections
+            && FormModel.ReleaseCollectionDetectionMode
+                is ReleaseCollectionDetectionMode.CustomRegex
+        )
+        {
+            if (string.IsNullOrWhiteSpace(FormModel.ReleaseCollectionPattern))
+            {
+                messageStore.Add(
+                    () => FormModel.ReleaseCollectionPattern!,
+                    L["ReleaseCollectionPatternRequired"]
+                );
+            }
+
+            if (string.IsNullOrWhiteSpace(FormModel.ReleaseCollectionKeyTemplate))
+            {
+                messageStore.Add(
+                    () => FormModel.ReleaseCollectionKeyTemplate!,
+                    L["ReleaseCollectionKeyTemplateRequired"]
+                );
+            }
+
+            if (string.IsNullOrWhiteSpace(FormModel.ReleaseCollectionNameTemplate))
+            {
+                messageStore.Add(
+                    () => FormModel.ReleaseCollectionNameTemplate!,
+                    L["ReleaseCollectionNameTemplateRequired"]
+                );
+            }
         }
     }
 

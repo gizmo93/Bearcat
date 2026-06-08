@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 using NfoReleaseInfo = Bearcat.Abstractions.NfoDatabase.ReleaseInfo;
+using ReleaseNfo = Bearcat.Abstractions.NfoDatabase.ReleaseNfo;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
@@ -155,7 +156,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         var providerMock = SetupNfoProvider(
             NfoProviderDatabaseClassName,
             "Bearcat.Remote.Nfo.2026-GRP",
-            new Abstractions.NfoDatabase.ReleaseNfo("remote.nfo", "remote nfo content")
+            new ReleaseNfo("remote.nfo", "remote nfo content")
         );
 
         // Act
@@ -507,7 +508,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     private Mock<INfoProvider> SetupNfoProvider(
         string className,
         string expectedReleaseName,
-        Abstractions.NfoDatabase.ReleaseNfo? releaseNfo
+        ReleaseNfo? releaseNfo
     )
     {
         var configMock = new Mock<INfoDatabaseConfig>(MockBehavior.Strict);

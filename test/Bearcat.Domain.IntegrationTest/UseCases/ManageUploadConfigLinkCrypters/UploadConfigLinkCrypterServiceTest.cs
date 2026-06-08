@@ -128,7 +128,66 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
         result.ShouldBeFalse();
     }
 
-    private async Task<UploadConfigLinkCrypter> AddUploadConfigLinkCrypterAsync(string? password)
+    [Test]
+    public async Task DeleteAsync_LinkCrypterIsCollectionScoped_ThrowsAndKeepsUploadConfigLinkCrypter()
+    {
+        // Arrange
+        var linkCrypter = await AddUploadConfigLinkCrypterAsync(
+            "secret",
+            LinkCrypterContainerScope.ReleaseCollection
+        );
+
+        // Act
+        var exception = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.DeleteAsync(linkCrypter.Id, CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldBe(
+            "Collection scoped link crypters are managed through release templates."
+        );
+        var result = await dbContext.UploadConfigLinkCrypters.SingleAsync();
+
+        result.Id.ShouldBe(linkCrypter.Id);
+    }
+
+    [Test]
+    public async Task UpdateAsync_LinkCrypterIsCollectionScoped_ThrowsAndKeepsSettings()
+    {
+        // Arrange
+        var linkCrypter = await AddUploadConfigLinkCrypterAsync(
+            "secret",
+            LinkCrypterContainerScope.ReleaseCollection
+        );
+
+        // Act
+        var exception = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.UpdateAsync(
+                linkCrypter.Id,
+                "changed",
+                enableCaptcha: false,
+                enableContainerDownload: false,
+                enableClickAndLoad: false,
+                cancellationToken: CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe(
+            "Collection scoped link crypters are managed through release templates."
+        );
+        var result = await dbContext.UploadConfigLinkCrypters.SingleAsync();
+
+        result.Password.ShouldBe("secret");
+        result.EnableCaptcha.ShouldBeTrue();
+        result.EnableContainerDownload.ShouldBeTrue();
+        result.EnableClickAndLoad.ShouldBeTrue();
+    }
+
+    private async Task<UploadConfigLinkCrypter> AddUploadConfigLinkCrypterAsync(
+        string? password,
+        LinkCrypterContainerScope containerScope = LinkCrypterContainerScope.Release
+    )
     {
         var seed = await AddDependenciesAsync();
         var linkCrypter = new UploadConfigLinkCrypter
@@ -136,6 +195,7 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
             UploadConfigId = seed.UploadConfigId,
             LinkCrypterRegistrationId = seed.LinkCrypterRegistrationId,
             Password = password,
+            ContainerScope = containerScope,
         };
 
         dbContext.UploadConfigLinkCrypters.Add(linkCrypter);

@@ -50,6 +50,17 @@ public partial class ReleaseTemplateDetail(
                 Name = releaseTemplate.Name,
                 ReleaseType = releaseTemplate.ReleaseType,
                 ReleaseGroupId = releaseTemplate.ReleaseGroupId,
+                UseReleaseCollections =
+                    releaseTemplate.ReleaseCollectionDetectionMode
+                    != ReleaseCollectionDetectionMode.Disabled,
+                ReleaseCollectionDetectionMode =
+                    releaseTemplate.ReleaseCollectionDetectionMode
+                    == ReleaseCollectionDetectionMode.Disabled
+                        ? ReleaseCollectionDetectionMode.SeriesEpisodePattern
+                        : releaseTemplate.ReleaseCollectionDetectionMode,
+                ReleaseCollectionPattern = releaseTemplate.ReleaseCollectionPattern,
+                ReleaseCollectionKeyTemplate = releaseTemplate.ReleaseCollectionKeyTemplate,
+                ReleaseCollectionNameTemplate = releaseTemplate.ReleaseCollectionNameTemplate,
                 IsEdit = true,
             },
         };
@@ -249,6 +260,13 @@ public partial class ReleaseTemplateDetail(
                     HosterRegistrationId = uploadConfig.HosterRegistrationId,
                     ArchiveConfigTemplateId = uploadConfig.ArchiveConfigTemplateId,
                     PremiumOnlyDownload = uploadConfig.PremiumOnlyDownload,
+                    CollectionUploadSlotKey = uploadConfig.CollectionUploadSlotKey,
+                    CollectionUploadSlotName = uploadConfig.CollectionUploadSlotName,
+                    CollectionUploadSlotIsRequired = uploadConfig.CollectionUploadSlotIsRequired,
+                    CollectionUploadSlotPasswordPolicy =
+                        uploadConfig.CollectionUploadSlotPasswordPolicy,
+                    CollectionUploadSlotExpectedArchivePassword =
+                        uploadConfig.CollectionUploadSlotExpectedArchivePassword,
                     LinksDistributedTo = uploadConfig.LinksDistributedTo.ToList(),
                     IsEdit = true,
                 },
@@ -433,6 +451,7 @@ public partial class ReleaseTemplateDetail(
                 new UploadConfigLinkCrypterTemplateFormModel
                 {
                     LinkCrypterRegistrationId = linkCrypter.LinkCrypterRegistrationId,
+                    ContainerScope = linkCrypter.ContainerScope,
                     Password = linkCrypter.Password,
                     EnableCaptcha = linkCrypter.EnableCaptcha,
                     EnableContainerDownload = linkCrypter.EnableContainerDownload,

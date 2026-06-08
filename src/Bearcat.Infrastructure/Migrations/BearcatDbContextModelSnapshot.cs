@@ -252,6 +252,45 @@ namespace BearCat.Infrastructure.Migrations
                     b.ToTable("BackgroundTaskStates");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.CollectionUploadSlot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ExpectedArchivePassword")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("PasswordPolicy")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ReleaseCollectionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReleaseCollectionId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("CollectionUploadSlots");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.ForumPostTemplate", b =>
                 {
                     b.Property<int>("Id")
@@ -467,6 +506,9 @@ namespace BearCat.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CollectionUploadSlotId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("ContainerUrl")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -490,29 +532,53 @@ namespace BearCat.Infrastructure.Migrations
                         .HasColumnType("text[]");
 
                     b.Property<string>("ExternalReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text");
+
+                    b.Property<int>("LinkCrypterRegistrationId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Password")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int>("Scope")
+                        .HasColumnType("integer");
+
                     b.Property<int>("State")
                         .HasColumnType("integer");
 
-                    b.Property<int>("UploadConfigLinkCrypterId")
+                    b.Property<int?>("UploadConfigLinkCrypterId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("UploadId")
+                    b.Property<int?>("UploadId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CollectionUploadSlotId");
+
+                    b.HasIndex("LinkCrypterRegistrationId");
 
                     b.HasIndex("UploadConfigLinkCrypterId");
 
                     b.HasIndex("UploadId");
 
                     b.ToTable("LinkCrypterContainers");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterContainerSourceUpload", b =>
+                {
+                    b.Property<int>("LinkCrypterContainerId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UploadId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("LinkCrypterContainerId", "UploadId");
+
+                    b.HasIndex("UploadId");
+
+                    b.ToTable("LinkCrypterContainerSourceUploads");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterRegistration", b =>
@@ -636,6 +702,9 @@ namespace BearCat.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<int?>("ReleaseCollectionId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("ReleaseFolderPath")
                         .IsRequired()
                         .HasMaxLength(1000)
@@ -653,9 +722,44 @@ namespace BearCat.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ReleaseCollectionId");
+
                     b.HasIndex("ReleaseGroupId");
 
                     b.ToTable("Releases");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseCollection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("ReleaseGroupId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReleaseGroupId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("ReleaseCollections");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseExternalInfo", b =>
@@ -837,6 +941,21 @@ namespace BearCat.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<int>("ReleaseCollectionDetectionMode")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ReleaseCollectionKeyTemplate")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ReleaseCollectionNameTemplate")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ReleaseCollectionPattern")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.Property<int>("ReleaseGroupId")
                         .HasColumnType("integer");
 
@@ -905,6 +1024,9 @@ namespace BearCat.Infrastructure.Migrations
                     b.Property<int>("ArchiveConfigId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("CollectionUploadSlotId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("HosterRegistrationId")
                         .HasColumnType("integer");
 
@@ -927,6 +1049,8 @@ namespace BearCat.Infrastructure.Migrations
 
                     b.HasIndex("ArchiveConfigId");
 
+                    b.HasIndex("CollectionUploadSlotId");
+
                     b.HasIndex("HosterRegistrationId");
 
                     b.HasIndex("ReleaseId");
@@ -941,6 +1065,9 @@ namespace BearCat.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ContainerScope")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("EnableCaptcha")
                         .HasColumnType("boolean");
@@ -977,6 +1104,9 @@ namespace BearCat.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ContainerScope")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("EnableCaptcha")
                         .HasColumnType("boolean");
@@ -1015,6 +1145,24 @@ namespace BearCat.Infrastructure.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ArchiveConfigTemplateId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CollectionUploadSlotExpectedArchivePassword")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("CollectionUploadSlotIsRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("CollectionUploadSlotKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("CollectionUploadSlotName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("CollectionUploadSlotPasswordPolicy")
                         .HasColumnType("integer");
 
                     b.Property<int>("HosterRegistrationId")
@@ -1136,6 +1284,17 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("Archive");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.CollectionUploadSlot", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseCollection", "ReleaseCollection")
+                        .WithMany("UploadSlots")
+                        .HasForeignKey("ReleaseCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ReleaseCollection");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.ImageUpload", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.ImageUploadConfig", "ImageUploadConfig")
@@ -1198,21 +1357,53 @@ namespace BearCat.Infrastructure.Migrations
 
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterContainer", b =>
                 {
+                    b.HasOne("Bearcat.Domain.Entities.CollectionUploadSlot", "CollectionUploadSlot")
+                        .WithMany()
+                        .HasForeignKey("CollectionUploadSlotId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Bearcat.Domain.Entities.LinkCrypterRegistration", "LinkCrypterRegistration")
+                        .WithMany()
+                        .HasForeignKey("LinkCrypterRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Bearcat.Domain.Entities.UploadConfigLinkCrypter", "UploadConfigLinkCrypter")
                         .WithMany("LinkCrypterContainers")
                         .HasForeignKey("UploadConfigLinkCrypterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Bearcat.Domain.Entities.Upload", "Upload")
                         .WithMany("LinkCrypterContainers")
                         .HasForeignKey("UploadId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("CollectionUploadSlot");
+
+                    b.Navigation("LinkCrypterRegistration");
 
                     b.Navigation("Upload");
 
                     b.Navigation("UploadConfigLinkCrypter");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterContainerSourceUpload", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.LinkCrypterContainer", "LinkCrypterContainer")
+                        .WithMany("SourceUploads")
+                        .HasForeignKey("LinkCrypterContainerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bearcat.Domain.Entities.Upload", "Upload")
+                        .WithMany()
+                        .HasForeignKey("UploadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LinkCrypterContainer");
+
+                    b.Navigation("Upload");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.Notification", b =>
@@ -1241,8 +1432,26 @@ namespace BearCat.Infrastructure.Migrations
 
             modelBuilder.Entity("Bearcat.Domain.Entities.Release", b =>
                 {
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseCollection", "ReleaseCollection")
+                        .WithMany("Releases")
+                        .HasForeignKey("ReleaseCollectionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Bearcat.Domain.Entities.ReleaseGroup", "ReleaseGroup")
                         .WithMany("Releases")
+                        .HasForeignKey("ReleaseGroupId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ReleaseCollection");
+
+                    b.Navigation("ReleaseGroup");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseCollection", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseGroup", "ReleaseGroup")
+                        .WithMany()
                         .HasForeignKey("ReleaseGroupId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1358,6 +1567,11 @@ namespace BearCat.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bearcat.Domain.Entities.CollectionUploadSlot", "CollectionUploadSlot")
+                        .WithMany("UploadConfigs")
+                        .HasForeignKey("CollectionUploadSlotId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Bearcat.Domain.Entities.HosterRegistration", "HosterRegistration")
                         .WithMany("UploadConfigs")
                         .HasForeignKey("HosterRegistrationId")
@@ -1371,6 +1585,8 @@ namespace BearCat.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("ArchiveConfig");
+
+                    b.Navigation("CollectionUploadSlot");
 
                     b.Navigation("HosterRegistration");
 
@@ -1487,6 +1703,11 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("UploadedFiles");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.CollectionUploadSlot", b =>
+                {
+                    b.Navigation("UploadConfigs");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.HosterRegistration", b =>
                 {
                     b.Navigation("UploadConfigs");
@@ -1512,6 +1733,8 @@ namespace BearCat.Infrastructure.Migrations
             modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterContainer", b =>
                 {
                     b.Navigation("Notifications");
+
+                    b.Navigation("SourceUploads");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.Release", b =>
@@ -1523,6 +1746,13 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("ReleaseInfo");
 
                     b.Navigation("UploadConfigs");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseCollection", b =>
+                {
+                    b.Navigation("Releases");
+
+                    b.Navigation("UploadSlots");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseGroup", b =>

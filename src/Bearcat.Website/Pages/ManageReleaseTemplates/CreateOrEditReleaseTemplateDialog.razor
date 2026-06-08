@@ -28,6 +28,45 @@
                                Options="ReleaseTypeOptions" />
         </div>
 
+        <div class="space-y-4 rounded-md border border-border/70 p-4">
+            <div class="flex items-center gap-2">
+                <BbCheckbox @bind-Checked="FormModel.UseReleaseCollections"
+                            Id="use-release-collections"
+                            AriaLabel="@L["UseReleaseCollections"]" />
+                <BbLabel For="use-release-collections">
+                    @L["UseReleaseCollections"]
+                </BbLabel>
+            </div>
+
+            @if (FormModel.UseReleaseCollections)
+            {
+                <BbFormFieldSelect TValue="ReleaseCollectionDetectionMode"
+                                   @bind-Value="FormModel.ReleaseCollectionDetectionMode"
+                                   Label="@L["ReleaseCollectionDetectionMode"]"
+                                   Options="ReleaseCollectionDetectionModeOptions" />
+
+                <div class="grid gap-4 md:grid-cols-2">
+                    <BbFormFieldInput TValue="string"
+                                      @bind-Value="FormModel.ReleaseCollectionKeyTemplate"
+                                      Label="@L["ReleaseCollectionKeyTemplate"]"
+                                      Placeholder="{title}.S{season}.{variant}" />
+
+                    <BbFormFieldInput TValue="string"
+                                      @bind-Value="FormModel.ReleaseCollectionNameTemplate"
+                                      Label="@L["ReleaseCollectionNameTemplate"]"
+                                      Placeholder="{title}.S{season}.{variant}" />
+                </div>
+
+                @if (FormModel.ReleaseCollectionDetectionMode is ReleaseCollectionDetectionMode.CustomRegex)
+                {
+                    <BbFormFieldInput TValue="string"
+                                      @bind-Value="FormModel.ReleaseCollectionPattern"
+                                      Label="@L["ReleaseCollectionPattern"]"
+                                      Placeholder="^(?<title>.+?)\.S(?<season>\d{2})E(?<episode>\d{2})\.(?<variant>.+)$" />
+                }
+            }
+        </div>
+
         <div class="flex justify-end gap-2">
             <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
                 @L["Cancel"]

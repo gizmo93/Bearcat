@@ -493,11 +493,11 @@ public class ToLinkToTest
         httpMessageHandler.PendingRequests.ShouldBe(0);
     }
 
-    private static Bearcat.LinkCrypters.ToLinkTo.Api.ApiResponse<TBody> CreateSuccessResponse<TBody>(
+    private static LinkCrypters.ToLinkTo.Api.ApiResponse<TBody> CreateSuccessResponse<TBody>(
         TBody body
     )
     {
-        return new Bearcat.LinkCrypters.ToLinkTo.Api.ApiResponse<TBody>
+        return new LinkCrypters.ToLinkTo.Api.ApiResponse<TBody>
         {
             Response = new ApiResponseContent<TBody>
             {
@@ -509,12 +509,12 @@ public class ToLinkToTest
         };
     }
 
-    private static Bearcat.LinkCrypters.ToLinkTo.Api.ApiResponse<TBody> CreateErrorResponse<TBody>(
+    private static LinkCrypters.ToLinkTo.Api.ApiResponse<TBody> CreateErrorResponse<TBody>(
         string errorMessage,
         int errorCode = 1
     )
     {
-        return new Bearcat.LinkCrypters.ToLinkTo.Api.ApiResponse<TBody>
+        return new LinkCrypters.ToLinkTo.Api.ApiResponse<TBody>
         {
             Response = new ApiResponseContent<TBody>
             {

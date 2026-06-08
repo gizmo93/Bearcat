@@ -1,10 +1,11 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
-using Bearcat.Hosters.GoFile.Api.GetAccountId;
+using Bearcat.Hosters.GoFile.Api.CreateFolder;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 using Refit;
+using Response = Bearcat.Hosters.GoFile.Api.GetAccountId.Response;
 
 namespace Bearcat.Hosters.GoFile.Api;
 
@@ -114,7 +115,7 @@ public class ApiClient(
 
         var folder = await api.CreateFolderAsync(
             apiToken,
-            new CreateFolder.Request(accountInfos.Data.RootFolder, folderName),
+            new Request(accountInfos.Data.RootFolder, folderName),
             cancellationToken
         );
 

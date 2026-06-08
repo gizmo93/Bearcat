@@ -1,3 +1,5 @@
+using Bearcat.Domain.ValueObjects;
+
 namespace Bearcat.Website.Pages.ManageReleaseTemplates;
 
 public class UploadConfigTemplateFormModel
@@ -9,6 +11,16 @@ public class UploadConfigTemplateFormModel
     public int? ArchiveConfigTemplateId { get; set; }
 
     public bool PremiumOnlyDownload { get; set; }
+
+    public string? CollectionUploadSlotKey { get; set; }
+
+    public string? CollectionUploadSlotName { get; set; }
+
+    public bool CollectionUploadSlotIsRequired { get; set; }
+
+    public CollectionUploadSlotPasswordPolicy CollectionUploadSlotPasswordPolicy { get; set; }
+
+    public string? CollectionUploadSlotExpectedArchivePassword { get; set; }
 
     public List<string> LinksDistributedTo { get; set; } = [];
 

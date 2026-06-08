@@ -8,6 +8,17 @@ public interface ILinkCrypterContainerCreationWriteRepository
         CancellationToken cancellationToken
     );
 
+    Task<CollectionUploadSlot> GetCollectionUploadSlotAsync(
+        int collectionUploadSlotId,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyList<LinkCrypterContainer>> GetCollectionContainersAsync(
+        int collectionUploadSlotId,
+        CancellationToken cancellationToken
+    );
+
     void Add(LinkCrypterContainer container);
+    void Remove(LinkCrypterContainer container);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

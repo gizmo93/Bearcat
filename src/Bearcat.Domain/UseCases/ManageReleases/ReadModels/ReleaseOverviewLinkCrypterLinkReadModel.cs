@@ -7,6 +7,7 @@ public record ReleaseOverviewLinkCrypterLinkReadModel(
     string LinkCrypterRegistrationName,
     string LinkCrypterClassName,
     string ContainerUrl,
+    LinkCrypterContainerScope Scope,
     LinkCrypterContainerState State,
     DateTime CreatedAt,
     IReadOnlyList<string> Errors

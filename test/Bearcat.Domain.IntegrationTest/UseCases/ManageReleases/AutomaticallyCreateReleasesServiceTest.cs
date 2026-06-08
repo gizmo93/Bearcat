@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -45,7 +46,11 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
             new FileSystemService(),
             CreateReleaseInfoResolutionService(),
             CreateTimeProvider(),
-            archiverFactory.Object
+            archiverFactory.Object,
+            new ReleaseCollectionAssignmentService(
+                new ReleaseCollectionRepository(dbContext, dbContext),
+                CreateTimeProvider()
+            )
         );
     }
 
@@ -188,6 +193,54 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         externalInfo.Urls.ShouldContain(url =>
             url.Type == UrlType.Other && url.Url == "https://www.xrel.to/movie/123"
         );
+    }
+
+    [Test]
+    public async Task ProcessAsync_MultipleEpisodesInSameTick_ReusesPendingReleaseCollection()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var template = await dbContext.ReleaseTemplates.SingleAsync(template =>
+            template.Id == releaseTemplate.ReleaseTemplateId
+        );
+        template.ReleaseCollectionDetectionMode =
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern;
+        await dbContext.SaveChangesAsync();
+
+        Directory.CreateDirectory(
+            Path.Combine(
+                tempRootPath,
+                "Bodies.2023.S01E01.German.DL.EAC3.1080p.DV.HDR.NF.WEB.H265-ZeroTwo"
+            )
+        );
+        Directory.CreateDirectory(
+            Path.Combine(
+                tempRootPath,
+                "Bodies.2023.S01E02.German.DL.EAC3.1080p.DV.HDR.NF.WEB.H265-ZeroTwo"
+            )
+        );
+        Directory.CreateDirectory(
+            Path.Combine(
+                tempRootPath,
+                "Bodies.2023.S01E03.German.DL.EAC3.1080p.DV.HDR.NF.WEB.H265-ZeroTwo"
+            )
+        );
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "Bodies.*");
+
+        // Act
+        var result = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(3);
+
+        var releaseCollection = await dbContext
+            .ReleaseCollections.Include(collection => collection.Releases)
+            .SingleAsync();
+
+        releaseCollection.Key.ShouldBe(
+            "bodies.2023.s01.german.dl.eac3.1080p.dv.hdr.nf.web.h265.zerotwo"
+        );
+        releaseCollection.Releases.Count.ShouldBe(3);
     }
 
     [Test]

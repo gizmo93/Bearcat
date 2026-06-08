@@ -10,10 +10,34 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
     private const string UnmanagedArchiveFilesBasePath = "Release folder";
     private const string UnmanagedArchiverName = "Unmanaged";
 
+    public Task<int> CreateAsync(
+        string name,
+        ReleaseType releaseType,
+        int releaseGroupId,
+        CancellationToken cancellationToken
+    )
+    {
+        return CreateAsync(
+            name: name,
+            releaseType: releaseType,
+            releaseGroupId: releaseGroupId,
+            releaseCollectionDetectionMode: ReleaseCollectionDetectionMode.Disabled,
+            releaseCollectionPattern: null,
+            releaseCollectionKeyTemplate: null,
+            releaseCollectionNameTemplate: null,
+            cancellationToken: cancellationToken
+        );
+    }
+
     public async Task<int> CreateAsync(
         string name,
         ReleaseType releaseType,
         int releaseGroupId,
+        ReleaseCollectionDetectionMode releaseCollectionDetectionMode =
+            ReleaseCollectionDetectionMode.Disabled,
+        string? releaseCollectionPattern = null,
+        string? releaseCollectionKeyTemplate = null,
+        string? releaseCollectionNameTemplate = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -22,6 +46,10 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             Name = name,
             ReleaseType = releaseType,
             ReleaseGroupId = releaseGroupId,
+            ReleaseCollectionDetectionMode = releaseCollectionDetectionMode,
+            ReleaseCollectionPattern = CleanOptional(releaseCollectionPattern),
+            ReleaseCollectionKeyTemplate = CleanOptional(releaseCollectionKeyTemplate),
+            ReleaseCollectionNameTemplate = CleanOptional(releaseCollectionNameTemplate),
         };
 
         EnsureUnmanagedArchiveConfigTemplate(releaseTemplate);
@@ -32,11 +60,37 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         return releaseTemplate.Id;
     }
 
+    public Task UpdateAsync(
+        int releaseTemplateId,
+        string name,
+        ReleaseType releaseType,
+        int releaseGroupId,
+        CancellationToken cancellationToken
+    )
+    {
+        return UpdateAsync(
+            releaseTemplateId,
+            name,
+            releaseType,
+            releaseGroupId,
+            ReleaseCollectionDetectionMode.Disabled,
+            releaseCollectionPattern: null,
+            releaseCollectionKeyTemplate: null,
+            releaseCollectionNameTemplate: null,
+            cancellationToken: cancellationToken
+        );
+    }
+
     public async Task UpdateAsync(
         int releaseTemplateId,
         string name,
         ReleaseType releaseType,
         int releaseGroupId,
+        ReleaseCollectionDetectionMode releaseCollectionDetectionMode =
+            ReleaseCollectionDetectionMode.Disabled,
+        string? releaseCollectionPattern = null,
+        string? releaseCollectionKeyTemplate = null,
+        string? releaseCollectionNameTemplate = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -52,6 +106,12 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
 
         releaseTemplate.Name = name;
         releaseTemplate.ReleaseGroupId = releaseGroupId;
+        releaseTemplate.ReleaseCollectionDetectionMode = releaseCollectionDetectionMode;
+        releaseTemplate.ReleaseCollectionPattern = CleanOptional(releaseCollectionPattern);
+        releaseTemplate.ReleaseCollectionKeyTemplate = CleanOptional(releaseCollectionKeyTemplate);
+        releaseTemplate.ReleaseCollectionNameTemplate = CleanOptional(
+            releaseCollectionNameTemplate
+        );
 
         EnsureUnmanagedArchiveConfigTemplate(releaseTemplate);
 
@@ -137,11 +197,21 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
                     ? null
                     : config.Name,
                 PremiumOnlyDownload = config.PremiumOnlyDownload,
+                CollectionUploadSlotKey = config.CollectionUploadSlot?.Key,
+                CollectionUploadSlotName = config.CollectionUploadSlot?.Name,
+                CollectionUploadSlotIsRequired = config.CollectionUploadSlot?.IsRequired ?? false,
+                CollectionUploadSlotPasswordPolicy =
+                    config.CollectionUploadSlot?.PasswordPolicy
+                    ?? CollectionUploadSlotPasswordPolicy.Ignore,
+                CollectionUploadSlotExpectedArchivePassword = config
+                    .CollectionUploadSlot
+                    ?.ExpectedArchivePassword,
                 LinksDistributedTo = CleanLinks(config.LinksDistributedTo),
                 LinkCrypterTemplates = config
                     .LinkCrypters.Select(linkCrypter => new UploadConfigLinkCrypterTemplate
                     {
                         LinkCrypterRegistrationId = linkCrypter.LinkCrypterRegistrationId,
+                        ContainerScope = linkCrypter.ContainerScope,
                         Password = CleanOptional(linkCrypter.Password),
                         EnableCaptcha = linkCrypter.EnableCaptcha,
                         EnableContainerDownload = linkCrypter.EnableContainerDownload,
@@ -274,6 +344,37 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         CancellationToken cancellationToken = default
     )
     {
+        return await CreateUploadConfigTemplateAsync(
+            releaseTemplateId,
+            name,
+            hosterRegistrationId,
+            archiveConfigTemplateId,
+            premiumOnlyDownload,
+            linksDistributedTo,
+            collectionUploadSlotKey: null,
+            collectionUploadSlotName: null,
+            collectionUploadSlotIsRequired: false,
+            collectionUploadSlotPasswordPolicy: CollectionUploadSlotPasswordPolicy.Ignore,
+            collectionUploadSlotExpectedArchivePassword: null,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<int> CreateUploadConfigTemplateAsync(
+        int releaseTemplateId,
+        string? name,
+        int hosterRegistrationId,
+        int archiveConfigTemplateId,
+        bool premiumOnlyDownload,
+        IReadOnlyList<string> linksDistributedTo,
+        string? collectionUploadSlotKey,
+        string? collectionUploadSlotName,
+        bool collectionUploadSlotIsRequired,
+        CollectionUploadSlotPasswordPolicy collectionUploadSlotPasswordPolicy,
+        string? collectionUploadSlotExpectedArchivePassword,
+        CancellationToken cancellationToken = default
+    )
+    {
         var releaseTemplate = await writeRepository.GetByIdWithChildrenAsync(
             releaseTemplateId,
             cancellationToken
@@ -289,6 +390,13 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             HosterRegistrationId = hosterRegistrationId,
             ArchiveConfigTemplateId = archiveConfigTemplate?.Id ?? archiveConfigTemplateId,
             PremiumOnlyDownload = premiumOnlyDownload,
+            CollectionUploadSlotKey = CleanOptional(collectionUploadSlotKey),
+            CollectionUploadSlotName = CleanOptional(collectionUploadSlotName),
+            CollectionUploadSlotIsRequired = collectionUploadSlotIsRequired,
+            CollectionUploadSlotPasswordPolicy = collectionUploadSlotPasswordPolicy,
+            CollectionUploadSlotExpectedArchivePassword = CleanOptional(
+                collectionUploadSlotExpectedArchivePassword
+            ),
             LinksDistributedTo = CleanLinks(linksDistributedTo),
         };
 
@@ -314,6 +422,37 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         CancellationToken cancellationToken = default
     )
     {
+        await UpdateUploadConfigTemplateAsync(
+            uploadConfigTemplateId,
+            name,
+            hosterRegistrationId,
+            archiveConfigTemplateId,
+            premiumOnlyDownload,
+            linksDistributedTo,
+            collectionUploadSlotKey: null,
+            collectionUploadSlotName: null,
+            collectionUploadSlotIsRequired: false,
+            collectionUploadSlotPasswordPolicy: CollectionUploadSlotPasswordPolicy.Ignore,
+            collectionUploadSlotExpectedArchivePassword: null,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task UpdateUploadConfigTemplateAsync(
+        int uploadConfigTemplateId,
+        string? name,
+        int hosterRegistrationId,
+        int archiveConfigTemplateId,
+        bool premiumOnlyDownload,
+        IReadOnlyList<string> linksDistributedTo,
+        string? collectionUploadSlotKey,
+        string? collectionUploadSlotName,
+        bool collectionUploadSlotIsRequired,
+        CollectionUploadSlotPasswordPolicy collectionUploadSlotPasswordPolicy,
+        string? collectionUploadSlotExpectedArchivePassword,
+        CancellationToken cancellationToken = default
+    )
+    {
         var uploadConfigTemplate = await writeRepository.GetUploadConfigTemplateAsync(
             uploadConfigTemplateId,
             cancellationToken
@@ -325,9 +464,21 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
 
         uploadConfigTemplate.Name = CleanOptional(name);
         uploadConfigTemplate.HosterRegistrationId = hosterRegistrationId;
+
         uploadConfigTemplate.ArchiveConfigTemplateId =
             archiveConfigTemplate?.Id ?? archiveConfigTemplateId;
+
         uploadConfigTemplate.PremiumOnlyDownload = premiumOnlyDownload;
+        uploadConfigTemplate.CollectionUploadSlotKey = CleanOptional(collectionUploadSlotKey);
+        uploadConfigTemplate.CollectionUploadSlotName = CleanOptional(collectionUploadSlotName);
+        uploadConfigTemplate.CollectionUploadSlotIsRequired = collectionUploadSlotIsRequired;
+
+        uploadConfigTemplate.CollectionUploadSlotPasswordPolicy =
+            collectionUploadSlotPasswordPolicy;
+
+        uploadConfigTemplate.CollectionUploadSlotExpectedArchivePassword = CleanOptional(
+            collectionUploadSlotExpectedArchivePassword
+        );
 
         if (archiveConfigTemplate is not null)
         {
@@ -416,6 +567,29 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         bool enableCaptcha,
         bool enableContainerDownload,
         bool enableClickAndLoad,
+        CancellationToken cancellationToken
+    )
+    {
+        return await CreateUploadConfigLinkCrypterTemplateAsync(
+            uploadConfigTemplateId: uploadConfigTemplateId,
+            linkCrypterRegistrationId: linkCrypterRegistrationId,
+            password: password,
+            enableCaptcha: enableCaptcha,
+            enableContainerDownload: enableContainerDownload,
+            enableClickAndLoad: enableClickAndLoad,
+            containerScope: LinkCrypterContainerScope.Release,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<int> CreateUploadConfigLinkCrypterTemplateAsync(
+        int uploadConfigTemplateId,
+        int linkCrypterRegistrationId,
+        string? password,
+        bool enableCaptcha,
+        bool enableContainerDownload,
+        bool enableClickAndLoad,
+        LinkCrypterContainerScope containerScope = LinkCrypterContainerScope.Release,
         CancellationToken cancellationToken = default
     )
     {
@@ -427,6 +601,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         var linkCrypterTemplate = new UploadConfigLinkCrypterTemplate
         {
             LinkCrypterRegistrationId = linkCrypterRegistrationId,
+            ContainerScope = containerScope,
             Password = CleanOptional(password),
             EnableCaptcha = enableCaptcha,
             EnableContainerDownload = enableContainerDownload,
@@ -446,6 +621,27 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         bool enableCaptcha,
         bool enableContainerDownload,
         bool enableClickAndLoad,
+        CancellationToken cancellationToken
+    )
+    {
+        await UpdateUploadConfigLinkCrypterTemplateAsync(
+            uploadConfigLinkCrypterTemplateId: uploadConfigLinkCrypterTemplateId,
+            password: password,
+            enableCaptcha: enableCaptcha,
+            enableContainerDownload: enableContainerDownload,
+            enableClickAndLoad: enableClickAndLoad,
+            containerScope: LinkCrypterContainerScope.Release,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task UpdateUploadConfigLinkCrypterTemplateAsync(
+        int uploadConfigLinkCrypterTemplateId,
+        string? password,
+        bool enableCaptcha,
+        bool enableContainerDownload,
+        bool enableClickAndLoad,
+        LinkCrypterContainerScope containerScope = LinkCrypterContainerScope.Release,
         CancellationToken cancellationToken = default
     )
     {
@@ -455,6 +651,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         );
 
         linkCrypterTemplate.Password = CleanOptional(password);
+        linkCrypterTemplate.ContainerScope = containerScope;
         linkCrypterTemplate.EnableCaptcha = enableCaptcha;
         linkCrypterTemplate.EnableContainerDownload = enableContainerDownload;
         linkCrypterTemplate.EnableClickAndLoad = enableClickAndLoad;

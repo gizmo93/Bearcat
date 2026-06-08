@@ -541,6 +541,13 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         var uploadConfigTemplate = template.UploadConfigTemplates.Single();
         uploadConfigTemplate.Name.ShouldBeNull();
         uploadConfigTemplate.PremiumOnlyDownload.ShouldBeTrue();
+        uploadConfigTemplate.CollectionUploadSlotKey.ShouldBe("forum-a");
+        uploadConfigTemplate.CollectionUploadSlotName.ShouldBe("Forum A");
+        uploadConfigTemplate.CollectionUploadSlotIsRequired.ShouldBeTrue();
+        uploadConfigTemplate.CollectionUploadSlotPasswordPolicy.ShouldBe(
+            CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue
+        );
+        uploadConfigTemplate.CollectionUploadSlotExpectedArchivePassword.ShouldBe("archive-secret");
         uploadConfigTemplate.LinksDistributedTo.ShouldBe(["forum-a", "forum-b"]);
         uploadConfigTemplate.ArchiveConfigTemplateId.ShouldBe(archiveConfigTemplate.Id);
         uploadConfigTemplate.LinkCrypterTemplates.Single().Password.ShouldBe("container-secret");
@@ -683,6 +690,13 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
             ReleaseType = ReleaseType.Managed,
             ReleaseFolderPath = "/tmp/releases/Bearcat.Release.001",
             ReleaseGroupId = releaseGroup.Id,
+            ReleaseCollection = new ReleaseCollection
+            {
+                ReleaseGroupId = releaseGroup.Id,
+                Key = "bearcat.release.001.collection",
+                Name = "Bearcat Release 001 Collection",
+                CreatedAt = DateTime.UtcNow,
+            },
             ArchiveConfigs =
             [
                 new ArchiveConfig
@@ -701,6 +715,15 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
             new UploadConfig
             {
                 Name = hosterRegistration.Name,
+                CollectionUploadSlot = new CollectionUploadSlot
+                {
+                    ReleaseCollection = release.ReleaseCollection!,
+                    Key = "forum-a",
+                    Name = "Forum A",
+                    IsRequired = true,
+                    PasswordPolicy = CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue,
+                    ExpectedArchivePassword = "archive-secret",
+                },
                 HosterRegistrationId = hosterRegistration.Id,
                 ArchiveConfig = release.ArchiveConfigs.Single(),
                 PremiumOnlyDownload = true,
