@@ -7,34 +7,30 @@ namespace Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 
 public static class ForumPostTemplateVariableCatalog
 {
+    private static readonly IReadOnlyList<ForumPostTemplateVariableReadModel> ImageLinkVariables =
+    [
+        new(
+            "{{ imagelinks.<image_upload_config_name>.full }}",
+            "Full image URL by image upload configuration name. The configuration name is normalized to lower snake case."
+        ),
+        new(
+            "{{ imagelinks.<image_upload_config_name>.medium }}",
+            "Medium image URL by image upload configuration name."
+        ),
+        new(
+            "{{ imagelinks.<image_upload_config_name>.thumbnail }}",
+            "Thumbnail image URL by image upload configuration name."
+        ),
+        new(
+            "{{ imagelinks[\"Image Upload Config Name\"].full }}",
+            "Full image URL using the original image upload configuration name."
+        ),
+    ];
+
     public static IReadOnlyList<ForumPostTemplateVariableReadModel> GetVariables()
     {
         var variables = GetVariables(typeof(ForumPostTemplateRenderModel), null).ToList();
-        variables.Add(
-            new ForumPostTemplateVariableReadModel(
-                "{{ imagelinks.<image_upload_config_name>.full }}",
-                "Full image URL by image upload configuration name. The configuration name is normalized to lower snake case."
-            )
-        );
-        variables.Add(
-            new ForumPostTemplateVariableReadModel(
-                "{{ imagelinks.<image_upload_config_name>.medium }}",
-                "Medium image URL by image upload configuration name."
-            )
-        );
-        variables.Add(
-            new ForumPostTemplateVariableReadModel(
-                "{{ imagelinks.<image_upload_config_name>.thumbnail }}",
-                "Thumbnail image URL by image upload configuration name."
-            )
-        );
-        variables.Add(
-            new ForumPostTemplateVariableReadModel(
-                "{{ imagelinks[\"Image Upload Config Name\"].full }}",
-                "Full image URL using the original image upload configuration name."
-            )
-        );
-
+        variables.AddRange(ImageLinkVariables);
         return variables;
     }
 
@@ -52,47 +48,51 @@ public static class ForumPostTemplateVariableCatalog
         {
             var attribute = property.GetCustomAttribute<ForumPostTemplateVariableAttribute>();
             if (attribute is null)
-            {
                 continue;
-            }
 
             var path = CombinePath(prefix, ToSnakeCase(property.Name));
 
-            if (!string.IsNullOrWhiteSpace(attribute.LoopVariable))
-            {
-                yield return new ForumPostTemplateVariableReadModel(
-                    $"{{{{ for {attribute.LoopVariable} in {path} }}}}",
-                    attribute.Description
-                );
+            foreach (var variable in GetVariablesForProperty(property, attribute, path))
+                yield return variable;
+        }
+    }
 
-                var elementType =
-                    attribute.ElementType ?? GetEnumerableElementType(property.PropertyType);
-                if (elementType is not null && !IsSimple(elementType))
-                {
-                    foreach (var child in GetVariables(elementType, attribute.LoopVariable))
-                    {
-                        yield return child;
-                    }
-                }
-
-                continue;
-            }
-
-            if (attribute.IncludeChildren)
-            {
-                foreach (var child in GetVariables(property.PropertyType, path))
-                {
-                    yield return child;
-                }
-
-                continue;
-            }
-
+    private static IEnumerable<ForumPostTemplateVariableReadModel> GetVariablesForProperty(
+        PropertyInfo property,
+        ForumPostTemplateVariableAttribute attribute,
+        string path
+    )
+    {
+        if (!string.IsNullOrWhiteSpace(attribute.LoopVariable))
+        {
             yield return new ForumPostTemplateVariableReadModel(
-                $"{{{{ {path} }}}}",
+                $"{{{{ for {attribute.LoopVariable} in {path} }}}}",
                 attribute.Description
             );
+
+            var elementType =
+                attribute.ElementType ?? GetEnumerableElementType(property.PropertyType);
+            if (elementType is not null && !IsSimple(elementType))
+            {
+                foreach (var child in GetVariables(elementType, attribute.LoopVariable))
+                    yield return child;
+            }
+
+            yield break;
         }
+
+        if (attribute.IncludeChildren)
+        {
+            foreach (var child in GetVariables(property.PropertyType, path))
+                yield return child;
+
+            yield break;
+        }
+
+        yield return new ForumPostTemplateVariableReadModel(
+            $"{{{{ {path} }}}}",
+            attribute.Description
+        );
     }
 
     private static Type? GetEnumerableElementType(Type type)

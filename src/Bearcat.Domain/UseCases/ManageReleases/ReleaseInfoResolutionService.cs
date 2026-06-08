@@ -100,20 +100,12 @@ public class ReleaseInfoResolutionService(
             return false;
         }
 
-        var releaseInfo = release.ReleaseInfo;
-        if (
-            await TryResolveNfoAsync(
-                release: release,
-                releaseInfo: releaseInfo,
-                registrations: registrations,
-                cancellationToken: cancellationToken
-            )
-        )
-        {
-            return true;
-        }
-
-        return false;
+        return await TryResolveNfoAsync(
+            release: release,
+            releaseInfo: release.ReleaseInfo,
+            registrations: registrations,
+            cancellationToken: cancellationToken
+        );
     }
 
     private async Task<bool> TryResolveAndAttachReleaseInfoAsync(
@@ -127,20 +119,17 @@ public class ReleaseInfoResolutionService(
             return false;
         }
 
+        if (release.Id > 0 && await repository.HasReleaseInfoAsync(release.Id, cancellationToken))
+        {
+            return false;
+        }
+
         foreach (var registration in registrations)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             try
             {
-                if (
-                    release.Id > 0
-                    && await repository.HasReleaseInfoAsync(release.Id, cancellationToken)
-                )
-                {
-                    return false;
-                }
-
                 var nfoDatabase = nfoDatabaseFactory.Get(registration.NfoDatabaseClassName);
 
                 var config = nfoDatabase.DeserializeConfig(registration.SerializedConfig);
@@ -156,9 +145,7 @@ public class ReleaseInfoResolutionService(
                     continue;
                 }
 
-                var releaseInfoEntity = ToEntity(registration.NfoDatabaseClassName, releaseInfo);
-
-                release.ReleaseInfo = releaseInfoEntity;
+                release.ReleaseInfo = ToEntity(registration.NfoDatabaseClassName, releaseInfo);
 
                 logger.LogInformation(
                     "Resolved release info for release {ReleaseName} using {NfoDatabase}",
@@ -201,7 +188,7 @@ public class ReleaseInfoResolutionService(
         CancellationToken cancellationToken
     )
     {
-        var lastCheckedThresholdDate = DateTime.UtcNow - lastCheckedThreshold;
+        var lastCheckedThresholdDate = timeProvider.GetLocalNow() - lastCheckedThreshold;
 
         var releases = await repository.GetReleasesWithoutInfoAsync(
             count: MissingReleaseBatchSize,

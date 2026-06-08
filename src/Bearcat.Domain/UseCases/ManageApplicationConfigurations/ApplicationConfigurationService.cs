@@ -24,53 +24,67 @@ public class ApplicationConfigurationService(
 
         return registry
             .GetDefinitions()
-            .Select(definition =>
-            {
-                var defaults =
-                    Activator.CreateInstance(definition.ConfigurationType)
-                    ?? throw new InvalidOperationException(
-                        $"Could not create default configuration {definition.ConfigurationType.Name}."
-                    );
-
-                var properties = definition
-                    .Properties.Select(property =>
-                    {
-                        var defaultValue = property.PropertyInfo.GetValue(defaults);
-                        var currentValue = defaultValue;
-                        var isOverridden = overridesByKey.TryGetValue(
-                            (definition.Key, property.Name),
-                            out var configurationOverride
-                        );
-
-                        if (isOverridden && configurationOverride is not null)
-                        {
-                            currentValue = ApplicationConfigurationValueSerializer.Deserialize(
-                                configurationOverride.SerializedValue,
-                                property.PropertyType
-                            );
-                        }
-
-                        return new ApplicationConfigurationPropertyDto(
-                            ConfigurationKey: definition.Key,
-                            Name: property.Name,
-                            DisplayName: property.DisplayName,
-                            Description: property.Description,
-                            ValueType: property.PropertyType,
-                            DefaultValue: defaultValue,
-                            CurrentValue: currentValue,
-                            IsOverridden: isOverridden,
-                            Options: property.Options
-                        );
-                    })
-                    .ToList();
-
-                return new ApplicationConfigurationDto(
-                    DisplayName: definition.DisplayName,
-                    Description: definition.Description,
-                    Properties: properties
-                );
-            })
+            .Select(definition => MapToDto(definition, overridesByKey))
             .ToList();
+    }
+
+    private static ApplicationConfigurationDto MapToDto(
+        ApplicationConfigurationDefinition definition,
+        Dictionary<(string, string), ApplicationConfigurationOverride> overridesByKey
+    )
+    {
+        var defaults =
+            Activator.CreateInstance(definition.ConfigurationType)
+            ?? throw new InvalidOperationException(
+                $"Could not create default configuration {definition.ConfigurationType.Name}."
+            );
+
+        var properties = definition
+            .Properties.Select(property =>
+                MapPropertyToDto(definition.Key, property, defaults, overridesByKey)
+            )
+            .ToList();
+
+        return new ApplicationConfigurationDto(
+            DisplayName: definition.DisplayName,
+            Description: definition.Description,
+            Properties: properties
+        );
+    }
+
+    private static ApplicationConfigurationPropertyDto MapPropertyToDto(
+        string configurationKey,
+        ApplicationConfigurationPropertyDefinition property,
+        object defaults,
+        Dictionary<(string, string), ApplicationConfigurationOverride> overridesByKey
+    )
+    {
+        var defaultValue = property.PropertyInfo.GetValue(defaults);
+        var currentValue = defaultValue;
+        var isOverridden = overridesByKey.TryGetValue(
+            (configurationKey, property.Name),
+            out var configurationOverride
+        );
+
+        if (isOverridden && configurationOverride is not null)
+        {
+            currentValue = ApplicationConfigurationValueSerializer.Deserialize(
+                configurationOverride.SerializedValue,
+                property.PropertyType
+            );
+        }
+
+        return new ApplicationConfigurationPropertyDto(
+            ConfigurationKey: configurationKey,
+            Name: property.Name,
+            DisplayName: property.DisplayName,
+            Description: property.Description,
+            ValueType: property.PropertyType,
+            DefaultValue: defaultValue,
+            CurrentValue: currentValue,
+            IsOverridden: isOverridden,
+            Options: property.Options
+        );
     }
 
     public async Task SaveOverrideAsync(

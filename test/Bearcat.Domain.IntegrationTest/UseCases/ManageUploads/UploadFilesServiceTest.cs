@@ -72,14 +72,39 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             CreateTimeProvider()
         );
 
-        service = new UploadFilesService(
-            new UploadFilesRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
-            hosterFactoryMock.Object,
+        var uploadFilesRepository = new UploadFilesRepository(
+            dbContext,
+            dbContext,
+            NoOpSecretProtector.Instance
+        );
+        var captchaVerificationService = new HosterCaptchaVerificationService(notificationService);
+        var finalizationService = new UploadFinalizationService(
+            CreateTimeProvider(),
+            Mock.Of<ILogger<UploadFinalizationService>>(),
+            notificationService
+        );
+        var fileUploadExecutionService = new FileUploadExecutionService(
+            Mock.Of<ILogger<FileUploadExecutionService>>(),
+            captchaVerificationService
+        );
+        var missingFileValidationService = new MissingFileValidationService(
+            uploadFilesRepository,
             new FileSystemService(),
+            Mock.Of<ILogger<MissingFileValidationService>>(),
+            notificationService
+        );
+        var concurrencyService = new UploadConcurrencyService(uploadFilesRepository);
+
+        service = new UploadFilesService(
+            uploadFilesRepository,
+            hosterFactoryMock.Object,
             CreateTimeProvider(),
             Mock.Of<ILogger<UploadFilesService>>(),
             notificationService,
-            new HosterCaptchaVerificationService(notificationService)
+            missingFileValidationService,
+            finalizationService,
+            fileUploadExecutionService,
+            concurrencyService
         )
         {
             UploadQueuePollDelay = TimeSpan.Zero,
@@ -1160,14 +1185,34 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             CreateTimeProvider()
         );
 
+        var captchaService = new HosterCaptchaVerificationService(notificationService);
+        var finalization = new UploadFinalizationService(
+            CreateTimeProvider(),
+            Mock.Of<ILogger<UploadFinalizationService>>(),
+            notificationService
+        );
+        var fileUploadExecution = new FileUploadExecutionService(
+            Mock.Of<ILogger<FileUploadExecutionService>>(),
+            captchaService
+        );
+        var missingFileValidation = new MissingFileValidationService(
+            repository,
+            new FileSystemService(),
+            Mock.Of<ILogger<MissingFileValidationService>>(),
+            notificationService
+        );
+        var concurrency = new UploadConcurrencyService(repository);
+
         var serviceWithMissingUpload = new UploadFilesService(
             repository,
             hosterFactoryMock.Object,
-            new FileSystemService(),
             CreateTimeProvider(),
             Mock.Of<ILogger<UploadFilesService>>(),
             notificationService,
-            new HosterCaptchaVerificationService(notificationService)
+            missingFileValidation,
+            finalization,
+            fileUploadExecution,
+            concurrency
         )
         {
             UploadQueuePollDelay = TimeSpan.Zero,
@@ -1182,7 +1227,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task HandleNonExistingArchiveFilesAsync_UploadHasNoArchive_ReturnsFalse()
+    public async Task GetUploadsWithMissingFilesAsync_UploadHasNoArchive_ReturnsEmpty()
     {
         // Arrange
         var upload = new Upload
@@ -1194,16 +1239,26 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             UploadedFiles = [],
         };
 
+        var uploadFilesRepository = new UploadFilesRepository(
+            dbContext,
+            dbContext,
+            NoOpSecretProtector.Instance
+        );
+        var validationService = new MissingFileValidationService(
+            uploadFilesRepository,
+            new FileSystemService(),
+            Mock.Of<ILogger<MissingFileValidationService>>(),
+            new NotificationService(new NotificationRepository(dbContext), CreateTimeProvider())
+        );
+
         // Act
-        var result = await InvokePrivateTaskAsync<bool>(
-            service,
-            "HandleNonExistingArchiveFilesAsync",
-            upload,
+        var result = await validationService.GetUploadsWithMissingFilesAsync(
+            [upload],
             CancellationToken.None
         );
 
         // Assert
-        result.ShouldBeFalse();
+        result.ShouldBeEmpty();
     }
 
     private async Task<Upload> AddUploadAsync(
@@ -1373,21 +1428,6 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
 
         var task = (Task)method.Invoke(target, parameters)!;
         await task;
-    }
-
-    private static async Task<T> InvokePrivateTaskAsync<T>(
-        object target,
-        string methodName,
-        params object[] parameters
-    )
-    {
-        var method = target
-            .GetType()
-            .GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
-        method.ShouldNotBeNull();
-
-        var task = (Task<T>)method.Invoke(target, parameters)!;
-        return await task;
     }
 
     private sealed class MissingCancellationUploadRepository : IUploadFilesRepository
