@@ -203,7 +203,6 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         var template = await dbContext.ReleaseTemplates.SingleAsync(template =>
             template.Id == releaseTemplate.ReleaseTemplateId
         );
-        template.UseReleaseCollections = true;
         template.ReleaseCollectionDetectionMode =
             ReleaseCollectionDetectionMode.SeriesEpisodePattern;
         await dbContext.SaveChangesAsync();

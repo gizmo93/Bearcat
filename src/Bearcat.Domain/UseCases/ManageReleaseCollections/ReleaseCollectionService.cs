@@ -78,8 +78,65 @@ public class ReleaseCollectionService(
     {
         await writeRepository.GetByIdAsync(releaseCollectionId, cancellationToken);
 
+        var (cleanedName, key) = await ResolveUniqueSlotKeyAsync(
+            releaseCollectionId,
+            name,
+            cancellationToken
+        );
+        var archiveConfigTargets = await GetValidatedArchiveConfigTargetsAsync(
+            releaseCollectionId,
+            CleanRequired(archiveConfigName, nameof(archiveConfigName)),
+            cancellationToken
+        );
+
+        var uploadSlot = new CollectionUploadSlot
+        {
+            ReleaseCollectionId = releaseCollectionId,
+            Key = key,
+            Name = cleanedName,
+            IsRequired = isRequired,
+            PasswordPolicy = passwordPolicy,
+            ExpectedArchivePassword =
+                passwordPolicy is CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue
+                    ? CleanRequired(
+                        expectedArchivePassword ?? string.Empty,
+                        nameof(expectedArchivePassword)
+                    )
+                    : null,
+        };
+
+        foreach (var target in archiveConfigTargets.Values)
+        {
+            uploadSlot.UploadConfigs.Add(
+                new UploadConfig
+                {
+                    ReleaseId = target.ReleaseId,
+                    ArchiveConfigId = target.ArchiveConfigId,
+                    HosterRegistrationId = hosterRegistrationId,
+                    Name = cleanedName,
+                    PremiumOnlyDownload = premiumOnlyDownload,
+                    LinksDistributedTo = [],
+                    LinkCrypters = [],
+                    Uploads = [],
+                }
+            );
+        }
+
+        writeRepository.Add(uploadSlot);
+        await writeRepository.SaveChangesAsync(cancellationToken);
+
+        return uploadSlot.Id;
+    }
+
+    private async Task<(string cleanedName, string key)> ResolveUniqueSlotKeyAsync(
+        int releaseCollectionId,
+        string name,
+        CancellationToken cancellationToken
+    )
+    {
         var cleanedName = CleanRequired(name, nameof(name));
         var key = CreateStableKey(cleanedName);
+
         if (string.IsNullOrWhiteSpace(key))
         {
             throw new ArgumentException(
@@ -101,13 +158,24 @@ public class ReleaseCollectionService(
             );
         }
 
+        return (cleanedName, key);
+    }
+
+    private async Task<
+        Dictionary<int, CollectionReleaseArchiveConfigTarget>
+    > GetValidatedArchiveConfigTargetsAsync(
+        int releaseCollectionId,
+        string archiveConfigName,
+        CancellationToken cancellationToken
+    )
+    {
         var releaseCount = await writeRepository.GetReleaseCountAsync(
             releaseCollectionId,
             cancellationToken
         );
         var archiveConfigTargets = await writeRepository.GetArchiveConfigTargetsAsync(
             releaseCollectionId,
-            CleanRequired(archiveConfigName, nameof(archiveConfigName)),
+            archiveConfigName,
             cancellationToken
         );
 
@@ -126,43 +194,7 @@ public class ReleaseCollectionService(
             );
         }
 
-        var uploadSlot = new CollectionUploadSlot
-        {
-            ReleaseCollectionId = releaseCollectionId,
-            Key = key,
-            Name = cleanedName,
-            IsRequired = isRequired,
-            PasswordPolicy = passwordPolicy,
-            ExpectedArchivePassword =
-                passwordPolicy is CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue
-                    ? CleanRequired(
-                        expectedArchivePassword ?? string.Empty,
-                        nameof(expectedArchivePassword)
-                    )
-                    : null,
-        };
-
-        foreach (var target in targetsByReleaseId.Values.Select(group => group.Single()))
-        {
-            uploadSlot.UploadConfigs.Add(
-                new UploadConfig
-                {
-                    ReleaseId = target.ReleaseId,
-                    ArchiveConfigId = target.ArchiveConfigId,
-                    HosterRegistrationId = hosterRegistrationId,
-                    Name = cleanedName,
-                    PremiumOnlyDownload = premiumOnlyDownload,
-                    LinksDistributedTo = [],
-                    LinkCrypters = [],
-                    Uploads = [],
-                }
-            );
-        }
-
-        writeRepository.Add(uploadSlot);
-        await writeRepository.SaveChangesAsync(cancellationToken);
-
-        return uploadSlot.Id;
+        return targetsByReleaseId.ToDictionary(kv => kv.Key, kv => kv.Value.Single());
     }
 
     public async Task DeleteUploadSlotAsync(

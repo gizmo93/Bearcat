@@ -407,7 +407,6 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             .ReleaseTemplates.Include(template => template.UploadConfigTemplates)
             .SingleAsync(template => template.Id == seed.ReleaseTemplateId);
 
-        releaseTemplate.UseReleaseCollections = true;
         releaseTemplate.ReleaseCollectionDetectionMode =
             ReleaseCollectionDetectionMode.SeriesEpisodePattern;
         releaseTemplate.UploadConfigTemplates.Single().CollectionUploadSlotKey =

@@ -8,7 +8,6 @@ public record ReleaseTemplateDetailReadModel(
     ReleaseType ReleaseType,
     int ReleaseGroupId,
     string ReleaseGroupName,
-    bool UseReleaseCollections,
     ReleaseCollectionDetectionMode ReleaseCollectionDetectionMode,
     string? ReleaseCollectionPattern,
     string? ReleaseCollectionKeyTemplate,

@@ -28,7 +28,8 @@ public class UploadConfigTemplate
 
     public bool CollectionUploadSlotIsRequired { get; set; }
 
-    public CollectionUploadSlotPasswordPolicy CollectionUploadSlotPasswordPolicy { get; set; }
+    public CollectionUploadSlotPasswordPolicy CollectionUploadSlotPasswordPolicy { get; set; } =
+        CollectionUploadSlotPasswordPolicy.Ignore;
 
     public string? CollectionUploadSlotExpectedArchivePassword { get; set; }
 

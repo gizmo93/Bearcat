@@ -1,6 +1,7 @@
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -73,8 +74,14 @@ public partial class ReleaseTemplatesPage(
                 Name = releaseTemplate.Name,
                 ReleaseType = releaseTemplate.ReleaseType,
                 ReleaseGroupId = releaseTemplate.ReleaseGroupId,
-                UseReleaseCollections = releaseTemplate.UseReleaseCollections,
-                ReleaseCollectionDetectionMode = releaseTemplate.ReleaseCollectionDetectionMode,
+                UseReleaseCollections =
+                    releaseTemplate.ReleaseCollectionDetectionMode
+                    != ReleaseCollectionDetectionMode.Disabled,
+                ReleaseCollectionDetectionMode =
+                    releaseTemplate.ReleaseCollectionDetectionMode
+                    == ReleaseCollectionDetectionMode.Disabled
+                        ? ReleaseCollectionDetectionMode.SeriesEpisodePattern
+                        : releaseTemplate.ReleaseCollectionDetectionMode,
                 ReleaseCollectionPattern = releaseTemplate.ReleaseCollectionPattern,
                 ReleaseCollectionKeyTemplate = releaseTemplate.ReleaseCollectionKeyTemplate,
                 ReleaseCollectionNameTemplate = releaseTemplate.ReleaseCollectionNameTemplate,

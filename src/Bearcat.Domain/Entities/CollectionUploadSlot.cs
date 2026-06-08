@@ -16,7 +16,8 @@ public class CollectionUploadSlot
 
     public bool IsRequired { get; set; }
 
-    public CollectionUploadSlotPasswordPolicy PasswordPolicy { get; set; }
+    public CollectionUploadSlotPasswordPolicy PasswordPolicy { get; set; } =
+        CollectionUploadSlotPasswordPolicy.Ignore;
 
     public string? ExpectedArchivePassword { get; set; }
 

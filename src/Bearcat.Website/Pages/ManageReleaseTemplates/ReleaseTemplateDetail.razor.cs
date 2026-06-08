@@ -50,8 +50,14 @@ public partial class ReleaseTemplateDetail(
                 Name = releaseTemplate.Name,
                 ReleaseType = releaseTemplate.ReleaseType,
                 ReleaseGroupId = releaseTemplate.ReleaseGroupId,
-                UseReleaseCollections = releaseTemplate.UseReleaseCollections,
-                ReleaseCollectionDetectionMode = releaseTemplate.ReleaseCollectionDetectionMode,
+                UseReleaseCollections =
+                    releaseTemplate.ReleaseCollectionDetectionMode
+                    != ReleaseCollectionDetectionMode.Disabled,
+                ReleaseCollectionDetectionMode =
+                    releaseTemplate.ReleaseCollectionDetectionMode
+                    == ReleaseCollectionDetectionMode.Disabled
+                        ? ReleaseCollectionDetectionMode.SeriesEpisodePattern
+                        : releaseTemplate.ReleaseCollectionDetectionMode,
                 ReleaseCollectionPattern = releaseTemplate.ReleaseCollectionPattern,
                 ReleaseCollectionKeyTemplate = releaseTemplate.ReleaseCollectionKeyTemplate,
                 ReleaseCollectionNameTemplate = releaseTemplate.ReleaseCollectionNameTemplate,

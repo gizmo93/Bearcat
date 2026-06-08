@@ -13,7 +13,6 @@ public class ReleaseCollectionDetectionServiceTest
         // Arrange
         var releaseTemplate = new ReleaseTemplate
         {
-            UseReleaseCollections = true,
             ReleaseCollectionDetectionMode = ReleaseCollectionDetectionMode.SeriesEpisodePattern,
         };
 

@@ -15,8 +15,7 @@ public static partial class ReleaseCollectionDetectionService
     )
     {
         if (
-            !releaseTemplate.UseReleaseCollections
-            || releaseTemplate.ReleaseCollectionDetectionMode
+            releaseTemplate.ReleaseCollectionDetectionMode
                 is ReleaseCollectionDetectionMode.Disabled
             || string.IsNullOrWhiteSpace(releaseName)
         )

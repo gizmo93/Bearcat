@@ -145,7 +145,6 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         var releaseTemplate = new ReleaseTemplate
         {
             ReleaseGroupId = seed.ReleaseGroupId,
-            UseReleaseCollections = true,
             ReleaseCollectionDetectionMode = ReleaseCollectionDetectionMode.SeriesEpisodePattern,
             UploadConfigTemplates =
             [

@@ -21,8 +21,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             name: name,
             releaseType: releaseType,
             releaseGroupId: releaseGroupId,
-            useReleaseCollections: false,
-            releaseCollectionDetectionMode: ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            releaseCollectionDetectionMode: ReleaseCollectionDetectionMode.Disabled,
             releaseCollectionPattern: null,
             releaseCollectionKeyTemplate: null,
             releaseCollectionNameTemplate: null,
@@ -34,9 +33,8 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         string name,
         ReleaseType releaseType,
         int releaseGroupId,
-        bool useReleaseCollections = false,
         ReleaseCollectionDetectionMode releaseCollectionDetectionMode =
-            ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            ReleaseCollectionDetectionMode.Disabled,
         string? releaseCollectionPattern = null,
         string? releaseCollectionKeyTemplate = null,
         string? releaseCollectionNameTemplate = null,
@@ -48,10 +46,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             Name = name,
             ReleaseType = releaseType,
             ReleaseGroupId = releaseGroupId,
-            UseReleaseCollections = useReleaseCollections,
-            ReleaseCollectionDetectionMode = useReleaseCollections
-                ? releaseCollectionDetectionMode
-                : ReleaseCollectionDetectionMode.Disabled,
+            ReleaseCollectionDetectionMode = releaseCollectionDetectionMode,
             ReleaseCollectionPattern = CleanOptional(releaseCollectionPattern),
             ReleaseCollectionKeyTemplate = CleanOptional(releaseCollectionKeyTemplate),
             ReleaseCollectionNameTemplate = CleanOptional(releaseCollectionNameTemplate),
@@ -78,8 +73,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             name,
             releaseType,
             releaseGroupId,
-            useReleaseCollections: false,
-            ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            ReleaseCollectionDetectionMode.Disabled,
             releaseCollectionPattern: null,
             releaseCollectionKeyTemplate: null,
             releaseCollectionNameTemplate: null,
@@ -92,9 +86,8 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         string name,
         ReleaseType releaseType,
         int releaseGroupId,
-        bool useReleaseCollections = false,
         ReleaseCollectionDetectionMode releaseCollectionDetectionMode =
-            ReleaseCollectionDetectionMode.SeriesEpisodePattern,
+            ReleaseCollectionDetectionMode.Disabled,
         string? releaseCollectionPattern = null,
         string? releaseCollectionKeyTemplate = null,
         string? releaseCollectionNameTemplate = null,
@@ -113,10 +106,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
 
         releaseTemplate.Name = name;
         releaseTemplate.ReleaseGroupId = releaseGroupId;
-        releaseTemplate.UseReleaseCollections = useReleaseCollections;
-        releaseTemplate.ReleaseCollectionDetectionMode = useReleaseCollections
-            ? releaseCollectionDetectionMode
-            : ReleaseCollectionDetectionMode.Disabled;
+        releaseTemplate.ReleaseCollectionDetectionMode = releaseCollectionDetectionMode;
         releaseTemplate.ReleaseCollectionPattern = CleanOptional(releaseCollectionPattern);
         releaseTemplate.ReleaseCollectionKeyTemplate = CleanOptional(releaseCollectionKeyTemplate);
         releaseTemplate.ReleaseCollectionNameTemplate = CleanOptional(

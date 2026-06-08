@@ -14,9 +14,8 @@ public class ReleaseTemplate
 
     public ReleaseGroup ReleaseGroup { get; set; } = null!;
 
-    public bool UseReleaseCollections { get; set; }
-
-    public ReleaseCollectionDetectionMode ReleaseCollectionDetectionMode { get; set; }
+    public ReleaseCollectionDetectionMode ReleaseCollectionDetectionMode { get; set; } =
+        ReleaseCollectionDetectionMode.Disabled;
 
     public string? ReleaseCollectionPattern { get; set; }
 

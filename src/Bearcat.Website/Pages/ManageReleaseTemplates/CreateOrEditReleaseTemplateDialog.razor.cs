@@ -70,6 +70,10 @@ public partial class CreateOrEditReleaseTemplateDialog(
     {
         var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
 
+        var detectionMode = FormModel.UseReleaseCollections
+            ? FormModel.ReleaseCollectionDetectionMode
+            : ReleaseCollectionDetectionMode.Disabled;
+
         if (FormModel.IsEdit && FormModel.ReleaseTemplateId is not null)
         {
             await service.UpdateAsync(
@@ -77,8 +81,7 @@ public partial class CreateOrEditReleaseTemplateDialog(
                 FormModel.Name,
                 FormModel.ReleaseType,
                 FormModel.ReleaseGroupId,
-                FormModel.UseReleaseCollections,
-                FormModel.ReleaseCollectionDetectionMode,
+                detectionMode,
                 FormModel.ReleaseCollectionPattern,
                 FormModel.ReleaseCollectionKeyTemplate,
                 FormModel.ReleaseCollectionNameTemplate
@@ -91,8 +94,7 @@ public partial class CreateOrEditReleaseTemplateDialog(
             FormModel.Name,
             FormModel.ReleaseType,
             FormModel.ReleaseGroupId,
-            FormModel.UseReleaseCollections,
-            FormModel.ReleaseCollectionDetectionMode,
+            detectionMode,
             FormModel.ReleaseCollectionPattern,
             FormModel.ReleaseCollectionKeyTemplate,
             FormModel.ReleaseCollectionNameTemplate

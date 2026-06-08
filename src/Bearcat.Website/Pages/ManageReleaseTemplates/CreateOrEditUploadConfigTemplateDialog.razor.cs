@@ -100,7 +100,8 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
         var detail = await releaseTemplateReadRepository.GetDetailAsync(ReleaseTemplateId);
         archiveConfigTemplates = detail?.ArchiveConfigTemplates ?? [];
         isUnmanagedReleaseTemplate = detail?.ReleaseType is ReleaseType.Unmanaged;
-        usesReleaseCollections = detail?.UseReleaseCollections is true;
+        usesReleaseCollections =
+            detail?.ReleaseCollectionDetectionMode is not ReleaseCollectionDetectionMode.Disabled;
 
         if (
             string.IsNullOrWhiteSpace(FormModel.CollectionUploadSlotName)

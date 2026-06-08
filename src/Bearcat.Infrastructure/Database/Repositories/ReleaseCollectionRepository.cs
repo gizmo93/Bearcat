@@ -38,10 +38,10 @@ public class ReleaseCollectionRepository(
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
-            var searchTerm = query.SearchTerm.Trim().ToLowerInvariant();
+            var searchTerm = $"%{query.SearchTerm.Trim()}%";
             collections = collections.Where(collection =>
-                collection.Name.ToLower().Contains(searchTerm)
-                || collection.Key.ToLower().Contains(searchTerm)
+                EF.Functions.ILike(collection.Name, searchTerm)
+                || EF.Functions.ILike(collection.Key, searchTerm)
             );
         }
 
@@ -54,11 +54,14 @@ public class ReleaseCollectionRepository(
 
         var totalCount = await collections.CountAsync(cancellationToken);
 
+        var pageIndex = Math.Max(0, query.PageIndex);
+        var pageSize = Math.Clamp(query.PageSize, 5, 100);
+
         var items = await collections
             .OrderBy(collection => collection.Name)
             .ThenBy(collection => collection.Id)
-            .Skip(query.PageIndex * query.PageSize)
-            .Take(query.PageSize)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
             .Select(collection => new ReleaseCollectionReadModel(
                 collection.Id,
                 collection.Name,
@@ -73,8 +76,8 @@ public class ReleaseCollectionRepository(
         return new PagedResult<ReleaseCollectionReadModel>(
             Items: items,
             TotalCount: totalCount,
-            PageIndex: query.PageIndex,
-            PageSize: query.PageSize
+            PageIndex: pageIndex,
+            PageSize: pageSize
         );
     }
 
@@ -374,7 +377,7 @@ public class ReleaseCollectionRepository(
         CancellationToken cancellationToken = default
     )
     {
-        return await dbWrite.CollectionUploadSlots.AnyAsync(
+        return await dbRead.CollectionUploadSlots.AnyAsync(
             slot => slot.ReleaseCollectionId == releaseCollectionId && slot.Key == key,
             cancellationToken
         );
@@ -385,7 +388,7 @@ public class ReleaseCollectionRepository(
         CancellationToken cancellationToken = default
     )
     {
-        return await dbWrite.Releases.CountAsync(
+        return await dbRead.Releases.CountAsync(
             release => release.ReleaseCollectionId == releaseCollectionId,
             cancellationToken
         );
@@ -399,7 +402,7 @@ public class ReleaseCollectionRepository(
         CancellationToken cancellationToken = default
     )
     {
-        return await dbWrite
+        return await dbRead
             .ArchiveConfigs.Where(config =>
                 config.Release.ReleaseCollectionId == releaseCollectionId
                 && config.Name == archiveConfigName
