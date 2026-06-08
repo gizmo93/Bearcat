@@ -40,27 +40,24 @@ public partial class ReleaseCollectionDetail(
         isInitialized = true;
     }
 
-    private async Task ShowLatestUploadLinksDialogAsync(ReleaseCollectionReleaseReadModel release)
+    private async Task ShowUploadLinksDialogAsync(
+        ReleaseCollectionReleaseReadModel release,
+        ReleaseLatestUploadReadModel upload
+    )
     {
-        if (release.LatestUploadId is null)
-        {
-            return;
-        }
-
-        var uploadConfigName = release.LatestUploadConfigName ?? release.Name;
         var parameters = new Dictionary<string, object?>
         {
             [nameof(UploadLinksDialog.ReleaseId)] = release.ReleaseId,
-            [nameof(UploadLinksDialog.UploadId)] = release.LatestUploadId.Value,
-            [nameof(UploadLinksDialog.UploadConfigName)] = uploadConfigName,
+            [nameof(UploadLinksDialog.UploadId)] = upload.UploadId,
+            [nameof(UploadLinksDialog.UploadConfigName)] = upload.UploadConfigName,
         };
 
         await dialogService.OpenAsync<UploadLinksDialog>(
             parameters,
             new DialogOpenOptions
             {
-                Title = L["UploadLinksTitle", release.LatestUploadId.Value],
-                Description = L["UploadLinksDialogDescription", uploadConfigName],
+                Title = L["UploadLinksTitle", upload.UploadId],
+                Description = L["UploadLinksDialogDescription", upload.UploadConfigName],
                 Size = DialogSize.Full,
                 ShowClose = true,
             }

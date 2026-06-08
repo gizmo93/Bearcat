@@ -9,8 +9,7 @@ public record ReleaseCollectionReleaseReadModel(
     DateTime CreatedAt,
     int ActiveUploadConfigsCount,
     int OnlineUploadConfigsCount,
-    int? LatestUploadId,
-    string? LatestUploadConfigName
+    IReadOnlyList<ReleaseLatestUploadReadModel> LatestUploads
 )
 {
     public OnlineState? OnlineState

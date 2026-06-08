@@ -217,7 +217,11 @@ public class ReleaseCollectionRepository(
             .Uploads.Where(upload =>
                 upload.UploadConfig.Release.ReleaseCollectionId == releaseCollectionId
             )
-            .GroupBy(upload => upload.UploadConfig.ReleaseId)
+            .GroupBy(upload => new
+            {
+                ReleaseId = upload.UploadConfig.ReleaseId,
+                UploadConfigId = upload.UploadConfigId,
+            })
             .Select(group =>
                 group
                     .OrderByDescending(upload => upload.UploadedAt ?? upload.CreatedAt)
@@ -232,7 +236,18 @@ public class ReleaseCollectionRepository(
             )
             .ToListAsync(cancellationToken);
 
-        var latestUploadsByReleaseId = latestUploads.ToDictionary(upload => upload.ReleaseId);
+        var latestUploadsByReleaseId = latestUploads
+            .GroupBy(upload => upload.ReleaseId)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                    group
+                        .Select(upload => new ReleaseLatestUploadReadModel(
+                            upload.UploadId,
+                            upload.UploadConfigName
+                        ))
+                        .ToList()
+            );
 
         var releases = await dbRead
             .Releases.Where(release => release.ReleaseCollectionId == releaseCollectionId)
@@ -292,7 +307,7 @@ public class ReleaseCollectionRepository(
             Releases: releases
                 .Select(release =>
                 {
-                    latestUploadsByReleaseId.TryGetValue(release.Id, out var latestUpload);
+                    latestUploadsByReleaseId.TryGetValue(release.Id, out var releaseLatestUploads);
 
                     return new ReleaseCollectionReleaseReadModel(
                         ReleaseId: release.Id,
@@ -301,8 +316,8 @@ public class ReleaseCollectionRepository(
                         CreatedAt: release.CreatedAt,
                         ActiveUploadConfigsCount: release.ActiveUploadConfigsCount,
                         OnlineUploadConfigsCount: release.OnlineUploadConfigsCount,
-                        LatestUploadId: latestUpload?.UploadId,
-                        LatestUploadConfigName: latestUpload?.UploadConfigName
+                        LatestUploads: releaseLatestUploads
+                            ?? (IReadOnlyList<ReleaseLatestUploadReadModel>)[]
                     );
                 })
                 .ToList()

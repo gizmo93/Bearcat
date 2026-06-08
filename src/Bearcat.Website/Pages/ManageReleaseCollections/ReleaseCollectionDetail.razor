@@ -236,14 +236,25 @@
                                     </div>
                                     <div class="bearcat-config-actions">
                                         <p class="bearcat-mobile-label">@L["Actions"]</p>
-                                        @if (release.LatestUploadId is not null)
+                                        @if (release.LatestUploads.Count > 0)
                                         {
-                                            <BbButton Variant="ButtonVariant.Ghost"
-                                                      Size="ButtonSize.IconSmall"
-                                                      AriaLabel="@L["ViewUploadLinks"]"
-                                                      OnClick="@(async () => await ShowLatestUploadLinksDialogAsync(release))">
-                                                <LucideIcon Name="list" class="h-4 w-4" />
-                                            </BbButton>
+                                            <BbDropdownMenu>
+                                                <BbDropdownMenuTrigger>
+                                                    <BbButton Variant="ButtonVariant.Ghost"
+                                                              Size="ButtonSize.IconSmall"
+                                                              AriaLabel="@L["ViewUploadLinks"]">
+                                                        <LucideIcon Name="list" class="h-4 w-4" />
+                                                    </BbButton>
+                                                </BbDropdownMenuTrigger>
+                                                <BbDropdownMenuContent Align="PopoverAlign.End">
+                                                    @foreach (var upload in release.LatestUploads)
+                                                    {
+                                                        <BbDropdownMenuItem OnClick="@(async _ => await ShowUploadLinksDialogAsync(release, upload))">
+                                                            @upload.UploadConfigName
+                                                        </BbDropdownMenuItem>
+                                                    }
+                                                </BbDropdownMenuContent>
+                                            </BbDropdownMenu>
                                         }
                                         <BbButton Variant="ButtonVariant.Ghost"
                                                   Size="ButtonSize.IconSmall"
