@@ -34,7 +34,49 @@ public class ApiClient(
         var authorization = GetAuthorizationHeader(config.ApiKey);
         var extension = Path.GetExtension(fileName).TrimStart('.');
 
-        var multipartUpload = await ExecuteFastApiRequestAsync(
+        var multipartUpload = await CreateMultipartUploadAsync(
+            authorization: authorization,
+            fileName: fileName,
+            extension: extension,
+            fileSize: fileSize,
+            cancellationToken: cancellationToken
+        );
+
+        var parts = await UploadPartsAsync(
+            authorization: authorization,
+            stream: stream,
+            multipartUpload: multipartUpload,
+            fileSize: fileSize,
+            cancellationToken: cancellationToken
+        );
+
+        await CompleteMultipartUploadAsync(
+            authorization: authorization,
+            multipartUpload: multipartUpload,
+            parts: parts,
+            cancellationToken: cancellationToken
+        );
+
+        return await CreateFileEntryAsync(
+            authorization: authorization,
+            fileName: fileName,
+            extension: extension,
+            fileSize: fileSize,
+            folderId: folderId,
+            multipartUpload: multipartUpload,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task<MultipartUpload> CreateMultipartUploadAsync(
+        string authorization,
+        string fileName,
+        string extension,
+        long fileSize,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await ExecuteFastApiRequestAsync(
             operationName: "multipart upload creation",
             action: token =>
                 api.CreateMultipartUploadAsync(
@@ -51,24 +93,30 @@ public class ApiClient(
         );
 
         if (
-            !IsSuccess(multipartUpload.Status)
-            || string.IsNullOrWhiteSpace(multipartUpload.Key)
-            || string.IsNullOrWhiteSpace(multipartUpload.UploadId)
-            || string.IsNullOrWhiteSpace(multipartUpload.StorageBucket)
+            !IsSuccess(response.Status)
+            || string.IsNullOrWhiteSpace(response.Key)
+            || string.IsNullOrWhiteSpace(response.UploadId)
+            || string.IsNullOrWhiteSpace(response.StorageBucket)
         )
         {
             throw new HttpRequestException("UploadG multipart upload creation failed");
         }
 
-        var parts = await UploadPartsAsync(
-            authorization: authorization,
-            stream: stream,
-            multipartUpload: multipartUpload,
-            fileSize: fileSize,
-            cancellationToken: cancellationToken
+        return new MultipartUpload(
+            Key: response.Key,
+            UploadId: response.UploadId,
+            StorageBucket: response.StorageBucket
         );
+    }
 
-        var completeResponse = await ExecuteFastApiRequestAsync(
+    private async Task CompleteMultipartUploadAsync(
+        string authorization,
+        MultipartUpload multipartUpload,
+        IReadOnlyList<UploadedPart> parts,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await ExecuteFastApiRequestAsync(
             operationName: "multipart upload completion",
             action: token =>
                 api.CompleteMultipartUploadAsync(
@@ -84,11 +132,22 @@ public class ApiClient(
             cancellationToken: cancellationToken
         );
 
-        if (!IsSuccess(completeResponse.Status))
+        if (!IsSuccess(response.Status))
         {
             throw new HttpRequestException("UploadG multipart upload completion failed");
         }
+    }
 
+    private async Task<UploadFileResponse> CreateFileEntryAsync(
+        string authorization,
+        string fileName,
+        string extension,
+        long fileSize,
+        string? folderId,
+        MultipartUpload multipartUpload,
+        CancellationToken cancellationToken
+    )
+    {
         var response = await ExecuteFastApiRequestAsync(
             operationName: "file entry creation",
             action: token =>
@@ -243,7 +302,7 @@ public class ApiClient(
     private async Task<IReadOnlyList<UploadedPart>> UploadPartsAsync(
         string authorization,
         Stream stream,
-        MultipartCreateResponse multipartUpload,
+        MultipartUpload multipartUpload,
         long fileSize,
         CancellationToken cancellationToken
     )
@@ -262,9 +321,9 @@ public class ApiClient(
                         authorization: authorization,
                         request: new BatchSignPartUrlsRequest(
                             PartNumbers: [partNumber],
-                            UploadId: multipartUpload.UploadId!,
-                            Key: multipartUpload.Key!,
-                            StorageBucket: multipartUpload.StorageBucket!
+                            UploadId: multipartUpload.UploadId,
+                            Key: multipartUpload.Key,
+                            StorageBucket: multipartUpload.StorageBucket
                         ),
                         cancellationToken: token
                     ),
@@ -357,30 +416,11 @@ public class ApiClient(
         {
             var entryId = TryParseId(file.ExternalId);
 
-            if (entryId is not null)
-            {
-                var shareableLinkResponse = await ExecuteFastApiRequestAsync(
-                    operationName: "shareable link lookup",
-                    action: token => api.GetShareableLinkAsync(authorization, entryId.Value, token),
-                    cancellationToken: cancellationToken
-                );
+            var isOnline = entryId is not null
+                ? await IsEntryOnlineAsync(authorization, entryId.Value, cancellationToken)
+                : await IsUrlReachableAsync(fileUrl, cancellationToken);
 
-                return (
-                    FileUrl: fileUrl,
-                    IsOnline: shareableLinkResponse.StatusCode == HttpStatusCode.OK
-                        && !string.IsNullOrWhiteSpace(shareableLinkResponse.Content?.Link?.Hash)
-                );
-            }
-
-            using var httpClient = httpClientProvider.GetUploadClient();
-            using var request = new HttpRequestMessage(HttpMethod.Get, fileUrl);
-            var response = await httpClient.SendAsync(
-                request,
-                HttpCompletionOption.ResponseHeadersRead,
-                cancellationToken
-            );
-
-            return (FileUrl: fileUrl, IsOnline: response.StatusCode == HttpStatusCode.OK);
+            return (FileUrl: fileUrl, IsOnline: isOnline);
         }
         catch (Exception ex)
         {
@@ -397,6 +437,38 @@ public class ApiClient(
         {
             semaphore.Release();
         }
+    }
+
+    private async Task<bool> IsEntryOnlineAsync(
+        string authorization,
+        long entryId,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await ExecuteFastApiRequestAsync(
+            operationName: "shareable link lookup",
+            action: token => api.GetShareableLinkAsync(authorization, entryId, token),
+            cancellationToken: cancellationToken
+        );
+
+        return response.StatusCode == HttpStatusCode.OK
+            && !string.IsNullOrWhiteSpace(response.Content?.Link?.Hash);
+    }
+
+    private async Task<bool> IsUrlReachableAsync(
+        string fileUrl,
+        CancellationToken cancellationToken
+    )
+    {
+        using var httpClient = httpClientProvider.GetUploadClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, fileUrl);
+        var response = await httpClient.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken
+        );
+
+        return response.StatusCode == HttpStatusCode.OK;
     }
 
     private async Task<long?> GetExistingFolderIdAsync(
@@ -503,6 +575,8 @@ public class ApiClient(
     {
         return string.Equals(status, "success", StringComparison.OrdinalIgnoreCase);
     }
+
+    private sealed record MultipartUpload(string Key, string UploadId, string StorageBucket);
 
     private sealed class StreamPartContent(Stream source, long length) : HttpContent
     {
