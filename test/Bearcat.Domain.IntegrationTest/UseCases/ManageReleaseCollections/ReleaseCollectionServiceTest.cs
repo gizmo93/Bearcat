@@ -11,6 +11,7 @@ using Bearcat.Infrastructure.Security;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -53,6 +54,268 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
     public async Task DisposeDbContextAsync()
     {
         await dbContext.DisposeAsync();
+    }
+
+    [Test]
+    public async Task CreateAsync_ValidData_PersistsCollection()
+    {
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Series",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        dbContext.ReleaseGroups.Add(releaseGroup);
+        await dbContext.SaveChangesAsync();
+
+        var id = await service.CreateAsync("  Hostage S01  ", "hostage.s01", releaseGroup.Id);
+
+        dbContext.ChangeTracker.Clear();
+        var collection = await dbContext.ReleaseCollections.FindAsync(id);
+
+        collection.ShouldNotBeNull();
+        collection.Name.ShouldBe("Hostage S01");
+        collection.Key.ShouldBe("hostage.s01");
+        collection.ReleaseGroupId.ShouldBe(releaseGroup.Id);
+    }
+
+    [Test]
+    public async Task UpdateAsync_ValidData_UpdatesName()
+    {
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Series",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        var collection = new ReleaseCollection
+        {
+            ReleaseGroup = releaseGroup,
+            Key = "hostage.s01",
+            Name = "Hostage S01",
+            CreatedAt = DateTime.UtcNow,
+        };
+        dbContext.ReleaseCollections.Add(collection);
+        await dbContext.SaveChangesAsync();
+
+        await service.UpdateAsync(collection.Id, "  Hostage Season 1  ");
+
+        dbContext.ChangeTracker.Clear();
+        var updated = await dbContext.ReleaseCollections.FindAsync(collection.Id);
+
+        updated!.Name.ShouldBe("Hostage Season 1");
+    }
+
+    [Test]
+    public async Task DeleteAsync_CollectionExists_RemovesCollection()
+    {
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Series",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        var collection = new ReleaseCollection
+        {
+            ReleaseGroup = releaseGroup,
+            Key = "hostage.s01",
+            Name = "Hostage S01",
+            CreatedAt = DateTime.UtcNow,
+        };
+        dbContext.ReleaseCollections.Add(collection);
+        await dbContext.SaveChangesAsync();
+
+        await service.DeleteAsync(collection.Id);
+
+        dbContext.ChangeTracker.Clear();
+        var exists = await dbContext.ReleaseCollections.AnyAsync(c => c.Id == collection.Id);
+
+        exists.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task CreateUploadSlotAsync_ValidData_CreatesSlotWithUploadConfigPerRelease()
+    {
+        var seed = await AddReleaseCollectionWithReleasesAsync("Main");
+        var hosterRegistration = new HosterRegistration
+        {
+            Name = "Rapidgator",
+            SerializedConfig = "{}",
+            HosterClassName = "RapidgatorHoster",
+            IsActive = true,
+        };
+        dbContext.HosterRegistrations.Add(hosterRegistration);
+        await dbContext.SaveChangesAsync();
+
+        var slotId = await service.CreateUploadSlotAsync(
+            seed.CollectionId,
+            "  Rapidgator  ",
+            hosterRegistration.Id,
+            "Main",
+            premiumOnlyDownload: false,
+            isRequired: true,
+            CollectionUploadSlotPasswordPolicy.Ignore,
+            expectedArchivePassword: null
+        );
+
+        dbContext.ChangeTracker.Clear();
+        var slot = await dbContext
+            .CollectionUploadSlots.Include(s => s.UploadConfigs)
+            .SingleAsync(s => s.Id == slotId);
+
+        slot.Key.ShouldBe("rapidgator");
+        slot.Name.ShouldBe("Rapidgator");
+        slot.PasswordPolicy.ShouldBe(CollectionUploadSlotPasswordPolicy.Ignore);
+        slot.ExpectedArchivePassword.ShouldBeNull();
+        slot.UploadConfigs.Count.ShouldBe(seed.ReleaseIds.Count);
+        slot.UploadConfigs.ShouldAllBe(uc =>
+            uc.Name == "Rapidgator"
+            && uc.HosterRegistrationId == hosterRegistration.Id
+            && !uc.PremiumOnlyDownload
+        );
+    }
+
+    [Test]
+    public async Task CreateUploadSlotAsync_MustEqualExpectedValue_PersistsExpectedPassword()
+    {
+        var seed = await AddReleaseCollectionWithReleasesAsync("Main");
+        var hosterRegistration = new HosterRegistration
+        {
+            Name = "Rapidgator",
+            SerializedConfig = "{}",
+            HosterClassName = "RapidgatorHoster",
+            IsActive = true,
+        };
+        dbContext.HosterRegistrations.Add(hosterRegistration);
+        await dbContext.SaveChangesAsync();
+
+        var slotId = await service.CreateUploadSlotAsync(
+            seed.CollectionId,
+            "Rapidgator",
+            hosterRegistration.Id,
+            "Main",
+            premiumOnlyDownload: false,
+            isRequired: true,
+            CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue,
+            expectedArchivePassword: "s3cr3t"
+        );
+
+        dbContext.ChangeTracker.Clear();
+        var slot = await dbContext.CollectionUploadSlots.FindAsync(slotId);
+
+        slot!.PasswordPolicy.ShouldBe(CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue);
+        slot.ExpectedArchivePassword.ShouldBe("s3cr3t");
+    }
+
+    [Test]
+    public async Task CreateUploadSlotAsync_EmptyName_Throws()
+    {
+        var seed = await AddReleaseCollectionWithReleasesAsync("Main");
+        var hosterRegistration = new HosterRegistration
+        {
+            Name = "Rapidgator",
+            SerializedConfig = "{}",
+            HosterClassName = "RapidgatorHoster",
+            IsActive = true,
+        };
+        dbContext.HosterRegistrations.Add(hosterRegistration);
+        await dbContext.SaveChangesAsync();
+
+        await Should.ThrowAsync<ArgumentException>(() =>
+            service.CreateUploadSlotAsync(
+                seed.CollectionId,
+                "   ",
+                hosterRegistration.Id,
+                "Main",
+                false,
+                true,
+                CollectionUploadSlotPasswordPolicy.Ignore,
+                null
+            )
+        );
+    }
+
+    [Test]
+    public async Task CreateUploadSlotAsync_DuplicateSlotKey_Throws()
+    {
+        var seed = await AddReleaseCollectionWithReleasesAsync("Main");
+        var hosterRegistration = new HosterRegistration
+        {
+            Name = "Rapidgator",
+            SerializedConfig = "{}",
+            HosterClassName = "RapidgatorHoster",
+            IsActive = true,
+        };
+        dbContext.HosterRegistrations.Add(hosterRegistration);
+        var existingSlot = new CollectionUploadSlot
+        {
+            ReleaseCollectionId = seed.CollectionId,
+            Key = "rapidgator",
+            Name = "Rapidgator",
+            PasswordPolicy = CollectionUploadSlotPasswordPolicy.Ignore,
+        };
+        dbContext.CollectionUploadSlots.Add(existingSlot);
+        await dbContext.SaveChangesAsync();
+
+        await Should.ThrowAsync<InvalidOperationException>(() =>
+            service.CreateUploadSlotAsync(
+                seed.CollectionId,
+                "Rapidgator",
+                hosterRegistration.Id,
+                "Main",
+                false,
+                true,
+                CollectionUploadSlotPasswordPolicy.Ignore,
+                null
+            )
+        );
+    }
+
+    [Test]
+    public async Task CreateUploadSlotAsync_ArchiveConfigMissingFromRelease_Throws()
+    {
+        var seed = await AddReleaseCollectionWithReleasesAsync("Main");
+        var hosterRegistration = new HosterRegistration
+        {
+            Name = "Rapidgator",
+            SerializedConfig = "{}",
+            HosterClassName = "RapidgatorHoster",
+            IsActive = true,
+        };
+        dbContext.HosterRegistrations.Add(hosterRegistration);
+        await dbContext.SaveChangesAsync();
+
+        await Should.ThrowAsync<InvalidOperationException>(() =>
+            service.CreateUploadSlotAsync(
+                seed.CollectionId,
+                "Rapidgator",
+                hosterRegistration.Id,
+                "WrongArchiveName",
+                false,
+                true,
+                CollectionUploadSlotPasswordPolicy.Ignore,
+                null
+            )
+        );
+    }
+
+    [Test]
+    public async Task DeleteUploadSlotAsync_SlotExists_RemovesSlotAndUploadConfigs()
+    {
+        var seed = await AddReleaseCollectionWithUploadSlotAsync();
+
+        await service.DeleteUploadSlotAsync(seed.CollectionUploadSlotId);
+
+        dbContext.ChangeTracker.Clear();
+        var slotExists = await dbContext.CollectionUploadSlots.AnyAsync(s =>
+            s.Id == seed.CollectionUploadSlotId
+        );
+        var uploadConfigsExist = await dbContext.UploadConfigs.AnyAsync(uc =>
+            uc.CollectionUploadSlotId == seed.CollectionUploadSlotId
+        );
+
+        slotExists.ShouldBeFalse();
+        uploadConfigsExist.ShouldBeFalse();
     }
 
     [Test]
@@ -360,6 +623,72 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
 
         return new TimeProvider(configuration);
     }
+
+    private async Task<ReleaseCollectionWithReleasesSeed> AddReleaseCollectionWithReleasesAsync(
+        string archiveConfigName
+    )
+    {
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Series",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        var releaseCollection = new ReleaseCollection
+        {
+            ReleaseGroup = releaseGroup,
+            Key = "hostage.s01",
+            Name = "Hostage S01",
+            CreatedAt = DateTime.UtcNow,
+        };
+        var release1 = new Release
+        {
+            Name = "Hostage.S01E01",
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = "/tmp/e01",
+            ReleaseGroup = releaseGroup,
+            ReleaseCollection = releaseCollection,
+        };
+        var release2 = new Release
+        {
+            Name = "Hostage.S01E02",
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = "/tmp/e02",
+            ReleaseGroup = releaseGroup,
+            ReleaseCollection = releaseCollection,
+        };
+        dbContext.ArchiveConfigs.AddRange(
+            new ArchiveConfig
+            {
+                Release = release1,
+                Name = archiveConfigName,
+                ArchiveFilesBasePath = "/tmp/archive",
+                ArchiverName = "rar",
+                ArchiveNamePrefix = "e01",
+                ArchiveFileSizeMb = 512,
+            },
+            new ArchiveConfig
+            {
+                Release = release2,
+                Name = archiveConfigName,
+                ArchiveFilesBasePath = "/tmp/archive",
+                ArchiverName = "rar",
+                ArchiveNamePrefix = "e02",
+                ArchiveFileSizeMb = 512,
+            }
+        );
+        await dbContext.SaveChangesAsync();
+
+        return new ReleaseCollectionWithReleasesSeed(
+            releaseCollection.Id,
+            [release1.Id, release2.Id]
+        );
+    }
+
+    private sealed record ReleaseCollectionWithReleasesSeed(
+        int CollectionId,
+        IReadOnlyList<int> ReleaseIds
+    );
 
     private sealed record ReleaseCollectionUploadSlotSeed(
         int ReleaseGroupId,

@@ -397,6 +397,173 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task UpdateCollectionContainersAsync_NoCompletedUploads_DoesNotCreateContainer()
+    {
+        // Arrange
+        var seed = await AddCollectionUploadsWithMissingContainerAsync();
+
+        var uploads = await dbContext.Uploads.ToListAsync();
+        foreach (var upload in uploads)
+        {
+            upload.OnlineState = OnlineState.Offline;
+        }
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        await collectionContainerService.UpdateContainersAsync(
+            seed.CollectionUploadSlotId,
+            CancellationToken.None
+        );
+
+        // Assert
+        (await dbContext.LinkCrypterContainers.AnyAsync()).ShouldBeFalse();
+        linkCrypterFactoryMock.Verify(f => f.Get(It.IsAny<string>()), Times.Never);
+    }
+
+    [Test]
+    public async Task UpdateCollectionContainersAsync_StaleSourceUploads_RemovesStaleEntry()
+    {
+        // Arrange
+        var seed = await AddCollectionUploadsWithMissingContainerAsync();
+        var existingContainerId = await AddExistingCollectionContainerAsync(seed, seed.UploadIds);
+
+        var firstUpload = await dbContext.Uploads.FindAsync(seed.UploadIds[0]);
+        firstUpload!.OnlineState = OnlineState.Offline;
+        await dbContext.SaveChangesAsync();
+
+        linkCrypterMock
+            .Setup(c =>
+                c.UpdateContainerAsync(
+                    linkCrypterConfigMock.Object,
+                    "https://crypter.test/existing-collection",
+                    "collection-existing",
+                    "container-secret",
+                    It.Is<IReadOnlyList<string>>(links =>
+                        links.SequenceEqual(new[] { "https://hoster.test/e02-a" })
+                    ),
+                    true,
+                    true,
+                    true,
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(new UpdateContainerResult(true, null));
+
+        // Act
+        await collectionContainerService.UpdateContainersAsync(
+            seed.CollectionUploadSlotId,
+            CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var container = await dbContext
+            .LinkCrypterContainers.Include(c => c.SourceUploads)
+            .SingleAsync(c => c.Id == existingContainerId);
+
+        container.SourceUploads.Count.ShouldBe(1);
+        container.SourceUploads.Single().UploadId.ShouldBe(seed.UploadIds[1]);
+    }
+
+    [Test]
+    public async Task UpdateCollectionContainersAsync_MustEqualExpectedValue_PasswordMatches_CreatesContainer()
+    {
+        // Arrange
+        var seed = await AddCollectionUploadsWithPasswordPolicyAsync(
+            CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue,
+            expectedPassword: "secret"
+        );
+        linkCrypterMock
+            .Setup(c =>
+                c.CreateContainerAsync(
+                    linkCrypterConfigMock.Object,
+                    It.IsAny<string>(),
+                    "container-secret",
+                    It.IsAny<IReadOnlyList<string>>(),
+                    true,
+                    true,
+                    true,
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(new CreateContainerResult(true, "https://crypter.test/new", "ref-1", []));
+
+        // Act
+        await collectionContainerService.UpdateContainersAsync(
+            seed.CollectionUploadSlotId,
+            CancellationToken.None
+        );
+
+        // Assert
+        var container = await dbContext.LinkCrypterContainers.SingleAsync();
+        container.State.ShouldBe(LinkCrypterContainerState.Created);
+        linkCrypterFactoryMock.Verify(f => f.Get(LinkCrypterClassName), Times.Once);
+    }
+
+    [Test]
+    public async Task UpdateCollectionContainersAsync_MustEqualExpectedValue_PasswordMismatch_MarksContainerAsFailed()
+    {
+        // Arrange
+        var seed = await AddCollectionUploadsWithPasswordPolicyAsync(
+            CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue,
+            expectedPassword: "expected"
+        );
+        var existingContainerId = await AddExistingCollectionContainerAsync(seed, seed.UploadIds);
+
+        // Act
+        await collectionContainerService.UpdateContainersAsync(
+            seed.CollectionUploadSlotId,
+            CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var container = await dbContext.LinkCrypterContainers.SingleAsync(c =>
+            c.Id == existingContainerId
+        );
+
+        container.State.ShouldBe(LinkCrypterContainerState.CreationFailed);
+        container.Errors.ShouldBe(["Archive passwords do not match the expected value."]);
+        linkCrypterFactoryMock.Verify(f => f.Get(It.IsAny<string>()), Times.Never);
+    }
+
+    [Test]
+    public async Task UpdateCollectionContainersAsync_SettingsDifferAcrossUploadConfigs_MarksContainerAsFailed()
+    {
+        // Arrange
+        var seed = await AddCollectionUploadsWithMissingContainerAsync();
+        var existingContainerId = await AddExistingCollectionContainerAsync(seed, seed.UploadIds);
+
+        var linkCrypters = await dbContext
+            .UploadConfigLinkCrypters.Where(lc =>
+                lc.UploadConfig.CollectionUploadSlotId == seed.CollectionUploadSlotId
+            )
+            .OrderBy(lc => lc.Id)
+            .ToListAsync();
+
+        linkCrypters[0].Password = "password-a";
+        linkCrypters[1].Password = "password-b";
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await collectionContainerService.UpdateContainersAsync(
+            seed.CollectionUploadSlotId,
+            CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var container = await dbContext.LinkCrypterContainers.SingleAsync(c =>
+            c.Id == existingContainerId
+        );
+
+        container.State.ShouldBe(LinkCrypterContainerState.CreationFailed);
+        container.Errors.ShouldBe(["Link crypter settings differ across upload configs."]);
+        linkCrypterFactoryMock.Verify(f => f.Get(It.IsAny<string>()), Times.Never);
+    }
+
+    [Test]
     public async Task UpdateCollectionContainersAsync_SharedLinkCrypterWasRemoved_DeletesExistingContainer()
     {
         var seed = await AddCollectionUploadsWithMissingContainerAsync();
@@ -416,6 +583,96 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         );
 
         (await dbContext.LinkCrypterContainers.AnyAsync()).ShouldBeFalse();
+    }
+
+    private async Task<CollectionContainerSeed> AddCollectionUploadsWithPasswordPolicyAsync(
+        CollectionUploadSlotPasswordPolicy passwordPolicy,
+        string expectedPassword
+    )
+    {
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Managed releases",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        var releaseCollection = new ReleaseCollection
+        {
+            ReleaseGroup = releaseGroup,
+            Key = "hostage-s01-pw",
+            Name = "Hostage S01",
+            CreatedAt = DateTime.UtcNow,
+        };
+        var collectionSlot = new CollectionUploadSlot
+        {
+            ReleaseCollection = releaseCollection,
+            Key = "forum-pw",
+            Name = "Forum PW",
+            IsRequired = true,
+            PasswordPolicy = passwordPolicy,
+            ExpectedArchivePassword = expectedPassword,
+        };
+        var hosterRegistration = new HosterRegistration
+        {
+            Name = "Hoster PW",
+            SerializedConfig = "{}",
+            HosterClassName = "TestHoster",
+            IsActive = true,
+        };
+        var linkCrypterRegistration = new LinkCrypterRegistration
+        {
+            Name = "Crypter PW",
+            LinkCrypterClassName = LinkCrypterClassName,
+            SerializedConfig = SerializedConfig,
+            IsActive = true,
+        };
+        var firstUploadConfig = CreateCollectionUploadConfig(
+            releaseGroup,
+            releaseCollection,
+            collectionSlot,
+            hosterRegistration,
+            linkCrypterRegistration,
+            "Hostage.S01E01.German",
+            "Episode 1 pw upload"
+        );
+        var secondUploadConfig = CreateCollectionUploadConfig(
+            releaseGroup,
+            releaseCollection,
+            collectionSlot,
+            hosterRegistration,
+            linkCrypterRegistration,
+            "Hostage.S01E02.German",
+            "Episode 2 pw upload"
+        );
+        var firstUpload = new Upload
+        {
+            UploadConfig = firstUploadConfig,
+            CreatedAt = DateTime.UtcNow,
+            UploadedAt = DateTime.UtcNow,
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Online,
+            UploadedFiles = [CreateUploadedFile("https://hoster.test/pw-e01-a")],
+            ErrorMessages = [],
+        };
+        var secondUpload = new Upload
+        {
+            UploadConfig = secondUploadConfig,
+            CreatedAt = DateTime.UtcNow,
+            UploadedAt = DateTime.UtcNow,
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Online,
+            UploadedFiles = [CreateUploadedFile("https://hoster.test/pw-e02-a")],
+            ErrorMessages = [],
+        };
+
+        dbContext.Uploads.AddRange(firstUpload, secondUpload);
+        await dbContext.SaveChangesAsync();
+
+        return new CollectionContainerSeed(
+            collectionSlot.Id,
+            linkCrypterRegistration.Id,
+            [firstUpload.Id, secondUpload.Id]
+        );
     }
 
     private async Task<MissingContainerSeed> AddUploadWithMissingContainerAsync()
