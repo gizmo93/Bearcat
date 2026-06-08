@@ -154,7 +154,7 @@ public class CollectionLinkCrypterContainerService(
 
         var result = await crypter.CreateContainerAsync(
             linkCrypterConfig: config,
-            containerName: $"{slot.ReleaseCollection.Name} - {slot.Name}",
+            containerName: slot.ReleaseCollection.Name,
             password: linkCrypterConfig.Password,
             enableCaptcha: linkCrypterConfig.EnableCaptcha,
             enableContainerDownload: linkCrypterConfig.EnableContainerDownload,
