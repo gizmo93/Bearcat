@@ -411,7 +411,12 @@ public partial class ReleaseTemplateDetail(
             [nameof(CreateOrEditUploadConfigLinkCrypterTemplateDialog.UploadConfigTemplateId)] =
                 uploadConfig.UploadConfigTemplateId,
             [nameof(CreateOrEditUploadConfigLinkCrypterTemplateDialog.FormModel)] =
-                new UploadConfigLinkCrypterTemplateFormModel(),
+                new UploadConfigLinkCrypterTemplateFormModel
+                {
+                    ContainerScope = string.IsNullOrWhiteSpace(uploadConfig.CollectionUploadSlotKey)
+                        ? LinkCrypterContainerScope.Release
+                        : LinkCrypterContainerScope.ReleaseCollection,
+                },
         };
 
         var dialog =

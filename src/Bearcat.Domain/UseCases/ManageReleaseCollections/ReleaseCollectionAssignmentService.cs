@@ -1,6 +1,7 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseCollections;
@@ -76,6 +77,11 @@ public class ReleaseCollectionAssignmentService(
             var slot = releaseCollection.UploadSlots.FirstOrDefault(existingSlot =>
                 string.Equals(existingSlot.Key, slotKey, StringComparison.Ordinal)
             );
+
+            foreach (var linkCrypter in uploadConfig.LinkCrypters)
+            {
+                linkCrypter.ContainerScope = LinkCrypterContainerScope.ReleaseCollection;
+            }
 
             if (slot is null)
             {
