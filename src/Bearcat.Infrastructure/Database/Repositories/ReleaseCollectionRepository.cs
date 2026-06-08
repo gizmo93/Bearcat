@@ -339,6 +339,35 @@ public class ReleaseCollectionRepository(
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<AvailableReleaseReadModel>> SearchAvailableReleasesAsync(
+        int releaseCollectionId,
+        string? searchTerm,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var releaseGroupId = await dbRead
+            .ReleaseCollections.Where(collection => collection.Id == releaseCollectionId)
+            .Select(collection => collection.ReleaseGroupId)
+            .FirstAsync(cancellationToken);
+
+        var query = dbRead.Releases.Where(release =>
+            release.ReleaseGroupId == releaseGroupId
+            && release.ReleaseCollectionId != releaseCollectionId
+        );
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = $"%{searchTerm.Trim()}%";
+            query = query.Where(release => EF.Functions.ILike(release.Name, term));
+        }
+
+        return await query
+            .OrderBy(release => release.Name)
+            .Take(50)
+            .Select(release => new AvailableReleaseReadModel(release.Id, release.Name))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<ReleaseCollection> GetByIdAsync(
         int releaseCollectionId,
         CancellationToken cancellationToken = default
@@ -348,6 +377,44 @@ public class ReleaseCollectionRepository(
             collection => collection.Id == releaseCollectionId,
             cancellationToken
         );
+    }
+
+    public async Task<ReleaseCollection> GetByIdWithSlotsAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .ReleaseCollections.Include(collection => collection.UploadSlots)
+                .ThenInclude(slot => slot.UploadConfigs)
+                    .ThenInclude(uploadConfig => uploadConfig.ArchiveConfig)
+            .Include(collection => collection.UploadSlots)
+                .ThenInclude(slot => slot.UploadConfigs)
+                    .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
+            .FirstAsync(collection => collection.Id == releaseCollectionId, cancellationToken);
+    }
+
+    public async Task<Release> GetReleaseByIdAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite.Releases.FirstAsync(
+            release => release.Id == releaseId,
+            cancellationToken
+        );
+    }
+
+    public async Task<Release> GetReleaseWithSlotUploadConfigsAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .Releases.Include(release =>
+                release.UploadConfigs.Where(uc => uc.CollectionUploadSlotId != null)
+            )
+            .FirstAsync(release => release.Id == releaseId, cancellationToken);
     }
 
     public async Task<CollectionUploadSlot> GetUploadSlotForSharedLinkCrypterUpdateAsync(
@@ -408,6 +475,26 @@ public class ReleaseCollectionRepository(
                 && config.Name == archiveConfigName
             )
             .Select(config => new CollectionReleaseArchiveConfigTarget(config.ReleaseId, config.Id))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<
+        IReadOnlyList<CollectionReleaseArchiveConfigTarget>
+    > GetArchiveConfigTargetsForReleaseAsync(
+        int releaseId,
+        IReadOnlyCollection<string> archiveConfigNames,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .ArchiveConfigs.Where(config =>
+                config.ReleaseId == releaseId && archiveConfigNames.Contains(config.Name)
+            )
+            .Select(config => new CollectionReleaseArchiveConfigTarget(
+                config.ReleaseId,
+                config.Id,
+                config.Name
+            ))
             .ToListAsync(cancellationToken);
     }
 

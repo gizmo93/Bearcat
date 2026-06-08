@@ -158,6 +158,53 @@ public partial class ReleaseCollectionDetail(
         await LoadReleaseCollectionAsync();
     }
 
+    private async Task ShowAddReleaseDialogAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(AddReleaseToCollectionDialog.ReleaseCollectionId)] = ReleaseCollectionId,
+        };
+
+        var dialog = await dialogService.OpenAsync<AddReleaseToCollectionDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["AddRelease"],
+                Description = L["AddReleaseToCollectionDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+            }
+        );
+
+        if (!dialog.Cancelled)
+        {
+            await LoadReleaseCollectionAsync();
+        }
+    }
+
+    private async Task RemoveReleaseAsync(ReleaseCollectionReleaseReadModel release)
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["RemoveFromCollection"],
+            L["RemoveReleaseFromCollectionConfirmation", release.Name],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["Remove"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        var service = ScopedServices.GetRequiredService<ReleaseCollectionService>();
+        await service.RemoveReleaseAsync(ReleaseCollectionId, release.ReleaseId);
+        await LoadReleaseCollectionAsync();
+    }
+
     private static BadgeVariant GetContainerVariant(LinkCrypterContainerState state) =>
         state switch
         {

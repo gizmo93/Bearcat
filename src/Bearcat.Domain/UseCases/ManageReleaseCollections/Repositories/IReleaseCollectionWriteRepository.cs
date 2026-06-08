@@ -16,6 +16,18 @@ public interface IReleaseCollectionWriteRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<ReleaseCollection> GetByIdWithSlotsAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<Release> GetReleaseByIdAsync(int releaseId, CancellationToken cancellationToken = default);
+
+    Task<Release> GetReleaseWithSlotUploadConfigsAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<CollectionUploadSlot> GetUploadSlotForSharedLinkCrypterUpdateAsync(
         int collectionUploadSlotId,
         CancellationToken cancellationToken = default
@@ -40,6 +52,14 @@ public interface IReleaseCollectionWriteRepository
     Task<IReadOnlyList<CollectionReleaseArchiveConfigTarget>> GetArchiveConfigTargetsAsync(
         int releaseCollectionId,
         string archiveConfigName,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<
+        IReadOnlyList<CollectionReleaseArchiveConfigTarget>
+    > GetArchiveConfigTargetsForReleaseAsync(
+        int releaseId,
+        IReadOnlyCollection<string> archiveConfigNames,
         CancellationToken cancellationToken = default
     );
 

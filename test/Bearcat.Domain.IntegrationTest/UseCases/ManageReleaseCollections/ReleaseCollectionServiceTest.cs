@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageNotifications;
@@ -12,6 +13,7 @@ using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using Shouldly;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -32,13 +34,8 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
             repository,
             new CollectionLinkCrypterContainerService(
                 new LinkCrypterContainerCreationWriteRepository(dbContext),
-                Microsoft
-                    .Extensions
-                    .Logging
-                    .Abstractions
-                    .NullLogger<CollectionLinkCrypterContainerService>
-                    .Instance,
-                new Moq.Mock<Bearcat.Abstractions.LinkCrypter.ILinkCrypterFactory>().Object,
+                NullLogger<CollectionLinkCrypterContainerService>.Instance,
+                new Mock<ILinkCrypterFactory>().Object,
                 CreateTimeProvider(),
                 new NotificationService(
                     new NotificationRepository(dbContext),
@@ -59,6 +56,7 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
     [Test]
     public async Task CreateAsync_ValidData_PersistsCollection()
     {
+        // Arrange
         var releaseGroup = new ReleaseGroup
         {
             Name = "Series",
@@ -68,8 +66,10 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         dbContext.ReleaseGroups.Add(releaseGroup);
         await dbContext.SaveChangesAsync();
 
+        // Act
         var id = await service.CreateAsync("  Hostage S01  ", "hostage.s01", releaseGroup.Id);
 
+        // Assert
         dbContext.ChangeTracker.Clear();
         var collection = await dbContext.ReleaseCollections.FindAsync(id);
 
@@ -82,6 +82,7 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
     [Test]
     public async Task UpdateAsync_ValidData_UpdatesName()
     {
+        // Arrange
         var releaseGroup = new ReleaseGroup
         {
             Name = "Series",
@@ -98,8 +99,10 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         dbContext.ReleaseCollections.Add(collection);
         await dbContext.SaveChangesAsync();
 
+        // Act
         await service.UpdateAsync(collection.Id, "  Hostage Season 1  ");
 
+        // Assert
         dbContext.ChangeTracker.Clear();
         var updated = await dbContext.ReleaseCollections.FindAsync(collection.Id);
 
@@ -109,6 +112,7 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
     [Test]
     public async Task DeleteAsync_CollectionExists_RemovesCollection()
     {
+        // Arrange
         var releaseGroup = new ReleaseGroup
         {
             Name = "Series",
@@ -125,8 +129,10 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         dbContext.ReleaseCollections.Add(collection);
         await dbContext.SaveChangesAsync();
 
+        // Act
         await service.DeleteAsync(collection.Id);
 
+        // Assert
         dbContext.ChangeTracker.Clear();
         var exists = await dbContext.ReleaseCollections.AnyAsync(c => c.Id == collection.Id);
 
@@ -136,6 +142,7 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
     [Test]
     public async Task CreateUploadSlotAsync_ValidData_CreatesSlotWithUploadConfigPerRelease()
     {
+        // Arrange
         var seed = await AddReleaseCollectionWithReleasesAsync("Main");
         var hosterRegistration = new HosterRegistration
         {
@@ -147,17 +154,19 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         dbContext.HosterRegistrations.Add(hosterRegistration);
         await dbContext.SaveChangesAsync();
 
+        // Act
         var slotId = await service.CreateUploadSlotAsync(
-            seed.CollectionId,
-            "  Rapidgator  ",
-            hosterRegistration.Id,
-            "Main",
+            releaseCollectionId: seed.CollectionId,
+            name: "  Rapidgator  ",
+            hosterRegistrationId: hosterRegistration.Id,
+            archiveConfigName: "Main",
             premiumOnlyDownload: false,
             isRequired: true,
-            CollectionUploadSlotPasswordPolicy.Ignore,
+            passwordPolicy: CollectionUploadSlotPasswordPolicy.Ignore,
             expectedArchivePassword: null
         );
 
+        // Assert
         dbContext.ChangeTracker.Clear();
         var slot = await dbContext
             .CollectionUploadSlots.Include(s => s.UploadConfigs)
@@ -178,6 +187,7 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
     [Test]
     public async Task CreateUploadSlotAsync_MustEqualExpectedValue_PersistsExpectedPassword()
     {
+        // Arrange
         var seed = await AddReleaseCollectionWithReleasesAsync("Main");
         var hosterRegistration = new HosterRegistration
         {
@@ -189,6 +199,7 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         dbContext.HosterRegistrations.Add(hosterRegistration);
         await dbContext.SaveChangesAsync();
 
+        // Act
         var slotId = await service.CreateUploadSlotAsync(
             seed.CollectionId,
             "Rapidgator",
@@ -200,6 +211,7 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
             expectedArchivePassword: "s3cr3t"
         );
 
+        // Assert
         dbContext.ChangeTracker.Clear();
         var slot = await dbContext.CollectionUploadSlots.FindAsync(slotId);
 
@@ -210,6 +222,7 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
     [Test]
     public async Task CreateUploadSlotAsync_EmptyName_Throws()
     {
+        // Arrange
         var seed = await AddReleaseCollectionWithReleasesAsync("Main");
         var hosterRegistration = new HosterRegistration
         {
@@ -221,6 +234,7 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         dbContext.HosterRegistrations.Add(hosterRegistration);
         await dbContext.SaveChangesAsync();
 
+        // Act & Assert
         await Should.ThrowAsync<ArgumentException>(() =>
             service.CreateUploadSlotAsync(
                 seed.CollectionId,
@@ -238,6 +252,7 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
     [Test]
     public async Task CreateUploadSlotAsync_DuplicateSlotKey_Throws()
     {
+        // Arrange
         var seed = await AddReleaseCollectionWithReleasesAsync("Main");
         var hosterRegistration = new HosterRegistration
         {
@@ -257,6 +272,7 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         dbContext.CollectionUploadSlots.Add(existingSlot);
         await dbContext.SaveChangesAsync();
 
+        // Act & Assert
         await Should.ThrowAsync<InvalidOperationException>(() =>
             service.CreateUploadSlotAsync(
                 seed.CollectionId,
@@ -274,6 +290,7 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
     [Test]
     public async Task CreateUploadSlotAsync_ArchiveConfigMissingFromRelease_Throws()
     {
+        // Arrange
         var seed = await AddReleaseCollectionWithReleasesAsync("Main");
         var hosterRegistration = new HosterRegistration
         {
@@ -285,6 +302,7 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         dbContext.HosterRegistrations.Add(hosterRegistration);
         await dbContext.SaveChangesAsync();
 
+        // Act & Assert
         await Should.ThrowAsync<InvalidOperationException>(() =>
             service.CreateUploadSlotAsync(
                 seed.CollectionId,
@@ -302,10 +320,13 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
     [Test]
     public async Task DeleteUploadSlotAsync_SlotExists_RemovesSlotAndUploadConfigs()
     {
+        // Arrange
         var seed = await AddReleaseCollectionWithUploadSlotAsync();
 
+        // Act
         await service.DeleteUploadSlotAsync(seed.CollectionUploadSlotId);
 
+        // Assert
         dbContext.ChangeTracker.Clear();
         var slotExists = await dbContext.CollectionUploadSlots.AnyAsync(s =>
             s.Id == seed.CollectionUploadSlotId
@@ -480,6 +501,157 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         linkCrypter.EnableCaptcha.ShouldBeFalse();
         linkCrypter.EnableContainerDownload.ShouldBeTrue();
         linkCrypter.EnableClickAndLoad.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task AddReleaseAsync_ValidRelease_AssignsToCollection()
+    {
+        // Arrange
+        var seed = await AddReleaseCollectionWithReleasesAsync("Main");
+        var newRelease = new Release
+        {
+            Name = "Hostage.S01E03",
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = "/tmp/e03",
+            ReleaseGroupId = (
+                await dbContext.ReleaseCollections.FindAsync(seed.CollectionId)
+            )!.ReleaseGroupId,
+        };
+        dbContext.Releases.Add(newRelease);
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.AddReleaseAsync(seed.CollectionId, newRelease.Id);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var release = await dbContext.Releases.FindAsync(newRelease.Id);
+        release!.ReleaseCollectionId.ShouldBe(seed.CollectionId);
+    }
+
+    [Test]
+    public async Task AddReleaseAsync_CollectionHasSlots_CreatesUploadConfigsForNewRelease()
+    {
+        // Arrange
+        var seed = await AddReleaseCollectionWithUploadSlotAsync();
+        var releaseGroup = await dbContext.ReleaseGroups.FindAsync(seed.ReleaseGroupId);
+        var newRelease = new Release
+        {
+            Name = "Episode 3",
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = "/tmp/e03",
+            ReleaseGroup = releaseGroup!,
+        };
+        var archiveConfig = new ArchiveConfig
+        {
+            Release = newRelease,
+            Name = "Episode 1 archive",
+            ArchiveFilesBasePath = "/tmp/archive",
+            ArchiverName = "rar",
+            ArchiveNamePrefix = "e03",
+            ArchiveFileSizeMb = 512,
+        };
+        dbContext.ArchiveConfigs.Add(archiveConfig);
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.AddReleaseAsync(seed.ReleaseCollectionId, newRelease.Id);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var slotUploadConfigs = await dbContext
+            .UploadConfigs.Where(uc =>
+                uc.ReleaseId == newRelease.Id
+                && uc.CollectionUploadSlotId == seed.CollectionUploadSlotId
+            )
+            .ToListAsync();
+
+        slotUploadConfigs.Count.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task AddReleaseAsync_WrongReleaseGroup_Throws()
+    {
+        // Arrange
+        var seed = await AddReleaseCollectionWithReleasesAsync("Main");
+        var otherGroup = new ReleaseGroup
+        {
+            Name = "Other",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        var otherRelease = new Release
+        {
+            Name = "Other.Release",
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = "/tmp/other",
+            ReleaseGroup = otherGroup,
+        };
+        dbContext.Releases.Add(otherRelease);
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act & Assert
+        await Should.ThrowAsync<InvalidOperationException>(() =>
+            service.AddReleaseAsync(seed.CollectionId, otherRelease.Id)
+        );
+    }
+
+    [Test]
+    public async Task RemoveReleaseAsync_ReleaseInCollection_DetachesAndCleansUpSlotUploadConfigs()
+    {
+        // Arrange
+        var seed = await AddReleaseCollectionWithUploadSlotAsync();
+        var releaseId = await dbContext
+            .UploadConfigs.Where(uc => uc.CollectionUploadSlotId == seed.CollectionUploadSlotId)
+            .Select(uc => uc.ReleaseId)
+            .FirstAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.RemoveReleaseAsync(seed.ReleaseCollectionId, releaseId);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var release = await dbContext.Releases.FindAsync(releaseId);
+        release!.ReleaseCollectionId.ShouldBeNull();
+
+        var slotUploadConfigs = await dbContext
+            .UploadConfigs.Where(uc =>
+                uc.ReleaseId == releaseId && uc.CollectionUploadSlotId != null
+            )
+            .ToListAsync();
+        slotUploadConfigs.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task RemoveReleaseAsync_ReleaseNotInCollection_Throws()
+    {
+        // Arrange
+        var seed = await AddReleaseCollectionWithReleasesAsync("Main");
+        var otherGroup = new ReleaseGroup
+        {
+            Name = "Other",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        var otherRelease = new Release
+        {
+            Name = "Other.Release",
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = "/tmp/other",
+            ReleaseGroup = otherGroup,
+        };
+        dbContext.Releases.Add(otherRelease);
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act & Assert
+        await Should.ThrowAsync<InvalidOperationException>(() =>
+            service.RemoveReleaseAsync(seed.CollectionId, otherRelease.Id)
+        );
     }
 
     private async Task<ReleaseCollectionUploadSlotSeed> AddReleaseCollectionWithUploadSlotAsync(

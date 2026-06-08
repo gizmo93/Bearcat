@@ -189,6 +189,12 @@
                             <BbCardDescription>@L["ReleaseCollectionReleasesDescription"]</BbCardDescription>
                         </div>
                     </div>
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              OnClick="ShowAddReleaseDialogAsync">
+                        <LucideIcon Name="plus" class="h-4 w-4" />
+                        @L["AddRelease"]
+                    </BbButton>
                 </div>
             </BbCardHeader>
             <BbCardContent>
@@ -230,11 +236,7 @@
                                     </div>
                                     <div class="bearcat-config-actions">
                                         <p class="bearcat-mobile-label">@L["Actions"]</p>
-                                        @if (release.LatestUploadId is null)
-                                        {
-                                            <span class="text-xs text-muted-foreground">@L["NoLatestUpload"]</span>
-                                        }
-                                        else
+                                        @if (release.LatestUploadId is not null)
                                         {
                                             <BbButton Variant="ButtonVariant.Ghost"
                                                       Size="ButtonSize.IconSmall"
@@ -243,6 +245,12 @@
                                                 <LucideIcon Name="list" class="h-4 w-4" />
                                             </BbButton>
                                         }
+                                        <BbButton Variant="ButtonVariant.Ghost"
+                                                  Size="ButtonSize.IconSmall"
+                                                  AriaLabel="@L["RemoveFromCollection"]"
+                                                  OnClick="@(async () => await RemoveReleaseAsync(release))">
+                                            <LucideIcon Name="x" class="h-4 w-4 text-destructive" />
+                                        </BbButton>
                                     </div>
                                 </div>
                             </div>

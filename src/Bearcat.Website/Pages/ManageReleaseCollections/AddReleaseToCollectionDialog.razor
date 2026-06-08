@@ -1,0 +1,22 @@
+@inherits OwningComponentBase
+
+<div class="space-y-4">
+    <BbFormFieldCombobox TValue="int?"
+                         @bind-Value="selectedReleaseId"
+                         @bind-Value:after="OnReleaseSelectedAsync"
+                         Label="@L["Release"]"
+                         Placeholder="@L["SearchReleasePlaceholder"]"
+                         SearchPlaceholder="@L["SearchReleasePlaceholder"]"
+                         EmptyMessage="@L["NoAvailableReleasesFound"]"
+                         Options="releaseOptions"
+                         SearchQuery="@searchQuery"
+                         SearchQueryChanged="OnSearchQueryChangedAsync"
+                         InputClass="w-full"
+                         MatchTriggerWidth="true" />
+
+    <div class="flex justify-end">
+        <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+            @L["Cancel"]
+        </BbButton>
+    </div>
+</div>

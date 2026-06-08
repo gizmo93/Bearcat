@@ -20,4 +20,10 @@ public interface IReleaseCollectionReadRepository
         int releaseCollectionId,
         CancellationToken cancellationToken = default
     );
+
+    Task<IReadOnlyList<AvailableReleaseReadModel>> SearchAvailableReleasesAsync(
+        int releaseCollectionId,
+        string? searchTerm,
+        CancellationToken cancellationToken = default
+    );
 }

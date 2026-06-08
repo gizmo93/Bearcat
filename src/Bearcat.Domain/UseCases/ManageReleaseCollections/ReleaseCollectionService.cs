@@ -216,6 +216,122 @@ public class ReleaseCollectionService(
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task AddReleaseAsync(
+        int releaseCollectionId,
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var releaseCollection = await writeRepository.GetByIdWithSlotsAsync(
+            releaseCollectionId,
+            cancellationToken
+        );
+
+        var release = await writeRepository.GetReleaseByIdAsync(releaseId, cancellationToken);
+
+        if (release.ReleaseGroupId != releaseCollection.ReleaseGroupId)
+        {
+            throw new InvalidOperationException(
+                "The release must belong to the same release group as the collection."
+            );
+        }
+
+        if (release.ReleaseCollectionId == releaseCollectionId)
+        {
+            return;
+        }
+
+        release.ReleaseCollectionId = releaseCollectionId;
+
+        if (releaseCollection.UploadSlots.Count > 0)
+        {
+            var archiveConfigNames = releaseCollection
+                .UploadSlots.Select(slot =>
+                    slot.UploadConfigs.Select(uc => uc.ArchiveConfig.Name).FirstOrDefault()
+                )
+                .Where(name => name is not null)
+                .Distinct()
+                .ToList();
+
+            var archiveConfigTargets = await writeRepository.GetArchiveConfigTargetsForReleaseAsync(
+                releaseId: releaseId,
+                archiveConfigNames: archiveConfigNames!,
+                cancellationToken: cancellationToken
+            );
+
+            var targetsByName = archiveConfigTargets.ToDictionary(
+                target => target.ArchiveConfigName!,
+                StringComparer.Ordinal
+            );
+
+            foreach (var slot in releaseCollection.UploadSlots)
+            {
+                var referenceUploadConfig = slot.UploadConfigs.FirstOrDefault();
+                if (referenceUploadConfig is null)
+                {
+                    continue;
+                }
+
+                var archiveConfigName = referenceUploadConfig.ArchiveConfig.Name;
+                if (!targetsByName.TryGetValue(archiveConfigName, out var target))
+                {
+                    continue;
+                }
+
+                var uploadConfig = new UploadConfig
+                {
+                    ReleaseId = releaseId,
+                    ArchiveConfigId = target.ArchiveConfigId,
+                    HosterRegistrationId = referenceUploadConfig.HosterRegistrationId,
+                    Name = referenceUploadConfig.Name,
+                    PremiumOnlyDownload = referenceUploadConfig.PremiumOnlyDownload,
+                    LinksDistributedTo = [],
+                    LinkCrypters = [],
+                    Uploads = [],
+                };
+
+                CollectionLinkCrypterSync.ApplyToNewUploadConfig(
+                    uploadConfig,
+                    CollectionLinkCrypterSync.GetSettingsFromSlot(slot)
+                );
+
+                slot.UploadConfigs.Add(uploadConfig);
+            }
+        }
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RemoveReleaseAsync(
+        int releaseCollectionId,
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var release = await writeRepository.GetReleaseWithSlotUploadConfigsAsync(
+            releaseId,
+            cancellationToken
+        );
+
+        if (release.ReleaseCollectionId != releaseCollectionId)
+        {
+            throw new InvalidOperationException("The release does not belong to this collection.");
+        }
+
+        release.ReleaseCollectionId = null;
+
+        var slotUploadConfigs = release
+            .UploadConfigs.Where(uc => uc.CollectionUploadSlotId is not null)
+            .ToList();
+
+        foreach (var uploadConfig in slotUploadConfigs)
+        {
+            writeRepository.Remove(uploadConfig);
+        }
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task UpdateSharedLinkCryptersAsync(
         int collectionUploadSlotId,
         IReadOnlyCollection<CollectionUploadSlotLinkCrypterSettings> linkCrypterSettings,

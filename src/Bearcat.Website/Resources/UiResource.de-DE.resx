@@ -678,4 +678,12 @@
   <data name="UseReleaseCollections" xml:space="preserve"><value>Release-Collections verwenden</value></data>
   <data name="UseCollectionUploadSlot" xml:space="preserve"><value>Diese Upload-Konfiguration über die Collection teilen</value></data>
   <data name="UseCollectionUploadSlotHelp" xml:space="preserve"><value>Erzeugt einen gemeinsamen Collection-Container für diese Gruppe.</value></data>
+  <data name="AddRelease" xml:space="preserve"><value>Release hinzufügen</value></data>
+  <data name="AddReleaseToCollectionDescription" xml:space="preserve"><value>Suche nach einem Release in der gleichen Release-Gruppe, um es dieser Collection hinzuzufügen.</value></data>
+  <data name="SearchRelease" xml:space="preserve"><value>Suchen</value></data>
+  <data name="SearchReleasePlaceholder" xml:space="preserve"><value>Nach Release-Name suchen</value></data>
+  <data name="NoAvailableReleasesFound" xml:space="preserve"><value>Keine verfügbaren Releases gefunden.</value></data>
+  <data name="RemoveFromCollection" xml:space="preserve"><value>Aus Collection entfernen</value></data>
+  <data name="RemoveReleaseFromCollectionConfirmation" xml:space="preserve"><value>{0} aus dieser Collection entfernen? Upload-Konfigurationen, die durch Collection-Upload-Slots erstellt wurden, werden gelöscht.</value></data>
+  <data name="Remove" xml:space="preserve"><value>Entfernen</value></data>
 </root>
