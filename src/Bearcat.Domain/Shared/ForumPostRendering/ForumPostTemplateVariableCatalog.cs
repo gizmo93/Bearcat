@@ -1,37 +1,14 @@
 using System.Collections;
 using System.Reflection;
 using System.Text;
-using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 
-namespace Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
+namespace Bearcat.Domain.Shared.ForumPostRendering;
 
 public static class ForumPostTemplateVariableCatalog
 {
-    private static readonly IReadOnlyList<ForumPostTemplateVariableReadModel> ImageLinkVariables =
-    [
-        new(
-            "{{ imagelinks.<image_upload_config_name>.full }}",
-            "Full image URL by image upload configuration name. The configuration name is normalized to lower snake case."
-        ),
-        new(
-            "{{ imagelinks.<image_upload_config_name>.medium }}",
-            "Medium image URL by image upload configuration name."
-        ),
-        new(
-            "{{ imagelinks.<image_upload_config_name>.thumbnail }}",
-            "Thumbnail image URL by image upload configuration name."
-        ),
-        new(
-            "{{ imagelinks[\"Image Upload Config Name\"].full }}",
-            "Full image URL using the original image upload configuration name."
-        ),
-    ];
-
-    public static IReadOnlyList<ForumPostTemplateVariableReadModel> GetVariables()
+    public static IReadOnlyList<ForumPostTemplateVariableReadModel> GetVariables(Type rootType)
     {
-        var variables = GetVariables(typeof(ForumPostTemplateRenderModel), null).ToList();
-        variables.AddRange(ImageLinkVariables);
-        return variables;
+        return GetVariables(rootType, null).ToList();
     }
 
     public static bool ShouldExposeMember(MemberInfo member)

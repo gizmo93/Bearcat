@@ -173,7 +173,8 @@ public partial class ReleaseOverview(
     {
         var parameters = new Dictionary<string, object?>
         {
-            [nameof(RenderForumPostDialog.ReleaseId)] = ReleaseId,
+            [nameof(RenderForumPostDialog.EntityId)] = ReleaseId,
+            [nameof(RenderForumPostDialog.Type)] = ForumPostTemplateType.Release,
         };
 
         await dialogService.OpenAsync<RenderForumPostDialog>(

@@ -35,13 +35,21 @@
                             <BbCardDescription>@L["SeriesMetadataDescription"]</BbCardDescription>
                         </div>
                     </div>
-                    <BbButton Variant="ButtonVariant.Outline"
-                              Size="ButtonSize.Small"
-                              Disabled="isResolvingMetadata"
-                              OnClick="ResolveMetadataAsync">
-                        <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isResolvingMetadata ? "animate-spin" : string.Empty)}")" />
-                        @L["RefreshMetadata"]
-                    </BbButton>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <BbButton Variant="ButtonVariant.Outline"
+                                  Size="ButtonSize.Small"
+                                  OnClick="ShowRenderForumPostDialogAsync">
+                            <LucideIcon Name="file-output" class="h-4 w-4" />
+                            @L["RenderForumPost"]
+                        </BbButton>
+                        <BbButton Variant="ButtonVariant.Outline"
+                                  Size="ButtonSize.Small"
+                                  Disabled="isResolvingMetadata"
+                                  OnClick="ResolveMetadataAsync">
+                            <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isResolvingMetadata ? "animate-spin" : string.Empty)}")" />
+                            @L["RefreshMetadata"]
+                        </BbButton>
+                    </div>
                 </div>
             </BbCardHeader>
             <BbCardContent>

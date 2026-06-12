@@ -1,6 +1,7 @@
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.ReadModels;
+using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
-using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
@@ -13,7 +14,10 @@ public partial class RenderForumPostDialog(
 ) : OwningComponentBase
 {
     [Parameter]
-    public int ReleaseId { get; set; }
+    public int EntityId { get; set; }
+
+    [Parameter]
+    public ForumPostTemplateType Type { get; set; } = ForumPostTemplateType.Release;
 
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
@@ -23,7 +27,7 @@ public partial class RenderForumPostDialog(
     private int selectedTemplateId;
     private string renderedContent = string.Empty;
     private bool isRendering;
-    private string RenderedCopyTargetId => $"rendered-forum-post-{ReleaseId}";
+    private string RenderedCopyTargetId => $"rendered-forum-post-{EntityId}";
 
     private IEnumerable<SelectOption<int>> TemplateOptions =>
         templates.Select(template => new SelectOption<int>(
@@ -33,7 +37,7 @@ public partial class RenderForumPostDialog(
 
     protected override async Task OnInitializedAsync()
     {
-        templates = await readRepository.GetAllAsync();
+        templates = await readRepository.GetAllAsync(Type);
         selectedTemplateId = templates.FirstOrDefault()?.ForumPostTemplateId ?? 0;
 
         if (selectedTemplateId != 0)
@@ -68,7 +72,7 @@ public partial class RenderForumPostDialog(
 
         try
         {
-            var result = await renderService.RenderAsync(ReleaseId, selectedTemplateId);
+            var result = await renderService.RenderAsync(EntityId, selectedTemplateId);
             renderedContent = result.Content;
             renderErrors = result.Errors;
         }

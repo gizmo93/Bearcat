@@ -3,6 +3,7 @@ using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageImageUploads.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
@@ -16,7 +17,7 @@ public class ReleaseReadRepository(
     IBearcatReadDbContext dbRead,
     IArchiverFactory archiverFactory,
     ILinkCrypterFactory linkCrypterFactory
-) : IReleaseReadRepository
+) : IReleaseReadRepository, IReleaseForumPostUploadRepository
 {
     public async Task<PagedResult<ReleaseReadModel>> SearchReleasesAsync(
         ReleaseSearchQuery query,
@@ -205,6 +206,174 @@ public class ReleaseReadRepository(
                     upload?.ErrorMessages ?? [],
                     upload?.ArchivePassword,
                     links
+                );
+            })
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<ReleaseForumPostUploadReadModel>> GetForumPostUploadsAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var uploadConfigs = await dbRead
+            .UploadConfigs.Where(c => c.ReleaseId == releaseId)
+            .OrderBy(c => c.Name)
+            .ThenBy(c => c.Id)
+            .Select(c => new
+            {
+                UploadConfigId = c.Id,
+                UploadConfigName = c.Name,
+                HosterName = c.HosterRegistration.Name,
+                ArchiverName = c.ArchiveConfig.ArchiverName,
+                ArchivePassword = c.ArchiveConfig.ArchivePassword,
+                LinkCrypters = c
+                    .LinkCrypters.Select(linkCrypter => new
+                    {
+                        linkCrypter.LinkCrypterRegistrationId,
+                        Name = linkCrypter.LinkCrypterRegistration.Name,
+                        linkCrypter.Password,
+                    })
+                    .ToList(),
+            })
+            .ToListAsync(cancellationToken: cancellationToken);
+
+        var latestUploads = await dbRead
+            .Uploads.Where(u => u.UploadConfig.ReleaseId == releaseId)
+            .GroupBy(u => u.UploadConfigId)
+            .Select(g =>
+                g.OrderByDescending(u => u.UploadedAt ?? u.CreatedAt)
+                    .ThenByDescending(u => u.Id)
+                    .Select(u => new
+                    {
+                        u.UploadConfigId,
+                        UploadId = u.Id,
+                        u.UploadedAt,
+                    })
+                    .First()
+            )
+            .ToListAsync(cancellationToken: cancellationToken);
+
+        var latestUploadByConfigId = latestUploads.ToDictionary(u => u.UploadConfigId);
+        var uploadIds = latestUploads.Select(u => u.UploadId).ToList();
+
+        var linksByUploadId = new Dictionary<int, IReadOnlyList<string>>();
+        var containers =
+            new List<(
+                int UploadId,
+                int LinkCrypterRegistrationId,
+                string ContainerUrl,
+                DateTime CreatedAt
+            )>();
+
+        if (uploadIds.Count > 0)
+        {
+            var directLinks = await dbRead
+                .UploadedFiles.Where(f =>
+                    uploadIds.Contains(f.UploadId) && f.Upload.UploadConfig.ReleaseId == releaseId
+                )
+                .OrderBy(f => f.ArchiveFile.FullFileName)
+                .ThenBy(f => f.Id)
+                .Select(f => new { f.UploadId, f.HosterFileLink })
+                .ToListAsync(cancellationToken: cancellationToken);
+
+            linksByUploadId = directLinks
+                .GroupBy(link => link.UploadId)
+                .ToDictionary(
+                    group => group.Key,
+                    group =>
+                        (IReadOnlyList<string>)group.Select(link => link.HosterFileLink).ToList()
+                );
+
+            var releaseContainers = await dbRead
+                .LinkCrypterContainers.Where(c =>
+                    c.Scope == LinkCrypterContainerScope.Release
+                    && c.UploadId != null
+                    && uploadIds.Contains(c.UploadId.Value)
+                    && c.Upload!.UploadConfig.ReleaseId == releaseId
+                )
+                .Select(c => new
+                {
+                    UploadId = c.UploadId!.Value,
+                    c.LinkCrypterRegistrationId,
+                    c.ContainerUrl,
+                    c.CreatedAt,
+                })
+                .ToListAsync(cancellationToken: cancellationToken);
+
+            var collectionContainers = await dbRead
+                .LinkCrypterContainerSourceUploads.Where(source =>
+                    uploadIds.Contains(source.UploadId)
+                    && source.Upload.UploadConfig.ReleaseId == releaseId
+                    && source.LinkCrypterContainer.Scope
+                        == LinkCrypterContainerScope.ReleaseCollection
+                )
+                .Select(source => new
+                {
+                    source.UploadId,
+                    source.LinkCrypterContainer.LinkCrypterRegistrationId,
+                    source.LinkCrypterContainer.ContainerUrl,
+                    source.LinkCrypterContainer.CreatedAt,
+                })
+                .ToListAsync(cancellationToken: cancellationToken);
+
+            containers.AddRange(
+                releaseContainers.Select(c =>
+                    (c.UploadId, c.LinkCrypterRegistrationId, c.ContainerUrl, c.CreatedAt)
+                )
+            );
+            containers.AddRange(
+                collectionContainers.Select(c =>
+                    (c.UploadId, c.LinkCrypterRegistrationId, c.ContainerUrl, c.CreatedAt)
+                )
+            );
+        }
+
+        var archiverNamesByClassName = archiverFactory
+            .GetArchivers()
+            .ToDictionary(archiver => archiver.ClassName, archiver => archiver.Name);
+
+        return uploadConfigs
+            .Select(config =>
+            {
+                latestUploadByConfigId.TryGetValue(config.UploadConfigId, out var upload);
+
+                IReadOnlyList<string> links =
+                    upload is not null && linksByUploadId.TryGetValue(upload.UploadId, out var l)
+                        ? l
+                        : [];
+
+                var linkCrypters = config
+                    .LinkCrypters.Select(linkCrypter =>
+                    {
+                        var container = upload is null
+                            ? default
+                            : containers.FirstOrDefault(c =>
+                                c.UploadId == upload.UploadId
+                                && c.LinkCrypterRegistrationId
+                                    == linkCrypter.LinkCrypterRegistrationId
+                            );
+
+                        return new ReleaseForumPostLinkCrypterReadModel(
+                            Name: linkCrypter.Name,
+                            Password: linkCrypter.Password,
+                            ContainerUrl: container.ContainerUrl ?? string.Empty,
+                            CreatedAt: container.CreatedAt
+                        );
+                    })
+                    .ToList();
+
+                return new ReleaseForumPostUploadReadModel(
+                    UploadConfigName: config.UploadConfigName,
+                    HosterName: config.HosterName,
+                    ArchiveFormat: archiverNamesByClassName.GetValueOrDefault(
+                        config.ArchiverName,
+                        config.ArchiverName
+                    ),
+                    ArchivePassword: config.ArchivePassword,
+                    UploadedAt: upload?.UploadedAt,
+                    Links: links,
+                    LinkCrypters: linkCrypters
                 );
             })
             .ToList();

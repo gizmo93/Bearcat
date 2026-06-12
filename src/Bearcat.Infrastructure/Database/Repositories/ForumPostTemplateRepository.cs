@@ -1,6 +1,7 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -11,15 +12,18 @@ public class ForumPostTemplateRepository(
 ) : IForumPostTemplateReadRepository, IForumPostTemplateWriteRepository
 {
     public async Task<IReadOnlyList<ForumPostTemplateSummaryReadModel>> GetAllAsync(
+        ForumPostTemplateType? type = null,
         CancellationToken cancellationToken = default
     )
     {
         return await dbRead
-            .ForumPostTemplates.OrderBy(template => template.Name)
+            .ForumPostTemplates.Where(template => type == null || template.Type == type)
+            .OrderBy(template => template.Name)
             .ThenBy(template => template.Id)
             .Select(template => new ForumPostTemplateSummaryReadModel(
                 template.Id,
                 template.Name,
+                template.Type,
                 template.UpdatedAt
             ))
             .ToListAsync(cancellationToken);
@@ -35,6 +39,7 @@ public class ForumPostTemplateRepository(
             .Select(template => new ForumPostTemplateDetailReadModel(
                 template.Id,
                 template.Name,
+                template.Type,
                 template.TemplateBody
             ))
             .FirstOrDefaultAsync(cancellationToken);

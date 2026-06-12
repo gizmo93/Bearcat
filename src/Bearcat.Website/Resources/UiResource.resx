@@ -599,6 +599,10 @@
   <data name="RenderForumPost" xml:space="preserve"><value>Render forum post</value></data>
   <data name="RenderForumPostDescription" xml:space="preserve"><value>Render this release with a forum post template.</value></data>
   <data name="RenderForumPostForRelease" xml:space="preserve"><value>Render forum post for {0}</value></data>
+  <data name="RenderForumPostForCollection" xml:space="preserve"><value>Render forum post for {0}</value></data>
+  <data name="ForumPostTemplateType" xml:space="preserve"><value>Type</value></data>
+  <data name="ForumPostTemplateTypeRelease" xml:space="preserve"><value>Release</value></data>
+  <data name="ForumPostTemplateTypeReleaseCollection" xml:space="preserve"><value>Release collection</value></data>
   <data name="SearchVariables" xml:space="preserve"><value>Search variables</value></data>
   <data name="SelectForumPostTemplate" xml:space="preserve"><value>Select a forum post template</value></data>
   <data name="Template" xml:space="preserve"><value>Template</value></data>

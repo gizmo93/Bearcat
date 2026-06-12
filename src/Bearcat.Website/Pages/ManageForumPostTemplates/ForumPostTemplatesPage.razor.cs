@@ -1,15 +1,18 @@
+using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.ReadModels;
+using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
-using Bearcat.Domain.UseCases.ManageReleases;
-using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
+using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
+using BlazorBlueprint.Primitives;
 
 namespace Bearcat.Website.Pages.ManageForumPostTemplates;
 
 public partial class ForumPostTemplatesPage(
     IForumPostTemplateReadRepository readRepository,
     ForumPostTemplateService service,
+    ForumPostRenderService renderService,
     DialogService dialogService
 )
 {
@@ -22,6 +25,10 @@ public partial class ForumPostTemplatesPage(
     private bool templatesPanelOpen;
     private bool variablesPanelOpen;
     private string variableSearchTerm = string.Empty;
+
+    private IEnumerable<SelectOption<ForumPostTemplateType>> TypeOptions =>
+        Enum.GetValues<ForumPostTemplateType>()
+            .Select(type => new SelectOption<ForumPostTemplateType>(type, GetTypeLabel(type)));
 
     private IReadOnlyList<ForumPostTemplateVariableReadModel> FilteredVariables
     {
@@ -44,7 +51,6 @@ public partial class ForumPostTemplatesPage(
 
     protected override async Task OnInitializedAsync()
     {
-        variables = ForumPostRenderService.GetVariables();
         await LoadTemplatesAsync(selectFirst: true);
     }
 
@@ -61,7 +67,7 @@ public partial class ForumPostTemplatesPage(
             }
             else if (selectFirst)
             {
-                await CreateNewAsync();
+                CreateNew();
             }
         }
         finally
@@ -85,21 +91,40 @@ public partial class ForumPostTemplatesPage(
         {
             ForumPostTemplateId = template.ForumPostTemplateId,
             Name = template.Name,
+            Type = template.Type,
             TemplateBody = template.TemplateBody,
         };
+
+        ReloadVariables();
     }
 
-    private Task CreateNewAsync()
+    private void CreateNew()
     {
         errorMessage = null;
         validationResult = null;
         formModel = new ForumPostTemplateFormModel
         {
             Name = string.Empty,
-            TemplateBody = DefaultTemplate,
+            Type = ForumPostTemplateType.Release,
+            TemplateBody = GetDefaultTemplate(ForumPostTemplateType.Release),
         };
 
-        return Task.CompletedTask;
+        ReloadVariables();
+    }
+
+    private void OnTypeChanged()
+    {
+        if (formModel.ForumPostTemplateId is null)
+        {
+            formModel.TemplateBody = GetDefaultTemplate(formModel.Type);
+        }
+
+        ReloadVariables();
+    }
+
+    private void ReloadVariables()
+    {
+        variables = renderService.GetVariables(formModel.Type);
     }
 
     private Task ValidateAsync()
@@ -127,7 +152,11 @@ public partial class ForumPostTemplatesPage(
 
         if (formModel.ForumPostTemplateId is null)
         {
-            var templateId = await service.CreateAsync(formModel.Name, formModel.TemplateBody);
+            var templateId = await service.CreateAsync(
+                formModel.Name,
+                formModel.Type,
+                formModel.TemplateBody
+            );
             await LoadTemplatesAsync(selectFirst: false);
             await SelectTemplateAsync(templateId);
             return;
@@ -136,6 +165,7 @@ public partial class ForumPostTemplatesPage(
         await service.UpdateAsync(
             formModel.ForumPostTemplateId.Value,
             formModel.Name,
+            formModel.Type,
             formModel.TemplateBody
         );
         await LoadTemplatesAsync(selectFirst: false);
@@ -177,7 +207,26 @@ public partial class ForumPostTemplatesPage(
             : "bearcat-forum-template-list-item";
     }
 
-    private const string DefaultTemplate = """
+    private string GetTypeLabel(ForumPostTemplateType type)
+    {
+        return type switch
+        {
+            ForumPostTemplateType.Release => L["ForumPostTemplateTypeRelease"],
+            ForumPostTemplateType.ReleaseCollection => L["ForumPostTemplateTypeReleaseCollection"],
+            _ => type.ToString(),
+        };
+    }
+
+    private static string GetDefaultTemplate(ForumPostTemplateType type)
+    {
+        return type switch
+        {
+            ForumPostTemplateType.ReleaseCollection => DefaultCollectionTemplate,
+            _ => DefaultReleaseTemplate,
+        };
+    }
+
+    private const string DefaultReleaseTemplate = """
         [CENTER]
         [B]{{ release.name }}[/B]
 
@@ -189,6 +238,26 @@ public partial class ForumPostTemplatesPage(
         [B]{{ upload.name }}[/B]
         {{ for crypter in upload.link_crypters }}
         [URL='{{ crypter.container_link }}']{{ crypter.name }}[/URL]
+        {{ end }}
+
+        {{ end }}
+        [/CENTER]
+        """;
+
+    private const string DefaultCollectionTemplate = """
+        [CENTER]
+        [B]{{ series.title }}[/B]
+
+        [IMG]{{ series.cover_url }}[/IMG]
+
+        {{ series.description }}
+
+        {{ for release in releases }}
+        [B]{{ release.name }}[/B]
+        {{ for upload in release.uploads }}
+        {{ for crypter in upload.link_crypters }}
+        [URL='{{ crypter.container_link }}']{{ upload.name }} - {{ crypter.name }}[/URL]
+        {{ end }}
         {{ end }}
 
         {{ end }}

@@ -1,4 +1,4 @@
-namespace Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
+namespace Bearcat.Domain.Shared.ForumPostRendering;
 
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class ForumPostTemplateVariableAttribute(string description) : Attribute

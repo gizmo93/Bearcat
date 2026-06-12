@@ -12,7 +12,7 @@
             </p>
         </div>
 
-        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="CreateNewAsync">
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="CreateNew">
             <LucideIcon Name="plus" class="h-4 w-4" />
             @L["NewForumPostTemplate"]
         </BbButton>
@@ -57,6 +57,12 @@
                                           @bind-Value="formModel.Name"
                                           Label="@L["Name"]"
                                           Placeholder="@L["ForumPostTemplateNamePlaceholder"]" />
+
+                        <BbFormFieldSelect TValue="ForumPostTemplateType"
+                                           @bind-Value="formModel.Type"
+                                           @bind-Value:after="OnTypeChanged"
+                                           Label="@L["ForumPostTemplateType"]"
+                                           Options="TypeOptions" />
 
                         <BbFormFieldTextarea @bind-Value="formModel.TemplateBody"
                                              Label="@L["Template"]"

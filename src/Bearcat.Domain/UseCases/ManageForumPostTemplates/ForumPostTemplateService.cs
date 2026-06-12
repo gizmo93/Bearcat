@@ -1,6 +1,7 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Scriban;
 
 namespace Bearcat.Domain.UseCases.ManageForumPostTemplates;
@@ -9,6 +10,7 @@ public class ForumPostTemplateService(IForumPostTemplateWriteRepository writeRep
 {
     public async Task<int> CreateAsync(
         string name,
+        ForumPostTemplateType type,
         string? templateBody,
         CancellationToken cancellationToken = default
     )
@@ -17,6 +19,7 @@ public class ForumPostTemplateService(IForumPostTemplateWriteRepository writeRep
         var template = new ForumPostTemplate
         {
             Name = name.Trim(),
+            Type = type,
             TemplateBody = templateBody ?? string.Empty,
             CreatedAt = now,
             UpdatedAt = now,
@@ -31,12 +34,14 @@ public class ForumPostTemplateService(IForumPostTemplateWriteRepository writeRep
     public async Task UpdateAsync(
         int forumPostTemplateId,
         string name,
+        ForumPostTemplateType type,
         string? templateBody,
         CancellationToken cancellationToken = default
     )
     {
         var template = await writeRepository.GetByIdAsync(forumPostTemplateId, cancellationToken);
         template.Name = name.Trim();
+        template.Type = type;
         template.TemplateBody = templateBody ?? string.Empty;
         template.UpdatedAt = DateTime.UtcNow;
 

@@ -1,15 +1,6 @@
-using Scriban.Runtime;
+using Bearcat.Domain.Shared.ForumPostRendering;
 
 namespace Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
-
-public sealed record ForumPostTemplateRenderContext(
-    ForumPostTemplateRenderModel RenderModel,
-    ScriptObject ImageLinks
-)
-{
-    public static ForumPostTemplateRenderContext Empty { get; } =
-        new(ForumPostTemplateRenderModel.Empty, new ScriptObject());
-}
 
 public sealed record ForumPostTemplateRenderModel
 {
@@ -131,44 +122,4 @@ public sealed record ForumPostTemplateExternalInfoModel
 
     [ForumPostTemplateVariable("Loop over URLs for this external info.", LoopVariable = "url")]
     public required IReadOnlyList<string> Urls { get; init; }
-}
-
-public sealed record ForumPostTemplateUploadModel
-{
-    [ForumPostTemplateVariable("Upload configuration name.")]
-    public required string Name { get; init; }
-
-    [ForumPostTemplateVariable("Hoster registration name.")]
-    public required string HosterName { get; init; }
-
-    [ForumPostTemplateVariable("Latest upload date.")]
-    public required DateTime? UploadedAt { get; init; }
-
-    [ForumPostTemplateVariable("Archive password of the latest upload.")]
-    public required string ArchivePassword { get; init; }
-
-    [ForumPostTemplateVariable(
-        "Loop over direct hoster links of the latest upload.",
-        LoopVariable = "link"
-    )]
-    public required IReadOnlyList<string> Links { get; init; }
-
-    [ForumPostTemplateVariable(
-        "Loop over link crypter container links.",
-        LoopVariable = "crypter",
-        ElementType = typeof(ForumPostTemplateLinkCrypterModel)
-    )]
-    public required IReadOnlyList<ForumPostTemplateLinkCrypterModel> LinkCrypters { get; init; }
-}
-
-public sealed record ForumPostTemplateLinkCrypterModel
-{
-    [ForumPostTemplateVariable("Link crypter registration name.")]
-    public required string Name { get; init; }
-
-    [ForumPostTemplateVariable("Generated container URL.")]
-    public required string ContainerLink { get; init; }
-
-    [ForumPostTemplateVariable("Container creation date.")]
-    public required DateTime CreatedAt { get; init; }
 }

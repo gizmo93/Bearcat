@@ -1,4 +1,5 @@
-﻿using Bearcat.Domain.UseCases.Dashboard.Repositories;
+﻿using Bearcat.Domain.Shared.ForumPostRendering;
+using Bearcat.Domain.UseCases.Dashboard.Repositories;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
@@ -115,8 +116,15 @@ public static class ServiceProviderConfig
                 ReleaseFolderAutomationRepository
             >();
             services.AddScoped<IReleaseReadRepository, ReleaseReadRepository>();
+            services.AddScoped<IReleaseForumPostUploadRepository>(serviceProvider =>
+                (ReleaseReadRepository)serviceProvider.GetRequiredService<IReleaseReadRepository>()
+            );
             services.AddScoped<IReleaseCollectionReadRepository, ReleaseCollectionRepository>();
             services.AddScoped<IReleaseCollectionWriteRepository, ReleaseCollectionRepository>();
+            services.AddScoped<
+                IReleaseCollectionForumPostRepository,
+                ReleaseCollectionForumPostRepository
+            >();
             services.AddScoped<IArchiveConfigWriteRepository, ArchiveConfigWriteRepository>();
             services.AddScoped<IArchiveReadRepository, ArchiveReadRepository>();
             services.AddScoped<

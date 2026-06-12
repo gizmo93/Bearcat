@@ -2,7 +2,9 @@ using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.Shared.ForumPostRendering;
+using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
+using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -24,11 +26,13 @@ public class ForumPostRenderServiceTest : BearcatIntegrationTest
         var forumPostTemplateRepository = new ForumPostTemplateRepository(dbContext, dbContext);
         var releaseReadRepository = new ReleaseReadRepository(
             dbContext,
-            Mock.Of<IArchiverFactory>(),
+            Mock.Of<IArchiverFactory>(factory => factory.GetArchivers() == new List<ArchiverDto>()),
             Mock.Of<ILinkCrypterFactory>()
         );
+        var uploadBuilder = new ReleaseForumPostUploadBuilder(releaseReadRepository);
+        var renderSource = new ReleaseForumPostRenderSource(releaseReadRepository, uploadBuilder);
 
-        service = new ForumPostRenderService(forumPostTemplateRepository, releaseReadRepository);
+        service = new ForumPostRenderService(forumPostTemplateRepository, [renderSource]);
     }
 
     [TearDown]
