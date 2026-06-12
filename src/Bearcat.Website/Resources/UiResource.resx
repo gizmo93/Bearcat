@@ -686,4 +686,27 @@
   <data name="RemoveFromCollection" xml:space="preserve"><value>Remove from collection</value></data>
   <data name="RemoveReleaseFromCollectionConfirmation" xml:space="preserve"><value>Remove {0} from this collection? Upload configurations created by collection upload slots will be deleted.</value></data>
   <data name="Remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="SeriesDatabaseRegistrations" xml:space="preserve"><value>Series database registrations</value></data>
+  <data name="SeriesDatabaseRegistrationsIntro" xml:space="preserve"><value>Enable and manage series metadata sources</value></data>
+  <data name="SeriesDatabases" xml:space="preserve"><value>Series databases</value></data>
+  <data name="SeriesDatabase" xml:space="preserve"><value>Series database</value></data>
+  <data name="NewSeriesDatabase" xml:space="preserve"><value>New series database</value></data>
+  <data name="AddSeriesDatabase" xml:space="preserve"><value>Add series database</value></data>
+  <data name="SeriesDatabaseDialogDescription" xml:space="preserve"><value>Enable a series database and store credentials if the provider requires them.</value></data>
+  <data name="SeriesDatabaseConfigurationHelp" xml:space="preserve"><value>Store the API credentials for the selected series database.</value></data>
+  <data name="SelectSeriesDatabase" xml:space="preserve"><value>Select a series database</value></data>
+  <data name="SelectSeriesDatabaseRequired" xml:space="preserve"><value>You must select a series database.</value></data>
+  <data name="SeriesDatabaseAlreadyRegistered" xml:space="preserve"><value>This series database is already registered.</value></data>
+  <data name="OpenSeriesDatabaseActions" xml:space="preserve"><value>Open series database actions</value></data>
+  <data name="SeriesDatabaseRegistrationActivated" xml:space="preserve"><value>Series database registration {0} activated</value></data>
+  <data name="SeriesDatabaseRegistrationDeactivated" xml:space="preserve"><value>Series database registration {0} deactivated</value></data>
+  <data name="DeleteSeriesDatabaseRegistrationConfirmation" xml:space="preserve"><value>Are you sure you want to delete series database registration {0}?</value></data>
+  <data name="SeriesMetadataSources" xml:space="preserve"><value>Series metadata sources</value></data>
+  <data name="SeriesMetadata" xml:space="preserve"><value>Series information</value></data>
+  <data name="SeriesMetadataDescription" xml:space="preserve"><value>Description and cover resolved from a series database.</value></data>
+  <data name="RefreshMetadata" xml:space="preserve"><value>Resolve metadata</value></data>
+  <data name="NoSeriesMetadataYet" xml:space="preserve"><value>No series metadata resolved yet.</value></data>
+  <data name="NoSeriesDescription" xml:space="preserve"><value>No description available.</value></data>
+  <data name="SeriesMetadataResolved" xml:space="preserve"><value>Series metadata resolved.</value></data>
+  <data name="SeriesMetadataNotResolved" xml:space="preserve"><value>No matching series found.</value></data>
 </root>

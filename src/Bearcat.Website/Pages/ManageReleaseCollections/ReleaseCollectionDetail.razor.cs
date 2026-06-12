@@ -12,6 +12,7 @@ namespace Bearcat.Website.Pages.ManageReleaseCollections;
 public partial class ReleaseCollectionDetail(
     IReleaseCollectionReadRepository readRepository,
     DialogService dialogService,
+    ToastService toastService,
     NavigationManager navigationManager
 )
 {
@@ -20,6 +21,7 @@ public partial class ReleaseCollectionDetail(
 
     private ReleaseCollectionDetailReadModel releaseCollection = null!;
     private bool isInitialized;
+    private bool isResolvingMetadata;
 
     protected override async Task OnInitializedAsync()
     {
@@ -38,6 +40,37 @@ public partial class ReleaseCollectionDetail(
 
         releaseCollection = detail;
         isInitialized = true;
+    }
+
+    private async Task ResolveMetadataAsync()
+    {
+        if (isResolvingMetadata)
+        {
+            return;
+        }
+
+        isResolvingMetadata = true;
+
+        try
+        {
+            var service =
+                ScopedServices.GetRequiredService<ReleaseCollectionInfoResolutionService>();
+            var resolved = await service.ResolveAsync(ReleaseCollectionId);
+
+            if (resolved)
+            {
+                toastService.Success(L["SeriesMetadataResolved"]);
+                await LoadReleaseCollectionAsync();
+            }
+            else
+            {
+                toastService.Info(L["SeriesMetadataNotResolved"]);
+            }
+        }
+        finally
+        {
+            isResolvingMetadata = false;
+        }
     }
 
     private async Task ShowUploadLinksDialogAsync(

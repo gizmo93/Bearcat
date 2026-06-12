@@ -29,6 +29,73 @@
             <BbCardHeader>
                 <div class="bearcat-section-header">
                     <div class="flex items-center gap-2">
+                        <LucideIcon Name="clapperboard" class="h-4 w-4" />
+                        <div>
+                            <BbCardTitle class="text-base">@L["SeriesMetadata"]</BbCardTitle>
+                            <BbCardDescription>@L["SeriesMetadataDescription"]</BbCardDescription>
+                        </div>
+                    </div>
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Disabled="isResolvingMetadata"
+                              OnClick="ResolveMetadataAsync">
+                        <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isResolvingMetadata ? "animate-spin" : string.Empty)}")" />
+                        @L["RefreshMetadata"]
+                    </BbButton>
+                </div>
+            </BbCardHeader>
+            <BbCardContent>
+                @if (releaseCollection.Metadata is null)
+                {
+                    <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                        @L["NoSeriesMetadataYet"]
+                    </div>
+                }
+                else
+                {
+                    <div class="bearcat-series-metadata">
+                        @if (!string.IsNullOrWhiteSpace(releaseCollection.Metadata.CoverUrl))
+                        {
+                            <img src="@releaseCollection.Metadata.CoverUrl"
+                                 alt="@releaseCollection.Metadata.Title"
+                                 class="bearcat-series-cover" />
+                        }
+                        <div class="min-w-0 space-y-3">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h2 class="text-lg font-semibold">@releaseCollection.Metadata.Title</h2>
+                                @if (!string.IsNullOrWhiteSpace(releaseCollection.Metadata.SeriesDatabaseUrl))
+                                {
+                                    <a class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                                       href="@releaseCollection.Metadata.SeriesDatabaseUrl"
+                                       target="_blank"
+                                       rel="noreferrer noopener">
+                                        <BbBadge Variant="BadgeVariant.Secondary">@releaseCollection.Metadata.SeriesDatabaseName</BbBadge>
+                                        <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
+                                    </a>
+                                }
+                                else
+                                {
+                                    <BbBadge Variant="BadgeVariant.Secondary">@releaseCollection.Metadata.SeriesDatabaseName</BbBadge>
+                                }
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(releaseCollection.Metadata.Description))
+                            {
+                                <p class="whitespace-pre-line text-sm text-muted-foreground">@releaseCollection.Metadata.Description</p>
+                            }
+                            else
+                            {
+                                <p class="text-sm text-muted-foreground">@L["NoSeriesDescription"]</p>
+                            }
+                        </div>
+                    </div>
+                }
+            </BbCardContent>
+        </BbCard>
+
+        <BbCard Class="border-border/70 shadow-sm">
+            <BbCardHeader>
+                <div class="bearcat-section-header">
+                    <div class="flex items-center gap-2">
                         <LucideIcon Name="rows-3" class="h-4 w-4" />
                         <div>
                             <BbCardTitle class="text-base">@L["CollectionUploadSlots"]</BbCardTitle>

@@ -19,6 +19,7 @@ using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.UseCases.ManageSeriesDatabases;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploads;
@@ -42,6 +43,7 @@ public static class ServiceProviderConfig
             services.AddScoped<AutomaticallyCreateReleasesService>();
             services.AddScoped<ReleaseCollectionService>();
             services.AddScoped<ReleaseCollectionAssignmentService>();
+            services.AddScoped<ReleaseCollectionInfoResolutionService>();
             services.AddScoped<ReleaseGroupService>();
             services.AddScoped<ReleaseService>();
             services.AddScoped<ForumPostRenderService>();
@@ -65,6 +67,7 @@ public static class ServiceProviderConfig
             services.AddScoped<UploadConfigService>();
             services.AddScoped<LinkCrypterService>();
             services.AddScoped<NfoDatabaseRegistrationService>();
+            services.AddScoped<SeriesDatabaseRegistrationService>();
             services.AddScoped<CollectionLinkCrypterContainerService>();
             services.AddScoped<LinkCrypterContainerService>();
             services.AddScoped<UploadConfigLinkCrypterService>();

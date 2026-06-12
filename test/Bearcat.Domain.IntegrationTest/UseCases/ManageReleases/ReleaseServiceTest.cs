@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.SeriesDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
@@ -32,7 +33,11 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             CreateTimeProvider(),
             archiverFactory.Object,
             new ReleaseCollectionAssignmentService(
-                new ReleaseCollectionRepository(dbContext, dbContext),
+                new ReleaseCollectionRepository(
+                    dbContext,
+                    dbContext,
+                    Mock.Of<ISeriesDatabaseFactory>()
+                ),
                 CreateTimeProvider()
             )
         );

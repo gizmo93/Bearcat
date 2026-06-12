@@ -8,6 +8,7 @@ using Bearcat.Infrastructure.InversionOfControl;
 using Bearcat.Infrastructure.Security;
 using Bearcat.LinkCrypters.InversionOfControl;
 using Bearcat.NfoDatabases.InversionOfControl;
+using Bearcat.SeriesDatabases.InversionOfControl;
 using Bearcat.Website;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
@@ -48,6 +49,7 @@ builder.Services.AddImageHosters();
 builder.Services.AddArchivers();
 builder.Services.AddLinkCrypters();
 builder.Services.AddNfoDatabases();
+builder.Services.AddSeriesDatabases();
 
 var app = builder.Build();
 

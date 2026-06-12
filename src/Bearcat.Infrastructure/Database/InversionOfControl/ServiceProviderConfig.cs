@@ -17,6 +17,7 @@ using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.UseCases.ManageSeriesDatabases.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
@@ -156,6 +157,15 @@ public static class ServiceProviderConfig
                 INfoDatabaseRegistrationWriteRepository,
                 NfoDatabaseRegistrationRepository
             >();
+            services.AddScoped<
+                ISeriesDatabaseRegistrationReadRepository,
+                SeriesDatabaseRegistrationRepository
+            >();
+            services.AddScoped<
+                ISeriesDatabaseRegistrationWriteRepository,
+                SeriesDatabaseRegistrationRepository
+            >();
+            services.AddScoped<IReleaseCollectionInfoRepository, ReleaseCollectionInfoRepository>();
         }
     }
 }

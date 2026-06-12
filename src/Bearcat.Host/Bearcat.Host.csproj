@@ -22,6 +22,7 @@
         <ProjectReference Include="..\Bearcat.ImageHosters\Bearcat.ImageHosters.csproj" />
         <ProjectReference Include="..\Bearcat.LinkCrypters\Bearcat.LinkCrypters.csproj" />
         <ProjectReference Include="..\Bearcat.NfoDatabases\Bearcat.NfoDatabases.csproj" />
+        <ProjectReference Include="..\Bearcat.SeriesDatabases\Bearcat.SeriesDatabases.csproj" />
         <ProjectReference Include="..\Bearcat.Website\Bearcat.Website.csproj" />
     </ItemGroup>
 </Project>

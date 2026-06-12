@@ -77,6 +77,10 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<ReleaseExternalInfo> ReleaseExternalInfos { get; set; } = null!;
 
+    public DbSet<SeriesDatabaseRegistration> SeriesDatabaseRegistrations { get; set; } = null!;
+
+    public DbSet<ReleaseCollectionMetadata> ReleaseCollectionMetadata { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BearcatDbContext).Assembly);

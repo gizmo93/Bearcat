@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.SeriesDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
@@ -10,7 +11,8 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 
 public class ReleaseCollectionRepository(
     IBearcatReadDbContext dbRead,
-    IBearcatWriteDbContext dbWrite
+    IBearcatWriteDbContext dbWrite,
+    ISeriesDatabaseFactory seriesDatabaseFactory
 ) : IReleaseCollectionReadRepository, IReleaseCollectionWriteRepository
 {
     public async Task<ReleaseCollection?> GetByReleaseGroupAndKeyAsync(
@@ -269,6 +271,20 @@ public class ReleaseCollectionRepository(
             })
             .ToListAsync(cancellationToken);
 
+        var metadata = await dbRead
+            .ReleaseCollectionMetadata.Where(metadata =>
+                metadata.ReleaseCollectionId == releaseCollectionId
+            )
+            .Select(metadata => new
+            {
+                metadata.SeriesDatabaseClassName,
+                metadata.Title,
+                metadata.Description,
+                metadata.CoverUrl,
+                metadata.SeriesDatabaseUrl,
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
         return new ReleaseCollectionDetailReadModel(
             ReleaseCollectionId: collection.Id,
             Name: collection.Name,
@@ -320,8 +336,26 @@ public class ReleaseCollectionRepository(
                             ?? (IReadOnlyList<ReleaseLatestUploadReadModel>)[]
                     );
                 })
-                .ToList()
+                .ToList(),
+            Metadata: metadata is null
+                ? null
+                : new ReleaseCollectionMetadataReadModel(
+                    SeriesDatabaseName: GetSeriesDatabaseName(metadata.SeriesDatabaseClassName),
+                    Title: metadata.Title,
+                    Description: metadata.Description,
+                    CoverUrl: metadata.CoverUrl,
+                    SeriesDatabaseUrl: metadata.SeriesDatabaseUrl
+                )
         );
+    }
+
+    private string GetSeriesDatabaseName(string seriesDatabaseClassName)
+    {
+        return seriesDatabaseFactory
+            .GetByClassName()
+            .TryGetValue(seriesDatabaseClassName, out var seriesDatabase)
+            ? seriesDatabase.Name
+            : seriesDatabaseClassName;
     }
 
     public async Task<

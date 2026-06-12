@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.LinkCrypter;
+using Bearcat.Abstractions.SeriesDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageNotifications;
@@ -29,7 +30,11 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
     public void Setup()
     {
         dbContext = Database.CreateDbContext();
-        repository = new ReleaseCollectionRepository(dbContext, dbContext);
+        repository = new ReleaseCollectionRepository(
+            dbContext,
+            dbContext,
+            Mock.Of<ISeriesDatabaseFactory>()
+        );
         service = new ReleaseCollectionService(
             repository,
             new CollectionLinkCrypterContainerService(

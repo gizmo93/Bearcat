@@ -17,4 +17,8 @@ public class ReleaseCollection
     public List<Release> Releases { get; set; } = [];
 
     public List<CollectionUploadSlot> UploadSlots { get; set; } = [];
+
+    public ReleaseCollectionMetadata? Metadata { get; set; }
+
+    public DateTime? MetadataCheckedAt { get; set; }
 }

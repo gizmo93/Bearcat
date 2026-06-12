@@ -8,5 +8,6 @@ public record ReleaseCollectionDetailReadModel(
     string ReleaseGroupName,
     DateTime CreatedAt,
     IReadOnlyList<CollectionUploadSlotReadModel> UploadSlots,
-    IReadOnlyList<ReleaseCollectionReleaseReadModel> Releases
+    IReadOnlyList<ReleaseCollectionReleaseReadModel> Releases,
+    ReleaseCollectionMetadataReadModel? Metadata
 );

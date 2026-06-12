@@ -2394,3 +2394,25 @@ a {
         display: none;
     }
 }
+
+.bearcat-series-metadata {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+@media (min-width: 640px) {
+    .bearcat-series-metadata {
+        flex-direction: row;
+    }
+}
+
+.bearcat-series-cover {
+    width: 9.5rem;
+    height: auto;
+    flex-shrink: 0;
+    align-self: flex-start;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    object-fit: cover;
+}

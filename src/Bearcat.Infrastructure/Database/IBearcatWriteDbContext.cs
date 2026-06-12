@@ -47,4 +47,6 @@ public interface IBearcatWriteDbContext
     DbSet<ReleaseInfo> ReleaseInfos { get; set; }
     DbSet<ReleaseNfo> ReleaseNfos { get; set; }
     DbSet<ReleaseExternalInfo> ReleaseExternalInfos { get; set; }
+    DbSet<SeriesDatabaseRegistration> SeriesDatabaseRegistrations { get; set; }
+    DbSet<ReleaseCollectionMetadata> ReleaseCollectionMetadata { get; set; }
 }
