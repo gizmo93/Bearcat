@@ -576,6 +576,21 @@
   <data name="NoBackgroundTasks" xml:space="preserve"><value>Noch keine Background-Tasks registriert</value></data>
   <data name="Running" xml:space="preserve"><value>Läuft</value></data>
   <data name="SetBackgroundTaskActiveState" xml:space="preserve"><value>Aktivierungsstatus für {0} setzen</value></data>
+  <data name="Interval" xml:space="preserve"><value>Intervall</value></data>
+  <data name="IntervalOverridden" xml:space="preserve"><value>Angepasst</value></data>
+  <data name="EditInterval" xml:space="preserve"><value>Intervall bearbeiten</value></data>
+  <data name="EditIntervalFor" xml:space="preserve"><value>Intervall für {0} bearbeiten</value></data>
+  <data name="IntervalDialogDescription" xml:space="preserve"><value>Lege fest, wie oft dieser Task läuft. Über „Auf Default zurücksetzen“ wird wieder das eingebaute Intervall verwendet.</value></data>
+  <data name="IntervalDefault" xml:space="preserve"><value>Default: {0}</value></data>
+  <data name="IntervalValue" xml:space="preserve"><value>Wert</value></data>
+  <data name="IntervalUnit" xml:space="preserve"><value>Einheit</value></data>
+  <data name="UnitSeconds" xml:space="preserve"><value>Sekunden</value></data>
+  <data name="UnitMinutes" xml:space="preserve"><value>Minuten</value></data>
+  <data name="UnitHours" xml:space="preserve"><value>Stunden</value></data>
+  <data name="IntervalUpdated" xml:space="preserve"><value>Intervall für {0} aktualisiert</value></data>
+  <data name="IntervalResetToDefault" xml:space="preserve"><value>Intervall für {0} auf Default zurückgesetzt</value></data>
+  <data name="IntervalInvalid" xml:space="preserve"><value>Bitte eine gültige ganze Zahl eingeben.</value></data>
+  <data name="IntervalTooSmall" xml:space="preserve"><value>Das Intervall muss mindestens {0} Sekunden betragen.</value></data>
   <data name="Started" xml:space="preserve"><value>Start</value></data>
   <data name="Success" xml:space="preserve"><value>Erfolgreich</value></data>
   <data name="OpenArchiveDetails" xml:space="preserve"><value>Archivdetails öffnen</value></data>

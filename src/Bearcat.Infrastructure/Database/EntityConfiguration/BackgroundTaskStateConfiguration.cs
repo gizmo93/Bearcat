@@ -12,6 +12,8 @@ public class BackgroundTaskStateConfiguration : IEntityTypeConfiguration<Backgro
         builder.Property(t => t.Key).IsRequired().HasMaxLength(500);
         builder.Property(t => t.DisplayName).IsRequired().HasMaxLength(200);
         builder.Property(t => t.IsEnabled).IsRequired();
+        builder.Property(t => t.DefaultInterval).IsRequired();
+        builder.Property(t => t.IntervalOverride);
         builder.Property(t => t.LastStartedAt).HasPrecision(4);
         builder.Property(t => t.LastFinishedAt).HasPrecision(4);
         builder.Property(t => t.LastErrorMessage).HasMaxLength(2000);

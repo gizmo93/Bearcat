@@ -1,6 +1,8 @@
 using Bearcat.Abstractions;
+using Bearcat.Abstractions.BackgroundTasks;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Security;
+using Bearcat.Infrastructure.BackgroundTasks;
 using Bearcat.Infrastructure.Configuration;
 using Bearcat.Infrastructure.Database.InversionOfControl;
 using Bearcat.Infrastructure.FileSystem;
@@ -24,6 +26,7 @@ public static class ServiceProviderConfig
                 IApplicationConfigurationOverrideCache,
                 ApplicationConfigurationOverrideCache
             >();
+            services.AddSingleton<IBackgroundTaskScheduleCache, BackgroundTaskScheduleCache>();
         }
     }
 }

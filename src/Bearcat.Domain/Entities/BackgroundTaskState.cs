@@ -12,6 +12,10 @@ public class BackgroundTaskState
 
     public bool IsEnabled { get; set; } = true;
 
+    public TimeSpan DefaultInterval { get; set; }
+
+    public TimeSpan? IntervalOverride { get; set; }
+
     public DateTime? LastStartedAt { get; set; }
 
     public DateTime? LastFinishedAt { get; set; }

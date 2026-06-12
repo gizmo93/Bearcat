@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.BackgroundTasks;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -7,18 +8,30 @@ namespace Bearcat.Domain.UseCases.ManageBackgroundTasks;
 
 public class BackgroundTaskStateService(
     IBackgroundTaskStateWriteRepository writeRepository,
+    IBackgroundTaskScheduleCache scheduleCache,
     TimeProvider timeProvider
 )
 {
     private const int MaxErrorMessageLength = 2000;
 
-    public async Task<bool> IsEnabledAsync(
+    public static readonly TimeSpan MinInterval = TimeSpan.FromSeconds(5);
+
+    public async Task<bool> RegisterAsync(
         string key,
         string displayName,
+        TimeSpan defaultInterval,
         CancellationToken cancellationToken = default
     )
     {
-        var taskState = await GetOrCreateAsync(key, displayName, cancellationToken);
+        var taskState = await GetOrCreateAsync(
+            key: key,
+            displayName: displayName,
+            defaultInterval: defaultInterval,
+            cancellationToken: cancellationToken
+        );
+
+        scheduleCache.SetEnabled(key, taskState.IsEnabled);
+        scheduleCache.SetOverride(key, taskState.IntervalOverride);
         return taskState.IsEnabled;
     }
 
@@ -28,7 +41,7 @@ public class BackgroundTaskStateService(
         CancellationToken cancellationToken = default
     )
     {
-        var taskState = await GetOrCreateAsync(key, displayName, cancellationToken);
+        var taskState = await GetOrCreateAsync(key, displayName, null, cancellationToken);
         taskState.LastStartedAt = timeProvider.GetLocalNow();
         taskState.LastFinishedAt = null;
         taskState.LastExecutionStatus = null;
@@ -44,7 +57,7 @@ public class BackgroundTaskStateService(
         CancellationToken cancellationToken = default
     )
     {
-        var taskState = await GetOrCreateAsync(key, displayName, cancellationToken);
+        var taskState = await GetOrCreateAsync(key, displayName, null, cancellationToken);
         taskState.LastFinishedAt = timeProvider.GetLocalNow();
         taskState.LastExecutionStatus = BackgroundTaskExecutionStatus.Success;
         taskState.LastErrorMessage = null;
@@ -60,7 +73,7 @@ public class BackgroundTaskStateService(
         CancellationToken cancellationToken = default
     )
     {
-        var taskState = await GetOrCreateAsync(key, displayName, cancellationToken);
+        var taskState = await GetOrCreateAsync(key, displayName, null, cancellationToken);
         taskState.LastFinishedAt = timeProvider.GetLocalNow();
         taskState.LastExecutionStatus = BackgroundTaskExecutionStatus.Error;
         taskState.LastErrorMessage = TruncateErrorMessage(exception.Message);
@@ -80,11 +93,38 @@ public class BackgroundTaskStateService(
         taskState.UpdatedAt = timeProvider.GetLocalNow();
 
         await writeRepository.SaveChangesAsync(cancellationToken);
+
+        scheduleCache.SetEnabled(taskState.Key, isEnabled);
+    }
+
+    public async Task SetIntervalOverrideAsync(
+        int id,
+        TimeSpan? interval,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (interval.HasValue && interval.Value < MinInterval)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(interval),
+                interval,
+                $"The interval override must be at least {MinInterval.TotalSeconds:0} seconds."
+            );
+        }
+
+        var taskState = await writeRepository.GetByIdAsync(id, cancellationToken);
+        taskState.IntervalOverride = interval;
+        taskState.UpdatedAt = timeProvider.GetLocalNow();
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+
+        scheduleCache.SetOverride(taskState.Key, interval);
     }
 
     private async Task<BackgroundTaskState> GetOrCreateAsync(
         string key,
         string displayName,
+        TimeSpan? defaultInterval,
         CancellationToken cancellationToken
     )
     {
@@ -98,6 +138,7 @@ public class BackgroundTaskStateService(
                 Key = key,
                 DisplayName = displayName,
                 IsEnabled = true,
+                DefaultInterval = defaultInterval ?? TimeSpan.Zero,
                 UpdatedAt = now,
             };
             writeRepository.Add(taskState);
@@ -105,9 +146,22 @@ public class BackgroundTaskStateService(
             return taskState;
         }
 
+        var hasChanges = false;
+
         if (taskState.DisplayName != displayName)
         {
             taskState.DisplayName = displayName;
+            hasChanges = true;
+        }
+
+        if (defaultInterval.HasValue && taskState.DefaultInterval != defaultInterval.Value)
+        {
+            taskState.DefaultInterval = defaultInterval.Value;
+            hasChanges = true;
+        }
+
+        if (hasChanges)
+        {
             taskState.UpdatedAt = now;
             await writeRepository.SaveChangesAsync(cancellationToken);
         }

@@ -11,7 +11,7 @@ public class ReleaseFolderAutomationBackgroundTask(
 {
     protected override string DisplayName => "Release folder automation";
 
-    protected override TimeSpan Interval => TimeSpan.FromMinutes(2);
+    protected override TimeSpan DefaultInterval => TimeSpan.FromMinutes(2);
 
     protected override async Task ExecuteTickAsync(
         IServiceProvider serviceProvider,

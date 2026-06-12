@@ -11,7 +11,7 @@ public class ArchiveCleanupBackgroundTask(
 {
     protected override string DisplayName => "Archive cleanup";
 
-    protected override TimeSpan Interval => TimeSpan.FromMinutes(30);
+    protected override TimeSpan DefaultInterval => TimeSpan.FromMinutes(30);
 
     protected override async Task ExecuteTickAsync(
         IServiceProvider serviceProvider,

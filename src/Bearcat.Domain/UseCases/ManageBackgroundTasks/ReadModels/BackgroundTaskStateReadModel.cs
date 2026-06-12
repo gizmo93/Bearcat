@@ -7,6 +7,8 @@ public record BackgroundTaskStateReadModel(
     string Key,
     string DisplayName,
     bool IsEnabled,
+    TimeSpan DefaultInterval,
+    TimeSpan? IntervalOverride,
     DateTime? LastStartedAt,
     DateTime? LastFinishedAt,
     BackgroundTaskExecutionStatus? LastExecutionStatus,

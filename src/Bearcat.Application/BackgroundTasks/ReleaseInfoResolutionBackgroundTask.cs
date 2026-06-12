@@ -11,7 +11,7 @@ public class ReleaseInfoResolutionBackgroundTask(
 {
     protected override string DisplayName => "Release info resolution";
 
-    protected override TimeSpan Interval => TimeSpan.FromMinutes(10);
+    protected override TimeSpan DefaultInterval => TimeSpan.FromMinutes(10);
 
     protected override async Task ExecuteTickAsync(
         IServiceProvider serviceProvider,

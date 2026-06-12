@@ -11,7 +11,7 @@ public class ArchivingBackgroundTask(
 {
     protected override string DisplayName => "Archive creation";
 
-    protected override TimeSpan Interval => TimeSpan.FromSeconds(20);
+    protected override TimeSpan DefaultInterval => TimeSpan.FromSeconds(20);
 
     protected override async Task ExecuteTickAsync(
         IServiceProvider serviceProvider,

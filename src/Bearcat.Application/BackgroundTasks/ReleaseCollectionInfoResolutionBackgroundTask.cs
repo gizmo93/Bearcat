@@ -11,7 +11,7 @@ public class ReleaseCollectionInfoResolutionBackgroundTask(
 {
     protected override string DisplayName => "Release collection metadata resolution";
 
-    protected override TimeSpan Interval => TimeSpan.FromMinutes(30);
+    protected override TimeSpan DefaultInterval => TimeSpan.FromMinutes(30);
 
     protected override async Task ExecuteTickAsync(
         IServiceProvider serviceProvider,

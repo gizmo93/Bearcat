@@ -51,6 +51,28 @@
                     </label>
                 </CellTemplate>
             </BbDataTableColumn>
+            <BbDataTableColumn TData="BackgroundTaskStateReadModel" TValue="TimeSpan"
+                               Header="@L["Interval"]"
+                               Property="@(task => GetEffectiveInterval(task))"
+                               Sortable="true"
+                               Width="170px">
+                <CellTemplate Context="task">
+                    <span class="bearcat-mobile-cell-label">@L["Interval"]</span>
+                    <div class="flex items-center gap-2">
+                        <BbButton Variant="ButtonVariant.Ghost"
+                                  Size="ButtonSize.Small"
+                                  OnClick="@(() => OpenIntervalDialog(task))"
+                                  AriaLabel="@L["EditIntervalFor", task.DisplayName]">
+                            <LucideIcon Name="timer" class="h-3.5 w-3.5" />
+                            <span class="text-sm">@FormatInterval(GetEffectiveInterval(task))</span>
+                        </BbButton>
+                        @if (task.IntervalOverride.HasValue)
+                        {
+                            <BbBadge Variant="BadgeVariant.Secondary">@L["IntervalOverridden"]</BbBadge>
+                        }
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
             <BbDataTableColumn TData="BackgroundTaskStateReadModel" TValue="string"
                                Header="@L["Status"]"
                                Property="@(task => GetStatusLabel(task))"
@@ -123,3 +145,57 @@
         </EmptyTemplate>
     </BbDataTable>
 </section>
+
+<BbDialog @bind-Open="isIntervalDialogOpen">
+    <BbDialogContent Class="max-w-md">
+        <BbDialogHeader>
+            <BbDialogTitle>@L["EditInterval"]</BbDialogTitle>
+            <BbDialogDescription>@L["IntervalDialogDescription"]</BbDialogDescription>
+        </BbDialogHeader>
+
+        @if (editingTask is not null)
+        {
+            <div class="space-y-4 py-2">
+                <div>
+                    <p class="text-sm font-medium">@editingTask.DisplayName</p>
+                    <p class="text-xs text-muted-foreground">
+                        @L["IntervalDefault", FormatInterval(editingTask.DefaultInterval)]
+                    </p>
+                </div>
+
+                <div class="flex items-end gap-2">
+                    <div class="flex-1 space-y-1.5">
+                        <BbLabel For="interval-value">@L["IntervalValue"]</BbLabel>
+                        <BbInput Id="interval-value"
+                                 Type="InputType.Number"
+                                 @bind-Value="intervalValue"
+                                 AriaInvalid="@(intervalError is not null)" />
+                    </div>
+                    <div class="flex-1 space-y-1.5">
+                        <BbLabel>@L["IntervalUnit"]</BbLabel>
+                        <BbSelect TValue="IntervalUnit"
+                                  @bind-Value="intervalUnit"
+                                  Options="IntervalUnitOptions" />
+                    </div>
+                </div>
+
+                @if (intervalError is not null)
+                {
+                    <p class="text-sm text-destructive">@intervalError</p>
+                }
+            </div>
+        }
+
+        <BbDialogFooter>
+            <BbButton Variant="ButtonVariant.Ghost"
+                      OnClick="ResetIntervalAsync"
+                      Disabled="@(editingTask?.IntervalOverride is null)">
+                @L["ResetToDefault"]
+            </BbButton>
+            <BbDialogClose>
+                <BbButton Variant="ButtonVariant.Outline">@L["Cancel"]</BbButton>
+            </BbDialogClose>
+            <BbButton OnClick="SaveIntervalAsync">@L["Save"]</BbButton>
+        </BbDialogFooter>
+    </BbDialogContent>
+</BbDialog>

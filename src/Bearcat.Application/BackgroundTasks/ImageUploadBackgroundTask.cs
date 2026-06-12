@@ -11,7 +11,7 @@ public class ImageUploadBackgroundTask(
 {
     protected override string DisplayName => "Image upload";
 
-    protected override TimeSpan Interval => TimeSpan.FromSeconds(30);
+    protected override TimeSpan DefaultInterval => TimeSpan.FromSeconds(30);
 
     protected override async Task ExecuteTickAsync(
         IServiceProvider serviceProvider,

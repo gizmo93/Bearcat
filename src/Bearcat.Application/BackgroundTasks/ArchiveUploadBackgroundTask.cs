@@ -11,7 +11,7 @@ public class ArchiveUploadBackgroundTask(
 {
     protected override string DisplayName => "Archive upload";
 
-    protected override TimeSpan Interval => TimeSpan.FromSeconds(20);
+    protected override TimeSpan DefaultInterval => TimeSpan.FromSeconds(20);
 
     protected override async Task ExecuteTickAsync(
         IServiceProvider serviceProvider,

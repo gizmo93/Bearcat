@@ -21,6 +21,8 @@ public class BackgroundTaskStateRepository(
                 t.Key,
                 t.DisplayName,
                 t.IsEnabled,
+                t.DefaultInterval,
+                t.IntervalOverride,
                 t.LastStartedAt,
                 t.LastFinishedAt,
                 t.LastExecutionStatus,

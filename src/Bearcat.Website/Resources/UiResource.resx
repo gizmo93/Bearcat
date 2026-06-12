@@ -576,6 +576,21 @@
   <data name="NoBackgroundTasks" xml:space="preserve"><value>No background tasks registered yet</value></data>
   <data name="Running" xml:space="preserve"><value>Running</value></data>
   <data name="SetBackgroundTaskActiveState" xml:space="preserve"><value>Set active state for {0}</value></data>
+  <data name="Interval" xml:space="preserve"><value>Interval</value></data>
+  <data name="IntervalOverridden" xml:space="preserve"><value>Custom</value></data>
+  <data name="EditInterval" xml:space="preserve"><value>Edit interval</value></data>
+  <data name="EditIntervalFor" xml:space="preserve"><value>Edit interval for {0}</value></data>
+  <data name="IntervalDialogDescription" xml:space="preserve"><value>Define how often this task runs. Use 'Reset to default' to fall back to the built-in interval.</value></data>
+  <data name="IntervalDefault" xml:space="preserve"><value>Default: {0}</value></data>
+  <data name="IntervalValue" xml:space="preserve"><value>Value</value></data>
+  <data name="IntervalUnit" xml:space="preserve"><value>Unit</value></data>
+  <data name="UnitSeconds" xml:space="preserve"><value>Seconds</value></data>
+  <data name="UnitMinutes" xml:space="preserve"><value>Minutes</value></data>
+  <data name="UnitHours" xml:space="preserve"><value>Hours</value></data>
+  <data name="IntervalUpdated" xml:space="preserve"><value>Interval for {0} updated</value></data>
+  <data name="IntervalResetToDefault" xml:space="preserve"><value>Interval for {0} reset to default</value></data>
+  <data name="IntervalInvalid" xml:space="preserve"><value>Please enter a valid whole number.</value></data>
+  <data name="IntervalTooSmall" xml:space="preserve"><value>The interval must be at least {0} seconds.</value></data>
   <data name="Started" xml:space="preserve"><value>Started</value></data>
   <data name="Success" xml:space="preserve"><value>Success</value></data>
   <data name="OpenArchiveDetails" xml:space="preserve"><value>Open archive details</value></data>

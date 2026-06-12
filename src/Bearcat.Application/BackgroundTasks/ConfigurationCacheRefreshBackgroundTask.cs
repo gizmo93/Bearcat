@@ -11,7 +11,7 @@ public class ConfigurationCacheRefreshBackgroundTask(
 {
     protected override string DisplayName => "Configuration cache refresh";
 
-    protected override TimeSpan Interval => TimeSpan.FromMinutes(5);
+    protected override TimeSpan DefaultInterval => TimeSpan.FromMinutes(5);
 
     protected override async Task ExecuteTickAsync(
         IServiceProvider serviceProvider,
