@@ -478,7 +478,10 @@ public class ApiClient(
 
         if (
             throwOnCaptchaRequired
-            && IsCaptchaVerificationRequired(response.Code, response.ErrorCode)
+            && (
+                IsCaptchaVerificationRequired(response.Code, response.ErrorCode)
+                || response.Code == (int)HttpStatusCode.BadRequest
+            )
         )
         {
             throw new CaptchaVerificationRequiredException(
