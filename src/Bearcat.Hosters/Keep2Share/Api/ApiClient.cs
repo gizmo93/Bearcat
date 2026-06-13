@@ -443,6 +443,7 @@ public class ApiClient(
     )
     {
         LoginResponse? response = null;
+        HttpStatusCode? httpStatusCode = null;
 
         try
         {
@@ -459,8 +460,10 @@ public class ApiClient(
         catch (ApiException ex)
             when (TryDeserializeLoginResponse(ex, out response)
                 || ex.StatusCode == HttpStatusCode.NotAcceptable
+                || ex.StatusCode == HttpStatusCode.BadRequest
             )
         {
+            httpStatusCode = ex.StatusCode;
             response ??= new LoginResponse
             {
                 Status = "error",
@@ -481,6 +484,7 @@ public class ApiClient(
             && (
                 IsCaptchaVerificationRequired(response.Code, response.ErrorCode)
                 || response.Code == (int)HttpStatusCode.BadRequest
+                || httpStatusCode == HttpStatusCode.BadRequest
             )
         )
         {
