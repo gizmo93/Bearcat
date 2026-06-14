@@ -20,6 +20,9 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<ImageUploadConfigTemplate> ImageUploadConfigTemplates { get; set; } = null!;
 
+    public DbSet<CollectionImageUploadConfigTemplate> CollectionImageUploadConfigTemplates { get; set; } =
+        null!;
+
     public DbSet<BackgroundTaskState> BackgroundTaskStates { get; set; } = null!;
 
     public DbSet<Release> Releases { get; set; } = null!;

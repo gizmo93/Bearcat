@@ -102,9 +102,9 @@
   <data name="DeleteConfig" xml:space="preserve"><value>Konfiguration löschen</value></data>
   <data name="DeleteHosterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Hoster-Registrierung {0} wirklich löschen? Dadurch werden auch Uploads entfernt, die zu dieser Registrierung gehören.</value></data>
   <data name="DeleteImageHosterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Bildhoster-Registrierung {0} wirklich löschen?</value></data>
-  <data name="DeleteImageUploadConfig" xml:space="preserve"><value>Bild-Upload-Konfiguration löschen</value></data>
-  <data name="DeleteImageUploadConfigConfirmation" xml:space="preserve"><value>Möchtest du die Bild-Upload-Konfiguration {0} wirklich löschen?</value></data>
-  <data name="DeleteImageUploadConfigTemplateConfirmation" xml:space="preserve"><value>Möchtest du die Bild-Upload-Konfigurationsvorlage {0} wirklich löschen?</value></data>
+    <data name="DeleteImageUploadConfig" xml:space="preserve"><value>Bilduploadkonfiguration löschen</value></data>
+    <data name="DeleteImageUploadConfigConfirmation" xml:space="preserve"><value>Möchtest du die Bilduploadkonfiguration {0} wirklich löschen?</value></data>
+    <data name="DeleteImageUploadConfigTemplateConfirmation" xml:space="preserve"><value>Möchtest du die Bilduploadkonfigurationsvorlage {0} wirklich löschen?</value></data>
   <data name="DeleteLink" xml:space="preserve"><value>Link löschen</value></data>
   <data name="DeleteLinkCrypterContainerConfig" xml:space="preserve"><value>Link-Crypter-Container-Konfiguration löschen</value></data>
   <data name="DeleteLinkCrypterContainerConfigConfirmation" xml:space="preserve"><value>Möchtest du diese Link-Crypter-Container-Konfiguration wirklich löschen?</value></data>
@@ -162,7 +162,7 @@
   <data name="Id" xml:space="preserve"><value>ID</value></data>
   <data name="ImageHoster" xml:space="preserve"><value>Bildhoster</value></data>
   <data name="AddImageHoster" xml:space="preserve"><value>Bildhoster hinzufügen</value></data>
-  <data name="AddImageUploadConfig" xml:space="preserve"><value>Bild-Upload-Konfiguration hinzufügen</value></data>
+    <data name="AddImageUploadConfig" xml:space="preserve"><value>Bilduploadkonfiguration hinzufügen</value></data>
   <data name="ImageHosterConfigurationHelp" xml:space="preserve"><value>Gib die API-Zugangsdaten für den ausgewählten Bildhoster an.</value></data>
   <data name="ImageHosterDialogDescription" xml:space="preserve"><value>Füge Bildhoster-Zugangsdaten hinzu.</value></data>
   <data name="ImageHosterRegistration" xml:space="preserve"><value>Bildhoster-Registrierung</value></data>
@@ -173,9 +173,9 @@
   <data name="ImageHosterRegistrationsIntro" xml:space="preserve"><value>Verwalte Bildhoster-API-Keys und prüfe, ob das Login funktioniert</value></data>
   <data name="ImageHosters" xml:space="preserve"><value>Bildhoster</value></data>
   <data name="ImageSize" xml:space="preserve"><value>Bildgröße</value></data>
-  <data name="ImageUploadConfig" xml:space="preserve"><value>Bild-Upload-Konfiguration</value></data>
+    <data name="ImageUploadConfig" xml:space="preserve"><value>Bilduploadkonfiguration</value></data>
   <data name="ImageUploadConfigDialogDescription" xml:space="preserve"><value>Lege fest, wohin Release-Bilder hochgeladen werden.</value></data>
-  <data name="ImageUploadConfigurations" xml:space="preserve"><value>Bild-Upload-Konfigurationen</value></data>
+    <data name="ImageUploadConfigurations" xml:space="preserve"><value>Bilduploadkonfigurationen</value></data>
   <data name="ImageUploadConfigurationsDescription" xml:space="preserve"><value>Bildhoster-Ziele für Release-Cover.</value></data>
   <data name="ImageUploadConfigTemplateDialogDescription" xml:space="preserve"><value>Lege Bildhoster-Ziele für Releases aus dieser Vorlage fest.</value></data>
   <data name="ImageUploadConfigTemplatesDescription" xml:space="preserve"><value>Bildhoster-Ziele, die auf Releases aus dieser Vorlage angewendet werden.</value></data>
@@ -213,7 +213,7 @@
   <data name="LoginFailed" xml:space="preserve"><value>Login für Registrierung {0} fehlgeschlagen: {1}</value></data>
   <data name="LoginSuccessful" xml:space="preserve"><value>Login für Registrierung {0} erfolgreich</value></data>
   <data name="Name" xml:space="preserve"><value>Name</value></data>
-  <data name="NameImageUploadConfigPlaceholder" xml:space="preserve"><value>Bild-Upload-Konfiguration benennen</value></data>
+  <data name="NameImageUploadConfigPlaceholder" xml:space="preserve"><value>Optional - andernfalls wird der Bildhoster-Name verwendet</value></data>
   <data name="NameIsRequired" xml:space="preserve"><value>Name ist erforderlich</value></data>
   <data name="NameUploadConfigPlaceholder" xml:space="preserve"><value>Upload-Konfiguration benennen</value></data>
   <data name="NameYourRelease" xml:space="preserve"><value>Release benennen</value></data>
@@ -237,8 +237,17 @@
   <data name="NoArchiveConfigurationsYet" xml:space="preserve"><value>Noch keine Archiv-Konfigurationen.</value></data>
   <data name="NoContainerLinksFound" xml:space="preserve"><value>Keine Containerlinks gefunden</value></data>
   <data name="NoDistributionTargets" xml:space="preserve"><value>Keine Verteilziele</value></data>
-  <data name="NoImageUploadConfigurationsYet" xml:space="preserve"><value>Noch keine Bild-Upload-Konfigurationen.</value></data>
-  <data name="NoImageUploadConfigTemplatesYet" xml:space="preserve"><value>Noch keine Bild-Upload-Konfigurationsvorlagen.</value></data>
+    <data name="NoImageUploadConfigurationsYet" xml:space="preserve"><value>Noch keine Bilduploadkonfigurationen.</value></data>
+    <data name="NoImageUploadConfigTemplatesYet" xml:space="preserve"><value>Noch keine Bilduploadkonfigurationsvorlagen.</value></data>
+  <data name="CollectionImageUploadConfigurations" xml:space="preserve"><value>Release Collection Bilduploadkonfigurationen</value></data>
+  <data name="CollectionImageUploadConfigTemplatesDescription" xml:space="preserve"><value>Bildhoster-Ziele, die auf die Coverbilder von Releases Collections aus dieser Vorlage angewendet werden.</value></data>
+  <data name="NoCollectionImageUploadConfigTemplatesYet" xml:space="preserve"><value>Noch keine Collection Bilduploadkonfigurationsvorlagen.</value></data>
+  <data name="AddCollectionImageUploadConfig" xml:space="preserve"><value>Collection Bilduploadkonfiguration hinzufügen</value></data>
+    <data name="CollectionImageUploadConfigTemplateDialogDescription" xml:space="preserve"><value>Lege Bildhoster-Ziele für die Coverbilder von Release Collections aus dieser Vorlage fest.</value></data>
+  <data name="CollectionImageUploads" xml:space="preserve"><value>Bild-Uploads</value></data>
+  <data name="CollectionImageUploadsDescription" xml:space="preserve"><value>Bildhoster-Ziele für das Coverbild dieser Collection.</value></data>
+  <data name="NoCollectionImageUploadsYet" xml:space="preserve"><value>Noch keine Bilduploadkonfiguration.</value></data>
+  <data name="ImageUploadPending" xml:space="preserve"><value>Noch nicht hochgeladen</value></data>
   <data name="NoImageUploadsFound" xml:space="preserve"><value>Keine Bild-Uploads gefunden</value></data>
   <data name="NoImageUploadUrlsFound" xml:space="preserve"><value>Keine Bild-Upload-URLs gefunden</value></data>
   <data name="NoLatestUpload" xml:space="preserve"><value>Noch kein Upload</value></data>
@@ -266,7 +275,7 @@
   <data name="OpenDetails" xml:space="preserve"><value>Details öffnen</value></data>
   <data name="OpenHosterActions" xml:space="preserve"><value>Hoster-Aktionen öffnen</value></data>
   <data name="OpenImageHosterActions" xml:space="preserve"><value>Aktionen öffnen</value></data>
-  <data name="OpenImageUploadConfigActions" xml:space="preserve"><value>Bild-Upload-Konfigurationsaktionen öffnen</value></data>
+    <data name="OpenImageUploadConfigActions" xml:space="preserve"><value>Aktionen öffnen</value></data>
   <data name="OpenLinkCrypterActions" xml:space="preserve"><value>Link-Crypter-Aktionen öffnen</value></data>
   <data name="OpenNfoDatabaseActions" xml:space="preserve"><value>NFO-Datenbank-Aktionen öffnen</value></data>
   <data name="OpenExternalUrl" xml:space="preserve"><value>Externe URL öffnen</value></data>

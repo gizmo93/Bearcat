@@ -64,12 +64,21 @@ public class ImageUploadService(
     {
         var imageUploadConfig = imageUpload.ImageUploadConfig;
         var registration = imageUploadConfig.ImageHosterRegistration;
-        var coverUrl = imageUploadConfig.Release.ReleaseInfo?.CoverUrl;
+
+        var (coverUrl, imageName) = imageUploadConfig switch
+        {
+            { Release: { } release } => (release.ReleaseInfo?.CoverUrl, release.Name),
+            { ReleaseCollection: { } collection } => (
+                collection.Metadata?.CoverUrl,
+                collection.Name
+            ),
+            _ => (null, string.Empty),
+        };
 
         if (string.IsNullOrWhiteSpace(coverUrl))
         {
             imageUpload.UploadState = UploadState.Failed;
-            imageUpload.ErrorMessages = ["Release has no cover URL."];
+            imageUpload.ErrorMessages = ["Image upload source has no cover URL."];
             return;
         }
 
@@ -86,7 +95,7 @@ public class ImageUploadService(
                 image: new ImageToUploadDto(
                     Source: coverUrl,
                     SourceType: ImageUploadSource.Url,
-                    Name: imageUploadConfig.Release.Name
+                    Name: imageName
                 ),
                 imageHosterConfig: config,
                 cancellationToken: cancellationToken

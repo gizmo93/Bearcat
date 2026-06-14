@@ -55,6 +55,8 @@ public class ReleaseTemplateRepository(
                     .ThenInclude(l => l.LinkCrypterRegistration)
             .Include(t => t.ImageUploadConfigTemplates)
                 .ThenInclude(i => i.ImageHosterRegistration)
+            .Include(t => t.CollectionImageUploadConfigTemplates)
+                .ThenInclude(i => i.ImageHosterRegistration)
             .FirstOrDefaultAsync(t => t.Id == releaseTemplateId, cancellationToken);
 
         return releaseTemplate is null ? null : ToDetailReadModel(releaseTemplate);
@@ -85,6 +87,11 @@ public class ReleaseTemplateRepository(
         dbWrite.Remove(imageUploadConfigTemplate);
     }
 
+    public void Remove(CollectionImageUploadConfigTemplate collectionImageUploadConfigTemplate)
+    {
+        dbWrite.Remove(collectionImageUploadConfigTemplate);
+    }
+
     public void Remove(UploadConfigLinkCrypterTemplate linkCrypterTemplate)
     {
         dbWrite.Remove(linkCrypterTemplate);
@@ -112,6 +119,7 @@ public class ReleaseTemplateRepository(
             .Include(t => t.UploadConfigTemplates)
                 .ThenInclude(u => u.LinkCrypterTemplates)
             .Include(t => t.ImageUploadConfigTemplates)
+            .Include(t => t.CollectionImageUploadConfigTemplates)
             .FirstAsync(t => t.Id == releaseTemplateId, cancellationToken);
     }
 
@@ -175,6 +183,17 @@ public class ReleaseTemplateRepository(
     {
         return await dbWrite.ImageUploadConfigTemplates.FirstAsync(
             template => template.Id == imageUploadConfigTemplateId,
+            cancellationToken
+        );
+    }
+
+    public async Task<CollectionImageUploadConfigTemplate> GetCollectionImageUploadConfigTemplateAsync(
+        int collectionImageUploadConfigTemplateId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite.CollectionImageUploadConfigTemplates.FirstAsync(
+            template => template.Id == collectionImageUploadConfigTemplateId,
             cancellationToken
         );
     }
@@ -267,6 +286,19 @@ public class ReleaseTemplateRepository(
                 .ToList(),
             releaseTemplate
                 .ImageUploadConfigTemplates.OrderBy(i => i.Name ?? i.ImageHosterRegistration.Name)
+                .ThenBy(i => i.Id)
+                .Select(i => new ImageUploadConfigTemplateReadModel(
+                    i.Id,
+                    i.Name,
+                    string.IsNullOrWhiteSpace(i.Name) ? i.ImageHosterRegistration.Name : i.Name,
+                    i.ImageHosterRegistrationId,
+                    i.ImageHosterRegistration.Name
+                ))
+                .ToList(),
+            releaseTemplate
+                .CollectionImageUploadConfigTemplates.OrderBy(i =>
+                    i.Name ?? i.ImageHosterRegistration.Name
+                )
                 .ThenBy(i => i.Id)
                 .Select(i => new ImageUploadConfigTemplateReadModel(
                     i.Id,

@@ -119,6 +119,9 @@ public static class ServiceProviderConfig
             services.AddScoped<IReleaseForumPostUploadRepository>(serviceProvider =>
                 (ReleaseReadRepository)serviceProvider.GetRequiredService<IReleaseReadRepository>()
             );
+            services.AddScoped<IForumPostImageLinkRepository>(serviceProvider =>
+                (ReleaseReadRepository)serviceProvider.GetRequiredService<IReleaseReadRepository>()
+            );
             services.AddScoped<IReleaseCollectionReadRepository, ReleaseCollectionRepository>();
             services.AddScoped<IReleaseCollectionWriteRepository, ReleaseCollectionRepository>();
             services.AddScoped<

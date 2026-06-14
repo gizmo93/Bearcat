@@ -1,4 +1,3 @@
-using System.Text;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
@@ -9,29 +8,10 @@ namespace Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 
 public class ReleaseForumPostRenderSource(
     IReleaseReadRepository releaseReadRepository,
-    ReleaseForumPostUploadBuilder uploadBuilder
+    ReleaseForumPostUploadBuilder uploadBuilder,
+    ForumPostImageLinkBuilder imageLinkBuilder
 ) : IForumPostRenderSource
 {
-    private static readonly IReadOnlyList<ForumPostTemplateVariableReadModel> ImageLinkVariables =
-    [
-        new(
-            "{{ imagelinks.<image_upload_config_name>.full }}",
-            "Full image URL by image upload configuration name. The configuration name is normalized to lower snake case."
-        ),
-        new(
-            "{{ imagelinks.<image_upload_config_name>.medium }}",
-            "Medium image URL by image upload configuration name."
-        ),
-        new(
-            "{{ imagelinks.<image_upload_config_name>.thumbnail }}",
-            "Thumbnail image URL by image upload configuration name."
-        ),
-        new(
-            "{{ imagelinks[\"Image Upload Config Name\"].full }}",
-            "Full image URL using the original image upload configuration name."
-        ),
-    ];
-
     public ForumPostTemplateType Type => ForumPostTemplateType.Release;
 
     public IReadOnlyList<ForumPostTemplateVariableReadModel> GetVariables()
@@ -39,7 +19,7 @@ public class ReleaseForumPostRenderSource(
         var variables = ForumPostTemplateVariableCatalog
             .GetVariables(typeof(ForumPostTemplateRenderModel))
             .ToList();
-        variables.AddRange(ImageLinkVariables);
+        variables.AddRange(ForumPostImageLinkBuilder.Variables);
         return variables;
     }
 
@@ -54,11 +34,6 @@ public class ReleaseForumPostRenderSource(
         {
             return null;
         }
-
-        var imageUploads = await releaseReadRepository.GetReleaseOverviewImageUploadsAsync(
-            releaseId: entityId,
-            cancellationToken: cancellationToken
-        );
 
         var info = await releaseReadRepository.GetReleaseInfoAsync(entityId, cancellationToken);
 
@@ -79,7 +54,10 @@ public class ReleaseForumPostRenderSource(
 
         var scriptObject = new ScriptObject();
         scriptObject.Import(renderModel, ForumPostTemplateVariableCatalog.ShouldExposeMember);
-        scriptObject["imagelinks"] = ToImageLinksScriptObject(imageUploads);
+        scriptObject["imagelinks"] = await imageLinkBuilder.BuildForReleaseAsync(
+            entityId,
+            cancellationToken
+        );
 
         return scriptObject;
     }
@@ -130,65 +108,5 @@ public class ReleaseForumPostRenderSource(
             },
             ExternalInfos = externalInfos,
         };
-    }
-
-    private static ScriptObject ToImageLinksScriptObject(
-        IReadOnlyList<ReleaseOverviewImageUploadReadModel> imageUploads
-    )
-    {
-        var imageLinks = new ScriptObject();
-
-        foreach (var imageUpload in imageUploads)
-        {
-            var configLinks = new ScriptObject();
-
-            foreach (var imageUrl in imageUpload.ImageUrls)
-            {
-                configLinks[NormalizeScriptKey(imageUrl.ImageSize.ToString())] = imageUrl.Url;
-            }
-
-            var normalizedConfigName = NormalizeScriptKey(imageUpload.ImageUploadConfigName);
-
-            imageLinks.TryAdd(normalizedConfigName, configLinks);
-
-            if (
-                !string.Equals(
-                    normalizedConfigName,
-                    imageUpload.ImageUploadConfigName,
-                    StringComparison.Ordinal
-                )
-            )
-            {
-                imageLinks.TryAdd(imageUpload.ImageUploadConfigName, configLinks);
-            }
-        }
-
-        return imageLinks;
-    }
-
-    private static string NormalizeScriptKey(string value)
-    {
-        var builder = new StringBuilder(value.Length);
-
-        foreach (var character in value.Trim())
-        {
-            if (char.IsLetterOrDigit(character))
-            {
-                builder.Append(char.ToLowerInvariant(character));
-            }
-            else if (builder.Length > 0 && builder[^1] != '_')
-            {
-                builder.Append('_');
-            }
-        }
-
-        var normalized = builder.ToString().Trim('_');
-
-        if (string.IsNullOrWhiteSpace(normalized))
-        {
-            return "_";
-        }
-
-        return char.IsDigit(normalized[0]) ? $"_{normalized}" : normalized;
     }
 }

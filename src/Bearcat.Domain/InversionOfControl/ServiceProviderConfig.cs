@@ -52,6 +52,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ReleaseService>();
             services.AddScoped<ForumPostRenderService>();
             services.AddScoped<ReleaseForumPostUploadBuilder>();
+            services.AddScoped<ForumPostImageLinkBuilder>();
             services.AddScoped<IForumPostRenderSource, ReleaseForumPostRenderSource>();
             services.AddScoped<IForumPostRenderSource, ReleaseCollectionForumPostRenderSource>();
             services.AddScoped<ReleaseInfoService>();

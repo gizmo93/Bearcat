@@ -18,6 +18,8 @@ public class ReleaseCollection
 
     public List<CollectionUploadSlot> UploadSlots { get; set; } = [];
 
+    public List<ImageUploadConfig> ImageUploadConfigs { get; set; } = [];
+
     public ReleaseCollectionMetadata? Metadata { get; set; }
 
     public DateTime? MetadataCheckedAt { get; set; }

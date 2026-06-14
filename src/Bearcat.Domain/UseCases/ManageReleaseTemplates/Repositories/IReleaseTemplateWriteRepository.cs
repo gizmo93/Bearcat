@@ -14,6 +14,8 @@ public interface IReleaseTemplateWriteRepository
 
     void Remove(ImageUploadConfigTemplate imageUploadConfigTemplate);
 
+    void Remove(CollectionImageUploadConfigTemplate collectionImageUploadConfigTemplate);
+
     void Remove(UploadConfigLinkCrypterTemplate linkCrypterTemplate);
 
     Task<ReleaseTemplate> GetByIdAsync(
@@ -43,6 +45,11 @@ public interface IReleaseTemplateWriteRepository
 
     Task<ImageUploadConfigTemplate> GetImageUploadConfigTemplateAsync(
         int imageUploadConfigTemplateId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<CollectionImageUploadConfigTemplate> GetCollectionImageUploadConfigTemplateAsync(
+        int collectionImageUploadConfigTemplateId,
         CancellationToken cancellationToken = default
     );
 

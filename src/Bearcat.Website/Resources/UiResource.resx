@@ -213,7 +213,7 @@
   <data name="LoginFailed" xml:space="preserve"><value>Login for registration {0} failed: {1}</value></data>
   <data name="LoginSuccessful" xml:space="preserve"><value>Login for registration {0} successful</value></data>
   <data name="Name" xml:space="preserve"><value>Name</value></data>
-  <data name="NameImageUploadConfigPlaceholder" xml:space="preserve"><value>Name the image upload config</value></data>
+  <data name="NameImageUploadConfigPlaceholder" xml:space="preserve"><value>Optional - defaults to the image hoster name</value></data>
   <data name="NameIsRequired" xml:space="preserve"><value>Name is required</value></data>
   <data name="NameUploadConfigPlaceholder" xml:space="preserve"><value>Name the upload config</value></data>
   <data name="NameYourRelease" xml:space="preserve"><value>Name your release</value></data>
@@ -239,6 +239,15 @@
   <data name="NoDistributionTargets" xml:space="preserve"><value>No distribution targets</value></data>
   <data name="NoImageUploadConfigurationsYet" xml:space="preserve"><value>No image upload configurations yet.</value></data>
   <data name="NoImageUploadConfigTemplatesYet" xml:space="preserve"><value>No image upload config templates yet.</value></data>
+  <data name="CollectionImageUploadConfigurations" xml:space="preserve"><value>Collection image upload configurations</value></data>
+  <data name="CollectionImageUploadConfigTemplatesDescription" xml:space="preserve"><value>Image hoster targets applied to the collection covers of releases created from this template.</value></data>
+  <data name="NoCollectionImageUploadConfigTemplatesYet" xml:space="preserve"><value>No collection image upload config templates yet.</value></data>
+  <data name="AddCollectionImageUploadConfig" xml:space="preserve"><value>Add collection image upload config</value></data>
+  <data name="CollectionImageUploadConfigTemplateDialogDescription" xml:space="preserve"><value>Define image hoster targets for the collection covers of releases created from this template.</value></data>
+  <data name="CollectionImageUploads" xml:space="preserve"><value>Image uploads</value></data>
+  <data name="CollectionImageUploadsDescription" xml:space="preserve"><value>Image hoster targets for the series cover of this collection.</value></data>
+  <data name="NoCollectionImageUploadsYet" xml:space="preserve"><value>No image upload configurations yet.</value></data>
+  <data name="ImageUploadPending" xml:space="preserve"><value>Not uploaded yet</value></data>
   <data name="NoImageUploadsFound" xml:space="preserve"><value>No image uploads found</value></data>
   <data name="NoImageUploadUrlsFound" xml:space="preserve"><value>No image upload URLs found</value></data>
   <data name="NoLatestUpload" xml:space="preserve"><value>No upload yet</value></data>

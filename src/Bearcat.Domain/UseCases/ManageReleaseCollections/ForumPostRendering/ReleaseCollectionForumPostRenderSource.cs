@@ -7,16 +7,21 @@ namespace Bearcat.Domain.UseCases.ManageReleaseCollections.ForumPostRendering;
 
 public class ReleaseCollectionForumPostRenderSource(
     IReleaseCollectionForumPostRepository repository,
-    ReleaseForumPostUploadBuilder uploadBuilder
+    ReleaseForumPostUploadBuilder uploadBuilder,
+    ForumPostImageLinkBuilder imageLinkBuilder
 ) : IForumPostRenderSource
 {
     public ForumPostTemplateType Type => ForumPostTemplateType.ReleaseCollection;
 
     public IReadOnlyList<ForumPostTemplateVariableReadModel> GetVariables()
     {
-        return ForumPostTemplateVariableCatalog.GetVariables(
-            typeof(ForumPostTemplateCollectionRenderModel)
-        );
+        var variables = ForumPostTemplateVariableCatalog
+            .GetVariables(typeof(ForumPostTemplateCollectionRenderModel))
+            .ToList();
+        
+        variables.AddRange(ForumPostImageLinkBuilder.Variables);
+        
+        return variables;
     }
 
     public async Task<ScriptObject?> BuildGlobalsAsync(
@@ -58,7 +63,12 @@ public class ReleaseCollectionForumPostRenderSource(
         };
 
         var scriptObject = new ScriptObject();
+        
         scriptObject.Import(renderModel, ForumPostTemplateVariableCatalog.ShouldExposeMember);
+        scriptObject["imagelinks"] = await imageLinkBuilder.BuildForCollectionAsync(
+            entityId,
+            cancellationToken
+        );
 
         return scriptObject;
     }

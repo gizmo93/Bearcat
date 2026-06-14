@@ -1,17 +1,18 @@
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs.Repositories;
+using Bearcat.Website.Pages.ManageImageUploadConfigs;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Bearcat.Website.Pages.ManageImageUploadConfigs;
+namespace Bearcat.Website.Pages.ManageReleaseCollections;
 
-public partial class CreateOrEditImageUploadConfigDialog : OwningComponentBase
+public partial class CreateOrEditCollectionImageUploadConfigDialog : OwningComponentBase
 {
     [Parameter]
-    public int ReleaseId { get; set; }
+    public int ReleaseCollectionId { get; set; }
 
     [Parameter]
     public int? ImageUploadConfigId { get; set; }
@@ -60,8 +61,8 @@ public partial class CreateOrEditImageUploadConfigDialog : OwningComponentBase
         }
         else
         {
-            await service.CreateAsync(
-                ReleaseId,
+            await service.CreateForCollectionAsync(
+                ReleaseCollectionId,
                 formModel.Name,
                 formModel.ImageHosterRegistrationId!.Value
             );

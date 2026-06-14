@@ -7,7 +7,7 @@ public class ImageUploadConfigService(IImageUploadConfigWriteRepository writeRep
 {
     public async Task<int> CreateAsync(
         int releaseId,
-        string name,
+        string? name,
         int imageHosterRegistrationId,
         CancellationToken cancellationToken = default
     )
@@ -15,7 +15,27 @@ public class ImageUploadConfigService(IImageUploadConfigWriteRepository writeRep
         var imageUploadConfig = new ImageUploadConfig
         {
             ReleaseId = releaseId,
-            Name = name,
+            Name = await ResolveNameAsync(name, imageHosterRegistrationId, cancellationToken),
+            ImageHosterRegistrationId = imageHosterRegistrationId,
+        };
+
+        writeRepository.Add(imageUploadConfig);
+        await writeRepository.SaveChangesAsync(cancellationToken);
+
+        return imageUploadConfig.Id;
+    }
+
+    public async Task<int> CreateForCollectionAsync(
+        int releaseCollectionId,
+        string? name,
+        int imageHosterRegistrationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var imageUploadConfig = new ImageUploadConfig
+        {
+            ReleaseCollectionId = releaseCollectionId,
+            Name = await ResolveNameAsync(name, imageHosterRegistrationId, cancellationToken),
             ImageHosterRegistrationId = imageHosterRegistrationId,
         };
 
@@ -27,7 +47,7 @@ public class ImageUploadConfigService(IImageUploadConfigWriteRepository writeRep
 
     public async Task UpdateAsync(
         int imageUploadConfigId,
-        string name,
+        string? name,
         int imageHosterRegistrationId,
         CancellationToken cancellationToken = default
     )
@@ -37,10 +57,31 @@ public class ImageUploadConfigService(IImageUploadConfigWriteRepository writeRep
             cancellationToken
         );
 
-        imageUploadConfig.Name = name;
+        imageUploadConfig.Name = await ResolveNameAsync(
+            name,
+            imageHosterRegistrationId,
+            cancellationToken
+        );
         imageUploadConfig.ImageHosterRegistrationId = imageHosterRegistrationId;
 
         await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<string> ResolveNameAsync(
+        string? name,
+        int imageHosterRegistrationId,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            return name.Trim();
+        }
+
+        return await writeRepository.GetImageHosterRegistrationNameAsync(
+            imageHosterRegistrationId,
+            cancellationToken
+        );
     }
 
     public async Task DeleteAsync(

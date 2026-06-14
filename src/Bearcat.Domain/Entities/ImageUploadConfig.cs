@@ -4,9 +4,13 @@ public class ImageUploadConfig
 {
     public int Id { get; set; }
 
-    public int ReleaseId { get; set; }
+    public int? ReleaseId { get; set; }
 
-    public Release Release { get; set; } = null!;
+    public Release? Release { get; set; }
+
+    public int? ReleaseCollectionId { get; set; }
+
+    public ReleaseCollection? ReleaseCollection { get; set; }
 
     public int ImageHosterRegistrationId { get; set; }
 

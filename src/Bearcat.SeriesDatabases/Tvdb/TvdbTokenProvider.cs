@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using System.Net;
 using Bearcat.Abstractions.SeriesDatabase;
 using Bearcat.SeriesDatabases.Tvdb.Api;
-using Refit;
 
 namespace Bearcat.SeriesDatabases.Tvdb;
 
