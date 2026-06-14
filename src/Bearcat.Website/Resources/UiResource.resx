@@ -282,7 +282,6 @@
   <data name="OpenReleaseDatabase" xml:space="preserve"><value>Open release database</value></data>
   <data name="OpenReleaseActions" xml:space="preserve"><value>Open release actions</value></data>
   <data name="OpenUploadConfigActions" xml:space="preserve"><value>Open upload config actions</value></data>
-  <data name="OtherHosters" xml:space="preserve"><value>Other hosters</value></data>
   <data name="Password" xml:space="preserve"><value>Password</value></data>
   <data name="PauseRefresh" xml:space="preserve"><value>Pause refresh</value></data>
   <data name="Pending" xml:space="preserve"><value>Pending</value></data>
