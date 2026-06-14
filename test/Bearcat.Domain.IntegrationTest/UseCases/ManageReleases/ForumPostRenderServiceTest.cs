@@ -30,7 +30,12 @@ public class ForumPostRenderServiceTest : BearcatIntegrationTest
             Mock.Of<ILinkCrypterFactory>()
         );
         var uploadBuilder = new ReleaseForumPostUploadBuilder(releaseReadRepository);
-        var renderSource = new ReleaseForumPostRenderSource(releaseReadRepository, uploadBuilder);
+        var imageLinkBuilder = new ForumPostImageLinkBuilder(releaseReadRepository);
+        var renderSource = new ReleaseForumPostRenderSource(
+            releaseReadRepository,
+            uploadBuilder,
+            imageLinkBuilder
+        );
 
         service = new ForumPostRenderService(forumPostTemplateRepository, [renderSource]);
     }

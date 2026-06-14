@@ -23,12 +23,24 @@ public class ImageUploadRepository(IBearcatWriteDbContext dbWrite, ISecretProtec
 
         var configs = await dbWrite
             .ImageUploadConfigs.Include(config => config.Release)
-                .ThenInclude(release => release.ReleaseInfo)
+                .ThenInclude(release => release!.ReleaseInfo)
+            .Include(config => config.ReleaseCollection)
+                .ThenInclude(collection => collection!.Metadata)
             .Include(config => config.ImageHosterRegistration)
             .Where(config =>
                 config.ImageHosterRegistration.IsActive
-                && config.Release.ReleaseInfo != null
-                && config.Release.ReleaseInfo.CoverUrl != null
+                && (
+                    (
+                        config.Release != null
+                        && config.Release.ReleaseInfo != null
+                        && config.Release.ReleaseInfo.CoverUrl != null
+                    )
+                    || (
+                        config.ReleaseCollection != null
+                        && config.ReleaseCollection.Metadata != null
+                        && config.ReleaseCollection.Metadata.CoverUrl != null
+                    )
+                )
             )
             .ToListAsync(cancellationToken);
 
@@ -59,7 +71,10 @@ public class ImageUploadRepository(IBearcatWriteDbContext dbWrite, ISecretProtec
                 .ThenInclude(config => config.ImageHosterRegistration)
             .Include(upload => upload.ImageUploadConfig)
                 .ThenInclude(config => config.Release)
-                    .ThenInclude(release => release.ReleaseInfo)
+                    .ThenInclude(release => release!.ReleaseInfo)
+            .Include(upload => upload.ImageUploadConfig)
+                .ThenInclude(config => config.ReleaseCollection)
+                    .ThenInclude(collection => collection!.Metadata)
             .Where(upload =>
                 upload.UploadState == UploadState.Pending
                 && upload.ImageUploadConfig.ImageHosterRegistration.IsActive

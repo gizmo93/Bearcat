@@ -54,7 +54,7 @@ public partial class CreateOrEditImageUploadConfigDialog : OwningComponentBase
         {
             await service.UpdateAsync(
                 ImageUploadConfigId!.Value,
-                formModel.Name!,
+                formModel.Name,
                 formModel.ImageHosterRegistrationId!.Value
             );
         }
@@ -62,7 +62,7 @@ public partial class CreateOrEditImageUploadConfigDialog : OwningComponentBase
         {
             await service.CreateAsync(
                 ReleaseId,
-                formModel.Name!,
+                formModel.Name,
                 formModel.ImageHosterRegistrationId!.Value
             );
         }
@@ -73,11 +73,6 @@ public partial class CreateOrEditImageUploadConfigDialog : OwningComponentBase
     private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs e)
     {
         messageStore.Clear();
-
-        if (string.IsNullOrWhiteSpace(formModel.Name))
-        {
-            messageStore.Add(() => formModel.Name!, L["NameIsRequired"]);
-        }
 
         if (formModel.ImageHosterRegistrationId is null)
         {

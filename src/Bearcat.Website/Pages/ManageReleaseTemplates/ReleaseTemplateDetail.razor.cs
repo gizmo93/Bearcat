@@ -404,6 +404,102 @@ public partial class ReleaseTemplateDetail(
         await LoadReleaseTemplateAsync();
     }
 
+    private async Task ShowAddCollectionImageUploadConfigDialogAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(CreateOrEditCollectionImageUploadConfigTemplateDialog.ReleaseTemplateId)] =
+                ReleaseTemplateId,
+            [nameof(CreateOrEditCollectionImageUploadConfigTemplateDialog.FormModel)] =
+                new ImageUploadConfigTemplateFormModel(),
+        };
+
+        var dialog =
+            await dialogService.OpenAsync<CreateOrEditCollectionImageUploadConfigTemplateDialog>(
+                parameters,
+                new DialogOpenOptions
+                {
+                    Title = L["AddCollectionImageUploadConfig"],
+                    Description = L["CollectionImageUploadConfigTemplateDialogDescription"],
+                    Size = DialogSize.Large,
+                    ShowClose = true,
+                    PreventClose = true,
+                }
+            );
+
+        if (!dialog.Cancelled)
+        {
+            await LoadReleaseTemplateAsync();
+        }
+    }
+
+    private async Task ShowEditCollectionImageUploadConfigDialogAsync(
+        ImageUploadConfigTemplateReadModel imageUploadConfig
+    )
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(CreateOrEditCollectionImageUploadConfigTemplateDialog.ReleaseTemplateId)] =
+                ReleaseTemplateId,
+            [
+                nameof(
+                    CreateOrEditCollectionImageUploadConfigTemplateDialog.CollectionImageUploadConfigTemplateId
+                )
+            ] = imageUploadConfig.ImageUploadConfigTemplateId,
+            [nameof(CreateOrEditCollectionImageUploadConfigTemplateDialog.FormModel)] =
+                new ImageUploadConfigTemplateFormModel
+                {
+                    Name = imageUploadConfig.Name,
+                    ImageHosterRegistrationId = imageUploadConfig.ImageHosterRegistrationId,
+                },
+        };
+
+        var dialog =
+            await dialogService.OpenAsync<CreateOrEditCollectionImageUploadConfigTemplateDialog>(
+                parameters,
+                new DialogOpenOptions
+                {
+                    Title = L["EditNamedItem", imageUploadConfig.DisplayName],
+                    Description = L["CollectionImageUploadConfigTemplateDialogDescription"],
+                    Size = DialogSize.Large,
+                    ShowClose = true,
+                    PreventClose = true,
+                }
+            );
+
+        if (!dialog.Cancelled)
+        {
+            await LoadReleaseTemplateAsync();
+        }
+    }
+
+    private async Task DeleteCollectionImageUploadConfigTemplateAsync(
+        ImageUploadConfigTemplateReadModel imageUploadConfig
+    )
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["DeleteNamedItem", imageUploadConfig.DisplayName],
+            L["DeleteImageUploadConfigTemplateConfirmation", imageUploadConfig.DisplayName],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
+        await service.DeleteCollectionImageUploadConfigTemplateAsync(
+            imageUploadConfig.ImageUploadConfigTemplateId
+        );
+        await LoadReleaseTemplateAsync();
+    }
+
     private async Task ShowAddLinkCrypterDialogAsync(UploadConfigTemplateReadModel uploadConfig)
     {
         var parameters = new Dictionary<string, object?>

@@ -17,7 +17,7 @@ public class ReleaseReadRepository(
     IBearcatReadDbContext dbRead,
     IArchiverFactory archiverFactory,
     ILinkCrypterFactory linkCrypterFactory
-) : IReleaseReadRepository, IReleaseForumPostUploadRepository
+) : IReleaseReadRepository, IReleaseForumPostUploadRepository, IForumPostImageLinkRepository
 {
     public async Task<PagedResult<ReleaseReadModel>> SearchReleasesAsync(
         ReleaseSearchQuery query,
@@ -441,6 +441,61 @@ public class ReleaseReadRepository(
                     ImageUrls: urls
                 );
             })
+            .ToList();
+    }
+
+    public Task<IReadOnlyList<ForumPostImageLinkReadModel>> GetReleaseImageLinksAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return GetImageLinksAsync(config => config.ReleaseId == releaseId, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<ForumPostImageLinkReadModel>> GetCollectionImageLinksAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return GetImageLinksAsync(
+            config => config.ReleaseCollectionId == releaseCollectionId,
+            cancellationToken
+        );
+    }
+
+    private async Task<IReadOnlyList<ForumPostImageLinkReadModel>> GetImageLinksAsync(
+        Expression<Func<ImageUploadConfig, bool>> predicate,
+        CancellationToken cancellationToken
+    )
+    {
+        var configs = await dbRead
+            .ImageUploadConfigs.Where(predicate)
+            .OrderBy(config => config.Name)
+            .ThenBy(config => config.Id)
+            .Select(config => new
+            {
+                config.Name,
+                Urls = config
+                    .ImageUploads.OrderByDescending(upload => upload.UploadedAt ?? upload.CreatedAt)
+                    .ThenByDescending(upload => upload.Id)
+                    .Take(1)
+                    .SelectMany(upload =>
+                        upload
+                            .ImageUrls.OrderBy(url => url.ImageSize)
+                            .ThenBy(url => url.Id)
+                            .Select(url => new { url.ImageSize, url.Url })
+                    )
+                    .ToList(),
+            })
+            .ToListAsync(cancellationToken);
+
+        return configs
+            .Select(config => new ForumPostImageLinkReadModel(
+                config.Name,
+                config
+                    .Urls.Select(url => new ForumPostImageLinkUrlReadModel(url.ImageSize, url.Url))
+                    .ToList()
+            ))
             .ToList();
     }
 

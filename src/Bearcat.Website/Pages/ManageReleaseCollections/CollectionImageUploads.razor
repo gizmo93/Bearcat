@@ -1,0 +1,142 @@
+<BbCard Class="border-border/70 shadow-sm">
+    <BbCardHeader>
+        <div class="bearcat-section-header">
+            <div class="flex items-center gap-2">
+                <LucideIcon Name="images" class="h-4 w-4" />
+                <div>
+                    <BbCardTitle class="text-base">@L["CollectionImageUploads"]</BbCardTitle>
+                    <BbCardDescription>@L["CollectionImageUploadsDescription"]</BbCardDescription>
+                </div>
+            </div>
+            <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="ShowAddDialogAsync">
+                <LucideIcon Name="plus" class="h-4 w-4" />
+                @L["Add"]
+            </BbButton>
+        </div>
+    </BbCardHeader>
+    <BbCardContent>
+        @if (isLoading)
+        {
+            <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                @L["Loading"]
+            </div>
+        }
+        else if (imageUploads.Count == 0)
+        {
+            <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                @L["NoCollectionImageUploadsYet"]
+            </div>
+        }
+        else
+        {
+            <div class="bearcat-release-overview-image-list">
+                @foreach (var config in imageUploads)
+                {
+                    var imageUrlsCopyTargetId = GetImageUrlsCopyTargetId(config);
+
+                    <article class="bearcat-release-overview-image-item">
+                        <div class="bearcat-release-overview-image-main">
+                            <div class="min-w-0">
+                                <div class="flex min-w-0 flex-wrap items-center gap-2">
+                                    <span class="truncate text-sm font-semibold" title="@config.Name">
+                                        @config.Name
+                                    </span>
+                                    <BbBadge Variant="BadgeVariant.Outline">@config.ImageHosterRegistrationName</BbBadge>
+                                </div>
+                                @if (config.UploadedAt is not null || config.CreatedAt is not null)
+                                {
+                                    <p class="truncate text-xs text-muted-foreground">
+                                        @((config.UploadedAt ?? config.CreatedAt)?.ToString("g"))
+                                    </p>
+                                }
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                @if (config.UploadState is null)
+                                {
+                                    <BbBadge Variant="BadgeVariant.Outline">@L["ImageUploadPending"]</BbBadge>
+                                }
+                                else
+                                {
+                                    <BbBadge Variant="@GetUploadVariant(config.UploadState.Value)">
+                                        @L.Localize(config.UploadState.Value)
+                                    </BbBadge>
+                                    <ErrorMessagesTooltip Messages="config.ErrorMessages" />
+                                }
+
+                                <textarea id="@imageUrlsCopyTargetId" hidden readonly>@GetImageUrlsText(config)</textarea>
+                                <button type="button"
+                                        class="bearcat-copy-button bearcat-copy-icon-button"
+                                        disabled="@(config.ImageUrls.Count == 0)"
+                                        aria-label="@L["CopyImageUrls"]"
+                                        title="@L["CopyImageUrls"]"
+                                        data-copy-target="@imageUrlsCopyTargetId"
+                                        data-copy-label="@L["CopyImageUrls"]"
+                                        data-copy-success-label="@L["Copied"]"
+                                        data-copy-failure-label="@L["CopyFailed"]"
+                                        onclick="window.bearcat.copyFromTarget(this)">
+                                    <LucideIcon Name="copy" class="h-4 w-4" />
+                                    <span class="sr-only bearcat-copy-button-label">@L["CopyImageUrls"]</span>
+                                </button>
+
+                                <BbDropdownMenu>
+                                    <BbDropdownMenuTrigger>
+                                        <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenImageUploadConfigActions"]">
+                                            <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                        </BbButton>
+                                    </BbDropdownMenuTrigger>
+                                    <BbDropdownMenuContent Align="PopoverAlign.End">
+                                        <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(config))">
+                                            @L["EditConfig"]
+                                        </BbDropdownMenuItem>
+                                        <BbDropdownMenuItem OnClick="@(async _ => await DeleteConfigAsync(config))">
+                                            @L["DeleteConfig"]
+                                        </BbDropdownMenuItem>
+                                    </BbDropdownMenuContent>
+                                </BbDropdownMenu>
+                            </div>
+                        </div>
+
+                        @if (config.ImageUrls.Count == 0)
+                        {
+                            <p class="text-sm text-muted-foreground">@L["NoImageUploadUrlsFound"]</p>
+                        }
+                        else
+                        {
+                            <div class="bearcat-release-overview-image-url-list">
+                                @foreach (var imageUrl in config.ImageUrls)
+                                {
+                                    var imageUrlCopyTargetId = GetImageUrlCopyTargetId(config, imageUrl);
+
+                                    <div class="bearcat-release-overview-image-url">
+                                        <BbBadge Variant="BadgeVariant.Secondary">@imageUrl.ImageSize</BbBadge>
+                                        <a class="bearcat-upload-link"
+                                           href="@imageUrl.Url"
+                                           target="_blank"
+                                           rel="noreferrer noopener"
+                                           title="@imageUrl.Url">
+                                            @imageUrl.Url
+                                        </a>
+                                        <textarea id="@imageUrlCopyTargetId" hidden readonly>@imageUrl.Url</textarea>
+                                        <button type="button"
+                                                class="bearcat-copy-button bearcat-copy-icon-button bearcat-release-overview-link-copy"
+                                                aria-label="@L["CopyLink"]"
+                                                title="@L["CopyLink"]"
+                                                data-copy-target="@imageUrlCopyTargetId"
+                                                data-copy-label="@L["CopyLink"]"
+                                                data-copy-success-label="@L["Copied"]"
+                                                data-copy-failure-label="@L["CopyFailed"]"
+                                                onclick="window.bearcat.copyFromTarget(this)">
+                                            <LucideIcon Name="copy" class="h-4 w-4" />
+                                            <span class="sr-only bearcat-copy-button-label">@L["CopyLink"]</span>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </article>
+                }
+            </div>
+        }
+    </BbCardContent>
+</BbCard>

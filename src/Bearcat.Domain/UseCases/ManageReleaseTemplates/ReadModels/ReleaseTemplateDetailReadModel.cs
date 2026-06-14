@@ -14,5 +14,6 @@ public record ReleaseTemplateDetailReadModel(
     string? ReleaseCollectionNameTemplate,
     IReadOnlyList<ArchiveConfigTemplateReadModel> ArchiveConfigTemplates,
     IReadOnlyList<UploadConfigTemplateReadModel> UploadConfigTemplates,
-    IReadOnlyList<ImageUploadConfigTemplateReadModel> ImageUploadConfigTemplates
+    IReadOnlyList<ImageUploadConfigTemplateReadModel> ImageUploadConfigTemplates,
+    IReadOnlyList<ImageUploadConfigTemplateReadModel> CollectionImageUploadConfigTemplates
 );

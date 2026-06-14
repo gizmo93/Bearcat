@@ -22,9 +22,11 @@ public class ReleaseCollectionRepository(
     )
     {
         return await dbWrite
-            .ReleaseCollections.Include(collection => collection.UploadSlots)
+            .ReleaseCollections.AsSplitQuery()
+            .Include(collection => collection.UploadSlots)
                 .ThenInclude(slot => slot.UploadConfigs)
                     .ThenInclude(uploadConfig => uploadConfig.LinkCrypters)
+            .Include(collection => collection.ImageUploadConfigs)
             .FirstOrDefaultAsync(
                 collection => collection.ReleaseGroupId == releaseGroupId && collection.Key == key,
                 cancellationToken
@@ -386,6 +388,71 @@ public class ReleaseCollectionRepository(
             .OrderBy(group => group.Key)
             .Select(group => new CollectionArchiveConfigOptionReadModel(group.Key, releaseCount))
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<CollectionImageUploadReadModel>> GetImageUploadsAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var imageUploadConfigs = await dbRead
+            .ImageUploadConfigs.Where(config => config.ReleaseCollectionId == releaseCollectionId)
+            .OrderBy(config => config.Name)
+            .ThenBy(config => config.Id)
+            .Select(config => new
+            {
+                config.Id,
+                config.Name,
+                config.ImageHosterRegistrationId,
+                ImageHosterRegistrationName = config.ImageHosterRegistration.Name,
+                LatestImageUpload = config
+                    .ImageUploads.OrderByDescending(upload => upload.UploadedAt ?? upload.CreatedAt)
+                    .ThenByDescending(upload => upload.Id)
+                    .Select(upload => new
+                    {
+                        ImageUploadId = upload.Id,
+                        upload.CreatedAt,
+                        upload.UploadedAt,
+                        upload.UploadState,
+                        ErrorMessages = upload.ErrorMessages.ToList(),
+                        ImageUrls = upload
+                            .ImageUrls.OrderBy(url => url.ImageSize)
+                            .ThenBy(url => url.Id)
+                            .Select(url => new { url.ImageSize, url.Url })
+                            .ToList(),
+                    })
+                    .FirstOrDefault(),
+            })
+            .ToListAsync(cancellationToken);
+
+        return imageUploadConfigs
+            .Select(config =>
+            {
+                var upload = config.LatestImageUpload;
+
+                var urls = upload is not null
+                    ? upload
+                        .ImageUrls.Select(url => new CollectionImageUploadUrlReadModel(
+                            url.ImageSize,
+                            url.Url
+                        ))
+                        .ToList()
+                    : [];
+
+                return new CollectionImageUploadReadModel(
+                    ImageUploadConfigId: config.Id,
+                    Name: config.Name,
+                    ImageHosterRegistrationId: config.ImageHosterRegistrationId,
+                    ImageHosterRegistrationName: config.ImageHosterRegistrationName,
+                    ImageUploadId: upload?.ImageUploadId,
+                    CreatedAt: upload?.CreatedAt,
+                    UploadedAt: upload?.UploadedAt,
+                    UploadState: upload?.UploadState,
+                    ErrorMessages: upload?.ErrorMessages ?? [],
+                    ImageUrls: urls
+                );
+            })
+            .ToList();
     }
 
     public async Task<IReadOnlyList<AvailableReleaseReadModel>> SearchAvailableReleasesAsync(

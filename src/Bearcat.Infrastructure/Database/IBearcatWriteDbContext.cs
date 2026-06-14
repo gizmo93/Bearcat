@@ -12,6 +12,7 @@ public interface IBearcatWriteDbContext
     public DbSet<ImageUpload> ImageUploads { get; set; }
     public DbSet<ImageUploadUrl> ImageUploadUrls { get; set; }
     public DbSet<ImageUploadConfigTemplate> ImageUploadConfigTemplates { get; set; }
+    public DbSet<CollectionImageUploadConfigTemplate> CollectionImageUploadConfigTemplates { get; set; }
     public DbSet<BackgroundTaskState> BackgroundTaskStates { get; set; }
     public DbSet<Release> Releases { get; set; }
     public DbSet<ReleaseCollection> ReleaseCollections { get; set; }
