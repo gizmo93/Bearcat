@@ -18,9 +18,9 @@ public class ReleaseCollectionForumPostRenderSource(
         var variables = ForumPostTemplateVariableCatalog
             .GetVariables(typeof(ForumPostTemplateCollectionRenderModel))
             .ToList();
-        
+
         variables.AddRange(ForumPostImageLinkBuilder.Variables);
-        
+
         return variables;
     }
 
@@ -63,7 +63,7 @@ public class ReleaseCollectionForumPostRenderSource(
         };
 
         var scriptObject = new ScriptObject();
-        
+
         scriptObject.Import(renderModel, ForumPostTemplateVariableCatalog.ShouldExposeMember);
         scriptObject["imagelinks"] = await imageLinkBuilder.BuildForCollectionAsync(
             entityId,

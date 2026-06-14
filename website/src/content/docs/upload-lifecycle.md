@@ -115,6 +115,10 @@ That container contains the hoster links from the completed upload.
 
 If the container creation fails, Bearcat stores the error on the container and creates a notification.
 
+The lifecycle above runs per release.
+If you manage related releases together, for example a TV show season, a release collection can bundle their links into one shared container instead of one container per release.
+See [Release Collections](/Bearcat/release-collections/) for how that works.
+
 ## 6. Online checks
 
 The "Upload state check" background task regularly asks hosters whether uploaded files still exist.
