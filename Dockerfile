@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0.300-noble AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0-noble AS build
 WORKDIR /App
 
 COPY . ./
@@ -7,7 +7,7 @@ RUN dotnet restore src/Bearcat.Host/Bearcat.Host.csproj -a x64
 RUN dotnet publish src/Bearcat.Host/Bearcat.Host.csproj -a x64 --no-restore -o /App/out
 
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0.8-noble
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.9-noble
 
 ENV \
     ASPNETCORE_ENVIRONMENT=Production \
