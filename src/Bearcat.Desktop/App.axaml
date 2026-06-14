@@ -1,8 +1,10 @@
-<Application xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="Bearcat.Desktop.App"
-             Name="Bearcat Desktop"
-             RequestedThemeVariant="Default">
+<Application
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="Bearcat.Desktop.App"
+    Name="Bearcat Desktop"
+    RequestedThemeVariant="Default"
+>
     <Application.Styles>
         <FluentTheme />
     </Application.Styles>
