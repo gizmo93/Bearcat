@@ -456,6 +456,64 @@ public class ReleaseServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task CreateFromTemplateAsync_TemplateWithCollectionImageConfig_MaterializesDeduplicatedConfig()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync();
+        var imageHosterRegistration = new ImageHosterRegistration
+        {
+            Name = "ImgBB",
+            ImageHosterClassName = "ImgBb",
+            SerializedConfig = "{}",
+            IsActive = true,
+        };
+        dbContext.ImageHosterRegistrations.Add(imageHosterRegistration);
+        await dbContext.SaveChangesAsync();
+
+        var releaseTemplate = await dbContext.ReleaseTemplates.SingleAsync(template =>
+            template.Id == seed.ReleaseTemplateId
+        );
+        releaseTemplate.ReleaseCollectionDetectionMode =
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern;
+        releaseTemplate.CollectionImageUploadConfigTemplates =
+        [
+            new CollectionImageUploadConfigTemplate
+            {
+                ImageHosterRegistrationId = imageHosterRegistration.Id,
+                Name = "Series cover",
+            },
+        ];
+        await dbContext.SaveChangesAsync();
+
+        // Act - two episodes of the same series share a single collection
+        await service.CreateFromTemplateAsync(
+            seed.ReleaseTemplateId,
+            "/tmp/releases/Hostage.S01E01.German.AC3.DL.1080p.Web.x265-FuN.mkv",
+            null,
+            CancellationToken.None
+        );
+        await service.CreateFromTemplateAsync(
+            seed.ReleaseTemplateId,
+            "/tmp/releases/Hostage.S01E02.German.AC3.DL.1080p.Web.x265-FuN.mkv",
+            null,
+            CancellationToken.None
+        );
+
+        // Assert
+        var collection = await dbContext
+            .ReleaseCollections.Include(releaseCollection => releaseCollection.ImageUploadConfigs)
+            .SingleAsync(releaseCollection =>
+                releaseCollection.ReleaseGroupId == seed.ReleaseGroupId
+            );
+
+        var config = collection.ImageUploadConfigs.ShouldHaveSingleItem();
+        config.Name.ShouldBe("Series cover");
+        config.ImageHosterRegistrationId.ShouldBe(imageHosterRegistration.Id);
+        config.ReleaseId.ShouldBeNull();
+        config.ReleaseCollectionId.ShouldBe(collection.Id);
+    }
+
+    [Test]
     public async Task CreateAsync_UnmanagedRelease_CreatesFixedArchiveConfigAndArchive()
     {
         // Arrange

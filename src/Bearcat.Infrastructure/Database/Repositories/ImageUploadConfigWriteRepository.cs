@@ -18,6 +18,19 @@ public class ImageUploadConfigWriteRepository(IBearcatWriteDbContext dbWrite)
         );
     }
 
+    public async Task<string> GetImageHosterRegistrationNameAsync(
+        int imageHosterRegistrationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .ImageHosterRegistrations.Where(registration =>
+                registration.Id == imageHosterRegistrationId
+            )
+            .Select(registration => registration.Name)
+            .FirstAsync(cancellationToken);
+    }
+
     public void Add(ImageUploadConfig imageUploadConfig)
     {
         dbWrite.Add(imageUploadConfig);

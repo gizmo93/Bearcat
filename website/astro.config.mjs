@@ -60,6 +60,7 @@ export default defineConfig({
                     items: [
                         { label: 'Initial Setup', slug: 'post-installation' },
                         { label: 'Release Types', slug: 'release-types' },
+                        { label: 'Release Collections', slug: 'release-collections' },
                         { label: 'The upload lifecycle', slug: 'upload-lifecycle' },
 
                     ],

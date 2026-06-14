@@ -615,6 +615,102 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         );
     }
 
+    [Test]
+    public async Task CreateCollectionImageUploadConfigTemplateAsync_DetectionDisabled_Throws()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
+        var imageHosterRegistration = await AddImageHosterRegistrationAsync();
+
+        // Act & Assert
+        await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.CreateCollectionImageUploadConfigTemplateAsync(
+                releaseTemplate.Id,
+                "Series cover",
+                imageHosterRegistration.Id,
+                CancellationToken.None
+            )
+        );
+
+        var hasTemplate = await dbContext.CollectionImageUploadConfigTemplates.AnyAsync();
+        hasTemplate.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task CreateCollectionImageUploadConfigTemplateAsync_DetectionEnabled_PersistsTemplate()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
+        releaseTemplate.ReleaseCollectionDetectionMode =
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern;
+        await dbContext.SaveChangesAsync();
+        var imageHosterRegistration = await AddImageHosterRegistrationAsync();
+
+        // Act
+        await service.CreateCollectionImageUploadConfigTemplateAsync(
+            releaseTemplate.Id,
+            "Series cover",
+            imageHosterRegistration.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        var template = await dbContext.CollectionImageUploadConfigTemplates.SingleAsync();
+        template.ReleaseTemplateId.ShouldBe(releaseTemplate.Id);
+        template.ImageHosterRegistrationId.ShouldBe(imageHosterRegistration.Id);
+        template.Name.ShouldBe("Series cover");
+    }
+
+    [Test]
+    public async Task UpdateAsync_DetectionDisabled_RemovesCollectionImageConfigTemplates()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
+        releaseTemplate.ReleaseCollectionDetectionMode =
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern;
+        await dbContext.SaveChangesAsync();
+        var imageHosterRegistration = await AddImageHosterRegistrationAsync();
+        await service.CreateCollectionImageUploadConfigTemplateAsync(
+            releaseTemplate.Id,
+            "Series cover",
+            imageHosterRegistration.Id,
+            CancellationToken.None
+        );
+
+        // Act
+        await service.UpdateAsync(
+            releaseTemplate.Id,
+            "Managed template",
+            ReleaseType.Managed,
+            releaseGroup.Id,
+            ReleaseCollectionDetectionMode.Disabled,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        var hasTemplate = await dbContext.CollectionImageUploadConfigTemplates.AnyAsync();
+        hasTemplate.ShouldBeFalse();
+    }
+
+    private async Task<ImageHosterRegistration> AddImageHosterRegistrationAsync()
+    {
+        var imageHosterRegistration = new ImageHosterRegistration
+        {
+            Name = "ImgBB",
+            ImageHosterClassName = "ImgBb",
+            SerializedConfig = "{}",
+            IsActive = true,
+        };
+
+        dbContext.ImageHosterRegistrations.Add(imageHosterRegistration);
+        await dbContext.SaveChangesAsync();
+
+        return imageHosterRegistration;
+    }
+
     private async Task<ReleaseGroup> AddReleaseGroupAsync(string name = "Managed releases")
     {
         var releaseGroup = new ReleaseGroup

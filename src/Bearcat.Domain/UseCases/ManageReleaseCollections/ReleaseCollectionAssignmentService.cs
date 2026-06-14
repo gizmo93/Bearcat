@@ -63,6 +63,8 @@ public class ReleaseCollectionAssignmentService(
 
         release.ReleaseCollection = releaseCollection;
 
+        MaterializeImageUploadConfigs(releaseCollection, releaseTemplate);
+
         foreach (var match in uploadConfigMatches)
         {
             var uploadConfigTemplate = match.UploadConfigTemplate;
@@ -114,6 +116,35 @@ public class ReleaseCollectionAssignmentService(
             {
                 slot.UploadConfigs.Add(uploadConfig);
             }
+        }
+    }
+
+    private static void MaterializeImageUploadConfigs(
+        ReleaseCollection releaseCollection,
+        ReleaseTemplate releaseTemplate
+    )
+    {
+        foreach (var template in releaseTemplate.CollectionImageUploadConfigTemplates)
+        {
+            var alreadyConfigured = releaseCollection.ImageUploadConfigs.Any(config =>
+                config.ImageHosterRegistrationId == template.ImageHosterRegistrationId
+            );
+
+            if (alreadyConfigured)
+            {
+                continue;
+            }
+
+            releaseCollection.ImageUploadConfigs.Add(
+                new ImageUploadConfig
+                {
+                    Name = string.IsNullOrWhiteSpace(template.Name)
+                        ? template.ImageHosterRegistration.Name
+                        : template.Name.Trim(),
+                    ImageHosterRegistrationId = template.ImageHosterRegistrationId,
+                    ImageUploads = [],
+                }
+            );
         }
     }
 

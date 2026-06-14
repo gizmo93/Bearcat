@@ -15,4 +15,7 @@ public class ImageHosterRegistration
     public List<ImageUploadConfig> ImageUploadConfigs { get; set; } = [];
 
     public List<ImageUploadConfigTemplate> ImageUploadConfigTemplates { get; set; } = [];
+
+    public List<CollectionImageUploadConfigTemplate> CollectionImageUploadConfigTemplates { get; set; } =
+    [];
 }

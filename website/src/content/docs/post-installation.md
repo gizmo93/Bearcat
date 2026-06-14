@@ -197,6 +197,11 @@ If an archive template is configured to use the release name as archive name, ev
 Templates can be used manually from the "Releases" page with "New from template".
 They are also required for folder automations, because the automation needs to know which archive and upload setup it should apply to newly found folders.
 
+A template can also group the releases it creates into a release collection.
+Turn on "Collection detection" in the template if the releases belong together, for example the episodes of a TV show season.
+Bearcat then keeps those releases side by side so you can share their uploads and links from one place.
+See [Release Collections](/Bearcat/release-collections/) to learn what you can do with a collection.
+
 ## Setting up folder automations
 
 Folder automations create releases automatically when new folders appear below a configured base folder.
@@ -223,6 +228,10 @@ The folder automation background task runs about every two minutes.
 For every matching direct subfolder, Bearcat checks whether a release with the same folder path already exists.
 If not, it creates a new release from the selected template, tries to fetch release information from the active NFO databases and adds a notification.
 The normal archive and upload background tasks then continue with archive creation, upload, online-state checks and link crypter container creation.
+
+If the selected template has "Collection detection" turned on, the newly created releases are also grouped into release collections automatically.
+This is handy for something like a full season, where every new episode folder ends up in the same collection without any extra work.
+See [Release Collections](/Bearcat/release-collections/) for the details.
 
 As an example, if your release directory contains:
 

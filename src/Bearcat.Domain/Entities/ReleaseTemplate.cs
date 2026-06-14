@@ -28,4 +28,7 @@ public class ReleaseTemplate
     public List<UploadConfigTemplate> UploadConfigTemplates { get; set; } = [];
 
     public List<ImageUploadConfigTemplate> ImageUploadConfigTemplates { get; set; } = [];
+
+    public List<CollectionImageUploadConfigTemplate> CollectionImageUploadConfigTemplates { get; set; } =
+    [];
 }

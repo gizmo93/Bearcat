@@ -9,6 +9,11 @@ public interface IImageUploadConfigWriteRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<string> GetImageHosterRegistrationNameAsync(
+        int imageHosterRegistrationId,
+        CancellationToken cancellationToken = default
+    );
+
     void Add(ImageUploadConfig imageUploadConfig);
 
     void Remove(ImageUploadConfig imageUploadConfig);

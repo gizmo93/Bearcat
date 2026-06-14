@@ -1,100 +1,199 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="760" d:DesignHeight="720"
-        x:Class="Bearcat.Desktop.MainWindow"
-        Title="Bearcat Desktop"
-        Icon="/Assets/bearcat-icon.png"
-        Width="760"
-        MinWidth="680"
-        Height="720"
-        MinHeight="620"
-        Closing="Window_Closing">
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    d:DesignWidth="760"
+    d:DesignHeight="720"
+    x:Class="Bearcat.Desktop.MainWindow"
+    Title="Bearcat Desktop"
+    Icon="/Assets/bearcat-icon.png"
+    Width="760"
+    MinWidth="680"
+    Height="720"
+    MinHeight="620"
+    Closing="Window_Closing"
+>
     <ScrollViewer>
         <StackPanel Margin="24" Spacing="18">
             <Grid ColumnDefinitions="*,180" ColumnSpacing="18">
                 <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
                     <TextBlock Text="Bearcat Desktop" FontSize="26" FontWeight="SemiBold" />
-                    <TextBlock Text="Start Bearcat locally with your own PostgreSQL server."
-                               Foreground="{DynamicResource TextControlPlaceholderForeground}" />
+                    <TextBlock
+                        Text="Start Bearcat locally with your own PostgreSQL server."
+                        Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                    />
                 </StackPanel>
-                <Image Grid.Column="1"
-                       Source="/Assets/bearcat.png"
-                       Width="160"
-                       MaxHeight="120"
-                       Stretch="Uniform"
-                       HorizontalAlignment="Right"
-                       VerticalAlignment="Center" />
+                <Image
+                    Grid.Column="1"
+                    Source="/Assets/bearcat.png"
+                    Width="160"
+                    MaxHeight="120"
+                    Stretch="Uniform"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                />
             </Grid>
 
-            <Border Padding="14"
-                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8">
-                <Grid RowDefinitions="Auto,Auto,Auto,Auto"
-                      ColumnDefinitions="160,*,110"
-                      RowSpacing="10"
-                      ColumnSpacing="10">
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Release path" VerticalAlignment="Center" />
+            <Border
+                Padding="14"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+            >
+                <Grid
+                    RowDefinitions="Auto,Auto,Auto,Auto"
+                    ColumnDefinitions="160,*,110"
+                    RowSpacing="10"
+                    ColumnSpacing="10"
+                >
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Text="Release path"
+                        VerticalAlignment="Center"
+                    />
                     <TextBox x:Name="ReleasePathTextBox" Grid.Row="0" Grid.Column="1" />
-                    <Button Grid.Row="0" Grid.Column="2" Content="Browse..." Click="BrowseReleasePath_Click" />
+                    <Button
+                        Grid.Row="0"
+                        Grid.Column="2"
+                        Content="Browse..."
+                        Click="BrowseReleasePath_Click"
+                    />
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="RAR executable" VerticalAlignment="Center" />
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Text="RAR executable"
+                        VerticalAlignment="Center"
+                    />
                     <TextBox x:Name="RarPathTextBox" Grid.Row="1" Grid.Column="1" />
-                    <Button Grid.Row="1" Grid.Column="2" Content="Browse..." Click="BrowseRarPath_Click" />
+                    <Button
+                        Grid.Row="1"
+                        Grid.Column="2"
+                        Content="Browse..."
+                        Click="BrowseRarPath_Click"
+                    />
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="7z executable" VerticalAlignment="Center" />
+                    <TextBlock
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Text="7z executable"
+                        VerticalAlignment="Center"
+                    />
                     <TextBox x:Name="SevenZipPathTextBox" Grid.Row="2" Grid.Column="1" />
-                    <Button Grid.Row="2" Grid.Column="2" Content="Browse..." Click="BrowseSevenZipPath_Click" />
+                    <Button
+                        Grid.Row="2"
+                        Grid.Column="2"
+                        Content="Browse..."
+                        Click="BrowseSevenZipPath_Click"
+                    />
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Bearcat Host" VerticalAlignment="Center" />
-                    <TextBox x:Name="BearcatHostPathTextBox"
-                             Grid.Row="3"
-                             Grid.Column="1"
-                             PlaceholderText="Auto-detect, or choose a published Bearcat.Host executable" />
-                    <Button Grid.Row="3" Grid.Column="2" Content="Browse..." Click="BrowseBearcatHostPath_Click" />
+                    <TextBlock
+                        Grid.Row="3"
+                        Grid.Column="0"
+                        Text="Bearcat Host"
+                        VerticalAlignment="Center"
+                    />
+                    <TextBox
+                        x:Name="BearcatHostPathTextBox"
+                        Grid.Row="3"
+                        Grid.Column="1"
+                        PlaceholderText="Auto-detect, or choose a published Bearcat.Host executable"
+                    />
+                    <Button
+                        Grid.Row="3"
+                        Grid.Column="2"
+                        Content="Browse..."
+                        Click="BrowseBearcatHostPath_Click"
+                    />
                 </Grid>
             </Border>
 
-            <Border Padding="14"
-                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8">
-                <Grid RowDefinitions="Auto,Auto,Auto"
-                      ColumnDefinitions="160,*,110"
-                      RowSpacing="10"
-                      ColumnSpacing="10">
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Postgres host" VerticalAlignment="Center" />
+            <Border
+                Padding="14"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+            >
+                <Grid
+                    RowDefinitions="Auto,Auto,Auto"
+                    ColumnDefinitions="160,*,110"
+                    RowSpacing="10"
+                    ColumnSpacing="10"
+                >
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Text="Postgres host"
+                        VerticalAlignment="Center"
+                    />
                     <TextBox x:Name="PostgresHostTextBox" Grid.Row="0" Grid.Column="1" />
                     <TextBox x:Name="PostgresPortTextBox" Grid.Row="0" Grid.Column="2" />
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Database" VerticalAlignment="Center" />
-                    <TextBox x:Name="PostgresDatabaseTextBox" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" />
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Text="Database"
+                        VerticalAlignment="Center"
+                    />
+                    <TextBox
+                        x:Name="PostgresDatabaseTextBox"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Grid.ColumnSpan="2"
+                    />
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Credentials" VerticalAlignment="Center" />
+                    <TextBlock
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Text="Credentials"
+                        VerticalAlignment="Center"
+                    />
                     <TextBox x:Name="PostgresUsernameTextBox" Grid.Row="2" Grid.Column="1" />
-                    <TextBox x:Name="PostgresPasswordTextBox"
-                             Grid.Row="2"
-                             Grid.Column="2"
-                             PasswordChar="*"
-                             PlaceholderText="Password" />
+                    <TextBox
+                        x:Name="PostgresPasswordTextBox"
+                        Grid.Row="2"
+                        Grid.Column="2"
+                        PasswordChar="*"
+                        PlaceholderText="Password"
+                    />
                 </Grid>
             </Border>
 
-            <Border Padding="14"
-                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8">
-                <Grid RowDefinitions="Auto,Auto"
-                      ColumnDefinitions="160,*"
-                      RowSpacing="10"
-                      ColumnSpacing="10">
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Web port" VerticalAlignment="Center" />
+            <Border
+                Padding="14"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+            >
+                <Grid
+                    RowDefinitions="Auto,Auto"
+                    ColumnDefinitions="160,*"
+                    RowSpacing="10"
+                    ColumnSpacing="10"
+                >
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Text="Web port"
+                        VerticalAlignment="Center"
+                    />
                     <TextBox x:Name="WebPortTextBox" Grid.Row="0" Grid.Column="1" />
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Status" VerticalAlignment="Center" />
-                    <TextBlock x:Name="StatusTextBlock" Grid.Row="1" Grid.Column="1" Text="Stopped" />
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Text="Status"
+                        VerticalAlignment="Center"
+                    />
+                    <TextBlock
+                        x:Name="StatusTextBlock"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Text="Stopped"
+                    />
                 </Grid>
             </Border>
 
@@ -106,11 +205,13 @@
                 <Button x:Name="QuitButton" Content="Quit" Click="QuitButton_Click" />
             </StackPanel>
 
-            <TextBox x:Name="LogTextBox"
-                     IsReadOnly="True"
-                     AcceptsReturn="True"
-                     TextWrapping="Wrap"
-                     MinHeight="180" />
+            <TextBox
+                x:Name="LogTextBox"
+                IsReadOnly="True"
+                AcceptsReturn="True"
+                TextWrapping="Wrap"
+                MinHeight="180"
+            />
         </StackPanel>
     </ScrollViewer>
 </Window>

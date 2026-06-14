@@ -113,6 +113,11 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             releaseCollectionNameTemplate
         );
 
+        if (releaseCollectionDetectionMode == ReleaseCollectionDetectionMode.Disabled)
+        {
+            releaseTemplate.CollectionImageUploadConfigTemplates.Clear();
+        }
+
         EnsureUnmanagedArchiveConfigTemplate(releaseTemplate);
 
         await writeRepository.SaveChangesAsync(cancellationToken);
@@ -557,6 +562,76 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         );
 
         writeRepository.Remove(imageUploadConfigTemplate);
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<int> CreateCollectionImageUploadConfigTemplateAsync(
+        int releaseTemplateId,
+        string? name,
+        int imageHosterRegistrationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var releaseTemplate = await writeRepository.GetByIdWithChildrenAsync(
+            releaseTemplateId,
+            cancellationToken
+        );
+
+        if (
+            releaseTemplate.ReleaseCollectionDetectionMode
+            == ReleaseCollectionDetectionMode.Disabled
+        )
+        {
+            throw new InvalidOperationException(
+                "Collection image upload configurations require release collection detection to be enabled."
+            );
+        }
+
+        var collectionImageUploadConfigTemplate = new CollectionImageUploadConfigTemplate
+        {
+            Name = CleanOptional(name),
+            ImageHosterRegistrationId = imageHosterRegistrationId,
+        };
+
+        releaseTemplate.CollectionImageUploadConfigTemplates.Add(
+            collectionImageUploadConfigTemplate
+        );
+        await writeRepository.SaveChangesAsync(cancellationToken);
+
+        return collectionImageUploadConfigTemplate.Id;
+    }
+
+    public async Task UpdateCollectionImageUploadConfigTemplateAsync(
+        int collectionImageUploadConfigTemplateId,
+        string? name,
+        int imageHosterRegistrationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var collectionImageUploadConfigTemplate =
+            await writeRepository.GetCollectionImageUploadConfigTemplateAsync(
+                collectionImageUploadConfigTemplateId,
+                cancellationToken
+            );
+
+        collectionImageUploadConfigTemplate.Name = CleanOptional(name);
+        collectionImageUploadConfigTemplate.ImageHosterRegistrationId = imageHosterRegistrationId;
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteCollectionImageUploadConfigTemplateAsync(
+        int collectionImageUploadConfigTemplateId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var collectionImageUploadConfigTemplate =
+            await writeRepository.GetCollectionImageUploadConfigTemplateAsync(
+                collectionImageUploadConfigTemplateId,
+                cancellationToken
+            );
+
+        writeRepository.Remove(collectionImageUploadConfigTemplate);
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 

@@ -38,6 +38,10 @@ public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite) : IReleaseWr
                 .ThenInclude(u => u.HosterRegistration)
             .Include(t => t.UploadConfigTemplates)
                 .ThenInclude(u => u.LinkCrypterTemplates)
+            .Include(t => t.ImageUploadConfigTemplates)
+                .ThenInclude(i => i.ImageHosterRegistration)
+            .Include(t => t.CollectionImageUploadConfigTemplates)
+                .ThenInclude(i => i.ImageHosterRegistration)
             .FirstAsync(t => t.Id == releaseTemplateId, cancellationToken);
     }
 

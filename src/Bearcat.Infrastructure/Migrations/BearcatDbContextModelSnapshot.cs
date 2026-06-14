@@ -258,6 +258,32 @@ namespace BearCat.Infrastructure.Migrations
                     b.ToTable("BackgroundTaskStates");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.CollectionImageUploadConfigTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ImageHosterRegistrationId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ReleaseTemplateId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImageHosterRegistrationId");
+
+                    b.HasIndex("ReleaseTemplateId");
+
+                    b.ToTable("CollectionImageUploadConfigTemplates");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.CollectionUploadSlot", b =>
                 {
                     b.Property<int>("Id")
@@ -319,9 +345,7 @@ namespace BearCat.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("Type")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasPrecision(4)
@@ -446,16 +470,24 @@ namespace BearCat.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("ReleaseId")
+                    b.Property<int?>("ReleaseCollectionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ReleaseId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ImageHosterRegistrationId");
 
+                    b.HasIndex("ReleaseCollectionId");
+
                     b.HasIndex("ReleaseId");
 
-                    b.ToTable("ImageUploadConfigs");
+                    b.ToTable("ImageUploadConfigs", t =>
+                        {
+                            t.HasCheckConstraint("CK_ImageUploadConfig_Owner", "(\"ReleaseId\" IS NOT NULL) <> (\"ReleaseCollectionId\" IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ImageUploadConfigTemplate", b =>
@@ -1367,6 +1399,25 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("Archive");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.CollectionImageUploadConfigTemplate", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.ImageHosterRegistration", "ImageHosterRegistration")
+                        .WithMany("CollectionImageUploadConfigTemplates")
+                        .HasForeignKey("ImageHosterRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseTemplate", "ReleaseTemplate")
+                        .WithMany("CollectionImageUploadConfigTemplates")
+                        .HasForeignKey("ReleaseTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImageHosterRegistration");
+
+                    b.Navigation("ReleaseTemplate");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.CollectionUploadSlot", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.ReleaseCollection", "ReleaseCollection")
@@ -1397,15 +1448,21 @@ namespace BearCat.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseCollection", "ReleaseCollection")
+                        .WithMany("ImageUploadConfigs")
+                        .HasForeignKey("ReleaseCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("Bearcat.Domain.Entities.Release", "Release")
                         .WithMany("ImageUploadConfigs")
                         .HasForeignKey("ReleaseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("ImageHosterRegistration");
 
                     b.Navigation("Release");
+
+                    b.Navigation("ReleaseCollection");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ImageUploadConfigTemplate", b =>
@@ -1809,6 +1866,8 @@ namespace BearCat.Infrastructure.Migrations
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ImageHosterRegistration", b =>
                 {
+                    b.Navigation("CollectionImageUploadConfigTemplates");
+
                     b.Navigation("ImageUploadConfigTemplates");
 
                     b.Navigation("ImageUploadConfigs");
@@ -1844,6 +1903,8 @@ namespace BearCat.Infrastructure.Migrations
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseCollection", b =>
                 {
+                    b.Navigation("ImageUploadConfigs");
+
                     b.Navigation("Metadata");
 
                     b.Navigation("Releases");
@@ -1866,6 +1927,8 @@ namespace BearCat.Infrastructure.Migrations
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseTemplate", b =>
                 {
                     b.Navigation("ArchiveConfigTemplates");
+
+                    b.Navigation("CollectionImageUploadConfigTemplates");
 
                     b.Navigation("ImageUploadConfigTemplates");
 
