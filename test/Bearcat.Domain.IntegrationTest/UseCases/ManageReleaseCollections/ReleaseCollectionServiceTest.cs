@@ -72,7 +72,12 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         await dbContext.SaveChangesAsync();
 
         // Act
-        var id = await service.CreateAsync("  Hostage S01  ", "hostage.s01", releaseGroup.Id);
+        var id = await service.CreateAsync(
+            "  Hostage S01  ",
+            "hostage.s01",
+            ReleaseContentType.TvShowEpisode,
+            releaseGroup.Id
+        );
 
         // Assert
         dbContext.ChangeTracker.Clear();
@@ -81,7 +86,39 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         collection.ShouldNotBeNull();
         collection.Name.ShouldBe("Hostage S01");
         collection.Key.ShouldBe("hostage.s01");
+        collection.ReleaseContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
         collection.ReleaseGroupId.ShouldBe(releaseGroup.Id);
+    }
+
+    [Test]
+    public async Task UpdateContentTypeAsync_ValidData_UpdatesContentType()
+    {
+        // Arrange
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Series",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        var collection = new ReleaseCollection
+        {
+            ReleaseGroup = releaseGroup,
+            Key = "hostage.s01",
+            Name = "Hostage S01",
+            ReleaseContentType = ReleaseContentType.TvShowEpisode,
+            CreatedAt = DateTime.UtcNow,
+        };
+        dbContext.ReleaseCollections.Add(collection);
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await service.UpdateContentTypeAsync(collection.Id, ReleaseContentType.Other);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var updated = await dbContext.ReleaseCollections.FindAsync(collection.Id);
+
+        updated!.ReleaseContentType.ShouldBe(ReleaseContentType.Other);
     }
 
     [Test]

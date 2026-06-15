@@ -9,5 +9,6 @@ public record ReleaseFolderAutomationReadModel(
     int ReleaseTemplateId,
     string ReleaseTemplateName,
     ReleaseType ReleaseType,
+    ReleaseContentType ReleaseContentType,
     bool IsEnabled
 );

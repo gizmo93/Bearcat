@@ -43,6 +43,37 @@ public partial class ReleaseCollectionDetail(
         isInitialized = true;
     }
 
+    private async Task ShowEditContentTypeDialogAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(EditReleaseCollectionContentTypeDialog.ReleaseCollectionId)] =
+                ReleaseCollectionId,
+            [nameof(EditReleaseCollectionContentTypeDialog.ContentType)] =
+                releaseCollection.ReleaseContentType,
+        };
+
+        var dialog = await dialogService.OpenAsync<EditReleaseCollectionContentTypeDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["ReleaseContentType"],
+                Description = L["EditContentTypeDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (dialog.Cancelled)
+        {
+            return;
+        }
+
+        toastService.Success(L["ReleaseContentTypeUpdated"]);
+        await LoadReleaseCollectionAsync();
+    }
+
     private async Task ResolveMetadataAsync()
     {
         if (isResolvingMetadata)

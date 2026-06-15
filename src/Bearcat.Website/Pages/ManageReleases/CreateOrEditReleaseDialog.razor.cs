@@ -42,6 +42,10 @@ public partial class CreateOrEditReleaseDialog(
         Enum.GetValues<ReleaseType>()
             .Select(type => new SelectOption<ReleaseType>(type, L.Localize(type)));
 
+    private IEnumerable<SelectOption<ReleaseContentType>> ReleaseContentTypeOptions =>
+        Enum.GetValues<ReleaseContentType>()
+            .Select(type => new SelectOption<ReleaseContentType>(type, L.Localize(type)));
+
     private string GetReleaseGroupDisplayText(int releaseGroupId)
     {
         return releaseGroups.FirstOrDefault(group => group.ReleaseGroupId == releaseGroupId)?.Name
@@ -51,6 +55,11 @@ public partial class CreateOrEditReleaseDialog(
     private string GetReleaseTypeDisplayText(ReleaseType releaseType)
     {
         return L.Localize(releaseType);
+    }
+
+    private string GetReleaseContentTypeDisplayText(ReleaseContentType releaseContentType)
+    {
+        return L.Localize(releaseContentType);
     }
 
     protected override async Task OnInitializedAsync()
@@ -78,6 +87,7 @@ public partial class CreateOrEditReleaseDialog(
                 releaseId: ReleaseId.Value,
                 name: formModel.Name,
                 releaseFolderPath: formModel.FolderPath,
+                releaseContentType: formModel.ReleaseContentType,
                 releaseGroupId: formModel.ReleaseGroupId
             );
 
@@ -89,6 +99,7 @@ public partial class CreateOrEditReleaseDialog(
             name: formModel.Name,
             releaseFolderPath: formModel.FolderPath,
             releaseType: formModel.ReleaseType,
+            releaseContentType: formModel.ReleaseContentType,
             releaseGroupId: formModel.ReleaseGroupId
         );
 

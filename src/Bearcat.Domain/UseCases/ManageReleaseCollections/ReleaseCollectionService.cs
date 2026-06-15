@@ -17,6 +17,7 @@ public class ReleaseCollectionService(
     public async Task<int> CreateAsync(
         string name,
         string key,
+        ReleaseContentType releaseContentType,
         int releaseGroupId,
         CancellationToken cancellationToken = default
     )
@@ -25,6 +26,7 @@ public class ReleaseCollectionService(
         {
             Name = CleanRequired(name, nameof(name)),
             Key = CleanRequired(key, nameof(key)),
+            ReleaseContentType = releaseContentType,
             ReleaseGroupId = releaseGroupId,
             CreatedAt = timeProvider.GetLocalNow(),
         };
@@ -46,6 +48,21 @@ public class ReleaseCollectionService(
             cancellationToken
         );
         releaseCollection.Name = CleanRequired(name, nameof(name));
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdateContentTypeAsync(
+        int releaseCollectionId,
+        ReleaseContentType releaseContentType,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var releaseCollection = await writeRepository.GetByIdAsync(
+            releaseCollectionId,
+            cancellationToken
+        );
+        releaseCollection.ReleaseContentType = releaseContentType;
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }

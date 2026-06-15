@@ -167,6 +167,7 @@ public partial class AllReleasesPage(
                 Name = release.Name,
                 FolderPath = release.ReleaseFolderPath,
                 ReleaseType = release.ReleaseType,
+                ReleaseContentType = release.ReleaseContentType,
                 ReleaseGroupId = release.ReleaseGroupId,
                 IsEdit = true,
             },

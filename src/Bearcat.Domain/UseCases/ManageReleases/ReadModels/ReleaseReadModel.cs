@@ -6,6 +6,7 @@ public record ReleaseReadModel(
     int ReleaseId,
     string Name,
     ReleaseType ReleaseType,
+    ReleaseContentType ReleaseContentType,
     int ReleaseGroupId,
     string ReleaseGroupName,
     string ReleaseFolderPath,

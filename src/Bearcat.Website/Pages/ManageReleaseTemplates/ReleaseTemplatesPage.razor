@@ -48,6 +48,14 @@
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="ReleaseTemplateSummaryReadModel" TValue="string"
+                               Header="@L["ReleaseContentType"]"
+                               Property="@(template => template.ReleaseContentType.ToString())"
+                               Width="150px">
+                <CellTemplate Context="template">
+                    <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(template.ReleaseContentType)</BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseTemplateSummaryReadModel" TValue="string"
                                Header="@L["ReleaseGroup"]"
                                Property="@(template => template.ReleaseGroupName)"
                                Width="180px">

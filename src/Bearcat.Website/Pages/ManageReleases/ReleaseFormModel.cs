@@ -8,6 +8,8 @@ public class ReleaseFormModel
 
     public ReleaseType ReleaseType { get; set; } = ReleaseType.Managed;
 
+    public ReleaseContentType ReleaseContentType { get; set; } = ReleaseContentType.Movie;
+
     public int ReleaseGroupId { get; set; }
 
     public string FolderPath { get; set; } = string.Empty;

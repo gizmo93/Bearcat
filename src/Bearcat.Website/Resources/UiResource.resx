@@ -305,6 +305,14 @@
     <data name="ReleaseRootsAndOnlineState" xml:space="preserve"><value>Search and manage releases</value></data>
   <data name="ReleaseResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} releases</value></data>
   <data name="ReleaseSearchPlaceholder" xml:space="preserve"><value>Name or folder path</value></data>
+  <data name="ReleaseContentType" xml:space="preserve"><value>Content type</value></data>
+  <data name="ReleaseContentTypeUpdated" xml:space="preserve"><value>Content type updated</value></data>
+  <data name="EditContentType" xml:space="preserve"><value>Edit content type</value></data>
+  <data name="EditContentTypeDescription" xml:space="preserve"><value>Choose the content type for this release collection.</value></data>
+  <data name="AnyReleaseContentType" xml:space="preserve"><value>Any content type</value></data>
+  <data name="ReleaseContentType.Movie" xml:space="preserve"><value>Movie</value></data>
+  <data name="ReleaseContentType.TvShowEpisode" xml:space="preserve"><value>TV show episode</value></data>
+  <data name="ReleaseContentType.Other" xml:space="preserve"><value>Other</value></data>
   <data name="ReleaseType" xml:space="preserve"><value>Release type</value></data>
   <data name="ReleaseType.Managed" xml:space="preserve"><value>Managed</value></data>
   <data name="ReleaseType.Managed.Description" xml:space="preserve"><value>Bearcat creates the archives and manages uploads automatically</value></data>

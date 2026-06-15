@@ -9,6 +9,7 @@ public class ReleaseCollectionConfiguration : IEntityTypeConfiguration<ReleaseCo
     public void Configure(EntityTypeBuilder<ReleaseCollection> builder)
     {
         builder.HasKey(c => c.Id);
+        builder.Property(c => c.ReleaseContentType).IsRequired();
         builder.Property(c => c.ReleaseGroupId).IsRequired();
         builder.Property(c => c.Key).IsRequired().HasMaxLength(500);
         builder.Property(c => c.Name).IsRequired().HasMaxLength(500);

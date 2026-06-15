@@ -32,6 +32,10 @@ public partial class CreateOrEditReleaseTemplateDialog(
         Enum.GetValues<ReleaseType>()
             .Select(type => new SelectOption<ReleaseType>(type, L.Localize(type)));
 
+    private IEnumerable<SelectOption<ReleaseContentType>> ReleaseContentTypeOptions =>
+        Enum.GetValues<ReleaseContentType>()
+            .Select(type => new SelectOption<ReleaseContentType>(type, L.Localize(type)));
+
     private IEnumerable<
         SelectOption<ReleaseCollectionDetectionMode>
     > ReleaseCollectionDetectionModeOptions =>
@@ -50,6 +54,11 @@ public partial class CreateOrEditReleaseTemplateDialog(
     private string GetReleaseTypeDisplayText(ReleaseType releaseType)
     {
         return L.Localize(releaseType);
+    }
+
+    private string GetReleaseContentTypeDisplayText(ReleaseContentType releaseContentType)
+    {
+        return L.Localize(releaseContentType);
     }
 
     protected override async Task OnInitializedAsync()
@@ -80,6 +89,7 @@ public partial class CreateOrEditReleaseTemplateDialog(
                 FormModel.ReleaseTemplateId.Value,
                 FormModel.Name,
                 FormModel.ReleaseType,
+                FormModel.ReleaseContentType,
                 FormModel.ReleaseGroupId,
                 detectionMode,
                 FormModel.ReleaseCollectionPattern,
@@ -93,6 +103,7 @@ public partial class CreateOrEditReleaseTemplateDialog(
         var releaseTemplateId = await service.CreateAsync(
             FormModel.Name,
             FormModel.ReleaseType,
+            FormModel.ReleaseContentType,
             FormModel.ReleaseGroupId,
             detectionMode,
             FormModel.ReleaseCollectionPattern,

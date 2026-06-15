@@ -49,6 +49,13 @@ public class ReleaseCollectionRepository(
             );
         }
 
+        if (query.ReleaseContentType is not null)
+        {
+            collections = collections.Where(collection =>
+                collection.ReleaseContentType == query.ReleaseContentType.Value
+            );
+        }
+
         if (query.ReleaseGroupId is not null)
         {
             collections = collections.Where(collection =>
@@ -70,6 +77,7 @@ public class ReleaseCollectionRepository(
                 collection.Id,
                 collection.Name,
                 collection.Key,
+                collection.ReleaseContentType,
                 collection.ReleaseGroupId,
                 collection.ReleaseGroup.Name,
                 collection.Releases.Count,
@@ -97,6 +105,7 @@ public class ReleaseCollectionRepository(
                 collection.Id,
                 collection.Name,
                 collection.Key,
+                collection.ReleaseContentType,
                 collection.ReleaseGroupId,
                 ReleaseGroupName = collection.ReleaseGroup.Name,
                 collection.CreatedAt,
@@ -291,6 +300,7 @@ public class ReleaseCollectionRepository(
             ReleaseCollectionId: collection.Id,
             Name: collection.Name,
             Key: collection.Key,
+            ReleaseContentType: collection.ReleaseContentType,
             ReleaseGroupId: collection.ReleaseGroupId,
             ReleaseGroupName: collection.ReleaseGroupName,
             CreatedAt: collection.CreatedAt,

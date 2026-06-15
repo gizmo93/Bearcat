@@ -4,6 +4,8 @@ using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
+using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Localization;
 using BlazorBlueprint.Primitives;
 
 namespace Bearcat.Website.Pages.ManageReleaseCollections;
@@ -18,6 +20,7 @@ public partial class ReleaseCollectionsPage(
     private IReadOnlyList<ReleaseCollectionReadModel> releaseCollections = [];
     private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
     private string? searchTerm;
+    private ReleaseContentType? selectedReleaseContentType;
     private int? selectedReleaseGroupId;
     private int totalCount;
     private int pageIndex;
@@ -29,11 +32,17 @@ public partial class ReleaseCollectionsPage(
     private int FirstResult => totalCount == 0 ? 0 : pageIndex * pageSize + 1;
     private int LastResult => Math.Min(totalCount, (pageIndex + 1) * pageSize);
     private string CollectionsTableKey =>
-        $"{pageIndex}-{pageSize}-{searchTerm}-{selectedReleaseGroupId}";
+        $"{pageIndex}-{pageSize}-{searchTerm}-{selectedReleaseContentType}-{selectedReleaseGroupId}";
 
     private IEnumerable<SelectOption<int?>> ReleaseGroupOptions =>
         new[] { new SelectOption<int?>(null, L["AllReleaseGroups"]) }.Concat(
             releaseGroups.Select(group => new SelectOption<int?>(group.ReleaseGroupId, group.Name))
+        );
+
+    private IEnumerable<SelectOption<ReleaseContentType?>> ReleaseContentTypeOptions =>
+        new SelectOption<ReleaseContentType?>[] { new(null, L["AnyReleaseContentType"]) }.Concat(
+            Enum.GetValues<ReleaseContentType>()
+                .Select(type => new SelectOption<ReleaseContentType?>(type, L.Localize(type)))
         );
 
     private IEnumerable<SelectOption<int>> PageSizeOptions =>
@@ -84,6 +93,7 @@ public partial class ReleaseCollectionsPage(
     private async Task ResetSearchAsync()
     {
         searchTerm = null;
+        selectedReleaseContentType = null;
         selectedReleaseGroupId = null;
         pageIndex = 0;
         await RefreshAsync();
@@ -132,6 +142,7 @@ public partial class ReleaseCollectionsPage(
             PagedResult<ReleaseCollectionReadModel> result = await readRepository.SearchAsync(
                 new ReleaseCollectionSearchQuery(
                     SearchTerm: searchTerm,
+                    ReleaseContentType: selectedReleaseContentType,
                     ReleaseGroupId: selectedReleaseGroupId,
                     PageIndex: pageIndex,
                     PageSize: pageSize

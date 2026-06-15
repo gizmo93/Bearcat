@@ -10,6 +10,11 @@
                            Label="@L["ReleaseType"]"
                            Options="ReleaseTypeOptions" />
 
+        <BbFormFieldSelect TValue="ReleaseContentType?"
+                           @bind-Value="selectedReleaseContentType"
+                           Label="@L["ReleaseContentType"]"
+                           Options="ReleaseContentTypeOptions" />
+
         <BbFormFieldSelect TValue="OnlineState?"
                            @bind-Value="selectedOnlineState"
                            Label="@L["OnlineState"]"
@@ -117,6 +122,7 @@
     private string? archiveFileName;
     private string? uploadId;
     private ReleaseType? selectedReleaseType;
+    private ReleaseContentType? selectedReleaseContentType;
     private OnlineState? selectedOnlineState;
     private int? selectedHosterRegistrationId;
     private string selectedArchiverName = string.Empty;
@@ -129,6 +135,7 @@
         || !string.IsNullOrWhiteSpace(linksDistributedTo)
         || HasActiveAdvancedFilters
         || selectedReleaseType is not null
+        || selectedReleaseContentType is not null
         || selectedOnlineState is not null
         || selectedHosterRegistrationId is not null
         || !string.IsNullOrWhiteSpace(selectedArchiverName)
@@ -164,6 +171,12 @@
         new SelectOption<ReleaseType?>[] { new(null, L["AnyReleaseType"]) }.Concat(
             Enum.GetValues<ReleaseType>()
                 .Select(type => new SelectOption<ReleaseType?>(type, L.Localize(type)))
+        );
+
+    private IEnumerable<SelectOption<ReleaseContentType?>> ReleaseContentTypeOptions =>
+        new SelectOption<ReleaseContentType?>[] { new(null, L["AnyReleaseContentType"]) }.Concat(
+            Enum.GetValues<ReleaseContentType>()
+                .Select(type => new SelectOption<ReleaseContentType?>(type, L.Localize(type)))
         );
 
     private IEnumerable<SelectOption<int?>> HosterRegistrationOptions =>
@@ -216,6 +229,7 @@
         archiveFileName = null;
         uploadId = null;
         selectedReleaseType = null;
+        selectedReleaseContentType = null;
         selectedOnlineState = null;
         selectedHosterRegistrationId = null;
         selectedArchiverName = string.Empty;
@@ -236,6 +250,7 @@
         return new ReleaseSearchQuery(
             SearchTerm: searchTerm,
             ReleaseType: selectedReleaseType,
+            ReleaseContentType: selectedReleaseContentType,
             OnlineState: selectedOnlineState,
             HosterRegistrationId: selectedHosterRegistrationId,
             ArchiverName: string.IsNullOrWhiteSpace(selectedArchiverName)

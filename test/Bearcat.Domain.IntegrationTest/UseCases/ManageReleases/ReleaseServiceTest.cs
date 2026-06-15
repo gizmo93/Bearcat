@@ -60,6 +60,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             "Bearcat.Release.001",
             "/tmp/release",
             ReleaseType.Managed,
+            ReleaseContentType.Movie,
             releaseGroup.Id,
             CancellationToken.None
         );
@@ -74,7 +75,31 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         release.CreatedAt.ShouldBeGreaterThan(default);
         release.ReleaseFolderPath.ShouldBe("/tmp/release");
         release.ReleaseType.ShouldBe(ReleaseType.Managed);
+        release.ReleaseContentType.ShouldBe(ReleaseContentType.Movie);
         release.ReleaseGroupId.ShouldBe(releaseGroup.Id);
+    }
+
+    [Test]
+    public async Task UpdateAsync_ChangesReleaseContentType()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Content type group");
+        var release = await AddReleaseAsync(releaseGroup.Id);
+
+        // Act
+        await service.UpdateAsync(
+            release.Id,
+            "Bearcat.Release.001",
+            release.ReleaseFolderPath,
+            ReleaseContentType.TvShowEpisode,
+            releaseGroup.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Releases.SingleAsync(r => r.Id == release.Id);
+        result.ReleaseContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
     }
 
     [Test]
@@ -90,6 +115,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             release.Id,
             "Bearcat.Release.Updated",
             "/tmp/release-updated",
+            ReleaseContentType.Movie,
             secondGroup.Id,
             CancellationToken.None
         );
@@ -116,6 +142,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             "Bearcat.Release.Unmanaged",
             oldReleaseFolderPath,
             ReleaseType.Unmanaged,
+            ReleaseContentType.Movie,
             firstGroup.Id,
             CancellationToken.None
         );
@@ -125,6 +152,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             releaseId,
             "Bearcat.Release.Updated",
             newReleaseFolderPath,
+            ReleaseContentType.Movie,
             secondGroup.Id,
             CancellationToken.None
         );
@@ -162,6 +190,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             "Bearcat.Release.Unmanaged",
             oldReleaseFolderPath,
             ReleaseType.Unmanaged,
+            ReleaseContentType.Movie,
             firstGroup.Id,
             CancellationToken.None
         );
@@ -171,6 +200,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             releaseId,
             "Bearcat.Release.Updated",
             newReleaseFolderPath,
+            ReleaseContentType.Movie,
             secondGroup.Id,
             CancellationToken.None
         );
@@ -211,6 +241,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             "Bearcat.Release.Unmanaged",
             oldReleaseFolderPath,
             ReleaseType.Unmanaged,
+            ReleaseContentType.Movie,
             firstGroup.Id,
             CancellationToken.None
         );
@@ -218,6 +249,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             releaseId,
             "Bearcat.Release.Updated",
             newReleaseFolderPath,
+            ReleaseContentType.Movie,
             secondGroup.Id,
             CancellationToken.None
         );
@@ -227,6 +259,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             releaseId,
             "Bearcat.Release.Updated",
             oldReleaseFolderPath,
+            ReleaseContentType.Movie,
             secondGroup.Id,
             CancellationToken.None
         );
@@ -267,6 +300,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             "Bearcat.Release.Unmanaged",
             oldReleaseFolderPath,
             ReleaseType.Unmanaged,
+            ReleaseContentType.Movie,
             firstGroup.Id,
             CancellationToken.None
         );
@@ -277,6 +311,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
                 releaseId,
                 "Bearcat.Release.Updated",
                 newReleaseFolderPath,
+                ReleaseContentType.Movie,
                 secondGroup.Id,
                 CancellationToken.None
             )
@@ -381,6 +416,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         release.CreatedAt.ShouldBeGreaterThan(default);
         release.ReleaseFolderPath.ShouldBe("/tmp/releases/Bearcat.Release.Template");
         release.ReleaseType.ShouldBe(ReleaseType.Managed);
+        release.ReleaseContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
         release.ReleaseGroupId.ShouldBe(seed.ReleaseGroupId);
 
         var archiveConfig = release.ArchiveConfigs.Single();
@@ -442,6 +478,8 @@ public class ReleaseServiceTest : BearcatIntegrationTest
 
         release.ReleaseCollection.ShouldNotBeNull();
         release.ReleaseCollection.Name.ShouldBe("Hostage.S01.German.AC3.DL.1080p.Web.x265-FuN.mkv");
+        release.ReleaseContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
+        release.ReleaseCollection.ReleaseContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
         release.ReleaseCollection.UploadSlots.Count.ShouldBe(1);
 
         var uploadSlot = release.ReleaseCollection.UploadSlots.Single();
@@ -525,6 +563,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             "Bearcat.Release.Unmanaged",
             releaseFolderPath,
             ReleaseType.Unmanaged,
+            ReleaseContentType.Movie,
             releaseGroup.Id,
             CancellationToken.None
         );
@@ -609,6 +648,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         {
             Name = "Managed template",
             ReleaseType = ReleaseType.Managed,
+            ReleaseContentType = ReleaseContentType.TvShowEpisode,
             ReleaseGroup = releaseGroup,
             ArchiveConfigTemplates =
             [

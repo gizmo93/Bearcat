@@ -137,21 +137,19 @@
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="ReleaseReadModel" TValue="string"
+                               Header="@L["ReleaseContentType"]"
+                               Property="@(release => release.ReleaseContentType.ToString())"
+                               Width="150px">
+                <CellTemplate Context="release">
+                    <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(release.ReleaseContentType)</BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseReadModel" TValue="string"
                                Header="@L["ReleaseGroup"]"
                                Property="@(release => release.ReleaseGroupName)"
                                Width="180px">
                 <CellTemplate Context="release">
                     <BbBadge Variant="BadgeVariant.Outline">@release.ReleaseGroupName</BbBadge>
-                </CellTemplate>
-            </BbDataTableColumn>
-            <BbDataTableColumn TData="ReleaseReadModel" TValue="string"
-                               Header="@L["FolderPath"]"
-                               Property="@(release => release.ReleaseFolderPath)"
-                               MinWidth="260px">
-                <CellTemplate Context="release">
-                    <p class="bearcat-release-list-path" title="@release.ReleaseFolderPath">
-                        @release.ReleaseFolderPath
-                    </p>
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="ReleaseReadModel" TValue="string"

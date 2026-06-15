@@ -16,6 +16,13 @@
                 <div class="flex flex-wrap items-center gap-2">
                     <BbBadge Variant="BadgeVariant.Outline">@releaseCollection.ReleaseGroupName</BbBadge>
                     <BbBadge Variant="BadgeVariant.Secondary">@releaseCollection.Releases.Count @L["Releases"]</BbBadge>
+                    <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(releaseCollection.ReleaseContentType)</BbBadge>
+                    <BbButton Variant="ButtonVariant.Ghost"
+                              Size="ButtonSize.IconSmall"
+                              AriaLabel="@L["EditContentType"]"
+                              OnClick="ShowEditContentTypeDialogAsync">
+                        <LucideIcon Name="pencil" class="h-4 w-4" />
+                    </BbButton>
                 </div>
                 <p class="truncate text-sm text-muted-foreground" title="@releaseCollection.Key">
                     @releaseCollection.Key

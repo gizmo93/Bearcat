@@ -18,6 +18,7 @@ public class ReleaseService(
         string name,
         string releaseFolderPath,
         ReleaseType releaseType,
+        ReleaseContentType releaseContentType,
         int releaseGroupId,
         CancellationToken cancellationToken = default
     )
@@ -29,6 +30,7 @@ public class ReleaseService(
             Name = name,
             CreatedAt = localNow,
             ReleaseType = releaseType,
+            ReleaseContentType = releaseContentType,
             ReleaseGroupId = releaseGroupId,
             ReleaseFolderPath = releaseFolderPath,
             ArchiveConfigs = [],
@@ -51,6 +53,7 @@ public class ReleaseService(
         int releaseId,
         string name,
         string releaseFolderPath,
+        ReleaseContentType releaseContentType,
         int releaseGroupId,
         CancellationToken cancellationToken = default
     )
@@ -85,6 +88,7 @@ public class ReleaseService(
         }
 
         release.Name = name;
+        release.ReleaseContentType = releaseContentType;
         release.ReleaseGroupId = releaseGroupId;
 
         await writeRepository.SaveChangesAsync(cancellationToken);
@@ -195,6 +199,7 @@ public class ReleaseService(
             Name = releaseName,
             ReleaseFolderPath = releaseFolderPath,
             ReleaseType = releaseType,
+            ReleaseContentType = releaseTemplate.ReleaseContentType,
             ReleaseGroupId = releaseTemplate.ReleaseGroupId,
             ArchiveConfigs = [],
             UploadConfigs = [],

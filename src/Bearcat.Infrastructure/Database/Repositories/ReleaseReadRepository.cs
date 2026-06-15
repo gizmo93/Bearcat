@@ -858,6 +858,7 @@ public class ReleaseReadRepository(
             entity.Id,
             entity.Name,
             entity.ReleaseType,
+            entity.ReleaseContentType,
             entity.ReleaseGroupId,
             entity.ReleaseGroup.Name,
             entity.ReleaseFolderPath,
@@ -894,6 +895,11 @@ public class ReleaseReadRepository(
         if (query.ReleaseType is not null)
         {
             releases = releases.Where(r => r.ReleaseType == query.ReleaseType.Value);
+        }
+
+        if (query.ReleaseContentType is not null)
+        {
+            releases = releases.Where(r => r.ReleaseContentType == query.ReleaseContentType.Value);
         }
 
         if (query.HosterRegistrationId is not null)

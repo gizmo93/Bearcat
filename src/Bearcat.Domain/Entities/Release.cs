@@ -12,6 +12,8 @@ public class Release
 
     public ReleaseType ReleaseType { get; set; }
 
+    public ReleaseContentType ReleaseContentType { get; set; }
+
     public int ReleaseGroupId { get; set; }
 
     public ReleaseGroup ReleaseGroup { get; set; } = null!;

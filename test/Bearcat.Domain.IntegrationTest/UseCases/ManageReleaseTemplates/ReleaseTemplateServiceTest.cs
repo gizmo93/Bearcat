@@ -40,6 +40,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         var result = await service.CreateAsync(
             "Scene template",
             ReleaseType.Managed,
+            ReleaseContentType.Movie,
             releaseGroup.Id,
             CancellationToken.None
         );
@@ -64,6 +65,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         var result = await service.CreateAsync(
             "Unmanaged template",
             ReleaseType.Unmanaged,
+            ReleaseContentType.Movie,
             releaseGroup.Id,
             CancellationToken.None
         );
@@ -167,6 +169,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
             releaseTemplate.Id,
             "Updated template",
             ReleaseType.Managed,
+            ReleaseContentType.Movie,
             secondReleaseGroup.Id,
             CancellationToken.None
         );
@@ -192,6 +195,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
                 releaseTemplate.Id,
                 "Updated template",
                 ReleaseType.Unmanaged,
+                ReleaseContentType.Movie,
                 releaseGroup.Id,
                 CancellationToken.None
             )
@@ -282,6 +286,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         var releaseTemplateId = await service.CreateAsync(
             "Unmanaged template",
             ReleaseType.Unmanaged,
+            ReleaseContentType.Movie,
             releaseGroup.Id,
             CancellationToken.None
         );
@@ -314,6 +319,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         var releaseTemplateId = await service.CreateAsync(
             "Unmanaged template",
             ReleaseType.Unmanaged,
+            ReleaseContentType.Movie,
             releaseGroup.Id,
             CancellationToken.None
         );
@@ -348,6 +354,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         await service.CreateAsync(
             "Unmanaged template",
             ReleaseType.Unmanaged,
+            ReleaseContentType.Movie,
             releaseGroup.Id,
             CancellationToken.None
         );
@@ -375,6 +382,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         var releaseTemplateId = await service.CreateAsync(
             "Unmanaged template",
             ReleaseType.Unmanaged,
+            ReleaseContentType.Movie,
             releaseGroup.Id,
             CancellationToken.None
         );
@@ -685,6 +693,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
             releaseTemplate.Id,
             "Managed template",
             ReleaseType.Managed,
+            ReleaseContentType.Movie,
             releaseGroup.Id,
             ReleaseCollectionDetectionMode.Disabled,
             cancellationToken: CancellationToken.None

@@ -8,6 +8,8 @@ public class ReleaseTemplateFormModel
 
     public ReleaseType ReleaseType { get; set; } = ReleaseType.Managed;
 
+    public ReleaseContentType ReleaseContentType { get; set; } = ReleaseContentType.Movie;
+
     public int ReleaseGroupId { get; set; }
 
     public bool UseReleaseCollections { get; set; }

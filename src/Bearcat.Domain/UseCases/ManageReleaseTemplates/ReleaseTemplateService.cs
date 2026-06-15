@@ -13,6 +13,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
     public Task<int> CreateAsync(
         string name,
         ReleaseType releaseType,
+        ReleaseContentType releaseContentType,
         int releaseGroupId,
         CancellationToken cancellationToken
     )
@@ -20,6 +21,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         return CreateAsync(
             name: name,
             releaseType: releaseType,
+            releaseContentType: releaseContentType,
             releaseGroupId: releaseGroupId,
             releaseCollectionDetectionMode: ReleaseCollectionDetectionMode.Disabled,
             releaseCollectionPattern: null,
@@ -32,6 +34,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
     public async Task<int> CreateAsync(
         string name,
         ReleaseType releaseType,
+        ReleaseContentType releaseContentType,
         int releaseGroupId,
         ReleaseCollectionDetectionMode releaseCollectionDetectionMode =
             ReleaseCollectionDetectionMode.Disabled,
@@ -45,6 +48,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         {
             Name = name,
             ReleaseType = releaseType,
+            ReleaseContentType = releaseContentType,
             ReleaseGroupId = releaseGroupId,
             ReleaseCollectionDetectionMode = releaseCollectionDetectionMode,
             ReleaseCollectionPattern = CleanOptional(releaseCollectionPattern),
@@ -64,6 +68,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         int releaseTemplateId,
         string name,
         ReleaseType releaseType,
+        ReleaseContentType releaseContentType,
         int releaseGroupId,
         CancellationToken cancellationToken
     )
@@ -72,6 +77,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             releaseTemplateId,
             name,
             releaseType,
+            releaseContentType,
             releaseGroupId,
             ReleaseCollectionDetectionMode.Disabled,
             releaseCollectionPattern: null,
@@ -85,6 +91,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         int releaseTemplateId,
         string name,
         ReleaseType releaseType,
+        ReleaseContentType releaseContentType,
         int releaseGroupId,
         ReleaseCollectionDetectionMode releaseCollectionDetectionMode =
             ReleaseCollectionDetectionMode.Disabled,
@@ -105,6 +112,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         }
 
         releaseTemplate.Name = name;
+        releaseTemplate.ReleaseContentType = releaseContentType;
         releaseTemplate.ReleaseGroupId = releaseGroupId;
         releaseTemplate.ReleaseCollectionDetectionMode = releaseCollectionDetectionMode;
         releaseTemplate.ReleaseCollectionPattern = CleanOptional(releaseCollectionPattern);
@@ -153,6 +161,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         {
             Name = name,
             ReleaseType = release.ReleaseType,
+            ReleaseContentType = release.ReleaseContentType,
             ReleaseGroupId = release.ReleaseGroupId,
         };
 

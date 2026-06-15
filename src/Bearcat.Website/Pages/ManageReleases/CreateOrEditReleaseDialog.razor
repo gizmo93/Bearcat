@@ -28,6 +28,12 @@
                                DisplayTextSelector="GetReleaseTypeDisplayText"
                                Options="ReleaseTypeOptions" />
 
+            <BbFormFieldSelect TValue="ReleaseContentType"
+                               @bind-Value="formModel.ReleaseContentType"
+                               Label="@L["ReleaseContentType"]"
+                               DisplayTextSelector="GetReleaseContentTypeDisplayText"
+                               Options="ReleaseContentTypeOptions" />
+
             <div class="space-y-2">
                 <label class="text-sm font-medium">@L["ReleaseFolder"]</label>
                 <div class="bearcat-folder-field">

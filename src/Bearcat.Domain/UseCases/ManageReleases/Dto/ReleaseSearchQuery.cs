@@ -5,6 +5,7 @@ namespace Bearcat.Domain.UseCases.ManageReleases.Dto;
 public record ReleaseSearchQuery(
     string? SearchTerm = null,
     ReleaseType? ReleaseType = null,
+    ReleaseContentType? ReleaseContentType = null,
     OnlineState? OnlineState = null,
     int? HosterRegistrationId = null,
     string? ArchiverName = null,

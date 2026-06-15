@@ -6,6 +6,7 @@ public record ReleaseTemplateSummaryReadModel(
     int ReleaseTemplateId,
     string Name,
     ReleaseType ReleaseType,
+    ReleaseContentType ReleaseContentType,
     int ReleaseGroupId,
     string ReleaseGroupName,
     ReleaseCollectionDetectionMode ReleaseCollectionDetectionMode,

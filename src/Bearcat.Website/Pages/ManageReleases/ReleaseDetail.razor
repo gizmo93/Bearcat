@@ -75,6 +75,14 @@
                 <p class="bearcat-release-path">@release.ReleaseGroupName</p>
             </div>
         </div>
+
+        <div class="bearcat-release-folder">
+            <LucideIcon Name="clapperboard" class="h-4 w-4 shrink-0 text-muted-foreground" />
+            <div class="min-w-0">
+                <p class="text-xs text-muted-foreground">@L["ReleaseContentType"]</p>
+                <p class="bearcat-release-path">@L.Localize(release.ReleaseContentType)</p>
+            </div>
+        </div>
     </div>
 
     <BbTabs Value="@activeTab" ValueChanged="HandleTabChangedAsync" Class="space-y-4">

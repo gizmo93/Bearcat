@@ -15,6 +15,11 @@ public static class LocalizationExtensions
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,
+        ReleaseContentType contentType
+    ) => localizer[$"ReleaseContentType.{contentType}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
         ReleaseCollectionDetectionMode mode
     ) => localizer[$"ReleaseCollectionDetectionMode.{mode}"];
 

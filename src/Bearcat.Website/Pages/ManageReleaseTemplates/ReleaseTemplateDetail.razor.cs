@@ -49,15 +49,17 @@ public partial class ReleaseTemplateDetail(
                 ReleaseTemplateId = releaseTemplate.ReleaseTemplateId,
                 Name = releaseTemplate.Name,
                 ReleaseType = releaseTemplate.ReleaseType,
+                ReleaseContentType = releaseTemplate.ReleaseContentType,
                 ReleaseGroupId = releaseTemplate.ReleaseGroupId,
                 UseReleaseCollections =
                     releaseTemplate.ReleaseCollectionDetectionMode
-                    != ReleaseCollectionDetectionMode.Disabled,
-                ReleaseCollectionDetectionMode =
-                    releaseTemplate.ReleaseCollectionDetectionMode
-                    == ReleaseCollectionDetectionMode.Disabled
-                        ? ReleaseCollectionDetectionMode.SeriesEpisodePattern
-                        : releaseTemplate.ReleaseCollectionDetectionMode,
+                        is ReleaseCollectionDetectionMode.SeriesEpisodePattern
+                            or ReleaseCollectionDetectionMode.CustomRegex,
+                ReleaseCollectionDetectionMode = releaseTemplate.ReleaseCollectionDetectionMode
+                    is ReleaseCollectionDetectionMode.SeriesEpisodePattern
+                        or ReleaseCollectionDetectionMode.CustomRegex
+                    ? releaseTemplate.ReleaseCollectionDetectionMode
+                    : ReleaseCollectionDetectionMode.SeriesEpisodePattern,
                 ReleaseCollectionPattern = releaseTemplate.ReleaseCollectionPattern,
                 ReleaseCollectionKeyTemplate = releaseTemplate.ReleaseCollectionKeyTemplate,
                 ReleaseCollectionNameTemplate = releaseTemplate.ReleaseCollectionNameTemplate,

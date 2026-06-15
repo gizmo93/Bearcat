@@ -1,8 +1,12 @@
+using Bearcat.Domain.ValueObjects;
+
 namespace Bearcat.Domain.Entities;
 
 public class ReleaseCollection
 {
     public int Id { get; set; }
+
+    public ReleaseContentType ReleaseContentType { get; set; }
 
     public int ReleaseGroupId { get; set; }
 

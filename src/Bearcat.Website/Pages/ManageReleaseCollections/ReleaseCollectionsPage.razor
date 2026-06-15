@@ -14,11 +14,16 @@
     </div>
 
     <div class="rounded-md border border-border/70 bg-card p-4">
-        <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(12rem,18rem)_auto] md:items-end">
+        <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(10rem,14rem)_minmax(10rem,14rem)_auto] md:items-end">
             <BbFormFieldInput TValue="string"
                               @bind-Value="searchTerm"
                               Label="@L["Search"]"
                               Placeholder="@L["SearchReleaseCollections"]" />
+
+            <BbFormFieldSelect TValue="ReleaseContentType?"
+                               @bind-Value="selectedReleaseContentType"
+                               Label="@L["ReleaseContentType"]"
+                               Options="ReleaseContentTypeOptions" />
 
             <BbFormFieldSelect TValue="int?"
                                @bind-Value="selectedReleaseGroupId"
@@ -60,6 +65,14 @@
                     <p class="mt-1 truncate text-xs text-muted-foreground" title="@collection.Key">
                         @collection.Key
                     </p>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseCollectionReadModel" TValue="string"
+                               Header="@L["ReleaseContentType"]"
+                               Property="@(collection => collection.ReleaseContentType.ToString())"
+                               Width="150px">
+                <CellTemplate Context="collection">
+                    <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(collection.ReleaseContentType)</BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="ReleaseCollectionReadModel" TValue="string"

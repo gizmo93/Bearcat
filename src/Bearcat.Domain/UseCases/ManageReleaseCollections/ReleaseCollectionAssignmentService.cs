@@ -51,6 +51,7 @@ public class ReleaseCollectionAssignmentService(
                 releaseCollection = new ReleaseCollection
                 {
                     ReleaseGroupId = releaseTemplate.ReleaseGroupId,
+                    ReleaseContentType = releaseTemplate.ReleaseContentType,
                     Key = detectionResult.Key,
                     Name = detectionResult.Name,
                     CreatedAt = timeProvider.GetLocalNow(),
