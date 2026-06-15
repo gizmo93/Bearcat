@@ -249,6 +249,58 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task ProcessAsync_TemplateWithCollectionImageConfig_MaterializesDeduplicatedConfigOnCollection()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var imageHosterRegistration = await AddImageHosterRegistrationAsync();
+        var template = await dbContext.ReleaseTemplates.SingleAsync(template =>
+            template.Id == releaseTemplate.ReleaseTemplateId
+        );
+        template.ReleaseCollectionDetectionMode =
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern;
+        template.CollectionImageUploadConfigTemplates =
+        [
+            new CollectionImageUploadConfigTemplate
+            {
+                ImageHosterRegistrationId = imageHosterRegistration.Id,
+                Name = "Series cover",
+            },
+        ];
+        await dbContext.SaveChangesAsync();
+
+        Directory.CreateDirectory(
+            Path.Combine(
+                tempRootPath,
+                "Bodies.2023.S01E01.German.DL.EAC3.1080p.DV.HDR.NF.WEB.H265-ZeroTwo"
+            )
+        );
+        Directory.CreateDirectory(
+            Path.Combine(
+                tempRootPath,
+                "Bodies.2023.S01E02.German.DL.EAC3.1080p.DV.HDR.NF.WEB.H265-ZeroTwo"
+            )
+        );
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "Bodies.*");
+
+        // Act
+        var result = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(2);
+
+        var releaseCollection = await dbContext
+            .ReleaseCollections.Include(collection => collection.ImageUploadConfigs)
+            .SingleAsync();
+
+        var config = releaseCollection.ImageUploadConfigs.ShouldHaveSingleItem();
+        config.Name.ShouldBe("Series cover");
+        config.ImageHosterRegistrationId.ShouldBe(imageHosterRegistration.Id);
+        config.ReleaseId.ShouldBeNull();
+        config.ReleaseCollectionId.ShouldBe(releaseCollection.Id);
+    }
+
+    [Test]
     public async Task ProcessAsync_AutomationIsDisabled_DoesNotCreateRelease()
     {
         // Arrange
@@ -446,6 +498,22 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
             }
         );
         await dbContext.SaveChangesAsync();
+    }
+
+    private async Task<ImageHosterRegistration> AddImageHosterRegistrationAsync()
+    {
+        var imageHosterRegistration = new ImageHosterRegistration
+        {
+            Name = "ImgBB",
+            ImageHosterClassName = "ImgBb",
+            SerializedConfig = "{}",
+            IsActive = true,
+        };
+
+        dbContext.ImageHosterRegistrations.Add(imageHosterRegistration);
+        await dbContext.SaveChangesAsync();
+
+        return imageHosterRegistration;
     }
 
     private async Task AddReleaseAsync(int releaseGroupId, string releaseFolderPath)

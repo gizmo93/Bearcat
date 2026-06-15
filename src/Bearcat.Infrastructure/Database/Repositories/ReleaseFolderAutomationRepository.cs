@@ -81,6 +81,12 @@ public class ReleaseFolderAutomationRepository(
             .Include(automation => automation.ReleaseTemplate)
                 .ThenInclude(template => template.UploadConfigTemplates)
                     .ThenInclude(uploadTemplate => uploadTemplate.LinkCrypterTemplates)
+            .Include(automation => automation.ReleaseTemplate)
+                .ThenInclude(template => template.ImageUploadConfigTemplates)
+                    .ThenInclude(imageTemplate => imageTemplate.ImageHosterRegistration)
+            .Include(automation => automation.ReleaseTemplate)
+                .ThenInclude(template => template.CollectionImageUploadConfigTemplates)
+                    .ThenInclude(imageTemplate => imageTemplate.ImageHosterRegistration)
             .ToListAsync(cancellationToken);
     }
 
