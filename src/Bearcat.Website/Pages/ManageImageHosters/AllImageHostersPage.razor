@@ -54,9 +54,12 @@
                                Property="@(imageHoster => imageHoster.Name)"
                                Width="120px">
                 <CellTemplate Context="imageHoster">
-                    <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => TryLoginAsync(imageHoster))">
-                        @L["TryLogin"]
-                    </BbButton>
+                    @if (SupportsLogin(imageHoster))
+                    {
+                        <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => TryLoginAsync(imageHoster))">
+                            @L["TryLogin"]
+                        </BbButton>
+                    }
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="ImageHosterRegistrationReadModel" TValue="string"

@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.ImageHoster;
 using Bearcat.ImageHosters.ImgBb.InversionOfControl;
+using Bearcat.ImageHosters.PixHost.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.ImageHosters.InversionOfControl;
@@ -11,6 +12,7 @@ public static class ServiceProviderConfig
         public void AddImageHosters()
         {
             services.AddImgBb();
+            services.AddPixHost();
             services.AddScoped<IImageHosterFactory, ImageHosterFactory>();
         }
     }

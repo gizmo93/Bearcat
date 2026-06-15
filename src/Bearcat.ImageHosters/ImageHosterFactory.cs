@@ -13,7 +13,8 @@ public class ImageHosterFactory(IServiceProvider serviceProvider) : IImageHoster
             .Select(h => new ImageHosterDto(
                 Name: h.Name,
                 ClassName: h.GetType().Name,
-                ConfigurationKeys: h.ConfigurationKeys
+                ConfigurationKeys: h.ConfigurationKeys,
+                SupportsLogin: h is ISupportsLogin
             ))
             .ToList();
     }

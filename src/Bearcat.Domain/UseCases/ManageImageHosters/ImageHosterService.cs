@@ -85,10 +85,18 @@ public class ImageHosterService(
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
         var imageHoster = imageHosterFactory.Get(registration.ImageHosterClassName);
+
+        if (imageHoster is not ISupportsLogin loginCapableImageHoster)
+        {
+            throw new InvalidOperationException(
+                $"Image hoster '{registration.ImageHosterClassName}' does not support login."
+            );
+        }
+
         var config = imageHoster.DeserializeConfig(
             secretProtector.Unprotect(registration.SerializedConfig)
         );
 
-        return await imageHoster.TryLoginAsync(config, cancellationToken);
+        return await loginCapableImageHoster.TryLoginAsync(config, cancellationToken);
     }
 }

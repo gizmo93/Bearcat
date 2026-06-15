@@ -18,9 +18,4 @@ public interface IImageHoster
     string SerializeConfig(IReadOnlyDictionary<string, string> config);
 
     IImageHosterConfig DeserializeConfig(string serializedConfig);
-
-    Task<TryLoginResult> TryLoginAsync(
-        IImageHosterConfig imageHosterConfig,
-        CancellationToken cancellationToken = default
-    );
 }

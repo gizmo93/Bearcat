@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Bearcat.ImageHosters.ImgBb;
 
-public class ImgBb(IImgBbApiClient apiClient, ILogger<ImgBb> logger) : IImageHoster
+public class ImgBb(IImgBbApiClient apiClient, ILogger<ImgBb> logger) : IImageHoster, ISupportsLogin
 {
     private const string LoginTestImageResourceName =
         "Bearcat.ImageHosters.ImgBb.Resources.LoginTestImage.png.base64";

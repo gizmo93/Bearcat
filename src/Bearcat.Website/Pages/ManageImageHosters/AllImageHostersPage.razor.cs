@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.ImageHoster;
 using Bearcat.Domain.UseCases.ManageImageHosters;
 using Bearcat.Domain.UseCases.ManageImageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageImageHosters.Repositories;
@@ -14,11 +15,24 @@ public partial class AllImageHostersPage(
 {
     private IReadOnlyList<ImageHosterRegistrationReadModel> imageHosters = [];
     private ImageHosterService imageHosterService = null!;
+    private HashSet<string> loginCapableClassNames = [];
 
     protected override async Task OnInitializedAsync()
     {
         await LoadImageHostersAsync();
         imageHosterService = ScopedServices.GetRequiredService<ImageHosterService>();
+
+        loginCapableClassNames = ScopedServices
+            .GetRequiredService<IImageHosterFactory>()
+            .GetImageHosters()
+            .Where(imageHoster => imageHoster.SupportsLogin)
+            .Select(imageHoster => imageHoster.ClassName)
+            .ToHashSet();
+    }
+
+    private bool SupportsLogin(ImageHosterRegistrationReadModel imageHoster)
+    {
+        return loginCapableClassNames.Contains(imageHoster.ImageHosterClassName);
     }
 
     private async Task LoadImageHostersAsync()

@@ -29,6 +29,7 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
         dbContext = Database.CreateDbContext();
         imageHosterConfigMock = new Mock<IImageHosterConfig>(MockBehavior.Strict);
         imageHosterMock = new Mock<IImageHoster>(MockBehavior.Strict);
+        imageHosterMock.As<ISupportsLogin>();
         imageHosterFactoryMock = new Mock<IImageHosterFactory>(MockBehavior.Strict);
 
         imageHosterFactoryMock
@@ -137,8 +138,9 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
             .Setup(hoster => hoster.DeserializeConfig(SerializedConfig))
             .Returns(imageHosterConfigMock.Object);
         imageHosterMock
-            .Setup(hoster =>
-                hoster.TryLoginAsync(imageHosterConfigMock.Object, CancellationToken.None)
+            .As<ISupportsLogin>()
+            .Setup(supportsLogin =>
+                supportsLogin.TryLoginAsync(imageHosterConfigMock.Object, CancellationToken.None)
             )
             .ReturnsAsync(loginResult);
 
