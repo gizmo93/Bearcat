@@ -3,192 +3,235 @@ title: "Upload Lifecycle"
 description: "Understand how Bearcat creates, uploads, checks, and refreshes release archives."
 ---
 
-This page explains what happens after you create a release and configure where it should be uploaded.
+This page explains to you everything that happens after you create a release and tell Bearcat where it should go.
 
-If you love complicated flowcharts, [this is the whole upload lifecycle](/Bearcat/images/upload-lifecycle.png).
+If you like long flow charts, you can expand the diagram below for the whole upload lifecycle.
+
+<details>
+<summary>Show the full upload lifecycle diagram</summary>
+
+```mermaid
+flowchart TD
+    %% --- Setup ---
+    Release[Release] --> UploadConfig[Upload configuration]
+    UploadConfig --> Cooldown[Initial upload cooldown]
+    Cooldown --> WFA[Upload record: WaitingForArchive]
+
+    %% --- Archive decision ---
+    WFA --> QReuse{Reusable archive exists?}
+    QReuse -- Yes --> QHosterType{Archive already uploaded to this hoster type?}
+    QReuse -- No --> QManaged{Managed release?}
+
+    QHosterType -- No --> Assign[Assign existing archive]
+    QHosterType -- Yes --> QActive{Reusable archive active in another upload?}
+
+    QActive -- Yes --> WaitTick[Wait for next archive creation tick]
+    WaitTick --> WFA
+    QActive -- No --> QInPlace{Archiver supports in-place hash change?}
+
+    QInPlace -- "Yes (RAR)" --> Append[Append trailing 0-byte to archive files]
+    Append --> Assign
+    QInPlace -- "No (e.g. 7-Zip)" --> QManaged
+
+    QManaged -- Yes --> Create[Create archive with __nonce.txt]
+    QManaged -- "No (bring your own archive)" --> WaitTick
+
+    Create --> QCreated{Archive created?}
+    QCreated -- No --> Failed[Upload: Failed]
+    QCreated -- Yes --> Pending[Upload: Pending]
+    Assign --> Pending
+
+    %% --- Upload to hoster ---
+    Pending --> UploadHoster[Upload to hoster]
+    UploadHoster --> QAllFiles{All files uploaded?}
+    QAllFiles -- Yes --> Completed[Upload: Completed / Online]
+    QAllFiles -- No --> FailedPartial[Upload: Failed / PartiallyOnline]
+
+    %% --- Link crypter containers ---
+    Completed --> QLinkCrypter{Link crypter configured?}
+    QLinkCrypter -- No --> OnlineChecks[Online checks]
+    QLinkCrypter -- Yes --> QPrevContainer{Previous container exists?}
+    QPrevContainer -- Yes --> UpdateContainer[Update existing container]
+    QPrevContainer -- No --> NewContainer[Create new container]
+    UpdateContainer --> OnlineChecks
+    NewContainer --> OnlineChecks
+
+    %% --- Online checks ---
+    OnlineChecks --> QCaptcha{Captcha required?}
+    QCaptcha -- Yes --> CaptchaWait[Mark upload + notify: resolve captcha]
+    CaptchaWait --> OnlineChecks
+    QCaptcha -- No --> QOnline{Files still online?}
+    QOnline -- Yes --> OnlineChecks
+    QOnline -- No --> Offline[Upload: Offline / PartiallyOnline]
+
+    %% --- Cancel (manual) ---
+    UploadHoster -. cancel requested .-> Canceled[Upload: Canceled]
+
+    %% --- Reupload: automatic from Offline/PartiallyOnline, manual also from Failed/Canceled ---
+    Offline --> QReupload{Reupload allowed?}
+    FailedPartial -. manual reupload .-> QReupload
+    Failed -. manual reupload .-> QReupload
+    Canceled -. manual reupload .-> QReupload
+
+    QReupload -- No --> WaitReupload[Wait for manual action or release group threshold]
+    WaitReupload --> QReupload
+    QReupload -- Yes --> NewUpload[New upload record]
+    NewUpload --> WFA
+```
+
+</details>
 
 ## 1. Release and upload configuration
 
-A release only describes the source folder and the setup around it.
-Nothing is uploaded just because the release exists.
+A release on its own is just a description: the source folder and a bit of setup around it. Creating a release does **not** upload anything yet.
 
-Bearcat starts the upload lifecycle once the release has at least one upload configuration.
-An upload configuration connects these things:
+The lifecycle only kicks off once a release has at least one **upload configuration**. An upload configuration connects these pieces together:
 
 - the release
 - the hoster registration
 - the archive configuration
 - optional link crypter configurations
 
-If a release has multiple upload configurations, each one gets its own upload lifecycle.
-For example, one release can upload the same archive setup to Rapidgator and DDownload through two separate upload configurations.
+Each upload configuration runs its own lifecycle. So if you want the same release on two hosters (say Rapidgator and DDownload), you create two upload configurations, and Bearcat handles each one independently.
 
-## 2. Initial upload creation
+Or let's say you want to upload the *same* release to the *same* hoster but in different archive sizes, because you want to post it in different forums, thats also possible.
 
-The first upload is not created immediately when you save an upload configuration.
-Bearcat waits for the "Initial upload cooldown" from "Configurations".
-The default is `5` minutes.
+## 2. The first upload
 
-The "Upload state check" background task creates missing initial uploads.
-When it creates one, the upload starts in the `WaitingForArchive` state.
+Bearcat doesn't create the first upload the instant you save an upload configuration. Instead it waits for the **"Initial upload cooldown"** you set under "Configurations" (default: `5` minutes).
 
-This cooldown gives you a short window to finish the release setup before Bearcat starts archiving and uploading.
-If you set the cooldown to `0`, the initial upload can be created on the next upload state check.
+The **"Upload state check"** background task then picks up any upload configuration that is still missing its first upload and creates one. That upload starts in the `WaitingForArchive` state.
 
-## 3. Archive creation
+The cooldown is there to allow you to finish setting up the release before Bearcat starts archiving and uploading. Also, it prevents problems from folders that aren't yet fully copied.
 
-The "Archive creation" background task looks for uploads in `WaitingForArchive` that do not have an archive yet.
+If you'd rather skip the wait, set the cooldown to `0` and the first upload is created on the very next upload state check.
 
-For each matching upload, Bearcat checks whether there is already a finished archive for the same archive configuration.
-If such an archive exists, Bearcat assigns it to the upload and moves the upload to `Pending`.
+## 3. Creating the archive
 
-For reuploads, Bearcat also checks whether that archive has already been uploaded to the same hoster type before.
-If it has, Bearcat must make sure the archive file hashes change before uploading again.
-When the archiver supports changing hashes in place (only RAR currently), Bearcat appends a harmless trailing byte to the existing archive files before assigning the archive.
-This changes the MD5 hash while keeping the archive extractable.
+The **"Archive creation"** background task looks for uploads in `WaitingForArchive` that don't have an archive yet, and gives each one an archive to upload.
 
-Not every archive format supports this safely.
-If the configured archiver does not support changing hashes in place, Bearcat does not modify the existing files and creates a fresh archive instead.
-If the reusable archive is currently used by another active upload, Bearcat waits and tries again on the next archive creation run.
+**Can an existing archive be reused?** For every matching upload, Bearcat first checks whether a finished archive already exists for the same archive configuration. If one does, it simply assigns that archive and moves the upload to `Pending`, so there is no need to pack the same files twice.
 
-If no reusable archive exists, Bearcat creates a new archive from the release folder.
-The archive configuration decides:
+**Reuploads need a MD5 hash change.** For reuploads, Bearcat also checks whether that archive was already uploaded to the same *type* of hoster before. If so, the archive files need new hashes before they go up again, because hosters often recognise an already-seen file by its MD5 hash.
 
-- where archive files are written
+- If the archiver can change hashes **in place** (currently only RAR), Bearcat appends a single harmless 0-byte to each archive file. That changes the MD5 hash but the archive still works without issues.
+- Before doing that, Bearcat makes sure no other active upload is currently using the archive. If one is, it waits and tries again on the next run.
+- If the archiver *can't* safely change hashes in place (7Zip!), Bearcat leaves the existing files alone and packs a fresh archive instead.
+
+**No reusable archive? Create a new one.** If nothing can be reused, Bearcat builds a new archive from the release folder. The archive configuration decides:
+
+- where the archive files are written
 - which archiver is used
 - the archive file name prefix
 - the archive password
 - the archive part size
 
-If archive creation succeeds, the archive becomes `Created` and the upload becomes `Pending`.
-If archive creation fails, the archive becomes `CreationFailed` and the upload becomes `Failed`.
+If packing succeeds, the archive becomes `Created` and the upload moves to `Pending`. If it fails, the archive becomes `CreationFailed` and the upload becomes `Failed`.
 
-During archive creation, Bearcat writes a small `__nonce.txt` file with a random value into the release folder before packing.
-This gives Bearcat a small, harmless file that can change between archive runs.
-That is important for reuploads, because hosters may recognize an already uploaded archive file by its MD5 hash even if you upload it again later.
+> **Note:** Bearcat only *creates* new archives for **managed** releases. Unmanaged releases ("bring your own archives") always already have an archive configuration and archive, so Bearcat just uses what's there.
 
-How strongly Bearcat changes the generated archive files is controlled by the "Archive repackaging" configuration.
-The default strategy is "Change archive file size by 1 MB".
-It creates the new archive without compression and without solid mode, but increases the archive part size by `1` MB compared to the latest archive for the same archive configuration.
-That usually changes the resulting archive parts while avoiding compression CPU cost.
+### The nonce file and repackaging
 
-The other available strategies are:
+Just before packing, Bearcat writes a tiny `__nonce.txt` file with a random value into the release folder. It's a small, harmless file that changes between runs, and that little change is what helps reuploads come out with different hashes than before.
 
-- "Nonce only, no compression" changes only `__nonce.txt` and packs without compression or solid mode. This has the lowest CPU cost, but the lowest chance that every archive part gets a new MD5 hash.
-- "Solid archive with compression" packs with solid mode and compression. This costs more CPU, but makes the `__nonce.txt` change affect the archive output more reliably.
+How aggressively Bearcat varies the resulting archive files is controlled by the **"Archive repackaging"** configuration. The default is **"Change archive file size by 1 MB"**: it packs without compression and without solid mode, but bumps the archive part size up by `1` MB compared to the latest archive for the same configuration. That reliably shifts the resulting parts without paying for compression CPU time.
 
-If "Archive cleanup" is enabled later and the archive has already been deleted locally, Bearcat cannot reuse that deleted archive for future uploads.
-In that case, a reupload will create a fresh archive if needed.
+The other strategies are:
 
-## 4. Upload to hoster
+- **"Nonce only, no compression"**: only `__nonce.txt` changes, packed without compression or solid mode. Lowest CPU cost, but the lowest chance that *every* part ends up with a new MD5 hash.
+- **"Solid archive with compression"**: packs with solid mode and compression. Costs more CPU, but makes the `__nonce.txt` change ripple through the whole archive much more reliably.
 
-The "Archive upload" background task uploads files for `Pending` uploads.
-While files are being uploaded, the upload state becomes `Uploading`.
+One thing to keep in mind: if "Archive cleanup" later deletes an archive locally, Bearcat can no longer reuse it. A future reupload will simply pack a fresh archive when needed.
 
-When all archive files are uploaded successfully, the upload becomes:
+## 4. Uploading to the hoster
+
+The **"Archive upload"** background task takes care of `Pending` uploads. While files are going up, the upload sits in the `Uploading` state.
+
+When every archive file uploads successfully, the upload becomes:
 
 - `Completed`
 - `Online`
-- marked with an upload timestamp
+- stamped with an upload timestamp
 
-If some files fail to upload, the upload becomes:
+If some files don't make it, the upload becomes:
 
 - `Failed`
 - `PartiallyOnline`
 
-You can follow these runs in the release detail page under the "Uploads" tab.
-The "Overview" tab shows the latest upload per upload configuration.
+You can watch all of this live on the release detail page under the **"Uploads"** tab. The **"Overview"** tab shows the latest upload per upload configuration.
 
 ## 5. Link crypter containers
 
-Link crypter containers are created after a hoster upload has completed successfully.
+Once a hoster upload finishes successfully, Bearcat can wrap the links into link crypter containers.
 
-The "Link crypter container creation" background task processes uploads that are:
+The **"Link crypter container creation"** background task processes uploads that are:
 
 - `Completed`
 - `Online`
 - linked to uploaded hoster files
 - connected to at least one active link crypter configuration
 
-For the first successful upload of an upload configuration, Bearcat creates a new container for each configured link crypter.
-That container contains the hoster links from the completed upload.
+For the first successful upload of an upload configuration, Bearcat creates a fresh container for each configured link crypter, filled with that upload's hoster links. If a container can't be created, Bearcat records the error on the container and raises a notification so you know.
 
-If the container creation fails, Bearcat stores the error on the container and creates a notification.
-
-The lifecycle above runs per release.
-If you manage related releases together, for example a TV show season, a release collection can bundle their links into one shared container instead of one container per release.
-See [Release Collections](/Bearcat/release-collections/) for how that works.
+This runs per release. If you manage related releases together (a TV show season, for example), a release collection can bundle their links into one shared container instead of one per release. See [Release Collections](/Bearcat/release-collections/) for the details.
 
 ## 6. Online checks
 
-The "Upload state check" background task regularly asks hosters whether uploaded files still exist.
-Each file is checked again when it has never been checked before or when its last check is older than about 30 minutes.
+The **"Upload state check"** background task regularly asks hosters whether the uploaded files are still there. A file gets re-checked when it has never been checked, or when its last check is older than 30 minutes.
 
-The upload online state is updated from the file results:
+Bearcat will then classify the upload using the following states:
 
-- `Online` means all checked files are online.
-- `PartiallyOnline` means at least one file is offline, but not all files are offline.
-- `Offline` means all uploaded files are offline.
+- **`Online`**: every checked file is online.
+- **`PartiallyOnline`**: at least one file is offline, but not all of them.
+- **`Offline`**: all uploaded files are offline.
 
-If a hoster check itself fails, Bearcat creates an error notification and keeps the previous online state.
+If the check itself fails (the hoster errors out), Bearcat raises an error notification and keeps the previous online state. And if a hoster asks for a captcha verification first, Bearcat marks the upload accordingly and sends you a notification that asks you to resolve the captcha.
 
 ## 7. Automatic reuploads
 
-Automatic reuploads are controlled by release groups.
-For a release to get automatic reuploads:
+Automatic reuploads are driven by release groups. To get automatically reuploaded, all of the following must be true for the Release:
 
-- its release group must have automatic reuploads enabled
-- the latest relevant upload must be `Offline` or `PartiallyOnline`
-- all uploaded files must have been checked at least once
-- the release group's "Hours until reupload" threshold must be reached
-- there must not already be an online or blocking replacement upload for the same upload configuration
+- its release group has automatic reuploads enabled
+- the latest relevant upload is `Offline` or `PartiallyOnline`
+- every uploaded file has been checked at least once
+- the release group's "Hours until reupload" threshold has been reached
+- there isn't already an online or *blocking* replacement upload for the same upload configuration
 
-Blocking replacement uploads are uploads that are already `Pending`, `Uploading`, `WaitingForArchive`, `Failed` or `CancellationRequested`.
-Bearcat uses this rule to avoid creating many replacement uploads for the same upload configuration at the same time.
+A **blocking** replacement is any other upload for the same upload configuration that is `Online`, or in one of these "in progress" states: `Pending`, `Uploading`, `WaitingForArchive`, `Failed`, or `CancellationRequested`.
 
-When Bearcat schedules a reupload, it creates a new upload record for the same upload configuration.
-The new upload starts again at `WaitingForArchive`.
-From there, the normal lifecycle continues:
+When a reupload is due, Bearcat creates a new upload record for the same upload configuration, starting fresh at `WaitingForArchive`. From there it follows the normal path:
 
 ```text
 WaitingForArchive -> Pending -> Uploading -> Completed
 ```
 
-If an existing archive can still be reused, the reupload can skip creating a new archive.
-Otherwise Bearcat creates a new archive from the release folder.
+If an existing archive can still be reused, the reupload skips packing. Otherwise it builds a new archive from the release folder, just like the first time.
 
 ## 8. Manual reuploads
 
-You can create a manual reupload from the "Uploads" tab.
-Bearcat allows this for uploads that are:
+You can also trigger a reupload yourself from the **"Uploads"** tab. Bearcat allows this for uploads that are:
 
 - `Offline`
 - `PartiallyOnline`
 - `Canceled`
+- `Failed`
 
-The same blocking rules apply as with automatic reuploads.
-If another online or pending replacement already exists for the upload configuration, Bearcat will not create another one.
+The same blocking rules as for automatic reuploads apply: if another online or in-progress replacement already exists for the upload configuration, Bearcat won't create a second one.
 
-Manual reuploads also create a new upload record and then use the normal archive and upload lifecycle.
+A manual reupload creates a new upload record and then follows the normal archive-and-upload lifecycle from there.
 
-## 9. What happens to link crypter containers on reupload?
+## 9. What happens to link crypter containers on a reupload?
 
-On a reupload, Bearcat tries to keep the existing link crypter container link useful.
+On a reupload Bearcat will try to re-use the existing link crypter container, is possible.
 
-If an earlier upload for the same upload configuration already has a container for the same link crypter configuration, Bearcat tries to update that existing container with the new hoster links from the reupload.
-This means the public container URL can stay the same while the links inside it are replaced.
+If an earlier upload for the same upload configuration already has a container for the same link crypter configuration, Bearcat tries to **update** that container with the new hoster links. When that works, the public container URL stays the same and only the links inside it change, which is great for anyone who already shared the link.
 
-If updating the existing container fails, Bearcat falls back to creating a new container.
-In that case, the new upload can get a new container URL.
+If the update fails, Bearcat falls back to creating a brand-new container, and the new upload may end up with a new container URL.
 
-This behavior depends on the link crypter provider and its API.
-Some providers support updating existing containers; if that does not work, Bearcat creates a fresh container instead.
+Whether updating is possible depends on the link crypter provider and its API. Some support it, some don't, and when they don't, Bearcat just creates a fresh container.
 
-## 10. Cleanup after successful uploads
+## 10. Cleanup after a successful upload
 
-Archive cleanup is optional.
-If automatic archive cleanup is disabled, Bearcat keeps local archive folders after upload.
+Cleanup is optional. If automatic archive cleanup is **disabled**, Bearcat keeps the local archive folders around after upload.
 
-If automatic archive cleanup is enabled, the "Archive cleanup" background task deletes local archive folders after all linked uploads have completed.
-This only deletes Bearcat's generated local archive folder.
-It does not delete the release source folder and it does not delete files from the hoster.
+If it's **enabled**, the **"Archive cleanup"** background task deletes the local archive folder once all linked uploads have completed. To be clear about what this touches: it only removes Bearcat's own generated archive folder. It never deletes your release source folder, and it never deletes anything from the hoster.

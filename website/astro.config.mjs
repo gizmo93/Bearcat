@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightThemeNova from 'starlight-theme-nova';
+import mermaid from 'astro-mermaid';
 
 const isGitHubActionsBuild = process.env.GITHUB_ACTIONS === 'true';
 
@@ -10,6 +11,10 @@ export default defineConfig({
 	site: 'https://gizmo93.github.io',
 	base: '/Bearcat',
 	integrations: [
+		mermaid({
+			theme: 'dark',
+			autoTheme: true,
+		}),
 		starlight({
 			title: 'Bearcat Docs',
 			description: 'User documentation for Bearcat.',
