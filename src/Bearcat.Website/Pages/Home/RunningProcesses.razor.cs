@@ -26,7 +26,7 @@ public partial class RunningProcesses(
 
     private bool SomethingIsRunning => runningUploads.Count > 0 || runningArchives.Count > 0;
 
-    private bool autoRefresh;
+    private bool autoRefresh = true;
 
     private bool refreshInProgress;
 
@@ -40,6 +40,7 @@ public partial class RunningProcesses(
         dbRead = ScopedServices.GetRequiredService<IBearcatReadDbContext>();
         navigationManager.LocationChanged += OnLocationChanged;
         await LoadDataAsync();
+        StartAutoRefreshTimer();
     }
 
     private async Task LoadRunningUploadsAsync()
@@ -87,6 +88,11 @@ public partial class RunningProcesses(
         }
 
         autoRefresh = true;
+        StartAutoRefreshTimer();
+    }
+
+    private void StartAutoRefreshTimer()
+    {
         refreshTimer = new Timer(TimeSpan.FromSeconds(3));
         refreshTimer.Elapsed += OnRefreshTimerElapsed;
         refreshTimer.AutoReset = true;
