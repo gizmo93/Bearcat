@@ -302,25 +302,28 @@ public class UploadFilesService(
         CancellationToken cancellationToken
     )
     {
-        var scheduledAny = true;
+        // Priority: fully schedule one upload's files (up to its hoster limit) before
+        // moving on to the next upload. Already-running uploads come first, then oldest
+        // by id, so the order is deterministic instead of depending on dictionary layout.
+        var prioritizedContexts = uploadContexts
+            .Values.Where(context =>
+                !context.CancellationRequested && context.PendingFiles.Count > 0
+            )
+            .OrderByDescending(context => context.RunningFileCount > 0)
+            .ThenBy(context => context.UploadId)
+            .ToList();
 
-        while (scheduledAny)
+        foreach (var context in prioritizedContexts)
         {
-            scheduledAny = false;
-
-            foreach (var context in uploadContexts.Values.ToList())
+            while (context.PendingFiles.Count > 0)
             {
-                if (context.CancellationRequested || context.PendingFiles.Count == 0)
+                if (!await concurrencyService.TryAcquireGlobalSlotAsync(cancellationToken))
                 {
-                    continue;
+                    // Global limit of parallel uploads reached - nothing more to schedule.
+                    return;
                 }
 
                 var fileToUpload = context.PendingFiles.Peek();
-
-                if (!await concurrencyService.TryAcquireGlobalSlotAsync(cancellationToken))
-                {
-                    return;
-                }
 
                 var (hosterSlotAcquired, hosterSemaphore) =
                     await concurrencyService.TryAcquireHosterSlotAsync(
@@ -330,13 +333,14 @@ public class UploadFilesService(
 
                 if (!hosterSlotAcquired)
                 {
+                    // This upload's hoster is at its (smaller) limit. Free the global slot
+                    // and let the remaining capacity be used by the next upload.
                     concurrencyService.ReleaseGlobalSlot();
-                    continue;
+                    break;
                 }
 
                 context.PendingFiles.Dequeue();
                 context.RunningFileCount++;
-                scheduledAny = true;
 
                 runningUploadTasks.Add(
                     fileUploadExecutionService.UploadFileAsync(
