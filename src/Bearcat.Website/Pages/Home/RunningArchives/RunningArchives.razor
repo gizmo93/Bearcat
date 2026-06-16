@@ -10,27 +10,46 @@
                  ShowPagination="@(Archives.Count > 10)"
                  InitialPageSize="10"
                  AriaLabel="@L["RunningArchives"]"
-                 Class="bearcat-data-table rounded-lg border border-border/70">
+                 Class="bearcat-data-table bearcat-running-archives-table rounded-lg border border-border/70">
         <Columns>
             <BbDataTableColumn TData="Archive" TValue="int"
                                Header="@L["Id"]"
                                Property="@(archive => archive.Id)"
-                               Sortable="true" />
+                               Sortable="true">
+                <CellTemplate Context="archive">
+                    <span class="bearcat-mobile-cell-label">@L["Id"]</span>
+                    <span class="tabular-nums">@archive.Id</span>
+                </CellTemplate>
+            </BbDataTableColumn>
             <BbDataTableColumn TData="Archive" TValue="string"
                                Header="@L["Release"]"
                                Property="@(archive => archive.ArchiveConfig.Release.Name)"
                                Sortable="true"
-                               Filterable="true" />
+                               Filterable="true">
+                <CellTemplate Context="archive">
+                    @archive.ArchiveConfig.Release.Name
+                </CellTemplate>
+            </BbDataTableColumn>
             <BbDataTableColumn TData="Archive" TValue="string"
                                Header="@L["ArchiveConfig"]"
                                Property="@(archive => archive.ArchiveConfig.Name)"
                                Sortable="true"
-                               Filterable="true" />
+                               Filterable="true">
+                <CellTemplate Context="archive">
+                    <span class="bearcat-mobile-cell-label">@L["ArchiveConfig"]</span>
+                    @archive.ArchiveConfig.Name
+                </CellTemplate>
+            </BbDataTableColumn>
             <BbDataTableColumn TData="Archive" TValue="string"
                                Header="@L["Archiver"]"
                                Property="@(archive => archive.ArchiveConfig.ArchiverName)"
                                Sortable="true"
-                               Filterable="true" />
+                               Filterable="true">
+                <CellTemplate Context="archive">
+                    <span class="bearcat-mobile-cell-label">@L["Archiver"]</span>
+                    @archive.ArchiveConfig.ArchiverName
+                </CellTemplate>
+            </BbDataTableColumn>
         </Columns>
     </BbDataTable>
 </section>

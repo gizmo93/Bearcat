@@ -729,6 +729,53 @@ a {
     min-height: 4rem;
 }
 
+.bearcat-running-uploads-table :where(table),
+.bearcat-running-archives-table :where(table) {
+    table-layout: auto;
+}
+
+.bearcat-running-uploads-table :where(td),
+.bearcat-running-archives-table :where(td) {
+    overflow-wrap: anywhere;
+}
+
+.bearcat-upload-release-name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+
+.bearcat-total-speed {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    padding: 0.4rem 0.7rem;
+    border-radius: var(--radius);
+    background: color-mix(in oklch, var(--primary) 12%, transparent);
+}
+
+.bearcat-total-speed::before {
+    content: "";
+    width: 0.45rem;
+    height: 0.45rem;
+    flex: none;
+    border-radius: 9999px;
+    background: var(--primary);
+}
+
+.bearcat-total-speed-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--foreground);
+}
+
+.bearcat-total-speed-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--primary);
+}
+
 .bearcat-hoster-login-actions {
     display: flex;
     align-items: center;
@@ -886,6 +933,8 @@ a {
     }
 
     .bearcat-background-tasks-table,
+    .bearcat-running-uploads-table,
+    .bearcat-running-archives-table,
     .bearcat-folder-automations-table,
     .bearcat-release-groups-table,
     .bearcat-release-templates-table,
@@ -896,6 +945,8 @@ a {
     }
 
     .bearcat-background-tasks-table :where(.rounded-md.border),
+    .bearcat-running-uploads-table :where(.rounded-md.border),
+    .bearcat-running-archives-table :where(.rounded-md.border),
     .bearcat-folder-automations-table :where(.rounded-md.border),
     .bearcat-release-groups-table :where(.rounded-md.border),
     .bearcat-release-templates-table :where(.rounded-md.border),
@@ -907,6 +958,8 @@ a {
     }
 
     .bearcat-background-tasks-table :where(table),
+    .bearcat-running-uploads-table :where(table),
+    .bearcat-running-archives-table :where(table),
     .bearcat-folder-automations-table :where(table),
     .bearcat-release-groups-table :where(table),
     .bearcat-release-templates-table :where(table),
@@ -919,6 +972,8 @@ a {
     }
 
     .bearcat-background-tasks-table :where(thead),
+    .bearcat-running-uploads-table :where(thead),
+    .bearcat-running-archives-table :where(thead),
     .bearcat-folder-automations-table :where(thead),
     .bearcat-release-groups-table :where(thead),
     .bearcat-release-templates-table :where(thead),
@@ -929,6 +984,8 @@ a {
     }
 
     .bearcat-background-tasks-table :where(tbody),
+    .bearcat-running-uploads-table :where(tbody),
+    .bearcat-running-archives-table :where(tbody),
     .bearcat-folder-automations-table :where(tbody),
     .bearcat-release-groups-table :where(tbody),
     .bearcat-release-templates-table :where(tbody),
@@ -940,6 +997,8 @@ a {
     }
 
     .bearcat-background-tasks-table :where(tbody tr),
+    .bearcat-running-uploads-table :where(tbody tr),
+    .bearcat-running-archives-table :where(tbody tr),
     .bearcat-folder-automations-table :where(tbody tr),
     .bearcat-release-groups-table :where(tbody tr),
     .bearcat-release-templates-table :where(tbody tr),
@@ -956,6 +1015,8 @@ a {
     }
 
     .bearcat-background-tasks-table :where(tbody tr:hover),
+    .bearcat-running-uploads-table :where(tbody tr:hover),
+    .bearcat-running-archives-table :where(tbody tr:hover),
     .bearcat-folder-automations-table :where(tbody tr:hover),
     .bearcat-release-groups-table :where(tbody tr:hover),
     .bearcat-release-templates-table :where(tbody tr:hover),
@@ -966,6 +1027,8 @@ a {
     }
 
     .bearcat-background-tasks-table :where(tbody td),
+    .bearcat-running-uploads-table :where(tbody td),
+    .bearcat-running-archives-table :where(tbody td),
     .bearcat-folder-automations-table :where(tbody td),
     .bearcat-release-groups-table :where(tbody td),
     .bearcat-release-templates-table :where(tbody td),
@@ -1023,6 +1086,47 @@ a {
     .bearcat-background-tasks-table :where(tbody td:nth-child(7) .max-w-md) {
         max-width: 100%;
         white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .bearcat-running-uploads-table :where(tbody tr) {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+    }
+
+    .bearcat-running-uploads-table :where(tbody td:nth-child(2)) {
+        grid-column: 1;
+        grid-row: 1;
+        color: var(--foreground);
+        font-size: 0.9375rem;
+        font-weight: 600;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+
+    .bearcat-running-uploads-table :where(tbody td:nth-child(5)) {
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: end;
+    }
+
+    .bearcat-running-uploads-table :where(tbody td:nth-child(1)),
+    .bearcat-running-uploads-table :where(tbody td:nth-child(3)),
+    .bearcat-running-uploads-table :where(tbody td:nth-child(4)),
+    .bearcat-running-uploads-table :where(tbody td:nth-child(6)),
+    .bearcat-running-uploads-table :where(tbody td:nth-child(7)) {
+        grid-column: 1 / -1;
+    }
+
+    .bearcat-running-archives-table :where(tbody tr) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .bearcat-running-archives-table :where(tbody td:nth-child(2)) {
+        color: var(--foreground);
+        font-size: 0.9375rem;
+        font-weight: 600;
+        line-height: 1.35;
         overflow-wrap: anywhere;
     }
 

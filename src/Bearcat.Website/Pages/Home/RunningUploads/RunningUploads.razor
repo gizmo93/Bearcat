@@ -10,118 +10,127 @@
         }
         @if (totalUploadSpeed is not null)
         {
-            <div class="inline-flex items-center gap-2 self-start whitespace-nowrap rounded-full bg-primary/10 px-3 py-1.5 text-primary sm:self-auto">
-                <LucideIcon Name="arrow-up" class="h-4 w-4" />
-                <span class="text-sm font-semibold tabular-nums">@totalUploadSpeed</span>
-                <span class="text-xs font-medium uppercase tracking-wide text-primary/70">@L["TotalUploadSpeed"]</span>
+            <div class="bearcat-total-speed self-start sm:self-auto">
+                <span class="bearcat-total-speed-value">@totalUploadSpeed</span>
+                <span class="bearcat-total-speed-label">@L["TotalUploadSpeed"]</span>
             </div>
         }
     </div>
 
-    <div class="overflow-x-auto">
-        <BbDataTable TData="Upload"
-                     Data="SortedUploads"
-                     ShowToolbar="false"
-                     ShowPagination="@(Uploads.Count > 10)"
-                     InitialPageSize="10"
-                     AriaLabel="@L["RunningUploads"]"
-                     Class="bearcat-data-table rounded-lg border border-border/70">
-            <Columns>
-                <BbDataTableColumn TData="Upload" TValue="int"
-                                   Header="@L["Id"]"
-                                   Property="@(upload => upload.Id)"
-                                   Sortable="true"
-                                   MinWidth="72px" />
-                <BbDataTableColumn TData="Upload" TValue="string"
-                                   Header="@L["Release"]"
-                                   Property="@(upload => upload.UploadConfig.Release.Name)"
-                                   Sortable="true"
-                                   Filterable="true"
-                                   MinWidth="260px">
-                    <CellTemplate Context="upload">
-                        <a class="font-medium text-primary transition hover:underline" href="@($"/releases/{upload.UploadConfig.ReleaseId}")">
-                            @upload.UploadConfig.Release.Name
-                        </a>
-                    </CellTemplate>
-                </BbDataTableColumn>
-                <BbDataTableColumn TData="Upload" TValue="string"
-                                   Header="@L["UploadConfig"]"
-                                   Property="@(upload => upload.UploadConfig.Name)"
-                                   Sortable="true"
-                                   Filterable="true"
-                                   MinWidth="160px" />
-                <BbDataTableColumn TData="Upload" TValue="string"
-                                   Header="@L["Hoster"]"
-                                   Property="@(upload => upload.UploadConfig.HosterRegistration.Name)"
-                                   Sortable="true"
-                                   Filterable="true"
-                                   MinWidth="150px" />
-                <BbDataTableColumn TData="Upload" TValue="string"
-                                   Header="@L["State"]"
-                                   Property="@(upload => upload.UploadState.ToString())"
-                                   Sortable="true"
-                                   MinWidth="130px">
-                    <CellTemplate Context="upload">
-                        <BbBadge Variant="@GetUploadVariant(upload.UploadState)">
-                            @L.Localize(upload.UploadState)
-                        </BbBadge>
-                    </CellTemplate>
-                </BbDataTableColumn>
-                <BbDataTableColumn TData="Upload" TValue="double"
-                                   Header="@L["Progress"]"
-                                   Property="@(GetUploadProgress)"
-                                   Sortable="true"
-                                   MinWidth="220px">
-                    <CellTemplate Context="upload">
-                        @{
-                            var percentage = GetUploadProgress(upload);
-                            var isExpanded = showDetailIds.Contains(upload.Id);
-                        }
-                        @if (upload.UploadState is UploadState.Uploading or UploadState.CancellationRequested)
-                        {
-                            var uploadSpeed = FormatUploadSpeed(upload.Id);
-                            <div class="flex items-center justify-end gap-3">
-                                <div class="flex min-w-[9rem] items-center gap-3">
-                                    <BbProgress Value="percentage" Class="w-full" />
-                                    <span class="w-12 text-right text-xs text-muted-foreground">@percentage%</span>
-                                </div>
-                                @if (uploadSpeed is not null)
-                                {
-                                    <span class="w-20 text-right text-xs font-medium tabular-nums text-muted-foreground">@uploadSpeed</span>
-                                }
-                                <BbButton Variant="ButtonVariant.Ghost"
-                                          Size="ButtonSize.IconSmall"
-                                          AriaLabel="@L["ToggleUploadDetails"]"
-                                          OnClick="@(_ => ToggleShowUploadDetails(upload.Id))">
-                                    <LucideIcon Name="@(isExpanded ? "chevron-up" : "chevron-down")" class="h-4 w-4" />
-                                </BbButton>
+    <BbDataTable TData="Upload"
+                 Data="SortedUploads"
+                 ShowToolbar="false"
+                 ShowPagination="@(Uploads.Count > 10)"
+                 InitialPageSize="10"
+                 AriaLabel="@L["RunningUploads"]"
+                 Class="bearcat-data-table bearcat-running-uploads-table rounded-lg border border-border/70">
+        <Columns>
+            <BbDataTableColumn TData="Upload" TValue="int"
+                               Header="@L["Id"]"
+                               Property="@(upload => upload.Id)"
+                               Sortable="true">
+                <CellTemplate Context="upload">
+                    <span class="bearcat-mobile-cell-label">@L["Id"]</span>
+                    <span class="tabular-nums">@upload.Id</span>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="Upload" TValue="string"
+                               Header="@L["Release"]"
+                               Property="@(upload => upload.UploadConfig.Release.Name)"
+                               Sortable="true"
+                               Filterable="true">
+                <CellTemplate Context="upload">
+                    <a class="bearcat-upload-release-name text-primary transition hover:underline" href="@($"/releases/{upload.UploadConfig.ReleaseId}")">
+                        @upload.UploadConfig.Release.Name
+                    </a>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="Upload" TValue="string"
+                               Header="@L["UploadConfig"]"
+                               Property="@(upload => upload.UploadConfig.Name)"
+                               Sortable="true"
+                               Filterable="true">
+                <CellTemplate Context="upload">
+                    <span class="bearcat-mobile-cell-label">@L["UploadConfig"]</span>
+                    @upload.UploadConfig.Name
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="Upload" TValue="string"
+                               Header="@L["Hoster"]"
+                               Property="@(upload => upload.UploadConfig.HosterRegistration.Name)"
+                               Sortable="true"
+                               Filterable="true">
+                <CellTemplate Context="upload">
+                    <span class="bearcat-mobile-cell-label">@L["Hoster"]</span>
+                    @upload.UploadConfig.HosterRegistration.Name
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="Upload" TValue="string"
+                               Header="@L["State"]"
+                               Property="@(upload => upload.UploadState.ToString())"
+                               Sortable="true">
+                <CellTemplate Context="upload">
+                    <BbBadge Variant="@GetUploadVariant(upload.UploadState)">
+                        @L.Localize(upload.UploadState)
+                    </BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="Upload" TValue="double"
+                               Header="@L["Progress"]"
+                               Property="@(GetUploadProgress)"
+                               Sortable="true"
+                               MinWidth="200px">
+                <CellTemplate Context="upload">
+                    @{
+                        var percentage = GetUploadProgress(upload);
+                        var isExpanded = showDetailIds.Contains(upload.Id);
+                    }
+                    @if (upload.UploadState is UploadState.Uploading or UploadState.CancellationRequested)
+                    {
+                        var uploadSpeed = FormatUploadSpeed(upload.Id);
+                        <span class="bearcat-mobile-cell-label">@L["Progress"]</span>
+                        <div class="flex items-center gap-3 sm:justify-end">
+                            <div class="flex min-w-[9rem] flex-1 items-center gap-3 sm:flex-none">
+                                <BbProgress Value="percentage" Class="w-full" />
+                                <span class="w-12 text-right text-xs text-muted-foreground">@percentage%</span>
                             </div>
-                        }
-                        else
-                        {
-                            <span class="text-xs text-muted-foreground">-</span>
-                        }
-                    </CellTemplate>
-                </BbDataTableColumn>
-                <BbDataTableColumn TData="Upload" TValue="int"
-                                   Header=""
-                                   Property="@(upload => upload.Id)"
-                                   Width="56px">
-                    <CellTemplate Context="upload">
-                        <div class="flex justify-end">
+                            @if (uploadSpeed is not null)
+                            {
+                                <span class="w-20 text-right text-xs font-medium tabular-nums text-muted-foreground">@uploadSpeed</span>
+                            }
                             <BbButton Variant="ButtonVariant.Ghost"
                                       Size="ButtonSize.IconSmall"
-                                      Disabled="@(!CanCancelUpload(upload))"
-                                      AriaLabel="@L["CancelUpload"]"
-                                      OnClick="@(() => CancelUploadAsync(upload))">
-                                <LucideIcon Name="ban" class="h-4 w-4" />
+                                      AriaLabel="@L["ToggleUploadDetails"]"
+                                      OnClick="@(_ => ToggleShowUploadDetails(upload.Id))">
+                                <LucideIcon Name="@(isExpanded ? "chevron-up" : "chevron-down")" class="h-4 w-4" />
                             </BbButton>
                         </div>
-                    </CellTemplate>
-                </BbDataTableColumn>
-            </Columns>
-        </BbDataTable>
-    </div>
+                    }
+                    else
+                    {
+                        <span class="bearcat-mobile-cell-label">@L["Progress"]</span>
+                        <span class="text-xs text-muted-foreground">-</span>
+                    }
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="Upload" TValue="int"
+                               Header=""
+                               Property="@(upload => upload.Id)"
+                               Width="56px">
+                <CellTemplate Context="upload">
+                    <div class="flex justify-end">
+                        <BbButton Variant="ButtonVariant.Ghost"
+                                  Size="ButtonSize.IconSmall"
+                                  Disabled="@(!CanCancelUpload(upload))"
+                                  AriaLabel="@L["CancelUpload"]"
+                                  OnClick="@(() => CancelUploadAsync(upload))">
+                            <LucideIcon Name="ban" class="h-4 w-4" />
+                        </BbButton>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+    </BbDataTable>
 
     @if (ExpandedUploads.Count > 0)
     {
