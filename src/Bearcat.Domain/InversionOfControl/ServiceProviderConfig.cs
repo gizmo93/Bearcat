@@ -27,6 +27,7 @@ using Bearcat.Domain.UseCases.ManageSeriesDatabases;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploads;
+using Bearcat.Domain.UseCases.ManageUploads.Progress;
 using Microsoft.Extensions.DependencyInjection;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -66,6 +67,7 @@ public static class ServiceProviderConfig
             services.AddScoped<FileUploadExecutionService>();
             services.AddScoped<MissingFileValidationService>();
             services.AddScoped<UploadConcurrencyService>();
+            services.AddSingleton<IUploadProgressTracker, UploadProgressTracker>();
             services.AddScoped<UploadStateService>();
             services.AddScoped<UploadStateService>();
             services.AddScoped<INotificationService, NotificationService>();

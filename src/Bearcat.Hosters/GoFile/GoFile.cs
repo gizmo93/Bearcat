@@ -5,6 +5,7 @@ using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.GoFile.Api;
 using Bearcat.Hosters.GoFile.Api.UploadFile;
+using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.GoFile;
@@ -22,6 +23,7 @@ public class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) : IHoste
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
+        IUploadProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -53,7 +55,7 @@ public class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) : IHoste
                 await using var stream = File.OpenRead(fileDto.FullFileName);
                 var response = await apiClient.UploadFileAsync(
                     apiKey: config.ApiKey,
-                    fileStream: stream,
+                    fileStream: new CountingStream(stream, progress),
                     fileName: fileName,
                     folderId: fileDto.FolderId,
                     cancellationToken: cancellationToken

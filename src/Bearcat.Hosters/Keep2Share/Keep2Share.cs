@@ -6,6 +6,7 @@ using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Keep2Share.Api;
+using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.Keep2Share;
@@ -28,6 +29,7 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
+        IUploadProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -44,7 +46,12 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
                     attempt
                 );
 
-                var response = await UploadFileInternalAsync(fileDto, config, cancellationToken);
+                var response = await UploadFileInternalAsync(
+                    fileDto: fileDto,
+                    config: config,
+                    progress: progress,
+                    cancellationToken: cancellationToken
+                );
 
                 var success =
                     response.Success == true
@@ -180,7 +187,7 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
             var response = await apiClient.LoginAsync(config, cancellationToken);
 
             return new TryLoginResult(
-                IsSuccess: response.Status == "success" && response.Code == (int)HttpStatusCode.OK,
+                IsSuccess: response is { Status: "success", Code: (int)HttpStatusCode.OK },
                 ErrorMessage: response.Status == "success" ? null : response.Message
             );
         }
@@ -225,6 +232,7 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
     private async Task<UploadFileResponse> UploadFileInternalAsync(
         FileDto fileDto,
         Keep2ShareConfig config,
+        IUploadProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -238,7 +246,7 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
 
         return await apiClient.UploadFileAsync(
             uploadFormData: uploadFormData,
-            stream: stream,
+            stream: new CountingStream(stream, progress),
             fileName: Path.GetFileName(fileDto.FullFileName),
             cancellationToken: cancellationToken
         );

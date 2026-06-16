@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.Keep2Share;
@@ -81,7 +82,12 @@ public class Keep2ShareTest
             );
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();
@@ -142,7 +148,12 @@ public class Keep2ShareTest
             );
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
@@ -169,7 +180,12 @@ public class Keep2ShareTest
             .ThrowsAsync(new HttpRequestException("temporary upload error"));
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();
@@ -214,7 +230,12 @@ public class Keep2ShareTest
 
         // Act + Assert
         await Should.ThrowAsync<CaptchaVerificationRequiredException>(() =>
-            service.UploadFileAsync(fileDto, config, CancellationToken.None)
+            service.UploadFileAsync(
+                fileDto,
+                config,
+                NullUploadProgress.Instance,
+                CancellationToken.None
+            )
         );
         apiClientMock.Verify(
             x => x.RequestUploadAsync(config, null, It.IsAny<CancellationToken>()),

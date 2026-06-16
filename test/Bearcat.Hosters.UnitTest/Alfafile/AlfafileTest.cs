@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.Alfafile;
 using Bearcat.Hosters.Alfafile.Api;
@@ -81,7 +82,12 @@ public class AlfafileTest
             .ReturnsAsync(uploadResponse);
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();
@@ -122,7 +128,12 @@ public class AlfafileTest
             .ReturnsAsync(uploadRequest);
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
@@ -167,7 +178,12 @@ public class AlfafileTest
             .ReturnsAsync(failedRequest);
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();

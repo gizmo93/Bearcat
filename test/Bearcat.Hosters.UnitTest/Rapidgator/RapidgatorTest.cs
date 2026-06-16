@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.Rapidgator;
 using Bearcat.Hosters.Rapidgator.Api;
@@ -134,7 +135,12 @@ public class RapidgatorTest
             );
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();
@@ -263,7 +269,12 @@ public class RapidgatorTest
             );
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
@@ -315,7 +326,12 @@ public class RapidgatorTest
             );
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();

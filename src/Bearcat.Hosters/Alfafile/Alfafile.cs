@@ -8,6 +8,7 @@ using Bearcat.Hosters.Alfafile.Api;
 using Bearcat.Hosters.Alfafile.Api.File;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Rapidgator.Exceptions;
+using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.Alfafile;
@@ -28,6 +29,7 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger) : 
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
+        IUploadProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -38,7 +40,12 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger) : 
         {
             try
             {
-                return await UploadFileInternalAsync(fileDto, config, cancellationToken);
+                return await UploadFileInternalAsync(
+                    fileDto: fileDto,
+                    config: config,
+                    progress: progress,
+                    cancellationToken: cancellationToken
+                );
             }
             catch (Exception ex)
             {
@@ -166,6 +173,7 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger) : 
     private async Task<UploadFileResult> UploadFileInternalAsync(
         FileDto fileDto,
         AlfafileConfig config,
+        IUploadProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -203,7 +211,7 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger) : 
 
         var uploadResult = await apiClient.UploadFileAsync(
             uploadUrl: requestedUpload.Url,
-            stream: stream,
+            stream: new CountingStream(stream, progress),
             fileName: Path.GetFileName(fileDto.FullFileName),
             cancellationToken: cancellationToken
         );

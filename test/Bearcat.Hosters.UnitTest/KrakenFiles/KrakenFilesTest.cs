@@ -1,4 +1,5 @@
 using System.Net;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.KrakenFiles;
 using Bearcat.Hosters.KrakenFiles.Api;
@@ -60,7 +61,12 @@ public class KrakenFilesTest
         try
         {
             // Act
-            var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+            var result = await service.UploadFileAsync(
+                fileDto,
+                config,
+                NullUploadProgress.Instance,
+                CancellationToken.None
+            );
 
             // Assert
             result.IsSuccess.ShouldBeTrue();

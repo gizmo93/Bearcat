@@ -31,6 +31,7 @@ public abstract class XFilesharingHosterBase<TConfig>(
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
+        IUploadProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -45,6 +46,7 @@ public abstract class XFilesharingHosterBase<TConfig>(
                 var response = await UploadFileInternalAsync(
                     fileDto: fileDto,
                     config: config,
+                    progress: progress,
                     cancellationToken: cancellationToken
                 );
 
@@ -218,6 +220,7 @@ public abstract class XFilesharingHosterBase<TConfig>(
     private async Task<UploadFileResponse> UploadFileInternalAsync(
         FileDto fileDto,
         TConfig config,
+        IUploadProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -242,7 +245,7 @@ public abstract class XFilesharingHosterBase<TConfig>(
         await using var stream = File.OpenRead(fileDto.FullFileName);
 
         var uploadResponse = await apiClient.UploadFileAsync(
-            stream: stream,
+            stream: new CountingStream(stream, progress),
             uploadUrl: uploadRequest.UploadUrl,
             sessionId: uploadRequest.SessionId,
             fileName: Path.GetFileName(fileDto.FullFileName),

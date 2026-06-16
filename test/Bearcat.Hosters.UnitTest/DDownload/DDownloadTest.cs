@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.DDownload;
 using Bearcat.Hosters.DDownload.Api;
@@ -71,7 +72,12 @@ public class DDownloadTest
             .ReturnsAsync(new UploadFileResponse { FileCode = "abc123", FileStatus = "OK" });
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();
@@ -126,7 +132,12 @@ public class DDownloadTest
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
@@ -185,7 +196,12 @@ public class DDownloadTest
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
@@ -237,7 +253,12 @@ public class DDownloadTest
             );
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();

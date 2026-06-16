@@ -3,13 +3,15 @@ using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
+using Bearcat.Domain.UseCases.ManageUploads.Progress;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Domain.UseCases.ManageUploads;
 
 public class FileUploadExecutionService(
     ILogger<FileUploadExecutionService> logger,
-    HosterCaptchaVerificationService captchaVerificationService
+    HosterCaptchaVerificationService captchaVerificationService,
+    IUploadProgressTracker progressTracker
 )
 {
     public TimeSpan FileUploadTimeout { get; set; } = Timeout.InfiniteTimeSpan;
@@ -44,6 +46,7 @@ public class FileUploadExecutionService(
             var result = await fileToUpload.Hoster.UploadFileAsync(
                 fileDto: fileDto,
                 hosterConfig: fileToUpload.HosterConfig,
+                progress: new UploadProgressReporter(progressTracker, fileToUpload.UploadId),
                 cancellationToken: fileUploadCancellationTokenSource.Token
             );
 

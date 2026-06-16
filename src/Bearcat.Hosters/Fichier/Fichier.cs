@@ -4,6 +4,7 @@ using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Fichier.Api;
+using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.Fichier;
@@ -21,6 +22,7 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger) : IHo
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
+        IUploadProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -40,7 +42,7 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger) : IHo
                 await using var stream = File.OpenRead(fileDto.FullFileName);
                 var response = await apiClient.UploadFileAsync(
                     config: config,
-                    stream: stream,
+                    stream: new CountingStream(stream, progress),
                     fileName: Path.GetFileName(fileDto.FullFileName),
                     folderId: fileDto.FolderId,
                     cancellationToken: cancellationToken

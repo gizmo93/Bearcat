@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.GoFile;
 using Bearcat.Hosters.GoFile.Api;
@@ -71,7 +72,12 @@ public class GoFileTest
             );
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();
@@ -116,7 +122,12 @@ public class GoFileTest
         var config = new GoFileConfig { ApiKey = "api-key" };
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.IsSuccess.ShouldBeFalse();
@@ -150,7 +161,12 @@ public class GoFileTest
             .ThrowsAsync(new InvalidOperationException("upload failed"));
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();

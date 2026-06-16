@@ -3,6 +3,7 @@ using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
+using Bearcat.Domain.UseCases.ManageUploads.Progress;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -19,7 +20,8 @@ public class UploadFilesService(
     MissingFileValidationService missingFileValidationService,
     UploadFinalizationService finalizationService,
     FileUploadExecutionService fileUploadExecutionService,
-    UploadConcurrencyService concurrencyService
+    UploadConcurrencyService concurrencyService,
+    IUploadProgressTracker progressTracker
 )
 {
     public TimeSpan UploadQueuePollDelay { get; set; } = TimeSpan.FromSeconds(10);
@@ -214,6 +216,7 @@ public class UploadFilesService(
 
             upload.UploadState = UploadState.Uploading;
             uploadContexts[upload.Id] = context;
+            progressTracker.StartTracking(upload.Id);
         }
 
         await repository.SaveChangesAsync(cancellationToken);
@@ -423,6 +426,7 @@ public class UploadFilesService(
         if (finalizationService.TryFinalizeUpload(context))
         {
             uploadContexts.Remove(context.UploadId);
+            progressTracker.StopTracking(context.UploadId);
         }
 
         await repository.SaveChangesAsync(cancellationToken);
@@ -549,6 +553,7 @@ public class UploadFilesService(
                 if (finalizationService.TryFinalizeUpload(context))
                 {
                     uploadContexts.Remove(uploadId);
+                    progressTracker.StopTracking(uploadId);
                     hasChanges = true;
                 }
 

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.Shared.XFilesharing.Api;
 using Bearcat.Hosters.Uploady;
@@ -65,7 +66,12 @@ public class UploadyTest
             .ReturnsAsync(new UploadFileResponse { FileCode = "abc123", FileStatus = "OK" });
 
         // Act
-        var result = await service.UploadFileAsync(fileDto, config, CancellationToken.None);
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
 
         // Assert
         result.ShouldNotBeNull();

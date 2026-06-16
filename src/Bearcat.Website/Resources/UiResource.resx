@@ -374,6 +374,7 @@
   <data name="ToggleVisibility" xml:space="preserve"><value>Toggle visibility</value></data>
   <data name="TotalConfigured" xml:space="preserve"><value>total configured</value></data>
   <data name="TotalReleases" xml:space="preserve"><value>Total releases</value></data>
+  <data name="TotalUploadSpeed" xml:space="preserve"><value>Total</value></data>
   <data name="TryLogin" xml:space="preserve"><value>Try login</value></data>
   <data name="UnhandledError" xml:space="preserve"><value>An unhandled error has occurred.</value></data>
   <data name="Upload" xml:space="preserve"><value>Upload</value></data>

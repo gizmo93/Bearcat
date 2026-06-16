@@ -4,6 +4,7 @@ using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Nitroflare.Api;
+using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Hosters.Nitroflare;
@@ -23,6 +24,7 @@ public class Nitroflare(INitroflareApiClient apiClient, ILogger<Nitroflare> logg
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
+        IUploadProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -42,7 +44,7 @@ public class Nitroflare(INitroflareApiClient apiClient, ILogger<Nitroflare> logg
                 await using var stream = File.OpenRead(fileDto.FullFileName);
                 var response = await apiClient.UploadFileAsync(
                     config: config,
-                    fileStream: stream,
+                    fileStream: new CountingStream(stream, progress),
                     fileName: Path.GetFileName(fileDto.FullFileName),
                     cancellationToken: cancellationToken
                 );

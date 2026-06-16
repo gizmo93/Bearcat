@@ -8,6 +8,7 @@
     <ItemGroup>
         <PackageReference Include="BlazorBlueprint.Components" />
         <PackageReference Include="BlazorBlueprint.Icons.Lucide" />
+        <PackageReference Include="Humanizer" />
     </ItemGroup>
 
     <ItemGroup>

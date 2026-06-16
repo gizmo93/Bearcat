@@ -1,5 +1,6 @@
 using System.Timers;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageUploads.Progress;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Microsoft.AspNetCore.Components;
@@ -10,9 +11,14 @@ using Timer = System.Timers.Timer;
 
 namespace Bearcat.Website.Pages.Home;
 
-public partial class RunningProcesses(NavigationManager navigationManager)
+public partial class RunningProcesses(
+    NavigationManager navigationManager,
+    IUploadProgressTracker uploadProgressTracker
+)
 {
     private IReadOnlyList<Upload> runningUploads = [];
+
+    private IReadOnlyDictionary<int, double> uploadSpeeds = new Dictionary<int, double>();
 
     private IReadOnlyList<Archive> runningArchives = [];
 
@@ -55,6 +61,11 @@ public partial class RunningProcesses(NavigationManager navigationManager)
                 || u.UploadState == UploadState.CancellationRequested
             )
             .ToListAsync();
+
+        uploadSpeeds = runningUploads
+            .Select(upload => (upload.Id, Snapshot: uploadProgressTracker.Get(upload.Id)))
+            .Where(entry => entry.Snapshot is not null)
+            .ToDictionary(entry => entry.Id, entry => entry.Snapshot!.BytesPerSecond);
     }
 
     private async Task LoadRunningArchivesAsync()

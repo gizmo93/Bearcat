@@ -7,6 +7,7 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
+using Bearcat.Domain.UseCases.ManageUploads.Progress;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -83,9 +84,11 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             Mock.Of<ILogger<UploadFinalizationService>>(),
             notificationService
         );
+        var progressTracker = new UploadProgressTracker();
         var fileUploadExecutionService = new FileUploadExecutionService(
             Mock.Of<ILogger<FileUploadExecutionService>>(),
-            captchaVerificationService
+            captchaVerificationService,
+            progressTracker
         );
         var missingFileValidationService = new MissingFileValidationService(
             uploadFilesRepository,
@@ -104,7 +107,8 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             missingFileValidationService,
             finalizationService,
             fileUploadExecutionService,
-            concurrencyService
+            concurrencyService,
+            progressTracker
         )
         {
             UploadQueuePollDelay = TimeSpan.Zero,
@@ -152,11 +156,12 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
-                (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
+                (FileDto fileDto, IHosterConfig _, IUploadProgress _, CancellationToken _) =>
                     new UploadFileResult(
                         true,
                         fileDto,
@@ -202,11 +207,12 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == archiveFilePath && f.PremiumOnlyDownload),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
-                (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
+                (FileDto fileDto, IHosterConfig _, IUploadProgress _, CancellationToken _) =>
                     new UploadFileResult(true, fileDto, [], "https://hoster.test/archive.part1.rar")
             );
 
@@ -219,6 +225,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == archiveFilePath && f.PremiumOnlyDownload),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 ),
             Times.Once
@@ -255,11 +262,12 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
-                (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
+                (FileDto fileDto, IHosterConfig _, IUploadProgress _, CancellationToken _) =>
                     new UploadFileResult(true, fileDto, [], "https://hoster.test/archive.part1.rar")
             );
 
@@ -322,11 +330,12 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                         && f.FolderId == "folder-id"
                     ),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
-                (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
+                (FileDto fileDto, IHosterConfig _, IUploadProgress _, CancellationToken _) =>
                     new UploadFileResult(
                         true,
                         fileDto,
@@ -364,6 +373,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FolderId == "folder-id"),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 ),
             Times.Exactly(2)
@@ -405,11 +415,12 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
-                (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
+                (FileDto fileDto, IHosterConfig _, IUploadProgress _, CancellationToken _) =>
                     new UploadFileResult(false, fileDto, ["Upload failed"], null)
             );
 
@@ -448,11 +459,17 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .Returns(
-                async (FileDto fileDto, IHosterConfig _, CancellationToken cancellationToken) =>
+                async (
+                    FileDto fileDto,
+                    IHosterConfig _,
+                    IUploadProgress _,
+                    CancellationToken cancellationToken
+                ) =>
                 {
                     await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
                     return new UploadFileResult(true, fileDto, [], "https://hoster.test/file");
@@ -583,11 +600,17 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                         f.FullFileName == archiveFilePath || f.FullFileName == secondArchiveFilePath
                     ),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .Returns(
-                async (FileDto fileDto, IHosterConfig _, CancellationToken cancellationToken) =>
+                async (
+                    FileDto fileDto,
+                    IHosterConfig _,
+                    IUploadProgress _,
+                    CancellationToken cancellationToken
+                ) =>
                 {
                     await using var cancellationDbContext = CreateDbContext();
                     var uploadToCancel = await cancellationDbContext.Uploads.SingleAsync(u =>
@@ -630,6 +653,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                         f.FullFileName == archiveFilePath || f.FullFileName == secondArchiveFilePath
                     ),
                     It.IsAny<IHosterConfig>(),
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 ),
             Times.Once
@@ -647,11 +671,12 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .Returns(
-                async (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
+                async (FileDto fileDto, IHosterConfig _, IUploadProgress _, CancellationToken _) =>
                 {
                     await using var cancellationDbContext = CreateDbContext();
                     var uploadToCancel = await cancellationDbContext.Uploads.SingleAsync(u =>
@@ -707,11 +732,12 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == missingUploadedFilePath),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
-                (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
+                (FileDto fileDto, IHosterConfig _, IUploadProgress _, CancellationToken _) =>
                     new UploadFileResult(true, fileDto, [], "https://hoster.test/archive.part2.rar")
             );
 
@@ -736,6 +762,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == alreadyUploadedFilePath),
                     It.IsAny<IHosterConfig>(),
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 ),
             Times.Never
@@ -762,11 +789,12 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.IsAny<FileDto>(),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .Returns(
-                async (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
+                async (FileDto fileDto, IHosterConfig _, IUploadProgress _, CancellationToken _) =>
                 {
                     if (fileDto.FullFileName == firstArchiveFilePath && !secondUploadQueued)
                     {
@@ -834,6 +862,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.IsAny<FileDto>(),
                     It.IsAny<IHosterConfig>(),
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 ),
             Times.Never
@@ -869,11 +898,12 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.IsAny<FileDto>(),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .Returns(
-                async (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
+                async (FileDto fileDto, IHosterConfig _, IUploadProgress _, CancellationToken _) =>
                 {
                     if (Interlocked.Increment(ref startedUploads) == 10)
                     {
@@ -914,6 +944,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -941,11 +972,12 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .Returns(
-                async (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
+                async (FileDto fileDto, IHosterConfig _, IUploadProgress _, CancellationToken _) =>
                 {
                     await using var updateDbContext = CreateDbContext();
                     var uploadToCancel = await updateDbContext.Uploads.SingleAsync(u =>
@@ -989,11 +1021,12 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == runningArchiveFilePath),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .Returns(
-                async (FileDto fileDto, IHosterConfig _, CancellationToken _) =>
+                async (FileDto fileDto, IHosterConfig _, IUploadProgress _, CancellationToken _) =>
                 {
                     if (!otherCancellationRequested)
                     {
@@ -1051,11 +1084,12 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .Returns(
-                (FileDto _, IHosterConfig _, CancellationToken _) =>
+                (FileDto _, IHosterConfig _, IUploadProgress _, CancellationToken _) =>
                 {
                     cancellationTokenSource.Cancel();
                     throw new OperationCanceledException(cancellationTokenSource.Token);
@@ -1191,9 +1225,11 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             Mock.Of<ILogger<UploadFinalizationService>>(),
             notificationService
         );
+        var progressTracker = new UploadProgressTracker();
         var fileUploadExecution = new FileUploadExecutionService(
             Mock.Of<ILogger<FileUploadExecutionService>>(),
-            captchaService
+            captchaService,
+            progressTracker
         );
         var missingFileValidation = new MissingFileValidationService(
             repository,
@@ -1212,7 +1248,8 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             missingFileValidation,
             finalization,
             fileUploadExecution,
-            concurrency
+            concurrency,
+            progressTracker
         )
         {
             UploadQueuePollDelay = TimeSpan.Zero,
@@ -1340,6 +1377,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 h.UploadFileAsync(
                     It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
                     hosterConfigMock.Object,
+                    It.IsAny<IUploadProgress>(),
                     It.IsAny<CancellationToken>()
                 ),
             Times.Once

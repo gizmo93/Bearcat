@@ -2,6 +2,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
+using Humanizer;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,6 +17,10 @@ public partial class RunningUploads(
     [Parameter]
     [EditorRequired]
     public IReadOnlyList<Upload> Uploads { get; set; } = null!;
+
+    [Parameter]
+    public IReadOnlyDictionary<int, double> UploadSpeeds { get; set; } =
+        new Dictionary<int, double>();
 
     [Parameter]
     public EventCallback OnUploadCanceled { get; set; }
@@ -94,5 +99,20 @@ public partial class RunningUploads(
         }
 
         return Math.Round((double)uploadedFiles / archiveFiles * 100, 0);
+    }
+
+    private double TotalUploadBytesPerSecond =>
+        UploadSpeeds.Values.Where(bytesPerSecond => bytesPerSecond > 0).Sum();
+
+    private string? FormatUploadSpeed(int uploadId)
+    {
+        return UploadSpeeds.TryGetValue(uploadId, out var bytesPerSecond)
+            ? FormatSpeed(bytesPerSecond)
+            : null;
+    }
+
+    private static string? FormatSpeed(double bytesPerSecond)
+    {
+        return bytesPerSecond <= 0 ? null : $"{bytesPerSecond.Bytes().Humanize("0.0")}/s";
     }
 }
