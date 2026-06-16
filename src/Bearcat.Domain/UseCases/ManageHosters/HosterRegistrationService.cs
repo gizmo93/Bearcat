@@ -20,6 +20,7 @@ public class HosterRegistrationService(
         bool isActive,
         Dictionary<string, string> configuration,
         string hosterClassName,
+        int? maxParallelUploadsOverride = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -32,6 +33,9 @@ public class HosterRegistrationService(
             IsActive = isActive,
             SerializedConfig = secretProtector.Protect(serializedConfig),
             HosterClassName = hosterClassName,
+            MaxParallelUploadsOverride = hoster.HasFixedParallelUploadLimit
+                ? null
+                : maxParallelUploadsOverride,
         };
 
         writeRepository.Add(registration);
@@ -57,6 +61,7 @@ public class HosterRegistrationService(
         int id,
         string name,
         Dictionary<string, string> configuration,
+        int? maxParallelUploadsOverride = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -68,6 +73,9 @@ public class HosterRegistrationService(
         );
 
         registration.Name = name;
+        registration.MaxParallelUploadsOverride = hoster.HasFixedParallelUploadLimit
+            ? null
+            : maxParallelUploadsOverride;
         foreach (var (key, value) in configuration)
         {
             mergedConfiguration[key] = value;

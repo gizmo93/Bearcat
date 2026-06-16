@@ -22,7 +22,7 @@ public interface IUploadFilesRepository
         CancellationToken cancellationToken
     );
 
-    Task<IReadOnlyDictionary<string, string>> GetConfigByHosterClassName(
+    Task<IReadOnlyDictionary<string, HosterUploadConcurrencyInfo>> GetConfigByHosterClassName(
         CancellationToken cancellationToken
     );
 }

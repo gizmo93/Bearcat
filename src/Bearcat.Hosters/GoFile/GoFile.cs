@@ -156,12 +156,16 @@ public class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) : IHoste
         return JsonSerializer.Serialize(hosterConfig);
     }
 
+    public bool HasFixedParallelUploadLimit => false;
+
+    public int? DefaultMaximumParallelUploads => 100;
+
     public Task<int?> GetMaximumParallelUploadsAsync(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken
     )
     {
-        return Task.FromResult<int?>(100);
+        return Task.FromResult(DefaultMaximumParallelUploads);
     }
 
     public async Task<TryLoginResult> TryLoginAsync(

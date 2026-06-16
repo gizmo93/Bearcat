@@ -32,6 +32,24 @@ Save and test the connection by clicking "Try login".
 
 ![try-login.png](images/try-login.png)
 
+### Parallel uploads per hoster
+
+Each hoster has a maximum number of parallel uploads that Bearcat respects during uploads.
+
+For some hosters this value is reported by the hoster API and cannot be changed (for example Rapidgator).
+For hosters where Bearcat only assumes a sensible default, you can override it per registration.
+
+When a hoster allows it, the "New hoster" and "Edit" dialog shows a "Maximum parallel uploads" field.
+The placeholder shows the assumed default; leave the field empty to keep using it, or enter a value to override it for this registration.
+
+The "Hoster registrations" table shows the effective value in the "Parallel uploads" column:
+
+- Hosters with an API-provided limit show "Via API".
+- Hosters with an assumed default show that default, or your override value with an "Override" badge and the default underneath.
+
+The global "Maximum parallel uploads" setting in "Configurations" still applies on top of the per-hoster limit, so the effective parallelism for a hoster is the smaller of the two values.
+See [Advanced Configuration](/Bearcat/advanced-configuration/#upload-concurrency) for the global setting.
+
 
 ## Setting up link crypter accounts, and NFO databases
 The menu option "Crypter registrations" works the same way as the "Hoster registrations", but here you can set up your accounts for link crypters, that you want to use to create link containers for your releases.

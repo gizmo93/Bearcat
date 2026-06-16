@@ -136,12 +136,16 @@ public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> l
         return JsonSerializer.Serialize(config);
     }
 
+    public bool HasFixedParallelUploadLimit => false;
+
+    public int? DefaultMaximumParallelUploads => MaxParallelUploads;
+
     public Task<int?> GetMaximumParallelUploadsAsync(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken
     )
     {
-        return Task.FromResult<int?>(MaxParallelUploads);
+        return Task.FromResult(DefaultMaximumParallelUploads);
     }
 
     public async Task<string> CreateFolderAsync(

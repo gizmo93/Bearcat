@@ -123,6 +123,10 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger) : 
         return JsonSerializer.Serialize(config);
     }
 
+    public bool HasFixedParallelUploadLimit => true;
+
+    public int? DefaultMaximumParallelUploads => null;
+
     public async Task<int?> GetMaximumParallelUploadsAsync(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken

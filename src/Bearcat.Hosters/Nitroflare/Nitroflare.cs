@@ -129,12 +129,16 @@ public class Nitroflare(INitroflareApiClient apiClient, ILogger<Nitroflare> logg
         return JsonSerializer.Serialize(config);
     }
 
+    public bool HasFixedParallelUploadLimit => false;
+
+    public int? DefaultMaximumParallelUploads => MaxNumberOfParallelUploads;
+
     public Task<int?> GetMaximumParallelUploadsAsync(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken
     )
     {
-        return Task.FromResult<int?>(MaxNumberOfParallelUploads);
+        return Task.FromResult(DefaultMaximumParallelUploads);
     }
 
     public async Task<TryLoginResult> TryLoginAsync(

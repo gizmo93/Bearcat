@@ -140,12 +140,16 @@ public abstract class XFilesharingHosterBase<TConfig>(
         return JsonSerializer.Serialize(hosterConfig);
     }
 
+    public bool HasFixedParallelUploadLimit => false;
+
+    public int? DefaultMaximumParallelUploads => MaximumParallelUploads;
+
     public Task<int?> GetMaximumParallelUploadsAsync(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken
     )
     {
-        return Task.FromResult<int?>(MaximumParallelUploads);
+        return Task.FromResult(DefaultMaximumParallelUploads);
     }
 
     public async Task<TryLoginResult> TryLoginAsync(

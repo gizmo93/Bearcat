@@ -124,3 +124,21 @@ For example:
 
 Changing the cooldown affects upload configurations that do not have an upload yet.
 It does not cancel or delay uploads that already exist.
+
+### Upload concurrency
+
+"Upload concurrency" controls how many archive files Bearcat uploads in parallel across all hosters.
+
+The available setting is:
+
+- "Maximum parallel uploads" defaults to `10`.
+
+This is the global limit for the "Archive upload" background task.
+Bearcat never runs more than this many file uploads at the same time, even when several uploads are pending.
+
+Each hoster also has its own parallel upload limit.
+For a single hoster, the effective number of parallel uploads is the smaller of this global limit and that hoster's limit.
+You can view and, where allowed, override the per-hoster limit on the "Hoster registrations" page (see ["Parallel uploads per hoster"](/Bearcat/post-installation/#parallel-uploads-per-hoster)).
+
+Lower this value to reduce bandwidth and CPU usage during uploads.
+Raise it if you upload to many hosters at once and want more files to transfer in parallel.

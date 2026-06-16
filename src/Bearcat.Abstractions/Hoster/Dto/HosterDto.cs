@@ -4,5 +4,7 @@ public record HosterDto(
     string Name,
     string HosterClassName,
     IReadOnlyList<string> ConfigurationKeys,
-    bool SupportsPremiumOnlyDownloads
+    bool SupportsPremiumOnlyDownloads,
+    bool HasFixedParallelUploadLimit,
+    int? DefaultMaximumParallelUploads
 );

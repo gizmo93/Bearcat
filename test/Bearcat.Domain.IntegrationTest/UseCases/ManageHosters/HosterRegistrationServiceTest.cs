@@ -32,6 +32,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         dbContext = Database.CreateDbContext();
         hosterConfigMock = new Mock<IHosterConfig>(MockBehavior.Strict);
         hosterMock = new Mock<IHoster>(MockBehavior.Strict);
+        hosterMock.Setup(h => h.HasFixedParallelUploadLimit).Returns(false);
         hosterFactoryMock = new Mock<IHosterFactory>(MockBehavior.Strict);
         notificationServiceMock = new Mock<INotificationService>(MockBehavior.Strict);
 
@@ -98,7 +99,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
             true,
             configuration,
             HosterClassName,
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -157,7 +158,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
             registration.Id,
             "Updated hoster",
             configuration,
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert

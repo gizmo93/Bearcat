@@ -93,20 +93,28 @@ public class UploadFilesRepository(
         );
     }
 
-    public async Task<IReadOnlyDictionary<string, string>> GetConfigByHosterClassName(
-        CancellationToken cancellationToken
-    )
+    public async Task<
+        IReadOnlyDictionary<string, HosterUploadConcurrencyInfo>
+    > GetConfigByHosterClassName(CancellationToken cancellationToken)
     {
         var registrations = await dbWrite
             .HosterRegistrations.Where(h => h.IsActive)
-            .Select(h => new { h.HosterClassName, h.SerializedConfig })
+            .Select(h => new
+            {
+                h.HosterClassName,
+                h.SerializedConfig,
+                h.MaxParallelUploadsOverride,
+            })
             .ToListAsync(cancellationToken);
 
         return registrations
             .DistinctBy(r => r.HosterClassName)
             .ToDictionary(
                 r => r.HosterClassName,
-                r => secretProtector.Unprotect(r.SerializedConfig)
+                r => new HosterUploadConcurrencyInfo(
+                    secretProtector.Unprotect(r.SerializedConfig),
+                    r.MaxParallelUploadsOverride
+                )
             );
     }
 

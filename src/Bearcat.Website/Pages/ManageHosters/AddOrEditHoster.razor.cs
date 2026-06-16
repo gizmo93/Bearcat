@@ -47,7 +47,8 @@ public partial class AddOrEditHoster(
                 name: FormModel.Name,
                 isActive: true,
                 configuration: FormModel.Configuration,
-                hosterClassName: FormModel.FullClassName
+                hosterClassName: FormModel.FullClassName,
+                maxParallelUploadsOverride: FormModel.MaxParallelUploadsOverride
             );
         }
         else
@@ -55,7 +56,8 @@ public partial class AddOrEditHoster(
             await hosterRegistrationService.UpdateRegistrationAsync(
                 FormModel.HosterRegistrationId!.Value,
                 FormModel.Name,
-                FormModel.Configuration
+                FormModel.Configuration,
+                FormModel.MaxParallelUploadsOverride
             );
         }
 

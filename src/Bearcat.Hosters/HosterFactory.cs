@@ -20,7 +20,9 @@ public class HosterFactory(IServiceProvider serviceProvider) : IHosterFactory
                 Name: h.Name,
                 HosterClassName: h.GetType().Name,
                 ConfigurationKeys: h.ConfigurationKeys,
-                SupportsPremiumOnlyDownloads: h.SupportsPremiumOnlyDownloads
+                SupportsPremiumOnlyDownloads: h.SupportsPremiumOnlyDownloads,
+                HasFixedParallelUploadLimit: h.HasFixedParallelUploadLimit,
+                DefaultMaximumParallelUploads: h.DefaultMaximumParallelUploads
             ))
             .ToList();
     }

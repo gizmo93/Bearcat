@@ -14,5 +14,7 @@ public class HosterRegistration
 
     public required string HosterClassName { get; set; }
 
+    public int? MaxParallelUploadsOverride { get; set; }
+
     public List<UploadConfig> UploadConfigs { get; set; } = null!;
 }

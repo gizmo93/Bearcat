@@ -150,12 +150,16 @@ public class UploadG(IUploadGApiClient apiClient, ILogger<UploadG> logger) : IHo
         return JsonSerializer.Serialize(config);
     }
 
+    public bool HasFixedParallelUploadLimit => false;
+
+    public int? DefaultMaximumParallelUploads => MaxParallelUploads;
+
     public Task<int?> GetMaximumParallelUploadsAsync(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken
     )
     {
-        return Task.FromResult<int?>(MaxParallelUploads);
+        return Task.FromResult(DefaultMaximumParallelUploads);
     }
 
     public async Task<string> CreateFolderAsync(

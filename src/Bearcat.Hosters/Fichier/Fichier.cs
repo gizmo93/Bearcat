@@ -135,12 +135,16 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger) : IHo
         return JsonSerializer.Serialize(config);
     }
 
+    public bool HasFixedParallelUploadLimit => false;
+
+    public int? DefaultMaximumParallelUploads => 3;
+
     public Task<int?> GetMaximumParallelUploadsAsync(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken
     )
     {
-        return Task.FromResult<int?>(3);
+        return Task.FromResult(DefaultMaximumParallelUploads);
     }
 
     public async Task<string> CreateFolderAsync(

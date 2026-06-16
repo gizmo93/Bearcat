@@ -1,4 +1,6 @@
+using System.Linq.Expressions;
 using System.Reflection;
+using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
@@ -54,6 +56,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
 
         hosterConfigMock = new Mock<IHosterConfig>(MockBehavior.Strict);
         hosterMock = new Mock<IHoster>(MockBehavior.Strict);
+        hosterMock.Setup(h => h.HasFixedParallelUploadLimit).Returns(false);
         hosterMock
             .Setup(h => h.DeserializeHosterConfig(SerializedHosterConfig))
             .Returns(hosterConfigMock.Object);
@@ -96,7 +99,10 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             Mock.Of<ILogger<MissingFileValidationService>>(),
             notificationService
         );
-        var concurrencyService = new UploadConcurrencyService(uploadFilesRepository);
+        var concurrencyService = new UploadConcurrencyService(
+            uploadFilesRepository,
+            new DefaultConfigurationProvider()
+        );
 
         service = new UploadFilesService(
             uploadFilesRepository,
@@ -302,6 +308,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         );
         var folderHosterMock = new Mock<IFolderHoster>(MockBehavior.Strict);
 
+        folderHosterMock.Setup(h => h.HasFixedParallelUploadLimit).Returns(false);
         folderHosterMock
             .Setup(h => h.DeserializeHosterConfig(SerializedHosterConfig))
             .Returns(hosterConfigMock.Object);
@@ -1237,7 +1244,10 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             Mock.Of<ILogger<MissingFileValidationService>>(),
             notificationService
         );
-        var concurrency = new UploadConcurrencyService(repository);
+        var concurrency = new UploadConcurrencyService(
+            repository,
+            new DefaultConfigurationProvider()
+        );
 
         var serviceWithMissingUpload = new UploadFilesService(
             repository,
@@ -1468,6 +1478,34 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         await task;
     }
 
+    private sealed class DefaultConfigurationProvider : IApplicationConfigurationProvider
+    {
+        public TConfiguration GetConfiguration<TConfiguration>()
+            where TConfiguration : IApplicationConfiguration, new() => new();
+
+        public bool GetValue<TConfiguration>(Expression<Func<TConfiguration, bool>> selector)
+            where TConfiguration : IApplicationConfiguration, new() =>
+            selector.Compile()(new TConfiguration());
+
+        public int GetValue<TConfiguration>(Expression<Func<TConfiguration, int>> selector)
+            where TConfiguration : IApplicationConfiguration, new() =>
+            selector.Compile()(new TConfiguration());
+
+        public int? GetValue<TConfiguration>(Expression<Func<TConfiguration, int?>> selector)
+            where TConfiguration : IApplicationConfiguration, new() =>
+            selector.Compile()(new TConfiguration());
+
+        public string? GetValue<TConfiguration>(Expression<Func<TConfiguration, string?>> selector)
+            where TConfiguration : IApplicationConfiguration, new() =>
+            selector.Compile()(new TConfiguration());
+
+        public TValue GetValue<TConfiguration, TValue>(
+            Expression<Func<TConfiguration, TValue>> selector
+        )
+            where TConfiguration : IApplicationConfiguration, new() =>
+            selector.Compile()(new TConfiguration());
+    }
+
     private sealed class MissingCancellationUploadRepository : IUploadFilesRepository
     {
         public bool GetMissingUploadByIdWasCalled { get; private set; }
@@ -1522,12 +1560,12 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             return Task.FromResult<IReadOnlyDictionary<int, string>>(new Dictionary<int, string>());
         }
 
-        public Task<IReadOnlyDictionary<string, string>> GetConfigByHosterClassName(
-            CancellationToken cancellationToken
-        )
+        public Task<
+            IReadOnlyDictionary<string, HosterUploadConcurrencyInfo>
+        > GetConfigByHosterClassName(CancellationToken cancellationToken)
         {
-            return Task.FromResult<IReadOnlyDictionary<string, string>>(
-                new Dictionary<string, string>()
+            return Task.FromResult<IReadOnlyDictionary<string, HosterUploadConcurrencyInfo>>(
+                new Dictionary<string, HosterUploadConcurrencyInfo>()
             );
         }
     }

@@ -7,6 +7,9 @@ public record HosterRegistrationReadModel(
     bool RequiresCaptchaVerification,
     bool SupportsCaptchaVerification,
     bool SupportsPremiumOnlyDownloads,
+    bool HasFixedParallelUploadLimit,
+    int? DefaultMaximumParallelUploads,
+    int? MaxParallelUploadsOverride,
     string HosterName,
     string FullClassName
 );

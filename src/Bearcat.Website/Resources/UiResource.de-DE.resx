@@ -517,6 +517,16 @@
   <data name="InitialUploadDescription" xml:space="preserve"><value>Steuert, wann der erste Upload für ein neu erstelltes Release angelegt wird.</value></data>
   <data name="InitialUploadCooldownMinutes" xml:space="preserve"><value>Cooldown für initiale Uploads (Minuten)</value></data>
     <data name="InitialUploadCooldownMinutesDescription" xml:space="preserve"><value>So viele Minuten nach dem Erstellen des Releases warten, bevor der erste Upload gestartet wird.</value></data>
+  <data name="UploadConcurrency" xml:space="preserve"><value>Upload-Parallelität</value></data>
+  <data name="UploadConcurrencyDescription" xml:space="preserve"><value>Steuert, wie viele Datei-Uploads über alle Hoster hinweg gleichzeitig laufen.</value></data>
+  <data name="MaxParallelUploads" xml:space="preserve"><value>Maximale parallele Uploads</value></data>
+  <data name="MaxParallelUploadsDescription" xml:space="preserve"><value>Das globale Limit gleichzeitig laufender Datei-Uploads über alle Hoster hinweg.</value></data>
+  <data name="MaxParallelUploadsOverride" xml:space="preserve"><value>Maximale parallele Uploads</value></data>
+  <data name="MaxParallelUploadsOverridePlaceholder" xml:space="preserve"><value>Hoster-Standard</value></data>
+  <data name="MaxParallelUploadsOverrideHelp" xml:space="preserve"><value>Überschreibt das angenommene Limit paralleler Uploads für diesen Hoster. Leer lassen, um den Hoster-Standard ({0}) zu verwenden.</value></data>
+  <data name="ParallelUploads" xml:space="preserve"><value>Parallele Uploads</value></data>
+  <data name="ParallelUploadsViaApi" xml:space="preserve"><value>Über API</value></data>
+  <data name="DefaultValueWithNumber" xml:space="preserve"><value>Standard: {0}</value></data>
   <data name="DefaultValue" xml:space="preserve"><value>Default</value></data>
   <data name="Override" xml:space="preserve"><value>Override</value></data>
   <data name="ResetToDefault" xml:space="preserve"><value>Auf Default zurücksetzen</value></data>

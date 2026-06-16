@@ -53,6 +53,19 @@
 
                     <ValidationMessage For="@(() => FormModel.Configuration)" />
                 </div>
+
+                @if (!selectedHoster.HasFixedParallelUploadLimit)
+                {
+                    <div class="space-y-1">
+                        <BbFormFieldInput TValue="int?"
+                                          @bind-Value="FormModel.MaxParallelUploadsOverride"
+                                          Label="@L["MaxParallelUploadsOverride"]"
+                                          Placeholder="@(selectedHoster.DefaultMaximumParallelUploads?.ToString() ?? L["MaxParallelUploadsOverridePlaceholder"])" />
+                        <p class="text-xs text-muted-foreground">
+                            @L["MaxParallelUploadsOverrideHelp", selectedHoster.DefaultMaximumParallelUploads ?? 0]
+                        </p>
+                    </div>
+                }
             }
         </div>
 

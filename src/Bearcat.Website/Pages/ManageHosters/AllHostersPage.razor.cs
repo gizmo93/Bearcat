@@ -61,6 +61,7 @@ public partial class AllHostersPage(
                 FullClassName = hosterRegistration.FullClassName,
                 IsEdit = true,
                 HosterRegistrationId = hosterRegistration.Id,
+                MaxParallelUploadsOverride = hosterRegistration.MaxParallelUploadsOverride,
             },
         };
 

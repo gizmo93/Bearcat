@@ -14,5 +14,6 @@ public class HosterRegistrationConfiguration : IEntityTypeConfiguration<HosterRe
         builder.Property(h => h.RequiresCaptchaVerification).IsRequired();
         builder.Property(h => h.SerializedConfig).IsRequired().HasMaxLength(4000);
         builder.Property(h => h.HosterClassName).IsRequired().HasMaxLength(500);
+        builder.Property(h => h.MaxParallelUploadsOverride);
     }
 }
