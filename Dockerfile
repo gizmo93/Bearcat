@@ -1,10 +1,14 @@
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0-noble AS build
 WORKDIR /App
 
+# Stamped into the assembly so the running app can report its version and check for updates.
+# The release workflow passes the actual version.
+ARG BEARCAT_VERSION=0.0.0-dev
+
 COPY . ./
 RUN dotnet restore src/Bearcat.Host/Bearcat.Host.csproj -a x64
 
-RUN dotnet publish src/Bearcat.Host/Bearcat.Host.csproj -a x64 --no-restore -o /App/out
+RUN dotnet publish src/Bearcat.Host/Bearcat.Host.csproj -a x64 --no-restore -o /App/out -p:Version=$BEARCAT_VERSION
 
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0.9-noble

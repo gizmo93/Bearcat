@@ -1,6 +1,7 @@
 @inherits LayoutComponentBase
 @implements IDisposable
 @inject NavigationManager NavigationManager
+@inject Bearcat.Abstractions.Updates.IUpdateChecker UpdateChecker
 
 <BbSidebarProvider DefaultOpen="true" Variant="SidebarVariant.Inset">
     <BbSidebar Class="bearcat-sidebar border-r border-border/70 bg-sidebar text-sidebar-foreground">
@@ -11,6 +12,7 @@
                 </div>
                 <BbSidebarHeaderInfo>
                     <span class="truncate text-sm font-semibold">Bearcat</span>
+                    <span class="truncate text-xs text-muted-foreground">@($"v{UpdateChecker.CurrentVersion}")</span>
                 </BbSidebarHeaderInfo>
             </BbSidebarHeaderContent>
         </BbSidebarHeader>
@@ -36,6 +38,7 @@
                     <p class="truncate text-xs text-muted-foreground">@CurrentPageSubtitle</p>
                 }
             </div>
+            <UpdateBanner />
             <NotificationBell />
         </header>
 

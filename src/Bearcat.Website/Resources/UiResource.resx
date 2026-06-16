@@ -755,4 +755,6 @@
   <data name="NoSeriesDescription" xml:space="preserve"><value>No description available.</value></data>
   <data name="SeriesMetadataResolved" xml:space="preserve"><value>Series metadata resolved.</value></data>
   <data name="SeriesMetadataNotResolved" xml:space="preserve"><value>No matching series found.</value></data>
+  <data name="UpdateAvailable" xml:space="preserve"><value>Update to {0}</value></data>
+  <data name="UpdateAvailableTooltip" xml:space="preserve"><value>Version {0} is available. Click to open the release page.</value></data>
 </root>

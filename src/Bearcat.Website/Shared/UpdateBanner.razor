@@ -1,0 +1,13 @@
+@if (status is { IsUpdateAvailable: true })
+{
+    <a href="@status.ReleaseUrl"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="inline-flex items-center no-underline"
+       title="@L["UpdateAvailableTooltip", status.LatestVersion ?? string.Empty]">
+        <BbBadge Variant="BadgeVariant.Default" Class="gap-1.5">
+            <LucideIcon Name="download" class="h-3.5 w-3.5" />
+            @L["UpdateAvailable", status.LatestVersion ?? string.Empty]
+        </BbBadge>
+    </a>
+}

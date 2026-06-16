@@ -23,6 +23,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if [ "${GITHUB_EVENT_NAME}" != "release" ] && [ "${GITHUB_REF_TYPE:-}" != "tag" ]; then
+            version="0.0.0-dev"
+          fi
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -46,6 +56,7 @@ jobs:
           --output "$RUNNER_TEMP/bearcat-host"
           -p:PublishSingleFile=false
           -p:ServerGarbageCollection=false
+          -p:Version=${{ steps.version.outputs.value }}
 
       - name: Publish Bearcat.Desktop
         run: >
@@ -56,6 +67,7 @@ jobs:
           --no-restore
           --output "$RUNNER_TEMP/bearcat-desktop"
           -p:PublishSingleFile=false
+          -p:Version=${{ steps.version.outputs.value }}
 
       - name: Build app bundle
         shell: bash
@@ -182,6 +194,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if [ "${GITHUB_EVENT_NAME}" != "release" ] && [ "${GITHUB_REF_TYPE:-}" != "tag" ]; then
+            version="0.0.0-dev"
+          fi
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -205,6 +227,7 @@ jobs:
           --output "$env:RUNNER_TEMP\bearcat-host"
           -p:PublishSingleFile=false
           -p:ServerGarbageCollection=false
+          -p:Version=${{ steps.version.outputs.value }}
 
       - name: Publish Bearcat.Desktop
         run: >
@@ -215,6 +238,7 @@ jobs:
           --no-restore
           --output "$env:RUNNER_TEMP\bearcat-desktop"
           -p:PublishSingleFile=false
+          -p:Version=${{ steps.version.outputs.value }}
 
       - name: Build package
         shell: pwsh

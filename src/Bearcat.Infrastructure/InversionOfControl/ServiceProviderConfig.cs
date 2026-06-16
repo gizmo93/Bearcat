@@ -1,12 +1,15 @@
+using System.Net.Http.Headers;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.BackgroundTasks;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Security;
+using Bearcat.Abstractions.Updates;
 using Bearcat.Infrastructure.BackgroundTasks;
 using Bearcat.Infrastructure.Configuration;
 using Bearcat.Infrastructure.Database.InversionOfControl;
 using Bearcat.Infrastructure.FileSystem;
 using Bearcat.Infrastructure.Security;
+using Bearcat.Infrastructure.Updates;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,6 +30,22 @@ public static class ServiceProviderConfig
                 ApplicationConfigurationOverrideCache
             >();
             services.AddSingleton<IBackgroundTaskScheduleCache, BackgroundTaskScheduleCache>();
+
+            services.AddHttpClient(
+                GitHubUpdateChecker.HttpClientName,
+                client =>
+                {
+                    client.Timeout = TimeSpan.FromSeconds(10);
+                    // GitHub rejects requests without a User-Agent header.
+                    client.DefaultRequestHeaders.UserAgent.Add(
+                        new ProductInfoHeaderValue("Bearcat", "1.0")
+                    );
+                    client.DefaultRequestHeaders.Accept.Add(
+                        new MediaTypeWithQualityHeaderValue("application/vnd.github+json")
+                    );
+                }
+            );
+            services.AddSingleton<IUpdateChecker, GitHubUpdateChecker>();
         }
     }
 }
