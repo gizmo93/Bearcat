@@ -57,6 +57,7 @@ export default defineConfig({
 								{ label: 'PostgreSQL for Desktop', slug: 'install-postgresql-for-desktop' },
 							],
 						},
+						{ label: 'Windows Service', slug: 'use-the-windows-service' },
 						{ label: 'Docker Container', slug: 'use-the-docker-image' },
 					],  
 				},

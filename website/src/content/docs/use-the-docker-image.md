@@ -3,11 +3,11 @@ title: "Docker Container"
 description: "Host Bearcat with Docker on Linux, NAS devices, servers, Windows, or macOS."
 ---
 
-Docker is the recommended setup for Linux, NAS, and server deployments. It is also a good choice for Windows Server or any always-on machine where Bearcat should run in the background, as Docker will make sure your container gets restarted if it crashes.
+Docker is the recommended setup for Linux, NAS, and server deployments.
+
+On Windows, Docker still works, but it is no longer the recommended option: prefer the [Windows service](/Bearcat/use-the-windows-service/) for always-on use or the [Desktop app](/Bearcat/use-the-desktop-launcher/) for on-demand use. On Windows the container reads your release files through a bind mount into a Linux VM, which is noticeably slower than the native Windows options. Use Docker on Windows only if you explicitly want a container-based setup.
 
 For local desktop use on macOS Apple Silicon, prefer the Bearcat Desktop app. The Docker image is published as `linux/amd64` because the official RAR command line tools are only available for Linux x64, while the Desktop app can run natively on Apple Silicon.
-
-For local desktop use on Windows, prefer the Bearcat Desktop app unless you explicitly want a Docker-based setup.
 
 ## Initial setup
 

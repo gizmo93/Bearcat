@@ -1,0 +1,108 @@
+name: Release Windows Service Artifacts
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CONFIGURATION: Release
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+
+jobs:
+  package-windows-service:
+    name: Package Windows Service ${{ matrix.runtime }}
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime:
+          - win-x64
+          - win-arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if [ "${GITHUB_EVENT_NAME}" != "release" ] && [ "${GITHUB_REF_TYPE:-}" != "tag" ]; then
+            version="0.0.0-dev"
+          fi
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore solution
+        run: dotnet restore Bearcat.slnx
+
+      - name: Restore service runtime projects
+        run: |
+          dotnet restore src/Bearcat.Host/Bearcat.Host.csproj --runtime ${{ matrix.runtime }}
+          dotnet restore src/Bearcat.Cli/Bearcat.Cli.csproj --runtime ${{ matrix.runtime }}
+
+      - name: Publish Bearcat.Host
+        run: >
+          dotnet publish src/Bearcat.Host/Bearcat.Host.csproj
+          --configuration "$env:CONFIGURATION"
+          --runtime ${{ matrix.runtime }}
+          --self-contained true
+          --no-restore
+          --output "$env:RUNNER_TEMP\bearcat-host"
+          -p:PublishSingleFile=false
+          -p:ServerGarbageCollection=false
+          -p:Version=${{ steps.version.outputs.value }}
+
+      - name: Publish Bearcat.Cli
+        run: >
+          dotnet publish src/Bearcat.Cli/Bearcat.Cli.csproj
+          --configuration "$env:CONFIGURATION"
+          --runtime ${{ matrix.runtime }}
+          --self-contained true
+          --no-restore
+          --output "$env:RUNNER_TEMP\bearcat-cli"
+          -p:PublishSingleFile=false
+          -p:Version=${{ steps.version.outputs.value }}
+
+      - name: Build package
+        shell: pwsh
+        run: |
+          $runtime = "${{ matrix.runtime }}"
+          $packageRoot = Join-Path $env:RUNNER_TEMP "Bearcat.Service-$runtime"
+          $artifactPath = Join-Path $env:RUNNER_TEMP "Bearcat.Service-$runtime.zip"
+
+          Remove-Item $packageRoot -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path $packageRoot | Out-Null
+
+          Copy-Item -Path "$env:RUNNER_TEMP\bearcat-host\*" -Destination $packageRoot -Recurse -Force
+          Copy-Item -Path "$env:RUNNER_TEMP\bearcat-cli\*" -Destination $packageRoot -Recurse -Force
+
+          Compress-Archive -Path "$packageRoot\*" -DestinationPath $artifactPath -Force
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bearcat.Service-${{ matrix.runtime }}
+          path: ${{ runner.temp }}/Bearcat.Service-${{ matrix.runtime }}.zip
+          if-no-files-found: error
+
+      - name: Attach artifact to GitHub release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh release upload "${{ github.event.release.tag_name }}"
+          "$env:RUNNER_TEMP\Bearcat.Service-${{ matrix.runtime }}.zip"
+          --clobber

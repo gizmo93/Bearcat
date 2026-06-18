@@ -1,11 +1,11 @@
 ---
-title: "PostgreSQL for Desktop"
-description: "Install and configure PostgreSQL for the Bearcat Desktop app."
+title: "PostgreSQL Setup"
+description: "Install and run PostgreSQL for Bearcat, for the Desktop app or the Windows service."
 ---
 
-The Bearcat Desktop app needs a PostgreSQL database to store its data.
+Bearcat needs a PostgreSQL database to store its data.
 
-It does not ship with PostgreSQL, so you need to install it on your own.
+It does not ship with PostgreSQL, so you need to provide it yourself. Both the Desktop app and the [Windows service](/Bearcat/use-the-windows-service/) connect to your own PostgreSQL server.
 
 Use PostgreSQL 18. Older PostgreSQL versions are currently untested.
 
@@ -21,32 +21,38 @@ Username: bearcat
 Password: choose-a-password
 ```
 
-You can use different values, but enter the same values in the Bearcat Desktop app.
+You can use different values, but enter the same values in your Bearcat configuration.
 
-## Windows Native
+## Windows
 
-Download the PostgreSQL 18 Windows installer from:
+On Windows you have two ways to run PostgreSQL: in Docker, or with the native installer.
 
-```text
-https://www.postgresql.org/download/windows/
-```
+:::tip[Recommended on Windows]
+Run PostgreSQL in Docker (see [PostgreSQL In Docker](#postgresql-in-docker) below). It keeps the database self-contained, easy to back up, and easy to remove again. The native installer registers an always-running Windows service and a system-wide install that is more tedious to get rid of later.
+:::
+
+If you prefer a native install, follow the steps below.
+
+### Native installer
+
+Download the PostgreSQL 18 Windows installer from [postgresql.org/download/windows](https://www.postgresql.org/download/windows/).
 
 During installation:
 
 - Choose PostgreSQL 18.
 - Keep the default port `5432` unless it is already used.
-- Set a password for the PostgreSQL `postgres` administrator user.
+- The installer creates a superuser named `postgres` and asks you to set its password. You choose only the password here, not the user name.
 - Stack Builder is optional and not required by Bearcat.
 
-Then enter `bearcat` and the created user / password as the database name in the Desktop app. Bearcat will create the database and apply migrations on startup.
+After installation you need a user and a database for Bearcat. You have two options:
 
-## macOS Native
+**Use the `postgres` superuser directly (simplest).** In your Bearcat configuration, enter `postgres` as the username and the password you set during installation, and `bearcat` as the database name. Bearcat creates the database and applies migrations on first start.
 
-Download Postgres.app from:
+**Create a dedicated `bearcat` user.** Open **pgAdmin 4** (installed alongside PostgreSQL), connect as `postgres`, and create a new login role named `bearcat`: set a password and enable **Can create databases?** in its privileges. Then use that account in your Bearcat configuration. Bearcat creates the `bearcat` database on first start.
 
-```text
-https://postgresapp.com
-```
+## macOS
+
+Download Postgres.app from [postgresapp.com](https://postgresapp.com).
 
 Install and start Postgres.app, then create or start a PostgreSQL 18 server. Keep the default port `5432` unless it is already used.
 
@@ -74,11 +80,11 @@ CREATE USER bearcat WITH PASSWORD 'choose-a-password';
 CREATE DATABASE bearcat OWNER bearcat;
 ```
 
-Enter the same host, port, database, username, and password in the Bearcat Desktop app.
+Enter the same host, port, database, username, and password in your Bearcat configuration.
 
 ## PostgreSQL In Docker
 
-If you prefer not to install PostgreSQL directly on your desktop OS, you can run only PostgreSQL in Docker and still use the Bearcat Desktop app.
+If you prefer not to install PostgreSQL directly on your operating system, you can run only PostgreSQL in Docker and still run Bearcat natively with the Desktop app or the Windows service. On Windows this is the recommended way to run PostgreSQL.
 
 Create a persistent data directory on your host machine:
 
@@ -86,7 +92,7 @@ Create a persistent data directory on your host machine:
 mkdir -p ~/Bearcat/postgres-data
 ```
 
-Choose a folder that is somewhere, where you can easily backup it, if you want to. This folder contains the PostgreSQL database files.
+Choose a folder you can easily back up. This folder contains the PostgreSQL database files.
 
 Start PostgreSQL 18:
 
@@ -116,7 +122,7 @@ docker run -d `
   postgres:18
 ```
 
-Use these settings in the Bearcat Desktop app:
+Use these settings in your Bearcat configuration:
 
 ```text
 Host: localhost
@@ -142,9 +148,9 @@ Do not delete the data directory unless you intentionally want to delete the Bea
 
 ## Troubleshooting
 
-If the Desktop app cannot connect:
+If Bearcat cannot connect:
 
 - Check that PostgreSQL is running.
-- Check that the port is `5432`, or update the Desktop app to use the port you chose.
+- Check that the port is `5432`, or update your Bearcat configuration to use the port you chose.
 - Check that the username and password match.
 - If the database does not exist, either grant the user `CREATEDB` permission or create the database manually.

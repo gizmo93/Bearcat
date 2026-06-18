@@ -9,7 +9,7 @@ But to make it easier for you to start and stop it if you want to run it on your
 
 This is my recommended local setup for macOS on Apple Silicon because the Desktop app runs natively on ARM and helps you to get the most out of your fast Apple Silicon Mac.
 
-On Windows, use the Desktop app for local desktop use. Use Docker for Windows Server or other always-on server deployments.
+On Windows, the Desktop app and the [Windows service](/Bearcat/use-the-windows-service/) are the two recommended options, and they run the exact same Bearcat. Use the Desktop app when you want to start and stop Bearcat on demand. Use the Windows service when you want it always on, for example on a server or on a PC where Bearcat should run permanently in the background.
 
 The Desktop uses YOUR OWN PostgreSQL server. It does not ship with PostgreSQL.
 

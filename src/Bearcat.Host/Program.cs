@@ -1,6 +1,7 @@
 ﻿using Bearcat.Application.InversionOfControl;
 using Bearcat.Archivers.InversionOfControl;
 using Bearcat.Domain.InversionOfControl;
+using Bearcat.Host;
 using Bearcat.Hosters.InversionOfControl;
 using Bearcat.ImageHosters.InversionOfControl;
 using Bearcat.Infrastructure.Database;
@@ -12,8 +13,18 @@ using Bearcat.SeriesDatabases.InversionOfControl;
 using Bearcat.Website;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.EventLog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseWindowsService();
+if (OperatingSystem.IsWindows())
+{
+#pragma warning disable CA1416 // Validate platform compatibility
+    builder.Services.Configure<EventLogSettings>(settings => settings.SourceName = "Bearcat");
+#pragma warning restore CA1416
+}
+
 var isDesktopMode = builder.Configuration.GetValue("Bearcat:DesktopMode", false);
 
 builder.Services.AddBearcatBlueprintComponents();
@@ -39,6 +50,26 @@ if (!isRunningInContainer)
         optional: true,
         reloadOnChange: false
     );
+
+    // When running a Windows service, we set the Bearcat:DataDirectory (the path, where the bearcat.key file is located)
+    // to the same as where the config.json is
+    if (File.Exists(BearcatPaths.WindowsServiceConfigPath))
+    {
+        builder.Configuration.AddInMemoryCollection(
+            new Dictionary<string, string?>
+            {
+                ["Bearcat:DataDirectory"] = Path.GetDirectoryName(
+                    BearcatPaths.WindowsServiceConfigPath
+                ),
+            }
+        );
+
+        builder.Configuration.AddJsonFile(
+            BearcatPaths.WindowsServiceConfigPath,
+            optional: true,
+            reloadOnChange: false
+        );
+    }
 }
 
 builder.Services.AddApplication();
