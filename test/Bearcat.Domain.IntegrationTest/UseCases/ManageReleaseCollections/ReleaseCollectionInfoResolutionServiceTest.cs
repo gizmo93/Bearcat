@@ -372,6 +372,147 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
         metadata.Title.ShouldBe("Bodies");
     }
 
+    [Test]
+    public async Task ProcessMissingCollectionMetadataAsync_RateLimitExceeded_StopsAndMarksChecked()
+    {
+        // Arrange
+        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: true);
+        var collection = await AddCollectionAsync(
+            "Bodies.2023.S01.German.DL.1080p",
+            CreateRelease(
+                "Bodies.2023.S01E01.German.DL.1080p-GRP",
+                nfoContent: "https://www.imdb.com/title/tt1234567/"
+            )
+        );
+
+        var (database, config) = SetupSeriesDatabase(SeriesDatabaseClassName);
+        database
+            .Setup(seriesDatabase =>
+                seriesDatabase.GetSeriesInfoByImdbIdAsync(
+                    config,
+                    "tt1234567",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(
+                new SeriesDatabaseRateLimitExceededException(SeriesDatabaseClassName, null)
+            );
+
+        // Act
+        var resolvedCount = await service.ProcessMissingCollectionMetadataAsync(
+            CancellationToken.None
+        );
+
+        // Assert
+        resolvedCount.ShouldBe(0);
+
+        dbContext.ChangeTracker.Clear();
+        (await dbContext.ReleaseCollectionMetadata.AnyAsync()).ShouldBeFalse();
+        var persistedCollection = await dbContext.ReleaseCollections.SingleAsync(c =>
+            c.Id == collection.Id
+        );
+        persistedCollection.MetadataCheckedAt.ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task ProcessMissingCollectionMetadataAsync_SeriesDatabaseThrows_MarksCheckedWithoutMetadata()
+    {
+        // Arrange
+        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: true);
+        var collection = await AddCollectionAsync(
+            "Unknown.Series.S01.German.DL.1080p",
+            CreateRelease("Unknown.Series.S01E01.German.DL.1080p-GRP")
+        );
+
+        var (database, config) = SetupSeriesDatabase(SeriesDatabaseClassName);
+        database
+            .Setup(seriesDatabase =>
+                seriesDatabase.GetSeriesInfoByTitleAsync(
+                    config,
+                    "Unknown Series",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(new InvalidOperationException("boom"));
+
+        // Act
+        var resolvedCount = await service.ProcessMissingCollectionMetadataAsync(
+            CancellationToken.None
+        );
+
+        // Assert
+        resolvedCount.ShouldBe(0);
+
+        dbContext.ChangeTracker.Clear();
+        (await dbContext.ReleaseCollectionMetadata.AnyAsync()).ShouldBeFalse();
+        var persistedCollection = await dbContext.ReleaseCollections.SingleAsync(c =>
+            c.Id == collection.Id
+        );
+        persistedCollection.MetadataCheckedAt.ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task ResolveAsync_NoActiveRegistration_ReturnsFalse()
+    {
+        // Arrange
+        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: false);
+        var collection = await AddCollectionAsync(
+            "Bodies.2023.S01.German.DL.1080p",
+            CreateRelease("Bodies.2023.S01E01.German.DL.1080p-GRP")
+        );
+
+        // Act
+        var resolved = await service.ResolveAsync(collection.Id, CancellationToken.None);
+
+        // Assert
+        resolved.ShouldBeFalse();
+        seriesDatabaseFactoryMock.Verify(factory => factory.Get(It.IsAny<string>()), Times.Never);
+    }
+
+    [Test]
+    public async Task ResolveAsync_CollectionNotFound_ReturnsFalse()
+    {
+        // Arrange
+        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: true);
+        SetupSeriesDatabase(SeriesDatabaseClassName);
+
+        // Act
+        var resolved = await service.ResolveAsync(999, CancellationToken.None);
+
+        // Assert
+        resolved.ShouldBeFalse();
+        (await dbContext.ReleaseCollectionMetadata.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ResolveAsync_CollectionAlreadyHasMetadata_ReturnsFalse()
+    {
+        // Arrange
+        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: true);
+        SetupSeriesDatabase(SeriesDatabaseClassName);
+        var collection = await AddCollectionAsync(
+            "Bodies.2023.S01.German.DL.1080p",
+            CreateRelease("Bodies.2023.S01E01.German.DL.1080p-GRP")
+        );
+        collection.Metadata = new ReleaseCollectionMetadata
+        {
+            SeriesDatabaseClassName = SeriesDatabaseClassName,
+            Title = "Bodies",
+            Description = "Existing",
+            CoverUrl = "https://artworks.example/cover.jpg",
+            SeriesDatabaseUrl = "https://www.thetvdb.com/series/bodies",
+        };
+        dbContext.Update(collection);
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var resolved = await service.ResolveAsync(collection.Id, CancellationToken.None);
+
+        // Assert
+        resolved.ShouldBeFalse();
+    }
+
     private (Mock<ISeriesDatabase> Database, ISeriesDatabaseConfig Config) SetupSeriesDatabase(
         string className,
         int priority = 0

@@ -127,6 +127,140 @@ public class ImageUploadServiceTest : BearcatIntegrationTest
         imageUpload.UploadState.ShouldBe(UploadState.Completed);
     }
 
+    [Test]
+    public async Task ProcessAsync_PendingUploadWithoutCover_MarksFailed()
+    {
+        // Arrange
+        var imageUpload = await AddPendingUploadForReleaseWithoutCoverAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var persisted = await dbContext.ImageUploads.SingleAsync(upload =>
+            upload.Id == imageUpload.Id
+        );
+        persisted.UploadState.ShouldBe(UploadState.Failed);
+        persisted.ErrorMessages.ShouldBe(["Image upload source has no cover URL."]);
+        imageHosterMock.Verify(
+            hoster =>
+                hoster.UploadImageAsync(
+                    It.IsAny<ImageToUploadDto>(),
+                    It.IsAny<IImageHosterConfig>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_UploadReturnsFailure_MarksFailedWithErrorMessages()
+    {
+        // Arrange
+        imageHosterMock
+            .Setup(hoster =>
+                hoster.UploadImageAsync(
+                    It.IsAny<ImageToUploadDto>(),
+                    It.IsAny<IImageHosterConfig>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                (ImageToUploadDto image, IImageHosterConfig _, CancellationToken _) =>
+                    new UploadImageResult(
+                        IsSuccess: false,
+                        Image: image,
+                        ImageUrls: [],
+                        ErrorMessages: ["upload rejected"]
+                    )
+            );
+        var collection = await AddCollectionWithImageConfigAsync(
+            "https://artworks.example/cover.jpg"
+        );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var imageUpload = await dbContext.ImageUploads.SingleAsync(upload =>
+            upload.ImageUploadConfig.ReleaseCollectionId == collection.Id
+        );
+        imageUpload.UploadState.ShouldBe(UploadState.Failed);
+        imageUpload.ErrorMessages.ShouldBe(["upload rejected"]);
+    }
+
+    [Test]
+    public async Task ProcessAsync_UploadThrows_MarksFailedWithInnerExceptionMessage()
+    {
+        // Arrange
+        imageHosterMock
+            .Setup(hoster =>
+                hoster.UploadImageAsync(
+                    It.IsAny<ImageToUploadDto>(),
+                    It.IsAny<IImageHosterConfig>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(
+                new InvalidOperationException("outer", new InvalidOperationException("inner cause"))
+            );
+        var collection = await AddCollectionWithImageConfigAsync(
+            "https://artworks.example/cover.jpg"
+        );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var imageUpload = await dbContext.ImageUploads.SingleAsync(upload =>
+            upload.ImageUploadConfig.ReleaseCollectionId == collection.Id
+        );
+        imageUpload.UploadState.ShouldBe(UploadState.Failed);
+        imageUpload.ErrorMessages.ShouldBe(["inner cause"]);
+    }
+
+    private async Task<ImageUpload> AddPendingUploadForReleaseWithoutCoverAsync()
+    {
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = $"Release group {Guid.NewGuid():N}",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+            Releases = [],
+        };
+
+        var release = new Release
+        {
+            Name = "Bodies.2023.S01E02-GRP",
+            CreatedAt = DateTime.UtcNow,
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = "/tmp/bodies-no-cover",
+            ReleaseGroup = releaseGroup,
+            ImageUploadConfigs = [],
+        };
+
+        var imageHosterRegistration = NewImageHosterRegistration();
+        var imageUpload = new ImageUpload
+        {
+            CreatedAt = DateTime.UtcNow,
+            UploadState = UploadState.Pending,
+            ImageUrls = [],
+            ErrorMessages = [],
+        };
+        var imageUploadConfig = new ImageUploadConfig
+        {
+            Release = release,
+            Name = "ImgBB Cover",
+            ImageHosterRegistration = imageHosterRegistration,
+            ImageUploads = [imageUpload],
+        };
+
+        dbContext.AddRange(releaseGroup, release, imageHosterRegistration, imageUploadConfig);
+        await dbContext.SaveChangesAsync();
+
+        return imageUpload;
+    }
+
     private void SetupSuccessfulUpload()
     {
         imageHosterMock
