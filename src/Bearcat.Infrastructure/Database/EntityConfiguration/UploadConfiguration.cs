@@ -18,6 +18,8 @@ public class UploadConfiguration : IEntityTypeConfiguration<Upload>
         builder.Property(u => u.PremiumOnlyDownload).IsRequired();
         builder.Property(u => u.ErrorMessages);
 
+        builder.HasIndex(u => new { u.UploadState, u.OnlineState });
+
         builder
             .HasMany(u => u.UploadedFiles)
             .WithOne(u => u.Upload)

@@ -15,6 +15,11 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(n => n.Message).IsRequired().HasMaxLength(2000);
 
         builder
+            .HasIndex(n => new { n.CreatedAt, n.Id })
+            .HasFilter($"\"{nameof(Notification.ResolvedAt)}\" IS NULL")
+            .IsDescending();
+
+        builder
             .HasOne(n => n.LinkCrypterContainer)
             .WithMany(l => l.Notifications)
             .HasForeignKey(n => n.LinkCrypterContainerId)

@@ -18,6 +18,8 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
         builder.Property(r => r.UploadsPostedAt).HasPrecision(4).IsRequired(false);
         builder.Property(r => r.ReleaseCollectionId).IsRequired(false);
 
+        builder.HasIndex(r => r.ReleaseFolderPath);
+
         builder
             .HasMany(r => r.ArchiveConfigs)
             .WithOne(a => a.Release)
