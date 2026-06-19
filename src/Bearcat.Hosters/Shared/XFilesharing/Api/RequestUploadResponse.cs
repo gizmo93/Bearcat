@@ -13,6 +13,19 @@ public class RequestUploadResponse
     [JsonPropertyName("result")]
     public string? UploadUrl { get; set; }
 
+    [JsonPropertyName("upload_url")]
+    public string? UploadUrlAlias
+    {
+        get => UploadUrl;
+        set
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                UploadUrl = value;
+            }
+        }
+    }
+
     [JsonPropertyName("sess_id")]
     public string? SessionId { get; set; }
 }
