@@ -237,7 +237,9 @@ public class ApiClient(
 
         var results = await Task.WhenAll(tasks);
 
-        return results.ToDictionary(result => result.FileUrl, result => result.IsOnline);
+        return results
+            .Where(result => result.IsOnline.HasValue)
+            .ToDictionary(result => result.FileUrl, result => result.IsOnline!.Value);
     }
 
     public async Task<bool> IsApiKeyValidAsync(
@@ -396,7 +398,7 @@ public class ApiClient(
         throw new HttpRequestException("UploadG part upload response did not include an ETag");
     }
 
-    private async Task<(string FileUrl, bool IsOnline)> CheckLinkAsync(
+    private async Task<(string FileUrl, bool? IsOnline)> CheckLinkAsync(
         string authorization,
         FileUrlToCheckDto file,
         SemaphoreSlim semaphore,
@@ -407,7 +409,7 @@ public class ApiClient(
 
         if (!IsUploadGShareableLink(fileUrl))
         {
-            return (FileUrl: fileUrl, IsOnline: false);
+            return (FileUrl: fileUrl, IsOnline: null);
         }
 
         await semaphore.WaitAsync(cancellationToken);
@@ -431,7 +433,7 @@ public class ApiClient(
                 ex.InnerException?.Message ?? ex.Message
             );
 
-            return (FileUrl: fileUrl, IsOnline: false);
+            return (FileUrl: fileUrl, IsOnline: null);
         }
         finally
         {

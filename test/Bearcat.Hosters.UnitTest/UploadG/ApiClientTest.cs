@@ -328,6 +328,30 @@ public class ApiClientTest
     }
 
     [Test]
+    public async Task CheckLinksAsync_EntryCheckThrows_OmitsLinkInsteadOfMarkingOffline()
+    {
+        // Arrange
+        var config = new UploadGConfig { ApiKey = "api-key" };
+        var fileUrl = "https://uploadg.com/drive/s/hash-value";
+
+        apiMock
+            .Setup(x =>
+                x.GetShareableLinkAsync("Bearer api-key", 17, It.IsAny<CancellationToken>())
+            )
+            .ThrowsAsync(new HttpRequestException("network down"));
+
+        // Act
+        var result = await apiClient.CheckLinksAsync(
+            config,
+            [new FileUrlToCheckDto(fileUrl, "17")],
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldNotContainKey(fileUrl);
+    }
+
+    [Test]
     public async Task IsApiKeyValidAsync_SpaceUsageOk_ReturnsTrue()
     {
         // Arrange

@@ -2,10 +2,12 @@ using System.Net;
 using System.Net.Http.Headers;
 using Bearcat.Hosters.Fichier;
 using Bearcat.Hosters.Fichier.Api;
+using Bearcat.Hosters.Fichier.Api.File;
 using Bearcat.Hosters.Fichier.Api.Folder;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Refit;
 using Shouldly;
 
 namespace Bearcat.Hosters.UnitTest.Fichier;
@@ -33,7 +35,10 @@ public class ApiClientTest
             apiMock.Object,
             new HttpClientProvider(httpClientFactoryMock.Object),
             loggerMock.Object
-        );
+        )
+        {
+            RateLimitRetryDelay = TimeSpan.Zero,
+        };
     }
 
     [TearDown]
@@ -298,6 +303,42 @@ public class ApiClientTest
                 )
             );
         });
+    }
+
+    [Test]
+    public async Task CheckLinksAsync_PersistentRateLimiting_OmitsLinkInsteadOfMarkingOffline()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+        var fileUrl = "https://1fichier.com/?abc";
+
+        apiMock
+            .Setup(x =>
+                x.GetFileInfoAsync(
+                    It.IsAny<string>(),
+                    It.Is<FileInfoRequest>(request => request.Url == fileUrl),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                CreateApiResponse<FileInfoResponse>(HttpStatusCode.TooManyRequests, content: null)
+            );
+
+        // Act
+        var result = await apiClient.CheckLinksAsync(config, [fileUrl], CancellationToken.None);
+
+        // Assert
+        result.ShouldNotContainKey(fileUrl);
+    }
+
+    private static ApiResponse<T> CreateApiResponse<T>(HttpStatusCode statusCode, T? content)
+    {
+        return new ApiResponse<T>(
+            new HttpResponseMessage(statusCode),
+            content!,
+            new RefitSettings(),
+            error: null
+        );
     }
 
     private static HttpResponseMessage CreateJsonResponse(string content)

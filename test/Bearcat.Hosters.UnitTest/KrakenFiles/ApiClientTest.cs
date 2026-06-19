@@ -248,6 +248,30 @@ public class ApiClientTest
         result.ShouldBeFalse();
     }
 
+    [Test]
+    public async Task CheckLinksAsync_FileCheckThrows_OmitsLinkInsteadOfMarkingOffline()
+    {
+        // Arrange
+        var config = new KrakenFilesConfig { ApiKey = "api-key" };
+        var fileUrl = "https://krakenfiles.com/view/file-hash/archive.rar.html";
+
+        apiMock
+            .Setup(x =>
+                x.GetFileAsync("bearcat-login-check", "api-key", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(CreateApiResponse<FileResponse>(HttpStatusCode.NotFound));
+
+        apiMock
+            .Setup(x => x.GetFileAsync("file-hash", "api-key", It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("network down"));
+
+        // Act
+        var result = await apiClient.CheckLinksAsync(config, [fileUrl], CancellationToken.None);
+
+        // Assert
+        result.ShouldNotContainKey(fileUrl);
+    }
+
     private static ApiResponse<T> CreateApiResponse<T>(
         HttpStatusCode statusCode,
         T? content = default

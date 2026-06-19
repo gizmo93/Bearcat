@@ -289,6 +289,25 @@ public class ApiClientTest
         calls.ShouldBe(2);
     }
 
+    [Test]
+    public async Task CheckLinksAsync_PersistentTooManyRequests_OmitsLinkInsteadOfMarkingOffline()
+    {
+        // Arrange
+        var fileUrl = "https://alfafile.net/file/file-1";
+
+        apiMock
+            .Setup(x => x.GetFileInfoAsync("auth-token", "file-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse(new FileInfoResponse(), HttpStatusCode.TooManyRequests)
+            );
+
+        // Act
+        var result = await apiClient.CheckLinksAsync(config, [fileUrl], CancellationToken.None);
+
+        // Assert
+        result.ShouldNotContainKey(fileUrl);
+    }
+
     private static ApiResponse<T> CreateApiResponse<T>(
         T content,
         HttpStatusCode statusCode = HttpStatusCode.OK

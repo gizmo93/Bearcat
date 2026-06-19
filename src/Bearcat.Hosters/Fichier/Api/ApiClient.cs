@@ -134,7 +134,9 @@ public class ApiClient(
 
         var results = await Task.WhenAll(checkTasks);
 
-        return results.ToDictionary(result => result.FileUrl, result => result.IsOnline);
+        return results
+            .Where(result => result.IsOnline.HasValue)
+            .ToDictionary(result => result.FileUrl, result => result.IsOnline!.Value);
     }
 
     public async Task<UserInfoResponse> GetUserInfoAsync(
@@ -270,7 +272,7 @@ public class ApiClient(
         return endUploadResponse;
     }
 
-    private async Task<(string FileUrl, bool IsOnline)> CheckLinkAsync(
+    private async Task<(string FileUrl, bool? IsOnline)> CheckLinkAsync(
         FichierConfig config,
         string fileUrl,
         SemaphoreSlim semaphore,
@@ -341,7 +343,7 @@ public class ApiClient(
             }
         }
 
-        return (fileUrl, false);
+        return (fileUrl, null);
     }
 
     private static string GetAuthorizationHeader(string apiKey)

@@ -152,7 +152,9 @@ public class ApiClient(
 
         var results = await Task.WhenAll(checkTasks);
 
-        return results.ToDictionary(result => result.FileUrl, result => result.IsOnline);
+        return results
+            .Where(result => result.IsOnline.HasValue)
+            .ToDictionary(result => result.FileUrl, result => result.IsOnline!.Value);
     }
 
     public async Task<bool> IsApiKeyValidAsync(
@@ -166,7 +168,7 @@ public class ApiClient(
             || response.StatusCode == HttpStatusCode.OK;
     }
 
-    private async Task<(string FileUrl, bool IsOnline)> CheckLinkAsync(
+    private async Task<(string FileUrl, bool? IsOnline)> CheckLinkAsync(
         KrakenFilesConfig config,
         string fileUrl,
         SemaphoreSlim semaphore,
@@ -177,7 +179,7 @@ public class ApiClient(
 
         if (fileHash is null)
         {
-            return (fileUrl, false);
+            return (fileUrl, null);
         }
 
         await semaphore.WaitAsync(cancellationToken);
@@ -197,7 +199,7 @@ public class ApiClient(
                 ex.InnerException?.Message ?? ex.Message
             );
 
-            return (fileUrl, false);
+            return (fileUrl, null);
         }
         finally
         {

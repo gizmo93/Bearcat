@@ -93,66 +93,84 @@ public class ApiClient(
     {
         var fileIdsByUrl = fileUrls.Distinct().ToDictionary(fileUrl => fileUrl, GetFileId);
 
-        var result = fileIdsByUrl.ToDictionary(item => item.Key, _ => false);
-
-        var validFileIds = fileIdsByUrl
-            .Values.OfType<string>()
-            .Where(fileId => !string.IsNullOrWhiteSpace(fileId))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        foreach (var fileIdsBatch in validFileIds.Chunk(MaxFileIdsPerFileInfoRequest))
-        {
-            var fileIdsInCurrentBatch = fileIdsBatch.ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            var response = await api.GetFileInfoAsync(
-                files: string.Join(',', fileIdsBatch),
-                cancellationToken: cancellationToken
+        var urlsByFileId = fileIdsByUrl
+            .Where(item => !string.IsNullOrWhiteSpace(item.Value))
+            .GroupBy(item => item.Value!, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Select(item => item.Key).ToList(),
+                StringComparer.OrdinalIgnoreCase
             );
 
-            if (!response.IsSuccessStatusCode || response.Content is null)
+        var result = new Dictionary<string, bool>();
+
+        foreach (var fileIdsBatch in urlsByFileId.Keys.Chunk(MaxFileIdsPerFileInfoRequest))
+        {
+            try
             {
-                logger.LogInformation(
-                    "Nitroflare file info request failed for {FileIds} with status code {StatusCode}",
-                    string.Join(',', fileIdsBatch),
-                    response.StatusCode
+                var response = await api.GetFileInfoAsync(
+                    files: string.Join(',', fileIdsBatch),
+                    cancellationToken: cancellationToken
                 );
 
-                continue;
-            }
-
-            if (
-                !string.Equals(response.Content.Type, "success", StringComparison.OrdinalIgnoreCase)
-            )
-            {
-                logger.LogInformation(
-                    "Nitroflare file info request failed for {FileIds}: {Message}",
-                    string.Join(',', fileIdsBatch),
-                    response.Content.Message
-                );
-
-                continue;
-            }
-
-            var onlineFileIds =
-                response
-                    .Content.Result?.Files?.Where(file =>
-                        string.Equals(
-                            file.Value.Status,
-                            "online",
-                            StringComparison.OrdinalIgnoreCase
-                        )
-                    )
-                    .Select(file => file.Key)
-                    .ToHashSet(StringComparer.OrdinalIgnoreCase)
-                ?? [];
-
-            foreach (var (fileUrl, fileId) in fileIdsByUrl)
-            {
-                if (fileId is not null && fileIdsInCurrentBatch.Contains(fileId))
+                if (!response.IsSuccessStatusCode || response.Content is null)
                 {
-                    result[fileUrl] = onlineFileIds.Contains(fileId);
+                    logger.LogInformation(
+                        "Nitroflare file info request failed for {FileIds} with status code {StatusCode}",
+                        string.Join(',', fileIdsBatch),
+                        response.StatusCode
+                    );
+
+                    continue;
                 }
+
+                if (
+                    !string.Equals(
+                        response.Content.Type,
+                        "success",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
+                {
+                    logger.LogInformation(
+                        "Nitroflare file info request failed for {FileIds}: {Message}",
+                        string.Join(',', fileIdsBatch),
+                        response.Content.Message
+                    );
+
+                    continue;
+                }
+
+                var onlineFileIds =
+                    response
+                        .Content.Result?.Files?.Where(file =>
+                            string.Equals(
+                                file.Value.Status,
+                                "online",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
+                        .Select(file => file.Key)
+                        .ToHashSet(StringComparer.OrdinalIgnoreCase)
+                    ?? [];
+
+                foreach (var fileId in fileIdsBatch)
+                {
+                    var isOnline = onlineFileIds.Contains(fileId);
+
+                    foreach (var fileUrl in urlsByFileId[fileId])
+                    {
+                        result[fileUrl] = isOnline;
+                    }
+                }
+            }
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                logger.LogWarning(
+                    ex,
+                    "Nitroflare file info request threw for {FileIds}; leaving their online status unchanged",
+                    string.Join(',', fileIdsBatch)
+                );
             }
         }
 

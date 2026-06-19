@@ -174,10 +174,12 @@ public class ApiClient(
 
         var results = await Task.WhenAll(checkTasks);
 
-        return results.ToDictionary(result => result.FileUrl, result => result.IsOnline);
+        return results
+            .Where(result => result.IsOnline.HasValue)
+            .ToDictionary(result => result.FileUrl, result => result.IsOnline!.Value);
     }
 
-    private async Task<(string FileUrl, bool IsOnline)> CheckLinkAsync(
+    private async Task<(string FileUrl, bool? IsOnline)> CheckLinkAsync(
         string token,
         string fileUrl,
         SemaphoreSlim semaphore,
@@ -188,7 +190,7 @@ public class ApiClient(
 
         if (string.IsNullOrWhiteSpace(fileId))
         {
-            return (fileUrl, false);
+            return (fileUrl, null);
         }
 
         foreach (var attempt in Enumerable.Range(1, MaxLinkCheckAttempts))
@@ -250,7 +252,7 @@ public class ApiClient(
             }
         }
 
-        return (fileUrl, false);
+        return (fileUrl, null);
     }
 
     public async Task<InfoResponse> GetUserInfoAsync(
