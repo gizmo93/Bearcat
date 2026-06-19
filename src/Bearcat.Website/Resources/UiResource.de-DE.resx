@@ -765,6 +765,10 @@
   <data name="Open" xml:space="preserve"><value>Öffnen</value></data>
   <data name="MarkPosted" xml:space="preserve"><value>Als gepostet markieren</value></data>
   <data name="PostQueueNothingOpen" xml:space="preserve"><value>Nichts offen zum Posten.</value></data>
+  <data name="PostQueueDisabled" xml:space="preserve"><value>Die Post-Warteschlange ist deaktiviert. Du kannst sie in den Konfigurationen aktivieren.</value></data>
+  <data name="PostQueueConfigurationDescription" xml:space="preserve"><value>Steuert die Post-Warteschlange, die Uploads erfasst, die du noch irgendwo posten musst.</value></data>
+  <data name="PostQueueEnabled" xml:space="preserve"><value>Post-Warteschlange aktivieren</value></data>
+  <data name="PostQueueEnabledDescription" xml:space="preserve"><value>Zeigt die Post Warteschlange und ihre Anzeige im Menü. Deaktiviere sie, wenn du nicht mit der Warteschlange arbeitest.</value></data>
   <data name="PostQueueWorkflowTitle" xml:space="preserve"><value>Posten</value></data>
   <data name="PostQueueProgress" xml:space="preserve"><value>{0} von {1}</value></data>
   <data name="Skip" xml:space="preserve"><value>Überspringen</value></data>

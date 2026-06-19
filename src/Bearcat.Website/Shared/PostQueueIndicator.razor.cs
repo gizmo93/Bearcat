@@ -1,3 +1,5 @@
+using Bearcat.Abstractions.Configurations;
+using Bearcat.Domain.Configurations;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Microsoft.AspNetCore.Components;
@@ -12,6 +14,7 @@ public partial class PostQueueIndicator(
 {
     private readonly CancellationTokenSource pollingCancellation = new();
     private int openCount;
+    private bool enabled = true;
     private Task? pollingTask;
 
     private string BadgeText => openCount > 99 ? "99+" : openCount.ToString();
@@ -30,6 +33,17 @@ public partial class PostQueueIndicator(
     private async Task RefreshCountAsync()
     {
         using var scope = serviceScopeFactory.CreateScope();
+        var configuration =
+            scope.ServiceProvider.GetRequiredService<IApplicationConfigurationProvider>();
+
+        enabled = configuration.GetValue<PostQueueConfiguration>(c => c.Enabled);
+
+        if (!enabled)
+        {
+            openCount = 0;
+            return;
+        }
+
         var releaseReadRepository =
             scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
         var collectionReadRepository =

@@ -10,16 +10,26 @@
             <p class="text-sm text-muted-foreground">@L["PostQueueDescription"]</p>
         </div>
 
-        <BbButton Variant="ButtonVariant.Outline"
-                  Size="ButtonSize.Small"
-                  Disabled="isLoading"
-                  OnClick="LoadAsync">
-            <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
-            @L["Refresh"]
-        </BbButton>
+        @if (enabled)
+        {
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      Disabled="isLoading"
+                      OnClick="LoadAsync">
+                <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
+                @L["Refresh"]
+            </BbButton>
+        }
     </div>
 
-    @if (isLoading)
+    @if (!enabled)
+    {
+        <div class="bearcat-release-empty">
+            <LucideIcon Name="power-off" class="h-5 w-5" />
+            <span>@L["PostQueueDisabled"]</span>
+        </div>
+    }
+    else if (isLoading)
     {
         <div class="bearcat-release-empty">
             <LucideIcon Name="loader-circle" class="h-5 w-5 animate-spin" />

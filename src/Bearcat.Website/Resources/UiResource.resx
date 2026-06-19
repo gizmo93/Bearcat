@@ -765,6 +765,10 @@
   <data name="Open" xml:space="preserve"><value>Open</value></data>
   <data name="MarkPosted" xml:space="preserve"><value>Mark as posted</value></data>
   <data name="PostQueueNothingOpen" xml:space="preserve"><value>Nothing waiting to be posted.</value></data>
+  <data name="PostQueueDisabled" xml:space="preserve"><value>The post queue is disabled. You can enable it in the configurations.</value></data>
+  <data name="PostQueueConfigurationDescription" xml:space="preserve"><value>Controls the post queue that tracks uploads you still need to post somewhere.</value></data>
+  <data name="PostQueueEnabled" xml:space="preserve"><value>Enable post queue</value></data>
+  <data name="PostQueueEnabledDescription" xml:space="preserve"><value>Show the post queue indicator in the menu. Disable it if you do not work with the queue.</value></data>
   <data name="PostQueueWorkflowTitle" xml:space="preserve"><value>Posting</value></data>
   <data name="PostQueueProgress" xml:space="preserve"><value>{0} of {1}</value></data>
   <data name="Skip" xml:space="preserve"><value>Skip</value></data>

@@ -1,3 +1,5 @@
+using Bearcat.Abstractions.Configurations;
+using Bearcat.Domain.Configurations;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
@@ -23,9 +25,20 @@ public partial class PostQueuePage(
     private IReadOnlyList<ReleasePostQueueItemReadModel> releaseItems = [];
     private IReadOnlyList<CollectionPostQueueItemReadModel> collectionItems = [];
     private bool isLoading = true;
+    private bool enabled = true;
 
     protected override async Task OnInitializedAsync()
     {
+        enabled = ScopedServices
+            .GetRequiredService<IApplicationConfigurationProvider>()
+            .GetValue<PostQueueConfiguration>(c => c.Enabled);
+
+        if (!enabled)
+        {
+            isLoading = false;
+            return;
+        }
+
         releaseReadRepository = ScopedServices.GetRequiredService<IReleaseReadRepository>();
         collectionReadRepository =
             ScopedServices.GetRequiredService<IReleaseCollectionReadRepository>();

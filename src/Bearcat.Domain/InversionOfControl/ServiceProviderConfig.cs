@@ -85,6 +85,7 @@ public static class ServiceProviderConfig
             services.AddApplicationConfiguration<ArchiveRepackagingConfiguration>();
             services.AddApplicationConfiguration<InitialUploadConfiguration>();
             services.AddApplicationConfiguration<UploadConcurrencyConfiguration>();
+            services.AddApplicationConfiguration<PostQueueConfiguration>();
             services.AddSingleton<ApplicationConfigurationRegistry>();
             services.AddScoped<
                 IApplicationConfigurationProvider,
