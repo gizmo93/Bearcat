@@ -1,0 +1,190 @@
+@page "/post-queue"
+@inherits OwningComponentBase
+
+<PageTitle>@L["PostQueue"] - Bearcat</PageTitle>
+
+<section class="space-y-6">
+    <div class="bearcat-section-header">
+        <div>
+            <h1 class="text-lg font-semibold">@L["PostQueue"]</h1>
+            <p class="text-sm text-muted-foreground">@L["PostQueueDescription"]</p>
+        </div>
+
+        <BbButton Variant="ButtonVariant.Outline"
+                  Size="ButtonSize.Small"
+                  Disabled="isLoading"
+                  OnClick="LoadAsync">
+            <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
+            @L["Refresh"]
+        </BbButton>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="bearcat-release-empty">
+            <LucideIcon Name="loader-circle" class="h-5 w-5 animate-spin" />
+            <span>@L["Loading"]</span>
+        </div>
+    }
+    else if (collectionItems.Count == 0 && releaseItems.Count == 0)
+    {
+        <div class="bearcat-release-empty">
+            <LucideIcon Name="inbox" class="h-5 w-5" />
+            <span>@L["PostQueueNothingOpen"]</span>
+        </div>
+    }
+    else
+    {
+        @if (collectionItems.Count > 0)
+        {
+            <div class="space-y-3">
+                <div class="bearcat-section-header">
+                    <div class="flex items-center gap-2">
+                        <LucideIcon Name="boxes" class="h-4 w-4" />
+                        <h2 class="text-base font-semibold">@L["Collections"]</h2>
+                        <BbBadge Variant="BadgeVariant.Secondary">@collectionItems.Count</BbBadge>
+                    </div>
+                    <BbButton Size="ButtonSize.Small"
+                              OnClick="@(() => StartCollectionWorkflow())">
+                        <LucideIcon Name="list-checks" class="h-4 w-4" />
+                        @L["StartWorkflow"]
+                    </BbButton>
+                </div>
+
+                @foreach (var item in collectionItems)
+                {
+                    <BbCard Class="border-border/70 shadow-sm">
+                        <BbCardContent Class="space-y-3 p-4">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div class="min-w-0 space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <LucideIcon Name="boxes" class="h-4 w-4 shrink-0 text-muted-foreground" />
+                                        <span class="truncate font-semibold" title="@item.Name">@item.Name</span>
+                                    </div>
+                                    <p class="text-xs text-muted-foreground" title="@item.LatestUploadedAt.ToString("g")">
+                                        @L["LatestUpload"]: @HumanizeUploadedAt(item.LatestUploadedAt)
+                                    </p>
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <BbButton Size="ButtonSize.Small"
+                                              OnClick="@(() => StartCollectionWorkflow(item.ReleaseCollectionId))">
+                                        <LucideIcon Name="external-link" class="h-4 w-4" />
+                                        @L["Open"]
+                                    </BbButton>
+                                    <BbButton Variant="ButtonVariant.Outline"
+                                              Size="ButtonSize.Small"
+                                              OnClick="@(() => MarkCollectionPostedAsync(item.ReleaseCollectionId))">
+                                        <LucideIcon Name="check" class="h-4 w-4" />
+                                        @L["MarkPosted"]
+                                    </BbButton>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                @foreach (var slot in item.SlotGroups)
+                                {
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="text-xs font-medium text-muted-foreground">@slot.SlotName</span>
+                                        @foreach (var hoster in slot.Hosters)
+                                        {
+                                            <BbBadge Variant="BadgeVariant.Secondary">
+                                                @hoster.HosterRegistrationName · @hoster.LinkCount
+                                            </BbBadge>
+                                        }
+                                        @foreach (var container in slot.Containers)
+                                        {
+                                            <BbBadge Variant="BadgeVariant.Outline">
+                                                <LucideIcon Name="shield" class="mr-1 h-3 w-3" />
+                                                @container.LinkCrypterRegistrationName · @container.Count
+                                            </BbBadge>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </BbCardContent>
+                    </BbCard>
+                }
+            </div>
+        }
+
+        @if (releaseItems.Count > 0)
+        {
+            <div class="space-y-3">
+                <div class="bearcat-section-header">
+                    <div class="flex items-center gap-2">
+                        <LucideIcon Name="upload" class="h-4 w-4" />
+                        <h2 class="text-base font-semibold">@L["SingleReleases"]</h2>
+                        <BbBadge Variant="BadgeVariant.Secondary">@releaseItems.Count</BbBadge>
+                    </div>
+                    <BbButton Size="ButtonSize.Small"
+                              OnClick="@(() => StartReleaseWorkflow())">
+                        <LucideIcon Name="list-checks" class="h-4 w-4" />
+                        @L["StartWorkflow"]
+                    </BbButton>
+                </div>
+
+                @foreach (var item in releaseItems)
+                {
+                    <BbCard Class="border-border/70 shadow-sm">
+                        <BbCardContent Class="space-y-3 p-4">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div class="min-w-0 space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <LucideIcon Name="upload" class="h-4 w-4 shrink-0 text-muted-foreground" />
+                                        <span class="truncate font-semibold" title="@item.ReleaseName">@item.ReleaseName</span>
+                                    </div>
+                                    <p class="text-xs text-muted-foreground" title="@item.LatestUploadedAt.ToString("g")">
+                                        @L["LatestUpload"]: @HumanizeUploadedAt(item.LatestUploadedAt)
+                                    </p>
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <BbButton Size="ButtonSize.Small"
+                                              OnClick="@(() => StartReleaseWorkflow(item.ReleaseId))">
+                                        <LucideIcon Name="external-link" class="h-4 w-4" />
+                                        @L["Open"]
+                                    </BbButton>
+                                    <BbButton Variant="ButtonVariant.Outline"
+                                              Size="ButtonSize.Small"
+                                              OnClick="@(() => MarkReleasePostedAsync(item.ReleaseId))">
+                                        <LucideIcon Name="check" class="h-4 w-4" />
+                                        @L["MarkPosted"]
+                                    </BbButton>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                @foreach (var group in item.ArchiveGroups)
+                                {
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="text-xs font-medium text-muted-foreground">@group.ArchiveConfigName</span>
+                                        @foreach (var hoster in group.Hosters)
+                                        {
+                                            <BbBadge Variant="BadgeVariant.Secondary">
+                                                @hoster.HosterRegistrationName · @hoster.LinkCount
+                                            </BbBadge>
+                                        }
+                                    </div>
+                                }
+
+                                @if (item.Containers.Count > 0)
+                                {
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        @foreach (var container in item.Containers)
+                                        {
+                                            <BbBadge Variant="BadgeVariant.Outline">
+                                                <LucideIcon Name="shield" class="mr-1 h-3 w-3" />
+                                                @container.LinkCrypterRegistrationName · @container.Count
+                                            </BbBadge>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </BbCardContent>
+                    </BbCard>
+                }
+            </div>
+        }
+    }
+</section>

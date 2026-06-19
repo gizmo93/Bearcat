@@ -1,4 +1,5 @@
 @page "/release-collections/{ReleaseCollectionId:int}"
+@using Bearcat.Website.Pages.PostQueue
 @inherits OwningComponentBase
 
 @if (!isInitialized)
@@ -9,10 +10,30 @@
 <PageTitle>@L["ReleaseCollection"] - @releaseCollection.Name - Bearcat</PageTitle>
 
 <section class="bearcat-release-shell">
+    @if (IsPostQueueWorkflow)
+    {
+        <PostQueueWorkflowBar Type="PostQueueWorkflowType.Collection" CurrentId="@ReleaseCollectionId" />
+    }
+
     <div class="bearcat-release-header">
         <div class="flex min-w-0 flex-wrap items-start justify-between gap-3">
             <div class="min-w-0 space-y-2">
-                <h1 class="bearcat-release-title font-semibold">@releaseCollection.Name</h1>
+                <div class="flex flex-wrap items-center gap-2">
+                    <h1 class="bearcat-release-title font-semibold">@releaseCollection.Name</h1>
+                    <textarea id="collection-title-copy-@ReleaseCollectionId" hidden readonly>@releaseCollection.Name</textarea>
+                    <button type="button"
+                            class="bearcat-copy-button bearcat-copy-icon-button"
+                            aria-label="@L["CopyTitle"]"
+                            title="@L["CopyTitle"]"
+                            data-copy-target="collection-title-copy-@ReleaseCollectionId"
+                            data-copy-label="@L["CopyTitle"]"
+                            data-copy-success-label="@L["Copied"]"
+                            data-copy-failure-label="@L["CopyFailed"]"
+                            onclick="window.bearcat.copyFromTarget(this)">
+                        <LucideIcon Name="copy" class="h-4 w-4" />
+                        <span class="sr-only bearcat-copy-button-label">@L["CopyTitle"]</span>
+                    </button>
+                </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <BbBadge Variant="BadgeVariant.Outline">@releaseCollection.ReleaseGroupName</BbBadge>
                     <BbBadge Variant="BadgeVariant.Secondary">@releaseCollection.Releases.Count @L["Releases"]</BbBadge>

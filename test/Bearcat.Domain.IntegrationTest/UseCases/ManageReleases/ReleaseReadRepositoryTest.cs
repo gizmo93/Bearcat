@@ -268,6 +268,40 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         url.Url.ShouldBe("https://www.imdb.com/de/title/tt1234567");
     }
 
+    [Test]
+    public async Task GetPostQueueAsync_ExcludesPostedReleases_AndGroupsByArchiveConfig()
+    {
+        // Arrange
+        var openRelease = await AddReleaseWithUploadedFileAsync(
+            "Bearcat.PostQueue.Open.2026-GRP",
+            "Bearcat.PostQueue.Open.2026-GRP.part01.rar",
+            "https://hoster.example/files/open"
+        );
+
+        var postedRelease = await AddReleaseWithUploadedFileAsync(
+            "Bearcat.PostQueue.Posted.2026-GRP",
+            "Bearcat.PostQueue.Posted.2026-GRP.part01.rar",
+            "https://hoster.example/files/posted"
+        );
+        postedRelease.Release.UploadsPostedAt = DateTime.UtcNow.AddDays(1);
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        var item = result.ShouldHaveSingleItem();
+        item.ReleaseId.ShouldBe(openRelease.Release.Id);
+
+        var archiveGroup = item.ArchiveGroups.ShouldHaveSingleItem();
+        archiveGroup.ArchiveConfigName.ShouldBe("Bearcat.PostQueue.Open.2026-GRP archive");
+
+        var hoster = archiveGroup.Hosters.ShouldHaveSingleItem();
+        hoster.HosterRegistrationName.ShouldBe("Bearcat.PostQueue.Open.2026-GRP hoster");
+        hoster.LinkCount.ShouldBe(1);
+    }
+
     private async Task<Release> AddReleaseAsync(
         string name = "Bearcat.Release.2026-GRP",
         ReleaseType releaseType = ReleaseType.Managed

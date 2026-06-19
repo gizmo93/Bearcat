@@ -33,4 +33,6 @@ public class Release
     public ReleaseInfo? ReleaseInfo { get; set; }
 
     public DateTime? ReleaseInfoCheckedAt { get; set; }
+
+    public DateTime? UploadsPostedAt { get; set; }
 }

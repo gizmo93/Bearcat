@@ -24,23 +24,36 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
     [SupplyParameterFromQuery(Name = "archiveConfigId")]
     public int? FocusArchiveConfigId { get; set; }
 
+    [SupplyParameterFromQuery(Name = "workflow")]
+    public string? Workflow { get; set; }
+
     private IReleaseReadRepository releaseReadRepository = null!;
     private ReleaseReadModel release = null!;
     private bool isInitialized;
+    private int? loadedReleaseId;
     private string? activeTab = "overview";
     private readonly Dictionary<string, IReloadableComponent> reloadableComponents = new();
 
-    protected override void OnParametersSet()
+    private bool IsPostQueueWorkflow =>
+        string.Equals(Workflow, "postqueue", StringComparison.OrdinalIgnoreCase);
+
+    protected override void OnInitialized()
     {
-        activeTab = NormalizeTab(RequestedTab);
+        releaseReadRepository = ScopedServices.GetRequiredService<IReleaseReadRepository>();
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
-        await base.OnInitializedAsync();
+        activeTab = NormalizeTab(RequestedTab);
 
-        releaseReadRepository = ScopedServices.GetRequiredService<IReleaseReadRepository>();
+        if (loadedReleaseId != ReleaseId)
+        {
+            await LoadReleaseAsync();
+        }
+    }
 
+    private async Task LoadReleaseAsync()
+    {
         var releaseReadModel = await releaseReadRepository.GetReleaseAsync(ReleaseId);
 
         if (releaseReadModel is null)
@@ -50,6 +63,7 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
         }
 
         release = releaseReadModel;
+        loadedReleaseId = ReleaseId;
         isInitialized = true;
     }
 

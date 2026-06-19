@@ -14,6 +14,8 @@ public class ReleaseCollectionConfiguration : IEntityTypeConfiguration<ReleaseCo
         builder.Property(c => c.Key).IsRequired().HasMaxLength(500);
         builder.Property(c => c.Name).IsRequired().HasMaxLength(500);
         builder.Property(c => c.CreatedAt).IsRequired().HasPrecision(4);
+        builder.Property(c => c.MetadataCheckedAt).HasPrecision(4).IsRequired(false);
+        builder.Property(c => c.UploadsPostedAt).HasPrecision(4).IsRequired(false);
 
         builder.HasIndex(c => new { c.ReleaseGroupId, c.Key }).IsUnique();
 

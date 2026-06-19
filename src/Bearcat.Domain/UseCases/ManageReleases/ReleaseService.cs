@@ -123,6 +123,17 @@ public class ReleaseService(
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task MarkUploadsPostedAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
+        release.UploadsPostedAt = timeProvider.GetLocalNow();
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<int> CreateFromTemplateAsync(
         int releaseTemplateId,
         string releaseFolderPath,

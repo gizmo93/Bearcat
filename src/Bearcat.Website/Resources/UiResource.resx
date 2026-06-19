@@ -757,4 +757,18 @@
   <data name="SeriesMetadataNotResolved" xml:space="preserve"><value>No matching series found.</value></data>
   <data name="UpdateAvailable" xml:space="preserve"><value>Update to {0}</value></data>
   <data name="UpdateAvailableTooltip" xml:space="preserve"><value>Version {0} is available. Click to open the release page.</value></data>
+  <data name="PostQueue" xml:space="preserve"><value>Post queue</value></data>
+  <data name="PostQueueDescription" xml:space="preserve"><value>Releases and collections with new uploads you still need to post somewhere.</value></data>
+  <data name="Collections" xml:space="preserve"><value>Collections</value></data>
+  <data name="SingleReleases" xml:space="preserve"><value>Single releases</value></data>
+  <data name="StartWorkflow" xml:space="preserve"><value>Start workflow</value></data>
+  <data name="Open" xml:space="preserve"><value>Open</value></data>
+  <data name="MarkPosted" xml:space="preserve"><value>Mark as posted</value></data>
+  <data name="PostQueueNothingOpen" xml:space="preserve"><value>Nothing waiting to be posted.</value></data>
+  <data name="PostQueueWorkflowTitle" xml:space="preserve"><value>Posting</value></data>
+  <data name="PostQueueProgress" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="Skip" xml:space="preserve"><value>Skip</value></data>
+  <data name="MarkPostedAndContinue" xml:space="preserve"><value>Done &amp; next</value></data>
+  <data name="LeaveWorkflow" xml:space="preserve"><value>Leave</value></data>
+  <data name="CopyTitle" xml:space="preserve"><value>Copy title</value></data>
 </root>

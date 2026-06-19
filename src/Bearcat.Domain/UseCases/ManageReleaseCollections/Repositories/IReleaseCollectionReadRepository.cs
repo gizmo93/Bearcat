@@ -16,6 +16,12 @@ public interface IReleaseCollectionReadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyList<CollectionPostQueueItemReadModel>> GetPostQueueAsync(
+        CancellationToken cancellationToken = default
+    );
+
+    Task<int> CountPostQueueAsync(CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<CollectionArchiveConfigOptionReadModel>> GetArchiveConfigOptionsAsync(
         int releaseCollectionId,
         CancellationToken cancellationToken = default

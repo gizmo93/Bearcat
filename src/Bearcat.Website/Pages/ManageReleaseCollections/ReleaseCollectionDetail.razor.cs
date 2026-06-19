@@ -20,13 +20,23 @@ public partial class ReleaseCollectionDetail(
     [Parameter]
     public int ReleaseCollectionId { get; set; }
 
+    [SupplyParameterFromQuery(Name = "workflow")]
+    public string? Workflow { get; set; }
+
     private ReleaseCollectionDetailReadModel releaseCollection = null!;
     private bool isInitialized;
     private bool isResolvingMetadata;
+    private int? loadedReleaseCollectionId;
 
-    protected override async Task OnInitializedAsync()
+    private bool IsPostQueueWorkflow =>
+        string.Equals(Workflow, "postqueue", StringComparison.OrdinalIgnoreCase);
+
+    protected override async Task OnParametersSetAsync()
     {
-        await LoadReleaseCollectionAsync();
+        if (loadedReleaseCollectionId != ReleaseCollectionId)
+        {
+            await LoadReleaseCollectionAsync();
+        }
     }
 
     private async Task LoadReleaseCollectionAsync()
@@ -40,6 +50,7 @@ public partial class ReleaseCollectionDetail(
         }
 
         releaseCollection = detail;
+        loadedReleaseCollectionId = ReleaseCollectionId;
         isInitialized = true;
     }
 

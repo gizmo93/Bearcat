@@ -27,4 +27,6 @@ public class ReleaseCollection
     public ReleaseCollectionMetadata? Metadata { get; set; }
 
     public DateTime? MetadataCheckedAt { get; set; }
+
+    public DateTime? UploadsPostedAt { get; set; }
 }

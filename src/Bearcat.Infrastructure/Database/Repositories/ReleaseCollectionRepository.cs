@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.SeriesDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.PostQueue;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
@@ -358,6 +359,181 @@ public class ReleaseCollectionRepository(
                     CoverUrl: metadata.CoverUrl,
                     SeriesDatabaseUrl: metadata.SeriesDatabaseUrl
                 )
+        );
+    }
+
+    public async Task<IReadOnlyList<CollectionPostQueueItemReadModel>> GetPostQueueAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var openCollections = await dbRead
+            .ReleaseCollections.Where(c =>
+                c.Releases.Any(r =>
+                    r.UploadConfigs.Any(uc =>
+                        uc.CollectionUploadSlotId != null
+                        && uc.Uploads.Any(u =>
+                            u.UploadState == UploadState.Completed
+                            && u.UploadedAt != null
+                            && (c.UploadsPostedAt == null || u.UploadedAt > c.UploadsPostedAt)
+                        )
+                    )
+                )
+            )
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                LatestUploadedAt = c
+                    .Releases.SelectMany(r =>
+                        r.UploadConfigs.Where(uc => uc.CollectionUploadSlotId != null)
+                    )
+                    .SelectMany(uc => uc.Uploads)
+                    .Where(u => u.UploadState == UploadState.Completed && u.UploadedAt != null)
+                    .Max(u => u.UploadedAt),
+            })
+            .ToListAsync(cancellationToken);
+
+        if (openCollections.Count == 0)
+        {
+            return [];
+        }
+
+        var openCollectionIds = openCollections.Select(c => c.Id).ToList();
+
+        var latestSlotUploads = await dbRead
+            .Uploads.Where(u =>
+                u.UploadConfig.CollectionUploadSlotId != null
+                && openCollectionIds.Contains(
+                    u.UploadConfig.CollectionUploadSlot!.ReleaseCollectionId
+                )
+            )
+            .GroupBy(u => u.UploadConfigId)
+            .Select(g =>
+                g.OrderByDescending(u => u.UploadedAt ?? u.CreatedAt)
+                    .ThenByDescending(u => u.Id)
+                    .Select(u => new
+                    {
+                        ReleaseCollectionId = u.UploadConfig
+                            .CollectionUploadSlot!
+                            .ReleaseCollectionId,
+                        SlotId = u.UploadConfig.CollectionUploadSlotId!.Value,
+                        SlotName = u.UploadConfig.CollectionUploadSlot!.Name,
+                        HosterRegistrationName = u.UploadConfig.HosterRegistration.Name,
+                        LinkCount = u.UploadedFiles.Count,
+                    })
+                    .First()
+            )
+            .ToListAsync(cancellationToken);
+
+        var slotContainers = await dbRead
+            .LinkCrypterContainers.Where(c =>
+                c.Scope == LinkCrypterContainerScope.ReleaseCollection
+                && c.CollectionUploadSlotId != null
+                && openCollectionIds.Contains(c.CollectionUploadSlot!.ReleaseCollectionId)
+            )
+            .Select(c => new
+            {
+                ReleaseCollectionId = c.CollectionUploadSlot!.ReleaseCollectionId,
+                SlotId = c.CollectionUploadSlotId!.Value,
+                SlotName = c.CollectionUploadSlot!.Name,
+                LinkCrypterRegistrationName = c.LinkCrypterRegistration.Name,
+            })
+            .ToListAsync(cancellationToken);
+
+        var hostersBySlot = latestSlotUploads
+            .GroupBy(u => new
+            {
+                u.ReleaseCollectionId,
+                u.SlotId,
+                u.SlotName,
+            })
+            .ToDictionary(
+                slotGroup => (slotGroup.Key.ReleaseCollectionId, slotGroup.Key.SlotId),
+                slotGroup =>
+                    slotGroup
+                        .GroupBy(u => u.HosterRegistrationName)
+                        .OrderBy(hosterGroup => hosterGroup.Key)
+                        .Select(hosterGroup => new PostQueueHosterReadModel(
+                            HosterRegistrationName: hosterGroup.Key,
+                            LinkCount: hosterGroup.Sum(u => u.LinkCount)
+                        ))
+                        .ToList()
+            );
+
+        var containersBySlot = slotContainers
+            .GroupBy(c => new
+            {
+                c.ReleaseCollectionId,
+                c.SlotId,
+                c.SlotName,
+            })
+            .ToDictionary(
+                slotGroup => (slotGroup.Key.ReleaseCollectionId, slotGroup.Key.SlotId),
+                slotGroup =>
+                    slotGroup
+                        .GroupBy(c => c.LinkCrypterRegistrationName)
+                        .OrderBy(registrationGroup => registrationGroup.Key)
+                        .Select(registrationGroup => new PostQueueContainerReadModel(
+                            LinkCrypterRegistrationName: registrationGroup.Key,
+                            Count: registrationGroup.Count()
+                        ))
+                        .ToList()
+            );
+
+        var slotNames = latestSlotUploads
+            .Select(u => (u.ReleaseCollectionId, u.SlotId, u.SlotName))
+            .Concat(slotContainers.Select(c => (c.ReleaseCollectionId, c.SlotId, c.SlotName)))
+            .Distinct()
+            .ToList();
+
+        var slotGroupsByCollectionId = slotNames
+            .GroupBy(slot => slot.ReleaseCollectionId)
+            .ToDictionary(
+                collectionGroup => collectionGroup.Key,
+                collectionGroup =>
+                    collectionGroup
+                        .OrderBy(slot => slot.SlotName)
+                        .Select(slot => new CollectionPostQueueSlotGroupReadModel(
+                            SlotName: slot.SlotName,
+                            Hosters: hostersBySlot.GetValueOrDefault(
+                                (slot.ReleaseCollectionId, slot.SlotId),
+                                []
+                            ),
+                            Containers: containersBySlot.GetValueOrDefault(
+                                (slot.ReleaseCollectionId, slot.SlotId),
+                                []
+                            )
+                        ))
+                        .ToList()
+            );
+
+        return openCollections
+            .OrderByDescending(c => c.LatestUploadedAt)
+            .ThenBy(c => c.Name)
+            .Select(c => new CollectionPostQueueItemReadModel(
+                ReleaseCollectionId: c.Id,
+                Name: c.Name,
+                LatestUploadedAt: c.LatestUploadedAt!.Value,
+                SlotGroups: slotGroupsByCollectionId.GetValueOrDefault(c.Id, [])
+            ))
+            .ToList();
+    }
+
+    public async Task<int> CountPostQueueAsync(CancellationToken cancellationToken = default)
+    {
+        return await dbRead.ReleaseCollections.CountAsync(
+            c =>
+                c.Releases.Any(r =>
+                    r.UploadConfigs.Any(uc =>
+                        uc.CollectionUploadSlotId != null
+                        && uc.Uploads.Any(u =>
+                            u.UploadState == UploadState.Completed
+                            && u.UploadedAt != null
+                            && (c.UploadsPostedAt == null || u.UploadedAt > c.UploadsPostedAt)
+                        )
+                    )
+                ),
+            cancellationToken
         );
     }
 

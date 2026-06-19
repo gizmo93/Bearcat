@@ -757,4 +757,18 @@
   <data name="SeriesMetadataNotResolved" xml:space="preserve"><value>Keine passende Serie gefunden.</value></data>
   <data name="UpdateAvailable" xml:space="preserve"><value>Update auf {0}</value></data>
   <data name="UpdateAvailableTooltip" xml:space="preserve"><value>Version {0} ist verfügbar. Zum Öffnen der Release-Seite klicken.</value></data>
+  <data name="PostQueue" xml:space="preserve"><value>Post-Warteschlange</value></data>
+  <data name="PostQueueDescription" xml:space="preserve"><value>Releases und Collections mit neuen Uploads, die du noch irgendwo posten musst.</value></data>
+  <data name="Collections" xml:space="preserve"><value>Collections</value></data>
+  <data name="SingleReleases" xml:space="preserve"><value>Einzelreleases</value></data>
+  <data name="StartWorkflow" xml:space="preserve"><value>Workflow starten</value></data>
+  <data name="Open" xml:space="preserve"><value>Öffnen</value></data>
+  <data name="MarkPosted" xml:space="preserve"><value>Als gepostet markieren</value></data>
+  <data name="PostQueueNothingOpen" xml:space="preserve"><value>Nichts offen zum Posten.</value></data>
+  <data name="PostQueueWorkflowTitle" xml:space="preserve"><value>Posten</value></data>
+  <data name="PostQueueProgress" xml:space="preserve"><value>{0} von {1}</value></data>
+  <data name="Skip" xml:space="preserve"><value>Überspringen</value></data>
+  <data name="MarkPostedAndContinue" xml:space="preserve"><value>Erledigt &amp; weiter</value></data>
+  <data name="LeaveWorkflow" xml:space="preserve"><value>Verlassen</value></data>
+  <data name="CopyTitle" xml:space="preserve"><value>Titel kopieren</value></data>
 </root>

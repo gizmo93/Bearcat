@@ -81,6 +81,20 @@ public class ReleaseCollectionService(
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task MarkUploadsPostedAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var releaseCollection = await writeRepository.GetByIdAsync(
+            releaseCollectionId,
+            cancellationToken
+        );
+        releaseCollection.UploadsPostedAt = timeProvider.GetLocalNow();
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<int> CreateUploadSlotAsync(
         int releaseCollectionId,
         string name,

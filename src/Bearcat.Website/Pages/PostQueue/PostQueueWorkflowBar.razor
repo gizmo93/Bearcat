@@ -1,0 +1,49 @@
+@namespace Bearcat.Website.Pages.PostQueue
+@inherits OwningComponentBase
+
+<div class="sticky z-10 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border px-4 py-3" style="top: 4rem; background: var(--card);">
+    <div class="flex min-w-0 items-center gap-3">
+        <LucideIcon Name="list-checks" class="h-5 w-5 shrink-0 text-muted-foreground" />
+        <div class="min-w-0">
+            <p class="text-sm font-semibold">@L["PostQueueWorkflowTitle"]</p>
+            @if (Run is not null)
+            {
+                <p class="text-xs text-muted-foreground">@L["PostQueueProgress", Run.Position, Run.Total]</p>
+            }
+        </div>
+        @if (Run is not null)
+        {
+            <div class="h-2 w-32 overflow-hidden rounded-full bg-border" role="progressbar">
+                <div class="h-full rounded-full bg-primary transition-all" style="width:@(ProgressPercent)%"></div>
+            </div>
+        }
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+        @if (Run is { RemainingCount: > 1 })
+        {
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      Disabled="isBusy"
+                      OnClick="Skip">
+                <LucideIcon Name="skip-forward" class="h-4 w-4" />
+                @L["Skip"]
+            </BbButton>
+        }
+
+        <BbButton Size="ButtonSize.Small"
+                  Disabled="isBusy"
+                  OnClick="CompleteAndContinueAsync">
+            <LucideIcon Name="package-check" class="h-4 w-4" />
+            @L["MarkPostedAndContinue"]
+        </BbButton>
+
+        <BbButton Variant="ButtonVariant.Ghost"
+                  Size="ButtonSize.Small"
+                  Disabled="isBusy"
+                  OnClick="Leave">
+            <LucideIcon Name="x" class="h-4 w-4" />
+            @L["LeaveWorkflow"]
+        </BbButton>
+    </div>
+</div>

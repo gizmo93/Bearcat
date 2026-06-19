@@ -4,6 +4,7 @@ using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.ForumPostRendering;
+using Bearcat.Domain.Shared.PostQueue;
 using Bearcat.Domain.UseCases.ManageImageUploads.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
@@ -103,8 +104,7 @@ public class ReleaseReadRepository(
             .ToListAsync(cancellationToken: cancellationToken);
 
         var uploadIds = latestUploads.Select(u => u.UploadId).ToList();
-        var linksByUploadId =
-            new Dictionary<int, IReadOnlyList<ReleaseOverviewLinkCrypterLinkReadModel>>();
+        var linksByUploadId = new Dictionary<int, List<ReleaseOverviewLinkCrypterLinkReadModel>>();
 
         if (uploadIds.Count > 0)
         {
@@ -164,19 +164,18 @@ public class ReleaseReadRepository(
                 .ToDictionary(
                     group => group.Key,
                     group =>
-                        (IReadOnlyList<ReleaseOverviewLinkCrypterLinkReadModel>)
-                            group
-                                .Select(link => new ReleaseOverviewLinkCrypterLinkReadModel(
-                                    LinkCrypterContainerId: link.LinkCrypterContainerId,
-                                    LinkCrypterRegistrationName: link.LinkCrypterRegistrationName,
-                                    LinkCrypterClassName: link.LinkCrypterClassName,
-                                    ContainerUrl: link.ContainerUrl,
-                                    Scope: link.Scope,
-                                    State: link.State,
-                                    CreatedAt: link.CreatedAt,
-                                    Errors: link.Errors
-                                ))
-                                .ToList()
+                        group
+                            .Select(link => new ReleaseOverviewLinkCrypterLinkReadModel(
+                                LinkCrypterContainerId: link.LinkCrypterContainerId,
+                                LinkCrypterRegistrationName: link.LinkCrypterRegistrationName,
+                                LinkCrypterClassName: link.LinkCrypterClassName,
+                                ContainerUrl: link.ContainerUrl,
+                                Scope: link.Scope,
+                                State: link.State,
+                                CreatedAt: link.CreatedAt,
+                                Errors: link.Errors
+                            ))
+                            .ToList()
                 );
         }
 
@@ -209,6 +208,142 @@ public class ReleaseReadRepository(
                 );
             })
             .ToList();
+    }
+
+    public async Task<IReadOnlyList<ReleasePostQueueItemReadModel>> GetPostQueueAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var openReleases = await dbRead
+            .Releases.Where(r =>
+                r.UploadConfigs.Any(uc =>
+                    uc.CollectionUploadSlotId == null
+                    && uc.Uploads.Any(u =>
+                        u.UploadState == UploadState.Completed
+                        && u.UploadedAt != null
+                        && (r.UploadsPostedAt == null || u.UploadedAt > r.UploadsPostedAt)
+                    )
+                )
+            )
+            .Select(r => new
+            {
+                r.Id,
+                r.Name,
+                LatestUploadedAt = r
+                    .UploadConfigs.Where(uc => uc.CollectionUploadSlotId == null)
+                    .SelectMany(uc => uc.Uploads)
+                    .Where(u => u.UploadState == UploadState.Completed && u.UploadedAt != null)
+                    .Max(u => u.UploadedAt),
+            })
+            .ToListAsync(cancellationToken);
+
+        if (openReleases.Count == 0)
+        {
+            return [];
+        }
+
+        var openReleaseIds = openReleases.Select(r => r.Id).ToList();
+
+        var latestUploads = await dbRead
+            .Uploads.Where(u =>
+                u.UploadConfig.CollectionUploadSlotId == null
+                && openReleaseIds.Contains(u.UploadConfig.ReleaseId)
+            )
+            .GroupBy(u => u.UploadConfigId)
+            .Select(g =>
+                g.OrderByDescending(u => u.UploadedAt ?? u.CreatedAt)
+                    .ThenByDescending(u => u.Id)
+                    .Select(u => new
+                    {
+                        u.UploadConfig.ReleaseId,
+                        ArchiveConfigName = u.UploadConfig.ArchiveConfig.Name,
+                        HosterRegistrationName = u.UploadConfig.HosterRegistration.Name,
+                        UploadId = u.Id,
+                        LinkCount = u.UploadedFiles.Count,
+                    })
+                    .First()
+            )
+            .ToListAsync(cancellationToken);
+
+        var uploadIds = latestUploads.Select(u => u.UploadId).ToList();
+
+        var containerRows = await dbRead
+            .LinkCrypterContainers.Where(c =>
+                c.Scope == LinkCrypterContainerScope.Release
+                && c.UploadId != null
+                && uploadIds.Contains(c.UploadId.Value)
+            )
+            .Select(c => new
+            {
+                ReleaseId = c.Upload!.UploadConfig.ReleaseId,
+                LinkCrypterRegistrationName = c.LinkCrypterRegistration.Name,
+            })
+            .ToListAsync(cancellationToken);
+
+        var archiveGroupsByReleaseId = latestUploads
+            .GroupBy(u => u.ReleaseId)
+            .ToDictionary(
+                releaseGroup => releaseGroup.Key,
+                releaseGroup =>
+                    releaseGroup
+                        .GroupBy(u => u.ArchiveConfigName)
+                        .OrderBy(archiveGroup => archiveGroup.Key)
+                        .Select(archiveGroup => new ReleasePostQueueArchiveGroupReadModel(
+                            ArchiveConfigName: archiveGroup.Key,
+                            Hosters: archiveGroup
+                                .GroupBy(u => u.HosterRegistrationName)
+                                .OrderBy(hosterGroup => hosterGroup.Key)
+                                .Select(hosterGroup => new PostQueueHosterReadModel(
+                                    HosterRegistrationName: hosterGroup.Key,
+                                    LinkCount: hosterGroup.Sum(u => u.LinkCount)
+                                ))
+                                .ToList()
+                        ))
+                        .ToList()
+            );
+
+        var containersByReleaseId = containerRows
+            .GroupBy(c => c.ReleaseId)
+            .ToDictionary(
+                releaseGroup => releaseGroup.Key,
+                releaseGroup =>
+                    releaseGroup
+                        .GroupBy(c => c.LinkCrypterRegistrationName)
+                        .OrderBy(registrationGroup => registrationGroup.Key)
+                        .Select(registrationGroup => new PostQueueContainerReadModel(
+                            LinkCrypterRegistrationName: registrationGroup.Key,
+                            Count: registrationGroup.Count()
+                        ))
+                        .ToList()
+            );
+
+        return openReleases
+            .OrderByDescending(r => r.LatestUploadedAt)
+            .ThenBy(r => r.Name)
+            .Select(r => new ReleasePostQueueItemReadModel(
+                ReleaseId: r.Id,
+                ReleaseName: r.Name,
+                LatestUploadedAt: r.LatestUploadedAt!.Value,
+                ArchiveGroups: archiveGroupsByReleaseId.GetValueOrDefault(r.Id, []),
+                Containers: containersByReleaseId.GetValueOrDefault(r.Id, [])
+            ))
+            .ToList();
+    }
+
+    public async Task<int> CountPostQueueAsync(CancellationToken cancellationToken = default)
+    {
+        return await dbRead.Releases.CountAsync(
+            r =>
+                r.UploadConfigs.Any(uc =>
+                    uc.CollectionUploadSlotId == null
+                    && uc.Uploads.Any(u =>
+                        u.UploadState == UploadState.Completed
+                        && u.UploadedAt != null
+                        && (r.UploadsPostedAt == null || u.UploadedAt > r.UploadsPostedAt)
+                    )
+                ),
+            cancellationToken
+        );
     }
 
     public async Task<IReadOnlyList<ReleaseForumPostUploadReadModel>> GetForumPostUploadsAsync(
