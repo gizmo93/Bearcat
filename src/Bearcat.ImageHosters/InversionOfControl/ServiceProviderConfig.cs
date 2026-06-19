@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.ImageHoster;
+using Bearcat.ImageHosters.DirectUpload.InversionOfControl;
 using Bearcat.ImageHosters.ImgBb.InversionOfControl;
 using Bearcat.ImageHosters.PixelFox.InversionOfControl;
 using Bearcat.ImageHosters.PixHost.InversionOfControl;
@@ -15,6 +16,7 @@ public static class ServiceProviderConfig
             services.AddImgBb();
             services.AddPixHost();
             services.AddPixelFox();
+            services.AddDirectUpload();
             services.AddScoped<IImageHosterFactory, ImageHosterFactory>();
         }
     }
