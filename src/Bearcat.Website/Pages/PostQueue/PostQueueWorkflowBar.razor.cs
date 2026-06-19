@@ -6,9 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Bearcat.Website.Pages.PostQueue;
 
 public partial class PostQueueWorkflowBar(
+    IServiceScopeFactory serviceScopeFactory,
     PostQueueWorkflowState workflowState,
     NavigationManager navigationManager
-) : OwningComponentBase
+) : ComponentBase
 {
     [Parameter]
     public PostQueueWorkflowType Type { get; set; }
@@ -58,16 +59,18 @@ public partial class PostQueueWorkflowBar(
 
     private async Task MarkPostedAsync(int id)
     {
+        using var scope = serviceScopeFactory.CreateScope();
+
         switch (Type)
         {
             case PostQueueWorkflowType.Release:
-                await ScopedServices
-                    .GetRequiredService<ReleaseService>()
+                await scope
+                    .ServiceProvider.GetRequiredService<ReleaseService>()
                     .MarkUploadsPostedAsync(id);
                 break;
             case PostQueueWorkflowType.Collection:
-                await ScopedServices
-                    .GetRequiredService<ReleaseCollectionService>()
+                await scope
+                    .ServiceProvider.GetRequiredService<ReleaseCollectionService>()
                     .MarkUploadsPostedAsync(id);
                 break;
         }
