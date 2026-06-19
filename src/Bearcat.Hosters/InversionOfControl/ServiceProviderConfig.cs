@@ -1,5 +1,6 @@
 ﻿using Bearcat.Abstractions.Hoster;
 using Bearcat.Hosters.Alfafile.InversionOfControl;
+using Bearcat.Hosters.ClicknUpload.InversionOfControl;
 using Bearcat.Hosters.DDownload.InversionOfControl;
 using Bearcat.Hosters.Fichier.InversionOfControl;
 using Bearcat.Hosters.FileQ.InversionOfControl;
@@ -23,6 +24,7 @@ public static class ServiceProviderConfig
     {
         services.AddAlfafile();
         services.AddRapidgator();
+        services.AddClicknUpload();
         services.AddDdownload();
         services.AddFileQ();
         services.AddFileServe();
