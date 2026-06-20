@@ -93,6 +93,14 @@ jobs:
             ln -s "../Resources/wwwroot" "$macos_dir/wwwroot"
           fi
 
+          # The Playwright driver ships a nested node binary. Nested code under
+          # Contents/MacOS breaks codesign ("bundle format unrecognized"). Relocate it
+          # into Resources and symlink it back, exactly like wwwroot above.
+          if [ -d "$macos_dir/.playwright" ]; then
+            mv "$macos_dir/.playwright" "$resources_dir/.playwright"
+            ln -s "../Resources/.playwright" "$macos_dir/.playwright"
+          fi
+
           icon_source="src/Bearcat.Desktop/Assets/bearcat-icon.png"
           iconset="$RUNNER_TEMP/BearcatIcon.iconset"
           rm -rf "$iconset"

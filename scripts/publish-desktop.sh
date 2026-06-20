@@ -100,6 +100,14 @@ package_macos_app() {
     ln -s "../Resources/wwwroot" "$macos_dir/wwwroot"
   fi
 
+  # The Playwright driver ships a nested node binary; nested code under
+  # Contents/MacOS breaks codesign ("bundle format unrecognized"). Relocate it
+  # into Resources and symlink it back, exactly like wwwroot above.
+  if [ -d "$macos_dir/.playwright" ]; then
+    mv "$macos_dir/.playwright" "$resources_dir/.playwright"
+    ln -s "../Resources/.playwright" "$macos_dir/.playwright"
+  fi
+
   if command -v sips >/dev/null 2>&1 && command -v iconutil >/dev/null 2>&1; then
     sips -z 16 16 "$icon_source" --out "$iconset/icon_16x16.png" >/dev/null
     sips -z 32 32 "$icon_source" --out "$iconset/icon_16x16@2x.png" >/dev/null
