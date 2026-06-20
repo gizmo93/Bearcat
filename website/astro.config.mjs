@@ -77,6 +77,7 @@ export default defineConfig({
 					items: [
 						{ label: 'Advanced Configuration', slug: 'advanced-configuration' },
 						{ label: 'Forum Post Templates', slug: 'forum-post-templates' },
+						{ label: 'Posting to Forums', slug: 'posting-to-forums' },
 					],
 				},
                 {

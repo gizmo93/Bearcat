@@ -49,6 +49,12 @@ first release detail page and shows a workflow bar at the top with your progress
 can render the forum post the usual way on the **Overview** tab. See
 [Forum post templates](/Bearcat/forum-post-templates/) for how rendering works.
 
+If you set up a forum as a distribution site, you can also use **Post to forum** on the **Overview**
+tab instead of copying the rendered text by hand. It builds the post from the same forum post
+templates and prepares a draft with a preview link, so you only have to check it and submit. It does
+not submit for you, so mark the release as posted here once the post is up. See
+[Posting to Forums](/Bearcat/posting-to-forums/).
+
 ![post-queue-toolbar.png](images/post-queue-toolbar.png)
 
 The workflow bar gives you three actions:
