@@ -3,7 +3,6 @@
         <Project Path="src/Bearcat.Cli/Bearcat.Cli.csproj" />
         <Project Path="src/Bearcat.Desktop/Bearcat.Desktop.csproj" />
         <Project Path="src/Bearcat.Host/Bearcat.Host.csproj" />
-        <Project Path="src/Bearcat.DistributionSites.Spike/Bearcat.DistributionSites.Spike.csproj" />
     </Folder>
     <Folder Name="/2_Shared/">
         <Project Path="src/Bearcat.Abstractions/Bearcat.Abstractions.csproj" />
