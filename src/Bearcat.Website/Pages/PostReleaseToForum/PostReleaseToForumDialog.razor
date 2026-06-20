@@ -1,0 +1,106 @@
+@using Bearcat.Website.Pages.PostReleaseToForum.Steps
+@inherits OwningComponentBase
+
+<div class="bearcat-post-wizard space-y-4 pr-1">
+    @if (errorMessage is not null)
+    {
+        <div class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            @errorMessage
+        </div>
+    }
+
+    @switch (step)
+    {
+        case WizardStep.Site:
+            <ForumWizardSiteStep IsEmpty="registrations.Count == 0"
+                                 Options="RegistrationOptions"
+                                 @bind-SelectedRegistrationId="selectedRegistrationId" />
+            break;
+
+        case WizardStep.Target:
+            <ForumWizardTargetStep @bind-PostName="postName"
+                                   OnNormalize="NormalizeReleaseName"
+                                   TargetOptions="TargetOptions"
+                                   @bind-SelectedTargetId="selectedTargetId" />
+            break;
+
+        case WizardStep.Thread:
+            <ForumWizardThreadStep ExistingThreadCount="existingThreads.Count"
+                                   PostName="@postName"
+                                   ThreadOptions="ThreadOptions"
+                                   @bind-ThreadSelection="threadSelection" />
+            break;
+
+        case WizardStep.Compose:
+            <ForumWizardComposeStep HasTemplates="templates.Count > 0"
+                                    TemplateOptions="TemplateOptions"
+                                    SelectedTemplateId="selectedTemplateId"
+                                    SelectedTemplateIdChanged="HandleTemplateChangedAsync"
+                                    RenderErrors="renderErrors"
+                                    IsNewThread="IsNewThread"
+                                    @bind-PostName="postName"
+                                    HasPrefixes="prefixes.Count > 0"
+                                    PrefixOptions="PrefixOptions"
+                                    @bind-SelectedPrefixIds="selectedPrefixIds"
+                                    @bind-Body="body" />
+            break;
+
+        case WizardStep.Done:
+            <ForumWizardDoneStep OpenUrl="@preparedDraft!.OpenUrl" />
+            break;
+    }
+
+    <div class="flex justify-between gap-2 pt-2">
+        <div>
+            @if (step is WizardStep.Target or WizardStep.Thread or WizardStep.Compose)
+            {
+                <BbButton Variant="ButtonVariant.Outline" Disabled="isBusy" OnClick="GoBack">
+                    @L["Back"]
+                </BbButton>
+            }
+        </div>
+
+        <div class="flex gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CloseAsync">
+                @(step == WizardStep.Done ? L["Close"] : L["Cancel"])
+            </BbButton>
+
+            @switch (step)
+            {
+                case WizardStep.Site:
+                    <BbButton Disabled="@(isBusy || selectedRegistrationId == 0)" OnClick="LoadHierarchyAsync">
+                        @BusyIcon()
+                        @L["Next"]
+                    </BbButton>
+                    break;
+
+                case WizardStep.Target:
+                    <BbButton Disabled="@(isBusy || selectedTargetId is null || string.IsNullOrWhiteSpace(postName))" OnClick="SearchThreadsAsync">
+                        @BusyIcon()
+                        @L["Next"]
+                    </BbButton>
+                    break;
+
+                case WizardStep.Thread:
+                    <BbButton Disabled="isBusy" OnClick="PrepareComposeAsync">
+                        @BusyIcon()
+                        @L["Next"]
+                    </BbButton>
+                    break;
+
+                case WizardStep.Compose:
+                    <BbButton Disabled="@(isBusy || templates.Count == 0)" OnClick="CreateDraftAsync">
+                        @BusyIcon()
+                        @L["PrepareDraft"]
+                    </BbButton>
+                    break;
+            }
+        </div>
+    </div>
+</div>
+
+@code
+{
+    private RenderFragment BusyIcon() =>
+        @<LucideIcon Name="loader-circle" class="@($"h-4 w-4 {(isBusy ? "animate-spin" : "hidden")}")" />;
+}

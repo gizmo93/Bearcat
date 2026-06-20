@@ -1,0 +1,75 @@
+@inherits OwningComponentBase
+
+@if (!isInitialized)
+{
+    return;
+}
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="formModel.Name"
+                              Label="@L["Name"]"
+                              Placeholder="@L["ConfigurationNamePlaceholder"]" />
+
+            <BbFormFieldSelect TValue="string"
+                               @bind-Value="formModel.ClassName"
+                               @bind-Value:after="OnSelectedDistributionSiteChanged"
+                               Label="@L["DistributionSite"]"
+                               Disabled="IsEditMode"
+                               Placeholder="@L["SelectDistributionSite"]"
+                               Options="distributionSites.Select(distributionSite => new SelectOption<string>(distributionSite.ClassName, distributionSite.Name))" />
+
+            @if (SelectedDistributionSite is not null)
+            {
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-sm font-medium">@L["Configuration"]</p>
+                        <p class="text-xs text-muted-foreground">
+                            @L["DistributionSiteConfigurationHelp"]
+                        </p>
+                    </div>
+
+                    @foreach (var key in SelectedDistributionSite.ConfigurationKeys)
+                    {
+                        var isSecretField = IsSecretField(key);
+
+                        <div class="grid gap-2">
+                            <label class="text-sm font-medium">@key</label>
+                            <div class="flex items-center gap-2">
+                                <BbInput Value="@formModel.Configuration.GetValueOrDefault(key)"
+                                         ValueChanged="@(value => OnConfigurationValueChanged(key, value))"
+                                         Type="@(isSecretField && !displayedSecrets.Contains(key) ? InputType.Password : InputType.Text)"
+                                         class="flex-1" />
+
+                                @if (isSecretField)
+                                {
+                                    <BbButton Variant="ButtonVariant.Ghost"
+                                              Size="ButtonSize.IconSmall"
+                                              AriaLabel="@L["TogglePasswordVisibility"]"
+                                              OnClick="@(() => ToggleShowHideSecret(key))">
+                                        <LucideIcon Name="@(displayedSecrets.Contains(key) ? "eye-off" : "eye")" class="h-4 w-4" />
+                                    </BbButton>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <ValidationMessage For="@(() => formModel.Configuration)" />
+                </div>
+            }
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

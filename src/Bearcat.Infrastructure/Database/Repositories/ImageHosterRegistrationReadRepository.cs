@@ -17,8 +17,7 @@ public class ImageHosterRegistrationReadRepository(
         var imageHostersByClassName = imageHosterFactory.GetByClassName();
 
         var registrations = await dbRead
-            .ImageHosterRegistrations.AsNoTracking()
-            .OrderBy(registration => registration.Name)
+            .ImageHosterRegistrations.OrderBy(registration => registration.Name)
             .Select(registration => new
             {
                 registration.Id,
@@ -52,8 +51,7 @@ public class ImageHosterRegistrationReadRepository(
         var imageHostersByClassName = imageHosterFactory.GetByClassName();
 
         var registration = await dbRead
-            .ImageHosterRegistrations.AsNoTracking()
-            .Where(registration => registration.Id == id)
+            .ImageHosterRegistrations.Where(registration => registration.Id == id)
             .Select(registration => new
             {
                 registration.Id,

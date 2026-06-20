@@ -1,0 +1,20 @@
+<div class="space-y-3">
+    <div class="flex items-center gap-2 text-sm font-medium text-foreground">
+        <LucideIcon Name="circle-check" class="h-5 w-5 text-emerald-500" />
+        @L["DraftPrepared"]
+    </div>
+    <p class="text-sm text-muted-foreground">@L["DraftPreparedHelp"]</p>
+    <a href="@OpenUrl"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-accent">
+        <LucideIcon Name="external-link" class="h-4 w-4" />
+        @L["OpenDraftInForum"]
+    </a>
+</div>
+
+@code
+{
+    [Parameter]
+    public string OpenUrl { get; set; } = string.Empty;
+}

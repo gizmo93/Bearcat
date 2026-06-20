@@ -1,0 +1,28 @@
+<div class="space-y-2">
+    <p class="text-sm text-muted-foreground">
+        @L["ExistingThreadsFound", ExistingThreadCount, PostName]
+    </p>
+    <BbFormFieldSelect TValue="string"
+                       Value="ThreadSelection"
+                       ValueChanged="ThreadSelectionChanged"
+                       Label="@L["Thread"]"
+                       Options="ThreadOptions" />
+</div>
+
+@code
+{
+    [Parameter]
+    public int ExistingThreadCount { get; set; }
+
+    [Parameter]
+    public string PostName { get; set; } = string.Empty;
+
+    [Parameter]
+    public IEnumerable<SelectOption<string>> ThreadOptions { get; set; } = [];
+
+    [Parameter]
+    public string ThreadSelection { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> ThreadSelectionChanged { get; set; }
+}

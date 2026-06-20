@@ -7,6 +7,7 @@ public interface IBearcatReadDbContext
 {
     public DbSet<HosterRegistration> HosterRegistrations { get; set; }
     public DbSet<ImageHosterRegistration> ImageHosterRegistrations { get; set; }
+    public DbSet<DistributionSiteRegistration> DistributionSiteRegistrations { get; set; }
     public DbSet<ImageUploadConfig> ImageUploadConfigs { get; set; }
     public DbSet<ImageUpload> ImageUploads { get; set; }
     public DbSet<ImageUploadUrl> ImageUploadUrls { get; set; }

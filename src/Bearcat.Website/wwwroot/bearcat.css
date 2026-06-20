@@ -2320,6 +2320,15 @@ a {
     line-height: 1.5;
 }
 
+.bearcat-post-wizard {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.bearcat-post-wizard-textarea {
+    min-height: 14rem;
+}
+
 @media (min-width: 640px) {
     .bearcat-folder-field {
         grid-template-columns: minmax(0, 1fr) auto;

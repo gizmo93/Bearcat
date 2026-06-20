@@ -3,17 +3,20 @@ using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageForumPostTemplates;
+using Bearcat.Website.Pages.PostReleaseToForum;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class ReleaseOverview(
     ToastService toastService,
     DialogService dialogService,
-    IServiceScopeFactory serviceScopeFactory
+    IServiceScopeFactory serviceScopeFactory,
+    IJSRuntime jsRuntime
 ) : ComponentBase, IReloadableComponent
 {
     [Parameter]
@@ -37,21 +40,8 @@ public partial class ReleaseOverview(
     private bool isLoading;
     private int? loadedReleaseId;
     private string? loadedReleaseFolderPath;
-    private string NfoCopyTargetId => $"release-overview-nfo-{ReleaseId}";
     private bool CanCopyNfo => !isLoading && !string.IsNullOrEmpty(nfoContent);
     private bool CanSaveNfoFile => !isLoading && releaseNfo is not null && !hasLocalNfo;
-    private string NfoCopyButtonTitle =>
-        CanCopyNfo ? L["CopyNfoIntoClipboard"] : L["NoNfoFileAvailable"];
-
-    private string GetNfoSaveButtonTitle()
-    {
-        if (releaseNfo is null)
-        {
-            return L["NoNfoFileAvailable"];
-        }
-
-        return hasLocalNfo ? L["NfoFileAlreadyExists"] : L["SaveNfoFile"];
-    }
 
     private string CoverDownloadUrl => $"/releases/{ReleaseId}/cover";
     private string CoverDownloadFileName => GetCoverDownloadFileName();
@@ -143,6 +133,24 @@ public partial class ReleaseOverview(
         }
     }
 
+    private async Task CopyNfoAsync()
+    {
+        if (string.IsNullOrEmpty(nfoContent))
+        {
+            return;
+        }
+
+        try
+        {
+            await jsRuntime.InvokeAsync<bool>("bearcat.copyText", nfoContent);
+            toastService.Success(L["Copied"]);
+        }
+        catch (JSException)
+        {
+            toastService.Error(L["CopyFailed"]);
+        }
+    }
+
     private async Task ShowLinksDialogAsync(ReleaseOverviewUploadReadModel upload)
     {
         if (upload.UploadId is null)
@@ -165,6 +173,27 @@ public partial class ReleaseOverview(
                 Description = L["UploadLinksDialogDescription", upload.UploadConfigName],
                 Size = DialogSize.Full,
                 ShowClose = true,
+            }
+        );
+    }
+
+    private async Task ShowPostToForumDialogAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(PostReleaseToForumDialog.ReleaseId)] = ReleaseId,
+            [nameof(PostReleaseToForumDialog.ReleaseName)] = ReleaseName,
+        };
+
+        await dialogService.OpenAsync<PostReleaseToForumDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["PostNamedReleaseToForum", ReleaseName],
+                Description = L["PostReleaseToForumDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
             }
         );
     }

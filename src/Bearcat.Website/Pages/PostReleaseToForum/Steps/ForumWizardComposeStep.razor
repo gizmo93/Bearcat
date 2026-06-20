@@ -1,0 +1,108 @@
+<div class="space-y-4">
+    @if (!HasTemplates)
+    {
+        <div class="bearcat-release-empty">
+            <LucideIcon Name="inbox" class="h-5 w-5" />
+            <span>@L["NoForumPostTemplatesFound"]</span>
+        </div>
+    }
+    else
+    {
+        <BbFormFieldSelect TValue="int"
+                           Value="SelectedTemplateId"
+                           ValueChanged="SelectedTemplateIdChanged"
+                           Label="@L["ForumPostTemplate"]"
+                           Placeholder="@L["SelectForumPostTemplate"]"
+                           Options="TemplateOptions" />
+    }
+
+    @if (RenderErrors.Count > 0)
+    {
+        <div class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            @foreach (var error in RenderErrors)
+            {
+                <p>@error</p>
+            }
+        </div>
+    }
+
+    @if (IsNewThread)
+    {
+        <BbFormFieldInput TValue="string"
+                          Value="PostName"
+                          ValueChanged="PostNameChanged"
+                          Label="@L["ThreadTitle"]" />
+
+        @if (HasPrefixes)
+        {
+            <BbFormFieldMultiSelect TValue="string"
+                                    Values="SelectedPrefixIds"
+                                    ValuesChanged="SelectedPrefixIdsChanged"
+                                    Label="@L["ThreadPrefixes"]"
+                                    HelperText="@L["ThreadPrefixesHelp"]"
+                                    Placeholder="@L["SelectThreadPrefixes"]"
+                                    SearchPlaceholder="@L["Search"]"
+                                    ShowSelectAll="false"
+                                    MatchTriggerWidth="true"
+                                    Options="PrefixOptions" />
+        }
+    }
+
+    <div class="space-y-2">
+        <label class="text-sm font-medium" for="forum-post-body">@L["ForumPostBody"]</label>
+        <textarea id="forum-post-body"
+                  class="bearcat-rendered-forum-post bearcat-post-wizard-textarea"
+                  value="@Body"
+                  @onchange="OnBodyChangedAsync"></textarea>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public bool HasTemplates { get; set; }
+
+    [Parameter]
+    public IEnumerable<SelectOption<int>> TemplateOptions { get; set; } = [];
+
+    [Parameter]
+    public int SelectedTemplateId { get; set; }
+
+    [Parameter]
+    public EventCallback<int> SelectedTemplateIdChanged { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<string> RenderErrors { get; set; } = [];
+
+    [Parameter]
+    public bool IsNewThread { get; set; }
+
+    [Parameter]
+    public string PostName { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> PostNameChanged { get; set; }
+
+    [Parameter]
+    public bool HasPrefixes { get; set; }
+
+    [Parameter]
+    public IEnumerable<SelectOption<string>> PrefixOptions { get; set; } = [];
+
+    [Parameter]
+    public IEnumerable<string> SelectedPrefixIds { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<IEnumerable<string>> SelectedPrefixIdsChanged { get; set; }
+
+    [Parameter]
+    public string Body { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> BodyChanged { get; set; }
+
+    private Task OnBodyChangedAsync(ChangeEventArgs args)
+    {
+        return BodyChanged.InvokeAsync(args.Value?.ToString() ?? string.Empty);
+    }
+}

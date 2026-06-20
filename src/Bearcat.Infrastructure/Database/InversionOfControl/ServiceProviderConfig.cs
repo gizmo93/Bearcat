@@ -4,6 +4,7 @@ using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks.Repositories;
+using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageImageHosters.Repositories;
@@ -23,6 +24,7 @@ using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.DistributionSites;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,6 +62,8 @@ public static class ServiceProviderConfig
             });
 
             services.AddRepositories();
+
+            services.AddScoped<IDistributionSessionStore, DatabaseDistributionSessionStore>();
         }
 
         private void AddRepositories()
@@ -83,6 +87,14 @@ public static class ServiceProviderConfig
             services.AddScoped<
                 IImageHosterRegistrationWriteRepository,
                 ImageHosterRegistrationWriteRepository
+            >();
+            services.AddScoped<
+                IDistributionSiteRegistrationWriteRepository,
+                DistributionSiteRegistrationWriteRepository
+            >();
+            services.AddScoped<
+                IDistributionSiteRegistrationReadRepository,
+                DistributionSiteRegistrationReadRepository
             >();
             services.AddScoped<
                 IImageUploadConfigWriteRepository,

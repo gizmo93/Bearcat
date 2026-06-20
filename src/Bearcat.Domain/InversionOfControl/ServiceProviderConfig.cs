@@ -6,6 +6,7 @@ using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks;
+using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
 using Bearcat.Domain.UseCases.ManageHosters;
@@ -41,6 +42,8 @@ public static class ServiceProviderConfig
         {
             services.AddScoped<HosterRegistrationService>();
             services.AddScoped<ImageHosterService>();
+            services.AddScoped<DistributionSiteSessionService>();
+            services.AddScoped<DistributionSiteRegistrationService>();
             services.AddScoped<ImageUploadConfigService>();
             services.AddScoped<ImageUploadService>();
             services.AddScoped<BackgroundTaskStateService>();

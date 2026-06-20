@@ -17,8 +17,7 @@ public class LinkCrypterRegistrationReadRepository(
         var cryptersByClassName = linkCrypterFactory.GetByClassName();
 
         var registrations = await dbRead
-            .LinkCrypterRegistrations.AsNoTracking()
-            .Select(registration => new
+            .LinkCrypterRegistrations.Select(registration => new
             {
                 registration.Id,
                 registration.Name,
@@ -54,8 +53,7 @@ public class LinkCrypterRegistrationReadRepository(
         var cryptersByClassName = linkCrypterFactory.GetByClassName();
 
         var registration = await dbRead
-            .LinkCrypterRegistrations.AsNoTracking()
-            .Where(l => l.Id == id)
+            .LinkCrypterRegistrations.Where(l => l.Id == id)
             .Select(registration => new
             {
                 registration.Id,

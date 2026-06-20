@@ -323,6 +323,41 @@ namespace BearCat.Infrastructure.Migrations
                     b.ToTable("CollectionUploadSlots");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.DistributionSiteRegistration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DistributionSiteClassName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("EncryptedSession")
+                        .HasMaxLength(8000)
+                        .HasColumnType("character varying(8000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("SerializedConfig")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DistributionSiteRegistrations");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.ForumPostTemplate", b =>
                 {
                     b.Property<int>("Id")

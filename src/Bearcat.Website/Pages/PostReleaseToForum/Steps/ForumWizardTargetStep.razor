@@ -1,0 +1,46 @@
+<div class="space-y-4">
+    <div class="grid gap-2">
+        <label class="text-sm font-medium">@L["ReleaseName"]</label>
+        <div class="flex items-center gap-2">
+            <BbInput Value="@PostName"
+                     ValueChanged="@(value => PostNameChanged.InvokeAsync(value ?? string.Empty))"
+                     class="flex-1" />
+            <BbButton Variant="ButtonVariant.Outline" OnClick="OnNormalize">
+                <LucideIcon Name="replace" class="h-4 w-4" />
+                @L["DotsToSpaces"]
+            </BbButton>
+        </div>
+        <p class="text-xs text-muted-foreground">@L["ReleaseNameHelp"]</p>
+    </div>
+
+    <BbFormFieldCombobox TValue="string"
+                         Value="SelectedTargetId"
+                         ValueChanged="SelectedTargetIdChanged"
+                         Label="@L["Subforum"]"
+                         Placeholder="@L["SelectSubforum"]"
+                         SearchPlaceholder="@L["Search"]"
+                         EmptyMessage="@L["NoSubforumFound"]"
+                         MatchTriggerWidth="true"
+                         Options="TargetOptions" />
+</div>
+
+@code
+{
+    [Parameter]
+    public string PostName { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> PostNameChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnNormalize { get; set; }
+
+    [Parameter]
+    public IEnumerable<SelectOption<string>> TargetOptions { get; set; } = [];
+
+    [Parameter]
+    public string? SelectedTargetId { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> SelectedTargetIdChanged { get; set; }
+}

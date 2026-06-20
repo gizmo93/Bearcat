@@ -81,7 +81,7 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
 
     private IQueryable<Notification> BaseQuery()
     {
-        return dbRead.Notifications.AsNoTracking();
+        return dbRead.Notifications.AsQueryable();
     }
 
     private static Expression<Func<Notification, NotificationProjection>> ToProjection()

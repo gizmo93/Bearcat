@@ -255,6 +255,7 @@
   <data name="NoConfigurationRequired" xml:space="preserve"><value>No configuration required</value></data>
   <data name="NoExternalInfos" xml:space="preserve"><value>No external infos</value></data>
   <data name="NoNfoFileAvailable" xml:space="preserve"><value>No NFO file available</value></data>
+  <data name="Nfo" xml:space="preserve"><value>NFO</value></data>
   <data name="NfoFileAlreadyExists" xml:space="preserve"><value>Release folder already contains an NFO file.</value></data>
   <data name="NfoFileSaveFailed" xml:space="preserve"><value>NFO file could not be saved: {0}</value></data>
   <data name="NfoFileSaved" xml:space="preserve"><value>NFO file {0} saved.</value></data>
@@ -775,4 +776,45 @@
   <data name="MarkPostedAndContinue" xml:space="preserve"><value>Done &amp; next</value></data>
   <data name="LeaveWorkflow" xml:space="preserve"><value>Leave</value></data>
   <data name="CopyTitle" xml:space="preserve"><value>Copy title</value></data>
+  <data name="DistributionSites" xml:space="preserve"><value>Distribution sites</value></data>
+  <data name="DistributionSiteRegistrations" xml:space="preserve"><value>Distribution site registrations</value></data>
+  <data name="DistributionSiteRegistrationsIntro" xml:space="preserve"><value>Manage distribution sites and check whether login works.</value></data>
+  <data name="NewDistributionSite" xml:space="preserve"><value>New distribution site</value></data>
+  <data name="DistributionSite" xml:space="preserve"><value>Distribution site</value></data>
+  <data name="AddDistributionSite" xml:space="preserve"><value>Add distribution site</value></data>
+  <data name="DistributionSiteDialogDescription" xml:space="preserve"><value>Add distribution site credentials.</value></data>
+  <data name="DistributionSiteConfigurationHelp" xml:space="preserve"><value>Provide the credentials for the selected distribution site.</value></data>
+  <data name="SelectDistributionSite" xml:space="preserve"><value>Select a distribution site</value></data>
+  <data name="SelectDistributionSiteRequired" xml:space="preserve"><value>You need to select a distribution site.</value></data>
+  <data name="OpenDistributionSiteActions" xml:space="preserve"><value>Open distribution site actions</value></data>
+  <data name="DistributionSiteRegistrationActivated" xml:space="preserve"><value>Distribution site registration {0} activated</value></data>
+  <data name="DistributionSiteRegistrationDeactivated" xml:space="preserve"><value>Distribution site registration {0} deactivated</value></data>
+  <data name="DeleteDistributionSiteRegistrationConfirmation" xml:space="preserve"><value>Are you sure you want to delete distribution site registration {0}?</value></data>
+  <data name="Forum" xml:space="preserve"><value>Forum</value></data>
+  <data name="Blog" xml:space="preserve"><value>Blog</value></data>
+  <data name="PostToForum" xml:space="preserve"><value>Post to forum</value></data>
+  <data name="PostNamedReleaseToForum" xml:space="preserve"><value>Post {0} to forum</value></data>
+  <data name="PostReleaseToForumDescription" xml:space="preserve"><value>Prepare a forum draft and open it for review.</value></data>
+  <data name="PostReleaseToForumIntro" xml:space="preserve"><value>Pick the forum to post this release to. The first login may take a moment.</value></data>
+  <data name="NoActiveForumDistributionSites" xml:space="preserve"><value>No active forum distribution sites. Add one first.</value></data>
+  <data name="Subforum" xml:space="preserve"><value>Subforum</value></data>
+  <data name="SelectSubforum" xml:space="preserve"><value>Select a subforum</value></data>
+  <data name="StartNewThread" xml:space="preserve"><value>Start a new thread</value></data>
+  <data name="ExistingThreadsFound" xml:space="preserve"><value>{0} existing threads found for "{1}".</value></data>
+  <data name="Thread" xml:space="preserve"><value>Thread</value></data>
+  <data name="ThreadTitle" xml:space="preserve"><value>Thread title</value></data>
+  <data name="ThreadTitleRequired" xml:space="preserve"><value>A thread title is required.</value></data>
+  <data name="ForumPostBody" xml:space="preserve"><value>Post text</value></data>
+  <data name="ForumPostBodyRequired" xml:space="preserve"><value>The post text must not be empty.</value></data>
+  <data name="PrepareDraft" xml:space="preserve"><value>Prepare draft</value></data>
+  <data name="DraftPrepared" xml:space="preserve"><value>Draft prepared</value></data>
+  <data name="DraftPreparedHelp" xml:space="preserve"><value>Open the link in a new tab — title and text are prefilled. Review it and submit it yourself. You must be logged into the same forum account in your browser.</value></data>
+  <data name="OpenDraftInForum" xml:space="preserve"><value>Open draft in forum</value></data>
+  <data name="ReleaseNameHelp" xml:space="preserve"><value>Used to search existing threads and as the new thread title. Some forums require spaces instead of dots (e.g. "Die Wolke 2006 GERMAN 1080p WEB H264 iNTERNAL - SunDry").</value></data>
+  <data name="ReleaseNameRequired" xml:space="preserve"><value>A release name is required.</value></data>
+  <data name="NoSubforumFound" xml:space="preserve"><value>No subforum found.</value></data>
+  <data name="ThreadPrefixes" xml:space="preserve"><value>Prefixes</value></data>
+  <data name="ThreadPrefixesHelp" xml:space="preserve"><value>Optional. Pick the prefixes required by the forum's rules (e.g. 1080p/x265, [Ads], English).</value></data>
+  <data name="SelectThreadPrefixes" xml:space="preserve"><value>Select prefixes...</value></data>
+  <data name="DotsToSpaces" xml:space="preserve"><value>Dots → spaces</value></data>
 </root>

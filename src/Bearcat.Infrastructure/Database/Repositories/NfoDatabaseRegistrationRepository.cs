@@ -19,8 +19,7 @@ public class NfoDatabaseRegistrationRepository(
         var databasesByClassName = nfoDatabaseFactory.GetByClassName();
 
         return await dbRead
-            .NfoDatabaseRegistrations.AsNoTracking()
-            .OrderBy(registration => registration.NfoDatabaseClassName)
+            .NfoDatabaseRegistrations.OrderBy(registration => registration.NfoDatabaseClassName)
             .Select(registration => ToReadModel(registration, databasesByClassName))
             .ToListAsync(cancellationToken);
     }

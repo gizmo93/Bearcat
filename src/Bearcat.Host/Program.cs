@@ -1,5 +1,6 @@
 ﻿using Bearcat.Application.InversionOfControl;
 using Bearcat.Archivers.InversionOfControl;
+using Bearcat.DistributionSites.InversionOfControl;
 using Bearcat.Domain.InversionOfControl;
 using Bearcat.Host;
 using Bearcat.Hosters.InversionOfControl;
@@ -77,6 +78,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddDomain();
 builder.Services.AddHosters();
 builder.Services.AddImageHosters();
+builder.Services.AddDistributionSites();
 builder.Services.AddArchivers();
 builder.Services.AddLinkCrypters();
 builder.Services.AddNfoDatabases();

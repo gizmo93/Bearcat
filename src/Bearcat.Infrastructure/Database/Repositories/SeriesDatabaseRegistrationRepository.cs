@@ -19,8 +19,9 @@ public class SeriesDatabaseRegistrationRepository(
         var databasesByClassName = seriesDatabaseFactory.GetByClassName();
 
         return await dbRead
-            .SeriesDatabaseRegistrations.AsNoTracking()
-            .OrderBy(registration => registration.SeriesDatabaseClassName)
+            .SeriesDatabaseRegistrations.OrderBy(registration =>
+                registration.SeriesDatabaseClassName
+            )
             .Select(registration => ToReadModel(registration, databasesByClassName))
             .ToListAsync(cancellationToken);
     }

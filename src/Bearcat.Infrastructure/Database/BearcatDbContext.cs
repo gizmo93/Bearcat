@@ -12,6 +12,8 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<ImageHosterRegistration> ImageHosterRegistrations { get; set; } = null!;
 
+    public DbSet<DistributionSiteRegistration> DistributionSiteRegistrations { get; set; } = null!;
+
     public DbSet<ImageUploadConfig> ImageUploadConfigs { get; set; } = null!;
 
     public DbSet<ImageUpload> ImageUploads { get; set; } = null!;

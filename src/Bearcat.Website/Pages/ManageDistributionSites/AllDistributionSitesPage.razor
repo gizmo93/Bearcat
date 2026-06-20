@@ -1,0 +1,103 @@
+@page "/distribution-site-registrations"
+@using Bearcat.Abstractions.DistributionSite
+@inherits OwningComponentBase
+
+<PageTitle>@L["DistributionSiteRegistrations"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["DistributionSiteRegistrations"]</h1>
+            <p class="text-sm text-muted-foreground">
+                @L["DistributionSiteRegistrationsIntro"]
+            </p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewDistributionSite"]
+        </BbButton>
+    </div>
+
+    <BbDataTable TData="DistributionSiteRegistrationReadModel"
+                 Data="distributionSites"
+                 ShowToolbar="false"
+                 ShowPagination="@(distributionSites.Count > 10)"
+                 InitialPageSize="10"
+                 AriaLabel="@L["DistributionSiteRegistrations"]"
+                 Class="bearcat-data-table bearcat-registrations-table">
+        <Columns>
+            <BbDataTableColumn TData="DistributionSiteRegistrationReadModel" TValue="string"
+                               Header="@L["Name"]"
+                               Property="@(distributionSite => distributionSite.Name)"
+                               Sortable="true"
+                               Filterable="true"
+                               Width="20%" />
+            <BbDataTableColumn TData="DistributionSiteRegistrationReadModel" TValue="string"
+                               Header="@L["DistributionSite"]"
+                               Property="@(distributionSite => distributionSite.DistributionSiteName)"
+                               Sortable="true"
+                               Filterable="true"
+                               Width="16%" />
+            <BbDataTableColumn TData="DistributionSiteRegistrationReadModel" TValue="DistributionSiteKind"
+                               Header="@L["Type"]"
+                               Property="@(distributionSite => distributionSite.Kind)"
+                               Sortable="true"
+                               Width="110px">
+                <CellTemplate Context="distributionSite">
+                    <BbBadge Variant="BadgeVariant.Outline">
+                        @(distributionSite.Kind == DistributionSiteKind.Forum ? L["Forum"] : L["Blog"])
+                    </BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="DistributionSiteRegistrationReadModel" TValue="bool"
+                               Header="@L["Active"]"
+                               Property="@(distributionSite => distributionSite.IsActive)"
+                               Sortable="true"
+                               Width="110px">
+                <CellTemplate Context="distributionSite">
+                    <BbBadge Variant="@(distributionSite.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
+                        @(distributionSite.IsActive ? L["Active"] : L["Inactive"])
+                    </BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="DistributionSiteRegistrationReadModel" TValue="string"
+                               Header="@L["Login"]"
+                               Property="@(distributionSite => distributionSite.Name)"
+                               Width="120px">
+                <CellTemplate Context="distributionSite">
+                    <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => TestLoginAsync(distributionSite))">
+                        @L["TryLogin"]
+                    </BbButton>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="DistributionSiteRegistrationReadModel" TValue="string"
+                               Header=""
+                               Property="@(distributionSite => distributionSite.Name)"
+                               Width="56px">
+                <CellTemplate Context="distributionSite">
+                    <div class="flex justify-end">
+                        <BbDropdownMenu>
+                            <BbDropdownMenuTrigger>
+                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenDistributionSiteActions"]">
+                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                </BbButton>
+                            </BbDropdownMenuTrigger>
+                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                                <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(distributionSite))">
+                                    @L["EditRegistration"]
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await ToggleIsActiveAsync(distributionSite))">
+                                    @(distributionSite.IsActive ? L["Disable"] : L["Enable"])
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(distributionSite))">
+                                    @L["DeleteRegistration"]
+                                </BbDropdownMenuItem>
+                            </BbDropdownMenuContent>
+                        </BbDropdownMenu>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+    </BbDataTable>
+</section>

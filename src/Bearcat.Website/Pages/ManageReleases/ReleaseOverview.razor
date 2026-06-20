@@ -5,6 +5,14 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
+            <BbButton Size="ButtonSize.Small"
+                      Class="bearcat-release-overview-action-button"
+                      Disabled="isLoading"
+                      OnClick="ShowPostToForumDialogAsync">
+                <LucideIcon Name="send" class="h-4 w-4" />
+                @L["PostToForum"]
+            </BbButton>
+
             <BbButton Variant="ButtonVariant.Outline"
                       Size="ButtonSize.Small"
                       Class="bearcat-release-overview-action-button"
@@ -14,7 +22,6 @@
                 @L["RenderForumPost"]
             </BbButton>
 
-            <textarea id="@NfoCopyTargetId" hidden readonly>@nfoContent</textarea>
             @if (!string.IsNullOrWhiteSpace(coverUrl))
             {
                 <a class="bearcat-copy-button bearcat-release-overview-action-button"
@@ -27,30 +34,32 @@
                 </a>
             }
 
-            <BbButton Variant="ButtonVariant.Outline"
-                      Size="ButtonSize.Small"
-                      Class="bearcat-release-overview-action-button"
-                      Disabled="@(!CanSaveNfoFile)"
-                      AriaLabel="@L["SaveNfoFile"]"
-                      title="@GetNfoSaveButtonTitle()"
-                      OnClick="SaveNfoFileAsync">
-                <LucideIcon Name="file-down" class="h-4 w-4" />
-                @L["SaveNfoFile"]
-            </BbButton>
-
-            <button type="button"
-                    class="bearcat-copy-button bearcat-release-overview-action-button"
-                    disabled="@(!CanCopyNfo)"
-                    aria-label="@L["CopyNfoIntoClipboard"]"
-                    title="@NfoCopyButtonTitle"
-                    data-copy-target="@NfoCopyTargetId"
-                    data-copy-label="@L["CopyNfoIntoClipboard"]"
-                    data-copy-success-label="@L["Copied"]"
-                    data-copy-failure-label="@L["CopyFailed"]"
-                    onclick="window.bearcat.copyFromTarget(this)">
-                <LucideIcon Name="clipboard-copy" class="h-4 w-4" />
-                <span class="bearcat-copy-button-label">@L["CopyNfoIntoClipboard"]</span>
-            </button>
+            <BbDropdownMenu>
+                <BbDropdownMenuTrigger>
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Class="bearcat-release-overview-action-button"
+                              Disabled="isLoading">
+                        <LucideIcon Name="file-text" class="h-4 w-4" />
+                        @L["Nfo"]
+                        <LucideIcon Name="chevron-down" class="h-4 w-4" />
+                    </BbButton>
+                </BbDropdownMenuTrigger>
+                <BbDropdownMenuContent Align="PopoverAlign.End">
+                    <BbDropdownMenuItem Disabled="@(!CanSaveNfoFile)" OnClick="SaveNfoFileAsync">
+                        <Icon>
+                            <LucideIcon Name="file-down" class="h-4 w-4" />
+                        </Icon>
+                        <ChildContent>@L["SaveNfoFile"]</ChildContent>
+                    </BbDropdownMenuItem>
+                    <BbDropdownMenuItem Disabled="@(!CanCopyNfo)" OnClick="CopyNfoAsync">
+                        <Icon>
+                            <LucideIcon Name="clipboard-copy" class="h-4 w-4" />
+                        </Icon>
+                        <ChildContent>@L["CopyNfoIntoClipboard"]</ChildContent>
+                    </BbDropdownMenuItem>
+                </BbDropdownMenuContent>
+            </BbDropdownMenu>
 
             <BbButton Variant="ButtonVariant.Outline"
                       Size="ButtonSize.Small"

@@ -1,0 +1,38 @@
+@if (IsEmpty)
+{
+    <div class="bearcat-release-empty">
+        <LucideIcon Name="inbox" class="h-5 w-5" />
+        <span>@L["NoActiveForumDistributionSites"]</span>
+    </div>
+    <div class="flex justify-end">
+        <BbButton Href="/distribution-site-registrations">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewDistributionSite"]
+        </BbButton>
+    </div>
+}
+else
+{
+    <BbFormFieldSelect TValue="int"
+                       Value="SelectedRegistrationId"
+                       ValueChanged="SelectedRegistrationIdChanged"
+                       Label="@L["DistributionSite"]"
+                       Placeholder="@L["SelectDistributionSite"]"
+                       Options="Options" />
+    <p class="text-xs text-muted-foreground">@L["PostReleaseToForumIntro"]</p>
+}
+
+@code
+{
+    [Parameter]
+    public bool IsEmpty { get; set; }
+
+    [Parameter]
+    public IEnumerable<SelectOption<int>> Options { get; set; } = [];
+
+    [Parameter]
+    public int SelectedRegistrationId { get; set; }
+
+    [Parameter]
+    public EventCallback<int> SelectedRegistrationIdChanged { get; set; }
+}

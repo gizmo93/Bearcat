@@ -21,6 +21,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Bearcat.Application\Bearcat.Application.csproj" />
         <ProjectReference Include="..\Bearcat.Archivers\Bearcat.Archivers.csproj" />
+        <ProjectReference Include="..\Bearcat.DistributionSites\Bearcat.DistributionSites.csproj" />
         <ProjectReference Include="..\Bearcat.Domain\Bearcat.Domain.csproj" />
         <ProjectReference Include="..\Bearcat.Hosters\Bearcat.Hosters.csproj" />
         <ProjectReference Include="..\Bearcat.ImageHosters\Bearcat.ImageHosters.csproj" />

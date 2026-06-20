@@ -19,8 +19,7 @@ public class HosterConfigurationRepository(
         var hostersByName = hosterFactory.GetHostersByName();
 
         var registrations = await dbRead
-            .HosterRegistrations.AsNoTracking()
-            .OrderBy(h => h.Name)
+            .HosterRegistrations.OrderBy(h => h.Name)
             .Select(h => new
             {
                 h.Id,

@@ -255,6 +255,7 @@
   <data name="NoConfigurationRequired" xml:space="preserve"><value>Keine Konfiguration erforderlich</value></data>
   <data name="NoExternalInfos" xml:space="preserve"><value>Keine externen Infos</value></data>
   <data name="NoNfoFileAvailable" xml:space="preserve"><value>Keine NFO-Datei verfügbar</value></data>
+  <data name="Nfo" xml:space="preserve"><value>NFO</value></data>
   <data name="NfoFileAlreadyExists" xml:space="preserve"><value>Im Release-Ordner liegt bereits eine NFO-Datei.</value></data>
   <data name="NfoFileSaveFailed" xml:space="preserve"><value>NFO-Datei konnte nicht gespeichert werden: {0}</value></data>
   <data name="NfoFileSaved" xml:space="preserve"><value>NFO-Datei {0} gespeichert.</value></data>
@@ -775,4 +776,45 @@
   <data name="MarkPostedAndContinue" xml:space="preserve"><value>Erledigt &amp; weiter</value></data>
   <data name="LeaveWorkflow" xml:space="preserve"><value>Verlassen</value></data>
   <data name="CopyTitle" xml:space="preserve"><value>Titel kopieren</value></data>
+  <data name="DistributionSites" xml:space="preserve"><value>Verteilungsseiten</value></data>
+  <data name="DistributionSiteRegistrations" xml:space="preserve"><value>Verteilungsseiten Registrierungen</value></data>
+  <data name="DistributionSiteRegistrationsIntro" xml:space="preserve"><value>Verwalte Verteilungsseiten und prüfe, ob das Login funktioniert.</value></data>
+  <data name="NewDistributionSite" xml:space="preserve"><value>Neue Verteilungsseite</value></data>
+  <data name="DistributionSite" xml:space="preserve"><value>Verteilungsseite</value></data>
+  <data name="AddDistributionSite" xml:space="preserve"><value>Verteilungsseite hinzufügen</value></data>
+  <data name="DistributionSiteDialogDescription" xml:space="preserve"><value>Füge Zugangsdaten für eine Verteilungsseite hinzu.</value></data>
+  <data name="DistributionSiteConfigurationHelp" xml:space="preserve"><value>Gib die Zugangsdaten für die ausgewählte Verteilungsseite an.</value></data>
+  <data name="SelectDistributionSite" xml:space="preserve"><value>Verteilungsseite auswählen</value></data>
+  <data name="SelectDistributionSiteRequired" xml:space="preserve"><value>Du musst eine Verteilungsseite auswählen.</value></data>
+  <data name="OpenDistributionSiteActions" xml:space="preserve"><value>Aktionen öffnen</value></data>
+  <data name="DistributionSiteRegistrationActivated" xml:space="preserve"><value>Verteilungsseiten Registrierung {0} aktiviert</value></data>
+  <data name="DistributionSiteRegistrationDeactivated" xml:space="preserve"><value>Verteilungsseiten Registrierung {0} deaktiviert</value></data>
+  <data name="DeleteDistributionSiteRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Verteilungsseite Registrierung {0} wirklich löschen?</value></data>
+  <data name="Forum" xml:space="preserve"><value>Forum</value></data>
+  <data name="Blog" xml:space="preserve"><value>Blog</value></data>
+  <data name="PostToForum" xml:space="preserve"><value>Im Forum posten</value></data>
+  <data name="PostNamedReleaseToForum" xml:space="preserve"><value>{0} im Forum posten</value></data>
+  <data name="PostReleaseToForumDescription" xml:space="preserve"><value>Bereite einen Entwurf vor und öffne ihn zur Kontrolle.</value></data>
+  <data name="PostReleaseToForumIntro" xml:space="preserve"><value>Wähle das Forum, in das dieses Release gepostet werden soll. Das erste Login kann einen Moment dauern.</value></data>
+  <data name="NoActiveForumDistributionSites" xml:space="preserve"><value>Keine aktive Formconfig vorhanden. Lege zuerst eine an.</value></data>
+  <data name="Subforum" xml:space="preserve"><value>Unterforum</value></data>
+  <data name="SelectSubforum" xml:space="preserve"><value>Unterforum auswählen</value></data>
+  <data name="StartNewThread" xml:space="preserve"><value>Neues Thema erstellen</value></data>
+  <data name="ExistingThreadsFound" xml:space="preserve"><value>{0} vorhandene Themen für „{1}“ gefunden.</value></data>
+  <data name="Thread" xml:space="preserve"><value>Thema</value></data>
+  <data name="ThreadTitle" xml:space="preserve"><value>Thread Titel</value></data>
+  <data name="ThreadTitleRequired" xml:space="preserve"><value>Ein Thread Titel ist erforderlich.</value></data>
+  <data name="ForumPostBody" xml:space="preserve"><value>Beitragstext</value></data>
+  <data name="ForumPostBodyRequired" xml:space="preserve"><value>Der Beitragstext darf nicht leer sein.</value></data>
+  <data name="PrepareDraft" xml:space="preserve"><value>Entwurf vorbereiten</value></data>
+  <data name="DraftPrepared" xml:space="preserve"><value>Entwurf vorbereitet</value></data>
+  <data name="DraftPreparedHelp" xml:space="preserve"><value>Öffne den Link in einem neuen Tab — Titel und Text sind vorausgefüllt. Prüfe ihn und sende ihn selbst ab. Du musst im Browser mit demselben Forum-Konto angemeldet sein.</value></data>
+  <data name="OpenDraftInForum" xml:space="preserve"><value>Entwurf im Forum öffnen</value></data>
+  <data name="ReleaseNameHelp" xml:space="preserve"><value>Wird für die Themensuche und als Titel des neuen Themas verwendet. Manche Foren verlangen Leerzeichen statt Punkte.</value></data>
+  <data name="ReleaseNameRequired" xml:space="preserve"><value>Ein Release-Name ist erforderlich.</value></data>
+  <data name="NoSubforumFound" xml:space="preserve"><value>Kein Unterforum gefunden.</value></data>
+  <data name="ThreadPrefixes" xml:space="preserve"><value>Präfixe</value></data>
+  <data name="ThreadPrefixesHelp" xml:space="preserve"><value>Optional. Wähle die laut Forenregeln passenden Präfixe.</value></data>
+  <data name="SelectThreadPrefixes" xml:space="preserve"><value>Präfixe auswählen …</value></data>
+  <data name="DotsToSpaces" xml:space="preserve"><value>Punkte → Leerzeichen</value></data>
 </root>
