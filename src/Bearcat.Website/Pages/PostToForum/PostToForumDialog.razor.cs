@@ -123,7 +123,7 @@ public partial class PostToForumDialog(
         {
             var hierarchy = await sessionService.GetTargetHierarchyAsync(selectedRegistrationId);
             var flattened = new List<FlatForumTarget>();
-            Flatten(hierarchy, depth: 0, flattened);
+            Flatten(hierarchy, ancestors: [], flattened);
             targets = flattened;
             selectedTargetId = targets.FirstOrDefault()?.Id;
             step = WizardStep.Target;
@@ -369,19 +369,20 @@ public partial class PostToForumDialog(
 
     private static void Flatten(
         IReadOnlyList<ForumTargetNode> nodes,
-        int depth,
+        IReadOnlyList<string> ancestors,
         List<FlatForumTarget> accumulator
     )
     {
         foreach (var node in nodes)
         {
+            var path = ancestors.Append(node.Title).ToList();
+
             if (node.CanReceivePosts)
             {
-                var indent = string.Concat(Enumerable.Repeat("— ", depth));
-                accumulator.Add(new FlatForumTarget(node.Id.Value, indent + node.Title));
+                accumulator.Add(new FlatForumTarget(node.Id.Value, string.Join(" › ", path)));
             }
 
-            Flatten(node.Children, depth + 1, accumulator);
+            Flatten(node.Children, path, accumulator);
         }
     }
 
