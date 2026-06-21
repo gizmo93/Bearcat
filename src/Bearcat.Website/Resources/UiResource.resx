@@ -552,7 +552,7 @@
   <data name="NoUploadConfigTemplatesYet" xml:space="preserve"><value>No upload config templates yet.</value></data>
   <data name="OpenReleaseTemplateActions" xml:space="preserve"><value>Open release template actions</value></data>
   <data name="PasswordProtected" xml:space="preserve"><value>Password protected</value></data>
-  <data name="ReleaseName" xml:space="preserve"><value>release name</value></data>
+    <data name="ReleaseName" xml:space="preserve"><value>Release name</value></data>
   <data name="ReleaseMetadataSources" xml:space="preserve"><value>Release metadata sources</value></data>
   <data name="ReleaseTemplate" xml:space="preserve"><value>Release template</value></data>
   <data name="ReleaseTemplateDialogDescription" xml:space="preserve"><value>Set the template name, release type, and release group.</value></data>

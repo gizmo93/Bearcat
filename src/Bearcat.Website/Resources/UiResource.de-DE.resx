@@ -553,7 +553,7 @@
   <data name="NoUploadConfigTemplatesYet" xml:space="preserve"><value>Noch keine Upload-Konfigurationstemplates.</value></data>
   <data name="OpenReleaseTemplateActions" xml:space="preserve"><value>Release-Template-Aktionen öffnen</value></data>
   <data name="PasswordProtected" xml:space="preserve"><value>Passwortgeschützt</value></data>
-  <data name="ReleaseName" xml:space="preserve"><value>Release-Name</value></data>
+    <data name="ReleaseName" xml:space="preserve"><value>Release Name</value></data>
   <data name="ReleaseTemplate" xml:space="preserve"><value>Release-Template</value></data>
   <data name="ReleaseTemplateDialogDescription" xml:space="preserve"><value>Lege Template-Name, Release-Typ und Release-Gruppe fest.</value></data>
   <data name="ReleaseTemplateNamePlaceholder" xml:space="preserve"><value>Release-Template benennen</value></data>
