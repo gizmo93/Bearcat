@@ -678,7 +678,7 @@
   <data name="CollectionUploadSlotKey" xml:space="preserve"><value>Slot-Key</value></data>
   <data name="CollectionUploadSlotArchiveConfigHelp" xml:space="preserve"><value>Wähle, welche Archive hochgeladen werden sollen.</value></data>
   <data name="CollectionUploadSlotName" xml:space="preserve"><value>Name der Upload-Gruppe</value></data>
-  <data name="CollectionUploadSlotNamePlaceholder" xml:space="preserve"><value>Rapidgator mit Passwort</value></data>
+    <data name="CollectionUploadSlotNamePlaceholder" xml:space="preserve"><value>zB der Hostername</value></data>
   <data name="CollectionUploadSlotRequired" xml:space="preserve"><value>Bei jedem Release erwartet</value></data>
   <data name="CollectionUploadSlots" xml:space="preserve"><value>Upload-Slots</value></data>
   <data name="CollectionUploadSlotsDescription" xml:space="preserve"><value>Upload-Gruppen, die Links aus mehreren Releases in gemeinsamen Containern sammeln können.</value></data>

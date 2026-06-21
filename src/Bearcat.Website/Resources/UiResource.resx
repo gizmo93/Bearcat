@@ -678,7 +678,7 @@
   <data name="CollectionUploadSlotKey" xml:space="preserve"><value>Slot key</value></data>
   <data name="CollectionUploadSlotArchiveConfigHelp" xml:space="preserve"><value>Choose which archives should be uploaded.</value></data>
   <data name="CollectionUploadSlotName" xml:space="preserve"><value>Upload group name</value></data>
-  <data name="CollectionUploadSlotNamePlaceholder" xml:space="preserve"><value>Rapidgator passworded</value></data>
+    <data name="CollectionUploadSlotNamePlaceholder" xml:space="preserve"><value>e.g. the Name of the Hoster</value></data>
   <data name="CollectionUploadSlotRequired" xml:space="preserve"><value>Expected on every release</value></data>
   <data name="CollectionUploadSlots" xml:space="preserve"><value>Upload slots</value></data>
   <data name="CollectionUploadSlotsDescription" xml:space="preserve"><value>Upload groups that can collect links from multiple releases into shared containers.</value></data>
@@ -810,7 +810,7 @@
   <data name="DraftPrepared" xml:space="preserve"><value>Draft prepared</value></data>
   <data name="DraftPreparedHelp" xml:space="preserve"><value>Open the link in a new tab — title and text are prefilled. Review it and submit it yourself. You must be logged into the same forum account in your browser.</value></data>
   <data name="OpenDraftInForum" xml:space="preserve"><value>Open draft in forum</value></data>
-  <data name="ReleaseNameHelp" xml:space="preserve"><value>Used to search existing threads and as the new thread title. Some forums require spaces instead of dots (e.g. "Die Wolke 2006 GERMAN 1080p WEB H264 iNTERNAL - SunDry").</value></data>
+    <data name="ReleaseNameHelp" xml:space="preserve"><value>Used to search existing threads and as the new thread title. Some forums require spaces instead of dots.</value></data>
   <data name="ReleaseNameRequired" xml:space="preserve"><value>A release name is required.</value></data>
   <data name="NoSubforumFound" xml:space="preserve"><value>No subforum found.</value></data>
   <data name="ThreadPrefixes" xml:space="preserve"><value>Prefixes</value></data>
