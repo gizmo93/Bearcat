@@ -333,6 +333,13 @@ public class ArchiveCreationService(
         archive.ArchiveFiles = archiveResult
             .CreatedFileNames.Select(f => new ArchiveFile { FullFileName = f })
             .ToList();
+        
+        // Sometimes after repacking existing files into new archives, they have the same MD5 hash as before.
+        // We avoid that by quickly trying to change the hash if possible.
+        if (archiver.CanChangeHashInPlace)
+        {
+            await ChangeArchiveFileHashesAsync(archive, cancellationToken);
+        }
 
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
