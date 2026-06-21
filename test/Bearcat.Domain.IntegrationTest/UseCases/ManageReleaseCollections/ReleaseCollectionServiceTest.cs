@@ -499,7 +499,6 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
             [
                 new UploadConfig
                 {
-                    LinksDistributedTo = [],
                     LinkCrypters =
                     [
                         new UploadConfigLinkCrypter
@@ -810,7 +809,6 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
             HosterRegistration = hosterRegistration,
             CollectionUploadSlot = collectionUploadSlot,
             Name = $"{releaseName} upload",
-            LinksDistributedTo = [],
             LinkCrypters = linkCrypterPassword is null
                 ? []
                 :

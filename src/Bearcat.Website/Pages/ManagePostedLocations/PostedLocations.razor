@@ -1,0 +1,63 @@
+@inherits OwningComponentBase
+
+<BbCard Class="border-border/70 shadow-sm">
+    <BbCardHeader>
+        <div class="bearcat-section-header">
+            <div class="flex items-center gap-2">
+                <LucideIcon Name="link" class="h-4 w-4" />
+                <div>
+                    <BbCardTitle class="text-base">@L["PostedLocations"]</BbCardTitle>
+                    <BbCardDescription>@L["PostedLocationsDescription"]</BbCardDescription>
+                </div>
+            </div>
+        </div>
+    </BbCardHeader>
+    <BbCardContent>
+        <div class="space-y-4">
+            <div class="flex items-center gap-2">
+                <BbInput @bind-Value="newUrl" class="flex-1" Placeholder="@L["PostedLocationUrlPlaceholder"]" />
+                <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" Disabled="isBusy" OnClick="AddAsync">
+                    <LucideIcon Name="plus" class="h-4 w-4" />
+                    @L["Add"]
+                </BbButton>
+            </div>
+
+            @if (locations.Count == 0)
+            {
+                <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                    @L["NoPostedLocationsYet"]
+                </div>
+            }
+            else
+            {
+                <div class="space-y-2">
+                    @foreach (var location in locations)
+                    {
+                        <div class="flex items-center gap-2 rounded-md border border-border/70 px-3 py-2">
+                            <LucideIcon Name="link" class="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <a href="@location.Url"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="flex-1 truncate text-sm hover:underline"
+                               title="@location.Url">
+                                @location.Url
+                            </a>
+                            <BbButton Variant="ButtonVariant.Ghost"
+                                      Size="ButtonSize.IconSmall"
+                                      AriaLabel="@L["Delete"]"
+                                      Disabled="isBusy"
+                                      OnClick="@(() => DeleteAsync(location.PostedLocationId))">
+                                <LucideIcon Name="trash-2" class="h-4 w-4" />
+                            </BbButton>
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (errorMessage is not null)
+            {
+                <p class="text-sm text-destructive">@errorMessage</p>
+            }
+        </div>
+    </BbCardContent>
+</BbCard>

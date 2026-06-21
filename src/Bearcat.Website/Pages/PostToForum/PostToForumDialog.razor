@@ -47,6 +47,35 @@
 
         case WizardStep.Done:
             <ForumWizardDoneStep OpenUrl="@preparedDraft!.OpenUrl" />
+
+            @if (postRecorded)
+            {
+                <div class="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm">
+                    <div class="flex items-center gap-2 font-medium text-foreground">
+                        <LucideIcon Name="circle-check" class="h-4 w-4 text-emerald-500" />
+                        @L["PostedLocationRecorded"]
+                    </div>
+                    <a href="@savedPostUrl"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="mt-1 block truncate text-xs text-muted-foreground hover:underline">
+                        @savedPostUrl
+                    </a>
+                </div>
+            }
+            else if (showManualUrlEntry)
+            {
+                <div class="space-y-2">
+                    <p class="text-sm text-muted-foreground">@L["PostedLocationManualHelp"]</p>
+                    <div class="flex items-center gap-2">
+                        <BbInput @bind-Value="manualUrl" class="flex-1" Placeholder="@L["PostedLocationUrlPlaceholder"]" />
+                        <BbButton Disabled="isBusy" OnClick="SaveManualUrlAsync">
+                            @BusyIcon()
+                            @L["Save"]
+                        </BbButton>
+                    </div>
+                </div>
+            }
             break;
     }
 
@@ -93,6 +122,16 @@
                         @BusyIcon()
                         @L["PrepareDraft"]
                     </BbButton>
+                    break;
+
+                case WizardStep.Done:
+                    @if (!postRecorded && !showManualUrlEntry)
+                    {
+                        <BbButton Disabled="isBusy" OnClick="ConfirmPostedAsync">
+                            @BusyIcon()
+                            @L["IHavePosted"]
+                        </BbButton>
+                    }
                     break;
             }
         </div>

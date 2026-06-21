@@ -146,7 +146,6 @@ public class ReleaseCollectionService(
                     HosterRegistrationId = hosterRegistrationId,
                     Name = cleanedName,
                     PremiumOnlyDownload = premiumOnlyDownload,
-                    LinksDistributedTo = [],
                     LinkCrypters = [],
                     Uploads = [],
                 }
@@ -316,7 +315,6 @@ public class ReleaseCollectionService(
                     HosterRegistrationId = referenceUploadConfig.HosterRegistrationId,
                     Name = referenceUploadConfig.Name,
                     PremiumOnlyDownload = referenceUploadConfig.PremiumOnlyDownload,
-                    LinksDistributedTo = [],
                     LinkCrypters = [],
                     Uploads = [],
                 };

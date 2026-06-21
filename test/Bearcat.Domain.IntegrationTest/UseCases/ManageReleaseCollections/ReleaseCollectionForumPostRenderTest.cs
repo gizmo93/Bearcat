@@ -253,7 +253,6 @@ public class ReleaseCollectionForumPostRenderTest : BearcatIntegrationTest
             HosterRegistration = hosterRegistration,
             ArchiveConfig = archiveConfig,
             Name = "Rapidgator",
-            LinksDistributedTo = [],
             LinkCrypters =
             [
                 new UploadConfigLinkCrypter

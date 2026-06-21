@@ -6,6 +6,7 @@ using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
+using Bearcat.Domain.UseCases.ManagePostedLocations;
 using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
@@ -69,7 +70,14 @@ public partial class PostToForumDialog(
 
     private PreparedDraft? preparedDraft;
 
+    private bool postRecorded;
+    private string? savedPostUrl;
+    private bool showManualUrlEntry;
+    private string manualUrl = string.Empty;
+
     private bool IsNewThread => threadSelection == NewThreadValue;
+
+    private bool IsCollection => TemplateType == ForumPostTemplateType.ReleaseCollection;
 
     private IEnumerable<SelectOption<int>> RegistrationOptions =>
         registrations.Select(registration => new SelectOption<int>(
@@ -235,6 +243,76 @@ public partial class PostToForumDialog(
 
             step = WizardStep.Done;
         });
+    }
+
+    private async Task ConfirmPostedAsync()
+    {
+        isBusy = true;
+        errorMessage = null;
+
+        try
+        {
+            var url = await sessionService.ResolvePostedUrlAsync(
+                registrationId: selectedRegistrationId,
+                target: new ForumTargetId(selectedTargetId ?? string.Empty),
+                isNewThread: IsNewThread,
+                threadUrl: IsNewThread ? string.Empty : threadSelection,
+                title: postName
+            );
+
+            if (url is not null)
+            {
+                await SavePostedLocationAsync(url);
+            }
+            else
+            {
+                StartManualUrlEntry();
+            }
+        }
+        catch (Exception exception)
+        {
+            errorMessage = exception.Message;
+            StartManualUrlEntry();
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task SaveManualUrlAsync()
+    {
+        if (string.IsNullOrWhiteSpace(manualUrl))
+        {
+            errorMessage = L["PostedLocationUrlRequired"];
+            return;
+        }
+
+        await RunBusyAsync(() => SavePostedLocationAsync(manualUrl));
+    }
+
+    private async Task SavePostedLocationAsync(string url)
+    {
+        var service = ScopedServices.GetRequiredService<PostedLocationService>();
+
+        if (IsCollection)
+        {
+            await service.AddForCollectionAsync(EntityId, url);
+        }
+        else
+        {
+            await service.AddForReleaseAsync(EntityId, url);
+        }
+
+        savedPostUrl = url.Trim();
+        postRecorded = true;
+        showManualUrlEntry = false;
+    }
+
+    private void StartManualUrlEntry()
+    {
+        manualUrl = IsNewThread ? preparedDraft?.OpenUrl ?? string.Empty : threadSelection;
+        showManualUrlEntry = true;
     }
 
     private void NormalizeReleaseName()

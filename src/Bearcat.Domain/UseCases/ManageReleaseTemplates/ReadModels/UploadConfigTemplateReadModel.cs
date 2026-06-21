@@ -16,6 +16,5 @@ public record UploadConfigTemplateReadModel(
     bool CollectionUploadSlotIsRequired,
     CollectionUploadSlotPasswordPolicy CollectionUploadSlotPasswordPolicy,
     string? CollectionUploadSlotExpectedArchivePassword,
-    IReadOnlyList<string> LinksDistributedTo,
     IReadOnlyList<UploadConfigLinkCrypterTemplateReadModel> LinkCrypterTemplates
 );

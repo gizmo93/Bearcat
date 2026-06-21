@@ -155,7 +155,6 @@ public class ReleaseCollectionPostQueueTest : BearcatIntegrationTest
             ArchiveConfig = archiveConfig,
             CollectionUploadSlot = uploadSlot,
             Name = $"{name} upload",
-            LinksDistributedTo = [],
             LinkCrypters = [],
         };
 

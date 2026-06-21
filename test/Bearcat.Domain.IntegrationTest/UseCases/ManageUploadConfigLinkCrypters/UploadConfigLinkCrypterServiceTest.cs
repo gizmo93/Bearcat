@@ -242,7 +242,6 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,
             Name = "Default upload",
-            LinksDistributedTo = [],
         };
         var linkCrypterRegistration = new LinkCrypterRegistration
         {

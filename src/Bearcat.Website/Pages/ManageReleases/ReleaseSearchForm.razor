@@ -41,9 +41,9 @@
                            Options="ReleaseGroupOptions" />
 
         <BbFormFieldInput TValue="string"
-                          @bind-Value="linksDistributedTo"
-                          Label="@L["LinksDistributedTo"]"
-                          Placeholder="@L["LinksDistributedToSearchPlaceholder"]" />
+                          @bind-Value="postedLocationUrl"
+                          Label="@L["PostedLocation"]"
+                          Placeholder="@L["PostedLocationSearchPlaceholder"]" />
     </div>
 
     <div class="bearcat-release-search-advanced">
@@ -117,7 +117,7 @@
     private const string SearchButtonStyle = "width: 8.75rem; min-width: 8.75rem; height: 2.25rem; min-height: 2.25rem; padding: 0 0.85rem; justify-content: center;";
 
     private string? searchTerm;
-    private string? linksDistributedTo;
+    private string? postedLocationUrl;
     private string? downloadLink;
     private string? archiveFileName;
     private string? uploadId;
@@ -132,7 +132,7 @@
 
     private bool HasActiveFilters =>
         !string.IsNullOrWhiteSpace(searchTerm)
-        || !string.IsNullOrWhiteSpace(linksDistributedTo)
+        || !string.IsNullOrWhiteSpace(postedLocationUrl)
         || HasActiveAdvancedFilters
         || selectedReleaseType is not null
         || selectedReleaseContentType is not null
@@ -224,7 +224,7 @@
         }
 
         searchTerm = null;
-        linksDistributedTo = null;
+        postedLocationUrl = null;
         downloadLink = null;
         archiveFileName = null;
         uploadId = null;
@@ -258,7 +258,7 @@
                 : selectedArchiverName,
             LinkCrypterRegistrationId: selectedLinkCrypterRegistrationId,
             ReleaseGroupId: selectedReleaseGroupId == 0 ? null : selectedReleaseGroupId,
-            LinksDistributedTo: linksDistributedTo,
+            PostedLocationUrl: postedLocationUrl,
             DownloadLink: downloadLink,
             ArchiveFileName: archiveFileName,
             UploadId: uploadId

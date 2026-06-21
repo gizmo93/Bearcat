@@ -157,7 +157,6 @@
                         <div class="bearcat-config-header bearcat-template-upload-grid">
                             <span>@L["UploadTarget"]</span>
                             <span>@L["ArchiveConfig"]</span>
-                            <span>@L["Links"]</span>
                             <span>@L["Crypters"]</span>
                             <span class="text-right">@L["Actions"]</span>
                         </div>
@@ -184,10 +183,6 @@
                                     <div class="min-w-0">
                                         <p class="bearcat-mobile-label">@L["ArchiveConfig"]</p>
                                         <p class="truncate text-sm font-medium" title="@config.ArchiveConfigTemplateName">@config.ArchiveConfigTemplateName</p>
-                                    </div>
-                                    <div>
-                                        <p class="bearcat-mobile-label">@L["Links"]</p>
-                                        <p class="text-sm font-medium">@config.LinksDistributedTo.Count</p>
                                     </div>
                                     <div>
                                         <p class="bearcat-mobile-label">@L["Crypters"]</p>
@@ -218,19 +213,6 @@
                                 </div>
                                 <BbCollapsibleContent Class="border-t border-border/70 bg-muted/5 px-4 pb-4 pt-4">
                                     <div class="space-y-4">
-                                        @if (config.LinksDistributedTo.Count > 0)
-                                        {
-                                            <div class="space-y-2">
-                                                <p class="text-xs text-muted-foreground">@L["LinksDistributedTo"]</p>
-                                                <div class="flex flex-wrap gap-2">
-                                                    @foreach (var link in config.LinksDistributedTo)
-                                                    {
-                                                        <BbBadge Variant="BadgeVariant.Secondary">@link</BbBadge>
-                                                    }
-                                                </div>
-                                            </div>
-                                        }
-
                                         <div class="space-y-3">
                                             <div class="bearcat-section-header">
                                                 <div class="flex items-center gap-2">

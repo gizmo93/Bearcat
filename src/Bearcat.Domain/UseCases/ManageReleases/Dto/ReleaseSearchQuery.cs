@@ -11,7 +11,7 @@ public record ReleaseSearchQuery(
     string? ArchiverName = null,
     int? LinkCrypterRegistrationId = null,
     int? ReleaseGroupId = null,
-    string? LinksDistributedTo = null,
+    string? PostedLocationUrl = null,
     string? DownloadLink = null,
     string? ArchiveFileName = null,
     string? UploadId = null,

@@ -37,4 +37,13 @@ public interface IForumDistributionSite : IDistributionSite
         string body,
         CancellationToken cancellationToken
     );
+
+    Task<string?> ResolvePostedUrlAsync(
+        DistributionSession session,
+        ForumTargetId target,
+        bool isNewThread,
+        string threadUrl,
+        string title,
+        CancellationToken cancellationToken
+    );
 }

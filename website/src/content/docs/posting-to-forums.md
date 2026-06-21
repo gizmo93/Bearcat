@@ -110,8 +110,22 @@ forum's own preview if you want, and submit.
 The draft belongs to your forum account, so you need to be logged into the same account in your
 browser. If you are not, the editor will not show the prefilled text.
 
-Bearcat does not mark the release as posted for you, because it cannot tell whether you actually
-hit submit. Once the post is up, mark it as posted in the [Post Queue](/Bearcat/post-queue/).
+Once you have submitted the post in the forum, click **I have posted** in the dialog. Bearcat then
+looks up the post you just made — the new reply in an existing thread, or the thread you just
+created — and stores its permalink under **Posted locations** on the release (or collection). If it
+cannot find the post automatically (the forum's search index can lag for a few seconds), it shows a
+field where you paste the URL yourself.
+
+Recording the post is separate from marking the release as posted: **I have posted** remembers
+*where* you posted, while the [Post Queue](/Bearcat/post-queue/) tracks *whether* a release still
+needs posting at all.
+
+## Posted locations
+
+Every release and collection has a **Posted locations** list — the URLs where it has been published,
+such as forum threads or WordPress pages. **Post to forum** fills it in for you, and you can also add
+or remove links by hand. Keep it up to date so you always know where to go if you ever need to swap
+out the download links.
 
 ## How this fits with templates and the post queue
 

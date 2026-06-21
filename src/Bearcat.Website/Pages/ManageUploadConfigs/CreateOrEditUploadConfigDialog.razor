@@ -34,34 +34,6 @@
                                Label="@L["ArchiveConfiguration"]"
                                Placeholder="@L["SelectArchiveConfiguration"]"
                                Options="archiveConfigOptions.OrderBy(kvp => kvp.Value).Select(kvp => new SelectOption<int?>(kvp.Key, kvp.Value))" />
-
-            <div class="space-y-3">
-                <div class="flex items-center justify-between gap-3">
-                    <div>
-                        <p class="text-sm font-medium">@L["LinksDistributedTo"]</p>
-                        <p class="text-xs text-muted-foreground">
-                            @L["LinksDistributedToHelp"]
-                        </p>
-                    </div>
-                    <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="AddLinkDistributedTo">
-                        <LucideIcon Name="plus" class="h-4 w-4" />
-                        @L["Add"]
-                    </BbButton>
-                </div>
-
-                @foreach (var index in Enumerable.Range(0, formModel.LinksDistributedTo.Count))
-                {
-                    <div class="flex items-center gap-2">
-                        <BbInput @bind-Value="formModel.LinksDistributedTo[index]" class="flex-1" />
-                        <BbButton Variant="ButtonVariant.Ghost"
-                                  Size="ButtonSize.IconSmall"
-                                  AriaLabel="@L["DeleteLink"]"
-                                  OnClick="@(() => DeleteLinkDistributedTo(index))">
-                            <LucideIcon Name="trash-2" class="h-4 w-4" />
-                        </BbButton>
-                    </div>
-                }
-            </div>
         </div>
 
         <div class="flex justify-end gap-2">

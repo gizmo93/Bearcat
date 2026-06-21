@@ -11,7 +11,6 @@ public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
         int hosterRegistrationId,
         int archiveConfigId,
         bool premiumOnlyDownload,
-        IReadOnlyList<string> linksDistributedTo,
         CancellationToken cancellationToken = default
     )
     {
@@ -22,9 +21,6 @@ public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
             HosterRegistrationId = hosterRegistrationId,
             ArchiveConfigId = archiveConfigId,
             PremiumOnlyDownload = premiumOnlyDownload,
-            LinksDistributedTo = linksDistributedTo
-                .Where(c => !string.IsNullOrWhiteSpace(c))
-                .ToList(),
         };
 
         writeRepository.Add(uploadConfig);
@@ -39,7 +35,6 @@ public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
         int hosterRegistrationId,
         int archiveConfigId,
         bool premiumOnlyDownload,
-        IReadOnlyList<string> linksDistributedTo,
         CancellationToken cancellationToken = default
     )
     {
@@ -49,7 +44,6 @@ public class UploadConfigService(IUploadConfigWriteRepository writeRepository)
         uploadConfig.HosterRegistrationId = hosterRegistrationId;
         uploadConfig.ArchiveConfigId = archiveConfigId;
         uploadConfig.PremiumOnlyDownload = premiumOnlyDownload;
-        uploadConfig.LinksDistributedTo = linksDistributedTo.ToList();
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }

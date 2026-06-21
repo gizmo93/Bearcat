@@ -9,6 +9,4 @@ public class UploadConfigFormModel
     public int? ArchiveConfigId { get; set; }
 
     public bool PremiumOnlyDownload { get; set; }
-
-    public List<string> LinksDistributedTo { get; init; } = [];
 }

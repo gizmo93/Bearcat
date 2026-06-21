@@ -206,9 +206,6 @@
   <data name="LinkCrypters" xml:space="preserve"><value>Link-Crypter</value></data>
   <data name="LinkCryptersDescription" xml:space="preserve"><value>Optionale Container für verteilte Upload-Links.</value></data>
   <data name="Links" xml:space="preserve"><value>Links</value></data>
-  <data name="LinksDistributedTo" xml:space="preserve"><value>Links verteilt an</value></data>
-  <data name="LinksDistributedToHelp" xml:space="preserve"><value>Optionale Nachverfolgung für Forum- oder Board-Posts mit dieser Upload-Konfiguration.</value></data>
-  <data name="LinksDistributedToSearchPlaceholder" xml:space="preserve"><value>Forum, Board oder Notiz</value></data>
   <data name="Login" xml:space="preserve"><value>Login</value></data>
   <data name="LoginFailed" xml:space="preserve"><value>Login für Registrierung {0} fehlgeschlagen: {1}</value></data>
   <data name="LoginSuccessful" xml:space="preserve"><value>Login für Registrierung {0} erfolgreich</value></data>
@@ -758,6 +755,16 @@
   <data name="SeriesMetadataNotResolved" xml:space="preserve"><value>Keine passende Serie gefunden.</value></data>
   <data name="UpdateAvailable" xml:space="preserve"><value>Update auf {0}</value></data>
   <data name="UpdateAvailableTooltip" xml:space="preserve"><value>Version {0} ist verfügbar. Zum Öffnen der Release-Seite klicken.</value></data>
+  <data name="IHavePosted" xml:space="preserve"><value>Ich habe gepostet</value></data>
+  <data name="PostedLocation" xml:space="preserve"><value>Veröffentlicht unter</value></data>
+  <data name="PostedLocations" xml:space="preserve"><value>Veröffentlichungs-Orte</value></data>
+  <data name="PostedLocationsDescription" xml:space="preserve"><value>Wo dies veröffentlicht wurde (Forenthreads, Seiten, …). Links manuell hinzufügen oder entfernen.</value></data>
+  <data name="NoPostedLocationsYet" xml:space="preserve"><value>Noch keine Veröffentlichungs-Orte.</value></data>
+  <data name="PostedLocationUrlPlaceholder" xml:space="preserve"><value>https://forum.beispiel/threads/...</value></data>
+  <data name="PostedLocationSearchPlaceholder" xml:space="preserve"><value>Forenpost- oder Seiten-URL</value></data>
+  <data name="PostedLocationRecorded" xml:space="preserve"><value>Gespeichert, wo du gepostet hast.</value></data>
+  <data name="PostedLocationManualHelp" xml:space="preserve"><value>Der Beitrag konnte nicht automatisch erkannt werden. Füge die URL deines Posts ein, um sie zu speichern.</value></data>
+  <data name="PostedLocationUrlRequired" xml:space="preserve"><value>Eine URL ist erforderlich.</value></data>
   <data name="PostQueue" xml:space="preserve"><value>Post-Warteschlange</value></data>
   <data name="PostQueueDescription" xml:space="preserve"><value>Releases und Collections mit neuen Uploads, die du noch irgendwo posten musst.</value></data>
   <data name="Collections" xml:space="preserve"><value>Collections</value></data>

@@ -2,6 +2,7 @@
 @using Bearcat.Website.Pages.ManageArchiveConfigs
 @using Bearcat.Website.Pages.ManageImageUploadConfigs
 @using Bearcat.Website.Pages.ManageImageUploads
+@using Bearcat.Website.Pages.ManagePostedLocations
 @using Bearcat.Website.Pages.ManageUploadConfigs
 @using Bearcat.Website.Pages.PostQueue
 @inherits OwningComponentBase
@@ -139,6 +140,7 @@
                 ReleaseId="@ReleaseId"
                 ReleaseName="@release.Name"
                 ReleaseFolderPath="@release.ReleaseFolderPath" />
+            <PostedLocations ReleaseId="@ReleaseId" />
         </BbTabsContent>
 
         <BbTabsContent Value="release-infos" Class="space-y-4">

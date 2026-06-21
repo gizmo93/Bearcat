@@ -220,7 +220,6 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
                 CollectionUploadSlotExpectedArchivePassword = config
                     .CollectionUploadSlot
                     ?.ExpectedArchivePassword,
-                LinksDistributedTo = CleanLinks(config.LinksDistributedTo),
                 LinkCrypterTemplates = config
                     .LinkCrypters.Select(linkCrypter => new UploadConfigLinkCrypterTemplate
                     {
@@ -354,7 +353,6 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         int hosterRegistrationId,
         int archiveConfigTemplateId,
         bool premiumOnlyDownload,
-        IReadOnlyList<string> linksDistributedTo,
         CancellationToken cancellationToken = default
     )
     {
@@ -364,7 +362,6 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             hosterRegistrationId,
             archiveConfigTemplateId,
             premiumOnlyDownload,
-            linksDistributedTo,
             collectionUploadSlotKey: null,
             collectionUploadSlotName: null,
             collectionUploadSlotIsRequired: false,
@@ -380,7 +377,6 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         int hosterRegistrationId,
         int archiveConfigTemplateId,
         bool premiumOnlyDownload,
-        IReadOnlyList<string> linksDistributedTo,
         string? collectionUploadSlotKey,
         string? collectionUploadSlotName,
         bool collectionUploadSlotIsRequired,
@@ -411,7 +407,6 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             CollectionUploadSlotExpectedArchivePassword = CleanOptional(
                 collectionUploadSlotExpectedArchivePassword
             ),
-            LinksDistributedTo = CleanLinks(linksDistributedTo),
         };
 
         if (archiveConfigTemplate is not null)
@@ -432,7 +427,6 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         int hosterRegistrationId,
         int archiveConfigTemplateId,
         bool premiumOnlyDownload,
-        IReadOnlyList<string> linksDistributedTo,
         CancellationToken cancellationToken = default
     )
     {
@@ -442,7 +436,6 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             hosterRegistrationId,
             archiveConfigTemplateId,
             premiumOnlyDownload,
-            linksDistributedTo,
             collectionUploadSlotKey: null,
             collectionUploadSlotName: null,
             collectionUploadSlotIsRequired: false,
@@ -458,7 +451,6 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         int hosterRegistrationId,
         int archiveConfigTemplateId,
         bool premiumOnlyDownload,
-        IReadOnlyList<string> linksDistributedTo,
         string? collectionUploadSlotKey,
         string? collectionUploadSlotName,
         bool collectionUploadSlotIsRequired,
@@ -498,8 +490,6 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         {
             uploadConfigTemplate.ArchiveConfigTemplate = archiveConfigTemplate;
         }
-
-        uploadConfigTemplate.LinksDistributedTo = CleanLinks(linksDistributedTo);
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
@@ -813,13 +803,5 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             ArchiveFileSizeMb = 0,
             UseReleaseNameAsArchiveName = false,
         };
-    }
-
-    private static List<string> CleanLinks(IReadOnlyList<string> links)
-    {
-        return links
-            .Where(link => !string.IsNullOrWhiteSpace(link))
-            .Select(link => link.Trim())
-            .ToList();
     }
 }

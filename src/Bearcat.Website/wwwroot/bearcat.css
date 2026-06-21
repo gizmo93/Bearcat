@@ -2486,7 +2486,7 @@ a {
     }
 
     .bearcat-upload-grid {
-        grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 100px minmax(0, 1fr) 84px;
+        grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr) 84px;
     }
 
     .bearcat-template-archive-grid {
@@ -2496,7 +2496,7 @@ a {
     }
 
     .bearcat-template-upload-grid {
-        grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 90px 90px 84px;
+        grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 90px 84px;
     }
 
     .bearcat-image-upload-config-grid {

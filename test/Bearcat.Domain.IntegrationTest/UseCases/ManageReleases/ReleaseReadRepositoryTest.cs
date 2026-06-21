@@ -362,7 +362,6 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,
             Name = $"{releaseName} upload",
-            LinksDistributedTo = [],
             LinkCrypters = [],
             Uploads = [],
         };

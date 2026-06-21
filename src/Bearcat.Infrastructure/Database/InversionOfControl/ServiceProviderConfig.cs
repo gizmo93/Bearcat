@@ -14,6 +14,7 @@ using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
+using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
@@ -75,6 +76,8 @@ public static class ServiceProviderConfig
                 ImageHosterRegistrationReadRepository
             >();
             services.AddScoped<IImageUploadConfigReadRepository, ImageUploadConfigReadRepository>();
+            services.AddScoped<IPostedLocationReadRepository, PostedLocationReadRepository>();
+            services.AddScoped<IPostedLocationWriteRepository, PostedLocationWriteRepository>();
             services.AddScoped<IBackgroundTaskStateReadRepository, BackgroundTaskStateRepository>();
             services.AddScoped<
                 IBackgroundTaskStateWriteRepository,

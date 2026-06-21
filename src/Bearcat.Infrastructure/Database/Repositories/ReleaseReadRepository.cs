@@ -1069,15 +1069,13 @@ public class ReleaseReadRepository(
             releases = releases.Where(r => r.ReleaseGroupId == query.ReleaseGroupId.Value);
         }
 
-        var linksDistributedTo = Normalize(query.LinksDistributedTo);
+        var postedLocationUrl = Normalize(query.PostedLocationUrl);
 
-        if (linksDistributedTo is not null)
+        if (postedLocationUrl is not null)
         {
-            var pattern = ToContainsPattern(linksDistributedTo);
+            var pattern = ToContainsPattern(postedLocationUrl);
             releases = releases.Where(r =>
-                r.UploadConfigs.Any(u =>
-                    u.LinksDistributedTo.Any(link => EF.Functions.ILike(link, pattern))
-                )
+                r.PostedLocations.Any(location => EF.Functions.ILike(location.Url, pattern))
             );
         }
 

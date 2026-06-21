@@ -40,7 +40,6 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
             seed.HosterRegistrationId,
             seed.ArchiveConfigId,
             true,
-            ["forum-a", "", " ", "forum-b"],
             CancellationToken.None
         );
 
@@ -55,7 +54,6 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
         uploadConfig.ArchiveConfigId.ShouldBe(seed.ArchiveConfigId);
         uploadConfig.Name.ShouldBe("Default upload");
         uploadConfig.PremiumOnlyDownload.ShouldBeTrue();
-        uploadConfig.LinksDistributedTo.ShouldBe(["forum-a", "forum-b"]);
     }
 
     [Test]
@@ -73,7 +71,6 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
             secondSeed.HosterRegistrationId,
             secondSeed.ArchiveConfigId,
             true,
-            ["forum-c", ""],
             CancellationToken.None
         );
 
@@ -86,7 +83,6 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
         result.HosterRegistrationId.ShouldBe(secondSeed.HosterRegistrationId);
         result.ArchiveConfigId.ShouldBe(secondSeed.ArchiveConfigId);
         result.PremiumOnlyDownload.ShouldBeTrue();
-        result.LinksDistributedTo.ShouldBe(["forum-c", ""]);
     }
 
     [Test]
@@ -132,7 +128,6 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
             ArchiveConfigId = seed.ArchiveConfigId,
             HosterRegistrationId = seed.HosterRegistrationId,
             Name = "Default upload",
-            LinksDistributedTo = ["forum-a"],
         };
 
         dbContext.UploadConfigs.Add(uploadConfig);

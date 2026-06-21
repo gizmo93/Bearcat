@@ -1,4 +1,5 @@
 @page "/release-collections/{ReleaseCollectionId:int}"
+@using Bearcat.Website.Pages.ManagePostedLocations
 @using Bearcat.Website.Pages.PostQueue
 @inherits OwningComponentBase
 
@@ -65,8 +66,8 @@
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <BbButton
-                                  Size="ButtonSize.Small"
-                                  OnClick="ShowPostToForumDialogAsync">
+                            Size="ButtonSize.Small"
+                            OnClick="ShowPostToForumDialogAsync">
                             <LucideIcon Name="send" class="h-4 w-4" />
                             @L["PostToForum"]
                         </BbButton>
@@ -133,9 +134,9 @@
                 }
             </BbCardContent>
         </BbCard>
-
+        
         <CollectionImageUploads ReleaseCollectionId="@ReleaseCollectionId" />
-
+        
         <BbCard Class="border-border/70 shadow-sm">
             <BbCardHeader>
                 <div class="bearcat-section-header">
@@ -289,7 +290,7 @@
                 }
             </BbCardContent>
         </BbCard>
-
+        
         <BbCard Class="border-border/70 shadow-sm">
             <BbCardHeader>
                 <div class="bearcat-section-header">
@@ -381,5 +382,8 @@
                 }
             </BbCardContent>
         </BbCard>
+        
+        <PostedLocations ReleaseCollectionId="@ReleaseCollectionId" />
+        
     </div>
 </section>

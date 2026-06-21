@@ -26,7 +26,5 @@ public class UploadConfig
 
     public List<Upload> Uploads { get; set; } = null!;
 
-    public List<string> LinksDistributedTo { get; set; } = null!;
-
     public List<UploadConfigLinkCrypter> LinkCrypters { get; set; } = null!;
 }

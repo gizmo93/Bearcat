@@ -206,9 +206,6 @@
   <data name="LinkCrypters" xml:space="preserve"><value>Link crypters</value></data>
   <data name="LinkCryptersDescription" xml:space="preserve"><value>Optional containers for distributed upload links.</value></data>
   <data name="Links" xml:space="preserve"><value>Links</value></data>
-  <data name="LinksDistributedTo" xml:space="preserve"><value>Links distributed to</value></data>
-  <data name="LinksDistributedToHelp" xml:space="preserve"><value>Optional tracking for forum or board posts using this upload config.</value></data>
-  <data name="LinksDistributedToSearchPlaceholder" xml:space="preserve"><value>Forum, board, or note</value></data>
   <data name="Login" xml:space="preserve"><value>Login</value></data>
   <data name="LoginFailed" xml:space="preserve"><value>Login for registration {0} failed: {1}</value></data>
   <data name="LoginSuccessful" xml:space="preserve"><value>Login for registration {0} successful</value></data>
@@ -758,6 +755,16 @@
   <data name="SeriesMetadataNotResolved" xml:space="preserve"><value>No matching series found.</value></data>
   <data name="UpdateAvailable" xml:space="preserve"><value>Update to {0}</value></data>
   <data name="UpdateAvailableTooltip" xml:space="preserve"><value>Version {0} is available. Click to open the release page.</value></data>
+  <data name="IHavePosted" xml:space="preserve"><value>I have posted</value></data>
+  <data name="PostedLocation" xml:space="preserve"><value>Posted location</value></data>
+  <data name="PostedLocations" xml:space="preserve"><value>Posted locations</value></data>
+  <data name="PostedLocationsDescription" xml:space="preserve"><value>Where this has been posted (forum threads, pages, ...). Add or remove links manually.</value></data>
+  <data name="NoPostedLocationsYet" xml:space="preserve"><value>No posted locations yet.</value></data>
+  <data name="PostedLocationUrlPlaceholder" xml:space="preserve"><value>https://forum.example/threads/...</value></data>
+  <data name="PostedLocationSearchPlaceholder" xml:space="preserve"><value>Forum post or page URL</value></data>
+  <data name="PostedLocationRecorded" xml:space="preserve"><value>Saved where you posted.</value></data>
+  <data name="PostedLocationManualHelp" xml:space="preserve"><value>Could not detect the post automatically. Paste the URL of your post to save it.</value></data>
+  <data name="PostedLocationUrlRequired" xml:space="preserve"><value>A URL is required.</value></data>
   <data name="PostQueue" xml:space="preserve"><value>Post queue</value></data>
   <data name="PostQueueDescription" xml:space="preserve"><value>Releases and collections with new uploads you still need to post somewhere.</value></data>
   <data name="Collections" xml:space="preserve"><value>Collections</value></data>

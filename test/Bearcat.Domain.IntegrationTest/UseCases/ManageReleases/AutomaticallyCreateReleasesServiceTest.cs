@@ -135,7 +135,6 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         uploadConfig.Name.ShouldBe("Primary hoster");
         uploadConfig.ArchiveConfigId.ShouldBe(archiveConfig.Id);
         uploadConfig.HosterRegistrationId.ShouldBe(releaseTemplate.HosterRegistrationId);
-        uploadConfig.LinksDistributedTo.ShouldBe(["forum-a", "forum-b"]);
         uploadConfig
             .LinkCrypters.Single()
             .LinkCrypterRegistrationId.ShouldBe(releaseTemplate.LinkCrypterRegistrationId);
@@ -458,7 +457,6 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
                 ReleaseTemplate = releaseTemplate,
                 ArchiveConfigTemplate = releaseTemplate.ArchiveConfigTemplates.Single(),
                 HosterRegistration = hosterRegistration,
-                LinksDistributedTo = ["forum-a", "forum-b"],
                 LinkCrypterTemplates =
                 [
                     new UploadConfigLinkCrypterTemplate

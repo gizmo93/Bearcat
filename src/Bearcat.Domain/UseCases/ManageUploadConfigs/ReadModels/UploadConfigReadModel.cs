@@ -8,6 +8,5 @@ public record UploadConfigReadModel(
     int ArchiveConfigId,
     string ArchiveConfigName,
     string ReleaseName,
-    bool PremiumOnlyDownload,
-    IReadOnlyList<string> LinksDistributedTo
+    bool PremiumOnlyDownload
 );

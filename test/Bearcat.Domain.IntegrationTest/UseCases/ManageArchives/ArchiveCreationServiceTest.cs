@@ -761,7 +761,6 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             ArchiveConfigId = archiveConfig.Id,
             HosterRegistration = hosterRegistration,
             Name = name,
-            LinksDistributedTo = [],
         };
 
         dbContext.UploadConfigs.Add(uploadConfig);

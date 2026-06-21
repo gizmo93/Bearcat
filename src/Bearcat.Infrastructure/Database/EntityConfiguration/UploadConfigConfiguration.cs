@@ -14,7 +14,6 @@ public class UploadConfigConfiguration : IEntityTypeConfiguration<UploadConfig>
         builder.Property(u => u.CollectionUploadSlotId).IsRequired(false);
         builder.Property(u => u.Name).HasMaxLength(200).IsRequired();
         builder.Property(u => u.PremiumOnlyDownload).IsRequired();
-        builder.Property(u => u.LinksDistributedTo);
 
         builder
             .HasOne(u => u.HosterRegistration)

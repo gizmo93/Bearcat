@@ -123,7 +123,6 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
                 FormModel.HosterRegistrationId!.Value,
                 FormModel.ArchiveConfigTemplateId!.Value,
                 CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
-                FormModel.LinksDistributedTo,
                 FormModel.CollectionUploadSlotKey,
                 FormModel.CollectionUploadSlotName,
                 FormModel.CollectionUploadSlotIsRequired,
@@ -139,7 +138,6 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
                 FormModel.HosterRegistrationId!.Value,
                 FormModel.ArchiveConfigTemplateId!.Value,
                 CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
-                FormModel.LinksDistributedTo,
                 FormModel.CollectionUploadSlotKey,
                 FormModel.CollectionUploadSlotName,
                 FormModel.CollectionUploadSlotIsRequired,
@@ -149,16 +147,6 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
         }
 
         await DialogRef.CloseAsync(DialogResult.Ok());
-    }
-
-    private void AddLinkDistributedTo()
-    {
-        FormModel.LinksDistributedTo.Add(string.Empty);
-    }
-
-    private void DeleteLinkDistributedTo(int index)
-    {
-        FormModel.LinksDistributedTo.RemoveAt(index);
     }
 
     private void OnHosterRegistrationChanged()

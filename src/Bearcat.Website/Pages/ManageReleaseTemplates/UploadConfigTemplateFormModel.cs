@@ -23,7 +23,5 @@ public class UploadConfigTemplateFormModel
 
     public string? CollectionUploadSlotExpectedArchivePassword { get; set; }
 
-    public List<string> LinksDistributedTo { get; set; } = [];
-
     public bool IsEdit { get; set; }
 }

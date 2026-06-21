@@ -10,6 +10,7 @@ public interface IBearcatWriteDbContext
     public DbSet<ImageHosterRegistration> ImageHosterRegistrations { get; set; }
     public DbSet<DistributionSiteRegistration> DistributionSiteRegistrations { get; set; }
     public DbSet<ImageUploadConfig> ImageUploadConfigs { get; set; }
+    public DbSet<PostedLocation> PostedLocations { get; set; }
     public DbSet<ImageUpload> ImageUploads { get; set; }
     public DbSet<ImageUploadUrl> ImageUploadUrls { get; set; }
     public DbSet<ImageUploadConfigTemplate> ImageUploadConfigTemplates { get; set; }

@@ -295,7 +295,6 @@ public class ArchiveCleanupServiceTest : BearcatIntegrationTest
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,
             Name = "Default upload",
-            LinksDistributedTo = [],
         };
 
         dbContext.UploadConfigs.Add(uploadConfig);

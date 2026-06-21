@@ -103,6 +103,27 @@ public class DistributionSiteSessionService(
         return await forum.PrepareReplyDraftAsync(session, threadUrl, body, cancellationToken);
     }
 
+    public async Task<string?> ResolvePostedUrlAsync(
+        int registrationId,
+        ForumTargetId target,
+        bool isNewThread,
+        string threadUrl,
+        string title,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var (forum, session) = await EnsureForumSessionAsync(registrationId, cancellationToken);
+
+        return await forum.ResolvePostedUrlAsync(
+            session: session,
+            target: target,
+            isNewThread: isNewThread,
+            threadUrl: threadUrl,
+            title: title,
+            cancellationToken: cancellationToken
+        );
+    }
+
     private async Task<(
         IForumDistributionSite Forum,
         DistributionSession Session

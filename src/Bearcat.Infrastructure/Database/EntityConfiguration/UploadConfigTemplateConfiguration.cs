@@ -21,7 +21,6 @@ public class UploadConfigTemplateConfiguration : IEntityTypeConfiguration<Upload
             .Property(u => u.CollectionUploadSlotExpectedArchivePassword)
             .IsRequired(false)
             .HasMaxLength(100);
-        builder.Property(u => u.LinksDistributedTo);
 
         builder
             .HasOne(u => u.HosterRegistration)

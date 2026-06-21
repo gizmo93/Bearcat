@@ -220,6 +220,98 @@ public sealed partial class XenForoForumClient : IDisposable
         return new PreparedDraft(thread.ToString(), RequiresSameAccountBrowserSession: true);
     }
 
+    public async Task<string?> GetLoggedInUsernameAsync(CancellationToken cancellationToken)
+    {
+        var document = await GetDocumentAsync("/", cancellationToken);
+        var username = document
+            .QuerySelector(".p-navgroup-link--user .p-navgroup-linkText")
+            ?.TextContent.Trim();
+
+        return string.IsNullOrWhiteSpace(username) ? null : username;
+    }
+
+    public async Task<string?> FindLatestPostUrlInThreadAsync(
+        string threadUrl,
+        string username,
+        CancellationToken cancellationToken
+    )
+    {
+        var document = await GetDocumentAsync(threadUrl, cancellationToken);
+
+        var lastPage = GetLastPageNumber(document);
+        if (lastPage > 1)
+        {
+            var pageUrl = new Uri(EnsureTrailingSlash(threadUrl), $"page-{lastPage}");
+            document = await GetDocumentAsync(pageUrl.ToString(), cancellationToken);
+        }
+
+        return BuildPostUrl(FindUserPostId(document, username, takeLast: true));
+    }
+
+    public async Task<string?> FindNewThreadPostUrlAsync(
+        string? forumUrl,
+        string title,
+        string username,
+        CancellationToken cancellationToken
+    )
+    {
+        var threads = await SearchThreadsAsync(
+            keywords: title,
+            forumUrl: forumUrl,
+            cancellationToken: cancellationToken
+        );
+
+        foreach (var thread in threads)
+        {
+            var document = await GetDocumentAsync(thread.Url, cancellationToken);
+            var postId = FindUserPostId(document, username, takeLast: false);
+            if (postId is not null)
+            {
+                return BuildPostUrl(postId);
+            }
+        }
+
+        return null;
+    }
+
+    private string? BuildPostUrl(string? postId)
+    {
+        return postId is null ? null : new Uri(baseUri, $"/posts/{postId}/").ToString();
+    }
+
+    private static string? FindUserPostId(IDocument document, string username, bool takeLast)
+    {
+        var posts = document
+            .QuerySelectorAll("article.message--post")
+            .Where(post =>
+                string.Equals(
+                    post.GetAttribute("data-author"),
+                    username,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            .ToList();
+
+        var post = takeLast ? posts.LastOrDefault() : posts.FirstOrDefault();
+        var content = post?.GetAttribute("data-content");
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return null;
+        }
+
+        var match = PostIdPattern().Match(content);
+        return match.Success ? match.Groups[1].Value : null;
+    }
+
+    private static int GetLastPageNumber(IDocument document)
+    {
+        return document
+            .QuerySelectorAll(".pageNav-main .pageNav-page a")
+            .Select(link => int.TryParse(link.TextContent.Trim(), out var page) ? page : 1)
+            .DefaultIfEmpty(1)
+            .Max();
+    }
+
     private List<NodeBuilder> ReadSubforums(IElement card)
     {
         var subforums = new List<NodeBuilder>();
@@ -367,6 +459,9 @@ public sealed partial class XenForoForumClient : IDisposable
 
     [GeneratedRegex(@"(\d+)$")]
     private static partial Regex NodeIdPattern();
+
+    [GeneratedRegex(@"post-(\d+)")]
+    private static partial Regex PostIdPattern();
 
     private sealed class NodeBuilder(ForumTargetId id, string title, bool canReceivePosts)
     {

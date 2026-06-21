@@ -269,7 +269,6 @@ public partial class ReleaseTemplateDetail(
                         uploadConfig.CollectionUploadSlotPasswordPolicy,
                     CollectionUploadSlotExpectedArchivePassword =
                         uploadConfig.CollectionUploadSlotExpectedArchivePassword,
-                    LinksDistributedTo = uploadConfig.LinksDistributedTo.ToList(),
                     IsEdit = true,
                 },
         };

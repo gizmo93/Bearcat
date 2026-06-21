@@ -919,7 +919,6 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             CollectionUploadSlot = collectionSlot,
             HosterRegistration = hosterRegistration,
             Name = uploadConfigName,
-            LinksDistributedTo = [],
             LinkCrypters =
             [
                 new UploadConfigLinkCrypter
@@ -977,7 +976,6 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             ArchiveConfig = archiveConfig,
             HosterRegistration = hosterRegistration,
             Name = "Default upload",
-            LinksDistributedTo = [],
             LinkCrypters =
             [
                 new UploadConfigLinkCrypter

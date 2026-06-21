@@ -33,7 +33,5 @@ public class UploadConfigTemplate
 
     public string? CollectionUploadSlotExpectedArchivePassword { get; set; }
 
-    public List<string> LinksDistributedTo { get; set; } = [];
-
     public List<UploadConfigLinkCrypterTemplate> LinkCrypterTemplates { get; set; } = [];
 }

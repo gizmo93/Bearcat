@@ -258,7 +258,6 @@ public class ReleaseTemplateRepository(
                     u.CollectionUploadSlotIsRequired,
                     u.CollectionUploadSlotPasswordPolicy,
                     u.CollectionUploadSlotExpectedArchivePassword,
-                    u.LinksDistributedTo,
                     u.LinkCrypterTemplates.OrderBy(l => l.LinkCrypterRegistration.Name)
                         .ThenBy(l => l.Id)
                         .Select(l => new UploadConfigLinkCrypterTemplateReadModel(

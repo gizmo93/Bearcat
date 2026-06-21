@@ -119,6 +119,37 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
         return await client.PrepareReplyDraftAsync(threadUrl, body, cancellationToken);
     }
 
+    public async Task<string?> ResolvePostedUrlAsync(
+        DistributionSession session,
+        ForumTargetId target,
+        bool isNewThread,
+        string threadUrl,
+        string title,
+        CancellationToken cancellationToken
+    )
+    {
+        using var client = CreateClient(session);
+
+        var username = await client.GetLoggedInUsernameAsync(cancellationToken);
+        if (username is null)
+        {
+            return null;
+        }
+
+        return isNewThread
+            ? await client.FindNewThreadPostUrlAsync(
+                forumUrl: target.Value,
+                title: title,
+                username: username,
+                cancellationToken: cancellationToken
+            )
+            : await client.FindLatestPostUrlInThreadAsync(
+                threadUrl: threadUrl,
+                username: username,
+                cancellationToken: cancellationToken
+            );
+    }
+
     private XenForoForumClient CreateClient(DistributionSession session)
     {
         var baseUri = new Uri(BaseUrl.EndsWith('/') ? BaseUrl : BaseUrl + "/");

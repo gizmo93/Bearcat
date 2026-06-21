@@ -24,6 +24,8 @@ public class ReleaseCollection
 
     public List<ImageUploadConfig> ImageUploadConfigs { get; set; } = [];
 
+    public List<PostedLocation> PostedLocations { get; set; } = [];
+
     public ReleaseCollectionMetadata? Metadata { get; set; }
 
     public DateTime? MetadataCheckedAt { get; set; }

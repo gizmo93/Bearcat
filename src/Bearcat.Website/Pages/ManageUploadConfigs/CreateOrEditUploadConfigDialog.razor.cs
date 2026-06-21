@@ -74,8 +74,7 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
                 name: formModel.Name!,
                 hosterRegistrationId: formModel.HosterRegistrationId!.Value,
                 archiveConfigId: formModel.ArchiveConfigId!.Value,
-                premiumOnlyDownload: CanUsePremiumOnlyDownload && formModel.PremiumOnlyDownload,
-                linksDistributedTo: formModel.LinksDistributedTo
+                premiumOnlyDownload: CanUsePremiumOnlyDownload && formModel.PremiumOnlyDownload
             );
         }
         else
@@ -85,8 +84,7 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
                 name: formModel.Name!,
                 hosterRegistrationId: formModel.HosterRegistrationId!.Value,
                 archiveConfigId: formModel.ArchiveConfigId!.Value,
-                premiumOnlyDownload: CanUsePremiumOnlyDownload && formModel.PremiumOnlyDownload,
-                linksDistributedTo: formModel.LinksDistributedTo
+                premiumOnlyDownload: CanUsePremiumOnlyDownload && formModel.PremiumOnlyDownload
             );
         }
 
@@ -114,16 +112,6 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
         {
             messageStore.Add(() => formModel.ArchiveConfigId!, L["ArchiveConfigRequired"]);
         }
-    }
-
-    private void DeleteLinkDistributedTo(int index)
-    {
-        formModel.LinksDistributedTo.RemoveAt(index);
-    }
-
-    private void AddLinkDistributedTo()
-    {
-        formModel.LinksDistributedTo.Add(string.Empty);
     }
 
     private void OnHosterRegistrationChanged()
@@ -155,7 +143,6 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
             HosterRegistrationId = uploadConfig.HosterRegistrationId,
             ArchiveConfigId = uploadConfig.ArchiveConfigId,
             PremiumOnlyDownload = uploadConfig.PremiumOnlyDownload,
-            LinksDistributedTo = uploadConfig.LinksDistributedTo.ToList(),
         };
     }
 

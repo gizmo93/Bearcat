@@ -271,7 +271,6 @@ public class ReleaseService(
                     releaseType is ReleaseType.Managed
                         ? archiveConfigsByTemplateId[template.ArchiveConfigTemplateId]
                         : unmanagedArchiveConfig!,
-                LinksDistributedTo = CleanLinks(template.LinksDistributedTo),
                 Uploads = [],
                 LinkCrypters = template
                     .LinkCrypterTemplates.Select(linkCrypter => new UploadConfigLinkCrypter
@@ -338,13 +337,5 @@ public class ReleaseService(
     private static string? CleanOptional(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-    }
-
-    private static List<string> CleanLinks(IReadOnlyList<string> links)
-    {
-        return links
-            .Where(link => !string.IsNullOrWhiteSpace(link))
-            .Select(link => link.Trim())
-            .ToList();
     }
 }

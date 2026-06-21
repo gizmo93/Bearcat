@@ -17,6 +17,7 @@ using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageLinkCrypters;
 using Bearcat.Domain.UseCases.ManageNfoDatabases;
 using Bearcat.Domain.UseCases.ManageNotifications;
+using Bearcat.Domain.UseCases.ManagePostedLocations;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
@@ -45,6 +46,7 @@ public static class ServiceProviderConfig
             services.AddScoped<DistributionSiteSessionService>();
             services.AddScoped<DistributionSiteRegistrationService>();
             services.AddScoped<ImageUploadConfigService>();
+            services.AddScoped<PostedLocationService>();
             services.AddScoped<ImageUploadService>();
             services.AddScoped<BackgroundTaskStateService>();
             services.AddScoped<ReleaseFolderAutomationService>();
