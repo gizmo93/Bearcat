@@ -291,6 +291,13 @@ public class ReleaseInfoResolutionService(
                     registration.NfoDatabaseClassName
                 );
 
+                await SaveNfoFileToDiskAsync(
+                    release: release,
+                    fileName: nfo.FileName,
+                    content: nfo.Content,
+                    cancellationToken: cancellationToken
+                );
+
                 return true;
             }
             catch (Exception exception)
@@ -305,6 +312,39 @@ public class ReleaseInfoResolutionService(
         }
 
         return false;
+    }
+
+    private async Task SaveNfoFileToDiskAsync(
+        Release release,
+        string fileName,
+        string content,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            var result = await ReleaseNfoService.SaveNfoFileAsync(
+                releaseFolderPath: release.ReleaseFolderPath,
+                fileName: fileName,
+                releaseName: release.Name,
+                content: content,
+                cancellationToken: cancellationToken
+            );
+
+            if (result is ReleaseNfoFileSaveResult.Saved)
+            {
+                logger.LogInformation("Saved NFO file for release {ReleaseName}", release.Name);
+            }
+        }
+        catch (Exception exception)
+            when (exception is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            logger.LogWarning(
+                exception,
+                "Failed to save NFO file for release {ReleaseName}",
+                release.Name
+            );
+        }
     }
 
     private static DomainReleaseInfo ToEntity(
