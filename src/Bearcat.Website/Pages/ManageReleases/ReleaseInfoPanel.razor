@@ -4,13 +4,23 @@
             <h2 class="text-lg font-semibold">@L["ReleaseInfo"]</h2>
         </div>
 
-        <BbButton Variant="ButtonVariant.Outline"
-                  Size="ButtonSize.Small"
-                  Disabled="isLoading"
-                  OnClick="LoadReleaseInfoAsync">
-            <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
-            @L["Refresh"]
-        </BbButton>
+        <div class="flex flex-wrap items-center gap-2">
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      Disabled="isLoading"
+                      OnClick="ShowEditReleaseInfoDialogAsync">
+                <LucideIcon Name="@(releaseInfo is null ? "plus" : "pencil")" class="h-4 w-4" />
+                @(releaseInfo is null ? L["AddReleaseInfo"] : L["EditReleaseInfo"])
+            </BbButton>
+
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      Disabled="isLoading"
+                      OnClick="LoadReleaseInfoAsync">
+                <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
+                @L["Refresh"]
+            </BbButton>
+        </div>
     </div>
 
     @if (isLoading)
@@ -35,7 +45,20 @@
     {
         <div class="bearcat-release-info-list">
             <article class="bearcat-release-info-item">
-                    <header class="bearcat-release-info-card-header">
+                <div class="bearcat-release-info-layout">
+                    @if (!string.IsNullOrWhiteSpace(releaseInfo.CoverUrl))
+                    {
+                        <a href="@releaseInfo.CoverUrl"
+                           target="_blank"
+                           rel="noreferrer noopener"
+                           title="@L["OpenCoverInNewTab"]">
+                            <img src="@releaseInfo.CoverUrl"
+                                 alt="@releaseInfo.ReleaseName"
+                                 class="bearcat-series-cover" />
+                        </a>
+                    }
+
+                    <div class="bearcat-release-info-content">
                         <div class="min-w-0 space-y-2">
                             <div class="bearcat-release-info-source-row">
                                 <span class="bearcat-release-info-source">
@@ -108,7 +131,6 @@
                                 <dd>@GetNfoFileName(releaseInfo)</dd>
                             </div>
                         </dl>
-                    </header>
 
                     @if (!string.IsNullOrWhiteSpace(releaseInfo.Description))
                     {
@@ -172,6 +194,8 @@
                             </div>
                         }
                     </div>
+                    </div>
+                </div>
             </article>
         </div>
     }

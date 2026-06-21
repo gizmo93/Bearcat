@@ -34,6 +34,7 @@ public partial class ReleaseOverview(
     private IReadOnlyList<ReleaseOverviewUploadReadModel> overviewUploads = [];
     private IReadOnlyList<ReleaseOverviewImageUploadReadModel> overviewImageUploads = [];
     private ReleaseNfoReadModel? releaseNfo;
+    private ReleaseInfoReadModel? releaseInfo;
     private string? coverUrl;
     private string? nfoContent;
     private bool hasLocalNfo;
@@ -67,6 +68,7 @@ public partial class ReleaseOverview(
             var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
 
             releaseNfo = null;
+            releaseInfo = null;
             coverUrl = null;
             nfoContent = null;
             hasLocalNfo = false;
@@ -75,7 +77,7 @@ public partial class ReleaseOverview(
             overviewImageUploads = await readRepository.GetReleaseOverviewImageUploadsAsync(
                 ReleaseId
             );
-            var releaseInfo = await readRepository.GetReleaseInfoAsync(ReleaseId);
+            releaseInfo = await readRepository.GetReleaseInfoAsync(ReleaseId);
             coverUrl = releaseInfo?.CoverUrl;
             releaseNfo = await readRepository.GetReleaseNfoAsync(ReleaseId);
             nfoContent = releaseNfo?.Content;
@@ -175,6 +177,37 @@ public partial class ReleaseOverview(
                 ShowClose = true,
             }
         );
+    }
+
+    private async Task ShowEditReleaseInfoDialogAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(EditReleaseInfoDialog.ReleaseId)] = ReleaseId,
+            [nameof(EditReleaseInfoDialog.ReleaseName)] = ReleaseName,
+            [nameof(EditReleaseInfoDialog.ReleaseInfo)] = releaseInfo,
+        };
+
+        var dialog = await dialogService.OpenAsync<EditReleaseInfoDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = releaseInfo is null ? L["AddReleaseInfo"] : L["EditReleaseInfo"],
+                Description = L["EditReleaseInfoDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (dialog.Cancelled)
+        {
+            return;
+        }
+
+        toastService.Success(L["ReleaseInfoUpdated"]);
+        await LoadOverviewAsync();
+        StateHasChanged();
     }
 
     private async Task ShowPostToForumDialogAsync()

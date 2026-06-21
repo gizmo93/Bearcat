@@ -22,6 +22,15 @@
                 @L["RenderForumPost"]
             </BbButton>
 
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      Class="bearcat-release-overview-action-button"
+                      Disabled="isLoading"
+                      OnClick="ShowEditReleaseInfoDialogAsync">
+                <LucideIcon Name="@(releaseInfo is null ? "plus" : "pencil")" class="h-4 w-4" />
+                @(releaseInfo is null ? L["AddReleaseInfo"] : L["EditReleaseInfo"])
+            </BbButton>
+
             @if (!string.IsNullOrWhiteSpace(coverUrl))
             {
                 <a class="bearcat-copy-button bearcat-release-overview-action-button"

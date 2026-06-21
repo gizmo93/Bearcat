@@ -1651,8 +1651,22 @@ a {
     border-top: 1px solid var(--border);
 }
 
-.bearcat-release-info-card-header {
+.bearcat-release-info-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+@media (min-width: 640px) {
+    .bearcat-release-info-layout {
+        flex-direction: row;
+    }
+}
+
+.bearcat-release-info-content {
     display: grid;
+    min-width: 0;
+    flex: 1;
     gap: 1rem;
 }
 
@@ -1859,11 +1873,6 @@ a {
     .bearcat-release-overview-image-main {
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
-    }
-
-    .bearcat-release-info-card-header {
-        grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.75fr);
-        align-items: start;
     }
 
     .bearcat-release-info-external-row {

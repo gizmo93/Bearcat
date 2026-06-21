@@ -238,7 +238,7 @@ public class Rapidgator(
             config: config,
             cancellationToken: cancellationToken
         );
-        
+
         // "Retried" because of "errors" but the file upload was actually successful
         if (uploadRequest.Response?.Upload?.File?.FileId is not null)
         {

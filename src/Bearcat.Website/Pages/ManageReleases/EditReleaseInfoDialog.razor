@@ -1,0 +1,141 @@
+@using System.ComponentModel.DataAnnotations
+@using Bearcat.Domain.UseCases.ManageReleases
+@using Microsoft.Extensions.DependencyInjection
+@inherits OwningComponentBase
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-6" style="max-height: 60vh; overflow-y: auto; padding-right: 0.5rem;">
+        <BbFormFieldInput TValue="string"
+                          @bind-Value="model.ReleaseName"
+                          Label="@L["ReleaseName"]" />
+
+        <div class="grid gap-4 sm:grid-cols-2">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="model.Genre"
+                              Label="@L["Genre"]" />
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="model.ReleaseDatabaseUrl"
+                              Label="@L["ReleaseDatabaseUrl"]" />
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="model.VideoType"
+                              Label="@L["VideoType"]" />
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="model.AudioType"
+                              Label="@L["AudioType"]" />
+            <BbFormFieldInput TValue="int?"
+                              @bind-Value="model.SizeNumber"
+                              Label="@L["Size"]" />
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="model.SizeUnit"
+                              Label="@L["SizeUnit"]" />
+        </div>
+
+        <BbFormFieldInput TValue="string"
+                          @bind-Value="model.CoverUrl"
+                          Label="@L["CoverUrl"]"
+                          Placeholder="@L["CoverUrlPlaceholder"]"
+                          HelperText="@L["CoverUrlHelp"]" />
+
+        @if (!string.IsNullOrWhiteSpace(model.CoverUrl))
+        {
+            <img src="@model.CoverUrl" alt="@L["CoverPreview"]" class="bearcat-series-cover" />
+        }
+
+        <BbFormFieldTextarea @bind-Value="model.Description"
+                             Label="@L["Description"]"
+                             UpdateTiming="UpdateTiming.OnChange" />
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [CascadingParameter]
+    public IDialogReference DialogRef { get; set; } = null!;
+
+    [Parameter]
+    public int ReleaseId { get; set; }
+
+    [Parameter]
+    public string ReleaseName { get; set; } = string.Empty;
+
+    [Parameter]
+    public ReleaseInfoReadModel? ReleaseInfo { get; set; }
+
+    private readonly FormModel model = new();
+    private EditContext editContext = null!;
+
+    protected override void OnInitialized()
+    {
+        model.ReleaseName = ReleaseInfo?.ReleaseName ?? ReleaseName;
+        model.CoverUrl = ReleaseInfo?.CoverUrl;
+        model.Genre = ReleaseInfo?.Genre;
+        model.VideoType = ReleaseInfo?.VideoType;
+        model.AudioType = ReleaseInfo?.AudioType;
+        model.SizeNumber = ReleaseInfo?.SizeNumber;
+        model.SizeUnit = ReleaseInfo?.SizeUnit;
+        model.ReleaseDatabaseUrl = ReleaseInfo?.ReleaseDatabaseUrl;
+        model.Description = ReleaseInfo?.Description;
+
+        editContext = new EditContext(model);
+    }
+
+    private async Task SaveAsync()
+    {
+        var service = ScopedServices.GetRequiredService<ReleaseInfoService>();
+        await service.UpdateReleaseInfoAsync(
+            ReleaseId,
+            new EditReleaseInfoData(
+                ReleaseName: model.ReleaseName,
+                CoverUrl: model.CoverUrl,
+                Genre: model.Genre,
+                VideoType: model.VideoType,
+                AudioType: model.AudioType,
+                SizeNumber: model.SizeNumber,
+                SizeUnit: model.SizeUnit,
+                ReleaseDatabaseUrl: model.ReleaseDatabaseUrl,
+                Description: model.Description
+            )
+        );
+
+        await DialogRef.CloseAsync(DialogResult.Ok(model.ReleaseName));
+    }
+
+    private async Task CancelAsync()
+    {
+        await DialogRef.CancelAsync();
+    }
+
+    private sealed class FormModel
+    {
+        [Required]
+        public string? ReleaseName { get; set; }
+
+        public string? CoverUrl { get; set; }
+
+        public string? Genre { get; set; }
+
+        public string? VideoType { get; set; }
+
+        public string? AudioType { get; set; }
+
+        public int? SizeNumber { get; set; }
+
+        public string? SizeUnit { get; set; }
+
+        public string? ReleaseDatabaseUrl { get; set; }
+
+        public string? Description { get; set; }
+    }
+}

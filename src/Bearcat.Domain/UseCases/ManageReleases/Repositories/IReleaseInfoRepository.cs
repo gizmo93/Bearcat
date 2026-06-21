@@ -23,7 +23,14 @@ public interface IReleaseInfoRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<Release> GetReleaseForCoverUpdateAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    );
+
     void Remove(ReleaseInfo releaseInfo);
+
+    void Remove(ImageUpload imageUpload);
 
     void DetachPendingReleaseInfo(Release release);
 

@@ -79,6 +79,12 @@
                         </BbButton>
                         <BbButton Variant="ButtonVariant.Outline"
                                   Size="ButtonSize.Small"
+                                  OnClick="ShowEditMetadataDialogAsync">
+                            <LucideIcon Name="pencil" class="h-4 w-4" />
+                            @L["EditMetadata"]
+                        </BbButton>
+                        <BbButton Variant="ButtonVariant.Outline"
+                                  Size="ButtonSize.Small"
                                   Disabled="isResolvingMetadata"
                                   OnClick="ResolveMetadataAsync">
                             <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isResolvingMetadata ? "animate-spin" : string.Empty)}")" />
@@ -99,9 +105,14 @@
                     <div class="bearcat-series-metadata">
                         @if (!string.IsNullOrWhiteSpace(releaseCollection.Metadata.CoverUrl))
                         {
-                            <img src="@releaseCollection.Metadata.CoverUrl"
-                                 alt="@releaseCollection.Metadata.Title"
-                                 class="bearcat-series-cover" />
+                            <a href="@releaseCollection.Metadata.CoverUrl"
+                               target="_blank"
+                               rel="noreferrer noopener"
+                               title="@L["OpenCoverInNewTab"]">
+                                <img src="@releaseCollection.Metadata.CoverUrl"
+                                     alt="@releaseCollection.Metadata.Title"
+                                     class="bearcat-series-cover" />
+                            </a>
                         }
                         <div class="min-w-0 space-y-3">
                             <div class="flex flex-wrap items-center gap-2">

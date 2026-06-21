@@ -121,6 +121,22 @@
   <data name="DeleteUploadConfig" xml:space="preserve"><value>Delete Upload Config</value></data>
   <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Are you sure you want to delete the upload config {0}?</value></data>
   <data name="DownloadCover" xml:space="preserve"><value>Download cover</value></data>
+  <data name="CoverUrl" xml:space="preserve"><value>Cover URL</value></data>
+  <data name="CoverUrlPlaceholder" xml:space="preserve"><value>https://example.com/cover.jpg</value></data>
+  <data name="CoverUrlHelp" xml:space="preserve"><value>Set the cover image URL manually. If it was already uploaded to image hosters, those uploads are removed and re-uploaded with the new cover.</value></data>
+  <data name="CoverPreview" xml:space="preserve"><value>Cover preview</value></data>
+  <data name="OpenCoverInNewTab" xml:space="preserve"><value>Open cover in full size in a new tab</value></data>
+  <data name="SizeUnit" xml:space="preserve"><value>Size unit</value></data>
+  <data name="ReleaseDatabaseUrl" xml:space="preserve"><value>Release database URL</value></data>
+  <data name="SeriesDatabaseUrl" xml:space="preserve"><value>Series database URL</value></data>
+  <data name="Title" xml:space="preserve"><value>Title</value></data>
+  <data name="EditReleaseInfo" xml:space="preserve"><value>Edit release info</value></data>
+  <data name="AddReleaseInfo" xml:space="preserve"><value>Add release info</value></data>
+  <data name="EditReleaseInfoDescription" xml:space="preserve"><value>Edit the release info manually, e.g. when no database returned a match. Changing the cover re-uploads it to the image hosters.</value></data>
+  <data name="ReleaseInfoUpdated" xml:space="preserve"><value>Release info updated</value></data>
+  <data name="EditMetadata" xml:space="preserve"><value>Edit metadata</value></data>
+  <data name="EditMetadataDescription" xml:space="preserve"><value>Edit the series metadata manually, e.g. when no database returned a match. Changing the cover re-uploads it to the image hosters.</value></data>
+  <data name="MetadataUpdated" xml:space="preserve"><value>Metadata updated</value></data>
   <data name="DownloadLink" xml:space="preserve"><value>Download link</value></data>
   <data name="DownloadLinkSearchPlaceholder" xml:space="preserve"><value>Paste part of a link</value></data>
   <data name="DownloadLinks" xml:space="preserve"><value>Download links</value></data>

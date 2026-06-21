@@ -86,6 +86,36 @@ public partial class ReleaseCollectionDetail(
         await LoadReleaseCollectionAsync();
     }
 
+    private async Task ShowEditMetadataDialogAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(EditCollectionMetadataDialog.ReleaseCollectionId)] = ReleaseCollectionId,
+            [nameof(EditCollectionMetadataDialog.CollectionName)] = releaseCollection.Name,
+            [nameof(EditCollectionMetadataDialog.Metadata)] = releaseCollection.Metadata,
+        };
+
+        var dialog = await dialogService.OpenAsync<EditCollectionMetadataDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["EditMetadata"],
+                Description = L["EditMetadataDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (dialog.Cancelled)
+        {
+            return;
+        }
+
+        toastService.Success(L["MetadataUpdated"]);
+        await LoadReleaseCollectionAsync();
+    }
+
     private async Task ResolveMetadataAsync()
     {
         if (isResolvingMetadata)

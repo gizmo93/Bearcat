@@ -69,9 +69,26 @@ public class ReleaseInfoRepository(
             .FirstAsync(info => info.Id == releaseInfoId, cancellationToken);
     }
 
+    public async Task<Release> GetReleaseForCoverUpdateAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .Releases.Include(release => release.ReleaseInfo)
+            .Include(release => release.ImageUploadConfigs)
+                .ThenInclude(config => config.ImageUploads)
+            .FirstAsync(release => release.Id == releaseId, cancellationToken);
+    }
+
     public void Remove(ReleaseInfo releaseInfo)
     {
         dbWrite.Remove(releaseInfo);
+    }
+
+    public void Remove(ImageUpload imageUpload)
+    {
+        dbWrite.Remove(imageUpload);
     }
 
     public void DetachPendingReleaseInfo(Release release)

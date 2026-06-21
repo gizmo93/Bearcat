@@ -14,6 +14,8 @@ public class ReleaseCollectionService(
     TimeProvider timeProvider
 )
 {
+    private const string ManualSource = "Manual";
+
     public async Task<int> CreateAsync(
         string name,
         string key,
@@ -50,6 +52,52 @@ public class ReleaseCollectionService(
         releaseCollection.Name = CleanRequired(name, nameof(name));
 
         await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdateMetadataAsync(
+        int releaseCollectionId,
+        EditCollectionMetadataData data,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var releaseCollection = await writeRepository.GetForCoverUpdateAsync(
+            releaseCollectionId,
+            cancellationToken
+        );
+        var newCoverUrl = CleanOptional(data.CoverUrl);
+        var previousCoverUrl = releaseCollection.Metadata?.CoverUrl;
+
+        var metadata = releaseCollection.Metadata;
+        if (metadata is null)
+        {
+            metadata = new ReleaseCollectionMetadata { SeriesDatabaseClassName = ManualSource };
+            releaseCollection.Metadata = metadata;
+        }
+
+        metadata.Title = CleanOptional(data.Title) ?? releaseCollection.Name;
+        metadata.CoverUrl = newCoverUrl;
+        metadata.Description = CleanOptional(data.Description);
+        metadata.SeriesDatabaseUrl = CleanOptional(data.SeriesDatabaseUrl);
+
+        if (!string.Equals(previousCoverUrl, newCoverUrl, StringComparison.Ordinal))
+        {
+            RemoveUploadedImages(releaseCollection.ImageUploadConfigs);
+        }
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    private void RemoveUploadedImages(IReadOnlyList<ImageUploadConfig> imageUploadConfigs)
+    {
+        var uploadedImages = imageUploadConfigs
+            .SelectMany(config => config.ImageUploads)
+            .Where(upload => upload.UploadState == UploadState.Completed)
+            .ToList();
+
+        foreach (var uploadedImage in uploadedImages)
+        {
+            writeRepository.Remove(uploadedImage);
+        }
     }
 
     public async Task UpdateContentTypeAsync(
@@ -398,6 +446,11 @@ public class ReleaseCollectionService(
         return string.IsNullOrWhiteSpace(value)
             ? throw new ArgumentException("Value is required.", parameterName)
             : value.Trim();
+    }
+
+    private static string? CleanOptional(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
     private static string CreateStableKey(string value)

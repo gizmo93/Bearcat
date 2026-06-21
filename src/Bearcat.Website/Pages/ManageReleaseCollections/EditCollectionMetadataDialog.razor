@@ -1,0 +1,105 @@
+@using System.ComponentModel.DataAnnotations
+@using Bearcat.Domain.UseCases.ManageReleaseCollections
+@using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto
+@using Microsoft.Extensions.DependencyInjection
+@inherits OwningComponentBase
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-6" style="max-height: 60vh; overflow-y: auto; padding-right: 0.5rem;">
+        <BbFormFieldInput TValue="string"
+                          @bind-Value="model.Title"
+                          Label="@L["Title"]" />
+
+        <BbFormFieldInput TValue="string"
+                          @bind-Value="model.SeriesDatabaseUrl"
+                          Label="@L["SeriesDatabaseUrl"]" />
+
+        <BbFormFieldInput TValue="string"
+                          @bind-Value="model.CoverUrl"
+                          Label="@L["CoverUrl"]"
+                          Placeholder="@L["CoverUrlPlaceholder"]"
+                          HelperText="@L["CoverUrlHelp"]" />
+
+        @if (!string.IsNullOrWhiteSpace(model.CoverUrl))
+        {
+            <img src="@model.CoverUrl" alt="@L["CoverPreview"]" class="bearcat-series-cover" />
+        }
+
+        <BbFormFieldTextarea @bind-Value="model.Description"
+                             Label="@L["Description"]"
+                             UpdateTiming="UpdateTiming.OnChange" />
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [CascadingParameter]
+    public IDialogReference DialogRef { get; set; } = null!;
+
+    [Parameter]
+    public int ReleaseCollectionId { get; set; }
+
+    [Parameter]
+    public string CollectionName { get; set; } = string.Empty;
+
+    [Parameter]
+    public ReleaseCollectionMetadataReadModel? Metadata { get; set; }
+
+    private readonly FormModel model = new();
+    private EditContext editContext = null!;
+
+    protected override void OnInitialized()
+    {
+        model.Title = Metadata?.Title ?? CollectionName;
+        model.CoverUrl = Metadata?.CoverUrl;
+        model.SeriesDatabaseUrl = Metadata?.SeriesDatabaseUrl;
+        model.Description = Metadata?.Description;
+
+        editContext = new EditContext(model);
+    }
+
+    private async Task SaveAsync()
+    {
+        var service = ScopedServices.GetRequiredService<ReleaseCollectionService>();
+        await service.UpdateMetadataAsync(
+            ReleaseCollectionId,
+            new EditCollectionMetadataData(
+                Title: model.Title,
+                CoverUrl: model.CoverUrl,
+                Description: model.Description,
+                SeriesDatabaseUrl: model.SeriesDatabaseUrl
+            )
+        );
+
+        await DialogRef.CloseAsync(DialogResult.Ok(model.Title));
+    }
+
+    private async Task CancelAsync()
+    {
+        await DialogRef.CancelAsync();
+    }
+
+    private sealed class FormModel
+    {
+        [Required]
+        public string? Title { get; set; }
+
+        public string? CoverUrl { get; set; }
+
+        public string? SeriesDatabaseUrl { get; set; }
+
+        public string? Description { get; set; }
+    }
+}

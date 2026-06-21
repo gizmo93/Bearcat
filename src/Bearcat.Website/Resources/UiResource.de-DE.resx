@@ -121,6 +121,22 @@
   <data name="DeleteUploadConfig" xml:space="preserve"><value>Upload-Konfiguration löschen</value></data>
   <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Möchtest du die Upload-Konfiguration {0} wirklich löschen?</value></data>
   <data name="DownloadCover" xml:space="preserve"><value>Cover herunterladen</value></data>
+  <data name="CoverUrl" xml:space="preserve"><value>Cover-URL</value></data>
+  <data name="CoverUrlPlaceholder" xml:space="preserve"><value>https://example.com/cover.jpg</value></data>
+  <data name="CoverUrlHelp" xml:space="preserve"><value>Setze die Cover-URL manuell. Falls sie bereits zu ImageHostern hochgeladen wurde, werden diese Uploads entfernt und mit dem neuen Cover erneut hochgeladen.</value></data>
+  <data name="CoverPreview" xml:space="preserve"><value>Cover-Vorschau</value></data>
+  <data name="OpenCoverInNewTab" xml:space="preserve"><value>Cover in voller Größe in neuem Tab öffnen</value></data>
+  <data name="SizeUnit" xml:space="preserve"><value>Größeneinheit</value></data>
+  <data name="ReleaseDatabaseUrl" xml:space="preserve"><value>Release-Datenbank-URL</value></data>
+  <data name="SeriesDatabaseUrl" xml:space="preserve"><value>Serien-Datenbank-URL</value></data>
+  <data name="Title" xml:space="preserve"><value>Titel</value></data>
+  <data name="EditReleaseInfo" xml:space="preserve"><value>Release-Info bearbeiten</value></data>
+  <data name="AddReleaseInfo" xml:space="preserve"><value>Release-Info hinzufügen</value></data>
+  <data name="EditReleaseInfoDescription" xml:space="preserve"><value>Bearbeite die Release-Info manuell, z. B. wenn keine Datenbank einen Treffer geliefert hat. Beim Ändern des Covers wird es erneut zu den ImageHostern hochgeladen.</value></data>
+  <data name="ReleaseInfoUpdated" xml:space="preserve"><value>Release-Info aktualisiert</value></data>
+  <data name="EditMetadata" xml:space="preserve"><value>Metadaten bearbeiten</value></data>
+  <data name="EditMetadataDescription" xml:space="preserve"><value>Bearbeite die Serien-Metadaten manuell, z. B. wenn keine Datenbank einen Treffer geliefert hat. Beim Ändern des Covers wird es erneut zu den ImageHostern hochgeladen.</value></data>
+  <data name="MetadataUpdated" xml:space="preserve"><value>Metadaten aktualisiert</value></data>
   <data name="DownloadLink" xml:space="preserve"><value>Downloadlink</value></data>
   <data name="DownloadLinkSearchPlaceholder" xml:space="preserve"><value>Teil eines Links einfügen</value></data>
   <data name="DownloadLinks" xml:space="preserve"><value>Downloadlinks</value></data>

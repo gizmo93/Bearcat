@@ -1,4 +1,3 @@
-using Bearcat.Cli;
 using Bearcat.Cli.Commands;
 using Spectre.Console.Cli;
 

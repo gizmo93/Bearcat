@@ -697,6 +697,18 @@ public class ReleaseCollectionRepository(
             .FirstAsync(collection => collection.Id == releaseCollectionId, cancellationToken);
     }
 
+    public async Task<ReleaseCollection> GetForCoverUpdateAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .ReleaseCollections.Include(collection => collection.Metadata)
+            .Include(collection => collection.ImageUploadConfigs)
+                .ThenInclude(config => config.ImageUploads)
+            .FirstAsync(collection => collection.Id == releaseCollectionId, cancellationToken);
+    }
+
     public async Task<Release> GetReleaseByIdAsync(
         int releaseId,
         CancellationToken cancellationToken = default
@@ -829,6 +841,11 @@ public class ReleaseCollectionRepository(
     public void Remove(ReleaseCollection releaseCollection)
     {
         dbWrite.Remove(releaseCollection);
+    }
+
+    public void Remove(ImageUpload imageUpload)
+    {
+        dbWrite.Remove(imageUpload);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)

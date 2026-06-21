@@ -1,7 +1,8 @@
 @inherits LayoutComponentBase
+@using Bearcat.Abstractions.Updates
 @implements IDisposable
 @inject NavigationManager NavigationManager
-@inject Bearcat.Abstractions.Updates.IUpdateChecker UpdateChecker
+@inject IUpdateChecker UpdateChecker
 
 <BbSidebarProvider DefaultOpen="true" Variant="SidebarVariant.Inset">
     <BbSidebar Class="bearcat-sidebar border-r border-border/70 bg-sidebar text-sidebar-foreground">

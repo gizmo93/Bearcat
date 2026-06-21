@@ -21,6 +21,11 @@ public interface IReleaseCollectionWriteRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<ReleaseCollection> GetForCoverUpdateAsync(
+        int releaseCollectionId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<Release> GetReleaseByIdAsync(int releaseId, CancellationToken cancellationToken = default);
 
     Task<Release> GetReleaseWithSlotUploadConfigsAsync(
@@ -74,6 +79,8 @@ public interface IReleaseCollectionWriteRepository
     void Remove(UploadConfigLinkCrypter uploadConfigLinkCrypter);
 
     void Remove(ReleaseCollection releaseCollection);
+
+    void Remove(ImageUpload imageUpload);
 
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -18,6 +18,9 @@ public partial class ReleaseInfoPanel(
     [EditorRequired]
     public int ReleaseId { get; set; }
 
+    [Parameter]
+    public string ReleaseName { get; set; } = string.Empty;
+
     private ReleaseInfoReadModel? releaseInfo;
     private bool isLoading;
 
@@ -40,6 +43,36 @@ public partial class ReleaseInfoPanel(
         {
             isLoading = false;
         }
+    }
+
+    private async Task ShowEditReleaseInfoDialogAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(EditReleaseInfoDialog.ReleaseId)] = ReleaseId,
+            [nameof(EditReleaseInfoDialog.ReleaseName)] = ReleaseName,
+            [nameof(EditReleaseInfoDialog.ReleaseInfo)] = releaseInfo,
+        };
+
+        var dialog = await dialogService.OpenAsync<EditReleaseInfoDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = releaseInfo is null ? L["AddReleaseInfo"] : L["EditReleaseInfo"],
+                Description = L["EditReleaseInfoDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (dialog.Cancelled)
+        {
+            return;
+        }
+
+        toastService.Success(L["ReleaseInfoUpdated"]);
+        await LoadReleaseInfoAsync();
     }
 
     private async Task DeleteReleaseInfoAsync(ReleaseInfoReadModel releaseInfo)
