@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.RegularExpressions;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
@@ -245,7 +246,7 @@ public sealed partial class XenForoForumClient : IDisposable
             document = await GetDocumentAsync(pageUrl.ToString(), cancellationToken);
         }
 
-        return BuildPostUrl(FindUserPostId(document, username, takeLast: true));
+        return ExtractPostPermalink(FindUserPost(document, username, takeLast: true));
     }
 
     public async Task<string?> FindNewThreadPostUrlAsync(
@@ -255,31 +256,113 @@ public sealed partial class XenForoForumClient : IDisposable
         CancellationToken cancellationToken
     )
     {
+        var threadUrl = await FindNewThreadUrlAsync(
+            forumUrl: forumUrl,
+            title: title,
+            username: username,
+            cancellationToken: cancellationToken
+        );
+
+        if (threadUrl is null)
+        {
+            return null;
+        }
+
+        var document = await GetDocumentAsync(threadUrl, cancellationToken);
+        return ExtractPostPermalink(FindUserPost(document, username, takeLast: false));
+    }
+
+    private async Task<string?> FindNewThreadUrlAsync(
+        string? forumUrl,
+        string title,
+        string username,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!string.IsNullOrWhiteSpace(forumUrl))
+        {
+            var listingUrl = forumUrl.TrimEnd('/') + "/?order=post_date&direction=desc";
+            var listing = await GetDocumentAsync(listingUrl, cancellationToken);
+            var listedHref = FindThreadHrefInListing(listing, title, username);
+            if (listedHref is not null)
+            {
+                return new Uri(baseUri, listedHref).ToString();
+            }
+        }
+
         var threads = await SearchThreadsAsync(
             keywords: title,
             forumUrl: forumUrl,
             cancellationToken: cancellationToken
         );
 
+        ExistingThread? matchedThread = null;
         foreach (var thread in threads)
         {
             var document = await GetDocumentAsync(thread.Url, cancellationToken);
-            var postId = FindUserPostId(document, username, takeLast: false);
-            if (postId is not null)
+            if (FindUserPost(document, username, takeLast: false) is not null)
             {
-                return BuildPostUrl(postId);
+                matchedThread = thread;
+                break;
             }
         }
 
-        return null;
+        return matchedThread?.Url;
     }
 
-    private string? BuildPostUrl(string? postId)
+    private static string? FindThreadHrefInListing(
+        IDocument document,
+        string title,
+        string username
+    )
     {
-        return postId is null ? null : new Uri(baseUri, $"/posts/{postId}/").ToString();
+        var normalizedTitle = NormalizeForMatch(title);
+
+        var rows = document
+            .QuerySelectorAll(".structItem--thread")
+            .Where(row =>
+                string.Equals(
+                    row.GetAttribute("data-author"),
+                    username,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            .ToList();
+
+        var matched =
+            rows.FirstOrDefault(row =>
+                NormalizeForMatch(
+                        row.QuerySelector(".structItem-title")?.TextContent ?? string.Empty
+                    )
+                    .Contains(normalizedTitle, StringComparison.Ordinal)
+            ) ?? rows.FirstOrDefault();
+
+        return matched
+            ?.QuerySelectorAll(".structItem-title a")
+            .LastOrDefault()
+            ?.GetAttribute("href");
     }
 
-    private static string? FindUserPostId(IDocument document, string username, bool takeLast)
+    private string? ExtractPostPermalink(IElement? post)
+    {
+        if (post is null)
+        {
+            return null;
+        }
+
+        var href =
+            post.QuerySelector(".message-attribution-main a")?.GetAttribute("href")
+            ?? post.QuerySelectorAll("a")
+                .Select(anchor => anchor.GetAttribute("href"))
+                .FirstOrDefault(value =>
+                    !string.IsNullOrWhiteSpace(value)
+                    && value.Contains("post-", StringComparison.Ordinal)
+                );
+
+        return string.IsNullOrWhiteSpace(href) ? null : new Uri(baseUri, href).ToString();
+    }
+
+    private static IElement? FindUserPost(IDocument document, string username, bool takeLast)
     {
         var posts = document
             .QuerySelectorAll("article.message--post")
@@ -292,15 +375,26 @@ public sealed partial class XenForoForumClient : IDisposable
             )
             .ToList();
 
-        var post = takeLast ? posts.LastOrDefault() : posts.FirstOrDefault();
-        var content = post?.GetAttribute("data-content");
-        if (string.IsNullOrWhiteSpace(content))
+        return takeLast ? posts.LastOrDefault() : posts.FirstOrDefault();
+    }
+
+    private static string NormalizeForMatch(string value)
+    {
+        var builder = new StringBuilder(value.Length);
+
+        foreach (var character in value)
         {
-            return null;
+            if (char.IsLetterOrDigit(character))
+            {
+                builder.Append(char.ToLowerInvariant(character));
+            }
+            else if (builder.Length > 0 && builder[^1] != ' ')
+            {
+                builder.Append(' ');
+            }
         }
 
-        var match = PostIdPattern().Match(content);
-        return match.Success ? match.Groups[1].Value : null;
+        return builder.ToString().Trim();
     }
 
     private static int GetLastPageNumber(IDocument document)
@@ -459,9 +553,6 @@ public sealed partial class XenForoForumClient : IDisposable
 
     [GeneratedRegex(@"(\d+)$")]
     private static partial Regex NodeIdPattern();
-
-    [GeneratedRegex(@"post-(\d+)")]
-    private static partial Regex PostIdPattern();
 
     private sealed class NodeBuilder(ForumTargetId id, string title, bool canReceivePosts)
     {
