@@ -34,10 +34,20 @@ jobs:
 
       - name: Resolve version
         id: version
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          version="${GITHUB_REF_NAME#v}"
-          if [ "${GITHUB_REF_TYPE}" != "tag" ]; then
+          if [ -n "${RELEASE_TAG}" ]; then
+            version="${RELEASE_TAG#v}"
+          elif [ "${GITHUB_REF_TYPE:-}" = "tag" ] && [ -n "${GITHUB_REF_NAME:-}" ]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
             version="0.0.0-dev"
+          fi
+          if [ -z "$version" ]; then
+            echo "::error::Could not resolve a version from the release tag or git ref."
+            exit 1
           fi
           echo "value=$version" >> "$GITHUB_OUTPUT"
 

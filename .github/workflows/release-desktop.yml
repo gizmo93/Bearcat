@@ -26,10 +26,19 @@ jobs:
       - name: Resolve version
         id: version
         shell: bash
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          version="${GITHUB_REF_NAME#v}"
-          if [ "${GITHUB_EVENT_NAME}" != "release" ] && [ "${GITHUB_REF_TYPE:-}" != "tag" ]; then
+          if [ -n "${RELEASE_TAG}" ]; then
+            version="${RELEASE_TAG#v}"
+          elif [ "${GITHUB_REF_TYPE:-}" = "tag" ] && [ -n "${GITHUB_REF_NAME:-}" ]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
             version="0.0.0-dev"
+          fi
+          if [ -z "$version" ]; then
+            echo "::error::Could not resolve a version from the release tag or git ref."
+            exit 1
           fi
           echo "value=$version" >> "$GITHUB_OUTPUT"
 
@@ -118,10 +127,7 @@ jobs:
           cp "$icon_source" "$iconset/icon_512x512@2x.png"
           iconutil -c icns "$iconset" -o "$resources_dir/bearcat-icon.icns"
 
-          version="${GITHUB_REF_NAME#v}"
-          if [ "${GITHUB_EVENT_NAME}" != "release" ] && [ "${GITHUB_REF_TYPE:-}" != "tag" ]; then
-            version="0.0.0"
-          fi
+          version="${{ steps.version.outputs.value }}"
 
           cat > "$contents_dir/Info.plist" <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
@@ -205,10 +211,19 @@ jobs:
       - name: Resolve version
         id: version
         shell: bash
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          version="${GITHUB_REF_NAME#v}"
-          if [ "${GITHUB_EVENT_NAME}" != "release" ] && [ "${GITHUB_REF_TYPE:-}" != "tag" ]; then
+          if [ -n "${RELEASE_TAG}" ]; then
+            version="${RELEASE_TAG#v}"
+          elif [ "${GITHUB_REF_TYPE:-}" = "tag" ] && [ -n "${GITHUB_REF_NAME:-}" ]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
             version="0.0.0-dev"
+          fi
+          if [ -z "$version" ]; then
+            echo "::error::Could not resolve a version from the release tag or git ref."
+            exit 1
           fi
           echo "value=$version" >> "$GITHUB_OUTPUT"
 
