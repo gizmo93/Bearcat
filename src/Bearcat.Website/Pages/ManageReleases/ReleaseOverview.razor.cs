@@ -234,7 +234,7 @@ public partial class ReleaseOverview(
             {
                 Title = L["PostNamedReleaseToForum", ReleaseName],
                 Description = L["PostToForumDescription"],
-                Size = DialogSize.Large,
+                Size = DialogSize.ExtraLarge,
                 ShowClose = true,
                 PreventClose = true,
             }

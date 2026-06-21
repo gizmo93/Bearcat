@@ -162,7 +162,7 @@ public partial class ReleaseCollectionDetail(
             {
                 Title = L["PostNamedCollectionToForum", releaseCollection.Name],
                 Description = L["PostToForumDescription"],
-                Size = DialogSize.Large,
+                Size = DialogSize.ExtraLarge,
                 ShowClose = true,
                 PreventClose = true,
             }
