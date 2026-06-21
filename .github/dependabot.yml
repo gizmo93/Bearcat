@@ -37,3 +37,6 @@ updates:
       - "/test/Bearcat.NfoDatabases.UnitTest"
     schedule:
       interval: "weekly"
+    ignore:
+        - dependency-name: "AngleSharp*" # hard depencency of BlazorBlueprint
+          versions: [">0.17.1"]
