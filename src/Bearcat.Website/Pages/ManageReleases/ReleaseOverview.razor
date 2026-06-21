@@ -74,7 +74,7 @@
                       Size="ButtonSize.Small"
                       Class="bearcat-release-overview-action-button"
                       Disabled="isLoading"
-                      OnClick="LoadOverviewAsync">
+                      OnClick="RefreshAsync">
                 <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
                 @L["Refresh"]
             </BbButton>

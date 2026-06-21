@@ -31,6 +31,9 @@ public partial class ReleaseOverview(
     [EditorRequired]
     public string ReleaseFolderPath { get; set; } = null!;
 
+    [Parameter]
+    public EventCallback OnRefreshed { get; set; }
+
     private IReadOnlyList<ReleaseOverviewUploadReadModel> overviewUploads = [];
     private IReadOnlyList<ReleaseOverviewImageUploadReadModel> overviewImageUploads = [];
     private ReleaseNfoReadModel? releaseNfo;
@@ -95,6 +98,12 @@ public partial class ReleaseOverview(
     {
         await LoadOverviewAsync();
         StateHasChanged();
+    }
+
+    private async Task RefreshAsync()
+    {
+        await LoadOverviewAsync();
+        await OnRefreshed.InvokeAsync();
     }
 
     private async Task SaveNfoFileAsync()
@@ -230,6 +239,8 @@ public partial class ReleaseOverview(
                 PreventClose = true,
             }
         );
+
+        await OnRefreshed.InvokeAsync();
     }
 
     private async Task RenderForumPostAsync()

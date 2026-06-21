@@ -2,6 +2,7 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Website.Pages.ManagePostedLocations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -32,6 +33,7 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
     private bool isInitialized;
     private int? loadedReleaseId;
     private string? activeTab = "overview";
+    private PostedLocations? postedLocations;
     private readonly Dictionary<string, IReloadableComponent> reloadableComponents = new();
 
     private bool IsPostQueueWorkflow =>
@@ -76,6 +78,14 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
         foreach (var component in affectedComponents)
         {
             await component.ReloadAsync();
+        }
+    }
+
+    private async Task ReloadPostedLocationsAsync()
+    {
+        if (postedLocations is not null)
+        {
+            await postedLocations.ReloadAsync();
         }
     }
 

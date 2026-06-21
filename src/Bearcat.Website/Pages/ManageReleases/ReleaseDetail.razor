@@ -139,8 +139,9 @@
                 @ref="@reloadableComponents[nameof(ReleaseOverview)]"
                 ReleaseId="@ReleaseId"
                 ReleaseName="@release.Name"
-                ReleaseFolderPath="@release.ReleaseFolderPath" />
-            <PostedLocations ReleaseId="@ReleaseId" />
+                ReleaseFolderPath="@release.ReleaseFolderPath"
+                OnRefreshed="ReloadPostedLocationsAsync" />
+            <PostedLocations @ref="postedLocations" ReleaseId="@ReleaseId" />
         </BbTabsContent>
 
         <BbTabsContent Value="release-infos" Class="space-y-4">

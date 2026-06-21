@@ -1,12 +1,13 @@
 using Bearcat.Domain.UseCases.ManagePostedLocations;
 using Bearcat.Domain.UseCases.ManagePostedLocations.ReadModels;
 using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
+using Bearcat.Website.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManagePostedLocations;
 
-public partial class PostedLocations : OwningComponentBase
+public partial class PostedLocations : OwningComponentBase, IReloadableComponent
 {
     [Parameter]
     public int? ReleaseId { get; set; }
@@ -26,11 +27,13 @@ public partial class PostedLocations : OwningComponentBase
         await ReloadAsync();
     }
 
-    private async Task ReloadAsync()
+    public async Task ReloadAsync()
     {
         locations = ReleaseCollectionId is { } collectionId
             ? await readRepository.GetForCollectionAsync(collectionId)
             : await readRepository.GetForReleaseAsync(ReleaseId!.Value);
+
+        StateHasChanged();
     }
 
     private async Task AddAsync()
