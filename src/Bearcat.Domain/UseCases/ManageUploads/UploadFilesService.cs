@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading.Channels;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
@@ -27,6 +28,10 @@ public class UploadFilesService(
     public TimeSpan UploadQueuePollDelay { get; set; } = TimeSpan.FromSeconds(10);
 
     public TimeSpan NewPendingUploadsPollDelay { get; set; } = TimeSpan.FromSeconds(30);
+
+    public int FolderCreationRetryAttempts { get; set; } = 3;
+
+    public TimeSpan FolderCreationRetryDelay { get; set; } = TimeSpan.FromSeconds(30);
 
     public TimeSpan FileUploadTimeout
     {
@@ -195,13 +200,29 @@ public class UploadFilesService(
                 hosterConfigsByRegistrationId[upload.UploadConfig.HosterRegistrationId]
             );
 
-            var context = await CreateUploadContextAsync(
-                upload: upload,
-                hoster: hoster,
-                hosterConfig: hosterConfig,
-                hosterClassName: hosterClassName,
-                cancellationToken: cancellationToken
-            );
+            UploadExecutionContext context;
+
+            try
+            {
+                context = await CreateUploadContextAsync(
+                    upload: upload,
+                    hoster: hoster,
+                    hosterConfig: hosterConfig,
+                    hosterClassName: hosterClassName,
+                    cancellationToken: cancellationToken
+                );
+            }
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                logger.LogError(
+                    ex,
+                    "Failed to prepare upload {UploadId}, leaving it pending and skipping it for now",
+                    upload.Id
+                );
+
+                trackedUploadIds.Remove(upload.Id);
+                continue;
+            }
 
             if (context.TotalFileCount == 0)
             {
@@ -222,7 +243,7 @@ public class UploadFilesService(
         await repository.SaveChangesAsync(cancellationToken);
     }
 
-    private static async Task<UploadExecutionContext> CreateUploadContextAsync(
+    private async Task<UploadExecutionContext> CreateUploadContextAsync(
         Upload upload,
         IHoster hoster,
         IHosterConfig hosterConfig,
@@ -277,7 +298,7 @@ public class UploadFilesService(
         return context;
     }
 
-    private static async Task<string?> CreateUploadFolderIdAsync(
+    private async Task<string?> CreateUploadFolderIdAsync(
         Upload upload,
         IHoster hoster,
         IHosterConfig hosterConfig,
@@ -292,7 +313,50 @@ public class UploadFilesService(
 
         var folderName = $"{upload.UploadConfig.Release.Name}_UploadId_{upload.Id}";
 
-        return await folderHoster.CreateFolderAsync(folderName, hosterConfig, cancellationToken);
+        return await CreateFolderWithRetryAsync(
+            folderHoster: folderHoster,
+            folderName: folderName,
+            hosterConfig: hosterConfig,
+            uploadId: upload.Id,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task<string> CreateFolderWithRetryAsync(
+        IHosterWithFolders folderHoster,
+        string folderName,
+        IHosterConfig hosterConfig,
+        int uploadId,
+        CancellationToken cancellationToken
+    )
+    {
+        foreach (var attempt in Enumerable.Range(1, FolderCreationRetryAttempts))
+        {
+            try
+            {
+                return await folderHoster.CreateFolderAsync(
+                    folderName,
+                    hosterConfig,
+                    cancellationToken
+                );
+            }
+            catch (Exception ex) when (attempt < FolderCreationRetryAttempts)
+            {
+                logger.LogWarning(
+                    ex,
+                    "Failed to create folder {FolderName} for upload {UploadId} on attempt {Attempt}/{MaxAttempts}, retrying in {RetryDelay}",
+                    folderName,
+                    uploadId,
+                    attempt,
+                    FolderCreationRetryAttempts,
+                    FolderCreationRetryDelay
+                );
+
+                await Task.Delay(FolderCreationRetryDelay, cancellationToken);
+            }
+        }
+
+        throw new UnreachableException();
     }
 
     private async Task ScheduleAvailableFileUploadsAsync(
