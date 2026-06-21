@@ -20,6 +20,26 @@ public class ReleaseReadRepository(
     ILinkCrypterFactory linkCrypterFactory
 ) : IReleaseReadRepository, IReleaseForumPostUploadRepository, IForumPostImageLinkRepository
 {
+    private static readonly Expression<Func<Release, bool>> IsReadyForPostQueue = r =>
+        r.UploadConfigs.Any(uc =>
+            uc.CollectionUploadSlotId == null
+            && uc.HosterRegistration.IsActive
+            && uc.Uploads.Any(u =>
+                u.UploadState == UploadState.Completed
+                && u.UploadedAt != null
+                && (r.UploadsPostedAt == null || u.UploadedAt > r.UploadsPostedAt)
+            )
+        )
+        && r.UploadConfigs.Where(uc =>
+                uc.CollectionUploadSlotId == null && uc.HosterRegistration.IsActive
+            )
+            .All(uc =>
+                uc.Uploads.OrderByDescending(u => u.UploadedAt ?? u.CreatedAt)
+                    .ThenByDescending(u => u.Id)
+                    .Select(u => u.UploadState)
+                    .FirstOrDefault() == UploadState.Completed
+            );
+
     public async Task<PagedResult<ReleaseReadModel>> SearchReleasesAsync(
         ReleaseSearchQuery query,
         CancellationToken cancellationToken = default
@@ -215,16 +235,7 @@ public class ReleaseReadRepository(
     )
     {
         var openReleases = await dbRead
-            .Releases.Where(r =>
-                r.UploadConfigs.Any(uc =>
-                    uc.CollectionUploadSlotId == null
-                    && uc.Uploads.Any(u =>
-                        u.UploadState == UploadState.Completed
-                        && u.UploadedAt != null
-                        && (r.UploadsPostedAt == null || u.UploadedAt > r.UploadsPostedAt)
-                    )
-                )
-            )
+            .Releases.Where(IsReadyForPostQueue)
             .Select(r => new
             {
                 r.Id,
@@ -332,18 +343,7 @@ public class ReleaseReadRepository(
 
     public async Task<int> CountPostQueueAsync(CancellationToken cancellationToken = default)
     {
-        return await dbRead.Releases.CountAsync(
-            r =>
-                r.UploadConfigs.Any(uc =>
-                    uc.CollectionUploadSlotId == null
-                    && uc.Uploads.Any(u =>
-                        u.UploadState == UploadState.Completed
-                        && u.UploadedAt != null
-                        && (r.UploadsPostedAt == null || u.UploadedAt > r.UploadsPostedAt)
-                    )
-                ),
-            cancellationToken
-        );
+        return await dbRead.Releases.CountAsync(IsReadyForPostQueue, cancellationToken);
     }
 
     public async Task<IReadOnlyList<ReleaseForumPostUploadReadModel>> GetForumPostUploadsAsync(

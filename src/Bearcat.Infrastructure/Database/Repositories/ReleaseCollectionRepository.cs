@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Bearcat.Abstractions.SeriesDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
@@ -16,6 +17,30 @@ public class ReleaseCollectionRepository(
     ISeriesDatabaseFactory seriesDatabaseFactory
 ) : IReleaseCollectionReadRepository, IReleaseCollectionWriteRepository
 {
+    private static readonly Expression<Func<ReleaseCollection, bool>> IsReadyForPostQueue = c =>
+        c.Releases.Any(r =>
+            r.UploadConfigs.Any(uc =>
+                uc.CollectionUploadSlotId != null
+                && uc.HosterRegistration.IsActive
+                && uc.Uploads.Any(u =>
+                    u.UploadState == UploadState.Completed
+                    && u.UploadedAt != null
+                    && (c.UploadsPostedAt == null || u.UploadedAt > c.UploadsPostedAt)
+                )
+            )
+        )
+        && c.Releases.All(r =>
+            r.UploadConfigs.Where(uc =>
+                    uc.CollectionUploadSlotId != null && uc.HosterRegistration.IsActive
+                )
+                .All(uc =>
+                    uc.Uploads.OrderByDescending(u => u.UploadedAt ?? u.CreatedAt)
+                        .ThenByDescending(u => u.Id)
+                        .Select(u => u.UploadState)
+                        .FirstOrDefault() == UploadState.Completed
+                )
+        );
+
     public async Task<ReleaseCollection?> GetByReleaseGroupAndKeyAsync(
         int releaseGroupId,
         string key,
@@ -367,18 +392,7 @@ public class ReleaseCollectionRepository(
     )
     {
         var openCollections = await dbRead
-            .ReleaseCollections.Where(c =>
-                c.Releases.Any(r =>
-                    r.UploadConfigs.Any(uc =>
-                        uc.CollectionUploadSlotId != null
-                        && uc.Uploads.Any(u =>
-                            u.UploadState == UploadState.Completed
-                            && u.UploadedAt != null
-                            && (c.UploadsPostedAt == null || u.UploadedAt > c.UploadsPostedAt)
-                        )
-                    )
-                )
-            )
+            .ReleaseCollections.Where(IsReadyForPostQueue)
             .Select(c => new
             {
                 c.Id,
@@ -521,20 +535,7 @@ public class ReleaseCollectionRepository(
 
     public async Task<int> CountPostQueueAsync(CancellationToken cancellationToken = default)
     {
-        return await dbRead.ReleaseCollections.CountAsync(
-            c =>
-                c.Releases.Any(r =>
-                    r.UploadConfigs.Any(uc =>
-                        uc.CollectionUploadSlotId != null
-                        && uc.Uploads.Any(u =>
-                            u.UploadState == UploadState.Completed
-                            && u.UploadedAt != null
-                            && (c.UploadsPostedAt == null || u.UploadedAt > c.UploadsPostedAt)
-                        )
-                    )
-                ),
-            cancellationToken
-        );
+        return await dbRead.ReleaseCollections.CountAsync(IsReadyForPostQueue, cancellationToken);
     }
 
     private string GetSeriesDatabaseName(string seriesDatabaseClassName)

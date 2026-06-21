@@ -302,6 +302,340 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         hoster.LinkCount.ShouldBe(1);
     }
 
+    [Test]
+    public async Task GetPostQueueAsync_AllActiveConfigsLatestCompleted_ShowsRelease()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.Ready.2026-GRP",
+            [
+                new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)]),
+                new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 5)]),
+            ]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_ActiveConfigWithLatestPendingUpload_HidesRelease()
+    {
+        // Arrange
+        await AddPostQueueReleaseAsync(
+            "Bearcat.Pending.2026-GRP",
+            [
+                new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)]),
+                new PostQueueConfigSpec([
+                    new PostQueueUploadSpec(
+                        UploadState.Pending,
+                        5,
+                        HasUploadedAt: false,
+                        FileCount: 0
+                    ),
+                ]),
+            ]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(0);
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_ActiveConfigWithoutUploads_HidesRelease()
+    {
+        // Arrange
+        await AddPostQueueReleaseAsync(
+            "Bearcat.Missing.2026-GRP",
+            [
+                new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)]),
+                new PostQueueConfigSpec([]),
+            ]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(0);
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_OnlyInProgressUpload_HidesRelease()
+    {
+        // Arrange
+        await AddPostQueueReleaseAsync(
+            "Bearcat.Uploading.2026-GRP",
+            [
+                new PostQueueConfigSpec([
+                    new PostQueueUploadSpec(
+                        UploadState.Uploading,
+                        5,
+                        HasUploadedAt: false,
+                        FileCount: 0
+                    ),
+                ]),
+            ]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(0);
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_LatestUploadCompletedAfterCanceledReupload_ShowsRelease()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.Reupload.2026-GRP",
+            [
+                new PostQueueConfigSpec([
+                    new PostQueueUploadSpec(
+                        UploadState.Canceled,
+                        60,
+                        HasUploadedAt: false,
+                        FileCount: 0
+                    ),
+                    new PostQueueUploadSpec(UploadState.Completed, 5),
+                ]),
+            ]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_LatestUploadFailedAfterCompleted_HidesRelease()
+    {
+        // Arrange
+        await AddPostQueueReleaseAsync(
+            "Bearcat.FailedReupload.2026-GRP",
+            [
+                new PostQueueConfigSpec([
+                    new PostQueueUploadSpec(UploadState.Completed, 60),
+                    new PostQueueUploadSpec(
+                        UploadState.Failed,
+                        5,
+                        HasUploadedAt: false,
+                        FileCount: 0
+                    ),
+                ]),
+            ]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(0);
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_InactiveHosterConfigWithoutUploads_IsIgnored_ShowsRelease()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.InactiveMissing.2026-GRP",
+            [
+                new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)]),
+                new PostQueueConfigSpec([], HosterActive: false),
+            ]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_InactiveHosterConfigWithPendingUpload_IsIgnored_ShowsRelease()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.InactivePending.2026-GRP",
+            [
+                new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)]),
+                new PostQueueConfigSpec(
+                    [
+                        new PostQueueUploadSpec(
+                            UploadState.Pending,
+                            5,
+                            HasUploadedAt: false,
+                            FileCount: 0
+                        ),
+                    ],
+                    HosterActive: false
+                ),
+            ]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
+    }
+
+    private async Task<Release> AddPostQueueReleaseAsync(
+        string name,
+        IReadOnlyList<PostQueueConfigSpec> configs,
+        DateTime? uploadsPostedAt = null
+    )
+    {
+        var release = await AddReleaseAsync(name);
+        release.UploadsPostedAt = uploadsPostedAt;
+
+        var configIndex = 0;
+        foreach (var configSpec in configs)
+        {
+            configIndex++;
+            var archiveConfig = new ArchiveConfig
+            {
+                ReleaseId = release.Id,
+                Name = $"{name} archive {configIndex}",
+                ArchiveFilesBasePath = "/tmp/archives",
+                ArchiverName = "RarArchiver",
+                ArchiveFileSizeMb = 100,
+                Archives = [],
+                UploadConfigs = [],
+            };
+            var hosterRegistration = new HosterRegistration
+            {
+                Name = $"{name} hoster {configIndex}",
+                SerializedConfig = "{}",
+                HosterClassName = "ExampleHoster",
+                IsActive = configSpec.HosterActive,
+                UploadConfigs = [],
+            };
+            var uploadConfig = new UploadConfig
+            {
+                ReleaseId = release.Id,
+                ArchiveConfig = archiveConfig,
+                HosterRegistration = hosterRegistration,
+                Name = $"{name} upload {configIndex}",
+                LinkCrypters = [],
+                Uploads = [],
+            };
+            dbContext.AddRange(archiveConfig, hosterRegistration, uploadConfig);
+
+            foreach (var uploadSpec in configSpec.Uploads)
+            {
+                AddUploadToConfig(name, uploadConfig, uploadSpec);
+            }
+        }
+
+        await dbContext.SaveChangesAsync();
+
+        return release;
+    }
+
+    private void AddUploadToConfig(string name, UploadConfig uploadConfig, PostQueueUploadSpec spec)
+    {
+        var createdAt = DateTime.UtcNow.AddMinutes(-spec.CreatedMinutesAgo);
+        var upload = new Upload
+        {
+            UploadConfig = uploadConfig,
+            CreatedAt = createdAt,
+            UploadedAt = spec.HasUploadedAt ? createdAt : null,
+            UploadState = spec.State,
+            OnlineState = OnlineState.Online,
+            UploadedFiles = [],
+            LinkCrypterContainers = [],
+            Notifications = [],
+        };
+
+        if (spec.FileCount > 0)
+        {
+            var archive = new Archive
+            {
+                ArchiveConfig = uploadConfig.ArchiveConfig,
+                ArchiveFolderPath = "/tmp/archives",
+                CreatedAt = createdAt,
+                ArchiveState = ArchiveState.Created,
+                ArchiveFileSizeMb = 100,
+                ArchiveFiles = [],
+                Uploads = [],
+                Notifications = [],
+            };
+            upload.Archive = archive;
+            dbContext.Add(archive);
+
+            for (var i = 0; i < spec.FileCount; i++)
+            {
+                var archiveFile = new ArchiveFile
+                {
+                    Archive = archive,
+                    FullFileName = $"{name}.{uploadConfig.Name}.part{i:00}-{Guid.NewGuid():N}.rar",
+                    UploadedFiles = [],
+                };
+                upload.UploadedFiles.Add(
+                    new UploadedFile
+                    {
+                        Upload = upload,
+                        ArchiveFile = archiveFile,
+                        HosterFileLink = $"https://hoster.example/{name}/{Guid.NewGuid():N}",
+                        OnlineState = OnlineState.Online,
+                        CreatedAt = createdAt,
+                    }
+                );
+                dbContext.Add(archiveFile);
+            }
+        }
+
+        dbContext.Add(upload);
+    }
+
+    private sealed record PostQueueUploadSpec(
+        UploadState State,
+        int CreatedMinutesAgo,
+        bool HasUploadedAt = true,
+        int FileCount = 1
+    );
+
+    private sealed record PostQueueConfigSpec(
+        IReadOnlyList<PostQueueUploadSpec> Uploads,
+        bool HosterActive = true
+    );
+
     private async Task<Release> AddReleaseAsync(
         string name = "Bearcat.Release.2026-GRP",
         ReleaseType releaseType = ReleaseType.Managed
