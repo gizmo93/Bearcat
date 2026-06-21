@@ -6,5 +6,6 @@ public record ReleaseUploadLinkReadModel(
     string FileName,
     string HosterFileLink,
     OnlineState OnlineState,
-    DateTime? CheckedAt
+    DateTime? CheckedAt,
+    IReadOnlyList<string> ErrorMessages
 );

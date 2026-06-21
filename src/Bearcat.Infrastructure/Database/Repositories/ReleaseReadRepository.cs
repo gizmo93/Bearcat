@@ -830,7 +830,8 @@ public class ReleaseReadRepository(
                 f.ArchiveFile.FullFileName,
                 f.HosterFileLink,
                 f.OnlineState,
-                f.CheckedAt
+                f.CheckedAt,
+                f.ErrorMessages
             ))
             .ToListAsync(cancellationToken: cancellationToken);
 
