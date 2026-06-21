@@ -7,5 +7,5 @@ public sealed class BoerseCx(IHttpClientFactory httpClientFactory)
 {
     public override string Name => "boerse.cx";
 
-    protected override string BaseUrl => "https://boerse.cx/";
+    public override string BaseUrl => "https://boerse.cx/";
 }

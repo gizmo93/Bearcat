@@ -7,5 +7,5 @@ public sealed class DataLoadMe(IHttpClientFactory httpClientFactory)
 {
     public override string Name => "data-load.me";
 
-    protected override string BaseUrl => "https://www.data-load.me/";
+    public override string BaseUrl => "https://www.data-load.me/";
 }

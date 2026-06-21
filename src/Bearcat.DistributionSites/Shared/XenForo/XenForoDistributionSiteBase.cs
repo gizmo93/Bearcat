@@ -12,7 +12,7 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
 {
     public abstract string Name { get; }
 
-    protected abstract string BaseUrl { get; }
+    public abstract string BaseUrl { get; }
 
     public virtual PostContentFormat ContentFormat => PostContentFormat.BBCode;
 

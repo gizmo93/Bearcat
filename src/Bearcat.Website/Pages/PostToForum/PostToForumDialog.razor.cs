@@ -7,6 +7,7 @@ using Bearcat.Domain.UseCases.ManageForumPostTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManagePostedLocations;
+using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
 using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
@@ -108,14 +109,63 @@ public partial class PostToForumDialog(
         postName = EntityName;
 
         var all = await registrationReadRepository.GetAllAsync();
-        registrations = all.Where(registration =>
+        var forums = all.Where(registration =>
                 registration.Kind == DistributionSiteKind.Forum && registration.IsActive
             )
             .ToList();
 
+        registrations = await OrderByPostingHistoryAsync(forums);
+
         selectedRegistrationId =
             registrations.FirstOrDefault()?.DistributionSiteRegistrationId ?? 0;
     }
+
+    private async Task<
+        IReadOnlyList<DistributionSiteRegistrationReadModel>
+    > OrderByPostingHistoryAsync(List<DistributionSiteRegistrationReadModel> forums)
+    {
+        var postedHosts = await GetPostedHostsAsync();
+        var factory = ScopedServices.GetRequiredService<IDistributionSiteFactory>();
+
+        return forums
+            .OrderBy(registration => HasAlreadyPosted(registration, factory, postedHosts) ? 1 : 0)
+            .ThenBy(registration => registration.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private async Task<HashSet<string>> GetPostedHostsAsync()
+    {
+        var readRepository = ScopedServices.GetRequiredService<IPostedLocationReadRepository>();
+        var locations = IsCollection
+            ? await readRepository.GetForCollectionAsync(EntityId)
+            : await readRepository.GetForReleaseAsync(EntityId);
+
+        var hosts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var location in locations)
+        {
+            if (Uri.TryCreate(location.Url, UriKind.Absolute, out var uri))
+            {
+                hosts.Add(NormalizeHost(uri.Host));
+            }
+        }
+
+        return hosts;
+    }
+
+    private static bool HasAlreadyPosted(
+        DistributionSiteRegistrationReadModel registration,
+        IDistributionSiteFactory factory,
+        HashSet<string> postedHosts
+    )
+    {
+        var site = factory.Get(registration.DistributionSiteClassName);
+
+        return Uri.TryCreate(site.BaseUrl, UriKind.Absolute, out var uri)
+            && postedHosts.Contains(NormalizeHost(uri.Host));
+    }
+
+    private static string NormalizeHost(string host) =>
+        host.StartsWith("www.", StringComparison.OrdinalIgnoreCase) ? host[4..] : host;
 
     private async Task LoadHierarchyAsync()
     {

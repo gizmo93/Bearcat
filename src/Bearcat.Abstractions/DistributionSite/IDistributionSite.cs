@@ -6,6 +6,8 @@ public interface IDistributionSite
 {
     string Name { get; }
 
+    string BaseUrl { get; }
+
     PostContentFormat ContentFormat { get; }
 
     IReadOnlyList<string> ConfigurationKeys { get; }
