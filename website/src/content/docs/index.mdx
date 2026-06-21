@@ -81,6 +81,13 @@ Forums:
 
 ## Installing & running Bearcat 
 
+<Aside type="note">
+Regarding the size of the Bearcat package:
+To enable the semi-automatic posting to forums, Bearcat uses Playwright, with is a framework to use a browser to programmatically access a website and navigate on it.
+This requires a headless version of Chromium to be installed and that headless version currently comes bundled with Bearcat, which adds about 260MB to the actual application size.
+The alternative would be, to not bundle it. Then the app would download it the first time it's required. Maybe this will be the way to go in the future.
+</Aside>
+
 <CardGrid>
 	<LinkCard
 		title="Desktop app"
