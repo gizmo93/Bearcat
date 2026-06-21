@@ -238,14 +238,18 @@ public class Rapidgator(
             config: config,
             cancellationToken: cancellationToken
         );
-
+        
+        // "Retried" because of "errors" but the file upload was actually successful
         if (uploadRequest.Response?.Upload?.File?.FileId is not null)
         {
             return new UploadFileResult(
-                IsSuccess: false,
+                IsSuccess: true,
                 FileDto: fileDto,
-                ErrorMessages: ["File already exists"],
-                FileUrl: null
+                ErrorMessages: [],
+                FileUrl: ShortenFileUrl(
+                    fileUrl: uploadRequest.Response?.Upload?.File?.Url,
+                    fileName: Path.GetFileName(fileDto.FullFileName)
+                )
             );
         }
 
