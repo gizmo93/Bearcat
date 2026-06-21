@@ -794,7 +794,8 @@
   <data name="Blog" xml:space="preserve"><value>Blog</value></data>
   <data name="PostToForum" xml:space="preserve"><value>Post to forum</value></data>
   <data name="PostNamedReleaseToForum" xml:space="preserve"><value>Post {0} to forum</value></data>
-  <data name="PostReleaseToForumDescription" xml:space="preserve"><value>Prepare a forum draft and open it for review.</value></data>
+  <data name="PostNamedCollectionToForum" xml:space="preserve"><value>Post {0} to forum</value></data>
+  <data name="PostToForumDescription" xml:space="preserve"><value>Prepare a forum draft and open it for review.</value></data>
   <data name="PostReleaseToForumIntro" xml:space="preserve"><value>Pick the forum to post this release to. The first login may take a moment.</value></data>
   <data name="NoActiveForumDistributionSites" xml:space="preserve"><value>No active forum distribution sites. Add one first.</value></data>
   <data name="Subforum" xml:space="preserve"><value>Subforum</value></data>

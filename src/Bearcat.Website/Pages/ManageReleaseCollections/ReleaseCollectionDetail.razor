@@ -64,6 +64,12 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
+                        <BbButton
+                                  Size="ButtonSize.Small"
+                                  OnClick="ShowPostToForumDialogAsync">
+                            <LucideIcon Name="send" class="h-4 w-4" />
+                            @L["PostToForum"]
+                        </BbButton>
                         <BbButton Variant="ButtonVariant.Outline"
                                   Size="ButtonSize.Small"
                                   OnClick="ShowRenderForumPostDialogAsync">

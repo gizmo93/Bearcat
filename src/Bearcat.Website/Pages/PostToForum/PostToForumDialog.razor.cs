@@ -12,19 +12,22 @@ using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Bearcat.Website.Pages.PostReleaseToForum;
+namespace Bearcat.Website.Pages.PostToForum;
 
-public partial class PostReleaseToForumDialog(
+public partial class PostToForumDialog(
     IDistributionSiteRegistrationReadRepository registrationReadRepository,
     IForumPostTemplateReadRepository templateReadRepository,
     ForumPostRenderService renderService
 ) : OwningComponentBase
 {
     [Parameter]
-    public int ReleaseId { get; set; }
+    public int EntityId { get; set; }
 
     [Parameter]
-    public string ReleaseName { get; set; } = string.Empty;
+    public string EntityName { get; set; } = string.Empty;
+
+    [Parameter]
+    public ForumPostTemplateType TemplateType { get; set; } = ForumPostTemplateType.Release;
 
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
@@ -94,7 +97,7 @@ public partial class PostReleaseToForumDialog(
     protected override async Task OnInitializedAsync()
     {
         sessionService = ScopedServices.GetRequiredService<DistributionSiteSessionService>();
-        postName = ReleaseName;
+        postName = EntityName;
 
         var all = await registrationReadRepository.GetAllAsync();
         registrations = all.Where(registration =>
@@ -148,7 +151,7 @@ public partial class PostReleaseToForumDialog(
     {
         await RunBusyAsync(async () =>
         {
-            templates = await templateReadRepository.GetAllAsync(ForumPostTemplateType.Release);
+            templates = await templateReadRepository.GetAllAsync(TemplateType);
             selectedTemplateId = templates.FirstOrDefault()?.ForumPostTemplateId ?? 0;
 
             if (IsNewThread)
@@ -190,7 +193,7 @@ public partial class PostReleaseToForumDialog(
 
         try
         {
-            var result = await renderService.RenderAsync(ReleaseId, selectedTemplateId);
+            var result = await renderService.RenderAsync(EntityId, selectedTemplateId);
             body = result.Content;
             renderErrors = result.Errors;
         }

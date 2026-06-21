@@ -3,7 +3,7 @@ using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageForumPostTemplates;
-using Bearcat.Website.Pages.PostReleaseToForum;
+using Bearcat.Website.Pages.PostToForum;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -181,16 +181,17 @@ public partial class ReleaseOverview(
     {
         var parameters = new Dictionary<string, object?>
         {
-            [nameof(PostReleaseToForumDialog.ReleaseId)] = ReleaseId,
-            [nameof(PostReleaseToForumDialog.ReleaseName)] = ReleaseName,
+            [nameof(PostToForumDialog.EntityId)] = ReleaseId,
+            [nameof(PostToForumDialog.EntityName)] = ReleaseName,
+            [nameof(PostToForumDialog.TemplateType)] = ForumPostTemplateType.Release,
         };
 
-        await dialogService.OpenAsync<PostReleaseToForumDialog>(
+        await dialogService.OpenAsync<PostToForumDialog>(
             parameters,
             new DialogOpenOptions
             {
                 Title = L["PostNamedReleaseToForum", ReleaseName],
-                Description = L["PostReleaseToForumDescription"],
+                Description = L["PostToForumDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
                 PreventClose = true,

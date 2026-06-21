@@ -4,6 +4,7 @@ using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageForumPostTemplates;
 using Bearcat.Website.Pages.ManageReleases;
+using Bearcat.Website.Pages.PostToForum;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -114,6 +115,28 @@ public partial class ReleaseCollectionDetail(
         {
             isResolvingMetadata = false;
         }
+    }
+
+    private async Task ShowPostToForumDialogAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(PostToForumDialog.EntityId)] = ReleaseCollectionId,
+            [nameof(PostToForumDialog.EntityName)] = releaseCollection.Name,
+            [nameof(PostToForumDialog.TemplateType)] = ForumPostTemplateType.ReleaseCollection,
+        };
+
+        await dialogService.OpenAsync<PostToForumDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["PostNamedCollectionToForum", releaseCollection.Name],
+                Description = L["PostToForumDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
     }
 
     private async Task ShowRenderForumPostDialogAsync()

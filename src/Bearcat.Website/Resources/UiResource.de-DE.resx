@@ -794,7 +794,8 @@
   <data name="Blog" xml:space="preserve"><value>Blog</value></data>
   <data name="PostToForum" xml:space="preserve"><value>Im Forum posten</value></data>
   <data name="PostNamedReleaseToForum" xml:space="preserve"><value>{0} im Forum posten</value></data>
-  <data name="PostReleaseToForumDescription" xml:space="preserve"><value>Bereite einen Entwurf vor und öffne ihn zur Kontrolle.</value></data>
+  <data name="PostNamedCollectionToForum" xml:space="preserve"><value>{0} im Forum posten</value></data>
+  <data name="PostToForumDescription" xml:space="preserve"><value>Bereite einen Entwurf vor und öffne ihn zur Kontrolle.</value></data>
   <data name="PostReleaseToForumIntro" xml:space="preserve"><value>Wähle das Forum, in das dieses Release gepostet werden soll. Das erste Login kann einen Moment dauern.</value></data>
   <data name="NoActiveForumDistributionSites" xml:space="preserve"><value>Keine aktive Formconfig vorhanden. Lege zuerst eine an.</value></data>
   <data name="Subforum" xml:space="preserve"><value>Unterforum</value></data>
