@@ -81,7 +81,7 @@ public class ReleaseInfoRepository(
             .FirstAsync(release => release.Id == releaseId, cancellationToken);
     }
 
-    public async Task<Release> GetReleaseForNfoUpdateAsync(
+    public async Task<Release> GetReleaseWithInfoAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     )

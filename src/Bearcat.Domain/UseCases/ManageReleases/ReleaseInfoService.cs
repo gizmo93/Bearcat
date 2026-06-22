@@ -66,7 +66,7 @@ public class ReleaseInfoService(
         CancellationToken cancellationToken = default
     )
     {
-        var release = await repository.GetReleaseForNfoUpdateAsync(releaseId, cancellationToken);
+        var release = await repository.GetReleaseWithInfoAsync(releaseId, cancellationToken);
 
         var releaseInfo = release.ReleaseInfo;
         if (releaseInfo is null)

@@ -13,6 +13,17 @@
                 @(releaseInfo is null ? L["AddReleaseInfo"] : L["EditReleaseInfo"])
             </BbButton>
 
+            @if (releaseInfo is null)
+            {
+                <BbButton Variant="ButtonVariant.Outline"
+                          Size="ButtonSize.Small"
+                          Disabled="isLoading || isResolving"
+                          OnClick="ResolveReleaseInfoAsync">
+                    <LucideIcon Name="radar" class="@($"h-4 w-4 {(isResolving ? "animate-spin" : string.Empty)}")" />
+                    @L["ResolveReleaseInfo"]
+                </BbButton>
+            }
+
             <BbButton Variant="ButtonVariant.Outline"
                       Size="ButtonSize.Small"
                       Disabled="isLoading"

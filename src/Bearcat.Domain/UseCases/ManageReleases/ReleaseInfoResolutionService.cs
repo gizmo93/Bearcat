@@ -66,6 +66,45 @@ public class ReleaseInfoResolutionService(
         );
     }
 
+    public async Task<bool> ResolveAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var registrations = await GetActiveNfoDatabaseRegistrationsAsync(cancellationToken);
+
+        if (registrations.Count == 0)
+        {
+            return false;
+        }
+
+        var release = await repository.GetReleaseWithInfoAsync(releaseId, cancellationToken);
+
+        var resolved = await TryResolveAsync(
+            release: release,
+            registrations: registrations,
+            cancellationToken: cancellationToken
+        );
+
+        try
+        {
+            await repository.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsDuplicateReleaseInfoException(exception))
+        {
+            repository.DetachPendingReleaseInfo(release);
+            logger.LogInformation(
+                exception,
+                "Release info for release {ReleaseName} was already resolved by another worker",
+                release.Name
+            );
+
+            return false;
+        }
+
+        return resolved;
+    }
+
     private async Task<bool> TryResolveAsync(
         Release release,
         IReadOnlyList<ActiveNfoDatabaseRegistrationReadModel> registrations,

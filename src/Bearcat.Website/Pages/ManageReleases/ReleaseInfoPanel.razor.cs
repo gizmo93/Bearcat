@@ -23,6 +23,7 @@ public partial class ReleaseInfoPanel(
 
     private ReleaseInfoReadModel? releaseInfo;
     private bool isLoading;
+    private bool isResolving;
 
     protected override async Task OnInitializedAsync()
     {
@@ -73,6 +74,38 @@ public partial class ReleaseInfoPanel(
 
         toastService.Success(L["ReleaseInfoUpdated"]);
         await LoadReleaseInfoAsync();
+    }
+
+    private async Task ResolveReleaseInfoAsync()
+    {
+        if (isResolving)
+        {
+            return;
+        }
+
+        isResolving = true;
+
+        try
+        {
+            await using var scope = serviceScopeFactory.CreateAsyncScope();
+            var resolutionService =
+                scope.ServiceProvider.GetRequiredService<ReleaseInfoResolutionService>();
+            var resolved = await resolutionService.ResolveAsync(ReleaseId);
+
+            if (resolved)
+            {
+                toastService.Success(L["ReleaseInfoResolved"]);
+                await LoadReleaseInfoAsync();
+            }
+            else
+            {
+                toastService.Info(L["ReleaseInfoNotResolved"]);
+            }
+        }
+        finally
+        {
+            isResolving = false;
+        }
     }
 
     private async Task ShowEditReleaseNfoDialogAsync()

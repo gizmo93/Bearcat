@@ -28,7 +28,7 @@ public interface IReleaseInfoRepository
         CancellationToken cancellationToken = default
     );
 
-    Task<Release> GetReleaseForNfoUpdateAsync(
+    Task<Release> GetReleaseWithInfoAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     );

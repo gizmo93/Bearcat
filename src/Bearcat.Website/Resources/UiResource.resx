@@ -134,6 +134,9 @@
   <data name="AddReleaseInfo" xml:space="preserve"><value>Add release info</value></data>
   <data name="EditReleaseInfoDescription" xml:space="preserve"><value>Edit the release info manually, e.g. when no database returned a match. Changing the cover re-uploads it to the image hosters.</value></data>
   <data name="ReleaseInfoUpdated" xml:space="preserve"><value>Release info updated</value></data>
+  <data name="ResolveReleaseInfo" xml:space="preserve"><value>Resolve now</value></data>
+  <data name="ReleaseInfoResolved" xml:space="preserve"><value>Release info resolved</value></data>
+  <data name="ReleaseInfoNotResolved" xml:space="preserve"><value>No release info found</value></data>
   <data name="AddNfo" xml:space="preserve"><value>Add NFO</value></data>
   <data name="EditNfo" xml:space="preserve"><value>Edit NFO</value></data>
   <data name="EditNfoDescription" xml:space="preserve"><value>Add or edit the NFO manually, e.g. when no NFO file exists, none could be downloaded, or the existing one is wrong. The NFO is also written to the release folder as a file.</value></data>
