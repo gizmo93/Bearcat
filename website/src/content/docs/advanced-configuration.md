@@ -38,7 +38,7 @@ Only disable a task if you intentionally want to pause that part of the system, 
 | Task | Runs | What it does |
 | --- | ---: | --- |
 | Configuration cache refresh | Every 5 minutes | Reloads configuration overrides from the database into the in-memory configuration cache. Saving a value in the UI also updates the cache immediately, but this task keeps the cache in sync. |
-| Release folder automation | Every 2 minutes | Scans enabled release folder automations, creates releases from matching direct subfolders and applies the selected release template. |
+| Release folder automation | Every 2 minutes | Scans enabled release folder automations and creates releases from matching direct subfolders using the selected release template. A matching folder is only turned into a release once it looks finished (see ["Folder automation"](#folder-automation) below). |
 | Release info resolution | Every 10 minutes | Looks for releases without release information and tries to fetch metadata from active NFO database registrations such as xrel.to. |
 | Archive creation | Every 20 seconds | Creates missing archives for uploads that are waiting for an archive. If a matching archive already exists, it can reuse it instead of creating a new one. |
 | Archive cleanup | Every 30 minutes | Deletes local archive folders after their linked uploads have completed, if automatic archive cleanup is enabled in "Configurations". |
@@ -104,6 +104,33 @@ When Bearcat creates the next archive for the same archive configuration, it rea
 For the first archive, Bearcat uses the "Archive file size (MB)" from the archive configuration.
 
 RAR and 7Zip both support all three strategies.
+
+### Folder automation
+
+"Folder automation" controls when a watched folder is considered finished and turned into a release by the "Release folder automation" background task.
+
+The available settings are:
+
+- "Folder stability (minutes)" defaults to `5`.
+- "Minimum folder size (MB)" defaults to `1`.
+
+When a matching folder is found, Bearcat does not create a release immediately.
+Instead it remembers the folder's total file count and size and only creates the release once that fingerprint has stayed unchanged for at least "Folder stability (minutes)" and the folder is at least "Minimum folder size (MB)" in size.
+
+This avoids two problems that happen when a release folder is still being filled:
+
+- Creating a release while files are still being copied in, which would extract the wrong media metadata (for example a too-small main video size).
+- Turning empty or near-empty folders into releases.
+
+Bearcat compares total size and file count between scans rather than folder modification dates, because release folders are often moved or copied with their original timestamps preserved.
+
+For example, with the defaults Bearcat creates the release once a matching folder has been quiet for about five minutes and holds at least one megabyte of files:
+
+- Raise "Folder stability (minutes)" if your copies are slow or pause for long stretches, so Bearcat waits longer before acting.
+- Set "Minimum folder size (MB)" to `0` to disable the size check and let even empty folders become releases.
+
+This only affects automatic release creation.
+You can still create releases manually and trigger media metadata extraction yourself on a release's "Release info" panel.
 
 ### Initial upload cooldown
 

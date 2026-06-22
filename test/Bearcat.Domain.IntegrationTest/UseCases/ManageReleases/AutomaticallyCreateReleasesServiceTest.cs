@@ -1,7 +1,10 @@
+using System.Linq.Expressions;
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Media;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Abstractions.SeriesDatabase;
+using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
@@ -30,10 +33,14 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
     private Mock<INfoDatabaseFactory> nfoDatabaseFactoryMock = null!;
     private string tempRootPath = null!;
     private AutomaticallyCreateReleasesService service = null!;
+    private int stabilityMinutes;
+    private int minimumFolderSizeMegabytes;
 
     [SetUp]
     public void Setup()
     {
+        stabilityMinutes = 0;
+        minimumFolderSizeMegabytes = 0;
         dbContext = Database.CreateDbContext();
         nfoDatabaseFactoryMock = new Mock<INfoDatabaseFactory>(MockBehavior.Strict);
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
@@ -57,8 +64,54 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
                     Mock.Of<ISeriesDatabaseFactory>()
                 ),
                 CreateTimeProvider()
-            )
+            ),
+            CreateConfigurationProvider()
         );
+    }
+
+    private IApplicationConfigurationProvider CreateConfigurationProvider()
+    {
+        var configurationProvider = new Mock<IApplicationConfigurationProvider>();
+        configurationProvider
+            .Setup(provider =>
+                provider.GetValue(
+                    It.Is<Expression<Func<FolderAutomationConfiguration, int>>>(selector =>
+                        SelectsMember(
+                            selector,
+                            nameof(FolderAutomationConfiguration.StabilityMinutes)
+                        )
+                    )
+                )
+            )
+            .Returns(() => stabilityMinutes);
+        configurationProvider
+            .Setup(provider =>
+                provider.GetValue(
+                    It.Is<Expression<Func<FolderAutomationConfiguration, int>>>(selector =>
+                        SelectsMember(
+                            selector,
+                            nameof(FolderAutomationConfiguration.MinimumFolderSizeMegabytes)
+                        )
+                    )
+                )
+            )
+            .Returns(() => minimumFolderSizeMegabytes);
+
+        return configurationProvider.Object;
+    }
+
+    private static bool SelectsMember(
+        Expression<Func<FolderAutomationConfiguration, int>> selector,
+        string memberName
+    )
+    {
+        return selector.Body is MemberExpression member && member.Member.Name == memberName;
+    }
+
+    private async Task<int> ProcessUntilStableAsync()
+    {
+        await service.ProcessAsync(CancellationToken.None);
+        return await service.ProcessAsync(CancellationToken.None);
     }
 
     [TearDown]
@@ -93,7 +146,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         await AddReleaseAsync(releaseTemplate.ReleaseGroupId, existingReleaseFolder.FullName);
 
         // Act
-        var result = await service.ProcessAsync(CancellationToken.None);
+        var result = await ProcessUntilStableAsync();
 
         // Assert
         result.ShouldBe(1);
@@ -166,7 +219,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         );
 
         // Act
-        var result = await service.ProcessAsync(CancellationToken.None);
+        var result = await ProcessUntilStableAsync();
 
         // Assert
         result.ShouldBe(1);
@@ -234,7 +287,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "Bodies.*");
 
         // Act
-        var result = await service.ProcessAsync(CancellationToken.None);
+        var result = await ProcessUntilStableAsync();
 
         // Assert
         result.ShouldBe(3);
@@ -285,7 +338,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "Bodies.*");
 
         // Act
-        var result = await service.ProcessAsync(CancellationToken.None);
+        var result = await ProcessUntilStableAsync();
 
         // Assert
         result.ShouldBe(2);
@@ -315,7 +368,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         );
 
         // Act
-        var result = await service.ProcessAsync(CancellationToken.None);
+        var result = await ProcessUntilStableAsync();
 
         // Assert
         result.ShouldBe(0);
@@ -335,7 +388,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
 
         // Act
-        var result = await service.ProcessAsync(CancellationToken.None);
+        var result = await ProcessUntilStableAsync();
 
         // Assert
         result.ShouldBe(0);
@@ -355,7 +408,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, releaseBasePath.FullName, null);
 
         // Act
-        var result = await service.ProcessAsync(CancellationToken.None);
+        var result = await ProcessUntilStableAsync();
 
         // Assert
         result.ShouldBe(1);
@@ -384,7 +437,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*Unmanaged");
 
         // Act
-        var result = await service.ProcessAsync(CancellationToken.None);
+        var result = await ProcessUntilStableAsync();
 
         // Assert
         result.ShouldBe(1);
@@ -405,6 +458,137 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         archive.ArchiveState.ShouldBe(ArchiveState.Created);
         archive.ArchiveFiles.Count.ShouldBe(2);
         release.UploadConfigs.Single().ArchiveConfigId.ShouldBe(archiveConfig.Id);
+    }
+
+    [Test]
+    public async Task ProcessAsync_FirstSightingOfFolder_RecordsObservationButCreatesNoRelease()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var folder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.Release.1080p"));
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
+
+        // Act
+        var result = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(0);
+        (await dbContext.Releases.AnyAsync()).ShouldBeFalse();
+        (await dbContext.Notifications.AnyAsync()).ShouldBeFalse();
+
+        var observation = await dbContext.ReleaseFolderObservations.SingleAsync();
+        observation.FolderPath.ShouldBe(folder.FullName);
+    }
+
+    [Test]
+    public async Task ProcessAsync_FolderContentChangesBetweenTicks_DoesNotCreateUntilStable()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var folder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.Release.1080p"));
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
+
+        // Act
+        var firstTick = await service.ProcessAsync(CancellationToken.None);
+
+        await File.WriteAllTextAsync(Path.Combine(folder.FullName, "video.mkv"), "partial");
+        var secondTick = await service.ProcessAsync(CancellationToken.None);
+
+        var thirdTick = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        firstTick.ShouldBe(0);
+        secondTick.ShouldBe(0);
+        thirdTick.ShouldBe(1);
+
+        var release = await dbContext.Releases.SingleAsync();
+        release.ReleaseFolderPath.ShouldBe(folder.FullName);
+        (await dbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_StableButWithinStabilityWindow_DoesNotCreateRelease()
+    {
+        // Arrange
+        stabilityMinutes = 60;
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var folder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.Release.1080p"));
+        await File.WriteAllTextAsync(Path.Combine(folder.FullName, "video.mkv"), "done");
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+        var result = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(0);
+        (await dbContext.Releases.AnyAsync()).ShouldBeFalse();
+        (await dbContext.ReleaseFolderObservations.SingleAsync()).FolderPath.ShouldBe(
+            folder.FullName
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_PendingFolderDisappears_RemovesStaleObservation()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var folder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.Release.1080p"));
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+        (await dbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeTrue();
+
+        Directory.Delete(folder.FullName, recursive: true);
+        var result = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(0);
+        (await dbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_FolderBelowMinimumSize_DoesNotCreateRelease()
+    {
+        // Arrange
+        minimumFolderSizeMegabytes = 1;
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var folder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.Release.1080p"));
+        await File.WriteAllTextAsync(Path.Combine(folder.FullName, "readme.txt"), "tiny");
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
+
+        // Act
+        var result = await ProcessUntilStableAsync();
+
+        // Assert
+        result.ShouldBe(0);
+        (await dbContext.Releases.AnyAsync()).ShouldBeFalse();
+        (await dbContext.ReleaseFolderObservations.SingleAsync()).FolderPath.ShouldBe(
+            folder.FullName
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_FolderReachesMinimumSize_CreatesRelease()
+    {
+        // Arrange
+        minimumFolderSizeMegabytes = 1;
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var folder = Directory.CreateDirectory(Path.Combine(tempRootPath, "Bearcat.Release.1080p"));
+        await File.WriteAllBytesAsync(
+            Path.Combine(folder.FullName, "video.mkv"),
+            new byte[2 * 1024 * 1024]
+        );
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
+
+        // Act
+        var result = await ProcessUntilStableAsync();
+
+        // Assert
+        result.ShouldBe(1);
+        var release = await dbContext.Releases.SingleAsync();
+        release.ReleaseFolderPath.ShouldBe(folder.FullName);
     }
 
     private async Task<ReleaseTemplateSeed> AddReleaseTemplateAsync(

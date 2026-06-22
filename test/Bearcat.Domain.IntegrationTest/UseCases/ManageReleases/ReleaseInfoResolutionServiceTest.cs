@@ -26,6 +26,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     private BearcatDbContext dbContext = null!;
     private Mock<INfoDatabaseFactory> nfoDatabaseFactoryMock = null!;
     private ReleaseInfoResolutionService service = null!;
+    private readonly List<string> tempReleaseFolders = [];
 
     [SetUp]
     public void Setup()
@@ -45,6 +46,16 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     public async Task DisposeDbContextAsync()
     {
         await dbContext.DisposeAsync();
+
+        foreach (var tempReleaseFolder in tempReleaseFolders)
+        {
+            if (Directory.Exists(tempReleaseFolder))
+            {
+                Directory.Delete(tempReleaseFolder, recursive: true);
+            }
+        }
+
+        tempReleaseFolders.Clear();
     }
 
     [Test]
@@ -666,10 +677,11 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         return release;
     }
 
-    private static string CreateTempReleaseFolder()
+    private string CreateTempReleaseFolder()
     {
         var path = Path.Combine(Path.GetTempPath(), $"bearcat-{Guid.NewGuid():N}");
         Directory.CreateDirectory(path);
+        tempReleaseFolders.Add(path);
         return path;
     }
 

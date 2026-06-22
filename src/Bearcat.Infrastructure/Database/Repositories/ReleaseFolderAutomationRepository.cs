@@ -90,6 +90,23 @@ public class ReleaseFolderAutomationRepository(
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ReleaseFolderObservation>> GetFolderObservationsAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite.ReleaseFolderObservations.ToListAsync(cancellationToken);
+    }
+
+    public void AddFolderObservation(ReleaseFolderObservation observation)
+    {
+        dbWrite.Add(observation);
+    }
+
+    public void RemoveFolderObservation(ReleaseFolderObservation observation)
+    {
+        dbWrite.Remove(observation);
+    }
+
     public async Task<HashSet<string>> GetExistingReleaseFolderPathsAsync(
         IReadOnlyCollection<string> releaseFolderPaths,
         CancellationToken cancellationToken = default

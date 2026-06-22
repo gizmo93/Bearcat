@@ -552,6 +552,12 @@
   <data name="InitialUploadDescription" xml:space="preserve"><value>Controls when the first upload is created for a newly created release.</value></data>
   <data name="InitialUploadCooldownMinutes" xml:space="preserve"><value>Initial upload cooldown (minutes)</value></data>
   <data name="InitialUploadCooldownMinutesDescription" xml:space="preserve"><value>Wait this many minutes after release creation before creating the first upload.</value></data>
+  <data name="FolderAutomation" xml:space="preserve"><value>Folder automation</value></data>
+  <data name="FolderAutomationDescription" xml:space="preserve"><value>Controls how watched folders are turned into releases automatically.</value></data>
+  <data name="FolderAutomationStabilityMinutes" xml:space="preserve"><value>Folder stability (minutes)</value></data>
+  <data name="FolderAutomationStabilityMinutesDescription" xml:space="preserve"><value>A watched folder is only turned into a release once its total file count and size have stayed unchanged for at least this many minutes. This avoids creating releases while files are still being copied into the folder.</value></data>
+  <data name="FolderAutomationMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimum folder size (MB)</value></data>
+  <data name="FolderAutomationMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Watched folders smaller than this are ignored and not turned into releases. This skips empty or near-empty folders. Set to 0 to disable.</value></data>
   <data name="UploadConcurrency" xml:space="preserve"><value>Upload concurrency</value></data>
   <data name="UploadConcurrencyDescription" xml:space="preserve"><value>Controls how many file uploads run in parallel across all hosters.</value></data>
   <data name="MaxParallelUploads" xml:space="preserve"><value>Maximum parallel uploads</value></data>

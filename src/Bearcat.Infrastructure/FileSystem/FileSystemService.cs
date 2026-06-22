@@ -35,6 +35,35 @@ public class FileSystemService : IFileSystemService
             .ToList();
     }
 
+    public FolderContentFingerprint GetFolderContentFingerprint(string path)
+    {
+        if (!Directory.Exists(path))
+        {
+            return new FolderContentFingerprint(0, 0);
+        }
+
+        var fileCount = 0;
+        long totalBytes = 0;
+
+        foreach (
+            var fileInfo in new DirectoryInfo(path).EnumerateFiles(
+                searchPattern: "*",
+                enumerationOptions: new EnumerationOptions
+                {
+                    IgnoreInaccessible = true,
+                    ReturnSpecialDirectories = false,
+                    RecurseSubdirectories = true,
+                }
+            )
+        )
+        {
+            fileCount++;
+            totalBytes += fileInfo.Length;
+        }
+
+        return new FolderContentFingerprint(fileCount, totalBytes);
+    }
+
     public string CreateTempDirectory(string basePath)
     {
         var folderPath = Path.Combine(basePath, Guid.NewGuid().ToString("N"));

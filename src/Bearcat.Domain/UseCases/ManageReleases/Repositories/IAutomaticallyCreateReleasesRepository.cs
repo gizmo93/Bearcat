@@ -17,5 +17,13 @@ public interface IAutomaticallyCreateReleasesRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyList<ReleaseFolderObservation>> GetFolderObservationsAsync(
+        CancellationToken cancellationToken = default
+    );
+
+    void AddFolderObservation(ReleaseFolderObservation observation);
+
+    void RemoveFolderObservation(ReleaseFolderObservation observation);
+
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

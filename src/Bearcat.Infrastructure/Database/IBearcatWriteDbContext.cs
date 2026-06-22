@@ -53,4 +53,5 @@ public interface IBearcatWriteDbContext
     DbSet<SeriesDatabaseRegistration> SeriesDatabaseRegistrations { get; set; }
     DbSet<ReleaseCollectionMetadata> ReleaseCollectionMetadata { get; set; }
     DbSet<ReleaseMediaFile> ReleaseMediaFiles { get; set; }
+    DbSet<ReleaseFolderObservation> ReleaseFolderObservations { get; set; }
 }

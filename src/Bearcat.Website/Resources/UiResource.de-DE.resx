@@ -553,6 +553,12 @@
   <data name="InitialUploadDescription" xml:space="preserve"><value>Steuert, wann der erste Upload für ein neu erstelltes Release angelegt wird.</value></data>
   <data name="InitialUploadCooldownMinutes" xml:space="preserve"><value>Cooldown für initiale Uploads (Minuten)</value></data>
     <data name="InitialUploadCooldownMinutesDescription" xml:space="preserve"><value>So viele Minuten nach dem Erstellen des Releases warten, bevor der erste Upload gestartet wird.</value></data>
+  <data name="FolderAutomation" xml:space="preserve"><value>Ordner-Automation</value></data>
+  <data name="FolderAutomationDescription" xml:space="preserve"><value>Steuert, wie überwachte Ordner automatisch in Releases umgewandelt werden.</value></data>
+  <data name="FolderAutomationStabilityMinutes" xml:space="preserve"><value>Ordner Stabilität (Minuten)</value></data>
+  <data name="FolderAutomationStabilityMinutesDescription" xml:space="preserve"><value>Ein überwachter Ordner wird erst dann in ein Release umgewandelt, wenn sich Dateianzahl und Gesamtgrösse mindestens so viele Minuten lang nicht mehr verändert haben. So werden keine Releases erstellt, während noch Dateien in den Ordner kopiert werden.</value></data>
+  <data name="FolderAutomationMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimale Ordnergrösse (MB)</value></data>
+  <data name="FolderAutomationMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Überwachte Ordner, die kleiner sind, werden ignoriert und nicht in Releases umgewandelt. So werden leere oder fast leere Ordner übersprungen. 0 zum Deaktivieren.</value></data>
   <data name="UploadConcurrency" xml:space="preserve"><value>Upload-Parallelität</value></data>
   <data name="UploadConcurrencyDescription" xml:space="preserve"><value>Steuert, wie viele Datei-Uploads über alle Hoster hinweg gleichzeitig laufen.</value></data>
   <data name="MaxParallelUploads" xml:space="preserve"><value>Maximale parallele Uploads</value></data>

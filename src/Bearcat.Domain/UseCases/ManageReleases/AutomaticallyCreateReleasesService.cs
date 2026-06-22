@@ -1,6 +1,8 @@
 using System.IO.Enumeration;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Configurations;
+using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
@@ -16,7 +18,8 @@ public class AutomaticallyCreateReleasesService(
     MediaMetadataService mediaMetadataService,
     TimeProvider timeProvider,
     IArchiverFactory archiverFactory,
-    ReleaseCollectionAssignmentService releaseCollectionAssignmentService
+    ReleaseCollectionAssignmentService releaseCollectionAssignmentService,
+    IApplicationConfigurationProvider configuration
 )
 {
     private const int MaxConcurrentFolderScans = 4;
@@ -30,35 +33,121 @@ public class AutomaticallyCreateReleasesService(
         }
 
         var candidates = await GetCandidateFoldersAsync(automations, cancellationToken);
-        if (candidates.Count == 0)
-        {
-            return 0;
-        }
 
-        var existingReleaseFolderPaths = await repository.GetExistingReleaseFolderPathsAsync(
-            candidates.Select(candidate => candidate.FolderPath).Distinct().ToList(),
-            cancellationToken
+        var candidatePaths = candidates
+            .Select(candidate => candidate.FolderPath)
+            .Distinct()
+            .ToList();
+
+        var existingReleaseFolderPaths =
+            candidatePaths.Count == 0
+                ? []
+                : await repository.GetExistingReleaseFolderPathsAsync(
+                    candidatePaths,
+                    cancellationToken
+                );
+
+        var observations = await repository.GetFolderObservationsAsync(cancellationToken);
+        var observationsByPath = observations.ToDictionary(observation => observation.FolderPath);
+
+        var pendingCandidates = candidates
+            .Where(candidate => !existingReleaseFolderPaths.Contains(candidate.FolderPath))
+            .ToList();
+
+        var pendingPaths = pendingCandidates.Select(candidate => candidate.FolderPath).ToHashSet();
+
+        var localNow = timeProvider.GetLocalNow();
+
+        var stabilityWindow = TimeSpan.FromMinutes(
+            Math.Max(
+                0,
+                configuration.GetValue<FolderAutomationConfiguration>(c => c.StabilityMinutes)
+            )
         );
 
-        var createdCount = 0;
+        var minimumBytes =
+            (long)
+                Math.Max(
+                    0,
+                    configuration.GetValue<FolderAutomationConfiguration>(c =>
+                        c.MinimumFolderSizeMegabytes
+                    )
+                )
+            * 1024
+            * 1024;
 
-        foreach (var candidate in candidates)
+        var processedPaths = new HashSet<string>();
+        var createdCount = 0;
+        var hasChanges = false;
+
+        foreach (var candidate in pendingCandidates)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var created = await CreateReleaseAsync(
-                candidate: candidate,
-                existingReleaseFolderPaths: existingReleaseFolderPaths,
-                cancellationToken: cancellationToken
-            );
-
-            if (created)
+            if (!processedPaths.Add(candidate.FolderPath))
             {
-                createdCount++;
+                continue;
             }
+
+            var fingerprint = fileSystemService.GetFolderContentFingerprint(candidate.FolderPath);
+
+            if (!observationsByPath.TryGetValue(candidate.FolderPath, out var observation))
+            {
+                repository.AddFolderObservation(
+                    new ReleaseFolderObservation
+                    {
+                        FolderPath = candidate.FolderPath,
+                        FileCount = fingerprint.FileCount,
+                        TotalBytes = fingerprint.TotalBytes,
+                        LastChangedAt = localNow,
+                    }
+                );
+                hasChanges = true;
+                continue;
+            }
+
+            var changed =
+                observation.FileCount != fingerprint.FileCount
+                || observation.TotalBytes != fingerprint.TotalBytes;
+
+            if (changed)
+            {
+                observation.FileCount = fingerprint.FileCount;
+                observation.TotalBytes = fingerprint.TotalBytes;
+                observation.LastChangedAt = localNow;
+                hasChanges = true;
+                continue;
+            }
+
+            if (localNow - observation.LastChangedAt < stabilityWindow)
+            {
+                continue;
+            }
+
+            if (fingerprint.TotalBytes < minimumBytes)
+            {
+                continue;
+            }
+
+            await CreateReleaseAsync(candidate, localNow, cancellationToken);
+
+            repository.RemoveFolderObservation(observation);
+
+            createdCount++;
+            hasChanges = true;
         }
 
-        if (createdCount > 0)
+        var orphanedObservations = observations.Where(observation =>
+            !pendingPaths.Contains(observation.FolderPath)
+        );
+
+        foreach (var observation in orphanedObservations)
+        {
+            repository.RemoveFolderObservation(observation);
+            hasChanges = true;
+        }
+
+        if (hasChanges)
         {
             await repository.SaveChangesAsync(cancellationToken);
         }
@@ -66,19 +155,12 @@ public class AutomaticallyCreateReleasesService(
         return createdCount;
     }
 
-    private async Task<bool> CreateReleaseAsync(
+    private async Task CreateReleaseAsync(
         ReleaseFolderCandidate candidate,
-        HashSet<string> existingReleaseFolderPaths,
+        DateTime localNow,
         CancellationToken cancellationToken
     )
     {
-        if (!existingReleaseFolderPaths.Add(candidate.FolderPath))
-        {
-            return false;
-        }
-
-        var localNow = timeProvider.GetLocalNow();
-
         var releaseData = ReleaseService.CreateFromTemplateData(
             releaseTemplate: candidate.Automation.ReleaseTemplate,
             releaseFolderPath: candidate.FolderPath,
@@ -115,8 +197,6 @@ public class AutomaticallyCreateReleasesService(
                     $"Release '{release.Name}' was created automatically from template '{candidate.Automation.ReleaseTemplate.Name}'.",
             }
         );
-
-        return true;
     }
 
     private async Task<IReadOnlySet<ReleaseFolderCandidate>> GetCandidateFoldersAsync(
