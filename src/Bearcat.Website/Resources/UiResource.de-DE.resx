@@ -66,6 +66,7 @@
   <data name="CopyNfoIntoClipboard" xml:space="preserve"><value>NFO in die Zwischenablage kopieren</value></data>
   <data name="CopyPassword" xml:space="preserve"><value>Passwort kopieren</value></data>
   <data name="Copied" xml:space="preserve"><value>Kopiert</value></data>
+  <data name="Copy" xml:space="preserve"><value>Kopieren</value></data>
   <data name="CopyFailed" xml:space="preserve"><value>Kopieren fehlgeschlagen</value></data>
   <data name="CopyUploadLinksFailed" xml:space="preserve"><value>Uploadlinks konnten nicht kopiert werden.</value></data>
   <data name="Captcha" xml:space="preserve"><value>Captcha</value></data>
@@ -135,6 +136,17 @@
   <data name="EditReleaseInfoDescription" xml:space="preserve"><value>Bearbeite die Release-Info manuell, z. B. wenn keine Datenbank einen Treffer geliefert hat. Beim Ändern des Covers wird es erneut zu den ImageHostern hochgeladen.</value></data>
   <data name="ReleaseInfoUpdated" xml:space="preserve"><value>Release-Info aktualisiert</value></data>
   <data name="ResolveReleaseInfo" xml:space="preserve"><value>Jetzt auflösen</value></data>
+  <data name="ExtractMediaMetadata" xml:space="preserve"><value>Mediendaten extrahieren</value></data>
+  <data name="MediaMetadata" xml:space="preserve"><value>Mediendateien</value></data>
+  <data name="MediaMetadataExtracted" xml:space="preserve"><value>Mediendaten extrahiert</value></data>
+  <data name="MainVideo" xml:space="preserve"><value>Hauptvideo</value></data>
+  <data name="Codec" xml:space="preserve"><value>Codec</value></data>
+  <data name="Details" xml:space="preserve"><value>Details</value></data>
+  <data name="Video" xml:space="preserve"><value>Video</value></data>
+  <data name="Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="Subtitle" xml:space="preserve"><value>Untertitel</value></data>
+  <data name="Default" xml:space="preserve"><value>Standard</value></data>
+  <data name="Forced" xml:space="preserve"><value>Erzwungen</value></data>
   <data name="ReleaseInfoResolved" xml:space="preserve"><value>Release-Info gefunden</value></data>
   <data name="ReleaseInfoNotResolved" xml:space="preserve"><value>Keine Release-Info gefunden</value></data>
   <data name="AddNfo" xml:space="preserve"><value>NFO hinzufügen</value></data>

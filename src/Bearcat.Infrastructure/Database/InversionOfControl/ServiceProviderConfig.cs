@@ -106,6 +106,7 @@ public static class ServiceProviderConfig
             services.AddScoped<IImageUploadRepository, ImageUploadRepository>();
             services.AddScoped<IReleaseWriteRepository, ReleaseWriteRepository>();
             services.AddScoped<IReleaseInfoRepository, ReleaseInfoRepository>();
+            services.AddScoped<IMediaMetadataRepository, MediaMetadataRepository>();
             services.AddScoped<IReleaseTemplateReadRepository, ReleaseTemplateRepository>();
             services.AddScoped<IReleaseTemplateWriteRepository, ReleaseTemplateRepository>();
             services.AddScoped<IForumPostTemplateReadRepository, ForumPostTemplateRepository>();

@@ -9,6 +9,7 @@ using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.InversionOfControl;
 using Bearcat.Infrastructure.Security;
 using Bearcat.LinkCrypters.InversionOfControl;
+using Bearcat.Media.InversionOfControl;
 using Bearcat.NfoDatabases.InversionOfControl;
 using Bearcat.SeriesDatabases.InversionOfControl;
 using Bearcat.Website;
@@ -81,6 +82,7 @@ builder.Services.AddImageHosters();
 builder.Services.AddDistributionSites();
 builder.Services.AddArchivers();
 builder.Services.AddLinkCrypters();
+builder.Services.AddMedia();
 builder.Services.AddNfoDatabases();
 builder.Services.AddSeriesDatabases();
 

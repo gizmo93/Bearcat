@@ -1,0 +1,106 @@
+@if (MediaFiles.Count > 0)
+{
+    <div class="bearcat-release-info-external">
+        <div class="bearcat-release-info-external-heading">
+            <LucideIcon Name="clapperboard" class="h-3.5 w-3.5" />
+            <span>@L["MediaMetadata"]</span>
+        </div>
+
+        <div class="bearcat-media-list">
+            @foreach (var file in OrderedMediaFiles)
+            {
+                var rows = MediaStreamRowBuilder.Build(file, L);
+
+                <BbCollapsible DefaultOpen="false" Class="bearcat-media-collapsible">
+                    <BbCollapsibleTrigger AsChild="false" Class="bearcat-media-trigger">
+                        <LucideIcon Name="chevron-down" class="bearcat-media-chevron h-4 w-4" />
+                        <span class="bearcat-media-trigger-main">
+                            @if (MainVideo is not null && MainVideo.MediaFileId == file.MediaFileId)
+                            {
+                                <BbBadge Variant="BadgeVariant.Default">@L["MainVideo"]</BbBadge>
+                            }
+                            <span class="bearcat-release-info-external-title" title="@file.RelativePath">
+                                @file.RelativePath
+                            </span>
+                        </span>
+                        <span class="bearcat-media-file-meta">
+                            <span>
+                                <LucideIcon Name="package" class="h-3.5 w-3.5" />
+                                @(string.IsNullOrWhiteSpace(file.ContainerFormat) ? "-" : file.ContainerFormat)
+                            </span>
+                            <span>
+                                <LucideIcon Name="clock" class="h-3.5 w-3.5" />
+                                @FormatDuration(file.Duration)
+                            </span>
+                            <span>
+                                <LucideIcon Name="hard-drive" class="h-3.5 w-3.5" />
+                                @FormatFileSize(file.SizeBytes)
+                            </span>
+                        </span>
+                    </BbCollapsibleTrigger>
+                    <BbCollapsibleContent Class="bearcat-media-content">
+                        <div class="bearcat-media-table-wrap">
+                            <BbTable TData="MediaStreamRow" Data="rows" EnableKeyboardNavigation="false" Class="bearcat-media-table">
+                                <BbTableHeader>
+                                    <BbTableRow TData="MediaStreamRow">
+                                        <BbTableHeaderCell TData="MediaStreamRow">@L["Type"]</BbTableHeaderCell>
+                                        <BbTableHeaderCell TData="MediaStreamRow">@L["Codec"]</BbTableHeaderCell>
+                                        <BbTableHeaderCell TData="MediaStreamRow">@L["Language"]</BbTableHeaderCell>
+                                        <BbTableHeaderCell TData="MediaStreamRow">@L["Details"]</BbTableHeaderCell>
+                                        <BbTableHeaderCell TData="MediaStreamRow">@L["Title"]</BbTableHeaderCell>
+                                        <BbTableHeaderCell TData="MediaStreamRow"></BbTableHeaderCell>
+                                    </BbTableRow>
+                                </BbTableHeader>
+                                <BbTableBody>
+                                    @foreach (var row in rows)
+                                    {
+                                        <BbTableRow TData="MediaStreamRow" Item="row">
+                                            <BbTableCell>@row.Kind</BbTableCell>
+                                            <BbTableCell>@row.Codec</BbTableCell>
+                                            <BbTableCell>@row.Language</BbTableCell>
+                                            <BbTableCell>@row.Details</BbTableCell>
+                                            <BbTableCell>@row.Title</BbTableCell>
+                                            <BbTableCell>
+                                                <div class="bearcat-media-flags">
+                                                    @if (row.IsDefault)
+                                                    {
+                                                        <BbBadge Variant="BadgeVariant.Secondary">@L["Default"]</BbBadge>
+                                                    }
+                                                    @if (row.Forced)
+                                                    {
+                                                        <BbBadge Variant="BadgeVariant.Outline">@L["Forced"]</BbBadge>
+                                                    }
+                                                </div>
+                                            </BbTableCell>
+                                        </BbTableRow>
+                                    }
+                                </BbTableBody>
+                            </BbTable>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(file.MediaInfoText))
+                        {
+                            <details class="bearcat-media-raw">
+                                <summary>MediaInfo</summary>
+                                <div class="bearcat-media-raw-body">
+                                    <textarea id="mediainfo-@file.MediaFileId" hidden readonly>@file.MediaInfoText</textarea>
+                                    <button type="button"
+                                            class="bearcat-copy-button bearcat-media-copy"
+                                            data-copy-target="mediainfo-@file.MediaFileId"
+                                            data-copy-label="@L["Copy"]"
+                                            data-copy-success-label="@L["Copied"]"
+                                            data-copy-failure-label="@L["CopyFailed"]"
+                                            onclick="window.bearcat.copyFromTarget(this)">
+                                        <LucideIcon Name="copy" class="h-4 w-4" />
+                                        <span class="bearcat-copy-button-label">@L["Copy"]</span>
+                                    </button>
+                                    <pre>@file.MediaInfoText</pre>
+                                </div>
+                            </details>
+                        }
+                    </BbCollapsibleContent>
+                </BbCollapsible>
+            }
+        </div>
+    </div>
+}

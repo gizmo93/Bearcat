@@ -43,9 +43,14 @@ public class ReleaseForumPostRenderSource(
 
         var uploads = await uploadBuilder.BuildAsync(entityId, cancellationToken);
 
+        var mediaFiles = await releaseReadRepository.GetMediaFilesAsync(
+            entityId,
+            cancellationToken
+        );
+
         var renderModel = new ForumPostTemplateRenderModel
         {
-            Release = ToReleaseModel(release, nfo),
+            Release = ToReleaseModel(release, nfo, mediaFiles),
             ReleaseInfo = info is null
                 ? ForumPostTemplateReleaseInfoModel.Empty
                 : ToReleaseInfoModel(info),
@@ -64,10 +69,104 @@ public class ReleaseForumPostRenderSource(
 
     private static ForumPostTemplateReleaseModel ToReleaseModel(
         ReleaseReadModel release,
-        string? nfo
+        string? nfo,
+        IReadOnlyList<ReleaseMediaFileReadModel> mediaFiles
     )
     {
-        return new ForumPostTemplateReleaseModel { Name = release.Name, Nfo = nfo ?? string.Empty };
+        var mediaFileModels = mediaFiles.Select(ToMediaFileModel).ToList();
+        var mainVideo = ReleaseMediaFileSelector.SelectMainVideo(mediaFiles);
+
+        return new ForumPostTemplateReleaseModel
+        {
+            Name = release.Name,
+            Nfo = nfo ?? string.Empty,
+            MainVideo = mainVideo is null
+                ? ForumPostTemplateMediaFileModel.Empty
+                : ToMediaFileModel(mainVideo),
+            MediaFiles = mediaFileModels,
+        };
+    }
+
+    private static ForumPostTemplateMediaFileModel ToMediaFileModel(ReleaseMediaFileReadModel file)
+    {
+        var defaultAudio =
+            file.AudioStreams.FirstOrDefault(stream => stream.IsDefault)
+            ?? file.AudioStreams.FirstOrDefault();
+
+        return new ForumPostTemplateMediaFileModel
+        {
+            Path = file.RelativePath,
+            SizeBytes = file.SizeBytes,
+            MediaInfo = file.MediaInfoText,
+            Duration = file.Duration is null
+                ? string.Empty
+                : file.Duration.Value.ToString(@"hh\:mm\:ss"),
+            Container = file.ContainerFormat ?? string.Empty,
+            Video = file.VideoStream is null
+                ? ForumPostTemplateVideoStreamModel.Empty
+                : ToVideoStreamModel(file.VideoStream),
+            DefaultAudio = defaultAudio is null
+                ? ForumPostTemplateAudioStreamModel.Empty
+                : ToAudioStreamModel(defaultAudio),
+            AudioStreams = file.AudioStreams.Select(ToAudioStreamModel).ToList(),
+            SubtitleStreams = file.SubtitleStreams.Select(ToSubtitleStreamModel).ToList(),
+        };
+    }
+
+    private static ForumPostTemplateVideoStreamModel ToVideoStreamModel(
+        ReleaseVideoStreamReadModel stream
+    )
+    {
+        var resolution =
+            stream.Width is null || stream.Height is null
+                ? string.Empty
+                : $"{stream.Width}x{stream.Height}";
+
+        return new ForumPostTemplateVideoStreamModel
+        {
+            Codec = stream.Codec,
+            Profile = stream.CodecProfile ?? string.Empty,
+            Width = stream.Width,
+            Height = stream.Height,
+            Resolution = resolution,
+            Fps = stream.Fps,
+            PixelFormat = stream.PixelFormat ?? string.Empty,
+            Language = stream.Language ?? string.Empty,
+            Title = stream.Title ?? string.Empty,
+            BitrateKbps = stream.BitrateKbps,
+        };
+    }
+
+    private static ForumPostTemplateAudioStreamModel ToAudioStreamModel(
+        ReleaseAudioStreamReadModel stream
+    )
+    {
+        return new ForumPostTemplateAudioStreamModel
+        {
+            Codec = stream.Codec,
+            Profile = stream.CodecProfile ?? string.Empty,
+            Language = stream.Language ?? string.Empty,
+            Title = stream.Title ?? string.Empty,
+            ChannelLayout = stream.ChannelLayout ?? string.Empty,
+            Channels = stream.Channels,
+            SampleRate = stream.SampleRate,
+            BitrateKbps = stream.BitrateKbps,
+            IsDefault = stream.IsDefault,
+        };
+    }
+
+    private static ForumPostTemplateSubtitleStreamModel ToSubtitleStreamModel(
+        ReleaseSubtitleStreamReadModel stream
+    )
+    {
+        return new ForumPostTemplateSubtitleStreamModel
+        {
+            Codec = stream.Codec,
+            Language = stream.Language ?? string.Empty,
+            Title = stream.Title ?? string.Empty,
+            Forced = stream.Forced,
+            IsDefault = stream.IsDefault,
+        };
     }
 
     private static ForumPostTemplateReleaseInfoModel ToReleaseInfoModel(ReleaseInfoReadModel info)

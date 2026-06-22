@@ -2,6 +2,7 @@ using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,9 +22,16 @@ public partial class ReleaseInfoPanel(
     [Parameter]
     public string ReleaseName { get; set; } = string.Empty;
 
+    [Parameter]
+    public ReleaseType ReleaseType { get; set; }
+
     private ReleaseInfoReadModel? releaseInfo;
+    private IReadOnlyList<ReleaseMediaFileReadModel> mediaFiles = [];
     private bool isLoading;
     private bool isResolving;
+    private bool isExtracting;
+
+    private bool CanExtractMediaMetadata => ReleaseType == ReleaseType.Managed;
 
     protected override async Task OnInitializedAsync()
     {
@@ -39,10 +47,36 @@ public partial class ReleaseInfoPanel(
             await using var scope = serviceScopeFactory.CreateAsyncScope();
             var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
             releaseInfo = await readRepository.GetReleaseInfoAsync(ReleaseId);
+            mediaFiles = await readRepository.GetMediaFilesAsync(ReleaseId);
         }
         finally
         {
             isLoading = false;
+        }
+    }
+
+    private async Task ExtractMediaMetadataAsync()
+    {
+        if (isExtracting || !CanExtractMediaMetadata)
+        {
+            return;
+        }
+
+        isExtracting = true;
+
+        try
+        {
+            await using var scope = serviceScopeFactory.CreateAsyncScope();
+            var mediaMetadataService =
+                scope.ServiceProvider.GetRequiredService<MediaMetadataService>();
+            await mediaMetadataService.ExtractForReleaseAsync(ReleaseId);
+
+            toastService.Success(L["MediaMetadataExtracted"]);
+            await LoadReleaseInfoAsync();
+        }
+        finally
+        {
+            isExtracting = false;
         }
     }
 

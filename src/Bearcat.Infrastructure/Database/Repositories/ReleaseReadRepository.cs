@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.LinkCrypter;
+using Bearcat.Abstractions.Media;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.ForumPostRendering;
@@ -693,6 +694,82 @@ public class ReleaseReadRepository(
                 info.ReleaseNfo.Content
             ))
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ReleaseMediaFileReadModel>> GetMediaFilesAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var files = await dbRead
+            .ReleaseMediaFiles.Where(file => file.ReleaseId == releaseId)
+            .OrderBy(file => file.RelativePath)
+            .Select(file => new
+            {
+                file.Id,
+                file.RelativePath,
+                file.SizeBytes,
+                file.MediaInfoJson,
+                file.MediaInfoText,
+            })
+            .ToListAsync(cancellationToken);
+
+        return files
+            .Select(file =>
+            {
+                var metadata = MediaInfoOutputParser.Parse(file.MediaInfoJson);
+
+                return new ReleaseMediaFileReadModel(
+                    file.Id,
+                    file.RelativePath,
+                    file.SizeBytes,
+                    metadata?.ContainerFormat,
+                    metadata?.Duration,
+                    metadata?.VideoStream is null
+                        ? null
+                        : new ReleaseVideoStreamReadModel(
+                            metadata.VideoStream.Index,
+                            metadata.VideoStream.Codec,
+                            metadata.VideoStream.CodecProfile,
+                            metadata.VideoStream.IsDefault,
+                            metadata.VideoStream.Language,
+                            metadata.VideoStream.Title,
+                            metadata.VideoStream.Width,
+                            metadata.VideoStream.Height,
+                            metadata.VideoStream.Fps,
+                            metadata.VideoStream.PixelFormat,
+                            metadata.VideoStream.BitrateKbps
+                        ),
+                    metadata
+                        ?.AudioStreams.Select(stream => new ReleaseAudioStreamReadModel(
+                            stream.Index,
+                            stream.Codec,
+                            stream.CodecProfile,
+                            stream.IsDefault,
+                            stream.Language,
+                            stream.Title,
+                            stream.SampleRate,
+                            stream.ChannelLayout,
+                            stream.Channels,
+                            stream.BitrateKbps
+                        ))
+                        .ToList()
+                        ?? [],
+                    metadata
+                        ?.SubtitleStreams.Select(stream => new ReleaseSubtitleStreamReadModel(
+                            stream.Index,
+                            stream.Codec,
+                            stream.IsDefault,
+                            stream.Forced,
+                            stream.Language,
+                            stream.Title
+                        ))
+                        .ToList()
+                        ?? [],
+                    file.MediaInfoText
+                );
+            })
+            .ToList();
     }
 
     public async Task<IReadOnlyList<ArchiveConfigReadModel>> GetArchiveConfigsAsync(

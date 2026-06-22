@@ -1,3 +1,5 @@
+@using Bearcat.Website.Pages.ManageReleases.MediaFiles
+
 <section class="bearcat-release-info-section space-y-4">
     <div class="bearcat-section-header">
         <div>
@@ -31,6 +33,17 @@
                 <LucideIcon Name="@(releaseInfo?.ReleaseNfo is null ? "file-plus" : "file-pen")" class="h-4 w-4" />
                 @(releaseInfo?.ReleaseNfo is null ? L["AddNfo"] : L["EditNfo"])
             </BbButton>
+
+            @if (CanExtractMediaMetadata)
+            {
+                <BbButton Variant="ButtonVariant.Outline"
+                          Size="ButtonSize.Small"
+                          Disabled="isLoading || isExtracting"
+                          OnClick="ExtractMediaMetadataAsync">
+                    <LucideIcon Name="clapperboard" class="@($"h-4 w-4 {(isExtracting ? "animate-spin" : string.Empty)}")" />
+                    @L["ExtractMediaMetadata"]
+                </BbButton>
+            }
 
             <BbButton Variant="ButtonVariant.Outline"
                       Size="ButtonSize.Small"
@@ -217,5 +230,10 @@
                 </div>
             </article>
         </div>
+    }
+
+    @if (!isLoading)
+    {
+        <MediaFilesSection MediaFiles="mediaFiles" />
     }
 </section>

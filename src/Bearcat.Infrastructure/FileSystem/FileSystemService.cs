@@ -19,6 +19,22 @@ public class FileSystemService : IFileSystemService
             .ToList();
     }
 
+    public List<string> GetFilesInPath(string path, bool recursive)
+    {
+        return Directory
+            .GetFiles(
+                path: path,
+                searchPattern: "*",
+                enumerationOptions: new EnumerationOptions
+                {
+                    IgnoreInaccessible = true,
+                    ReturnSpecialDirectories = false,
+                    RecurseSubdirectories = recursive,
+                }
+            )
+            .ToList();
+    }
+
     public string CreateTempDirectory(string basePath)
     {
         var folderPath = Path.Combine(basePath, Guid.NewGuid().ToString("N"));

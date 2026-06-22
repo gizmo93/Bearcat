@@ -88,6 +88,8 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<ReleaseCollectionMetadata> ReleaseCollectionMetadata { get; set; } = null!;
 
+    public DbSet<ReleaseMediaFile> ReleaseMediaFiles { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BearcatDbContext).Assembly);

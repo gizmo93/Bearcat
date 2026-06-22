@@ -63,6 +63,7 @@ public static class ServiceProviderConfig
             services.AddScoped<IForumPostRenderSource, ReleaseCollectionForumPostRenderSource>();
             services.AddScoped<ReleaseInfoService>();
             services.AddScoped<ReleaseInfoResolutionService>();
+            services.AddScoped<MediaMetadataService>();
             services.AddScoped<ReleaseTemplateService>();
             services.AddScoped<ForumPostTemplateService>();
             services.AddScoped<ArchiveCreationService>();

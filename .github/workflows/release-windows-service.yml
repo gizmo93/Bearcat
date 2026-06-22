@@ -93,6 +93,22 @@ jobs:
           $env:PLAYWRIGHT_BROWSERS_PATH = "$env:RUNNER_TEMP\bearcat-host\playwright-browsers"
           & "$env:RUNNER_TEMP\bearcat-host\playwright.ps1" install chromium
 
+      - name: Bundle MediaInfo
+        shell: pwsh
+        run: |
+          # Ships the MediaInfo CLI next to the host so media metadata extraction works
+          # without a system install. The x64 build also runs on win-arm64 via emulation.
+          $version = "25.04"
+          $url = "https://mediaarea.net/download/binary/mediainfo/$version/MediaInfo_CLI_${version}_Windows_x64.zip"
+          $zip = "$env:RUNNER_TEMP\mediainfo.zip"
+          $extract = "$env:RUNNER_TEMP\mediainfo-cli"
+          Invoke-WebRequest -Uri $url -OutFile $zip
+          Expand-Archive -Path $zip -DestinationPath $extract -Force
+          $target = "$env:RUNNER_TEMP\bearcat-host\mediainfo"
+          New-Item -ItemType Directory -Path $target -Force | Out-Null
+          Copy-Item "$extract\MediaInfo.exe" $target -Force
+          Copy-Item "$extract\LIBCURL.DLL" $target -Force
+
       - name: Build package
         shell: pwsh
         run: |

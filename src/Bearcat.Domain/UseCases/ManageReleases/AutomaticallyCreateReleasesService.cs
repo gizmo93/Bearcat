@@ -13,6 +13,7 @@ public class AutomaticallyCreateReleasesService(
     IAutomaticallyCreateReleasesRepository repository,
     IFileSystemService fileSystemService,
     ReleaseInfoResolutionService releaseInfoResolutionService,
+    MediaMetadataService mediaMetadataService,
     TimeProvider timeProvider,
     IArchiverFactory archiverFactory,
     ReleaseCollectionAssignmentService releaseCollectionAssignmentService
@@ -100,6 +101,8 @@ public class AutomaticallyCreateReleasesService(
         );
 
         await releaseInfoResolutionService.TryResolveAsync(release, cancellationToken);
+
+        await mediaMetadataService.TryExtractAsync(release, cancellationToken);
 
         repository.Add(release);
 

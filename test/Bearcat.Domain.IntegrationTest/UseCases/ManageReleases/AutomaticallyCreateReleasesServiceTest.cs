@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Media;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Abstractions.SeriesDatabase;
 using Bearcat.Domain.Entities;
@@ -46,6 +47,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
             new ReleaseFolderAutomationRepository(dbContext, dbContext),
             new FileSystemService(),
             CreateReleaseInfoResolutionService(),
+            CreateMediaMetadataService(),
             CreateTimeProvider(),
             archiverFactory.Object,
             new ReleaseCollectionAssignmentService(
@@ -546,6 +548,24 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
             nfoDatabaseFactoryMock.Object,
             NullLogger<ReleaseInfoResolutionService>.Instance,
             CreateTimeProvider()
+        );
+    }
+
+    private MediaMetadataService CreateMediaMetadataService()
+    {
+        var extractorMock = new Mock<IMediaMetadataExtractor>();
+        extractorMock
+            .Setup(extractor =>
+                extractor.ExtractAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync((MediaProbeResult?)null);
+
+        return new MediaMetadataService(
+            new MediaMetadataRepository(dbContext),
+            extractorMock.Object,
+            new FileSystemService(),
+            CreateTimeProvider(),
+            NullLogger<MediaMetadataService>.Instance
         );
     }
 

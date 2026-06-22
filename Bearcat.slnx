@@ -19,6 +19,7 @@
         <Project Path="src/Bearcat.Hosters/Bearcat.Hosters.csproj" />
         <Project Path="src/Bearcat.ImageHosters/Bearcat.ImageHosters.csproj" />
         <Project Path="src/Bearcat.LinkCrypters/Bearcat.LinkCrypters.csproj" />
+        <Project Path="src/Bearcat.Media/Bearcat.Media.csproj" />
         <Project Path="src/Bearcat.NfoDatabases/Bearcat.NfoDatabases.csproj" />
         <Project Path="src/Bearcat.SeriesDatabases/Bearcat.SeriesDatabases.csproj" />
     </Folder>
@@ -30,6 +31,7 @@
         <Project Path="test/Bearcat.Infrastructure.UnitTest/Bearcat.Infrastructure.UnitTest.csproj" />
         <Project Path="test/Bearcat.IntegrationTest.Utils/Bearcat.IntegrationTest.Utils.csproj" />
         <Project Path="test/Bearcat.LinkCrypters.UnitTest/Bearcat.LinkCrypters.UnitTest.csproj" />
+        <Project Path="test/Bearcat.Media.UnitTest/Bearcat.Media.UnitTest.csproj" />
         <Project Path="test/Bearcat.NfoDatabases.UnitTest/Bearcat.NfoDatabases.UnitTest.csproj" />
     </Folder>
 </Solution>

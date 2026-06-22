@@ -22,6 +22,7 @@ ENV \
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     p7zip-full \
+    mediainfo \
     wget \
     && wget https://www.win-rar.com/fileadmin/winrar-versions/rarlinux-x64-712.tar.gz \
     && tar -xzf rarlinux-x64-712.tar.gz \

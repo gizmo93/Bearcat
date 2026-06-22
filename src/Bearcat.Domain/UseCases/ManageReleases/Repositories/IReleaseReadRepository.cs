@@ -47,6 +47,11 @@ public interface IReleaseReadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyList<ReleaseMediaFileReadModel>> GetMediaFilesAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<IReadOnlyList<ArchiveConfigReadModel>> GetArchiveConfigsAsync(
         int releaseId,
         CancellationToken cancellationToken

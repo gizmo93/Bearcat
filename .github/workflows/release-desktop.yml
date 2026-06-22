@@ -78,6 +78,27 @@ jobs:
           -p:PublishSingleFile=false
           -p:Version=${{ steps.version.outputs.value }}
 
+      - name: Bundle MediaInfo
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Ships the universal MediaInfo CLI next to the host so media metadata
+          # extraction works without a system install.
+          version="25.04"
+          url="https://mediaarea.net/download/binary/mediainfo/${version}/MediaInfo_CLI_${version}_Mac.dmg"
+          dmg="$RUNNER_TEMP/mediainfo.dmg"
+          curl -sSL --fail -o "$dmg" "$url"
+          mount_point=$(hdiutil attach "$dmg" -nobrowse -readonly | tail -1 | awk '{print $NF}')
+          expand_dir="$RUNNER_TEMP/mediainfo-pkg"
+          rm -rf "$expand_dir"
+          pkgutil --expand-full "$mount_point/mediainfo.pkg" "$expand_dir"
+          hdiutil detach "$mount_point" >/dev/null
+
+          target="$RUNNER_TEMP/bearcat-host/mediainfo"
+          mkdir -p "$target"
+          cp "$expand_dir/Payload/usr/local/bin/mediainfo" "$target/mediainfo"
+          chmod +x "$target/mediainfo"
+
       - name: Build app bundle
         shell: bash
         run: |
@@ -108,6 +129,13 @@ jobs:
           if [ -d "$macos_dir/.playwright" ]; then
             mv "$macos_dir/.playwright" "$resources_dir/.playwright"
             ln -s "../Resources/.playwright" "$macos_dir/.playwright"
+          fi
+
+          # Same treatment for the bundled MediaInfo CLI: a loose Mach-O binary under
+          # Contents/MacOS trips codesign, so relocate it into Resources and symlink back.
+          if [ -d "$macos_dir/mediainfo" ]; then
+            mv "$macos_dir/mediainfo" "$resources_dir/mediainfo"
+            ln -s "../Resources/mediainfo" "$macos_dir/mediainfo"
           fi
 
           icon_source="src/Bearcat.Desktop/Assets/bearcat-icon.png"
@@ -270,6 +298,22 @@ jobs:
           # runtime download. The win-x64 Chromium build also runs on win-arm64 via emulation.
           $env:PLAYWRIGHT_BROWSERS_PATH = "$env:RUNNER_TEMP\bearcat-host\playwright-browsers"
           & "$env:RUNNER_TEMP\bearcat-host\playwright.ps1" install chromium
+
+      - name: Bundle MediaInfo
+        shell: pwsh
+        run: |
+          # Ships the MediaInfo CLI next to the host so media metadata extraction works
+          # without a system install. The x64 build also runs on win-arm64 via emulation.
+          $version = "25.04"
+          $url = "https://mediaarea.net/download/binary/mediainfo/$version/MediaInfo_CLI_${version}_Windows_x64.zip"
+          $zip = "$env:RUNNER_TEMP\mediainfo.zip"
+          $extract = "$env:RUNNER_TEMP\mediainfo-cli"
+          Invoke-WebRequest -Uri $url -OutFile $zip
+          Expand-Archive -Path $zip -DestinationPath $extract -Force
+          $target = "$env:RUNNER_TEMP\bearcat-host\mediainfo"
+          New-Item -ItemType Directory -Path $target -Force | Out-Null
+          Copy-Item "$extract\MediaInfo.exe" $target -Force
+          Copy-Item "$extract\LIBCURL.DLL" $target -Force
 
       - name: Build package
         shell: pwsh

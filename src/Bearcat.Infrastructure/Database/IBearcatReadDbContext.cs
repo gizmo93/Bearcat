@@ -43,4 +43,5 @@ public interface IBearcatReadDbContext
     public DbSet<ReleaseExternalInfo> ReleaseExternalInfos { get; set; }
     public DbSet<SeriesDatabaseRegistration> SeriesDatabaseRegistrations { get; set; }
     public DbSet<ReleaseCollectionMetadata> ReleaseCollectionMetadata { get; set; }
+    public DbSet<ReleaseMediaFile> ReleaseMediaFiles { get; set; }
 }
