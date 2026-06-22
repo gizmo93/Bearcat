@@ -96,6 +96,7 @@ public class ReleaseForumPostRenderSource(
         return new ForumPostTemplateMediaFileModel
         {
             Path = file.RelativePath,
+            Extension = GetExtension(file.RelativePath),
             SizeBytes = file.SizeBytes,
             MediaInfo = file.MediaInfoText,
             Duration = file.Duration is null
@@ -111,6 +112,14 @@ public class ReleaseForumPostRenderSource(
             AudioStreams = file.AudioStreams.Select(ToAudioStreamModel).ToList(),
             SubtitleStreams = file.SubtitleStreams.Select(ToSubtitleStreamModel).ToList(),
         };
+    }
+
+    private static string GetExtension(string relativePath)
+    {
+        var extension = Path.GetExtension(relativePath);
+        return string.IsNullOrEmpty(extension)
+            ? string.Empty
+            : extension.TrimStart('.').ToLowerInvariant();
     }
 
     private static ForumPostTemplateVideoStreamModel ToVideoStreamModel(

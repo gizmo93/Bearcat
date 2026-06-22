@@ -60,6 +60,7 @@ public sealed record ForumPostTemplateMediaFileModel
         new()
         {
             Path = string.Empty,
+            Extension = string.Empty,
             SizeBytes = 0,
             Duration = string.Empty,
             Container = string.Empty,
@@ -72,6 +73,9 @@ public sealed record ForumPostTemplateMediaFileModel
 
     [ForumPostTemplateVariable("Relative file path inside the release folder.")]
     public required string Path { get; init; }
+
+    [ForumPostTemplateVariable("File extension without leading dot, e.g. mkv.")]
+    public required string Extension { get; init; }
 
     [ForumPostTemplateVariable("Full MediaInfo text dump for the file.")]
     public required string MediaInfo { get; init; }
