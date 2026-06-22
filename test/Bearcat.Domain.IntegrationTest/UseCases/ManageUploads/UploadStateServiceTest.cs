@@ -187,12 +187,105 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task CheckUploadStatesAsync_HosterCheckFails_CreatesErrorNotificationAndKeepsState()
+    public async Task CheckUploadStatesAsync_AlreadyPartiallyOnlineRemainsPartiallyOnline_DoesNotCreateWarning()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.PartiallyOnline,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"]
+        );
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(
+                    true,
+                    [],
+                    new Dictionary<string, bool>
+                    {
+                        ["https://hoster.test/1"] = true,
+                        ["https://hoster.test/2"] = false,
+                    }
+                )
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .Include(u => u.Notifications)
+            .SingleAsync();
+
+        result.Id.ShouldBe(upload.Id);
+        result.OnlineState.ShouldBe(OnlineState.PartiallyOnline);
+        result.Notifications.ShouldBeEmpty();
+        hosterMock.VerifyAll();
+        hosterFactoryMock.VerifyAll();
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_PartiallyOnlineUploadRecovers_MarksUploadOnlineWithoutWarning()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.PartiallyOnline,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"]
+        );
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(
+                    true,
+                    [],
+                    new Dictionary<string, bool>
+                    {
+                        ["https://hoster.test/1"] = true,
+                        ["https://hoster.test/2"] = true,
+                    }
+                )
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .Include(u => u.Notifications)
+            .SingleAsync();
+
+        result.Id.ShouldBe(upload.Id);
+        result.OnlineState.ShouldBe(OnlineState.Online);
+        result.UploadedFiles.ShouldAllBe(f => f.OnlineState == OnlineState.Online);
+        result.Notifications.ShouldBeEmpty();
+        hosterMock.VerifyAll();
+        hosterFactoryMock.VerifyAll();
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_HosterCheckFailsAndNoSuccessfulCheckWithinThreshold_CreatesErrorNotificationAndKeepsState()
     {
         // Arrange
         var upload = await AddCompletedUploadAsync(
             OnlineState.Online,
-            checkedAt: localNow.AddHours(-1),
+            checkedAt: localNow.AddHours(-4),
             uploadedFileLinks: ["https://hoster.test/1"]
         );
         hosterMock
@@ -222,7 +315,49 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         result.OnlineState.ShouldBe(OnlineState.Online);
         result.UploadedFiles.Single().OnlineState.ShouldBe(OnlineState.Online);
         result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Error);
-        result.Notifications.Single().Message.ShouldBe("Failed to check file existence on hoster.");
+        result
+            .Notifications.Single()
+            .Message.ShouldBe(
+                "Failed to check file existence on hoster, Error messages: API unavailable"
+            );
+        hosterMock.VerifyAll();
+        hosterFactoryMock.VerifyAll();
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_HosterCheckFailsButSuccessfulCheckWithinThreshold_DoesNotCreateNotification()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(false, ["API unavailable"], new Dictionary<string, bool>())
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .Include(u => u.Notifications)
+            .SingleAsync();
+
+        result.Id.ShouldBe(upload.Id);
+        result.OnlineState.ShouldBe(OnlineState.Online);
+        result.Notifications.ShouldBeEmpty();
         hosterMock.VerifyAll();
         hosterFactoryMock.VerifyAll();
     }
@@ -802,7 +937,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         result.Id.ShouldBe(upload.Id);
         result.OnlineState.ShouldBe(OnlineState.Offline);
         result.UploadedFiles.ShouldAllBe(f => f.OnlineState == OnlineState.Offline);
-        result.Notifications.Single().Message.ShouldBe("Some files are offline on the hoster");
+        result.Notifications.Single().Message.ShouldBe("All files are offline on the hoster");
     }
 
     [Test]

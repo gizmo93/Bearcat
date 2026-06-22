@@ -12,7 +12,6 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
         CancellationToken cancellationToken
     )
     {
-        List<OnlineState> onlineStatesToCheck = [OnlineState.Online, OnlineState.PartiallyOnline];
         List<UploadState> uploadStatesToExclude =
         [
             UploadState.Canceled,
@@ -31,7 +30,10 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
                 .ThenInclude(uc => uc.HosterRegistration)
             .Include(u => u.UploadedFiles)
             .Where(u =>
-                onlineStatesToCheck.Contains(u.OnlineState)
+                (
+                    u.OnlineState == OnlineState.Online
+                    || u.OnlineState == OnlineState.PartiallyOnline
+                )
                 && !uploadStatesToExclude.Contains(u.UploadState)
                 && u.UploadConfig.HosterRegistration.IsActive
                 && u.UploadedFiles.Any(f => f.CheckedAt == null || f.CheckedAt < lastCheckThreshold)

@@ -25,6 +25,8 @@ public class UploadStateService(
     ISecretProtector secretProtector
 )
 {
+    private static readonly TimeSpan FailedCheckNotificationThreshold = TimeSpan.FromHours(3);
+
     public async Task CheckUploadStatesAsync(DateTime localNow, CancellationToken cancellationToken)
     {
         await ProcessUploadStateChecksAsync(localNow, cancellationToken);
@@ -184,6 +186,7 @@ public class UploadStateService(
                     hoster: hoster,
                     hosterConfig: hosterConfig,
                     upload: upload,
+                    localNow: localNow,
                     cancellationToken: cancellationToken
                 );
 
@@ -202,10 +205,12 @@ public class UploadStateService(
         IHoster hoster,
         IHosterConfig hosterConfig,
         Upload upload,
+        DateTime localNow,
         CancellationToken cancellationToken
     )
     {
-        var checkedAt = timeProvider.GetLocalNow();
+        var checkedAt = localNow;
+        var previousOnlineState = upload.OnlineState;
         var filesWithoutUrl = upload
             .UploadedFiles.Where(f => string.IsNullOrWhiteSpace(f.HosterFileLink))
             .ToList();
@@ -265,11 +270,21 @@ public class UploadStateService(
                 string.Join("; ", result.ErrorMessages)
             );
 
-            notificationService.CreateError(
-                message: "Failed to check file existence on hoster.",
-                entity: upload,
-                selector: u => u.Upload
-            );
+            var lastOnlineCheck = upload
+                .UploadedFiles.Where(f => f.OnlineState == OnlineState.Online)
+                .Min(f => f.CheckedAt);
+
+            if (
+                lastOnlineCheck is not null
+                && checkedAt - lastOnlineCheck.Value >= FailedCheckNotificationThreshold
+            )
+            {
+                notificationService.CreateError(
+                    message: $"Failed to check file existence on hoster, Error messages: {string.Join(", ", result.ErrorMessages)}",
+                    entity: upload,
+                    selector: u => u.Upload
+                );
+            }
 
             return;
         }
@@ -296,23 +311,34 @@ public class UploadStateService(
             f.OnlineState == OnlineState.Offline
         );
 
-        if (offlineFilesCount > 0)
+        upload.OnlineState = offlineFilesCount switch
         {
-            upload.OnlineState =
-                offlineFilesCount == upload.UploadedFiles.Count
-                    ? OnlineState.Offline
-                    : OnlineState.PartiallyOnline;
+            0 => OnlineState.Online,
+            _ when offlineFilesCount == upload.UploadedFiles.Count => OnlineState.Offline,
+            _ => OnlineState.PartiallyOnline,
+        };
 
-            notificationService.CreateWarning(
-                message: "Some files are offline on the hoster",
-                entity: upload,
-                selector: u => u.Upload
-            );
-        }
-        else
+        CreateOfflineNotificationIfNeeded(upload, previousOnlineState);
+    }
+
+    private void CreateOfflineNotificationIfNeeded(Upload upload, OnlineState previousOnlineState)
+    {
+        var becameOffline =
+            upload.OnlineState != previousOnlineState
+            && upload.OnlineState is OnlineState.Offline or OnlineState.PartiallyOnline;
+
+        if (!becameOffline)
         {
-            upload.OnlineState = OnlineState.Online;
+            return;
         }
+
+        var allOrSome = upload.OnlineState is OnlineState.Offline ? "All" : "Some";
+
+        notificationService.CreateWarning(
+            message: $"{allOrSome} files are offline on the hoster",
+            entity: upload,
+            selector: u => u.Upload
+        );
     }
 
     private async Task ProcessAutomaticReuploadsAsync(
