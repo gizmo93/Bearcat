@@ -115,6 +115,107 @@ Inside `upload.link_crypters`, these variables are available:
 | `{{ crypter.container_link }}` | Generated container URL. |
 | `{{ crypter.created_at }}` | Container creation date. |
 
+## Media information
+
+For managed releases, Bearcat can read technical metadata from the video files in the release folder
+(container, duration, video/audio/subtitle streams) using [MediaInfo](https://mediaarea.net/en/MediaInfo).
+This lets you put resolution, codecs, runtime, languages or a complete MediaInfo dump into your forum post.
+
+### When are the media metadata parsed?
+
+Media metadata are read from the raw video files, so they are only available for managed releases.
+
+- **Automatically** when a release is created automatically from a release template (right after the
+  release info is resolved). This only happens for managed releases.
+- **Manually** at any time with the "Extract media metadata" button on a release's "Release info" panel.
+  Use this to (re-)parse the files, for example after the files changed or for releases that were not
+  created automatically.
+
+The button re-reads every video file and replaces the previously stored metadata.
+
+### Main video
+
+`release.main_video` points to the largest video file in the release, which is usually the actual video, the rest is usually samples.
+This is a shortcut so you do not have to loop over `release.media_files` for the common case.
+
+| Variable | Description |
+| --- | --- |
+| `{{ release.main_video.path }}` | Relative file path inside the release folder. |
+| `{{ release.main_video.extension }}` | File extension without leading dot, for example `mkv`. |
+| `{{ release.main_video.size_bytes }}` | File size in bytes. |
+| `{{ release.main_video.duration }}` | Duration formatted as `hh:mm:ss`. |
+| `{{ release.main_video.container }}` | Container format, for example `Matroska`. |
+| `{{ release.main_video.media_info }}` | Full MediaInfo text dump for the file. |
+| `{{ release.main_video.video.codec }}` | Video codec, for example `HEVC`. |
+| `{{ release.main_video.video.profile }}` | Video codec profile, for example `Main 10`. |
+| `{{ release.main_video.video.resolution }}` | Resolution formatted as `WxH`, for example `1920x1080`. |
+| `{{ release.main_video.video.width }}` | Frame width in pixels. |
+| `{{ release.main_video.video.height }}` | Frame height in pixels. |
+| `{{ release.main_video.video.fps }}` | Frames per second. |
+| `{{ release.main_video.video.pixel_format }}` | Pixel format, for example `YUV 4:2:0 10 bit`. |
+| `{{ release.main_video.video.bitrate_kbps }}` | Video bitrate in kbit/s. |
+| `{{ release.main_video.video.language }}` | Video stream language. |
+| `{{ release.main_video.video.title }}` | Video stream title. |
+| `{{ release.main_video.default_audio.codec }}` | Codec of the default (or first) audio stream, for example `DTS`. |
+| `{{ release.main_video.default_audio.profile }}` | Audio codec profile, for example `DTS-HD MA`. |
+| `{{ release.main_video.default_audio.channel_layout }}` | Channel layout, for example `5.1`. |
+| `{{ release.main_video.default_audio.channels }}` | Channel count. |
+| `{{ release.main_video.default_audio.sample_rate }}` | Sample rate in Hz. |
+| `{{ release.main_video.default_audio.bitrate_kbps }}` | Audio bitrate in kbit/s. |
+| `{{ release.main_video.default_audio.language }}` | Audio stream language. |
+| `{{ release.main_video.default_audio.title }}` | Audio stream title. |
+
+### All media files
+
+Loop over every parsed video file with `release.media_files`. Each `file` has the same fields as
+`release.main_video`, plus loops over its individual audio and subtitle streams.
+
+| Loop | Description |
+| --- | --- |
+| `{{ for file in release.media_files }}` | Loops over all parsed video files. |
+| `{{ for audio in file.audio_streams }}` | Loops over the audio streams of a file. |
+| `{{ for subtitle in file.subtitle_streams }}` | Loops over the subtitle streams of a file. |
+
+Inside `file.audio_streams`, these variables are available:
+
+| Variable | Description |
+| --- | --- |
+| `{{ audio.codec }}` | Audio codec. |
+| `{{ audio.profile }}` | Audio codec profile. |
+| `{{ audio.language }}` | Stream language. |
+| `{{ audio.title }}` | Stream title. |
+| `{{ audio.channel_layout }}` | Channel layout. |
+| `{{ audio.channels }}` | Channel count. |
+| `{{ audio.sample_rate }}` | Sample rate in Hz. |
+| `{{ audio.bitrate_kbps }}` | Bitrate in kbit/s. |
+| `{{ audio.is_default }}` | Whether this is the default stream. |
+
+Inside `file.subtitle_streams`, these variables are available:
+
+| Variable | Description |
+| --- | --- |
+| `{{ subtitle.codec }}` | Subtitle codec. |
+| `{{ subtitle.language }}` | Stream language. |
+| `{{ subtitle.title }}` | Stream title. |
+| `{{ subtitle.forced }}` | Whether the subtitle is forced. |
+| `{{ subtitle.is_default }}` | Whether this is the default stream. |
+
+Example that posts a raw MediaInfo dump of the main video inside a spoiler:
+
+```text
+[SPOILER="MediaInfo"]
+{{ release.main_video.media_info }}
+[/SPOILER]
+```
+
+Or a short technical summary built from individual fields:
+
+```text
+Video: {{ release.main_video.video.codec }} {{ release.main_video.video.resolution }}
+Audio: {{ release.main_video.default_audio.codec }} {{ release.main_video.default_audio.channel_layout }}
+Runtime: {{ release.main_video.duration }}
+```
+
 ## Image links
 
 Image links are available through `imagelinks`.
