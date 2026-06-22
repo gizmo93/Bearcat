@@ -1840,11 +1840,12 @@ a {
 .bearcat-media-chevron {
     flex-shrink: 0;
     color: var(--muted-foreground);
+    transform: rotate(-90deg);
     transition: transform 0.15s ease;
 }
 
-.bearcat-media-trigger[aria-expanded="true"] .bearcat-media-chevron {
-    transform: rotate(180deg);
+.bearcat-media-trigger[data-state="open"] .bearcat-media-chevron {
+    transform: rotate(0deg);
 }
 
 .bearcat-media-content {
