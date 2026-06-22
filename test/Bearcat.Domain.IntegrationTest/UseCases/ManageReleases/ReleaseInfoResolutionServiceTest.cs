@@ -422,7 +422,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             "bearcat.nfo",
             "Bearcat.Release.2026-GRP",
             "nfo content",
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -446,13 +446,38 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             "bearcat.nfo",
             "Bearcat.Release.2026-GRP",
             "new content",
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
         result.ShouldBe(ReleaseNfoFileSaveResult.AlreadyExists);
         (await File.ReadAllTextAsync(filePath)).ShouldBe("existing content");
         File.Exists(Path.Combine(releaseFolderPath, "bearcat.nfo")).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task SaveNfoFileAsync_OverwriteWithDifferentName_ReplacesExistingNfo()
+    {
+        // Arrange
+        var releaseFolderPath = CreateTempReleaseFolder();
+        var existingPath = Path.Combine(releaseFolderPath, "existing.nfo");
+        await File.WriteAllTextAsync(existingPath, "existing content");
+
+        // Act
+        var result = await ReleaseNfoService.SaveNfoFileAsync(
+            releaseFolderPath,
+            "bearcat.nfo",
+            "Bearcat.Release.2026-GRP",
+            "new content",
+            overwrite: true,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(ReleaseNfoFileSaveResult.Saved);
+        File.Exists(existingPath).ShouldBeFalse();
+        var filePath = Path.Combine(releaseFolderPath, "bearcat.nfo");
+        (await File.ReadAllTextAsync(filePath)).ShouldBe("new content");
     }
 
     [Test]
@@ -467,7 +492,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             string.Empty,
             "Bearcat.Release.2026-GRP",
             "nfo content",
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert

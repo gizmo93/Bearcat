@@ -134,6 +134,13 @@
   <data name="AddReleaseInfo" xml:space="preserve"><value>Release-Info hinzufügen</value></data>
   <data name="EditReleaseInfoDescription" xml:space="preserve"><value>Bearbeite die Release-Info manuell, z. B. wenn keine Datenbank einen Treffer geliefert hat. Beim Ändern des Covers wird es erneut zu den ImageHostern hochgeladen.</value></data>
   <data name="ReleaseInfoUpdated" xml:space="preserve"><value>Release-Info aktualisiert</value></data>
+  <data name="AddNfo" xml:space="preserve"><value>NFO hinzufügen</value></data>
+  <data name="EditNfo" xml:space="preserve"><value>NFO bearbeiten</value></data>
+  <data name="EditNfoDescription" xml:space="preserve"><value>Füge die NFO manuell hinzu oder bearbeite sie, z. B. wenn keine NFO-Datei existiert, keine heruntergeladen werden konnte oder die vorhandene falsch ist. Die NFO wird zusätzlich als Datei in den Release-Ordner geschrieben.</value></data>
+  <data name="NfoUpdated" xml:space="preserve"><value>NFO aktualisiert</value></data>
+  <data name="NfoFileName" xml:space="preserve"><value>NFO-Dateiname</value></data>
+  <data name="NfoFileNamePlaceholder" xml:space="preserve"><value>release.nfo</value></data>
+  <data name="NfoContent" xml:space="preserve"><value>NFO-Inhalt</value></data>
   <data name="EditMetadata" xml:space="preserve"><value>Metadaten bearbeiten</value></data>
   <data name="EditMetadataDescription" xml:space="preserve"><value>Bearbeite die Serien-Metadaten manuell, z. B. wenn keine Datenbank einen Treffer geliefert hat. Beim Ändern des Covers wird es erneut zu den ImageHostern hochgeladen.</value></data>
   <data name="MetadataUpdated" xml:space="preserve"><value>Metadaten aktualisiert</value></data>

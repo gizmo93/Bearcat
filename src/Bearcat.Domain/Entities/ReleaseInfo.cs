@@ -2,6 +2,9 @@ namespace Bearcat.Domain.Entities;
 
 public class ReleaseInfo
 {
+    public const string ManualSource = "Manual";
+    public const string LocalNfoSource = "Local";
+
     public int Id { get; set; }
 
     public int ReleaseId { get; set; }
@@ -31,4 +34,9 @@ public class ReleaseInfo
     public List<ReleaseExternalInfo> ExternalInfos { get; set; } = [];
 
     public ReleaseNfo? ReleaseNfo { get; set; }
+
+    public static ReleaseInfo CreatePlaceholder(string source, string releaseName)
+    {
+        return new ReleaseInfo { NfoDatabaseClassName = source, ReleaseName = releaseName };
+    }
 }

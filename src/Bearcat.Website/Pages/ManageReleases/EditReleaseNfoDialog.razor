@@ -1,0 +1,77 @@
+@using System.ComponentModel.DataAnnotations
+@using Bearcat.Domain.UseCases.ManageReleases
+@using Microsoft.Extensions.DependencyInjection
+@inherits OwningComponentBase
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-6" style="max-height: 60vh; overflow-y: auto; padding-right: 0.5rem;">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="model.FileName"
+                              Label="@L["NfoFileName"]"
+                              Placeholder="@L["NfoFileNamePlaceholder"]" />
+
+            <BbFormFieldTextarea @bind-Value="model.Content"
+                                 Label="@L["NfoContent"]"
+                                 InputClass="bearcat-nfo-editor font-mono text-xs"
+                                 UpdateTiming="UpdateTiming.OnChange" />
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [CascadingParameter]
+    public IDialogReference DialogRef { get; set; } = null!;
+
+    [Parameter]
+    public int ReleaseId { get; set; }
+
+    [Parameter]
+    public string ReleaseName { get; set; } = string.Empty;
+
+    [Parameter]
+    public ReleaseNfoReadModel? ReleaseNfo { get; set; }
+
+    private readonly FormModel model = new();
+    private EditContext editContext = null!;
+
+    protected override void OnInitialized()
+    {
+        model.FileName = ReleaseNfo?.FileName ?? $"{ReleaseName}.nfo";
+        model.Content = ReleaseNfo?.Content ?? string.Empty;
+
+        editContext = new EditContext(model);
+    }
+
+    private async Task SaveAsync()
+    {
+        var service = ScopedServices.GetRequiredService<ReleaseInfoService>();
+        await service.UpdateNfoAsync(ReleaseId, model.FileName, model.Content ?? string.Empty);
+
+        await DialogRef.CloseAsync(DialogResult.Ok(model.FileName));
+    }
+
+    private async Task CancelAsync()
+    {
+        await DialogRef.CancelAsync();
+    }
+
+    private sealed class FormModel
+    {
+        public string? FileName { get; set; }
+
+        [Required]
+        public string? Content { get; set; }
+    }
+}

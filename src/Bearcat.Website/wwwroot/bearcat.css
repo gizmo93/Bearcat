@@ -2560,3 +2560,9 @@ a {
     border-radius: var(--radius);
     object-fit: cover;
 }
+
+.bearcat-nfo-editor {
+    height: 24rem;
+    overflow-y: auto;
+    resize: vertical;
+}

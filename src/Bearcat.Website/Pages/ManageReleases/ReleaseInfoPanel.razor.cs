@@ -75,6 +75,36 @@ public partial class ReleaseInfoPanel(
         await LoadReleaseInfoAsync();
     }
 
+    private async Task ShowEditReleaseNfoDialogAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(EditReleaseNfoDialog.ReleaseId)] = ReleaseId,
+            [nameof(EditReleaseNfoDialog.ReleaseName)] = ReleaseName,
+            [nameof(EditReleaseNfoDialog.ReleaseNfo)] = releaseInfo?.ReleaseNfo,
+        };
+
+        var dialog = await dialogService.OpenAsync<EditReleaseNfoDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = releaseInfo?.ReleaseNfo is null ? L["AddNfo"] : L["EditNfo"],
+                Description = L["EditNfoDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+                PreventClose = true,
+            }
+        );
+
+        if (dialog.Cancelled)
+        {
+            return;
+        }
+
+        toastService.Success(L["NfoUpdated"]);
+        await LoadReleaseInfoAsync();
+    }
+
     private async Task DeleteReleaseInfoAsync(ReleaseInfoReadModel releaseInfo)
     {
         var result = await dialogService.ConfirmAsync(

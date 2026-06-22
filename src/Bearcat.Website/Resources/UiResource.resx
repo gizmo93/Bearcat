@@ -134,6 +134,13 @@
   <data name="AddReleaseInfo" xml:space="preserve"><value>Add release info</value></data>
   <data name="EditReleaseInfoDescription" xml:space="preserve"><value>Edit the release info manually, e.g. when no database returned a match. Changing the cover re-uploads it to the image hosters.</value></data>
   <data name="ReleaseInfoUpdated" xml:space="preserve"><value>Release info updated</value></data>
+  <data name="AddNfo" xml:space="preserve"><value>Add NFO</value></data>
+  <data name="EditNfo" xml:space="preserve"><value>Edit NFO</value></data>
+  <data name="EditNfoDescription" xml:space="preserve"><value>Add or edit the NFO manually, e.g. when no NFO file exists, none could be downloaded, or the existing one is wrong. The NFO is also written to the release folder as a file.</value></data>
+  <data name="NfoUpdated" xml:space="preserve"><value>NFO updated</value></data>
+  <data name="NfoFileName" xml:space="preserve"><value>NFO file name</value></data>
+  <data name="NfoFileNamePlaceholder" xml:space="preserve"><value>release.nfo</value></data>
+  <data name="NfoContent" xml:space="preserve"><value>NFO content</value></data>
   <data name="EditMetadata" xml:space="preserve"><value>Edit metadata</value></data>
   <data name="EditMetadataDescription" xml:space="preserve"><value>Edit the series metadata manually, e.g. when no database returned a match. Changing the cover re-uploads it to the image hosters.</value></data>
   <data name="MetadataUpdated" xml:space="preserve"><value>Metadata updated</value></data>

@@ -28,6 +28,11 @@ public interface IReleaseInfoRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<Release> GetReleaseForNfoUpdateAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    );
+
     void Remove(ReleaseInfo releaseInfo);
 
     void Remove(ImageUpload imageUpload);

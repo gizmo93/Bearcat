@@ -16,6 +16,14 @@
             <BbButton Variant="ButtonVariant.Outline"
                       Size="ButtonSize.Small"
                       Disabled="isLoading"
+                      OnClick="ShowEditReleaseNfoDialogAsync">
+                <LucideIcon Name="@(releaseInfo?.ReleaseNfo is null ? "file-plus" : "file-pen")" class="h-4 w-4" />
+                @(releaseInfo?.ReleaseNfo is null ? L["AddNfo"] : L["EditNfo"])
+            </BbButton>
+
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      Disabled="isLoading"
                       OnClick="LoadReleaseInfoAsync">
                 <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
                 @L["Refresh"]

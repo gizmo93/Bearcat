@@ -95,17 +95,57 @@ public class ReleaseInfoResolutionService(
         CancellationToken cancellationToken
     )
     {
-        if (release.ReleaseInfo is null || release.ReleaseInfo.ReleaseNfo is not null)
+        if (release.ReleaseInfo?.ReleaseNfo is not null)
         {
             return false;
         }
 
-        return await TryResolveNfoAsync(
-            release: release,
-            releaseInfo: release.ReleaseInfo,
-            registrations: registrations,
-            cancellationToken: cancellationToken
+        if (release.ReleaseInfo is not null)
+        {
+            return await TryResolveNfoAsync(
+                release: release,
+                releaseInfo: release.ReleaseInfo,
+                registrations: registrations,
+                cancellationToken: cancellationToken
+            );
+        }
+
+        return await TryAttachLocalNfoWithoutInfoAsync(release, cancellationToken);
+    }
+
+    private async Task<bool> TryAttachLocalNfoWithoutInfoAsync(
+        Release release,
+        CancellationToken cancellationToken
+    )
+    {
+        if (release.Id > 0 && await repository.HasReleaseInfoAsync(release.Id, cancellationToken))
+        {
+            return false;
+        }
+
+        var localNfo = await ReleaseNfoService.GetLocalNfoAsync(release.ReleaseFolderPath);
+
+        if (localNfo is null)
+        {
+            return false;
+        }
+
+        release.ReleaseInfo = DomainReleaseInfo.CreatePlaceholder(
+            DomainReleaseInfo.LocalNfoSource,
+            release.Name
         );
+        release.ReleaseInfo.ReleaseNfo = new DomainReleaseNfo
+        {
+            FileName = localNfo.FileName,
+            Content = localNfo.Content,
+        };
+
+        logger.LogInformation(
+            "Stored local NFO for release {ReleaseName} without resolved release info",
+            release.Name
+        );
+
+        return true;
     }
 
     private async Task<bool> TryResolveAndAttachReleaseInfoAsync(

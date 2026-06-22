@@ -81,6 +81,17 @@ public class ReleaseInfoRepository(
             .FirstAsync(release => release.Id == releaseId, cancellationToken);
     }
 
+    public async Task<Release> GetReleaseForNfoUpdateAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .Releases.Include(release => release.ReleaseInfo)
+                .ThenInclude(info => info!.ReleaseNfo)
+            .FirstAsync(release => release.Id == releaseId, cancellationToken);
+    }
+
     public void Remove(ReleaseInfo releaseInfo)
     {
         dbWrite.Remove(releaseInfo);

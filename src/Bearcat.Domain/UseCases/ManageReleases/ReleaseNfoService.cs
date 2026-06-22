@@ -58,6 +58,7 @@ public static class ReleaseNfoService
         string fileName,
         string releaseName,
         string content,
+        bool overwrite = false,
         CancellationToken cancellationToken = default
     )
     {
@@ -66,13 +67,24 @@ public static class ReleaseNfoService
             return ReleaseNfoFileSaveResult.ReleaseFolderMissing;
         }
 
-        if (!string.IsNullOrWhiteSpace(FindNfoPath(releaseFolderPath)))
+        var existingNfoPath = FindNfoPath(releaseFolderPath);
+
+        if (!overwrite && !string.IsNullOrWhiteSpace(existingNfoPath))
         {
             return ReleaseNfoFileSaveResult.AlreadyExists;
         }
 
         var safeFileName = GetSafeNfoFileName(fileName, releaseName);
         var nfoPath = Path.Combine(releaseFolderPath, safeFileName);
+
+        if (
+            overwrite
+            && !string.IsNullOrWhiteSpace(existingNfoPath)
+            && !string.Equals(existingNfoPath, nfoPath, StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            File.Delete(existingNfoPath);
+        }
 
         await File.WriteAllTextAsync(nfoPath, content, Encoding.UTF8, cancellationToken);
         return ReleaseNfoFileSaveResult.Saved;
@@ -98,7 +110,7 @@ public static class ReleaseNfoService
             .FirstOrDefault();
     }
 
-    private static string GetSafeNfoFileName(string fileName, string releaseName)
+    public static string GetSafeNfoFileName(string fileName, string releaseName)
     {
         var safeFileName = Path.GetFileName(fileName);
 
