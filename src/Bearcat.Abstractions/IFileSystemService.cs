@@ -8,6 +8,7 @@ public interface IFileSystemService
     string CreateTempDirectory(string basePath);
     bool FileExists(string filePath);
     void DeleteDirectoryIfExists(string path);
+    IReadOnlyList<string> DeleteDirectoriesByNameRecursively(string rootPath, string directoryName);
 }
 
 public readonly record struct FolderContentFingerprint(int FileCount, long TotalBytes);

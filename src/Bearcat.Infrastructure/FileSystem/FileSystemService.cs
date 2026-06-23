@@ -84,4 +84,41 @@ public class FileSystemService : IFileSystemService
 
         Directory.Delete(path, recursive: true);
     }
+
+    public IReadOnlyList<string> DeleteDirectoriesByNameRecursively(
+        string rootPath,
+        string directoryName
+    )
+    {
+        if (!Directory.Exists(rootPath))
+        {
+            return [];
+        }
+
+        var matchingDirectories = Directory.GetDirectories(
+            path: rootPath,
+            searchPattern: directoryName,
+            enumerationOptions: new EnumerationOptions
+            {
+                IgnoreInaccessible = true,
+                ReturnSpecialDirectories = false,
+                RecurseSubdirectories = true,
+            }
+        );
+
+        var deletedDirectories = new List<string>();
+
+        foreach (var directory in matchingDirectories)
+        {
+            if (!Directory.Exists(directory))
+            {
+                continue;
+            }
+
+            Directory.Delete(directory, recursive: true);
+            deletedDirectories.Add(directory);
+        }
+
+        return deletedDirectories;
+    }
 }

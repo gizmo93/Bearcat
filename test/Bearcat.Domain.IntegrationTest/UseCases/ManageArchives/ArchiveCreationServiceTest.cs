@@ -526,6 +526,55 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task ProcessAsync_ReleaseContainsSynologyMetadataFolders_RemovesThemBeforeArchiving()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+        var topLevelMetadataFolder = Directory
+            .CreateDirectory(Path.Combine(releaseFolderPath, "@eaDir"))
+            .FullName;
+        var nestedMediaFolder = Directory
+            .CreateDirectory(Path.Combine(releaseFolderPath, "Disc1"))
+            .FullName;
+        var nestedMetadataFolder = Directory
+            .CreateDirectory(Path.Combine(nestedMediaFolder, "@eaDir"))
+            .FullName;
+        await File.WriteAllTextAsync(Path.Combine(topLevelMetadataFolder, "thumb.jpg"), "junk");
+        await File.WriteAllTextAsync(Path.Combine(nestedMetadataFolder, "thumb.jpg"), "junk");
+
+        var metadataFoldersExistedDuringArchiving = true;
+        archiverFactoryMock.Setup(f => f.GetByName("zip")).Returns(archiverMock.Object);
+        archiverMock
+            .Setup(a =>
+                a.ArchiveAsync(
+                    releaseFolderPath,
+                    It.IsAny<string>(),
+                    "bearcat-release",
+                    It.IsAny<int>(),
+                    "secret",
+                    It.IsAny<ArchiveOptions>(),
+                    CancellationToken.None
+                )
+            )
+            .Callback(() =>
+                metadataFoldersExistedDuringArchiving =
+                    Directory.Exists(topLevelMetadataFolder)
+                    || Directory.Exists(nestedMetadataFolder)
+            )
+            .ReturnsAsync(new ArchiveResult(true, ["archive.part1.rar"], null));
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        metadataFoldersExistedDuringArchiving.ShouldBeFalse();
+        Directory.Exists(topLevelMetadataFolder).ShouldBeFalse();
+        Directory.Exists(nestedMetadataFolder).ShouldBeFalse();
+        Directory.Exists(nestedMediaFolder).ShouldBeTrue();
+        upload.UploadState.ShouldBe(UploadState.Pending);
+    }
+
+    [Test]
     public async Task ProcessAsync_SolidCompressionStrategy_CreatesSolidCompressedArchive()
     {
         // Arrange

@@ -22,6 +22,7 @@ public class ArchiveCreationService(
 )
 {
     private const string UniqueFileName = "__nonce.txt";
+    private const string SynologyMetadataFolderName = "@eaDir";
 
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
@@ -290,6 +291,10 @@ public class ArchiveCreationService(
         repository.Add(archive);
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
+        // For people that host Bearcat on a Synology NAS: DSM adds that nasty hidden @eaDir folder everywhere where media is.
+        // So we should remove it before archiving.
+        RemoveSynologyMetadataFolders(config.Release.ReleaseFolderPath);
+
         await CreateOrUpdateUniqueFileAsync(config.Release.ReleaseFolderPath, cancellationToken);
 
         var archiveResult = await archiver.ArchiveAsync(
@@ -348,6 +353,26 @@ public class ArchiveCreationService(
             archive.Id,
             config.Id,
             archive.ArchiveFiles.Count
+        );
+    }
+
+    private void RemoveSynologyMetadataFolders(string releasePath)
+    {
+        var deletedFolders = fileSystemService.DeleteDirectoriesByNameRecursively(
+            rootPath: releasePath,
+            directoryName: SynologyMetadataFolderName
+        );
+
+        if (deletedFolders.Count == 0)
+        {
+            return;
+        }
+
+        logger.LogInformation(
+            "Removed {FolderCount} Synology metadata folders ({FolderName}) from release folder {ReleaseFolderPath} before archiving",
+            deletedFolders.Count,
+            SynologyMetadataFolderName,
+            releasePath
         );
     }
 
