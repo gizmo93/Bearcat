@@ -9,6 +9,8 @@ public sealed class UploadExecutionContext(
     int totalFileCount,
     int successfulFileCount,
     int failedFileCount,
+    long totalBytes,
+    long alreadyUploadedBytes,
     CancellationTokenSource cancellationTokenSource
 ) : IDisposable
 {
@@ -17,6 +19,10 @@ public sealed class UploadExecutionContext(
     public int UploadId => Upload.Id;
 
     public int TotalFileCount { get; } = totalFileCount;
+
+    public long TotalBytes { get; } = totalBytes;
+
+    public long AlreadyUploadedBytes { get; } = alreadyUploadedBytes;
 
     public int SuccessfulFileCount { get; set; } = successfulFileCount;
 

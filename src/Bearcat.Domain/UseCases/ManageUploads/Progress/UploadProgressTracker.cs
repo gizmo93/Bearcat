@@ -11,9 +11,13 @@ public sealed class UploadProgressTracker : IUploadProgressTracker
 
     private readonly ConcurrentDictionary<int, UploadSpeedState> states = new();
 
-    public void StartTracking(int uploadId)
+    public void StartTracking(int uploadId, long totalBytes, long alreadyUploadedBytes)
     {
-        states[uploadId] = new UploadSpeedState(Stopwatch.GetTimestamp());
+        states[uploadId] = new UploadSpeedState(
+            startTimestamp: Stopwatch.GetTimestamp(),
+            totalBytes: totalBytes,
+            baselineBytes: alreadyUploadedBytes
+        );
     }
 
     public void AddBytes(int uploadId, long bytes)
@@ -29,16 +33,23 @@ public sealed class UploadProgressTracker : IUploadProgressTracker
         states.TryRemove(uploadId, out _);
     }
 
-    public UploadSpeedSnapshot? Get(int uploadId)
+    public UploadProgressSnapshot? Get(int uploadId)
     {
         if (!states.TryGetValue(uploadId, out var state))
         {
             return null;
         }
 
-        var bytesPerSecond = state.GetBytesPerSecond(Stopwatch.GetTimestamp(), SpeedWindow);
+        var now = Stopwatch.GetTimestamp();
+        var bytesPerSecond = state.GetBytesPerSecond(now, SpeedWindow);
+        var (uploadedBytes, totalBytes) = state.GetProgress();
 
-        return new UploadSpeedSnapshot(uploadId, bytesPerSecond);
+        return new UploadProgressSnapshot(
+            UploadId: uploadId,
+            BytesPerSecond: bytesPerSecond,
+            UploadedBytes: uploadedBytes,
+            TotalBytes: totalBytes
+        );
     }
 
     private sealed class UploadSpeedState
@@ -47,12 +58,18 @@ public sealed class UploadProgressTracker : IUploadProgressTracker
 
         private readonly Queue<Sample> samples = new();
 
+        private readonly long totalBytes;
+
+        private readonly long baselineBytes;
+
         private long cumulativeBytes;
 
         private long lastSampleTimestamp;
 
-        public UploadSpeedState(long startTimestamp)
+        public UploadSpeedState(long startTimestamp, long totalBytes, long baselineBytes)
         {
+            this.totalBytes = totalBytes;
+            this.baselineBytes = baselineBytes;
             lastSampleTimestamp = startTimestamp;
             samples.Enqueue(new Sample(startTimestamp, CumulativeBytes: 0));
         }
@@ -96,6 +113,21 @@ public sealed class UploadProgressTracker : IUploadProgressTracker
                 }
 
                 return (cumulativeBytes - oldest.CumulativeBytes) / elapsedSeconds;
+            }
+        }
+
+        public (long UploadedBytes, long TotalBytes) GetProgress()
+        {
+            lock (gate)
+            {
+                var uploadedBytes = baselineBytes + cumulativeBytes;
+
+                if (totalBytes > 0 && uploadedBytes > totalBytes)
+                {
+                    uploadedBytes = totalBytes;
+                }
+
+                return (uploadedBytes, totalBytes);
             }
         }
 

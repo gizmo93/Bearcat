@@ -237,7 +237,11 @@ public class UploadFilesService(
 
             upload.UploadState = UploadState.Uploading;
             uploadContexts[upload.Id] = context;
-            progressTracker.StartTracking(upload.Id);
+            progressTracker.StartTracking(
+                upload.Id,
+                context.TotalBytes,
+                context.AlreadyUploadedBytes
+            );
         }
 
         await repository.SaveChangesAsync(cancellationToken);
@@ -258,9 +262,28 @@ public class UploadFilesService(
         var successfulFileCount = upload.UploadedFiles.Count(uf => uf.ErrorMessages.Count == 0);
         var failedFileCount = upload.UploadedFiles.Count(uf => uf.ErrorMessages.Count > 0);
 
+        var successfullyUploadedArchiveFileIds = upload
+            .UploadedFiles.Where(uf => uf.ErrorMessages.Count == 0)
+            .Select(uf => uf.ArchiveFileId)
+            .ToHashSet();
+
         var archiveFilesToUpload = upload
             .Archive!.ArchiveFiles.Where(af => !processedArchiveFileIds.Contains(af.Id))
             .ToList();
+
+        var totalBytes = 0L;
+        var alreadyUploadedBytes = 0L;
+
+        foreach (var archiveFile in upload.Archive.ArchiveFiles)
+        {
+            var fileSizeInBytes = GetFileSizeInBytes(archiveFile.FullFileName);
+            totalBytes += fileSizeInBytes;
+
+            if (successfullyUploadedArchiveFileIds.Contains(archiveFile.Id))
+            {
+                alreadyUploadedBytes += fileSizeInBytes;
+            }
+        }
 
         var folderId = await CreateUploadFolderIdAsync(
             upload: upload,
@@ -275,6 +298,8 @@ public class UploadFilesService(
             totalFileCount: upload.Archive.ArchiveFiles.Count,
             successfulFileCount: successfulFileCount,
             failedFileCount: failedFileCount,
+            totalBytes: totalBytes,
+            alreadyUploadedBytes: alreadyUploadedBytes,
             cancellationTokenSource: CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken
             )
@@ -357,6 +382,13 @@ public class UploadFilesService(
         }
 
         throw new UnreachableException();
+    }
+
+    private static long GetFileSizeInBytes(string fullFileName)
+    {
+        var fileInfo = new FileInfo(fullFileName);
+
+        return fileInfo.Exists ? fileInfo.Length : 0;
     }
 
     private async Task ScheduleAvailableFileUploadsAsync(

@@ -16,7 +16,8 @@ public partial class RunningProcesses(
 {
     private IReadOnlyList<Upload> runningUploads = [];
 
-    private IReadOnlyDictionary<int, double> uploadSpeeds = new Dictionary<int, double>();
+    private IReadOnlyDictionary<int, UploadProgressSnapshot> uploadProgress =
+        new Dictionary<int, UploadProgressSnapshot>();
 
     private IReadOnlyList<Archive> runningArchives = [];
 
@@ -63,10 +64,10 @@ public partial class RunningProcesses(
             )
             .ToListAsync();
 
-        uploadSpeeds = runningUploads
-            .Select(upload => (upload.Id, Snapshot: uploadProgressTracker.Get(upload.Id)))
-            .Where(entry => entry.Snapshot is not null)
-            .ToDictionary(entry => entry.Id, entry => entry.Snapshot!.BytesPerSecond);
+        uploadProgress = runningUploads
+            .Select(upload => uploadProgressTracker.Get(upload.Id))
+            .Where(snapshot => snapshot is not null)
+            .ToDictionary(snapshot => snapshot!.UploadId, snapshot => snapshot!);
     }
 
     private async Task LoadRunningArchivesAsync()

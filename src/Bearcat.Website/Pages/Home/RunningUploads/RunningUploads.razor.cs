@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageUploads;
+using Bearcat.Domain.UseCases.ManageUploads.Progress;
 using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
 using Humanizer;
@@ -19,8 +20,8 @@ public partial class RunningUploads(
     public IReadOnlyList<Upload> Uploads { get; set; } = null!;
 
     [Parameter]
-    public IReadOnlyDictionary<int, double> UploadSpeeds { get; set; } =
-        new Dictionary<int, double>();
+    public IReadOnlyDictionary<int, UploadProgressSnapshot> UploadProgress { get; set; } =
+        new Dictionary<int, UploadProgressSnapshot>();
 
     [Parameter]
     public EventCallback OnUploadCanceled { get; set; }
@@ -88,26 +89,21 @@ public partial class RunningUploads(
     private static bool CanCancelUpload(Upload upload) =>
         upload.UploadState is UploadState.Pending or UploadState.Uploading;
 
-    private static double GetUploadProgress(Upload upload)
+    private double GetUploadProgress(Upload upload)
     {
-        var uploadedFiles = upload.UploadedFiles.Count;
-        var archiveFiles = upload.Archive?.ArchiveFiles.Count ?? 0;
-
-        if (archiveFiles == 0)
-        {
-            return 0;
-        }
-
-        return Math.Round((double)uploadedFiles / archiveFiles * 100, 0);
+        return UploadProgress.TryGetValue(upload.Id, out var snapshot) ? snapshot.Percentage : 0;
     }
 
     private double TotalUploadBytesPerSecond =>
-        UploadSpeeds.Values.Where(bytesPerSecond => bytesPerSecond > 0).Sum();
+        UploadProgress
+            .Values.Select(snapshot => snapshot.BytesPerSecond)
+            .Where(speed => speed > 0)
+            .Sum();
 
     private string? FormatUploadSpeed(int uploadId)
     {
-        return UploadSpeeds.TryGetValue(uploadId, out var bytesPerSecond)
-            ? FormatSpeed(bytesPerSecond)
+        return UploadProgress.TryGetValue(uploadId, out var snapshot)
+            ? FormatSpeed(snapshot.BytesPerSecond)
             : null;
     }
 

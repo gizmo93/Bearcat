@@ -1167,6 +1167,8 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             totalFileCount: 1,
             successfulFileCount: 0,
             failedFileCount: 0,
+            totalBytes: 0,
+            alreadyUploadedBytes: 0,
             CancellationTokenSource.CreateLinkedTokenSource(CancellationToken.None)
         );
         var uploadContexts = new Dictionary<int, UploadExecutionContext>
