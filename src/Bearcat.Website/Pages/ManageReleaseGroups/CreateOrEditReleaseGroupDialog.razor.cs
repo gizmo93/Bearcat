@@ -1,5 +1,4 @@
 using Bearcat.Domain.UseCases.ManageQualityProfiles.ReadModels;
-using Bearcat.Domain.UseCases.ManageQualityProfiles.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
@@ -17,22 +16,23 @@ public partial class CreateOrEditReleaseGroupDialog : OwningComponentBase
     [Parameter]
     public ReleaseGroupFormModel FormModel { get; set; } = new();
 
+    [Parameter]
+    public IReadOnlyList<QualityProfileReadModel> QualityProfiles { get; set; } = [];
+
     private EditContext editContext = null!;
     private ValidationMessageStore? messageStore;
-    private IReadOnlyList<QualityProfileReadModel> qualityProfiles = [];
 
     private IEnumerable<SelectOption<int?>> QualityProfileOptions =>
-        qualityProfiles.Select(profile => new SelectOption<int?>(profile.Id, profile.Name));
+        [
+            new SelectOption<int?>(null, L["NoQualityProfile"]),
+            .. QualityProfiles.Select(profile => new SelectOption<int?>(profile.Id, profile.Name)),
+        ];
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         editContext = new EditContext(FormModel);
         messageStore = new ValidationMessageStore(editContext);
         editContext.OnValidationRequested += HandleValidationRequested;
-
-        qualityProfiles = await ScopedServices
-            .GetRequiredService<IQualityProfileReadRepository>()
-            .GetAllAsync();
     }
 
     private async Task SaveAsync()

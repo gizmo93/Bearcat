@@ -1,3 +1,5 @@
+using Bearcat.Domain.UseCases.ManageQualityProfiles.ReadModels;
+using Bearcat.Domain.UseCases.ManageQualityProfiles.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
@@ -8,6 +10,7 @@ namespace Bearcat.Website.Pages.ManageReleaseGroups;
 
 public partial class ReleaseGroupsPage(
     IReleaseGroupReadRepository readRepository,
+    IQualityProfileReadRepository qualityProfileReadRepository,
     DialogService dialogService,
     ToastService toastService
 )
@@ -39,6 +42,8 @@ public partial class ReleaseGroupsPage(
         var parameters = new Dictionary<string, object?>
         {
             [nameof(CreateOrEditReleaseGroupDialog.FormModel)] = new ReleaseGroupFormModel(),
+            [nameof(CreateOrEditReleaseGroupDialog.QualityProfiles)] =
+                await qualityProfileReadRepository.GetAllAsync(),
         };
 
         var dialog = await dialogService.OpenAsync<CreateOrEditReleaseGroupDialog>(
@@ -72,6 +77,8 @@ public partial class ReleaseGroupsPage(
                 IsEdit = true,
                 ReleaseGroupId = releaseGroup.ReleaseGroupId,
             },
+            [nameof(CreateOrEditReleaseGroupDialog.QualityProfiles)] =
+                await qualityProfileReadRepository.GetAllAsync(),
         };
 
         var dialog = await dialogService.OpenAsync<CreateOrEditReleaseGroupDialog>(
