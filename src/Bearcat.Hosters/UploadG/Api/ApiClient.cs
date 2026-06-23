@@ -457,7 +457,7 @@ public class ApiClient(
             && !string.IsNullOrWhiteSpace(response.Content?.Link?.Hash);
     }
 
-    private async Task<bool> IsUrlReachableAsync(
+    private async Task<bool?> IsUrlReachableAsync(
         string fileUrl,
         CancellationToken cancellationToken
     )
@@ -470,7 +470,13 @@ public class ApiClient(
             cancellationToken
         );
 
-        return response.StatusCode == HttpStatusCode.OK;
+        // UploadG is highly flaky, ignore everything other than 200 and 404
+        return response.StatusCode switch
+        {
+            HttpStatusCode.OK => true,
+            HttpStatusCode.NotFound => false,
+            _ => null,
+        };
     }
 
     private async Task<long?> GetExistingFolderIdAsync(
