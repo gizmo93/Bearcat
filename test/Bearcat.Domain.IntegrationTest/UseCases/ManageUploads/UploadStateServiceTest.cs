@@ -1072,7 +1072,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task CheckUploadStatesAsync_AutomaticReuploadDueAndQualityGatePassed_CreatesReupload()
+    public async Task CheckUploadStatesAsync_AutomaticReuploadDueAndQualityGatePasses_CreatesReupload()
     {
         // Arrange
         var upload = await AddCompletedUploadAsync(
@@ -1080,11 +1080,9 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             checkedAt: localNow.AddHours(-25),
             uploadedFileLinks: ["https://hoster.test/1"],
             enableAutomaticReuploads: true,
-            qualityProfile: CreateRequireNfoProfile()
+            qualityProfile: CreateRequireNfoProfile(),
+            releaseInfo: CreateReleaseInfoWithNfo()
         );
-        var release = await dbContext.Releases.SingleAsync();
-        release.QualityGateState = QualityGateState.Passed;
-        await dbContext.SaveChangesAsync();
 
         // Act
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
@@ -1094,6 +1092,33 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         var uploads = await dbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
         uploads.Count.ShouldBe(2);
         uploads.Single(u => u.Id != upload.Id).UploadConfigId.ShouldBe(upload.UploadConfigId);
+        var release = await dbContext.Releases.SingleAsync();
+        release.QualityGateState.ShouldBe(QualityGateState.Passed);
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_AutomaticReuploadDueButGateNotYetEvaluatedAndFails_SkipsAndStoresFailure()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow.AddHours(-25),
+            uploadedFileLinks: ["https://hoster.test/1"],
+            enableAutomaticReuploads: true,
+            qualityProfile: CreateRequireNfoProfile()
+        );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var uploads = await dbContext.Uploads.ToListAsync();
+        uploads.Count.ShouldBe(1);
+        uploads.Single().Id.ShouldBe(upload.Id);
+        var release = await dbContext.Releases.Include(r => r.QualityIssues).SingleAsync();
+        release.QualityGateState.ShouldBe(QualityGateState.Failed);
+        release.QualityIssues.Single().Description.ShouldBe("NFO is missing");
     }
 
     private static QualityProfile CreateRequireNfoProfile() =>
@@ -1131,13 +1156,15 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         IReadOnlyList<string> uploadedFileLinks,
         bool enableAutomaticReuploads = false,
         bool hosterIsActive = true,
-        QualityProfile? qualityProfile = null
+        QualityProfile? qualityProfile = null,
+        ReleaseInfo? releaseInfo = null
     )
     {
         var uploadConfig = await AddUploadConfigAsync(
             enableAutomaticReuploads,
             hosterIsActive,
-            qualityProfile: qualityProfile
+            qualityProfile: qualityProfile,
+            releaseInfo: releaseInfo
         );
         var archive = new Archive
         {

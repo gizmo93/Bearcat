@@ -211,7 +211,6 @@ public class UploadStateService(
         CancellationToken cancellationToken
     )
     {
-        var checkedAt = localNow;
         var previousOnlineState = upload.OnlineState;
         var filesWithoutUrl = upload
             .UploadedFiles.Where(f => string.IsNullOrWhiteSpace(f.HosterFileLink))
@@ -220,7 +219,7 @@ public class UploadStateService(
         foreach (var file in filesWithoutUrl)
         {
             file.OnlineState = OnlineState.Offline;
-            file.CheckedAt = checkedAt;
+            file.CheckedAt = localNow;
         }
 
         if (filesWithoutUrl.Count > 0)
@@ -278,7 +277,7 @@ public class UploadStateService(
 
             if (
                 lastOnlineCheck is not null
-                && checkedAt - lastOnlineCheck.Value >= FailedCheckNotificationThreshold
+                && localNow - lastOnlineCheck.Value >= FailedCheckNotificationThreshold
             )
             {
                 notificationService.CreateError(
@@ -306,7 +305,7 @@ public class UploadStateService(
             }
 
             file.OnlineState = exists ? OnlineState.Online : OnlineState.Offline;
-            file.CheckedAt = checkedAt;
+            file.CheckedAt = localNow;
         }
 
         var offlineFilesCount = upload.UploadedFiles.Count(f =>
@@ -358,13 +357,17 @@ public class UploadStateService(
             .OfType<Upload>()
             .ToList();
 
+        var evaluatedReleaseIds = new HashSet<int>();
+
         foreach (var upload in uploads.Where(u => IsAutomaticReuploadDue(u, localNow)))
         {
-            if (!IsQualityGateSatisfied(upload.UploadConfig.Release))
+            var release = upload.UploadConfig.Release;
+
+            if (!EvaluateAndCheckQualityGate(release, localNow, evaluatedReleaseIds))
             {
                 logger.LogInformation(
                     "Skipping automatic reupload for Release {ReleaseId} because the quality gate is not satisfied",
-                    upload.UploadConfig.Release.Id
+                    release.Id
                 );
                 continue;
             }
@@ -397,12 +400,28 @@ public class UploadStateService(
         return newUpload;
     }
 
-    private static bool IsQualityGateSatisfied(Release release)
+    private bool EvaluateAndCheckQualityGate(
+        Release release,
+        DateTime localNow,
+        HashSet<int> evaluatedReleaseIds
+    )
     {
-        return release.ReleaseGroup.QualityProfileId is null
-            || release.QualityGateState
-                is QualityGateState.Passed
-                    or QualityGateState.ManuallyApproved;
+        if (release.ReleaseGroup.QualityProfileId is null)
+        {
+            return true;
+        }
+
+        if (
+            evaluatedReleaseIds.Add(release.Id)
+            && release.QualityGateState is QualityGateState.NotEvaluated or QualityGateState.Passed
+        )
+        {
+            qualityGateEvaluator.EvaluateAndApply(release, localNow);
+        }
+
+        return release.QualityGateState
+            is QualityGateState.Passed
+                or QualityGateState.ManuallyApproved;
     }
 
     private static bool IsAutomaticReuploadDue(Upload upload, DateTime localNow)
@@ -468,22 +487,13 @@ public class UploadStateService(
                 cancellationToken
             );
 
+        var evaluatedReleaseIds = new HashSet<int>();
+
         foreach (var releaseUploadConfigs in uploadConfigsWithoutUploads.GroupBy(uc => uc.Release))
         {
             var release = releaseUploadConfigs.Key;
 
-            if (
-                release.QualityGateState is QualityGateState.NotEvaluated or QualityGateState.Passed
-            )
-            {
-                qualityGateEvaluator.EvaluateAndApply(release, localNow);
-            }
-
-            if (
-                release.QualityGateState
-                is not QualityGateState.Passed
-                    and not QualityGateState.ManuallyApproved
-            )
+            if (!EvaluateAndCheckQualityGate(release, localNow, evaluatedReleaseIds))
             {
                 logger.LogInformation(
                     "Skipping upload creation for Release {ReleaseId} because the quality gate is not satisfied",

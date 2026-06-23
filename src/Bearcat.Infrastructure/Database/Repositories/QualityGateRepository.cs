@@ -21,17 +21,7 @@ public class QualityGateRepository(IBearcatWriteDbContext dbWrite) : IQualityGat
     )
     {
         return await BuildEvaluationQuery()
-            .Where(r =>
-                r.ReleaseGroup.QualityProfileId != null
-                && r.QualityGateState != QualityGateState.ManuallyApproved
-                && r.UploadConfigs.Any(uc =>
-                    !uc.Uploads.Any()
-                    || uc.Uploads.Any(u =>
-                        u.OnlineState == OnlineState.Offline
-                        || u.OnlineState == OnlineState.PartiallyOnline
-                    )
-                )
-            )
+            .Where(r => r.QualityGateState == QualityGateState.Failed)
             .ToListAsync(cancellationToken);
     }
 

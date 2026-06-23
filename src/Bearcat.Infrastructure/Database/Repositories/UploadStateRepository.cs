@@ -60,6 +60,18 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
             .Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.Release)
                     .ThenInclude(r => r.ReleaseGroup)
+                        .ThenInclude(g => g.QualityProfile!)
+                            .ThenInclude(p => p.Rules)
+            .Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.Release)
+                    .ThenInclude(r => r.ReleaseInfo!)
+                        .ThenInclude(i => i.ReleaseNfo)
+            .Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.Release)
+                    .ThenInclude(r => r.MediaFiles)
+            .Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.Release)
+                    .ThenInclude(r => r.QualityIssues)
             .Where(u =>
                 (
                     u.OnlineState == OnlineState.Offline
