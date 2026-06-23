@@ -399,7 +399,9 @@ public class ApiClient(
     }
 
     private async Task<(string FileUrl, bool? IsOnline)> CheckLinkAsync(
+#pragma warning disable S1172
         string authorization,
+#pragma warning restore S1172
         FileUrlToCheckDto file,
         SemaphoreSlim semaphore,
         CancellationToken cancellationToken
@@ -416,11 +418,7 @@ public class ApiClient(
 
         try
         {
-            var entryId = TryParseId(file.ExternalId);
-
-            var isOnline = entryId is not null
-                ? await IsEntryOnlineAsync(authorization, entryId.Value, cancellationToken)
-                : await IsUrlReachableAsync(fileUrl, cancellationToken);
+            var isOnline = await IsUrlReachableAsync(fileUrl, cancellationToken);
 
             return (FileUrl: fileUrl, IsOnline: isOnline);
         }
@@ -441,7 +439,9 @@ public class ApiClient(
         }
     }
 
+#pragma warning disable S1144
     private async Task<bool> IsEntryOnlineAsync(
+#pragma warning restore S1144
         string authorization,
         long entryId,
         CancellationToken cancellationToken

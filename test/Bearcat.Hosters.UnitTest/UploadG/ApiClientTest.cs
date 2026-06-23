@@ -292,42 +292,6 @@ public class ApiClientTest
     }
 
     [Test]
-    public async Task CheckLinksAsync_LinkWithExternalId_UsesDocumentedShareableLinkEndpoint()
-    {
-        // Arrange
-        var config = new UploadGConfig { ApiKey = "api-key" };
-        var fileUrl = "https://uploadg.com/drive/s/hash-value";
-
-        apiMock
-            .Setup(x =>
-                x.GetShareableLinkAsync("Bearer api-key", 17, It.IsAny<CancellationToken>())
-            )
-            .ReturnsAsync(
-                CreateApiResponse(
-                    HttpStatusCode.OK,
-                    new ShareableLinkResponse(
-                        Status: "success",
-                        Link: new ShareableLink(1, "hash-value", 17)
-                    )
-                )
-            );
-
-        // Act
-        var result = await apiClient.CheckLinksAsync(
-            config,
-            [new FileUrlToCheckDto(fileUrl, "17")],
-            CancellationToken.None
-        );
-
-        // Assert
-        result[fileUrl].ShouldBeTrue();
-        httpClientFactoryMock.Verify(
-            x => x.CreateClient(HttpClientProvider.UploadHttpClientName),
-            Times.Never
-        );
-    }
-
-    [Test]
     public async Task CheckLinksAsync_EntryCheckThrows_OmitsLinkInsteadOfMarkingOffline()
     {
         // Arrange
