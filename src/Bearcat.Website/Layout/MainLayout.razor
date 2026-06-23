@@ -40,6 +40,7 @@
                 }
             </div>
             <UpdateBanner />
+            <QualityIssuesIndicator />
             <PostQueueIndicator />
             <NotificationBell />
         </header>
@@ -111,6 +112,8 @@
             "configurations" => (L["Configurations"], L["ApplicationConfigurationsSubtitle"]),
             "background-tasks" => (L["BackgroundTasks"], L["BackgroundTasksSubtitle"]),
             "release-groups" => (L["ReleaseGroups"], string.Empty),
+            "quality-issues" => (L["QualityIssues"], L["QualityIssuesSubtitle"]),
+            "quality-profiles" => (L["QualityProfiles"], L["QualityProfilesSubtitle"]),
             _ => ("Bearcat", string.Empty)
         };
     }

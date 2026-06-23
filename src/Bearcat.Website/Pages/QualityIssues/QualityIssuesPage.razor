@@ -1,0 +1,92 @@
+@page "/quality-issues"
+
+<PageTitle>@L["QualityIssues"] - Bearcat</PageTitle>
+
+<section class="space-y-6">
+    <div class="bearcat-section-header">
+        <div>
+            <h1 class="text-lg font-semibold">@L["QualityIssues"]</h1>
+            <p class="text-sm text-muted-foreground">@L["QualityIssuesDescription"]</p>
+        </div>
+
+        <BbButton Variant="ButtonVariant.Outline"
+                  Size="ButtonSize.Small"
+                  Disabled="isLoading"
+                  OnClick="LoadAsync">
+            <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
+            @L["Refresh"]
+        </BbButton>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="bearcat-release-empty">
+            <LucideIcon Name="loader-circle" class="h-5 w-5 animate-spin" />
+            <span>@L["Loading"]</span>
+        </div>
+    }
+    else if (items.Count == 0)
+    {
+        <div class="bearcat-release-empty">
+            <LucideIcon Name="shield-check" class="h-5 w-5" />
+            <span>@L["QualityIssuesNothingOpen"]</span>
+        </div>
+    }
+    else
+    {
+        <div class="space-y-3">
+            @foreach (var item in items)
+            {
+                <BbCard Class="border-border/70 shadow-sm">
+                    <BbCardContent Class="space-y-3 p-4">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div class="min-w-0 space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <LucideIcon Name="shield-alert" class="h-4 w-4 shrink-0 text-muted-foreground" />
+                                    <span class="truncate font-semibold" title="@item.ReleaseName">@item.ReleaseName</span>
+                                </div>
+                                <p class="text-xs text-muted-foreground">
+                                    @item.ReleaseGroupName
+                                    @if (item.EvaluatedAt is not null)
+                                    {
+                                        <span> · @L["LastChecked"]: @HumanizeEvaluatedAt(item.EvaluatedAt.Value)</span>
+                                    }
+                                </p>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <BbButton Size="ButtonSize.Small"
+                                          OnClick="@(() => OpenRelease(item.ReleaseId))">
+                                    <LucideIcon Name="external-link" class="h-4 w-4" />
+                                    @L["Open"]
+                                </BbButton>
+                                <BbButton Variant="ButtonVariant.Outline"
+                                          Size="ButtonSize.Small"
+                                          OnClick="@(() => RecheckAsync(item.ReleaseId))">
+                                    <LucideIcon Name="refresh-cw" class="h-4 w-4" />
+                                    @L["Recheck"]
+                                </BbButton>
+                                <BbButton Variant="ButtonVariant.Outline"
+                                          Size="ButtonSize.Small"
+                                          OnClick="@(() => ApproveAsync(item.ReleaseId))">
+                                    <LucideIcon Name="check" class="h-4 w-4" />
+                                    @L["ApproveManually"]
+                                </BbButton>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2">
+                            @foreach (var issue in item.Issues)
+                            {
+                                <BbBadge Variant="BadgeVariant.Outline">
+                                    <LucideIcon Name="triangle-alert" class="mr-1 h-3 w-3 text-destructive" />
+                                    @issue
+                                </BbBadge>
+                            }
+                        </div>
+                    </BbCardContent>
+                </BbCard>
+            }
+        </div>
+    }
+</section>

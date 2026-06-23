@@ -869,4 +869,41 @@
   <data name="ThreadPrefixesHelp" xml:space="preserve"><value>Optional. Pick the prefixes required by the forum's rules (e.g. 1080p/x265, [Ads], English).</value></data>
   <data name="SelectThreadPrefixes" xml:space="preserve"><value>Select prefixes...</value></data>
   <data name="DotsToSpaces" xml:space="preserve"><value>Dots → spaces</value></data>
+  <data name="Workflows" xml:space="preserve"><value>Workflows</value></data>
+  <data name="QualityIssues" xml:space="preserve"><value>Quality issues</value></data>
+  <data name="QualityIssuesDescription" xml:space="preserve"><value>Releases that do not pass their quality gate and thus are not uploaded automatically.</value></data>
+  <data name="QualityIssuesSubtitle" xml:space="preserve"><value>Releases blocked by the quality gate</value></data>
+  <data name="QualityIssuesNothingOpen" xml:space="preserve"><value>No releases are currently blocked by the quality gate.</value></data>
+  <data name="LastChecked" xml:space="preserve"><value>Last checked</value></data>
+  <data name="Recheck" xml:space="preserve"><value>Re-check</value></data>
+  <data name="ApproveManually" xml:space="preserve"><value>Approve manually</value></data>
+  <data name="QualityProfiles" xml:space="preserve"><value>Quality profiles</value></data>
+  <data name="QualityProfilesSubtitle" xml:space="preserve"><value>Reusable quality checks for release groups</value></data>
+  <data name="QualityProfilesIntro" xml:space="preserve"><value>Define sets of quality checks and assign them to release groups.</value></data>
+  <data name="NewQualityProfile" xml:space="preserve"><value>New quality profile</value></data>
+  <data name="NoQualityProfilesFound" xml:space="preserve"><value>No quality profiles found.</value></data>
+  <data name="Checks" xml:space="preserve"><value>Checks</value></data>
+  <data name="AssignedGroups" xml:space="preserve"><value>Assigned groups</value></data>
+  <data name="QualityProfileDialogDescription" xml:space="preserve"><value>Configure the quality checks a release must pass before uploads are created.</value></data>
+  <data name="QualityProfileDeleted" xml:space="preserve"><value>Quality profile "{0}" deleted.</value></data>
+  <data name="DeleteQualityProfileConfirmation" xml:space="preserve"><value>Do you really want to delete the quality profile "{0}"? Assigned release groups will keep no profile.</value></data>
+  <data name="QualityProfileNamePlaceholder" xml:space="preserve"><value>e.g. Movies standard</value></data>
+  <data name="QualityChecks" xml:space="preserve"><value>Quality checks</value></data>
+  <data name="AddQualityCheck" xml:space="preserve"><value>Add check</value></data>
+  <data name="NoQualityChecksYet" xml:space="preserve"><value>No checks yet. A profile without checks always passes.</value></data>
+  <data name="QualityCheckType" xml:space="preserve"><value>Check type</value></data>
+  <data name="FilePattern" xml:space="preserve"><value>File pattern</value></data>
+  <data name="FilePatternHelp" xml:space="preserve"><value>A file matching this pattern must exist in the release folder (e.g. *.nfo).</value></data>
+  <data name="MinimumFolderSizeMb" xml:space="preserve"><value>Minimum folder size (MB)</value></data>
+  <data name="RequireCover" xml:space="preserve"><value>Cover image required</value></data>
+  <data name="RequireDescription" xml:space="preserve"><value>Description required</value></data>
+  <data name="RequireNfo" xml:space="preserve"><value>NFO required</value></data>
+  <data name="QualityCheckNoConfiguration" xml:space="preserve"><value>This check has no additional configuration.</value></data>
+  <data name="QualityCheckRuleType.FilePatternPresent" xml:space="preserve"><value>File with pattern present</value></data>
+  <data name="QualityCheckRuleType.MinimumFolderSize" xml:space="preserve"><value>Minimum folder size</value></data>
+  <data name="QualityCheckRuleType.RequiredReleaseInfo" xml:space="preserve"><value>Required release infos</value></data>
+  <data name="QualityCheckRuleType.MediaInfoPresent" xml:space="preserve"><value>Media info present</value></data>
+  <data name="QualityProfile" xml:space="preserve"><value>Quality profile</value></data>
+  <data name="NoQualityProfile" xml:space="preserve"><value>No quality profile</value></data>
+  <data name="QualityProfileHelp" xml:space="preserve"><value>Releases in this group must pass the selected profile before uploads are created.</value></data>
 </root>

@@ -1,0 +1,83 @@
+@page "/quality-profiles"
+@inherits OwningComponentBase
+
+<PageTitle>@L["QualityProfiles"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["QualityProfiles"]</h1>
+            <p class="text-sm text-muted-foreground">
+                @L["QualityProfilesIntro"]
+            </p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewQualityProfile"]
+        </BbButton>
+    </div>
+
+    <BbDataTable TData="QualityProfileReadModel"
+                 Data="profiles"
+                 ShowToolbar="false"
+                 ShowPagination="@(profiles.Count > 10)"
+                 InitialPageSize="10"
+                 IsLoading="isLoading"
+                 AriaLabel="@L["QualityProfiles"]"
+                 Class="bearcat-data-table">
+        <Columns>
+            <BbDataTableColumn TData="QualityProfileReadModel" TValue="string"
+                               Header="@L["Name"]"
+                               Property="@(profile => profile.Name)"
+                               Sortable="true"
+                               Width="40%" />
+            <BbDataTableColumn TData="QualityProfileReadModel" TValue="int"
+                               Header="@L["Checks"]"
+                               Property="@(profile => profile.RuleCount)"
+                               Width="160px">
+                <CellTemplate Context="profile">
+                    <BbBadge Variant="BadgeVariant.Outline">@profile.RuleCount</BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="QualityProfileReadModel" TValue="int"
+                               Header="@L["AssignedGroups"]"
+                               Property="@(profile => profile.AssignedGroupCount)"
+                               Width="170px">
+                <CellTemplate Context="profile">
+                    <BbBadge Variant="BadgeVariant.Outline">@profile.AssignedGroupCount</BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="QualityProfileReadModel" TValue="string"
+                               Header=""
+                               Property="@(profile => profile.Name)"
+                               Width="56px">
+                <CellTemplate Context="profile">
+                    <div class="flex justify-end">
+                        <BbDropdownMenu>
+                            <BbDropdownMenuTrigger>
+                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["Actions"]">
+                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                </BbButton>
+                            </BbDropdownMenuTrigger>
+                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                                <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(profile))">
+                                    @L["Edit"]
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(profile))">
+                                    @L["Delete"]
+                                </BbDropdownMenuItem>
+                            </BbDropdownMenuContent>
+                        </BbDropdownMenu>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+        <EmptyTemplate>
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="inbox" class="h-5 w-5" />
+                <span>@L["NoQualityProfilesFound"]</span>
+            </div>
+        </EmptyTemplate>
+    </BbDataTable>
+</section>

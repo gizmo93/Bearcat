@@ -7,6 +7,7 @@ using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -22,7 +23,8 @@ public class UploadStateService(
     INotificationService notificationService,
     HosterCaptchaVerificationService captchaVerificationService,
     ILogger<UploadStateService> logger,
-    ISecretProtector secretProtector
+    ISecretProtector secretProtector,
+    QualityGateEvaluator qualityGateEvaluator
 )
 {
     private static readonly TimeSpan FailedCheckNotificationThreshold = TimeSpan.FromHours(3);
@@ -358,6 +360,15 @@ public class UploadStateService(
 
         foreach (var upload in uploads.Where(u => IsAutomaticReuploadDue(u, localNow)))
         {
+            if (!IsQualityGateSatisfied(upload.UploadConfig.Release))
+            {
+                logger.LogInformation(
+                    "Skipping automatic reupload for Release {ReleaseId} because the quality gate is not satisfied",
+                    upload.UploadConfig.Release.Id
+                );
+                continue;
+            }
+
             CreateNewUpload(upload, "Automatic reupload scheduled due to offline files");
         }
 
@@ -384,6 +395,14 @@ public class UploadStateService(
 
         uploadStateRepository.Add(newUpload);
         return newUpload;
+    }
+
+    private static bool IsQualityGateSatisfied(Release release)
+    {
+        return release.ReleaseGroup.QualityProfileId is null
+            || release.QualityGateState
+                is QualityGateState.Passed
+                    or QualityGateState.ManuallyApproved;
     }
 
     private static bool IsAutomaticReuploadDue(Upload upload, DateTime localNow)
@@ -449,28 +468,53 @@ public class UploadStateService(
                 cancellationToken
             );
 
-        foreach (var uploadConfig in uploadConfigsWithoutUploads)
+        foreach (var releaseUploadConfigs in uploadConfigsWithoutUploads.GroupBy(uc => uc.Release))
         {
-            var upload = new Upload
+            var release = releaseUploadConfigs.Key;
+
+            if (
+                release.QualityGateState is QualityGateState.NotEvaluated or QualityGateState.Passed
+            )
             {
-                UploadConfig = uploadConfig,
-                CreatedAt = timeProvider.GetLocalNow(),
-                UploadState = UploadState.WaitingForArchive,
-                OnlineState = OnlineState.Unknown,
-                PremiumOnlyDownload = uploadConfig.PremiumOnlyDownload,
-            };
-            uploadStateRepository.Add(upload);
+                qualityGateEvaluator.EvaluateAndApply(release, localNow);
+            }
 
-            notificationService.CreateInfo(
-                message: "Initial upload created for release",
-                entity: upload,
-                selector: u => u.Upload
-            );
+            if (
+                release.QualityGateState
+                is not QualityGateState.Passed
+                    and not QualityGateState.ManuallyApproved
+            )
+            {
+                logger.LogInformation(
+                    "Skipping upload creation for Release {ReleaseId} because the quality gate is not satisfied",
+                    release.Id
+                );
+                continue;
+            }
 
-            logger.LogInformation(
-                "Created missing upload for UploadConfig {UploadConfigId}",
-                uploadConfig.Id
-            );
+            foreach (var uploadConfig in releaseUploadConfigs)
+            {
+                var upload = new Upload
+                {
+                    UploadConfig = uploadConfig,
+                    CreatedAt = timeProvider.GetLocalNow(),
+                    UploadState = UploadState.WaitingForArchive,
+                    OnlineState = OnlineState.Unknown,
+                    PremiumOnlyDownload = uploadConfig.PremiumOnlyDownload,
+                };
+                uploadStateRepository.Add(upload);
+
+                notificationService.CreateInfo(
+                    message: "Initial upload created for release",
+                    entity: upload,
+                    selector: u => u.Upload
+                );
+
+                logger.LogInformation(
+                    "Created missing upload for UploadConfig {UploadConfigId}",
+                    uploadConfig.Id
+                );
+            }
         }
 
         await uploadStateRepository.SaveChangesAsync(cancellationToken);

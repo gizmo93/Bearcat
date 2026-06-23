@@ -1,0 +1,104 @@
+@inherits OwningComponentBase
+@using Bearcat.Domain.Shared.QualityGate
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <BbFormFieldInput TValue="string"
+                          @bind-Value="FormModel.Name"
+                          Label="@L["Name"]"
+                          Placeholder="@L["QualityProfileNamePlaceholder"]" />
+
+        <div class="space-y-3">
+            <div class="flex items-center justify-between">
+                <label class="text-sm font-medium">@L["QualityChecks"]</label>
+                <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="AddRule">
+                    <LucideIcon Name="plus" class="h-4 w-4" />
+                    @L["AddQualityCheck"]
+                </BbButton>
+            </div>
+
+            <div class="space-y-3 pr-1" style="max-height: 45vh; overflow-y: auto;">
+            @if (rules.Count == 0)
+            {
+                <div class="bearcat-release-empty">
+                    <LucideIcon Name="shield" class="h-5 w-5" />
+                    <span>@L["NoQualityChecksYet"]</span>
+                </div>
+            }
+
+            @foreach (var rule in rules)
+            {
+                var descriptors = catalog.GetParameters(rule.RuleType);
+
+                <div class="space-y-3 rounded-md border border-border/70 p-3">
+                    <div class="flex items-start gap-2">
+                        <div class="flex-1">
+                            <BbFormFieldSelect TValue="QualityCheckRuleType"
+                                               Value="rule.RuleType"
+                                               ValueChanged="@(value => ChangeRuleType(rule, value))"
+                                               Label="@L["QualityCheckType"]"
+                                               Options="RuleTypeOptions" />
+                        </div>
+                        <BbButton Variant="ButtonVariant.Ghost"
+                                  Size="ButtonSize.IconSmall"
+                                  Class="mt-6"
+                                  AriaLabel="@L["Remove"]"
+                                  OnClick="@(() => RemoveRule(rule))">
+                            <LucideIcon Name="trash-2" class="h-4 w-4" />
+                        </BbButton>
+                    </div>
+
+                    @if (descriptors.Count == 0)
+                    {
+                        <p class="text-xs text-muted-foreground">@L["QualityCheckNoConfiguration"]</p>
+                    }
+                    else
+                    {
+                        <div class="space-y-2">
+                            @foreach (var descriptor in descriptors)
+                            {
+                                switch (descriptor.Kind)
+                                {
+                                    case QualityCheckParameterKind.Text:
+                                        <BbFormFieldInput TValue="string"
+                                                          Value="@GetText(rule, descriptor.Key)"
+                                                          ValueChanged="@(value => SetText(rule, descriptor.Key, value))"
+                                                          Label="@L[descriptor.LabelKey]"
+                                                          Placeholder="@descriptor.Placeholder"
+                                                          HelperText="@HelperText(descriptor)" />
+                                        break;
+                                    case QualityCheckParameterKind.Integer:
+                                        <BbFormFieldNumericInput TValue="int"
+                                                                 Value="@GetInt(rule, descriptor.Key)"
+                                                                 ValueChanged="@(value => SetInt(rule, descriptor.Key, value))"
+                                                                 Label="@L[descriptor.LabelKey]"
+                                                                 Min="@(descriptor.Minimum ?? 0)"
+                                                                 Step="1"
+                                                                 ShowButtons="true" />
+                                        break;
+                                    case QualityCheckParameterKind.Boolean:
+                                        <BbFormFieldSwitch Checked="@GetBool(rule, descriptor.Key)"
+                                                           CheckedChanged="@(value => SetBool(rule, descriptor.Key, value))"
+                                                           Label="@L[descriptor.LabelKey]" />
+                                        break;
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

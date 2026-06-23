@@ -35,7 +35,7 @@ public class ReleaseGroupServiceTest : BearcatIntegrationTest
         var name = "  Managed releases  ";
 
         // Act
-        var result = await service.CreateAsync(name, true, 24, CancellationToken.None);
+        var result = await service.CreateAsync(name, true, 24, null, CancellationToken.None);
 
         // Assert
         var releaseGroup = await dbContext.ReleaseGroups.SingleAsync();
@@ -56,7 +56,7 @@ public class ReleaseGroupServiceTest : BearcatIntegrationTest
 
         // Act
         var result = await Should.ThrowAsync<ArgumentException>(async () =>
-            await service.CreateAsync(name, false, 24, CancellationToken.None)
+            await service.CreateAsync(name, false, 24, null, CancellationToken.None)
         );
 
         // Assert
@@ -76,6 +76,7 @@ public class ReleaseGroupServiceTest : BearcatIntegrationTest
                 "Managed releases",
                 false,
                 numberOfHoursUntilReupload,
+                null,
                 CancellationToken.None
             )
         );
@@ -97,6 +98,7 @@ public class ReleaseGroupServiceTest : BearcatIntegrationTest
             "  Updated releases  ",
             true,
             48,
+            null,
             CancellationToken.None
         );
 

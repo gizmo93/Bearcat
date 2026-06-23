@@ -6,7 +6,7 @@ using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
-using Humanizer;
+using Bearcat.Website.Formatting;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -116,8 +116,7 @@ public partial class PostQueuePage(
         await LoadAsync();
     }
 
-    private string HumanizeUploadedAt(DateTime uploadedAt) =>
-        uploadedAt.Humanize(utcDate: false, dateToCompareAgainst: timeProvider.GetLocalNow());
+    private string HumanizeUploadedAt(DateTime uploadedAt) => timeProvider.Humanize(uploadedAt);
 
     private static IReadOnlyList<int> OrderFrom(IReadOnlyList<int> ids, int? startId)
     {

@@ -12,6 +12,15 @@ public class ReleaseGroupConfiguration : IEntityTypeConfiguration<ReleaseGroup>
         builder.Property(r => r.Name).HasMaxLength(500).IsRequired();
         builder.Property(r => r.EnableAutomaticReuploads).IsRequired();
         builder.Property(r => r.NumberOfHoursUntilReupload).IsRequired();
+        builder.Property(r => r.QualityProfileId).IsRequired(false);
+
+        builder
+            .HasOne(r => r.QualityProfile)
+            .WithMany(p => p.ReleaseGroups)
+            .HasForeignKey(r => r.QualityProfileId)
+            .HasPrincipalKey(p => p.Id)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder
             .HasMany(r => r.Releases)

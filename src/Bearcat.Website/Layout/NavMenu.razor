@@ -1,8 +1,12 @@
 @using BlazorBlueprint.Primitives.Sheet
+@using Microsoft.AspNetCore.Http
 @implements IDisposable
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+@inject PersistentComponentState ApplicationState
+@inject IHttpContextAccessor HttpContextAccessor
 
-<div @onclick="@((MouseEventArgs _) => CloseMobileSidebar())">
+<div>
     <BbSidebarGroup>
         <BbSidebarGroupContent>
             <BbSidebarMenu>
@@ -37,24 +41,6 @@
                     </BbSidebarMenuButton>
                 </BbSidebarMenuItem>
                 <BbSidebarMenuItem>
-                    <BbSidebarMenuButton Href="/forum-post-templates" Match="NavLinkMatch.Prefix" Tooltip="@L["ForumPostTemplates"]">
-                        <LucideIcon Name="message-square-text" class="h-4 w-4" />
-                        <span>@L["ForumPostTemplates"]</span>
-                    </BbSidebarMenuButton>
-                </BbSidebarMenuItem>
-                <BbSidebarMenuItem>
-                    <BbSidebarMenuButton Href="/release-groups" Match="NavLinkMatch.Prefix" Tooltip="@L["ReleaseGroups"]">
-                        <LucideIcon Name="layers" class="h-4 w-4" />
-                        <span>@L["ReleaseGroups"]</span>
-                    </BbSidebarMenuButton>
-                </BbSidebarMenuItem>
-                <BbSidebarMenuItem>
-                    <BbSidebarMenuButton Href="/release-folder-automations" Match="NavLinkMatch.Prefix" Tooltip="@L["ReleaseFolderAutomations"]">
-                        <LucideIcon Name="folder-cog" class="h-4 w-4" />
-                        <span>@L["ReleaseFolderAutomations"]</span>
-                    </BbSidebarMenuButton>
-                </BbSidebarMenuItem>
-                <BbSidebarMenuItem>
                     <BbSidebarMenuButton Href="/background-tasks" Match="NavLinkMatch.Prefix" Tooltip="@L["BackgroundTasks"]">
                         <LucideIcon Name="activity" class="h-4 w-4" />
                         <span>@L["BackgroundTasks"]</span>
@@ -63,63 +49,106 @@
             </BbSidebarMenu>
         </BbSidebarGroupContent>
     </BbSidebarGroup>
-
-    <BbSidebarGroup>
-        <BbSidebarGroupLabel>@L["Registrations"]</BbSidebarGroupLabel>
-        <BbSidebarGroupContent>
-            <BbSidebarMenu>
-                <BbSidebarMenuItem>
-                    <BbSidebarMenuButton Href="/hoster-registrations" Match="NavLinkMatch.Prefix" Tooltip="@L["Hosters"]">
-                        <LucideIcon Name="key-round" class="h-4 w-4" />
-                        <span>@L["HosterRegistrations"]</span>
-                    </BbSidebarMenuButton>
-                </BbSidebarMenuItem>
-                <BbSidebarMenuItem>
-                    <BbSidebarMenuButton Href="/link-crypter-registrations" Match="NavLinkMatch.Prefix" Tooltip="@L["Crypters"]">
-                        <LucideIcon Name="shield" class="h-4 w-4" />
-                        <span>@L["CrypterRegistrations"]</span>
-                    </BbSidebarMenuButton>
-                </BbSidebarMenuItem>
-                <BbSidebarMenuItem>
-                    <BbSidebarMenuButton Href="/image-hoster-registrations" Match="NavLinkMatch.Prefix" Tooltip="@L["ImageHosters"]">
-                        <LucideIcon Name="image-up" class="h-4 w-4" />
-                        <span>@L["ImageHosterRegistrations"]</span>
-                    </BbSidebarMenuButton>
-                </BbSidebarMenuItem>
-                <BbSidebarMenuItem>
-                    <BbSidebarMenuButton Href="/distribution-site-registrations" Match="NavLinkMatch.Prefix" Tooltip="@L["DistributionSites"]">
-                        <LucideIcon Name="send" class="h-4 w-4" />
-                        <span>@L["DistributionSiteRegistrations"]</span>
-                    </BbSidebarMenuButton>
-                </BbSidebarMenuItem>
-                <BbSidebarMenuItem>
-                    <BbSidebarMenuButton Href="/nfo-database-registrations" Match="NavLinkMatch.Prefix" Tooltip="@L["NfoDatabases"]">
-                        <LucideIcon Name="database" class="h-4 w-4" />
-                        <span>@L["NfoDatabaseRegistrations"]</span>
-                    </BbSidebarMenuButton>
-                </BbSidebarMenuItem>
-                <BbSidebarMenuItem>
-                    <BbSidebarMenuButton Href="/series-database-registrations" Match="NavLinkMatch.Prefix" Tooltip="@L["SeriesDatabases"]">
-                        <LucideIcon Name="tv" class="h-4 w-4" />
-                        <span>@L["SeriesDatabaseRegistrations"]</span>
-                    </BbSidebarMenuButton>
-                </BbSidebarMenuItem>
-            </BbSidebarMenu>
-        </BbSidebarGroupContent>
+    
+        <BbSidebarGroup>
+        <BbCollapsible Open="configurationOpen" OpenChanged="SetConfigurationOpenAsync">
+            <BbCollapsibleTrigger AsChild="false" Class="w-full">
+                <div class="bearcat-nav-group-label">
+                    <span>@L["Configuration"]</span>
+                    <LucideIcon Name="chevron-down" class="@ChevronClass(configurationOpen)" />
+                </div>
+            </BbCollapsibleTrigger>
+            <BbCollapsibleContent>
+                <BbSidebarGroupContent>
+                    <BbSidebarMenu>
+                        <BbSidebarMenuItem>
+                            <BbSidebarMenuButton Href="/release-groups" Match="NavLinkMatch.Prefix" Tooltip="@L["ReleaseGroups"]">
+                                <LucideIcon Name="layers" class="h-4 w-4" />
+                                <span>@L["ReleaseGroups"]</span>
+                            </BbSidebarMenuButton>
+                        </BbSidebarMenuItem>
+                        <BbSidebarMenuItem>
+                            <BbSidebarMenuButton Href="/quality-profiles" Match="NavLinkMatch.Prefix" Tooltip="@L["QualityProfiles"]">
+                                <LucideIcon Name="shield-check" class="h-4 w-4" />
+                                <span>@L["QualityProfiles"]</span>
+                            </BbSidebarMenuButton>
+                        </BbSidebarMenuItem>
+                        <BbSidebarMenuItem>
+                            <BbSidebarMenuButton Href="/forum-post-templates" Match="NavLinkMatch.Prefix" Tooltip="@L["ForumPostTemplates"]">
+                                <LucideIcon Name="message-square-text" class="h-4 w-4" />
+                                <span>@L["ForumPostTemplates"]</span>
+                            </BbSidebarMenuButton>
+                        </BbSidebarMenuItem>
+                        <BbSidebarMenuItem>
+                            <BbSidebarMenuButton Href="/release-folder-automations" Match="NavLinkMatch.Prefix" Tooltip="@L["ReleaseFolderAutomations"]">
+                                <LucideIcon Name="folder-cog" class="h-4 w-4" />
+                                <span>@L["ReleaseFolderAutomations"]</span>
+                            </BbSidebarMenuButton>
+                        </BbSidebarMenuItem>
+                        <BbSidebarMenuItem>
+                            <BbSidebarMenuButton Href="/configurations" Match="NavLinkMatch.Prefix" Tooltip="@L["Configurations"]">
+                                <LucideIcon Name="settings" class="h-4 w-4" />
+                                <span>@L["Configurations"]</span>
+                            </BbSidebarMenuButton>
+                        </BbSidebarMenuItem>
+                    </BbSidebarMenu>
+                </BbSidebarGroupContent>
+            </BbCollapsibleContent>
+        </BbCollapsible>
     </BbSidebarGroup>
 
+
     <BbSidebarGroup>
-        <BbSidebarGroupLabel>@L["Settings"]</BbSidebarGroupLabel>
-        <BbSidebarGroupContent>
-            <BbSidebarMenu>
-                <BbSidebarMenuItem>
-                    <BbSidebarMenuButton Href="/configurations" Match="NavLinkMatch.Prefix" Tooltip="@L["Configurations"]">
-                        <LucideIcon Name="settings" class="h-4 w-4" />
-                        <span>@L["Configurations"]</span>
-                    </BbSidebarMenuButton>
-                </BbSidebarMenuItem>
-            </BbSidebarMenu>
-        </BbSidebarGroupContent>
+        <BbCollapsible Open="registrationsOpen" OpenChanged="SetRegistrationsOpenAsync">
+            <BbCollapsibleTrigger AsChild="false" Class="w-full">
+                <div class="bearcat-nav-group-label">
+                    <span>@L["Registrations"]</span>
+                    <LucideIcon Name="chevron-down" class="@ChevronClass(registrationsOpen)" />
+                </div>
+            </BbCollapsibleTrigger>
+            <BbCollapsibleContent>
+                <BbSidebarGroupContent>
+                    <BbSidebarMenu>
+                        <BbSidebarMenuItem>
+                            <BbSidebarMenuButton Href="/hoster-registrations" Match="NavLinkMatch.Prefix" Tooltip="@L["Hosters"]">
+                                <LucideIcon Name="key-round" class="h-4 w-4" />
+                                <span>@L["HosterRegistrations"]</span>
+                            </BbSidebarMenuButton>
+                        </BbSidebarMenuItem>
+                        <BbSidebarMenuItem>
+                            <BbSidebarMenuButton Href="/link-crypter-registrations" Match="NavLinkMatch.Prefix" Tooltip="@L["Crypters"]">
+                                <LucideIcon Name="shield" class="h-4 w-4" />
+                                <span>@L["CrypterRegistrations"]</span>
+                            </BbSidebarMenuButton>
+                        </BbSidebarMenuItem>
+                        <BbSidebarMenuItem>
+                            <BbSidebarMenuButton Href="/image-hoster-registrations" Match="NavLinkMatch.Prefix" Tooltip="@L["ImageHosters"]">
+                                <LucideIcon Name="image-up" class="h-4 w-4" />
+                                <span>@L["ImageHosterRegistrations"]</span>
+                            </BbSidebarMenuButton>
+                        </BbSidebarMenuItem>
+                        <BbSidebarMenuItem>
+                            <BbSidebarMenuButton Href="/distribution-site-registrations" Match="NavLinkMatch.Prefix" Tooltip="@L["DistributionSites"]">
+                                <LucideIcon Name="send" class="h-4 w-4" />
+                                <span>@L["DistributionSiteRegistrations"]</span>
+                            </BbSidebarMenuButton>
+                        </BbSidebarMenuItem>
+                        <BbSidebarMenuItem>
+                            <BbSidebarMenuButton Href="/nfo-database-registrations" Match="NavLinkMatch.Prefix" Tooltip="@L["NfoDatabases"]">
+                                <LucideIcon Name="database" class="h-4 w-4" />
+                                <span>@L["NfoDatabaseRegistrations"]</span>
+                            </BbSidebarMenuButton>
+                        </BbSidebarMenuItem>
+                        <BbSidebarMenuItem>
+                            <BbSidebarMenuButton Href="/series-database-registrations" Match="NavLinkMatch.Prefix" Tooltip="@L["SeriesDatabases"]">
+                                <LucideIcon Name="tv" class="h-4 w-4" />
+                                <span>@L["SeriesDatabaseRegistrations"]</span>
+                            </BbSidebarMenuButton>
+                        </BbSidebarMenuItem>
+                    </BbSidebarMenu>
+                </BbSidebarGroupContent>
+            </BbCollapsibleContent>
+        </BbCollapsible>
     </BbSidebarGroup>
 </div>
 
@@ -130,10 +159,70 @@
     [CascadingParameter]
     private SheetContext? SheetContext { get; set; }
 
+    private const string ConfigurationOpenKey = "bearcat.nav.configurationOpen";
+    private const string RegistrationsOpenKey = "bearcat.nav.registrationsOpen";
+
+    private PersistingComponentStateSubscription persistSubscription;
+
+    private bool registrationsOpen = true;
+    private bool configurationOpen = true;
+
     protected override void OnInitialized()
     {
         NavigationManager.LocationChanged += HandleLocationChanged;
+
+        persistSubscription = ApplicationState.RegisterOnPersisting(PersistGroupState);
+
+        configurationOpen = RestoreGroupState(ConfigurationOpenKey) ?? configurationOpen;
+        registrationsOpen = RestoreGroupState(RegistrationsOpenKey) ?? registrationsOpen;
     }
+
+    private bool? RestoreGroupState(string key)
+    {
+        if (ApplicationState.TryTakeFromJson<bool>(key, out var persisted))
+        {
+            return persisted;
+        }
+
+        return HttpContextAccessor.HttpContext?.Request.Cookies.TryGetValue(key, out var cookie) == true
+            ? cookie == "true"
+            : null;
+    }
+
+    private Task PersistGroupState()
+    {
+        ApplicationState.PersistAsJson(ConfigurationOpenKey, configurationOpen);
+        ApplicationState.PersistAsJson(RegistrationsOpenKey, registrationsOpen);
+
+        return Task.CompletedTask;
+    }
+
+    private async Task SetConfigurationOpenAsync(bool open)
+    {
+        configurationOpen = open;
+        await PersistCookieAsync(ConfigurationOpenKey, open);
+    }
+
+    private async Task SetRegistrationsOpenAsync(bool open)
+    {
+        registrationsOpen = open;
+        await PersistCookieAsync(RegistrationsOpenKey, open);
+    }
+
+    private async Task PersistCookieAsync(string key, bool open)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("bearcat.setCookie", key, open ? "true" : "false");
+        }
+        catch (JSException)
+        {
+            // Ignore cookie failures; the menu still works for this session.
+        }
+    }
+
+    private static string ChevronClass(bool open) =>
+        $"h-4 w-4 shrink-0 transition-transform {(open ? "rotate-180" : string.Empty)}";
 
     private void HandleLocationChanged(object? sender, LocationChangedEventArgs args)
     {
@@ -150,5 +239,6 @@
     public void Dispose()
     {
         NavigationManager.LocationChanged -= HandleLocationChanged;
+        persistSubscription.Dispose();
     }
 }

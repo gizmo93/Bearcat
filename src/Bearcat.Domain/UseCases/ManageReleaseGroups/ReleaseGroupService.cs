@@ -9,6 +9,7 @@ public class ReleaseGroupService(IReleaseGroupWriteRepository writeRepository)
         string name,
         bool enableAutomaticReuploads,
         int numberOfHoursUntilReupload,
+        int? qualityProfileId,
         CancellationToken cancellationToken = default
     )
     {
@@ -19,6 +20,7 @@ public class ReleaseGroupService(IReleaseGroupWriteRepository writeRepository)
             Name = name.Trim(),
             EnableAutomaticReuploads = enableAutomaticReuploads,
             NumberOfHoursUntilReupload = numberOfHoursUntilReupload,
+            QualityProfileId = qualityProfileId,
         };
 
         writeRepository.Add(releaseGroup);
@@ -32,6 +34,7 @@ public class ReleaseGroupService(IReleaseGroupWriteRepository writeRepository)
         string name,
         bool enableAutomaticReuploads,
         int numberOfHoursUntilReupload,
+        int? qualityProfileId,
         CancellationToken cancellationToken = default
     )
     {
@@ -41,6 +44,7 @@ public class ReleaseGroupService(IReleaseGroupWriteRepository writeRepository)
         releaseGroup.Name = name.Trim();
         releaseGroup.EnableAutomaticReuploads = enableAutomaticReuploads;
         releaseGroup.NumberOfHoursUntilReupload = numberOfHoursUntilReupload;
+        releaseGroup.QualityProfileId = qualityProfileId;
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }

@@ -21,6 +21,13 @@
                                      Step="1"
                                      ShowButtons="true"
                                      HelperText="@L["HoursUntilReuploadHelp"]" />
+
+            <BbFormFieldSelect TValue="int?"
+                               @bind-Value="FormModel.QualityProfileId"
+                               Label="@L["QualityProfile"]"
+                               Placeholder="@L["NoQualityProfile"]"
+                               Options="QualityProfileOptions"
+                               HelperText="@L["QualityProfileHelp"]" />
         </div>
 
         <div class="flex justify-end gap-2">

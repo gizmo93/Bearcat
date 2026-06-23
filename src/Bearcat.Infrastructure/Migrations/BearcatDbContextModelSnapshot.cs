@@ -805,6 +805,49 @@ namespace BearCat.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.QualityCheckRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ParametersJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("QualityProfileId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RuleType")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QualityProfileId");
+
+                    b.ToTable("QualityCheckRules");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.QualityProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("QualityProfiles");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.Release", b =>
                 {
                     b.Property<int>("Id")
@@ -825,6 +868,13 @@ namespace BearCat.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("QualityGateEvaluatedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<int>("QualityGateState")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("ReleaseCollectionId")
                         .HasColumnType("integer");
@@ -852,6 +902,8 @@ namespace BearCat.Infrastructure.Migrations
                         .HasColumnType("timestamp(4) without time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("QualityGateState");
 
                     b.HasIndex("ReleaseCollectionId");
 
@@ -1050,7 +1102,12 @@ namespace BearCat.Infrastructure.Migrations
                     b.Property<int>("NumberOfHoursUntilReupload")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("QualityProfileId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("QualityProfileId");
 
                     b.ToTable("ReleaseGroups");
                 });
@@ -1174,6 +1231,32 @@ namespace BearCat.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("ReleaseNfos");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseQualityIssue", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("ReleaseId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RuleType")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReleaseId");
+
+                    b.ToTable("ReleaseQualityIssues");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseTemplate", b =>
@@ -1746,6 +1829,17 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("ReleaseCollection");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.QualityCheckRule", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.QualityProfile", "QualityProfile")
+                        .WithMany("Rules")
+                        .HasForeignKey("QualityProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("QualityProfile");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.Release", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.ReleaseCollection", "ReleaseCollection")
@@ -1836,6 +1930,16 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("ReleaseTemplate");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseGroup", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.QualityProfile", "QualityProfile")
+                        .WithMany("ReleaseGroups")
+                        .HasForeignKey("QualityProfileId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("QualityProfile");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseInfo", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.Release", "Release")
@@ -1866,6 +1970,17 @@ namespace BearCat.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("ReleaseInfo");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseQualityIssue", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
+                        .WithMany("QualityIssues")
+                        .HasForeignKey("ReleaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Release");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseTemplate", b =>
@@ -2077,6 +2192,13 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("SourceUploads");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.QualityProfile", b =>
+                {
+                    b.Navigation("ReleaseGroups");
+
+                    b.Navigation("Rules");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.Release", b =>
                 {
                     b.Navigation("ArchiveConfigs");
@@ -2086,6 +2208,8 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("MediaFiles");
 
                     b.Navigation("PostedLocations");
+
+                    b.Navigation("QualityIssues");
 
                     b.Navigation("ReleaseInfo");
 

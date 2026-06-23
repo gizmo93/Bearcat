@@ -2,6 +2,8 @@
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.ForumPostRendering;
+using Bearcat.Domain.Shared.QualityGate;
+using Bearcat.Domain.Shared.QualityGate.Checks;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives;
@@ -18,6 +20,7 @@ using Bearcat.Domain.UseCases.ManageLinkCrypters;
 using Bearcat.Domain.UseCases.ManageNfoDatabases;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManagePostedLocations;
+using Bearcat.Domain.UseCases.ManageQualityProfiles;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
@@ -55,6 +58,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ReleaseCollectionAssignmentService>();
             services.AddScoped<ReleaseCollectionInfoResolutionService>();
             services.AddScoped<ReleaseGroupService>();
+            services.AddScoped<QualityProfileService>();
             services.AddScoped<ReleaseService>();
             services.AddScoped<ForumPostRenderService>();
             services.AddScoped<ReleaseForumPostUploadBuilder>();
@@ -76,6 +80,13 @@ public static class ServiceProviderConfig
             services.AddSingleton<IUploadProgressTracker, UploadProgressTracker>();
             services.AddScoped<UploadStateService>();
             services.AddScoped<UploadStateService>();
+            services.AddScoped<QualityGateEvaluator>();
+            services.AddScoped<QualityGateService>();
+            services.AddScoped<IQualityCheck, FilePatternQualityCheck>();
+            services.AddScoped<IQualityCheck, MinimumFolderSizeQualityCheck>();
+            services.AddScoped<IQualityCheck, RequiredReleaseInfoQualityCheck>();
+            services.AddScoped<IQualityCheck, MediaInfoQualityCheck>();
+            services.AddScoped<QualityCheckCatalog>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<HosterCaptchaVerificationService>();
             services.AddScoped<ArchiveConfigService>();

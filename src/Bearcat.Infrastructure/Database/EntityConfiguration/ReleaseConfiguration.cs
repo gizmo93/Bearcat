@@ -18,8 +18,11 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
         builder.Property(r => r.MediaMetadataExtractedAt).HasPrecision(4).IsRequired(false);
         builder.Property(r => r.UploadsPostedAt).HasPrecision(4).IsRequired(false);
         builder.Property(r => r.ReleaseCollectionId).IsRequired(false);
+        builder.Property(r => r.QualityGateState).IsRequired();
+        builder.Property(r => r.QualityGateEvaluatedAt).HasPrecision(4).IsRequired(false);
 
         builder.HasIndex(r => r.ReleaseFolderPath);
+        builder.HasIndex(r => r.QualityGateState);
 
         builder
             .HasMany(r => r.ArchiveConfigs)
@@ -49,6 +52,14 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
             .HasMany(r => r.MediaFiles)
             .WithOne(file => file.Release)
             .HasForeignKey(file => file.ReleaseId)
+            .HasPrincipalKey(r => r.Id)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .HasMany(r => r.QualityIssues)
+            .WithOne(issue => issue.Release)
+            .HasForeignKey(issue => issue.ReleaseId)
             .HasPrincipalKey(r => r.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);

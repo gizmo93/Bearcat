@@ -32,6 +32,12 @@ public interface IReleaseReadRepository
 
     Task<int> CountPostQueueAsync(CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<ReleaseQualityIssueQueueItemReadModel>> GetQualityIssuesQueueAsync(
+        CancellationToken cancellationToken = default
+    );
+
+    Task<int> CountQualityIssuesQueueAsync(CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<ReleaseOverviewImageUploadReadModel>> GetReleaseOverviewImageUploadsAsync(
         int releaseId,
         CancellationToken cancellationToken = default

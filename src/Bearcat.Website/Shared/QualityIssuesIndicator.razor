@@ -1,0 +1,14 @@
+@namespace Bearcat.Website.Shared
+
+<BbButton Variant="ButtonVariant.Ghost"
+          Size="ButtonSize.IconSmall"
+          AriaLabel="@L["QualityIssues"]"
+          title="@L["QualityIssues"]"
+          Class="bearcat-notification-trigger"
+          OnClick="OpenQualityIssues">
+    <LucideIcon Name="shield-alert" class="h-4 w-4" />
+    @if (openCount > 0)
+    {
+        <span class="bearcat-postqueue-badge">@BadgeText</span>
+    }
+</BbButton>

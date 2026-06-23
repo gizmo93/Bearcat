@@ -347,6 +347,34 @@ public class ReleaseReadRepository(
         return await dbRead.Releases.CountAsync(IsReadyForPostQueue, cancellationToken);
     }
 
+    public async Task<
+        IReadOnlyList<ReleaseQualityIssueQueueItemReadModel>
+    > GetQualityIssuesQueueAsync(CancellationToken cancellationToken = default)
+    {
+        return await dbRead
+            .Releases.Where(r => r.QualityGateState == QualityGateState.Failed)
+            .OrderBy(r => r.Name)
+            .ThenBy(r => r.Id)
+            .Select(r => new ReleaseQualityIssueQueueItemReadModel(
+                r.Id,
+                r.Name,
+                r.ReleaseGroup.Name,
+                r.QualityGateEvaluatedAt,
+                r.QualityIssues.Select(issue => issue.Description).ToList()
+            ))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> CountQualityIssuesQueueAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead.Releases.CountAsync(
+            r => r.QualityGateState == QualityGateState.Failed,
+            cancellationToken
+        );
+    }
+
     public async Task<IReadOnlyList<ReleaseForumPostUploadReadModel>> GetForumPostUploadsAsync(
         int releaseId,
         CancellationToken cancellationToken = default

@@ -10,5 +10,9 @@ public class ReleaseGroup
 
     public int NumberOfHoursUntilReupload { get; set; }
 
+    public int? QualityProfileId { get; set; }
+
+    public QualityProfile? QualityProfile { get; set; }
+
     public List<Release> Releases { get; set; } = null!;
 }

@@ -51,6 +51,11 @@ public static class LocalizationExtensions
         NotificationType type
     ) => localizer[$"NotificationType.{type}"];
 
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        QualityCheckRuleType ruleType
+    ) => localizer[$"QualityCheckRuleType.{ruleType}"];
+
     public static string LocalizeDescription(
         this IStringLocalizer<UiResource> localizer,
         ReleaseType releaseType

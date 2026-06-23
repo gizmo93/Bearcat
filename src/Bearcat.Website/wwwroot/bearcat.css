@@ -375,6 +375,26 @@ a {
     text-align: center;
 }
 
+.bearcat-nav-group-label {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.375rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--sidebar-foreground);
+    opacity: 0.75;
+    cursor: pointer;
+}
+
+.bearcat-nav-group-label:hover {
+    background: var(--sidebar-accent);
+    opacity: 1;
+}
+
 .bearcat-notification-menu {
     width: min(23rem, calc(100vw - 2rem));
 }

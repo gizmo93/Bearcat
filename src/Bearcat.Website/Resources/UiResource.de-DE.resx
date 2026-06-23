@@ -869,4 +869,41 @@
   <data name="ThreadPrefixesHelp" xml:space="preserve"><value>Optional. Wähle die laut Forenregeln passenden Präfixe.</value></data>
   <data name="SelectThreadPrefixes" xml:space="preserve"><value>Präfixe auswählen …</value></data>
   <data name="DotsToSpaces" xml:space="preserve"><value>Punkte → Leerzeichen</value></data>
+  <data name="Workflows" xml:space="preserve"><value>Workflows</value></data>
+  <data name="QualityIssues" xml:space="preserve"><value>Qualitätsprobleme</value></data>
+  <data name="QualityIssuesDescription" xml:space="preserve"><value>Releases, die ihr Quality Gate nicht erfüllen und deshalb nicht automatisch hochgeladen werden.</value></data>
+  <data name="QualityIssuesSubtitle" xml:space="preserve"><value>Vom Quality Gate blockierte Releases</value></data>
+  <data name="QualityIssuesNothingOpen" xml:space="preserve"><value>Aktuell werden keine Releases vom Quality-Gate blockiert.</value></data>
+  <data name="LastChecked" xml:space="preserve"><value>Zuletzt geprüft</value></data>
+  <data name="Recheck" xml:space="preserve"><value>Neu prüfen</value></data>
+  <data name="ApproveManually" xml:space="preserve"><value>Manuell freigeben</value></data>
+  <data name="QualityProfiles" xml:space="preserve"><value>Qualitätsprofile</value></data>
+  <data name="QualityProfilesSubtitle" xml:space="preserve"><value>Wiederverwendbare Qualitätsprüfungen für Releasegruppen</value></data>
+  <data name="QualityProfilesIntro" xml:space="preserve"><value>Definiere Sätze von Qualitätsprüfungen und weise sie Releasegruppen zu.</value></data>
+  <data name="NewQualityProfile" xml:space="preserve"><value>Neues Qualitätsprofil</value></data>
+  <data name="NoQualityProfilesFound" xml:space="preserve"><value>Keine Qualitätsprofile gefunden.</value></data>
+  <data name="Checks" xml:space="preserve"><value>Prüfungen</value></data>
+  <data name="AssignedGroups" xml:space="preserve"><value>Zugewiesene Gruppen</value></data>
+  <data name="QualityProfileDialogDescription" xml:space="preserve"><value>Lege fest, welche Prüfungen ein Release bestehen muss, bevor Uploads erstellt werden.</value></data>
+  <data name="QualityProfileDeleted" xml:space="preserve"><value>Qualitätsprofil „{0}" gelöscht.</value></data>
+  <data name="DeleteQualityProfileConfirmation" xml:space="preserve"><value>Möchtest du das Qualitätsprofil „{0}" wirklich löschen? Zugewiesene Release-Gruppen haben danach kein Profil mehr.</value></data>
+  <data name="QualityProfileNamePlaceholder" xml:space="preserve"><value>z. B. Filme Standard</value></data>
+  <data name="QualityChecks" xml:space="preserve"><value>Qualitätsprüfungen</value></data>
+  <data name="AddQualityCheck" xml:space="preserve"><value>Prüfung hinzufügen</value></data>
+  <data name="NoQualityChecksYet" xml:space="preserve"><value>Noch keine Prüfungen. Ein Profil ohne Prüfungen wird immer bestanden.</value></data>
+  <data name="QualityCheckType" xml:space="preserve"><value>Prüfungstyp</value></data>
+  <data name="FilePattern" xml:space="preserve"><value>Dateimuster</value></data>
+  <data name="FilePatternHelp" xml:space="preserve"><value>Eine Datei mit diesem Muster muss im Releaseordner vorhanden sein (z. B. *.nfo).</value></data>
+  <data name="MinimumFolderSizeMb" xml:space="preserve"><value>Mindestgröße des Ordners (MB)</value></data>
+  <data name="RequireCover" xml:space="preserve"><value>Coverbild erforderlich</value></data>
+  <data name="RequireDescription" xml:space="preserve"><value>Beschreibung erforderlich</value></data>
+  <data name="RequireNfo" xml:space="preserve"><value>NFO erforderlich</value></data>
+  <data name="QualityCheckNoConfiguration" xml:space="preserve"><value>Dieser Check hat keine zusätzliche Konfiguration.</value></data>
+  <data name="QualityCheckRuleType.FilePatternPresent" xml:space="preserve"><value>Datei mit Muster vorhanden</value></data>
+  <data name="QualityCheckRuleType.MinimumFolderSize" xml:space="preserve"><value>Mindestgröße des Ordners</value></data>
+  <data name="QualityCheckRuleType.RequiredReleaseInfo" xml:space="preserve"><value>Erforderliche Release-Infos</value></data>
+  <data name="QualityCheckRuleType.MediaInfoPresent" xml:space="preserve"><value>MediaInfo vorhanden</value></data>
+  <data name="QualityProfile" xml:space="preserve"><value>Qualitätsprofil</value></data>
+  <data name="NoQualityProfile" xml:space="preserve"><value>Kein Qualitätsprofil</value></data>
+  <data name="QualityProfileHelp" xml:space="preserve"><value>Releases dieser Gruppe müssen das gewählte Profil bestehen, bevor Uploads erstellt werden.</value></data>
 </root>

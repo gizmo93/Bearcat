@@ -50,6 +50,21 @@
                     <span class="text-sm">@L["HoursCount", group.NumberOfHoursUntilReupload]</span>
                 </CellTemplate>
             </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseGroupReadModel" TValue="string"
+                               Header="@L["QualityProfile"]"
+                               Property="@(group => group.QualityProfileName)"
+                               Width="190px">
+                <CellTemplate Context="group">
+                    @if (group.QualityProfileName is null)
+                    {
+                        <span class="text-sm text-muted-foreground">@L["NoQualityProfile"]</span>
+                    }
+                    else
+                    {
+                        <BbBadge Variant="BadgeVariant.Secondary">@group.QualityProfileName</BbBadge>
+                    }
+                </CellTemplate>
+            </BbDataTableColumn>
             <BbDataTableColumn TData="ReleaseGroupReadModel" TValue="int"
                                Header="@L["AssignedReleases"]"
                                Property="@(group => group.AssignedReleaseCount)"

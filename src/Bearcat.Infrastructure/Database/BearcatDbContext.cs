@@ -92,6 +92,12 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<ReleaseFolderObservation> ReleaseFolderObservations { get; set; } = null!;
 
+    public DbSet<QualityProfile> QualityProfiles { get; set; } = null!;
+
+    public DbSet<QualityCheckRule> QualityCheckRules { get; set; } = null!;
+
+    public DbSet<ReleaseQualityIssue> ReleaseQualityIssues { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BearcatDbContext).Assembly);

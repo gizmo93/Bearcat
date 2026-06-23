@@ -41,4 +41,10 @@ public class Release
     public DateTime? MediaMetadataExtractedAt { get; set; }
 
     public DateTime? UploadsPostedAt { get; set; }
+
+    public QualityGateState QualityGateState { get; set; } = QualityGateState.NotEvaluated;
+
+    public DateTime? QualityGateEvaluatedAt { get; set; }
+
+    public List<ReleaseQualityIssue> QualityIssues { get; set; } = [];
 }

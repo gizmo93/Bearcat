@@ -57,6 +57,15 @@ export async function copyFromTarget(button) {
     }
 }
 
+export function setCookie(key, value) {
+    try {
+        const oneYearInSeconds = 60 * 60 * 24 * 365;
+        document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=${oneYearInSeconds}; samesite=lax`;
+    } catch {
+        // Ignore cookie failures (e.g. disabled cookies).
+    }
+}
+
 function updateScrollAwareHeader() {
     const header = document.querySelector(".bearcat-app-header");
     if (!header) {
@@ -78,5 +87,6 @@ initScrollAwareHeader();
 window.bearcat = {
     copyFromTarget,
     copyText,
+    setCookie,
     updateScrollAwareHeader,
 };

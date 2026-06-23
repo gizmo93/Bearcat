@@ -8,6 +8,8 @@ public class ReleaseGroupFormModel
 
     public int NumberOfHoursUntilReupload { get; set; }
 
+    public int? QualityProfileId { get; set; }
+
     public bool IsEdit { get; set; }
 
     public int? ReleaseGroupId { get; set; }

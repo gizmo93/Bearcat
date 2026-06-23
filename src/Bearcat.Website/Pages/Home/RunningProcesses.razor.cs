@@ -1,4 +1,3 @@
-using System.Timers;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageUploads.Progress;
 using Bearcat.Domain.ValueObjects;
@@ -7,7 +6,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Timer = System.Timers.Timer;
 
 namespace Bearcat.Website.Pages.Home;
 
@@ -32,7 +30,9 @@ public partial class RunningProcesses(
 
     private bool isDisposed;
 
-    private Timer? refreshTimer;
+    private PeriodicTimer? refreshTimer;
+
+    private CancellationTokenSource? refreshCts;
 
     protected override async Task OnInitializedAsync()
     {
@@ -93,29 +93,26 @@ public partial class RunningProcesses(
 
     private void StartAutoRefreshTimer()
     {
-        refreshTimer = new Timer(TimeSpan.FromSeconds(3));
-        refreshTimer.Elapsed += OnRefreshTimerElapsed;
-        refreshTimer.AutoReset = true;
-        refreshTimer.Start();
+        refreshCts = new CancellationTokenSource();
+        refreshTimer = new PeriodicTimer(TimeSpan.FromSeconds(3));
+        _ = RunAutoRefreshLoopAsync(refreshTimer, refreshCts.Token);
     }
 
-    private async void OnRefreshTimerElapsed(object? sender, ElapsedEventArgs args)
+    private async Task RunAutoRefreshLoopAsync(
+        PeriodicTimer timer,
+        CancellationToken cancellationToken
+    )
     {
         try
         {
-            await InvokeAsync(async () =>
+            while (await timer.WaitForNextTickAsync(cancellationToken))
             {
-                if (isDisposed || refreshInProgress)
-                {
-                    return;
-                }
-
-                await LoadDataAsync();
-            });
+                await InvokeAsync(LoadDataAsync);
+            }
         }
         catch (Exception)
         {
-            // Make sure all errors like disposed DbContexts are caught
+            // Expected on stop (cancellation) and for disposed DbContexts during teardown
         }
     }
 
@@ -144,14 +141,11 @@ public partial class RunningProcesses(
 
     private void StopAutoRefreshTimer()
     {
-        if (refreshTimer is null)
-        {
-            return;
-        }
+        refreshCts?.Cancel();
+        refreshCts?.Dispose();
+        refreshCts = null;
 
-        refreshTimer.Elapsed -= OnRefreshTimerElapsed;
-        refreshTimer.Stop();
-        refreshTimer.Dispose();
+        refreshTimer?.Dispose();
         refreshTimer = null;
     }
 

@@ -15,6 +15,7 @@ using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
+using Bearcat.Domain.UseCases.ManageQualityProfiles.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
@@ -113,6 +114,8 @@ public static class ServiceProviderConfig
             services.AddScoped<IForumPostTemplateWriteRepository, ForumPostTemplateRepository>();
             services.AddScoped<IReleaseGroupReadRepository, ReleaseGroupRepository>();
             services.AddScoped<IReleaseGroupWriteRepository, ReleaseGroupRepository>();
+            services.AddScoped<IQualityProfileReadRepository, QualityProfileRepository>();
+            services.AddScoped<IQualityProfileWriteRepository, QualityProfileRepository>();
             services.AddScoped<IArchiveCreationRepository, ArchiveCreationRepository>();
             services.AddScoped<IArchiveCleanupRepository, ArchiveCleanupRepository>();
             services.AddScoped<IUploadFilesRepository, UploadFilesRepository>();
@@ -132,6 +135,7 @@ public static class ServiceProviderConfig
                 ReleaseFolderAutomationRepository
             >();
             services.AddScoped<IReleaseReadRepository, ReleaseReadRepository>();
+            services.AddScoped<IQualityGateRepository, QualityGateRepository>();
             services.AddScoped<IReleaseForumPostUploadRepository>(serviceProvider =>
                 (ReleaseReadRepository)serviceProvider.GetRequiredService<IReleaseReadRepository>()
             );

@@ -68,6 +68,7 @@ public partial class ReleaseGroupsPage(
                 Name = releaseGroup.Name,
                 EnableAutomaticReuploads = releaseGroup.EnableAutomaticReuploads,
                 NumberOfHoursUntilReupload = releaseGroup.NumberOfHoursUntilReupload,
+                QualityProfileId = releaseGroup.QualityProfileId,
                 IsEdit = true,
                 ReleaseGroupId = releaseGroup.ReleaseGroupId,
             },

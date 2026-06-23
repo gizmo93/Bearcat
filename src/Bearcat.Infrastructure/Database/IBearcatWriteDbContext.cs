@@ -54,4 +54,7 @@ public interface IBearcatWriteDbContext
     DbSet<ReleaseCollectionMetadata> ReleaseCollectionMetadata { get; set; }
     DbSet<ReleaseMediaFile> ReleaseMediaFiles { get; set; }
     DbSet<ReleaseFolderObservation> ReleaseFolderObservations { get; set; }
+    DbSet<QualityProfile> QualityProfiles { get; set; }
+    DbSet<QualityCheckRule> QualityCheckRules { get; set; }
+    DbSet<ReleaseQualityIssue> ReleaseQualityIssues { get; set; }
 }

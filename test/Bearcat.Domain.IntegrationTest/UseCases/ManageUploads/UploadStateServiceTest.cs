@@ -6,11 +6,13 @@ using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.FileSystem;
 using Bearcat.Infrastructure.Security;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
@@ -1100,7 +1102,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             notificationService,
             new HosterCaptchaVerificationService(notificationService),
             Mock.Of<ILogger<UploadStateService>>(),
-            NoOpSecretProtector.Instance
+            NoOpSecretProtector.Instance,
+            new QualityGateEvaluator([], new FileSystemService())
         );
     }
 

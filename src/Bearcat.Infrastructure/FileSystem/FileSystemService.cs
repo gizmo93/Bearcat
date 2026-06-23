@@ -75,6 +75,11 @@ public class FileSystemService : IFileSystemService
         return File.Exists(filePath);
     }
 
+    public bool DirectoryExists(string path)
+    {
+        return Directory.Exists(path);
+    }
+
     public void DeleteDirectoryIfExists(string path)
     {
         if (!Directory.Exists(path))

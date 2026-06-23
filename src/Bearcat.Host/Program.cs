@@ -38,6 +38,7 @@ builder.Services.Configure<HostOptions>(options =>
 
 // Add services to the container.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+builder.Services.AddHttpContextAccessor();
 
 var isRunningInContainer = string.Equals(
     Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"),

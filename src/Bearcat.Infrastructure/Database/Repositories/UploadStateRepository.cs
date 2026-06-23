@@ -99,7 +99,19 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
     )
     {
         return await dbWrite
-            .UploadConfigs.Where(u =>
+            .UploadConfigs.AsSplitQuery()
+            .Include(u => u.Release)
+                .ThenInclude(r => r.ReleaseGroup)
+                    .ThenInclude(g => g.QualityProfile!)
+                        .ThenInclude(p => p.Rules)
+            .Include(u => u.Release)
+                .ThenInclude(r => r.ReleaseInfo!)
+                    .ThenInclude(i => i.ReleaseNfo)
+            .Include(u => u.Release)
+                .ThenInclude(r => r.MediaFiles)
+            .Include(u => u.Release)
+                .ThenInclude(r => r.QualityIssues)
+            .Where(u =>
                 !u.Uploads.Any()
                 && u.HosterRegistration.IsActive
                 && u.Release.CreatedAt <= releaseCreatedBefore

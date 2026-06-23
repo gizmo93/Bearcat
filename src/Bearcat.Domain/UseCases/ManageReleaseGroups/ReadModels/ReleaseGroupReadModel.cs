@@ -5,5 +5,7 @@ public record ReleaseGroupReadModel(
     string Name,
     bool EnableAutomaticReuploads,
     int NumberOfHoursUntilReupload,
-    int AssignedReleaseCount
+    int AssignedReleaseCount,
+    int? QualityProfileId,
+    string? QualityProfileName
 );

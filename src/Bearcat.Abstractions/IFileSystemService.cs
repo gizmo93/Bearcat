@@ -7,6 +7,7 @@ public interface IFileSystemService
     FolderContentFingerprint GetFolderContentFingerprint(string path);
     string CreateTempDirectory(string basePath);
     bool FileExists(string filePath);
+    bool DirectoryExists(string path);
     void DeleteDirectoryIfExists(string path);
     IReadOnlyList<string> DeleteDirectoriesByNameRecursively(string rootPath, string directoryName);
 }
