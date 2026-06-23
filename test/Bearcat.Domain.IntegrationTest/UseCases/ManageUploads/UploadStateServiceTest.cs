@@ -7,6 +7,7 @@ using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.QualityGate;
+using Bearcat.Domain.Shared.QualityGate.Checks;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
@@ -982,15 +983,162 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         uploads.Count.ShouldBe(1);
     }
 
+    [Test]
+    public async Task CheckUploadStatesAsync_QualityGateFails_DoesNotCreateInitialUploadAndMarksFailed()
+    {
+        // Arrange
+        await AddUploadConfigAsync(
+            enableAutomaticReuploads: false,
+            qualityProfile: CreateRequireNfoProfile()
+        );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        (await dbContext.Uploads.AnyAsync()).ShouldBeFalse();
+        var release = await dbContext.Releases.Include(r => r.QualityIssues).SingleAsync();
+        release.QualityGateState.ShouldBe(QualityGateState.Failed);
+        release.QualityGateEvaluatedAt.ShouldBe(localNow);
+        release.QualityIssues.Single().Description.ShouldBe("NFO is missing");
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_QualityGatePasses_CreatesInitialUploadAndMarksPassed()
+    {
+        // Arrange
+        await AddUploadConfigAsync(
+            enableAutomaticReuploads: false,
+            qualityProfile: CreateRequireNfoProfile(),
+            releaseInfo: CreateReleaseInfoWithNfo()
+        );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var upload = await dbContext.Uploads.SingleAsync();
+        upload.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        var release = await dbContext.Releases.SingleAsync();
+        release.QualityGateState.ShouldBe(QualityGateState.Passed);
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_ManuallyApprovedFailingRelease_CreatesUploadAndKeepsApproval()
+    {
+        // Arrange
+        await AddUploadConfigAsync(
+            enableAutomaticReuploads: false,
+            qualityProfile: CreateRequireNfoProfile()
+        );
+        var release = await dbContext.Releases.SingleAsync();
+        release.QualityGateState = QualityGateState.ManuallyApproved;
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        (await dbContext.Uploads.AnyAsync()).ShouldBeTrue();
+        var updated = await dbContext.Releases.SingleAsync();
+        updated.QualityGateState.ShouldBe(QualityGateState.ManuallyApproved);
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_AutomaticReuploadDueButQualityGateFailed_DoesNotCreateReupload()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow.AddHours(-25),
+            uploadedFileLinks: ["https://hoster.test/1"],
+            enableAutomaticReuploads: true,
+            qualityProfile: CreateRequireNfoProfile()
+        );
+        var release = await dbContext.Releases.SingleAsync();
+        release.QualityGateState = QualityGateState.Failed;
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        var uploads = await dbContext.Uploads.ToListAsync();
+        uploads.Count.ShouldBe(1);
+        uploads.Single().Id.ShouldBe(upload.Id);
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_AutomaticReuploadDueAndQualityGatePassed_CreatesReupload()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow.AddHours(-25),
+            uploadedFileLinks: ["https://hoster.test/1"],
+            enableAutomaticReuploads: true,
+            qualityProfile: CreateRequireNfoProfile()
+        );
+        var release = await dbContext.Releases.SingleAsync();
+        release.QualityGateState = QualityGateState.Passed;
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var uploads = await dbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
+        uploads.Count.ShouldBe(2);
+        uploads.Single(u => u.Id != upload.Id).UploadConfigId.ShouldBe(upload.UploadConfigId);
+    }
+
+    private static QualityProfile CreateRequireNfoProfile() =>
+        new()
+        {
+            Name = "Require NFO",
+            Rules =
+            [
+                new QualityCheckRule
+                {
+                    RuleType = QualityCheckRuleType.RequiredReleaseInfo,
+                    ParametersJson = QualityCheckParameterValues.Serialize(
+                        new Dictionary<string, object?>
+                        {
+                            ["requireCover"] = false,
+                            ["requireDescription"] = false,
+                            ["requireNfo"] = true,
+                        }
+                    ),
+                },
+            ],
+        };
+
+    private static ReleaseInfo CreateReleaseInfoWithNfo() =>
+        new()
+        {
+            NfoDatabaseClassName = ReleaseInfo.ManualSource,
+            ReleaseName = "Bearcat.Release.001",
+            ReleaseNfo = new ReleaseNfo { FileName = "release.nfo", Content = "NFO body" },
+        };
+
     private async Task<Upload> AddCompletedUploadAsync(
         OnlineState onlineState,
         DateTime? checkedAt,
         IReadOnlyList<string> uploadedFileLinks,
         bool enableAutomaticReuploads = false,
-        bool hosterIsActive = true
+        bool hosterIsActive = true,
+        QualityProfile? qualityProfile = null
     )
     {
-        var uploadConfig = await AddUploadConfigAsync(enableAutomaticReuploads, hosterIsActive);
+        var uploadConfig = await AddUploadConfigAsync(
+            enableAutomaticReuploads,
+            hosterIsActive,
+            qualityProfile: qualityProfile
+        );
         var archive = new Archive
         {
             ArchiveConfigId = uploadConfig.ArchiveConfigId,
@@ -1039,7 +1187,9 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     private async Task<UploadConfig> AddUploadConfigAsync(
         bool enableAutomaticReuploads,
         bool hosterIsActive = true,
-        DateTime? releaseCreatedAt = null
+        DateTime? releaseCreatedAt = null,
+        QualityProfile? qualityProfile = null,
+        ReleaseInfo? releaseInfo = null
     )
     {
         var releaseGroup = new ReleaseGroup
@@ -1047,6 +1197,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             Name = "Managed releases",
             EnableAutomaticReuploads = enableAutomaticReuploads,
             NumberOfHoursUntilReupload = 24,
+            QualityProfile = qualityProfile,
         };
         var release = new Release
         {
@@ -1055,6 +1206,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             ReleaseType = ReleaseType.Managed,
             ReleaseFolderPath = "/tmp/release",
             ReleaseGroup = releaseGroup,
+            ReleaseInfo = releaseInfo,
         };
         var archiveConfig = new ArchiveConfig
         {
@@ -1103,7 +1255,15 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             new HosterCaptchaVerificationService(notificationService),
             Mock.Of<ILogger<UploadStateService>>(),
             NoOpSecretProtector.Instance,
-            new QualityGateEvaluator([], new FileSystemService())
+            new QualityGateEvaluator(
+                [
+                    new FilePatternQualityCheck(),
+                    new MinimumFolderSizeQualityCheck(),
+                    new RequiredReleaseInfoQualityCheck(),
+                    new MediaInfoQualityCheck(),
+                ],
+                new FileSystemService()
+            )
         );
     }
 

@@ -26,6 +26,7 @@
     <Folder Name="/5_Tests/">
         <Project Path="test/Bearcat.Archivers.IntegrationTest/Bearcat.Archivers.IntegrationTest.csproj" />
         <Project Path="test/Bearcat.Domain.IntegrationTest/Bearcat.Domain.IntegrationTest.csproj" />
+        <Project Path="test/Bearcat.Domain.UnitTest/Bearcat.Domain.UnitTest.csproj" />
         <Project Path="test/Bearcat.Hosters.UnitTest/Bearcat.Hosters.UnitTest.csproj" />
         <Project Path="test/Bearcat.ImageHosters.UnitTest/Bearcat.ImageHosters.UnitTest.csproj" />
         <Project Path="test/Bearcat.Infrastructure.UnitTest/Bearcat.Infrastructure.UnitTest.csproj" />
