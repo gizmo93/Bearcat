@@ -89,6 +89,7 @@ public class MissingFileValidationService(
 
         upload.ArchiveId = null;
         upload.UploadState = UploadState.WaitingForArchive;
+        upload.UploadedFiles = [];
 
         await repository.SaveChangesAsync(cancellationToken);
     }
