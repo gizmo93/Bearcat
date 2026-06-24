@@ -161,6 +161,10 @@ public class ArchiveCreationService(
         {
             upload.ArchiveId = assignableArchive.Id;
             upload.UploadState = UploadState.Pending;
+
+            // Take the newest still online file for a previous upload of the current upload
+            // and copy it over to the new upload, so we only upload files that were offline (for PartiallyOnline uploads)
+            CarryOverOnlineFiles(upload, assignableArchive);
         }
 
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
@@ -172,6 +176,47 @@ public class ArchiveCreationService(
         );
 
         return true;
+    }
+
+    private void CarryOverOnlineFiles(Upload newUpload, Archive assignableArchive)
+    {
+        var reusableOnlineFiles = assignableArchive
+            .Uploads.Where(u =>
+                u.Id != newUpload.Id && u.UploadConfigId == newUpload.UploadConfigId
+            )
+            .SelectMany(u => u.UploadedFiles)
+            .Where(uf =>
+                uf.OnlineState == OnlineState.Online
+                && !string.IsNullOrWhiteSpace(uf.HosterFileLink)
+            )
+            .GroupBy(uf => uf.ArchiveFileId)
+            .Select(group => group.MaxBy(uf => uf.UploadId)!)
+            .ToList();
+
+        if (reusableOnlineFiles.Count == 0)
+        {
+            return;
+        }
+
+        newUpload.UploadedFiles = reusableOnlineFiles
+            .Select(source => new UploadedFile
+            {
+                Upload = newUpload,
+                ArchiveFileId = source.ArchiveFileId,
+                HosterFileLink = source.HosterFileLink,
+                ExternalId = source.ExternalId,
+                OnlineState = OnlineState.Online,
+                CreatedAt = source.CreatedAt,
+                CheckedAt = source.CheckedAt,
+            })
+            .ToList();
+
+        logger.LogInformation(
+            "Carried over {FileCount} online files to reupload {UploadId} from previous uploads of archive {ArchiveId}",
+            newUpload.UploadedFiles.Count,
+            newUpload.Id,
+            assignableArchive.Id
+        );
     }
 
     private async Task<bool> ArchiveNeedsHashChangeAsync(

@@ -22,15 +22,20 @@ public static class ArchiveExtractionTestHelper
     {
         foreach (var fileName in archiveResult.CreatedFileNames)
         {
-            await using var stream = new FileStream(
-                fileName,
-                FileMode.Append,
-                FileAccess.Write,
-                FileShare.Read
-            );
-            stream.WriteByte(0);
-            await stream.FlushAsync();
+            await AppendNullByteToArchiveFileAsync(fileName);
         }
+    }
+
+    public static async Task AppendNullByteToArchiveFileAsync(string fileName)
+    {
+        await using var stream = new FileStream(
+            fileName,
+            FileMode.Append,
+            FileAccess.Write,
+            FileShare.Read
+        );
+        stream.WriteByte(0);
+        await stream.FlushAsync();
     }
 
     public static async Task ExtractWithSevenZipAsync(

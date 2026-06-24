@@ -133,6 +133,43 @@ public class RarArchiverTest
     }
 
     [Test]
+    public async Task ArchiveAsync_SingleSplitArchiveFileHasTrailingNullByteAdded_CanStillBeExtracted()
+    {
+        // Arrange
+        var sourceFilePath = await ArchiveExtractionTestHelper.WriteRandomSourceFileAsync(
+            sourceFolderPath
+        );
+        var extractPath = Directory.CreateDirectory(Path.Combine(tempRootPath, "extract")).FullName;
+
+        var result = await service.ArchiveAsync(
+            sourceFolderPath: sourceFolderPath,
+            destinationPath: destinationPath,
+            archiveNamePrefix: "archive",
+            targetFileSizeMb: 1,
+            password: null,
+            options: new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
+            cancellationToken: CancellationToken.None
+        );
+
+        result.IsSuccess.ShouldBeTrue();
+        result.CreatedFileNames.Count.ShouldBeGreaterThan(1);
+
+        var orderedArchiveFiles = result.CreatedFileNames.Order(StringComparer.Ordinal).ToList();
+
+        // Act
+        await ArchiveExtractionTestHelper.AppendNullByteToArchiveFileAsync(
+            orderedArchiveFiles.Last()
+        );
+        await ArchiveExtractionTestHelper.ExtractWithRarAsync(
+            orderedArchiveFiles.First(),
+            extractPath
+        );
+
+        // Assert
+        ArchiveExtractionTestHelper.ExtractedPayloadShouldMatchSource(sourceFilePath, extractPath);
+    }
+
+    [Test]
     public async Task ArchiveAsync_SourceFolderDoesNotExist_ReturnsFailedResult()
     {
         // Arrange

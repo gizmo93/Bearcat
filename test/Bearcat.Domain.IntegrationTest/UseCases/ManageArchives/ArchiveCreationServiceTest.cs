@@ -772,6 +772,167 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         );
     }
 
+    [Test]
+    public async Task ProcessAsync_PreviousUploadHasOnlineFiles_CarriesOverOnlineFilesToReupload()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+
+        var existingArchiveFolder = Directory
+            .CreateDirectory(Path.Combine(archiveFilesBasePath, "existing"))
+            .FullName;
+
+        var onlineArchiveFilePath = Path.Combine(existingArchiveFolder, "existing.part1.rar");
+        var offlineArchiveFilePath = Path.Combine(existingArchiveFolder, "existing.part2.rar");
+
+        await File.WriteAllTextAsync(onlineArchiveFilePath, "online-data");
+        await File.WriteAllTextAsync(offlineArchiveFilePath, "offline-data");
+
+        var onlineArchiveFile = new ArchiveFile { FullFileName = onlineArchiveFilePath };
+        var offlineArchiveFile = new ArchiveFile { FullFileName = offlineArchiveFilePath };
+
+        var existingArchive = new Archive
+        {
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveFolderPath = existingArchiveFolder,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 512,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveFiles = [onlineArchiveFile, offlineArchiveFile],
+            Uploads = [],
+            ErrorMessages = [],
+        };
+
+        var previousUpload = new Upload
+        {
+            UploadConfigId = upload.UploadConfigId,
+            Archive = existingArchive,
+            CreatedAt = DateTime.UtcNow.AddHours(-1),
+            UploadedAt = DateTime.UtcNow.AddHours(-1),
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.PartiallyOnline,
+            ErrorMessages = [],
+            UploadedFiles =
+            [
+                new UploadedFile
+                {
+                    ArchiveFile = onlineArchiveFile,
+                    HosterFileLink = "https://hoster.example/online",
+                    ExternalId = "external-1",
+                    OnlineState = OnlineState.Online,
+                    CreatedAt = DateTime.UtcNow.AddHours(-1),
+                    CheckedAt = DateTime.UtcNow.AddHours(-1),
+                },
+                new UploadedFile
+                {
+                    ArchiveFile = offlineArchiveFile,
+                    HosterFileLink = "https://hoster.example/offline",
+                    ExternalId = "external-2",
+                    OnlineState = OnlineState.Offline,
+                    CreatedAt = DateTime.UtcNow.AddHours(-1),
+                    CheckedAt = DateTime.UtcNow.AddHours(-1),
+                },
+            ],
+        };
+        dbContext.Archives.Add(existingArchive);
+        dbContext.Uploads.Add(previousUpload);
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .SingleAsync(u => u.Id == upload.Id);
+
+        result.ArchiveId.ShouldBe(existingArchive.Id);
+        result.UploadState.ShouldBe(UploadState.Pending);
+
+        var carriedFile = result.UploadedFiles.ShouldHaveSingleItem();
+
+        carriedFile.ArchiveFileId.ShouldBe(onlineArchiveFile.Id);
+        carriedFile.HosterFileLink.ShouldBe("https://hoster.example/online");
+        carriedFile.ExternalId.ShouldBe("external-1");
+        carriedFile.OnlineState.ShouldBe(OnlineState.Online);
+    }
+
+    [Test]
+    public async Task ProcessAsync_PreviousUploadOnDifferentUploadConfig_DoesNotCarryOverOnlineFiles()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+
+        var otherUploadConfig = await AddUploadConfigAsync(
+            upload.UploadConfig.ArchiveConfig,
+            hosterClassName: "OtherHoster",
+            name: "Other hoster upload"
+        );
+
+        var existingArchiveFolder = Directory
+            .CreateDirectory(Path.Combine(archiveFilesBasePath, "existing"))
+            .FullName;
+
+        var archiveFilePath = Path.Combine(existingArchiveFolder, "existing.part1.rar");
+
+        await File.WriteAllTextAsync(archiveFilePath, "archive-data");
+
+        var archiveFile = new ArchiveFile { FullFileName = archiveFilePath };
+
+        var existingArchive = new Archive
+        {
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveFolderPath = existingArchiveFolder,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 512,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveFiles = [archiveFile],
+            Uploads = [],
+            ErrorMessages = [],
+        };
+
+        var previousUpload = new Upload
+        {
+            UploadConfigId = otherUploadConfig.Id,
+            Archive = existingArchive,
+            CreatedAt = DateTime.UtcNow.AddHours(-1),
+            UploadedAt = DateTime.UtcNow.AddHours(-1),
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Online,
+            ErrorMessages = [],
+            UploadedFiles =
+            [
+                new UploadedFile
+                {
+                    ArchiveFile = archiveFile,
+                    HosterFileLink = "https://other-hoster.example/online",
+                    ExternalId = "external-1",
+                    OnlineState = OnlineState.Online,
+                    CreatedAt = DateTime.UtcNow.AddHours(-1),
+                    CheckedAt = DateTime.UtcNow.AddHours(-1),
+                },
+            ],
+        };
+
+        dbContext.Archives.Add(existingArchive);
+        dbContext.Uploads.Add(previousUpload);
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .SingleAsync(u => u.Id == upload.Id);
+
+        result.ArchiveId.ShouldBe(existingArchive.Id);
+        result.UploadState.ShouldBe(UploadState.Pending);
+        result.UploadedFiles.ShouldBeEmpty();
+    }
+
     private async Task<Upload> AddUploadWaitingForArchiveAsync()
     {
         var uploadConfig = await AddUploadConfigAsync();

@@ -39,7 +39,8 @@ flowchart TD
     Create --> QCreated{Archive created?}
     QCreated -- No --> Failed[Upload: Failed]
     QCreated -- Yes --> Pending[Upload: Pending]
-    Assign --> Pending
+    Assign --> Carry[Carry over still-online files from previous upload]
+    Carry --> Pending
 
     %% --- Upload to hoster ---
     Pending --> UploadHoster[Upload to hoster]
@@ -117,6 +118,8 @@ The **"Archive creation"** background task looks for uploads in `WaitingForArchi
 - If the archiver can change hashes **in place** (currently only RAR), Bearcat appends a single harmless 0-byte to each archive file. That changes the MD5 hash but the archive still works without issues.
 - Before doing that, Bearcat makes sure no other active upload is currently using the archive. If one is, it waits and tries again on the next run.
 - If the archiver *can't* safely change hashes in place (7Zip!), Bearcat leaves the existing files alone and packs a fresh archive instead.
+
+**Reusing an archive carries over the files that are still online.** When a reupload reuses the *same* archive as a previous upload of the same upload configuration, Bearcat copies over the hoster links for the files that are still online and only uploads the ones that actually went offline. This makes recovering from a `PartiallyOnline` upload cheap: the surviving files stay where they are, and Bearcat just fills the gaps instead of sending everything up again. It only works when the same archive is reused, though. If a fresh archive has to be packed, its freshly packed files aren't compatible with the old ones, so the whole release is uploaded again.
 
 **No reusable archive? Create a new one.** If nothing can be reused, Bearcat builds a new archive from the release folder. The archive configuration decides:
 
@@ -205,7 +208,7 @@ When a reupload is due, Bearcat creates a new upload record for the same upload 
 WaitingForArchive -> Pending -> Uploading -> Completed
 ```
 
-If an existing archive can still be reused, the reupload skips packing. Otherwise it builds a new archive from the release folder, just like the first time.
+If an existing archive can still be reused, the reupload skips packing. When that same archive is reused, the reupload also keeps the files that are still online and only sends up the ones that went offline (see [Creating the archive](#3-creating-the-archive)), so recovering a `PartiallyOnline` upload only moves the missing parts. Otherwise it builds a new archive from the release folder and uploads everything, just like the first time.
 
 ## 8. Manual reuploads
 
