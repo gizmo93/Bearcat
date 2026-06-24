@@ -3,7 +3,8 @@
         <BbButton Variant="ButtonVariant.Ghost"
                   Size="ButtonSize.IconSmall"
                   AriaLabel="@L["OpenNotifications"]"
-                  Class="bearcat-notification-trigger">
+                  Class="bearcat-notification-trigger"
+                  OnClick="HandleTriggerClick">
             <LucideIcon Name="bell" class="h-4 w-4" />
             @if (unresolvedCount > 0)
             {

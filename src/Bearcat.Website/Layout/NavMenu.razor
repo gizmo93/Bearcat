@@ -5,6 +5,7 @@
 @inject IJSRuntime JS
 @inject PersistentComponentState ApplicationState
 @inject IHttpContextAccessor HttpContextAccessor
+@inject NavMenuState NavState
 
 <div>
     <BbSidebarGroup>
@@ -51,11 +52,11 @@
     </BbSidebarGroup>
     
         <BbSidebarGroup>
-        <BbCollapsible Open="configurationOpen" OpenChanged="SetConfigurationOpenAsync">
+        <BbCollapsible Open="NavState.ConfigurationOpen" OpenChanged="SetConfigurationOpenAsync">
             <BbCollapsibleTrigger AsChild="false" Class="w-full">
                 <div class="bearcat-nav-group-label">
                     <span>@L["Configuration"]</span>
-                    <LucideIcon Name="chevron-down" class="@ChevronClass(configurationOpen)" />
+                    <LucideIcon Name="chevron-down" class="@ChevronClass(NavState.ConfigurationOpen)" />
                 </div>
             </BbCollapsibleTrigger>
             <BbCollapsibleContent>
@@ -99,11 +100,11 @@
 
 
     <BbSidebarGroup>
-        <BbCollapsible Open="registrationsOpen" OpenChanged="SetRegistrationsOpenAsync">
+        <BbCollapsible Open="NavState.RegistrationsOpen" OpenChanged="SetRegistrationsOpenAsync">
             <BbCollapsibleTrigger AsChild="false" Class="w-full">
                 <div class="bearcat-nav-group-label">
                     <span>@L["Registrations"]</span>
-                    <LucideIcon Name="chevron-down" class="@ChevronClass(registrationsOpen)" />
+                    <LucideIcon Name="chevron-down" class="@ChevronClass(NavState.RegistrationsOpen)" />
                 </div>
             </BbCollapsibleTrigger>
             <BbCollapsibleContent>
@@ -164,17 +165,20 @@
 
     private PersistingComponentStateSubscription persistSubscription;
 
-    private bool registrationsOpen = true;
-    private bool configurationOpen = true;
-
     protected override void OnInitialized()
     {
         NavigationManager.LocationChanged += HandleLocationChanged;
 
         persistSubscription = ApplicationState.RegisterOnPersisting(PersistGroupState);
 
-        configurationOpen = RestoreGroupState(ConfigurationOpenKey) ?? configurationOpen;
-        registrationsOpen = RestoreGroupState(RegistrationsOpenKey) ?? registrationsOpen;
+        if (NavState.Initialized)
+        {
+            return;
+        }
+
+        NavState.ConfigurationOpen = RestoreGroupState(ConfigurationOpenKey) ?? NavState.ConfigurationOpen;
+        NavState.RegistrationsOpen = RestoreGroupState(RegistrationsOpenKey) ?? NavState.RegistrationsOpen;
+        NavState.Initialized = true;
     }
 
     private bool? RestoreGroupState(string key)
@@ -191,21 +195,21 @@
 
     private Task PersistGroupState()
     {
-        ApplicationState.PersistAsJson(ConfigurationOpenKey, configurationOpen);
-        ApplicationState.PersistAsJson(RegistrationsOpenKey, registrationsOpen);
+        ApplicationState.PersistAsJson(ConfigurationOpenKey, NavState.ConfigurationOpen);
+        ApplicationState.PersistAsJson(RegistrationsOpenKey, NavState.RegistrationsOpen);
 
         return Task.CompletedTask;
     }
 
     private async Task SetConfigurationOpenAsync(bool open)
     {
-        configurationOpen = open;
+        NavState.ConfigurationOpen = open;
         await PersistCookieAsync(ConfigurationOpenKey, open);
     }
 
     private async Task SetRegistrationsOpenAsync(bool open)
     {
-        registrationsOpen = open;
+        NavState.RegistrationsOpen = open;
         await PersistCookieAsync(RegistrationsOpenKey, open);
     }
 

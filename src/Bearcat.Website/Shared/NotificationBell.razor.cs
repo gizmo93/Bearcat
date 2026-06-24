@@ -4,27 +4,45 @@ using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.ValueObjects;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Shared;
 
-public partial class NotificationBell(IServiceScopeFactory serviceScopeFactory)
-    : ComponentBase,
-        IAsyncDisposable
+public partial class NotificationBell(
+    IServiceScopeFactory serviceScopeFactory,
+    NavigationManager navigationManager
+) : ComponentBase, IAsyncDisposable
 {
     private readonly CancellationTokenSource pollingCancellation = new();
     private IReadOnlyList<NotificationReadModel> latestNotifications = [];
     private int unresolvedCount;
     private bool isOpen;
     private bool isLoadingPreview;
+    private bool openedByTriggerClick;
     private Task? pollingTask;
 
     private string BadgeText => unresolvedCount > 99 ? "99+" : unresolvedCount.ToString();
 
     protected override async Task OnInitializedAsync()
     {
+        navigationManager.LocationChanged += HandleLocationChanged;
         await RefreshCountAsync();
         pollingTask = PollCountAsync(pollingCancellation.Token);
+    }
+
+    private void HandleTriggerClick()
+    {
+        if (openedByTriggerClick)
+        {
+            openedByTriggerClick = false;
+            return;
+        }
+
+        if (isOpen)
+        {
+            isOpen = false;
+        }
     }
 
     private async Task HandleOpenChangedAsync(bool open)
@@ -33,8 +51,24 @@ public partial class NotificationBell(IServiceScopeFactory serviceScopeFactory)
 
         if (open)
         {
+            openedByTriggerClick = true;
             await LoadPreviewAsync();
         }
+        else
+        {
+            openedByTriggerClick = false;
+        }
+    }
+
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        if (!isOpen)
+        {
+            return;
+        }
+
+        isOpen = false;
+        _ = InvokeAsync(StateHasChanged);
     }
 
     private async Task LoadPreviewAsync()
@@ -107,6 +141,7 @@ public partial class NotificationBell(IServiceScopeFactory serviceScopeFactory)
 
     public async ValueTask DisposeAsync()
     {
+        navigationManager.LocationChanged -= HandleLocationChanged;
         await pollingCancellation.CancelAsync();
         pollingCancellation.Dispose();
 
