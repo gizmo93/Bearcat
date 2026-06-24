@@ -7,7 +7,9 @@ Bearcat is a tool for managing One Click Hoster uploads. It tracks release folde
 
 Generated links can be submitted to one or more link crypters. Bearcat checks link availability automatically, schedules repackaging and reuploading when links go offline, and handles the case where a release that was down must be uploaded again with a `__nonce__` file so the generated archive hashes change.
 
-Bearcat is a .NET 10 application built on ASP.NET Core. The frontend uses Blazor, and PostgreSQL is used as the database. The application can run locally or in Docker.
+Bearcat is a .NET 10 application built on ASP.NET Core. The frontend uses Blazor, and PostgreSQL is used as the database. 
+
+The application can run in [Docker](https://gizmo93.github.io/Bearcat/use-the-docker-image/), as a [Desktop App on macOS and Windows](https://gizmo93.github.io/Bearcat/use-the-desktop-launcher/) and as a [Windows Service](https://gizmo93.github.io/Bearcat/use-the-windows-service/) for Server usages.
 
 ![gui.png](docs/images/gui.png)
 
