@@ -226,6 +226,7 @@ appsettings.user.json
 *Resource.designer.cs
 /**/*.css
 !/src/Bearcat.Website/wwwroot/bearcat.css
+!/src/Bearcat.Website/wwwroot/css/app-input.css
 custom.aprof
 
 /src/**/App_Data/*

@@ -39,7 +39,7 @@
                     {
                         <div class="flex items-center gap-2">
                             <LucideIcon Name="@(uploadedFile.OnlineState == OnlineState.Online ? "circle-check" : "circle-x")"
-                                        class="@($"h-4 w-4 {(uploadedFile.OnlineState == OnlineState.Online ? "text-emerald-400" : "text-red-400")}")" />
+                                        class="@($"h-4 w-4 {(uploadedFile.OnlineState == OnlineState.Online ? "text-emerald-500" : "text-red-500")}")" />
                             <span>@L.Localize(uploadedFile.OnlineState)</span>
                         </div>
                     }

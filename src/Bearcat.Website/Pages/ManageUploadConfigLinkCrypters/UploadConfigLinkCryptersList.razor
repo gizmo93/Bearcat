@@ -19,123 +19,118 @@
         </div>
     </BbCardHeader>
     <BbCardContent>
-        <BbDataTable TData="UploadConfigLinkCrypterReadModel"
-                     Data="uploadConfigLinkCrypters"
-                     ShowToolbar="false"
-                     ShowPagination="@(uploadConfigLinkCrypters.Count > 10)"
-                     InitialPageSize="10"
-                     AriaLabel="@L["UploadConfigLinkCrypters"]"
-                     Class="rounded-lg border border-border/70">
-            <Columns>
-                <BbDataTableColumn TData="UploadConfigLinkCrypterReadModel" TValue="string"
-                                   Header="@L["Crypter"]"
-                                   Property="@(item => item.LinkCrypterRegistrationName)"
-                                   Sortable="true"
-                                   Filterable="true">
-                    <CellTemplate Context="item">
-                        <div class="space-y-1">
-                            <p class="font-medium">@item.LinkCrypterRegistrationName</p>
-                            <p class="text-xs text-muted-foreground">@item.LinkCrypterName</p>
-                        </div>
-                    </CellTemplate>
-                </BbDataTableColumn>
-                <BbDataTableColumn TData="UploadConfigLinkCrypterReadModel" TValue="string"
-                                   Header="@L["Password"]"
-                                   Property="@(item => item.Password ?? string.Empty)">
-                    <CellTemplate Context="item">
-                        @if (!string.IsNullOrWhiteSpace(item.Password))
-                        {
-                            <HiddenElement>
-                                @item.Password
-                            </HiddenElement>
-                        }
-                        else
-                        {
-                            <span class="text-xs text-muted-foreground">-</span>
-                        }
-                    </CellTemplate>
-                </BbDataTableColumn>
-                <BbDataTableColumn TData="UploadConfigLinkCrypterReadModel" TValue="string"
-                                   Header="@L["LinkCrypterSettings"]"
-                                   Property="@(item => item.LinkCrypterRegistrationName)">
-                    <CellTemplate Context="item">
-                        <div class="flex flex-wrap gap-1">
-                            @if (item.SupportsCaptcha)
-                            {
-                                <BbBadge Variant="@(item.EnableCaptcha ? BadgeVariant.Default : BadgeVariant.Outline)">
-                                    @L["Captcha"]: @(item.EnableCaptcha ? L["Enabled"] : L["Disabled"])
-                                </BbBadge>
-                            }
-                            @if (item.SupportsContainerDownload)
-                            {
-                                <BbBadge Variant="@(item.EnableContainerDownload ? BadgeVariant.Default : BadgeVariant.Outline)">
-                                    @L["ContainerDownload"]: @(item.EnableContainerDownload ? L["Enabled"] : L["Disabled"])
-                                </BbBadge>
-                            }
-                            @if (item.SupportsClickAndLoad)
-                            {
-                                <BbBadge Variant="@(item.EnableClickAndLoad ? BadgeVariant.Default : BadgeVariant.Outline)">
-                                    @L["ClickAndLoad"]: @(item.EnableClickAndLoad ? L["Enabled"] : L["Disabled"])
-                                </BbBadge>
-                            }
-                            @if (!item.SupportsCaptcha && !item.SupportsContainerDownload && !item.SupportsClickAndLoad)
-                            {
-                                <span class="text-xs text-muted-foreground">-</span>
-                            }
-                        </div>
-                    </CellTemplate>
-                </BbDataTableColumn>
-                <BbDataTableColumn TData="UploadConfigLinkCrypterReadModel" TValue="bool"
-                                   Header="@L["Active"]"
-                                   Property="@(item => item.LinkCrypterIsActive)"
-                                   Sortable="true">
-                    <CellTemplate Context="item">
-                        <BbBadge Variant="@(item.LinkCrypterIsActive ? BadgeVariant.Default : BadgeVariant.Secondary)">
-                            @(item.LinkCrypterIsActive ? L["Active"] : L["Inactive"])
-                        </BbBadge>
-                    </CellTemplate>
-                </BbDataTableColumn>
-                <BbDataTableColumn TData="UploadConfigLinkCrypterReadModel" TValue="string"
-                                   Header=""
-                                   Property="@(item => item.LinkCrypterRegistrationName)">
-                    <CellTemplate Context="item">
-                        <div class="flex justify-end">
-                            @if (item.ContainerScope is LinkCrypterContainerScope.ReleaseCollection)
-                            {
-                                @if (item.ReleaseCollectionId is not null)
+        @if (uploadConfigLinkCrypters.Count == 0)
+        {
+            <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+                @L["NoLinkCryptersYet"]
+            </div>
+        }
+        else
+        {
+            <div class="overflow-hidden rounded-lg border border-border/70">
+                <div class="grid max-lg:hidden grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1.8fr)_90px_84px] items-center gap-4 bg-muted px-4 py-2 text-[0.6875rem] font-semibold uppercase text-muted-foreground">
+                    <span>@L["Crypter"]</span>
+                    <span>@L["Password"]</span>
+                    <span>@L["LinkCrypterSettings"]</span>
+                    <span>@L["Active"]</span>
+                    <span class="text-right">@L["Actions"]</span>
+                </div>
+                @foreach (var item in uploadConfigLinkCrypters)
+                {
+                    <div class="border-t border-border/70 first:border-t-0">
+                        <div class="grid gap-3 p-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1.8fr)_90px_84px] lg:items-center lg:gap-4 lg:px-4 lg:py-[0.85rem]">
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium">@item.LinkCrypterRegistrationName</p>
+                                <p class="text-xs text-muted-foreground">@item.LinkCrypterName</p>
+                            </div>
+
+                            <div class="min-w-0">
+                                <p class="mb-1 text-[0.6875rem] font-semibold uppercase text-muted-foreground lg:hidden">@L["Password"]</p>
+                                @if (!string.IsNullOrWhiteSpace(item.Password))
                                 {
-                                    <a class="text-xs font-medium text-primary underline-offset-4 hover:underline"
-                                       href="@($"/release-collections/{item.ReleaseCollectionId}")">
-                                        @L["ManagedByReleaseCollection"]
-                                    </a>
+                                    <HiddenElement>
+                                        @item.Password
+                                    </HiddenElement>
                                 }
                                 else
                                 {
-                                    <span class="text-xs text-muted-foreground">@L["ManagedByReleaseCollection"]</span>
+                                    <span class="text-xs text-muted-foreground">-</span>
                                 }
-                            }
-                            else
-                            {
-                                <BbDropdownMenu>
-                                    <BbDropdownMenuTrigger>
-                                        <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenLinkCrypterActions"]">
-                                            <LucideIcon Name="ellipsis" class="h-4 w-4" />
-                                        </BbButton>
-                                    </BbDropdownMenuTrigger>
-                                    <BbDropdownMenuContent Align="PopoverAlign.End">
-                                        <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(item))">
-                                            @L["Edit"]
-                                        </BbDropdownMenuItem>
-                                        <BbDropdownMenuItem OnClick="@(async _ => await ShowDeleteDialogAsync(item))">
-                                            @L["Delete"]
-                                        </BbDropdownMenuItem>
-                                    </BbDropdownMenuContent>
-                                </BbDropdownMenu>
-                            }
+                            </div>
+
+                            <div class="min-w-0">
+                                <p class="mb-1 text-[0.6875rem] font-semibold uppercase text-muted-foreground lg:hidden">@L["LinkCrypterSettings"]</p>
+                                <div class="flex flex-wrap gap-1">
+                                    @if (item.SupportsCaptcha)
+                                    {
+                                        <BbBadge Variant="@(item.EnableCaptcha ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                            @L["Captcha"]: @(item.EnableCaptcha ? L["Enabled"] : L["Disabled"])
+                                        </BbBadge>
+                                    }
+                                    @if (item.SupportsContainerDownload)
+                                    {
+                                        <BbBadge Variant="@(item.EnableContainerDownload ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                            @L["ContainerDownload"]: @(item.EnableContainerDownload ? L["Enabled"] : L["Disabled"])
+                                        </BbBadge>
+                                    }
+                                    @if (item.SupportsClickAndLoad)
+                                    {
+                                        <BbBadge Variant="@(item.EnableClickAndLoad ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                            @L["ClickAndLoad"]: @(item.EnableClickAndLoad ? L["Enabled"] : L["Disabled"])
+                                        </BbBadge>
+                                    }
+                                    @if (!item.SupportsCaptcha && !item.SupportsContainerDownload && !item.SupportsClickAndLoad)
+                                    {
+                                        <span class="text-xs text-muted-foreground">-</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="min-w-0">
+                                <p class="mb-1 text-[0.6875rem] font-semibold uppercase text-muted-foreground lg:hidden">@L["Active"]</p>
+                                <BbBadge Variant="@(item.LinkCrypterIsActive ? BadgeVariant.Default : BadgeVariant.Secondary)">
+                                    @(item.LinkCrypterIsActive ? L["Active"] : L["Inactive"])
+                                </BbBadge>
+                            </div>
+
+                            <div class="flex items-center justify-end gap-1">
+                                @if (item.ContainerScope is LinkCrypterContainerScope.ReleaseCollection)
+                                {
+                                    @if (item.ReleaseCollectionId is not null)
+                                    {
+                                        <a class="text-xs font-medium text-primary underline-offset-4 hover:underline"
+                                           href="@($"/release-collections/{item.ReleaseCollectionId}")">
+                                            @L["ManagedByReleaseCollection"]
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-xs text-muted-foreground">@L["ManagedByReleaseCollection"]</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <BbDropdownMenu>
+                                        <BbDropdownMenuTrigger>
+                                            <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenLinkCrypterActions"]">
+                                                <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                            </BbButton>
+                                        </BbDropdownMenuTrigger>
+                                        <BbDropdownMenuContent Align="PopoverAlign.End">
+                                            <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(item))">
+                                                @L["Edit"]
+                                            </BbDropdownMenuItem>
+                                            <BbDropdownMenuItem OnClick="@(async _ => await ShowDeleteDialogAsync(item))">
+                                                @L["Delete"]
+                                            </BbDropdownMenuItem>
+                                        </BbDropdownMenuContent>
+                                    </BbDropdownMenu>
+                                }
+                            </div>
                         </div>
-                    </CellTemplate>
-                </BbDataTableColumn>
-            </Columns>
-        </BbDataTable>
+                    </div>
+                }
+            </div>
+        }
     </BbCardContent>
 </BbCard>

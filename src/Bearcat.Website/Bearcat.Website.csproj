@@ -19,4 +19,55 @@
         <ProjectReference Include="..\Bearcat.Domain\Bearcat.Domain.csproj" />
         <ProjectReference Include="..\Bearcat.Infrastructure\Bearcat.Infrastructure.csproj" />
     </ItemGroup>
+
+    <PropertyGroup>
+        <TailwindVersion>v4.3.1</TailwindVersion>
+        <TailwindCliArch
+            Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'Arm64'"
+            >arm64</TailwindCliArch>
+        <TailwindCliArch Condition="'$(TailwindCliArch)' == ''">x64</TailwindCliArch>
+        <TailwindCliOs Condition="$([MSBuild]::IsOSPlatform('OSX'))">macos</TailwindCliOs>
+        <TailwindCliOs Condition="$([MSBuild]::IsOSPlatform('Linux'))">linux</TailwindCliOs>
+        <TailwindCliOs Condition="$([MSBuild]::IsOSPlatform('Windows'))">windows</TailwindCliOs>
+        <TailwindCliExtension Condition="$([MSBuild]::IsOSPlatform('Windows'))"
+            >.exe</TailwindCliExtension>
+        <TailwindCliFileName>tailwindcss-$(TailwindCliOs)-$(TailwindCliArch)$(TailwindCliExtension)</TailwindCliFileName>
+        <TailwindCliDirectory>$(MSBuildProjectDirectory)/obj/tailwind/$(TailwindVersion)/</TailwindCliDirectory>
+        <TailwindCli>$(TailwindCliDirectory)$(TailwindCliFileName)</TailwindCli>
+        <TailwindInput>$(MSBuildProjectDirectory)/wwwroot/css/app-input.css</TailwindInput>
+        <TailwindOutput>$(MSBuildProjectDirectory)/wwwroot/css/app.css</TailwindOutput>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <TailwindSource Include="$(TailwindInput)" />
+        <TailwindSource Include="$(MSBuildProjectDirectory)/Pages/**/*.razor;$(MSBuildProjectDirectory)/Shared/**/*.razor;$(MSBuildProjectDirectory)/Layout/**/*.razor" />
+    </ItemGroup>
+
+    <Target Name="DownloadTailwindCli" Condition="!Exists('$(TailwindCli)')">
+        <Message
+            Importance="high"
+            Text="Downloading Tailwind CSS CLI $(TailwindVersion) ($(TailwindCliFileName))..."
+        />
+        <DownloadFile
+            SourceUrl="https://github.com/tailwindlabs/tailwindcss/releases/download/$(TailwindVersion)/$(TailwindCliFileName)"
+            DestinationFolder="$(TailwindCliDirectory)"
+            DestinationFileName="$(TailwindCliFileName)"
+            SkipUnchangedFiles="true"
+        />
+        <Exec
+            Condition="!$([MSBuild]::IsOSPlatform('Windows'))"
+            Command="chmod +x &quot;$(TailwindCli)&quot;"
+        />
+    </Target>
+
+    <Target
+        Name="BuildTailwindCss"
+        DependsOnTargets="DownloadTailwindCli"
+        BeforeTargets="BeforeBuild"
+        Inputs="@(TailwindSource)"
+        Outputs="$(TailwindOutput)"
+    >
+        <Message Importance="high" Text="Building Tailwind CSS -> wwwroot/css/app.css" />
+        <Exec Command="&quot;$(TailwindCli)&quot; --input &quot;$(TailwindInput)&quot; --output &quot;$(TailwindOutput)&quot; --minify" />
+    </Target>
 </Project>
