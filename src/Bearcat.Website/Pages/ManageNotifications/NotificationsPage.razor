@@ -40,7 +40,7 @@
                  InitialPageSize="@pageSize"
                  IsLoading="isLoading"
                  AriaLabel="@L["Notifications"]"
-                 Class="bearcat-data-table">
+                 Class="bearcat-data-table bearcat-notifications-table">
         <Columns>
             <BbDataTableColumn TData="NotificationReadModel" TValue="string"
                                Header="@L["Type"]"
@@ -57,6 +57,7 @@
                                Property="@(notification => notification.ResolvedAt is null ? "Unresolved" : "Resolved")"
                                Width="145px">
                 <CellTemplate Context="notification">
+                    <span class="bearcat-mobile-cell-label">@L["Status"]</span>
                     @if (notification.ResolvedAt is null)
                     {
                         <BbBadge Variant="BadgeVariant.Outline">@L["Unresolved"]</BbBadge>
@@ -76,7 +77,7 @@
                                MinWidth="280px">
                 <CellTemplate Context="notification">
                     <a href="@($"/notifications/{notification.NotificationId}")" class="block min-w-0 hover:underline">
-                        <p class="truncate text-sm font-medium" title="@notification.Message">@notification.Message</p>
+                        <p class="truncate text-sm font-medium bearcat-notification-message" title="@notification.Message">@notification.Message</p>
                     </a>
                 </CellTemplate>
             </BbDataTableColumn>
@@ -85,6 +86,7 @@
                                Property="@(notification => notification.RelatedEntity?.DisplayName ?? string.Empty)"
                                MinWidth="240px">
                 <CellTemplate Context="notification">
+                    <span class="bearcat-mobile-cell-label">@L["RelatedEntity"]</span>
                     @if (notification.RelatedEntity is null)
                     {
                         <span class="text-sm text-muted-foreground">@L["Unlinked"]</span>
@@ -107,6 +109,7 @@
                                Property="@(notification => notification.CreatedAt)"
                                Width="180px">
                 <CellTemplate Context="notification">
+                    <span class="bearcat-mobile-cell-label">@L["CreatedAt"]</span>
                     <span class="text-sm">@notification.CreatedAt.ToString("g")</span>
                 </CellTemplate>
             </BbDataTableColumn>
