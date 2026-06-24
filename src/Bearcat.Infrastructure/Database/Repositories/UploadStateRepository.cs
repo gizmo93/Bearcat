@@ -37,6 +37,11 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
                 && !uploadStatesToExclude.Contains(u.UploadState)
                 && u.UploadConfig.HosterRegistration.IsActive
                 && u.UploadedFiles.Any(f => f.CheckedAt == null || f.CheckedAt < lastCheckThreshold)
+                && !dbWrite.Uploads.Any(newer =>
+                    newer.UploadConfigId == u.UploadConfigId
+                    && newer.Id > u.Id
+                    && newer.UploadState == UploadState.Completed
+                )
             )
             .ToListAsync(cancellationToken: cancellationToken);
     }

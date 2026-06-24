@@ -116,6 +116,109 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task CheckUploadStatesAsync_PreviousUploadSupersededByNewerCompletedUpload_OnlyChecksNewestUpload()
+    {
+        // Arrange
+        var staleCheckedAt = localNow.AddHours(-1);
+        var supersededUpload = await AddCompletedUploadAsync(
+            OnlineState.PartiallyOnline,
+            checkedAt: staleCheckedAt,
+            uploadedFileLinks: ["https://hoster.test/old1", "https://hoster.test/old2"]
+        );
+
+        var newerArchive = new Archive
+        {
+            ArchiveConfigId = supersededUpload.UploadConfig.ArchiveConfigId,
+            ArchiveFolderPath = "/tmp/archive",
+            ArchiveState = ArchiveState.Created,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveFiles =
+            [
+                new ArchiveFile { FullFileName = "new1.rar" },
+                new ArchiveFile { FullFileName = "new2.rar" },
+            ],
+            Uploads = [],
+            ErrorMessages = [],
+        };
+        var newerUpload = new Upload
+        {
+            UploadConfigId = supersededUpload.UploadConfigId,
+            Archive = newerArchive,
+            CreatedAt = DateTime.UtcNow,
+            UploadedAt = localNow.AddHours(-1),
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Online,
+            ErrorMessages = [],
+            UploadedFiles =
+            [
+                new UploadedFile
+                {
+                    ArchiveFile = newerArchive.ArchiveFiles[0],
+                    HosterFileLink = "https://hoster.test/new1",
+                    ErrorMessages = [],
+                    OnlineState = OnlineState.Online,
+                    CreatedAt = localNow.AddHours(-1),
+                    CheckedAt = staleCheckedAt,
+                },
+                new UploadedFile
+                {
+                    ArchiveFile = newerArchive.ArchiveFiles[1],
+                    HosterFileLink = "https://hoster.test/new2",
+                    ErrorMessages = [],
+                    OnlineState = OnlineState.Online,
+                    CreatedAt = localNow.AddHours(-1),
+                    CheckedAt = staleCheckedAt,
+                },
+            ],
+        };
+        dbContext.Uploads.Add(newerUpload);
+        await dbContext.SaveChangesAsync();
+
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.Is<IReadOnlyList<FileUrlToCheckDto>>(files =>
+                        files.Count == 2
+                        && files.All(file =>
+                            file.Url == "https://hoster.test/new1"
+                            || file.Url == "https://hoster.test/new2"
+                        )
+                    ),
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(
+                    true,
+                    [],
+                    new Dictionary<string, bool>
+                    {
+                        ["https://hoster.test/new1"] = true,
+                        ["https://hoster.test/new2"] = true,
+                    }
+                )
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var superseded = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .SingleAsync(u => u.Id == supersededUpload.Id);
+        var newer = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .SingleAsync(u => u.Id == newerUpload.Id);
+
+        superseded.UploadedFiles.ShouldAllBe(f => f.CheckedAt == staleCheckedAt);
+        newer.UploadedFiles.ShouldAllBe(f => f.CheckedAt > localNow.AddMinutes(-1));
+        hosterMock.VerifyAll();
+        hosterFactoryMock.VerifyAll();
+    }
+
+    [Test]
     public async Task CheckUploadStatesAsync_InactiveHosterRegistration_DoesNotCheckUploadState()
     {
         // Arrange
