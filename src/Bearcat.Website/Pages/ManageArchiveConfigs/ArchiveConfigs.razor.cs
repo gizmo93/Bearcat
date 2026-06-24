@@ -29,8 +29,8 @@ public partial class ArchiveConfigs(DialogService dialogService, ToastService to
     private IReleaseReadRepository readRepository = null!;
     private string ArchiveGridClass =>
         ReleaseType is ReleaseType.Unmanaged
-            ? "bearcat-archive-grid-unmanaged"
-            : "bearcat-archive-grid";
+            ? "lg:grid-cols-[minmax(0,1.35fr)_120px_110px_84px]"
+            : "lg:grid-cols-[minmax(0,1.35fr)_120px_110px_120px_minmax(0,1fr)_84px]";
 
     protected override async Task OnInitializedAsync()
     {

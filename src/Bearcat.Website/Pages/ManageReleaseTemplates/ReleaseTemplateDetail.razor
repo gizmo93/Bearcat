@@ -68,7 +68,7 @@
                 else
                 {
                     <div class="bearcat-config-list">
-                        <div class="bearcat-config-header bearcat-template-archive-grid">
+                        <div class="bearcat-config-header lg:grid-cols-[minmax(0,1fr)_150px_minmax(0,1.45fr)_minmax(0,0.8fr)_84px]">
                             <span>@L["Name"]</span>
                             <span>@L["Archiver"]</span>
                             <span>@L["ArchiveFilesBasePath"]</span>
@@ -78,7 +78,7 @@
                         @foreach (var config in releaseTemplate.ArchiveConfigTemplates)
                         {
                             <div class="bearcat-config-item">
-                                <div class="bearcat-config-row bearcat-template-archive-grid">
+                                <div class="bearcat-config-row lg:grid-cols-[minmax(0,1fr)_150px_minmax(0,1.45fr)_minmax(0,0.8fr)_84px]">
                                     <div class="min-w-0">
                                         <p class="text-sm font-semibold">@config.Name</p>
                                         @if (!string.IsNullOrWhiteSpace(config.ArchivePassword))
@@ -154,7 +154,7 @@
                 else
                 {
                     <div class="bearcat-config-list">
-                        <div class="bearcat-config-header bearcat-template-upload-grid">
+                        <div class="bearcat-config-header lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_90px_84px]">
                             <span>@L["UploadTarget"]</span>
                             <span>@L["ArchiveConfig"]</span>
                             <span>@L["Crypters"]</span>
@@ -163,7 +163,7 @@
                         @foreach (var config in releaseTemplate.UploadConfigTemplates)
                         {
                             <BbCollapsible Class="bearcat-config-item">
-                                <div class="bearcat-config-row bearcat-template-upload-grid">
+                                <div class="bearcat-config-row lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_90px_84px]">
                                     <div class="min-w-0">
                                         <div class="flex flex-wrap items-center gap-2">
                                             <span class="text-sm font-semibold">@config.DisplayName</span>
@@ -317,7 +317,7 @@
                 else
                 {
                     <div class="bearcat-config-list">
-                        <div class="bearcat-config-header bearcat-image-upload-config-grid">
+                        <div class="bearcat-config-header lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_84px]">
                             <span>@L["ImageUploadTarget"]</span>
                             <span>@L["ImageHosterRegistration"]</span>
                             <span class="text-right">@L["Actions"]</span>
@@ -325,7 +325,7 @@
                         @foreach (var config in releaseTemplate.ImageUploadConfigTemplates)
                         {
                             <div class="bearcat-config-item">
-                                <div class="bearcat-config-row bearcat-image-upload-config-grid">
+                                <div class="bearcat-config-row lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_84px]">
                                     <div class="min-w-0">
                                         <p class="text-sm font-semibold">@config.DisplayName</p>
                                     </div>
@@ -386,7 +386,7 @@
                 else
                 {
                     <div class="bearcat-config-list">
-                        <div class="bearcat-config-header bearcat-image-upload-config-grid">
+                        <div class="bearcat-config-header lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_84px]">
                             <span>@L["ImageUploadTarget"]</span>
                             <span>@L["ImageHosterRegistration"]</span>
                             <span class="text-right">@L["Actions"]</span>
@@ -394,7 +394,7 @@
                         @foreach (var config in releaseTemplate.CollectionImageUploadConfigTemplates)
                         {
                             <div class="bearcat-config-item">
-                                <div class="bearcat-config-row bearcat-image-upload-config-grid">
+                                <div class="bearcat-config-row lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_84px]">
                                     <div class="min-w-0">
                                         <p class="text-sm font-semibold">@config.DisplayName</p>
                                     </div>

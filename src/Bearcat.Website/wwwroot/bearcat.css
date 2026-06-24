@@ -130,11 +130,6 @@ a {
     top: 0.5rem;
 }
 
-.bearcat-app-inset {
-    min-width: 0;
-    min-height: 100vh;
-}
-
 .bearcat-app-header {
     border-color: color-mix(in oklch, var(--border) 78%, transparent) !important;
     background: transparent;
@@ -280,31 +275,11 @@ a {
     overflow-wrap: anywhere;
 }
 
-.bearcat-tab-label {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.45rem;
-}
-
-.bearcat-tab-meta {
-    color: var(--muted-foreground);
-    font-size: 0.625rem;
-    font-weight: 400;
-    line-height: 1;
-    opacity: 0.72;
-}
-
 .bearcat-release-title {
     max-width: 100%;
     overflow-wrap: anywhere;
     font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.75rem);
     line-height: 1.15;
-}
-
-.bearcat-badge-trigger {
-    display: inline-flex;
-    align-items: center;
-    line-height: 1;
 }
 
 .bearcat-data-table,
@@ -660,11 +635,6 @@ a {
     align-items: center;
 }
 
-.bearcat-release-page-nav {
-    display: flex;
-    justify-content: flex-start;
-}
-
 .bearcat-releases-page {
     width: 100%;
     max-width: 1800px;
@@ -814,13 +784,6 @@ a {
     color: var(--primary);
 }
 
-.bearcat-hoster-login-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    white-space: nowrap;
-}
-
 .bearcat-captcha-action-button {
     width: auto !important;
     min-width: 6.75rem;
@@ -936,6 +899,7 @@ a {
     font-weight: 600;
     line-height: 1.35;
     text-decoration: none;
+    overflow-wrap: anywhere;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
 }
@@ -1935,12 +1899,14 @@ a {
     gap: 0.25rem 1rem;
     font-size: 0.85rem;
     color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
 }
 
 .bearcat-media-file-meta span {
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
+    min-width: 6.5rem;
 }
 
 .bearcat-media-table {
@@ -2123,81 +2089,6 @@ a {
     vertical-align: middle;
 }
 
-.bearcat-registration-config {
-    min-width: 0;
-}
-
-.bearcat-registration-config-summary {
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-}
-
-.bearcat-registration-config-details {
-    margin-top: 0.75rem;
-    display: grid;
-    gap: 0.5rem;
-    border-top: 1px solid var(--border);
-    padding-top: 0.75rem;
-}
-
-.bearcat-registration-config-row {
-    display: grid;
-    gap: 0.15rem;
-}
-
-.bearcat-release-stats {
-    display: grid;
-    grid-template-columns: repeat(2, max-content);
-    align-items: center;
-    gap: 0;
-}
-
-.bearcat-release-kpi {
-    display: inline-grid;
-    grid-template-columns: auto minmax(0, max-content);
-    min-width: 0;
-    align-items: center;
-    column-gap: 0.55rem;
-    padding-inline: 0.9rem;
-    text-align: left;
-}
-
-.bearcat-release-kpi + .bearcat-release-kpi {
-    border-left: 1px solid var(--border);
-}
-
-.bearcat-release-kpi-value {
-    color: var(--foreground);
-    font-size: 1.25rem;
-    font-weight: 700;
-    line-height: 1;
-}
-
-.bearcat-release-kpi-copy {
-    display: grid;
-    gap: 0.1rem;
-    min-width: 0;
-}
-
-.bearcat-release-kpi-label {
-    color: var(--foreground);
-    font-size: 0.75rem;
-    font-weight: 600;
-    line-height: 1;
-    white-space: nowrap;
-}
-
-.bearcat-release-kpi-hint {
-    color: var(--muted-foreground);
-    font-size: 0.6875rem;
-    font-weight: 500;
-    line-height: 1;
-    white-space: nowrap;
-}
-
 .bearcat-config-list {
     overflow: hidden;
     border: 1px solid var(--border);
@@ -2332,16 +2223,6 @@ a {
     padding-top: 0.75rem;
 }
 
-.bearcat-folder-field {
-    display: grid;
-    gap: 0.5rem;
-}
-
-.bearcat-folder-button {
-    justify-content: center;
-    white-space: nowrap;
-}
-
 .bearcat-folder-dialog {
     display: flex;
     flex-direction: column;
@@ -2388,8 +2269,7 @@ a {
     color: var(--accent-foreground);
 }
 
-.bearcat-folder-tree-toggle,
-.bearcat-folder-tree-toggle-spacer {
+.bearcat-folder-tree-toggle {
     display: inline-flex;
     flex: 0 0 auto;
     align-items: center;
@@ -2555,11 +2435,6 @@ a {
 }
 
 @media (min-width: 640px) {
-    .bearcat-folder-field {
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: center;
-    }
-
     .bearcat-page-header,
     .bearcat-section-header {
         flex-direction: row;
@@ -2672,15 +2547,6 @@ a {
     .bearcat-release-info-bar {
         border-radius: 0.5rem;
     }
-
-    .bearcat-release-stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .bearcat-release-kpi {
-        padding-inline: 0;
-        grid-template-columns: auto minmax(0, 1fr);
-    }
 }
 
 @media (min-width: 1024px) {
@@ -2702,36 +2568,6 @@ a {
         padding: 0.85rem 1rem;
     }
 
-    .bearcat-archive-grid {
-        grid-template-columns: minmax(0, 1.35fr) 120px 110px 120px minmax(0, 1fr) 84px;
-    }
-
-    .bearcat-archive-grid-unmanaged {
-        grid-template-columns: minmax(0, 1.35fr) 120px 110px 84px;
-    }
-
-    .bearcat-upload-grid {
-        grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr) 84px;
-    }
-
-    .bearcat-template-archive-grid {
-        grid-template-columns:
-            minmax(0, 1fr) 150px minmax(0, 1.45fr) minmax(0, 0.8fr)
-            84px;
-    }
-
-    .bearcat-template-upload-grid {
-        grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 90px 84px;
-    }
-
-    .bearcat-image-upload-config-grid {
-        grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 84px;
-    }
-
-    .bearcat-collection-slots-grid {
-        grid-template-columns: minmax(0, 1fr) minmax(160px, 0.75fr) 150px 110px 120px 84px;
-    }
-
     .bearcat-collection-containers {
         padding-left: calc(1rem + min(28%, 23rem));
     }
@@ -2742,24 +2578,8 @@ a {
         gap: 1rem;
     }
 
-    .bearcat-collection-releases-grid {
-        grid-template-columns: minmax(0, 1fr) 140px 140px 180px 96px;
-    }
-
     .bearcat-mobile-label {
         display: none;
-    }
-}
-
-.bearcat-series-metadata {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-@media (min-width: 640px) {
-    .bearcat-series-metadata {
-        flex-direction: row;
     }
 }
 

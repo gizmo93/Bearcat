@@ -90,7 +90,7 @@
                                Property="@(hoster => hoster.Name)"
                                Width="260px">
                 <CellTemplate Context="hoster">
-                    <div class="bearcat-hoster-login-actions">
+                    <div class="flex items-center gap-2 whitespace-nowrap">
                         <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => TryLoginAsync(hoster))">
                             @L["TryLogin"]
                         </BbButton>

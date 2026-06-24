@@ -102,7 +102,7 @@
                 }
                 else
                 {
-                    <div class="bearcat-series-metadata">
+                    <div class="flex flex-col gap-4 sm:flex-row">
                         @if (!string.IsNullOrWhiteSpace(releaseCollection.Metadata.CoverUrl))
                         {
                             <a href="@releaseCollection.Metadata.CoverUrl"
@@ -176,7 +176,7 @@
                 else
                 {
                     <div class="bearcat-config-list">
-                        <div class="bearcat-config-header bearcat-collection-slots-grid">
+                        <div class="bearcat-config-header lg:grid-cols-[minmax(0,1fr)_minmax(160px,0.75fr)_150px_110px_120px_84px]">
                             <span>@L["Name"]</span>
                             <span>@L["SharedLinkCrypters"]</span>
                             <span>@L["PasswordPolicy"]</span>
@@ -187,7 +187,7 @@
                         @foreach (var slot in releaseCollection.UploadSlots)
                         {
                             <div class="bearcat-config-item">
-                                <div class="bearcat-config-row bearcat-collection-slots-grid">
+                                <div class="bearcat-config-row lg:grid-cols-[minmax(0,1fr)_minmax(160px,0.75fr)_150px_110px_120px_84px]">
                                     <div class="min-w-0">
                                         <p class="truncate text-sm font-semibold" title="@slot.Name">@slot.Name</p>
                                         <p class="mt-1 truncate text-xs text-muted-foreground" title="@slot.Key">@slot.Key</p>
@@ -330,7 +330,7 @@
                 else
                 {
                     <div class="bearcat-config-list">
-                        <div class="bearcat-config-header bearcat-collection-releases-grid">
+                        <div class="bearcat-config-header lg:grid-cols-[minmax(0,1fr)_140px_140px_180px_96px]">
                             <span>@L["Name"]</span>
                             <span>@L["OnlineState"]</span>
                             <span>@L["ReleaseType"]</span>
@@ -340,7 +340,7 @@
                         @foreach (var release in releaseCollection.Releases)
                         {
                             <div class="bearcat-config-item">
-                                <div class="bearcat-config-row bearcat-collection-releases-grid">
+                                <div class="bearcat-config-row lg:grid-cols-[minmax(0,1fr)_140px_140px_180px_96px]">
                                     <a class="bearcat-release-list-name"
                                        href="@($"/releases/{release.ReleaseId}")">
                                         @release.Name

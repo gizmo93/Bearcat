@@ -27,7 +27,7 @@
         else
         {
             <div class="bearcat-config-list">
-                <div class="bearcat-config-header bearcat-upload-grid">
+                <div class="bearcat-config-header lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1fr)_84px]">
                     <span>@L["UploadTarget"]</span>
                     <span>@L["ArchiveConfig"]</span>
                     <span class="text-right">@L["Actions"]</span>
@@ -35,7 +35,7 @@
                 @foreach (var config in uploadConfigs)
                 {
                     <BbCollapsible Class="@($"bearcat-config-item {(FocusUploadConfigId == config.UploadConfigId ? "bearcat-config-item-focused" : string.Empty)}")">
-                        <div class="bearcat-config-row bearcat-upload-grid">
+                        <div class="bearcat-config-row lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1fr)_84px]">
                             <div class="min-w-0">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span class="text-sm font-semibold">@config.Name</span>

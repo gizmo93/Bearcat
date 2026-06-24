@@ -24,7 +24,7 @@
         else
         {
             <div class="bearcat-config-list">
-                <div class="bearcat-config-header bearcat-upload-grid">
+                <div class="bearcat-config-header lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1fr)_84px]">
                     <span>@L["ImageUploadTarget"]</span>
                     <span>@L["ImageHosterRegistration"]</span>
                     <span>@L["ImageUploads"]</span>
@@ -33,7 +33,7 @@
                 @foreach (var config in imageUploadConfigs)
                 {
                     <div class="bearcat-config-item">
-                        <div class="bearcat-config-row bearcat-upload-grid">
+                        <div class="bearcat-config-row lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1fr)_84px]">
                             <div class="min-w-0">
                                 <span class="text-sm font-semibold">@config.Name</span>
                             </div>

@@ -41,6 +41,7 @@
     <ItemGroup>
         <TailwindSource Include="$(TailwindInput)" />
         <TailwindSource Include="$(MSBuildProjectDirectory)/Pages/**/*.razor;$(MSBuildProjectDirectory)/Shared/**/*.razor;$(MSBuildProjectDirectory)/Layout/**/*.razor" />
+        <TailwindSource Include="$(MSBuildProjectDirectory)/Pages/**/*.razor.cs;$(MSBuildProjectDirectory)/Shared/**/*.razor.cs;$(MSBuildProjectDirectory)/Layout/**/*.razor.cs" />
     </ItemGroup>
 
     <ItemGroup>
@@ -72,6 +73,7 @@
     >
         <Message Importance="high" Text="Building Tailwind CSS -> wwwroot/css/app.css" />
         <Exec Command="&quot;$(TailwindCli)&quot; --input &quot;$(TailwindInput)&quot; --output &quot;$(TailwindOutput)&quot; --minify" />
+        <Touch Files="$(TailwindOutput)" />
     </Target>
 
     <Target

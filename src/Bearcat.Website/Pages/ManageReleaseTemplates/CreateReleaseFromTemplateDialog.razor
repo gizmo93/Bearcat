@@ -14,11 +14,11 @@
 
             <div class="space-y-2">
                 <label class="text-sm font-medium">@L["ReleaseFolder"]</label>
-                <div class="bearcat-folder-field">
+                <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                     <BbInput Value="@formModel.FolderPath" Disabled="true" Class="sm:flex-1" />
                     <BbButton Variant="ButtonVariant.Outline"
                               Size="ButtonSize.Small"
-                              Class="bearcat-folder-button"
+                              Class="justify-center whitespace-nowrap"
                               AriaLabel="@L["BrowseReleaseFolders"]"
                               OnClick="OpenFolderDialogAsync">
                         <LucideIcon Name="folder-open" class="h-4 w-4" />

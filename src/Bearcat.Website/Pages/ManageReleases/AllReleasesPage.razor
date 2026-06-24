@@ -102,8 +102,7 @@
             </BbDataTableColumn>
             <BbDataTableColumn TData="ReleaseReadModel" TValue="string"
                                Header="@L["Name"]"
-                               Property="@(release => release.Name)"
-                               Width="28%">
+                               Property="@(release => release.Name)">
                 <CellTemplate Context="release">
                     <a class="bearcat-release-list-name"
                        href="@($"/releases/{release.ReleaseId}")">
@@ -126,7 +125,7 @@
                 <CellTemplate Context="release">
                     <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
                         <BbTooltipTrigger>
-                            <span class="bearcat-badge-trigger">
+                            <span class="inline-flex items-center leading-none">
                                 <BbBadge Variant="BadgeVariant.Outline">@L.Localize(release.ReleaseType)</BbBadge>
                             </span>
                         </BbTooltipTrigger>
@@ -205,7 +204,7 @@
 
             @if (TotalPages > 1)
             {
-                <BbPagination Class="bearcat-release-page-nav">
+                <BbPagination Class="flex justify-start">
                     <BbPaginationContent>
                         <BbPaginationItem>
                             <BbPaginationPrevious Disabled="@(CurrentPage <= 1)"

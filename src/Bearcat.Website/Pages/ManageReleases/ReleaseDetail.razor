@@ -45,7 +45,7 @@
                     <div class="flex flex-wrap items-center gap-2">
                         <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
                             <BbTooltipTrigger>
-                                <span class="bearcat-badge-trigger">
+                                <span class="inline-flex items-center leading-none">
                                     <BbBadge Variant="BadgeVariant.Outline">@L.Localize(release.ReleaseType)</BbBadge>
                                 </span>
                             </BbTooltipTrigger>
@@ -111,24 +111,24 @@
             <BbTabsTrigger Value="release-infos">@L["ReleaseInfo"]</BbTabsTrigger>
             <BbTabsTrigger Value="archives">@L["ArchiveConfigurations"]</BbTabsTrigger>
             <BbTabsTrigger Value="upload-configs">
-                <span class="bearcat-tab-label">
+                <span class="inline-flex items-baseline gap-[0.45rem]">
                     <span>@L["UploadConfigurations"]</span>
-                    <span class="bearcat-tab-meta">@release.ActiveUploadConfigsCount</span>
+                    <span class="text-muted-foreground text-[0.625rem] font-normal leading-none opacity-[0.72]">@release.ActiveUploadConfigsCount</span>
                 </span>
             </BbTabsTrigger>
             <BbTabsTrigger Value="image-upload-configs">
-                <span class="bearcat-tab-label">
+                <span class="inline-flex items-baseline gap-[0.45rem]">
                     <span>@L["ImageUploadConfigurations"]</span>
                 </span>
             </BbTabsTrigger>
             <BbTabsTrigger Value="uploads">
-                <span class="bearcat-tab-label">
+                <span class="inline-flex items-baseline gap-[0.45rem]">
                     <span>@L["Uploads"]</span>
-                    <span class="bearcat-tab-meta">@release.OnlineUploadConfigsCount @L["OnlineState.Online"]</span>
+                    <span class="text-muted-foreground text-[0.625rem] font-normal leading-none opacity-[0.72]">@release.OnlineUploadConfigsCount @L["OnlineState.Online"]</span>
                 </span>
             </BbTabsTrigger>
             <BbTabsTrigger Value="image-uploads">
-                <span class="bearcat-tab-label">
+                <span class="inline-flex items-baseline gap-[0.45rem]">
                     <span>@L["ImageUploads"]</span>
                 </span>
             </BbTabsTrigger>
