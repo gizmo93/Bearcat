@@ -43,6 +43,10 @@
         <TailwindSource Include="$(MSBuildProjectDirectory)/Pages/**/*.razor;$(MSBuildProjectDirectory)/Shared/**/*.razor;$(MSBuildProjectDirectory)/Layout/**/*.razor" />
     </ItemGroup>
 
+    <ItemGroup>
+        <Content Remove="wwwroot/css/app.css" />
+    </ItemGroup>
+
     <Target Name="DownloadTailwindCli" Condition="!Exists('$(TailwindCli)')">
         <Message
             Importance="high"
@@ -63,11 +67,20 @@
     <Target
         Name="BuildTailwindCss"
         DependsOnTargets="DownloadTailwindCli"
-        BeforeTargets="BeforeBuild"
         Inputs="@(TailwindSource)"
         Outputs="$(TailwindOutput)"
     >
         <Message Importance="high" Text="Building Tailwind CSS -> wwwroot/css/app.css" />
         <Exec Command="&quot;$(TailwindCli)&quot; --input &quot;$(TailwindInput)&quot; --output &quot;$(TailwindOutput)&quot; --minify" />
+    </Target>
+
+    <Target
+        Name="IncludeTailwindCssStaticWebAsset"
+        DependsOnTargets="BuildTailwindCss"
+        BeforeTargets="AssignTargetPaths"
+    >
+        <ItemGroup>
+            <Content Include="wwwroot/css/app.css" />
+        </ItemGroup>
     </Target>
 </Project>
