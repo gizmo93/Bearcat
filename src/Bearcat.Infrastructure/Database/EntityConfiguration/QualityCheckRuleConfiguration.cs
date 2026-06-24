@@ -11,6 +11,6 @@ public class QualityCheckRuleConfiguration : IEntityTypeConfiguration<QualityChe
         builder.HasKey(r => r.Id);
         builder.Property(r => r.QualityProfileId).IsRequired();
         builder.Property(r => r.RuleType).IsRequired();
-        builder.Property(r => r.ParametersJson).IsRequired();
+        builder.Property(r => r.ParametersJson).IsRequired().HasColumnType("jsonb");
     }
 }

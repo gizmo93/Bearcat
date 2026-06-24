@@ -13,7 +13,7 @@ public class ReleaseMediaFileConfiguration : IEntityTypeConfiguration<ReleaseMed
         builder.Property(file => file.ReleaseId).IsRequired();
         builder.Property(file => file.RelativePath).IsRequired().HasMaxLength(1000);
         builder.Property(file => file.SizeBytes).IsRequired();
-        builder.Property(file => file.MediaInfoJson).IsRequired();
+        builder.Property(file => file.MediaInfoJson).IsRequired().HasColumnType("jsonb");
         builder.Property(file => file.MediaInfoText).IsRequired();
 
         builder.HasIndex(file => file.ReleaseId);
