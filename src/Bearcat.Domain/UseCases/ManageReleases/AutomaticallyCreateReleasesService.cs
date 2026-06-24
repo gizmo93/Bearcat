@@ -4,6 +4,7 @@ using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -19,7 +20,8 @@ public class AutomaticallyCreateReleasesService(
     TimeProvider timeProvider,
     IArchiverFactory archiverFactory,
     ReleaseCollectionAssignmentService releaseCollectionAssignmentService,
-    IApplicationConfigurationProvider configuration
+    IApplicationConfigurationProvider configuration,
+    INotificationService notificationService
 )
 {
     private const int MaxConcurrentFolderScans = 4;
@@ -188,14 +190,10 @@ public class AutomaticallyCreateReleasesService(
 
         repository.Add(release);
 
-        repository.Add(
-            new Notification
-            {
-                CreatedAt = timeProvider.GetLocalNow(),
-                NotificationType = NotificationType.Info,
-                Message =
-                    $"Release '{release.Name}' was created automatically from template '{candidate.Automation.ReleaseTemplate.Name}'.",
-            }
+        notificationService.CreateInfo(
+            message: $"Release '{release.Name}' was created automatically from template '{candidate.Automation.ReleaseTemplate.Name}'",
+            entity: release,
+            selector: n => n.Release
         );
     }
 

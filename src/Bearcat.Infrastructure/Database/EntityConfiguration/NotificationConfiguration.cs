@@ -42,5 +42,13 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
             .HasPrincipalKey(l => l.Id)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .HasOne(n => n.Release)
+            .WithMany(l => l.Notifications)
+            .HasForeignKey(n => n.ReleaseId)
+            .HasPrincipalKey(l => l.Id)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

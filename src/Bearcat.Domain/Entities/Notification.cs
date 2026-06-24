@@ -22,6 +22,10 @@ public class Notification
 
     public Archive? Archive { get; set; }
 
+    public int? ReleaseId { get; set; }
+
+    public Release? Release { get; set; }
+
     public int? LinkCrypterContainerId { get; set; }
 
     public LinkCrypterContainer? LinkCrypterContainer { get; set; }

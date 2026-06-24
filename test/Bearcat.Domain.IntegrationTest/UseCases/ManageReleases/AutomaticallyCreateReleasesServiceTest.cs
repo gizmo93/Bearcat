@@ -6,6 +6,7 @@ using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Abstractions.SeriesDatabase;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
@@ -44,28 +45,39 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         dbContext = Database.CreateDbContext();
         nfoDatabaseFactoryMock = new Mock<INfoDatabaseFactory>(MockBehavior.Strict);
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
+
         Directory.CreateDirectory(tempRootPath);
+
         var archiverFactory = new Mock<IArchiverFactory>();
+
         archiverFactory
             .Setup(f => f.GetArchivers())
             .Returns([new ArchiverDto("RAR", "RarArchiver", ".rar")]);
 
+        var notificationRepository = new NotificationRepository(dbContext);
+
+        var notificationService = new NotificationService(
+            repository: notificationRepository,
+            timeProvider: CreateTimeProvider()
+        );
+
         service = new AutomaticallyCreateReleasesService(
-            new ReleaseFolderAutomationRepository(dbContext, dbContext),
-            new FileSystemService(),
-            CreateReleaseInfoResolutionService(),
-            CreateMediaMetadataService(),
-            CreateTimeProvider(),
-            archiverFactory.Object,
-            new ReleaseCollectionAssignmentService(
+            repository: new ReleaseFolderAutomationRepository(dbContext, dbContext),
+            fileSystemService: new FileSystemService(),
+            releaseInfoResolutionService: CreateReleaseInfoResolutionService(),
+            mediaMetadataService: CreateMediaMetadataService(),
+            timeProvider: CreateTimeProvider(),
+            archiverFactory: archiverFactory.Object,
+            releaseCollectionAssignmentService: new ReleaseCollectionAssignmentService(
                 new ReleaseCollectionRepository(
-                    dbContext,
-                    dbContext,
-                    Mock.Of<ISeriesDatabaseFactory>()
+                    dbRead: dbContext,
+                    dbWrite: dbContext,
+                    seriesDatabaseFactory: Mock.Of<ISeriesDatabaseFactory>()
                 ),
                 CreateTimeProvider()
             ),
-            CreateConfigurationProvider()
+            configuration: CreateConfigurationProvider(),
+            notificationService: notificationService
         );
     }
 
@@ -198,7 +210,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         var notification = await dbContext.Notifications.SingleAsync();
         notification.NotificationType.ShouldBe(NotificationType.Info);
         notification.Message.ShouldBe(
-            "Release 'Bearcat.Release.1080p' was created automatically from template 'Managed template'."
+            "Release 'Bearcat.Release.1080p' was created automatically from template 'Managed template'"
         );
     }
 

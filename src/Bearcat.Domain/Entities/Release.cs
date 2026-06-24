@@ -47,4 +47,6 @@ public class Release
     public DateTime? QualityGateEvaluatedAt { get; set; }
 
     public List<ReleaseQualityIssue> QualityIssues { get; set; } = [];
+
+    public List<Notification> Notifications { get; set; } = [];
 }

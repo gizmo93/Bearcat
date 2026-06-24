@@ -906,4 +906,7 @@
   <data name="QualityProfile" xml:space="preserve"><value>Qualitätsprofil</value></data>
   <data name="NoQualityProfile" xml:space="preserve"><value>Kein Qualitätsprofil</value></data>
   <data name="QualityProfileHelp" xml:space="preserve"><value>Releases dieser Gruppe müssen das gewählte Profil bestehen, bevor Uploads erstellt werden.</value></data>
+    <data name="NotificationEntity.Release" xml:space="preserve">
+        <value>Release</value>
+    </data>
 </root>

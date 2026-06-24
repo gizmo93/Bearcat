@@ -121,7 +121,9 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
                 : n.LinkCrypterContainer!.UploadConfigLinkCrypter!.UploadConfig.Release.Name,
             n.LinkCrypterContainerId == null
                 ? null
-                : n.LinkCrypterContainer!.LinkCrypterRegistration.Name
+                : n.LinkCrypterContainer!.LinkCrypterRegistration.Name,
+            n.ReleaseId,
+            n.ReleaseId == null ? null : n.Release!.Name
         );
     }
 
@@ -148,9 +150,12 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
         )
         {
             return new NotificationRelatedEntityReadModel(
-                "Upload",
-                JoinDisplayName(notification.UploadReleaseName, notification.UploadConfigName),
-                $"/releases/{notification.UploadReleaseId}?tab=uploads&uploadConfigId={notification.UploadConfigId}"
+                EntityType: "Upload",
+                DisplayName: JoinDisplayName(
+                    notification.UploadReleaseName,
+                    notification.UploadConfigName
+                ),
+                TargetUrl: $"/releases/{notification.UploadReleaseId}?tab=uploads&uploadConfigId={notification.UploadConfigId}"
             );
         }
 
@@ -161,9 +166,12 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
         )
         {
             return new NotificationRelatedEntityReadModel(
-                "Archive",
-                JoinDisplayName(notification.ArchiveReleaseName, notification.ArchiveConfigName),
-                $"/releases/{notification.ArchiveReleaseId}?tab=archives&archiveConfigId={notification.ArchiveConfigId}"
+                EntityType: "Archive",
+                DisplayName: JoinDisplayName(
+                    notification.ArchiveReleaseName,
+                    notification.ArchiveConfigName
+                ),
+                TargetUrl: $"/releases/{notification.ArchiveReleaseId}?tab=archives&archiveConfigId={notification.ArchiveConfigId}"
             );
         }
 
@@ -174,13 +182,22 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
         )
         {
             return new NotificationRelatedEntityReadModel(
-                "LinkCrypterContainer",
-                JoinDisplayName(
+                EntityType: "LinkCrypterContainer",
+                DisplayName: JoinDisplayName(
                     notification.LinkReleaseName,
                     notification.LinkUploadConfigName,
                     notification.LinkCrypterName
                 ),
-                $"/releases/{notification.LinkReleaseId}?tab=upload-configs&uploadConfigId={notification.LinkUploadConfigId}"
+                TargetUrl: $"/releases/{notification.LinkReleaseId}?tab=upload-configs&uploadConfigId={notification.LinkUploadConfigId}"
+            );
+        }
+
+        if (notification.ReleaseId is not null)
+        {
+            return new NotificationRelatedEntityReadModel(
+                EntityType: "Release",
+                DisplayName: notification.ReleaseName ?? "Unlinked",
+                TargetUrl: $"/releases/{notification.ReleaseId}"
             );
         }
 
@@ -214,6 +231,8 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
         string? LinkUploadConfigName,
         int? LinkReleaseId,
         string? LinkReleaseName,
-        string? LinkCrypterName
+        string? LinkCrypterName,
+        int? ReleaseId,
+        string? ReleaseName
     );
 }
