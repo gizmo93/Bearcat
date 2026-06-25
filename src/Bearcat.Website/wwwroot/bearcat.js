@@ -84,9 +84,91 @@ function initScrollAwareHeader() {
 
 initScrollAwareHeader();
 
+const lineNumberedTextarea = (() => {
+    const registry = new WeakMap();
+
+    function paint(textarea, gutter, mirror) {
+        if (!textarea || !gutter) {
+            return;
+        }
+
+        const style = window.getComputedStyle(textarea);
+        mirror.style.fontFamily = style.fontFamily;
+        mirror.style.fontSize = style.fontSize;
+        mirror.style.fontWeight = style.fontWeight;
+        mirror.style.lineHeight = style.lineHeight;
+        mirror.style.letterSpacing = style.letterSpacing;
+        mirror.style.tabSize = style.tabSize;
+        mirror.style.overflowWrap = style.overflowWrap;
+        mirror.style.wordBreak = style.wordBreak;
+
+        const contentWidth =
+            textarea.clientWidth -
+            parseFloat(style.paddingLeft) -
+            parseFloat(style.paddingRight);
+        mirror.style.width = Math.max(0, contentWidth) + "px";
+
+        mirror.textContent = "x";
+        const rowHeight = mirror.offsetHeight || parseFloat(style.fontSize) * 1.2;
+
+        const lines = textarea.value.split("\n");
+        const numbers = [];
+
+        for (let i = 0; i < lines.length; i++) {
+            numbers.push(String(i + 1));
+
+            const line = lines[i];
+            mirror.textContent = line.length > 0 ? line : " ";
+            const rows = Math.max(1, Math.round(mirror.offsetHeight / rowHeight));
+
+            for (let row = 1; row < rows; row++) {
+                numbers.push("");
+            }
+        }
+
+        gutter.textContent = numbers.join("\n");
+        gutter.scrollTop = textarea.scrollTop;
+    }
+
+    function attach(textarea, gutter, mirror) {
+        if (!textarea || !gutter || !mirror) {
+            return;
+        }
+
+        if (registry.has(textarea)) {
+            refresh(textarea);
+            return;
+        }
+
+        const onInput = () => paint(textarea, gutter, mirror);
+        const onScroll = () => {
+            gutter.scrollTop = textarea.scrollTop;
+        };
+        const resizeObserver = new ResizeObserver(() => paint(textarea, gutter, mirror));
+
+        registry.set(textarea, { gutter, mirror, onInput, onScroll, resizeObserver });
+
+        textarea.addEventListener("input", onInput);
+        textarea.addEventListener("scroll", onScroll, { passive: true });
+        resizeObserver.observe(textarea);
+
+        paint(textarea, gutter, mirror);
+    }
+
+    function refresh(textarea) {
+        const entry = registry.get(textarea);
+        if (entry) {
+            paint(textarea, entry.gutter, entry.mirror);
+        }
+    }
+
+    return { attach, refresh };
+})();
+
 window.bearcat = {
     copyFromTarget,
     copyText,
     setCookie,
     updateScrollAwareHeader,
+    lineNumberedTextarea,
 };

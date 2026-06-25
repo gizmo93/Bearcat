@@ -1,0 +1,62 @@
+@inject IJSRuntime JS
+
+<div class="bearcat-code-editor @Class">
+    <pre @ref="gutterRef" class="bearcat-code-editor-gutter" aria-hidden="true">1</pre>
+    <textarea @ref="textareaRef"
+              class="bearcat-code-editor-input"
+              spellcheck="false"
+              placeholder="@Placeholder"
+              @bind:get="Value"
+              @bind:set="SetValueAsync"
+              @bind:event="oninput"></textarea>
+    <div @ref="mirrorRef" class="bearcat-code-editor-mirror" aria-hidden="true"></div>
+</div>
+
+@code {
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ValueChanged { get; set; }
+
+    [Parameter]
+    public string? Placeholder { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private ElementReference textareaRef;
+    private ElementReference gutterRef;
+    private ElementReference mirrorRef;
+    private bool attached;
+    private string? lastValue;
+
+    private async Task SetValueAsync(string? value)
+    {
+        Value = value;
+        lastValue = value;
+        await ValueChanged.InvokeAsync(value);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync(
+                "bearcat.lineNumberedTextarea.attach",
+                textareaRef,
+                gutterRef,
+                mirrorRef
+            );
+            attached = true;
+            lastValue = Value;
+            return;
+        }
+
+        if (attached && !string.Equals(lastValue, Value, StringComparison.Ordinal))
+        {
+            lastValue = Value;
+            await JS.InvokeVoidAsync("bearcat.lineNumberedTextarea.refresh", textareaRef);
+        }
+    }
+}

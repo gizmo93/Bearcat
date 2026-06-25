@@ -64,11 +64,11 @@
                                            Label="@L["ForumPostTemplateType"]"
                                            Options="TypeOptions" />
 
-                        <BbFormFieldTextarea @bind-Value="formModel.TemplateBody"
-                                             Label="@L["Template"]"
-                                             Placeholder="@L["ForumPostTemplateBodyPlaceholder"]"
-                                             InputClass="min-h-[34rem] font-mono text-xs"
-                                             UpdateTiming="UpdateTiming.OnChange" />
+                        <div class="space-y-1.5">
+                            <label class="text-sm font-medium leading-none">@L["Template"]</label>
+                            <LineNumberedTextarea @bind-Value="formModel.TemplateBody"
+                                                  Placeholder="@L["ForumPostTemplateBodyPlaceholder"]" />
+                        </div>
 
                         @if (!string.IsNullOrWhiteSpace(errorMessage))
                         {
