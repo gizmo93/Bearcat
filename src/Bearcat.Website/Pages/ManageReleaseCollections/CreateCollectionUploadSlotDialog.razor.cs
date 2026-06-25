@@ -60,6 +60,13 @@ public partial class CreateCollectionUploadSlotDialog(
     private bool CanUsePremiumOnlyDownload =>
         SelectedHosterRegistration?.SupportsPremiumOnlyDownloads is true;
 
+    private CollectionArchiveConfigOptionReadModel? SelectedArchiveConfig =>
+        string.IsNullOrWhiteSpace(FormModel.ArchiveConfigName)
+            ? null
+            : archiveConfigOptions.FirstOrDefault(config =>
+                config.Name == FormModel.ArchiveConfigName
+            );
+
     protected override async Task OnInitializedAsync()
     {
         hosterRegistrations = await hosterReadRepository.GetAllRegistrationsAsync();
@@ -111,6 +118,22 @@ public partial class CreateCollectionUploadSlotDialog(
         if (string.IsNullOrWhiteSpace(FormModel.ArchiveConfigName))
         {
             messageStore.Add(() => FormModel.ArchiveConfigName!, L["ArchiveConfigRequired"]);
+        }
+
+        if (
+            SelectedHosterRegistration?.MaxFileSizeMb is { } maxFileSizeMb
+            && SelectedArchiveConfig is { } archiveConfig
+            && archiveConfig.ArchiveFileSizeMb > maxFileSizeMb
+        )
+        {
+            messageStore.Add(
+                () => FormModel.ArchiveConfigName!,
+                L[
+                    "ArchiveFileSizeExceedsHosterLimit",
+                    archiveConfig.ArchiveFileSizeMb,
+                    maxFileSizeMb
+                ]
+            );
         }
 
         var key = CreateStableKey(FormModel.Name);

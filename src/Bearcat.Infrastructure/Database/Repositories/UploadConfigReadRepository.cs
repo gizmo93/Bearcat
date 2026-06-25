@@ -57,13 +57,14 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
             .ToDictionaryAsync(h => h.Id, h => h.Name, cancellationToken: cancellationToken);
     }
 
-    public async Task<IReadOnlyDictionary<int, string>> GetArchiveConfigOptionsAsync(
+    public async Task<IReadOnlyList<ArchiveConfigOptionReadModel>> GetArchiveConfigOptionsAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     )
     {
         return await dbRead
             .ArchiveConfigs.Where(a => a.ReleaseId == releaseId)
-            .ToDictionaryAsync(a => a.Id, a => a.Name, cancellationToken: cancellationToken);
+            .Select(a => new ArchiveConfigOptionReadModel(a.Id, a.Name, a.ArchiveFileSizeMb))
+            .ToListAsync(cancellationToken: cancellationToken);
     }
 }

@@ -33,7 +33,7 @@
                                @bind-Value="formModel.ArchiveConfigId"
                                Label="@L["ArchiveConfiguration"]"
                                Placeholder="@L["SelectArchiveConfiguration"]"
-                               Options="archiveConfigOptions.OrderBy(kvp => kvp.Value).Select(kvp => new SelectOption<int?>(kvp.Key, kvp.Value))" />
+                               Options="archiveConfigOptions.OrderBy(config => config.Name).Select(config => new SelectOption<int?>(config.ArchiveConfigId, config.Name))" />
         </div>
 
         <div class="flex justify-end gap-2">
