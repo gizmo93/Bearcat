@@ -6,5 +6,7 @@ public sealed class NullUploadProgress : IUploadProgress
 
     private NullUploadProgress() { }
 
+    public void BeginFile() { }
+
     public void ReportBytesTransferred(long bytes) { }
 }

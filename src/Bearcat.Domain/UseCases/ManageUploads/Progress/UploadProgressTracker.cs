@@ -20,11 +20,19 @@ public sealed class UploadProgressTracker : IUploadProgressTracker
         );
     }
 
-    public void AddBytes(int uploadId, long bytes)
+    public void AddBytes(int uploadId, int fileId, long bytes)
     {
         if (states.TryGetValue(uploadId, out var state))
         {
-            state.AddBytes(bytes, Stopwatch.GetTimestamp(), SampleInterval, SpeedWindow);
+            state.AddBytes(fileId, bytes, Stopwatch.GetTimestamp(), SampleInterval, SpeedWindow);
+        }
+    }
+
+    public void ResetFile(int uploadId, int fileId)
+    {
+        if (states.TryGetValue(uploadId, out var state))
+        {
+            state.ResetFile(fileId);
         }
     }
 
@@ -58,6 +66,8 @@ public sealed class UploadProgressTracker : IUploadProgressTracker
 
         private readonly Queue<Sample> samples = new();
 
+        private readonly Dictionary<int, long> bytesPerFile = new();
+
         private readonly long totalBytes;
 
         private readonly long baselineBytes;
@@ -75,6 +85,7 @@ public sealed class UploadProgressTracker : IUploadProgressTracker
         }
 
         public void AddBytes(
+            int fileId,
             long bytes,
             long nowTimestamp,
             TimeSpan sampleInterval,
@@ -84,6 +95,7 @@ public sealed class UploadProgressTracker : IUploadProgressTracker
             lock (gate)
             {
                 cumulativeBytes += bytes;
+                bytesPerFile[fileId] = bytesPerFile.GetValueOrDefault(fileId) + bytes;
 
                 if (Stopwatch.GetElapsedTime(lastSampleTimestamp, nowTimestamp) < sampleInterval)
                 {
@@ -93,6 +105,14 @@ public sealed class UploadProgressTracker : IUploadProgressTracker
                 lastSampleTimestamp = nowTimestamp;
                 samples.Enqueue(new Sample(nowTimestamp, cumulativeBytes));
                 TrimOldSamples(nowTimestamp, window);
+            }
+        }
+
+        public void ResetFile(int fileId)
+        {
+            lock (gate)
+            {
+                bytesPerFile[fileId] = 0;
             }
         }
 
@@ -120,7 +140,7 @@ public sealed class UploadProgressTracker : IUploadProgressTracker
         {
             lock (gate)
             {
-                var uploadedBytes = baselineBytes + cumulativeBytes;
+                var uploadedBytes = baselineBytes + bytesPerFile.Values.Sum();
 
                 if (totalBytes > 0 && uploadedBytes > totalBytes)
                 {

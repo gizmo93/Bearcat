@@ -2,8 +2,19 @@ using Bearcat.Abstractions.Hoster;
 
 namespace Bearcat.Hosters.Shared;
 
-public sealed class CountingStream(Stream inner, IUploadProgress progress) : Stream
+public sealed class CountingStream : Stream
 {
+    private readonly Stream inner;
+
+    private readonly IUploadProgress progress;
+
+    public CountingStream(Stream inner, IUploadProgress progress)
+    {
+        this.inner = inner;
+        this.progress = progress;
+        progress.BeginFile();
+    }
+
     public override bool CanRead => inner.CanRead;
 
     public override bool CanSeek => inner.CanSeek;
