@@ -10,5 +10,7 @@ public class ArchiveFile
 
     public string FullFileName { get; set; } = null!;
 
+    public string? Md5Hash { get; set; }
+
     public List<UploadedFile> UploadedFiles { get; set; } = null!;
 }

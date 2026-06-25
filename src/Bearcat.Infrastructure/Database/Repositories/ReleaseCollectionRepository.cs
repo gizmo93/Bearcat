@@ -573,7 +573,11 @@ public class ReleaseCollectionRepository(
                 group.Select(config => config.ReleaseId).Distinct().Count() == releaseCount
             )
             .OrderBy(group => group.Key)
-            .Select(group => new CollectionArchiveConfigOptionReadModel(group.Key, releaseCount))
+            .Select(group => new CollectionArchiveConfigOptionReadModel(
+                group.Key,
+                releaseCount,
+                group.Max(config => config.ArchiveFileSizeMb)
+            ))
             .ToListAsync(cancellationToken);
     }
 

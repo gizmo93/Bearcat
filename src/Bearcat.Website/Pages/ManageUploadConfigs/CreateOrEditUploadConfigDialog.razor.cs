@@ -1,6 +1,7 @@
 using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
@@ -27,7 +28,7 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
     private IReadOnlyList<HosterRegistrationReadModel> hosterRegistrations = [];
-    private IReadOnlyDictionary<int, string> archiveConfigOptions = null!;
+    private IReadOnlyList<ArchiveConfigOptionReadModel> archiveConfigOptions = [];
     private bool isInitialized;
 
     private IEnumerable<SelectOption<int?>> HosterRegistrationOptions =>
@@ -45,6 +46,13 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
 
     private bool CanUsePremiumOnlyDownload =>
         SelectedHosterRegistration?.SupportsPremiumOnlyDownloads is true;
+
+    private ArchiveConfigOptionReadModel? SelectedArchiveConfig =>
+        formModel.ArchiveConfigId is null
+            ? null
+            : archiveConfigOptions.FirstOrDefault(config =>
+                config.ArchiveConfigId == formModel.ArchiveConfigId
+            );
 
     protected override async Task OnInitializedAsync()
     {
@@ -111,6 +119,22 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
         if (formModel.ArchiveConfigId is null)
         {
             messageStore.Add(() => formModel.ArchiveConfigId!, L["ArchiveConfigRequired"]);
+        }
+
+        if (
+            SelectedHosterRegistration?.MaxFileSizeMb is { } maxFileSizeMb
+            && SelectedArchiveConfig is { } archiveConfig
+            && archiveConfig.ArchiveFileSizeMb > maxFileSizeMb
+        )
+        {
+            messageStore.Add(
+                () => formModel.ArchiveConfigId!,
+                L[
+                    "ArchiveFileSizeExceedsHosterLimit",
+                    archiveConfig.ArchiveFileSizeMb,
+                    maxFileSizeMb
+                ]
+            );
         }
     }
 

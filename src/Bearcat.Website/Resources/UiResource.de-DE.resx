@@ -25,6 +25,7 @@
   <data name="ArchiveAndUploadConfiguration" xml:space="preserve"><value>Archiv- und Upload-Konfiguration</value></data>
   <data name="ArchiveConfig" xml:space="preserve"><value>Archiv-Konfig.</value></data>
   <data name="ArchiveConfigRequired" xml:space="preserve"><value>Archiv-Konfiguration ist erforderlich.</value></data>
+  <data name="ArchiveFileSizeExceedsHosterLimit" xml:space="preserve"><value>Die Archiv-Dateigröße ({0} MB) überschreitet die maximale Dateigröße des Hosters von {1} MB.</value></data>
   <data name="ArchiveConfiguration" xml:space="preserve"><value>Archiv-Konfiguration</value></data>
   <data name="ArchiveConfigurationDialogDescription" xml:space="preserve"><value>Lege fest, wie Archive für dieses Release erstellt werden.</value></data>
   <data name="ArchiveConfigurations" xml:space="preserve"><value>Archiv-Konfigurationen</value></data>

@@ -46,7 +46,11 @@ public class FileUploadExecutionService(
             var result = await fileToUpload.Hoster.UploadFileAsync(
                 fileDto: fileDto,
                 hosterConfig: fileToUpload.HosterConfig,
-                progress: new UploadProgressReporter(progressTracker, fileToUpload.UploadId),
+                progress: new UploadProgressReporter(
+                    tracker: progressTracker,
+                    uploadId: fileToUpload.UploadId,
+                    fileId: fileToUpload.ArchiveFileId
+                ),
                 cancellationToken: fileUploadCancellationTokenSource.Token
             );
 

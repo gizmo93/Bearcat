@@ -4,17 +4,20 @@ using System.Collections.Generic;
 using Bearcat.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace BearCat.Infrastructure.Migrations
+namespace Bearcat.Infrastructure.Migrations
 {
     [DbContext(typeof(BearcatDbContext))]
-    partial class BearcatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260625181756_AddMd5HashToArchiveFile")]
+    partial class AddMd5HashToArchiveFile
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -921,62 +924,6 @@ namespace BearCat.Infrastructure.Migrations
                     b.HasIndex("ReleaseGroupId");
 
                     b.ToTable("Releases");
-                });
-
-            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseClassification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("ClassifiedAt")
-                        .HasPrecision(4)
-                        .HasColumnType("timestamp(4) without time zone");
-
-                    b.Property<int?>("Episode")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsMultiLanguage")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("LanguageSource")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ParserVersion")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("PrimaryLanguage")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<int>("ReleaseId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Resolution")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ResolutionSource")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("Season")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<int?>("Year")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReleaseId")
-                        .IsUnique();
-
-                    b.ToTable("ReleaseClassifications");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseCollection", b =>
@@ -1930,17 +1877,6 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("ReleaseGroup");
                 });
 
-            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseClassification", b =>
-                {
-                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
-                        .WithOne("Classification")
-                        .HasForeignKey("Bearcat.Domain.Entities.ReleaseClassification", "ReleaseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Release");
-                });
-
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseCollection", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.ReleaseGroup", "ReleaseGroup")
@@ -2285,8 +2221,6 @@ namespace BearCat.Infrastructure.Migrations
             modelBuilder.Entity("Bearcat.Domain.Entities.Release", b =>
                 {
                     b.Navigation("ArchiveConfigs");
-
-                    b.Navigation("Classification");
 
                     b.Navigation("ImageUploadConfigs");
 

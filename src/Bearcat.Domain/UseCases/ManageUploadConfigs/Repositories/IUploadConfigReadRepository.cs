@@ -18,7 +18,7 @@ public interface IUploadConfigReadRepository
         CancellationToken cancellationToken = default
     );
 
-    Task<IReadOnlyDictionary<int, string>> GetArchiveConfigOptionsAsync(
+    Task<IReadOnlyList<ArchiveConfigOptionReadModel>> GetArchiveConfigOptionsAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     );

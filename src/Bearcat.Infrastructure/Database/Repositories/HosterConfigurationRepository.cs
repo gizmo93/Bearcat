@@ -43,6 +43,9 @@ public class HosterConfigurationRepository(
                     h.RequiresCaptchaVerification,
                     hoster is IHosterWithCaptchaVerification,
                     hoster.SupportsPremiumOnlyDownloads,
+                    hoster is IHosterWithFileSizeLimit fileSizeLimit
+                        ? fileSizeLimit.MaxFileSizeMb
+                        : null,
                     hoster.HasFixedParallelUploadLimit,
                     hoster.DefaultMaximumParallelUploads,
                     h.MaxParallelUploadsOverride,

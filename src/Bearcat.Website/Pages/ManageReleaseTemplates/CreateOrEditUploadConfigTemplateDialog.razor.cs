@@ -68,6 +68,13 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
     private bool CanUsePremiumOnlyDownload =>
         SelectedHosterRegistration?.SupportsPremiumOnlyDownloads is true;
 
+    private ArchiveConfigTemplateReadModel? SelectedArchiveConfigTemplate =>
+        FormModel.ArchiveConfigTemplateId is null
+            ? null
+            : archiveConfigTemplates.FirstOrDefault(config =>
+                config.ArchiveConfigTemplateId == FormModel.ArchiveConfigTemplateId
+            );
+
     private bool useCollectionUploadSlot;
 
     protected override async Task OnInitializedAsync()
@@ -184,6 +191,22 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
             messageStore.Add(
                 () => FormModel.ArchiveConfigTemplateId!,
                 L["SelectArchiveConfigurationRequired"]
+            );
+        }
+
+        if (
+            SelectedHosterRegistration?.MaxFileSizeMb is { } maxFileSizeMb
+            && SelectedArchiveConfigTemplate is { } archiveConfigTemplate
+            && archiveConfigTemplate.ArchiveFileSizeMb > maxFileSizeMb
+        )
+        {
+            messageStore.Add(
+                () => FormModel.ArchiveConfigTemplateId!,
+                L[
+                    "ArchiveFileSizeExceedsHosterLimit",
+                    archiveConfigTemplate.ArchiveFileSizeMb,
+                    maxFileSizeMb
+                ]
             );
         }
 
