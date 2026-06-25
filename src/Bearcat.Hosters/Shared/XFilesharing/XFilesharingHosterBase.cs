@@ -26,7 +26,7 @@ public abstract class XFilesharingHosterBase<TConfig>(
 
     protected virtual int MaximumParallelUploads => 50;
 
-    protected virtual int UploadRetryAttempts => 3;
+    protected virtual int UploadRetryAttempts => 5;
 
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
