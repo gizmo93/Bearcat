@@ -13,6 +13,7 @@ public class MediaMetadataRepository(IBearcatWriteDbContext dbWrite) : IMediaMet
     {
         return await dbWrite
             .Releases.Include(release => release.MediaFiles)
+            .Include(release => release.Classification)
             .FirstOrDefaultAsync(release => release.Id == releaseId, cancellationToken);
     }
 

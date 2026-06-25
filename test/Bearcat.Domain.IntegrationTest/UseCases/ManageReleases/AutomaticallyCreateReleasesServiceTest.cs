@@ -760,8 +760,18 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
             new MediaMetadataRepository(dbContext),
             extractorMock.Object,
             new FileSystemService(),
+            CreateReleaseClassificationService(),
             CreateTimeProvider(),
             NullLogger<MediaMetadataService>.Instance
+        );
+    }
+
+    private ReleaseClassificationService CreateReleaseClassificationService()
+    {
+        return new ReleaseClassificationService(
+            new ReleaseClassificationRepository(dbContext),
+            CreateTimeProvider(),
+            NullLogger<ReleaseClassificationService>.Instance
         );
     }
 
