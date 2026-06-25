@@ -29,7 +29,7 @@ flowchart TD
     WaitTick --> WFA
     QActive -- No --> QInPlace{Archiver supports in-place hash change?}
 
-    QInPlace -- "Yes (RAR)" --> Append[Append trailing 0-byte to archive files]
+    QInPlace -- "Yes (RAR)" --> Append[Append 0-bytes until each file's hash is new]
     Append --> Assign
     QInPlace -- "No (e.g. 7-Zip)" --> QManaged
 
@@ -115,7 +115,7 @@ The **"Archive creation"** background task looks for uploads in `WaitingForArchi
 
 **Reuploads need a MD5 hash change.** For reuploads, Bearcat also checks whether that archive was already uploaded to the same *type* of hoster before. If so, the archive files need new hashes before they go up again, because hosters often recognise an already-seen file by its MD5 hash.
 
-- If the archiver can change hashes **in place** (currently only RAR), Bearcat appends a single harmless 0-byte to each archive file. That changes the MD5 hash but the archive still works without issues.
+- If the archiver can change hashes **in place** (currently only RAR), Bearcat appends harmless 0-bytes to each archive file until its MD5 hash is one that hasn't been used for this archive configuration before. Bearcat stores the MD5 hash of every archive file it produces, so it knows which hashes are already taken, even after the original files are long gone. The archive still extracts without issues.
 - Before doing that, Bearcat makes sure no other active upload is currently using the archive. If one is, it waits and tries again on the next run.
 - If the archiver *can't* safely change hashes in place (7Zip!), Bearcat leaves the existing files alone and packs a fresh archive instead.
 
@@ -137,12 +137,15 @@ If packing succeeds, the archive becomes `Created` and the upload moves to `Pend
 
 Just before packing, Bearcat writes a tiny `__nonce.txt` file with a random value into the release folder. It's a small, harmless file that changes between runs, and that little change is what helps reuploads come out with different hashes than before.
 
-How aggressively Bearcat varies the resulting archive files is controlled by the **"Archive repackaging"** configuration. The default is **"Change archive file size by 1 MB"**: it packs without compression and without solid mode, but bumps the archive part size up by `1` MB compared to the latest archive for the same configuration. That reliably shifts the resulting parts without paying for compression CPU time.
+For **RAR**, the nonce plus the 0-byte append (see above) already guarantee a new hash for every part. RAR packs at the part size from the archive configuration and is then adjusted in place, so its parts stay essentially at your configured size (give or take a few appended bytes) instead of growing by a megabyte on every reupload. That matters for hosters that enforce a maximum size per file.
 
-The other strategies are:
+**7-Zip can't be tweaked after packing**, because its split volumes form one continuous stream, so touching any part would corrupt it. For 7-Zip the only way to get different files is to vary the *content* while packing, and the **"Archive repackaging"** configuration controls how:
 
+- **"Change archive file size by 1 MB"** (default): packs without compression and without solid mode, but bumps the archive part size up by `1` MB compared to the latest archive for the same configuration. That reliably shifts the resulting parts without paying for compression CPU time.
 - **"Nonce only, no compression"**: only `__nonce.txt` changes, packed without compression or solid mode. Lowest CPU cost, but the lowest chance that *every* part ends up with a new MD5 hash.
 - **"Solid archive with compression"**: packs with solid mode and compression. Costs more CPU, but makes the `__nonce.txt` change ripple through the whole archive much more reliably.
+
+The compression and solid-mode parts of these strategies still apply to RAR too; only the 1 MB size bump is skipped, because RAR doesn't need it. Bearcat also falls back to this repackaging strategy for RAR archives that were created before it started tracking hashes (their stored hash is still empty): the first reupload repacks such an archive with the strategy above, and from then on it uses the cheaper append approach.
 
 One thing to keep in mind: if "Archive cleanup" later deletes an archive locally, Bearcat can no longer reuse it. A future reupload will simply pack a fresh archive when needed.
 

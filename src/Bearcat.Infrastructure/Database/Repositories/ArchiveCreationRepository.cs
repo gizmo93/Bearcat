@@ -79,6 +79,32 @@ public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite) : IArchiv
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 
+    public async Task<IReadOnlyList<string>> GetKnownArchiveFileHashesAsync(
+        int archiveConfigId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .Archives.Where(a => a.ArchiveConfigId == archiveConfigId)
+            .SelectMany(a => a.ArchiveFiles)
+            .Where(f => f.Md5Hash != null)
+            .Select(f => f.Md5Hash!)
+            .Distinct()
+            .ToListAsync(cancellationToken: cancellationToken);
+    }
+
+    public async Task<bool> LastArchiveHasFilesWithoutHashAsync(
+        int archiveConfigId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .Archives.Where(a => a.ArchiveConfigId == archiveConfigId && a.ArchiveFiles.Any())
+            .OrderByDescending(a => a.Id)
+            .Select(a => a.ArchiveFiles.Any(f => f.Md5Hash == null))
+            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+    }
+
     public async Task DeleteOrphanedArchivesAsync(CancellationToken cancellationToken)
     {
         await dbWrite

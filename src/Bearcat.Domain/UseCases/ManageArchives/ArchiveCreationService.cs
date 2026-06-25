@@ -1,4 +1,5 @@
-﻿using Bearcat.Abstractions;
+﻿using System.Security.Cryptography;
+using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
@@ -154,7 +155,11 @@ public class ArchiveCreationService(
                 return false;
             }
 
-            await ChangeArchiveFileHashesAsync(assignableArchive, cancellationToken);
+            await ChangeArchiveFileHashesAsync(
+                archive: assignableArchive,
+                knownHashes: await LoadKnownHashesAsync(archiveConfig.Id, cancellationToken),
+                cancellationToken: cancellationToken
+            );
         }
 
         foreach (var upload in uploads)
@@ -246,39 +251,105 @@ public class ArchiveCreationService(
         return false;
     }
 
-    private async Task ChangeArchiveFileHashesAsync(
-        Archive archive,
+    private async Task<HashSet<string>> LoadKnownHashesAsync(
+        int archiveConfigId,
         CancellationToken cancellationToken
     )
     {
-        foreach (var fullFileName in archive.ArchiveFiles.Select(af => af.FullFileName))
+        var hashes = await repository.GetKnownArchiveFileHashesAsync(
+            archiveConfigId: archiveConfigId,
+            cancellationToken: cancellationToken
+        );
+
+        return hashes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private async Task ChangeArchiveFileHashesAsync(
+        Archive archive,
+        HashSet<string> knownHashes,
+        CancellationToken cancellationToken
+    )
+    {
+        foreach (var archiveFile in archive.ArchiveFiles)
         {
-            if (!File.Exists(fullFileName))
+            if (!File.Exists(archiveFile.FullFileName))
             {
                 logger.LogWarning(
                     "Cannot change MD5 hash for missing archive file {ArchiveFileName} in archive {ArchiveId}",
-                    fullFileName,
+                    archiveFile.FullFileName,
                     archive.Id
                 );
 
                 continue;
             }
 
-            await using var stream = new FileStream(
-                path: fullFileName,
-                mode: FileMode.Append,
-                access: FileAccess.Write,
-                share: FileShare.Read
-            );
-            stream.WriteByte(0);
-            await stream.FlushAsync(cancellationToken);
+            string hash;
+            do
+            {
+                await AppendNullByteAsync(archiveFile.FullFileName, cancellationToken);
+                hash = await ComputeMd5HashAsync(archiveFile.FullFileName, cancellationToken);
+            } while (!knownHashes.Add(hash));
+
+            archiveFile.Md5Hash = hash;
         }
 
         logger.LogInformation(
-            "Changed MD5 hash for {FileCount} archive files in existing archive {ArchiveId}",
+            "Changed MD5 hash for {FileCount} archive files in archive {ArchiveId}",
             archive.ArchiveFiles.Count,
             archive.Id
         );
+    }
+
+    private async Task StoreArchiveFileHashesAsync(
+        Archive archive,
+        CancellationToken cancellationToken
+    )
+    {
+        foreach (var archiveFile in archive.ArchiveFiles)
+        {
+            if (!File.Exists(archiveFile.FullFileName))
+            {
+                logger.LogWarning(
+                    "Cannot compute MD5 hash for missing archive file {ArchiveFileName} in archive {ArchiveId}",
+                    archiveFile.FullFileName,
+                    archive.Id
+                );
+
+                continue;
+            }
+
+            archiveFile.Md5Hash = await ComputeMd5HashAsync(
+                archiveFile.FullFileName,
+                cancellationToken
+            );
+        }
+    }
+
+    private static async Task AppendNullByteAsync(
+        string fullFileName,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var stream = new FileStream(
+            path: fullFileName,
+            mode: FileMode.Append,
+            access: FileAccess.Write,
+            share: FileShare.Read
+        );
+        stream.WriteByte(0);
+        await stream.FlushAsync(cancellationToken);
+    }
+
+    private static async Task<string> ComputeMd5HashAsync(
+        string fullFileName,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var stream = File.OpenRead(fullFileName);
+        using var md5 = MD5.Create();
+        var hash = await md5.ComputeHashAsync(stream, cancellationToken);
+
+        return Convert.ToHexString(hash);
     }
 
     private async Task CreateArchiveAsync(
@@ -319,7 +390,19 @@ public class ArchiveCreationService(
         var archiveDirectoryPath = fileSystemService.CreateTempDirectory(
             config.ArchiveFilesBasePath
         );
-        var archiveSettings = await ResolveArchiveSettingsAsync(config, cancellationToken);
+
+        var lastArchiveHasUnknownHashes = await repository.LastArchiveHasFilesWithoutHashAsync(
+            archiveConfigId: config.Id,
+            cancellationToken: cancellationToken
+        );
+
+        var useHashAppendStrategy = archiver.CanChangeHashInPlace && !lastArchiveHasUnknownHashes;
+
+        var archiveSettings = await ResolveArchiveSettingsAsync(
+            config: config,
+            useHashAppendStrategy: useHashAppendStrategy,
+            cancellationToken: cancellationToken
+        );
 
         var archive = new Archive
         {
@@ -384,11 +467,17 @@ public class ArchiveCreationService(
             .CreatedFileNames.Select(f => new ArchiveFile { FullFileName = f })
             .ToList();
 
-        // Sometimes after repacking existing files into new archives, they have the same MD5 hash as before.
-        // We avoid that by quickly trying to change the hash if possible.
         if (archiver.CanChangeHashInPlace)
         {
-            await ChangeArchiveFileHashesAsync(archive, cancellationToken);
+            await ChangeArchiveFileHashesAsync(
+                archive: archive,
+                knownHashes: await LoadKnownHashesAsync(config.Id, cancellationToken),
+                cancellationToken: cancellationToken
+            );
+        }
+        else
+        {
+            await StoreArchiveFileHashesAsync(archive, cancellationToken);
         }
 
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
@@ -436,6 +525,7 @@ public class ArchiveCreationService(
 
     private async Task<ArchiveSettings> ResolveArchiveSettingsAsync(
         ArchiveConfig config,
+        bool useHashAppendStrategy,
         CancellationToken cancellationToken
     )
     {
@@ -483,6 +573,14 @@ public class ArchiveCreationService(
                 "Unknown archive repackaging strategy {Strategy}. Falling back to {DefaultStrategy}.",
                 strategy,
                 ArchiveRepackagingStrategies.IncrementArchiveFileSize
+            );
+        }
+
+        if (useHashAppendStrategy)
+        {
+            return new ArchiveSettings(
+                ArchiveFileSizeMb: config.ArchiveFileSizeMb,
+                Options: new ArchiveOptions(UseCompression: false, UseSolidArchive: false)
             );
         }
 
