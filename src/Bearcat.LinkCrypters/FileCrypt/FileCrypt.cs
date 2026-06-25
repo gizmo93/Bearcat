@@ -64,7 +64,8 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
                 IsSuccess: success,
                 ContainerLink: success ? container!.Link : null,
                 ExternalReference: externalReference,
-                ErrorMessages: success ? [] : [GetErrorMessage(response)]
+                ErrorMessages: success ? [] : [GetErrorMessage(response)],
+                StatusImageId: success ? container!.StatusImgId : null
             );
         }
         catch (Exception ex)
@@ -110,10 +111,12 @@ public class FileCrypt(IFileCryptApi api) : ILinkCrypter
             );
 
             var success = IsSuccess(response);
+            var container = response.Container?.FirstOrDefault();
 
             return new UpdateContainerResult(
                 IsSuccess: success,
-                ErrorMessage: success ? null : GetErrorMessage(response)
+                ErrorMessage: success ? null : GetErrorMessage(response),
+                StatusImageId: success ? container?.StatusImgId : null
             );
         }
         catch (Exception ex)

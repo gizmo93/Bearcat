@@ -15,6 +15,7 @@ public class LinkCrypterContainerConfiguration : IEntityTypeConfiguration<LinkCr
         builder.Property(l => l.CollectionUploadSlotId).IsRequired(false);
         builder.Property(l => l.LinkCrypterRegistrationId).IsRequired();
         builder.Property(l => l.ExternalReference).IsRequired(false);
+        builder.Property(l => l.StatusImageId).IsRequired(false).HasMaxLength(100);
         builder.Property(l => l.ContainerUrl).IsRequired().HasMaxLength(200);
         builder.Property(l => l.State).IsRequired();
         builder.Property(l => l.Password).IsRequired(false).HasMaxLength(100);

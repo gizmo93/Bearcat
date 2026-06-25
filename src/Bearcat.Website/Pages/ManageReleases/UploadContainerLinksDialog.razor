@@ -89,6 +89,12 @@
                                 @container.ContainerUrl
                             </a>
                         }
+                        @if (!string.IsNullOrWhiteSpace(container.StatusImageId))
+                        {
+                            <p class="mt-1 truncate text-xs text-muted-foreground" title="@container.StatusImageId">
+                                @L["StatusImageId"]: <span class="font-mono">@container.StatusImageId</span>
+                            </p>
+                        }
                     </CellTemplate>
                 </BbDataTableColumn>
                 <BbDataTableColumn TData="ReleaseUploadContainerLinkReadModel" TValue="string"

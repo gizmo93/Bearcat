@@ -29,6 +29,9 @@ public class ContainerResponse
 
     [JsonPropertyName("name")]
     public string? Name { get; set; }
+
+    [JsonPropertyName("statusimg_id")]
+    public string? StatusImgId { get; set; }
 }
 
 // Currently needed:

@@ -4,5 +4,6 @@ public record CreateContainerResult(
     bool IsSuccess,
     string? ContainerLink,
     string? ExternalReference,
-    IReadOnlyList<string> ErrorMessages
+    IReadOnlyList<string> ErrorMessages,
+    string? StatusImageId = null
 );

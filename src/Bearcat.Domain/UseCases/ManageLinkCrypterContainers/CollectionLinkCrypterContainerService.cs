@@ -169,6 +169,7 @@ public class CollectionLinkCrypterContainerService(
             CollectionUploadSlotId = slot.Id,
             LinkCrypterRegistrationId = linkCrypterConfig.LinkCrypterRegistrationId,
             ExternalReference = result.ExternalReference,
+            StatusImageId = result.StatusImageId,
             ContainerUrl = result.ContainerLink ?? string.Empty,
             Password = linkCrypterConfig.Password,
             EnableCaptcha = linkCrypterConfig.EnableCaptcha,
@@ -240,6 +241,7 @@ public class CollectionLinkCrypterContainerService(
             return;
         }
 
+        container.StatusImageId = result.StatusImageId ?? container.StatusImageId;
         SyncSourceUploads(container, uploads);
         await repository.SaveChangesAsync(cancellationToken);
     }

@@ -26,6 +26,8 @@ public class LinkCrypterContainer
 
     public string? ExternalReference { get; set; }
 
+    public string? StatusImageId { get; set; }
+
     public string ContainerUrl { get; set; } = null!;
 
     public string? Password { get; set; }

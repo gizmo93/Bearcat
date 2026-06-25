@@ -51,7 +51,8 @@ public class HideCx(IHideCxApi api) : ILinkCrypter
                 IsSuccess: true,
                 ContainerLink: result.CanonicalUrl,
                 ExternalReference: result.Id,
-                ErrorMessages: []
+                ErrorMessages: [],
+                StatusImageId: result.Id
             );
         }
         catch (Exception ex)
@@ -124,7 +125,11 @@ public class HideCx(IHideCxApi api) : ILinkCrypter
                 cancellationToken: cancellationToken
             );
 
-            return new UpdateContainerResult(IsSuccess: true, ErrorMessage: null);
+            return new UpdateContainerResult(
+                IsSuccess: true,
+                ErrorMessage: null,
+                StatusImageId: externalReference
+            );
         }
         catch (Exception ex)
         {

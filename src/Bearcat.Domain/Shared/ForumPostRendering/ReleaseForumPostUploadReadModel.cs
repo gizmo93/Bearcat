@@ -14,5 +14,6 @@ public record ReleaseForumPostLinkCrypterReadModel(
     string Name,
     string? Password,
     string ContainerUrl,
+    string? StatusImageId,
     DateTime CreatedAt
 );

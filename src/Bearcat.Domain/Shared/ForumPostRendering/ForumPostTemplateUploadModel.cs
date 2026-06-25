@@ -46,6 +46,11 @@ public sealed record ForumPostTemplateLinkCrypterModel
     [ForumPostTemplateVariable("Generated container URL.")]
     public required string ContainerLink { get; init; }
 
+    [ForumPostTemplateVariable(
+        "Status image identifier for link crypters that offer a live online/offline status image (e.g. hide.cx, filecrypt.cc). Empty when not supported. Combine it with the crypter's status image URL, e.g. https://hide.cx/state/{{ crypter.status_image_id }}."
+    )]
+    public required string StatusImageId { get; init; }
+
     [ForumPostTemplateVariable("Container creation date.")]
     public required DateTime CreatedAt { get; init; }
 }

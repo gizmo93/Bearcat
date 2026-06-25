@@ -34,6 +34,7 @@ public class ReleaseForumPostUploadBuilder(IReleaseForumPostUploadRepository rep
                     Name = linkCrypter.Name,
                     Password = linkCrypter.Password ?? string.Empty,
                     ContainerLink = linkCrypter.ContainerUrl,
+                    StatusImageId = linkCrypter.StatusImageId ?? string.Empty,
                     CreatedAt = linkCrypter.CreatedAt,
                 })
                 .ToList(),

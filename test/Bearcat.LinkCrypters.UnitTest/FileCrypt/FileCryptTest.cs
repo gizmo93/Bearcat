@@ -50,6 +50,7 @@ public class FileCryptTest
                         {
                             Link = "https://filecrypt.cc/Container/60598C0844.html",
                             Name = "container-name",
+                            StatusImgId = "87C8C585C1",
                         },
                     ],
                 }
@@ -74,6 +75,7 @@ public class FileCryptTest
         result.ExternalReference.ShouldNotBeNull();
         result.ExternalReference!.ShouldContain("\"ContainerId\":\"60598C0844\"");
         result.ExternalReference.ShouldContain("\"Name\":\"container-name\"");
+        result.StatusImageId.ShouldBe("87C8C585C1");
         result.ErrorMessages.ShouldBeEmpty();
 
         apiMock.Verify(x =>
@@ -203,6 +205,7 @@ public class FileCryptTest
                         {
                             Link = "https://filecrypt.cc/Container/60598C0844.html",
                             Name = "container-name",
+                            StatusImgId = "87C8C585C1",
                         },
                     ],
                 }
@@ -225,6 +228,7 @@ public class FileCryptTest
         result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeTrue();
         result.ErrorMessage.ShouldBeNull();
+        result.StatusImageId.ShouldBe("87C8C585C1");
 
         apiMock.Verify(x =>
             x.SendAsync(

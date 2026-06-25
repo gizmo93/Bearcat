@@ -85,6 +85,7 @@
   <data name="ContainerLinks" xml:space="preserve"><value>Container links</value></data>
   <data name="ContainerLinksDialogDescription" xml:space="preserve"><value>Link crypter containers generated for upload configuration {0}.</value></data>
   <data name="ContainerLinksTitle" xml:space="preserve"><value>Upload #{0} container links</value></data>
+  <data name="StatusImageId" xml:space="preserve"><value>Status image ID</value></data>
   <data name="Containers" xml:space="preserve"><value>Containers</value></data>
   <data name="ContainersAndValidation" xml:space="preserve"><value>Containers and validation</value></data>
   <data name="CreateRelease" xml:space="preserve"><value>Create release</value></data>

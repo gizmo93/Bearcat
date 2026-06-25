@@ -427,6 +427,7 @@ public class ReleaseReadRepository(
                 int UploadId,
                 int LinkCrypterRegistrationId,
                 string ContainerUrl,
+                string? StatusImageId,
                 DateTime CreatedAt
             )>();
 
@@ -461,6 +462,7 @@ public class ReleaseReadRepository(
                     UploadId = c.UploadId!.Value,
                     c.LinkCrypterRegistrationId,
                     c.ContainerUrl,
+                    c.StatusImageId,
                     c.CreatedAt,
                 })
                 .ToListAsync(cancellationToken: cancellationToken);
@@ -477,18 +479,31 @@ public class ReleaseReadRepository(
                     source.UploadId,
                     source.LinkCrypterContainer.LinkCrypterRegistrationId,
                     source.LinkCrypterContainer.ContainerUrl,
+                    source.LinkCrypterContainer.StatusImageId,
                     source.LinkCrypterContainer.CreatedAt,
                 })
                 .ToListAsync(cancellationToken: cancellationToken);
 
             containers.AddRange(
                 releaseContainers.Select(c =>
-                    (c.UploadId, c.LinkCrypterRegistrationId, c.ContainerUrl, c.CreatedAt)
+                    (
+                        c.UploadId,
+                        c.LinkCrypterRegistrationId,
+                        c.ContainerUrl,
+                        c.StatusImageId,
+                        c.CreatedAt
+                    )
                 )
             );
             containers.AddRange(
                 collectionContainers.Select(c =>
-                    (c.UploadId, c.LinkCrypterRegistrationId, c.ContainerUrl, c.CreatedAt)
+                    (
+                        c.UploadId,
+                        c.LinkCrypterRegistrationId,
+                        c.ContainerUrl,
+                        c.StatusImageId,
+                        c.CreatedAt
+                    )
                 )
             );
         }
@@ -522,6 +537,7 @@ public class ReleaseReadRepository(
                             Name: linkCrypter.Name,
                             Password: linkCrypter.Password,
                             ContainerUrl: container.ContainerUrl ?? string.Empty,
+                            StatusImageId: container.StatusImageId,
                             CreatedAt: container.CreatedAt
                         );
                     })
@@ -989,6 +1005,7 @@ public class ReleaseReadRepository(
                 LinkCrypterRegistrationName = c.LinkCrypterRegistration.Name,
                 LinkCrypterClassName = c.LinkCrypterRegistration.LinkCrypterClassName,
                 c.ContainerUrl,
+                c.StatusImageId,
                 c.Scope,
                 c.State,
                 c.CreatedAt,
@@ -1016,6 +1033,7 @@ public class ReleaseReadRepository(
                     .LinkCrypterRegistration
                     .LinkCrypterClassName,
                 source.LinkCrypterContainer.ContainerUrl,
+                source.LinkCrypterContainer.StatusImageId,
                 source.LinkCrypterContainer.Scope,
                 source.LinkCrypterContainer.State,
                 source.LinkCrypterContainer.CreatedAt,
@@ -1034,6 +1052,7 @@ public class ReleaseReadRepository(
                 LinkCrypterRegistrationName: container.LinkCrypterRegistrationName,
                 LinkCrypterClassName: container.LinkCrypterClassName,
                 ContainerUrl: container.ContainerUrl,
+                StatusImageId: container.StatusImageId,
                 Scope: container.Scope,
                 State: container.State,
                 CreatedAt: container.CreatedAt,

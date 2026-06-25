@@ -197,6 +197,7 @@ public class LinkCrypterContainerService(
         previousContainer.EnableCaptcha = linkCrypterConfig.EnableCaptcha;
         previousContainer.EnableContainerDownload = linkCrypterConfig.EnableContainerDownload;
         previousContainer.EnableClickAndLoad = linkCrypterConfig.EnableClickAndLoad;
+        previousContainer.StatusImageId = result.StatusImageId ?? previousContainer.StatusImageId;
         previousContainer.Errors = [];
         previousContainer.State = LinkCrypterContainerState.Created;
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
@@ -235,6 +236,7 @@ public class LinkCrypterContainerService(
             LinkCrypterRegistrationId = linkCrypterConfig.LinkCrypterRegistrationId,
             Upload = upload,
             ExternalReference = result.ExternalReference,
+            StatusImageId = result.StatusImageId,
             ContainerUrl = result.ContainerLink ?? string.Empty,
             Password = linkCrypterConfig.Password,
             EnableCaptcha = linkCrypterConfig.EnableCaptcha,

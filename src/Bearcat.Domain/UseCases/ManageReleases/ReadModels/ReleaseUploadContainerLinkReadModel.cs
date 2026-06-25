@@ -6,6 +6,7 @@ public record ReleaseUploadContainerLinkReadModel(
     string LinkCrypterRegistrationName,
     string LinkCrypterClassName,
     string ContainerUrl,
+    string? StatusImageId,
     LinkCrypterContainerScope Scope,
     LinkCrypterContainerState State,
     DateTime CreatedAt,

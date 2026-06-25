@@ -68,6 +68,7 @@ public class HideCxTest
         result.IsSuccess.ShouldBeTrue();
         result.ContainerLink.ShouldBe("https://hide.cx/container");
         result.ExternalReference.ShouldBe("external-id");
+        result.StatusImageId.ShouldBe("external-id");
         result.ErrorMessages.ShouldBeEmpty();
     }
 
@@ -144,6 +145,7 @@ public class HideCxTest
         result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeTrue();
         result.ErrorMessage.ShouldBeNull();
+        result.StatusImageId.ShouldBe("external-id");
     }
 
     [Test]
