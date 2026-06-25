@@ -49,6 +49,14 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder
+            .HasOne(r => r.Classification)
+            .WithOne(c => c.Release)
+            .HasForeignKey<ReleaseClassification>(c => c.ReleaseId)
+            .HasPrincipalKey<Release>(r => r.Id)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder
             .HasMany(r => r.MediaFiles)
             .WithOne(file => file.Release)
             .HasForeignKey(file => file.ReleaseId)

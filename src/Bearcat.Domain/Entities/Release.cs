@@ -36,6 +36,8 @@ public class Release
 
     public DateTime? ReleaseInfoCheckedAt { get; set; }
 
+    public ReleaseClassification? Classification { get; set; }
+
     public List<ReleaseMediaFile> MediaFiles { get; set; } = [];
 
     public DateTime? MediaMetadataExtractedAt { get; set; }
