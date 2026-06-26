@@ -16,17 +16,7 @@ public class ApiClient(
     ILogger<ApiClient> logger
 ) : IRapidgatorApiClient
 {
-    private const int AuthTimeout = 400;
-
-    private bool NeedsReauthentication =>
-        string.IsNullOrWhiteSpace(authToken)
-        || (DateTime.UtcNow - lastAuthTime).TotalSeconds > AuthTimeout;
-
-    private string? authToken;
-
-    private DateTime lastAuthTime = DateTime.MinValue;
-
-    private readonly SemaphoreSlim authSemaphore = new(initialCount: 1, maxCount: 1);
+    private readonly KeyedAuthTokenCache authTokenCache = new(TimeSpan.FromSeconds(400));
 
     public async Task<UploadFileResponse> RequestUploadFileAsync(
         string name,
@@ -189,11 +179,9 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        try
-        {
-            await authSemaphore.WaitAsync(cancellationToken);
-
-            if (NeedsReauthentication)
+        return await authTokenCache.GetOrAuthenticateAsync(
+            config.Username,
+            async ct =>
             {
                 logger.LogInformation(
                     "Authenticating to Rapidgator for user {Username}",
@@ -202,19 +190,13 @@ public class ApiClient(
                 var loginResponse = await LoginAsync(
                     login: config.Username,
                     password: config.Password,
-                    cancellationToken: cancellationToken
+                    cancellationToken: ct
                 );
 
-                authToken = loginResponse.Response.Token;
-                lastAuthTime = DateTime.UtcNow;
-            }
-
-            return authToken!;
-        }
-        finally
-        {
-            authSemaphore.Release();
-        }
+                return loginResponse.Response.Token;
+            },
+            cancellationToken
+        );
     }
 
     private static void EnsureFolderResponseSucceeded(FolderResponse response, string message)

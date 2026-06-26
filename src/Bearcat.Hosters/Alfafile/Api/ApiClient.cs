@@ -19,8 +19,6 @@ public class ApiClient(
 {
     public TimeSpan RateLimitRetryDelay { get; init; } = TimeSpan.FromSeconds(5);
 
-    private const int AuthTimeout = 400;
-
     private const int MaxParallelLinkChecks = 10;
 
     private const int MaxLinkCheckAttempts = 3;
@@ -31,15 +29,7 @@ public class ApiClient(
         PropertyNameCaseInsensitive = true,
     };
 
-    private bool NeedsReauthentication =>
-        string.IsNullOrWhiteSpace(authToken)
-        || (DateTime.UtcNow - lastAuthTime).TotalSeconds > AuthTimeout;
-
-    private string? authToken;
-
-    private DateTime lastAuthTime = DateTime.MinValue;
-
-    private readonly SemaphoreSlim authSemaphore = new(initialCount: 1, maxCount: 1);
+    private readonly KeyedAuthTokenCache authTokenCache = new(TimeSpan.FromSeconds(400));
 
     public async Task<UploadFileResponse> RequestUploadFileAsync(
         string name,
@@ -305,11 +295,9 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        try
-        {
-            await authSemaphore.WaitAsync(cancellationToken);
-
-            if (NeedsReauthentication)
+        return await authTokenCache.GetOrAuthenticateAsync(
+            config.Username,
+            async ct =>
             {
                 logger.LogInformation(
                     "Authenticating to Alfafile for user {Username}",
@@ -319,7 +307,7 @@ public class ApiClient(
                 var response = await api.LoginAsync(
                     login: config.Username,
                     password: config.Password,
-                    cancellationToken: cancellationToken
+                    cancellationToken: ct
                 );
 
                 var content = response.Content;
@@ -335,16 +323,10 @@ public class ApiClient(
                     );
                 }
 
-                authToken = content.Response.Token;
-                lastAuthTime = DateTime.UtcNow;
-            }
-
-            return authToken!;
-        }
-        finally
-        {
-            authSemaphore.Release();
-        }
+                return content.Response.Token;
+            },
+            cancellationToken
+        );
     }
 
     private static string? GetFileId(string fileUrl)

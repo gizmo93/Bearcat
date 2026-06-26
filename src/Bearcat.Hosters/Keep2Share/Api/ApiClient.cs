@@ -26,21 +26,11 @@ public class ApiClient(
         PropertyNameCaseInsensitive = true,
     };
 
-    private const int AuthTimeout = 1500;
-
     private const int MaxFilesInfoBatchSize = 100;
 
     private const int MaxFilesInfoAttempts = 3;
 
-    private bool NeedsReauthentication =>
-        string.IsNullOrWhiteSpace(authToken)
-        || (DateTime.UtcNow - lastAuthTime).TotalSeconds > AuthTimeout;
-
-    private string? authToken;
-
-    private DateTime lastAuthTime = DateTime.MinValue;
-
-    private readonly SemaphoreSlim authSemaphore = new(initialCount: 1, maxCount: 1);
+    private readonly KeyedAuthTokenCache authTokenCache = new(TimeSpan.FromSeconds(1500));
 
     public async Task<LoginResponse> LoginAsync(
         Keep2ShareConfig config,
@@ -404,18 +394,16 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        try
-        {
-            await authSemaphore.WaitAsync(cancellationToken);
-
-            if (NeedsReauthentication)
+        return await authTokenCache.GetOrAuthenticateAsync(
+            config.EmailAddress,
+            async ct =>
             {
                 logger.LogInformation(
                     "Authenticating to Keep2Share for user {Username}",
                     config.EmailAddress
                 );
 
-                var loginResponse = await LoginAsync(config, cancellationToken);
+                var loginResponse = await LoginAsync(config, ct);
 
                 if (loginResponse.Status != "success" || loginResponse.AuthToken is null)
                 {
@@ -424,14 +412,11 @@ public class ApiClient(
                             ?? $"Keep2Share login failed with status code {loginResponse.Code}"
                     );
                 }
-            }
 
-            return authToken!;
-        }
-        finally
-        {
-            authSemaphore.Release();
-        }
+                return loginResponse.AuthToken;
+            },
+            cancellationToken
+        );
     }
 
     private async Task<LoginResponse> LoginAsync(
@@ -474,8 +459,6 @@ public class ApiClient(
 
         if (response.Status == "success" && !string.IsNullOrWhiteSpace(response.AuthToken))
         {
-            authToken = response.AuthToken;
-            lastAuthTime = DateTime.UtcNow;
             return response;
         }
 
