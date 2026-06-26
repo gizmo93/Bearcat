@@ -39,7 +39,14 @@ public class ReleaseReadRepository(
                     .ThenByDescending(u => u.Id)
                     .Select(u => u.UploadState)
                     .FirstOrDefault() == UploadState.Completed
-            );
+                && uc.LinkCrypters.Where(lc =>
+                        lc.ContainerScope == LinkCrypterContainerScope.Release
+                        && lc.LinkCrypterRegistration.IsActive
+                    )
+                    .All(lc => lc.LinkCrypterContainers.Any())
+            )
+        && r.ImageUploadConfigs.Where(ic => ic.ImageHosterRegistration.IsActive)
+            .All(ic => ic.ImageUploads.Any());
 
     public async Task<PagedResult<ReleaseReadModel>> SearchReleasesAsync(
         ReleaseSearchQuery query,

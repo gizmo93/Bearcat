@@ -515,10 +515,179 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
     }
 
+    [Test]
+    public async Task GetPostQueueAsync_ConfiguredLinkCrypterWithoutContainer_HidesRelease()
+    {
+        // Arrange
+        await AddPostQueueReleaseAsync(
+            "Bearcat.MissingContainer.2026-GRP",
+            [
+                new PostQueueConfigSpec(
+                    [new PostQueueUploadSpec(UploadState.Completed, 10)],
+                    LinkCrypters: [new PostQueueLinkCrypterSpec(HasContainer: false)]
+                ),
+            ]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(0);
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_ConfiguredLinkCrypterWithContainer_ShowsRelease()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.WithContainer.2026-GRP",
+            [
+                new PostQueueConfigSpec(
+                    [new PostQueueUploadSpec(UploadState.Completed, 10)],
+                    LinkCrypters: [new PostQueueLinkCrypterSpec(HasContainer: true)]
+                ),
+            ]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_InactiveLinkCrypterWithoutContainer_IsIgnored_ShowsRelease()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.InactiveCrypter.2026-GRP",
+            [
+                new PostQueueConfigSpec(
+                    [new PostQueueUploadSpec(UploadState.Completed, 10)],
+                    LinkCrypters:
+                    [
+                        new PostQueueLinkCrypterSpec(
+                            HasContainer: false,
+                            RegistrationActive: false
+                        ),
+                    ]
+                ),
+            ]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_CollectionScopedLinkCrypterWithoutReleaseContainer_IsIgnored_ShowsRelease()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.CollectionScopedCrypter.2026-GRP",
+            [
+                new PostQueueConfigSpec(
+                    [new PostQueueUploadSpec(UploadState.Completed, 10)],
+                    LinkCrypters:
+                    [
+                        new PostQueueLinkCrypterSpec(
+                            HasContainer: false,
+                            Scope: LinkCrypterContainerScope.ReleaseCollection
+                        ),
+                    ]
+                ),
+            ]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_ImageUploadConfigWithoutUpload_HidesRelease()
+    {
+        // Arrange
+        await AddPostQueueReleaseAsync(
+            "Bearcat.MissingImage.2026-GRP",
+            [new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)])],
+            imageConfigs: [new PostQueueImageConfigSpec(HasUpload: false)]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(0);
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_ImageUploadConfigWithUpload_ShowsRelease()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.WithImage.2026-GRP",
+            [new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)])],
+            imageConfigs: [new PostQueueImageConfigSpec(HasUpload: true)]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_InactiveImageHosterWithoutUpload_IsIgnored_ShowsRelease()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.InactiveImageHoster.2026-GRP",
+            [new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)])],
+            imageConfigs: [new PostQueueImageConfigSpec(HasUpload: false, HosterActive: false)]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
+    }
+
     private async Task<Release> AddPostQueueReleaseAsync(
         string name,
         IReadOnlyList<PostQueueConfigSpec> configs,
-        DateTime? uploadsPostedAt = null
+        DateTime? uploadsPostedAt = null,
+        IReadOnlyList<PostQueueImageConfigSpec>? imageConfigs = null
     )
     {
         var release = await AddReleaseAsync(name);
@@ -561,11 +730,99 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
             {
                 AddUploadToConfig(name, uploadConfig, uploadSpec);
             }
+
+            var linkCrypterIndex = 0;
+            foreach (var linkCrypterSpec in configSpec.LinkCrypters)
+            {
+                linkCrypterIndex++;
+                AddLinkCrypterToConfig(
+                    $"{name} {configIndex}-{linkCrypterIndex}",
+                    uploadConfig,
+                    linkCrypterSpec
+                );
+            }
+        }
+
+        var imageConfigIndex = 0;
+        foreach (var imageConfigSpec in imageConfigs ?? [])
+        {
+            imageConfigIndex++;
+            AddImageUploadConfig(release, $"{name} image {imageConfigIndex}", imageConfigSpec);
         }
 
         await dbContext.SaveChangesAsync();
 
         return release;
+    }
+
+    private void AddLinkCrypterToConfig(
+        string name,
+        UploadConfig uploadConfig,
+        PostQueueLinkCrypterSpec spec
+    )
+    {
+        var linkCrypterRegistration = new LinkCrypterRegistration
+        {
+            Name = $"{name} crypter",
+            LinkCrypterClassName = "FileCrypt",
+            SerializedConfig = "{}",
+            IsActive = spec.RegistrationActive,
+        };
+        var uploadConfigLinkCrypter = new UploadConfigLinkCrypter
+        {
+            UploadConfig = uploadConfig,
+            LinkCrypterRegistration = linkCrypterRegistration,
+            ContainerScope = spec.Scope,
+            LinkCrypterContainers = [],
+        };
+        dbContext.AddRange(linkCrypterRegistration, uploadConfigLinkCrypter);
+
+        if (spec.HasContainer)
+        {
+            dbContext.Add(
+                new LinkCrypterContainer
+                {
+                    Scope = spec.Scope,
+                    UploadConfigLinkCrypter = uploadConfigLinkCrypter,
+                    LinkCrypterRegistration = linkCrypterRegistration,
+                    ContainerUrl = $"https://filecrypt.example/{name}",
+                    State = LinkCrypterContainerState.Created,
+                    CreatedAt = DateTime.UtcNow,
+                }
+            );
+        }
+    }
+
+    private void AddImageUploadConfig(Release release, string name, PostQueueImageConfigSpec spec)
+    {
+        var imageHosterRegistration = new ImageHosterRegistration
+        {
+            Name = $"{name} hoster",
+            ImageHosterClassName = "PiXhost",
+            SerializedConfig = "{}",
+            IsActive = spec.HosterActive,
+        };
+        var imageUploadConfig = new ImageUploadConfig
+        {
+            Release = release,
+            ImageHosterRegistration = imageHosterRegistration,
+            Name = name,
+            ImageUploads = [],
+        };
+        dbContext.AddRange(imageHosterRegistration, imageUploadConfig);
+
+        if (spec.HasUpload)
+        {
+            dbContext.Add(
+                new ImageUpload
+                {
+                    ImageUploadConfig = imageUploadConfig,
+                    CreatedAt = DateTime.UtcNow,
+                    UploadedAt = DateTime.UtcNow,
+                    UploadState = UploadState.Completed,
+                }
+            );
+        }
     }
 
     private void AddUploadToConfig(string name, UploadConfig uploadConfig, PostQueueUploadSpec spec)
@@ -633,8 +890,20 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
 
     private sealed record PostQueueConfigSpec(
         IReadOnlyList<PostQueueUploadSpec> Uploads,
-        bool HosterActive = true
+        bool HosterActive = true,
+        IReadOnlyList<PostQueueLinkCrypterSpec> LinkCrypters = null!
+    )
+    {
+        public IReadOnlyList<PostQueueLinkCrypterSpec> LinkCrypters { get; } = LinkCrypters ?? [];
+    }
+
+    private sealed record PostQueueLinkCrypterSpec(
+        bool HasContainer,
+        LinkCrypterContainerScope Scope = LinkCrypterContainerScope.Release,
+        bool RegistrationActive = true
     );
+
+    private sealed record PostQueueImageConfigSpec(bool HasUpload, bool HosterActive = true);
 
     private async Task<Release> AddReleaseAsync(
         string name = "Bearcat.Release.2026-GRP",

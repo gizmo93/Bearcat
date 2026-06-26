@@ -259,10 +259,143 @@ public class ReleaseCollectionPostQueueTest : BearcatIntegrationTest
         result.ShouldHaveSingleItem().ReleaseCollectionId.ShouldBe(collection.Id);
     }
 
+    [Test]
+    public async Task GetPostQueueAsync_SlotLinkCrypterWithoutContainer_HidesCollection()
+    {
+        // Arrange
+        await AddPostQueueCollectionAsync(
+            "MissingContainer.Collection",
+            [
+                new CollectionReleaseSpec([
+                    new CollectionConfigSpec(
+                        [new CollectionUploadSpec(UploadState.Completed, 10)],
+                        LinkCrypters: [new CollectionLinkCrypterSpec(HasContainer: false)]
+                    ),
+                ]),
+            ]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(0);
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_SlotLinkCrypterWithContainer_ShowsCollection()
+    {
+        // Arrange
+        var collection = await AddPostQueueCollectionAsync(
+            "WithContainer.Collection",
+            [
+                new CollectionReleaseSpec([
+                    new CollectionConfigSpec(
+                        [new CollectionUploadSpec(UploadState.Completed, 10)],
+                        LinkCrypters: [new CollectionLinkCrypterSpec(HasContainer: true)]
+                    ),
+                ]),
+            ]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseCollectionId.ShouldBe(collection.Id);
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_InactiveSlotLinkCrypterWithoutContainer_IsIgnored_ShowsCollection()
+    {
+        // Arrange
+        var collection = await AddPostQueueCollectionAsync(
+            "InactiveCrypter.Collection",
+            [
+                new CollectionReleaseSpec([
+                    new CollectionConfigSpec(
+                        [new CollectionUploadSpec(UploadState.Completed, 10)],
+                        LinkCrypters:
+                        [
+                            new CollectionLinkCrypterSpec(
+                                HasContainer: false,
+                                RegistrationActive: false
+                            ),
+                        ]
+                    ),
+                ]),
+            ]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseCollectionId.ShouldBe(collection.Id);
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_CollectionImageConfigWithoutUpload_HidesCollection()
+    {
+        // Arrange
+        await AddPostQueueCollectionAsync(
+            "MissingImage.Collection",
+            [
+                new CollectionReleaseSpec([
+                    new CollectionConfigSpec([new CollectionUploadSpec(UploadState.Completed, 10)]),
+                ]),
+            ],
+            imageConfigs: [new CollectionImageConfigSpec(HasUpload: false)]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(0);
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPostQueueAsync_CollectionImageConfigWithUpload_ShowsCollection()
+    {
+        // Arrange
+        var collection = await AddPostQueueCollectionAsync(
+            "WithImage.Collection",
+            [
+                new CollectionReleaseSpec([
+                    new CollectionConfigSpec([new CollectionUploadSpec(UploadState.Completed, 10)]),
+                ]),
+            ],
+            imageConfigs: [new CollectionImageConfigSpec(HasUpload: true)]
+        );
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetPostQueueAsync(CancellationToken.None);
+        var count = await repository.CountPostQueueAsync(CancellationToken.None);
+
+        // Assert
+        count.ShouldBe(1);
+        result.ShouldHaveSingleItem().ReleaseCollectionId.ShouldBe(collection.Id);
+    }
+
     private async Task<ReleaseCollection> AddPostQueueCollectionAsync(
         string name,
         IReadOnlyList<CollectionReleaseSpec> releases,
-        DateTime? uploadsPostedAt = null
+        DateTime? uploadsPostedAt = null,
+        IReadOnlyList<CollectionImageConfigSpec>? imageConfigs = null
     )
     {
         var releaseGroup = new ReleaseGroup
@@ -348,12 +481,110 @@ public class ReleaseCollectionPostQueueTest : BearcatIntegrationTest
                 {
                     AddCollectionUpload(name, uploadConfig, uploadSpec);
                 }
+
+                var linkCrypterIndex = 0;
+                foreach (var linkCrypterSpec in configSpec.LinkCrypters)
+                {
+                    linkCrypterIndex++;
+                    AddCollectionLinkCrypter(
+                        $"{name} {releaseIndex}-{configIndex}-{linkCrypterIndex}",
+                        uploadConfig,
+                        uploadSlot,
+                        linkCrypterSpec
+                    );
+                }
             }
+        }
+
+        var imageConfigIndex = 0;
+        foreach (var imageConfigSpec in imageConfigs ?? [])
+        {
+            imageConfigIndex++;
+            AddCollectionImageUploadConfig(
+                collection,
+                $"{name} image {imageConfigIndex}",
+                imageConfigSpec
+            );
         }
 
         await dbContext.SaveChangesAsync();
 
         return collection;
+    }
+
+    private void AddCollectionLinkCrypter(
+        string name,
+        UploadConfig uploadConfig,
+        CollectionUploadSlot? uploadSlot,
+        CollectionLinkCrypterSpec spec
+    )
+    {
+        var linkCrypterRegistration = new LinkCrypterRegistration
+        {
+            Name = $"{name} crypter",
+            LinkCrypterClassName = "FileCrypt",
+            SerializedConfig = "{}",
+            IsActive = spec.RegistrationActive,
+        };
+        var uploadConfigLinkCrypter = new UploadConfigLinkCrypter
+        {
+            UploadConfig = uploadConfig,
+            LinkCrypterRegistration = linkCrypterRegistration,
+            ContainerScope = LinkCrypterContainerScope.ReleaseCollection,
+            LinkCrypterContainers = [],
+        };
+        dbContext.AddRange(linkCrypterRegistration, uploadConfigLinkCrypter);
+
+        if (spec.HasContainer && uploadSlot is not null)
+        {
+            dbContext.Add(
+                new LinkCrypterContainer
+                {
+                    Scope = LinkCrypterContainerScope.ReleaseCollection,
+                    CollectionUploadSlot = uploadSlot,
+                    LinkCrypterRegistration = linkCrypterRegistration,
+                    ContainerUrl = $"https://filecrypt.example/{name}",
+                    State = LinkCrypterContainerState.Created,
+                    CreatedAt = DateTime.UtcNow,
+                }
+            );
+        }
+    }
+
+    private void AddCollectionImageUploadConfig(
+        ReleaseCollection collection,
+        string name,
+        CollectionImageConfigSpec spec
+    )
+    {
+        var imageHosterRegistration = new ImageHosterRegistration
+        {
+            Name = $"{name} hoster",
+            ImageHosterClassName = "PiXhost",
+            SerializedConfig = "{}",
+            IsActive = spec.HosterActive,
+        };
+        var imageUploadConfig = new ImageUploadConfig
+        {
+            ReleaseCollection = collection,
+            ImageHosterRegistration = imageHosterRegistration,
+            Name = name,
+            ImageUploads = [],
+        };
+        dbContext.AddRange(imageHosterRegistration, imageUploadConfig);
+
+        if (spec.HasUpload)
+        {
+            dbContext.Add(
+                new ImageUpload
+                {
+                    ImageUploadConfig = imageUploadConfig,
+                    CreatedAt = DateTime.UtcNow,
+                    UploadedAt = DateTime.UtcNow,
+                    UploadState = UploadState.Completed,
+                }
+            );
+        }
     }
 
     private void AddCollectionUpload(
@@ -422,8 +653,19 @@ public class ReleaseCollectionPostQueueTest : BearcatIntegrationTest
         IReadOnlyList<CollectionUploadSpec> Uploads,
         bool UseSlot = true,
         bool HosterActive = true,
-        string SlotName = "1080p"
+        string SlotName = "1080p",
+        IReadOnlyList<CollectionLinkCrypterSpec> LinkCrypters = null!
+    )
+    {
+        public IReadOnlyList<CollectionLinkCrypterSpec> LinkCrypters { get; } = LinkCrypters ?? [];
+    }
+
+    private sealed record CollectionLinkCrypterSpec(
+        bool HasContainer,
+        bool RegistrationActive = true
     );
+
+    private sealed record CollectionImageConfigSpec(bool HasUpload, bool HosterActive = true);
 
     private sealed record CollectionReleaseSpec(IReadOnlyList<CollectionConfigSpec> Configs);
 

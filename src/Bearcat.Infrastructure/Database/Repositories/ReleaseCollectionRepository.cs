@@ -17,7 +17,7 @@ public class ReleaseCollectionRepository(
     ISeriesDatabaseFactory seriesDatabaseFactory
 ) : IReleaseCollectionReadRepository, IReleaseCollectionWriteRepository
 {
-    private static readonly Expression<Func<ReleaseCollection, bool>> IsReadyForPostQueue = c =>
+    private readonly Expression<Func<ReleaseCollection, bool>> isReadyForPostQueue = c =>
         c.Releases.Any(r =>
             r.UploadConfigs.Any(uc =>
                 uc.CollectionUploadSlotId != null
@@ -38,8 +38,22 @@ public class ReleaseCollectionRepository(
                         .ThenByDescending(u => u.Id)
                         .Select(u => u.UploadState)
                         .FirstOrDefault() == UploadState.Completed
+                    && uc.LinkCrypters.Where(lc =>
+                            lc.ContainerScope == LinkCrypterContainerScope.ReleaseCollection
+                            && lc.LinkCrypterRegistration.IsActive
+                        )
+                        .All(lc =>
+                            dbRead.LinkCrypterContainers.Any(container =>
+                                container.Scope == LinkCrypterContainerScope.ReleaseCollection
+                                && container.CollectionUploadSlotId == uc.CollectionUploadSlotId
+                                && container.LinkCrypterRegistrationId
+                                    == lc.LinkCrypterRegistrationId
+                            )
+                        )
                 )
-        );
+        )
+        && c.ImageUploadConfigs.Where(ic => ic.ImageHosterRegistration.IsActive)
+            .All(ic => ic.ImageUploads.Any());
 
     public async Task<ReleaseCollection?> GetByReleaseGroupAndKeyAsync(
         int releaseGroupId,
@@ -392,7 +406,7 @@ public class ReleaseCollectionRepository(
     )
     {
         var openCollections = await dbRead
-            .ReleaseCollections.Where(IsReadyForPostQueue)
+            .ReleaseCollections.Where(isReadyForPostQueue)
             .Select(c => new
             {
                 c.Id,
@@ -535,7 +549,7 @@ public class ReleaseCollectionRepository(
 
     public async Task<int> CountPostQueueAsync(CancellationToken cancellationToken = default)
     {
-        return await dbRead.ReleaseCollections.CountAsync(IsReadyForPostQueue, cancellationToken);
+        return await dbRead.ReleaseCollections.CountAsync(isReadyForPostQueue, cancellationToken);
     }
 
     private string GetSeriesDatabaseName(string seriesDatabaseClassName)
