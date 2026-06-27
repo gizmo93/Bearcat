@@ -1,10 +1,25 @@
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using Npgsql;
 
 namespace Bearcat.Desktop;
 
 public sealed class DesktopSettings
 {
-    public string ReleaseDataDirectory { get; set; } = string.Empty;
+    public List<string> WorkingDirectories { get; set; } = [];
+
+    [JsonInclude]
+    public string? ReleaseDataDirectory
+    {
+        get => null;
+        set
+        {
+            if (!string.IsNullOrWhiteSpace(value) && WorkingDirectories.Count == 0)
+            {
+                WorkingDirectories.Add(value.Trim());
+            }
+        }
+    }
 
     public string RarPath { get; set; } = "rar";
 

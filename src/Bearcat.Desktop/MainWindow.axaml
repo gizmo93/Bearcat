@@ -51,15 +51,25 @@
                     <TextBlock
                         Grid.Row="0"
                         Grid.Column="0"
-                        Text="Release path"
-                        VerticalAlignment="Center"
+                        Text="Working directories"
+                        VerticalAlignment="Top"
+                        Margin="0,6,0,0"
                     />
-                    <TextBox x:Name="ReleasePathTextBox" Grid.Row="0" Grid.Column="1" />
+                    <TextBox
+                        x:Name="WorkingDirectoriesTextBox"
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        AcceptsReturn="True"
+                        TextWrapping="NoWrap"
+                        MinHeight="64"
+                        PlaceholderText="One directory per line"
+                    />
                     <Button
                         Grid.Row="0"
                         Grid.Column="2"
-                        Content="Browse..."
-                        Click="BrowseReleasePath_Click"
+                        Content="Add..."
+                        VerticalAlignment="Top"
+                        Click="BrowseWorkingDirectory_Click"
                     />
 
                     <TextBlock

@@ -4,14 +4,14 @@ using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Bearcat.Website.Pages.ManageReleaseTemplates;
 
 public partial class CreateOrEditArchiveConfigTemplateDialog(
     IArchiverFactory archiverFactory,
-    IConfiguration configuration,
+    IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig,
     DialogService dialogService
 ) : OwningComponentBase
 {
@@ -90,9 +90,8 @@ public partial class CreateOrEditArchiveConfigTemplateDialog(
     {
         var parameters = new Dictionary<string, object?>
         {
-            [nameof(FolderSelectionDialog.BaseFolderPath)] = configuration
-                .GetRequiredSection("ReleaseDataDirectory")
-                .Value!,
+            [nameof(FolderSelectionDialog.BaseFolderPaths)] =
+                workingDirectoriesConfig.Value.GetWorkingDirectories(),
             [nameof(FolderSelectionDialog.SelectedFolderPath)] = FormModel.ArchiveFilesBasePath,
         };
 

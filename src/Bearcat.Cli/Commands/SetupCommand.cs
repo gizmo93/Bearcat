@@ -48,24 +48,50 @@ public sealed class SetupCommand : AsyncCommand
             cancellationToken
         );
 
-        var releaseDataDirectory = await AnsiConsole.PromptAsync(
-            new TextPrompt<string>("Release data directory:").Validate(ValidateReleaseDirectory),
-            cancellationToken
-        );
-        if (!Directory.Exists(releaseDataDirectory))
+        var workingDirectories = new List<string>();
+        while (true)
         {
-            if (
-                !await AnsiConsole.ConfirmAsync(
-                    $"{releaseDataDirectory} does not exist. Create it?",
-                    cancellationToken: cancellationToken
-                )
-            )
+            var prompt = new TextPrompt<string>(
+                workingDirectories.Count == 0
+                    ? "Working directory:"
+                    : "Additional working directory (empty = done):"
+            ).Validate(ValidateWorkingDirectory);
+
+            if (workingDirectories.Count > 0)
             {
-                AnsiConsole.MarkupLine("[yellow]Aborted.[/]");
-                return 1;
+                prompt.AllowEmpty();
             }
 
-            Directory.CreateDirectory(releaseDataDirectory);
+            var workingDirectory = (
+                await AnsiConsole.PromptAsync(prompt, cancellationToken)
+            ).Trim();
+            if (string.IsNullOrWhiteSpace(workingDirectory))
+            {
+                break;
+            }
+
+            if (workingDirectories.Contains(workingDirectory))
+            {
+                AnsiConsole.MarkupLine("[yellow]Already added.[/]");
+                continue;
+            }
+
+            if (!Directory.Exists(workingDirectory))
+            {
+                if (
+                    !await AnsiConsole.ConfirmAsync(
+                        $"{workingDirectory} does not exist. Create it?",
+                        cancellationToken: cancellationToken
+                    )
+                )
+                {
+                    continue;
+                }
+
+                Directory.CreateDirectory(workingDirectory);
+            }
+
+            workingDirectories.Add(workingDirectory);
         }
 
         var connectionString = new NpgsqlConnectionStringBuilder
@@ -117,7 +143,7 @@ public sealed class SetupCommand : AsyncCommand
         {
             Database = { ConnectionString = connectionString },
             Archivers = { RarPath = rarPath, SevenZipPath = sevenZipPath },
-            ReleaseDataDirectory = releaseDataDirectory,
+            WorkingDirectories = workingDirectories,
             Urls = urls,
         }.Save(BearcatPaths.WindowsServiceConfigPath);
         AnsiConsole.MarkupLineInterpolated($"Wrote {BearcatPaths.WindowsServiceConfigPath}");
@@ -137,9 +163,12 @@ public sealed class SetupCommand : AsyncCommand
 
         if (result == 0)
         {
-            if (OperatingSystem.IsWindows() && IsUncPath(releaseDataDirectory))
+            if (OperatingSystem.IsWindows())
             {
-                PrintNetworkPathNotice(releaseDataDirectory);
+                foreach (var workingDirectory in workingDirectories.Where(IsUncPath))
+                {
+                    PrintNetworkPathNotice(workingDirectory);
+                }
             }
 
             PrintKeyBackupNotice();
@@ -200,7 +229,7 @@ public sealed class SetupCommand : AsyncCommand
         return 0;
     }
 
-    private static ValidationResult ValidateReleaseDirectory(string path)
+    private static ValidationResult ValidateWorkingDirectory(string path)
     {
         if (OperatingSystem.IsWindows() && IsMappedNetworkDrive(path))
         {
@@ -229,7 +258,7 @@ public sealed class SetupCommand : AsyncCommand
     {
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLineInterpolated(
-            $"[yellow]The release directory {path} is a network path.[/]"
+            $"[yellow]The working directory {path} is a network path.[/]"
         );
         AnsiConsole.MarkupLine(
             "The service runs as LocalSystem, which cannot reach a protected share. "

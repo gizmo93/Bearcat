@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Bearcat.Cli;
 
@@ -7,11 +8,26 @@ public sealed class ServiceConfigFile
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         WriteIndented = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
     public DatabaseSection Database { get; init; } = new();
     public ArchiversSection Archivers { get; init; } = new();
-    public string ReleaseDataDirectory { get; init; } = string.Empty;
+    public List<string> WorkingDirectories { get; init; } = [];
+
+    [JsonInclude]
+    public string? ReleaseDataDirectory
+    {
+        get => null;
+        init
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                WorkingDirectories.Add(value.Trim());
+            }
+        }
+    }
+
     public string Urls { get; init; } = string.Empty;
 
     public static ServiceConfigFile Load(string path)

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Bearcat.Desktop;
 
@@ -9,6 +10,7 @@ public sealed class DesktopSettingsStore
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         WriteIndented = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
     public string SettingsPath { get; } =

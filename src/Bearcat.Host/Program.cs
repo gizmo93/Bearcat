@@ -29,7 +29,7 @@ if (OperatingSystem.IsWindows())
 
 var isDesktopMode = builder.Configuration.GetValue("Bearcat:DesktopMode", false);
 
-builder.Services.AddBearcatBlueprintComponents();
+builder.Services.AddBearcatBlueprintComponents(builder.Configuration);
 builder.Services.Configure<HostOptions>(options =>
 {
     options.ServicesStartConcurrently = true;

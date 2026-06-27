@@ -89,7 +89,13 @@ public sealed class BearcatHostProcess : IDisposable
         startInfo.Environment["ASPNETCORE_URLS"] = settings.WebUrl;
         startInfo.Environment["Bearcat__DesktopMode"] = "true";
         startInfo.Environment["Database__ConnectionString"] = settings.CreateConnectionString();
-        startInfo.Environment["ReleaseDataDirectory"] = settings.ReleaseDataDirectory;
+        for (var index = 0; index < settings.WorkingDirectories.Count; index++)
+        {
+            startInfo.Environment[$"WorkingDirectories__{index}"] = settings.WorkingDirectories[
+                index
+            ];
+        }
+
         startInfo.Environment["Archivers__RarPath"] = settings.RarPath;
         startInfo.Environment["Archivers__SevenZipPath"] = settings.SevenZipPath;
 

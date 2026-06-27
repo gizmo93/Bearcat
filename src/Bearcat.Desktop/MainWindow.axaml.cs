@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -128,7 +130,10 @@ public partial class MainWindow : Window
 
     private void LoadSettings(DesktopSettings settings)
     {
-        ReleasePathTextBox.Text = settings.ReleaseDataDirectory;
+        WorkingDirectoriesTextBox.Text = string.Join(
+            Environment.NewLine,
+            settings.WorkingDirectories
+        );
         RarPathTextBox.Text = settings.RarPath;
         SevenZipPathTextBox.Text = settings.SevenZipPath;
         BearcatHostPathTextBox.Text = settings.BearcatHostPath;
@@ -144,7 +149,7 @@ public partial class MainWindow : Window
     {
         settings = new DesktopSettings
         {
-            ReleaseDataDirectory = ReleasePathTextBox.Text?.Trim() ?? string.Empty,
+            WorkingDirectories = ParseWorkingDirectories(WorkingDirectoriesTextBox.Text),
             RarPath = RarPathTextBox.Text?.Trim() ?? string.Empty,
             SevenZipPath = SevenZipPathTextBox.Text?.Trim() ?? string.Empty,
             BearcatHostPath = BearcatHostPathTextBox.Text?.Trim() ?? string.Empty,
@@ -169,6 +174,21 @@ public partial class MainWindow : Window
         settings.PostgresPort = postgresPort;
         settings.WebPort = webPort;
         return true;
+    }
+
+    private static List<string> ParseWorkingDirectories(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return [];
+        }
+
+        return text.Split(
+                ['\r', '\n'],
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+            )
+            .Distinct()
+            .ToList();
     }
 
     private async Task RunBusyAsync(Func<Task> action)
@@ -272,13 +292,18 @@ public partial class MainWindow : Window
         await QuitAsync();
     }
 
-    private async void BrowseReleasePath_Click(object? sender, RoutedEventArgs e)
+    private async void BrowseWorkingDirectory_Click(object? sender, RoutedEventArgs e)
     {
-        var path = await PickFolderAsync("Choose release data directory");
-        if (!string.IsNullOrWhiteSpace(path))
+        var path = await PickFolderAsync("Choose working directory");
+        if (string.IsNullOrWhiteSpace(path))
         {
-            ReleasePathTextBox.Text = path;
+            return;
         }
+
+        var existing = WorkingDirectoriesTextBox.Text?.TrimEnd('\r', '\n') ?? string.Empty;
+        WorkingDirectoriesTextBox.Text = string.IsNullOrWhiteSpace(existing)
+            ? path
+            : $"{existing}{Environment.NewLine}{path}";
     }
 
     private async void BrowseRarPath_Click(object? sender, RoutedEventArgs e)

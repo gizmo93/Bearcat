@@ -7,7 +7,7 @@ namespace Bearcat.Website.Shared;
 public partial class FolderSelectionDialog(IFileSystemService fileSystemService) : ComponentBase
 {
     [Parameter]
-    public string BaseFolderPath { get; set; } = null!;
+    public IReadOnlyList<string> BaseFolderPaths { get; set; } = [];
 
     [Parameter]
     public string? SelectedFolderPath { get; set; }
@@ -25,10 +25,23 @@ public partial class FolderSelectionDialog(IFileSystemService fileSystemService)
 
     protected override void OnInitialized()
     {
-        rootNodes = [CreateNode(BaseFolderPath)];
+        rootNodes = BaseFolderPaths
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Select(CreateRootNode)
+            .ToList();
+
+        if (rootNodes.Count == 0)
+        {
+            return;
+        }
+
+        if (InitializeSelection())
+        {
+            return;
+        }
+
         expandedItems = [rootNodes[0].Path];
         EnsureChildrenLoaded(rootNodes[0]);
-        InitializeSelection();
     }
 
     private async Task SaveAsync()
@@ -75,23 +88,46 @@ public partial class FolderSelectionDialog(IFileSystemService fileSystemService)
         return node.Children;
     }
 
-    private void InitializeSelection()
+    private bool InitializeSelection()
     {
         if (string.IsNullOrWhiteSpace(SelectedFolderPath))
         {
-            return;
+            return false;
         }
 
-        var selectedNode = EnsureSelectedPath(rootNodes[0], SelectedFolderPath);
+        var rootNode = FindOwningRoot(SelectedFolderPath);
+
+        if (rootNode is null)
+        {
+            return false;
+        }
+
+        var selectedNode = EnsureSelectedPath(rootNode, SelectedFolderPath);
 
         if (selectedNode is null)
         {
-            return;
+            return false;
         }
 
         EnsureChildrenLoaded(selectedNode);
         selectedItem = selectedNode.Path;
-        expandedItems = GetAncestorPaths(selectedNode.Path).Append(rootNodes[0].Path).ToHashSet();
+        expandedItems = GetAncestorPaths(selectedNode.Path, rootNode.Path)
+            .Append(rootNode.Path)
+            .ToHashSet();
+
+        return true;
+    }
+
+    private FolderSelectionNode? FindOwningRoot(string path)
+    {
+        var normalizedPath = NormalizePath(path);
+
+        if (string.IsNullOrWhiteSpace(normalizedPath))
+        {
+            return null;
+        }
+
+        return rootNodes.FirstOrDefault(root => IsSameOrDescendantPath(normalizedPath, root.Path));
     }
 
     private FolderSelectionNode? EnsureSelectedPath(
@@ -129,12 +165,14 @@ public partial class FolderSelectionDialog(IFileSystemService fileSystemService)
         return currentNode;
     }
 
-    private IEnumerable<string> GetAncestorPaths(string path)
+    private static IEnumerable<string> GetAncestorPaths(string path, string basePath)
     {
-        var basePath = NormalizePath(BaseFolderPath);
+        var normalizedBasePath = NormalizePath(basePath);
         var currentPath = NormalizePath(path);
 
-        while (!string.IsNullOrWhiteSpace(currentPath) && !PathsEqual(currentPath, basePath))
+        while (
+            !string.IsNullOrWhiteSpace(currentPath) && !PathsEqual(currentPath, normalizedBasePath)
+        )
         {
             currentPath = Path.GetDirectoryName(currentPath);
 
@@ -227,6 +265,11 @@ public partial class FolderSelectionDialog(IFileSystemService fileSystemService)
         }
 
         return filtered;
+    }
+
+    private static FolderSelectionNode CreateRootNode(string path)
+    {
+        return new FolderSelectionNode { Path = path, Name = path };
     }
 
     private FolderSelectionNode CreateNode(string path)

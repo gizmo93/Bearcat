@@ -6,15 +6,15 @@ using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Bearcat.Website.Pages.ManageReleaseTemplates;
 
 public partial class CreateReleaseFromTemplateDialog(
     IReleaseTemplateReadRepository readRepository,
     DialogService dialogService,
-    IConfiguration configuration,
+    IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig,
     NavigationManager navigationManager
 ) : OwningComponentBase
 {
@@ -64,10 +64,10 @@ public partial class CreateReleaseFromTemplateDialog(
 
     private async Task OpenFolderDialogAsync()
     {
-        var releasesPath = configuration.GetRequiredSection("ReleaseDataDirectory").Value!;
         var parameters = new Dictionary<string, object?>
         {
-            [nameof(FolderSelectionDialog.BaseFolderPath)] = releasesPath,
+            [nameof(FolderSelectionDialog.BaseFolderPaths)] =
+                workingDirectoriesConfig.Value.GetWorkingDirectories(),
             [nameof(FolderSelectionDialog.SelectedFolderPath)] = formModel.FolderPath,
         };
 

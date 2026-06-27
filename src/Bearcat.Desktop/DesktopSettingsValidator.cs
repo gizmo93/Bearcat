@@ -10,14 +10,23 @@ public static class DesktopSettingsValidator
 {
     public static async Task ValidateAsync(DesktopSettings settings)
     {
-        RequireValue(settings.ReleaseDataDirectory, "Release path is required.");
         RequireValue(settings.PostgresHost, "Postgres host is required.");
         RequireValue(settings.PostgresDatabase, "Database name is required.");
         RequireValue(settings.PostgresUsername, "Postgres username is required.");
 
-        if (!Directory.Exists(settings.ReleaseDataDirectory))
+        if (settings.WorkingDirectories.Count == 0)
         {
-            throw new InvalidOperationException("Release path does not exist.");
+            throw new InvalidOperationException("At least one working directory is required.");
+        }
+
+        var missingDirectory = settings.WorkingDirectories.FirstOrDefault(directory =>
+            !Directory.Exists(directory)
+        );
+        if (missingDirectory is not null)
+        {
+            throw new InvalidOperationException(
+                $"Working directory does not exist: {missingDirectory}"
+            );
         }
 
         if (!CommandExists(settings.RarPath))
