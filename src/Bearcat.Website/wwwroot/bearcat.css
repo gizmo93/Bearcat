@@ -2421,17 +2421,29 @@ a {
     line-height: 1.5;
 }
 
-.bearcat-post-wizard {
-    max-height: 70vh;
-    overflow-y: auto;
-}
-
 .bearcat-post-wizard-textarea {
     min-height: 14rem;
 }
 
 [aria-modal] h2 {
     overflow-wrap: anywhere;
+}
+
+[aria-modal="true"][role="dialog"]:not([data-side]),
+[aria-modal="true"][role="alertdialog"]:not([data-side]) {
+    top: 2rem;
+    translate: -50% 0;
+    max-height: calc(100vh - 4rem);
+    max-height: calc(100dvh - 4rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    animation: none;
+}
+
+@media (max-height: 820px) {
+    .bearcat-rendered-forum-post:not(.bearcat-post-wizard-textarea) {
+        min-height: 40vh;
+    }
 }
 
 @media (min-width: 640px) {
