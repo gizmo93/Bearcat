@@ -370,6 +370,21 @@ a {
     opacity: 1;
 }
 
+[data-collapsible="icon"] .bearcat-nav-group-label,
+[data-collapsible="icon"] .bearcat-culture-selector {
+    display: none;
+}
+
+[data-collapsible="icon"] [data-sidebar="content"] > *,
+[data-collapsible="icon"] [data-sidebar="content"] [data-sidebar="menu"],
+[data-collapsible="icon"] [data-sidebar="content"] [data-sidebar="menu-item"] {
+    width: 100%;
+}
+
+[data-collapsible="icon"] [data-sidebar="menu-button"] {
+    margin-inline: auto;
+}
+
 .bearcat-notification-menu {
     width: min(23rem, calc(100vw - 2rem));
 }
