@@ -1,20 +1,19 @@
 using System.Net.Http.Json;
-using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Updates;
 
 namespace Bearcat.Infrastructure.Updates;
 
-public sealed class GitHubUpdateChecker(IHttpClientFactory httpClientFactory)
-    : IUpdateChecker,
-        IDisposable
+public sealed class GitHubUpdateChecker(
+    IHttpClientFactory httpClientFactory,
+    IAppVersionProvider appVersionProvider
+) : IUpdateChecker, IDisposable
 {
     public const string HttpClientName = "github-updates";
 
     private const string Owner = "gizmo93";
     private const string Repository = "Bearcat";
-    private const string DevelopmentVersion = "0.0.0-dev";
 
     private static readonly Uri LatestReleaseUri = new(
         $"https://api.github.com/repos/{Owner}/{Repository}/releases/latest"
@@ -30,7 +29,7 @@ public sealed class GitHubUpdateChecker(IHttpClientFactory httpClientFactory)
     private UpdateStatus? cachedStatus;
     private DateTimeOffset cachedAt;
 
-    public string CurrentVersion { get; } = ReadCurrentVersion();
+    public string CurrentVersion { get; } = appVersionProvider.CurrentVersion;
 
     public async Task<UpdateStatus> GetUpdateStatusAsync(
         CancellationToken cancellationToken = default
@@ -119,23 +118,6 @@ public sealed class GitHubUpdateChecker(IHttpClientFactory httpClientFactory)
         {
             return new UpdateStatus(CurrentVersion, null, false, ReleasesPageUrl);
         }
-    }
-
-    private static string ReadCurrentVersion()
-    {
-        var informationalVersion = Assembly
-            .GetEntryAssembly()
-            ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-            ?.InformationalVersion;
-
-        if (string.IsNullOrWhiteSpace(informationalVersion))
-        {
-            return DevelopmentVersion;
-        }
-
-        // The SDK appends "+<git-sha>" build metadata that we do not want to display or compare.
-        var plusIndex = informationalVersion.IndexOf('+');
-        return plusIndex >= 0 ? informationalVersion[..plusIndex] : informationalVersion;
     }
 
     private static bool IsDevelopmentVersion(string version)
