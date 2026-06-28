@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
+using Bearcat.Abstractions.Updates;
 using Bearcat.Infrastructure.Updates;
 using Moq;
 using Shouldly;
@@ -27,7 +28,9 @@ public class GitHubUpdateCheckerTest
             .Setup(factory => factory.CreateClient(GitHubUpdateChecker.HttpClientName))
             .Returns(() => new HttpClient(httpMessageHandler, disposeHandler: false));
 
-        checker = new GitHubUpdateChecker(httpClientFactoryMock.Object);
+        var appVersionProvider = new FakeAppVersionProvider("1.0.0");
+
+        checker = new GitHubUpdateChecker(httpClientFactoryMock.Object, appVersionProvider);
     }
 
     [TearDown]
@@ -170,6 +173,11 @@ public class GitHubUpdateCheckerTest
                 Headers = { ContentType = new MediaTypeHeaderValue("application/json") },
             },
         };
+    }
+
+    private sealed class FakeAppVersionProvider(string currentVersion) : IAppVersionProvider
+    {
+        public string CurrentVersion { get; } = currentVersion;
     }
 
     private sealed class TestHttpMessageHandler : HttpMessageHandler

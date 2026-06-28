@@ -45,6 +45,7 @@ public static class ServiceProviderConfig
                     );
                 }
             );
+            services.AddSingleton<IAppVersionProvider, AssemblyAppVersionProvider>();
             services.AddSingleton<IUpdateChecker, GitHubUpdateChecker>();
         }
     }
