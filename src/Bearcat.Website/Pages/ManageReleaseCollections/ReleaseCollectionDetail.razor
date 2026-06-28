@@ -369,7 +369,7 @@
                                                         <LucideIcon Name="list" class="h-4 w-4" />
                                                     </BbButton>
                                                 </BbDropdownMenuTrigger>
-                                                <BbDropdownMenuContent Align="PopoverAlign.End">
+                                                <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
                                                     @foreach (var upload in release.LatestUploads)
                                                     {
                                                         <BbDropdownMenuItem OnClick="@(async _ => await ShowUploadLinksDialogAsync(release, upload))">

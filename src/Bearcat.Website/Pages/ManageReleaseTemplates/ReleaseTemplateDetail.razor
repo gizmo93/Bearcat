@@ -26,7 +26,7 @@
                         <LucideIcon Name="ellipsis" class="h-4 w-4" />
                     </BbButton>
                 </BbDropdownMenuTrigger>
-                <BbDropdownMenuContent Align="PopoverAlign.End">
+                <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
                     <BbDropdownMenuItem OnClick="ShowEditTemplateDialogAsync">
                         @L["Edit"]
                     </BbDropdownMenuItem>
@@ -109,7 +109,7 @@
                                                         <LucideIcon Name="ellipsis" class="h-4 w-4" />
                                                     </BbButton>
                                                 </BbDropdownMenuTrigger>
-                                                <BbDropdownMenuContent Align="PopoverAlign.End">
+                                                <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
                                                     <BbDropdownMenuItem OnClick="@(async _ => await ShowEditArchiveConfigDialogAsync(config))">
                                                         @L["EditConfig"]
                                                     </BbDropdownMenuItem>
@@ -195,7 +195,7 @@
                                                     <LucideIcon Name="ellipsis" class="h-4 w-4" />
                                                 </BbButton>
                                             </BbDropdownMenuTrigger>
-                                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                                            <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
                                                 <BbDropdownMenuItem OnClick="@(async _ => await ShowEditUploadConfigDialogAsync(config))">
                                                     @L["EditConfig"]
                                                 </BbDropdownMenuItem>
@@ -340,7 +340,7 @@
                                                     <LucideIcon Name="ellipsis" class="h-4 w-4" />
                                                 </BbButton>
                                             </BbDropdownMenuTrigger>
-                                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                                            <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
                                                 <BbDropdownMenuItem OnClick="@(async _ => await ShowEditImageUploadConfigDialogAsync(config))">
                                                     @L["EditConfig"]
                                                 </BbDropdownMenuItem>
@@ -409,7 +409,7 @@
                                                     <LucideIcon Name="ellipsis" class="h-4 w-4" />
                                                 </BbButton>
                                             </BbDropdownMenuTrigger>
-                                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                                            <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
                                                 <BbDropdownMenuItem OnClick="@(async _ => await ShowEditCollectionImageUploadConfigDialogAsync(config))">
                                                     @L["EditConfig"]
                                                 </BbDropdownMenuItem>

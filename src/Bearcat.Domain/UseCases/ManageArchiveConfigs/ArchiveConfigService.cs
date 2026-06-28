@@ -83,8 +83,10 @@ public class ArchiveConfigService(
         await writeRepository.SaveChangesAsync();
     }
 
-    public async Task RefreshUnmanagedArchiveAsync(
+    public async Task<ArchiveFolderChangeResult> SetArchiveFolderAsync(
         int archiveConfigId,
+        string archiveFolderPath,
+        bool confirmContentChange,
         CancellationToken cancellationToken = default
     )
     {
@@ -101,13 +103,20 @@ public class ArchiveConfigService(
 
         EnsureUnmanagedRelease(archiveConfig);
 
-        UnmanagedReleaseArchiveInitializer.RefreshArchiveConfig(
+        var result = UnmanagedReleaseArchiveInitializer.ApplyArchiveFolder(
             archiveConfig: archiveConfig,
-            archivers: archiverFactory.GetArchivers(),
-            createdAt: timeProvider.GetLocalNow()
+            archiveFolderPath: archiveFolderPath,
+            archiver: archiverFactory.GetByName(archiveConfig.ArchiverName),
+            createdAt: timeProvider.GetLocalNow(),
+            confirmContentChange: confirmContentChange
         );
 
-        await writeRepository.SaveChangesAsync(cancellationToken);
+        if (result is not ArchiveFolderChangeResult.ConfirmationRequired)
+        {
+            await writeRepository.SaveChangesAsync(cancellationToken);
+        }
+
+        return result;
     }
 
     private static void EnsureManagedRelease(ArchiveConfig archiveConfig)

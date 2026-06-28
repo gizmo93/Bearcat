@@ -54,7 +54,7 @@
                         <LucideIcon Name="chevron-down" class="h-4 w-4" />
                     </BbButton>
                 </BbDropdownMenuTrigger>
-                <BbDropdownMenuContent Align="PopoverAlign.End">
+                <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
                     <BbDropdownMenuItem Disabled="@(!CanSaveNfoFile)" OnClick="SaveNfoFileAsync">
                         <Icon>
                             <LucideIcon Name="file-down" class="h-4 w-4" />

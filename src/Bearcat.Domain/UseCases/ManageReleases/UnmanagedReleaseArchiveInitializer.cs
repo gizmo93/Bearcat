@@ -8,6 +8,7 @@ public static class UnmanagedReleaseArchiveInitializer
 {
     public static ArchiveConfig CreateArchiveConfig(
         Release release,
+        string archiveFolderPath,
         IReadOnlyList<ArchiverDto> archivers,
         DateTime createdAt
     )
@@ -19,7 +20,7 @@ public static class UnmanagedReleaseArchiveInitializer
             );
         }
 
-        var archiveFiles = GetArchiveFiles(release.ReleaseFolderPath, archivers);
+        var archiveFiles = GetArchiveFiles(archiveFolderPath, archivers);
         var archiver = archiveFiles
             .Select(file => file.Archiver)
             .DistinctBy(a => a.ClassName)
@@ -28,8 +29,8 @@ public static class UnmanagedReleaseArchiveInitializer
         return new ArchiveConfig
         {
             Release = release,
-            Name = archiveFiles[0].Archiver.Name,
-            ArchiveFilesBasePath = release.ReleaseFolderPath,
+            Name = archiver.Name,
+            ArchiveFilesBasePath = archiveFolderPath,
             ArchiverName = archiver.ClassName,
             ArchiveNamePrefix = null,
             ArchivePassword = null,
@@ -37,59 +38,46 @@ public static class UnmanagedReleaseArchiveInitializer
             UploadConfigs = [],
             Archives =
             [
-                new Archive
-                {
-                    ArchiveFolderPath = release.ReleaseFolderPath,
-                    CreatedAt = createdAt,
-                    ArchiveState = ArchiveState.Created,
-                    ArchiveFileSizeMb = 0,
-                    ArchiveFiles = archiveFiles
-                        .Select(file => new ArchiveFile { FullFileName = file.FullFileName })
-                        .ToList(),
-                    Uploads = [],
-                    ErrorMessages = [],
-                    Notifications = [],
-                },
+                BuildArchive(
+                    archiveFolderPath,
+                    archiveFiles.Select(file => file.FullFileName).ToList(),
+                    createdAt
+                ),
             ],
         };
     }
 
-    public static void RefreshArchiveConfig(
+    public static ArchiveFolderChangeResult ApplyArchiveFolder(
         ArchiveConfig archiveConfig,
-        IReadOnlyList<ArchiverDto> archivers,
-        DateTime createdAt
+        string archiveFolderPath,
+        IArchiver archiver,
+        DateTime createdAt,
+        bool confirmContentChange
     )
     {
         if (archiveConfig.Release.ReleaseType is not ReleaseType.Unmanaged)
         {
             throw new InvalidOperationException(
-                "Unmanaged archive refresh can only be used for unmanaged releases."
+                "Archive folders can only be changed for unmanaged releases."
             );
         }
 
-        var archiver = archivers.SingleOrDefault(archiver =>
-            string.Equals(archiver.ClassName, archiveConfig.ArchiverName, StringComparison.Ordinal)
-        );
-
-        if (archiver is null)
-        {
-            throw new InvalidOperationException(
-                $"Archiver {archiveConfig.ArchiverName} is no longer available."
-            );
-        }
-
-        var releaseFolderPath = archiveConfig.Release.ReleaseFolderPath;
+        var archiveFiles = GetArchiveFiles(archiveFolderPath, archiver);
         var currentArchive = GetCurrentArchive(archiveConfig);
-        var archiveFiles = GetArchiveFiles(releaseFolderPath, archiver);
 
         if (currentArchive is not null && ArchiveFileNamesMatch(currentArchive, archiveFiles))
         {
-            archiveConfig.ArchiveFilesBasePath = releaseFolderPath;
-            RepointArchive(currentArchive, releaseFolderPath);
-            return;
+            archiveConfig.ArchiveFilesBasePath = archiveFolderPath;
+            RepointArchive(currentArchive, archiveFolderPath);
+            return ArchiveFolderChangeResult.Relocated;
         }
 
-        archiveConfig.ArchiveFilesBasePath = releaseFolderPath;
+        if (!confirmContentChange)
+        {
+            return ArchiveFolderChangeResult.ConfirmationRequired;
+        }
+
+        archiveConfig.ArchiveFilesBasePath = archiveFolderPath;
 
         foreach (
             var archive in archiveConfig.Archives.Where(archive =>
@@ -100,42 +88,51 @@ public static class UnmanagedReleaseArchiveInitializer
             archive.ArchiveState = ArchiveState.Deleted;
         }
 
-        archiveConfig.Archives.Add(
-            new Archive
-            {
-                ArchiveFolderPath = releaseFolderPath,
-                CreatedAt = createdAt,
-                ArchiveState = ArchiveState.Created,
-                ArchiveFileSizeMb = 0,
-                ArchiveFiles = archiveFiles
-                    .Select(file => new ArchiveFile { FullFileName = file.FullFileName })
-                    .ToList(),
-                Uploads = [],
-                ErrorMessages = [],
-                Notifications = [],
-            }
-        );
+        archiveConfig.Archives.Add(BuildArchive(archiveFolderPath, archiveFiles, createdAt));
+
+        return ArchiveFolderChangeResult.Reimported;
+    }
+
+    private static Archive BuildArchive(
+        string archiveFolderPath,
+        IReadOnlyList<string> archiveFileNames,
+        DateTime createdAt
+    )
+    {
+        return new Archive
+        {
+            ArchiveFolderPath = archiveFolderPath,
+            CreatedAt = createdAt,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 0,
+            ArchiveFiles = archiveFileNames
+                .Select(fileName => new ArchiveFile { FullFileName = fileName })
+                .ToList(),
+            Uploads = [],
+            ErrorMessages = [],
+            Notifications = [],
+        };
     }
 
     private static IReadOnlyList<UnmanagedArchiveFile> GetArchiveFiles(
-        string releaseFolderPath,
+        string archiveFolderPath,
         IReadOnlyList<ArchiverDto> archivers
     )
     {
-        if (!Directory.Exists(releaseFolderPath))
+        if (!Directory.Exists(archiveFolderPath))
         {
             throw new InvalidOperationException(
-                $"Release folder path {releaseFolderPath} does not exist."
+                $"Archive folder path {archiveFolderPath} does not exist."
             );
         }
 
         var archiveFiles = Directory
-            .EnumerateFiles(releaseFolderPath)
+            .EnumerateFiles(archiveFolderPath)
             .Select(file => new
             {
                 FullFileName = file,
                 MatchingArchivers = archivers
-                    .Where(archiver => FileMatchesArchiver(file, archiver))
+                    .Where(archiver => FileMatchesArchiver(file, archiver.FileExtension))
                     .ToList(),
             })
             .Where(file => file.MatchingArchivers.Count > 0)
@@ -149,7 +146,7 @@ public static class UnmanagedReleaseArchiveInitializer
         if (archiveFiles.Count == 0)
         {
             throw new InvalidOperationException(
-                $"Release folder path {releaseFolderPath} does not contain supported archive files."
+                $"Archive folder path {archiveFolderPath} does not contain supported archive files."
             );
         }
 
@@ -161,36 +158,35 @@ public static class UnmanagedReleaseArchiveInitializer
         if (matchingArchivers.Count > 1)
         {
             throw new InvalidOperationException(
-                $"Release folder path {releaseFolderPath} contains archive files for multiple archivers."
+                $"Archive folder path {archiveFolderPath} contains archive files for multiple archivers."
             );
         }
 
         return archiveFiles;
     }
 
-    private static IReadOnlyList<UnmanagedArchiveFile> GetArchiveFiles(
-        string releaseFolderPath,
-        ArchiverDto archiver
+    private static IReadOnlyList<string> GetArchiveFiles(
+        string archiveFolderPath,
+        IArchiver archiver
     )
     {
-        if (!Directory.Exists(releaseFolderPath))
+        if (!Directory.Exists(archiveFolderPath))
         {
             throw new InvalidOperationException(
-                $"Release folder path {releaseFolderPath} does not exist."
+                $"Archive folder path {archiveFolderPath} does not exist."
             );
         }
 
         var archiveFiles = Directory
-            .EnumerateFiles(releaseFolderPath)
-            .Where(file => FileMatchesArchiver(file, archiver))
+            .EnumerateFiles(archiveFolderPath)
+            .Where(file => FileMatchesArchiver(file, archiver.FileExtension))
             .OrderBy(file => file, StringComparer.OrdinalIgnoreCase)
-            .Select(file => new UnmanagedArchiveFile(file, archiver))
             .ToList();
 
         if (archiveFiles.Count == 0)
         {
             throw new InvalidOperationException(
-                $"Release folder path {releaseFolderPath} does not contain archive files for archiver {archiver.Name}."
+                $"Archive folder path {archiveFolderPath} does not contain archive files for archiver {archiver.Name}."
             );
         }
 
@@ -208,15 +204,15 @@ public static class UnmanagedReleaseArchiveInitializer
 
     private static bool ArchiveFileNamesMatch(
         Archive archive,
-        IReadOnlyList<UnmanagedArchiveFile> archiveFiles
+        IReadOnlyList<string> archiveFileNames
     )
     {
         var currentFileNames = archive
             .ArchiveFiles.Select(file => Path.GetFileName(file.FullFileName))
             .OrderBy(fileName => fileName, StringComparer.OrdinalIgnoreCase);
 
-        var discoveredFileNames = archiveFiles
-            .Select(file => Path.GetFileName(file.FullFileName))
+        var discoveredFileNames = archiveFileNames
+            .Select(Path.GetFileName)
             .OrderBy(fileName => fileName, StringComparer.OrdinalIgnoreCase);
 
         return currentFileNames.SequenceEqual(
@@ -225,25 +221,25 @@ public static class UnmanagedReleaseArchiveInitializer
         );
     }
 
-    private static void RepointArchive(Archive archive, string releaseFolderPath)
+    private static void RepointArchive(Archive archive, string archiveFolderPath)
     {
-        archive.ArchiveFolderPath = releaseFolderPath;
+        archive.ArchiveFolderPath = archiveFolderPath;
 
         foreach (var archiveFile in archive.ArchiveFiles)
         {
             archiveFile.FullFileName = Path.Combine(
-                releaseFolderPath,
+                archiveFolderPath,
                 Path.GetFileName(archiveFile.FullFileName)
             );
         }
     }
 
-    private static bool FileMatchesArchiver(string filePath, ArchiverDto archiver)
+    private static bool FileMatchesArchiver(string filePath, string fileExtension)
     {
         var fileName = Path.GetFileName(filePath);
 
-        return fileName.EndsWith(archiver.FileExtension, StringComparison.OrdinalIgnoreCase)
-            || fileName.Contains($"{archiver.FileExtension}.", StringComparison.OrdinalIgnoreCase);
+        return fileName.EndsWith(fileExtension, StringComparison.OrdinalIgnoreCase)
+            || fileName.Contains($"{fileExtension}.", StringComparison.OrdinalIgnoreCase);
     }
 
     private sealed record UnmanagedArchiveFile(string FullFileName, ArchiverDto Archiver);

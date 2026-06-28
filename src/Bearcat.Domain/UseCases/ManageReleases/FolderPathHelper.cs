@@ -10,4 +10,22 @@ internal static class FolderPathHelper
         );
         return Path.GetFileName(normalizedPath);
     }
+
+    public static bool IsSameOrSubPath(string? childPath, string? parentPath)
+    {
+        if (string.IsNullOrEmpty(childPath) || string.IsNullOrEmpty(parentPath))
+        {
+            return false;
+        }
+
+        var parent = parentPath.TrimEnd(
+            Path.DirectorySeparatorChar,
+            Path.AltDirectorySeparatorChar
+        );
+        var child = childPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        return string.Equals(child, parent, StringComparison.Ordinal)
+            || child.StartsWith(parent + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+            || child.StartsWith(parent + Path.AltDirectorySeparatorChar, StringComparison.Ordinal);
+    }
 }

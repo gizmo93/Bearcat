@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
+using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -26,6 +27,11 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
         archiverFactory
             .Setup(f => f.GetArchivers())
             .Returns([new ArchiverDto("RAR", "RarArchiver", ".rar")]);
+
+        var rarArchiver = new Mock<IArchiver>();
+        rarArchiver.SetupGet(a => a.Name).Returns("RAR");
+        rarArchiver.SetupGet(a => a.FileExtension).Returns(".rar");
+        archiverFactory.Setup(f => f.GetByName("RarArchiver")).Returns(rarArchiver.Object);
 
         var repository = new ArchiveConfigWriteRepository(dbContext);
         service = new ArchiveConfigService(
@@ -245,7 +251,7 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task RefreshUnmanagedArchiveAsync_AllArchiveFilesExist_DoesNotCreateNewArchive()
+    public async Task SetArchiveFolderAsync_AllArchiveFilesExist_RelocatesArchive()
     {
         // Arrange
         var releaseFolderPath = CreateReleaseFolderWithFiles(
@@ -259,9 +265,15 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
         );
 
         // Act
-        await service.RefreshUnmanagedArchiveAsync(archiveConfig.Id);
+        var changeResult = await service.SetArchiveFolderAsync(
+            archiveConfig.Id,
+            releaseFolderPath,
+            confirmContentChange: false
+        );
 
         // Assert
+        changeResult.ShouldBe(ArchiveFolderChangeResult.Relocated);
+
         dbContext.ChangeTracker.Clear();
         var result = await dbContext
             .ArchiveConfigs.AsSplitQuery()
@@ -281,7 +293,7 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task RefreshUnmanagedArchiveAsync_ArchiveFilesChanged_CreatesNewArchive()
+    public async Task SetArchiveFolderAsync_ArchiveFilesChanged_RequiresConfirmationThenReimports()
     {
         // Arrange
         var releaseFolderPath = CreateReleaseFolderWithFiles(
@@ -301,9 +313,21 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
         );
 
         // Act
-        await service.RefreshUnmanagedArchiveAsync(archiveConfig.Id);
+        var unconfirmedResult = await service.SetArchiveFolderAsync(
+            archiveConfig.Id,
+            releaseFolderPath,
+            confirmContentChange: false
+        );
+        var confirmedResult = await service.SetArchiveFolderAsync(
+            archiveConfig.Id,
+            releaseFolderPath,
+            confirmContentChange: true
+        );
 
         // Assert
+        unconfirmedResult.ShouldBe(ArchiveFolderChangeResult.ConfirmationRequired);
+        confirmedResult.ShouldBe(ArchiveFolderChangeResult.Reimported);
+
         dbContext.ChangeTracker.Clear();
         var result = await dbContext
             .ArchiveConfigs.AsSplitQuery()
@@ -323,7 +347,7 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task RefreshUnmanagedArchiveAsync_TargetHasAdditionalArchiveFiles_CreatesNewArchive()
+    public async Task SetArchiveFolderAsync_TargetHasAdditionalArchiveFiles_RequiresConfirmationThenReimports()
     {
         // Arrange
         var releaseFolderPath = CreateReleaseFolderWithFiles(
@@ -336,9 +360,21 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
         );
 
         // Act
-        await service.RefreshUnmanagedArchiveAsync(archiveConfig.Id);
+        var unconfirmedResult = await service.SetArchiveFolderAsync(
+            archiveConfig.Id,
+            releaseFolderPath,
+            confirmContentChange: false
+        );
+        var confirmedResult = await service.SetArchiveFolderAsync(
+            archiveConfig.Id,
+            releaseFolderPath,
+            confirmContentChange: true
+        );
 
         // Assert
+        unconfirmedResult.ShouldBe(ArchiveFolderChangeResult.ConfirmationRequired);
+        confirmedResult.ShouldBe(ArchiveFolderChangeResult.Reimported);
+
         dbContext.ChangeTracker.Clear();
         var result = await dbContext
             .ArchiveConfigs.AsSplitQuery()
@@ -359,7 +395,7 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task RefreshUnmanagedArchiveAsync_NoMatchingArchiveFiles_ThrowsInvalidOperationException()
+    public async Task SetArchiveFolderAsync_NoMatchingArchiveFiles_ThrowsInvalidOperationException()
     {
         // Arrange
         var releaseFolderPath = CreateReleaseFolderWithFiles("Bearcat.Release.Unmanaged.part1.rar");
@@ -375,24 +411,32 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
 
         // Act
         var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
-            await service.RefreshUnmanagedArchiveAsync(archiveConfig.Id)
+            await service.SetArchiveFolderAsync(
+                archiveConfig.Id,
+                releaseFolderPath,
+                confirmContentChange: false
+            )
         );
 
         // Assert
         result.Message.ShouldBe(
-            $"Release folder path {releaseFolderPath} does not contain archive files for archiver RAR."
+            $"Archive folder path {releaseFolderPath} does not contain archive files for archiver RAR."
         );
     }
 
     [Test]
-    public async Task RefreshUnmanagedArchiveAsync_ManagedReleaseArchiveConfig_ThrowsInvalidOperationException()
+    public async Task SetArchiveFolderAsync_ManagedReleaseArchiveConfig_ThrowsInvalidOperationException()
     {
         // Arrange
         var archiveConfig = await AddArchiveConfigAsync();
 
         // Act
         var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
-            await service.RefreshUnmanagedArchiveAsync(archiveConfig.Id)
+            await service.SetArchiveFolderAsync(
+                archiveConfig.Id,
+                "/data/releases",
+                confirmContentChange: false
+            )
         );
 
         // Assert
