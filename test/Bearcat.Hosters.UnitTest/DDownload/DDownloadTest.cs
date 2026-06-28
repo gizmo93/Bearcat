@@ -235,7 +235,7 @@ public class DDownloadTest
     }
 
     [Test]
-    public async Task UploadFileAsync_RequestUploadFails_ReturnsFailureAndRetriesThreeTimes()
+    public async Task UploadFileAsync_RequestUploadFails_ReturnsFailureAndRetriesFiveTimes()
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
@@ -268,10 +268,12 @@ public class DDownloadTest
             "temporary upload error",
             "temporary upload error",
             "temporary upload error",
+            "temporary upload error",
+            "temporary upload error"
         ]);
         apiClientMock.Verify(
             x => x.RequestUploadAsync("api-key", It.IsAny<CancellationToken>()),
-            Times.Exactly(3)
+            Times.Exactly(5)
         );
         apiClientMock.Verify(
             x =>
