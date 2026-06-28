@@ -50,6 +50,11 @@ public sealed class QualityGateEvaluator(
 
     public void EvaluateAndApply(Release release, DateTime evaluatedAt)
     {
+        if (release.ReleaseType is ReleaseType.Unmanaged)
+        {
+            return;
+        }
+
         if (release.QualityGateState == QualityGateState.ManuallyApproved)
         {
             return;

@@ -13,6 +13,11 @@ public interface IAutomaticallyCreateReleasesRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<HashSet<string>> GetExistingArchiveFolderPathsAsync(
+        IReadOnlyCollection<string> archiveFolderPaths,
+        CancellationToken cancellationToken = default
+    );
+
     Task<IReadOnlyList<ReleaseFolderAutomation>> GetEnabledWithTemplatesAsync(
         CancellationToken cancellationToken = default
     );

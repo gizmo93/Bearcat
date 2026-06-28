@@ -365,11 +365,13 @@ public class ArchiveCreationService(
             config.ArchiverName
         );
 
-        if (!Directory.Exists(config.Release.ReleaseFolderPath))
+        var releaseFolderPath = config.Release.ReleaseFolderPath;
+
+        if (string.IsNullOrEmpty(releaseFolderPath) || !Directory.Exists(releaseFolderPath))
         {
             logger.LogError(
                 "Release folder path {ReleaseFolderPath} does not exist for ArchiveConfig {ArchiveConfigId}",
-                config.Release.ReleaseFolderPath,
+                releaseFolderPath,
                 config.Id
             );
 
@@ -377,7 +379,7 @@ public class ArchiveCreationService(
             {
                 upload.UploadState = UploadState.Failed;
                 notificationService.CreateError(
-                    message: $"Release folder path {config.Release.ReleaseFolderPath} does not exist.",
+                    message: $"Release folder path {releaseFolderPath} does not exist.",
                     entity: upload,
                     selector: n => n.Upload
                 );
@@ -421,12 +423,12 @@ public class ArchiveCreationService(
 
         // For people that host Bearcat on a Synology NAS: DSM adds that nasty hidden @eaDir folder everywhere where media is.
         // So we should remove it before archiving.
-        RemoveSynologyMetadataFolders(config.Release.ReleaseFolderPath);
+        RemoveSynologyMetadataFolders(releaseFolderPath);
 
-        await CreateOrUpdateUniqueFileAsync(config.Release.ReleaseFolderPath, cancellationToken);
+        await CreateOrUpdateUniqueFileAsync(releaseFolderPath, cancellationToken);
 
         var archiveResult = await archiver.ArchiveAsync(
-            sourceFolderPath: config.Release.ReleaseFolderPath,
+            sourceFolderPath: releaseFolderPath,
             destinationPath: archiveDirectoryPath,
             archiveNamePrefix: config.ArchiveNamePrefix ?? Guid.NewGuid().ToString(),
             targetFileSizeMb: archiveSettings.ArchiveFileSizeMb,

@@ -90,6 +90,21 @@ public class ReleaseReadRepository(
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 
+    public async Task<IReadOnlyList<string>> GetUnmanagedArchiveFolderPathsAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .Releases.Where(release => release.Id == releaseId)
+            .SelectMany(release => release.ArchiveConfigs)
+            .SelectMany(config => config.Archives)
+            .Where(archive => archive.ArchiveState == ArchiveState.Created)
+            .Select(archive => archive.ArchiveFolderPath)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<ReleaseOverviewUploadReadModel>> GetReleaseOverviewAsync(
         int releaseId,
         CancellationToken cancellationToken = default
@@ -359,7 +374,10 @@ public class ReleaseReadRepository(
     > GetQualityIssuesQueueAsync(CancellationToken cancellationToken = default)
     {
         return await dbRead
-            .Releases.Where(r => r.QualityGateState == QualityGateState.Failed)
+            .Releases.Where(r =>
+                r.QualityGateState == QualityGateState.Failed
+                && r.ReleaseType == ReleaseType.Managed
+            )
             .OrderBy(r => r.Name)
             .ThenBy(r => r.Id)
             .Select(r => new ReleaseQualityIssueQueueItemReadModel(
@@ -377,7 +395,9 @@ public class ReleaseReadRepository(
     )
     {
         return await dbRead.Releases.CountAsync(
-            r => r.QualityGateState == QualityGateState.Failed,
+            r =>
+                r.QualityGateState == QualityGateState.Failed
+                && r.ReleaseType == ReleaseType.Managed,
             cancellationToken
         );
     }
@@ -1150,7 +1170,7 @@ public class ReleaseReadRepository(
 
             releases = releases.Where(r =>
                 EF.Functions.ILike(r.Name, pattern)
-                || EF.Functions.ILike(r.ReleaseFolderPath, pattern)
+                || (r.ReleaseFolderPath != null && EF.Functions.ILike(r.ReleaseFolderPath, pattern))
             );
         }
 

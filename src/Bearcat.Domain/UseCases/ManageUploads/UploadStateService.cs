@@ -406,6 +406,13 @@ public class UploadStateService(
         HashSet<int> evaluatedReleaseIds
     )
     {
+        // We can't execute most checks of unmanaged Releases as we just have a set of RAR files to work with
+        // and no Release folder with uncompressed data, so we skip them.
+        if (release.ReleaseType is ReleaseType.Unmanaged)
+        {
+            return true;
+        }
+
         if (release.ReleaseGroup.QualityProfileId is null)
         {
             return true;
