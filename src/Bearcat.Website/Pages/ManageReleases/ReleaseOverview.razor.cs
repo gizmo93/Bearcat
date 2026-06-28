@@ -28,8 +28,7 @@ public partial class ReleaseOverview(
     public string ReleaseName { get; set; } = null!;
 
     [Parameter]
-    [EditorRequired]
-    public string ReleaseFolderPath { get; set; } = null!;
+    public string? ReleaseFolderPath { get; set; }
 
     [Parameter]
     public EventCallback OnRefreshed { get; set; }
@@ -45,7 +44,11 @@ public partial class ReleaseOverview(
     private int? loadedReleaseId;
     private string? loadedReleaseFolderPath;
     private bool CanCopyNfo => !isLoading && !string.IsNullOrEmpty(nfoContent);
-    private bool CanSaveNfoFile => !isLoading && releaseNfo is not null && !hasLocalNfo;
+    private bool CanSaveNfoFile =>
+        !isLoading
+        && releaseNfo is not null
+        && !hasLocalNfo
+        && !string.IsNullOrWhiteSpace(ReleaseFolderPath);
 
     private string CoverDownloadUrl => $"/releases/{ReleaseId}/cover";
     private string CoverDownloadFileName => GetCoverDownloadFileName();

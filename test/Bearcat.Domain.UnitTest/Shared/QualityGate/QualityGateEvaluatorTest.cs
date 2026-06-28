@@ -158,6 +158,24 @@ public class QualityGateEvaluatorTest
         release.QualityIssues.ShouldBeEmpty();
     }
 
+    [Test]
+    public void EvaluateAndApply_UnmanagedRelease_IsNotEvaluated()
+    {
+        // Arrange
+        var evaluator = CreateEvaluator();
+        var release = CreateRelease();
+        release.ReleaseType = ReleaseType.Unmanaged;
+        release.ReleaseGroup.QualityProfile = CreateProfile(RequireNfoRule());
+
+        // Act
+        evaluator.EvaluateAndApply(release, EvaluatedAt);
+
+        // Assert
+        release.QualityGateState.ShouldBe(QualityGateState.NotEvaluated);
+        release.QualityGateEvaluatedAt.ShouldBeNull();
+        release.QualityIssues.ShouldBeEmpty();
+    }
+
     private static QualityGateEvaluator CreateEvaluator(
         FakeFileSystemService? fileSystemService = null
     ) =>

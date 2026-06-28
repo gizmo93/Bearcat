@@ -35,6 +35,12 @@ public partial class CreateOrEditReleaseDialog(
     private ValidationMessageStore? messageStore;
     private string? folderValidationMessage;
 
+    private bool ShowFolderSelection =>
+        !(formModel.IsEdit && formModel.ReleaseType is ReleaseType.Unmanaged);
+
+    private string FolderLabel =>
+        formModel.ReleaseType is ReleaseType.Unmanaged ? L["ArchiveFolder"] : L["ReleaseFolder"];
+
     private IEnumerable<SelectOption<int>> ReleaseGroupOptions =>
         releaseGroups.Select(group => new SelectOption<int>(group.ReleaseGroupId, group.Name));
 
@@ -117,7 +123,7 @@ public partial class CreateOrEditReleaseDialog(
             messageStore.Add(() => formModel.Name, L["NameIsRequired"]);
         }
 
-        if (string.IsNullOrWhiteSpace(formModel.FolderPath))
+        if (ShowFolderSelection && string.IsNullOrWhiteSpace(formModel.FolderPath))
         {
             folderValidationMessage = L["SelectFolderRequired"];
             messageStore.Add(() => formModel.FolderPath, folderValidationMessage);
@@ -142,8 +148,14 @@ public partial class CreateOrEditReleaseDialog(
             parameters,
             new DialogOpenOptions
             {
-                Title = L["SelectReleaseFolder"],
-                Description = L["SelectReleaseFolderDescription"],
+                Title =
+                    formModel.ReleaseType is ReleaseType.Unmanaged
+                        ? L["SelectExistingArchiveFolder"]
+                        : L["SelectReleaseFolder"],
+                Description =
+                    formModel.ReleaseType is ReleaseType.Unmanaged
+                        ? L["SelectExistingArchiveFolderDescription"]
+                        : L["SelectReleaseFolderDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
             }

@@ -65,8 +65,15 @@
         />
     </Target>
 
+    <PropertyGroup>
+        <SkipTailwindBuild
+            Condition="'$(SkipTailwindBuild)' == 'true' and '$(Configuration)' != 'Debug'"
+            >false</SkipTailwindBuild>
+    </PropertyGroup>
+
     <Target
         Name="BuildTailwindCss"
+        Condition="'$(SkipTailwindBuild)' != 'true'"
         DependsOnTargets="DownloadTailwindCli"
         Inputs="@(TailwindSource)"
         Outputs="$(TailwindOutput)"
@@ -78,11 +85,16 @@
 
     <Target
         Name="IncludeTailwindCssStaticWebAsset"
-        DependsOnTargets="BuildTailwindCss"
+        DependsOnTargets="DownloadTailwindCli;BuildTailwindCss"
         BeforeTargets="AssignTargetPaths"
     >
+        <Message
+            Condition="'$(SkipTailwindBuild)' == 'true'"
+            Importance="high"
+            Text="Skipping Tailwind CSS build (SkipTailwindBuild=true), reusing existing wwwroot/css/app.css"
+        />
         <ItemGroup>
-            <Content Include="wwwroot/css/app.css" />
+            <Content Include="wwwroot/css/app.css" Condition="Exists('$(TailwindOutput)')" />
         </ItemGroup>
     </Target>
 </Project>

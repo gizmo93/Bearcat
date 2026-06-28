@@ -83,7 +83,7 @@
                                     <LucideIcon Name="ellipsis" class="h-4 w-4" />
                                 </BbButton>
                             </BbDropdownMenuTrigger>
-                            <BbDropdownMenuContent Align="PopoverAlign.End">
+                            <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
                                 <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(distributionSite))">
                                     @L["EditRegistration"]
                                 </BbDropdownMenuItem>

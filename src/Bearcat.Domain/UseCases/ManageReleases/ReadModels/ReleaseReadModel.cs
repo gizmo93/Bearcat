@@ -9,7 +9,7 @@ public record ReleaseReadModel(
     ReleaseContentType ReleaseContentType,
     int ReleaseGroupId,
     string ReleaseGroupName,
-    string ReleaseFolderPath,
+    string? ReleaseFolderPath,
     int ActiveUploadConfigsCount,
     int OnlineUploadConfigsCount
 )

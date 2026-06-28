@@ -21,6 +21,11 @@ public interface IReleaseReadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyList<string>> GetUnmanagedArchiveFolderPathsAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<IReadOnlyList<ReleaseOverviewUploadReadModel>> GetReleaseOverviewAsync(
         int releaseId,
         CancellationToken cancellationToken = default
