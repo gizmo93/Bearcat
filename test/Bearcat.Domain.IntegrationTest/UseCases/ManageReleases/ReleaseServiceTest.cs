@@ -556,9 +556,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        result.Message.ShouldBe(
-            "A release folder must be assigned when converting to managed."
-        );
+        result.Message.ShouldBe("A release folder must be assigned when converting to managed.");
         dbContext.ChangeTracker.Clear();
         var unchanged = await dbContext.Releases.SingleAsync(r => r.Id == releaseId);
         unchanged.ReleaseType.ShouldBe(ReleaseType.Unmanaged);

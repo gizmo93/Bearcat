@@ -44,7 +44,11 @@ public partial class ReleaseOverview(
     private int? loadedReleaseId;
     private string? loadedReleaseFolderPath;
     private bool CanCopyNfo => !isLoading && !string.IsNullOrEmpty(nfoContent);
-    private bool CanSaveNfoFile => !isLoading && releaseNfo is not null && !hasLocalNfo;
+    private bool CanSaveNfoFile =>
+        !isLoading
+        && releaseNfo is not null
+        && !hasLocalNfo
+        && !string.IsNullOrWhiteSpace(ReleaseFolderPath);
 
     private string CoverDownloadUrl => $"/releases/{ReleaseId}/cover";
     private string CoverDownloadFileName => GetCoverDownloadFileName();

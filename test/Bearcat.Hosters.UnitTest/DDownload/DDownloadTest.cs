@@ -269,7 +269,7 @@ public class DDownloadTest
             "temporary upload error",
             "temporary upload error",
             "temporary upload error",
-            "temporary upload error"
+            "temporary upload error",
         ]);
         apiClientMock.Verify(
             x => x.RequestUploadAsync("api-key", It.IsAny<CancellationToken>()),
