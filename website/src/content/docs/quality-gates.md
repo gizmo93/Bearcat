@@ -11,6 +11,10 @@ is too small does not end up online.
 Quality gates are optional. A release group without a quality profile behaves exactly as before, so
 nothing changes until you opt in.
 
+Quality gates apply to [managed releases](/Bearcat/release-types/) only. Unmanaged releases have no
+raw files or release folder for Bearcat to inspect, so they are skipped entirely: they never appear
+in the quality issues list and their uploads are never held back by a profile.
+
 ## How it fits together
 
 There are two pieces:
