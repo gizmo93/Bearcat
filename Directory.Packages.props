@@ -43,7 +43,7 @@
         <PackageVersion Include="Spectre.Console.Cli" Version="0.55.0" />
         <PackageVersion Include="Testcontainers.PostgreSql" Version="4.12.0" />
         <PackageVersion Include="Avalonia" Version="12.0.5" />
-        <PackageVersion Include="Avalonia.Desktop" Version="12.0.4" />
+        <PackageVersion Include="Avalonia.Desktop" Version="12.0.5" />
         <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.0.5" />
         <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.0.5" />
     </ItemGroup>
