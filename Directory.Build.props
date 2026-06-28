@@ -7,6 +7,10 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <NoWarn>S2365,S3220,S1450</NoWarn>
     </PropertyGroup>
+    <Import
+        Project="Directory.Build.local.props"
+        Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.local.props')"
+    />
     <ItemGroup>
         <PackageReference
             Include="Shane32.Analyzers"

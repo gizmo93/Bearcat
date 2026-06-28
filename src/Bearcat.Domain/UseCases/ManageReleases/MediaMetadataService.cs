@@ -60,7 +60,7 @@ public class MediaMetadataService(
     }
 
     private async Task<List<ReleaseMediaFile>> BuildMediaFilesAsync(
-        string releaseFolderPath,
+        string? releaseFolderPath,
         CancellationToken cancellationToken
     )
     {

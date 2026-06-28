@@ -21,7 +21,10 @@ public class QualityGateRepository(IBearcatWriteDbContext dbWrite) : IQualityGat
     )
     {
         return await BuildEvaluationQuery()
-            .Where(r => r.QualityGateState == QualityGateState.Failed)
+            .Where(r =>
+                r.QualityGateState == QualityGateState.Failed
+                && r.ReleaseType == ReleaseType.Managed
+            )
             .ToListAsync(cancellationToken);
     }
 

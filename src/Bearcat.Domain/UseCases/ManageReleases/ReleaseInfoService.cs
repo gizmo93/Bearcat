@@ -92,6 +92,11 @@ public class ReleaseInfoService(
 
         await repository.SaveChangesAsync(cancellationToken);
 
+        if (release.ReleaseFolderPath is null)
+        {
+            return;
+        }
+
         try
         {
             await ReleaseNfoService.SaveNfoFileAsync(

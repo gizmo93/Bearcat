@@ -58,6 +58,14 @@
   <data name="BrowseReleaseFolders" xml:space="preserve"><value>Browse release folders</value></data>
   <data name="BuiltWithBlazorBlueprint" xml:space="preserve"><value>Built with BlazorBlueprint</value></data>
   <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="ConvertToUnmanaged" xml:space="preserve"><value>Convert to unmanaged</value></data>
+  <data name="ConvertToUnmanagedTitle" xml:space="preserve"><value>Convert {0} to unmanaged</value></data>
+  <data name="ConvertToUnmanagedConfirmation" xml:space="preserve"><value>This release will become unmanaged and keep only its existing archives. Afterwards you can delete the raw files at {0}.</value></data>
+  <data name="ConvertToUnmanagedConfirmationArchivesInside" xml:space="preserve"><value>This release will become unmanaged and keep only its existing archives. Afterwards you can delete the raw files at {0}. Caution: archives are stored inside this folder, so do not delete the whole folder.</value></data>
+  <data name="ConvertToUnmanagedNotReady" xml:space="preserve"><value>All archive configs must have a created archive before the release can be converted.</value></data>
+  <data name="ReleaseConvertedToUnmanaged" xml:space="preserve"><value>{0} was converted to unmanaged.</value></data>
+  <data name="ConvertToManaged" xml:space="preserve"><value>Convert to managed</value></data>
+  <data name="ReleaseConvertedToManaged" xml:space="preserve"><value>{0} was converted to managed.</value></data>
   <data name="CancelUpload" xml:space="preserve"><value>Cancel upload</value></data>
   <data name="CancelUploadConfirmation" xml:space="preserve"><value>Cancel upload #{0}? Running file transfers will be stopped as soon as the worker sees the request.</value></data>
   <data name="Close" xml:space="preserve"><value>Close</value></data>
@@ -329,12 +337,16 @@
   <data name="RandomArchiveNameWillBeGenerated" xml:space="preserve"><value>A random archive name will be generated</value></data>
   <data name="RandomName" xml:space="preserve"><value>Random name</value></data>
   <data name="Refresh" xml:space="preserve"><value>Refresh</value></data>
-  <data name="RefreshUnmanagedArchive" xml:space="preserve"><value>Refresh unmanaged archive</value></data>
-  <data name="RefreshUnmanagedArchiveTooltip" xml:space="preserve"><value>Check the release folder and refresh archive files</value></data>
+  <data name="ChangeArchiveFolder" xml:space="preserve"><value>Change archive folder</value></data>
+  <data name="ChangeArchiveFolderTooltip" xml:space="preserve"><value>Point this archive config at a different folder and relocate or re-import its files</value></data>
+  <data name="ChangeArchiveFolderDialogTitle" xml:space="preserve"><value>Change archive folder</value></data>
+  <data name="ChangeArchiveFolderDialogDescription" xml:space="preserve"><value>Choose the folder that contains this configuration's archive files</value></data>
   <data name="Registration" xml:space="preserve"><value>registration</value></data>
   <data name="Release" xml:space="preserve"><value>Release</value></data>
   <data name="ReleaseDetails" xml:space="preserve"><value>Release details</value></data>
   <data name="ReleaseFolder" xml:space="preserve"><value>Release folder</value></data>
+  <data name="ArchiveFolder" xml:space="preserve"><value>Archive folder</value></data>
+  <data name="NoArchivesYet" xml:space="preserve"><value>No archives yet</value></data>
   <data name="ReleaseFolderMissing" xml:space="preserve"><value>Release folder does not exist.</value></data>
   <data name="ReleaseInfo" xml:space="preserve"><value>Release info</value></data>
   <data name="ReleaseInfoDeleted" xml:space="preserve"><value>Release info deleted</value></data>
@@ -378,6 +390,8 @@
   <data name="SelectArchiveConfiguration" xml:space="preserve"><value>Select an archive configuration</value></data>
   <data name="SelectArchiveFolder" xml:space="preserve"><value>Select a folder where the archive files should be created</value></data>
   <data name="SelectArchiveFolderDescription" xml:space="preserve"><value>Choose where Bearcat should create archive files.</value></data>
+  <data name="SelectExistingArchiveFolder" xml:space="preserve"><value>Select archive folder</value></data>
+  <data name="SelectExistingArchiveFolderDescription" xml:space="preserve"><value>Choose the folder where the archive files are located.</value></data>
   <data name="SelectArchiver" xml:space="preserve"><value>Select an archiver</value></data>
   <data name="SelectArchiverRequired" xml:space="preserve"><value>You must select an archiver</value></data>
   <data name="SelectCrypter" xml:space="preserve"><value>Select a crypter</value></data>
@@ -480,7 +494,11 @@
   <data name="Resolved" xml:space="preserve"><value>Resolved</value></data>
   <data name="ResolvedAt" xml:space="preserve"><value>Resolved at</value></data>
   <data name="Type" xml:space="preserve"><value>Type</value></data>
-  <data name="UnmanagedArchiveRefreshed" xml:space="preserve"><value>Unmanaged archive refreshed.</value></data>
+  <data name="ArchiveFolderRelocated" xml:space="preserve"><value>Archive folder updated.</value></data>
+  <data name="ArchiveFolderReimported" xml:space="preserve"><value>Archive files re-imported.</value></data>
+  <data name="ReimportArchiveFolder" xml:space="preserve"><value>Re-import archive files?</value></data>
+  <data name="ReimportArchiveFolderConfirmation" xml:space="preserve"><value>The folder contains a different set of archive files. Importing them as a new archive version resets the upload status for this archive.</value></data>
+  <data name="Continue" xml:space="preserve"><value>Continue</value></data>
   <data name="Unlinked" xml:space="preserve"><value>Unlinked</value></data>
   <data name="UnresolvedNotifications" xml:space="preserve"><value>Unresolved notifications</value></data>
   <data name="UnresolvedNotificationsCount" xml:space="preserve"><value>{0} unresolved</value></data>
