@@ -87,7 +87,7 @@
                                                 <LucideIcon Name="ellipsis" class="h-4 w-4" />
                                             </BbButton>
                                         </BbDropdownMenuTrigger>
-                                        <BbDropdownMenuContent Align="PopoverAlign.End">
+                                        <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
                                             <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(config))">
                                                 @L["EditConfig"]
                                             </BbDropdownMenuItem>
@@ -104,14 +104,14 @@
                                             <span class="inline-flex">
                                                 <BbButton Variant="ButtonVariant.Ghost"
                                                           Size="ButtonSize.IconSmall"
-                                                          OnClick="@(async _ => await RefreshUnmanagedArchiveAsync(config))"
-                                                          AriaLabel="@L["RefreshUnmanagedArchive"]">
-                                                    <LucideIcon Name="refresh-cw" class="h-4 w-4" />
+                                                          OnClick="@(async _ => await ChangeArchiveFolderAsync(config))"
+                                                          AriaLabel="@L["ChangeArchiveFolder"]">
+                                                    <LucideIcon Name="folder-sync" class="h-4 w-4" />
                                                 </BbButton>
                                             </span>
                                         </BbTooltipTrigger>
                                         <BbTooltipContent Class="max-w-xs text-xs">
-                                            @L["RefreshUnmanagedArchiveTooltip"]
+                                            @L["ChangeArchiveFolderTooltip"]
                                         </BbTooltipContent>
                                     </BbTooltip>
                                 }

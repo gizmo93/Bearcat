@@ -131,207 +131,6 @@ public class ReleaseServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task UpdateAsync_UnmanagedReleaseFolderChanges_AllArchiveFilesExist_RepointsArchiveFiles()
-    {
-        // Arrange
-        var firstGroup = await AddReleaseGroupAsync("First group");
-        var secondGroup = await AddReleaseGroupAsync("Second group");
-        var oldReleaseFolderPath = CreateReleaseFolderWithArchives("Bearcat.Release.Unmanaged");
-        var newReleaseFolderPath = CreateReleaseFolderWithArchives("Bearcat.Release.Unmanaged");
-        var releaseId = await service.CreateAsync(
-            "Bearcat.Release.Unmanaged",
-            oldReleaseFolderPath,
-            ReleaseType.Unmanaged,
-            ReleaseContentType.Movie,
-            firstGroup.Id,
-            CancellationToken.None
-        );
-
-        // Act
-        await service.UpdateAsync(
-            releaseId,
-            "Bearcat.Release.Updated",
-            newReleaseFolderPath,
-            ReleaseContentType.Movie,
-            secondGroup.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        dbContext.ChangeTracker.Clear();
-        var release = await dbContext
-            .Releases.AsSplitQuery()
-            .Include(r => r.ArchiveConfigs)
-                .ThenInclude(c => c.Archives)
-                    .ThenInclude(a => a.ArchiveFiles)
-            .SingleAsync(r => r.Id == releaseId);
-        var archive = release.ArchiveConfigs.Single().Archives.Single();
-
-        release.ReleaseFolderPath.ShouldBe(newReleaseFolderPath);
-        archive.ArchiveFolderPath.ShouldBe(newReleaseFolderPath);
-        archive.ArchiveState.ShouldBe(ArchiveState.Created);
-        archive
-            .ArchiveFiles.Select(f => f.FullFileName)
-            .ShouldBe([
-                Path.Combine(newReleaseFolderPath, "Bearcat.Release.Unmanaged.part1.rar"),
-                Path.Combine(newReleaseFolderPath, "Bearcat.Release.Unmanaged.part2.rar"),
-            ]);
-    }
-
-    [Test]
-    public async Task UpdateAsync_UnmanagedReleaseFolderChanges_ArchiveFilesChanged_CreatesNewArchive()
-    {
-        // Arrange
-        var firstGroup = await AddReleaseGroupAsync("First group");
-        var secondGroup = await AddReleaseGroupAsync("Second group");
-        var oldReleaseFolderPath = CreateReleaseFolderWithArchives("Bearcat.Release.Unmanaged");
-        var newReleaseFolderPath = CreateReleaseFolderWithFiles("Bearcat.Release.Unmanaged.rar");
-        var releaseId = await service.CreateAsync(
-            "Bearcat.Release.Unmanaged",
-            oldReleaseFolderPath,
-            ReleaseType.Unmanaged,
-            ReleaseContentType.Movie,
-            firstGroup.Id,
-            CancellationToken.None
-        );
-
-        // Act
-        await service.UpdateAsync(
-            releaseId,
-            "Bearcat.Release.Updated",
-            newReleaseFolderPath,
-            ReleaseContentType.Movie,
-            secondGroup.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        dbContext.ChangeTracker.Clear();
-        var release = await dbContext
-            .Releases.AsSplitQuery()
-            .Include(r => r.ArchiveConfigs)
-                .ThenInclude(c => c.Archives)
-                    .ThenInclude(a => a.ArchiveFiles)
-            .SingleAsync(r => r.Id == releaseId);
-        var archives = release.ArchiveConfigs.Single().Archives.OrderBy(a => a.Id).ToList();
-
-        release.ReleaseFolderPath.ShouldBe(newReleaseFolderPath);
-        archives.Count.ShouldBe(2);
-        archives[0].ArchiveState.ShouldBe(ArchiveState.Deleted);
-        archives[1].ArchiveState.ShouldBe(ArchiveState.Created);
-        archives[1].ArchiveFolderPath.ShouldBe(newReleaseFolderPath);
-        archives[1]
-            .ArchiveFiles.Single()
-            .FullFileName.ShouldBe(
-                Path.Combine(newReleaseFolderPath, "Bearcat.Release.Unmanaged.rar")
-            );
-    }
-
-    [Test]
-    public async Task UpdateAsync_UnmanagedReleaseFolderChanges_TargetHasAdditionalArchiveFiles_CreatesNewArchive()
-    {
-        // Arrange
-        var firstGroup = await AddReleaseGroupAsync("First group");
-        var secondGroup = await AddReleaseGroupAsync("Second group");
-        var oldReleaseFolderPath = CreateReleaseFolderWithArchives("Bearcat.Release.Unmanaged");
-        var newReleaseFolderPath = CreateReleaseFolderWithFiles(
-            "Bearcat.Release.Unmanaged.part1.rar"
-        );
-        var releaseId = await service.CreateAsync(
-            "Bearcat.Release.Unmanaged",
-            oldReleaseFolderPath,
-            ReleaseType.Unmanaged,
-            ReleaseContentType.Movie,
-            firstGroup.Id,
-            CancellationToken.None
-        );
-        await service.UpdateAsync(
-            releaseId,
-            "Bearcat.Release.Updated",
-            newReleaseFolderPath,
-            ReleaseContentType.Movie,
-            secondGroup.Id,
-            CancellationToken.None
-        );
-
-        // Act
-        await service.UpdateAsync(
-            releaseId,
-            "Bearcat.Release.Updated",
-            oldReleaseFolderPath,
-            ReleaseContentType.Movie,
-            secondGroup.Id,
-            CancellationToken.None
-        );
-
-        // Assert
-        dbContext.ChangeTracker.Clear();
-        var release = await dbContext
-            .Releases.AsSplitQuery()
-            .Include(r => r.ArchiveConfigs)
-                .ThenInclude(c => c.Archives)
-                    .ThenInclude(a => a.ArchiveFiles)
-            .SingleAsync(r => r.Id == releaseId);
-        var archives = release.ArchiveConfigs.Single().Archives.OrderBy(a => a.Id).ToList();
-
-        release.ReleaseFolderPath.ShouldBe(oldReleaseFolderPath);
-        archives.Count.ShouldBe(3);
-        archives[0].ArchiveState.ShouldBe(ArchiveState.Deleted);
-        archives[1].ArchiveState.ShouldBe(ArchiveState.Deleted);
-        archives[2].ArchiveState.ShouldBe(ArchiveState.Created);
-        archives[2].ArchiveFolderPath.ShouldBe(oldReleaseFolderPath);
-        archives[2]
-            .ArchiveFiles.Select(file => file.FullFileName)
-            .ShouldBe([
-                Path.Combine(oldReleaseFolderPath, "Bearcat.Release.Unmanaged.part1.rar"),
-                Path.Combine(oldReleaseFolderPath, "Bearcat.Release.Unmanaged.part2.rar"),
-            ]);
-    }
-
-    [Test]
-    public async Task UpdateAsync_UnmanagedReleaseFolderChanges_NoMatchingArchiveFiles_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var firstGroup = await AddReleaseGroupAsync("First group");
-        var secondGroup = await AddReleaseGroupAsync("Second group");
-        var oldReleaseFolderPath = CreateReleaseFolderWithArchives("Bearcat.Release.Unmanaged");
-        var newReleaseFolderPath = CreateReleaseFolderWithFiles("Bearcat.Release.Unmanaged.zip");
-        var releaseId = await service.CreateAsync(
-            "Bearcat.Release.Unmanaged",
-            oldReleaseFolderPath,
-            ReleaseType.Unmanaged,
-            ReleaseContentType.Movie,
-            firstGroup.Id,
-            CancellationToken.None
-        );
-
-        // Act
-        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
-            await service.UpdateAsync(
-                releaseId,
-                "Bearcat.Release.Updated",
-                newReleaseFolderPath,
-                ReleaseContentType.Movie,
-                secondGroup.Id,
-                CancellationToken.None
-            )
-        );
-
-        // Assert
-        result.Message.ShouldBe(
-            $"Release folder path {newReleaseFolderPath} does not contain archive files for archiver RAR."
-        );
-        dbContext.ChangeTracker.Clear();
-
-        var release = await dbContext
-            .Releases.Include(r => r.ArchiveConfigs)
-            .SingleAsync(r => r.Id == releaseId);
-
-        release.ReleaseFolderPath.ShouldBe(oldReleaseFolderPath);
-        release.ArchiveConfigs.Single().ArchiveFilesBasePath.ShouldBe(oldReleaseFolderPath);
-    }
-
-    [Test]
     public async Task UpdateReleaseGroupAsync_ReleaseIdsAreEmpty_DoesNotChangeReleases()
     {
         // Arrange
@@ -577,6 +376,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         var archiveConfig = release.ArchiveConfigs.Single();
         var archive = archiveConfig.Archives.Single();
 
+        release.ReleaseFolderPath.ShouldBeNull();
         archiveConfig.ArchiveFilesBasePath.ShouldBe(releaseFolderPath);
         archiveConfig.ArchiverName.ShouldBe("RarArchiver");
         archiveConfig.ArchiveFileSizeMb.ShouldBe(0);
@@ -589,6 +389,286 @@ public class ReleaseServiceTest : BearcatIntegrationTest
                 "Bearcat.Release.Unmanaged.part1.rar",
                 "Bearcat.Release.Unmanaged.part2.rar",
             ]);
+    }
+
+    [Test]
+    public async Task ConvertToUnmanagedAsync_AllArchivesCreated_SetsUnmanagedAndNullsFolderPath()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Convert group");
+        var release = await AddManagedReleaseWithArchiveAsync(
+            releaseGroup.Id,
+            releaseFolderPath: "/data/releases/Bearcat.Release",
+            archiveFolderPath: "/data/archives/abc",
+            archiveState: ArchiveState.Created
+        );
+
+        // Act
+        await service.ConvertToUnmanagedAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Releases.Include(r => r.ArchiveConfigs)
+                .ThenInclude(c => c.Archives)
+            .SingleAsync(r => r.Id == release.Id);
+
+        result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        result.ReleaseFolderPath.ShouldBeNull();
+        result
+            .ArchiveConfigs.Single()
+            .Archives.Single()
+            .ArchiveFolderPath.ShouldBe("/data/archives/abc");
+    }
+
+    [Test]
+    public async Task ConvertToUnmanagedAsync_ArchiveNotCreated_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Convert group");
+        var release = await AddManagedReleaseWithArchiveAsync(
+            releaseGroup.Id,
+            releaseFolderPath: "/data/releases/Bearcat.Release",
+            archiveFolderPath: "/data/archives/abc",
+            archiveState: ArchiveState.Creating
+        );
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.ConvertToUnmanagedAsync(release.Id, CancellationToken.None)
+        );
+
+        // Assert
+        result.Message.ShouldBe(
+            "All archive configs must have a created archive before the release can be converted to unmanaged."
+        );
+        dbContext.ChangeTracker.Clear();
+        var unchanged = await dbContext.Releases.SingleAsync(r => r.Id == release.Id);
+        unchanged.ReleaseType.ShouldBe(ReleaseType.Managed);
+        unchanged.ReleaseFolderPath.ShouldBe("/data/releases/Bearcat.Release");
+    }
+
+    [Test]
+    public async Task ConvertToUnmanagedAsync_UnmanagedRelease_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Convert group");
+        var releaseFolderPath = CreateReleaseFolderWithArchives("Bearcat.Release.Unmanaged");
+        var releaseId = await service.CreateAsync(
+            "Bearcat.Release.Unmanaged",
+            releaseFolderPath,
+            ReleaseType.Unmanaged,
+            ReleaseContentType.Movie,
+            releaseGroup.Id,
+            CancellationToken.None
+        );
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.ConvertToUnmanagedAsync(releaseId, CancellationToken.None)
+        );
+
+        // Assert
+        result.Message.ShouldBe("Only managed releases can be converted to unmanaged.");
+    }
+
+    [Test]
+    public async Task ConvertToManagedAsync_UnmanagedRelease_SetsManagedAndAssignsFolder()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Convert group");
+        var archiveFolderPath = CreateReleaseFolderWithArchives("Bearcat.Release.Unmanaged");
+        var releaseId = await service.CreateAsync(
+            "Bearcat.Release.Unmanaged",
+            archiveFolderPath,
+            ReleaseType.Unmanaged,
+            ReleaseContentType.Movie,
+            releaseGroup.Id,
+            CancellationToken.None
+        );
+
+        // Act
+        await service.ConvertToManagedAsync(
+            releaseId,
+            "/data/releases/Bearcat.Release",
+            CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Releases.AsSplitQuery()
+            .Include(r => r.ArchiveConfigs)
+                .ThenInclude(c => c.Archives)
+            .SingleAsync(r => r.Id == releaseId);
+
+        result.ReleaseType.ShouldBe(ReleaseType.Managed);
+        result.ReleaseFolderPath.ShouldBe("/data/releases/Bearcat.Release");
+        result
+            .ArchiveConfigs.Single()
+            .Archives.Single()
+            .ArchiveFolderPath.ShouldBe(archiveFolderPath);
+    }
+
+    [Test]
+    public async Task ConvertToManagedAsync_ManagedRelease_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Convert group");
+        var release = await AddManagedReleaseWithArchiveAsync(
+            releaseGroup.Id,
+            releaseFolderPath: "/data/releases/Bearcat.Release",
+            archiveFolderPath: "/data/archives/abc",
+            archiveState: ArchiveState.Created
+        );
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.ConvertToManagedAsync(
+                release.Id,
+                "/data/releases/Bearcat.Release",
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        result.Message.ShouldBe("Only unmanaged releases can be converted to managed.");
+    }
+
+    [Test]
+    public async Task ConvertToManagedAsync_BlankFolder_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Convert group");
+        var archiveFolderPath = CreateReleaseFolderWithArchives("Bearcat.Release.Unmanaged");
+        var releaseId = await service.CreateAsync(
+            "Bearcat.Release.Unmanaged",
+            archiveFolderPath,
+            ReleaseType.Unmanaged,
+            ReleaseContentType.Movie,
+            releaseGroup.Id,
+            CancellationToken.None
+        );
+
+        // Act
+        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await service.ConvertToManagedAsync(releaseId, "  ", CancellationToken.None)
+        );
+
+        // Assert
+        result.Message.ShouldBe(
+            "A release folder must be assigned when converting to managed."
+        );
+        dbContext.ChangeTracker.Clear();
+        var unchanged = await dbContext.Releases.SingleAsync(r => r.Id == releaseId);
+        unchanged.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        unchanged.ReleaseFolderPath.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task GetUnmanagedConversionPreviewAsync_ArchiveInsideReleaseFolder_ReportsWarningAndCanConvert()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Convert group");
+        var release = await AddManagedReleaseWithArchiveAsync(
+            releaseGroup.Id,
+            releaseFolderPath: "/data/releases/Bearcat.Release",
+            archiveFolderPath: "/data/releases/Bearcat.Release/archives",
+            archiveState: ArchiveState.Created
+        );
+
+        // Act
+        var preview = await service.GetUnmanagedConversionPreviewAsync(
+            release.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        preview.CanConvert.ShouldBeTrue();
+        preview.ArchivesInsideReleaseFolder.ShouldBeTrue();
+        preview.ReleaseFolderPath.ShouldBe("/data/releases/Bearcat.Release");
+    }
+
+    [Test]
+    public async Task GetUnmanagedConversionPreviewAsync_ArchiveOutsideReleaseFolder_NoWarning()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Convert group");
+        var release = await AddManagedReleaseWithArchiveAsync(
+            releaseGroup.Id,
+            releaseFolderPath: "/data/releases/Bearcat.Release",
+            archiveFolderPath: "/data/archives/abc",
+            archiveState: ArchiveState.Created
+        );
+
+        // Act
+        var preview = await service.GetUnmanagedConversionPreviewAsync(
+            release.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        preview.CanConvert.ShouldBeTrue();
+        preview.ArchivesInsideReleaseFolder.ShouldBeFalse();
+    }
+
+    private async Task<Release> AddManagedReleaseWithArchiveAsync(
+        int releaseGroupId,
+        string releaseFolderPath,
+        string archiveFolderPath,
+        ArchiveState archiveState
+    )
+    {
+        var release = new Release
+        {
+            Name = "Bearcat.Release.Managed",
+            CreatedAt = DateTime.UtcNow,
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = releaseFolderPath,
+            ReleaseGroupId = releaseGroupId,
+            ArchiveConfigs =
+            [
+                new ArchiveConfig
+                {
+                    Name = "RAR",
+                    ArchiveFilesBasePath = archiveFolderPath,
+                    ArchiverName = "RarArchiver",
+                    ArchiveNamePrefix = "Bearcat.Release.Managed",
+                    ArchivePassword = null,
+                    ArchiveFileSizeMb = 0,
+                    UploadConfigs = [],
+                    Archives =
+                    [
+                        new Archive
+                        {
+                            ArchiveFolderPath = archiveFolderPath,
+                            CreatedAt = DateTime.UtcNow,
+                            ArchiveState = archiveState,
+                            ArchiveFileSizeMb = 0,
+                            ArchiveFiles =
+                            [
+                                new ArchiveFile
+                                {
+                                    FullFileName = Path.Combine(
+                                        archiveFolderPath,
+                                        "Bearcat.Release.Managed.part1.rar"
+                                    ),
+                                },
+                            ],
+                            Uploads = [],
+                            ErrorMessages = [],
+                            Notifications = [],
+                        },
+                    ],
+                },
+            ],
+        };
+
+        dbContext.Releases.Add(release);
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        return release;
     }
 
     private async Task<ReleaseGroup> AddReleaseGroupAsync(string name)

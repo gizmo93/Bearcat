@@ -28,8 +28,7 @@ public partial class ReleaseOverview(
     public string ReleaseName { get; set; } = null!;
 
     [Parameter]
-    [EditorRequired]
-    public string ReleaseFolderPath { get; set; } = null!;
+    public string? ReleaseFolderPath { get; set; }
 
     [Parameter]
     public EventCallback OnRefreshed { get; set; }

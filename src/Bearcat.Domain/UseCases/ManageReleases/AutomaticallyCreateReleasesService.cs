@@ -41,19 +41,29 @@ public class AutomaticallyCreateReleasesService(
             .Distinct()
             .ToList();
 
-        var existingReleaseFolderPaths =
-            candidatePaths.Count == 0
-                ? []
-                : await repository.GetExistingReleaseFolderPathsAsync(
+        var existingFolderPaths = new HashSet<string>();
+
+        if (candidatePaths.Count > 0)
+        {
+            existingFolderPaths.UnionWith(
+                await repository.GetExistingReleaseFolderPathsAsync(
                     candidatePaths,
                     cancellationToken
-                );
+                )
+            );
+            existingFolderPaths.UnionWith(
+                await repository.GetExistingArchiveFolderPathsAsync(
+                    candidatePaths,
+                    cancellationToken
+                )
+            );
+        }
 
         var observations = await repository.GetFolderObservationsAsync(cancellationToken);
         var observationsByPath = observations.ToDictionary(observation => observation.FolderPath);
 
         var pendingCandidates = candidates
-            .Where(candidate => !existingReleaseFolderPaths.Contains(candidate.FolderPath))
+            .Where(candidate => !existingFolderPaths.Contains(candidate.FolderPath))
             .ToList();
 
         var pendingPaths = pendingCandidates.Select(candidate => candidate.FolderPath).ToHashSet();

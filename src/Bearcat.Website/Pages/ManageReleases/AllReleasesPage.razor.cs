@@ -165,7 +165,7 @@ public partial class AllReleasesPage(
             [nameof(CreateOrEditReleaseDialog.FormModel)] = new ReleaseFormModel
             {
                 Name = release.Name,
-                FolderPath = release.ReleaseFolderPath,
+                FolderPath = release.ReleaseFolderPath ?? string.Empty,
                 ReleaseType = release.ReleaseType,
                 ReleaseContentType = release.ReleaseContentType,
                 ReleaseGroupId = release.ReleaseGroupId,

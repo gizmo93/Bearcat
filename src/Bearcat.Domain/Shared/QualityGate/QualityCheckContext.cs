@@ -13,13 +13,15 @@ public sealed class QualityCheckContext(Release release, IFileSystemService file
     public IReadOnlyList<string> Files => files ??= ReadFiles();
 
     public long TotalBytes =>
-        totalBytes ??= fileSystemService
-            .GetFolderContentFingerprint(release.ReleaseFolderPath)
-            .TotalBytes;
+        totalBytes ??= release.ReleaseFolderPath is null
+            ? 0
+            : fileSystemService.GetFolderContentFingerprint(release.ReleaseFolderPath).TotalBytes;
 
     private List<string> ReadFiles()
     {
-        return !fileSystemService.DirectoryExists(release.ReleaseFolderPath)
+        return
+            release.ReleaseFolderPath is null
+            || !fileSystemService.DirectoryExists(release.ReleaseFolderPath)
             ? []
             : fileSystemService.GetFilesInPath(release.ReleaseFolderPath, recursive: true);
     }

@@ -243,3 +243,6 @@ appsettings.user.json
 # macOS stuff
 .DS_Store
 .vscode/gitcharm-changelists.json
+
+# Local-only MSBuild overrides (e.g. SkipTailwindBuild for fast dev builds)
+Directory.Build.local.props

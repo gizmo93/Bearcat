@@ -2,16 +2,23 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManagePostedLocations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
-public partial class ReleaseDetail(NavigationManager navigationManager, DialogService dialogService)
-    : OwningComponentBase
+public partial class ReleaseDetail(
+    NavigationManager navigationManager,
+    DialogService dialogService,
+    ToastService toastService,
+    IServiceScopeFactory serviceScopeFactory,
+    IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig
+) : OwningComponentBase
 {
     [Parameter]
     public int ReleaseId { get; set; }
@@ -30,6 +37,7 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
 
     private IReleaseReadRepository releaseReadRepository = null!;
     private ReleaseReadModel release = null!;
+    private IReadOnlyList<string> unmanagedArchiveFolderPaths = [];
     private bool isInitialized;
     private int? loadedReleaseId;
     private string? activeTab = "overview";
@@ -65,8 +73,17 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
         }
 
         release = releaseReadModel;
+        await LoadUnmanagedArchiveFolderPathsAsync();
         loadedReleaseId = ReleaseId;
         isInitialized = true;
+    }
+
+    private async Task LoadUnmanagedArchiveFolderPathsAsync()
+    {
+        unmanagedArchiveFolderPaths =
+            release.ReleaseType is ReleaseType.Unmanaged
+                ? await releaseReadRepository.GetUnmanagedArchiveFolderPathsAsync(release.ReleaseId)
+                : [];
     }
 
     private async Task HandleChangeAffectingOtherComponentsAsync(string componentName)
@@ -116,7 +133,7 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
             [nameof(CreateOrEditReleaseDialog.FormModel)] = new ReleaseFormModel
             {
                 Name = release.Name,
-                FolderPath = release.ReleaseFolderPath,
+                FolderPath = release.ReleaseFolderPath ?? string.Empty,
                 ReleaseType = release.ReleaseType,
                 ReleaseContentType = release.ReleaseContentType,
                 ReleaseGroupId = release.ReleaseGroupId,
@@ -165,6 +182,101 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
         navigationManager.NavigateTo("/releases");
     }
 
+    private bool CanConvertToUnmanaged => release.ReleaseType is ReleaseType.Managed;
+
+    private bool IsUnmanaged => release.ReleaseType is ReleaseType.Unmanaged;
+
+    private async Task ConvertToUnmanagedAsync()
+    {
+        await using var scope = serviceScopeFactory.CreateAsyncScope();
+        var service = scope.ServiceProvider.GetRequiredService<ReleaseService>();
+        var preview = await service.GetUnmanagedConversionPreviewAsync(release.ReleaseId);
+
+        if (!preview.CanConvert)
+        {
+            toastService.Error(L["ConvertToUnmanagedNotReady"]);
+            return;
+        }
+
+        var folderPath = preview.ReleaseFolderPath ?? string.Empty;
+        var confirmation = preview.ArchivesInsideReleaseFolder
+            ? L["ConvertToUnmanagedConfirmationArchivesInside", folderPath]
+            : L["ConvertToUnmanagedConfirmation", folderPath];
+
+        var result = await dialogService.ConfirmAsync(
+            L["ConvertToUnmanagedTitle", release.Name],
+            confirmation,
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["ConvertToUnmanaged"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            await service.ConvertToUnmanagedAsync(release.ReleaseId);
+            toastService.Success(L["ReleaseConvertedToUnmanaged", release.Name]);
+            await ReloadReleaseAsync();
+        }
+        catch (InvalidOperationException exception)
+        {
+            toastService.Error(exception.Message);
+        }
+    }
+
+    private async Task ConvertToManagedAsync()
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(FolderSelectionDialog.BaseFolderPaths)] =
+                workingDirectoriesConfig.Value.GetWorkingDirectories(),
+        };
+
+        var folderResult = await dialogService.OpenAsync<FolderSelectionDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["SelectReleaseFolder"],
+                Description = L["SelectReleaseFolderDescription"],
+                Size = DialogSize.Large,
+                ShowClose = true,
+            }
+        );
+
+        if (folderResult.Cancelled)
+        {
+            return;
+        }
+
+        var folderPath = folderResult.GetData<string>();
+
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            return;
+        }
+
+        await using var scope = serviceScopeFactory.CreateAsyncScope();
+        var service = scope.ServiceProvider.GetRequiredService<ReleaseService>();
+
+        try
+        {
+            await service.ConvertToManagedAsync(release.ReleaseId, folderPath);
+            toastService.Success(L["ReleaseConvertedToManaged", release.Name]);
+            await ReloadReleaseAsync();
+        }
+        catch (InvalidOperationException exception)
+        {
+            toastService.Error(exception.Message);
+        }
+    }
+
     private async Task SaveAsTemplateAsync()
     {
         var result = await dialogService.PromptAsync(
@@ -206,5 +318,6 @@ public partial class ReleaseDetail(NavigationManager navigationManager, DialogSe
         }
 
         release = releaseReadModel;
+        await LoadUnmanagedArchiveFolderPathsAsync();
     }
 }
