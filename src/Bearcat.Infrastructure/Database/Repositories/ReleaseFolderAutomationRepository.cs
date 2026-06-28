@@ -2,6 +2,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -113,8 +114,24 @@ public class ReleaseFolderAutomationRepository(
     )
     {
         return await dbWrite
-            .Releases.Where(release => releaseFolderPaths.Contains(release.ReleaseFolderPath))
-            .Select(release => release.ReleaseFolderPath)
+            .Releases.Where(release =>
+                release.ReleaseFolderPath != null
+                && releaseFolderPaths.Contains(release.ReleaseFolderPath)
+            )
+            .Select(release => release.ReleaseFolderPath!)
+            .ToHashSetAsync(cancellationToken);
+    }
+
+    public async Task<HashSet<string>> GetExistingArchiveFolderPathsAsync(
+        IReadOnlyCollection<string> archiveFolderPaths,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .Releases.Where(release => release.ReleaseType == ReleaseType.Unmanaged)
+            .SelectMany(release => release.ArchiveConfigs)
+            .Select(archiveConfig => archiveConfig.ArchiveFilesBasePath)
+            .Where(archiveFolderPath => archiveFolderPaths.Contains(archiveFolderPath))
             .ToHashSetAsync(cancellationToken);
     }
 

@@ -2455,6 +2455,21 @@ a {
     animation: none;
 }
 
+[aria-modal] [id^="bb-dialog-"][id$="-desc"] {
+    overflow-wrap: anywhere;
+}
+
+body:has([aria-modal="true"]) [role="menu"] {
+    display: none;
+}
+
+@media (min-width: 640px) {
+    [aria-modal] [id^="bb-dialog-"][id$="-title"],
+    [aria-modal] [id^="bb-dialog-"][id$="-desc"] {
+        text-align: left;
+    }
+}
+
 @media (max-height: 820px) {
     .bearcat-rendered-forum-post:not(.bearcat-post-wizard-textarea) {
         min-height: 40vh;

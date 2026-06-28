@@ -63,13 +63,25 @@
                             <LucideIcon Name="ellipsis" class="h-4 w-4" />
                         </BbButton>
                     </BbDropdownMenuTrigger>
-                    <BbDropdownMenuContent Align="PopoverAlign.End">
+                    <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
                         <BbDropdownMenuItem OnClick="ShowEditReleaseDialogAsync">
                             @L["Edit"]
                         </BbDropdownMenuItem>
                         <BbDropdownMenuItem OnClick="SaveAsTemplateAsync">
                             @L["SaveAsTemplate"]
                         </BbDropdownMenuItem>
+                        @if (CanConvertToUnmanaged)
+                        {
+                            <BbDropdownMenuItem OnClick="ConvertToUnmanagedAsync">
+                                @L["ConvertToUnmanaged"]
+                            </BbDropdownMenuItem>
+                        }
+                        @if (IsUnmanaged)
+                        {
+                            <BbDropdownMenuItem OnClick="ConvertToManagedAsync">
+                                @L["ConvertToManaged"]
+                            </BbDropdownMenuItem>
+                        }
                         <BbDropdownMenuItem OnClick="DeleteReleaseAsync">
                             @L["DeleteRelease"]
                         </BbDropdownMenuItem>
@@ -83,8 +95,26 @@
         <div class="bearcat-release-folder">
             <LucideIcon Name="folder" class="h-4 w-4 shrink-0 text-muted-foreground" />
             <div class="min-w-0">
-                <p class="text-xs text-muted-foreground">@L["ReleaseFolder"]</p>
-                <p class="bearcat-release-path">@release.ReleaseFolderPath</p>
+                @if (IsUnmanaged)
+                {
+                    <p class="text-xs text-muted-foreground">@L["ArchiveFolder"]</p>
+                    @if (unmanagedArchiveFolderPaths.Count == 0)
+                    {
+                        <p class="bearcat-release-path">@L["NoArchivesYet"]</p>
+                    }
+                    else
+                    {
+                        @foreach (var path in unmanagedArchiveFolderPaths)
+                        {
+                            <p class="bearcat-release-path">@path</p>
+                        }
+                    }
+                }
+                else
+                {
+                    <p class="text-xs text-muted-foreground">@L["ReleaseFolder"]</p>
+                    <p class="bearcat-release-path">@release.ReleaseFolderPath</p>
+                }
             </div>
         </div>
 

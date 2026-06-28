@@ -473,6 +473,37 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task ProcessAsync_UnmanagedReleaseAlreadyExists_DoesNotRecreateForSameArchiveFolder()
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync(ReleaseType.Unmanaged);
+        var releaseFolder = Directory.CreateDirectory(
+            Path.Combine(tempRootPath, "Bearcat.Release.Unmanaged")
+        );
+        await File.WriteAllTextAsync(
+            Path.Combine(releaseFolder.FullName, "archive.part1.rar"),
+            "1"
+        );
+        await File.WriteAllTextAsync(
+            Path.Combine(releaseFolder.FullName, "archive.part2.rar"),
+            "2"
+        );
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*Unmanaged");
+
+        // Act
+        var created = await ProcessUntilStableAsync();
+        var firstRerun = await service.ProcessAsync(CancellationToken.None);
+        var secondRerun = await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        created.ShouldBe(1);
+        firstRerun.ShouldBe(0);
+        secondRerun.ShouldBe(0);
+        (await dbContext.Releases.CountAsync()).ShouldBe(1);
+        (await dbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
     public async Task ProcessAsync_FirstSightingOfFolder_RecordsObservationButCreatesNoRelease()
     {
         // Arrange

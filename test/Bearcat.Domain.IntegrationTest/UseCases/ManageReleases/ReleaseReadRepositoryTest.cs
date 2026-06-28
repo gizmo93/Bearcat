@@ -905,6 +905,78 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
 
     private sealed record PostQueueImageConfigSpec(bool HasUpload, bool HosterActive = true);
 
+    [Test]
+    public async Task GetUnmanagedArchiveFolderPathsAsync_ReturnsDistinctCreatedArchiveFolders()
+    {
+        // Arrange
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Unmanaged paths group",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+            Releases = [],
+        };
+        var release = new Release
+        {
+            Name = "Bearcat.Unmanaged.Paths",
+            CreatedAt = DateTime.UtcNow,
+            ReleaseType = ReleaseType.Unmanaged,
+            ReleaseFolderPath = null,
+            ReleaseGroup = releaseGroup,
+            UploadConfigs = [],
+            ArchiveConfigs =
+            [
+                BuildUnmanagedArchiveConfig("/data/archives/x", ArchiveState.Created),
+                BuildUnmanagedArchiveConfig("/data/archives/y", ArchiveState.Created),
+                BuildUnmanagedArchiveConfig("/data/archives/x", ArchiveState.Created),
+                BuildUnmanagedArchiveConfig("/data/archives/z", ArchiveState.Deleted),
+            ],
+        };
+        dbContext.Releases.Add(release);
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetUnmanagedArchiveFolderPathsAsync(
+            release.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.OrderBy(path => path).ShouldBe(["/data/archives/x", "/data/archives/y"]);
+    }
+
+    private static ArchiveConfig BuildUnmanagedArchiveConfig(
+        string archiveFolderPath,
+        ArchiveState archiveState
+    )
+    {
+        return new ArchiveConfig
+        {
+            Name = "RAR",
+            ArchiveFilesBasePath = archiveFolderPath,
+            ArchiverName = "RarArchiver",
+            ArchiveNamePrefix = null,
+            ArchivePassword = null,
+            ArchiveFileSizeMb = 0,
+            UploadConfigs = [],
+            Archives =
+            [
+                new Archive
+                {
+                    ArchiveFolderPath = archiveFolderPath,
+                    CreatedAt = DateTime.UtcNow,
+                    ArchiveState = archiveState,
+                    ArchiveFileSizeMb = 0,
+                    ArchiveFiles = [],
+                    Uploads = [],
+                    ErrorMessages = [],
+                    Notifications = [],
+                },
+            ],
+        };
+    }
+
     private async Task<Release> AddReleaseAsync(
         string name = "Bearcat.Release.2026-GRP",
         ReleaseType releaseType = ReleaseType.Managed
