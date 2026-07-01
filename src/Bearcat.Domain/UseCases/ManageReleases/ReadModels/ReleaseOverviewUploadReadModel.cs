@@ -11,6 +11,7 @@ public record ReleaseOverviewUploadReadModel(
     DateTime? UploadedAt,
     UploadState? UploadState,
     OnlineState? OnlineState,
+    DateTime? NotFullyOnlineSince,
     int LinkCount,
     IReadOnlyList<string> ErrorMessages,
     string? ArchivePassword,

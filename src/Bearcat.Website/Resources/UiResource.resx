@@ -278,6 +278,7 @@
   <data name="NewRelease" xml:space="preserve"><value>New release</value></data>
   <data name="Next" xml:space="preserve"><value>Next</value></data>
   <data name="No" xml:space="preserve"><value>No</value></data>
+  <data name="NotFullyOnlineSince" xml:space="preserve"><value>Not fully online since</value></data>
   <data name="NoArchivePassword" xml:space="preserve"><value>No archive password</value></data>
   <data name="NoArchiveConfigurationsYet" xml:space="preserve"><value>No archive configurations yet.</value></data>
   <data name="NoContainerLinksFound" xml:space="preserve"><value>No container links found</value></data>

@@ -136,6 +136,7 @@ public class ReleaseReadRepository(
                         u.UploadedAt,
                         u.UploadState,
                         u.OnlineState,
+                        u.NotFullyOnlineSince,
                         LinkCount = u.UploadedFiles.Count,
                         ErrorMessages = u.ErrorMessages.ToList(),
                         ArchivePassword = u.Archive == null
@@ -244,6 +245,7 @@ public class ReleaseReadRepository(
                     upload?.UploadedAt,
                     upload?.UploadState,
                     upload?.OnlineState,
+                    upload?.NotFullyOnlineSince,
                     upload?.LinkCount ?? 0,
                     upload?.ErrorMessages ?? [],
                     upload?.ArchivePassword,
@@ -923,6 +925,7 @@ public class ReleaseReadRepository(
                 u.UploadedAt,
                 u.UploadState,
                 u.OnlineState,
+                u.NotFullyOnlineSince,
                 u.UploadedFiles.Count,
                 u.LinkCrypterContainers.Count
                     + dbRead.LinkCrypterContainerSourceUploads.Count(source =>

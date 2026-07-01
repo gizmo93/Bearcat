@@ -284,6 +284,8 @@ public class ReleaseCollectionRepository(
                         ReleaseId = upload.UploadConfig.ReleaseId,
                         UploadId = upload.Id,
                         UploadConfigName = upload.UploadConfig.Name,
+                        upload.OnlineState,
+                        upload.NotFullyOnlineSince,
                     })
                     .First()
             )
@@ -300,6 +302,16 @@ public class ReleaseCollectionRepository(
                             upload.UploadConfigName
                         ))
                         .ToList()
+            );
+
+        var notFullyOnlineSinceByReleaseId = latestUploads
+            .Where(upload =>
+                upload.OnlineState != OnlineState.Online && upload.NotFullyOnlineSince is not null
+            )
+            .GroupBy(upload => upload.ReleaseId)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Min(upload => upload.NotFullyOnlineSince)
             );
 
         var releases = await dbRead
@@ -384,6 +396,9 @@ public class ReleaseCollectionRepository(
                         CreatedAt: release.CreatedAt,
                         ActiveUploadConfigsCount: release.ActiveUploadConfigsCount,
                         OnlineUploadConfigsCount: release.OnlineUploadConfigsCount,
+                        NotFullyOnlineSince: notFullyOnlineSinceByReleaseId.GetValueOrDefault(
+                            release.Id
+                        ),
                         LatestUploads: releaseLatestUploads
                             ?? (IReadOnlyList<ReleaseLatestUploadReadModel>)[]
                     );

@@ -52,7 +52,8 @@
                                Property="@(upload => upload.OnlineState.ToString())"
                                Width="150px">
                 <CellTemplate Context="upload">
-                    <OnlineStateBadge Value="@upload.OnlineState" />
+                    <OnlineStateBadge Value="@upload.OnlineState"
+                                      NotFullyOnlineSince="@upload.NotFullyOnlineSince" />
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="ReleaseUploadReadModel" TValue="string"

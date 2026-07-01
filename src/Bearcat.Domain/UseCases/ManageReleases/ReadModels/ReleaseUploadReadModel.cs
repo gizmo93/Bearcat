@@ -10,6 +10,7 @@ public record ReleaseUploadReadModel(
     DateTime? UploadedAt,
     UploadState UploadState,
     OnlineState OnlineState,
+    DateTime? NotFullyOnlineSince,
     int LinkCount,
     int ContainerCount,
     bool CanCreateReupload,

@@ -1,8 +1,24 @@
+@using Bearcat.Website.Formatting
+@inject Bearcat.Domain.Shared.TimeProvider TimeProvider
+
 @if (Value is not null)
 {
-    <BbBadge Variant="@variant" Class="@Class">
-        @L.Localize(Value.Value)
-    </BbBadge>
+    @if (ShowNotFullyOnlineSince)
+    {
+        <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
+            <BbTooltipTrigger AsChild="false" Class="inline-flex">
+                @Badge
+            </BbTooltipTrigger>
+            <BbTooltipContent Class="max-w-xs text-xs">
+                <p class="font-medium">@L["NotFullyOnlineSince"]</p>
+                <p>@TimeProvider.Humanize(NotFullyOnlineSince!.Value) (@NotFullyOnlineSince.Value.ToString("g"))</p>
+            </BbTooltipContent>
+        </BbTooltip>
+    }
+    else
+    {
+        @Badge
+    }
 }
 
 @code {
@@ -11,7 +27,14 @@
     public OnlineState? Value { get; set; }
 
     [Parameter]
+    public DateTime? NotFullyOnlineSince { get; set; }
+
+    [Parameter]
     public string? Class { get; set; }
+
+    private bool ShowNotFullyOnlineSince =>
+        NotFullyOnlineSince is not null
+        && Value is OnlineState.PartiallyOnline or OnlineState.Offline;
 
     private BadgeVariant variant => Value switch
     {
@@ -20,4 +43,6 @@
         OnlineState.Offline => BadgeVariant.Destructive,
         _ => BadgeVariant.Outline
     };
+
+    private RenderFragment Badge => @<BbBadge Variant="@variant" Class="@Class">@L.Localize(Value!.Value)</BbBadge>;
 }

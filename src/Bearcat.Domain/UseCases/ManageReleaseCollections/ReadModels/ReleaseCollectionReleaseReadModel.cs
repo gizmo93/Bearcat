@@ -9,6 +9,7 @@ public record ReleaseCollectionReleaseReadModel(
     DateTime CreatedAt,
     int ActiveUploadConfigsCount,
     int OnlineUploadConfigsCount,
+    DateTime? NotFullyOnlineSince,
     IReadOnlyList<ReleaseLatestUploadReadModel> LatestUploads
 )
 {
