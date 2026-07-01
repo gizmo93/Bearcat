@@ -1067,12 +1067,12 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task CheckUploadStatesAsync_AutomaticReuploadHasUncheckedFile_DoesNotCreateReupload()
+    public async Task CheckUploadStatesAsync_AutomaticReuploadNotFullyOnlineSinceWithinThreshold_DoesNotCreateReupload()
     {
         // Arrange
         await AddCompletedUploadAsync(
             OnlineState.Offline,
-            checkedAt: null,
+            checkedAt: localNow.AddHours(-1),
             uploadedFileLinks: ["https://hoster.test/1"],
             enableAutomaticReuploads: true
         );
@@ -1084,6 +1084,59 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         var uploads = await dbContext.Uploads.ToListAsync();
 
         uploads.Count.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_PartiallyOnlineUploadStillBeingRechecked_CreatesReuploadBasedOnNotFullyOnlineSince()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.PartiallyOnline,
+            checkedAt: localNow.AddMinutes(-31),
+            uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"],
+            enableAutomaticReuploads: true
+        );
+        upload.NotFullyOnlineSince = localNow.AddHours(-25);
+        upload.UploadedFiles[1].OnlineState = OnlineState.Offline;
+        await dbContext.SaveChangesAsync();
+
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(
+                    true,
+                    [],
+                    new Dictionary<string, bool>
+                    {
+                        ["https://hoster.test/1"] = true,
+                        ["https://hoster.test/2"] = false,
+                    }
+                )
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .OrderBy(u => u.Id)
+            .ToListAsync();
+        var recheckedUpload = result.Single(u => u.Id == upload.Id);
+        var reupload = result.Single(u => u.Id != upload.Id);
+
+        result.Count.ShouldBe(2);
+        recheckedUpload.NotFullyOnlineSince.ShouldBe(localNow.AddHours(-25));
+        recheckedUpload.UploadedFiles.ShouldContain(f => f.CheckedAt == localNow);
+        reupload.UploadConfigId.ShouldBe(upload.UploadConfigId);
+        reupload.UploadState.ShouldBe(UploadState.WaitingForArchive);
     }
 
     [Test]
@@ -1289,6 +1342,9 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             UploadedAt = localNow.AddHours(-2),
             UploadState = UploadState.Completed,
             OnlineState = onlineState,
+            NotFullyOnlineSince = onlineState is OnlineState.PartiallyOnline or OnlineState.Offline
+                ? checkedAt
+                : null,
             ErrorMessages = [],
             UploadedFiles = [],
         };

@@ -238,7 +238,7 @@ public class UploadStateService(
 
         if (filesByUrl.Count == 0)
         {
-            upload.OnlineState = OnlineState.Offline;
+            SetOnlineState(upload, OnlineState.Offline, localNow);
             return;
         }
 
@@ -312,14 +312,30 @@ public class UploadStateService(
             f.OnlineState == OnlineState.Offline
         );
 
-        upload.OnlineState = offlineFilesCount switch
+        var newOnlineState = offlineFilesCount switch
         {
             0 => OnlineState.Online,
             _ when offlineFilesCount == upload.UploadedFiles.Count => OnlineState.Offline,
             _ => OnlineState.PartiallyOnline,
         };
 
+        SetOnlineState(upload, newOnlineState, localNow);
+
         CreateOfflineNotificationIfNeeded(upload, previousOnlineState);
+    }
+
+    private static void SetOnlineState(Upload upload, OnlineState onlineState, DateTime localNow)
+    {
+        upload.OnlineState = onlineState;
+
+        if (onlineState is OnlineState.PartiallyOnline or OnlineState.Offline)
+        {
+            upload.NotFullyOnlineSince ??= localNow;
+        }
+        else
+        {
+            upload.NotFullyOnlineSince = null;
+        }
     }
 
     private void CreateOfflineNotificationIfNeeded(Upload upload, OnlineState previousOnlineState)
@@ -440,15 +456,14 @@ public class UploadStateService(
             return false;
         }
 
-        if (upload.UploadedFiles.Any(f => f.CheckedAt is null))
+        if (upload.NotFullyOnlineSince is null)
         {
             return false;
         }
 
-        var oldestCheckedAt = upload.UploadedFiles.Min(f => f.CheckedAt!.Value);
         var threshold = localNow.AddHours(-releaseGroup.NumberOfHoursUntilReupload);
 
-        return oldestCheckedAt <= threshold;
+        return upload.NotFullyOnlineSince <= threshold;
     }
 
     private static bool HasBlockingReupload(Upload upload)
