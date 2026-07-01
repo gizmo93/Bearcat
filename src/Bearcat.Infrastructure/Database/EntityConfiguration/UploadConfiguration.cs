@@ -11,6 +11,7 @@ public class UploadConfiguration : IEntityTypeConfiguration<Upload>
         builder.HasKey(u => u.Id);
         builder.Property(u => u.UploadConfigId).IsRequired();
         builder.Property(u => u.ArchiveId).IsRequired(false);
+        builder.Property(u => u.HosterFolderId).IsRequired(false);
         builder.Property(u => u.CreatedAt).IsRequired().HasPrecision(4);
         builder.Property(u => u.UploadedAt).IsRequired(false).HasPrecision(4);
         builder.Property(u => u.UploadState).IsRequired();

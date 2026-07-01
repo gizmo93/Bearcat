@@ -14,6 +14,8 @@ public class Upload
 
     public Archive? Archive { get; set; }
 
+    public string? HosterFolderId { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime? UploadedAt { get; set; }

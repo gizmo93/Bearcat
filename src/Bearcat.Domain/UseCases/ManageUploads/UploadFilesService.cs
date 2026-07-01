@@ -293,6 +293,11 @@ public class UploadFilesService(
             cancellationToken: cancellationToken
         );
 
+        if (folderId is not null)
+        {
+            upload.HosterFolderId = folderId;
+        }
+
         var context = new UploadExecutionContext(
             upload: upload,
             totalFileCount: upload.Archive.ArchiveFiles.Count,
