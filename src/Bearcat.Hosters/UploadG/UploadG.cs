@@ -173,6 +173,26 @@ public class UploadG(IUploadGApiClient apiClient, ILogger<UploadG> logger) : IHo
         return await apiClient.CreateFolderAsync(config, folderName, cancellationToken);
     }
 
+    public async Task MoveFileToFolderAsync(
+        string fileUrl,
+        string? externalId,
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        if (string.IsNullOrWhiteSpace(externalId))
+        {
+            throw new InvalidOperationException(
+                $"Cannot move UploadG file {fileUrl} without a known entry id"
+            );
+        }
+
+        var config = hosterConfig.As<UploadGConfig>();
+
+        await apiClient.MoveFileToFolderAsync(config, externalId, folderId, cancellationToken);
+    }
+
     public async Task<TryLoginResult> TryLoginAsync(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken

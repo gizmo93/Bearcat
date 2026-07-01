@@ -132,6 +132,38 @@ public class ApiClient(
             ?? throw new HttpRequestException("KrakenFiles folder creation returned no folder id");
     }
 
+    public async Task MoveFileToFolderAsync(
+        KrakenFilesConfig config,
+        string fileUrl,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileHash = TryExtractFileHash(fileUrl);
+
+        if (string.IsNullOrWhiteSpace(fileHash))
+        {
+            throw new HttpRequestException(
+                $"Could not extract KrakenFiles file hash from URL {fileUrl}"
+            );
+        }
+
+        var response = await api.MoveFileAsync(
+            fileHash,
+            config.ApiKey,
+            new MoveFileRequest(folderId),
+            cancellationToken
+        );
+
+        if (response.Status != (int)HttpStatusCode.OK)
+        {
+            throw new HttpRequestException(
+                response.Data?.Message
+                    ?? $"KrakenFiles file move failed with status {response.Status}"
+            );
+        }
+    }
+
     public async Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
         KrakenFilesConfig config,
         IReadOnlyList<string> fileUrls,

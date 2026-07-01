@@ -149,6 +149,19 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger) : 
         return await apiClient.CreateFolderAsync(config, folderName, cancellationToken);
     }
 
+    public async Task MoveFileToFolderAsync(
+        string fileUrl,
+        string? externalId,
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<AlfafileConfig>();
+
+        await apiClient.MoveFileToFolderAsync(config, fileUrl, folderId, cancellationToken);
+    }
+
     public async Task<TryLoginResult> TryLoginAsync(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken

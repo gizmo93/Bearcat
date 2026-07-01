@@ -221,6 +221,19 @@ public class Rapidgator(
         );
     }
 
+    public async Task MoveFileToFolderAsync(
+        string fileUrl,
+        string? externalId,
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<RapidgatorConfig>();
+
+        await apiClient.MoveFileToFolderAsync(config, fileUrl, folderId, cancellationToken);
+    }
+
     private async Task<UploadFileResult> UploadFileInternalAsync(
         FileDto fileDto,
         RapidgatorConfig config,

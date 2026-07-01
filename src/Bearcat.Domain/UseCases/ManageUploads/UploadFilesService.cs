@@ -296,6 +296,14 @@ public class UploadFilesService(
         if (folderId is not null)
         {
             upload.HosterFolderId = folderId;
+
+            await MoveFilesFromOtherFoldersAsync(
+                upload: upload,
+                hoster: hoster,
+                hosterConfig: hosterConfig,
+                folderId: folderId,
+                cancellationToken: cancellationToken
+            );
         }
 
         var context = new UploadExecutionContext(
@@ -326,6 +334,59 @@ public class UploadFilesService(
         }
 
         return context;
+    }
+
+    private async Task MoveFilesFromOtherFoldersAsync(
+        Upload upload,
+        IHoster hoster,
+        IHosterConfig hosterConfig,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        if (hoster is not IHosterWithFolders folderHoster)
+        {
+            return;
+        }
+
+        var filesToMove = upload
+            .UploadedFiles.Where(uf =>
+                !string.IsNullOrWhiteSpace(uf.HosterFileLink) && uf.HosterFolderId != folderId
+            )
+            .ToList();
+
+        foreach (var file in filesToMove)
+        {
+            try
+            {
+                await folderHoster.MoveFileToFolderAsync(
+                    fileUrl: file.HosterFileLink,
+                    externalId: file.ExternalId,
+                    folderId: folderId,
+                    hosterConfig: hosterConfig,
+                    cancellationToken: cancellationToken
+                );
+
+                file.HosterFolderId = folderId;
+
+                logger.LogInformation(
+                    "Moved carried-over file {FileLink} to folder {FolderId} for upload {UploadId}",
+                    file.HosterFileLink,
+                    folderId,
+                    upload.Id
+                );
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(
+                    ex,
+                    "Failed to move file {FileLink} to folder {FolderId} for upload {UploadId}, leaving it in its current folder",
+                    file.HosterFileLink,
+                    folderId,
+                    upload.Id
+                );
+            }
+        }
     }
 
     private async Task<string?> CreateUploadFolderIdAsync(
@@ -592,6 +653,7 @@ public class UploadFilesService(
                 ArchiveFileId = result.ArchiveFileId,
                 HosterFileLink = result.FileUrl ?? string.Empty,
                 ExternalId = result.ExternalId,
+                HosterFolderId = context.Upload.HosterFolderId,
                 ErrorMessages = result.Errors.ToList(),
                 OnlineState = result.IsSuccess ? OnlineState.Online : OnlineState.Unknown,
                 CreatedAt = timeProvider.GetLocalNow(),

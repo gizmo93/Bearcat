@@ -210,6 +210,7 @@ public class ArchiveCreationService(
                 ArchiveFileId = source.ArchiveFileId,
                 HosterFileLink = source.HosterFileLink,
                 ExternalId = source.ExternalId,
+                HosterFolderId = source.HosterFolderId,
                 OnlineState = OnlineState.Online,
                 CreatedAt = source.CreatedAt,
                 CheckedAt = source.CheckedAt,

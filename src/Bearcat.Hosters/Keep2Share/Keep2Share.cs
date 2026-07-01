@@ -179,6 +179,19 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
         return await apiClient.CreateFolderAsync(config, folderName, cancellationToken);
     }
 
+    public async Task MoveFileToFolderAsync(
+        string fileUrl,
+        string? externalId,
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<Keep2ShareConfig>();
+
+        await apiClient.MoveFileToFolderAsync(config, fileUrl, folderId, cancellationToken);
+    }
+
     public async Task<TryLoginResult> TryLoginAsync(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken

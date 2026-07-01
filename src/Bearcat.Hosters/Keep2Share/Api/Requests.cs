@@ -45,3 +45,9 @@ public record GetFilesInfoRequest(
     [property: JsonPropertyName("auth_token")] string AuthToken,
     [property: JsonPropertyName("ids")] IReadOnlyList<string> Ids
 );
+
+public record UpdateFilesRequest(
+    [property: JsonPropertyName("auth_token")] string AuthToken,
+    [property: JsonPropertyName("ids")] IReadOnlyList<string> Ids,
+    [property: JsonPropertyName("new_parent")] string NewParent
+);

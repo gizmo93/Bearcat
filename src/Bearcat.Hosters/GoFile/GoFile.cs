@@ -146,6 +146,24 @@ public class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) : IHoste
         );
     }
 
+    public async Task MoveFileToFolderAsync(
+        string fileUrl,
+        string? externalId,
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<GoFileConfig>();
+
+        await apiClient.MoveFileToFolderAsync(
+            apiKey: config.ApiKey,
+            fileUrl: fileUrl,
+            folderId: folderId,
+            cancellationToken: cancellationToken
+        );
+    }
+
     public IHosterConfig DeserializeHosterConfig(string serializedConfig)
     {
         return JsonSerializer.Deserialize<GoFileConfig>(serializedConfig)!;

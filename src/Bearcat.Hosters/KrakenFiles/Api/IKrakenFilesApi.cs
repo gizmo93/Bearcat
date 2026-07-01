@@ -34,4 +34,12 @@ public interface IKrakenFilesApi
         [Body] CreateFolderRequest request,
         CancellationToken cancellationToken
     );
+
+    [Patch("/api/file/{hash}/move")]
+    Task<MoveFileResponse> MoveFileAsync(
+        string hash,
+        [Header("X-AUTH-TOKEN")] string apiToken,
+        [Body] MoveFileRequest request,
+        CancellationToken cancellationToken
+    );
 }

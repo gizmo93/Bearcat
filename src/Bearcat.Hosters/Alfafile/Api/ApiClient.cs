@@ -91,6 +91,42 @@ public class ApiClient(
         return createdFolder.Response.Folder.FolderId;
     }
 
+    public async Task MoveFileToFolderAsync(
+        AlfafileConfig config,
+        string fileUrl,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileId = GetFileId(fileUrl);
+
+        if (string.IsNullOrWhiteSpace(fileId))
+        {
+            throw new HttpRequestException(
+                $"Could not extract Alfafile file id from URL {fileUrl}"
+            );
+        }
+
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+
+        var response = await api.MoveFileAsync(token, fileId, folderId, cancellationToken);
+        var result = response.Response?.Result;
+
+        if (
+            !((HttpStatusCode)response.Status).IsSuccessStatusCode
+            || result is null
+            || result.Fail > 0
+            || result.Success < 1
+        )
+        {
+            throw new HttpRequestException(
+                result?.Errors.Count > 0
+                    ? $"Alfafile file move failed: {string.Join(", ", result.Errors)}"
+                    : response.Details ?? $"Alfafile file move failed with status {response.Status}"
+            );
+        }
+    }
+
     public async Task<UploadFileResponse> UploadFileAsync(
         string uploadUrl,
         Stream stream,

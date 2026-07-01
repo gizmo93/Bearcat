@@ -34,4 +34,11 @@ public interface IFichierApi
         [Body] CreateFolderRequest request,
         CancellationToken cancellationToken
     );
+
+    [Post("/file/mv.cgi")]
+    Task<MoveFileResponse> MoveFilesAsync(
+        [Header("Authorization")] string authorization,
+        [Body] MoveFileRequest request,
+        CancellationToken cancellationToken
+    );
 }

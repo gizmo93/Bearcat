@@ -16,6 +16,13 @@ public interface IKrakenFilesApiClient
         CancellationToken cancellationToken
     );
 
+    Task MoveFileToFolderAsync(
+        KrakenFilesConfig config,
+        string fileUrl,
+        string folderId,
+        CancellationToken cancellationToken
+    );
+
     Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
         KrakenFilesConfig config,
         IReadOnlyList<string> fileUrls,

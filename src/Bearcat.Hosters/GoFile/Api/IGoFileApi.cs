@@ -43,4 +43,11 @@ public interface IGoFileApi
         [Header("X-Website-Token")] string websiteToken,
         CancellationToken cancellationToken = default
     );
+
+    [Put("/contents/move")]
+    Task<MoveContent.Response> MoveContentAsync(
+        [Header("Authorization")] string apiToken,
+        [Body] MoveContent.Request request,
+        CancellationToken cancellationToken = default
+    );
 }

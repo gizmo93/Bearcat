@@ -321,6 +321,80 @@ public class ApiClientTest
         );
     }
 
+    [Test]
+    public async Task MoveFileToFolderAsync_ApiReportsSuccess_MovesFileByExtractedFileId()
+    {
+        // Arrange
+        apiMock
+            .Setup(x =>
+                x.MoveFileAsync("auth-token", "Gu", "dest-folder", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                new MoveFileResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Response = new MoveFileResponse.ResponseObject
+                    {
+                        Result = new MoveFileResponse.ResultObject
+                        {
+                            Success = 1,
+                            SuccessIds = ["Gu"],
+                        },
+                    },
+                }
+            );
+
+        // Act
+        await apiClient.MoveFileToFolderAsync(
+            config,
+            "https://alfafile.net/file/Gu",
+            "dest-folder",
+            CancellationToken.None
+        );
+
+        // Assert
+        apiMock.Verify(
+            x => x.MoveFileAsync("auth-token", "Gu", "dest-folder", It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task MoveFileToFolderAsync_ApiReportsFailure_Throws()
+    {
+        // Arrange
+        apiMock
+            .Setup(x =>
+                x.MoveFileAsync("auth-token", "Gu", "dest-folder", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                new MoveFileResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Response = new MoveFileResponse.ResponseObject
+                    {
+                        Result = new MoveFileResponse.ResultObject
+                        {
+                            Success = 0,
+                            Fail = 1,
+                            FailIds = ["Gu"],
+                            Errors = ["Conflict. File with the same name already exists"],
+                        },
+                    },
+                }
+            );
+
+        // Act & Assert
+        await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.MoveFileToFolderAsync(
+                config,
+                "https://alfafile.net/file/Gu",
+                "dest-folder",
+                CancellationToken.None
+            )
+        );
+    }
+
     private static void UpdateMaximum(ref int maximum, int current)
     {
         var initialMaximum = maximum;

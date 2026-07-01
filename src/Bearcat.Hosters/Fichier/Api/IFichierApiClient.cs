@@ -19,6 +19,13 @@ public interface IFichierApiClient
         CancellationToken cancellationToken
     );
 
+    Task MoveFileToFolderAsync(
+        FichierConfig config,
+        string fileUrl,
+        string folderId,
+        CancellationToken cancellationToken
+    );
+
     Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
         FichierConfig config,
         IReadOnlyList<string> fileUrls,

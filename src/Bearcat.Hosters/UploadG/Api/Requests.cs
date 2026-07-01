@@ -42,3 +42,8 @@ public record CreateShareableLinkRequest(
     [property: JsonPropertyName("allow_download")] bool AllowDownload,
     [property: JsonPropertyName("allow_edit")] bool AllowEdit
 );
+
+public record MoveEntriesRequest(
+    [property: JsonPropertyName("entryIds")] IReadOnlyList<long> EntryIds,
+    [property: JsonPropertyName("destinationId")] long? DestinationId
+);

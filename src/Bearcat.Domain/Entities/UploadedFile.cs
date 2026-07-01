@@ -18,6 +18,8 @@ public class UploadedFile
 
     public string? ExternalId { get; set; }
 
+    public string? HosterFolderId { get; set; }
+
     public List<string> ErrorMessages { get; set; } = [];
 
     public OnlineState OnlineState { get; set; }

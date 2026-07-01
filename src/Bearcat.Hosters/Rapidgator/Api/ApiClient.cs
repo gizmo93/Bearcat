@@ -94,6 +94,65 @@ public class ApiClient(
         return createdFolder.Response!.Folder!.FolderId;
     }
 
+    public async Task MoveFileToFolderAsync(
+        RapidgatorConfig config,
+        string fileUrl,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileId = ExtractFileId(fileUrl);
+
+        if (string.IsNullOrWhiteSpace(fileId))
+        {
+            throw new HttpRequestException(
+                $"Could not extract Rapidgator file id from URL {fileUrl}"
+            );
+        }
+
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+
+        var response = await api.MoveFileAsync(token, fileId, folderId, cancellationToken);
+        var result = response.Response?.Result;
+
+        if (
+            !((HttpStatusCode)response.Status).IsSuccessStatusCode
+            || result is null
+            || result.Fail > 0
+            || result.Success < 1
+        )
+        {
+            throw new HttpRequestException(
+                result?.Errors.Count > 0
+                    ? $"Rapidgator file move failed: {string.Join(", ", result.Errors)}"
+                    : response.Details
+                        ?? $"Rapidgator file move failed with status {response.Status}"
+            );
+        }
+    }
+
+    private static string? ExtractFileId(string fileUrl)
+    {
+        if (!Uri.TryCreate(fileUrl, UriKind.Absolute, out var uri))
+        {
+            return null;
+        }
+
+        var segments = uri
+            .Segments.Select(segment => segment.Trim('/'))
+            .Where(segment => !string.IsNullOrWhiteSpace(segment))
+            .ToArray();
+
+        var fileSegmentIndex = Array.FindIndex(
+            segments,
+            segment => string.Equals(segment, "file", StringComparison.OrdinalIgnoreCase)
+        );
+
+        return fileSegmentIndex >= 0 && fileSegmentIndex + 1 < segments.Length
+            ? segments[fileSegmentIndex + 1]
+            : null;
+    }
+
     public async Task<UploadFileResponse> UploadFileAsync(
         string uploadUrl,
         Stream stream,

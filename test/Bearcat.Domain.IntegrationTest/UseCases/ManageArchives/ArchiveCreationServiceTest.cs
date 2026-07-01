@@ -951,6 +951,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                     ArchiveFile = onlineArchiveFile,
                     HosterFileLink = "https://hoster.example/online",
                     ExternalId = "external-1",
+                    HosterFolderId = "source-folder",
                     OnlineState = OnlineState.Online,
                     CreatedAt = DateTime.UtcNow.AddHours(-1),
                     CheckedAt = DateTime.UtcNow.AddHours(-1),
@@ -987,6 +988,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         carriedFile.ArchiveFileId.ShouldBe(onlineArchiveFile.Id);
         carriedFile.HosterFileLink.ShouldBe("https://hoster.example/online");
         carriedFile.ExternalId.ShouldBe("external-1");
+        carriedFile.HosterFolderId.ShouldBe("source-folder");
         carriedFile.OnlineState.ShouldBe(OnlineState.Online);
     }
 

@@ -112,6 +112,22 @@ public class ApiClient(
             ?? throw new HttpRequestException("1fichier folder creation returned no folder id");
     }
 
+    public async Task MoveFileToFolderAsync(
+        FichierConfig config,
+        string fileUrl,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await api.MoveFilesAsync(
+            GetAuthorizationHeader(config.ApiKey),
+            new MoveFileRequest { Urls = [fileUrl], DestinationFolderId = ParseFolderId(folderId) },
+            cancellationToken
+        );
+
+        EnsureOk(response.Status, response.Message, "1fichier file move failed");
+    }
+
     public async Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
         FichierConfig config,
         IReadOnlyList<string> fileUrls,

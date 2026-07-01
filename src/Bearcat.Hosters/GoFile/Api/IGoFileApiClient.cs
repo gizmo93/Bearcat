@@ -20,6 +20,13 @@ public interface IGoFileApiClient
         CancellationToken cancellationToken
     );
 
+    Task MoveFileToFolderAsync(
+        string apiKey,
+        string fileUrl,
+        string folderId,
+        CancellationToken cancellationToken
+    );
+
     Task<IReadOnlyDictionary<string, (bool IsOnline, string? ErrorMessage)>> CheckOnlineStatusAsync(
         IReadOnlyList<string> fileUrls,
         string apiKey,

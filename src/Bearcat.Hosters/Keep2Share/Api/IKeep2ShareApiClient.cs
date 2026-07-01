@@ -32,6 +32,13 @@ public interface IKeep2ShareApiClient
         CancellationToken cancellationToken
     );
 
+    Task MoveFileToFolderAsync(
+        Keep2ShareConfig config,
+        string fileUrl,
+        string folderId,
+        CancellationToken cancellationToken
+    );
+
     Task<UploadFileResponse> UploadFileAsync(
         UploadFormDataResponse uploadFormData,
         Stream stream,

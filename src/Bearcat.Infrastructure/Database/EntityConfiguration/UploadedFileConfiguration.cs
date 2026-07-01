@@ -13,6 +13,7 @@ public class UploadedFileConfiguration : IEntityTypeConfiguration<UploadedFile>
         builder.Property(u => u.ArchiveFileId).IsRequired();
         builder.Property(u => u.HosterFileLink).IsRequired().HasMaxLength(500);
         builder.Property(u => u.ExternalId).IsRequired(false).HasMaxLength(200);
+        builder.Property(u => u.HosterFolderId).IsRequired(false);
         builder.Property(u => u.OnlineState).IsRequired();
         builder.Property(u => u.DownloadCount).IsRequired(false);
         builder.Property(u => u.CreatedAt).IsRequired().HasPrecision(4);

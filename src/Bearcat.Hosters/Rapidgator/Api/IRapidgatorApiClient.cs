@@ -44,4 +44,11 @@ public interface IRapidgatorApiClient
         RapidgatorConfig config,
         CancellationToken cancellationToken
     );
+
+    Task MoveFileToFolderAsync(
+        RapidgatorConfig config,
+        string fileUrl,
+        string folderId,
+        CancellationToken cancellationToken
+    );
 }

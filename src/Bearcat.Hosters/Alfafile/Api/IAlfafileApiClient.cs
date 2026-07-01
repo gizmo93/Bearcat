@@ -20,6 +20,13 @@ public interface IAlfafileApiClient
         CancellationToken cancellationToken
     );
 
+    Task MoveFileToFolderAsync(
+        AlfafileConfig config,
+        string fileUrl,
+        string folderId,
+        CancellationToken cancellationToken
+    );
+
     Task<UploadFileResponse> UploadFileAsync(
         string uploadUrl,
         Stream stream,

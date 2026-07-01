@@ -69,4 +69,11 @@ public interface IUploadGApi
         [Body] CreateShareableLinkRequest request,
         CancellationToken cancellationToken
     );
+
+    [Post("/file-entries/move")]
+    Task<StatusResponse> MoveEntriesAsync(
+        [Header("Authorization")] string authorization,
+        [Body] MoveEntriesRequest request,
+        CancellationToken cancellationToken
+    );
 }

@@ -210,6 +210,30 @@ public abstract class XFilesharingHosterBase<TConfig>(
         );
     }
 
+    public async Task MoveFileToFolderAsync(
+        string fileUrl,
+        string? externalId,
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<TConfig>();
+        var fileCode = ExtractFileCode(fileUrl);
+
+        if (string.IsNullOrWhiteSpace(fileCode))
+        {
+            throw new InvalidOperationException($"Could not extract file code from URL {fileUrl}");
+        }
+
+        await apiClient.SetFileFolderAsync(
+            apiKey: config.ApiKey,
+            fileCode: fileCode,
+            folderId: folderId,
+            cancellationToken: cancellationToken
+        );
+    }
+
     protected virtual string BuildFileUrl(string fileCode)
     {
         return string.Format(CultureInfo.InvariantCulture, FileUrlFormat, fileCode);

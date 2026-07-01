@@ -7,4 +7,12 @@ public interface IHosterWithFolders : IHoster
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken
     );
+
+    Task MoveFileToFolderAsync(
+        string fileUrl,
+        string? externalId,
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    );
 }

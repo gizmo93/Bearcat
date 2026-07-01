@@ -58,4 +58,12 @@ public interface IAlfafileApi
         [Query] [AliasAs("file_id")] string fileId,
         CancellationToken cancellationToken
     );
+
+    [Get("/api/v1/file/move")]
+    Task<MoveFileResponse> MoveFileAsync(
+        [Query] string token,
+        [Query] [AliasAs("file_id")] string fileId,
+        [Query] [AliasAs("folder_id_dest")] string folderIdDest,
+        CancellationToken cancellationToken
+    );
 }

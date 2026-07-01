@@ -159,6 +159,19 @@ public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> l
         return await apiClient.CreateFolderAsync(config, folderName, cancellationToken);
     }
 
+    public async Task MoveFileToFolderAsync(
+        string fileUrl,
+        string? externalId,
+        string folderId,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<KrakenFilesConfig>();
+
+        await apiClient.MoveFileToFolderAsync(config, fileUrl, folderId, cancellationToken);
+    }
+
     public async Task<TryLoginResult> TryLoginAsync(
         IHosterConfig hosterConfig,
         CancellationToken cancellationToken

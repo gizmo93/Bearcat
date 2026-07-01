@@ -132,6 +132,34 @@ public class ApiClient(
         return folder.Data.Id;
     }
 
+    public async Task MoveFileToFolderAsync(
+        string apiKey,
+        string fileUrl,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileId = TryExtractFileId(fileUrl);
+
+        if (string.IsNullOrWhiteSpace(fileId))
+        {
+            throw new HttpRequestException($"Could not extract GoFile file id from URL {fileUrl}");
+        }
+
+        var response = await api.MoveContentAsync(
+            GetAuthorizationHeader(apiKey),
+            new MoveContent.Request(ContentsId: fileId, FolderId: folderId),
+            cancellationToken
+        );
+
+        if (!string.Equals(response.Status, "ok", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new HttpRequestException(
+                $"GoFile file move failed with status {response.Status}"
+            );
+        }
+    }
+
     private async Task<string?> GetExistingRootFolderIdAsync(
         string rootFolderId,
         string folderName,

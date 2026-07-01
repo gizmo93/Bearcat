@@ -19,6 +19,13 @@ public interface IUploadGApiClient
         CancellationToken cancellationToken
     );
 
+    Task MoveFileToFolderAsync(
+        UploadGConfig config,
+        string externalId,
+        string folderId,
+        CancellationToken cancellationToken
+    );
+
     Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
         UploadGConfig config,
         IReadOnlyList<FileUrlToCheckDto> files,

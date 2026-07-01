@@ -193,6 +193,62 @@ public class ApiClient(
             ?? throw new HttpRequestException("Keep2Share folder creation returned no folder id");
     }
 
+    public async Task MoveFileToFolderAsync(
+        Keep2ShareConfig config,
+        string fileUrl,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileId = TryExtractFileId(fileUrl);
+
+        if (string.IsNullOrWhiteSpace(fileId))
+        {
+            throw new HttpRequestException(
+                $"Could not extract Keep2Share file id from URL {fileUrl}"
+            );
+        }
+
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+
+        UpdateFilesResponse response;
+
+        try
+        {
+            response = await api.UpdateFilesAsync(
+                new UpdateFilesRequest(AuthToken: token, Ids: [fileId], NewParent: folderId),
+                cancellationToken
+            );
+        }
+        catch (ApiException ex)
+        {
+            ThrowIfCaptchaVerificationRequired(ex);
+            throw;
+        }
+
+        var fileErrors =
+            response
+                .Files.FirstOrDefault(file =>
+                    string.Equals(file.Id, fileId, StringComparison.Ordinal)
+                )
+                ?.Errors
+            ?? [];
+
+        if (
+            response.Status != "success"
+            || !((HttpStatusCode)response.Code).IsSuccessStatusCode
+            || fileErrors.Count > 0
+        )
+        {
+            throw new HttpRequestException(
+                fileErrors.Count > 0
+                    ? $"Keep2Share file move failed: {string.Join(", ", fileErrors)}"
+                    : response.Message
+                        ?? $"Keep2Share file move failed with status={response.Status}, code={response.Code}"
+            );
+        }
+    }
+
     public async Task<UploadFileResponse> UploadFileAsync(
         UploadFormDataResponse uploadFormData,
         Stream stream,

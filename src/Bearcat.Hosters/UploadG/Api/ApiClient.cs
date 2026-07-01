@@ -214,6 +214,44 @@ public class ApiClient(
         return response.Folder.Id.ToString();
     }
 
+    public async Task MoveFileToFolderAsync(
+        UploadGConfig config,
+        string externalId,
+        string folderId,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!long.TryParse(externalId, out var entryId))
+        {
+            throw new HttpRequestException($"Invalid UploadG entry id: {externalId}");
+        }
+
+        if (!long.TryParse(folderId, out var destinationId))
+        {
+            throw new HttpRequestException($"Invalid UploadG folder id: {folderId}");
+        }
+
+        var authorization = GetAuthorizationHeader(config.ApiKey);
+
+        var response = await ExecuteFastApiRequestAsync(
+            operationName: "file move",
+            action: token =>
+                api.MoveEntriesAsync(
+                    authorization,
+                    new MoveEntriesRequest([entryId], destinationId),
+                    token
+                ),
+            cancellationToken: cancellationToken
+        );
+
+        if (!IsSuccess(response.Status))
+        {
+            throw new HttpRequestException(
+                $"UploadG file move failed with status {response.Status}"
+            );
+        }
+    }
+
     public async Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
         UploadGConfig config,
         IReadOnlyList<FileUrlToCheckDto> files,
