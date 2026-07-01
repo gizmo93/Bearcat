@@ -312,7 +312,11 @@ public class DDownloadTest
                 )
             )
             .ReturnsAsync(
-                new Dictionary<string, bool> { ["online-code"] = true, ["offline-code"] = false }
+                new Dictionary<string, XFilesharingFileStatus>
+                {
+                    ["online-code"] = new(Exists: true, DownloadCount: 150),
+                    ["offline-code"] = new(Exists: false, DownloadCount: null),
+                }
             );
 
         // Act
@@ -327,6 +331,9 @@ public class DDownloadTest
         result.IsSuccess.ShouldBeTrue();
         result.StatusPerFileUrl[fileUrls[0]].ShouldBeTrue();
         result.StatusPerFileUrl[fileUrls[1]].ShouldBeFalse();
+        result.DownloadCountPerFileUrl.ShouldNotBeNull();
+        result.DownloadCountPerFileUrl[fileUrls[0]].ShouldBe(150);
+        result.DownloadCountPerFileUrl.ShouldNotContainKey(fileUrls[1]);
         result.ErrorMessages.ShouldBeEmpty();
     }
 

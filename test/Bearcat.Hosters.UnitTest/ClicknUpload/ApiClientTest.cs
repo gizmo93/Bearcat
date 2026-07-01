@@ -30,6 +30,68 @@ public class ApiClientTest
     }
 
     [Test]
+    public void FileInfoResult_NumericDownloadsField_DeserializesDownloadsAsString()
+    {
+        // Arrange
+        const string json = """
+            {
+              "msg": "OK",
+              "status": 200,
+              "result": [
+                {
+                  "filecode": "abc123xyz456",
+                  "status": 200,
+                  "name": "video.mp4",
+                  "downloads": 150
+                }
+              ]
+            }
+            """;
+
+        // Act
+        var response = JsonSerializer.Deserialize<FileInfoResponse>(
+            json,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        );
+
+        // Assert
+        response.ShouldNotBeNull();
+        response.Results.ShouldHaveSingleItem();
+        response.Results[0].Downloads.ShouldBe("150");
+    }
+
+    [Test]
+    public void FileInfoResult_StringDownloadSingularField_DeserializesDownloadAsString()
+    {
+        // Arrange
+        const string json = """
+            {
+              "msg": "OK",
+              "status": 200,
+              "result": [
+                {
+                  "filecode": "gi4o0tlro01u",
+                  "status": 200,
+                  "name": "clip.mp4",
+                  "download": "0"
+                }
+              ]
+            }
+            """;
+
+        // Act
+        var response = JsonSerializer.Deserialize<FileInfoResponse>(
+            json,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        );
+
+        // Assert
+        response.ShouldNotBeNull();
+        response.Results.ShouldHaveSingleItem();
+        response.Results[0].Download.ShouldBe("0");
+    }
+
+    [Test]
     public void RequestUploadResponse_ResultField_MapsUploadUrl()
     {
         // Arrange

@@ -97,7 +97,12 @@ public class UploadyTest
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync(new Dictionary<string, bool> { ["online-code"] = true });
+            .ReturnsAsync(
+                new Dictionary<string, XFilesharingFileStatus>
+                {
+                    ["online-code"] = new(Exists: true, DownloadCount: null),
+                }
+            );
 
         // Act
         var result = await service.CheckFilesExistAsync(

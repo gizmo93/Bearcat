@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -14,13 +15,18 @@ public abstract class XFilesharingApiClient<TApi>(
 ) : IXFilesharingApiClient
     where TApi : IXFilesharingApi
 {
-    public async Task<Dictionary<string, bool>> FilesExistAsync(
+    protected TApi Api => api;
+
+    public virtual async Task<Dictionary<string, XFilesharingFileStatus>> FilesExistAsync(
         string apiKey,
         IReadOnlySet<string> fileCodes,
         CancellationToken cancellationToken
     )
     {
-        var result = fileCodes.ToDictionary(fileCode => fileCode, _ => false);
+        var result = fileCodes.ToDictionary(
+            fileCode => fileCode,
+            _ => new XFilesharingFileStatus(Exists: false, DownloadCount: null)
+        );
 
         foreach (var batch in fileCodes.Chunk(50))
         {
@@ -32,11 +38,26 @@ public abstract class XFilesharingApiClient<TApi>(
 
             foreach (var file in response.Results.Where(file => file.FileCode is not null))
             {
-                result[file.FileCode!] = file.Status == (int)HttpStatusCode.OK;
+                result[file.FileCode!] = new XFilesharingFileStatus(
+                    Exists: file.Status == (int)HttpStatusCode.OK,
+                    DownloadCount: ParseDownloadCount(file.Downloads ?? file.Download)
+                );
             }
         }
 
         return result;
+    }
+
+    protected static int? ParseDownloadCount(string? downloads)
+    {
+        return int.TryParse(
+            downloads,
+            NumberStyles.Integer,
+            CultureInfo.InvariantCulture,
+            out var count
+        )
+            ? count
+            : null;
     }
 
     public async Task<AccountInfoResponse> GetAccountInfoAsync(

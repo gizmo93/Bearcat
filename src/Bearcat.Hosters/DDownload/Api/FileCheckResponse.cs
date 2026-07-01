@@ -1,8 +1,9 @@
 using System.Text.Json.Serialization;
+using Bearcat.Hosters.Shared.XFilesharing.Api;
 
-namespace Bearcat.Hosters.Shared.XFilesharing.Api;
+namespace Bearcat.Hosters.DDownload.Api;
 
-public class FileInfoResponse
+public class FileCheckResponse
 {
     [JsonPropertyName("msg")]
     public string Msg { get; set; } = null!;
@@ -11,15 +12,21 @@ public class FileInfoResponse
     public int Status { get; set; }
 
     [JsonPropertyName("result")]
-    public FileInfoResult[] Results { get; set; } = [];
+    public FileCheckResult Result { get; set; } = new();
 }
 
-public class FileInfoResult
+public class FileCheckResult
+{
+    [JsonPropertyName("files")]
+    public FileCheckFile[] Files { get; set; } = [];
+}
+
+public class FileCheckFile
 {
     [JsonPropertyName("status")]
     public int Status { get; set; }
 
-    [JsonPropertyName("filecode")]
+    [JsonPropertyName("file_code")]
     public string? FileCode { get; set; }
 
     [JsonPropertyName("name")]
@@ -28,8 +35,4 @@ public class FileInfoResult
     [JsonPropertyName("downloads")]
     [JsonConverter(typeof(StringOrNumberJsonConverter))]
     public string? Downloads { get; set; }
-
-    [JsonPropertyName("download")]
-    [JsonConverter(typeof(StringOrNumberJsonConverter))]
-    public string? Download { get; set; }
 }

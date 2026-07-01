@@ -2,7 +2,7 @@ namespace Bearcat.Hosters.Shared.XFilesharing.Api;
 
 public interface IXFilesharingApiClient
 {
-    Task<Dictionary<string, bool>> FilesExistAsync(
+    Task<Dictionary<string, XFilesharingFileStatus>> FilesExistAsync(
         string apiKey,
         IReadOnlySet<string> fileCodes,
         CancellationToken cancellationToken

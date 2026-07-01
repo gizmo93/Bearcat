@@ -105,14 +105,27 @@ public abstract class XFilesharingHosterBase<TConfig>(
                 cancellationToken: cancellationToken
             );
 
-            var statusPerFileUrl = results
+            var matchedResults = results
                 .Where(kvp => fileUrlByFileCode.ContainsKey(kvp.Key))
-                .ToDictionary(kvp => fileUrlByFileCode[kvp.Key], kvp => kvp.Value);
+                .ToList();
+
+            var statusPerFileUrl = matchedResults.ToDictionary(
+                kvp => fileUrlByFileCode[kvp.Key],
+                kvp => kvp.Value.Exists
+            );
+
+            var downloadCountPerFileUrl = matchedResults
+                .Where(kvp => kvp.Value.DownloadCount is not null)
+                .ToDictionary(
+                    kvp => fileUrlByFileCode[kvp.Key],
+                    kvp => kvp.Value.DownloadCount!.Value
+                );
 
             return new FileExistResult(
                 IsSuccess: true,
                 ErrorMessages: [],
-                StatusPerFileUrl: statusPerFileUrl
+                StatusPerFileUrl: statusPerFileUrl,
+                DownloadCountPerFileUrl: downloadCountPerFileUrl
             );
         }
         catch (Exception ex)

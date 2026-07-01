@@ -22,6 +22,8 @@ public class UploadedFile
 
     public OnlineState OnlineState { get; set; }
 
+    public int? DownloadCount { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime? CheckedAt { get; set; }

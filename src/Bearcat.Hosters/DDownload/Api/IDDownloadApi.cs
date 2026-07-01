@@ -18,6 +18,13 @@ public interface IDDownloadApi : IXFilesharingApi
         CancellationToken cancellationToken
     );
 
+    [Get("/file/check")]
+    Task<FileCheckResponse> CheckFilesAsync(
+        [Query] [AliasAs("key")] string apiKey,
+        [Query] [AliasAs("file_code")] string fileCodes,
+        CancellationToken cancellationToken
+    );
+
     [Get("/upload/server")]
     new Task<ApiResponse<RequestUploadResponse>> RequestUploadAsync(
         [Query] [AliasAs("key")] string apiKey,

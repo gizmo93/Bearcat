@@ -52,6 +52,105 @@ public class ApiClientTest
     }
 
     [Test]
+    public void FileCheckResponse_RealResponse_DeserializesFilesWithDownloads()
+    {
+        // Arrange
+        const string json = """
+            {
+              "msg": "OK",
+              "result": {
+                "files": [
+                  {
+                    "downloads": 0,
+                    "file_code": "oejag2gpfcr0",
+                    "name": "part58.rar",
+                    "size": "105906178",
+                    "status": 200,
+                    "uploaded": "2026-05-31 19:39:51"
+                  },
+                  {
+                    "file_code": "ni6z27dyros2",
+                    "msg": "Not found",
+                    "status": 404
+                  }
+                ],
+                "stats": { "dmca": 0, "found": 1, "not_found": 1 },
+                "total": 2
+              },
+              "status": 200
+            }
+            """;
+
+        // Act
+        var response = JsonSerializer.Deserialize<FileCheckResponse>(
+            json,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        );
+
+        // Assert
+        response.ShouldNotBeNull();
+        response.Result.Files.Length.ShouldBe(2);
+        response.Result.Files[0].FileCode.ShouldBe("oejag2gpfcr0");
+        response.Result.Files[0].Downloads.ShouldBe("0");
+        response.Result.Files[1].FileCode.ShouldBe("ni6z27dyros2");
+        response.Result.Files[1].Downloads.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task FilesExistAsync_ApiReturnsFileCheckResults_MapsExistenceAndDownloadCount()
+    {
+        // Arrange
+        apiMock
+            .Setup(x =>
+                x.CheckFilesAsync("api-key", It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                new FileCheckResponse
+                {
+                    Msg = "OK",
+                    Status = (int)HttpStatusCode.OK,
+                    Result = new FileCheckResult
+                    {
+                        Files =
+                        [
+                            new FileCheckFile
+                            {
+                                FileCode = "online-code",
+                                Status = (int)HttpStatusCode.OK,
+                                Downloads = "150",
+                            },
+                            new FileCheckFile
+                            {
+                                FileCode = "not-found-code",
+                                Status = (int)HttpStatusCode.NotFound,
+                            },
+                            new FileCheckFile
+                            {
+                                FileCode = "dmca-code",
+                                Status = (int)HttpStatusCode.UnavailableForLegalReasons,
+                            },
+                        ],
+                    },
+                }
+            );
+
+        // Act
+        var result = await apiClient.FilesExistAsync(
+            "api-key",
+            new HashSet<string> { "online-code", "not-found-code", "dmca-code" },
+            CancellationToken.None
+        );
+
+        // Assert
+        result["online-code"].Exists.ShouldBeTrue();
+        result["online-code"].DownloadCount.ShouldBe(150);
+        result["not-found-code"].Exists.ShouldBeFalse();
+        result["not-found-code"].DownloadCount.ShouldBeNull();
+        result["dmca-code"].Exists.ShouldBeFalse();
+        result["dmca-code"].DownloadCount.ShouldBeNull();
+    }
+
+    [Test]
     public async Task CreateFolderAsync_ExistingRootFolderWithName_ReturnsExistingFolderId()
     {
         // Arrange

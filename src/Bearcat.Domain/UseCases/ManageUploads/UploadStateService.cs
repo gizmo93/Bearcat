@@ -306,6 +306,11 @@ public class UploadStateService(
 
             file.OnlineState = exists ? OnlineState.Online : OnlineState.Offline;
             file.CheckedAt = localNow;
+
+            if (result.DownloadCountPerFileUrl?.TryGetValue(url, out var downloadCount) == true)
+            {
+                file.DownloadCount = downloadCount;
+            }
         }
 
         var offlineFilesCount = upload.UploadedFiles.Count(f =>

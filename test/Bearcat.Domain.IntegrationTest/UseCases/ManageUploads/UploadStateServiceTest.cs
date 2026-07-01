@@ -116,6 +116,58 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task CheckUploadStatesAsync_HosterReportsDownloadCounts_PersistsDownloadCountPerFile()
+    {
+        // Arrange
+        await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"]
+        );
+        await dbContext.SaveChangesAsync();
+
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(
+                    true,
+                    [],
+                    new Dictionary<string, bool>
+                    {
+                        ["https://hoster.test/1"] = true,
+                        ["https://hoster.test/2"] = true,
+                    },
+                    new Dictionary<string, int> { ["https://hoster.test/1"] = 150 }
+                )
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+
+        var firstFile = result.UploadedFiles.Single(f =>
+            f.HosterFileLink == "https://hoster.test/1"
+        );
+        var secondFile = result.UploadedFiles.Single(f =>
+            f.HosterFileLink == "https://hoster.test/2"
+        );
+
+        firstFile.DownloadCount.ShouldBe(150);
+        secondFile.DownloadCount.ShouldBeNull();
+        hosterMock.VerifyAll();
+        hosterFactoryMock.VerifyAll();
+    }
+
+    [Test]
     public async Task CheckUploadStatesAsync_PreviousUploadSupersededByNewerCompletedUpload_OnlyChecksNewestUpload()
     {
         // Arrange
