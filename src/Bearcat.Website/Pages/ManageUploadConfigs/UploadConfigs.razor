@@ -46,18 +46,24 @@
                                     }
                                 </div>
                                 <p class="mt-1 text-xs text-muted-foreground">@L["HosterTarget"]</p>
-                                <div class="mt-2 flex flex-col gap-1 text-xs text-muted-foreground">
-                                    <span class="inline-flex items-center gap-1.5" title="@L["IndividualDownloadsHint"]">
-                                        <LucideIcon Name="download" class="h-3 w-3 shrink-0" />
-                                        <span>@L["IndividualDownloads"]</span>
-                                        <span class="font-medium text-foreground tabular-nums">@config.TotalIndividualDownloads.ToString("N0", CultureInfo.CurrentCulture)</span>
-                                    </span>
-                                    <span class="inline-flex items-center gap-1.5" title="@L["CompleteDownloadsHint"]">
-                                        <LucideIcon Name="package-check" class="h-3 w-3 shrink-0" />
-                                        <span>@L["CompleteDownloads"]</span>
-                                        <span class="font-medium text-foreground tabular-nums">@config.TotalCompleteDownloads.ToString("N0", CultureInfo.CurrentCulture)</span>
-                                    </span>
-                                </div>
+                                @if (config.TotalIndividualDownloads is not null)
+                                {
+                                    <div class="mt-2 flex flex-col gap-1 text-xs text-muted-foreground">
+                                        <span class="inline-flex items-center gap-1.5" title="@L["IndividualDownloadsHint"]">
+                                            <LucideIcon Name="download" class="h-3 w-3 shrink-0" />
+                                            <span>@L["IndividualDownloads"]</span>
+                                            <span class="font-medium text-foreground tabular-nums">@config.TotalIndividualDownloads.Value.ToString("N0", CultureInfo.CurrentCulture)</span>
+                                        </span>
+                                        @if (config.TotalCompleteDownloads is not null)
+                                        {
+                                            <span class="inline-flex items-center gap-1.5" title="@L["CompleteDownloadsHint"]">
+                                                <LucideIcon Name="package-check" class="h-3 w-3 shrink-0" />
+                                                <span>@L["CompleteDownloads"]</span>
+                                                <span class="font-medium text-foreground tabular-nums">@config.TotalCompleteDownloads.Value.ToString("N0", CultureInfo.CurrentCulture)</span>
+                                            </span>
+                                        }
+                                    </div>
+                                }
                             </div>
 
                             <div class="min-w-0">

@@ -142,7 +142,31 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
         // Assert
         var config = result.ShouldHaveSingleItem();
         config.TotalIndividualDownloads.ShouldBe(40);
-        config.TotalCompleteDownloads.ShouldBe(15);
+        config.TotalCompleteDownloads.ShouldBe(15d);
+    }
+
+    [Test]
+    public async Task GetUploadConfigsAsync_NoDownloadCountsKnown_LeavesAggregatesNull()
+    {
+        // Arrange
+        var seed = await AddUploadConfigDependenciesAsync();
+        var uploadConfig = await AddUploadConfigAsync(seed);
+        var archive = await AddArchiveAsync(seed.ArchiveConfigId);
+
+        await AddUploadWithFilesAsync(uploadConfig.Id, archive.Id, [null, null]);
+
+        var readRepository = new UploadConfigReadRepository(dbContext);
+
+        // Act
+        var result = await readRepository.GetUploadConfigsAsync(
+            seed.ReleaseId,
+            CancellationToken.None
+        );
+
+        // Assert
+        var config = result.ShouldHaveSingleItem();
+        config.TotalIndividualDownloads.ShouldBeNull();
+        config.TotalCompleteDownloads.ShouldBeNull();
     }
 
     private async Task<Archive> AddArchiveAsync(int archiveConfigId)

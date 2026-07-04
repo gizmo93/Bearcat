@@ -62,16 +62,18 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
             u.ArchiveConfig.Name,
             u.Release.Name,
             u.PremiumOnlyDownload,
-            u.Uploads.SelectMany(upload => upload.UploadedFiles)
-                .Sum(file => file.DownloadCount ?? 0),
-            (int)
-                Math.Round(
-                    u.Uploads.Sum(upload =>
-                        upload
-                            .UploadedFiles.Where(file => file.DownloadCount != null)
-                            .Average(file => (double?)file.DownloadCount)
-                        ?? 0d
-                    )
+            u.Uploads.Any(upload => upload.UploadedFiles.Any(file => file.DownloadCount != null))
+                ? u
+                    .Uploads.SelectMany(upload => upload.UploadedFiles)
+                    .Sum(file => file.DownloadCount ?? 0)
+                : (int?)null,
+            u.Uploads.Any(upload => upload.UploadedFiles.Any(file => file.DownloadCount != null))
+                ? u.Uploads.Sum(upload =>
+                    upload
+                        .UploadedFiles.Where(file => file.DownloadCount != null)
+                        .Average(file => (double?)file.DownloadCount)
+                    ?? 0d
                 )
+                : (double?)null
         );
 }
