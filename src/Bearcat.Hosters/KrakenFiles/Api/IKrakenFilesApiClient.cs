@@ -1,3 +1,5 @@
+using Bearcat.Hosters.Shared;
+
 namespace Bearcat.Hosters.KrakenFiles.Api;
 
 public interface IKrakenFilesApiClient
@@ -23,7 +25,7 @@ public interface IKrakenFilesApiClient
         CancellationToken cancellationToken
     );
 
-    Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
+    Task<IReadOnlyDictionary<string, LinkCheckStatus>> CheckLinksAsync(
         KrakenFilesConfig config,
         IReadOnlyList<string> fileUrls,
         CancellationToken cancellationToken

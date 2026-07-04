@@ -45,6 +45,14 @@ public interface IAlfafileApi
         CancellationToken cancellationToken
     );
 
+    [Get("/api/v1/folder/content")]
+    Task<ApiResponse<FolderContentResponse>> GetFolderContentAsync(
+        [Query] string token,
+        [Query] [AliasAs("folder_id")] string? folderId,
+        [Query] int page,
+        CancellationToken cancellationToken
+    );
+
     [Get("/api/v1/file/upload_info")]
     Task<UploadFileResponse> GetUploadInfoAsync(
         [Query] string token,

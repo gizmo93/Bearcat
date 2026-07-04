@@ -95,16 +95,22 @@ public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> l
 
         try
         {
-            var statusPerFileUrl = await apiClient.CheckLinksAsync(
-                config,
-                fileUrls,
-                cancellationToken
+            var checkResults = await apiClient.CheckLinksAsync(config, fileUrls, cancellationToken);
+
+            var statusPerFileUrl = checkResults.ToDictionary(
+                result => result.Key,
+                result => result.Value.IsOnline
             );
+
+            var downloadCountPerFileUrl = checkResults
+                .Where(result => result.Value.DownloadCount is not null)
+                .ToDictionary(result => result.Key, result => result.Value.DownloadCount!.Value);
 
             return new FileExistResult(
                 IsSuccess: true,
                 ErrorMessages: [],
-                StatusPerFileUrl: statusPerFileUrl
+                StatusPerFileUrl: statusPerFileUrl,
+                DownloadCountPerFileUrl: downloadCountPerFileUrl
             );
         }
         catch (Exception ex)

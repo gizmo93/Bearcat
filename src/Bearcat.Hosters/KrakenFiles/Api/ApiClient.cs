@@ -164,7 +164,7 @@ public class ApiClient(
         }
     }
 
-    public async Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
+    public async Task<IReadOnlyDictionary<string, LinkCheckStatus>> CheckLinksAsync(
         KrakenFilesConfig config,
         IReadOnlyList<string> fileUrls,
         CancellationToken cancellationToken
@@ -186,7 +186,10 @@ public class ApiClient(
 
         return results
             .Where(result => result.IsOnline.HasValue)
-            .ToDictionary(result => result.FileUrl, result => result.IsOnline!.Value);
+            .ToDictionary(
+                result => result.FileUrl,
+                result => new LinkCheckStatus(result.IsOnline!.Value, result.DownloadCount)
+            );
     }
 
     public async Task<bool> IsApiKeyValidAsync(
@@ -200,7 +203,7 @@ public class ApiClient(
             || response.StatusCode == HttpStatusCode.OK;
     }
 
-    private async Task<(string FileUrl, bool? IsOnline)> CheckLinkAsync(
+    private async Task<(string FileUrl, bool? IsOnline, int? DownloadCount)> CheckLinkAsync(
         KrakenFilesConfig config,
         string fileUrl,
         SemaphoreSlim semaphore,
@@ -211,7 +214,7 @@ public class ApiClient(
 
         if (fileHash is null)
         {
-            return (fileUrl, null);
+            return (fileUrl, null, null);
         }
 
         await semaphore.WaitAsync(cancellationToken);
@@ -219,8 +222,9 @@ public class ApiClient(
         try
         {
             var response = await api.GetFileAsync(fileHash, config.ApiKey, cancellationToken);
+            var isOnline = response.StatusCode == HttpStatusCode.OK;
 
-            return (fileUrl, response.StatusCode == HttpStatusCode.OK);
+            return (fileUrl, isOnline, isOnline ? response.Content?.Data?.Downloads : null);
         }
         catch (Exception ex)
         {
@@ -231,7 +235,7 @@ public class ApiClient(
                 ex.InnerException?.Message ?? ex.Message
             );
 
-            return (fileUrl, null);
+            return (fileUrl, null, null);
         }
         finally
         {

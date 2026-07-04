@@ -17,5 +17,7 @@ public record FileData
 
     public string? Hash { get; init; }
 
+    public int? Downloads { get; init; }
+
     public string? Message { get; init; }
 }

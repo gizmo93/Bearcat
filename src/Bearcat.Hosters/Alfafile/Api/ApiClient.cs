@@ -176,7 +176,7 @@ public class ApiClient(
         return await api.GetUploadInfoAsync(token, uploadId, cancellationToken);
     }
 
-    public async Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
+    public async Task<IReadOnlyDictionary<string, LinkCheckStatus>> CheckLinksAsync(
         AlfafileConfig config,
         IReadOnlyList<string> fileUrls,
         CancellationToken cancellationToken
@@ -200,12 +200,86 @@ public class ApiClient(
 
         var results = await Task.WhenAll(checkTasks);
 
+        var folderIds = results
+            .Where(result => result.File is not null)
+            .Select(result => result.File!.FolderId)
+            .Distinct()
+            .ToList();
+
+        var downloadCountByFileId = await GetDownloadCountsByFileIdAsync(
+            token: token,
+            folderIds: folderIds,
+            cancellationToken: cancellationToken
+        );
+
         return results
             .Where(result => result.IsOnline.HasValue)
-            .ToDictionary(result => result.FileUrl, result => result.IsOnline!.Value);
+            .ToDictionary(
+                result => result.FileUrl,
+                result => new LinkCheckStatus(
+                    result.IsOnline!.Value,
+                    result.File is { FileId: not null } file
+                        ? downloadCountByFileId.GetValueOrDefault(file.FileId)
+                        : null
+                )
+            );
     }
 
-    private async Task<(string FileUrl, bool? IsOnline)> CheckLinkAsync(
+    private async Task<Dictionary<string, int?>> GetDownloadCountsByFileIdAsync(
+        string token,
+        IReadOnlyList<string?> folderIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var downloadCountByFileId = new Dictionary<string, int?>();
+
+        foreach (var folderId in folderIds)
+        {
+            try
+            {
+                var page = 1;
+
+                while (true)
+                {
+                    var response = await api.GetFolderContentAsync(
+                        token: token,
+                        folderId: folderId,
+                        page: page,
+                        cancellationToken: cancellationToken
+                    );
+
+                    var files = response.Content?.Response?.Folder?.Files ?? [];
+
+                    foreach (var file in files.Where(file => file.FileId is not null))
+                    {
+                        downloadCountByFileId[file.FileId] = file.NbDownloads;
+                    }
+
+                    var pager = response.Content?.Response?.Pager;
+
+                    if (pager is null || pager.Current >= pager.Total)
+                    {
+                        break;
+                    }
+
+                    page++;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(
+                    ex,
+                    "Failed to fetch Alfafile folder content for folder {FolderId} to read download counts: {Message}",
+                    folderId,
+                    ex.InnerException?.Message ?? ex.Message
+                );
+            }
+        }
+
+        return downloadCountByFileId;
+    }
+
+    private async Task<(string FileUrl, bool? IsOnline, UploadedFile? File)> CheckLinkAsync(
         string token,
         string fileUrl,
         SemaphoreSlim semaphore,
@@ -216,7 +290,7 @@ public class ApiClient(
 
         if (string.IsNullOrWhiteSpace(fileId))
         {
-            return (fileUrl, null);
+            return (fileUrl, null, null);
         }
 
         foreach (var attempt in Enumerable.Range(1, MaxLinkCheckAttempts))
@@ -237,14 +311,13 @@ public class ApiClient(
                 }
                 else
                 {
-                    var content = response.Content;
-
-                    return (
-                        fileUrl,
+                    var file = response.Content?.Response?.File;
+                    var isOnline =
                         response.IsSuccessStatusCode
-                            && content
-                                is { Status: (int)HttpStatusCode.OK, Response.File: not null }
-                    );
+                        && response.Content is { Status: (int)HttpStatusCode.OK }
+                        && file is not null;
+
+                    return (fileUrl, isOnline, isOnline ? file : null);
                 }
             }
             catch (ApiException exception)
@@ -278,7 +351,7 @@ public class ApiClient(
             }
         }
 
-        return (fileUrl, null);
+        return (fileUrl, null, null);
     }
 
     public async Task<InfoResponse> GetUserInfoAsync(

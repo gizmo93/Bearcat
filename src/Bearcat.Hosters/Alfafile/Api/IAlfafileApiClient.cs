@@ -1,5 +1,6 @@
 using Bearcat.Hosters.Alfafile.Api.File;
 using Bearcat.Hosters.Alfafile.Api.User;
+using Bearcat.Hosters.Shared;
 
 namespace Bearcat.Hosters.Alfafile.Api;
 
@@ -40,7 +41,7 @@ public interface IAlfafileApiClient
         CancellationToken cancellationToken
     );
 
-    Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
+    Task<IReadOnlyDictionary<string, LinkCheckStatus>> CheckLinksAsync(
         AlfafileConfig config,
         IReadOnlyList<string> fileUrls,
         CancellationToken cancellationToken

@@ -44,6 +44,28 @@ public class ApiClientTest
                 )
             );
 
+        apiMock
+            .Setup(x =>
+                x.GetFolderContentAsync(
+                    "auth-token",
+                    It.IsAny<string?>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new FolderContentResponse
+                    {
+                        Status = (int)HttpStatusCode.OK,
+                        Response = new FolderContentResponse.ResponseObject
+                        {
+                            Pager = new FolderContentResponse.Pager { Current = 1, Total = 1 },
+                        },
+                    }
+                )
+            );
+
         apiClient = new ApiClient(
             apiMock.Object,
             new HttpClientProvider(httpClientFactoryMock.Object),
@@ -243,7 +265,7 @@ public class ApiClientTest
 
         // Assert
         result.Count.ShouldBe(25);
-        result.Values.ShouldAllBe(isOnline => isOnline);
+        result.Values.ShouldAllBe(status => status.IsOnline);
         maximumParallelRequests.ShouldBe(10);
     }
 
@@ -285,7 +307,7 @@ public class ApiClientTest
         var result = await apiClient.CheckLinksAsync(config, [fileUrl], CancellationToken.None);
 
         // Assert
-        result[fileUrl].ShouldBeTrue();
+        result[fileUrl].IsOnline.ShouldBeTrue();
         calls.ShouldBe(2);
     }
 
@@ -306,6 +328,63 @@ public class ApiClientTest
 
         // Assert
         result.ShouldNotContainKey(fileUrl);
+    }
+
+    [Test]
+    public async Task CheckLinksAsync_FolderContentReportsDownloads_MapsDownloadCountToFileUrl()
+    {
+        // Arrange
+        var fileUrl = "https://alfafile.net/file/GA";
+
+        apiMock
+            .Setup(x => x.GetFileInfoAsync("auth-token", "GA", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new FileInfoResponse
+                    {
+                        Status = (int)HttpStatusCode.OK,
+                        Response = new FileInfoResponse.ResponseObject
+                        {
+                            File = new UploadedFile { FileId = "GA", FolderId = "7" },
+                        },
+                    }
+                )
+            );
+
+        apiMock
+            .Setup(x =>
+                x.GetFolderContentAsync("auth-token", "7", 1, It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new FolderContentResponse
+                    {
+                        Status = (int)HttpStatusCode.OK,
+                        Response = new FolderContentResponse.ResponseObject
+                        {
+                            Folder = new FolderContentResponse.FolderContent
+                            {
+                                Files =
+                                [
+                                    new FolderContentResponse.ContentFile
+                                    {
+                                        FileId = "GA",
+                                        NbDownloads = 42,
+                                    },
+                                ],
+                            },
+                            Pager = new FolderContentResponse.Pager { Current = 1, Total = 1 },
+                        },
+                    }
+                )
+            );
+
+        // Act
+        var result = await apiClient.CheckLinksAsync(config, [fileUrl], CancellationToken.None);
+
+        // Assert
+        result[fileUrl].IsOnline.ShouldBeTrue();
+        result[fileUrl].DownloadCount.ShouldBe(42);
     }
 
     private static ApiResponse<T> CreateApiResponse<T>(

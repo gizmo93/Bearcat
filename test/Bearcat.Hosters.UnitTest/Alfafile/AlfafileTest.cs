@@ -6,6 +6,7 @@ using Bearcat.Hosters.Alfafile;
 using Bearcat.Hosters.Alfafile.Api;
 using Bearcat.Hosters.Alfafile.Api.File;
 using Bearcat.Hosters.Alfafile.Api.User;
+using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
@@ -232,7 +233,11 @@ public class AlfafileTest
         apiClientMock
             .Setup(x => x.CheckLinksAsync(config, fileUrls, It.IsAny<CancellationToken>()))
             .ReturnsAsync(
-                new Dictionary<string, bool> { [fileUrls[0]] = true, [fileUrls[1]] = false }
+                new Dictionary<string, LinkCheckStatus>
+                {
+                    [fileUrls[0]] = new LinkCheckStatus(true, 42),
+                    [fileUrls[1]] = new LinkCheckStatus(false, null),
+                }
             );
 
         // Act
@@ -247,6 +252,9 @@ public class AlfafileTest
         result.IsSuccess.ShouldBeTrue();
         result.StatusPerFileUrl[fileUrls[0]].ShouldBeTrue();
         result.StatusPerFileUrl[fileUrls[1]].ShouldBeFalse();
+        result.DownloadCountPerFileUrl.ShouldNotBeNull();
+        result.DownloadCountPerFileUrl[fileUrls[0]].ShouldBe(42);
+        result.DownloadCountPerFileUrl.ShouldNotContainKey(fileUrls[1]);
         result.ErrorMessages.ShouldBeEmpty();
     }
 
