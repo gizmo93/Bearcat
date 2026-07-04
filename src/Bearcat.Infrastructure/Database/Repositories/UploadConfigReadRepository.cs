@@ -1,4 +1,6 @@
-﻿using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
+﻿using System.Linq.Expressions;
+using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,16 +16,7 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
         return await dbRead
             .UploadConfigs.Where(u => u.ReleaseId == releaseId)
             .OrderBy(u => u.Id)
-            .Select(u => new UploadConfigReadModel(
-                u.Id,
-                u.Name,
-                u.HosterRegistration.Name,
-                u.HosterRegistrationId,
-                u.ArchiveConfigId,
-                u.ArchiveConfig.Name,
-                u.Release.Name,
-                u.PremiumOnlyDownload
-            ))
+            .Select(ToReadModel)
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
@@ -35,16 +28,7 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
         return await dbRead
             .UploadConfigs.Where(u => u.Id == uploadConfigId)
             .OrderBy(u => u.Id)
-            .Select(u => new UploadConfigReadModel(
-                u.Id,
-                u.Name,
-                u.HosterRegistration.Name,
-                u.HosterRegistrationId,
-                u.ArchiveConfigId,
-                u.ArchiveConfig.Name,
-                u.Release.Name,
-                u.PremiumOnlyDownload
-            ))
+            .Select(ToReadModel)
             .FirstAsync(cancellationToken: cancellationToken);
     }
 
@@ -67,4 +51,27 @@ public class UploadConfigReadRepository(IBearcatReadDbContext dbRead) : IUploadC
             .Select(a => new ArchiveConfigOptionReadModel(a.Id, a.Name, a.ArchiveFileSizeMb))
             .ToListAsync(cancellationToken: cancellationToken);
     }
+
+    private static readonly Expression<Func<UploadConfig, UploadConfigReadModel>> ToReadModel =
+        u => new UploadConfigReadModel(
+            u.Id,
+            u.Name,
+            u.HosterRegistration.Name,
+            u.HosterRegistrationId,
+            u.ArchiveConfigId,
+            u.ArchiveConfig.Name,
+            u.Release.Name,
+            u.PremiumOnlyDownload,
+            u.Uploads.SelectMany(upload => upload.UploadedFiles)
+                .Sum(file => file.DownloadCount ?? 0),
+            (int)
+                Math.Round(
+                    u.Uploads.Sum(upload =>
+                        upload
+                            .UploadedFiles.Where(file => file.DownloadCount != null)
+                            .Average(file => (double?)file.DownloadCount)
+                        ?? 0d
+                    )
+                )
+        );
 }

@@ -469,6 +469,11 @@
   <data name="UrlType.Other" xml:space="preserve"><value>Andere</value></data>
   <data name="VideoType" xml:space="preserve"><value>Video</value></data>
   <data name="CheckedAt" xml:space="preserve"><value>Geprüft am</value></data>
+  <data name="Downloads" xml:space="preserve"><value>Downloads</value></data>
+  <data name="IndividualDownloads" xml:space="preserve"><value>Einzeldownloads</value></data>
+  <data name="IndividualDownloadsHint" xml:space="preserve"><value>Summe aller Part-Downloadzahlen über alle Uploads dieser Konfiguration.</value></data>
+  <data name="CompleteDownloads" xml:space="preserve"><value>Vollständige Downloads</value></data>
+  <data name="CompleteDownloadsHint" xml:space="preserve"><value>Geschätzte Anzahl vollständiger Downloads: die Summe der durchschnittlichen Downloadzahl pro Upload.</value></data>
   <data name="ViewContainerLinks" xml:space="preserve"><value>Containerlinks anzeigen</value></data>
   <data name="ViewUploadLinks" xml:space="preserve"><value>Uploadlinks anzeigen</value></data>
   <data name="Welcome" xml:space="preserve"><value>Willkommen</value></data>

@@ -982,7 +982,8 @@ public class ReleaseReadRepository(
                 f.HosterFileLink,
                 f.OnlineState,
                 f.CheckedAt,
-                f.ErrorMessages
+                f.ErrorMessages,
+                f.DownloadCount
             ))
             .ToListAsync(cancellationToken: cancellationToken);
 

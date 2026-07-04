@@ -120,6 +120,86 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
         result.ShouldNotContainKey(inactiveSeed.HosterRegistrationId);
     }
 
+    [Test]
+    public async Task GetUploadConfigsAsync_UploadsWithDownloadCounts_AggregatesIndividualAndCompleteDownloads()
+    {
+        // Arrange
+        var seed = await AddUploadConfigDependenciesAsync();
+        var uploadConfig = await AddUploadConfigAsync(seed);
+        var archive = await AddArchiveAsync(seed.ArchiveConfigId);
+
+        await AddUploadWithFilesAsync(uploadConfig.Id, archive.Id, [10, 12, 8]);
+        await AddUploadWithFilesAsync(uploadConfig.Id, archive.Id, [4, 6, null]);
+
+        var readRepository = new UploadConfigReadRepository(dbContext);
+
+        // Act
+        var result = await readRepository.GetUploadConfigsAsync(
+            seed.ReleaseId,
+            CancellationToken.None
+        );
+
+        // Assert
+        var config = result.ShouldHaveSingleItem();
+        config.TotalIndividualDownloads.ShouldBe(40);
+        config.TotalCompleteDownloads.ShouldBe(15);
+    }
+
+    private async Task<Archive> AddArchiveAsync(int archiveConfigId)
+    {
+        var archive = new Archive
+        {
+            ArchiveConfigId = archiveConfigId,
+            ArchiveFolderPath = "/tmp/archive",
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 512,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        dbContext.Archives.Add(archive);
+        await dbContext.SaveChangesAsync();
+
+        return archive;
+    }
+
+    private async Task AddUploadWithFilesAsync(
+        int uploadConfigId,
+        int archiveId,
+        IReadOnlyList<int?> downloadCounts
+    )
+    {
+        var upload = new Upload
+        {
+            UploadConfigId = uploadConfigId,
+            ArchiveId = archiveId,
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Online,
+            CreatedAt = DateTime.UtcNow,
+            UploadedFiles = [],
+        };
+
+        foreach (var (downloadCount, index) in downloadCounts.Select((value, i) => (value, i)))
+        {
+            upload.UploadedFiles.Add(
+                new UploadedFile
+                {
+                    ArchiveFile = new ArchiveFile
+                    {
+                        ArchiveId = archiveId,
+                        FullFileName = $"archive.part{index}.rar",
+                    },
+                    HosterFileLink = $"https://hoster.test/file/{Guid.NewGuid()}",
+                    OnlineState = OnlineState.Online,
+                    DownloadCount = downloadCount,
+                    CreatedAt = DateTime.UtcNow,
+                }
+            );
+        }
+
+        dbContext.Uploads.Add(upload);
+        await dbContext.SaveChangesAsync();
+    }
+
     private async Task<UploadConfig> AddUploadConfigAsync(UploadConfigSeed seed)
     {
         var uploadConfig = new UploadConfig

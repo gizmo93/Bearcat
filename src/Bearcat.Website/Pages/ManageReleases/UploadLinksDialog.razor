@@ -77,6 +77,16 @@
                         <span class="text-sm">@(link.CheckedAt?.ToString("g") ?? "-")</span>
                     </CellTemplate>
                 </BbDataTableColumn>
+                <BbDataTableColumn TData="ReleaseUploadLinkReadModel" TValue="int?"
+                                   Header="@L["Downloads"]"
+                                   Property="@(link => link.DownloadCount)"
+                                   Width="120px">
+                    <CellTemplate Context="link">
+                        <span class="text-sm tabular-nums">
+                            @(link.DownloadCount?.ToString("N0", CultureInfo.CurrentCulture) ?? "-")
+                        </span>
+                    </CellTemplate>
+                </BbDataTableColumn>
                 <BbDataTableColumn TData="ReleaseUploadLinkReadModel" TValue="string"
                                    Header="@L["UploadLink"]"
                                    Property="@(link => link.HosterFileLink)"

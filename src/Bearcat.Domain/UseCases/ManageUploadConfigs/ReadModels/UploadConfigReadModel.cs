@@ -8,5 +8,7 @@ public record UploadConfigReadModel(
     int ArchiveConfigId,
     string ArchiveConfigName,
     string ReleaseName,
-    bool PremiumOnlyDownload
+    bool PremiumOnlyDownload,
+    int TotalIndividualDownloads,
+    int TotalCompleteDownloads
 );

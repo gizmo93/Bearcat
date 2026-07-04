@@ -468,6 +468,11 @@
   <data name="UrlType.Other" xml:space="preserve"><value>Other</value></data>
   <data name="VideoType" xml:space="preserve"><value>Video</value></data>
   <data name="CheckedAt" xml:space="preserve"><value>Checked at</value></data>
+  <data name="Downloads" xml:space="preserve"><value>Downloads</value></data>
+  <data name="IndividualDownloads" xml:space="preserve"><value>Individual downloads</value></data>
+  <data name="IndividualDownloadsHint" xml:space="preserve"><value>Sum of all part download counts across every upload in this configuration.</value></data>
+  <data name="CompleteDownloads" xml:space="preserve"><value>Complete downloads</value></data>
+  <data name="CompleteDownloadsHint" xml:space="preserve"><value>Estimated number of complete downloads: the sum of the average download count per upload.</value></data>
   <data name="ViewContainerLinks" xml:space="preserve"><value>View container links</value></data>
   <data name="ViewUploadLinks" xml:space="preserve"><value>View upload links</value></data>
   <data name="Welcome" xml:space="preserve"><value>Welcome</value></data>
