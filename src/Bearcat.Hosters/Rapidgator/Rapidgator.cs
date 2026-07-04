@@ -112,20 +112,29 @@ public class Rapidgator(
     )
     {
         var config = hosterConfig.As<RapidgatorConfig>();
-        var fileUrls = files.Select(file => file.Url).ToList();
 
         try
         {
-            var statusPerLink = await apiClient.CheckLinksAsync(
+            var checkResults = await apiClient.CheckLinksAsync(
                 config: config,
-                links: fileUrls,
+                files: files,
                 cancellationToken: cancellationToken
             );
+
+            var statusPerFileUrl = checkResults.ToDictionary(
+                result => result.Key,
+                result => result.Value.IsOnline
+            );
+
+            var downloadCountPerFileUrl = checkResults
+                .Where(result => result.Value.DownloadCount is not null)
+                .ToDictionary(result => result.Key, result => result.Value.DownloadCount!.Value);
 
             return new FileExistResult(
                 IsSuccess: true,
                 ErrorMessages: [],
-                StatusPerFileUrl: statusPerLink
+                StatusPerFileUrl: statusPerFileUrl,
+                DownloadCountPerFileUrl: downloadCountPerFileUrl
             );
         }
         catch (Exception ex)

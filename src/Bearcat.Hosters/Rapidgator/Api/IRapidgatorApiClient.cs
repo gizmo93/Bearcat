@@ -1,4 +1,6 @@
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.Rapidgator.Api.File;
+using Bearcat.Hosters.Shared;
 
 namespace Bearcat.Hosters.Rapidgator.Api;
 
@@ -33,9 +35,9 @@ public interface IRapidgatorApiClient
         CancellationToken cancellationToken
     );
 
-    Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
+    Task<IReadOnlyDictionary<string, LinkCheckStatus>> CheckLinksAsync(
         RapidgatorConfig config,
-        IReadOnlyList<string> links,
+        IReadOnlyList<FileUrlToCheckDto> files,
         CancellationToken cancellationToken
     );
 

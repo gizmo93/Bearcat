@@ -251,7 +251,8 @@ public class UploadStateService(
                 files: filesByUrl
                     .Values.Select(file => new FileUrlToCheckDto(
                         Url: file.HosterFileLink,
-                        ExternalId: file.ExternalId
+                        ExternalId: file.ExternalId,
+                        HosterFolderId: file.HosterFolderId
                     ))
                     .ToList(),
                 cancellationToken: cancellationToken

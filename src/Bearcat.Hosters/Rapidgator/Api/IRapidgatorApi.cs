@@ -61,6 +61,14 @@ public interface IRapidgatorApi
         CancellationToken cancellationToken
     );
 
+    [Get("/api/v2/folder/content")]
+    Task<ApiResponse<FolderContentResponse>> GetFolderContentAsync(
+        [Query] string token,
+        [Query] [AliasAs("folder_id")] string? folderId,
+        [Query] int page,
+        CancellationToken cancellationToken
+    );
+
     [Get("/api/v2/file/upload_info?upload_id={uploadId}&token={token}")]
     Task<UploadFileResponse> GetFileStatusAsync(
         string token,

@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Rapidgator.Api.File;
 using Bearcat.Hosters.Rapidgator.Api.Folder;
@@ -206,9 +207,9 @@ public class ApiClient(
         return response;
     }
 
-    public async Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
+    public async Task<IReadOnlyDictionary<string, LinkCheckStatus>> CheckLinksAsync(
         RapidgatorConfig config,
-        IReadOnlyList<string> links,
+        IReadOnlyList<FileUrlToCheckDto> files,
         CancellationToken cancellationToken
     )
     {
@@ -216,7 +217,7 @@ public class ApiClient(
 
         var responses = new List<CheckLinksResponse>();
 
-        foreach (var linksBatch in links.Chunk(25))
+        foreach (var linksBatch in files.Select(file => file.Url).Chunk(25))
         {
             var response = await api.CheckLinkAsync(
                 token: token,
@@ -227,10 +228,92 @@ public class ApiClient(
             responses.Add(response.Content!);
         }
 
-        return responses
+        var statusPerUrl = responses
             .Where(r => r.Responses is not null)
             .SelectMany(r => r.Responses!)
             .ToDictionary(r => r.Url, r => r.Status == "ACCESS");
+
+        var folderIds = files
+            .Where(file => statusPerUrl.GetValueOrDefault(file.Url))
+            .Select(file => file.HosterFolderId)
+            .Where(folderId => !string.IsNullOrWhiteSpace(folderId))
+            .Distinct()
+            .ToList();
+
+        var downloadCountByFileId = await GetDownloadCountsByFileIdAsync(
+            token: token,
+            folderIds: folderIds,
+            cancellationToken: cancellationToken
+        );
+
+        return files
+            .Where(file => statusPerUrl.ContainsKey(file.Url))
+            .ToDictionary(
+                file => file.Url,
+                file =>
+                {
+                    var fileId = ExtractFileId(file.Url);
+
+                    return new LinkCheckStatus(
+                        statusPerUrl[file.Url],
+                        fileId is not null ? downloadCountByFileId.GetValueOrDefault(fileId) : null
+                    );
+                }
+            );
+    }
+
+    private async Task<Dictionary<string, int?>> GetDownloadCountsByFileIdAsync(
+        string token,
+        IReadOnlyList<string?> folderIds,
+        CancellationToken cancellationToken
+    )
+    {
+        var downloadCountByFileId = new Dictionary<string, int?>();
+
+        foreach (var folderId in folderIds)
+        {
+            try
+            {
+                var page = 1;
+
+                while (true)
+                {
+                    var response = await api.GetFolderContentAsync(
+                        token: token,
+                        folderId: folderId,
+                        page: page,
+                        cancellationToken: cancellationToken
+                    );
+
+                    var contentFiles = response.Content?.Response?.Folder?.Files ?? [];
+
+                    foreach (var file in contentFiles.Where(file => file.FileId is not null))
+                    {
+                        downloadCountByFileId[file.FileId] = file.NbDownloads;
+                    }
+
+                    var pager = response.Content?.Response?.Pager;
+
+                    if (pager is null || pager.Current >= pager.Total)
+                    {
+                        break;
+                    }
+
+                    page++;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(
+                    ex,
+                    "Failed to fetch Rapidgator folder content for folder {FolderId} to read download counts: {Message}",
+                    folderId,
+                    ex.InnerException?.Message ?? ex.Message
+                );
+            }
+        }
+
+        return downloadCountByFileId;
     }
 
     private async Task<string> GetAuthTokenAsync(

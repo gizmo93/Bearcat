@@ -6,6 +6,7 @@ using Bearcat.Hosters.Rapidgator;
 using Bearcat.Hosters.Rapidgator.Api;
 using Bearcat.Hosters.Rapidgator.Api.File;
 using Bearcat.Hosters.Rapidgator.Api.User;
+using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Refit;
@@ -401,9 +402,19 @@ public class RapidgatorTest
         };
 
         apiClientMock
-            .Setup(x => x.CheckLinksAsync(config, fileUrls, It.IsAny<CancellationToken>()))
+            .Setup(x =>
+                x.CheckLinksAsync(
+                    config,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
             .ReturnsAsync(
-                new Dictionary<string, bool> { [fileUrls[0]] = true, [fileUrls[1]] = false }
+                new Dictionary<string, LinkCheckStatus>
+                {
+                    [fileUrls[0]] = new LinkCheckStatus(true, 42),
+                    [fileUrls[1]] = new LinkCheckStatus(false, null),
+                }
             );
 
         // Act
@@ -418,6 +429,9 @@ public class RapidgatorTest
         result.IsSuccess.ShouldBeTrue();
         result.StatusPerFileUrl[fileUrls[0]].ShouldBeTrue();
         result.StatusPerFileUrl[fileUrls[1]].ShouldBeFalse();
+        result.DownloadCountPerFileUrl.ShouldNotBeNull();
+        result.DownloadCountPerFileUrl[fileUrls[0]].ShouldBe(42);
+        result.DownloadCountPerFileUrl.ShouldNotContainKey(fileUrls[1]);
         result.ErrorMessages.ShouldBeEmpty();
     }
 
@@ -429,7 +443,13 @@ public class RapidgatorTest
         var fileUrls = new[] { "https://rapidgator.net/file/online" };
 
         apiClientMock
-            .Setup(x => x.CheckLinksAsync(config, fileUrls, It.IsAny<CancellationToken>()))
+            .Setup(x =>
+                x.CheckLinksAsync(
+                    config,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
             .ThrowsAsync(new InvalidOperationException("login failed"));
 
         // Act

@@ -1,4 +1,5 @@
 using System.Net;
+using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.Rapidgator;
 using Bearcat.Hosters.Rapidgator.Api;
 using Bearcat.Hosters.Rapidgator.Api.File;
@@ -211,6 +212,131 @@ public class ApiClientTest
 
         // Assert
         result.ShouldBeSameAs(expectedResponse);
+    }
+
+    [Test]
+    public async Task CheckLinksAsync_OnlineFileInKnownFolder_MapsStatusAndDownloadCount()
+    {
+        // Arrange
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+        var fileUrl = "https://rapidgator.net/file/abc123";
+
+        SetupLogin();
+
+        apiMock
+            .Setup(x =>
+                x.CheckLinkAsync("token", It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new CheckLinksResponse
+                    {
+                        Status = (int)HttpStatusCode.OK,
+                        Responses =
+                        [
+                            new CheckLinksResponse.ResponseObject
+                            {
+                                Url = fileUrl,
+                                Filename = "archive.rar",
+                                Status = "ACCESS",
+                            },
+                        ],
+                    }
+                )
+            );
+
+        apiMock
+            .Setup(x =>
+                x.GetFolderContentAsync("token", "folder-id", 1, It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new FolderContentResponse
+                    {
+                        Status = (int)HttpStatusCode.OK,
+                        Response = new FolderContentResponse.ResponseObject
+                        {
+                            Folder = new FolderContentResponse.FolderContent
+                            {
+                                Files =
+                                [
+                                    new FolderContentResponse.ContentFile
+                                    {
+                                        FileId = "abc123",
+                                        Url = fileUrl,
+                                        NbDownloads = 7,
+                                    },
+                                ],
+                            },
+                            Pager = new FolderContentResponse.Pager { Current = 1, Total = 1 },
+                        },
+                    }
+                )
+            );
+
+        // Act
+        var result = await apiClient.CheckLinksAsync(
+            config,
+            [new FileUrlToCheckDto(fileUrl, null, "folder-id")],
+            CancellationToken.None
+        );
+
+        // Assert
+        result[fileUrl].IsOnline.ShouldBeTrue();
+        result[fileUrl].DownloadCount.ShouldBe(7);
+    }
+
+    [Test]
+    public async Task CheckLinksAsync_OfflineFile_DoesNotFetchFolderContent()
+    {
+        // Arrange
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+        var fileUrl = "https://rapidgator.net/file/abc123";
+
+        SetupLogin();
+
+        apiMock
+            .Setup(x =>
+                x.CheckLinkAsync("token", It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new CheckLinksResponse
+                    {
+                        Status = (int)HttpStatusCode.OK,
+                        Responses =
+                        [
+                            new CheckLinksResponse.ResponseObject
+                            {
+                                Url = fileUrl,
+                                Filename = "archive.rar",
+                                Status = "DELETED",
+                            },
+                        ],
+                    }
+                )
+            );
+
+        // Act
+        var result = await apiClient.CheckLinksAsync(
+            config,
+            [new FileUrlToCheckDto(fileUrl, null, "folder-id")],
+            CancellationToken.None
+        );
+
+        // Assert
+        result[fileUrl].IsOnline.ShouldBeFalse();
+        result[fileUrl].DownloadCount.ShouldBeNull();
+        apiMock.Verify(
+            x =>
+                x.GetFolderContentAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
     }
 
     private void SetupLogin()
