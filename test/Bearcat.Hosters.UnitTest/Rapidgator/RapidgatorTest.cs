@@ -575,7 +575,10 @@ public class RapidgatorTest
     private static ApiResponse<T> CreateApiResponse<T>(T content)
     {
         return new ApiResponse<T>(
-            new HttpResponseMessage(HttpStatusCode.OK),
+            new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                RequestMessage = new HttpRequestMessage(),
+            },
             content,
             new RefitSettings(),
             error: null

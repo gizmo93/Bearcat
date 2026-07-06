@@ -339,7 +339,7 @@ public class ApiClientTest
     private static ApiResponse<T> CreateApiResponse<T>(HttpStatusCode statusCode, T content)
     {
         return new ApiResponse<T>(
-            new HttpResponseMessage(statusCode),
+            new HttpResponseMessage(statusCode) { RequestMessage = new HttpRequestMessage() },
             content,
             new RefitSettings(),
             error: null
