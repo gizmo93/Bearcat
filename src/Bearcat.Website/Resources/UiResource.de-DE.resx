@@ -117,6 +117,8 @@
     <data name="DeleteImageUploadConfigConfirmation" xml:space="preserve"><value>Möchtest du die Bilduploadkonfiguration {0} wirklich löschen?</value></data>
     <data name="DeleteImageUploadConfigTemplateConfirmation" xml:space="preserve"><value>Möchtest du die Bilduploadkonfigurationsvorlage {0} wirklich löschen?</value></data>
   <data name="DeleteLink" xml:space="preserve"><value>Link löschen</value></data>
+  <data name="DeleteLinkCrypterContainer" xml:space="preserve"><value>Link-Crypter-Container löschen</value></data>
+  <data name="DeleteLinkCrypterContainerConfirmation" xml:space="preserve"><value>Möchtest du diesen fehlgeschlagenen Link Crypter Container wirklich löschen? Beim nächsten Durchlauf wird automatisch ein neuer erstellt.</value></data>
   <data name="DeleteLinkCrypterContainerConfig" xml:space="preserve"><value>Link-Crypter-Container-Konfiguration löschen</value></data>
   <data name="DeleteLinkCrypterContainerConfigConfirmation" xml:space="preserve"><value>Möchtest du diese Link-Crypter-Container-Konfiguration wirklich löschen?</value></data>
   <data name="DeleteLinkCrypterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Link-Crypter-Registrierung {0} wirklich löschen?</value></data>

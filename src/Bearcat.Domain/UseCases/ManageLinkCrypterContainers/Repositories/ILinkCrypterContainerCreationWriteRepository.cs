@@ -18,6 +18,8 @@ public interface ILinkCrypterContainerCreationWriteRepository
         CancellationToken cancellationToken
     );
 
+    Task<LinkCrypterContainer?> GetByIdAsync(int id, CancellationToken cancellationToken);
+
     void Add(LinkCrypterContainer container);
     void Remove(LinkCrypterContainer container);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);

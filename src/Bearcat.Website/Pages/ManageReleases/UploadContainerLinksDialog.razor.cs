@@ -1,3 +1,4 @@
+using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -7,7 +8,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
-public partial class UploadContainerLinksDialog(IServiceScopeFactory serviceScopeFactory)
+public partial class UploadContainerLinksDialog(
+    IServiceScopeFactory serviceScopeFactory,
+    DialogService dialogService
+)
 {
     [Parameter]
     public int ReleaseId { get; set; }
@@ -36,6 +40,12 @@ public partial class UploadContainerLinksDialog(IServiceScopeFactory serviceScop
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadContainersAsync();
+        isInitialized = true;
+    }
+
+    private async Task LoadContainersAsync()
+    {
         isLoading = true;
 
         try
@@ -47,8 +57,43 @@ public partial class UploadContainerLinksDialog(IServiceScopeFactory serviceScop
         finally
         {
             isLoading = false;
-            isInitialized = true;
         }
+    }
+
+    private static bool CanDelete(ReleaseUploadContainerLinkReadModel container) =>
+        container
+            is {
+                State: LinkCrypterContainerState.CreationFailed,
+                Scope: LinkCrypterContainerScope.Release,
+            };
+
+    private async Task DeleteContainerAsync(ReleaseUploadContainerLinkReadModel container)
+    {
+        if (!CanDelete(container))
+        {
+            return;
+        }
+
+        var result = await dialogService.ConfirmAsync(
+            L["DeleteLinkCrypterContainer"],
+            L["DeleteLinkCrypterContainerConfirmation"],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        await using var scope = serviceScopeFactory.CreateAsyncScope();
+        var service = scope.ServiceProvider.GetRequiredService<LinkCrypterContainerService>();
+        await service.DeleteFailedContainerAsync(container.Id, CancellationToken.None);
+        await LoadContainersAsync();
     }
 
     private static BadgeVariant GetContainerVariant(LinkCrypterContainerState state) =>

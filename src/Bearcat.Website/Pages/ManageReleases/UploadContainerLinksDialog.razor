@@ -142,6 +142,24 @@
                         <span class="text-sm">@container.CreatedAt.ToString("g")</span>
                     </CellTemplate>
                 </BbDataTableColumn>
+                <BbDataTableColumn TData="ReleaseUploadContainerLinkReadModel" TValue="string"
+                                   Header=""
+                                   Property="@(container => container.ContainerUrl)"
+                                   Width="64px">
+                    <CellTemplate Context="container">
+                        @if (CanDelete(container))
+                        {
+                            <div class="flex justify-end">
+                                <BbButton Variant="ButtonVariant.Ghost"
+                                          Size="ButtonSize.IconSmall"
+                                          AriaLabel="@L["DeleteLinkCrypterContainer"]"
+                                          OnClick="@(async _ => await DeleteContainerAsync(container))">
+                                    <LucideIcon Name="trash-2" class="h-4 w-4 text-destructive" />
+                                </BbButton>
+                            </div>
+                        }
+                    </CellTemplate>
+                </BbDataTableColumn>
             </Columns>
             <EmptyTemplate>
                 <div class="bearcat-release-empty">
