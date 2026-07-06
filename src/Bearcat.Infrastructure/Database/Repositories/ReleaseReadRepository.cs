@@ -1033,6 +1033,7 @@ public class ReleaseReadRepository(
             )
             .Select(c => new
             {
+                c.Id,
                 LinkCrypterRegistrationName = c.LinkCrypterRegistration.Name,
                 LinkCrypterClassName = c.LinkCrypterRegistration.LinkCrypterClassName,
                 c.ContainerUrl,
@@ -1055,6 +1056,7 @@ public class ReleaseReadRepository(
             )
             .Select(source => new
             {
+                source.LinkCrypterContainer.Id,
                 LinkCrypterRegistrationName = source
                     .LinkCrypterContainer
                     .LinkCrypterRegistration
@@ -1080,6 +1082,7 @@ public class ReleaseReadRepository(
             .OrderBy(container => container.LinkCrypterRegistrationName)
             .ThenBy(container => container.CreatedAt)
             .Select(container => new ReleaseUploadContainerLinkReadModel(
+                Id: container.Id,
                 LinkCrypterRegistrationName: container.LinkCrypterRegistrationName,
                 LinkCrypterClassName: container.LinkCrypterClassName,
                 ContainerUrl: container.ContainerUrl,

@@ -2183,6 +2183,13 @@ a {
     gap: 0.5rem;
 }
 
+.bearcat-collection-container-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.25rem;
+}
+
 .bearcat-mobile-label {
     margin: 0 0 0.25rem;
     color: var(--muted-foreground);
