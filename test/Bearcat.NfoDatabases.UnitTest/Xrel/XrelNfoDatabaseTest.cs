@@ -380,7 +380,10 @@ public class XrelNfoDatabaseTest
         IReadOnlyDictionary<string, string>? headers = null
     )
     {
-        var response = new HttpResponseMessage(statusCode);
+        var response = new HttpResponseMessage(statusCode)
+        {
+            RequestMessage = new HttpRequestMessage(),
+        };
         foreach (var header in headers ?? new Dictionary<string, string>())
         {
             response.Headers.TryAddWithoutValidation(header.Key, header.Value);

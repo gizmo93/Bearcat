@@ -164,7 +164,7 @@ public class ApiClientTest
     )
     {
         return new ApiResponse<FileInfoResponse>(
-            new HttpResponseMessage(statusCode),
+            new HttpResponseMessage(statusCode) { RequestMessage = new HttpRequestMessage() },
             content!,
             new RefitSettings(),
             error: null
