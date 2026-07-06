@@ -73,6 +73,9 @@ dotnet_diagnostic.S2365.severity = none
 dotnet_diagnostic.S4144.severity = none
 dotnet_diagnostic.S3220.severity = none
 dotnet_diagnostic.S2365.severity = none
+dotnet_diagnostic.S4790.severity = none
+dotnet_diagnostic.S4036.severity = none
+dotnet_diagnostic.S2092.severity = none
 
 # var preferences
 csharp_style_namespace_declarations = file_scoped:warning

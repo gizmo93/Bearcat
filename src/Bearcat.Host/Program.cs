@@ -134,6 +134,7 @@ app.MapGet(
                     IsEssential = true,
                     Path = "/",
                     SameSite = SameSiteMode.Lax,
+                    HttpOnly = true,
                 }
             );
         }
