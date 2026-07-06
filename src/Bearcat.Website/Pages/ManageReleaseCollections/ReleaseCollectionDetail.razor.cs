@@ -1,3 +1,4 @@
+using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
@@ -348,6 +349,37 @@ public partial class ReleaseCollectionDetail(
 
         var service = ScopedServices.GetRequiredService<ReleaseCollectionService>();
         await service.RemoveReleaseAsync(ReleaseCollectionId, release.ReleaseId);
+        await LoadReleaseCollectionAsync();
+    }
+
+    private async Task DeleteFailedContainerAsync(CollectionUploadSlotContainerReadModel container)
+    {
+        if (container.State != LinkCrypterContainerState.CreationFailed)
+        {
+            return;
+        }
+
+        var result = await dialogService.ConfirmAsync(
+            L["DeleteLinkCrypterContainer"],
+            L["DeleteLinkCrypterContainerConfirmation"],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["Delete"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        var service = ScopedServices.GetRequiredService<LinkCrypterContainerService>();
+        await service.DeleteFailedContainerAsync(
+            container.LinkCrypterContainerId,
+            CancellationToken.None
+        );
         await LoadReleaseCollectionAsync();
     }
 

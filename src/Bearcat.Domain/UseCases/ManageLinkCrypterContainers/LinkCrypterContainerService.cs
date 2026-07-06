@@ -58,20 +58,48 @@ public class LinkCrypterContainerService(
         CancellationToken cancellationToken
     )
     {
-        if (upload.UploadConfig.CollectionUploadSlotId is not int slotId)
+        if (upload.UploadConfig.CollectionUploadSlotId is not { } slotId)
         {
             return;
         }
 
         var hasCollectionScopedCrypters = upload.UploadConfig.LinkCrypters.Any(l =>
-            l.ContainerScope == LinkCrypterContainerScope.ReleaseCollection
-            && l.LinkCrypterRegistration.IsActive
+            l
+                is {
+                    ContainerScope: LinkCrypterContainerScope.ReleaseCollection,
+                    LinkCrypterRegistration.IsActive: true
+                }
         );
 
         if (hasCollectionScopedCrypters && processedCollectionSlots.Add(slotId))
         {
             await collectionContainerService.UpdateContainersAsync(slotId, cancellationToken);
         }
+    }
+
+    public async Task DeleteFailedContainerAsync(
+        int containerId,
+        CancellationToken cancellationToken
+    )
+    {
+        var container = await repository.GetByIdAsync(containerId, cancellationToken);
+
+        if (container is null)
+        {
+            throw new InvalidOperationException(
+                $"Link crypter container {containerId} was not found."
+            );
+        }
+
+        if (container.State != LinkCrypterContainerState.CreationFailed)
+        {
+            throw new InvalidOperationException(
+                "Only failed link crypter containers can be deleted."
+            );
+        }
+
+        repository.Remove(container);
+        await repository.SaveChangesAsync(cancellationToken);
     }
 
     private async Task CreateMissingReleaseContainersAsync(
@@ -126,17 +154,14 @@ public class LinkCrypterContainerService(
     )
     {
         return upload
-            .UploadConfig.Uploads.Where(u =>
-                u.Id < upload.Id
-                && u.LinkCrypterContainers.Any(l =>
-                    l.UploadConfigLinkCrypterId == linkCrypterConfig.Id
-                )
+            .UploadConfig.Uploads.Where(u => u.Id < upload.Id)
+            .SelectMany(u => u.LinkCrypterContainers)
+            .Where(l =>
+                l.UploadConfigLinkCrypterId == linkCrypterConfig.Id
+                && l.State == LinkCrypterContainerState.Created
             )
-            .Select(u =>
-                u.LinkCrypterContainers.First(l =>
-                    l.UploadConfigLinkCrypterId == linkCrypterConfig.Id
-                )
-            )
+            .OrderByDescending(l => l.UploadId)
+            .ThenByDescending(l => l.Id)
             .FirstOrDefault();
     }
 

@@ -261,13 +261,13 @@
                                                         </BbBadge>
                                                         <ErrorMessagesTooltip Messages="container.Errors" />
                                                     </div>
-                                                    @if (string.IsNullOrWhiteSpace(container.ContainerUrl))
-                                                    {
-                                                        <span class="text-sm text-muted-foreground">-</span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <div class="bearcat-collection-container-link">
+                                                    <div class="bearcat-collection-container-link">
+                                                        @if (string.IsNullOrWhiteSpace(container.ContainerUrl))
+                                                        {
+                                                            <span class="text-sm text-muted-foreground">-</span>
+                                                        }
+                                                        else
+                                                        {
                                                             <a class="bearcat-upload-link"
                                                                href="@container.ContainerUrl"
                                                                target="_blank"
@@ -276,20 +276,34 @@
                                                                 @container.ContainerUrl
                                                             </a>
                                                             <textarea id="@copyTargetId" hidden readonly>@container.ContainerUrl</textarea>
-                                                            <button type="button"
-                                                                    class="bearcat-copy-button bearcat-copy-icon-button"
-                                                                    aria-label="@L["CopyLink"]"
-                                                                    title="@L["CopyLink"]"
-                                                                    data-copy-target="@copyTargetId"
-                                                                    data-copy-label="@L["CopyLink"]"
-                                                                    data-copy-success-label="@L["Copied"]"
-                                                                    data-copy-failure-label="@L["CopyFailed"]"
-                                                                    onclick="window.bearcat.copyFromTarget(this)">
-                                                                <LucideIcon Name="copy" class="h-4 w-4" />
-                                                                <span class="sr-only bearcat-copy-button-label">@L["CopyLink"]</span>
-                                                            </button>
+                                                        }
+                                                        <div class="bearcat-collection-container-actions">
+                                                            @if (!string.IsNullOrWhiteSpace(container.ContainerUrl))
+                                                            {
+                                                                <button type="button"
+                                                                        class="bearcat-copy-button bearcat-copy-icon-button"
+                                                                        aria-label="@L["CopyLink"]"
+                                                                        title="@L["CopyLink"]"
+                                                                        data-copy-target="@copyTargetId"
+                                                                        data-copy-label="@L["CopyLink"]"
+                                                                        data-copy-success-label="@L["Copied"]"
+                                                                        data-copy-failure-label="@L["CopyFailed"]"
+                                                                        onclick="window.bearcat.copyFromTarget(this)">
+                                                                    <LucideIcon Name="copy" class="h-4 w-4" />
+                                                                    <span class="sr-only bearcat-copy-button-label">@L["CopyLink"]</span>
+                                                                </button>
+                                                            }
+                                                            @if (container.State is LinkCrypterContainerState.CreationFailed)
+                                                            {
+                                                                <BbButton Variant="ButtonVariant.Ghost"
+                                                                          Size="ButtonSize.IconSmall"
+                                                                          AriaLabel="@L["DeleteLinkCrypterContainer"]"
+                                                                          OnClick="@(async () => await DeleteFailedContainerAsync(container))">
+                                                                    <LucideIcon Name="trash-2" class="h-4 w-4 text-destructive" />
+                                                                </BbButton>
+                                                            }
                                                         </div>
-                                                    }
+                                                    </div>
                                                 </div>
                                             }
                                         </div>

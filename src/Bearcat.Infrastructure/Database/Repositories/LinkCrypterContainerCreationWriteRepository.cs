@@ -89,6 +89,17 @@ public class LinkCrypterContainerCreationWriteRepository(IBearcatWriteDbContext 
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<LinkCrypterContainer?> GetByIdAsync(
+        int id,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite.LinkCrypterContainers.FirstOrDefaultAsync(
+            container => container.Id == id,
+            cancellationToken
+        );
+    }
+
     public void Add(LinkCrypterContainer container)
     {
         dbWrite.Add(container);
