@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -93,6 +94,14 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         persistedInfo.Genre.ShouldBe("Drama, Sci-Fi");
         persistedInfo.Description.ShouldBe("Bearcat plot");
         persistedInfo.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_cover/movie123.JPG");
+
+        var metadata = await dbContext.ReleaseMetadata.SingleAsync();
+        metadata.ReleaseId.ShouldBe(release.Id);
+        metadata.MetadataDatabaseClassName.ShouldBe(WorkingDatabaseClassName);
+        metadata.Title.ShouldBe("Bearcat Movie");
+        metadata.Genre.ShouldBe("Drama, Sci-Fi");
+        metadata.Description.ShouldBe("Bearcat plot");
+        metadata.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_cover/movie123.JPG");
 
         var externalInfo = persistedInfo.ExternalInfos.Single();
         externalInfo.Type.ShouldBe(ExternalInfoType.Movie);
@@ -616,6 +625,45 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         persistedRelease.ReleaseInfo.ShouldBeNull();
         persistedRelease.ReleaseNfo!.FileName.ShouldBe("manual.nfo");
         persistedRelease.ExternalIdentifiers.ShouldHaveSingleItem().Value.ShouldBe("tt7654321");
+    }
+
+    [Test]
+    public async Task UpdateReleaseInfoAsync_ManualValues_PersistsSceneInfoAndMetadata()
+    {
+        var release = await AddReleaseAsync("Manual.Release.2026-GRP");
+        var infoService = new ReleaseInfoService(
+            new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
+            new Mock<ILogger<ReleaseInfoService>>().Object
+        );
+
+        await infoService.UpdateReleaseInfoAsync(
+            release.Id,
+            new EditReleaseInfoData(
+                ReleaseName: "Manual.Release.2026-GRP",
+                CoverUrl: "https://images.test/cover.jpg",
+                Genre: "Drama",
+                VideoType: "WEB",
+                AudioType: "EAC3",
+                SizeNumber: 12,
+                SizeUnit: "GB",
+                ReleaseDatabaseUrl: null,
+                Description: "Manual description"
+            ),
+            CancellationToken.None
+        );
+
+        dbContext.ChangeTracker.Clear();
+        var persistedRelease = await dbContext
+            .Releases.Include(item => item.ReleaseInfo)
+            .Include(item => item.Metadata)
+            .SingleAsync();
+
+        persistedRelease.ReleaseInfo!.VideoType.ShouldBe("WEB");
+        persistedRelease.Metadata!.MetadataDatabaseClassName.ShouldBe(ReleaseMetadata.ManualSource);
+        persistedRelease.Metadata.Title.ShouldBe("Manual.Release.2026-GRP");
+        persistedRelease.Metadata.Genre.ShouldBe("Drama");
+        persistedRelease.Metadata.Description.ShouldBe("Manual description");
+        persistedRelease.Metadata.CoverUrl.ShouldBe("https://images.test/cover.jpg");
     }
 
     private Mock<INfoDatabase> SetupNfoDatabase(

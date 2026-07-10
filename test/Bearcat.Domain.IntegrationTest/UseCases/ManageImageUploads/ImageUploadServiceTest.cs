@@ -342,6 +342,11 @@ public class ImageUploadServiceTest : BearcatIntegrationTest
             {
                 NfoDatabaseClassName = "ImdbNfoDatabase",
                 ReleaseName = "Bodies.2023.S01E01-GRP",
+            },
+            Metadata = new ReleaseMetadata
+            {
+                MetadataDatabaseClassName = "ImdbNfoDatabase",
+                Title = "Bodies",
                 CoverUrl = coverUrl,
             },
             ImageUploadConfigs = [],

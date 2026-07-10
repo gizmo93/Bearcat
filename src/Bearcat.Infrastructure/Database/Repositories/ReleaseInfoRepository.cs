@@ -67,7 +67,8 @@ public class ReleaseInfoRepository(
     )
     {
         return await dbWrite
-            .ReleaseInfos.Include(r => r.Release)
+            .ReleaseInfos.Include(info => info.Release)
+                .ThenInclude(release => release.Metadata)
             .FirstAsync(info => info.Id == releaseInfoId, cancellationToken);
     }
 
@@ -78,6 +79,7 @@ public class ReleaseInfoRepository(
     {
         return await dbWrite
             .Releases.Include(release => release.ReleaseInfo)
+            .Include(release => release.Metadata)
             .Include(release => release.ImageUploadConfigs)
                 .ThenInclude(config => config.ImageUploads)
             .FirstAsync(release => release.Id == releaseId, cancellationToken);
@@ -91,6 +93,7 @@ public class ReleaseInfoRepository(
         return await dbWrite
             .Releases.Include(release => release.ReleaseInfo)
                 .ThenInclude(info => info!.ExternalInfos)
+            .Include(release => release.Metadata)
             .Include(release => release.ReleaseNfo)
             .Include(release => release.ExternalIdentifiers)
             .FirstAsync(release => release.Id == releaseId, cancellationToken);
@@ -99,6 +102,11 @@ public class ReleaseInfoRepository(
     public void Remove(ReleaseInfo releaseInfo)
     {
         dbWrite.Remove(releaseInfo);
+    }
+
+    public void Remove(ReleaseMetadata metadata)
+    {
+        dbWrite.Remove(metadata);
     }
 
     public void Remove(ImageUpload imageUpload)
@@ -119,6 +127,21 @@ public class ReleaseInfoRepository(
             .Where(entry => entry.State == EntityState.Added)
             .Select(entry => entry.Entity)
             .ToList();
+
+        var pendingMetadata = dbWrite
+            .ChangeTracker.Entries<ReleaseMetadata>()
+            .Where(entry => entry.State == EntityState.Added)
+            .Select(entry => entry.Entity)
+            .ToList();
+
+        foreach (
+            var entry in dbWrite
+                .ChangeTracker.Entries<ReleaseMetadata>()
+                .Where(entry => pendingMetadata.Contains(entry.Entity))
+        )
+        {
+            entry.State = EntityState.Detached;
+        }
 
         foreach (
             var entry in dbWrite
@@ -141,6 +164,11 @@ public class ReleaseInfoRepository(
         if (release.ReleaseInfo is not null && pendingReleaseInfos.Contains(release.ReleaseInfo))
         {
             release.ReleaseInfo = null;
+        }
+
+        if (release.Metadata is not null && pendingMetadata.Contains(release.Metadata))
+        {
+            release.Metadata = null;
         }
     }
 

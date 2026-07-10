@@ -105,6 +105,11 @@ public class QualityChecksTest
         {
             NfoDatabaseClassName = ReleaseInfo.ManualSource,
             ReleaseName = release.Name,
+        };
+        release.Metadata = new ReleaseMetadata
+        {
+            MetadataDatabaseClassName = ReleaseMetadata.ManualSource,
+            Title = release.Name,
             CoverUrl = "https://images.test/cover.jpg",
             Description = "A description",
         };

@@ -19,7 +19,13 @@ public class ReleaseInfoService(
         );
         repository.Remove(releaseInfo);
 
+        if (releaseInfo.Release.Metadata is not null)
+        {
+            repository.Remove(releaseInfo.Release.Metadata);
+        }
+
         releaseInfo.Release.ReleaseInfoCheckedAt = null;
+        releaseInfo.Release.MetadataCheckedAt = null;
 
         await repository.SaveChangesAsync(cancellationToken);
     }
@@ -32,7 +38,7 @@ public class ReleaseInfoService(
     {
         var release = await repository.GetReleaseForCoverUpdateAsync(releaseId, cancellationToken);
         var newCoverUrl = CleanOptional(data.CoverUrl);
-        var previousCoverUrl = release.ReleaseInfo?.CoverUrl;
+        var previousCoverUrl = release.Metadata?.CoverUrl;
 
         var releaseInfo = release.ReleaseInfo;
         if (releaseInfo is null)
@@ -42,14 +48,32 @@ public class ReleaseInfoService(
         }
 
         releaseInfo.ReleaseName = CleanOptional(data.ReleaseName) ?? release.Name;
-        releaseInfo.CoverUrl = newCoverUrl;
-        releaseInfo.Genre = CleanOptional(data.Genre);
         releaseInfo.VideoType = CleanOptional(data.VideoType);
         releaseInfo.AudioType = CleanOptional(data.AudioType);
         releaseInfo.SizeNumber = data.SizeNumber;
         releaseInfo.SizeUnit = CleanOptional(data.SizeUnit);
         releaseInfo.ReleaseDatabaseUrl = CleanOptional(data.ReleaseDatabaseUrl);
-        releaseInfo.Description = CleanOptional(data.Description);
+
+        var metadata = release.Metadata;
+        if (metadata is null)
+        {
+            metadata = new ReleaseMetadata
+            {
+                MetadataDatabaseClassName = ReleaseMetadata.ManualSource,
+            };
+            release.Metadata = metadata;
+        }
+
+        metadata.MetadataDatabaseClassName = ReleaseMetadata.ManualSource;
+        metadata.Title = releaseInfo.ReleaseName;
+        metadata.CoverUrl = newCoverUrl;
+        metadata.Genre = CleanOptional(data.Genre);
+        metadata.Description = CleanOptional(data.Description);
+
+        // Keep the legacy columns populated until their cleanup migration.
+        releaseInfo.CoverUrl = metadata.CoverUrl;
+        releaseInfo.Genre = metadata.Genre;
+        releaseInfo.Description = metadata.Description;
 
         if (!string.Equals(previousCoverUrl, newCoverUrl, StringComparison.Ordinal))
         {

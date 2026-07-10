@@ -67,7 +67,7 @@ public class ImageUploadService(
 
         var (coverUrl, imageName) = imageUploadConfig switch
         {
-            { Release: { } release } => (release.ReleaseInfo?.CoverUrl, release.Name),
+            { Release: { } release } => (release.Metadata?.CoverUrl, release.Name),
             { ReleaseCollection: { } collection } => (
                 collection.Metadata?.CoverUrl,
                 collection.Name

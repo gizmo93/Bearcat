@@ -175,6 +175,11 @@ public partial class ReleaseInfoPanel(
 
     private async Task DeleteReleaseInfoAsync(ReleaseInfoReadModel releaseInfo)
     {
+        if (releaseInfo.ReleaseInfoId is null)
+        {
+            return;
+        }
+
         var result = await dialogService.ConfirmAsync(
             L["DeleteReleaseInfoTitle"],
             L["DeleteReleaseInfoConfirmation", releaseInfo.ReleaseName],
@@ -192,7 +197,7 @@ public partial class ReleaseInfoPanel(
         }
 
         await operationRunner.RunAsync(
-            (ReleaseInfoService service) => service.DeleteAsync(releaseInfo.ReleaseInfoId)
+            (ReleaseInfoService service) => service.DeleteAsync(releaseInfo.ReleaseInfoId.Value)
         );
 
         toastService.Success(L["ReleaseInfoDeleted"]);

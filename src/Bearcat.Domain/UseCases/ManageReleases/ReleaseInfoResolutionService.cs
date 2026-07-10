@@ -205,6 +205,18 @@ public class ReleaseInfoResolutionService(
                 if (release.ReleaseInfo is null)
                 {
                     release.ReleaseInfo = ToEntity(registration.NfoDatabaseClassName, releaseInfo);
+                    release.Metadata ??= new ReleaseMetadata
+                    {
+                        MetadataDatabaseClassName = registration.NfoDatabaseClassName,
+                        Title =
+                            releaseInfo
+                                .ExternalInfos.Select(info => info.Title)
+                                .FirstOrDefault(title => !string.IsNullOrWhiteSpace(title))
+                            ?? releaseInfo.ReleaseName,
+                        Genre = releaseInfo.Genre,
+                        Description = releaseInfo.Description,
+                        CoverUrl = releaseInfo.CoverUrl,
+                    };
                     releaseInfoAttached = true;
 
                     logger.LogInformation(

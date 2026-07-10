@@ -36,11 +36,15 @@ public class Release
 
     public ReleaseInfo? ReleaseInfo { get; set; }
 
+    public ReleaseMetadata? Metadata { get; set; }
+
     public ReleaseNfo? ReleaseNfo { get; set; }
 
     public List<ReleaseExternalIdentifier> ExternalIdentifiers { get; set; } = [];
 
     public DateTime? ReleaseInfoCheckedAt { get; set; }
+
+    public DateTime? MetadataCheckedAt { get; set; }
 
     public List<ReleaseMediaFile> MediaFiles { get; set; } = [];
 

@@ -16,6 +16,7 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
         builder.Property(r => r.PrimaryLanguageCode).HasMaxLength(2).IsRequired(false);
         builder.Property(r => r.ReleaseFolderPath).HasMaxLength(1000).IsRequired(false);
         builder.Property(r => r.ReleaseInfoCheckedAt).HasPrecision(4).IsRequired(false);
+        builder.Property(r => r.MetadataCheckedAt).HasPrecision(4).IsRequired(false);
         builder.Property(r => r.MediaMetadataExtractedAt).HasPrecision(4).IsRequired(false);
         builder.Property(r => r.UploadsPostedAt).HasPrecision(4).IsRequired(false);
         builder.Property(r => r.ReleaseCollectionId).IsRequired(false);
@@ -45,6 +46,14 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
             .HasOne(r => r.ReleaseInfo)
             .WithOne(i => i.Release)
             .HasForeignKey<ReleaseInfo>(i => i.ReleaseId)
+            .HasPrincipalKey<Release>(r => r.Id)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .HasOne(r => r.Metadata)
+            .WithOne(metadata => metadata.Release)
+            .HasForeignKey<ReleaseMetadata>(metadata => metadata.ReleaseId)
             .HasPrincipalKey<Release>(r => r.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);

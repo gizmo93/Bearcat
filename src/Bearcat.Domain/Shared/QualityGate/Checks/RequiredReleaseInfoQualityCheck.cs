@@ -28,17 +28,17 @@ public sealed class RequiredReleaseInfoQualityCheck : IQualityCheck
         var parameters = QualityCheckParameterValues.Parse(rule.ParametersJson);
 
         var release = context.Release;
-        var info = release.ReleaseInfo;
+        var metadata = release.Metadata;
         var issues = new List<string>();
 
-        if (parameters.GetBool(RequireCoverKey) && string.IsNullOrWhiteSpace(info?.CoverUrl))
+        if (parameters.GetBool(RequireCoverKey) && string.IsNullOrWhiteSpace(metadata?.CoverUrl))
         {
             issues.Add("Cover image is missing");
         }
 
         if (
             parameters.GetBool(RequireDescriptionKey)
-            && string.IsNullOrWhiteSpace(info?.Description)
+            && string.IsNullOrWhiteSpace(metadata?.Description)
         )
         {
             issues.Add("Description is missing");

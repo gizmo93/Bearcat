@@ -35,6 +35,8 @@ public interface IReleaseInfoRepository
 
     void Remove(ReleaseInfo releaseInfo);
 
+    void Remove(ReleaseMetadata metadata);
+
     void Remove(ImageUpload imageUpload);
 
     void DetachPendingReleaseInfo(Release release);

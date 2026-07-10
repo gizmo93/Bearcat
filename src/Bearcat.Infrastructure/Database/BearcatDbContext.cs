@@ -86,6 +86,8 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<ReleaseExternalIdentifier> ReleaseExternalIdentifiers { get; set; } = null!;
 
+    public DbSet<ReleaseMetadata> ReleaseMetadata { get; set; } = null!;
+
     public DbSet<SeriesDatabaseRegistration> SeriesDatabaseRegistrations { get; set; } = null!;
 
     public DbSet<ReleaseCollectionMetadata> ReleaseCollectionMetadata { get; set; } = null!;

@@ -714,41 +714,52 @@ public class ReleaseReadRepository(
     )
     {
         return await dbRead
-            .ReleaseInfos.AsSplitQuery()
-            .Where(info => info.ReleaseId == releaseId)
-            .Select(info => new ReleaseInfoReadModel(
-                info.Id,
-                info.NfoDatabaseClassName,
-                info.ReleaseName,
-                info.ReleaseDatabaseUrl,
-                info.SizeNumber,
-                info.SizeUnit,
-                info.VideoType,
-                info.AudioType,
-                info.Genre,
-                info.Description,
-                info.CoverUrl,
-                info.Release.ReleaseNfo == null
+            .Releases.AsSplitQuery()
+            .Where(release => release.Id == releaseId)
+            .Select(release =>
+                release.ReleaseInfo == null && release.Metadata == null
                     ? null
-                    : new ReleaseNfoReadModel(
-                        info.Release.ReleaseNfo.Id,
-                        info.Release.ReleaseNfo.FileName,
-                        info.Release.ReleaseNfo.Content
-                    ),
-                info.ExternalInfos.OrderBy(externalInfo => externalInfo.Id)
-                    .Select(externalInfo => new ReleaseExternalInfoReadModel(
-                        externalInfo.Id,
-                        externalInfo.Type,
-                        externalInfo.Title,
-                        externalInfo
-                            .Urls.Select(url => new ReleaseExternalInfoUrlReadModel(
-                                url.Type,
-                                url.Url
-                            ))
-                            .ToList()
-                    ))
-                    .ToList()
-            ))
+                    : new ReleaseInfoReadModel(
+                        release.ReleaseInfo == null ? null : release.ReleaseInfo.Id,
+                        release.ReleaseInfo == null
+                            ? release.Metadata!.MetadataDatabaseClassName
+                            : release.ReleaseInfo.NfoDatabaseClassName,
+                        release.ReleaseInfo == null
+                            ? release.Metadata!.Title
+                            : release.ReleaseInfo.ReleaseName,
+                        release.ReleaseInfo == null ? null : release.ReleaseInfo.ReleaseDatabaseUrl,
+                        release.ReleaseInfo == null ? null : release.ReleaseInfo.SizeNumber,
+                        release.ReleaseInfo == null ? null : release.ReleaseInfo.SizeUnit,
+                        release.ReleaseInfo == null ? null : release.ReleaseInfo.VideoType,
+                        release.ReleaseInfo == null ? null : release.ReleaseInfo.AudioType,
+                        release.Metadata == null ? null : release.Metadata.Genre,
+                        release.Metadata == null ? null : release.Metadata.Description,
+                        release.Metadata == null ? null : release.Metadata.CoverUrl,
+                        release.ReleaseNfo == null
+                            ? null
+                            : new ReleaseNfoReadModel(
+                                release.ReleaseNfo.Id,
+                                release.ReleaseNfo.FileName,
+                                release.ReleaseNfo.Content
+                            ),
+                        release.ReleaseInfo == null
+                            ? new List<ReleaseExternalInfoReadModel>()
+                            : release
+                                .ReleaseInfo.ExternalInfos.OrderBy(externalInfo => externalInfo.Id)
+                                .Select(externalInfo => new ReleaseExternalInfoReadModel(
+                                    externalInfo.Id,
+                                    externalInfo.Type,
+                                    externalInfo.Title,
+                                    externalInfo
+                                        .Urls.Select(url => new ReleaseExternalInfoUrlReadModel(
+                                            url.Type,
+                                            url.Url
+                                        ))
+                                        .ToList()
+                                ))
+                                .ToList()
+                    )
+            )
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 

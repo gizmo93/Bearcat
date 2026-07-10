@@ -171,6 +171,14 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
                 ],
             }
         );
+        release.Metadata = new ReleaseMetadata
+        {
+            MetadataDatabaseClassName = "XrelNfoDatabase",
+            Title = "Bearcat Movie",
+            Genre = "Drama, Sci-Fi",
+            Description = "Bearcat plot",
+            CoverUrl = "https://uploads2.xrel.to/img_cover/movie123.JPG",
+        };
         release.ReleaseNfo = new ReleaseNfo { FileName = "bearcat.nfo", Content = "nfo content" };
         await dbContext.SaveChangesAsync();
         dbContext.ChangeTracker.Clear();

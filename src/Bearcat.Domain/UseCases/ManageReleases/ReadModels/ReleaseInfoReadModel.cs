@@ -3,7 +3,7 @@ using Bearcat.Abstractions.NfoDatabase;
 namespace Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 
 public record ReleaseInfoReadModel(
-    int ReleaseInfoId,
+    int? ReleaseInfoId,
     string NfoDatabaseClassName,
     string ReleaseName,
     string? ReleaseDatabaseUrl,

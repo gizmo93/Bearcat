@@ -23,7 +23,7 @@ public class ImageUploadRepository(IBearcatWriteDbContext dbWrite, ISecretProtec
 
         var configs = await dbWrite
             .ImageUploadConfigs.Include(config => config.Release)
-                .ThenInclude(release => release!.ReleaseInfo)
+                .ThenInclude(release => release!.Metadata)
             .Include(config => config.ReleaseCollection)
                 .ThenInclude(collection => collection!.Metadata)
             .Include(config => config.ImageHosterRegistration)
@@ -32,8 +32,8 @@ public class ImageUploadRepository(IBearcatWriteDbContext dbWrite, ISecretProtec
                 && (
                     (
                         config.Release != null
-                        && config.Release.ReleaseInfo != null
-                        && config.Release.ReleaseInfo.CoverUrl != null
+                        && config.Release.Metadata != null
+                        && config.Release.Metadata.CoverUrl != null
                     )
                     || (
                         config.ReleaseCollection != null
@@ -71,7 +71,7 @@ public class ImageUploadRepository(IBearcatWriteDbContext dbWrite, ISecretProtec
                 .ThenInclude(config => config.ImageHosterRegistration)
             .Include(upload => upload.ImageUploadConfig)
                 .ThenInclude(config => config.Release)
-                    .ThenInclude(release => release!.ReleaseInfo)
+                    .ThenInclude(release => release!.Metadata)
             .Include(upload => upload.ImageUploadConfig)
                 .ThenInclude(config => config.ReleaseCollection)
                     .ThenInclude(collection => collection!.Metadata)
