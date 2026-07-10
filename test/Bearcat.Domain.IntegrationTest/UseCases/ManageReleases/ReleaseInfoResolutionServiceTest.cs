@@ -1,7 +1,9 @@
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -26,6 +28,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
 
     private BearcatDbContext dbContext = null!;
     private Mock<INfoDatabaseFactory> nfoDatabaseFactoryMock = null!;
+    private Mock<IMediaMetadataDatabaseFactory> metadataDatabaseFactoryMock = null!;
     private ReleaseInfoResolutionService service = null!;
     private readonly List<string> tempReleaseFolders = [];
 
@@ -34,10 +37,16 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     {
         dbContext = Database.CreateDbContext();
         nfoDatabaseFactoryMock = new Mock<INfoDatabaseFactory>(MockBehavior.Strict);
+        metadataDatabaseFactoryMock = new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict);
 
         service = new ReleaseInfoResolutionService(
             new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
             nfoDatabaseFactoryMock.Object,
+            new MediaMetadataResolver(
+                new MediaMetadataResolverRepository(dbContext, NoOpSecretProtector.Instance),
+                metadataDatabaseFactoryMock.Object,
+                new Mock<ILogger<MediaMetadataResolver>>().Object
+            ),
             new Mock<ILogger<ReleaseInfoResolutionService>>().Object,
             CreateTimeProvider()
         );
@@ -664,6 +673,80 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         persistedRelease.Metadata.Genre.ShouldBe("Drama");
         persistedRelease.Metadata.Description.ShouldBe("Manual description");
         persistedRelease.Metadata.CoverUrl.ShouldBe("https://images.test/cover.jpg");
+    }
+
+    [Test]
+    public async Task ResolveAsync_NfoContainsImdbId_ResolvesMovieMetadata()
+    {
+        var release = await AddReleaseAsync("Amok.1994.1080p.BluRay.x264-PL3X");
+        release.ReleaseContentType = ReleaseContentType.Movie;
+        release.PrimaryLanguageCode = "de";
+        release.ReleaseNfo = new Bearcat.Domain.Entities.ReleaseNfo
+        {
+            FileName = "amok.nfo",
+            Content = "https://www.imdb.com/title/tt0109093/",
+        };
+        release.ExternalIdentifiers.Add(
+            new ReleaseExternalIdentifier
+            {
+                Type = ExternalIdentifierType.Imdb,
+                Value = "tt0109093",
+                Source = ExternalIdentifierSource.Nfo,
+            }
+        );
+
+        const string databaseClassName = "MovieMetadataDatabase";
+        dbContext.SeriesDatabaseRegistrations.Add(
+            new SeriesDatabaseRegistration
+            {
+                SeriesDatabaseClassName = databaseClassName,
+                SerializedConfig = SerializedConfig,
+                IsActive = true,
+            }
+        );
+        await dbContext.SaveChangesAsync();
+
+        var config = new Mock<IMediaMetadataDatabaseConfig>(MockBehavior.Strict).Object;
+        var database = new Mock<IMediaMetadataDatabase>(MockBehavior.Strict);
+        database.SetupGet(item => item.SupportedMediaKinds).Returns([MediaKind.Movie]);
+        database.SetupGet(item => item.ResolutionPriority).Returns(0);
+        database.Setup(item => item.DeserializeConfig(SerializedConfig)).Returns(config);
+        database
+            .Setup(item =>
+                item.GetByImdbIdAsync(
+                    config,
+                    It.Is<MediaMetadataLookup>(lookup =>
+                        lookup.MediaKind == MediaKind.Movie
+                        && lookup.ImdbId == "tt0109093"
+                        && lookup.Title == "Amok"
+                        && lookup.Year == 1994
+                        && lookup.LanguageCode == "de"
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new MediaMetadata(
+                    "Amok",
+                    "Description",
+                    "Drama",
+                    "https://images.test/amok.jpg",
+                    "https://metadata.test/amok"
+                )
+            );
+        metadataDatabaseFactoryMock
+            .Setup(factory => factory.Get(databaseClassName))
+            .Returns(database.Object);
+
+        var resolved = await service.ResolveAsync(release.Id, CancellationToken.None);
+
+        resolved.ShouldBeTrue();
+        dbContext.ChangeTracker.Clear();
+        var metadata = await dbContext.ReleaseMetadata.SingleAsync();
+        metadata.MetadataDatabaseClassName.ShouldBe(databaseClassName);
+        metadata.Title.ShouldBe("Amok");
+        metadata.Genre.ShouldBe("Drama");
+        metadata.MetadataDatabaseUrl.ShouldBe("https://metadata.test/amok");
     }
 
     private Mock<INfoDatabase> SetupNfoDatabase(

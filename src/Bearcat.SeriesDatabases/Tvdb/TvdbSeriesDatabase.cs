@@ -27,7 +27,7 @@ public class TvdbSeriesDatabase(TvdbClient client) : IMediaMetadataDatabase
         }
 
         var tvdbConfig = config.As<TvdbConfig>();
-        
+
         var series = await client.GetSeriesByImdbIdAsync(
             config: tvdbConfig,
             imdbId: lookup.ImdbId,
@@ -63,7 +63,7 @@ public class TvdbSeriesDatabase(TvdbClient client) : IMediaMetadataDatabase
         }
 
         var tvdbConfig = config.As<TvdbConfig>();
-        
+
         var result = await client.SearchSeriesByTitleAsync(
             config: tvdbConfig,
             title: lookup.Title,

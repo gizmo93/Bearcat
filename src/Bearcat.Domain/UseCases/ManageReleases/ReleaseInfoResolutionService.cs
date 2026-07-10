@@ -1,7 +1,10 @@
+using System.Text.RegularExpressions;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -13,9 +16,10 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ManageReleases;
 
-public class ReleaseInfoResolutionService(
+public partial class ReleaseInfoResolutionService(
     IReleaseInfoRepository repository,
     INfoDatabaseFactory nfoDatabaseFactory,
+    MediaMetadataResolver metadataResolver,
     ILogger<ReleaseInfoResolutionService> logger,
     TimeProvider timeProvider
 )
@@ -58,6 +62,7 @@ public class ReleaseInfoResolutionService(
         return await TryResolveAsync(
             release: release,
             registrations: registrations,
+            respectLastCheckedAt: false,
             cancellationToken: cancellationToken
         );
     }
@@ -74,6 +79,7 @@ public class ReleaseInfoResolutionService(
         var resolved = await TryResolveAsync(
             release: release,
             registrations: registrations,
+            respectLastCheckedAt: false,
             cancellationToken: cancellationToken
         );
 
@@ -81,7 +87,7 @@ public class ReleaseInfoResolutionService(
         {
             await repository.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException exception) when (IsDuplicateReleaseInfoException(exception))
+        catch (DbUpdateException exception) when (IsDuplicateReleaseDataException(exception))
         {
             repository.DetachPendingReleaseInfo(release);
             await repository.SaveChangesAsync(cancellationToken);
@@ -100,24 +106,136 @@ public class ReleaseInfoResolutionService(
     private async Task<bool> TryResolveAsync(
         Release release,
         IReadOnlyList<ActiveNfoDatabaseRegistrationReadModel> registrations,
+        bool respectLastCheckedAt,
         CancellationToken cancellationToken = default
     )
     {
-        var nfoAttached = await TryResolveAndAttachNfoAsync(
-            release: release,
-            registrations: registrations,
-            cancellationToken: cancellationToken
+        var lastCheckedThresholdDate = timeProvider.GetLocalNow() - lastCheckedThreshold;
+        var releaseInfoNeedsResolution =
+            (release.ReleaseInfo is null || release.ReleaseNfo is null)
+            && (
+                !respectLastCheckedAt
+                || release.ReleaseInfoCheckedAt is null
+                || release.ReleaseInfoCheckedAt < lastCheckedThresholdDate
+            );
+        var metadataNeedsResolution =
+            release.Metadata is null
+            && (
+                !respectLastCheckedAt
+                || release.MetadataCheckedAt is null
+                || release.MetadataCheckedAt < lastCheckedThresholdDate
+            );
+
+        var nfoAttached =
+            releaseInfoNeedsResolution
+            && await TryResolveAndAttachNfoAsync(
+                release: release,
+                registrations: registrations,
+                cancellationToken: cancellationToken
+            );
+
+        var releaseInfoAttached =
+            releaseInfoNeedsResolution
+            && await TryResolveAndAttachReleaseInfoAsync(
+                release: release,
+                registrations: registrations,
+                cancellationToken: cancellationToken
+            );
+
+        var metadataAttached =
+            metadataNeedsResolution
+            && await TryResolveAndAttachMetadataAsync(release, cancellationToken);
+
+        if (releaseInfoNeedsResolution)
+        {
+            release.ReleaseInfoCheckedAt = timeProvider.GetLocalNow();
+        }
+
+        if (metadataNeedsResolution)
+        {
+            release.MetadataCheckedAt = timeProvider.GetLocalNow();
+        }
+
+        return releaseInfoAttached || nfoAttached || metadataAttached;
+    }
+
+    private async Task<bool> TryResolveAndAttachMetadataAsync(
+        Release release,
+        CancellationToken cancellationToken
+    )
+    {
+        if (release.Metadata is not null)
+        {
+            return false;
+        }
+
+        var mediaKind = release.ReleaseContentType switch
+        {
+            ReleaseContentType.Movie => MediaKind.Movie,
+            ReleaseContentType.TvShowEpisode => MediaKind.TvEpisode,
+            _ => (MediaKind?)null,
+        };
+
+        if (mediaKind is null)
+        {
+            return false;
+        }
+
+        var normalizedName = release.Name.Replace('.', ' ').Replace('_', ' ');
+        var titleMarker = TitleMarkerRegex().Match(normalizedName);
+        var title = titleMarker.Success
+            ? normalizedName[..titleMarker.Index].Trim()
+            : normalizedName.Trim();
+        var yearMatch = YearRegex().Match(normalizedName);
+        var episodeMatch = EpisodeRegex().Match(normalizedName);
+        var externalTitle = release
+            .ReleaseInfo?.ExternalInfos.Select(info => info.Title)
+            .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+        var imdbId = release
+            .ExternalIdentifiers.Where(identifier => identifier.Type == ExternalIdentifierType.Imdb)
+            .OrderBy(identifier => identifier.Source)
+            .Select(identifier => identifier.Value)
+            .FirstOrDefault();
+
+        var resolved = await metadataResolver.ResolveAsync(
+            new MediaMetadataLookup(
+                MediaKind: mediaKind.Value,
+                ImdbId: imdbId,
+                Title: externalTitle ?? title,
+                Year: yearMatch.Success ? int.Parse(yearMatch.Value) : null,
+                SeasonNumber: episodeMatch.Success
+                    ? int.Parse(episodeMatch.Groups["season"].Value)
+                    : null,
+                EpisodeNumber: episodeMatch.Success
+                    ? int.Parse(episodeMatch.Groups["episode"].Value)
+                    : null,
+                LanguageCode: release.PrimaryLanguageCode
+            ),
+            cancellationToken
         );
 
-        var releaseInfoAttached = await TryResolveAndAttachReleaseInfoAsync(
-            release: release,
-            registrations: registrations,
-            cancellationToken: cancellationToken
+        if (resolved is null)
+        {
+            return false;
+        }
+
+        release.Metadata = new ReleaseMetadata
+        {
+            MetadataDatabaseClassName = resolved.DatabaseClassName,
+            Title = resolved.Metadata.Title,
+            Genre = resolved.Metadata.Genre,
+            Description = resolved.Metadata.Description,
+            CoverUrl = resolved.Metadata.CoverUrl,
+            MetadataDatabaseUrl = resolved.Metadata.DatabaseUrl,
+        };
+
+        logger.LogInformation(
+            "Resolved metadata for release {ReleaseName} using {MetadataDatabase}",
+            release.Name,
+            resolved.DatabaseClassName
         );
 
-        release.ReleaseInfoCheckedAt = timeProvider.GetLocalNow();
-
-        return releaseInfoAttached || nfoAttached;
+        return true;
     }
 
     private async Task<bool> TryResolveAndAttachNfoAsync(
@@ -205,18 +323,30 @@ public class ReleaseInfoResolutionService(
                 if (release.ReleaseInfo is null)
                 {
                     release.ReleaseInfo = ToEntity(registration.NfoDatabaseClassName, releaseInfo);
-                    release.Metadata ??= new ReleaseMetadata
+                    var metadataTitle = releaseInfo
+                        .ExternalInfos.Select(info => info.Title)
+                        .FirstOrDefault(title => !string.IsNullOrWhiteSpace(title));
+
+                    if (
+                        release.Metadata is null
+                        && (
+                            !string.IsNullOrWhiteSpace(metadataTitle)
+                            || !string.IsNullOrWhiteSpace(releaseInfo.Genre)
+                            || !string.IsNullOrWhiteSpace(releaseInfo.Description)
+                            || !string.IsNullOrWhiteSpace(releaseInfo.CoverUrl)
+                        )
+                    )
                     {
-                        MetadataDatabaseClassName = registration.NfoDatabaseClassName,
-                        Title =
-                            releaseInfo
-                                .ExternalInfos.Select(info => info.Title)
-                                .FirstOrDefault(title => !string.IsNullOrWhiteSpace(title))
-                            ?? releaseInfo.ReleaseName,
-                        Genre = releaseInfo.Genre,
-                        Description = releaseInfo.Description,
-                        CoverUrl = releaseInfo.CoverUrl,
-                    };
+                        release.Metadata = new ReleaseMetadata
+                        {
+                            MetadataDatabaseClassName = registration.NfoDatabaseClassName,
+                            Title = metadataTitle ?? releaseInfo.ReleaseName,
+                            Genre = releaseInfo.Genre,
+                            Description = releaseInfo.Description,
+                            CoverUrl = releaseInfo.CoverUrl,
+                        };
+                    }
+
                     releaseInfoAttached = true;
 
                     logger.LogInformation(
@@ -297,6 +427,7 @@ public class ReleaseInfoResolutionService(
             var resolved = await TryResolveAsync(
                 release: release,
                 registrations: registrations,
+                respectLastCheckedAt: true,
                 cancellationToken: cancellationToken
             );
 
@@ -309,7 +440,7 @@ public class ReleaseInfoResolutionService(
             {
                 await repository.SaveChangesAsync(cancellationToken);
             }
-            catch (DbUpdateException exception) when (IsDuplicateReleaseInfoException(exception))
+            catch (DbUpdateException exception) when (IsDuplicateReleaseDataException(exception))
             {
                 repository.DetachPendingReleaseInfo(release);
                 await repository.SaveChangesAsync(cancellationToken);
@@ -486,13 +617,22 @@ public class ReleaseInfoResolutionService(
         return activeNfoDatabaseRegistrations;
     }
 
-    private static bool IsDuplicateReleaseInfoException(DbUpdateException exception)
+    private static bool IsDuplicateReleaseDataException(DbUpdateException exception)
     {
         return exception.InnerException
             is PostgresException
             {
                 SqlState: PostgresErrorCodes.UniqueViolation,
-                ConstraintName: "IX_ReleaseInfos_ReleaseId",
+                ConstraintName: "IX_ReleaseInfos_ReleaseId" or "IX_ReleaseMetadata_ReleaseId",
             };
     }
+
+    [GeneratedRegex(@"\b(?:19|20)\d{2}\b")]
+    private static partial Regex YearRegex();
+
+    [GeneratedRegex(@"\bS(?<season>\d{1,2})E(?<episode>\d{1,3})\b", RegexOptions.IgnoreCase)]
+    private static partial Regex EpisodeRegex();
+
+    [GeneratedRegex(@"\b(?:(?:19|20)\d{2}|S\d{1,2}E\d{1,3})\b", RegexOptions.IgnoreCase)]
+    private static partial Regex TitleMarkerRegex();
 }

@@ -25,6 +25,7 @@ using Bearcat.Domain.UseCases.ManageSeriesDatabases.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
+using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.DistributionSites;
 using Microsoft.EntityFrameworkCore;
@@ -191,6 +192,7 @@ public static class ServiceProviderConfig
                 SeriesDatabaseRegistrationRepository
             >();
             services.AddScoped<IReleaseCollectionInfoRepository, ReleaseCollectionInfoRepository>();
+            services.AddScoped<IMediaMetadataResolverRepository, MediaMetadataResolverRepository>();
         }
     }
 }

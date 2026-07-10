@@ -2,6 +2,7 @@ using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -35,8 +36,12 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
         metadataDatabaseFactoryMock = new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict);
 
         service = new ReleaseCollectionInfoResolutionService(
-            new ReleaseCollectionInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
-            metadataDatabaseFactoryMock.Object,
+            new ReleaseCollectionInfoRepository(dbContext),
+            new MediaMetadataResolver(
+                new MediaMetadataResolverRepository(dbContext, NoOpSecretProtector.Instance),
+                metadataDatabaseFactoryMock.Object,
+                new Mock<ILogger<MediaMetadataResolver>>().Object
+            ),
             new Mock<ILogger<ReleaseCollectionInfoResolutionService>>().Object,
             CreateTimeProvider()
         );
@@ -528,6 +533,9 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
         var configMock = new Mock<IMediaMetadataDatabaseConfig>(MockBehavior.Strict);
         var databaseMock = new Mock<IMediaMetadataDatabase>(MockBehavior.Strict);
         databaseMock.SetupGet(database => database.ResolutionPriority).Returns(priority);
+        databaseMock
+            .SetupGet(database => database.SupportedMediaKinds)
+            .Returns([MediaKind.TvSeries]);
         databaseMock
             .Setup(database => database.DeserializeConfig(SerializedConfig))
             .Returns(configMock.Object);

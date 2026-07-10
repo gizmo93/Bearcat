@@ -9,6 +9,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -781,6 +782,11 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         return new ReleaseInfoResolutionService(
             new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
             nfoDatabaseFactoryMock.Object,
+            new MediaMetadataResolver(
+                new MediaMetadataResolverRepository(dbContext, NoOpSecretProtector.Instance),
+                new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict).Object,
+                NullLogger<MediaMetadataResolver>.Instance
+            ),
             NullLogger<ReleaseInfoResolutionService>.Instance,
             CreateTimeProvider()
         );

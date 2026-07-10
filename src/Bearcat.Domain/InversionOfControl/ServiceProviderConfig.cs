@@ -33,6 +33,7 @@ using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.ManageUploads.Progress;
+using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Microsoft.Extensions.DependencyInjection;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -67,6 +68,7 @@ public static class ServiceProviderConfig
             services.AddScoped<IForumPostRenderSource, ReleaseCollectionForumPostRenderSource>();
             services.AddScoped<ReleaseInfoService>();
             services.AddScoped<ReleaseInfoResolutionService>();
+            services.AddScoped<MediaMetadataResolver>();
             services.AddScoped<MediaMetadataService>();
             services.AddScoped<ReleaseTemplateService>();
             services.AddScoped<ForumPostTemplateService>();

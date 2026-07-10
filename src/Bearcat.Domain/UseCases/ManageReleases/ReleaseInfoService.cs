@@ -112,6 +112,12 @@ public class ReleaseInfoService(
             source: ExternalIdentifierSource.Nfo,
             values: [content]
         );
+        release.MetadataCheckedAt = null;
+
+        if (release.ReleaseCollection is not null)
+        {
+            release.ReleaseCollection.MetadataCheckedAt = null;
+        }
 
         await repository.SaveChangesAsync(cancellationToken);
 

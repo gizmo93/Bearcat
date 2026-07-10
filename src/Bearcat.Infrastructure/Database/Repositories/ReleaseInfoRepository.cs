@@ -37,11 +37,28 @@ public class ReleaseInfoRepository(
             .Releases.Include(release => release.ReleaseInfo)
                 .ThenInclude(info => info!.ExternalInfos)
             .Include(release => release.ReleaseNfo)
+            .Include(release => release.Metadata)
             .Include(release => release.ExternalIdentifiers)
-            .Where(release => release.ReleaseInfo == null || release.ReleaseNfo == null)
             .Where(release =>
-                release.ReleaseInfoCheckedAt == null
-                || release.ReleaseInfoCheckedAt < lastCheckedThreshold
+                release.ReleaseInfo == null
+                || release.ReleaseNfo == null
+                || release.Metadata == null
+            )
+            .Where(release =>
+                (
+                    (release.ReleaseInfo == null || release.ReleaseNfo == null)
+                    && (
+                        release.ReleaseInfoCheckedAt == null
+                        || release.ReleaseInfoCheckedAt < lastCheckedThreshold
+                    )
+                )
+                || (
+                    release.Metadata == null
+                    && (
+                        release.MetadataCheckedAt == null
+                        || release.MetadataCheckedAt < lastCheckedThreshold
+                    )
+                )
             )
             .Where(release => !excludedReleaseIds.Contains(release.Id))
             .OrderBy(release => release.CreatedAt)
@@ -96,6 +113,7 @@ public class ReleaseInfoRepository(
             .Include(release => release.Metadata)
             .Include(release => release.ReleaseNfo)
             .Include(release => release.ExternalIdentifiers)
+            .Include(release => release.ReleaseCollection)
             .FirstAsync(release => release.Id == releaseId, cancellationToken);
     }
 
