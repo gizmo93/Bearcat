@@ -2,6 +2,7 @@ using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -32,11 +33,6 @@ public class ReleaseInfoResolutionService(
         var seenReleaseIds = new HashSet<int>();
 
         var registrations = await GetActiveNfoDatabaseRegistrationsAsync(cancellationToken);
-
-        if (registrations.Count == 0)
-        {
-            return 0;
-        }
 
         while (hasReleasesWithoutInfos)
         {
@@ -73,11 +69,6 @@ public class ReleaseInfoResolutionService(
     {
         var registrations = await GetActiveNfoDatabaseRegistrationsAsync(cancellationToken);
 
-        if (registrations.Count == 0)
-        {
-            return false;
-        }
-
         var release = await repository.GetReleaseWithInfoAsync(releaseId, cancellationToken);
 
         var resolved = await TryResolveAsync(
@@ -93,6 +84,7 @@ public class ReleaseInfoResolutionService(
         catch (DbUpdateException exception) when (IsDuplicateReleaseInfoException(exception))
         {
             repository.DetachPendingReleaseInfo(release);
+            await repository.SaveChangesAsync(cancellationToken);
             logger.LogInformation(
                 exception,
                 "Release info for release {ReleaseName} was already resolved by another worker",
@@ -111,13 +103,13 @@ public class ReleaseInfoResolutionService(
         CancellationToken cancellationToken = default
     )
     {
-        var releaseInfoAttached = await TryResolveAndAttachReleaseInfoAsync(
+        var nfoAttached = await TryResolveAndAttachNfoAsync(
             release: release,
             registrations: registrations,
             cancellationToken: cancellationToken
         );
 
-        var nfoAttached = await TryResolveAndAttachNfoAsync(
+        var releaseInfoAttached = await TryResolveAndAttachReleaseInfoAsync(
             release: release,
             registrations: registrations,
             cancellationToken: cancellationToken
@@ -134,57 +126,20 @@ public class ReleaseInfoResolutionService(
         CancellationToken cancellationToken
     )
     {
-        if (release.ReleaseInfo?.ReleaseNfo is not null)
-        {
-            return false;
-        }
-
-        if (release.ReleaseInfo is not null)
-        {
-            return await TryResolveNfoAsync(
-                release: release,
-                releaseInfo: release.ReleaseInfo,
-                registrations: registrations,
-                cancellationToken: cancellationToken
-            );
-        }
-
-        return await TryAttachLocalNfoWithoutInfoAsync(release, cancellationToken);
-    }
-
-    private async Task<bool> TryAttachLocalNfoWithoutInfoAsync(
-        Release release,
-        CancellationToken cancellationToken
-    )
-    {
-        if (release.Id > 0 && await repository.HasReleaseInfoAsync(release.Id, cancellationToken))
+        if (release.ReleaseNfo is not null)
         {
             return false;
         }
 
         var localNfo = await ReleaseNfoService.GetLocalNfoAsync(release.ReleaseFolderPath);
 
-        if (localNfo is null)
+        if (localNfo is not null)
         {
-            return false;
+            AttachNfo(release, localNfo.FileName, localNfo.Content);
+            return true;
         }
 
-        release.ReleaseInfo = DomainReleaseInfo.CreatePlaceholder(
-            DomainReleaseInfo.LocalNfoSource,
-            release.Name
-        );
-        release.ReleaseInfo.ReleaseNfo = new DomainReleaseNfo
-        {
-            FileName = localNfo.FileName,
-            Content = localNfo.Content,
-        };
-
-        logger.LogInformation(
-            "Stored local NFO for release {ReleaseName} without resolved release info",
-            release.Name
-        );
-
-        return true;
+        return await TryResolveNfoAsync(release, registrations, cancellationToken);
     }
 
     private async Task<bool> TryResolveAndAttachReleaseInfoAsync(
@@ -193,12 +148,35 @@ public class ReleaseInfoResolutionService(
         CancellationToken cancellationToken
     )
     {
+        var initialIdentifierCount = release.ExternalIdentifiers.Count;
+        var releaseInfoAttached = false;
+
         if (release.ReleaseInfo is not null)
         {
-            return false;
+            ReleaseExternalIdentifierService.SyncImdbIds(
+                release,
+                GetExternalIdentifierSource(release.ReleaseInfo.NfoDatabaseClassName),
+                release
+                    .ReleaseInfo.ExternalInfos.SelectMany(info => info.Urls)
+                    .Select(url => url.Url)
+                    .ToList()
+            );
+
+            if (
+                release.ExternalIdentifiers.Any(identifier =>
+                    identifier.Type == ExternalIdentifierType.Imdb
+                )
+            )
+            {
+                return release.ExternalIdentifiers.Count != initialIdentifierCount;
+            }
         }
 
-        if (release.Id > 0 && await repository.HasReleaseInfoAsync(release.Id, cancellationToken))
+        if (
+            release.ReleaseInfo is null
+            && release.Id > 0
+            && await repository.HasReleaseInfoAsync(release.Id, cancellationToken)
+        )
         {
             return false;
         }
@@ -224,15 +202,35 @@ public class ReleaseInfoResolutionService(
                     continue;
                 }
 
-                release.ReleaseInfo = ToEntity(registration.NfoDatabaseClassName, releaseInfo);
+                if (release.ReleaseInfo is null)
+                {
+                    release.ReleaseInfo = ToEntity(registration.NfoDatabaseClassName, releaseInfo);
+                    releaseInfoAttached = true;
 
-                logger.LogInformation(
-                    "Resolved release info for release {ReleaseName} using {NfoDatabase}",
-                    release.Name,
-                    registration.NfoDatabaseClassName
+                    logger.LogInformation(
+                        "Resolved release info for release {ReleaseName} using {NfoDatabase}",
+                        release.Name,
+                        registration.NfoDatabaseClassName
+                    );
+                }
+
+                ReleaseExternalIdentifierService.SyncImdbIds(
+                    release,
+                    GetExternalIdentifierSource(registration.NfoDatabaseClassName),
+                    releaseInfo
+                        .ExternalInfos.SelectMany(info => info.Urls)
+                        .Select(url => url.Value)
+                        .ToList()
                 );
 
-                return true;
+                if (
+                    release.ExternalIdentifiers.Any(identifier =>
+                        identifier.Type == ExternalIdentifierType.Imdb
+                    )
+                )
+                {
+                    return true;
+                }
             }
             catch (NfoDatabaseRateLimitExceededException exception)
             {
@@ -243,7 +241,7 @@ public class ReleaseInfoResolutionService(
                     registration.NfoDatabaseClassName
                 );
 
-                return false;
+                continue;
             }
             catch (Exception exception)
             {
@@ -254,11 +252,11 @@ public class ReleaseInfoResolutionService(
                     registration.NfoDatabaseClassName
                 );
 
-                return false;
+                continue;
             }
         }
 
-        return false;
+        return releaseInfoAttached || release.ExternalIdentifiers.Count != initialIdentifierCount;
     }
 
     private async Task<(bool FoundReleasesWithoutInfo, int ResolvedCount)> ResolveBatchAsync(
@@ -302,6 +300,7 @@ public class ReleaseInfoResolutionService(
             catch (DbUpdateException exception) when (IsDuplicateReleaseInfoException(exception))
             {
                 repository.DetachPendingReleaseInfo(release);
+                await repository.SaveChangesAsync(cancellationToken);
                 logger.LogInformation(
                     exception,
                     "Release info for release {ReleaseName} was already resolved by another worker",
@@ -315,24 +314,10 @@ public class ReleaseInfoResolutionService(
 
     private async Task<bool> TryResolveNfoAsync(
         Release release,
-        DomainReleaseInfo releaseInfo,
         IReadOnlyList<ActiveNfoDatabaseRegistrationReadModel> registrations,
         CancellationToken cancellationToken
     )
     {
-        var localNfo = await ReleaseNfoService.GetLocalNfoAsync(release.ReleaseFolderPath);
-
-        if (localNfo is not null)
-        {
-            releaseInfo.ReleaseNfo = new DomainReleaseNfo
-            {
-                FileName = localNfo.FileName,
-                Content = localNfo.Content,
-            };
-
-            return true;
-        }
-
         foreach (var registration in registrations)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -349,7 +334,7 @@ public class ReleaseInfoResolutionService(
                 var config = nfoDatabase.DeserializeConfig(registration.SerializedConfig);
                 var nfo = await nfoProvider.GetReleaseNfoAsync(
                     config: config,
-                    dirname: releaseInfo.ReleaseName,
+                    dirname: release.ReleaseInfo?.ReleaseName ?? release.Name,
                     cancellationToken: cancellationToken
                 );
 
@@ -358,11 +343,7 @@ public class ReleaseInfoResolutionService(
                     continue;
                 }
 
-                releaseInfo.ReleaseNfo = new DomainReleaseNfo
-                {
-                    FileName = nfo.FileName,
-                    Content = nfo.Content,
-                };
+                AttachNfo(release, nfo.FileName, nfo.Content);
 
                 logger.LogInformation(
                     "Resolved NFO for release {ReleaseName} using {NfoDatabase}",
@@ -391,6 +372,23 @@ public class ReleaseInfoResolutionService(
         }
 
         return false;
+    }
+
+    private static void AttachNfo(Release release, string fileName, string content)
+    {
+        release.ReleaseNfo = new DomainReleaseNfo { FileName = fileName, Content = content };
+        ReleaseExternalIdentifierService.SyncImdbIds(
+            release,
+            ExternalIdentifierSource.Nfo,
+            [content]
+        );
+    }
+
+    private static ExternalIdentifierSource GetExternalIdentifierSource(string className)
+    {
+        return className.Contains("Srrdb", StringComparison.OrdinalIgnoreCase)
+            ? ExternalIdentifierSource.Srrdb
+            : ExternalIdentifierSource.Xrel;
     }
 
     private async Task SaveNfoFileToDiskAsync(

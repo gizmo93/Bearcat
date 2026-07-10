@@ -21,6 +21,7 @@ public class ReleaseService(
         ReleaseType releaseType,
         ReleaseContentType releaseContentType,
         int releaseGroupId,
+        string? primaryLanguageCode,
         CancellationToken cancellationToken = default
     )
     {
@@ -33,6 +34,7 @@ public class ReleaseService(
             CreatedAt = localNow,
             ReleaseType = releaseType,
             ReleaseContentType = releaseContentType,
+            PrimaryLanguageCode = CleanOptional(primaryLanguageCode)?.ToLowerInvariant(),
             ReleaseGroupId = releaseGroupId,
             ReleaseFolderPath = isUnmanaged ? null : releaseFolderPath,
             ArchiveConfigs = [],
@@ -64,6 +66,7 @@ public class ReleaseService(
         string? releaseFolderPath,
         ReleaseContentType releaseContentType,
         int releaseGroupId,
+        string? primaryLanguageCode,
         CancellationToken cancellationToken = default
     )
     {
@@ -77,6 +80,7 @@ public class ReleaseService(
         release.Name = name;
         release.ReleaseContentType = releaseContentType;
         release.ReleaseGroupId = releaseGroupId;
+        release.PrimaryLanguageCode = CleanOptional(primaryLanguageCode)?.ToLowerInvariant();
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }

@@ -10,5 +10,6 @@ public record ReleaseFolderAutomationReadModel(
     string ReleaseTemplateName,
     ReleaseType ReleaseType,
     ReleaseContentType ReleaseContentType,
+    string? PrimaryLanguageCode,
     bool IsEnabled
 );

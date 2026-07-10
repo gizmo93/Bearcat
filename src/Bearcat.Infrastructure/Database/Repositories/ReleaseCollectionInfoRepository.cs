@@ -91,8 +91,9 @@ public class ReleaseCollectionInfoRepository(
     {
         return query
             .Include(collection => collection.Releases)
-                .ThenInclude(release => release.ReleaseInfo)
-                    .ThenInclude(info => info!.ReleaseNfo)
+                .ThenInclude(release => release.ReleaseNfo)
+            .Include(collection => collection.Releases)
+                .ThenInclude(release => release.ExternalIdentifiers)
             .Include(collection => collection.Releases)
                 .ThenInclude(release => release.ReleaseInfo)
                     .ThenInclude(info => info!.ExternalInfos);

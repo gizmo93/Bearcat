@@ -69,6 +69,7 @@ public partial class ReleaseFolderAutomationsPage(
                     ReleaseFolderAutomationId = automation.ReleaseFolderAutomationId,
                     BasePath = automation.BasePath,
                     FolderNamePattern = automation.FolderNamePattern,
+                    PrimaryLanguageCode = automation.PrimaryLanguageCode ?? string.Empty,
                     ReleaseTemplateId = automation.ReleaseTemplateId,
                     IsEnabled = automation.IsEnabled,
                     IsEdit = true,

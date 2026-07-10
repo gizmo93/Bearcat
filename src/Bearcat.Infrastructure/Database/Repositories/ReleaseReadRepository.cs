@@ -728,12 +728,12 @@ public class ReleaseReadRepository(
                 info.Genre,
                 info.Description,
                 info.CoverUrl,
-                info.ReleaseNfo == null
+                info.Release.ReleaseNfo == null
                     ? null
                     : new ReleaseNfoReadModel(
-                        info.ReleaseNfo.Id,
-                        info.ReleaseNfo.FileName,
-                        info.ReleaseNfo.Content
+                        info.Release.ReleaseNfo.Id,
+                        info.Release.ReleaseNfo.FileName,
+                        info.Release.ReleaseNfo.Content
                     ),
                 info.ExternalInfos.OrderBy(externalInfo => externalInfo.Id)
                     .Select(externalInfo => new ReleaseExternalInfoReadModel(
@@ -758,13 +758,11 @@ public class ReleaseReadRepository(
     )
     {
         return await dbRead
-            .ReleaseInfos.Where(info => info.ReleaseId == releaseId && info.ReleaseNfo != null)
-            .OrderBy(info => info.NfoDatabaseClassName)
-            .ThenBy(info => info.Id)
-            .Select(info => new ReleaseNfoReadModel(
-                info.ReleaseNfo!.Id,
-                info.ReleaseNfo.FileName,
-                info.ReleaseNfo.Content
+            .Releases.Where(release => release.Id == releaseId && release.ReleaseNfo != null)
+            .Select(release => new ReleaseNfoReadModel(
+                release.ReleaseNfo!.Id,
+                release.ReleaseNfo.FileName,
+                release.ReleaseNfo.Content
             ))
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
@@ -1153,6 +1151,7 @@ public class ReleaseReadRepository(
             entity.Name,
             entity.ReleaseType,
             entity.ReleaseContentType,
+            entity.PrimaryLanguageCode,
             entity.ReleaseGroupId,
             entity.ReleaseGroup.Name,
             entity.ReleaseFolderPath,

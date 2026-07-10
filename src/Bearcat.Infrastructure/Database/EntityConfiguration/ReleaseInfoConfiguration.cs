@@ -31,13 +31,5 @@ public class ReleaseInfoConfiguration : IEntityTypeConfiguration<ReleaseInfo>
             .HasPrincipalKey(info => info.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder
-            .HasOne(info => info.ReleaseNfo)
-            .WithOne(nfo => nfo.ReleaseInfo)
-            .HasForeignKey<ReleaseNfo>(nfo => nfo.ReleaseInfoId)
-            .HasPrincipalKey<ReleaseInfo>(info => info.Id)
-            .IsRequired(false)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -10,10 +10,11 @@ public class ReleaseNfoConfiguration : IEntityTypeConfiguration<ReleaseNfo>
     {
         builder.HasKey(nfo => nfo.Id);
 
-        builder.Property(nfo => nfo.ReleaseInfoId).IsRequired();
+        builder.Property(nfo => nfo.ReleaseId).IsRequired();
+        builder.Property(nfo => nfo.ReleaseInfoId).IsRequired(false);
         builder.Property(nfo => nfo.FileName).IsRequired().HasMaxLength(500);
         builder.Property(nfo => nfo.Content).IsRequired();
 
-        builder.HasIndex(nfo => nfo.ReleaseInfoId).IsUnique();
+        builder.HasIndex(nfo => nfo.ReleaseId).IsUnique();
     }
 }

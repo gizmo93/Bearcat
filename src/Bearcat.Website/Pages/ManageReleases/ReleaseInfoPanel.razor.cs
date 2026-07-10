@@ -26,6 +26,7 @@ public partial class ReleaseInfoPanel(
     public ReleaseType ReleaseType { get; set; }
 
     private ReleaseInfoReadModel? releaseInfo;
+    private ReleaseNfoReadModel? releaseNfo;
     private IReadOnlyList<ReleaseMediaFileReadModel> mediaFiles = [];
     private bool isLoading;
     private bool isResolving;
@@ -47,6 +48,7 @@ public partial class ReleaseInfoPanel(
             await operationRunner.RunAsync<IReleaseReadRepository>(async repository =>
             {
                 releaseInfo = await repository.GetReleaseInfoAsync(ReleaseId);
+                releaseNfo = await repository.GetReleaseNfoAsync(ReleaseId);
                 mediaFiles = await repository.GetMediaFilesAsync(ReleaseId);
             });
         }
@@ -147,14 +149,14 @@ public partial class ReleaseInfoPanel(
         {
             [nameof(EditReleaseNfoDialog.ReleaseId)] = ReleaseId,
             [nameof(EditReleaseNfoDialog.ReleaseName)] = ReleaseName,
-            [nameof(EditReleaseNfoDialog.ReleaseNfo)] = releaseInfo?.ReleaseNfo,
+            [nameof(EditReleaseNfoDialog.ReleaseNfo)] = releaseNfo,
         };
 
         var dialog = await dialogService.OpenAsync<EditReleaseNfoDialog>(
             parameters,
             new DialogOpenOptions
             {
-                Title = releaseInfo?.ReleaseNfo is null ? L["AddNfo"] : L["EditNfo"],
+                Title = releaseNfo is null ? L["AddNfo"] : L["EditNfo"],
                 Description = L["EditNfoDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
@@ -210,10 +212,8 @@ public partial class ReleaseInfoPanel(
     private static string GetValueOrDash(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "-" : value;
 
-    private static string GetNfoFileName(ReleaseInfoReadModel releaseInfo) =>
-        string.IsNullOrWhiteSpace(releaseInfo.ReleaseNfo?.FileName)
-            ? "-"
-            : releaseInfo.ReleaseNfo.FileName;
+    private string GetNfoFileName() =>
+        string.IsNullOrWhiteSpace(releaseNfo?.FileName) ? "-" : releaseNfo.FileName;
 
     private static string GetDatabaseDisplayName(string className)
     {

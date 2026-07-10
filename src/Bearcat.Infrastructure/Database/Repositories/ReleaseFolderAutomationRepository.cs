@@ -31,6 +31,7 @@ public class ReleaseFolderAutomationRepository(
                 a.ReleaseTemplate.Name,
                 a.ReleaseTemplate.ReleaseType,
                 a.ReleaseTemplate.ReleaseContentType,
+                a.PrimaryLanguageCode,
                 a.IsEnabled
             ))
             .ToListAsync(cancellationToken);

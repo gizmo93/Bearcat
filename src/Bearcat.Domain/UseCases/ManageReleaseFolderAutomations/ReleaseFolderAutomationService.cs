@@ -9,6 +9,7 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
         string basePath,
         string? folderNamePattern,
         int releaseTemplateId,
+        string? primaryLanguageCode,
         bool isEnabled,
         CancellationToken cancellationToken = default
     )
@@ -20,6 +21,9 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
                 ? null
                 : folderNamePattern.Trim(),
             ReleaseTemplateId = releaseTemplateId,
+            PrimaryLanguageCode = string.IsNullOrWhiteSpace(primaryLanguageCode)
+                ? null
+                : primaryLanguageCode.Trim().ToLowerInvariant(),
             IsEnabled = isEnabled,
         };
 
@@ -34,6 +38,7 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
         string basePath,
         string? folderNamePattern,
         int releaseTemplateId,
+        string? primaryLanguageCode,
         bool isEnabled,
         CancellationToken cancellationToken = default
     )
@@ -48,6 +53,9 @@ public class ReleaseFolderAutomationService(IReleaseFolderAutomationWriteReposit
             ? null
             : folderNamePattern.Trim();
         automation.ReleaseTemplateId = releaseTemplateId;
+        automation.PrimaryLanguageCode = string.IsNullOrWhiteSpace(primaryLanguageCode)
+            ? null
+            : primaryLanguageCode.Trim().ToLowerInvariant();
         automation.IsEnabled = isEnabled;
 
         await repository.SaveChangesAsync(cancellationToken);

@@ -14,8 +14,8 @@ public class ReleaseInfoService(
     public async Task DeleteAsync(int releaseInfoId, CancellationToken cancellationToken = default)
     {
         var releaseInfo = await repository.GetReleaseInfoByIdAsync(
-            releaseInfoId,
-            cancellationToken
+            releaseInfoId: releaseInfoId,
+            cancellationToken: cancellationToken
         );
         repository.Remove(releaseInfo);
 
@@ -68,27 +68,26 @@ public class ReleaseInfoService(
     {
         var release = await repository.GetReleaseWithInfoAsync(releaseId, cancellationToken);
 
-        var releaseInfo = release.ReleaseInfo;
-        if (releaseInfo is null)
-        {
-            releaseInfo = ReleaseInfo.CreatePlaceholder(ReleaseInfo.ManualSource, release.Name);
-            release.ReleaseInfo = releaseInfo;
-        }
-
         var safeFileName = ReleaseNfoService.GetSafeNfoFileName(
             fileName ?? string.Empty,
             release.Name
         );
 
-        if (releaseInfo.ReleaseNfo is null)
+        if (release.ReleaseNfo is null)
         {
-            releaseInfo.ReleaseNfo = new ReleaseNfo { FileName = safeFileName, Content = content };
+            release.ReleaseNfo = new ReleaseNfo { FileName = safeFileName, Content = content };
         }
         else
         {
-            releaseInfo.ReleaseNfo.FileName = safeFileName;
-            releaseInfo.ReleaseNfo.Content = content;
+            release.ReleaseNfo.FileName = safeFileName;
+            release.ReleaseNfo.Content = content;
         }
+
+        ReleaseExternalIdentifierService.SyncImdbIds(
+            release: release,
+            source: ExternalIdentifierSource.Nfo,
+            values: [content]
+        );
 
         await repository.SaveChangesAsync(cancellationToken);
 

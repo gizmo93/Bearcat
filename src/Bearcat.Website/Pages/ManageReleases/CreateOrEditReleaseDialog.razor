@@ -34,6 +34,15 @@
                                DisplayTextSelector="GetReleaseContentTypeDisplayText"
                                Options="ReleaseContentTypeOptions" />
 
+            <BbFormFieldCombobox TValue="string"
+                                 @bind-Value="formModel.PrimaryLanguageCode"
+                                 Label="@L["PrimaryLanguage"]"
+                                 SearchPlaceholder="@L["SearchLanguage"]"
+                                 EmptyMessage="@L["NoLanguagesFound"]"
+                                 InputClass="w-full"
+                                 MatchTriggerWidth="true"
+                                 Options="LanguageOptions" />
+
             @if (ShowFolderSelection)
             {
                 <div class="space-y-2">

@@ -4,17 +4,20 @@ using System.Collections.Generic;
 using Bearcat.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace BearCat.Infrastructure.Migrations
+namespace Bearcat.Infrastructure.Migrations
 {
     [DbContext(typeof(BearcatDbContext))]
-    partial class BearcatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260710213558_AddPrimaryLanguages")]
+    partial class AddPrimaryLanguages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1018,36 +1021,6 @@ namespace BearCat.Infrastructure.Migrations
                     b.ToTable("ReleaseCollectionMetadata");
                 });
 
-            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseExternalIdentifier", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ReleaseId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Source")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReleaseId", "Type", "Value", "Source")
-                        .IsUnique();
-
-                    b.ToTable("ReleaseExternalIdentifiers");
-                });
-
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseExternalInfo", b =>
                 {
                     b.Property<int>("Id")
@@ -1276,15 +1249,12 @@ namespace BearCat.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<int>("ReleaseId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("ReleaseInfoId")
+                    b.Property<int>("ReleaseInfoId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ReleaseId")
+                    b.HasIndex("ReleaseInfoId")
                         .IsUnique();
 
                     b.ToTable("ReleaseNfos");
@@ -1957,17 +1927,6 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("ReleaseCollection");
                 });
 
-            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseExternalIdentifier", b =>
-                {
-                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
-                        .WithMany("ExternalIdentifiers")
-                        .HasForeignKey("ReleaseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Release");
-                });
-
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseExternalInfo", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.ReleaseInfo", "ReleaseInfo")
@@ -2052,13 +2011,12 @@ namespace BearCat.Infrastructure.Migrations
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseNfo", b =>
                 {
-                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseInfo", "ReleaseInfo")
                         .WithOne("ReleaseNfo")
-                        .HasForeignKey("Bearcat.Domain.Entities.ReleaseNfo", "ReleaseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("Bearcat.Domain.Entities.ReleaseNfo", "ReleaseInfoId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
-                    b.Navigation("Release");
+                    b.Navigation("ReleaseInfo");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseQualityIssue", b =>
@@ -2292,8 +2250,6 @@ namespace BearCat.Infrastructure.Migrations
                 {
                     b.Navigation("ArchiveConfigs");
 
-                    b.Navigation("ExternalIdentifiers");
-
                     b.Navigation("ImageUploadConfigs");
 
                     b.Navigation("MediaFiles");
@@ -2305,8 +2261,6 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("QualityIssues");
 
                     b.Navigation("ReleaseInfo");
-
-                    b.Navigation("ReleaseNfo");
 
                     b.Navigation("UploadConfigs");
                 });
@@ -2332,6 +2286,8 @@ namespace BearCat.Infrastructure.Migrations
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseInfo", b =>
                 {
                     b.Navigation("ExternalInfos");
+
+                    b.Navigation("ReleaseNfo");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseTemplate", b =>

@@ -1219,7 +1219,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await AddUploadConfigAsync(
             enableAutomaticReuploads: false,
             qualityProfile: CreateRequireNfoProfile(),
-            releaseInfo: CreateReleaseInfoWithNfo()
+            releaseInfo: CreateReleaseInfo(),
+            hasNfo: true
         );
 
         // Act
@@ -1289,7 +1290,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             uploadedFileLinks: ["https://hoster.test/1"],
             enableAutomaticReuploads: true,
             qualityProfile: CreateRequireNfoProfile(),
-            releaseInfo: CreateReleaseInfoWithNfo()
+            releaseInfo: CreateReleaseInfo(),
+            hasNfo: true
         );
 
         // Act
@@ -1350,12 +1352,11 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             ],
         };
 
-    private static ReleaseInfo CreateReleaseInfoWithNfo() =>
+    private static ReleaseInfo CreateReleaseInfo() =>
         new()
         {
             NfoDatabaseClassName = ReleaseInfo.ManualSource,
             ReleaseName = "Bearcat.Release.001",
-            ReleaseNfo = new ReleaseNfo { FileName = "release.nfo", Content = "NFO body" },
         };
 
     private async Task<Upload> AddCompletedUploadAsync(
@@ -1365,14 +1366,16 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         bool enableAutomaticReuploads = false,
         bool hosterIsActive = true,
         QualityProfile? qualityProfile = null,
-        ReleaseInfo? releaseInfo = null
+        ReleaseInfo? releaseInfo = null,
+        bool hasNfo = false
     )
     {
         var uploadConfig = await AddUploadConfigAsync(
             enableAutomaticReuploads,
             hosterIsActive,
             qualityProfile: qualityProfile,
-            releaseInfo: releaseInfo
+            releaseInfo: releaseInfo,
+            hasNfo: hasNfo
         );
         var archive = new Archive
         {
@@ -1427,7 +1430,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         bool hosterIsActive = true,
         DateTime? releaseCreatedAt = null,
         QualityProfile? qualityProfile = null,
-        ReleaseInfo? releaseInfo = null
+        ReleaseInfo? releaseInfo = null,
+        bool hasNfo = false
     )
     {
         var releaseGroup = new ReleaseGroup
@@ -1445,6 +1449,9 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             ReleaseFolderPath = "/tmp/release",
             ReleaseGroup = releaseGroup,
             ReleaseInfo = releaseInfo,
+            ReleaseNfo = hasNfo
+                ? new ReleaseNfo { FileName = "release.nfo", Content = "NFO body" }
+                : null,
         };
         var archiveConfig = new ArchiveConfig
         {

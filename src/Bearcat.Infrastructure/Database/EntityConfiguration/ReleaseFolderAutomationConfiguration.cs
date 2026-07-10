@@ -12,6 +12,7 @@ public class ReleaseFolderAutomationConfiguration
         builder.HasKey(a => a.Id);
         builder.Property(a => a.BasePath).IsRequired().HasMaxLength(1000);
         builder.Property(a => a.FolderNamePattern).IsRequired(false).HasMaxLength(200);
+        builder.Property(a => a.PrimaryLanguageCode).HasMaxLength(2).IsRequired(false);
         builder.Property(a => a.ReleaseTemplateId).IsRequired();
         builder.Property(a => a.IsEnabled).IsRequired();
 

@@ -140,14 +140,16 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         resolvedCount.ShouldBe(1);
 
         dbContext.ChangeTracker.Clear();
-        var persistedInfo = await dbContext
-            .ReleaseInfos.Include(info => info.ReleaseNfo)
+        var persistedRelease = await dbContext
+            .Releases.Include(item => item.ReleaseInfo)
+            .Include(item => item.ReleaseNfo)
             .SingleAsync();
+        var persistedInfo = persistedRelease.ReleaseInfo!;
 
         persistedInfo.ReleaseId.ShouldBe(release.Id);
-        persistedInfo.ReleaseNfo.ShouldNotBeNull();
-        persistedInfo.ReleaseNfo.FileName.ShouldBe("bearcat.nfo");
-        persistedInfo.ReleaseNfo.Content.ShouldBe("local nfo content");
+        persistedRelease.ReleaseNfo.ShouldNotBeNull();
+        persistedRelease.ReleaseNfo.FileName.ShouldBe("bearcat.nfo");
+        persistedRelease.ReleaseNfo.Content.ShouldBe("local nfo content");
     }
 
     [Test]
@@ -177,15 +179,17 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         resolvedCount.ShouldBe(1);
 
         dbContext.ChangeTracker.Clear();
-        var persistedInfo = await dbContext
-            .ReleaseInfos.Include(info => info.ReleaseNfo)
+        var persistedRelease = await dbContext
+            .Releases.Include(item => item.ReleaseInfo)
+            .Include(item => item.ReleaseNfo)
             .SingleAsync();
+        var persistedInfo = persistedRelease.ReleaseInfo!;
 
         persistedInfo.ReleaseId.ShouldBe(release.Id);
         persistedInfo.NfoDatabaseClassName.ShouldBe(xrelDatabaseClassName);
-        persistedInfo.ReleaseNfo.ShouldNotBeNull();
-        persistedInfo.ReleaseNfo.FileName.ShouldBe("remote.nfo");
-        persistedInfo.ReleaseNfo.Content.ShouldBe("remote nfo content");
+        persistedRelease.ReleaseNfo.ShouldNotBeNull();
+        persistedRelease.ReleaseNfo.FileName.ShouldBe("remote.nfo");
+        persistedRelease.ReleaseNfo.Content.ShouldBe("remote nfo content");
 
         providerMock.Verify(
             provider =>
@@ -230,13 +234,15 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         (await File.ReadAllTextAsync(nfoFilePath)).ShouldBe("remote nfo content");
 
         dbContext.ChangeTracker.Clear();
-        var persistedInfo = await dbContext
-            .ReleaseInfos.Include(info => info.ReleaseNfo)
+        var persistedRelease = await dbContext
+            .Releases.Include(item => item.ReleaseInfo)
+            .Include(item => item.ReleaseNfo)
             .SingleAsync();
+        var persistedInfo = persistedRelease.ReleaseInfo!;
 
         persistedInfo.ReleaseId.ShouldBe(release.Id);
-        persistedInfo.ReleaseNfo.ShouldNotBeNull();
-        persistedInfo.ReleaseNfo.FileName.ShouldBe("remote.nfo");
+        persistedRelease.ReleaseNfo.ShouldNotBeNull();
+        persistedRelease.ReleaseNfo.FileName.ShouldBe("remote.nfo");
     }
 
     [Test]
@@ -320,6 +326,41 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
                 ),
             Times.Once
         );
+    }
+
+    [Test]
+    public async Task ProcessMissingReleaseInfosAsync_FirstMatchHasNoImdb_UsesNextDatabaseForIdentifier()
+    {
+        const string xrelClassName = "XrelNfoDatabase";
+        const string srrdbClassName = "SrrdbNfoDatabase";
+        const string releaseName = "English.Release.2026-GRP";
+
+        await AddReleaseAsync(releaseName);
+        await AddNfoDatabaseRegistrationAsync(xrelClassName, isActive: true);
+        await AddNfoDatabaseRegistrationAsync(srrdbClassName, isActive: true);
+
+        SetupNfoDatabase(
+            xrelClassName,
+            releaseName,
+            CreateReleaseInfo(releaseName) with
+            {
+                ExternalInfos = [],
+            }
+        );
+        SetupNfoDatabase(srrdbClassName, releaseName, CreateReleaseInfo(releaseName));
+
+        await service.ProcessMissingReleaseInfosAsync(CancellationToken.None);
+
+        dbContext.ChangeTracker.Clear();
+        var release = await dbContext
+            .Releases.Include(item => item.ReleaseInfo)
+            .Include(item => item.ExternalIdentifiers)
+            .SingleAsync();
+
+        release.ReleaseInfo!.NfoDatabaseClassName.ShouldBe(xrelClassName);
+        var identifier = release.ExternalIdentifiers.ShouldHaveSingleItem();
+        identifier.Value.ShouldBe("tt1234567");
+        identifier.Source.ShouldBe(ExternalIdentifierSource.Srrdb);
     }
 
     [Test]
@@ -547,6 +588,34 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
 
         releaseInfo.ShouldNotBeNull();
         releaseInfo.ReleaseName.ShouldBe("New.Tracked.Release.2026-GRP");
+    }
+
+    [Test]
+    public async Task UpdateNfoAsync_ManualNfo_PersistsNfoAndImdbWithoutReleaseInfoPlaceholder()
+    {
+        var release = await AddReleaseAsync("Manual.Nfo.Release.2026-GRP");
+        var infoService = new ReleaseInfoService(
+            new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
+            new Mock<ILogger<ReleaseInfoService>>().Object
+        );
+
+        await infoService.UpdateNfoAsync(
+            release.Id,
+            "manual.nfo",
+            "https://www.imdb.com/title/tt7654321/",
+            CancellationToken.None
+        );
+
+        dbContext.ChangeTracker.Clear();
+        var persistedRelease = await dbContext
+            .Releases.Include(item => item.ReleaseInfo)
+            .Include(item => item.ReleaseNfo)
+            .Include(item => item.ExternalIdentifiers)
+            .SingleAsync();
+
+        persistedRelease.ReleaseInfo.ShouldBeNull();
+        persistedRelease.ReleaseNfo!.FileName.ShouldBe("manual.nfo");
+        persistedRelease.ExternalIdentifiers.ShouldHaveSingleItem().Value.ShouldBe("tt7654321");
     }
 
     private Mock<INfoDatabase> SetupNfoDatabase(

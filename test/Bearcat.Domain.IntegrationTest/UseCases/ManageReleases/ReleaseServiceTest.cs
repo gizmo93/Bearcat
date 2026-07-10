@@ -62,6 +62,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseType.Managed,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            null,
             CancellationToken.None
         );
 
@@ -93,6 +94,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             release.ReleaseFolderPath,
             ReleaseContentType.TvShowEpisode,
             releaseGroup.Id,
+            null,
             CancellationToken.None
         );
 
@@ -117,6 +119,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             "/tmp/release-updated",
             ReleaseContentType.Movie,
             secondGroup.Id,
+            null,
             CancellationToken.None
         );
 
@@ -363,6 +366,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseType.Unmanaged,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            null,
             CancellationToken.None
         );
 
@@ -460,6 +464,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseType.Unmanaged,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            null,
             CancellationToken.None
         );
 
@@ -484,6 +489,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseType.Unmanaged,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            null,
             CancellationToken.None
         );
 
@@ -547,6 +553,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseType.Unmanaged,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            null,
             CancellationToken.None
         );
 

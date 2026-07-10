@@ -35,8 +35,10 @@ public class ReleaseInfoRepository(
     {
         return await dbWrite
             .Releases.Include(release => release.ReleaseInfo)
-                .ThenInclude(info => info!.ReleaseNfo)
-            .Where(release => release.ReleaseInfo == null || release.ReleaseInfo.ReleaseNfo == null)
+                .ThenInclude(info => info!.ExternalInfos)
+            .Include(release => release.ReleaseNfo)
+            .Include(release => release.ExternalIdentifiers)
+            .Where(release => release.ReleaseInfo == null || release.ReleaseNfo == null)
             .Where(release =>
                 release.ReleaseInfoCheckedAt == null
                 || release.ReleaseInfoCheckedAt < lastCheckedThreshold
@@ -88,7 +90,9 @@ public class ReleaseInfoRepository(
     {
         return await dbWrite
             .Releases.Include(release => release.ReleaseInfo)
-                .ThenInclude(info => info!.ReleaseNfo)
+                .ThenInclude(info => info!.ExternalInfos)
+            .Include(release => release.ReleaseNfo)
+            .Include(release => release.ExternalIdentifiers)
             .FirstAsync(release => release.Id == releaseId, cancellationToken);
     }
 
@@ -115,21 +119,6 @@ public class ReleaseInfoRepository(
             .Where(entry => entry.State == EntityState.Added)
             .Select(entry => entry.Entity)
             .ToList();
-
-        var pendingReleaseNfos = dbWrite
-            .ChangeTracker.Entries<ReleaseNfo>()
-            .Where(entry => entry.State == EntityState.Added)
-            .Select(entry => entry.Entity)
-            .ToList();
-
-        foreach (
-            var entry in dbWrite
-                .ChangeTracker.Entries<ReleaseNfo>()
-                .Where(e => pendingReleaseNfos.Contains(e.Entity))
-        )
-        {
-            entry.State = EntityState.Detached;
-        }
 
         foreach (
             var entry in dbWrite

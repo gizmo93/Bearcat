@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.SeriesDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
+using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -614,15 +615,31 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
 
         if (nfoContent is not null)
         {
-            releaseInfo.ReleaseNfo = new ReleaseNfo
-            {
-                FileName = "release.nfo",
-                Content = nfoContent,
-            };
+            release.ReleaseNfo = new ReleaseNfo { FileName = "release.nfo", Content = nfoContent };
+            release.ExternalIdentifiers.AddRange(
+                ImdbIdParser
+                    .ExtractAll(nfoContent)
+                    .Select(imdbId => new ReleaseExternalIdentifier
+                    {
+                        Type = Bearcat.Domain.ValueObjects.ExternalIdentifierType.Imdb,
+                        Value = imdbId,
+                        Source = Bearcat.Domain.ValueObjects.ExternalIdentifierSource.Nfo,
+                    })
+            );
         }
 
         if (imdbExternalUrl is not null)
         {
+            release.ExternalIdentifiers.AddRange(
+                ImdbIdParser
+                    .ExtractAll(imdbExternalUrl)
+                    .Select(imdbId => new ReleaseExternalIdentifier
+                    {
+                        Type = Bearcat.Domain.ValueObjects.ExternalIdentifierType.Imdb,
+                        Value = imdbId,
+                        Source = Bearcat.Domain.ValueObjects.ExternalIdentifierSource.Srrdb,
+                    })
+            );
             releaseInfo.ExternalInfos.Add(
                 new ReleaseExternalInfo
                 {

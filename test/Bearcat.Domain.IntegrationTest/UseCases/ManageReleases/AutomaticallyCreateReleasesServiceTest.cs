@@ -154,7 +154,12 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         var nestedContainer = Directory.CreateDirectory(Path.Combine(tempRootPath, "Nested"));
         Directory.CreateDirectory(Path.Combine(nestedContainer.FullName, "Nested.Release.1080p"));
 
-        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
+        await AddAutomationAsync(
+            releaseTemplate.ReleaseTemplateId,
+            tempRootPath,
+            "*1080p*",
+            primaryLanguageCode: "de"
+        );
         await AddReleaseAsync(releaseTemplate.ReleaseGroupId, existingReleaseFolder.FullName);
 
         // Act
@@ -189,6 +194,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         createdRelease.Name.ShouldBe("Bearcat.Release.1080p");
         createdRelease.ReleaseType.ShouldBe(ReleaseType.Managed);
         createdRelease.ReleaseGroupId.ShouldBe(releaseTemplate.ReleaseGroupId);
+        createdRelease.PrimaryLanguageCode.ShouldBe("de");
 
         var archiveConfig = createdRelease.ArchiveConfigs.Single();
         archiveConfig.Name.ShouldBe("RAR Forum A");
@@ -712,7 +718,8 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         int releaseTemplateId,
         string basePath,
         string? folderNamePattern,
-        bool isEnabled = true
+        bool isEnabled = true,
+        string? primaryLanguageCode = null
     )
     {
         dbContext.ReleaseFolderAutomations.Add(
@@ -720,6 +727,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
             {
                 BasePath = basePath,
                 FolderNamePattern = folderNamePattern,
+                PrimaryLanguageCode = primaryLanguageCode,
                 ReleaseTemplateId = releaseTemplateId,
                 IsEnabled = isEnabled,
             }

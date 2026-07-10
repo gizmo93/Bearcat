@@ -33,8 +33,6 @@ public class ReleaseInfo
 
     public List<ReleaseExternalInfo> ExternalInfos { get; set; } = [];
 
-    public ReleaseNfo? ReleaseNfo { get; set; }
-
     public static ReleaseInfo CreatePlaceholder(string source, string releaseName)
     {
         return new ReleaseInfo { NfoDatabaseClassName = source, ReleaseName = releaseName };

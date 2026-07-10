@@ -4,9 +4,11 @@ public class ReleaseNfo
 {
     public int Id { get; set; }
 
-    public int ReleaseInfoId { get; set; }
+    public int ReleaseId { get; set; }
 
-    public ReleaseInfo ReleaseInfo { get; set; } = null!;
+    public Release Release { get; set; } = null!;
+
+    public int? ReleaseInfoId { get; set; }
 
     public string FileName { get; set; } = null!;
 

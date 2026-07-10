@@ -1,9 +1,9 @@
 using System.Text.RegularExpressions;
-using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Abstractions.SeriesDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -259,49 +259,12 @@ public partial class ReleaseCollectionInfoResolutionService(
 
     private static string? ExtractImdbId(ReleaseCollection collection)
     {
-        foreach (var release in collection.Releases)
-        {
-            var nfoContent = release.ReleaseInfo?.ReleaseNfo?.Content;
-
-            if (string.IsNullOrWhiteSpace(nfoContent))
-            {
-                continue;
-            }
-
-            var match = ImdbIdRegex().Match(nfoContent);
-
-            if (match.Success)
-            {
-                return match.Value;
-            }
-        }
-
-        foreach (var release in collection.Releases)
-        {
-            var externalInfos = release.ReleaseInfo?.ExternalInfos;
-
-            if (externalInfos is null)
-            {
-                continue;
-            }
-
-            foreach (var url in externalInfos.SelectMany(externalInfo => externalInfo.Urls))
-            {
-                if (url.Type != UrlType.Imdb)
-                {
-                    continue;
-                }
-
-                var match = ImdbIdRegex().Match(url.Url);
-
-                if (match.Success)
-                {
-                    return match.Value;
-                }
-            }
-        }
-
-        return null;
+        return collection
+            .Releases.SelectMany(release => release.ExternalIdentifiers)
+            .Where(identifier => identifier.Type == ExternalIdentifierType.Imdb)
+            .OrderBy(identifier => identifier.Source)
+            .Select(identifier => identifier.Value)
+            .FirstOrDefault();
     }
 
     private static string? ExtractSeriesTitle(string collectionName)
@@ -350,9 +313,6 @@ public partial class ReleaseCollectionInfoResolutionService(
                 ConstraintName: "IX_ReleaseCollectionMetadata_ReleaseCollectionId",
             };
     }
-
-    [GeneratedRegex(@"tt\d{7,8}", RegexOptions.IgnoreCase)]
-    private static partial Regex ImdbIdRegex();
 
     [GeneratedRegex(@"\b(S\d{1,2}(E\d{1,3})?|Season|Staffel)\b", RegexOptions.IgnoreCase)]
     private static partial Regex SeasonMarkerRegex();

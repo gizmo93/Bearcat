@@ -16,6 +16,8 @@ public class ReleaseCollection
 
     public string Name { get; set; } = null!;
 
+    public string? PrimaryLanguageCode { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public List<Release> Releases { get; set; } = [];

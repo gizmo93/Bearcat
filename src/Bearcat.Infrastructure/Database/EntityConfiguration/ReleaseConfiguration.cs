@@ -13,6 +13,7 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
         builder.Property(r => r.CreatedAt).IsRequired().HasPrecision(4);
         builder.Property(r => r.ReleaseType).IsRequired();
         builder.Property(r => r.ReleaseContentType).IsRequired();
+        builder.Property(r => r.PrimaryLanguageCode).HasMaxLength(2).IsRequired(false);
         builder.Property(r => r.ReleaseFolderPath).HasMaxLength(1000).IsRequired(false);
         builder.Property(r => r.ReleaseInfoCheckedAt).HasPrecision(4).IsRequired(false);
         builder.Property(r => r.MediaMetadataExtractedAt).HasPrecision(4).IsRequired(false);
@@ -45,6 +46,22 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
             .WithOne(i => i.Release)
             .HasForeignKey<ReleaseInfo>(i => i.ReleaseId)
             .HasPrincipalKey<Release>(r => r.Id)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .HasOne(r => r.ReleaseNfo)
+            .WithOne(nfo => nfo.Release)
+            .HasForeignKey<ReleaseNfo>(nfo => nfo.ReleaseId)
+            .HasPrincipalKey<Release>(r => r.Id)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .HasMany(r => r.ExternalIdentifiers)
+            .WithOne(identifier => identifier.Release)
+            .HasForeignKey(identifier => identifier.ReleaseId)
+            .HasPrincipalKey(r => r.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
 

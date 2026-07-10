@@ -107,8 +107,8 @@ public class QualityChecksTest
             ReleaseName = release.Name,
             CoverUrl = "https://images.test/cover.jpg",
             Description = "A description",
-            ReleaseNfo = new ReleaseNfo { FileName = "release.nfo", Content = "NFO body" },
         };
+        release.ReleaseNfo = new ReleaseNfo { FileName = "release.nfo", Content = "NFO body" };
         var context = CreateContext(new FakeFileSystemService(), release);
 
         // Act
@@ -158,8 +158,8 @@ public class QualityChecksTest
         {
             NfoDatabaseClassName = ReleaseInfo.ManualSource,
             ReleaseName = release.Name,
-            ReleaseNfo = new ReleaseNfo { FileName = "release.nfo", Content = "   " },
         };
+        release.ReleaseNfo = new ReleaseNfo { FileName = "release.nfo", Content = "   " };
         var context = CreateContext(new FakeFileSystemService(), release);
 
         // Act

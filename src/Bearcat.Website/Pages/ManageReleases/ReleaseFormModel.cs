@@ -10,6 +10,8 @@ public class ReleaseFormModel
 
     public ReleaseContentType ReleaseContentType { get; set; } = ReleaseContentType.Movie;
 
+    public string PrimaryLanguageCode { get; set; } = string.Empty;
+
     public int ReleaseGroupId { get; set; }
 
     public string FolderPath { get; set; } = string.Empty;

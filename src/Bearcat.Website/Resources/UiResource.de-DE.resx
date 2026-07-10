@@ -937,4 +937,8 @@
     <data name="NotificationEntity.Release" xml:space="preserve">
         <value>Release</value>
     </data>
+  <data name="PrimaryLanguage" xml:space="preserve"><value>Primärsprache</value></data>
+  <data name="Unknown" xml:space="preserve"><value>Unbekannt</value></data>
+  <data name="SearchLanguage" xml:space="preserve"><value>Sprache suchen...</value></data>
+  <data name="NoLanguagesFound" xml:space="preserve"><value>Keine Sprachen gefunden.</value></data>
 </root>

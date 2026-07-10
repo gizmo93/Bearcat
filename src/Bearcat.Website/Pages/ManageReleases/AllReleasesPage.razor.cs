@@ -168,6 +168,7 @@ public partial class AllReleasesPage(
                 FolderPath = release.ReleaseFolderPath ?? string.Empty,
                 ReleaseType = release.ReleaseType,
                 ReleaseContentType = release.ReleaseContentType,
+                PrimaryLanguageCode = release.PrimaryLanguageCode ?? string.Empty,
                 ReleaseGroupId = release.ReleaseGroupId,
                 IsEdit = true,
             },

@@ -14,6 +14,8 @@ public class Release
 
     public ReleaseContentType ReleaseContentType { get; set; }
 
+    public string? PrimaryLanguageCode { get; set; }
+
     public int ReleaseGroupId { get; set; }
 
     public ReleaseGroup ReleaseGroup { get; set; } = null!;
@@ -33,6 +35,10 @@ public class Release
     public string? ReleaseFolderPath { get; set; }
 
     public ReleaseInfo? ReleaseInfo { get; set; }
+
+    public ReleaseNfo? ReleaseNfo { get; set; }
+
+    public List<ReleaseExternalIdentifier> ExternalIdentifiers { get; set; } = [];
 
     public DateTime? ReleaseInfoCheckedAt { get; set; }
 

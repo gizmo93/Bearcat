@@ -30,8 +30,8 @@
                       Size="ButtonSize.Small"
                       Disabled="isLoading"
                       OnClick="ShowEditReleaseNfoDialogAsync">
-                <LucideIcon Name="@(releaseInfo?.ReleaseNfo is null ? "file-plus" : "file-pen")" class="h-4 w-4" />
-                @(releaseInfo?.ReleaseNfo is null ? L["AddNfo"] : L["EditNfo"])
+                <LucideIcon Name="@(releaseNfo is null ? "file-plus" : "file-pen")" class="h-4 w-4" />
+                @(releaseNfo is null ? L["AddNfo"] : L["EditNfo"])
             </BbButton>
 
             @if (CanExtractMediaMetadata)
@@ -160,7 +160,7 @@
                                     <LucideIcon Name="file-text" class="h-3.5 w-3.5" />
                                     NFO
                                 </dt>
-                                <dd>@GetNfoFileName(releaseInfo)</dd>
+                                <dd>@GetNfoFileName()</dd>
                             </div>
                         </dl>
 

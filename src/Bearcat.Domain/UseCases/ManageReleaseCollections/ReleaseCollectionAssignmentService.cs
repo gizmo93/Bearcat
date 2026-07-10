@@ -54,12 +54,18 @@ public class ReleaseCollectionAssignmentService(
                     ReleaseContentType = releaseTemplate.ReleaseContentType,
                     Key = detectionResult.Key,
                     Name = detectionResult.Name,
+                    PrimaryLanguageCode = release.PrimaryLanguageCode,
                     CreatedAt = timeProvider.GetLocalNow(),
                 };
                 writeRepository.Add(releaseCollection);
             }
 
             releaseCollectionsByKey[cacheKey] = releaseCollection;
+        }
+
+        if (releaseCollection.PrimaryLanguageCode is null)
+        {
+            releaseCollection.PrimaryLanguageCode = release.PrimaryLanguageCode;
         }
 
         release.ReleaseCollection = releaseCollection;

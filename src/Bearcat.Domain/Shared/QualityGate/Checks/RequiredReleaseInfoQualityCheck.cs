@@ -27,7 +27,8 @@ public sealed class RequiredReleaseInfoQualityCheck : IQualityCheck
     {
         var parameters = QualityCheckParameterValues.Parse(rule.ParametersJson);
 
-        var info = context.Release.ReleaseInfo;
+        var release = context.Release;
+        var info = release.ReleaseInfo;
         var issues = new List<string>();
 
         if (parameters.GetBool(RequireCoverKey) && string.IsNullOrWhiteSpace(info?.CoverUrl))
@@ -45,7 +46,7 @@ public sealed class RequiredReleaseInfoQualityCheck : IQualityCheck
 
         if (
             parameters.GetBool(RequireNfoKey)
-            && (info?.ReleaseNfo is null || string.IsNullOrWhiteSpace(info.ReleaseNfo.Content))
+            && (release.ReleaseNfo is null || string.IsNullOrWhiteSpace(release.ReleaseNfo.Content))
         )
         {
             issues.Add("NFO is missing");

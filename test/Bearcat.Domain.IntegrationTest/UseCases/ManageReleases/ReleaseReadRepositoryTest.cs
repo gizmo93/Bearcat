@@ -148,7 +148,6 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
                 Genre = "Drama, Sci-Fi",
                 Description = "Bearcat plot",
                 CoverUrl = "https://uploads2.xrel.to/img_cover/movie123.JPG",
-                ReleaseNfo = new ReleaseNfo { FileName = "bearcat.nfo", Content = "nfo content" },
                 ExternalInfos =
                 [
                     new ReleaseExternalInfo
@@ -172,6 +171,7 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
                 ],
             }
         );
+        release.ReleaseNfo = new ReleaseNfo { FileName = "bearcat.nfo", Content = "nfo content" };
         await dbContext.SaveChangesAsync();
         dbContext.ChangeTracker.Clear();
 
@@ -217,9 +217,9 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
                 NfoDatabaseClassName = "XrelNfoDatabase",
                 ReleaseName = "Bearcat.Release.2026-GRP",
                 ExternalInfos = [],
-                ReleaseNfo = new ReleaseNfo { FileName = "bearcat.nfo", Content = "nfo content" },
             }
         );
+        release.ReleaseNfo = new ReleaseNfo { FileName = "bearcat.nfo", Content = "nfo content" };
         await dbContext.SaveChangesAsync();
         dbContext.ChangeTracker.Clear();
 

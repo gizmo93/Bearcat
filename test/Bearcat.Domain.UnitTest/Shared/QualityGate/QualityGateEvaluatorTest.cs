@@ -129,8 +129,8 @@ public class QualityGateEvaluatorTest
         {
             NfoDatabaseClassName = ReleaseInfo.ManualSource,
             ReleaseName = release.Name,
-            ReleaseNfo = new ReleaseNfo { FileName = "release.nfo", Content = "NFO body" },
         };
+        release.ReleaseNfo = new ReleaseNfo { FileName = "release.nfo", Content = "NFO body" };
 
         // Act
         evaluator.EvaluateAndApply(release, EvaluatedAt);
