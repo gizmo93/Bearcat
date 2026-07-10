@@ -26,6 +26,7 @@ public partial class ReleaseInfoPanel(
     public ReleaseType ReleaseType { get; set; }
 
     private ReleaseInfoReadModel? releaseInfo;
+    private ReleaseMetadataReadModel? releaseMetadata;
     private ReleaseNfoReadModel? releaseNfo;
     private IReadOnlyList<ReleaseMediaFileReadModel> mediaFiles = [];
     private bool isLoading;
@@ -48,6 +49,7 @@ public partial class ReleaseInfoPanel(
             await operationRunner.RunAsync<IReleaseReadRepository>(async repository =>
             {
                 releaseInfo = await repository.GetReleaseInfoAsync(ReleaseId);
+                releaseMetadata = await repository.GetReleaseMetadataAsync(ReleaseId);
                 releaseNfo = await repository.GetReleaseNfoAsync(ReleaseId);
                 mediaFiles = await repository.GetMediaFilesAsync(ReleaseId);
             });
@@ -89,15 +91,14 @@ public partial class ReleaseInfoPanel(
             [nameof(EditReleaseInfoDialog.ReleaseId)] = ReleaseId,
             [nameof(EditReleaseInfoDialog.ReleaseName)] = ReleaseName,
             [nameof(EditReleaseInfoDialog.ReleaseInfo)] = releaseInfo,
+            [nameof(EditReleaseInfoDialog.ReleaseMetadata)] = releaseMetadata,
         };
 
         var dialog = await dialogService.OpenAsync<EditReleaseInfoDialog>(
             parameters,
             new DialogOpenOptions
             {
-                Title = releaseInfo?.ReleaseInfoId is null
-                    ? L["AddReleaseInfo"]
-                    : L["EditReleaseInfo"],
+                Title = releaseInfo is null ? L["AddReleaseInfo"] : L["EditReleaseInfo"],
                 Description = L["EditReleaseInfoDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
@@ -206,11 +207,11 @@ public partial class ReleaseInfoPanel(
         await LoadReleaseInfoAsync();
     }
 
-    private async Task DeleteReleaseInfoAsync(ReleaseInfoReadModel releaseInfo)
+    private async Task DeleteReleaseInfoAsync()
     {
         var result = await dialogService.ConfirmAsync(
             L["DeleteReleaseInfoTitle"],
-            L["DeleteReleaseInfoConfirmation", releaseInfo.ReleaseName],
+            L["DeleteReleaseInfoConfirmation", ReleaseName],
             new ConfirmDialogOptions
             {
                 ConfirmText = L["Delete"],
@@ -245,9 +246,6 @@ public partial class ReleaseInfoPanel(
     private static string GetValueOrDash(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "-" : value;
 
-    private string GetNfoFileName() =>
-        string.IsNullOrWhiteSpace(releaseNfo?.FileName) ? "-" : releaseNfo.FileName;
-
     private static string GetDatabaseDisplayName(string className)
     {
         if (className.Equals("XrelNfoDatabase", StringComparison.OrdinalIgnoreCase))
@@ -255,10 +253,19 @@ public partial class ReleaseInfoPanel(
             return "xREL";
         }
 
-        const string suffix = "NfoDatabase";
-        return className.EndsWith(suffix, StringComparison.Ordinal)
-            ? className[..^suffix.Length]
-            : className;
+        const string nfoSuffix = "NfoDatabase";
+        if (className.EndsWith(nfoSuffix, StringComparison.Ordinal))
+        {
+            return className[..^nfoSuffix.Length];
+        }
+
+        const string metadataSuffix = "MetadataDatabase";
+        if (className.EndsWith(metadataSuffix, StringComparison.Ordinal))
+        {
+            return className[..^metadataSuffix.Length];
+        }
+
+        return className;
     }
 
     private string GetUrlLabel(ReleaseExternalInfoUrlReadModel url)

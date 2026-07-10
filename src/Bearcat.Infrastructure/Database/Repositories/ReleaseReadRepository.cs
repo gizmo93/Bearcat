@@ -715,51 +715,48 @@ public class ReleaseReadRepository(
     {
         return await dbRead
             .Releases.AsSplitQuery()
-            .Where(release => release.Id == releaseId)
-            .Select(release =>
-                release.ReleaseInfo == null && release.Metadata == null
-                    ? null
-                    : new ReleaseInfoReadModel(
-                        release.ReleaseInfo == null ? null : release.ReleaseInfo.Id,
-                        release.ReleaseInfo == null
-                            ? release.Metadata!.MetadataDatabaseClassName
-                            : release.ReleaseInfo.NfoDatabaseClassName,
-                        release.ReleaseInfo == null
-                            ? release.Metadata!.Title
-                            : release.ReleaseInfo.ReleaseName,
-                        release.ReleaseInfo == null ? null : release.ReleaseInfo.ReleaseDatabaseUrl,
-                        release.ReleaseInfo == null ? null : release.ReleaseInfo.SizeNumber,
-                        release.ReleaseInfo == null ? null : release.ReleaseInfo.SizeUnit,
-                        release.ReleaseInfo == null ? null : release.ReleaseInfo.VideoType,
-                        release.ReleaseInfo == null ? null : release.ReleaseInfo.AudioType,
-                        release.Metadata == null ? null : release.Metadata.Genre,
-                        release.Metadata == null ? null : release.Metadata.Description,
-                        release.Metadata == null ? null : release.Metadata.CoverUrl,
-                        release.ReleaseNfo == null
-                            ? null
-                            : new ReleaseNfoReadModel(
-                                release.ReleaseNfo.Id,
-                                release.ReleaseNfo.FileName,
-                                release.ReleaseNfo.Content
-                            ),
-                        release.ReleaseInfo == null
-                            ? new List<ReleaseExternalInfoReadModel>()
-                            : release
-                                .ReleaseInfo.ExternalInfos.OrderBy(externalInfo => externalInfo.Id)
-                                .Select(externalInfo => new ReleaseExternalInfoReadModel(
-                                    externalInfo.Id,
-                                    externalInfo.Type,
-                                    externalInfo.Title,
-                                    externalInfo
-                                        .Urls.Select(url => new ReleaseExternalInfoUrlReadModel(
-                                            url.Type,
-                                            url.Url
-                                        ))
-                                        .ToList()
-                                ))
-                                .ToList()
-                    )
-            )
+            .Where(release => release.Id == releaseId && release.ReleaseInfo != null)
+            .Select(release => new ReleaseInfoReadModel(
+                release.ReleaseInfo!.NfoDatabaseClassName,
+                release.ReleaseInfo.ReleaseName,
+                release.ReleaseInfo.ReleaseDatabaseUrl,
+                release.ReleaseInfo.SizeNumber,
+                release.ReleaseInfo.SizeUnit,
+                release.ReleaseInfo.VideoType,
+                release.ReleaseInfo.AudioType,
+                release
+                    .ReleaseInfo.ExternalInfos.OrderBy(externalInfo => externalInfo.Id)
+                    .Select(externalInfo => new ReleaseExternalInfoReadModel(
+                        externalInfo.Id,
+                        externalInfo.Type,
+                        externalInfo.Title,
+                        externalInfo
+                            .Urls.Select(url => new ReleaseExternalInfoUrlReadModel(
+                                url.Type,
+                                url.Url
+                            ))
+                            .ToList()
+                    ))
+                    .ToList()
+            ))
+            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+    }
+
+    public async Task<ReleaseMetadataReadModel?> GetReleaseMetadataAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .Releases.Where(release => release.Id == releaseId && release.Metadata != null)
+            .Select(release => new ReleaseMetadataReadModel(
+                release.Metadata!.MetadataDatabaseClassName,
+                release.Metadata.Title,
+                release.Metadata.Genre,
+                release.Metadata.Description,
+                release.Metadata.CoverUrl,
+                release.Metadata.MetadataDatabaseUrl
+            ))
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 

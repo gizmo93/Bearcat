@@ -53,6 +53,11 @@ public interface IReleaseReadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<ReleaseMetadataReadModel?> GetReleaseMetadataAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<ReleaseNfoReadModel?> GetReleaseNfoAsync(
         int releaseId,
         CancellationToken cancellationToken = default

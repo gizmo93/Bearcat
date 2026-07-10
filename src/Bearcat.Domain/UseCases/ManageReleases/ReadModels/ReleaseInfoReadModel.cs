@@ -3,7 +3,6 @@ using Bearcat.Abstractions.NfoDatabase;
 namespace Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 
 public record ReleaseInfoReadModel(
-    int? ReleaseInfoId,
     string NfoDatabaseClassName,
     string ReleaseName,
     string? ReleaseDatabaseUrl,
@@ -11,11 +10,16 @@ public record ReleaseInfoReadModel(
     string? SizeUnit,
     string? VideoType,
     string? AudioType,
+    IReadOnlyList<ReleaseExternalInfoReadModel> ExternalInfos
+);
+
+public record ReleaseMetadataReadModel(
+    string MetadataDatabaseClassName,
+    string Title,
     string? Genre,
     string? Description,
     string? CoverUrl,
-    ReleaseNfoReadModel? ReleaseNfo,
-    IReadOnlyList<ReleaseExternalInfoReadModel> ExternalInfos
+    string? MetadataDatabaseUrl
 );
 
 public record ReleaseNfoReadModel(int ReleaseNfoId, string FileName, string Content);
