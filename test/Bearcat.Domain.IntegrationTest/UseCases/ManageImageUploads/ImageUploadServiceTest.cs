@@ -300,7 +300,7 @@ public class ImageUploadServiceTest : BearcatIntegrationTest
             CreatedAt = DateTime.UtcNow,
             Metadata = new ReleaseCollectionMetadata
             {
-                SeriesDatabaseClassName = "TvdbSeriesDatabase",
+                MetadataDatabaseClassName = "TvdbMetadataDatabase",
                 Title = "Bodies",
                 CoverUrl = coverUrl,
             },

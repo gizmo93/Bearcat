@@ -52,7 +52,7 @@ public interface IBearcatWriteDbContext
     DbSet<ReleaseExternalInfo> ReleaseExternalInfos { get; set; }
     DbSet<ReleaseExternalIdentifier> ReleaseExternalIdentifiers { get; set; }
     DbSet<ReleaseMetadata> ReleaseMetadata { get; set; }
-    DbSet<SeriesDatabaseRegistration> SeriesDatabaseRegistrations { get; set; }
+    DbSet<MediaDatabaseRegistration> MediaDatabaseRegistrations { get; set; }
     DbSet<ReleaseCollectionMetadata> ReleaseCollectionMetadata { get; set; }
     DbSet<ReleaseMediaFile> ReleaseMediaFiles { get; set; }
     DbSet<ReleaseFolderObservation> ReleaseFolderObservations { get; set; }

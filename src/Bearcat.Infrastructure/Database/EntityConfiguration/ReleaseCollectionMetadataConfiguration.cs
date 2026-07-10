@@ -13,14 +13,14 @@ public class ReleaseCollectionMetadataConfiguration
 
         builder.Property(metadata => metadata.ReleaseCollectionId).IsRequired();
         builder
-            .Property(metadata => metadata.SeriesDatabaseClassName)
+            .Property(metadata => metadata.MetadataDatabaseClassName)
             .IsRequired()
             .HasMaxLength(100);
         builder.Property(metadata => metadata.Title).IsRequired().HasMaxLength(500);
         builder.Property(metadata => metadata.Description).IsRequired(false);
         builder.Property(metadata => metadata.CoverUrl).IsRequired(false).HasMaxLength(1000);
         builder
-            .Property(metadata => metadata.SeriesDatabaseUrl)
+            .Property(metadata => metadata.MetadataDatabaseUrl)
             .IsRequired(false)
             .HasMaxLength(1000);
 

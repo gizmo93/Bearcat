@@ -701,10 +701,10 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         };
 
         const string databaseClassName = "MovieMetadataDatabase";
-        dbContext.SeriesDatabaseRegistrations.Add(
-            new SeriesDatabaseRegistration
+        dbContext.MediaDatabaseRegistrations.Add(
+            new MediaDatabaseRegistration
             {
-                SeriesDatabaseClassName = databaseClassName,
+                MediaDatabaseClassName = databaseClassName,
                 SerializedConfig = SerializedConfig,
                 IsActive = true,
             }

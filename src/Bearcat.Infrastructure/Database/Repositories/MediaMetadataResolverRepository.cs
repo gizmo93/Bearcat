@@ -14,10 +14,10 @@ public class MediaMetadataResolverRepository(
     )
     {
         return await dbRead
-            .SeriesDatabaseRegistrations.Where(registration => registration.IsActive)
-            .OrderBy(registration => registration.SeriesDatabaseClassName)
+            .MediaDatabaseRegistrations.Where(registration => registration.IsActive)
+            .OrderBy(registration => registration.MediaDatabaseClassName)
             .Select(registration => new MediaMetadataDatabaseRegistration(
-                registration.SeriesDatabaseClassName,
+                registration.MediaDatabaseClassName,
                 secretProtector.Unprotect(registration.SerializedConfig)
             ))
             .ToListAsync(cancellationToken);

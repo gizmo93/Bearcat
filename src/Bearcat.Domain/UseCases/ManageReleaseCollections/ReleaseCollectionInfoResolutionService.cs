@@ -136,11 +136,11 @@ public partial class ReleaseCollectionInfoResolutionService(
 
         collection.Metadata = new ReleaseCollectionMetadata
         {
-            SeriesDatabaseClassName = resolved.DatabaseClassName,
+            MetadataDatabaseClassName = resolved.DatabaseClassName,
             Title = resolved.Metadata.Title,
             Description = resolved.Metadata.Description,
             CoverUrl = resolved.Metadata.CoverUrl,
-            SeriesDatabaseUrl = resolved.Metadata.DatabaseUrl,
+            MetadataDatabaseUrl = resolved.Metadata.DatabaseUrl,
         };
 
         logger.LogInformation(

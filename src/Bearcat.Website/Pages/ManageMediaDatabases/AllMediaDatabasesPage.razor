@@ -1,0 +1,87 @@
+@page "/media-database-registrations"
+@inherits OwningComponentBase
+
+<PageTitle>@L["MediaDatabaseRegistrations"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["MediaDatabaseRegistrations"]</h1>
+            <p class="text-sm text-muted-foreground">
+                @L["MediaDatabaseRegistrationsIntro"]
+            </p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button"
+                  Disabled="@(!CanAddRegistration)"
+                  OnClick="ShowAddDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewMediaDatabase"]
+        </BbButton>
+    </div>
+
+    <BbDataTable TData="MediaDatabaseRegistrationReadModel"
+                 Data="registrations"
+                 ShowToolbar="false"
+                 ShowPagination="@(registrations.Count > 10)"
+                 InitialPageSize="10"
+                 AriaLabel="@L["MediaDatabaseRegistrations"]"
+                 Class="bearcat-data-table bearcat-registrations-table">
+        <Columns>
+            <BbDataTableColumn TData="MediaDatabaseRegistrationReadModel" TValue="string"
+                               Header="@L["MediaDatabase"]"
+                               Property="@(registration => registration.MediaDatabaseName)"
+                               Sortable="true"
+                               Filterable="true"
+                               Width="24%" />
+            <BbDataTableColumn TData="MediaDatabaseRegistrationReadModel" TValue="bool"
+                               Header="@L["Active"]"
+                               Property="@(registration => registration.IsActive)"
+                               Sortable="true"
+                               Width="110px">
+                <CellTemplate Context="registration">
+                    <BbBadge Variant="@(registration.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
+                        @(registration.IsActive ? L["Active"] : L["Inactive"])
+                    </BbBadge>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="MediaDatabaseRegistrationReadModel" TValue="string"
+                               Header="@L["Login"]"
+                               Property="@(registration => registration.MediaDatabaseName)"
+                               Width="160px">
+                <CellTemplate Context="registration">
+                    <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => TryLoginAsync(registration))">
+                        @L["TryLogin"]
+                    </BbButton>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="MediaDatabaseRegistrationReadModel" TValue="string"
+                               Header=""
+                               Property="@(registration => registration.MediaDatabaseName)"
+                               Width="56px">
+                <CellTemplate Context="registration">
+                    <div class="flex justify-end">
+                        <BbDropdownMenu>
+                            <BbDropdownMenuTrigger>
+                                <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenMediaDatabaseActions"]">
+                                    <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                </BbButton>
+                            </BbDropdownMenuTrigger>
+                            <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                                <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(registration))">
+                                    @L["EditRegistration"]
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await ToggleIsActiveAsync(registration))">
+                                    @(registration.IsActive ? L["Disable"] : L["Enable"])
+                                </BbDropdownMenuItem>
+                                <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(registration))">
+                                    @L["DeleteRegistration"]
+                                </BbDropdownMenuItem>
+                            </BbDropdownMenuContent>
+                        </BbDropdownMenu>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+    </BbDataTable>
+</section>

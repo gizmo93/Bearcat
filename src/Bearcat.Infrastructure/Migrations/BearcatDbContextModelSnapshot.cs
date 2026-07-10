@@ -701,6 +701,35 @@ namespace BearCat.Infrastructure.Migrations
                     b.ToTable("LinkCrypterRegistrations");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.MediaDatabaseRegistration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MediaDatabaseClassName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("SerializedConfig")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MediaDatabaseClassName")
+                        .IsUnique();
+
+                    b.ToTable("MediaDatabaseRegistrations");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.NfoDatabaseRegistration", b =>
                 {
                     b.Property<int>("Id")
@@ -997,17 +1026,17 @@ namespace BearCat.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<int>("ReleaseCollectionId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("SeriesDatabaseClassName")
+                    b.Property<string>("MetadataDatabaseClassName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<string>("SeriesDatabaseUrl")
+                    b.Property<string>("MetadataDatabaseUrl")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("ReleaseCollectionId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -1406,35 +1435,6 @@ namespace BearCat.Infrastructure.Migrations
                     b.HasIndex("ReleaseGroupId");
 
                     b.ToTable("ReleaseTemplates");
-                });
-
-            modelBuilder.Entity("Bearcat.Domain.Entities.SeriesDatabaseRegistration", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("SerializedConfig")
-                        .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
-
-                    b.Property<string>("SeriesDatabaseClassName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SeriesDatabaseClassName")
-                        .IsUnique();
-
-                    b.ToTable("SeriesDatabaseRegistrations");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.Upload", b =>

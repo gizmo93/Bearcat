@@ -8,7 +8,7 @@ public class ReleaseCollectionMetadata
 
     public ReleaseCollection ReleaseCollection { get; set; } = null!;
 
-    public string SeriesDatabaseClassName { get; set; } = null!;
+    public string MetadataDatabaseClassName { get; set; } = null!;
 
     public string Title { get; set; } = null!;
 
@@ -16,5 +16,5 @@ public class ReleaseCollectionMetadata
 
     public string? CoverUrl { get; set; }
 
-    public string? SeriesDatabaseUrl { get; set; }
+    public string? MetadataDatabaseUrl { get; set; }
 }

@@ -70,14 +70,14 @@ public class ReleaseCollectionService(
         var metadata = releaseCollection.Metadata;
         if (metadata is null)
         {
-            metadata = new ReleaseCollectionMetadata { SeriesDatabaseClassName = ManualSource };
+            metadata = new ReleaseCollectionMetadata { MetadataDatabaseClassName = ManualSource };
             releaseCollection.Metadata = metadata;
         }
 
         metadata.Title = CleanOptional(data.Title) ?? releaseCollection.Name;
         metadata.CoverUrl = newCoverUrl;
         metadata.Description = CleanOptional(data.Description);
-        metadata.SeriesDatabaseUrl = CleanOptional(data.SeriesDatabaseUrl);
+        metadata.MetadataDatabaseUrl = CleanOptional(data.MetadataDatabaseUrl);
 
         if (!string.Equals(previousCoverUrl, newCoverUrl, StringComparison.Ordinal))
         {

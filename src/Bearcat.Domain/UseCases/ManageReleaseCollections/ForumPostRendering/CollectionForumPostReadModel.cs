@@ -12,7 +12,7 @@ public record CollectionForumPostSeriesReadModel(
     string Title,
     string? Description,
     string? CoverUrl,
-    string? SeriesDatabaseUrl
+    string? MetadataDatabaseUrl
 );
 
 public record CollectionForumPostReleaseReadModel(int ReleaseId, string Name);

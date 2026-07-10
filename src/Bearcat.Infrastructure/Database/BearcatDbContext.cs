@@ -88,7 +88,7 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<ReleaseMetadata> ReleaseMetadata { get; set; } = null!;
 
-    public DbSet<SeriesDatabaseRegistration> SeriesDatabaseRegistrations { get; set; } = null!;
+    public DbSet<MediaDatabaseRegistration> MediaDatabaseRegistrations { get; set; } = null!;
 
     public DbSet<ReleaseCollectionMetadata> ReleaseCollectionMetadata { get; set; } = null!;
 

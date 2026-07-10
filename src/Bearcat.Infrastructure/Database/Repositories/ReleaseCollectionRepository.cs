@@ -340,11 +340,11 @@ public class ReleaseCollectionRepository(
             )
             .Select(metadata => new
             {
-                metadata.SeriesDatabaseClassName,
+                metadata.MetadataDatabaseClassName,
                 metadata.Title,
                 metadata.Description,
                 metadata.CoverUrl,
-                metadata.SeriesDatabaseUrl,
+                metadata.MetadataDatabaseUrl,
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -407,11 +407,13 @@ public class ReleaseCollectionRepository(
             Metadata: metadata is null
                 ? null
                 : new ReleaseCollectionMetadataReadModel(
-                    SeriesDatabaseName: GetSeriesDatabaseName(metadata.SeriesDatabaseClassName),
+                    MetadataDatabaseName: GetMetadataDatabaseName(
+                        metadata.MetadataDatabaseClassName
+                    ),
                     Title: metadata.Title,
                     Description: metadata.Description,
                     CoverUrl: metadata.CoverUrl,
-                    SeriesDatabaseUrl: metadata.SeriesDatabaseUrl
+                    MetadataDatabaseUrl: metadata.MetadataDatabaseUrl
                 )
         );
     }
@@ -567,13 +569,13 @@ public class ReleaseCollectionRepository(
         return await dbRead.ReleaseCollections.CountAsync(isReadyForPostQueue, cancellationToken);
     }
 
-    private string GetSeriesDatabaseName(string seriesDatabaseClassName)
+    private string GetMetadataDatabaseName(string metadataDatabaseClassName)
     {
         return metadataDatabaseFactory
             .GetByClassName()
-            .TryGetValue(seriesDatabaseClassName, out var metadataDatabase)
+            .TryGetValue(metadataDatabaseClassName, out var metadataDatabase)
             ? metadataDatabase.Name
-            : seriesDatabaseClassName;
+            : metadataDatabaseClassName;
     }
 
     public async Task<

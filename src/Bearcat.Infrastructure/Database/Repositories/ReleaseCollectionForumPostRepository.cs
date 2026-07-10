@@ -25,7 +25,7 @@ public class ReleaseCollectionForumPostRepository(IBearcatReadDbContext dbRead)
                         collection.Metadata.Title,
                         collection.Metadata.Description,
                         collection.Metadata.CoverUrl,
-                        collection.Metadata.SeriesDatabaseUrl
+                        collection.Metadata.MetadataDatabaseUrl
                     ),
             })
             .FirstOrDefaultAsync(cancellationToken);

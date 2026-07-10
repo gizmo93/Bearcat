@@ -21,8 +21,8 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseCollections;
 
 public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
 {
-    private const string SeriesDatabaseClassName = "TvdbSeriesDatabase";
-    private const string SecondSeriesDatabaseClassName = "OtherSeriesDatabase";
+    private const string MetadataDatabaseClassName = "TvdbMetadataDatabase";
+    private const string SecondMetadataDatabaseClassName = "OtherMediaDatabase";
     private const string SerializedConfig = "{\"ApiKey\":\"secret\"}";
 
     private BearcatDbContext dbContext = null!;
@@ -57,7 +57,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
     public async Task ProcessMissingCollectionMetadataAsync_NfoContainsImdbId_ResolvesByImdbAndPersistsMetadata()
     {
         // Arrange
-        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: true);
+        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: true);
         var collection = await AddCollectionAsync(
             "Bodies.2023.S01.German.DL.1080p",
             CreateRelease(
@@ -68,7 +68,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
         collection.PrimaryLanguageCode = "de";
         await dbContext.SaveChangesAsync();
 
-        var (database, config) = SetupSeriesDatabase(SeriesDatabaseClassName);
+        var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
         database
             .Setup(seriesDatabase =>
                 seriesDatabase.GetByImdbIdAsync(
@@ -95,11 +95,11 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
         var metadata = await dbContext.ReleaseCollectionMetadata.SingleAsync();
 
         metadata.ReleaseCollectionId.ShouldBe(collection.Id);
-        metadata.SeriesDatabaseClassName.ShouldBe(SeriesDatabaseClassName);
+        metadata.MetadataDatabaseClassName.ShouldBe(MetadataDatabaseClassName);
         metadata.Title.ShouldBe("Bodies");
         metadata.Description.ShouldBe("Vier Detectives, ein Verbrechen.");
         metadata.CoverUrl.ShouldBe("https://artworks.thetvdb.com/banners/cover.jpg");
-        metadata.SeriesDatabaseUrl.ShouldBe("https://www.thetvdb.com/series/bodies");
+        metadata.MetadataDatabaseUrl.ShouldBe("https://www.thetvdb.com/series/bodies");
 
         var persistedCollection = await dbContext.ReleaseCollections.SingleAsync();
         persistedCollection.MetadataCheckedAt.ShouldNotBeNull();
@@ -128,7 +128,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
     public async Task ProcessMissingCollectionMetadataAsync_NoNfoImdb_FallsBackToResolvedExternalInfoImdb()
     {
         // Arrange
-        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: true);
+        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: true);
         await AddCollectionAsync(
             "Bodies.2023.S01.German.DL.1080p",
             CreateRelease(
@@ -137,7 +137,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
             )
         );
 
-        var (database, config) = SetupSeriesDatabase(SeriesDatabaseClassName);
+        var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
         database
             .Setup(seriesDatabase =>
                 seriesDatabase.GetByImdbIdAsync(
@@ -175,13 +175,13 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
     public async Task ProcessMissingCollectionMetadataAsync_NoImdb_FallsBackToTitleExtractedFromCollectionName()
     {
         // Arrange
-        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: true);
+        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: true);
         await AddCollectionAsync(
             "The.Bearcat.Files.S01.German.DL.1080p.WEB",
             CreateRelease("The.Bearcat.Files.S01E01.German.DL.1080p-GRP")
         );
 
-        var (database, config) = SetupSeriesDatabase(SeriesDatabaseClassName);
+        var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
         database
             .Setup(seriesDatabase =>
                 seriesDatabase.GetByTitleAsync(
@@ -202,7 +202,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
 
         dbContext.ChangeTracker.Clear();
         var metadata = await dbContext.ReleaseCollectionMetadata.SingleAsync();
-        metadata.SeriesDatabaseClassName.ShouldBe(SeriesDatabaseClassName);
+        metadata.MetadataDatabaseClassName.ShouldBe(MetadataDatabaseClassName);
 
         database.Verify(
             seriesDatabase =>
@@ -219,7 +219,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
     public async Task ProcessMissingCollectionMetadataAsync_NoActiveRegistration_DoesNothing()
     {
         // Arrange
-        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: false);
+        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: false);
         await AddCollectionAsync(
             "Bodies.2023.S01.German.DL.1080p",
             CreateRelease("Bodies.2023.S01E01.German.DL.1080p-GRP")
@@ -240,13 +240,13 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
     public async Task ProcessMissingCollectionMetadataAsync_NoMatchingSeries_MarksCheckedWithoutMetadata()
     {
         // Arrange
-        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: true);
+        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: true);
         var collection = await AddCollectionAsync(
             "Unknown.Series.S01.German.DL.1080p",
             CreateRelease("Unknown.Series.S01E01.German.DL.1080p-GRP")
         );
 
-        var (database, config) = SetupSeriesDatabase(SeriesDatabaseClassName);
+        var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
         database
             .Setup(seriesDatabase =>
                 seriesDatabase.GetByTitleAsync(
@@ -278,8 +278,8 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
     public async Task ProcessMissingCollectionMetadataAsync_FirstDatabaseReturnsNull_UsesNextDatabase()
     {
         // Arrange
-        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: true);
-        await AddSeriesDatabaseRegistrationAsync(SecondSeriesDatabaseClassName, isActive: true);
+        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: true);
+        await AddMediaDatabaseRegistrationAsync(SecondMetadataDatabaseClassName, isActive: true);
         await AddCollectionAsync(
             "Fallback.Series.S01.German.DL.1080p",
             CreateRelease(
@@ -288,8 +288,8 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
             )
         );
 
-        var (firstDatabase, firstConfig) = SetupSeriesDatabase(
-            SeriesDatabaseClassName,
+        var (firstDatabase, firstConfig) = SetupMediaDatabase(
+            MetadataDatabaseClassName,
             priority: 0
         );
         firstDatabase
@@ -311,8 +311,8 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
             )
             .ReturnsAsync((MediaMetadata?)null);
 
-        var (secondDatabase, secondConfig) = SetupSeriesDatabase(
-            SecondSeriesDatabaseClassName,
+        var (secondDatabase, secondConfig) = SetupMediaDatabase(
+            SecondMetadataDatabaseClassName,
             priority: 100
         );
         secondDatabase
@@ -335,7 +335,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
 
         dbContext.ChangeTracker.Clear();
         var metadata = await dbContext.ReleaseCollectionMetadata.SingleAsync();
-        metadata.SeriesDatabaseClassName.ShouldBe(SecondSeriesDatabaseClassName);
+        metadata.MetadataDatabaseClassName.ShouldBe(SecondMetadataDatabaseClassName);
 
         firstDatabase.Verify(
             seriesDatabase =>
@@ -352,7 +352,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
     public async Task ResolveAsync_CollectionWithImdbNfo_PersistsMetadata()
     {
         // Arrange
-        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: true);
+        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: true);
         var collection = await AddCollectionAsync(
             "Bodies.2023.S01.German.DL.1080p",
             CreateRelease(
@@ -361,7 +361,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
             )
         );
 
-        var (database, config) = SetupSeriesDatabase(SeriesDatabaseClassName);
+        var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
         database
             .Setup(seriesDatabase =>
                 seriesDatabase.GetByImdbIdAsync(
@@ -388,7 +388,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
     public async Task ProcessMissingCollectionMetadataAsync_RateLimitExceeded_StopsAndMarksChecked()
     {
         // Arrange
-        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: true);
+        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: true);
         var collection = await AddCollectionAsync(
             "Bodies.2023.S01.German.DL.1080p",
             CreateRelease(
@@ -397,7 +397,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
             )
         );
 
-        var (database, config) = SetupSeriesDatabase(SeriesDatabaseClassName);
+        var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
         database
             .Setup(seriesDatabase =>
                 seriesDatabase.GetByImdbIdAsync(
@@ -407,7 +407,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
                 )
             )
             .ThrowsAsync(
-                new MediaMetadataDatabaseRateLimitExceededException(SeriesDatabaseClassName, null)
+                new MediaMetadataDatabaseRateLimitExceededException(MetadataDatabaseClassName, null)
             );
 
         // Act
@@ -427,16 +427,16 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task ProcessMissingCollectionMetadataAsync_SeriesDatabaseThrows_MarksCheckedWithoutMetadata()
+    public async Task ProcessMissingCollectionMetadataAsync_MediaDatabaseThrows_MarksCheckedWithoutMetadata()
     {
         // Arrange
-        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: true);
+        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: true);
         var collection = await AddCollectionAsync(
             "Unknown.Series.S01.German.DL.1080p",
             CreateRelease("Unknown.Series.S01E01.German.DL.1080p-GRP")
         );
 
-        var (database, config) = SetupSeriesDatabase(SeriesDatabaseClassName);
+        var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
         database
             .Setup(seriesDatabase =>
                 seriesDatabase.GetByTitleAsync(
@@ -467,7 +467,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
     public async Task ResolveAsync_NoActiveRegistration_ReturnsFalse()
     {
         // Arrange
-        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: false);
+        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: false);
         var collection = await AddCollectionAsync(
             "Bodies.2023.S01.German.DL.1080p",
             CreateRelease("Bodies.2023.S01E01.German.DL.1080p-GRP")
@@ -485,8 +485,8 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
     public async Task ResolveAsync_CollectionNotFound_ReturnsFalse()
     {
         // Arrange
-        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: true);
-        SetupSeriesDatabase(SeriesDatabaseClassName);
+        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: true);
+        SetupMediaDatabase(MetadataDatabaseClassName);
 
         // Act
         var resolved = await service.ResolveAsync(999, CancellationToken.None);
@@ -500,19 +500,19 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
     public async Task ResolveAsync_CollectionAlreadyHasMetadata_ReturnsFalse()
     {
         // Arrange
-        await AddSeriesDatabaseRegistrationAsync(SeriesDatabaseClassName, isActive: true);
-        SetupSeriesDatabase(SeriesDatabaseClassName);
+        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: true);
+        SetupMediaDatabase(MetadataDatabaseClassName);
         var collection = await AddCollectionAsync(
             "Bodies.2023.S01.German.DL.1080p",
             CreateRelease("Bodies.2023.S01E01.German.DL.1080p-GRP")
         );
         collection.Metadata = new ReleaseCollectionMetadata
         {
-            SeriesDatabaseClassName = SeriesDatabaseClassName,
+            MetadataDatabaseClassName = MetadataDatabaseClassName,
             Title = "Bodies",
             Description = "Existing",
             CoverUrl = "https://artworks.example/cover.jpg",
-            SeriesDatabaseUrl = "https://www.thetvdb.com/series/bodies",
+            MetadataDatabaseUrl = "https://www.thetvdb.com/series/bodies",
         };
         dbContext.Update(collection);
         await dbContext.SaveChangesAsync();
@@ -528,7 +528,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
     private (
         Mock<IMediaMetadataDatabase> Database,
         IMediaMetadataDatabaseConfig Config
-    ) SetupSeriesDatabase(string className, int priority = 0)
+    ) SetupMediaDatabase(string className, int priority = 0)
     {
         var configMock = new Mock<IMediaMetadataDatabaseConfig>(MockBehavior.Strict);
         var databaseMock = new Mock<IMediaMetadataDatabase>(MockBehavior.Strict);
@@ -546,16 +546,16 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
         return (databaseMock, configMock.Object);
     }
 
-    private async Task AddSeriesDatabaseRegistrationAsync(string className, bool isActive)
+    private async Task AddMediaDatabaseRegistrationAsync(string className, bool isActive)
     {
-        var registration = new SeriesDatabaseRegistration
+        var registration = new MediaDatabaseRegistration
         {
-            SeriesDatabaseClassName = className,
+            MediaDatabaseClassName = className,
             SerializedConfig = SerializedConfig,
             IsActive = isActive,
         };
 
-        dbContext.SeriesDatabaseRegistrations.Add(registration);
+        dbContext.MediaDatabaseRegistrations.Add(registration);
         await dbContext.SaveChangesAsync();
     }
 
