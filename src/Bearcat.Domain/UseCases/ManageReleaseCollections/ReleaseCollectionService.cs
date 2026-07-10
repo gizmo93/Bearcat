@@ -14,8 +14,6 @@ public class ReleaseCollectionService(
     TimeProvider timeProvider
 )
 {
-    private const string ManualSource = "Manual";
-
     public async Task<int> CreateAsync(
         string name,
         string key,
@@ -70,7 +68,10 @@ public class ReleaseCollectionService(
         var metadata = releaseCollection.Metadata;
         if (metadata is null)
         {
-            metadata = new ReleaseCollectionMetadata { MetadataDatabaseClassName = ManualSource };
+            metadata = new ReleaseCollectionMetadata
+            {
+                MetadataDatabaseClassName = ReleaseCollectionMetadata.ManualSource,
+            };
             releaseCollection.Metadata = metadata;
         }
 

@@ -165,18 +165,42 @@ public partial class ReleaseInfoResolutionService(
         return releaseInfoAttached || nfoAttached || metadataAttached;
     }
 
+    public async Task<bool> RefreshMetadataAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var release = await repository.GetReleaseWithInfoAsync(releaseId, cancellationToken);
+        var resolved = await TryResolveAndAttachMetadataAsync(release, cancellationToken);
+
+        release.MetadataCheckedAt = timeProvider.GetLocalNow();
+
+        try
+        {
+            await repository.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsDuplicateReleaseDataException(exception))
+        {
+            repository.DetachPendingReleaseInfo(release);
+            await repository.SaveChangesAsync(cancellationToken);
+            logger.LogInformation(
+                exception,
+                "Metadata for release {ReleaseName} was already resolved by another worker",
+                release.Name
+            );
+
+            return false;
+        }
+
+        return resolved;
+    }
+
     private async Task<bool> TryResolveAndAttachMetadataAsync(
         Release release,
         CancellationToken cancellationToken
     )
     {
-        if (
-            release.Metadata is not null
-            && (
-                release.Metadata.MetadataDatabaseClassName == ReleaseMetadata.ManualSource
-                || !string.IsNullOrWhiteSpace(release.Metadata.CoverUrl)
-            )
-        )
+        if (release.Metadata?.MetadataDatabaseClassName == ReleaseMetadata.ManualSource)
         {
             return false;
         }
@@ -231,13 +255,24 @@ public partial class ReleaseInfoResolutionService(
             return false;
         }
 
+        var existingMetadata = release.Metadata;
         release.Metadata ??= new ReleaseMetadata();
         release.Metadata.MetadataDatabaseClassName = resolved.DatabaseClassName;
         release.Metadata.Title = resolved.Metadata.Title;
-        release.Metadata.Genre = resolved.Metadata.Genre;
-        release.Metadata.Description = resolved.Metadata.Description;
-        release.Metadata.CoverUrl = resolved.Metadata.CoverUrl;
-        release.Metadata.MetadataDatabaseUrl = resolved.Metadata.DatabaseUrl;
+        release.Metadata.Genre = string.IsNullOrWhiteSpace(resolved.Metadata.Genre)
+            ? existingMetadata?.Genre
+            : resolved.Metadata.Genre;
+        release.Metadata.Description = string.IsNullOrWhiteSpace(resolved.Metadata.Description)
+            ? existingMetadata?.Description
+            : resolved.Metadata.Description;
+        release.Metadata.CoverUrl = string.IsNullOrWhiteSpace(resolved.Metadata.CoverUrl)
+            ? existingMetadata?.CoverUrl
+            : resolved.Metadata.CoverUrl;
+        release.Metadata.MetadataDatabaseUrl = string.IsNullOrWhiteSpace(
+            resolved.Metadata.DatabaseUrl
+        )
+            ? existingMetadata?.MetadataDatabaseUrl
+            : resolved.Metadata.DatabaseUrl;
 
         logger.LogInformation(
             "Resolved metadata for release {ReleaseName} using {MetadataDatabase}",

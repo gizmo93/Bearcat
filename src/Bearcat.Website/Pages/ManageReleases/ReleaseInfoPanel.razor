@@ -26,6 +26,17 @@
                 </BbButton>
             }
 
+            @if (releaseInfo is not null)
+            {
+                <BbButton Variant="ButtonVariant.Outline"
+                          Size="ButtonSize.Small"
+                          Disabled="isLoading || isResolving"
+                          OnClick="RefreshMetadataAsync">
+                    <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isResolving ? "animate-spin" : string.Empty)}")" />
+                    @L["RefreshMetadata"]
+                </BbButton>
+            }
+
             <BbButton Variant="ButtonVariant.Outline"
                       Size="ButtonSize.Small"
                       Disabled="isLoading"
@@ -108,16 +119,13 @@
                                         <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
                                     </a>
                                 }
-                                @if (releaseInfo.ReleaseInfoId is not null)
-                                {
-                                    <button type="button"
-                                            class="bearcat-release-info-source-link bearcat-release-info-delete-button"
-                                            title="@L["DeleteReleaseInfo"]"
-                                            aria-label="@L["DeleteReleaseInfo"]"
-                                            @onclick="@(async () => await DeleteReleaseInfoAsync(releaseInfo))">
-                                        <LucideIcon Name="trash-2" class="h-3.5 w-3.5" />
-                                    </button>
-                                }
+                                <button type="button"
+                                        class="bearcat-release-info-source-link bearcat-release-info-delete-button"
+                                        title="@L["DeleteReleaseInfo"]"
+                                        aria-label="@L["DeleteReleaseInfo"]"
+                                        @onclick="@(async () => await DeleteReleaseInfoAsync(releaseInfo))">
+                                    <LucideIcon Name="trash-2" class="h-3.5 w-3.5" />
+                                </button>
                             </div>
 
                             <h3 class="bearcat-release-info-title" title="@releaseInfo.ReleaseName">

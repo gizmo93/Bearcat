@@ -497,11 +497,10 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task ResolveAsync_CollectionAlreadyHasMetadata_ReturnsFalse()
+    public async Task ResolveAsync_CollectionAlreadyHasMetadata_RefreshesMetadata()
     {
         // Arrange
         await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: true);
-        SetupMediaDatabase(MetadataDatabaseClassName);
         var collection = await AddCollectionAsync(
             "Bodies.2023.S01.German.DL.1080p",
             CreateRelease("Bodies.2023.S01E01.German.DL.1080p-GRP")
@@ -518,11 +517,46 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
         await dbContext.SaveChangesAsync();
         dbContext.ChangeTracker.Clear();
 
+        var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
+        database
+            .Setup(metadataDatabase =>
+                metadataDatabase.GetByTitleAsync(
+                    config,
+                    It.Is<MediaMetadataLookup>(lookup => lookup.Title == "Bodies"),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(CreateMetadata());
+
         // Act
         var resolved = await service.ResolveAsync(collection.Id, CancellationToken.None);
 
         // Assert
+        resolved.ShouldBeTrue();
+        dbContext.ChangeTracker.Clear();
+        var metadata = await dbContext.ReleaseCollectionMetadata.SingleAsync();
+        metadata.Description.ShouldBe("Vier Detectives, ein Verbrechen.");
+        metadata.CoverUrl.ShouldBe("https://artworks.thetvdb.com/banners/cover.jpg");
+    }
+
+    [Test]
+    public async Task ResolveAsync_ManualMetadata_ReturnsFalse()
+    {
+        var collection = await AddCollectionAsync(
+            "Bodies.2023.S01.German.DL.1080p",
+            CreateRelease("Bodies.2023.S01E01.German.DL.1080p-GRP")
+        );
+        collection.Metadata = new ReleaseCollectionMetadata
+        {
+            MetadataDatabaseClassName = ReleaseCollectionMetadata.ManualSource,
+            Title = "Bodies",
+        };
+        await dbContext.SaveChangesAsync();
+
+        var resolved = await service.ResolveAsync(collection.Id, CancellationToken.None);
+
         resolved.ShouldBeFalse();
+        metadataDatabaseFactoryMock.Verify(factory => factory.Get(It.IsAny<string>()), Times.Never);
     }
 
     private (

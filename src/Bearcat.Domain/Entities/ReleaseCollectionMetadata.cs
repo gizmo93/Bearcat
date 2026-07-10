@@ -2,6 +2,8 @@ namespace Bearcat.Domain.Entities;
 
 public class ReleaseCollectionMetadata
 {
+    public const string ManualSource = "Manual";
+
     public int Id { get; set; }
 
     public int ReleaseCollectionId { get; set; }

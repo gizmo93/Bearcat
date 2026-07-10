@@ -18,11 +18,6 @@ public interface IReleaseInfoRepository
 
     Task<bool> HasReleaseInfoAsync(int releaseId, CancellationToken cancellationToken = default);
 
-    Task<ReleaseInfo> GetReleaseInfoByIdAsync(
-        int releaseInfoId,
-        CancellationToken cancellationToken = default
-    );
-
     Task<Release> GetReleaseForCoverUpdateAsync(
         int releaseId,
         CancellationToken cancellationToken = default

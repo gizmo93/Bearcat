@@ -58,12 +58,14 @@ public partial class ReleaseCollectionInfoResolutionService(
             return false;
         }
 
-        if (collection.Metadata is not null)
+        if (
+            collection.Metadata?.MetadataDatabaseClassName == ReleaseCollectionMetadata.ManualSource
+        )
         {
             return false;
         }
 
-        var resolved = await TryResolveAsync(collection, cancellationToken);
+        var resolved = await TryResolveAsync(collection, replaceExisting: true, cancellationToken);
         collection.MetadataCheckedAt = timeProvider.GetLocalNow();
         await SaveChangesSafelyAsync(collection, cancellationToken);
 
@@ -92,7 +94,11 @@ public partial class ReleaseCollectionInfoResolutionService(
 
             seenCollectionIds.Add(collection.Id);
 
-            var resolved = await TryResolveAsync(collection, cancellationToken);
+            var resolved = await TryResolveAsync(
+                collection,
+                replaceExisting: false,
+                cancellationToken
+            );
             collection.MetadataCheckedAt = timeProvider.GetLocalNow();
 
             if (resolved)
@@ -108,10 +114,11 @@ public partial class ReleaseCollectionInfoResolutionService(
 
     private async Task<bool> TryResolveAsync(
         ReleaseCollection collection,
+        bool replaceExisting,
         CancellationToken cancellationToken
     )
     {
-        if (collection.Metadata is not null)
+        if (collection.Metadata is not null && !replaceExisting)
         {
             return false;
         }
@@ -134,14 +141,12 @@ public partial class ReleaseCollectionInfoResolutionService(
             return false;
         }
 
-        collection.Metadata = new ReleaseCollectionMetadata
-        {
-            MetadataDatabaseClassName = resolved.DatabaseClassName,
-            Title = resolved.Metadata.Title,
-            Description = resolved.Metadata.Description,
-            CoverUrl = resolved.Metadata.CoverUrl,
-            MetadataDatabaseUrl = resolved.Metadata.DatabaseUrl,
-        };
+        collection.Metadata ??= new ReleaseCollectionMetadata();
+        collection.Metadata.MetadataDatabaseClassName = resolved.DatabaseClassName;
+        collection.Metadata.Title = resolved.Metadata.Title;
+        collection.Metadata.Description = resolved.Metadata.Description;
+        collection.Metadata.CoverUrl = resolved.Metadata.CoverUrl;
+        collection.Metadata.MetadataDatabaseUrl = resolved.Metadata.DatabaseUrl;
 
         logger.LogInformation(
             "Resolved metadata for release collection {CollectionName} using {MetadataDatabase}",

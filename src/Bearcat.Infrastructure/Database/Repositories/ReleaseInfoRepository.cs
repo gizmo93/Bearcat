@@ -89,17 +89,6 @@ public class ReleaseInfoRepository(
         );
     }
 
-    public async Task<ReleaseInfo> GetReleaseInfoByIdAsync(
-        int releaseInfoId,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return await dbWrite
-            .ReleaseInfos.Include(info => info.Release)
-                .ThenInclude(release => release.Metadata)
-            .FirstAsync(info => info.Id == releaseInfoId, cancellationToken);
-    }
-
     public async Task<Release> GetReleaseForCoverUpdateAsync(
         int releaseId,
         CancellationToken cancellationToken = default

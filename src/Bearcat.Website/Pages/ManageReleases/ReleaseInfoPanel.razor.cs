@@ -131,6 +131,37 @@ public partial class ReleaseInfoPanel(
 
             if (resolved)
             {
+                toastService.Success(L["ReleaseMetadataResolved"]);
+                await LoadReleaseInfoAsync();
+            }
+            else
+            {
+                toastService.Info(L["ReleaseMetadataNotResolved"]);
+            }
+        }
+        finally
+        {
+            isResolving = false;
+        }
+    }
+
+    private async Task RefreshMetadataAsync()
+    {
+        if (isResolving)
+        {
+            return;
+        }
+
+        isResolving = true;
+
+        try
+        {
+            var resolved = await operationRunner.RunAsync(
+                (ReleaseInfoResolutionService service) => service.RefreshMetadataAsync(ReleaseId)
+            );
+
+            if (resolved)
+            {
                 toastService.Success(L["ReleaseInfoResolved"]);
                 await LoadReleaseInfoAsync();
             }
@@ -177,11 +208,6 @@ public partial class ReleaseInfoPanel(
 
     private async Task DeleteReleaseInfoAsync(ReleaseInfoReadModel releaseInfo)
     {
-        if (releaseInfo.ReleaseInfoId is null)
-        {
-            return;
-        }
-
         var result = await dialogService.ConfirmAsync(
             L["DeleteReleaseInfoTitle"],
             L["DeleteReleaseInfoConfirmation", releaseInfo.ReleaseName],
@@ -199,7 +225,7 @@ public partial class ReleaseInfoPanel(
         }
 
         await operationRunner.RunAsync(
-            (ReleaseInfoService service) => service.DeleteAsync(releaseInfo.ReleaseInfoId.Value)
+            (ReleaseInfoService service) => service.DeleteAsync(ReleaseId)
         );
 
         toastService.Success(L["ReleaseInfoDeleted"]);

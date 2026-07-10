@@ -11,21 +11,22 @@ public class ReleaseInfoService(
     ILogger<ReleaseInfoService> logger
 )
 {
-    public async Task DeleteAsync(int releaseInfoId, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(int releaseId, CancellationToken cancellationToken = default)
     {
-        var releaseInfo = await repository.GetReleaseInfoByIdAsync(
-            releaseInfoId: releaseInfoId,
-            cancellationToken: cancellationToken
-        );
-        repository.Remove(releaseInfo);
+        var release = await repository.GetReleaseWithInfoAsync(releaseId, cancellationToken);
 
-        if (releaseInfo.Release.Metadata is not null)
+        if (release.ReleaseInfo is not null)
         {
-            repository.Remove(releaseInfo.Release.Metadata);
+            repository.Remove(release.ReleaseInfo);
         }
 
-        releaseInfo.Release.ReleaseInfoCheckedAt = null;
-        releaseInfo.Release.MetadataCheckedAt = null;
+        if (release.Metadata is not null)
+        {
+            repository.Remove(release.Metadata);
+        }
+
+        release.ReleaseInfoCheckedAt = null;
+        release.MetadataCheckedAt = null;
 
         await repository.SaveChangesAsync(cancellationToken);
     }

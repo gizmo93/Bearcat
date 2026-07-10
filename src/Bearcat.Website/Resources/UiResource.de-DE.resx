@@ -127,9 +127,9 @@
   <data name="DeleteRegistration" xml:space="preserve"><value>Registrierung löschen</value></data>
   <data name="DeleteRelease" xml:space="preserve"><value>Release löschen</value></data>
   <data name="DeleteReleaseConfirmation" xml:space="preserve"><value>Möchtest du das Release {0} wirklich löschen?</value></data>
-  <data name="DeleteReleaseInfo" xml:space="preserve"><value>Release-Info löschen</value></data>
-  <data name="DeleteReleaseInfoConfirmation" xml:space="preserve"><value>Release-Info {0} löschen? Der Hintergrundtask kann sie erneut abrufen.</value></data>
-  <data name="DeleteReleaseInfoTitle" xml:space="preserve"><value>Release-Info löschen</value></data>
+  <data name="DeleteReleaseInfo" xml:space="preserve"><value>Releaseinfos und Metadaten löschen</value></data>
+  <data name="DeleteReleaseInfoConfirmation" xml:space="preserve"><value>Release-Infos und Metadaten für {0} löschen? Der Hintergrundtask kann sie erneut abrufen.</value></data>
+  <data name="DeleteReleaseInfoTitle" xml:space="preserve"><value>Releaseinfos und Metadaten löschen</value></data>
   <data name="DeleteReleaseTitle" xml:space="preserve"><value>Release {0} löschen</value></data>
   <data name="DeleteUploadConfig" xml:space="preserve"><value>Upload-Konfiguration löschen</value></data>
   <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Möchtest du die Upload-Konfiguration {0} wirklich löschen?</value></data>
@@ -161,6 +161,8 @@
   <data name="Forced" xml:space="preserve"><value>Erzwungen</value></data>
   <data name="ReleaseInfoResolved" xml:space="preserve"><value>Release-Info gefunden</value></data>
   <data name="ReleaseInfoNotResolved" xml:space="preserve"><value>Keine Release-Info gefunden</value></data>
+  <data name="ReleaseMetadataResolved" xml:space="preserve"><value>Metadaten abgerufen</value></data>
+  <data name="ReleaseMetadataNotResolved" xml:space="preserve"><value>Keine passenden Metadaten gefunden</value></data>
   <data name="AddNfo" xml:space="preserve"><value>NFO hinzufügen</value></data>
   <data name="EditNfo" xml:space="preserve"><value>NFO bearbeiten</value></data>
   <data name="EditNfoDescription" xml:space="preserve"><value>Füge die NFO manuell hinzu oder bearbeite sie, z. B. wenn keine NFO-Datei existiert, keine heruntergeladen werden konnte oder die vorhandene falsch ist. Die NFO wird zusätzlich als Datei in den Release-Ordner geschrieben.</value></data>
