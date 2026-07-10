@@ -676,7 +676,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task ResolveAsync_NfoContainsImdbId_ResolvesMovieMetadata()
+    public async Task ResolveAsync_IncompleteSceneMetadata_ResolvesMovieMetadataByImdb()
     {
         var release = await AddReleaseAsync("Amok.1994.1080p.BluRay.x264-PL3X");
         release.ReleaseContentType = ReleaseContentType.Movie;
@@ -694,6 +694,11 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
                 Source = ExternalIdentifierSource.Nfo,
             }
         );
+        release.Metadata = new ReleaseMetadata
+        {
+            MetadataDatabaseClassName = "SrrdbNfoDatabase",
+            Title = "Amok",
+        };
 
         const string databaseClassName = "MovieMetadataDatabase";
         dbContext.SeriesDatabaseRegistrations.Add(
@@ -747,6 +752,44 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         metadata.Title.ShouldBe("Amok");
         metadata.Genre.ShouldBe("Drama");
         metadata.MetadataDatabaseUrl.ShouldBe("https://metadata.test/amok");
+    }
+
+    [Test]
+    public async Task ResolveAsync_MetadataExistsButReleaseInfoIsMissing_ResolvesReleaseInfoImmediately()
+    {
+        var release = await AddReleaseAsync(
+            "Die.Wolke.2006.GERMAN.1080p.WEB.H264.iNTERNAL-SunDry",
+            releaseInfoCheckedAt: DateTime.UtcNow
+        );
+        release.ReleaseNfo = new Bearcat.Domain.Entities.ReleaseNfo
+        {
+            FileName = "sundry-die.wolke.german.1080p.web.h264.nfo",
+            Content = "https://www.imdb.com/title/tt0480083/",
+        };
+        release.Metadata = new ReleaseMetadata
+        {
+            MetadataDatabaseClassName = "TmdbMetadataDatabase",
+            Title = "The Cloud",
+            CoverUrl = "https://image.tmdb.org/t/p/w500/cloud.jpg",
+        };
+        await AddNfoDatabaseRegistrationAsync("XrelNfoDatabase", isActive: true);
+        SetupNfoDatabase("XrelNfoDatabase", release.Name, CreateReleaseInfo(release.Name));
+        await dbContext.SaveChangesAsync();
+
+        var resolved = await service.ResolveAsync(release.Id, CancellationToken.None);
+
+        resolved.ShouldBeTrue();
+        dbContext.ChangeTracker.Clear();
+        var releaseInfo = await dbContext
+            .ReleaseInfos.Include(info => info.ExternalInfos)
+            .SingleAsync();
+        releaseInfo.NfoDatabaseClassName.ShouldBe("XrelNfoDatabase");
+        releaseInfo.SizeNumber.ShouldBe(12);
+        releaseInfo.VideoType.ShouldBe("WEB");
+        releaseInfo.ExternalInfos.ShouldHaveSingleItem();
+        (await dbContext.ReleaseMetadata.SingleAsync()).MetadataDatabaseClassName.ShouldBe(
+            "TmdbMetadataDatabase"
+        );
     }
 
     private Mock<INfoDatabase> SetupNfoDatabase(

@@ -34,6 +34,5 @@ public static class ServiceProviderConfig
         services.AddKeyedScoped<IMediaMetadataDatabase, TvdbSeriesDatabase>(
             nameof(TvdbSeriesDatabase)
         );
-        services.AddScoped<IMediaMetadataDatabaseFactory, MediaMetadataDatabaseFactory>();
     }
 }

@@ -95,7 +95,9 @@ public partial class ReleaseInfoPanel(
             parameters,
             new DialogOpenOptions
             {
-                Title = releaseInfo is null ? L["AddReleaseInfo"] : L["EditReleaseInfo"],
+                Title = releaseInfo?.ReleaseInfoId is null
+                    ? L["AddReleaseInfo"]
+                    : L["EditReleaseInfo"],
                 Description = L["EditReleaseInfoDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,

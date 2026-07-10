@@ -43,6 +43,10 @@ public class ReleaseInfoRepository(
                 release.ReleaseInfo == null
                 || release.ReleaseNfo == null
                 || release.Metadata == null
+                || (
+                    release.Metadata.MetadataDatabaseClassName != ReleaseMetadata.ManualSource
+                    && release.Metadata.CoverUrl == null
+                )
             )
             .Where(release =>
                 (
@@ -53,7 +57,14 @@ public class ReleaseInfoRepository(
                     )
                 )
                 || (
-                    release.Metadata == null
+                    (
+                        release.Metadata == null
+                        || (
+                            release.Metadata.MetadataDatabaseClassName
+                                != ReleaseMetadata.ManualSource
+                            && release.Metadata.CoverUrl == null
+                        )
+                    )
                     && (
                         release.MetadataCheckedAt == null
                         || release.MetadataCheckedAt < lastCheckedThreshold

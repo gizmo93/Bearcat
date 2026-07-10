@@ -802,22 +802,22 @@
   <data name="RemoveFromCollection" xml:space="preserve"><value>Aus Collection entfernen</value></data>
   <data name="RemoveReleaseFromCollectionConfirmation" xml:space="preserve"><value>{0} aus dieser Collection entfernen? Upload-Konfigurationen, die durch Collection-Upload-Slots erstellt wurden, werden gelöscht.</value></data>
   <data name="Remove" xml:space="preserve"><value>Entfernen</value></data>
-  <data name="SeriesDatabaseRegistrations" xml:space="preserve"><value>Seriendatenbank-Registrierungen</value></data>
-  <data name="SeriesDatabaseRegistrationsIntro" xml:space="preserve"><value>Aktiviere und verwalte Serien-Metadatenquellen</value></data>
-  <data name="SeriesDatabases" xml:space="preserve"><value>Seriendatenbanken</value></data>
-  <data name="SeriesDatabase" xml:space="preserve"><value>Seriendatenbank</value></data>
-  <data name="NewSeriesDatabase" xml:space="preserve"><value>Neue Seriendatenbank</value></data>
-  <data name="AddSeriesDatabase" xml:space="preserve"><value>Seriendatenbank hinzufügen</value></data>
-  <data name="SeriesDatabaseDialogDescription" xml:space="preserve"><value>Aktiviere eine Seriendatenbank und speichere Zugangsdaten, falls der Anbieter sie benötigt.</value></data>
-  <data name="SeriesDatabaseConfigurationHelp" xml:space="preserve"><value>Speichere die API-Zugangsdaten für die ausgewählte Seriendatenbank.</value></data>
-  <data name="SelectSeriesDatabase" xml:space="preserve"><value>Seriendatenbank auswählen</value></data>
-  <data name="SelectSeriesDatabaseRequired" xml:space="preserve"><value>Du musst eine Seriendatenbank auswählen.</value></data>
-  <data name="SeriesDatabaseAlreadyRegistered" xml:space="preserve"><value>Diese Seriendatenbank ist bereits registriert.</value></data>
-  <data name="OpenSeriesDatabaseActions" xml:space="preserve"><value>Seriendatenbank-Aktionen öffnen</value></data>
-  <data name="SeriesDatabaseRegistrationActivated" xml:space="preserve"><value>Seriendatenbank-Registrierung {0} aktiviert</value></data>
-  <data name="SeriesDatabaseRegistrationDeactivated" xml:space="preserve"><value>Seriendatenbank-Registrierung {0} deaktiviert</value></data>
-  <data name="DeleteSeriesDatabaseRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Seriendatenbank-Registrierung {0} wirklich löschen?</value></data>
-  <data name="SeriesMetadataSources" xml:space="preserve"><value>Serien-Metadatenquellen</value></data>
+  <data name="SeriesDatabaseRegistrations" xml:space="preserve"><value>Metadatenquellen</value></data>
+  <data name="SeriesDatabaseRegistrationsIntro" xml:space="preserve"><value>Aktiviere und verwalte Metadatenquellen für Filme und Serien</value></data>
+  <data name="SeriesDatabases" xml:space="preserve"><value>Metadatenquellen</value></data>
+  <data name="SeriesDatabase" xml:space="preserve"><value>Metadatenquelle</value></data>
+  <data name="NewSeriesDatabase" xml:space="preserve"><value>Neue Metadatenquelle</value></data>
+  <data name="AddSeriesDatabase" xml:space="preserve"><value>Metadatenquelle hinzufügen</value></data>
+  <data name="SeriesDatabaseDialogDescription" xml:space="preserve"><value>Aktiviere eine Metadatenquelle und speichere Zugangsdaten, falls der Anbieter sie benötigt.</value></data>
+  <data name="SeriesDatabaseConfigurationHelp" xml:space="preserve"><value>Speichere die API-Zugangsdaten für die ausgewählte Metadatenquelle.</value></data>
+  <data name="SelectSeriesDatabase" xml:space="preserve"><value>Metadatenquelle auswählen</value></data>
+  <data name="SelectSeriesDatabaseRequired" xml:space="preserve"><value>Du musst eine Metadatenquelle auswählen.</value></data>
+  <data name="SeriesDatabaseAlreadyRegistered" xml:space="preserve"><value>Diese Metadatenquelle ist bereits registriert.</value></data>
+  <data name="OpenSeriesDatabaseActions" xml:space="preserve"><value>Aktionen der Metadatenquelle öffnen</value></data>
+  <data name="SeriesDatabaseRegistrationActivated" xml:space="preserve"><value>Metadatenquelle {0} aktiviert</value></data>
+  <data name="SeriesDatabaseRegistrationDeactivated" xml:space="preserve"><value>Metadatenquelle {0} deaktiviert</value></data>
+  <data name="DeleteSeriesDatabaseRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Metadatenquelle {0} wirklich löschen?</value></data>
+  <data name="SeriesMetadataSources" xml:space="preserve"><value>Metadaten für Filme und Serien</value></data>
   <data name="SeriesMetadata" xml:space="preserve"><value>Serieninformationen</value></data>
   <data name="SeriesMetadataDescription" xml:space="preserve"><value>Beschreibung und Cover aus einer Seriendatenbank.</value></data>
   <data name="RefreshMetadata" xml:space="preserve"><value>Metadaten abrufen</value></data>

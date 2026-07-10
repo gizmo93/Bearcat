@@ -119,7 +119,13 @@ public partial class ReleaseInfoResolutionService(
                 || release.ReleaseInfoCheckedAt < lastCheckedThresholdDate
             );
         var metadataNeedsResolution =
-            release.Metadata is null
+            (
+                release.Metadata is null
+                || (
+                    release.Metadata.MetadataDatabaseClassName != ReleaseMetadata.ManualSource
+                    && string.IsNullOrWhiteSpace(release.Metadata.CoverUrl)
+                )
+            )
             && (
                 !respectLastCheckedAt
                 || release.MetadataCheckedAt is null
@@ -164,7 +170,13 @@ public partial class ReleaseInfoResolutionService(
         CancellationToken cancellationToken
     )
     {
-        if (release.Metadata is not null)
+        if (
+            release.Metadata is not null
+            && (
+                release.Metadata.MetadataDatabaseClassName == ReleaseMetadata.ManualSource
+                || !string.IsNullOrWhiteSpace(release.Metadata.CoverUrl)
+            )
+        )
         {
             return false;
         }
@@ -219,15 +231,13 @@ public partial class ReleaseInfoResolutionService(
             return false;
         }
 
-        release.Metadata = new ReleaseMetadata
-        {
-            MetadataDatabaseClassName = resolved.DatabaseClassName,
-            Title = resolved.Metadata.Title,
-            Genre = resolved.Metadata.Genre,
-            Description = resolved.Metadata.Description,
-            CoverUrl = resolved.Metadata.CoverUrl,
-            MetadataDatabaseUrl = resolved.Metadata.DatabaseUrl,
-        };
+        release.Metadata ??= new ReleaseMetadata();
+        release.Metadata.MetadataDatabaseClassName = resolved.DatabaseClassName;
+        release.Metadata.Title = resolved.Metadata.Title;
+        release.Metadata.Genre = resolved.Metadata.Genre;
+        release.Metadata.Description = resolved.Metadata.Description;
+        release.Metadata.CoverUrl = resolved.Metadata.CoverUrl;
+        release.Metadata.MetadataDatabaseUrl = resolved.Metadata.DatabaseUrl;
 
         logger.LogInformation(
             "Resolved metadata for release {ReleaseName} using {MetadataDatabase}",

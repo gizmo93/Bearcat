@@ -1,3 +1,5 @@
+using Bearcat.Abstractions.MediaMetadataDatabase;
+using Bearcat.SeriesDatabases.Tmdb.InversionOfControl;
 using Bearcat.SeriesDatabases.Tvdb.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +12,8 @@ public static class ServiceProviderConfig
         public void AddSeriesDatabases()
         {
             services.AddTvdb();
+            services.AddTmdb();
+            services.AddScoped<IMediaMetadataDatabaseFactory, MediaMetadataDatabaseFactory>();
         }
     }
 }
