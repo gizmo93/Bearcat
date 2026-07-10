@@ -1,4 +1,4 @@
-using Bearcat.Abstractions.SeriesDatabase;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageSeriesDatabases.ReadModels;
 using Bearcat.Domain.UseCases.ManageSeriesDatabases.Repositories;
@@ -9,14 +9,14 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 public class SeriesDatabaseRegistrationRepository(
     IBearcatReadDbContext dbRead,
     IBearcatWriteDbContext dbWrite,
-    ISeriesDatabaseFactory seriesDatabaseFactory
+    IMediaMetadataDatabaseFactory metadataDatabaseFactory
 ) : ISeriesDatabaseRegistrationReadRepository, ISeriesDatabaseRegistrationWriteRepository
 {
     public async Task<IReadOnlyList<SeriesDatabaseRegistrationReadModel>> GetAllAsync(
         CancellationToken cancellationToken = default
     )
     {
-        var databasesByClassName = seriesDatabaseFactory.GetByClassName();
+        var databasesByClassName = metadataDatabaseFactory.GetByClassName();
 
         return await dbRead
             .SeriesDatabaseRegistrations.OrderBy(registration =>
@@ -31,7 +31,7 @@ public class SeriesDatabaseRegistrationRepository(
         CancellationToken cancellationToken = default
     )
     {
-        var databasesByClassName = seriesDatabaseFactory.GetByClassName();
+        var databasesByClassName = metadataDatabaseFactory.GetByClassName();
 
         var registration = await dbRead
             .SeriesDatabaseRegistrations.Where(registration => registration.Id == id)
@@ -93,7 +93,7 @@ public class SeriesDatabaseRegistrationRepository(
 
     private static SeriesDatabaseRegistrationReadModel ToReadModel(
         SeriesDatabaseRegistration registration,
-        IReadOnlyDictionary<string, ISeriesDatabase> databasesByClassName
+        IReadOnlyDictionary<string, IMediaMetadataDatabase> databasesByClassName
     )
     {
         var database = databasesByClassName[registration.SeriesDatabaseClassName];

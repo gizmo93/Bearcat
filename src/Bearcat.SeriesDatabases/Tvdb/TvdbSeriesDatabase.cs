@@ -1,30 +1,38 @@
+using System.Globalization;
 using System.Text.Json;
-using Bearcat.Abstractions.SeriesDatabase;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.SeriesDatabases.Extensions;
 
 namespace Bearcat.SeriesDatabases.Tvdb;
 
-public class TvdbSeriesDatabase(TvdbClient client) : ISeriesDatabase
+public class TvdbSeriesDatabase(TvdbClient client) : IMediaMetadataDatabase
 {
     public string Name => "TheTVDB";
 
     public int ResolutionPriority => 0;
 
+    public IReadOnlyList<MediaKind> SupportedMediaKinds => [MediaKind.TvSeries];
+
     public IReadOnlyList<string> ConfigurationKeys => [TvdbConfig.ApiKeyConfigKey];
 
-    public async Task<SeriesInfo?> GetSeriesInfoByImdbIdAsync(
-        ISeriesDatabaseConfig config,
-        string imdbId,
+    public async Task<MediaMetadata?> GetByImdbIdAsync(
+        IMediaMetadataDatabaseConfig config,
+        MediaMetadataLookup lookup,
         CancellationToken cancellationToken = default
     )
     {
-        if (string.IsNullOrWhiteSpace(imdbId))
+        if (lookup.MediaKind != MediaKind.TvSeries || string.IsNullOrWhiteSpace(lookup.ImdbId))
         {
             return null;
         }
 
         var tvdbConfig = config.As<TvdbConfig>();
-        var series = await client.GetSeriesByImdbIdAsync(tvdbConfig, imdbId, cancellationToken);
+        
+        var series = await client.GetSeriesByImdbIdAsync(
+            config: tvdbConfig,
+            imdbId: lookup.ImdbId,
+            cancellationToken: cancellationToken
+        );
 
         if (series is null)
         {
@@ -38,23 +46,29 @@ public class TvdbSeriesDatabase(TvdbClient client) : ISeriesDatabase
             fallbackOverview: series.Overview,
             image: series.Image,
             slug: series.Slug,
+            languageCode: lookup.LanguageCode,
             cancellationToken: cancellationToken
         );
     }
 
-    public async Task<SeriesInfo?> GetSeriesInfoByTitleAsync(
-        ISeriesDatabaseConfig config,
-        string title,
+    public async Task<MediaMetadata?> GetByTitleAsync(
+        IMediaMetadataDatabaseConfig config,
+        MediaMetadataLookup lookup,
         CancellationToken cancellationToken = default
     )
     {
-        if (string.IsNullOrWhiteSpace(title))
+        if (lookup.MediaKind != MediaKind.TvSeries || string.IsNullOrWhiteSpace(lookup.Title))
         {
             return null;
         }
 
         var tvdbConfig = config.As<TvdbConfig>();
-        var result = await client.SearchSeriesByTitleAsync(tvdbConfig, title, cancellationToken);
+        
+        var result = await client.SearchSeriesByTitleAsync(
+            config: tvdbConfig,
+            title: lookup.Title,
+            cancellationToken: cancellationToken
+        );
 
         if (result?.TvdbId is null || !long.TryParse(result.TvdbId, out var seriesId))
         {
@@ -68,12 +82,13 @@ public class TvdbSeriesDatabase(TvdbClient client) : ISeriesDatabase
             fallbackOverview: result.Overview,
             image: result.ImageUrl,
             slug: result.Slug,
+            languageCode: lookup.LanguageCode,
             cancellationToken: cancellationToken
         );
     }
 
     public async Task<TryLoginResult> TryLoginAsync(
-        ISeriesDatabaseConfig config,
+        IMediaMetadataDatabaseConfig config,
         CancellationToken cancellationToken = default
     )
     {
@@ -102,7 +117,7 @@ public class TvdbSeriesDatabase(TvdbClient client) : ISeriesDatabase
         return JsonSerializer.Serialize(dictionary);
     }
 
-    public ISeriesDatabaseConfig DeserializeConfig(string serializedConfig)
+    public IMediaMetadataDatabaseConfig DeserializeConfig(string serializedConfig)
     {
         var dictionary =
             JsonSerializer.Deserialize<Dictionary<string, string>>(serializedConfig) ?? [];
@@ -112,21 +127,25 @@ public class TvdbSeriesDatabase(TvdbClient client) : ISeriesDatabase
         );
     }
 
-    private async Task<SeriesInfo?> BuildSeriesInfoAsync(
+    private async Task<MediaMetadata?> BuildSeriesInfoAsync(
         TvdbConfig config,
         long seriesId,
         string? fallbackName,
         string? fallbackOverview,
         string? image,
         string? slug,
+        string? languageCode,
         CancellationToken cancellationToken
     )
     {
-        var translation = await client.GetGermanTranslationAsync(
-            config,
-            seriesId,
-            cancellationToken
-        );
+        var translation = string.IsNullOrWhiteSpace(languageCode)
+            ? null
+            : await client.GetTranslationAsync(
+                config: config,
+                seriesId: seriesId,
+                languageCode: CultureInfo.GetCultureInfo(languageCode).ThreeLetterISOLanguageName,
+                cancellationToken: cancellationToken
+            );
 
         var title = FirstNonEmpty(translation?.Name, fallbackName);
 
@@ -135,11 +154,12 @@ public class TvdbSeriesDatabase(TvdbClient client) : ISeriesDatabase
             return null;
         }
 
-        return new SeriesInfo(
+        return new MediaMetadata(
             Title: title,
             Description: FirstNonEmpty(translation?.Overview, fallbackOverview),
+            Genre: null,
             CoverUrl: NullIfWhiteSpace(image),
-            SeriesDatabaseUrl: string.IsNullOrWhiteSpace(slug)
+            DatabaseUrl: string.IsNullOrWhiteSpace(slug)
                 ? null
                 : $"https://www.thetvdb.com/series/{slug}"
         );

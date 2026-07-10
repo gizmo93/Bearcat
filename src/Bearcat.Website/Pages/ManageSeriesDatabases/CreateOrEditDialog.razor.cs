@@ -1,4 +1,4 @@
-using Bearcat.Abstractions.SeriesDatabase;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.UseCases.ManageSeriesDatabases;
 using Bearcat.Domain.UseCases.ManageSeriesDatabases.Repositories;
 using BlazorBlueprint.Components;
@@ -18,14 +18,14 @@ public partial class CreateOrEditDialog
 
     private bool IsEditMode => SeriesDatabaseRegistrationId.HasValue;
     private ISeriesDatabaseRegistrationReadRepository readRepository = null!;
-    private ISeriesDatabaseFactory seriesDatabaseFactory = null!;
+    private IMediaMetadataDatabaseFactory metadataDatabaseFactory = null!;
     private RegistrationFormModel formModel = new();
     private EditContext editContext = null!;
     private ValidationMessageStore validationMessageStore = null!;
-    private IReadOnlyList<SeriesDatabaseDto> seriesDatabases = [];
+    private IReadOnlyList<MediaMetadataDatabaseDto> seriesDatabases = [];
     private IReadOnlySet<string> registeredClassNames = new HashSet<string>();
     private readonly HashSet<string> displayedSecrets = [];
-    private SeriesDatabaseDto? SelectedSeriesDatabase =>
+    private MediaMetadataDatabaseDto? SelectedSeriesDatabase =>
         seriesDatabases.FirstOrDefault(database => database.ClassName == formModel.ClassName);
     private bool isInitialized;
 
@@ -33,7 +33,8 @@ public partial class CreateOrEditDialog
     {
         readRepository =
             ScopedServices.GetRequiredService<ISeriesDatabaseRegistrationReadRepository>();
-        seriesDatabaseFactory = ScopedServices.GetRequiredService<ISeriesDatabaseFactory>();
+        metadataDatabaseFactory =
+            ScopedServices.GetRequiredService<IMediaMetadataDatabaseFactory>();
 
         await InitializeFormModelAsync();
         await InitializeSeriesDatabasesAsync();
@@ -144,8 +145,8 @@ public partial class CreateOrEditDialog
             .Select(registration => registration.SeriesDatabaseClassName)
             .ToHashSet();
 
-        seriesDatabases = seriesDatabaseFactory
-            .GetSeriesDatabases()
+        seriesDatabases = metadataDatabaseFactory
+            .GetDatabases()
             .Where(database => IsEditMode || !registeredClassNames.Contains(database.ClassName))
             .ToList();
     }

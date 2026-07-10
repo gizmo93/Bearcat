@@ -1,4 +1,4 @@
-using Bearcat.Abstractions.SeriesDatabase;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageSeriesDatabases;
 using Bearcat.Infrastructure.Database;
@@ -17,18 +17,18 @@ public class SeriesDatabaseRegistrationServiceTest : BearcatIntegrationTest
     private const string SerializedConfig = "{\"ApiKey\":\"secret\"}";
 
     private BearcatDbContext dbContext = null!;
-    private Mock<ISeriesDatabase> databaseMock = null!;
-    private Mock<ISeriesDatabaseConfig> configMock = null!;
-    private Mock<ISeriesDatabaseFactory> factoryMock = null!;
+    private Mock<IMediaMetadataDatabase> databaseMock = null!;
+    private Mock<IMediaMetadataDatabaseConfig> configMock = null!;
+    private Mock<IMediaMetadataDatabaseFactory> factoryMock = null!;
     private SeriesDatabaseRegistrationService service = null!;
 
     [SetUp]
     public void Setup()
     {
         dbContext = Database.CreateDbContext();
-        databaseMock = new Mock<ISeriesDatabase>(MockBehavior.Strict);
-        configMock = new Mock<ISeriesDatabaseConfig>(MockBehavior.Strict);
-        factoryMock = new Mock<ISeriesDatabaseFactory>(MockBehavior.Strict);
+        databaseMock = new Mock<IMediaMetadataDatabase>(MockBehavior.Strict);
+        configMock = new Mock<IMediaMetadataDatabaseConfig>(MockBehavior.Strict);
+        factoryMock = new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict);
         factoryMock.Setup(factory => factory.Get(ClassName)).Returns(databaseMock.Object);
 
         service = new SeriesDatabaseRegistrationService(

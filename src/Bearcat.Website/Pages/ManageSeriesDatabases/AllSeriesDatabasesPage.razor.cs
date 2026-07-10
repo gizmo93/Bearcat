@@ -1,4 +1,4 @@
-using Bearcat.Abstractions.SeriesDatabase;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.UseCases.ManageSeriesDatabases;
 using Bearcat.Domain.UseCases.ManageSeriesDatabases.ReadModels;
 using Bearcat.Domain.UseCases.ManageSeriesDatabases.Repositories;
@@ -9,7 +9,7 @@ namespace Bearcat.Website.Pages.ManageSeriesDatabases;
 
 public partial class AllSeriesDatabasesPage(
     ISeriesDatabaseRegistrationReadRepository readRepository,
-    ISeriesDatabaseFactory seriesDatabaseFactory,
+    IMediaMetadataDatabaseFactory metadataDatabaseFactory,
     DialogService dialogService,
     ToastService toastService
 )
@@ -17,7 +17,7 @@ public partial class AllSeriesDatabasesPage(
     private IReadOnlyList<SeriesDatabaseRegistrationReadModel> registrations = [];
     private SeriesDatabaseRegistrationService service = null!;
     private bool CanAddRegistration =>
-        registrations.Count < seriesDatabaseFactory.GetSeriesDatabases().Count;
+        registrations.Count < metadataDatabaseFactory.GetDatabases().Count;
 
     protected override async Task OnInitializedAsync()
     {

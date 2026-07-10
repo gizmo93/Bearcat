@@ -1,5 +1,5 @@
 using System.Net;
-using Bearcat.Abstractions.SeriesDatabase;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.SeriesDatabases.Tvdb.Api;
 using Refit;
 
@@ -46,15 +46,17 @@ public class TvdbClient(ITvdbApi api, TvdbTokenProvider tokenProvider)
         await tokenProvider.GetTokenAsync(config, cancellationToken);
     }
 
-    public async Task<TvdbTranslation?> GetGermanTranslationAsync(
+    public async Task<TvdbTranslation?> GetTranslationAsync(
         TvdbConfig config,
         long seriesId,
+        string languageCode,
         CancellationToken cancellationToken = default
     )
     {
         return await SendAsync(
             config: config,
-            call: token => api.GetSeriesTranslationAsync(seriesId, "deu", token, cancellationToken),
+            call: token =>
+                api.GetSeriesTranslationAsync(seriesId, languageCode, token, cancellationToken),
             cancellationToken: cancellationToken
         );
     }
@@ -85,7 +87,7 @@ public class TvdbClient(ITvdbApi api, TvdbTokenProvider tokenProvider)
             case HttpStatusCode.NotFound:
                 return default;
             case HttpStatusCode.TooManyRequests:
-                throw new SeriesDatabaseRateLimitExceededException("TheTVDB", resetAt: null);
+                throw new MediaMetadataDatabaseRateLimitExceededException("TheTVDB", resetAt: null);
         }
 
         if (!response.IsSuccessStatusCode)

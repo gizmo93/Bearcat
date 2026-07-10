@@ -1,8 +1,8 @@
-using Bearcat.Abstractions.SeriesDatabase;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 
 namespace Bearcat.SeriesDatabases.Tvdb;
 
-public record TvdbConfig(string ApiKey) : ISeriesDatabaseConfig
+public record TvdbConfig(string ApiKey) : IMediaMetadataDatabaseConfig
 {
     public const string ApiKeyConfigKey = "ApiKey";
 

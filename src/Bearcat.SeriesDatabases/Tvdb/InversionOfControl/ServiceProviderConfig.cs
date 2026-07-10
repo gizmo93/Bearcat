@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Bearcat.Abstractions.SeriesDatabase;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.SeriesDatabases.Tvdb.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -31,7 +31,9 @@ public static class ServiceProviderConfig
 
         services.AddSingleton<TvdbTokenProvider>();
         services.AddScoped<TvdbClient>();
-        services.AddKeyedScoped<ISeriesDatabase, TvdbSeriesDatabase>(nameof(TvdbSeriesDatabase));
-        services.AddScoped<ISeriesDatabaseFactory, SeriesDatabaseFactory>();
+        services.AddKeyedScoped<IMediaMetadataDatabase, TvdbSeriesDatabase>(
+            nameof(TvdbSeriesDatabase)
+        );
+        services.AddScoped<IMediaMetadataDatabaseFactory, MediaMetadataDatabaseFactory>();
     }
 }

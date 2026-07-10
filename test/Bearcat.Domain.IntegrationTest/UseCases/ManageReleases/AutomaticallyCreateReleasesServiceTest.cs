@@ -2,8 +2,8 @@ using System.Linq.Expressions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Media;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.NfoDatabase;
-using Bearcat.Abstractions.SeriesDatabase;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageNotifications;
@@ -72,7 +72,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
                 new ReleaseCollectionRepository(
                     dbRead: dbContext,
                     dbWrite: dbContext,
-                    seriesDatabaseFactory: Mock.Of<ISeriesDatabaseFactory>()
+                    metadataDatabaseFactory: Mock.Of<IMediaMetadataDatabaseFactory>()
                 ),
                 CreateTimeProvider()
             ),

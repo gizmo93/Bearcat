@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using System.Net;
-using Bearcat.Abstractions.SeriesDatabase;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.SeriesDatabases.Tvdb.Api;
 
 namespace Bearcat.SeriesDatabases.Tvdb;
@@ -53,7 +53,7 @@ public class TvdbTokenProvider(ITvdbApi api)
 
         if (response.StatusCode == HttpStatusCode.TooManyRequests)
         {
-            throw new SeriesDatabaseRateLimitExceededException("TheTVDB", resetAt: null);
+            throw new MediaMetadataDatabaseRateLimitExceededException("TheTVDB", resetAt: null);
         }
 
         if (

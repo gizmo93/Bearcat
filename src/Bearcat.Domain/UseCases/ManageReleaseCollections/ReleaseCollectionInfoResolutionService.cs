@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using Bearcat.Abstractions.SeriesDatabase;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
@@ -13,7 +13,7 @@ namespace Bearcat.Domain.UseCases.ManageReleaseCollections;
 
 public partial class ReleaseCollectionInfoResolutionService(
     IReleaseCollectionInfoRepository repository,
-    ISeriesDatabaseFactory seriesDatabaseFactory,
+    IMediaMetadataDatabaseFactory metadataDatabaseFactory,
     ILogger<ReleaseCollectionInfoResolutionService> logger,
     TimeProvider timeProvider
 )
@@ -134,8 +134,15 @@ public partial class ReleaseCollectionInfoResolutionService(
             return false;
         }
 
-        var imdbId = ExtractImdbId(collection);
-        var seriesTitle = ExtractSeriesTitle(collection.Name);
+        var lookup = new MediaMetadataLookup(
+            MediaKind: MediaKind.TvSeries,
+            ImdbId: ExtractImdbId(collection),
+            Title: ExtractSeriesTitle(collection.Name),
+            Year: null,
+            SeasonNumber: null,
+            EpisodeNumber: null,
+            LanguageCode: collection.PrimaryLanguageCode
+        );
 
         foreach (var registration in registrations)
         {
@@ -143,20 +150,20 @@ public partial class ReleaseCollectionInfoResolutionService(
 
             try
             {
-                var seriesDatabase = seriesDatabaseFactory.Get(
+                var metadataDatabase = metadataDatabaseFactory.Get(
                     registration.SeriesDatabaseClassName
                 );
-                var config = seriesDatabase.DeserializeConfig(registration.SerializedConfig);
+                
+                var config = metadataDatabase.DeserializeConfig(registration.SerializedConfig);
 
-                var seriesInfo = await ResolveSeriesInfoAsync(
-                    seriesDatabase: seriesDatabase,
+                var metadata = await ResolveMetadataAsync(
+                    metadataDatabase: metadataDatabase,
                     config: config,
-                    imdbId: imdbId,
-                    seriesTitle: seriesTitle,
+                    lookup: lookup,
                     cancellationToken: cancellationToken
                 );
 
-                if (seriesInfo is null)
+                if (metadata is null)
                 {
                     continue;
                 }
@@ -164,10 +171,10 @@ public partial class ReleaseCollectionInfoResolutionService(
                 collection.Metadata = new ReleaseCollectionMetadata
                 {
                     SeriesDatabaseClassName = registration.SeriesDatabaseClassName,
-                    Title = seriesInfo.Title,
-                    Description = seriesInfo.Description,
-                    CoverUrl = seriesInfo.CoverUrl,
-                    SeriesDatabaseUrl = seriesInfo.SeriesDatabaseUrl,
+                    Title = metadata.Title,
+                    Description = metadata.Description,
+                    CoverUrl = metadata.CoverUrl,
+                    SeriesDatabaseUrl = metadata.DatabaseUrl,
                 };
 
                 logger.LogInformation(
@@ -178,7 +185,7 @@ public partial class ReleaseCollectionInfoResolutionService(
 
                 return true;
             }
-            catch (SeriesDatabaseRateLimitExceededException exception)
+            catch (MediaMetadataDatabaseRateLimitExceededException exception)
             {
                 logger.LogWarning(
                     exception,
@@ -203,35 +210,26 @@ public partial class ReleaseCollectionInfoResolutionService(
         return false;
     }
 
-    private static async Task<SeriesInfo?> ResolveSeriesInfoAsync(
-        ISeriesDatabase seriesDatabase,
-        ISeriesDatabaseConfig config,
-        string? imdbId,
-        string? seriesTitle,
+    private static async Task<MediaMetadata?> ResolveMetadataAsync(
+        IMediaMetadataDatabase metadataDatabase,
+        IMediaMetadataDatabaseConfig config,
+        MediaMetadataLookup lookup,
         CancellationToken cancellationToken
     )
     {
-        if (!string.IsNullOrWhiteSpace(imdbId))
+        if (!string.IsNullOrWhiteSpace(lookup.ImdbId))
         {
-            var byImdb = await seriesDatabase.GetSeriesInfoByImdbIdAsync(
-                config,
-                imdbId,
-                cancellationToken
-            );
+            var mediaMetadata = await metadataDatabase.GetByImdbIdAsync(config, lookup, cancellationToken);
 
-            if (byImdb is not null)
+            if (mediaMetadata is not null)
             {
-                return byImdb;
+                return mediaMetadata;
             }
         }
 
-        if (!string.IsNullOrWhiteSpace(seriesTitle))
+        if (!string.IsNullOrWhiteSpace(lookup.Title))
         {
-            return await seriesDatabase.GetSeriesInfoByTitleAsync(
-                config,
-                seriesTitle,
-                cancellationToken
-            );
+            return await metadataDatabase.GetByTitleAsync(config, lookup, cancellationToken);
         }
 
         return null;
@@ -296,7 +294,7 @@ public partial class ReleaseCollectionInfoResolutionService(
             await repository.GetActiveSeriesDatabaseRegistrationsAsync(cancellationToken)
         )
             .OrderBy(registration =>
-                seriesDatabaseFactory.Get(registration.SeriesDatabaseClassName).ResolutionPriority
+                metadataDatabaseFactory.Get(registration.SeriesDatabaseClassName).ResolutionPriority
             )
             .ThenBy(registration => registration.SeriesDatabaseClassName)
             .ToList();

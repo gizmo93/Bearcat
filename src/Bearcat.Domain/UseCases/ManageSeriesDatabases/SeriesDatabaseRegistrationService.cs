@@ -1,5 +1,5 @@
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.Security;
-using Bearcat.Abstractions.SeriesDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageSeriesDatabases.Repositories;
 
@@ -7,7 +7,7 @@ namespace Bearcat.Domain.UseCases.ManageSeriesDatabases;
 
 public class SeriesDatabaseRegistrationService(
     ISeriesDatabaseRegistrationWriteRepository repository,
-    ISeriesDatabaseFactory seriesDatabaseFactory,
+    IMediaMetadataDatabaseFactory metadataDatabaseFactory,
     ISecretProtector secretProtector
 )
 {
@@ -29,12 +29,12 @@ public class SeriesDatabaseRegistrationService(
             );
         }
 
-        var seriesDatabase = seriesDatabaseFactory.Get(className);
+        var metadataDatabase = metadataDatabaseFactory.Get(className);
         var registration = new SeriesDatabaseRegistration
         {
             SeriesDatabaseClassName = className,
             SerializedConfig = secretProtector.Protect(
-                seriesDatabase.SerializeConfig(configuration)
+                metadataDatabase.SerializeConfig(configuration)
             ),
             IsActive = true,
         };
@@ -50,10 +50,10 @@ public class SeriesDatabaseRegistrationService(
     )
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
-        var seriesDatabase = seriesDatabaseFactory.Get(registration.SeriesDatabaseClassName);
+        var metadataDatabase = metadataDatabaseFactory.Get(registration.SeriesDatabaseClassName);
         var serializedConfig = secretProtector.Unprotect(registration.SerializedConfig);
         var mergedConfiguration = new Dictionary<string, string>(
-            seriesDatabase.DeserializeConfig(serializedConfig).ToDictionary()
+            metadataDatabase.DeserializeConfig(serializedConfig).ToDictionary()
         );
 
         foreach (var (key, value) in configuration)
@@ -62,7 +62,7 @@ public class SeriesDatabaseRegistrationService(
         }
 
         registration.SerializedConfig = secretProtector.Protect(
-            seriesDatabase.SerializeConfig(mergedConfiguration)
+            metadataDatabase.SerializeConfig(mergedConfiguration)
         );
 
         await repository.SaveChangesAsync(cancellationToken);
@@ -74,12 +74,12 @@ public class SeriesDatabaseRegistrationService(
     )
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
-        var seriesDatabase = seriesDatabaseFactory.Get(registration.SeriesDatabaseClassName);
-        var config = seriesDatabase.DeserializeConfig(
+        var metadataDatabase = metadataDatabaseFactory.Get(registration.SeriesDatabaseClassName);
+        var config = metadataDatabase.DeserializeConfig(
             secretProtector.Unprotect(registration.SerializedConfig)
         );
 
-        return await seriesDatabase.TryLoginAsync(config, cancellationToken);
+        return await metadataDatabase.TryLoginAsync(config, cancellationToken);
     }
 
     public async Task ToggleIsActiveAsync(int id, CancellationToken cancellationToken = default)
