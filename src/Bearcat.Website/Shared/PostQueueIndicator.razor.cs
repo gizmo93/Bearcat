@@ -2,13 +2,13 @@ using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Website.ScopedOperations;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Shared;
 
 public partial class PostQueueIndicator(
-    IServiceScopeFactory serviceScopeFactory,
+    IScopedOperationRunner operationRunner,
     NavigationManager navigationManager
 ) : ComponentBase, IAsyncDisposable
 {
@@ -32,26 +32,21 @@ public partial class PostQueueIndicator(
 
     private async Task RefreshCountAsync()
     {
-        using var scope = serviceScopeFactory.CreateScope();
-        var configuration =
-            scope.ServiceProvider.GetRequiredService<IApplicationConfigurationProvider>();
+        await operationRunner.RunAsync(
+            async (
+                IApplicationConfigurationProvider configuration,
+                IReleaseReadRepository releaseRepository,
+                IReleaseCollectionReadRepository collectionRepository
+            ) =>
+            {
+                enabled = configuration.GetValue<PostQueueConfiguration>(c => c.Enabled);
 
-        enabled = configuration.GetValue<PostQueueConfiguration>(c => c.Enabled);
-
-        if (!enabled)
-        {
-            openCount = 0;
-            return;
-        }
-
-        var releaseReadRepository =
-            scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
-        var collectionReadRepository =
-            scope.ServiceProvider.GetRequiredService<IReleaseCollectionReadRepository>();
-
-        openCount =
-            await releaseReadRepository.CountPostQueueAsync()
-            + await collectionReadRepository.CountPostQueueAsync();
+                openCount = enabled
+                    ? await releaseRepository.CountPostQueueAsync()
+                        + await collectionRepository.CountPostQueueAsync()
+                    : 0;
+            }
+        );
     }
 
     private async Task PollCountAsync(CancellationToken cancellationToken)

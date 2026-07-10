@@ -1,5 +1,6 @@
 using Bearcat.Website.Layout;
 using Bearcat.Website.Pages.PostQueue;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,7 @@ public static class ServiceProviderConfig
         services.AddBlazorBlueprintComponents();
         services.AddLocalization(options => options.ResourcesPath = "Resources");
         services.AddHttpClient("cover-download");
+        services.AddSingleton<IScopedOperationRunner, ScopedOperationRunner>();
         services.AddScoped<PostQueueWorkflowState>();
         services.AddScoped<NavMenuState>();
         services

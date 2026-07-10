@@ -1,11 +1,11 @@
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Website.ScopedOperations;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Shared;
 
 public partial class QualityIssuesIndicator(
-    IServiceScopeFactory serviceScopeFactory,
+    IScopedOperationRunner operationRunner,
     NavigationManager navigationManager
 ) : ComponentBase, IAsyncDisposable
 {
@@ -28,11 +28,9 @@ public partial class QualityIssuesIndicator(
 
     private async Task RefreshCountAsync()
     {
-        using var scope = serviceScopeFactory.CreateScope();
-        var releaseReadRepository =
-            scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
-
-        openCount = await releaseReadRepository.CountQualityIssuesQueueAsync();
+        openCount = await operationRunner.RunAsync(
+            (IReleaseReadRepository repository) => repository.CountQualityIssuesQueueAsync()
+        );
     }
 
     private async Task PollCountAsync(CancellationToken cancellationToken)

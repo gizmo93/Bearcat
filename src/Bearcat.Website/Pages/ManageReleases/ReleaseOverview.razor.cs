@@ -4,10 +4,10 @@ using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageForumPostTemplates;
 using Bearcat.Website.Pages.PostToForum;
+using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 
 namespace Bearcat.Website.Pages.ManageReleases;
@@ -15,7 +15,7 @@ namespace Bearcat.Website.Pages.ManageReleases;
 public partial class ReleaseOverview(
     ToastService toastService,
     DialogService dialogService,
-    IServiceScopeFactory serviceScopeFactory,
+    IScopedOperationRunner operationRunner,
     IJSRuntime jsRuntime
 ) : ComponentBase, IReloadableComponent
 {
@@ -70,26 +70,26 @@ public partial class ReleaseOverview(
 
         try
         {
-            await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
+            await operationRunner.RunAsync<IReleaseReadRepository>(async repository =>
+            {
+                releaseNfo = null;
+                releaseInfo = null;
+                coverUrl = null;
+                nfoContent = null;
+                hasLocalNfo = false;
 
-            releaseNfo = null;
-            releaseInfo = null;
-            coverUrl = null;
-            nfoContent = null;
-            hasLocalNfo = false;
-
-            overviewUploads = await readRepository.GetReleaseOverviewAsync(ReleaseId);
-            overviewImageUploads = await readRepository.GetReleaseOverviewImageUploadsAsync(
-                ReleaseId
-            );
-            releaseInfo = await readRepository.GetReleaseInfoAsync(ReleaseId);
-            coverUrl = releaseInfo?.CoverUrl;
-            releaseNfo = await readRepository.GetReleaseNfoAsync(ReleaseId);
-            nfoContent = releaseNfo?.Content;
-            hasLocalNfo = ReleaseNfoService.HasLocalNfo(ReleaseFolderPath);
-            loadedReleaseId = ReleaseId;
-            loadedReleaseFolderPath = ReleaseFolderPath;
+                overviewUploads = await repository.GetReleaseOverviewAsync(ReleaseId);
+                overviewImageUploads = await repository.GetReleaseOverviewImageUploadsAsync(
+                    ReleaseId
+                );
+                releaseInfo = await repository.GetReleaseInfoAsync(ReleaseId);
+                coverUrl = releaseInfo?.CoverUrl;
+                releaseNfo = await repository.GetReleaseNfoAsync(ReleaseId);
+                nfoContent = releaseNfo?.Content;
+                hasLocalNfo = ReleaseNfoService.HasLocalNfo(ReleaseFolderPath);
+                loadedReleaseId = ReleaseId;
+                loadedReleaseFolderPath = ReleaseFolderPath;
+            });
         }
         finally
         {

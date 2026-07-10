@@ -7,14 +7,14 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Website.Formatting;
+using Bearcat.Website.ScopedOperations;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Website.Pages.PostQueue;
 
 public partial class PostQueuePage(
-    IServiceScopeFactory serviceScopeFactory,
+    IScopedOperationRunner operationRunner,
     PostQueueWorkflowState workflowState,
     NavigationManager navigationManager,
     TimeProvider timeProvider
@@ -27,12 +27,10 @@ public partial class PostQueuePage(
 
     protected override async Task OnInitializedAsync()
     {
-        using (var scope = serviceScopeFactory.CreateScope())
-        {
-            enabled = scope
-                .ServiceProvider.GetRequiredService<IApplicationConfigurationProvider>()
-                .GetValue<PostQueueConfiguration>(c => c.Enabled);
-        }
+        enabled = await operationRunner.RunAsync(
+            (IApplicationConfigurationProvider configuration) =>
+                Task.FromResult(configuration.GetValue<PostQueueConfiguration>(c => c.Enabled))
+        );
 
         if (!enabled)
         {
@@ -49,14 +47,16 @@ public partial class PostQueuePage(
 
         try
         {
-            using var scope = serviceScopeFactory.CreateScope();
-            var releaseReadRepository =
-                scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
-            var collectionReadRepository =
-                scope.ServiceProvider.GetRequiredService<IReleaseCollectionReadRepository>();
-
-            releaseItems = await releaseReadRepository.GetPostQueueAsync();
-            collectionItems = await collectionReadRepository.GetPostQueueAsync();
+            await operationRunner.RunAsync(
+                async (
+                    IReleaseReadRepository releaseRepository,
+                    IReleaseCollectionReadRepository collectionRepository
+                ) =>
+                {
+                    releaseItems = await releaseRepository.GetPostQueueAsync();
+                    collectionItems = await collectionRepository.GetPostQueueAsync();
+                }
+            );
         }
         finally
         {
@@ -94,24 +94,19 @@ public partial class PostQueuePage(
 
     private async Task MarkReleasePostedAsync(int releaseId)
     {
-        using (var scope = serviceScopeFactory.CreateScope())
-        {
-            await scope
-                .ServiceProvider.GetRequiredService<ReleaseService>()
-                .MarkUploadsPostedAsync(releaseId);
-        }
+        await operationRunner.RunAsync(
+            (ReleaseService service) => service.MarkUploadsPostedAsync(releaseId)
+        );
 
         await LoadAsync();
     }
 
     private async Task MarkCollectionPostedAsync(int releaseCollectionId)
     {
-        using (var scope = serviceScopeFactory.CreateScope())
-        {
-            await scope
-                .ServiceProvider.GetRequiredService<ReleaseCollectionService>()
-                .MarkUploadsPostedAsync(releaseCollectionId);
-        }
+        await operationRunner.RunAsync(
+            (ReleaseCollectionService service) =>
+                service.MarkUploadsPostedAsync(releaseCollectionId)
+        );
 
         await LoadAsync();
     }

@@ -2,14 +2,14 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Website.Formatting;
+using Bearcat.Website.ScopedOperations;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Website.Pages.QualityIssues;
 
 public partial class QualityIssuesPage(
-    IServiceScopeFactory serviceScopeFactory,
+    IScopedOperationRunner operationRunner,
     NavigationManager navigationManager,
     TimeProvider timeProvider
 ) : ComponentBase
@@ -28,10 +28,9 @@ public partial class QualityIssuesPage(
 
         try
         {
-            using var scope = serviceScopeFactory.CreateScope();
-            items = await scope
-                .ServiceProvider.GetRequiredService<IReleaseReadRepository>()
-                .GetQualityIssuesQueueAsync();
+            items = await operationRunner.RunAsync(
+                (IReleaseReadRepository repository) => repository.GetQualityIssuesQueueAsync()
+            );
         }
         finally
         {
@@ -46,24 +45,18 @@ public partial class QualityIssuesPage(
 
     private async Task RecheckAsync(int releaseId)
     {
-        using (var scope = serviceScopeFactory.CreateScope())
-        {
-            await scope
-                .ServiceProvider.GetRequiredService<QualityGateService>()
-                .RefreshAsync(releaseId);
-        }
+        await operationRunner.RunAsync(
+            (QualityGateService service) => service.RefreshAsync(releaseId)
+        );
 
         await LoadAsync();
     }
 
     private async Task ApproveAsync(int releaseId)
     {
-        using (var scope = serviceScopeFactory.CreateScope())
-        {
-            await scope
-                .ServiceProvider.GetRequiredService<QualityGateService>()
-                .ApproveAsync(releaseId);
-        }
+        await operationRunner.RunAsync(
+            (QualityGateService service) => service.ApproveAsync(releaseId)
+        );
 
         await LoadAsync();
     }

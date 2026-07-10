@@ -2,14 +2,14 @@ using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class UploadContainerLinksDialog(
-    IServiceScopeFactory serviceScopeFactory,
+    IScopedOperationRunner operationRunner,
     DialogService dialogService
 )
 {
@@ -50,9 +50,10 @@ public partial class UploadContainerLinksDialog(
 
         try
         {
-            await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
-            containers = await readRepository.GetUploadContainerLinksAsync(ReleaseId, UploadId);
+            containers = await operationRunner.RunAsync(
+                (IReleaseReadRepository repository) =>
+                    repository.GetUploadContainerLinksAsync(ReleaseId, UploadId)
+            );
         }
         finally
         {
@@ -90,9 +91,10 @@ public partial class UploadContainerLinksDialog(
             return;
         }
 
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var service = scope.ServiceProvider.GetRequiredService<LinkCrypterContainerService>();
-        await service.DeleteFailedContainerAsync(container.Id, CancellationToken.None);
+        await operationRunner.RunAsync(
+            (LinkCrypterContainerService service) =>
+                service.DeleteFailedContainerAsync(container.Id, CancellationToken.None)
+        );
         await LoadContainersAsync();
     }
 

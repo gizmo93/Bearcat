@@ -2,15 +2,15 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageNotifications.ReadModels;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Shared;
 
 public partial class NotificationBell(
-    IServiceScopeFactory serviceScopeFactory,
+    IScopedOperationRunner operationRunner,
     NavigationManager navigationManager
 ) : ComponentBase, IAsyncDisposable
 {
@@ -77,11 +77,11 @@ public partial class NotificationBell(
 
         try
         {
-            using var scope = serviceScopeFactory.CreateScope();
-            var readRepository =
-                scope.ServiceProvider.GetRequiredService<INotificationReadRepository>();
-            latestNotifications = await readRepository.GetLatestUnresolvedAsync(5);
-            unresolvedCount = await readRepository.CountUnresolvedAsync();
+            await operationRunner.RunAsync<INotificationReadRepository>(async repository =>
+            {
+                latestNotifications = await repository.GetLatestUnresolvedAsync(5);
+                unresolvedCount = await repository.CountUnresolvedAsync();
+            });
         }
         finally
         {
@@ -91,18 +91,17 @@ public partial class NotificationBell(
 
     private async Task ResolveFromPreviewAsync(int notificationId)
     {
-        using var scope = serviceScopeFactory.CreateScope();
-        var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
-        await notificationService.ResolveAsync(notificationId);
+        await operationRunner.RunAsync(
+            (INotificationService service) => service.ResolveAsync(notificationId)
+        );
         await LoadPreviewAsync();
     }
 
     private async Task RefreshCountAsync()
     {
-        using var scope = serviceScopeFactory.CreateScope();
-        var readRepository =
-            scope.ServiceProvider.GetRequiredService<INotificationReadRepository>();
-        unresolvedCount = await readRepository.CountUnresolvedAsync();
+        unresolvedCount = await operationRunner.RunAsync(
+            (INotificationReadRepository repository) => repository.CountUnresolvedAsync()
+        );
     }
 
     private async Task PollCountAsync(CancellationToken cancellationToken)

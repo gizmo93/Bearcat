@@ -39,29 +39,23 @@ public static class ServiceProviderConfig
     {
         public void AddDatabase(IConfiguration configuration)
         {
-            services.AddDbContext<BearcatDbContext>(
-                builder =>
-                {
-                    var connectionString = configuration
-                        .GetRequiredSection("Database:ConnectionString")
-                        .Value;
-                    builder.UseNpgsql(
-                        connectionString,
-                        opts => opts.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
-                    );
-                },
-                ServiceLifetime.Transient
-            );
+            services.AddDbContextFactory<BearcatDbContext>(builder =>
+            {
+                var connectionString = configuration
+                    .GetRequiredSection("Database:ConnectionString")
+                    .Value;
+                builder.UseNpgsql(
+                    connectionString,
+                    opts => opts.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+                );
+            });
 
             services.AddScoped<IBearcatWriteDbContext>(s =>
                 s.GetRequiredService<BearcatDbContext>()
             );
             services.AddScoped<IBearcatReadDbContext>(s =>
-            {
-                var dbContext = s.GetRequiredService<BearcatDbContext>();
-                dbContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-                return dbContext;
-            });
+                s.GetRequiredService<BearcatDbContext>()
+            );
 
             services.AddRepositories();
 

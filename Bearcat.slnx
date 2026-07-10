@@ -34,5 +34,6 @@
         <Project Path="test/Bearcat.LinkCrypters.UnitTest/Bearcat.LinkCrypters.UnitTest.csproj" />
         <Project Path="test/Bearcat.Media.UnitTest/Bearcat.Media.UnitTest.csproj" />
         <Project Path="test/Bearcat.NfoDatabases.UnitTest/Bearcat.NfoDatabases.UnitTest.csproj" />
+        <Project Path="test/Bearcat.Website.UnitTest/Bearcat.Website.UnitTest.csproj" />
     </Folder>
 </Solution>

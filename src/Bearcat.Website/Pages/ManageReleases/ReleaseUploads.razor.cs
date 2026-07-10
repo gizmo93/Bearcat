@@ -5,16 +5,16 @@ using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class ReleaseUploads(
     DialogService dialogService,
-    IServiceScopeFactory serviceScopeFactory,
+    IScopedOperationRunner operationRunner,
     ToastService toastService
 ) : ComponentBase
 {
@@ -84,10 +84,9 @@ public partial class ReleaseUploads(
 
     protected override async Task OnInitializedAsync()
     {
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var uploadConfigReadRepository =
-            scope.ServiceProvider.GetRequiredService<IUploadConfigReadRepository>();
-        uploadConfigs = await uploadConfigReadRepository.GetUploadConfigsAsync(ReleaseId);
+        uploadConfigs = await operationRunner.RunAsync(
+            (IUploadConfigReadRepository repository) => repository.GetUploadConfigsAsync(ReleaseId)
+        );
         ApplyInitialUploadConfigFilter();
         await RefreshUploadsAsync();
     }
@@ -119,15 +118,16 @@ public partial class ReleaseUploads(
 
         try
         {
-            await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
-            var result = await readRepository.SearchUploadsAsync(
-                new ReleaseUploadSearchQuery(
-                    ReleaseId,
-                    selectedUploadConfigId == 0 ? null : selectedUploadConfigId,
-                    pageIndex,
-                    pageSize
-                )
+            var result = await operationRunner.RunAsync(
+                (IReleaseReadRepository repository) =>
+                    repository.SearchUploadsAsync(
+                        new ReleaseUploadSearchQuery(
+                            ReleaseId,
+                            selectedUploadConfigId == 0 ? null : selectedUploadConfigId,
+                            pageIndex,
+                            pageSize
+                        )
+                    )
             );
 
             uploads = result.Items;
@@ -191,9 +191,9 @@ public partial class ReleaseUploads(
 
     private async Task CreateManualReuploadAsync(ReleaseUploadReadModel upload)
     {
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var uploadStateService = scope.ServiceProvider.GetRequiredService<UploadStateService>();
-        await uploadStateService.CreateManualReuploadAsync(upload.UploadId);
+        await operationRunner.RunAsync(
+            (UploadStateService service) => service.CreateManualReuploadAsync(upload.UploadId)
+        );
         toastService.Success(L["ManualReuploadCreated", upload.UploadId]);
         await RefreshUploadsAsync();
     }
@@ -216,9 +216,9 @@ public partial class ReleaseUploads(
             return;
         }
 
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var uploadStateService = scope.ServiceProvider.GetRequiredService<UploadStateService>();
-        var cancellationRequested = await uploadStateService.CancelUploadAsync(upload.UploadId);
+        var cancellationRequested = await operationRunner.RunAsync(
+            (UploadStateService service) => service.CancelUploadAsync(upload.UploadId)
+        );
 
         if (cancellationRequested)
         {
@@ -234,9 +234,9 @@ public partial class ReleaseUploads(
 
     private async Task ResumeUploadAsync(ReleaseUploadReadModel upload)
     {
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var uploadStateService = scope.ServiceProvider.GetRequiredService<UploadStateService>();
-        var resumed = await uploadStateService.ResumeUploadAsync(upload.UploadId);
+        var resumed = await operationRunner.RunAsync(
+            (UploadStateService service) => service.ResumeUploadAsync(upload.UploadId)
+        );
 
         if (resumed)
         {
@@ -268,9 +268,9 @@ public partial class ReleaseUploads(
             return;
         }
 
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var uploadStateService = scope.ServiceProvider.GetRequiredService<UploadStateService>();
-        var deleted = await uploadStateService.DeleteUploadAsync(upload.UploadId);
+        var deleted = await operationRunner.RunAsync(
+            (UploadStateService service) => service.DeleteUploadAsync(upload.UploadId)
+        );
 
         if (deleted)
         {

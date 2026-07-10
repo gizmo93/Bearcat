@@ -4,6 +4,7 @@ using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManagePostedLocations;
+using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -16,7 +17,7 @@ public partial class ReleaseDetail(
     NavigationManager navigationManager,
     DialogService dialogService,
     ToastService toastService,
-    IServiceScopeFactory serviceScopeFactory,
+    IScopedOperationRunner operationRunner,
     IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig
 ) : OwningComponentBase
 {
@@ -188,9 +189,10 @@ public partial class ReleaseDetail(
 
     private async Task ConvertToUnmanagedAsync()
     {
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var service = scope.ServiceProvider.GetRequiredService<ReleaseService>();
-        var preview = await service.GetUnmanagedConversionPreviewAsync(release.ReleaseId);
+        var preview = await operationRunner.RunAsync(
+            (ReleaseService service) =>
+                service.GetUnmanagedConversionPreviewAsync(release.ReleaseId)
+        );
 
         if (!preview.CanConvert)
         {
@@ -221,7 +223,9 @@ public partial class ReleaseDetail(
 
         try
         {
-            await service.ConvertToUnmanagedAsync(release.ReleaseId);
+            await operationRunner.RunAsync(
+                (ReleaseService service) => service.ConvertToUnmanagedAsync(release.ReleaseId)
+            );
             toastService.Success(L["ReleaseConvertedToUnmanaged", release.Name]);
             await ReloadReleaseAsync();
         }
@@ -262,12 +266,12 @@ public partial class ReleaseDetail(
             return;
         }
 
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var service = scope.ServiceProvider.GetRequiredService<ReleaseService>();
-
         try
         {
-            await service.ConvertToManagedAsync(release.ReleaseId, folderPath);
+            await operationRunner.RunAsync(
+                (ReleaseService service) =>
+                    service.ConvertToManagedAsync(release.ReleaseId, folderPath)
+            );
             toastService.Success(L["ReleaseConvertedToManaged", release.Name]);
             await ReloadReleaseAsync();
         }

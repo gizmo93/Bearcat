@@ -2,14 +2,14 @@ using Bearcat.Domain.UseCases.ManageImageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleaseCollections;
 
 public partial class CollectionImageUploads(
-    IServiceScopeFactory serviceScopeFactory,
+    IScopedOperationRunner operationRunner,
     DialogService dialogService
 ) : ComponentBase
 {
@@ -31,10 +31,10 @@ public partial class CollectionImageUploads(
 
         try
         {
-            await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var readRepository =
-                scope.ServiceProvider.GetRequiredService<IReleaseCollectionReadRepository>();
-            imageUploads = await readRepository.GetImageUploadsAsync(ReleaseCollectionId);
+            imageUploads = await operationRunner.RunAsync(
+                (IReleaseCollectionReadRepository repository) =>
+                    repository.GetImageUploadsAsync(ReleaseCollectionId)
+            );
         }
         finally
         {
@@ -114,9 +114,9 @@ public partial class CollectionImageUploads(
             return;
         }
 
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var service = scope.ServiceProvider.GetRequiredService<ImageUploadConfigService>();
-        await service.DeleteAsync(config.ImageUploadConfigId);
+        await operationRunner.RunAsync(
+            (ImageUploadConfigService service) => service.DeleteAsync(config.ImageUploadConfigId)
+        );
 
         await RefreshAsync();
     }

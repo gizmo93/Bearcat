@@ -1,14 +1,14 @@
 using Bearcat.Domain.UseCases.ManageImageUploads.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageImageUploads;
 
 public partial class ReleaseImageUploads(
-    IServiceScopeFactory serviceScopeFactory,
+    IScopedOperationRunner operationRunner,
     DialogService dialogService
 ) : ComponentBase
 {
@@ -30,9 +30,9 @@ public partial class ReleaseImageUploads(
 
         try
         {
-            await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
-            imageUploads = await readRepository.GetImageUploadsAsync(ReleaseId);
+            imageUploads = await operationRunner.RunAsync(
+                (IReleaseReadRepository repository) => repository.GetImageUploadsAsync(ReleaseId)
+            );
         }
         finally
         {

@@ -1,16 +1,16 @@
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs.ReadModels;
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs.Repositories;
+using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageImageUploadConfigs;
 
 public partial class ImageUploadConfigs(
     DialogService dialogService,
-    IServiceScopeFactory serviceScopeFactory
+    IScopedOperationRunner operationRunner
 ) : ComponentBase, IReloadableComponent
 {
     [Parameter]
@@ -94,18 +94,18 @@ public partial class ImageUploadConfigs(
             return;
         }
 
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var service = scope.ServiceProvider.GetRequiredService<ImageUploadConfigService>();
-        await service.DeleteAsync(config.ImageUploadConfigId);
+        await operationRunner.RunAsync(
+            (ImageUploadConfigService service) => service.DeleteAsync(config.ImageUploadConfigId)
+        );
         await LoadImageUploadConfigsAsync();
     }
 
     private async Task LoadImageUploadConfigsAsync()
     {
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var readRepository =
-            scope.ServiceProvider.GetRequiredService<IImageUploadConfigReadRepository>();
-        imageUploadConfigs = await readRepository.GetImageUploadConfigsAsync(ReleaseId);
+        imageUploadConfigs = await operationRunner.RunAsync(
+            (IImageUploadConfigReadRepository repository) =>
+                repository.GetImageUploadConfigsAsync(ReleaseId)
+        );
     }
 
     public async Task ReloadAsync()

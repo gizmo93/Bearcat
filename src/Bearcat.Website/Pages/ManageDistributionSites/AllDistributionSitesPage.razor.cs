@@ -1,6 +1,7 @@
 using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Domain.UseCases.ManageDistributionSites.ReadModels;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,7 +10,8 @@ namespace Bearcat.Website.Pages.ManageDistributionSites;
 public partial class AllDistributionSitesPage(
     IDistributionSiteRegistrationReadRepository readRepository,
     DialogService dialogService,
-    ToastService toastService
+    ToastService toastService,
+    IScopedOperationRunner operationRunner
 )
 {
     private IReadOnlyList<DistributionSiteRegistrationReadModel> distributionSites = [];
@@ -110,10 +112,10 @@ public partial class AllDistributionSitesPage(
 
     private async Task TestLoginAsync(DistributionSiteRegistrationReadModel distributionSite)
     {
-        await using var scope = ScopedServices.CreateAsyncScope();
-        var service = scope.ServiceProvider.GetRequiredService<DistributionSiteSessionService>();
-
-        var result = await service.TestLoginAsync(distributionSite.DistributionSiteRegistrationId);
+        var result = await operationRunner.RunAsync(
+            (DistributionSiteSessionService service) =>
+                service.TestLoginAsync(distributionSite.DistributionSiteRegistrationId)
+        );
 
         if (result.IsSuccess)
         {

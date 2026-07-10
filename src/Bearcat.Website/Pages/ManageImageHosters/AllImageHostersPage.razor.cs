@@ -2,6 +2,7 @@ using Bearcat.Abstractions.ImageHoster;
 using Bearcat.Domain.UseCases.ManageImageHosters;
 using Bearcat.Domain.UseCases.ManageImageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageImageHosters.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,7 +11,8 @@ namespace Bearcat.Website.Pages.ManageImageHosters;
 public partial class AllImageHostersPage(
     IImageHosterRegistrationReadRepository readRepository,
     DialogService dialogService,
-    ToastService toastService
+    ToastService toastService,
+    IScopedOperationRunner operationRunner
 )
 {
     private IReadOnlyList<ImageHosterRegistrationReadModel> imageHosters = [];
@@ -121,10 +123,10 @@ public partial class AllImageHostersPage(
 
     private async Task TryLoginAsync(ImageHosterRegistrationReadModel imageHoster)
     {
-        await using var scope = ScopedServices.CreateAsyncScope();
-        var service = scope.ServiceProvider.GetRequiredService<ImageHosterService>();
-
-        var result = await service.TryLoginAsync(imageHoster.ImageHosterRegistrationId);
+        var result = await operationRunner.RunAsync(
+            (ImageHosterService service) =>
+                service.TryLoginAsync(imageHoster.ImageHosterRegistrationId)
+        );
 
         if (result.IsSuccess)
         {

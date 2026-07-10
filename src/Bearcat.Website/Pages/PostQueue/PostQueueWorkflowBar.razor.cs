@@ -1,12 +1,12 @@
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Website.ScopedOperations;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.PostQueue;
 
 public partial class PostQueueWorkflowBar(
-    IServiceScopeFactory serviceScopeFactory,
+    IScopedOperationRunner operationRunner,
     PostQueueWorkflowState workflowState,
     NavigationManager navigationManager
 ) : ComponentBase
@@ -59,19 +59,17 @@ public partial class PostQueueWorkflowBar(
 
     private async Task MarkPostedAsync(int id)
     {
-        using var scope = serviceScopeFactory.CreateScope();
-
         switch (Type)
         {
             case PostQueueWorkflowType.Release:
-                await scope
-                    .ServiceProvider.GetRequiredService<ReleaseService>()
-                    .MarkUploadsPostedAsync(id);
+                await operationRunner.RunAsync(
+                    (ReleaseService service) => service.MarkUploadsPostedAsync(id)
+                );
                 break;
             case PostQueueWorkflowType.Collection:
-                await scope
-                    .ServiceProvider.GetRequiredService<ReleaseCollectionService>()
-                    .MarkUploadsPostedAsync(id);
+                await operationRunner.RunAsync(
+                    (ReleaseCollectionService service) => service.MarkUploadsPostedAsync(id)
+                );
                 break;
         }
     }

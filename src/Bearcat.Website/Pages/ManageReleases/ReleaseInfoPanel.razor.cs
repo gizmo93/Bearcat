@@ -3,16 +3,16 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class ReleaseInfoPanel(
     DialogService dialogService,
     ToastService toastService,
-    IServiceScopeFactory serviceScopeFactory
+    IScopedOperationRunner operationRunner
 ) : ComponentBase
 {
     [Parameter]
@@ -44,10 +44,11 @@ public partial class ReleaseInfoPanel(
 
         try
         {
-            await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
-            releaseInfo = await readRepository.GetReleaseInfoAsync(ReleaseId);
-            mediaFiles = await readRepository.GetMediaFilesAsync(ReleaseId);
+            await operationRunner.RunAsync<IReleaseReadRepository>(async repository =>
+            {
+                releaseInfo = await repository.GetReleaseInfoAsync(ReleaseId);
+                mediaFiles = await repository.GetMediaFilesAsync(ReleaseId);
+            });
         }
         finally
         {
@@ -66,10 +67,9 @@ public partial class ReleaseInfoPanel(
 
         try
         {
-            await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var mediaMetadataService =
-                scope.ServiceProvider.GetRequiredService<MediaMetadataService>();
-            await mediaMetadataService.ExtractForReleaseAsync(ReleaseId);
+            await operationRunner.RunAsync(
+                (MediaMetadataService service) => service.ExtractForReleaseAsync(ReleaseId)
+            );
 
             toastService.Success(L["MediaMetadataExtracted"]);
             await LoadReleaseInfoAsync();
@@ -121,10 +121,9 @@ public partial class ReleaseInfoPanel(
 
         try
         {
-            await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var resolutionService =
-                scope.ServiceProvider.GetRequiredService<ReleaseInfoResolutionService>();
-            var resolved = await resolutionService.ResolveAsync(ReleaseId);
+            var resolved = await operationRunner.RunAsync(
+                (ReleaseInfoResolutionService service) => service.ResolveAsync(ReleaseId)
+            );
 
             if (resolved)
             {
@@ -190,11 +189,9 @@ public partial class ReleaseInfoPanel(
             return;
         }
 
-        await using (var scope = serviceScopeFactory.CreateAsyncScope())
-        {
-            var releaseInfoService = scope.ServiceProvider.GetRequiredService<ReleaseInfoService>();
-            await releaseInfoService.DeleteAsync(releaseInfo.ReleaseInfoId);
-        }
+        await operationRunner.RunAsync(
+            (ReleaseInfoService service) => service.DeleteAsync(releaseInfo.ReleaseInfoId)
+        );
 
         toastService.Success(L["ReleaseInfoDeleted"]);
         await LoadReleaseInfoAsync();

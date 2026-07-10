@@ -3,6 +3,7 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -15,7 +16,7 @@ public partial class ArchiveConfigs(
     DialogService dialogService,
     ToastService toastService,
     IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig,
-    IServiceScopeFactory serviceScopeFactory
+    IScopedOperationRunner operationRunner
 ) : OwningComponentBase, IReloadableComponent
 {
     [Parameter]
@@ -89,12 +90,9 @@ public partial class ArchiveConfigs(
             return;
         }
 
-        await using (var scope = serviceScopeFactory.CreateAsyncScope())
-        {
-            var archiveConfigService =
-                scope.ServiceProvider.GetRequiredService<ArchiveConfigService>();
-            await archiveConfigService.DeleteAsync(archiveConfig.ArchiveConfigId);
-        }
+        await operationRunner.RunAsync(
+            (ArchiveConfigService service) => service.DeleteAsync(archiveConfig.ArchiveConfigId)
+        );
 
         await LoadArchiveConfigsAsync();
         await OnChangeAffectingOtherComponents.InvokeAsync(GetType().Name);
@@ -147,18 +145,15 @@ public partial class ArchiveConfigs(
     {
         try
         {
-            ArchiveFolderChangeResult result;
-            await using (var scope = serviceScopeFactory.CreateAsyncScope())
-            {
-                var archiveConfigService =
-                    scope.ServiceProvider.GetRequiredService<ArchiveConfigService>();
-                result = await archiveConfigService.SetArchiveFolderAsync(
-                    archiveConfigId: archiveConfigId,
-                    archiveFolderPath: folderPath,
-                    confirmContentChange: confirmContentChange,
-                    cancellationToken: CancellationToken.None
-                );
-            }
+            var result = await operationRunner.RunAsync(
+                (ArchiveConfigService service) =>
+                    service.SetArchiveFolderAsync(
+                        archiveConfigId: archiveConfigId,
+                        archiveFolderPath: folderPath,
+                        confirmContentChange: confirmContentChange,
+                        cancellationToken: CancellationToken.None
+                    )
+            );
 
             if (result is ArchiveFolderChangeResult.ConfirmationRequired)
             {
@@ -203,11 +198,9 @@ public partial class ArchiveConfigs(
 
     private async Task LoadArchiveConfigsAsync()
     {
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
-        archiveConfigs = await readRepository.GetArchiveConfigsAsync(
-            ReleaseId,
-            CancellationToken.None
+        archiveConfigs = await operationRunner.RunAsync(
+            (IReleaseReadRepository repository) =>
+                repository.GetArchiveConfigsAsync(ReleaseId, CancellationToken.None)
         );
     }
 

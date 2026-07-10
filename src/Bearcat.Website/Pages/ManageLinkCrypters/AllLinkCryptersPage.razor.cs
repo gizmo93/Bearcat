@@ -1,6 +1,7 @@
 using Bearcat.Domain.UseCases.ManageLinkCrypters;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,7 +10,8 @@ namespace Bearcat.Website.Pages.ManageLinkCrypters;
 public partial class AllLinkCryptersPage(
     ILinkCrypterRegistrationReadRepository readRepository,
     DialogService dialogService,
-    ToastService toastService
+    ToastService toastService,
+    IScopedOperationRunner operationRunner
 )
 {
     private IReadOnlyList<LinkCrypterRegistrationReadModel> crypters = [];
@@ -107,10 +109,9 @@ public partial class AllLinkCryptersPage(
 
     private async Task TryLoginAsync(LinkCrypterRegistrationReadModel crypter)
     {
-        await using var scope = ScopedServices.CreateAsyncScope();
-        var service = scope.ServiceProvider.GetRequiredService<LinkCrypterService>();
-
-        var result = await service.TryLoginAsync(crypter.LinkCrypterRegistrationId);
+        var result = await operationRunner.RunAsync(
+            (LinkCrypterService service) => service.TryLoginAsync(crypter.LinkCrypterRegistrationId)
+        );
 
         if (result.IsSuccess)
         {

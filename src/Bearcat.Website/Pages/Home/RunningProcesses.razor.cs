@@ -2,26 +2,24 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageUploads.Progress;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
+using Bearcat.Website.ScopedOperations;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.Home;
 
-public partial class RunningProcesses(
-    NavigationManager navigationManager,
-    IUploadProgressTracker uploadProgressTracker
-)
+public sealed partial class RunningProcesses(
+    IUploadProgressTracker uploadProgressTracker,
+    IScopedOperationRunner operationRunner
+) : IDisposable
 {
+    private readonly CancellationTokenSource lifetimeCancellation = new();
     private IReadOnlyList<Upload> runningUploads = [];
 
     private IReadOnlyDictionary<int, UploadProgressSnapshot> uploadProgress =
         new Dictionary<int, UploadProgressSnapshot>();
 
     private IReadOnlyList<Archive> runningArchives = [];
-
-    private IBearcatReadDbContext dbRead = null!;
 
     private bool SomethingIsRunning => runningUploads.Count > 0 || runningArchives.Count > 0;
 
@@ -37,14 +35,17 @@ public partial class RunningProcesses(
 
     protected override async Task OnInitializedAsync()
     {
-        await base.OnInitializedAsync();
-        dbRead = ScopedServices.GetRequiredService<IBearcatReadDbContext>();
-        navigationManager.LocationChanged += OnLocationChanged;
-        await LoadDataAsync();
-        StartAutoRefreshTimer();
+        await LoadDataAsync(lifetimeCancellation.Token);
+        if (!isDisposed)
+        {
+            StartAutoRefreshTimer();
+        }
     }
 
-    private async Task LoadRunningUploadsAsync()
+    private async Task LoadRunningUploadsAsync(
+        IBearcatReadDbContext dbRead,
+        CancellationToken cancellationToken
+    )
     {
         runningUploads = await dbRead
             .Uploads.AsSplitQuery()
@@ -62,7 +63,7 @@ public partial class RunningProcesses(
                 || u.UploadState == UploadState.Uploading
                 || u.UploadState == UploadState.CancellationRequested
             )
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         uploadProgress = runningUploads
             .Select(upload => uploadProgressTracker.Get(upload.Id))
@@ -70,13 +71,16 @@ public partial class RunningProcesses(
             .ToDictionary(snapshot => snapshot!.UploadId, snapshot => snapshot!);
     }
 
-    private async Task LoadRunningArchivesAsync()
+    private async Task LoadRunningArchivesAsync(
+        IBearcatReadDbContext dbRead,
+        CancellationToken cancellationToken
+    )
     {
         runningArchives = await dbRead
             .Archives.Include(a => a.ArchiveConfig)
                 .ThenInclude(ac => ac.Release)
             .Where(a => a.ArchiveState == ArchiveState.Creating)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     private void ToggleAutoRefresh()
@@ -94,7 +98,7 @@ public partial class RunningProcesses(
 
     private void StartAutoRefreshTimer()
     {
-        refreshCts = new CancellationTokenSource();
+        refreshCts = CancellationTokenSource.CreateLinkedTokenSource(lifetimeCancellation.Token);
         refreshTimer = new PeriodicTimer(TimeSpan.FromSeconds(3));
         _ = RunAutoRefreshLoopAsync(refreshTimer, refreshCts.Token);
     }
@@ -108,18 +112,17 @@ public partial class RunningProcesses(
         {
             while (await timer.WaitForNextTickAsync(cancellationToken))
             {
-                await InvokeAsync(LoadDataAsync);
+                await InvokeAsync(() => LoadDataAsync(cancellationToken));
             }
         }
-        catch (Exception)
-        {
-            // Expected on stop (cancellation) and for disposed DbContexts during teardown
-        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
     }
 
-    private async Task LoadDataAsync()
+    private Task LoadDataAsync() => LoadDataAsync(lifetimeCancellation.Token);
+
+    private async Task LoadDataAsync(CancellationToken cancellationToken)
     {
-        if (isDisposed)
+        if (isDisposed || refreshInProgress)
         {
             return;
         }
@@ -127,17 +130,32 @@ public partial class RunningProcesses(
         refreshInProgress = true;
         StateHasChanged();
 
-        await LoadRunningUploadsAsync();
-        await LoadRunningArchivesAsync();
+        try
+        {
+            await operationRunner.RunAsync<IBearcatReadDbContext>(
+                async (dbRead, operationCancellationToken) =>
+                {
+                    await LoadRunningUploadsAsync(dbRead, operationCancellationToken);
+                    await LoadRunningArchivesAsync(dbRead, operationCancellationToken);
+                },
+                cancellationToken
+            );
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+        finally
+        {
+            refreshInProgress = false;
+        }
 
-        refreshInProgress = false;
+        if (isDisposed || cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
         StateHasChanged();
-    }
-
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
-    {
-        autoRefresh = false;
-        StopAutoRefreshTimer();
     }
 
     private void StopAutoRefreshTimer()
@@ -150,15 +168,11 @@ public partial class RunningProcesses(
         refreshTimer = null;
     }
 
-    protected override void Dispose(bool disposing)
+    public void Dispose()
     {
-        if (disposing)
-        {
-            isDisposed = true;
-            navigationManager.LocationChanged -= OnLocationChanged;
-            StopAutoRefreshTimer();
-        }
-
-        base.Dispose(disposing);
+        isDisposed = true;
+        lifetimeCancellation.Cancel();
+        StopAutoRefreshTimer();
+        lifetimeCancellation.Dispose();
     }
 }

@@ -1,11 +1,11 @@
 using Bearcat.Domain.UseCases.ManageImageUploads.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Website.ScopedOperations;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageImageUploads;
 
-public partial class ImageUploadUrlsDialog(IServiceScopeFactory serviceScopeFactory)
+public partial class ImageUploadUrlsDialog(IScopedOperationRunner operationRunner)
 {
     [Parameter]
     public int ReleaseId { get; set; }
@@ -17,8 +17,9 @@ public partial class ImageUploadUrlsDialog(IServiceScopeFactory serviceScopeFact
 
     protected override async Task OnInitializedAsync()
     {
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
-        urls = await readRepository.GetImageUploadUrlsAsync(ReleaseId, ImageUploadId);
+        urls = await operationRunner.RunAsync(
+            (IReleaseReadRepository repository) =>
+                repository.GetImageUploadUrlsAsync(ReleaseId, ImageUploadId)
+        );
     }
 }

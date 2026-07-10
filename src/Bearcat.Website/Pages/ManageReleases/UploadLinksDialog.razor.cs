@@ -3,14 +3,14 @@ using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
-public partial class UploadLinksDialog(IServiceScopeFactory serviceScopeFactory)
+public partial class UploadLinksDialog(IScopedOperationRunner operationRunner)
 {
     [Parameter]
     public int ReleaseId { get; set; }
@@ -103,16 +103,17 @@ public partial class UploadLinksDialog(IServiceScopeFactory serviceScopeFactory)
 
         try
         {
-            await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
-            var result = await readRepository.SearchUploadLinksAsync(
-                new ReleaseUploadLinkSearchQuery(
-                    ReleaseId,
-                    UploadId,
-                    SelectedOnlineStateValue,
-                    pageIndex,
-                    pageSize
-                )
+            var result = await operationRunner.RunAsync(
+                (IReleaseReadRepository repository) =>
+                    repository.SearchUploadLinksAsync(
+                        new ReleaseUploadLinkSearchQuery(
+                            ReleaseId,
+                            UploadId,
+                            SelectedOnlineStateValue,
+                            pageIndex,
+                            pageSize
+                        )
+                    )
             );
 
             links = result.Items;
@@ -169,12 +170,9 @@ public partial class UploadLinksDialog(IServiceScopeFactory serviceScopeFactory)
 
     private async Task RefreshAllUploadLinksAsync()
     {
-        await using var scope = serviceScopeFactory.CreateAsyncScope();
-        var readRepository = scope.ServiceProvider.GetRequiredService<IReleaseReadRepository>();
-        allUploadLinks = await readRepository.GetUploadLinksAsync(
-            ReleaseId,
-            UploadId,
-            SelectedOnlineStateValue
+        allUploadLinks = await operationRunner.RunAsync(
+            (IReleaseReadRepository repository) =>
+                repository.GetUploadLinksAsync(ReleaseId, UploadId, SelectedOnlineStateValue)
         );
     }
 
