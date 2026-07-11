@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
@@ -84,12 +85,30 @@ public class ReleaseForumPostRenderSource(
         return new ForumPostTemplateReleaseModel
         {
             Name = release.Name,
+            PrimaryLanguage = GetLanguageName(release.PrimaryLanguageCode),
             Nfo = nfo ?? string.Empty,
             MainVideo = mainVideo is null
                 ? ForumPostTemplateMediaFileModel.Empty
                 : ToMediaFileModel(mainVideo),
             MediaFiles = mediaFileModels,
         };
+    }
+
+    private static string GetLanguageName(string? languageCode)
+    {
+        if (string.IsNullOrWhiteSpace(languageCode))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            return CultureInfo.GetCultureInfo(languageCode).NativeName;
+        }
+        catch (CultureNotFoundException)
+        {
+            return languageCode;
+        }
     }
 
     private static ForumPostTemplateMediaFileModel ToMediaFileModel(ReleaseMediaFileReadModel file)

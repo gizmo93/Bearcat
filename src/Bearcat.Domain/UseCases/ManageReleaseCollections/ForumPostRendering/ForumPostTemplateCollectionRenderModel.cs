@@ -31,6 +31,9 @@ public sealed record ForumPostTemplateCollectionModel
 
     [ForumPostTemplateVariable("Release group name.")]
     public required string ReleaseGroup { get; init; }
+
+    [ForumPostTemplateVariable("Primary language name.")]
+    public required string PrimaryLanguage { get; init; }
 }
 
 public sealed record ForumPostTemplateSeriesModel

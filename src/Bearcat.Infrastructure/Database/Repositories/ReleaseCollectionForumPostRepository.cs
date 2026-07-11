@@ -18,6 +18,7 @@ public class ReleaseCollectionForumPostRepository(IBearcatReadDbContext dbRead)
             {
                 collection.Name,
                 collection.Key,
+                collection.PrimaryLanguageCode,
                 ReleaseGroupName = collection.ReleaseGroup.Name,
                 Series = collection.Metadata == null
                     ? null
@@ -46,6 +47,7 @@ public class ReleaseCollectionForumPostRepository(IBearcatReadDbContext dbRead)
             Name: collection.Name,
             Key: collection.Key,
             ReleaseGroupName: collection.ReleaseGroupName,
+            PrimaryLanguageCode: collection.PrimaryLanguageCode,
             Series: collection.Series,
             Releases: releases
         );

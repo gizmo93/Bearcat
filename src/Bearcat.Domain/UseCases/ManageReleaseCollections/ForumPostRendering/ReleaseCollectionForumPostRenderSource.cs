@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -57,6 +58,7 @@ public class ReleaseCollectionForumPostRenderSource(
                 Name = collection.Name,
                 Key = collection.Key,
                 ReleaseGroup = collection.ReleaseGroupName,
+                PrimaryLanguage = GetLanguageName(collection.PrimaryLanguageCode),
             },
             Series = ToSeriesModel(collection.Series),
             Releases = releases,
@@ -71,6 +73,23 @@ public class ReleaseCollectionForumPostRenderSource(
         );
 
         return scriptObject;
+    }
+
+    private static string GetLanguageName(string? languageCode)
+    {
+        if (string.IsNullOrWhiteSpace(languageCode))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            return CultureInfo.GetCultureInfo(languageCode).NativeName;
+        }
+        catch (CultureNotFoundException)
+        {
+            return languageCode;
+        }
     }
 
     private static ForumPostTemplateSeriesModel ToSeriesModel(

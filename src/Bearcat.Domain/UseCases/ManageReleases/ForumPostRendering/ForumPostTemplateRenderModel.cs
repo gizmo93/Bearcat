@@ -32,6 +32,7 @@ public sealed record ForumPostTemplateReleaseModel
         new()
         {
             Name = string.Empty,
+            PrimaryLanguage = string.Empty,
             Nfo = string.Empty,
             MainVideo = ForumPostTemplateMediaFileModel.Empty,
             MediaFiles = [],
@@ -39,6 +40,9 @@ public sealed record ForumPostTemplateReleaseModel
 
     [ForumPostTemplateVariable("Release name.")]
     public required string Name { get; init; }
+
+    [ForumPostTemplateVariable("Primary language name.")]
+    public required string PrimaryLanguage { get; init; }
 
     [ForumPostTemplateVariable("Stored NFO content for the release.")]
     public required string Nfo { get; init; }

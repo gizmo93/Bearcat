@@ -110,6 +110,32 @@ public class ReleaseCollectionForumPostRenderTest : BearcatIntegrationTest
         result.Content.ShouldBe("https://img.example/full.jpg|https://img.example/thumb.jpg");
     }
 
+    [Test]
+    public async Task RenderAsync_TemplateUsesPrimaryLanguage_RendersNativeLanguageName()
+    {
+        var collection = await AddCollectionWithImageUploadAsync();
+        collection.PrimaryLanguageCode = "de";
+        var template = new ForumPostTemplate
+        {
+            Name = "Collection primary language template",
+            Type = ForumPostTemplateType.ReleaseCollection,
+            TemplateBody = "{{ collection.primary_language }}",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+
+        dbContext.ForumPostTemplates.Add(template);
+        await dbContext.SaveChangesAsync();
+
+        var result = await service.RenderAsync(collection.Id, template.Id, CancellationToken.None);
+
+        result.Errors.ShouldBeEmpty();
+        result.Content.ShouldBe("Deutsch");
+        service
+            .GetVariables(ForumPostTemplateType.ReleaseCollection)
+            .ShouldContain(variable => variable.Path == "{{ collection.primary_language }}");
+    }
+
     private async Task<ReleaseCollection> AddCollectionWithImageUploadAsync()
     {
         var releaseGroup = new ReleaseGroup

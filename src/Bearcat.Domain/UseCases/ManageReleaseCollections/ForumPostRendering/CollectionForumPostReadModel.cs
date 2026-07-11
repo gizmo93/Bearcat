@@ -4,6 +4,7 @@ public record CollectionForumPostReadModel(
     string Name,
     string Key,
     string ReleaseGroupName,
+    string? PrimaryLanguageCode,
     CollectionForumPostSeriesReadModel? Series,
     IReadOnlyList<CollectionForumPostReleaseReadModel> Releases
 );

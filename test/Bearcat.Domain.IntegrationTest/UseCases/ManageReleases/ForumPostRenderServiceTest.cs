@@ -71,6 +71,31 @@ public class ForumPostRenderServiceTest : BearcatIntegrationTest
         result.Content.ShouldBe("https://img.example/full.jpg|https://img.example/thumb.jpg");
     }
 
+    [Test]
+    public async Task RenderAsync_TemplateUsesPrimaryLanguage_RendersNativeLanguageName()
+    {
+        var release = await AddReleaseAsync();
+        release.PrimaryLanguageCode = "de";
+        var template = new ForumPostTemplate
+        {
+            Name = "Primary language template",
+            TemplateBody = "{{ release.primary_language }}",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+
+        dbContext.ForumPostTemplates.Add(template);
+        await dbContext.SaveChangesAsync();
+
+        var result = await service.RenderAsync(release.Id, template.Id, CancellationToken.None);
+
+        result.Errors.ShouldBeEmpty();
+        result.Content.ShouldBe("Deutsch");
+        service
+            .GetVariables(ForumPostTemplateType.Release)
+            .ShouldContain(variable => variable.Path == "{{ release.primary_language }}");
+    }
+
     private async Task<Release> AddReleaseAsync()
     {
         var releaseGroup = new ReleaseGroup
