@@ -89,14 +89,7 @@
                     else
                     {
                         <div class="space-y-4">
-                            @if (pairingUrl is null)
-                            {
-                                <BbButton OnClick="BeginPairingAsync">
-                                    <LucideIcon Name="send" class="h-4 w-4" />
-                                    @L["ConnectTelegram"]
-                                </BbButton>
-                            }
-                            else
+                            @if (pairingUrl is not null)
                             {
                                 <p class="text-sm text-muted-foreground">@L["TelegramPairingInstructions"]</p>
                                 <div class="flex flex-wrap gap-2">
@@ -110,6 +103,25 @@
                                         @L["CheckConnection"]
                                     </BbButton>
                                 </div>
+                            }
+                            else if (settings.IsPairing)
+                            {
+                                <p class="text-sm text-muted-foreground">@L["TelegramPairingInProgress"]</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <BbButton Variant="ButtonVariant.Outline" OnClick="RefreshConnectionAsync">
+                                        @L["CheckConnection"]
+                                    </BbButton>
+                                    <BbButton Variant="ButtonVariant.Ghost" OnClick="BeginPairingAsync">
+                                        @L["TelegramResendLink"]
+                                    </BbButton>
+                                </div>
+                            }
+                            else
+                            {
+                                <BbButton OnClick="BeginPairingAsync">
+                                    <LucideIcon Name="send" class="h-4 w-4" />
+                                    @L["ConnectTelegram"]
+                                </BbButton>
                             }
                         </div>
                     }

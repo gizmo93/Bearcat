@@ -973,6 +973,8 @@
   <data name="ConnectTelegram" xml:space="preserve"><value>Connect Telegram</value></data>
   <data name="DisconnectTelegram" xml:space="preserve"><value>Disconnect</value></data>
   <data name="TelegramPairingInstructions" xml:space="preserve"><value>Open Telegram and press Start. The link expires after ten minutes.</value></data>
+  <data name="TelegramPairingInProgress" xml:space="preserve"><value>A pairing link was already sent and is still valid. Press Start in Telegram, then check the connection.</value></data>
+  <data name="TelegramResendLink" xml:space="preserve"><value>Generate a new link</value></data>
   <data name="OpenTelegram" xml:space="preserve"><value>Open Telegram</value></data>
   <data name="CheckConnection" xml:space="preserve"><value>Check connection</value></data>
   <data name="ForwardNotificationTypes" xml:space="preserve"><value>Forwarded notification types</value></data>

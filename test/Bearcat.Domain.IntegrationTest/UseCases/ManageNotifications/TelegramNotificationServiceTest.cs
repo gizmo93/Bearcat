@@ -1,8 +1,10 @@
 using System.Net;
 using System.Text;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageNotifications.Telegram;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
+using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.Security;
 using Bearcat.Infrastructure.Telegram;
 using Bearcat.IntegrationTest.Utils;
@@ -28,10 +30,11 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
         writeDbContext = Database.CreateDbContext();
         telegram = new TelegramHttpMessageHandler();
         service = new TelegramNotificationService(
-            readDbContext,
-            writeDbContext,
+            new TelegramConfigurationRepository(writeDbContext),
+            new TelegramNotificationReadRepository(readDbContext),
+            new TelegramDeliveryRepository(writeDbContext),
             NoOpSecretProtector.Instance,
-            new TestHttpClientFactory(telegram),
+            new TelegramClient(new TestHttpClientFactory(telegram)),
             CreateTimeProvider(),
             new TelegramConfigurationCache()
         );

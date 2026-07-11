@@ -9,6 +9,8 @@ public class TelegramDeliveryConfiguration : IEntityTypeConfiguration<TelegramDe
     public void Configure(EntityTypeBuilder<TelegramDelivery> builder)
     {
         builder.HasKey(delivery => delivery.Id);
+        builder.Property(delivery => delivery.NotificationId).IsRequired();
+        builder.Property(delivery => delivery.AttemptCount).IsRequired();
         builder.Property(delivery => delivery.CreatedAt).IsRequired().HasPrecision(4);
         builder.Property(delivery => delivery.DeliveredAt).HasPrecision(4);
         builder.Property(delivery => delivery.NextAttemptAt).HasPrecision(4);

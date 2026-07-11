@@ -1,29 +1,27 @@
 using System.Security.Cryptography;
 using System.Text;
-using Bearcat.Abstractions.Notifications;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.ValueObjects;
-using Bearcat.Infrastructure.Database;
-using Microsoft.EntityFrameworkCore;
-using Telegram.Bot;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
-namespace Bearcat.Infrastructure.Telegram;
+namespace Bearcat.Domain.UseCases.ManageNotifications.Telegram;
 
 public sealed class TelegramNotificationService(
-    IBearcatReadDbContext readDbContext,
-    IBearcatWriteDbContext writeDbContext,
+    ITelegramConfigurationRepository configurationRepository,
+    ITelegramNotificationReadRepository readRepository,
+    ITelegramDeliveryRepository deliveryRepository,
     ISecretProtector secretProtector,
-    IHttpClientFactory httpClientFactory,
+    ITelegramClient telegramClient,
     TimeProvider timeProvider,
     TelegramConfigurationCache configurationCache
-) : ITelegramNotificationProcessor
+)
 {
     private static readonly TimeSpan PairingDuration = TimeSpan.FromMinutes(10);
-    private const int DeliveryBatchSize = 100;
+    private const int PrepareBatchSize = 100;
+    private const int SendBatchSize = 10;
+    private const int MaxDeliveryAttempts = 10;
 
     public async Task<TelegramSettings> GetSettingsAsync(
         string defaultBaseUrl,
@@ -68,26 +66,22 @@ public sealed class TelegramNotificationService(
         CancellationToken cancellationToken = default
     )
     {
-        await EnsureCacheInitializedAsync(cancellationToken);
-
         var baseUrl = NormalizeBaseUrl(notificationBaseUrl);
 
-        var configuration = await writeDbContext.TelegramConfigurations.SingleOrDefaultAsync(
-            cancellationToken
-        );
+        var configuration = await configurationRepository.GetAsync(cancellationToken);
 
         if (configuration is null)
         {
             configuration = await CreateConfigurationAsync(botToken, baseUrl, cancellationToken);
-            writeDbContext.TelegramConfigurations.Add(configuration);
+            configurationRepository.Add(configuration);
         }
         else
         {
             await UpdateConfigurationAsync(configuration, botToken, baseUrl, cancellationToken);
         }
 
-        await writeDbContext.SaveChangesAsync(cancellationToken);
-        configurationCache.Update(configuration);
+        await configurationRepository.SaveChangesAsync(cancellationToken);
+        configurationCache.Invalidate();
     }
 
     public async Task SaveLevelsAsync(
@@ -103,8 +97,8 @@ public sealed class TelegramNotificationService(
         configuration.ForwardWarning = forwardWarning;
         configuration.ForwardError = forwardError;
 
-        await writeDbContext.SaveChangesAsync(cancellationToken);
-        configurationCache.Update(configuration);
+        await configurationRepository.SaveChangesAsync(cancellationToken);
+        configurationCache.Invalidate();
     }
 
     public async Task<string> BeginPairingAsync(CancellationToken cancellationToken = default)
@@ -121,9 +115,9 @@ public sealed class TelegramNotificationService(
         );
 
         configuration.PairingExpiresAt = timeProvider.GetLocalNow().Add(PairingDuration);
-        await writeDbContext.SaveChangesAsync(cancellationToken);
+        await configurationRepository.SaveChangesAsync(cancellationToken);
 
-        configurationCache.Update(configuration);
+        configurationCache.Invalidate();
 
         return $"https://t.me/{configuration.BotUsername}?start={token}";
     }
@@ -140,10 +134,10 @@ public sealed class TelegramNotificationService(
             cancellationToken
         );
 
-        await DeletePendingDeliveriesAsync(cancellationToken);
-        await writeDbContext.SaveChangesAsync(cancellationToken);
+        await deliveryRepository.DeletePendingAsync(cancellationToken);
+        await configurationRepository.SaveChangesAsync(cancellationToken);
 
-        configurationCache.Update(configuration);
+        configurationCache.Invalidate();
     }
 
     public async Task SendTestMessageAsync(CancellationToken cancellationToken = default)
@@ -157,12 +151,12 @@ public sealed class TelegramNotificationService(
             throw new InvalidOperationException("Telegram is not connected.");
         }
 
-        await CreateClient(botToken: secretProtector.Unprotect(configuration.EncryptedBotToken))
-            .SendMessage(
-                chatId: configuration.ChatId.Value,
-                text: "Bearcat Telegram notifications are connected.",
-                cancellationToken: cancellationToken
-            );
+        await telegramClient.SendMessageAsync(
+            secretProtector.Unprotect(configuration.EncryptedBotToken),
+            configuration.ChatId.Value,
+            "Bearcat Telegram notifications are connected.",
+            cancellationToken
+        );
     }
 
     public bool HasPendingPairing => configurationCache.Current?.PairingTokenHash is not null;
@@ -184,7 +178,7 @@ public sealed class TelegramNotificationService(
         }
 
         var updates = await ReceivePairingUpdatesAsync(pairing, cancellationToken);
-        if (updates.Length > 0)
+        if (updates.Count > 0)
         {
             await ApplyPairingUpdatesAsync(updates, cancellationToken);
         }
@@ -203,7 +197,12 @@ public sealed class TelegramNotificationService(
 
         await PrepareDeliveriesAsync(configuration, cancellationToken);
 
-        var deliveries = await GetPendingDeliveriesAsync(cancellationToken);
+        var deliveries = await deliveryRepository.GetPendingAsync(
+            timeProvider.GetLocalNow(),
+            MaxDeliveryAttempts,
+            SendBatchSize,
+            cancellationToken
+        );
 
         await SendDeliveriesAsync(configuration, deliveries, cancellationToken);
     }
@@ -219,11 +218,11 @@ public sealed class TelegramNotificationService(
             throw new InvalidOperationException("A Telegram bot token is required.");
         }
 
-        var bot = await CreateClient(botToken).GetMe(cancellationToken);
+        var bot = await telegramClient.GetBotAsync(botToken, cancellationToken);
         return new TelegramConfiguration
         {
             EncryptedBotToken = secretProtector.Protect(botToken),
-            BotUsername = bot.Username!,
+            BotUsername = bot.Username,
             NotificationBaseUrl = baseUrl,
             ForwardNotificationsAfterId = await GetLatestNotificationIdAsync(cancellationToken),
         };
@@ -243,10 +242,10 @@ public sealed class TelegramNotificationService(
             return;
         }
 
-        var bot = await CreateClient(botToken).GetMe(cancellationToken);
+        var bot = await telegramClient.GetBotAsync(botToken, cancellationToken);
 
         configuration.EncryptedBotToken = secretProtector.Protect(botToken);
-        configuration.BotUsername = bot.Username!;
+        configuration.BotUsername = bot.Username;
         configuration.ChatId = null;
         configuration.ChatName = null;
         configuration.PairingTokenHash = null;
@@ -255,7 +254,7 @@ public sealed class TelegramNotificationService(
         configuration.ForwardNotificationsAfterId = await GetLatestNotificationIdAsync(
             cancellationToken
         );
-        await DeletePendingDeliveriesAsync(cancellationToken);
+        await deliveryRepository.DeletePendingAsync(cancellationToken);
     }
 
     private async Task ClearExpiredPairingAsync(CancellationToken cancellationToken)
@@ -265,45 +264,43 @@ public sealed class TelegramNotificationService(
         configuration.PairingTokenHash = null;
         configuration.PairingExpiresAt = null;
 
-        await writeDbContext.SaveChangesAsync(cancellationToken);
-        configurationCache.Update(configuration);
+        await configurationRepository.SaveChangesAsync(cancellationToken);
+        configurationCache.Invalidate();
     }
 
-    private async Task<Update[]> ReceivePairingUpdatesAsync(
+    private async Task<IReadOnlyList<TelegramUpdate>> ReceivePairingUpdatesAsync(
         TelegramConfigurationState pairing,
         CancellationToken cancellationToken
     )
     {
-        var client = CreateClient(secretProtector.Unprotect(pairing.EncryptedBotToken));
-
-        return await client.GetUpdates(
-            offset: (int)pairing.UpdateOffset,
-            timeout: 30,
-            allowedUpdates: [UpdateType.Message],
-            cancellationToken: cancellationToken
+        return await telegramClient.GetUpdatesAsync(
+            secretProtector.Unprotect(pairing.EncryptedBotToken),
+            (int)pairing.UpdateOffset,
+            cancellationToken
         );
     }
 
     private async Task ApplyPairingUpdatesAsync(
-        Update[] updates,
+        IReadOnlyList<TelegramUpdate> updates,
         CancellationToken cancellationToken
     )
     {
         var configuration = await GetConfigurationAsync(cancellationToken);
-        configuration.UpdateOffset = updates[^1].Id + 1;
+        configuration.UpdateOffset = updates[^1].UpdateId + 1;
 
         foreach (var update in updates)
         {
             if (
-                !TryReadPairingToken(update, out var token)
+                update.Chat is null
+                || !TryReadPairingToken(update.Text, out var token)
                 || !IsValidPairingToken(configuration, token)
             )
             {
                 continue;
             }
 
-            configuration.ChatId = update.Message!.Chat.Id;
-            configuration.ChatName = GetChatName(update.Message.Chat);
+            configuration.ChatId = update.Chat.Id;
+            configuration.ChatName = GetChatName(update.Chat);
             configuration.PairingTokenHash = null;
             configuration.PairingExpiresAt = null;
             configuration.ForwardNotificationsAfterId = await GetLatestNotificationIdAsync(
@@ -313,25 +310,69 @@ public sealed class TelegramNotificationService(
             break;
         }
 
-        await writeDbContext.SaveChangesAsync(cancellationToken);
-        configurationCache.Update(configuration);
+        await configurationRepository.SaveChangesAsync(cancellationToken);
+        configurationCache.Invalidate();
     }
 
-    private async Task<List<TelegramDelivery>> GetPendingDeliveriesAsync(
+    private async Task PrepareDeliveriesAsync(
+        TelegramConfigurationState configuration,
         CancellationToken cancellationToken
     )
     {
-        var now = timeProvider.GetLocalNow();
+        var notificationIds = await readRepository.GetForwardableNotificationIdsAsync(
+            configuration.ForwardNotificationsAfterId,
+            configuration.ForwardInfo,
+            configuration.ForwardWarning,
+            configuration.ForwardError,
+            PrepareBatchSize,
+            cancellationToken
+        );
 
-        return await writeDbContext
-            .TelegramDeliveries.Include(delivery => delivery.Notification)
-            .Where(delivery =>
-                delivery.DeliveredAt == null
-                && (delivery.NextAttemptAt == null || delivery.NextAttemptAt <= now)
-            )
-            .OrderBy(delivery => delivery.Id)
-            .Take(10)
-            .ToListAsync(cancellationToken);
+        foreach (var notificationId in notificationIds)
+        {
+            deliveryRepository.Add(
+                new TelegramDelivery
+                {
+                    NotificationId = notificationId,
+                    CreatedAt = timeProvider.GetLocalNow(),
+                }
+            );
+        }
+
+        if (notificationIds.Count > 0)
+        {
+            await deliveryRepository.SaveChangesAsync(cancellationToken);
+        }
+
+        await AdvanceForwardWatermarkAsync(
+            configuration.ForwardNotificationsAfterId,
+            cancellationToken
+        );
+    }
+
+    private async Task AdvanceForwardWatermarkAsync(
+        int currentAfterId,
+        CancellationToken cancellationToken
+    )
+    {
+        var firstUnhandled = await readRepository.GetFirstUnhandledNotificationIdAsync(
+            currentAfterId,
+            cancellationToken
+        );
+
+        var newAfterId = firstUnhandled is null
+            ? await readRepository.GetLatestNotificationIdAsync(cancellationToken)
+            : firstUnhandled.Value - 1;
+
+        if (newAfterId <= currentAfterId)
+        {
+            return;
+        }
+
+        var configuration = await GetConfigurationAsync(cancellationToken);
+        configuration.ForwardNotificationsAfterId = newAfterId;
+        await configurationRepository.SaveChangesAsync(cancellationToken);
+        configurationCache.Invalidate();
     }
 
     private async Task SendDeliveriesAsync(
@@ -340,16 +381,17 @@ public sealed class TelegramNotificationService(
         CancellationToken cancellationToken
     )
     {
-        var client = CreateClient(secretProtector.Unprotect(configuration.EncryptedBotToken));
+        var botToken = secretProtector.Unprotect(configuration.EncryptedBotToken);
 
         foreach (var delivery in deliveries)
         {
             try
             {
-                await client.SendMessage(
-                    chatId: configuration.ChatId!.Value,
-                    text: CreateMessage(configuration, delivery.Notification),
-                    cancellationToken: cancellationToken
+                await telegramClient.SendMessageAsync(
+                    botToken,
+                    configuration.ChatId!.Value,
+                    CreateMessage(configuration, delivery.Notification),
+                    cancellationToken
                 );
                 delivery.DeliveredAt = timeProvider.GetLocalNow();
                 delivery.LastError = null;
@@ -367,70 +409,8 @@ public sealed class TelegramNotificationService(
                     .AddSeconds(Math.Min(300, 5 * Math.Pow(2, delivery.AttemptCount - 1)));
             }
 
-            await writeDbContext.SaveChangesAsync(cancellationToken);
+            await deliveryRepository.SaveChangesAsync(cancellationToken);
         }
-    }
-
-    private async Task PrepareDeliveriesAsync(
-        TelegramConfigurationState configuration,
-        CancellationToken cancellationToken
-    )
-    {
-        var notificationIds = await readDbContext
-            .Notifications.Where(notification =>
-                notification.Id > configuration.ForwardNotificationsAfterId
-                && notification.ResolvedAt == null
-                && (
-                    (
-                        notification.NotificationType == NotificationType.Info
-                        && configuration.ForwardInfo
-                    )
-                    || (
-                        notification.NotificationType == NotificationType.Warning
-                        && configuration.ForwardWarning
-                    )
-                    || (
-                        notification.NotificationType == NotificationType.Error
-                        && configuration.ForwardError
-                    )
-                )
-                && !readDbContext.TelegramDeliveries.Any(delivery =>
-                    delivery.NotificationId == notification.Id
-                )
-            )
-            .OrderBy(notification => notification.Id)
-            .Select(notification => notification.Id)
-            .Take(DeliveryBatchSize)
-            .ToListAsync(cancellationToken);
-
-        foreach (var notificationId in notificationIds)
-        {
-            writeDbContext.TelegramDeliveries.Add(
-                new TelegramDelivery
-                {
-                    NotificationId = notificationId,
-                    CreatedAt = timeProvider.GetLocalNow(),
-                }
-            );
-        }
-
-        if (notificationIds.Count > 0)
-        {
-            await writeDbContext.SaveChangesAsync(cancellationToken);
-        }
-    }
-
-    private TelegramBotClient CreateClient(string botToken)
-    {
-        return new TelegramBotClient(botToken, httpClientFactory.CreateClient("telegram"));
-    }
-
-    private async Task<TelegramConfiguration> GetConfigurationAsync(
-        CancellationToken cancellationToken
-    )
-    {
-        return await writeDbContext.TelegramConfigurations.SingleOrDefaultAsync(cancellationToken)
-            ?? throw new InvalidOperationException("Telegram is not configured.");
     }
 
     private async Task EnsureCacheInitializedAsync(CancellationToken cancellationToken)
@@ -440,26 +420,21 @@ public sealed class TelegramNotificationService(
             return;
         }
 
-        var configuration = await readDbContext.TelegramConfigurations.SingleOrDefaultAsync(
-            cancellationToken
-        );
+        var state = await readRepository.GetConfigurationStateAsync(cancellationToken);
+        configurationCache.Set(state);
+    }
 
-        configurationCache.Initialize(configuration);
+    private async Task<TelegramConfiguration> GetConfigurationAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        return await configurationRepository.GetAsync(cancellationToken)
+            ?? throw new InvalidOperationException("Telegram is not configured.");
     }
 
     private async Task<int> GetLatestNotificationIdAsync(CancellationToken cancellationToken)
     {
-        return await readDbContext.Notifications.MaxAsync(
-                notification => (int?)notification.Id,
-                cancellationToken
-            ) ?? 0;
-    }
-
-    private async Task DeletePendingDeliveriesAsync(CancellationToken cancellationToken)
-    {
-        await writeDbContext
-            .TelegramDeliveries.Where(delivery => delivery.DeliveredAt == null)
-            .ExecuteDeleteAsync(cancellationToken);
+        return await readRepository.GetLatestNotificationIdAsync(cancellationToken);
     }
 
     private static string NormalizeBaseUrl(string notificationBaseUrl)
@@ -477,11 +452,10 @@ public sealed class TelegramNotificationService(
         return notificationBaseUrl.TrimEnd('/');
     }
 
-    private static bool TryReadPairingToken(Update update, out string token)
+    private static bool TryReadPairingToken(string? text, out string token)
     {
         const string command = "/start ";
 
-        var text = update.Message?.Text;
         if (text?.StartsWith(command, StringComparison.Ordinal) == true)
         {
             token = text[command.Length..].Trim();
@@ -502,7 +476,7 @@ public sealed class TelegramNotificationService(
             );
     }
 
-    private static string GetChatName(Chat chat)
+    private static string GetChatName(TelegramChat chat)
     {
         var name = string.Join(
             ' ',

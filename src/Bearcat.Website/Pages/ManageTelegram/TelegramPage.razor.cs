@@ -1,4 +1,4 @@
-using Bearcat.Infrastructure.Telegram;
+using Bearcat.Domain.UseCases.ManageNotifications.Telegram;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -60,18 +60,32 @@ public partial class TelegramPage(
 
     private async Task SaveLevelsAsync()
     {
-        await operationRunner.RunAsync(
-            (TelegramNotificationService service) =>
-                service.SaveLevelsAsync(forwardInfo, forwardWarning, forwardError)
-        );
-        toastService.Success(L["TelegramLevelsSaved"]);
+        try
+        {
+            await operationRunner.RunAsync(
+                (TelegramNotificationService service) =>
+                    service.SaveLevelsAsync(forwardInfo, forwardWarning, forwardError)
+            );
+            toastService.Success(L["TelegramLevelsSaved"]);
+        }
+        catch (Exception exception)
+        {
+            toastService.Error(exception.Message);
+        }
     }
 
     private async Task BeginPairingAsync()
     {
-        pairingUrl = await operationRunner.RunAsync(
-            (TelegramNotificationService service) => service.BeginPairingAsync()
-        );
+        try
+        {
+            pairingUrl = await operationRunner.RunAsync(
+                (TelegramNotificationService service) => service.BeginPairingAsync()
+            );
+        }
+        catch (Exception exception)
+        {
+            toastService.Error(exception.Message);
+        }
     }
 
     private async Task RefreshConnectionAsync()
@@ -101,10 +115,17 @@ public partial class TelegramPage(
 
     private async Task DisconnectAsync()
     {
-        await operationRunner.RunAsync(
-            (TelegramNotificationService service) => service.DisconnectAsync()
-        );
-        pairingUrl = null;
-        await LoadAsync();
+        try
+        {
+            await operationRunner.RunAsync(
+                (TelegramNotificationService service) => service.DisconnectAsync()
+            );
+            pairingUrl = null;
+            await LoadAsync();
+        }
+        catch (Exception exception)
+        {
+            toastService.Error(exception.Message);
+        }
     }
 }

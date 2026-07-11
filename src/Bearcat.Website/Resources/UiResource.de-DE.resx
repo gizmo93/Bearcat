@@ -976,6 +976,8 @@
   <data name="ConnectTelegram" xml:space="preserve"><value>Telegram verbinden</value></data>
   <data name="DisconnectTelegram" xml:space="preserve"><value>Verbindung trennen</value></data>
   <data name="TelegramPairingInstructions" xml:space="preserve"><value>Öffne Telegram und drücke Start. Der Link läuft nach zehn Minuten ab.</value></data>
+  <data name="TelegramPairingInProgress" xml:space="preserve"><value>Es wurde bereits ein Kopplungslink gesendet, der noch gültig ist. Drücke in Telegram auf Start und prüfe dann die Verbindung.</value></data>
+  <data name="TelegramResendLink" xml:space="preserve"><value>Neuen Link erzeugen</value></data>
   <data name="OpenTelegram" xml:space="preserve"><value>Telegram öffnen</value></data>
   <data name="CheckConnection" xml:space="preserve"><value>Verbindung prüfen</value></data>
   <data name="ForwardNotificationTypes" xml:space="preserve"><value>Weitergeleitete Notificationtypen</value></data>

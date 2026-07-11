@@ -1,4 +1,4 @@
-using Bearcat.Abstractions.Notifications;
+using Bearcat.Domain.UseCases.ManageNotifications.Telegram;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -22,15 +22,15 @@ public sealed class TelegramNotificationBackgroundTask(
 
                 await using (var scope = serviceScopeFactory.CreateAsyncScope())
                 {
-                    var processor =
-                        scope.ServiceProvider.GetRequiredService<ITelegramNotificationProcessor>();
+                    var service =
+                        scope.ServiceProvider.GetRequiredService<TelegramNotificationService>();
 
-                    await processor.ProcessDeliveriesAsync(stoppingToken);
+                    await service.ProcessDeliveriesAsync(stoppingToken);
 
-                    hasPendingPairing = processor.HasPendingPairing;
+                    hasPendingPairing = service.HasPendingPairing;
                     if (hasPendingPairing)
                     {
-                        await processor.PollPairingAsync(stoppingToken);
+                        await service.PollPairingAsync(stoppingToken);
                     }
                 }
 

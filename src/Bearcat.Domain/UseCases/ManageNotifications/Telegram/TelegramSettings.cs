@@ -1,4 +1,4 @@
-namespace Bearcat.Infrastructure.Telegram;
+namespace Bearcat.Domain.UseCases.ManageNotifications.Telegram;
 
 public sealed record TelegramSettings(
     bool IsConfigured,
