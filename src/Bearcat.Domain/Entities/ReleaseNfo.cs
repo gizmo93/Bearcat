@@ -8,8 +8,6 @@ public class ReleaseNfo
 
     public Release Release { get; set; } = null!;
 
-    public int? ReleaseInfoId { get; set; }
-
     public string FileName { get; set; } = null!;
 
     public string Content { get; set; } = null!;

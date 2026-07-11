@@ -71,11 +71,6 @@ public class ReleaseInfoService(
         metadata.Genre = CleanOptional(data.Genre);
         metadata.Description = CleanOptional(data.Description);
 
-        // Keep the legacy columns populated until their cleanup migration.
-        releaseInfo.CoverUrl = metadata.CoverUrl;
-        releaseInfo.Genre = metadata.Genre;
-        releaseInfo.Description = metadata.Description;
-
         ReleaseExternalIdentifierService.SyncImdbIds(
             release: release,
             source: ExternalIdentifierSource.Manual,

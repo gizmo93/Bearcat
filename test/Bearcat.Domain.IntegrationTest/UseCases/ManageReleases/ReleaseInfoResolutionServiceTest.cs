@@ -100,9 +100,6 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         persistedInfo.SizeUnit.ShouldBe("GB");
         persistedInfo.VideoType.ShouldBe("WEB");
         persistedInfo.AudioType.ShouldBe("AC3");
-        persistedInfo.Genre.ShouldBe("Drama, Sci-Fi");
-        persistedInfo.Description.ShouldBe("Bearcat plot");
-        persistedInfo.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_cover/movie123.JPG");
 
         var metadata = await dbContext.ReleaseMetadata.SingleAsync();
         metadata.ReleaseId.ShouldBe(release.Id);

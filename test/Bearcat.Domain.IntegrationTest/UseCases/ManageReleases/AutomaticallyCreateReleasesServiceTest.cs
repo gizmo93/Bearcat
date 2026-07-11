@@ -248,6 +248,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
             .Releases.AsSplitQuery()
             .Include(release => release.ReleaseInfo)
                 .ThenInclude(info => info!.ExternalInfos)
+            .Include(release => release.Metadata)
             .SingleAsync(release => release.ReleaseFolderPath == releaseFolder.FullName);
 
         var releaseInfo = release.ReleaseInfo.ShouldNotBeNull();
@@ -258,9 +259,11 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         releaseInfo.SizeUnit.ShouldBe("GB");
         releaseInfo.VideoType.ShouldBe("WEB");
         releaseInfo.AudioType.ShouldBe("AC3");
-        releaseInfo.Genre.ShouldBe("Drama, Sci-Fi");
-        releaseInfo.Description.ShouldBe("Bearcat plot");
-        releaseInfo.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_cover/movie123.JPG");
+
+        var metadata = release.Metadata.ShouldNotBeNull();
+        metadata.Genre.ShouldBe("Drama, Sci-Fi");
+        metadata.Description.ShouldBe("Bearcat plot");
+        metadata.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_cover/movie123.JPG");
 
         var externalInfo = releaseInfo.ExternalInfos.Single();
         externalInfo.Type.ShouldBe(ExternalInfoType.Movie);

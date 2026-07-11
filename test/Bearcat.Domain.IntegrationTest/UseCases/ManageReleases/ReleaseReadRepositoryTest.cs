@@ -145,9 +145,6 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
                 SizeUnit = "GB",
                 VideoType = "WEB",
                 AudioType = "AC3",
-                Genre = "Drama, Sci-Fi",
-                Description = "Bearcat plot",
-                CoverUrl = "https://uploads2.xrel.to/img_cover/movie123.JPG",
                 ExternalInfos =
                 [
                     new ReleaseExternalInfo

@@ -626,9 +626,6 @@ public partial class ReleaseInfoResolutionService(
             SizeUnit = releaseInfo.Size?.Unit,
             VideoType = releaseInfo.VideoType,
             AudioType = releaseInfo.AudioType,
-            Genre = releaseInfo.Genre,
-            Description = releaseInfo.Description,
-            CoverUrl = releaseInfo.CoverUrl,
             ExternalInfos = releaseInfo
                 .ExternalInfos.Select(externalInfo => new ReleaseExternalInfo
                 {
