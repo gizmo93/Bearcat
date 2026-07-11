@@ -9,6 +9,7 @@ public record ReleaseCollectionDetailReadModel(
     ReleaseContentType ReleaseContentType,
     int ReleaseGroupId,
     string ReleaseGroupName,
+    string? PrimaryLanguageCode,
     DateTime CreatedAt,
     IReadOnlyList<CollectionUploadSlotReadModel> UploadSlots,
     IReadOnlyList<ReleaseCollectionReleaseReadModel> Releases,

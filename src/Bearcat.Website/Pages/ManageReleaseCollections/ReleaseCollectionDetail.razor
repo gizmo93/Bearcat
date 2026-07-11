@@ -37,6 +37,15 @@
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <BbBadge Variant="BadgeVariant.Outline">@releaseCollection.ReleaseGroupName</BbBadge>
+                    @if (string.IsNullOrWhiteSpace(releaseCollection.PrimaryLanguageCode))
+                    {
+                        <BbBadge Variant="BadgeVariant.Outline">@L["PrimaryLanguage"]: @L["NotSet"]</BbBadge>
+                    }
+                    else
+                    {
+                        var culture = CultureInfo.GetCultureInfo(releaseCollection.PrimaryLanguageCode);
+                        <BbBadge Variant="BadgeVariant.Outline">@culture.NativeName (@culture.TwoLetterISOLanguageName)</BbBadge>
+                    }
                     <BbBadge Variant="BadgeVariant.Secondary">@releaseCollection.Releases.Count @L["Releases"]</BbBadge>
                     <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(releaseCollection.ReleaseContentType)</BbBadge>
                     <BbButton Variant="ButtonVariant.Ghost"

@@ -133,6 +133,22 @@
                 <p class="bearcat-release-path">@L.Localize(release.ReleaseContentType)</p>
             </div>
         </div>
+
+        <div class="bearcat-release-folder">
+            <LucideIcon Name="languages" class="h-4 w-4 shrink-0 text-muted-foreground" />
+            <div class="min-w-0">
+                <p class="text-xs text-muted-foreground">@L["PrimaryLanguage"]</p>
+                @if (string.IsNullOrWhiteSpace(release.PrimaryLanguageCode))
+                {
+                    <p class="bearcat-release-path">@L["NotSet"]</p>
+                }
+                else
+                {
+                    var culture = CultureInfo.GetCultureInfo(release.PrimaryLanguageCode);
+                    <p class="bearcat-release-path">@culture.NativeName (@culture.TwoLetterISOLanguageName)</p>
+                }
+            </div>
+        </div>
     </div>
 
     <BbTabs @key="ReleaseId" Value="@activeTab" ValueChanged="HandleTabChangedAsync" Class="space-y-4">

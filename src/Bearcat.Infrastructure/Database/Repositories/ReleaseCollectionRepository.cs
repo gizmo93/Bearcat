@@ -148,6 +148,7 @@ public class ReleaseCollectionRepository(
                 collection.ReleaseContentType,
                 collection.ReleaseGroupId,
                 ReleaseGroupName = collection.ReleaseGroup.Name,
+                collection.PrimaryLanguageCode,
                 collection.CreatedAt,
             })
             .FirstOrDefaultAsync(cancellationToken);
@@ -355,6 +356,7 @@ public class ReleaseCollectionRepository(
             ReleaseContentType: collection.ReleaseContentType,
             ReleaseGroupId: collection.ReleaseGroupId,
             ReleaseGroupName: collection.ReleaseGroupName,
+            PrimaryLanguageCode: collection.PrimaryLanguageCode,
             CreatedAt: collection.CreatedAt,
             UploadSlots: uploadSlots
                 .Select(slot =>
