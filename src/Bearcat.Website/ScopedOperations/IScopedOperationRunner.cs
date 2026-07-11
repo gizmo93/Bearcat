@@ -2,6 +2,9 @@ namespace Bearcat.Website.ScopedOperations;
 
 public interface IScopedOperationRunner
 {
+    TResult Run<TService, TResult>(Func<TService, TResult> operation)
+        where TService : notnull;
+
     Task RunAsync<TService>(Func<TService, Task> operation)
         where TService : notnull;
 

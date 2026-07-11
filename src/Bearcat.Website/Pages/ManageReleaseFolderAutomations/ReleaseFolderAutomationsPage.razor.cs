@@ -2,14 +2,14 @@ using System.Globalization;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleaseFolderAutomations;
 
 public partial class ReleaseFolderAutomationsPage(
-    IReleaseFolderAutomationReadRepository readRepository,
-    DialogService dialogService
+    DialogService dialogService,
+    IScopedOperationRunner operationRunner
 )
 {
     private IReadOnlyList<ReleaseFolderAutomationReadModel> automations = [];
@@ -26,7 +26,9 @@ public partial class ReleaseFolderAutomationsPage(
 
         try
         {
-            automations = await readRepository.GetAllAsync();
+            automations = await operationRunner.RunAsync(
+                (IReleaseFolderAutomationReadRepository repository) => repository.GetAllAsync()
+            );
         }
         finally
         {
@@ -97,8 +99,10 @@ public partial class ReleaseFolderAutomationsPage(
 
     private async Task ToggleEnabledAsync(ReleaseFolderAutomationReadModel automation)
     {
-        var service = ScopedServices.GetRequiredService<ReleaseFolderAutomationService>();
-        await service.SetEnabledAsync(automation.ReleaseFolderAutomationId, !automation.IsEnabled);
+        await operationRunner.RunAsync(
+            (ReleaseFolderAutomationService service) =>
+                service.SetEnabledAsync(automation.ReleaseFolderAutomationId, !automation.IsEnabled)
+        );
         await LoadAutomationsAsync();
     }
 
@@ -126,8 +130,10 @@ public partial class ReleaseFolderAutomationsPage(
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<ReleaseFolderAutomationService>();
-        await service.DeleteAsync(automation.ReleaseFolderAutomationId);
+        await operationRunner.RunAsync(
+            (ReleaseFolderAutomationService service) =>
+                service.DeleteAsync(automation.ReleaseFolderAutomationId)
+        );
         await LoadAutomationsAsync();
     }
 }

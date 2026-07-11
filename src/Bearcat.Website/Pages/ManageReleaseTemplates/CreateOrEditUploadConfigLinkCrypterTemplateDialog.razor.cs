@@ -3,17 +3,17 @@ using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleaseTemplates;
 
 public partial class CreateOrEditUploadConfigLinkCrypterTemplateDialog(
-    ILinkCrypterRegistrationReadRepository linkCrypterReadRepository
-) : OwningComponentBase
+    IScopedOperationRunner operationRunner
+) : ComponentBase
 {
     [Parameter]
     public UploadConfigLinkCrypterTemplateFormModel FormModel { get; set; } = null!;
@@ -46,17 +46,19 @@ public partial class CreateOrEditUploadConfigLinkCrypterTemplateDialog(
     private bool CanUseClickAndLoad =>
         SelectedLinkCrypterRegistration?.SupportsClickAndLoad is true;
 
-    private IEnumerable<SelectOption<int?>> LinkCrypterOptions =>
+    private IReadOnlyList<SelectOption<int?>> LinkCrypterOptions =>
         linkCrypterRegistrations
             .OrderBy(linkCrypter => linkCrypter.Name)
             .Select(linkCrypter => new SelectOption<int?>(
                 linkCrypter.LinkCrypterRegistrationId,
                 linkCrypter.Name
-            ));
+            ))
+            .ToList();
 
-    private IEnumerable<SelectOption<LinkCrypterContainerScope>> ContainerScopeOptions =>
+    private IReadOnlyList<SelectOption<LinkCrypterContainerScope>> ContainerScopeOptions =>
         Enum.GetValues<LinkCrypterContainerScope>()
-            .Select(scope => new SelectOption<LinkCrypterContainerScope>(scope, L.Localize(scope)));
+            .Select(scope => new SelectOption<LinkCrypterContainerScope>(scope, L.Localize(scope)))
+            .ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -65,27 +67,29 @@ public partial class CreateOrEditUploadConfigLinkCrypterTemplateDialog(
         editContext.OnValidationRequested += HandleValidationRequested;
         isEdit = UploadConfigLinkCrypterTemplateId is not null;
 
-        linkCrypterRegistrations = await linkCrypterReadRepository.GetAllAsync();
+        linkCrypterRegistrations = await operationRunner.RunAsync(
+            (ILinkCrypterRegistrationReadRepository repository) => repository.GetAllAsync()
+        );
         isInitialized = true;
     }
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
+        await operationRunner.RunAsync<ReleaseTemplateService>(async service =>
+        {
+            if (isEdit)
+            {
+                await service.UpdateUploadConfigLinkCrypterTemplateAsync(
+                    UploadConfigLinkCrypterTemplateId!.Value,
+                    FormModel.Password,
+                    CanUseCaptcha && FormModel.EnableCaptcha,
+                    CanUseContainerDownload && FormModel.EnableContainerDownload,
+                    CanUseClickAndLoad && FormModel.EnableClickAndLoad,
+                    FormModel.ContainerScope
+                );
+                return;
+            }
 
-        if (isEdit)
-        {
-            await service.UpdateUploadConfigLinkCrypterTemplateAsync(
-                UploadConfigLinkCrypterTemplateId!.Value,
-                FormModel.Password,
-                CanUseCaptcha && FormModel.EnableCaptcha,
-                CanUseContainerDownload && FormModel.EnableContainerDownload,
-                CanUseClickAndLoad && FormModel.EnableClickAndLoad,
-                FormModel.ContainerScope
-            );
-        }
-        else
-        {
             await service.CreateUploadConfigLinkCrypterTemplateAsync(
                 UploadConfigTemplateId,
                 FormModel.LinkCrypterRegistrationId!.Value,
@@ -95,7 +99,7 @@ public partial class CreateOrEditUploadConfigLinkCrypterTemplateDialog(
                 CanUseClickAndLoad && FormModel.EnableClickAndLoad,
                 FormModel.ContainerScope
             );
-        }
+        });
 
         await DialogRef.CloseAsync(DialogResult.Ok());
     }

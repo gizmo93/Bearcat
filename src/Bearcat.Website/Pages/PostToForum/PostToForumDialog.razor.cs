@@ -9,18 +9,14 @@ using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManagePostedLocations;
 using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.PostToForum;
 
-public partial class PostToForumDialog(
-    IDistributionSiteRegistrationReadRepository registrationReadRepository,
-    IForumPostTemplateReadRepository templateReadRepository,
-    ForumPostRenderService renderService
-) : OwningComponentBase
+public partial class PostToForumDialog(IScopedOperationRunner operationRunner) : ComponentBase
 {
     [Parameter]
     public int EntityId { get; set; }
@@ -49,8 +45,6 @@ public partial class PostToForumDialog(
     private bool isBusy;
     private string? errorMessage;
 
-    private DistributionSiteSessionService sessionService = null!;
-
     private IReadOnlyList<DistributionSiteRegistrationReadModel> registrations = [];
     private int selectedRegistrationId;
 
@@ -67,7 +61,7 @@ public partial class PostToForumDialog(
     private IReadOnlyList<string> renderErrors = [];
 
     private IReadOnlyList<ThreadPrefix> prefixes = [];
-    private IEnumerable<string> selectedPrefixIds = new List<string>();
+    private IReadOnlyList<string> selectedPrefixIds = [];
 
     private PreparedDraft? preparedDraft;
 
@@ -80,35 +74,38 @@ public partial class PostToForumDialog(
 
     private bool IsCollection => TemplateType == ForumPostTemplateType.ReleaseCollection;
 
-    private IEnumerable<SelectOption<int>> RegistrationOptions =>
-        registrations.Select(registration => new SelectOption<int>(
-            registration.DistributionSiteRegistrationId,
-            $"{registration.Name} ({registration.DistributionSiteName})"
-        ));
+    private IReadOnlyList<SelectOption<int>> RegistrationOptions =>
+        registrations
+            .Select(registration => new SelectOption<int>(
+                registration.DistributionSiteRegistrationId,
+                $"{registration.Name} ({registration.DistributionSiteName})"
+            ))
+            .ToList();
 
-    private IEnumerable<SelectOption<string>> TargetOptions =>
-        targets.Select(target => new SelectOption<string>(target.Id, target.Label));
+    private IReadOnlyList<SelectOption<string>> TargetOptions =>
+        targets.Select(target => new SelectOption<string>(target.Id, target.Label)).ToList();
 
-    private IEnumerable<SelectOption<string>> ThreadOptions =>
-        new[] { new SelectOption<string>(NewThreadValue, L["StartNewThread"]) }.Concat(
-            existingThreads.Select(thread => new SelectOption<string>(thread.Url, thread.Title))
-        );
+    private IReadOnlyList<SelectOption<string>> ThreadOptions =>
+        [
+            new(NewThreadValue, L["StartNewThread"]),
+            .. existingThreads.Select(thread => new SelectOption<string>(thread.Url, thread.Title)),
+        ];
 
-    private IEnumerable<SelectOption<int>> TemplateOptions =>
-        templates.Select(template => new SelectOption<int>(
-            template.ForumPostTemplateId,
-            template.Name
-        ));
+    private IReadOnlyList<SelectOption<int>> TemplateOptions =>
+        templates
+            .Select(template => new SelectOption<int>(template.ForumPostTemplateId, template.Name))
+            .ToList();
 
-    private IEnumerable<SelectOption<string>> PrefixOptions =>
-        prefixes.Select(prefix => new SelectOption<string>(prefix.Id, prefix.Label));
+    private IReadOnlyList<SelectOption<string>> PrefixOptions =>
+        prefixes.Select(prefix => new SelectOption<string>(prefix.Id, prefix.Label)).ToList();
 
     protected override async Task OnInitializedAsync()
     {
-        sessionService = ScopedServices.GetRequiredService<DistributionSiteSessionService>();
         postName = EntityName;
 
-        var all = await registrationReadRepository.GetAllAsync();
+        var all = await operationRunner.RunAsync(
+            (IDistributionSiteRegistrationReadRepository repository) => repository.GetAllAsync()
+        );
         var forums = all.Where(registration =>
                 registration.Kind == DistributionSiteKind.Forum && registration.IsActive
             )
@@ -125,20 +122,26 @@ public partial class PostToForumDialog(
     > OrderByPostingHistoryAsync(List<DistributionSiteRegistrationReadModel> forums)
     {
         var postedHosts = await GetPostedHostsAsync();
-        var factory = ScopedServices.GetRequiredService<IDistributionSiteFactory>();
-
-        return forums
-            .OrderBy(registration => HasAlreadyPosted(registration, factory, postedHosts) ? 1 : 0)
-            .ThenBy(registration => registration.Name, StringComparer.OrdinalIgnoreCase)
-            .ToList();
+        return operationRunner.Run(
+            (IDistributionSiteFactory factory) =>
+                (IReadOnlyList<DistributionSiteRegistrationReadModel>)
+                    forums
+                        .OrderBy(registration =>
+                            HasAlreadyPosted(registration, factory, postedHosts) ? 1 : 0
+                        )
+                        .ThenBy(registration => registration.Name, StringComparer.OrdinalIgnoreCase)
+                        .ToList()
+        );
     }
 
     private async Task<HashSet<string>> GetPostedHostsAsync()
     {
-        var readRepository = ScopedServices.GetRequiredService<IPostedLocationReadRepository>();
-        var locations = IsCollection
-            ? await readRepository.GetForCollectionAsync(EntityId)
-            : await readRepository.GetForReleaseAsync(EntityId);
+        var locations = await operationRunner.RunAsync(
+            (IPostedLocationReadRepository repository) =>
+                IsCollection
+                    ? repository.GetForCollectionAsync(EntityId)
+                    : repository.GetForReleaseAsync(EntityId)
+        );
 
         var hosts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var location in locations)
@@ -171,7 +174,10 @@ public partial class PostToForumDialog(
     {
         await RunBusyAsync(async () =>
         {
-            var hierarchy = await sessionService.GetTargetHierarchyAsync(selectedRegistrationId);
+            var hierarchy = await operationRunner.RunAsync(
+                (DistributionSiteSessionService service) =>
+                    service.GetTargetHierarchyAsync(selectedRegistrationId)
+            );
             var flattened = new List<FlatForumTarget>();
             Flatten(hierarchy, ancestors: [], flattened);
             targets = flattened;
@@ -195,10 +201,13 @@ public partial class PostToForumDialog(
 
         await RunBusyAsync(async () =>
         {
-            existingThreads = await sessionService.FindExistingThreadsAsync(
-                registrationId: selectedRegistrationId,
-                target: new ForumTargetId(selectedTargetId),
-                releaseName: postName
+            existingThreads = await operationRunner.RunAsync(
+                (DistributionSiteSessionService service) =>
+                    service.FindExistingThreadsAsync(
+                        registrationId: selectedRegistrationId,
+                        target: new ForumTargetId(selectedTargetId),
+                        releaseName: postName
+                    )
             );
             threadSelection = existingThreads.FirstOrDefault()?.Url ?? NewThreadValue;
             step = WizardStep.Thread;
@@ -209,16 +218,22 @@ public partial class PostToForumDialog(
     {
         await RunBusyAsync(async () =>
         {
-            templates = await templateReadRepository.GetAllAsync(TemplateType);
+            templates = await operationRunner.RunAsync(
+                (IForumPostTemplateReadRepository repository) =>
+                    repository.GetAllAsync(TemplateType)
+            );
             selectedTemplateId = templates.FirstOrDefault()?.ForumPostTemplateId ?? 0;
 
             if (IsNewThread)
             {
-                prefixes = await sessionService.GetThreadPrefixesAsync(
-                    registrationId: selectedRegistrationId,
-                    target: new ForumTargetId(selectedTargetId!)
+                prefixes = await operationRunner.RunAsync(
+                    (DistributionSiteSessionService service) =>
+                        service.GetThreadPrefixesAsync(
+                            registrationId: selectedRegistrationId,
+                            target: new ForumTargetId(selectedTargetId!)
+                        )
                 );
-                selectedPrefixIds = new List<string>();
+                selectedPrefixIds = [];
             }
             else
             {
@@ -251,7 +266,10 @@ public partial class PostToForumDialog(
 
         try
         {
-            var result = await renderService.RenderAsync(EntityId, selectedTemplateId);
+            var result = await operationRunner.RunAsync(
+                (ForumPostRenderService service) =>
+                    service.RenderAsync(EntityId, selectedTemplateId)
+            );
             body = result.Content;
             renderErrors = result.Errors;
         }
@@ -277,19 +295,24 @@ public partial class PostToForumDialog(
 
         await RunBusyAsync(async () =>
         {
-            preparedDraft = IsNewThread
-                ? await sessionService.PrepareNewThreadDraftAsync(
-                    registrationId: selectedRegistrationId,
-                    target: new ForumTargetId(selectedTargetId!),
-                    title: postName,
-                    prefixIds: selectedPrefixIds.ToList(),
-                    body: body
-                )
-                : await sessionService.PrepareReplyDraftAsync(
-                    registrationId: selectedRegistrationId,
-                    threadUrl: threadSelection,
-                    body: body
-                );
+            preparedDraft = await operationRunner.RunAsync<
+                DistributionSiteSessionService,
+                PreparedDraft
+            >(service =>
+                IsNewThread
+                    ? service.PrepareNewThreadDraftAsync(
+                        registrationId: selectedRegistrationId,
+                        target: new ForumTargetId(selectedTargetId!),
+                        title: postName,
+                        prefixIds: selectedPrefixIds,
+                        body: body
+                    )
+                    : service.PrepareReplyDraftAsync(
+                        registrationId: selectedRegistrationId,
+                        threadUrl: threadSelection,
+                        body: body
+                    )
+            );
 
             step = WizardStep.Done;
         });
@@ -302,12 +325,15 @@ public partial class PostToForumDialog(
 
         try
         {
-            var url = await sessionService.ResolvePostedUrlAsync(
-                registrationId: selectedRegistrationId,
-                target: new ForumTargetId(selectedTargetId ?? string.Empty),
-                isNewThread: IsNewThread,
-                threadUrl: IsNewThread ? string.Empty : threadSelection,
-                title: postName
+            var url = await operationRunner.RunAsync(
+                (DistributionSiteSessionService service) =>
+                    service.ResolvePostedUrlAsync(
+                        registrationId: selectedRegistrationId,
+                        target: new ForumTargetId(selectedTargetId ?? string.Empty),
+                        isNewThread: IsNewThread,
+                        threadUrl: IsNewThread ? string.Empty : threadSelection,
+                        title: postName
+                    )
             );
 
             if (url is not null)
@@ -343,16 +369,16 @@ public partial class PostToForumDialog(
 
     private async Task SavePostedLocationAsync(string url)
     {
-        var service = ScopedServices.GetRequiredService<PostedLocationService>();
+        await operationRunner.RunAsync<PostedLocationService>(async service =>
+        {
+            if (IsCollection)
+            {
+                await service.AddForCollectionAsync(EntityId, url);
+                return;
+            }
 
-        if (IsCollection)
-        {
-            await service.AddForCollectionAsync(EntityId, url);
-        }
-        else
-        {
             await service.AddForReleaseAsync(EntityId, url);
-        }
+        });
 
         savedPostUrl = url.Trim();
         postRecorded = true;

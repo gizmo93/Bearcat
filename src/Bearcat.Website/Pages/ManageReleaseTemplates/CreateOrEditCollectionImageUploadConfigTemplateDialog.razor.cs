@@ -1,16 +1,16 @@
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleaseTemplates;
 
 public partial class CreateOrEditCollectionImageUploadConfigTemplateDialog(
-    IImageUploadConfigReadRepository imageUploadConfigReadRepository
-) : OwningComponentBase
+    IScopedOperationRunner operationRunner
+) : ComponentBase
 {
     [Parameter]
     public ImageUploadConfigTemplateFormModel FormModel { get; set; } = null!;
@@ -31,15 +31,18 @@ public partial class CreateOrEditCollectionImageUploadConfigTemplateDialog(
 
     private bool IsEdit => CollectionImageUploadConfigTemplateId is not null;
 
-    private IEnumerable<SelectOption<int?>> ImageHosterRegistrationOptions =>
+    private IReadOnlyList<SelectOption<int?>> ImageHosterRegistrationOptions =>
         imageHosterRegistrationOptions
             .OrderBy(kvp => kvp.Value)
-            .Select(kvp => new SelectOption<int?>(kvp.Key, kvp.Value));
+            .Select(kvp => new SelectOption<int?>(kvp.Key, kvp.Value))
+            .ToList();
 
     protected override async Task OnInitializedAsync()
     {
-        imageHosterRegistrationOptions =
-            await imageUploadConfigReadRepository.GetImageHosterRegistrationOptionsAsync();
+        imageHosterRegistrationOptions = await operationRunner.RunAsync(
+            (IImageUploadConfigReadRepository repository) =>
+                repository.GetImageHosterRegistrationOptionsAsync()
+        );
         editContext = new EditContext(FormModel);
         messageStore = new ValidationMessageStore(editContext);
         editContext.OnValidationRequested += HandleValidationRequested;
@@ -48,24 +51,24 @@ public partial class CreateOrEditCollectionImageUploadConfigTemplateDialog(
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
+        await operationRunner.RunAsync<ReleaseTemplateService>(async service =>
+        {
+            if (IsEdit)
+            {
+                await service.UpdateCollectionImageUploadConfigTemplateAsync(
+                    CollectionImageUploadConfigTemplateId!.Value,
+                    FormModel.Name,
+                    FormModel.ImageHosterRegistrationId!.Value
+                );
+                return;
+            }
 
-        if (IsEdit)
-        {
-            await service.UpdateCollectionImageUploadConfigTemplateAsync(
-                CollectionImageUploadConfigTemplateId!.Value,
-                FormModel.Name,
-                FormModel.ImageHosterRegistrationId!.Value
-            );
-        }
-        else
-        {
             await service.CreateCollectionImageUploadConfigTemplateAsync(
                 ReleaseTemplateId,
                 FormModel.Name,
                 FormModel.ImageHosterRegistrationId!.Value
             );
-        }
+        });
 
         await DialogRef.CloseAsync(DialogResult.Ok());
     }

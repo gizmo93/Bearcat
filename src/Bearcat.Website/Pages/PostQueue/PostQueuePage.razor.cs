@@ -27,9 +27,9 @@ public partial class PostQueuePage(
 
     protected override async Task OnInitializedAsync()
     {
-        enabled = await operationRunner.RunAsync(
+        enabled = operationRunner.Run(
             (IApplicationConfigurationProvider configuration) =>
-                Task.FromResult(configuration.GetValue<PostQueueConfiguration>(c => c.Enabled))
+                configuration.GetValue<PostQueueConfiguration>(c => c.Enabled)
         );
 
         if (!enabled)

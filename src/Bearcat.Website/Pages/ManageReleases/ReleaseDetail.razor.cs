@@ -8,7 +8,6 @@ using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace Bearcat.Website.Pages.ManageReleases;
@@ -19,7 +18,7 @@ public partial class ReleaseDetail(
     ToastService toastService,
     IScopedOperationRunner operationRunner,
     IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig
-) : OwningComponentBase
+) : ComponentBase
 {
     [Parameter]
     public int ReleaseId { get; set; }
@@ -36,7 +35,6 @@ public partial class ReleaseDetail(
     [SupplyParameterFromQuery(Name = "workflow")]
     public string? Workflow { get; set; }
 
-    private IReleaseReadRepository releaseReadRepository = null!;
     private ReleaseReadModel release = null!;
     private IReadOnlyList<string> unmanagedArchiveFolderPaths = [];
     private bool isInitialized;
@@ -47,11 +45,6 @@ public partial class ReleaseDetail(
 
     private bool IsPostQueueWorkflow =>
         string.Equals(Workflow, "postqueue", StringComparison.OrdinalIgnoreCase);
-
-    protected override void OnInitialized()
-    {
-        releaseReadRepository = ScopedServices.GetRequiredService<IReleaseReadRepository>();
-    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -65,7 +58,9 @@ public partial class ReleaseDetail(
 
     private async Task LoadReleaseAsync()
     {
-        var releaseReadModel = await releaseReadRepository.GetReleaseAsync(ReleaseId);
+        var releaseReadModel = await operationRunner.RunAsync(
+            (IReleaseReadRepository repository) => repository.GetReleaseAsync(ReleaseId)
+        );
 
         if (releaseReadModel is null)
         {
@@ -83,7 +78,10 @@ public partial class ReleaseDetail(
     {
         unmanagedArchiveFolderPaths =
             release.ReleaseType is ReleaseType.Unmanaged
-                ? await releaseReadRepository.GetUnmanagedArchiveFolderPathsAsync(release.ReleaseId)
+                ? await operationRunner.RunAsync(
+                    (IReleaseReadRepository repository) =>
+                        repository.GetUnmanagedArchiveFolderPathsAsync(release.ReleaseId)
+                )
                 : [];
     }
 
@@ -179,8 +177,9 @@ public partial class ReleaseDetail(
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<ReleaseService>();
-        await service.DeleteAsync(release.ReleaseId);
+        await operationRunner.RunAsync(
+            (ReleaseService service) => service.DeleteAsync(release.ReleaseId)
+        );
         navigationManager.NavigateTo("/releases");
     }
 
@@ -303,10 +302,9 @@ public partial class ReleaseDetail(
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
-        var releaseTemplateId = await service.CreateTemplateFromReleaseAsync(
-            release.ReleaseId,
-            result.Value
+        var releaseTemplateId = await operationRunner.RunAsync(
+            (ReleaseTemplateService service) =>
+                service.CreateTemplateFromReleaseAsync(release.ReleaseId, result.Value)
         );
 
         navigationManager.NavigateTo($"/release-templates/{releaseTemplateId}");
@@ -314,7 +312,9 @@ public partial class ReleaseDetail(
 
     private async Task ReloadReleaseAsync()
     {
-        var releaseReadModel = await releaseReadRepository.GetReleaseAsync(ReleaseId);
+        var releaseReadModel = await operationRunner.RunAsync(
+            (IReleaseReadRepository repository) => repository.GetReleaseAsync(ReleaseId)
+        );
 
         if (releaseReadModel is null)
         {

@@ -1,15 +1,17 @@
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageImageUploadConfigs.Repositories;
 using Bearcat.Website.Pages.ManageImageUploadConfigs;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleaseCollections;
 
-public partial class CreateOrEditCollectionImageUploadConfigDialog : OwningComponentBase
+public partial class CreateOrEditCollectionImageUploadConfigDialog(
+    IScopedOperationRunner operationRunner
+) : ComponentBase
 {
     [Parameter]
     public int ReleaseCollectionId { get; set; }
@@ -21,25 +23,25 @@ public partial class CreateOrEditCollectionImageUploadConfigDialog : OwningCompo
     public IDialogReference DialogRef { get; set; } = null!;
 
     private bool IsEdit => ImageUploadConfigId.HasValue;
-    private IImageUploadConfigReadRepository readRepository = null!;
     private ImageUploadConfigFormModel formModel = null!;
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
     private IReadOnlyDictionary<int, string> imageHosterRegistrationOptions = null!;
     private bool isInitialized;
 
-    private IEnumerable<SelectOption<int?>> ImageHosterRegistrationOptions =>
+    private IReadOnlyList<SelectOption<int?>> ImageHosterRegistrationOptions =>
         imageHosterRegistrationOptions
             .OrderBy(kvp => kvp.Value)
-            .Select(kvp => new SelectOption<int?>(kvp.Key, kvp.Value));
+            .Select(kvp => new SelectOption<int?>(kvp.Key, kvp.Value))
+            .ToList();
 
     protected override async Task OnInitializedAsync()
     {
-        readRepository = ScopedServices.GetRequiredService<IImageUploadConfigReadRepository>();
-
         await InitializeFormModelAsync();
-        imageHosterRegistrationOptions =
-            await readRepository.GetImageHosterRegistrationOptionsAsync();
+        imageHosterRegistrationOptions = await operationRunner.RunAsync(
+            (IImageUploadConfigReadRepository repository) =>
+                repository.GetImageHosterRegistrationOptionsAsync()
+        );
 
         editContext = new EditContext(formModel);
         messageStore = new ValidationMessageStore(editContext);
@@ -49,24 +51,24 @@ public partial class CreateOrEditCollectionImageUploadConfigDialog : OwningCompo
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<ImageUploadConfigService>();
+        await operationRunner.RunAsync<ImageUploadConfigService>(async service =>
+        {
+            if (IsEdit)
+            {
+                await service.UpdateAsync(
+                    ImageUploadConfigId!.Value,
+                    formModel.Name,
+                    formModel.ImageHosterRegistrationId!.Value
+                );
+                return;
+            }
 
-        if (IsEdit)
-        {
-            await service.UpdateAsync(
-                ImageUploadConfigId!.Value,
-                formModel.Name,
-                formModel.ImageHosterRegistrationId!.Value
-            );
-        }
-        else
-        {
             await service.CreateForCollectionAsync(
                 ReleaseCollectionId,
                 formModel.Name,
                 formModel.ImageHosterRegistrationId!.Value
             );
-        }
+        });
 
         await DialogRef.CloseAsync(DialogResult.Ok());
     }
@@ -92,7 +94,10 @@ public partial class CreateOrEditCollectionImageUploadConfigDialog : OwningCompo
             return;
         }
 
-        var config = await readRepository.GetReadModelByIdAsync(ImageUploadConfigId!.Value);
+        var config = await operationRunner.RunAsync(
+            (IImageUploadConfigReadRepository repository) =>
+                repository.GetReadModelByIdAsync(ImageUploadConfigId!.Value)
+        );
 
         formModel = new ImageUploadConfigFormModel
         {

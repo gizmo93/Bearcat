@@ -3,15 +3,16 @@ using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageUploadConfigs;
 
-public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
+public partial class CreateOrEditUploadConfigDialog(IScopedOperationRunner operationRunner)
+    : ComponentBase
 {
     [Parameter]
     public int ReleaseId { get; set; }
@@ -23,7 +24,6 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
     public IDialogReference DialogRef { get; set; } = null!;
 
     private bool IsEdit => UploadConfigId.HasValue;
-    private IUploadConfigReadRepository readRepository = null!;
     private UploadConfigFormModel formModel = null!;
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
@@ -31,11 +31,12 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
     private IReadOnlyList<ArchiveConfigOptionReadModel> archiveConfigOptions = [];
     private bool isInitialized;
 
-    private IEnumerable<SelectOption<int?>> HosterRegistrationOptions =>
+    private IReadOnlyList<SelectOption<int?>> HosterRegistrationOptions =>
         hosterRegistrations
             .Where(hoster => hoster.IsActive || hoster.Id == formModel.HosterRegistrationId)
             .OrderBy(hoster => hoster.Name)
-            .Select(hoster => new SelectOption<int?>(hoster.Id, hoster.Name));
+            .Select(hoster => new SelectOption<int?>(hoster.Id, hoster.Name))
+            .ToList();
 
     private HosterRegistrationReadModel? SelectedHosterRegistration =>
         formModel.HosterRegistrationId is null
@@ -56,13 +57,14 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        readRepository = ScopedServices.GetRequiredService<IUploadConfigReadRepository>();
-        var hosterReadRepository =
-            ScopedServices.GetRequiredService<IHosterConfigurationReadRepository>();
-
         await InitializeFormModelAsync();
-        hosterRegistrations = await hosterReadRepository.GetAllRegistrationsAsync();
-        archiveConfigOptions = await readRepository.GetArchiveConfigOptionsAsync(ReleaseId);
+        hosterRegistrations = await operationRunner.RunAsync(
+            (IHosterConfigurationReadRepository repository) => repository.GetAllRegistrationsAsync()
+        );
+        archiveConfigOptions = await operationRunner.RunAsync(
+            (IUploadConfigReadRepository repository) =>
+                repository.GetArchiveConfigOptionsAsync(ReleaseId)
+        );
         ResetPremiumOnlyDownloadIfUnsupported();
 
         editContext = new EditContext(formModel);
@@ -73,20 +75,20 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<UploadConfigService>();
+        await operationRunner.RunAsync<UploadConfigService>(async service =>
+        {
+            if (IsEdit)
+            {
+                await service.UpdateAsync(
+                    uploadConfigId: UploadConfigId!.Value,
+                    name: formModel.Name!,
+                    hosterRegistrationId: formModel.HosterRegistrationId!.Value,
+                    archiveConfigId: formModel.ArchiveConfigId!.Value,
+                    premiumOnlyDownload: CanUsePremiumOnlyDownload && formModel.PremiumOnlyDownload
+                );
+                return;
+            }
 
-        if (IsEdit)
-        {
-            await service.UpdateAsync(
-                uploadConfigId: UploadConfigId!.Value,
-                name: formModel.Name!,
-                hosterRegistrationId: formModel.HosterRegistrationId!.Value,
-                archiveConfigId: formModel.ArchiveConfigId!.Value,
-                premiumOnlyDownload: CanUsePremiumOnlyDownload && formModel.PremiumOnlyDownload
-            );
-        }
-        else
-        {
             await service.CreateAsync(
                 releaseId: ReleaseId,
                 name: formModel.Name!,
@@ -94,7 +96,7 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
                 archiveConfigId: formModel.ArchiveConfigId!.Value,
                 premiumOnlyDownload: CanUsePremiumOnlyDownload && formModel.PremiumOnlyDownload
             );
-        }
+        });
 
         await DialogRef.CloseAsync(DialogResult.Ok());
     }
@@ -159,7 +161,10 @@ public partial class CreateOrEditUploadConfigDialog : OwningComponentBase
             return;
         }
 
-        var uploadConfig = await readRepository.GetReadModelByIdAsync(UploadConfigId!.Value);
+        var uploadConfig = await operationRunner.RunAsync(
+            (IUploadConfigReadRepository repository) =>
+                repository.GetReadModelByIdAsync(UploadConfigId!.Value)
+        );
 
         formModel = new UploadConfigFormModel
         {

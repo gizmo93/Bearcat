@@ -2,32 +2,34 @@ using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.UseCases.ManageMediaDatabases;
 using Bearcat.Domain.UseCases.ManageMediaDatabases.ReadModels;
 using Bearcat.Domain.UseCases.ManageMediaDatabases.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageMediaDatabases;
 
 public partial class AllMediaDatabasesPage(
-    IMediaDatabaseRegistrationReadRepository readRepository,
-    IMediaMetadataDatabaseFactory metadataDatabaseFactory,
     DialogService dialogService,
-    ToastService toastService
+    ToastService toastService,
+    IScopedOperationRunner operationRunner
 )
 {
     private IReadOnlyList<MediaDatabaseRegistrationReadModel> registrations = [];
-    private MediaDatabaseRegistrationService service = null!;
-    private bool CanAddRegistration =>
-        registrations.Count < metadataDatabaseFactory.GetDatabases().Count;
+    private int availableDatabaseCount;
+    private bool CanAddRegistration => registrations.Count < availableDatabaseCount;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadRegistrationsAsync();
-        service = ScopedServices.GetRequiredService<MediaDatabaseRegistrationService>();
+        availableDatabaseCount = operationRunner.Run(
+            (IMediaMetadataDatabaseFactory factory) => factory.GetDatabases().Count
+        );
     }
 
     private async Task LoadRegistrationsAsync()
     {
-        registrations = await readRepository.GetAllAsync();
+        registrations = await operationRunner.RunAsync(
+            (IMediaDatabaseRegistrationReadRepository repository) => repository.GetAllAsync()
+        );
     }
 
     private async Task ShowAddDialogAsync()
@@ -76,7 +78,9 @@ public partial class AllMediaDatabasesPage(
 
     private async Task TryLoginAsync(MediaDatabaseRegistrationReadModel registration)
     {
-        var result = await service.TryLoginAsync(registration.Id);
+        var result = await operationRunner.RunAsync(
+            (MediaDatabaseRegistrationService service) => service.TryLoginAsync(registration.Id)
+        );
 
         if (result.IsSuccess)
         {
@@ -91,7 +95,10 @@ public partial class AllMediaDatabasesPage(
 
     private async Task ToggleIsActiveAsync(MediaDatabaseRegistrationReadModel registration)
     {
-        await service.ToggleIsActiveAsync(registration.Id);
+        await operationRunner.RunAsync(
+            (MediaDatabaseRegistrationService service) =>
+                service.ToggleIsActiveAsync(registration.Id)
+        );
 
         toastService.Success(
             registration.IsActive
@@ -119,7 +126,9 @@ public partial class AllMediaDatabasesPage(
             return;
         }
 
-        await service.DeleteAsync(registration.Id);
+        await operationRunner.RunAsync(
+            (MediaDatabaseRegistrationService service) => service.DeleteAsync(registration.Id)
+        );
         await LoadRegistrationsAsync();
     }
 }

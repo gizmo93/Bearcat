@@ -3,18 +3,17 @@ using Bearcat.Domain.UseCases.ManageBackgroundTasks;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks.ReadModels;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageBackgroundTasks;
 
 public partial class BackgroundTasksPage(
-    IBackgroundTaskStateReadRepository readRepository,
-    ToastService toastService
+    ToastService toastService,
+    IScopedOperationRunner operationRunner
 )
 {
-    private BackgroundTaskStateService backgroundTaskStateService = null!;
     private IReadOnlyList<BackgroundTaskStateReadModel> backgroundTasks = [];
     private bool isLoading;
 
@@ -33,8 +32,6 @@ public partial class BackgroundTasksPage(
 
     protected override async Task OnInitializedAsync()
     {
-        backgroundTaskStateService =
-            ScopedServices.GetRequiredService<BackgroundTaskStateService>();
         await LoadAsync();
     }
 
@@ -44,7 +41,10 @@ public partial class BackgroundTasksPage(
 
         try
         {
-            backgroundTasks = await readRepository.GetAllAsync(CancellationToken.None);
+            backgroundTasks = await operationRunner.RunAsync(
+                (IBackgroundTaskStateReadRepository repository) =>
+                    repository.GetAllAsync(CancellationToken.None)
+            );
         }
         finally
         {
@@ -59,10 +59,9 @@ public partial class BackgroundTasksPage(
 
     private async Task SetIsEnabledAsync(BackgroundTaskStateReadModel task, bool isEnabled)
     {
-        await backgroundTaskStateService.SetIsEnabledAsync(
-            task.Id,
-            isEnabled,
-            CancellationToken.None
+        await operationRunner.RunAsync(
+            (BackgroundTaskStateService service) =>
+                service.SetIsEnabledAsync(task.Id, isEnabled, CancellationToken.None)
         );
 
         toastService.Success(
@@ -123,10 +122,9 @@ public partial class BackgroundTasksPage(
             return;
         }
 
-        await backgroundTaskStateService.SetIntervalOverrideAsync(
-            editingTask.Id,
-            interval,
-            CancellationToken.None
+        await operationRunner.RunAsync(
+            (BackgroundTaskStateService service) =>
+                service.SetIntervalOverrideAsync(editingTask.Id, interval, CancellationToken.None)
         );
 
         toastService.Success(L["IntervalUpdated", editingTask.DisplayName]);
@@ -141,10 +139,9 @@ public partial class BackgroundTasksPage(
             return;
         }
 
-        await backgroundTaskStateService.SetIntervalOverrideAsync(
-            editingTask.Id,
-            null,
-            CancellationToken.None
+        await operationRunner.RunAsync(
+            (BackgroundTaskStateService service) =>
+                service.SetIntervalOverrideAsync(editingTask.Id, null, CancellationToken.None)
         );
 
         toastService.Success(L["IntervalResetToDefault", editingTask.DisplayName]);

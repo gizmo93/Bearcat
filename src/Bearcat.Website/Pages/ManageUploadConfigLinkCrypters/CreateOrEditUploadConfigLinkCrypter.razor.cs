@@ -1,14 +1,15 @@
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageUploadConfigLinkCrypters;
 
-public partial class CreateOrEditUploadConfigLinkCrypter : OwningComponentBase
+public partial class CreateOrEditUploadConfigLinkCrypter(IScopedOperationRunner operationRunner)
+    : ComponentBase
 {
     [Parameter]
     public int UploadConfigId { get; set; }
@@ -27,7 +28,6 @@ public partial class CreateOrEditUploadConfigLinkCrypter : OwningComponentBase
     private FormModel formModel = new();
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
-    private IUploadConfigLinkCrypterReadRepository readRepository = null!;
     private UploadConfigLinkCrypterReadModel? configReadModel;
 
     private bool IsEdit => UploadConfigLinkCrypterId.HasValue;
@@ -46,10 +46,10 @@ public partial class CreateOrEditUploadConfigLinkCrypter : OwningComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        readRepository =
-            ScopedServices.GetRequiredService<IUploadConfigLinkCrypterReadRepository>();
-
-        linkCrypterOptions = await readRepository.GetLinkCrypterOptionsAsync();
+        linkCrypterOptions = await operationRunner.RunAsync(
+            (IUploadConfigLinkCrypterReadRepository repository) =>
+                repository.GetLinkCrypterOptionsAsync()
+        );
         await InitializeFormModelAsync();
 
         editContext = new EditContext(formModel);
@@ -61,19 +61,20 @@ public partial class CreateOrEditUploadConfigLinkCrypter : OwningComponentBase
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<UploadConfigLinkCrypterService>();
-        if (IsEdit)
+        await operationRunner.RunAsync<UploadConfigLinkCrypterService>(async service =>
         {
-            await service.UpdateAsync(
-                UploadConfigLinkCrypterId!.Value,
-                formModel.Password,
-                CanUseCaptcha && formModel.EnableCaptcha,
-                CanUseContainerDownload && formModel.EnableContainerDownload,
-                CanUseClickAndLoad && formModel.EnableClickAndLoad
-            );
-        }
-        else
-        {
+            if (IsEdit)
+            {
+                await service.UpdateAsync(
+                    UploadConfigLinkCrypterId!.Value,
+                    formModel.Password,
+                    CanUseCaptcha && formModel.EnableCaptcha,
+                    CanUseContainerDownload && formModel.EnableContainerDownload,
+                    CanUseClickAndLoad && formModel.EnableClickAndLoad
+                );
+                return;
+            }
+
             await service.CreateAsync(
                 uploadConfigId: UploadConfigId,
                 linkCrypterRegistrationId: formModel.LinkCrypterRegistrationId!.Value,
@@ -83,7 +84,7 @@ public partial class CreateOrEditUploadConfigLinkCrypter : OwningComponentBase
                     && formModel.EnableContainerDownload,
                 enableClickAndLoad: CanUseClickAndLoad && formModel.EnableClickAndLoad
             );
-        }
+        });
 
         await DialogRef.CloseAsync(DialogResult.Ok());
     }
@@ -116,7 +117,10 @@ public partial class CreateOrEditUploadConfigLinkCrypter : OwningComponentBase
             return;
         }
 
-        configReadModel = await readRepository.GetByIdAsync(UploadConfigLinkCrypterId!.Value);
+        configReadModel = await operationRunner.RunAsync(
+            (IUploadConfigLinkCrypterReadRepository repository) =>
+                repository.GetByIdAsync(UploadConfigLinkCrypterId!.Value)
+        );
 
         if (
             linkCrypterOptions.All(option =>

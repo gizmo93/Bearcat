@@ -3,30 +3,27 @@ using Bearcat.Domain.UseCases.ManageDistributionSites.ReadModels;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageDistributionSites;
 
 public partial class AllDistributionSitesPage(
-    IDistributionSiteRegistrationReadRepository readRepository,
     DialogService dialogService,
     ToastService toastService,
     IScopedOperationRunner operationRunner
 )
 {
     private IReadOnlyList<DistributionSiteRegistrationReadModel> distributionSites = [];
-    private DistributionSiteRegistrationService registrationService = null!;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadDistributionSitesAsync();
-        registrationService =
-            ScopedServices.GetRequiredService<DistributionSiteRegistrationService>();
     }
 
     private async Task LoadDistributionSitesAsync()
     {
-        distributionSites = await readRepository.GetAllAsync();
+        distributionSites = await operationRunner.RunAsync(
+            (IDistributionSiteRegistrationReadRepository repository) => repository.GetAllAsync()
+        );
     }
 
     private async Task ShowAddDialogAsync()
@@ -76,8 +73,9 @@ public partial class AllDistributionSitesPage(
 
     private async Task ToggleIsActiveAsync(DistributionSiteRegistrationReadModel distributionSite)
     {
-        await registrationService.ToggleIsActiveAsync(
-            distributionSite.DistributionSiteRegistrationId
+        await operationRunner.RunAsync(
+            (DistributionSiteRegistrationService service) =>
+                service.ToggleIsActiveAsync(distributionSite.DistributionSiteRegistrationId)
         );
 
         toastService.Success(
@@ -106,7 +104,10 @@ public partial class AllDistributionSitesPage(
             return;
         }
 
-        await registrationService.DeleteAsync(distributionSite.DistributionSiteRegistrationId);
+        await operationRunner.RunAsync(
+            (DistributionSiteRegistrationService service) =>
+                service.DeleteAsync(distributionSite.DistributionSiteRegistrationId)
+        );
         await LoadDistributionSitesAsync();
     }
 

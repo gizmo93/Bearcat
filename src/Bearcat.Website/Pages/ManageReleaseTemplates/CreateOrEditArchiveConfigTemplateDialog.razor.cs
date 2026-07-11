@@ -1,19 +1,19 @@
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace Bearcat.Website.Pages.ManageReleaseTemplates;
 
 public partial class CreateOrEditArchiveConfigTemplateDialog(
-    IArchiverFactory archiverFactory,
     IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig,
-    DialogService dialogService
-) : OwningComponentBase
+    DialogService dialogService,
+    IScopedOperationRunner operationRunner
+) : ComponentBase
 {
     [Parameter]
     public ArchiveConfigTemplateFormModel FormModel { get; set; } = null!;
@@ -37,7 +37,7 @@ public partial class CreateOrEditArchiveConfigTemplateDialog(
 
     protected override void OnInitialized()
     {
-        archivers = archiverFactory.GetArchivers();
+        archivers = operationRunner.Run((IArchiverFactory factory) => factory.GetArchivers());
         editContext = new EditContext(FormModel);
         messageStore = new ValidationMessageStore(editContext);
         editContext.OnValidationRequested += HandleValidationRequested;
@@ -56,22 +56,22 @@ public partial class CreateOrEditArchiveConfigTemplateDialog(
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
+        await operationRunner.RunAsync<ReleaseTemplateService>(async service =>
+        {
+            if (isEdit)
+            {
+                await service.UpdateArchiveConfigTemplateAsync(
+                    ArchiveConfigTemplateId!.Value,
+                    FormModel.Name,
+                    FormModel.ArchiveFilesBasePath,
+                    FormModel.ArchiverName!,
+                    FormModel.ArchivePassword,
+                    FormModel.ArchiveFileSizeMb,
+                    FormModel.UseReleaseNameAsArchiveName
+                );
+                return;
+            }
 
-        if (isEdit)
-        {
-            await service.UpdateArchiveConfigTemplateAsync(
-                ArchiveConfigTemplateId!.Value,
-                FormModel.Name,
-                FormModel.ArchiveFilesBasePath,
-                FormModel.ArchiverName!,
-                FormModel.ArchivePassword,
-                FormModel.ArchiveFileSizeMb,
-                FormModel.UseReleaseNameAsArchiveName
-            );
-        }
-        else
-        {
             await service.CreateArchiveConfigTemplateAsync(
                 ReleaseTemplateId,
                 FormModel.Name,
@@ -81,7 +81,7 @@ public partial class CreateOrEditArchiveConfigTemplateDialog(
                 FormModel.ArchiveFileSizeMb,
                 FormModel.UseReleaseNameAsArchiveName
             );
-        }
+        });
 
         await DialogRef.CloseAsync(DialogResult.Ok());
     }

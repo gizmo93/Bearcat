@@ -1,4 +1,3 @@
-@inherits OwningComponentBase
 @using Bearcat.Domain.Shared.QualityGate
 
 <EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
@@ -30,7 +29,7 @@
 
             @foreach (var rule in rules)
             {
-                var descriptors = catalog.GetParameters(rule.RuleType);
+                var descriptors = parameterDescriptors[rule.RuleType];
 
                 <div class="space-y-3 rounded-md border border-border/70 p-3">
                     <div class="flex items-start gap-2">

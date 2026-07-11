@@ -2,14 +2,14 @@ using Bearcat.Abstractions.ImageHoster;
 using Bearcat.Abstractions.ImageHoster.Dto;
 using Bearcat.Domain.UseCases.ManageImageHosters;
 using Bearcat.Domain.UseCases.ManageImageHosters.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageImageHosters;
 
-public partial class CreateOrEditDialog
+public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
 {
     [Parameter]
     public int? ImageHosterRegistrationId { get; set; }
@@ -18,8 +18,6 @@ public partial class CreateOrEditDialog
     public IDialogReference DialogRef { get; set; } = null!;
 
     private bool IsEditMode => ImageHosterRegistrationId.HasValue;
-    private IImageHosterRegistrationReadRepository readRepository = null!;
-    private IImageHosterFactory imageHosterFactory = null!;
     private RegistrationFormModel formModel = new();
     private EditContext editContext = null!;
     private ValidationMessageStore validationMessageStore = null!;
@@ -31,12 +29,10 @@ public partial class CreateOrEditDialog
 
     protected override async Task OnInitializedAsync()
     {
-        readRepository =
-            ScopedServices.GetRequiredService<IImageHosterRegistrationReadRepository>();
-        imageHosterFactory = ScopedServices.GetRequiredService<IImageHosterFactory>();
-
         await InitializeFormModelAsync();
-        imageHosters = imageHosterFactory.GetImageHosters();
+        imageHosters = operationRunner.Run(
+            (IImageHosterFactory factory) => factory.GetImageHosters()
+        );
 
         editContext = new EditContext(formModel);
         editContext.OnValidationRequested += OnValidationRequested;
@@ -46,24 +42,24 @@ public partial class CreateOrEditDialog
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<ImageHosterService>();
+        await operationRunner.RunAsync<ImageHosterService>(async service =>
+        {
+            if (!IsEditMode)
+            {
+                await service.CreateAsync(
+                    name: formModel.Name!,
+                    className: formModel.ClassName!,
+                    configuration: formModel.Configuration
+                );
+                return;
+            }
 
-        if (!IsEditMode)
-        {
-            await service.CreateAsync(
-                name: formModel.Name!,
-                className: formModel.ClassName!,
-                configuration: formModel.Configuration
-            );
-        }
-        else
-        {
             await service.UpdateAsync(
                 id: ImageHosterRegistrationId!.Value,
                 name: formModel.Name!,
                 configuration: formModel.Configuration
             );
-        }
+        });
 
         await DialogRef.CloseAsync(DialogResult.Ok());
     }
@@ -110,7 +106,10 @@ public partial class CreateOrEditDialog
             return;
         }
 
-        var registration = await readRepository.GetByIdAsync(ImageHosterRegistrationId!.Value);
+        var registration = await operationRunner.RunAsync(
+            (IImageHosterRegistrationReadRepository repository) =>
+                repository.GetByIdAsync(ImageHosterRegistrationId!.Value)
+        );
 
         if (registration is null)
         {

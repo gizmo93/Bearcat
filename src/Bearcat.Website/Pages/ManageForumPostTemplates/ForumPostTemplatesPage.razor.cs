@@ -4,16 +4,15 @@ using Bearcat.Domain.UseCases.ManageForumPostTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 
 namespace Bearcat.Website.Pages.ManageForumPostTemplates;
 
 public partial class ForumPostTemplatesPage(
-    IForumPostTemplateReadRepository readRepository,
-    ForumPostTemplateService service,
-    ForumPostRenderService renderService,
-    DialogService dialogService
+    DialogService dialogService,
+    IScopedOperationRunner operationRunner
 )
 {
     private IReadOnlyList<ForumPostTemplateSummaryReadModel> templates = [];
@@ -26,9 +25,10 @@ public partial class ForumPostTemplatesPage(
     private bool variablesPanelOpen;
     private string variableSearchTerm = string.Empty;
 
-    private IEnumerable<SelectOption<ForumPostTemplateType>> TypeOptions =>
+    private IReadOnlyList<SelectOption<ForumPostTemplateType>> TypeOptions =>
         Enum.GetValues<ForumPostTemplateType>()
-            .Select(type => new SelectOption<ForumPostTemplateType>(type, GetTypeLabel(type)));
+            .Select(type => new SelectOption<ForumPostTemplateType>(type, GetTypeLabel(type)))
+            .ToList();
 
     private IReadOnlyList<ForumPostTemplateVariableReadModel> FilteredVariables
     {
@@ -60,7 +60,9 @@ public partial class ForumPostTemplatesPage(
 
         try
         {
-            templates = await readRepository.GetAllAsync();
+            templates = await operationRunner.RunAsync(
+                (IForumPostTemplateReadRepository repository) => repository.GetAllAsync()
+            );
             if (selectFirst && templates.Count > 0)
             {
                 await SelectTemplateAsync(templates[0].ForumPostTemplateId);
@@ -81,7 +83,10 @@ public partial class ForumPostTemplatesPage(
         errorMessage = null;
         validationResult = null;
 
-        var template = await readRepository.GetDetailAsync(forumPostTemplateId);
+        var template = await operationRunner.RunAsync(
+            (IForumPostTemplateReadRepository repository) =>
+                repository.GetDetailAsync(forumPostTemplateId)
+        );
         if (template is null)
         {
             return;
@@ -124,7 +129,9 @@ public partial class ForumPostTemplatesPage(
 
     private void ReloadVariables()
     {
-        variables = renderService.GetVariables(formModel.Type);
+        variables = operationRunner.Run(
+            (ForumPostRenderService service) => service.GetVariables(formModel.Type)
+        );
     }
 
     private Task ValidateAsync()
@@ -152,21 +159,23 @@ public partial class ForumPostTemplatesPage(
 
         if (formModel.ForumPostTemplateId is null)
         {
-            var templateId = await service.CreateAsync(
-                formModel.Name,
-                formModel.Type,
-                formModel.TemplateBody
+            var templateId = await operationRunner.RunAsync(
+                (ForumPostTemplateService service) =>
+                    service.CreateAsync(formModel.Name, formModel.Type, formModel.TemplateBody)
             );
             await LoadTemplatesAsync(selectFirst: false);
             await SelectTemplateAsync(templateId);
             return;
         }
 
-        await service.UpdateAsync(
-            formModel.ForumPostTemplateId.Value,
-            formModel.Name,
-            formModel.Type,
-            formModel.TemplateBody
+        await operationRunner.RunAsync(
+            (ForumPostTemplateService service) =>
+                service.UpdateAsync(
+                    formModel.ForumPostTemplateId.Value,
+                    formModel.Name,
+                    formModel.Type,
+                    formModel.TemplateBody
+                )
         );
         await LoadTemplatesAsync(selectFirst: false);
         await SelectTemplateAsync(formModel.ForumPostTemplateId.Value);
@@ -195,7 +204,10 @@ public partial class ForumPostTemplatesPage(
             return;
         }
 
-        await service.DeleteAsync(formModel.ForumPostTemplateId.Value);
+        await operationRunner.RunAsync(
+            (ForumPostTemplateService service) =>
+                service.DeleteAsync(formModel.ForumPostTemplateId.Value)
+        );
         await LoadTemplatesAsync(selectFirst: true);
     }
 

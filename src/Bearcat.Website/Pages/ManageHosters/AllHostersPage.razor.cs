@@ -3,29 +3,27 @@ using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageHosters;
 
 public partial class AllHostersPage(
-    IHosterConfigurationReadRepository readRepository,
     DialogService dialogService,
     ToastService toastService,
     IScopedOperationRunner operationRunner
 )
 {
     private IReadOnlyList<HosterRegistrationReadModel> hosters = [];
-    private HosterRegistrationService hosterRegistrationService = null!;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadHostersAsync();
-        hosterRegistrationService = ScopedServices.GetRequiredService<HosterRegistrationService>();
     }
 
     private async Task LoadHostersAsync()
     {
-        hosters = await readRepository.GetAllRegistrationsAsync();
+        hosters = await operationRunner.RunAsync(
+            (IHosterConfigurationReadRepository repository) => repository.GetAllRegistrationsAsync()
+        );
     }
 
     private async Task ShowAddDialogAsync()
@@ -87,7 +85,9 @@ public partial class AllHostersPage(
 
     private async Task ToggleIsActiveAsync(HosterRegistrationReadModel hoster)
     {
-        await hosterRegistrationService.ToggleIsActiveAsync(hoster.Id);
+        await operationRunner.RunAsync(
+            (HosterRegistrationService service) => service.ToggleIsActiveAsync(hoster.Id)
+        );
 
         toastService.Success(
             hoster.IsActive
@@ -115,7 +115,9 @@ public partial class AllHostersPage(
             return;
         }
 
-        await hosterRegistrationService.RemoveAsync(hoster.Id);
+        await operationRunner.RunAsync(
+            (HosterRegistrationService service) => service.RemoveAsync(hoster.Id)
+        );
         await LoadHostersAsync();
     }
 

@@ -1,14 +1,14 @@
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Domain.UseCases.ManageLinkCrypters;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageLinkCrypters;
 
-public partial class CreateOrEditDialog
+public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
 {
     [Parameter]
     public int? LinkCrypterRegistrationId { get; set; }
@@ -17,8 +17,6 @@ public partial class CreateOrEditDialog
     public IDialogReference DialogRef { get; set; } = null!;
 
     private bool IsEditMode => LinkCrypterRegistrationId.HasValue;
-    private ILinkCrypterRegistrationReadRepository readRepository = null!;
-    private ILinkCrypterFactory linkCrypterFactory = null!;
     private RegistrationFormModel formModel = new();
     private EditContext editContext = null!;
     private ValidationMessageStore validationMessageStore = null!;
@@ -30,12 +28,8 @@ public partial class CreateOrEditDialog
 
     protected override async Task OnInitializedAsync()
     {
-        readRepository =
-            ScopedServices.GetRequiredService<ILinkCrypterRegistrationReadRepository>();
-        linkCrypterFactory = ScopedServices.GetRequiredService<ILinkCrypterFactory>();
-
         await InitializeFormModelAsync();
-        crypters = linkCrypterFactory.GetLinkCrypters();
+        crypters = operationRunner.Run((ILinkCrypterFactory factory) => factory.GetLinkCrypters());
 
         editContext = new EditContext(formModel);
         editContext.OnValidationRequested += OnValidationRequested;
@@ -45,24 +39,24 @@ public partial class CreateOrEditDialog
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<LinkCrypterService>();
+        await operationRunner.RunAsync<LinkCrypterService>(async service =>
+        {
+            if (!IsEditMode)
+            {
+                await service.CreateAsync(
+                    name: formModel.Name!,
+                    className: formModel.ClassName!,
+                    configuration: formModel.Configuration
+                );
+                return;
+            }
 
-        if (!IsEditMode)
-        {
-            await service.CreateAsync(
-                name: formModel.Name!,
-                className: formModel.ClassName!,
-                configuration: formModel.Configuration
-            );
-        }
-        else
-        {
             await service.UpdateAsync(
                 id: LinkCrypterRegistrationId!.Value,
                 name: formModel.Name!,
                 configuration: formModel.Configuration
             );
-        }
+        });
 
         await DialogRef.CloseAsync(DialogResult.Ok());
     }
@@ -114,7 +108,10 @@ public partial class CreateOrEditDialog
             return;
         }
 
-        var registration = await readRepository.GetByIdAsync(LinkCrypterRegistrationId!.Value);
+        var registration = await operationRunner.RunAsync(
+            (ILinkCrypterRegistrationReadRepository repository) =>
+                repository.GetByIdAsync(LinkCrypterRegistrationId!.Value)
+        );
 
         if (registration is null)
         {

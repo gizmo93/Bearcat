@@ -2,31 +2,33 @@ using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageNotifications.ReadModels;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageNotifications;
 
-public partial class NotificationDetailPage(NavigationManager navigationManager)
-    : OwningComponentBase
+public partial class NotificationDetailPage(
+    NavigationManager navigationManager,
+    IScopedOperationRunner operationRunner
+) : ComponentBase
 {
     [Parameter]
     public int NotificationId { get; set; }
 
     private NotificationReadModel notification = null!;
-    private INotificationReadRepository readRepository = null!;
     private bool isInitialized;
 
     protected override async Task OnInitializedAsync()
     {
-        readRepository = ScopedServices.GetRequiredService<INotificationReadRepository>();
         await LoadNotificationAsync();
     }
 
     private async Task LoadNotificationAsync()
     {
-        var notificationReadModel = await readRepository.GetByIdAsync(NotificationId);
+        var notificationReadModel = await operationRunner.RunAsync(
+            (INotificationReadRepository repository) => repository.GetByIdAsync(NotificationId)
+        );
 
         if (notificationReadModel is null)
         {
@@ -40,8 +42,9 @@ public partial class NotificationDetailPage(NavigationManager navigationManager)
 
     private async Task ResolveNotificationAsync()
     {
-        var notificationService = ScopedServices.GetRequiredService<INotificationService>();
-        await notificationService.ResolveAsync(NotificationId);
+        await operationRunner.RunAsync(
+            (INotificationService service) => service.ResolveAsync(NotificationId)
+        );
         await LoadNotificationAsync();
     }
 

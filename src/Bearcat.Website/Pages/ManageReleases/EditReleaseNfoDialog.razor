@@ -1,7 +1,7 @@
 @using System.ComponentModel.DataAnnotations
 @using Bearcat.Domain.UseCases.ManageReleases
-@using Microsoft.Extensions.DependencyInjection
-@inherits OwningComponentBase
+@using Bearcat.Website.ScopedOperations
+@inject IScopedOperationRunner OperationRunner
 
 <EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
     <DataAnnotationsValidator />
@@ -56,8 +56,10 @@
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<ReleaseInfoService>();
-        await service.UpdateNfoAsync(ReleaseId, model.FileName, model.Content ?? string.Empty);
+        await OperationRunner.RunAsync(
+            (ReleaseInfoService service) =>
+                service.UpdateNfoAsync(ReleaseId, model.FileName, model.Content ?? string.Empty)
+        );
 
         await DialogRef.CloseAsync(DialogResult.Ok(model.FileName));
     }

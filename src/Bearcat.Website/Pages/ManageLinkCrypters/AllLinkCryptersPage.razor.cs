@@ -3,29 +3,27 @@ using Bearcat.Domain.UseCases.ManageLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageLinkCrypters;
 
 public partial class AllLinkCryptersPage(
-    ILinkCrypterRegistrationReadRepository readRepository,
     DialogService dialogService,
     ToastService toastService,
     IScopedOperationRunner operationRunner
 )
 {
     private IReadOnlyList<LinkCrypterRegistrationReadModel> crypters = [];
-    private LinkCrypterService linkCrypterService = null!;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadCryptersAsync();
-        linkCrypterService = ScopedServices.GetRequiredService<LinkCrypterService>();
     }
 
     private async Task LoadCryptersAsync()
     {
-        crypters = await readRepository.GetAllAsync();
+        crypters = await operationRunner.RunAsync(
+            (ILinkCrypterRegistrationReadRepository repository) => repository.GetAllAsync()
+        );
     }
 
     private async Task ShowAddDialogAsync()
@@ -75,7 +73,10 @@ public partial class AllLinkCryptersPage(
 
     private async Task ToggleIsActiveAsync(LinkCrypterRegistrationReadModel crypter)
     {
-        await linkCrypterService.ToggleIsActiveAsync(crypter.LinkCrypterRegistrationId);
+        await operationRunner.RunAsync(
+            (LinkCrypterService service) =>
+                service.ToggleIsActiveAsync(crypter.LinkCrypterRegistrationId)
+        );
 
         toastService.Success(
             crypter.IsActive
@@ -103,7 +104,9 @@ public partial class AllLinkCryptersPage(
             return;
         }
 
-        await linkCrypterService.DeleteAsync(crypter.LinkCrypterRegistrationId);
+        await operationRunner.RunAsync(
+            (LinkCrypterService service) => service.DeleteAsync(crypter.LinkCrypterRegistrationId)
+        );
         await LoadCryptersAsync();
     }
 

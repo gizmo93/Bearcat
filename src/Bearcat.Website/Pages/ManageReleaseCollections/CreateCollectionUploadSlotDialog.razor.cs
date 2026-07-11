@@ -6,18 +6,16 @@ using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleaseCollections;
 
-public partial class CreateCollectionUploadSlotDialog(
-    IHosterConfigurationReadRepository hosterReadRepository,
-    IReleaseCollectionReadRepository releaseCollectionReadRepository
-) : OwningComponentBase
+public partial class CreateCollectionUploadSlotDialog(IScopedOperationRunner operationRunner)
+    : ComponentBase
 {
     [Parameter]
     public CollectionUploadSlotFormModel FormModel { get; set; } = new();
@@ -34,21 +32,25 @@ public partial class CreateCollectionUploadSlotDialog(
     private IReadOnlyList<CollectionArchiveConfigOptionReadModel> archiveConfigOptions = [];
     private bool isInitialized;
 
-    private IEnumerable<SelectOption<CollectionUploadSlotPasswordPolicy>> PasswordPolicyOptions =>
+    private IReadOnlyList<SelectOption<CollectionUploadSlotPasswordPolicy>> PasswordPolicyOptions =>
         Enum.GetValues<CollectionUploadSlotPasswordPolicy>()
             .Select(policy => new SelectOption<CollectionUploadSlotPasswordPolicy>(
                 policy,
                 L.Localize(policy)
-            ));
+            ))
+            .ToList();
 
-    private IEnumerable<SelectOption<int?>> HosterRegistrationOptions =>
+    private IReadOnlyList<SelectOption<int?>> HosterRegistrationOptions =>
         hosterRegistrations
             .Where(hoster => hoster.IsActive || hoster.Id == FormModel.HosterRegistrationId)
             .OrderBy(hoster => hoster.Name)
-            .Select(hoster => new SelectOption<int?>(hoster.Id, hoster.Name));
+            .Select(hoster => new SelectOption<int?>(hoster.Id, hoster.Name))
+            .ToList();
 
-    private IEnumerable<SelectOption<string>> ArchiveConfigOptions =>
-        archiveConfigOptions.Select(config => new SelectOption<string>(config.Name, config.Name));
+    private IReadOnlyList<SelectOption<string>> ArchiveConfigOptions =>
+        archiveConfigOptions
+            .Select(config => new SelectOption<string>(config.Name, config.Name))
+            .ToList();
 
     private HosterRegistrationReadModel? SelectedHosterRegistration =>
         FormModel.HosterRegistrationId is null
@@ -69,9 +71,12 @@ public partial class CreateCollectionUploadSlotDialog(
 
     protected override async Task OnInitializedAsync()
     {
-        hosterRegistrations = await hosterReadRepository.GetAllRegistrationsAsync();
-        archiveConfigOptions = await releaseCollectionReadRepository.GetArchiveConfigOptionsAsync(
-            FormModel.ReleaseCollectionId
+        hosterRegistrations = await operationRunner.RunAsync(
+            (IHosterConfigurationReadRepository repository) => repository.GetAllRegistrationsAsync()
+        );
+        archiveConfigOptions = await operationRunner.RunAsync(
+            (IReleaseCollectionReadRepository repository) =>
+                repository.GetArchiveConfigOptionsAsync(FormModel.ReleaseCollectionId)
         );
 
         editContext = new EditContext(FormModel);
@@ -82,16 +87,18 @@ public partial class CreateCollectionUploadSlotDialog(
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<ReleaseCollectionService>();
-        var id = await service.CreateUploadSlotAsync(
-            FormModel.ReleaseCollectionId,
-            FormModel.Name,
-            FormModel.HosterRegistrationId!.Value,
-            FormModel.ArchiveConfigName!,
-            CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
-            FormModel.IsRequired,
-            FormModel.PasswordPolicy,
-            FormModel.ExpectedArchivePassword
+        var id = await operationRunner.RunAsync(
+            (ReleaseCollectionService service) =>
+                service.CreateUploadSlotAsync(
+                    FormModel.ReleaseCollectionId,
+                    FormModel.Name,
+                    FormModel.HosterRegistrationId!.Value,
+                    FormModel.ArchiveConfigName!,
+                    CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
+                    FormModel.IsRequired,
+                    FormModel.PasswordPolicy,
+                    FormModel.ExpectedArchivePassword
+                )
         );
 
         await DialogRef.CloseAsync(DialogResult.Ok(id));

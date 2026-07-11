@@ -2,11 +2,12 @@ using System.Globalization;
 using Bearcat.Domain.UseCases.Dashboard.ReadModels;
 using Bearcat.Domain.UseCases.Dashboard.Repositories;
 using Bearcat.Website.Localization;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 
 namespace Bearcat.Website.Pages.Dashboard;
 
-public partial class DashboardPage(IDashboardReadRepository readRepository)
+public partial class DashboardPage(IScopedOperationRunner operationRunner)
 {
     private const int ChartColorCount = 20;
     private const string DateKey = "Date";
@@ -48,13 +49,19 @@ public partial class DashboardPage(IDashboardReadRepository readRepository)
                 ? (DateOnly?)null
                 : DateOnly.FromDateTime(dateRange.End);
 
-            var uploads = await readRepository.GetUploadsPerDayAsync(
-                uploadedFrom,
-                uploadedTo,
-                CancellationToken.None
-            );
-            var releaseSummary = await readRepository.GetReleaseOnlineStateSummaryAsync(
-                CancellationToken.None
+            var (uploads, releaseSummary) = await operationRunner.RunAsync(
+                async (IDashboardReadRepository repository) =>
+                {
+                    var uploadSummary = await repository.GetUploadsPerDayAsync(
+                        uploadedFrom,
+                        uploadedTo,
+                        CancellationToken.None
+                    );
+                    var onlineStateSummary = await repository.GetReleaseOnlineStateSummaryAsync(
+                        CancellationToken.None
+                    );
+                    return (uploadSummary, onlineStateSummary);
+                }
             );
 
             UpdateChart(uploads);

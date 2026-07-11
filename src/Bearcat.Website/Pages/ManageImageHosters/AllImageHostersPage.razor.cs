@@ -4,32 +4,29 @@ using Bearcat.Domain.UseCases.ManageImageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageImageHosters.Repositories;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageImageHosters;
 
 public partial class AllImageHostersPage(
-    IImageHosterRegistrationReadRepository readRepository,
     DialogService dialogService,
     ToastService toastService,
     IScopedOperationRunner operationRunner
 )
 {
     private IReadOnlyList<ImageHosterRegistrationReadModel> imageHosters = [];
-    private ImageHosterService imageHosterService = null!;
     private HashSet<string> loginCapableClassNames = [];
 
     protected override async Task OnInitializedAsync()
     {
         await LoadImageHostersAsync();
-        imageHosterService = ScopedServices.GetRequiredService<ImageHosterService>();
-
-        loginCapableClassNames = ScopedServices
-            .GetRequiredService<IImageHosterFactory>()
-            .GetImageHosters()
-            .Where(imageHoster => imageHoster.SupportsLogin)
-            .Select(imageHoster => imageHoster.ClassName)
-            .ToHashSet();
+        loginCapableClassNames = operationRunner.Run(
+            (IImageHosterFactory factory) =>
+                factory
+                    .GetImageHosters()
+                    .Where(imageHoster => imageHoster.SupportsLogin)
+                    .Select(imageHoster => imageHoster.ClassName)
+                    .ToHashSet()
+        );
     }
 
     private bool SupportsLogin(ImageHosterRegistrationReadModel imageHoster)
@@ -39,7 +36,9 @@ public partial class AllImageHostersPage(
 
     private async Task LoadImageHostersAsync()
     {
-        imageHosters = await readRepository.GetAllAsync();
+        imageHosters = await operationRunner.RunAsync(
+            (IImageHosterRegistrationReadRepository repository) => repository.GetAllAsync()
+        );
     }
 
     private async Task ShowAddDialogAsync()
@@ -89,7 +88,10 @@ public partial class AllImageHostersPage(
 
     private async Task ToggleIsActiveAsync(ImageHosterRegistrationReadModel imageHoster)
     {
-        await imageHosterService.ToggleIsActiveAsync(imageHoster.ImageHosterRegistrationId);
+        await operationRunner.RunAsync(
+            (ImageHosterService service) =>
+                service.ToggleIsActiveAsync(imageHoster.ImageHosterRegistrationId)
+        );
 
         toastService.Success(
             imageHoster.IsActive
@@ -117,7 +119,10 @@ public partial class AllImageHostersPage(
             return;
         }
 
-        await imageHosterService.DeleteAsync(imageHoster.ImageHosterRegistrationId);
+        await operationRunner.RunAsync(
+            (ImageHosterService service) =>
+                service.DeleteAsync(imageHoster.ImageHosterRegistrationId)
+        );
         await LoadImageHostersAsync();
     }
 

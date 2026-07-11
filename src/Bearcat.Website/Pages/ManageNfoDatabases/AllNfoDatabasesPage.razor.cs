@@ -2,32 +2,34 @@ using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.UseCases.ManageNfoDatabases;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.ReadModels;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageNfoDatabases;
 
 public partial class AllNfoDatabasesPage(
-    INfoDatabaseRegistrationReadRepository readRepository,
-    INfoDatabaseFactory nfoDatabaseFactory,
     DialogService dialogService,
-    ToastService toastService
+    ToastService toastService,
+    IScopedOperationRunner operationRunner
 )
 {
     private IReadOnlyList<NfoDatabaseRegistrationReadModel> registrations = [];
-    private NfoDatabaseRegistrationService service = null!;
-    private bool CanAddRegistration =>
-        registrations.Count < nfoDatabaseFactory.GetNfoDatabases().Count;
+    private int availableDatabaseCount;
+    private bool CanAddRegistration => registrations.Count < availableDatabaseCount;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadRegistrationsAsync();
-        service = ScopedServices.GetRequiredService<NfoDatabaseRegistrationService>();
+        availableDatabaseCount = operationRunner.Run(
+            (INfoDatabaseFactory factory) => factory.GetNfoDatabases().Count
+        );
     }
 
     private async Task LoadRegistrationsAsync()
     {
-        registrations = await readRepository.GetAllAsync();
+        registrations = await operationRunner.RunAsync(
+            (INfoDatabaseRegistrationReadRepository repository) => repository.GetAllAsync()
+        );
     }
 
     private async Task ShowAddDialogAsync()
@@ -76,7 +78,9 @@ public partial class AllNfoDatabasesPage(
 
     private async Task ToggleIsActiveAsync(NfoDatabaseRegistrationReadModel registration)
     {
-        await service.ToggleIsActiveAsync(registration.Id);
+        await operationRunner.RunAsync(
+            (NfoDatabaseRegistrationService service) => service.ToggleIsActiveAsync(registration.Id)
+        );
 
         toastService.Success(
             registration.IsActive
@@ -104,7 +108,9 @@ public partial class AllNfoDatabasesPage(
             return;
         }
 
-        await service.DeleteAsync(registration.Id);
+        await operationRunner.RunAsync(
+            (NfoDatabaseRegistrationService service) => service.DeleteAsync(registration.Id)
+        );
         await LoadRegistrationsAsync();
     }
 }

@@ -1,13 +1,16 @@
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageUploadConfigLinkCrypters;
 
-public partial class UploadConfigLinkCryptersList(DialogService dialogService) : OwningComponentBase
+public partial class UploadConfigLinkCryptersList(
+    DialogService dialogService,
+    IScopedOperationRunner operationRunner
+) : ComponentBase
 {
     [Parameter]
     [EditorRequired]
@@ -17,14 +20,11 @@ public partial class UploadConfigLinkCryptersList(DialogService dialogService) :
     [EditorRequired]
     public string? ReleaseName { get; set; }
 
-    private IUploadConfigLinkCrypterReadRepository readRepository = null!;
     private IReadOnlyList<UploadConfigLinkCrypterReadModel> uploadConfigLinkCrypters = [];
     private bool isInitialized;
 
     protected override async Task OnInitializedAsync()
     {
-        readRepository =
-            ScopedServices.GetRequiredService<IUploadConfigLinkCrypterReadRepository>();
         await LoadDataAsync();
         isInitialized = true;
     }
@@ -95,13 +95,18 @@ public partial class UploadConfigLinkCryptersList(DialogService dialogService) :
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<UploadConfigLinkCrypterService>();
-        await service.DeleteAsync(uploadConfigLinkCrypterReadModel.UploadConfigLinkCrypterId);
+        await operationRunner.RunAsync(
+            (UploadConfigLinkCrypterService service) =>
+                service.DeleteAsync(uploadConfigLinkCrypterReadModel.UploadConfigLinkCrypterId)
+        );
         await LoadDataAsync();
     }
 
     private async Task LoadDataAsync()
     {
-        uploadConfigLinkCrypters = await readRepository.GetByUploadConfigIdAsync(UploadConfigId);
+        uploadConfigLinkCrypters = await operationRunner.RunAsync(
+            (IUploadConfigLinkCrypterReadRepository repository) =>
+                repository.GetByUploadConfigIdAsync(UploadConfigId)
+        );
     }
 }

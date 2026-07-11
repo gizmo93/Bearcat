@@ -2,15 +2,15 @@ using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleaseCollections;
 
 public partial class EditCollectionUploadSlotLinkCryptersDialog(
-    ILinkCrypterRegistrationReadRepository linkCrypterRegistrationReadRepository
-) : OwningComponentBase
+    IScopedOperationRunner operationRunner
+) : ComponentBase
 {
     [Parameter]
     public int CollectionUploadSlotId { get; set; }
@@ -33,7 +33,9 @@ public partial class EditCollectionUploadSlotLinkCryptersDialog(
         var selectedLinkCryptersByRegistrationId = SharedLinkCrypters.ToDictionary(linkCrypter =>
             linkCrypter.LinkCrypterRegistrationId
         );
-        var registrations = await linkCrypterRegistrationReadRepository.GetAllAsync();
+        var registrations = await operationRunner.RunAsync(
+            (ILinkCrypterRegistrationReadRepository repository) => repository.GetAllAsync()
+        );
 
         linkCrypterOptions.AddRange(
             registrations
@@ -78,8 +80,10 @@ public partial class EditCollectionUploadSlotLinkCryptersDialog(
             ))
             .ToList();
 
-        var service = ScopedServices.GetRequiredService<ReleaseCollectionService>();
-        await service.UpdateSharedLinkCryptersAsync(CollectionUploadSlotId, settings);
+        await operationRunner.RunAsync(
+            (ReleaseCollectionService service) =>
+                service.UpdateSharedLinkCryptersAsync(CollectionUploadSlotId, settings)
+        );
         await DialogRef.CloseAsync(DialogResult.Ok());
     }
 

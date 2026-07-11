@@ -5,6 +5,14 @@ namespace Bearcat.Website.ScopedOperations;
 public sealed class ScopedOperationRunner(IServiceScopeFactory scopeFactory)
     : IScopedOperationRunner
 {
+    public TResult Run<TService, TResult>(Func<TService, TResult> operation)
+        where TService : notnull
+    {
+        using var scope = scopeFactory.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<TService>();
+        return operation(service);
+    }
+
     public Task RunAsync<TService>(Func<TService, Task> operation)
         where TService : notnull => RunAsync<TService>((service, _) => operation(service));
 

@@ -11,19 +11,16 @@ using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Website.Pages.ManageReleaseTemplates;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class AllReleasesPage(
-    IReleaseReadRepository readRepository,
-    IHosterConfigurationReadRepository hosterReadRepository,
-    ILinkCrypterRegistrationReadRepository linkCrypterReadRepository,
-    IReleaseGroupReadRepository releaseGroupReadRepository,
     DialogService dialogService,
-    ToastService toastService
+    ToastService toastService,
+    IScopedOperationRunner operationRunner
 )
 {
     private const string NoBulkLanguageSelected = "__not_selected__";
@@ -35,7 +32,6 @@ public partial class AllReleasesPage(
     private IReadOnlyList<LinkCrypterRegistrationReadModel> linkCrypterRegistrations = [];
     private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
     private readonly HashSet<int> selectedReleaseIds = [];
-    private ReleaseService service = null!;
     private ReleaseSearchQuery searchQuery = new();
     private int totalCount;
     private int pageIndex;
@@ -52,13 +48,17 @@ public partial class AllReleasesPage(
     private bool AreAllVisibleReleasesSelected =>
         releases.Count > 0 && releases.All(r => selectedReleaseIds.Contains(r.ReleaseId));
 
-    private IEnumerable<SelectOption<int>> PageSizeOptions =>
-        pageSizes.Select(size => new SelectOption<int>(size, size.ToString()));
+    private IReadOnlyList<SelectOption<int>> PageSizeOptions =>
+        pageSizes.Select(size => new SelectOption<int>(size, size.ToString())).ToList();
 
-    private IEnumerable<SelectOption<int>> ReleaseGroupOptions =>
-        new[] { new SelectOption<int>(0, L["SelectReleaseGroup"]) }.Concat(
-            releaseGroups.Select(group => new SelectOption<int>(group.ReleaseGroupId, group.Name))
-        );
+    private IReadOnlyList<SelectOption<int>> ReleaseGroupOptions =>
+        [
+            new(0, L["SelectReleaseGroup"]),
+            .. releaseGroups.Select(group => new SelectOption<int>(
+                group.ReleaseGroupId,
+                group.Name
+            )),
+        ];
 
     private IReadOnlyList<SelectOption<string>> BulkLanguageOptions =>
         [
@@ -75,13 +75,13 @@ public partial class AllReleasesPage(
                 )),
         ];
 
-    private IEnumerable<int?> PaginationItems
+    private IReadOnlyList<int?> PaginationItems
     {
         get
         {
             if (TotalPages <= 7)
             {
-                return Enumerable.Range(1, TotalPages).Select(page => (int?)page);
+                return Enumerable.Range(1, TotalPages).Select(page => (int?)page).ToList();
             }
 
             var pages = new List<int?> { 1 };
@@ -107,11 +107,18 @@ public partial class AllReleasesPage(
 
     protected override async Task OnInitializedAsync()
     {
-        service = ScopedServices.GetRequiredService<ReleaseService>();
-        hosterRegistrations = await hosterReadRepository.GetAllRegistrationsAsync();
-        archiverOptions = readRepository.GetArchiverFilterOptions();
-        linkCrypterRegistrations = await linkCrypterReadRepository.GetAllAsync();
-        releaseGroups = await releaseGroupReadRepository.GetAllAsync();
+        hosterRegistrations = await operationRunner.RunAsync(
+            (IHosterConfigurationReadRepository repository) => repository.GetAllRegistrationsAsync()
+        );
+        archiverOptions = operationRunner.Run(
+            (IReleaseReadRepository repository) => repository.GetArchiverFilterOptions()
+        );
+        linkCrypterRegistrations = await operationRunner.RunAsync(
+            (ILinkCrypterRegistrationReadRepository repository) => repository.GetAllAsync()
+        );
+        releaseGroups = await operationRunner.RunAsync(
+            (IReleaseGroupReadRepository repository) => repository.GetAllAsync()
+        );
         await RefreshReleasesAsync();
     }
 
@@ -133,7 +140,9 @@ public partial class AllReleasesPage(
             return;
         }
 
-        await service.DeleteAsync(release.ReleaseId);
+        await operationRunner.RunAsync(
+            (ReleaseService service) => service.DeleteAsync(release.ReleaseId)
+        );
         await RefreshReleasesAsync();
     }
 
@@ -216,12 +225,15 @@ public partial class AllReleasesPage(
 
         try
         {
-            var result = await readRepository.SearchReleasesAsync(
-                searchQuery with
-                {
-                    PageIndex = pageIndex,
-                    PageSize = pageSize,
-                }
+            var result = await operationRunner.RunAsync(
+                (IReleaseReadRepository repository) =>
+                    repository.SearchReleasesAsync(
+                        searchQuery with
+                        {
+                            PageIndex = pageIndex,
+                            PageSize = pageSize,
+                        }
+                    )
             );
 
             releases = result.Items;
@@ -285,7 +297,10 @@ public partial class AllReleasesPage(
 
         var releaseIds = selectedReleaseIds.ToList();
 
-        await service.UpdateReleaseGroupAsync(releaseIds, selectedBulkReleaseGroupId);
+        await operationRunner.RunAsync(
+            (ReleaseService service) =>
+                service.UpdateReleaseGroupAsync(releaseIds, selectedBulkReleaseGroupId)
+        );
 
         toastService.Success(L["ReleaseGroupChangedForReleases", releaseIds.Count]);
         selectedReleaseIds.Clear();
@@ -305,7 +320,10 @@ public partial class AllReleasesPage(
         }
 
         var releaseIds = selectedReleaseIds.ToList();
-        await service.UpdatePrimaryLanguageAsync(releaseIds, selectedBulkPrimaryLanguageCode);
+        await operationRunner.RunAsync(
+            (ReleaseService service) =>
+                service.UpdatePrimaryLanguageAsync(releaseIds, selectedBulkPrimaryLanguageCode)
+        );
 
         toastService.Success(L["PrimaryLanguageChangedForReleases", releaseIds.Count]);
         selectedReleaseIds.Clear();

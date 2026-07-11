@@ -3,17 +3,16 @@ using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleaseTemplates;
 
-public partial class CreateOrEditReleaseTemplateDialog(
-    IReleaseGroupReadRepository releaseGroupReadRepository
-) : OwningComponentBase
+public partial class CreateOrEditReleaseTemplateDialog(IScopedOperationRunner operationRunner)
+    : ComponentBase
 {
     [Parameter]
     public ReleaseTemplateFormModel FormModel { get; set; } = null!;
@@ -25,25 +24,34 @@ public partial class CreateOrEditReleaseTemplateDialog(
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
 
-    private IEnumerable<SelectOption<int>> ReleaseGroupOptions =>
-        releaseGroups.Select(group => new SelectOption<int>(group.ReleaseGroupId, group.Name));
+    private IReadOnlyList<SelectOption<int>> ReleaseGroupOptions =>
+        releaseGroups
+            .Select(group => new SelectOption<int>(group.ReleaseGroupId, group.Name))
+            .ToList();
 
-    private IEnumerable<SelectOption<ReleaseType>> ReleaseTypeOptions =>
+    private IReadOnlyList<SelectOption<ReleaseType>> ReleaseTypeOptions =>
         Enum.GetValues<ReleaseType>()
-            .Select(type => new SelectOption<ReleaseType>(type, L.Localize(type)));
+            .Select(type => new SelectOption<ReleaseType>(type, L.Localize(type)))
+            .ToList();
 
-    private IEnumerable<SelectOption<ReleaseContentType>> ReleaseContentTypeOptions =>
+    private IReadOnlyList<SelectOption<ReleaseContentType>> ReleaseContentTypeOptions =>
         Enum.GetValues<ReleaseContentType>()
-            .Select(type => new SelectOption<ReleaseContentType>(type, L.Localize(type)));
+            .Select(type => new SelectOption<ReleaseContentType>(type, L.Localize(type)))
+            .ToList();
 
-    private IEnumerable<
+    private IReadOnlyList<
         SelectOption<ReleaseCollectionDetectionMode>
     > ReleaseCollectionDetectionModeOptions =>
         new[]
         {
             ReleaseCollectionDetectionMode.SeriesEpisodePattern,
             ReleaseCollectionDetectionMode.CustomRegex,
-        }.Select(mode => new SelectOption<ReleaseCollectionDetectionMode>(mode, L.Localize(mode)));
+        }
+            .Select(mode => new SelectOption<ReleaseCollectionDetectionMode>(
+                mode,
+                L.Localize(mode)
+            ))
+            .ToList();
 
     private string GetReleaseGroupDisplayText(int releaseGroupId)
     {
@@ -67,7 +75,9 @@ public partial class CreateOrEditReleaseTemplateDialog(
         messageStore = new ValidationMessageStore(editContext);
         editContext.OnValidationRequested += HandleValidationRequested;
 
-        releaseGroups = await releaseGroupReadRepository.GetAllAsync();
+        releaseGroups = await operationRunner.RunAsync(
+            (IReleaseGroupReadRepository repository) => repository.GetAllAsync()
+        );
 
         if (releaseGroups.Count > 0 && FormModel.ReleaseGroupId == 0)
         {
@@ -77,38 +87,42 @@ public partial class CreateOrEditReleaseTemplateDialog(
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
-
         var detectionMode = FormModel.UseReleaseCollections
             ? FormModel.ReleaseCollectionDetectionMode
             : ReleaseCollectionDetectionMode.Disabled;
 
         if (FormModel.IsEdit && FormModel.ReleaseTemplateId is not null)
         {
-            await service.UpdateAsync(
-                FormModel.ReleaseTemplateId.Value,
-                FormModel.Name,
-                FormModel.ReleaseType,
-                FormModel.ReleaseContentType,
-                FormModel.ReleaseGroupId,
-                detectionMode,
-                FormModel.ReleaseCollectionPattern,
-                FormModel.ReleaseCollectionKeyTemplate,
-                FormModel.ReleaseCollectionNameTemplate
+            await operationRunner.RunAsync(
+                (ReleaseTemplateService service) =>
+                    service.UpdateAsync(
+                        FormModel.ReleaseTemplateId.Value,
+                        FormModel.Name,
+                        FormModel.ReleaseType,
+                        FormModel.ReleaseContentType,
+                        FormModel.ReleaseGroupId,
+                        detectionMode,
+                        FormModel.ReleaseCollectionPattern,
+                        FormModel.ReleaseCollectionKeyTemplate,
+                        FormModel.ReleaseCollectionNameTemplate
+                    )
             );
             await DialogRef.CloseAsync(DialogResult.Ok(FormModel.ReleaseTemplateId.Value));
             return;
         }
 
-        var releaseTemplateId = await service.CreateAsync(
-            FormModel.Name,
-            FormModel.ReleaseType,
-            FormModel.ReleaseContentType,
-            FormModel.ReleaseGroupId,
-            detectionMode,
-            FormModel.ReleaseCollectionPattern,
-            FormModel.ReleaseCollectionKeyTemplate,
-            FormModel.ReleaseCollectionNameTemplate
+        var releaseTemplateId = await operationRunner.RunAsync(
+            (ReleaseTemplateService service) =>
+                service.CreateAsync(
+                    FormModel.Name,
+                    FormModel.ReleaseType,
+                    FormModel.ReleaseContentType,
+                    FormModel.ReleaseGroupId,
+                    detectionMode,
+                    FormModel.ReleaseCollectionPattern,
+                    FormModel.ReleaseCollectionKeyTemplate,
+                    FormModel.ReleaseCollectionNameTemplate
+                )
         );
         await DialogRef.CloseAsync(DialogResult.Ok(releaseTemplateId));
     }
