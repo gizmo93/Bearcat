@@ -56,7 +56,7 @@ public class LoginResponse
         public long MaxFileSize { get; set; }
 
         [JsonPropertyName("nb_pipes")]
-        public long NbPipes { get; set; }
+        public int NbPipes { get; set; }
     }
 
     public class RemoteUpload

@@ -183,7 +183,7 @@ public class Rapidgator(
             cancellationToken: cancellationToken
         );
 
-        return response.Content!.Response.User.RemoteUpload.MaxNbJobs;
+        return response.Content!.Response.User.Upload.NbPipes;
     }
 
     public async Task<TryLoginResult> TryLoginAsync(

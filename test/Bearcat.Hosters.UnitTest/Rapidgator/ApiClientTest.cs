@@ -215,6 +215,47 @@ public class ApiClientTest
     }
 
     [Test]
+    public async Task UploadFileAsync_StreamLargerThanOneGiB_UsesLongContentLength()
+    {
+        // Arrange
+        const long fileSize = 1024L * 1024 * 1024 + 1;
+        var handler = new RecordingUploadHandler();
+        using var httpClient = new HttpClient(handler);
+        var httpClientFactoryMock = new Mock<IHttpClientFactory>();
+        httpClientFactoryMock
+            .Setup(x => x.CreateClient(HttpClientProvider.UploadHttpClientName))
+            .Returns(httpClient);
+        var loggerMock = new Mock<ILogger<RapidgatorApiClient>>();
+        var client = new RapidgatorApiClient(
+            apiMock.Object,
+            new HttpClientProvider(httpClientFactoryMock.Object),
+            loggerMock.Object
+        );
+        await using var stream = new FileStream(
+            Path.GetTempFileName(),
+            FileMode.Open,
+            FileAccess.ReadWrite,
+            FileShare.None,
+            bufferSize: 1,
+            FileOptions.DeleteOnClose
+        );
+        stream.SetLength(fileSize);
+
+        // Act
+        var result = await client.UploadFileAsync(
+            "https://upload.rapidgator.test",
+            stream,
+            "archive.part01.rar",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Status.ShouldBe((int)HttpStatusCode.OK);
+        handler.ContentLength.ShouldNotBeNull();
+        handler.ContentLength.Value.ShouldBeGreaterThan(fileSize);
+    }
+
+    [Test]
     public async Task CheckLinksAsync_OnlineFileInKnownFolder_MapsStatusAndDownloadCount()
     {
         // Arrange
@@ -374,5 +415,25 @@ public class ApiClientTest
             new RefitSettings(),
             error: null
         );
+    }
+
+    private sealed class RecordingUploadHandler : HttpMessageHandler
+    {
+        public long? ContentLength { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
+        {
+            ContentLength = request.Content?.Headers.ContentLength;
+
+            return Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"status\":200}"),
+                }
+            );
+        }
     }
 }

@@ -474,7 +474,7 @@ public class RapidgatorTest
 
         rapidgatorApiMock
             .Setup(x => x.LoginAsync("user", "password", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreateApiResponse(CreateLoginResponse(maxJobs: 8)));
+            .ReturnsAsync(CreateApiResponse(CreateLoginResponse(uploadPipes: 8)));
 
         // Act
         var result = await service.TryLoginAsync(config, CancellationToken.None);
@@ -495,7 +495,7 @@ public class RapidgatorTest
             .Setup(x => x.LoginAsync("user", "password", It.IsAny<CancellationToken>()))
             .ReturnsAsync(
                 CreateApiResponse(
-                    CreateLoginResponse(maxJobs: 0, status: 400, details: "invalid credentials")
+                    CreateLoginResponse(uploadPipes: 0, status: 400, details: "invalid credentials")
                 )
             );
 
@@ -509,21 +509,23 @@ public class RapidgatorTest
     }
 
     [Test]
-    public async Task GetMaximumParallelUploadsAsync_LoginReturnsLimit_ReturnsLimit()
+    public async Task GetMaximumParallelUploadsAsync_LoginReturnsUploadPipes_ReturnsPipeCount()
     {
         // Arrange
         var config = new RapidgatorConfig { Username = "user", Password = "password" };
 
         rapidgatorApiMock
             .Setup(x => x.LoginAsync("user", "password", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreateApiResponse(CreateLoginResponse(maxJobs: 11)));
+            .ReturnsAsync(
+                CreateApiResponse(CreateLoginResponse(uploadPipes: 5, remoteUploadJobs: 200))
+            );
 
         // Act
         var result = await service.GetMaximumParallelUploadsAsync(config, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
-        result.ShouldBe(11);
+        result.ShouldBe(5);
     }
 
     [Test]
@@ -552,7 +554,8 @@ public class RapidgatorTest
     }
 
     private static LoginResponse CreateLoginResponse(
-        int maxJobs,
+        int uploadPipes,
+        int remoteUploadJobs = 0,
         int status = (int)HttpStatusCode.OK,
         string? details = null
     )
@@ -566,7 +569,8 @@ public class RapidgatorTest
                 Token = "token",
                 User = new LoginResponse.User
                 {
-                    RemoteUpload = new LoginResponse.RemoteUpload { MaxNbJobs = maxJobs },
+                    Upload = new LoginResponse.Upload { NbPipes = uploadPipes },
+                    RemoteUpload = new LoginResponse.RemoteUpload { MaxNbJobs = remoteUploadJobs },
                 },
             },
         };
