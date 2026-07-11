@@ -10,6 +10,8 @@ public class ReleaseFolderAutomationFormModel
 
     public int? ReleaseTemplateId { get; set; }
 
+    public string PrimaryLanguageCode { get; set; } = string.Empty;
+
     public bool IsEnabled { get; set; } = true;
 
     public bool IsEdit { get; set; }

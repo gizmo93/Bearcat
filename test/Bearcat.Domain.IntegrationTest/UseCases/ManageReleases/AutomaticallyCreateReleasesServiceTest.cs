@@ -2,13 +2,14 @@ using System.Linq.Expressions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Media;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.NfoDatabase;
-using Bearcat.Abstractions.SeriesDatabase;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -72,7 +73,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
                 new ReleaseCollectionRepository(
                     dbRead: dbContext,
                     dbWrite: dbContext,
-                    seriesDatabaseFactory: Mock.Of<ISeriesDatabaseFactory>()
+                    metadataDatabaseFactory: Mock.Of<IMediaMetadataDatabaseFactory>()
                 ),
                 CreateTimeProvider()
             ),
@@ -154,7 +155,12 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         var nestedContainer = Directory.CreateDirectory(Path.Combine(tempRootPath, "Nested"));
         Directory.CreateDirectory(Path.Combine(nestedContainer.FullName, "Nested.Release.1080p"));
 
-        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
+        await AddAutomationAsync(
+            releaseTemplate.ReleaseTemplateId,
+            tempRootPath,
+            "*1080p*",
+            primaryLanguageCode: "de"
+        );
         await AddReleaseAsync(releaseTemplate.ReleaseGroupId, existingReleaseFolder.FullName);
 
         // Act
@@ -189,6 +195,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         createdRelease.Name.ShouldBe("Bearcat.Release.1080p");
         createdRelease.ReleaseType.ShouldBe(ReleaseType.Managed);
         createdRelease.ReleaseGroupId.ShouldBe(releaseTemplate.ReleaseGroupId);
+        createdRelease.PrimaryLanguageCode.ShouldBe("de");
 
         var archiveConfig = createdRelease.ArchiveConfigs.Single();
         archiveConfig.Name.ShouldBe("RAR Forum A");
@@ -241,6 +248,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
             .Releases.AsSplitQuery()
             .Include(release => release.ReleaseInfo)
                 .ThenInclude(info => info!.ExternalInfos)
+            .Include(release => release.Metadata)
             .SingleAsync(release => release.ReleaseFolderPath == releaseFolder.FullName);
 
         var releaseInfo = release.ReleaseInfo.ShouldNotBeNull();
@@ -251,9 +259,11 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         releaseInfo.SizeUnit.ShouldBe("GB");
         releaseInfo.VideoType.ShouldBe("WEB");
         releaseInfo.AudioType.ShouldBe("AC3");
-        releaseInfo.Genre.ShouldBe("Drama, Sci-Fi");
-        releaseInfo.Description.ShouldBe("Bearcat plot");
-        releaseInfo.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_cover/movie123.JPG");
+
+        var metadata = release.Metadata.ShouldNotBeNull();
+        metadata.Genre.ShouldBe("Drama, Sci-Fi");
+        metadata.Description.ShouldBe("Bearcat plot");
+        metadata.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_cover/movie123.JPG");
 
         var externalInfo = releaseInfo.ExternalInfos.Single();
         externalInfo.Type.ShouldBe(ExternalInfoType.Movie);
@@ -712,7 +722,8 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         int releaseTemplateId,
         string basePath,
         string? folderNamePattern,
-        bool isEnabled = true
+        bool isEnabled = true,
+        string? primaryLanguageCode = null
     )
     {
         dbContext.ReleaseFolderAutomations.Add(
@@ -720,6 +731,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
             {
                 BasePath = basePath,
                 FolderNamePattern = folderNamePattern,
+                PrimaryLanguageCode = primaryLanguageCode,
                 ReleaseTemplateId = releaseTemplateId,
                 IsEnabled = isEnabled,
             }
@@ -773,6 +785,11 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         return new ReleaseInfoResolutionService(
             new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
             nfoDatabaseFactoryMock.Object,
+            new MediaMetadataResolver(
+                new MediaMetadataResolverRepository(dbContext, NoOpSecretProtector.Instance),
+                new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict).Object,
+                NullLogger<MediaMetadataResolver>.Instance
+            ),
             NullLogger<ReleaseInfoResolutionService>.Instance,
             CreateTimeProvider()
         );

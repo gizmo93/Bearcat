@@ -27,7 +27,7 @@ public static class CollectionLinkCrypterSync
     public static IReadOnlyDictionary<
         int,
         CollectionUploadSlotLinkCrypterSettings
-    > NormalizeSettings(IReadOnlyCollection<CollectionUploadSlotLinkCrypterSettings> settings)
+    > NormalizeSettings(IReadOnlyList<CollectionUploadSlotLinkCrypterSettings> settings)
     {
         return settings
             .GroupBy(item => item.LinkCrypterRegistrationId)

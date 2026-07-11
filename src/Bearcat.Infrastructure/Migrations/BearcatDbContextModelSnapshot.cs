@@ -701,6 +701,35 @@ namespace BearCat.Infrastructure.Migrations
                     b.ToTable("LinkCrypterRegistrations");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.MediaDatabaseRegistration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MediaDatabaseClassName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("SerializedConfig")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MediaDatabaseClassName")
+                        .IsUnique();
+
+                    b.ToTable("MediaDatabaseRegistrations");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.NfoDatabaseRegistration", b =>
                 {
                     b.Property<int>("Id")
@@ -877,10 +906,18 @@ namespace BearCat.Infrastructure.Migrations
                         .HasPrecision(4)
                         .HasColumnType("timestamp(4) without time zone");
 
+                    b.Property<DateTime?>("MetadataCheckedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<string>("PrimaryLanguageCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
 
                     b.Property<DateTime?>("QualityGateEvaluatedAt")
                         .HasPrecision(4)
@@ -952,6 +989,10 @@ namespace BearCat.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<string>("PrimaryLanguageCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
+
                     b.Property<int>("ReleaseContentType")
                         .HasColumnType("integer");
 
@@ -985,17 +1026,17 @@ namespace BearCat.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<int>("ReleaseCollectionId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("SeriesDatabaseClassName")
+                    b.Property<string>("MetadataDatabaseClassName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<string>("SeriesDatabaseUrl")
+                    b.Property<string>("MetadataDatabaseUrl")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("ReleaseCollectionId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -1008,6 +1049,36 @@ namespace BearCat.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("ReleaseCollectionMetadata");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseExternalIdentifier", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ReleaseId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReleaseId", "Type", "Value", "Source")
+                        .IsUnique();
+
+                    b.ToTable("ReleaseExternalIdentifiers");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseExternalInfo", b =>
@@ -1054,6 +1125,10 @@ namespace BearCat.Infrastructure.Migrations
 
                     b.Property<bool>("IsEnabled")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("PrimaryLanguageCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
 
                     b.Property<int>("ReleaseTemplateId")
                         .HasColumnType("integer");
@@ -1136,17 +1211,6 @@ namespace BearCat.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<string>("CoverUrl")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Genre")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
                     b.Property<string>("NfoDatabaseClassName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1217,6 +1281,50 @@ namespace BearCat.Infrastructure.Migrations
                     b.ToTable("ReleaseMediaFiles");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseMetadata", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CoverUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Genre")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("MetadataDatabaseClassName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("MetadataDatabaseUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("ReleaseId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReleaseId")
+                        .IsUnique();
+
+                    b.ToTable("ReleaseMetadata");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseNfo", b =>
                 {
                     b.Property<int>("Id")
@@ -1234,12 +1342,12 @@ namespace BearCat.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<int>("ReleaseInfoId")
+                    b.Property<int>("ReleaseId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ReleaseInfoId")
+                    b.HasIndex("ReleaseId")
                         .IsUnique();
 
                     b.ToTable("ReleaseNfos");
@@ -1313,35 +1421,6 @@ namespace BearCat.Infrastructure.Migrations
                     b.HasIndex("ReleaseGroupId");
 
                     b.ToTable("ReleaseTemplates");
-                });
-
-            modelBuilder.Entity("Bearcat.Domain.Entities.SeriesDatabaseRegistration", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("SerializedConfig")
-                        .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
-
-                    b.Property<string>("SeriesDatabaseClassName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SeriesDatabaseClassName")
-                        .IsUnique();
-
-                    b.ToTable("SeriesDatabaseRegistrations");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.Upload", b =>
@@ -1912,6 +1991,17 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("ReleaseCollection");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseExternalIdentifier", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
+                        .WithMany("ExternalIdentifiers")
+                        .HasForeignKey("ReleaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Release");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseExternalInfo", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.ReleaseInfo", "ReleaseInfo")
@@ -1994,14 +2084,26 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("Release");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseMetadata", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
+                        .WithOne("Metadata")
+                        .HasForeignKey("Bearcat.Domain.Entities.ReleaseMetadata", "ReleaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Release");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseNfo", b =>
                 {
-                    b.HasOne("Bearcat.Domain.Entities.ReleaseInfo", "ReleaseInfo")
+                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
                         .WithOne("ReleaseNfo")
-                        .HasForeignKey("Bearcat.Domain.Entities.ReleaseNfo", "ReleaseInfoId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("Bearcat.Domain.Entities.ReleaseNfo", "ReleaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("ReleaseInfo");
+                    b.Navigation("Release");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseQualityIssue", b =>
@@ -2235,9 +2337,13 @@ namespace BearCat.Infrastructure.Migrations
                 {
                     b.Navigation("ArchiveConfigs");
 
+                    b.Navigation("ExternalIdentifiers");
+
                     b.Navigation("ImageUploadConfigs");
 
                     b.Navigation("MediaFiles");
+
+                    b.Navigation("Metadata");
 
                     b.Navigation("Notifications");
 
@@ -2246,6 +2352,8 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("QualityIssues");
 
                     b.Navigation("ReleaseInfo");
+
+                    b.Navigation("ReleaseNfo");
 
                     b.Navigation("UploadConfigs");
                 });
@@ -2271,8 +2379,6 @@ namespace BearCat.Infrastructure.Migrations
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseInfo", b =>
                 {
                     b.Navigation("ExternalInfos");
-
-                    b.Navigation("ReleaseNfo");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseTemplate", b =>

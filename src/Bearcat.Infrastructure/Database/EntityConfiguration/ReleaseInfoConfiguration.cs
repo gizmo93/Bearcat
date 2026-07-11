@@ -18,9 +18,6 @@ public class ReleaseInfoConfiguration : IEntityTypeConfiguration<ReleaseInfo>
         builder.Property(info => info.SizeUnit).IsRequired(false).HasMaxLength(50);
         builder.Property(info => info.VideoType).IsRequired(false).HasMaxLength(100);
         builder.Property(info => info.AudioType).IsRequired(false).HasMaxLength(100);
-        builder.Property(info => info.Genre).IsRequired(false).HasMaxLength(500);
-        builder.Property(info => info.Description).IsRequired(false);
-        builder.Property(info => info.CoverUrl).IsRequired(false).HasMaxLength(1000);
 
         builder.HasIndex(info => info.ReleaseId).IsUnique();
 
@@ -30,14 +27,6 @@ public class ReleaseInfoConfiguration : IEntityTypeConfiguration<ReleaseInfo>
             .HasForeignKey(externalInfo => externalInfo.ReleaseInfoId)
             .HasPrincipalKey(info => info.Id)
             .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder
-            .HasOne(info => info.ReleaseNfo)
-            .WithOne(nfo => nfo.ReleaseInfo)
-            .HasForeignKey<ReleaseNfo>(nfo => nfo.ReleaseInfoId)
-            .HasPrincipalKey<ReleaseInfo>(info => info.Id)
-            .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

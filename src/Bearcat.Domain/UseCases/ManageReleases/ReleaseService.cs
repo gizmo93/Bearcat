@@ -21,6 +21,7 @@ public class ReleaseService(
         ReleaseType releaseType,
         ReleaseContentType releaseContentType,
         int releaseGroupId,
+        string? primaryLanguageCode,
         CancellationToken cancellationToken = default
     )
     {
@@ -33,6 +34,7 @@ public class ReleaseService(
             CreatedAt = localNow,
             ReleaseType = releaseType,
             ReleaseContentType = releaseContentType,
+            PrimaryLanguageCode = CleanOptional(primaryLanguageCode)?.ToLowerInvariant(),
             ReleaseGroupId = releaseGroupId,
             ReleaseFolderPath = isUnmanaged ? null : releaseFolderPath,
             ArchiveConfigs = [],
@@ -64,6 +66,7 @@ public class ReleaseService(
         string? releaseFolderPath,
         ReleaseContentType releaseContentType,
         int releaseGroupId,
+        string? primaryLanguageCode,
         CancellationToken cancellationToken = default
     )
     {
@@ -77,12 +80,13 @@ public class ReleaseService(
         release.Name = name;
         release.ReleaseContentType = releaseContentType;
         release.ReleaseGroupId = releaseGroupId;
+        release.PrimaryLanguageCode = CleanOptional(primaryLanguageCode)?.ToLowerInvariant();
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 
     public async Task UpdateReleaseGroupAsync(
-        IReadOnlyCollection<int> releaseIds,
+        IReadOnlyList<int> releaseIds,
         int releaseGroupId,
         CancellationToken cancellationToken = default
     )
@@ -97,6 +101,28 @@ public class ReleaseService(
         foreach (var release in releases)
         {
             release.ReleaseGroupId = releaseGroupId;
+        }
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdatePrimaryLanguageAsync(
+        IReadOnlyList<int> releaseIds,
+        string? primaryLanguageCode,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (releaseIds.Count == 0)
+        {
+            return;
+        }
+
+        var releases = await writeRepository.GetByIdsAsync(releaseIds, cancellationToken);
+        var normalizedLanguageCode = CleanOptional(primaryLanguageCode)?.ToLowerInvariant();
+
+        foreach (var release in releases)
+        {
+            release.PrimaryLanguageCode = normalizedLanguageCode;
         }
 
         await writeRepository.SaveChangesAsync(cancellationToken);

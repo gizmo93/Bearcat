@@ -37,12 +37,21 @@
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <BbBadge Variant="BadgeVariant.Outline">@releaseCollection.ReleaseGroupName</BbBadge>
+                    @if (string.IsNullOrWhiteSpace(releaseCollection.PrimaryLanguageCode))
+                    {
+                        <BbBadge Variant="BadgeVariant.Outline">@L["PrimaryLanguage"]: @L["NotSet"]</BbBadge>
+                    }
+                    else
+                    {
+                        var culture = CultureInfo.GetCultureInfo(releaseCollection.PrimaryLanguageCode);
+                        <BbBadge Variant="BadgeVariant.Outline">@culture.NativeName (@culture.TwoLetterISOLanguageName)</BbBadge>
+                    }
                     <BbBadge Variant="BadgeVariant.Secondary">@releaseCollection.Releases.Count @L["Releases"]</BbBadge>
                     <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(releaseCollection.ReleaseContentType)</BbBadge>
                     <BbButton Variant="ButtonVariant.Ghost"
                               Size="ButtonSize.IconSmall"
-                              AriaLabel="@L["EditContentType"]"
-                              OnClick="ShowEditContentTypeDialogAsync">
+                              AriaLabel="@L["EditCollectionSettings"]"
+                              OnClick="ShowEditSettingsDialogAsync">
                         <LucideIcon Name="pencil" class="h-4 w-4" />
                     </BbButton>
                 </div>
@@ -117,19 +126,19 @@
                         <div class="min-w-0 space-y-3">
                             <div class="flex flex-wrap items-center gap-2">
                                 <h2 class="text-lg font-semibold">@releaseCollection.Metadata.Title</h2>
-                                @if (!string.IsNullOrWhiteSpace(releaseCollection.Metadata.SeriesDatabaseUrl))
+                                @if (!string.IsNullOrWhiteSpace(releaseCollection.Metadata.MetadataDatabaseUrl))
                                 {
                                     <a class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                                       href="@releaseCollection.Metadata.SeriesDatabaseUrl"
+                                       href="@releaseCollection.Metadata.MetadataDatabaseUrl"
                                        target="_blank"
                                        rel="noreferrer noopener">
-                                        <BbBadge Variant="BadgeVariant.Secondary">@releaseCollection.Metadata.SeriesDatabaseName</BbBadge>
+                                        <BbBadge Variant="BadgeVariant.Secondary">@releaseCollection.Metadata.MetadataDatabaseName</BbBadge>
                                         <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
                                     </a>
                                 }
                                 else
                                 {
-                                    <BbBadge Variant="BadgeVariant.Secondary">@releaseCollection.Metadata.SeriesDatabaseName</BbBadge>
+                                    <BbBadge Variant="BadgeVariant.Secondary">@releaseCollection.Metadata.MetadataDatabaseName</BbBadge>
                                 }
                             </div>
                             @if (!string.IsNullOrWhiteSpace(releaseCollection.Metadata.Description))

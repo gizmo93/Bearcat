@@ -186,6 +186,7 @@ public class AutomaticallyCreateReleasesService(
         var release = releaseData.Release;
 
         release.CreatedAt = localNow;
+        release.PrimaryLanguageCode = candidate.Automation.PrimaryLanguageCode;
 
         await releaseCollectionAssignmentService.AssignFromTemplateAsync(
             release: release,

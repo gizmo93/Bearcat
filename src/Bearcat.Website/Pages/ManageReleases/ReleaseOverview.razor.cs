@@ -37,6 +37,8 @@ public partial class ReleaseOverview(
     private IReadOnlyList<ReleaseOverviewImageUploadReadModel> overviewImageUploads = [];
     private ReleaseNfoReadModel? releaseNfo;
     private ReleaseInfoReadModel? releaseInfo;
+    private ReleaseMetadataReadModel? releaseMetadata;
+    private IReadOnlyList<ReleaseExternalIdentifierReadModel> externalIdentifiers = [];
     private string? coverUrl;
     private string? nfoContent;
     private bool hasLocalNfo;
@@ -74,6 +76,8 @@ public partial class ReleaseOverview(
             {
                 releaseNfo = null;
                 releaseInfo = null;
+                releaseMetadata = null;
+                externalIdentifiers = [];
                 coverUrl = null;
                 nfoContent = null;
                 hasLocalNfo = false;
@@ -83,7 +87,11 @@ public partial class ReleaseOverview(
                     ReleaseId
                 );
                 releaseInfo = await repository.GetReleaseInfoAsync(ReleaseId);
-                coverUrl = releaseInfo?.CoverUrl;
+                releaseMetadata = await repository.GetReleaseMetadataAsync(ReleaseId);
+                externalIdentifiers = await repository.GetReleaseExternalIdentifiersAsync(
+                    ReleaseId
+                );
+                coverUrl = releaseMetadata?.CoverUrl;
                 releaseNfo = await repository.GetReleaseNfoAsync(ReleaseId);
                 nfoContent = releaseNfo?.Content;
                 hasLocalNfo = ReleaseNfoService.HasLocalNfo(ReleaseFolderPath);
@@ -198,6 +206,8 @@ public partial class ReleaseOverview(
             [nameof(EditReleaseInfoDialog.ReleaseId)] = ReleaseId,
             [nameof(EditReleaseInfoDialog.ReleaseName)] = ReleaseName,
             [nameof(EditReleaseInfoDialog.ReleaseInfo)] = releaseInfo,
+            [nameof(EditReleaseInfoDialog.ReleaseMetadata)] = releaseMetadata,
+            [nameof(EditReleaseInfoDialog.ExternalIdentifiers)] = externalIdentifiers,
         };
 
         var dialog = await dialogService.OpenAsync<EditReleaseInfoDialog>(

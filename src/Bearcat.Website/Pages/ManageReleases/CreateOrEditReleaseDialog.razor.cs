@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
@@ -41,16 +42,34 @@ public partial class CreateOrEditReleaseDialog(
     private string FolderLabel =>
         formModel.ReleaseType is ReleaseType.Unmanaged ? L["ArchiveFolder"] : L["ReleaseFolder"];
 
-    private IEnumerable<SelectOption<int>> ReleaseGroupOptions =>
-        releaseGroups.Select(group => new SelectOption<int>(group.ReleaseGroupId, group.Name));
+    private IReadOnlyList<SelectOption<int>> ReleaseGroupOptions =>
+        releaseGroups
+            .Select(group => new SelectOption<int>(group.ReleaseGroupId, group.Name))
+            .ToList();
 
-    private IEnumerable<SelectOption<ReleaseType>> ReleaseTypeOptions =>
+    private IReadOnlyList<SelectOption<ReleaseType>> ReleaseTypeOptions =>
         Enum.GetValues<ReleaseType>()
-            .Select(type => new SelectOption<ReleaseType>(type, L.Localize(type)));
+            .Select(type => new SelectOption<ReleaseType>(type, L.Localize(type)))
+            .ToList();
 
-    private IEnumerable<SelectOption<ReleaseContentType>> ReleaseContentTypeOptions =>
+    private IReadOnlyList<SelectOption<ReleaseContentType>> ReleaseContentTypeOptions =>
         Enum.GetValues<ReleaseContentType>()
-            .Select(type => new SelectOption<ReleaseContentType>(type, L.Localize(type)));
+            .Select(type => new SelectOption<ReleaseContentType>(type, L.Localize(type)))
+            .ToList();
+
+    private IReadOnlyList<SelectOption<string>> LanguageOptions =>
+        [
+            new(string.Empty, L["Unknown"]),
+            .. CultureInfo
+                .GetCultures(CultureTypes.NeutralCultures)
+                .Where(culture => culture.TwoLetterISOLanguageName.Length == 2)
+                .DistinctBy(culture => culture.TwoLetterISOLanguageName)
+                .OrderBy(culture => culture.NativeName)
+                .Select(culture => new SelectOption<string>(
+                    culture.TwoLetterISOLanguageName,
+                    culture.NativeName
+                )),
+        ];
 
     private string GetReleaseGroupDisplayText(int releaseGroupId)
     {
@@ -94,7 +113,8 @@ public partial class CreateOrEditReleaseDialog(
                 name: formModel.Name,
                 releaseFolderPath: formModel.FolderPath,
                 releaseContentType: formModel.ReleaseContentType,
-                releaseGroupId: formModel.ReleaseGroupId
+                releaseGroupId: formModel.ReleaseGroupId,
+                primaryLanguageCode: formModel.PrimaryLanguageCode
             );
 
             await DialogRef.CloseAsync(DialogResult.Ok(ReleaseId.Value));
@@ -106,7 +126,8 @@ public partial class CreateOrEditReleaseDialog(
             releaseFolderPath: formModel.FolderPath,
             releaseType: formModel.ReleaseType,
             releaseContentType: formModel.ReleaseContentType,
-            releaseGroupId: formModel.ReleaseGroupId
+            releaseGroupId: formModel.ReleaseGroupId,
+            primaryLanguageCode: formModel.PrimaryLanguageCode
         );
 
         await DialogRef.CloseAsync(DialogResult.Ok(id));

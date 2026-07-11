@@ -12,6 +12,12 @@
                           @bind-Value="model.ReleaseName"
                           Label="@L["ReleaseName"]" />
 
+        <BbFormFieldInput TValue="string"
+                          @bind-Value="model.ImdbId"
+                          Label="@L["ImdbId"]"
+                          Placeholder="tt1234567"
+                          HelperText="@L["ManualImdbIdHelp"]" />
+
         <div class="grid gap-4 sm:grid-cols-2">
             <BbFormFieldInput TValue="string"
                               @bind-Value="model.Genre"
@@ -73,20 +79,30 @@
     [Parameter]
     public ReleaseInfoReadModel? ReleaseInfo { get; set; }
 
+    [Parameter]
+    public ReleaseMetadataReadModel? ReleaseMetadata { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<ReleaseExternalIdentifierReadModel> ExternalIdentifiers { get; set; } = [];
+
     private readonly FormModel model = new();
     private EditContext editContext = null!;
 
     protected override void OnInitialized()
     {
         model.ReleaseName = ReleaseInfo?.ReleaseName ?? ReleaseName;
-        model.CoverUrl = ReleaseInfo?.CoverUrl;
-        model.Genre = ReleaseInfo?.Genre;
+        model.CoverUrl = ReleaseMetadata?.CoverUrl;
+        model.Genre = ReleaseMetadata?.Genre;
         model.VideoType = ReleaseInfo?.VideoType;
         model.AudioType = ReleaseInfo?.AudioType;
         model.SizeNumber = ReleaseInfo?.SizeNumber;
         model.SizeUnit = ReleaseInfo?.SizeUnit;
         model.ReleaseDatabaseUrl = ReleaseInfo?.ReleaseDatabaseUrl;
-        model.Description = ReleaseInfo?.Description;
+        model.Description = ReleaseMetadata?.Description;
+        model.ImdbId = ExternalIdentifiers
+            .Where(identifier => identifier.Sources.Contains(ExternalIdentifierSource.Manual))
+            .Select(identifier => identifier.Value)
+            .FirstOrDefault();
 
         editContext = new EditContext(model);
     }
@@ -105,7 +121,8 @@
                 SizeNumber: model.SizeNumber,
                 SizeUnit: model.SizeUnit,
                 ReleaseDatabaseUrl: model.ReleaseDatabaseUrl,
-                Description: model.Description
+                Description: model.Description,
+                ImdbId: model.ImdbId
             )
         );
 
@@ -137,5 +154,7 @@
         public string? ReleaseDatabaseUrl { get; set; }
 
         public string? Description { get; set; }
+
+        public string? ImdbId { get; set; }
     }
 }

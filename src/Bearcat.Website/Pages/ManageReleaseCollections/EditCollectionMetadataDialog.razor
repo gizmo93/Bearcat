@@ -14,8 +14,8 @@
                           Label="@L["Title"]" />
 
         <BbFormFieldInput TValue="string"
-                          @bind-Value="model.SeriesDatabaseUrl"
-                          Label="@L["SeriesDatabaseUrl"]" />
+                          @bind-Value="model.MetadataDatabaseUrl"
+                          Label="@L["MetadataDatabaseUrl"]" />
 
         <BbFormFieldInput TValue="string"
                           @bind-Value="model.CoverUrl"
@@ -64,7 +64,7 @@
     {
         model.Title = Metadata?.Title ?? CollectionName;
         model.CoverUrl = Metadata?.CoverUrl;
-        model.SeriesDatabaseUrl = Metadata?.SeriesDatabaseUrl;
+        model.MetadataDatabaseUrl = Metadata?.MetadataDatabaseUrl;
         model.Description = Metadata?.Description;
 
         editContext = new EditContext(model);
@@ -79,7 +79,7 @@
                 Title: model.Title,
                 CoverUrl: model.CoverUrl,
                 Description: model.Description,
-                SeriesDatabaseUrl: model.SeriesDatabaseUrl
+                MetadataDatabaseUrl: model.MetadataDatabaseUrl
             )
         );
 
@@ -98,7 +98,7 @@
 
         public string? CoverUrl { get; set; }
 
-        public string? SeriesDatabaseUrl { get; set; }
+        public string? MetadataDatabaseUrl { get; set; }
 
         public string? Description { get; set; }
     }

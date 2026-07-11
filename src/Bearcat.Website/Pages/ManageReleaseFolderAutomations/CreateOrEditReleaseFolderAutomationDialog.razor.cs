@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
@@ -27,11 +28,24 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
 
-    private IEnumerable<SelectOption<int?>> ReleaseTemplateOptions =>
-        releaseTemplates.Select(template => new SelectOption<int?>(
-            template.ReleaseTemplateId,
-            template.Name
-        ));
+    private IReadOnlyList<SelectOption<int?>> ReleaseTemplateOptions =>
+        releaseTemplates
+            .Select(template => new SelectOption<int?>(template.ReleaseTemplateId, template.Name))
+            .ToList();
+
+    private IReadOnlyList<SelectOption<string>> LanguageOptions =>
+        [
+            new(string.Empty, L["Unknown"]),
+            .. CultureInfo
+                .GetCultures(CultureTypes.NeutralCultures)
+                .Where(culture => culture.TwoLetterISOLanguageName.Length == 2)
+                .DistinctBy(culture => culture.TwoLetterISOLanguageName)
+                .OrderBy(culture => culture.NativeName)
+                .Select(culture => new SelectOption<string>(
+                    culture.TwoLetterISOLanguageName,
+                    culture.NativeName
+                )),
+        ];
 
     protected override async Task OnInitializedAsync()
     {
@@ -52,6 +66,7 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
                 FormModel.BasePath,
                 FormModel.FolderNamePattern,
                 FormModel.ReleaseTemplateId!.Value,
+                FormModel.PrimaryLanguageCode,
                 FormModel.IsEnabled
             );
         }
@@ -61,6 +76,7 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
                 FormModel.BasePath,
                 FormModel.FolderNamePattern,
                 FormModel.ReleaseTemplateId!.Value,
+                FormModel.PrimaryLanguageCode,
                 FormModel.IsEnabled
             );
         }

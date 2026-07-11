@@ -27,17 +27,18 @@ public sealed class RequiredReleaseInfoQualityCheck : IQualityCheck
     {
         var parameters = QualityCheckParameterValues.Parse(rule.ParametersJson);
 
-        var info = context.Release.ReleaseInfo;
+        var release = context.Release;
+        var metadata = release.Metadata;
         var issues = new List<string>();
 
-        if (parameters.GetBool(RequireCoverKey) && string.IsNullOrWhiteSpace(info?.CoverUrl))
+        if (parameters.GetBool(RequireCoverKey) && string.IsNullOrWhiteSpace(metadata?.CoverUrl))
         {
             issues.Add("Cover image is missing");
         }
 
         if (
             parameters.GetBool(RequireDescriptionKey)
-            && string.IsNullOrWhiteSpace(info?.Description)
+            && string.IsNullOrWhiteSpace(metadata?.Description)
         )
         {
             issues.Add("Description is missing");
@@ -45,7 +46,7 @@ public sealed class RequiredReleaseInfoQualityCheck : IQualityCheck
 
         if (
             parameters.GetBool(RequireNfoKey)
-            && (info?.ReleaseNfo is null || string.IsNullOrWhiteSpace(info.ReleaseNfo.Content))
+            && (release.ReleaseNfo is null || string.IsNullOrWhiteSpace(release.ReleaseNfo.Content))
         )
         {
             issues.Add("NFO is missing");

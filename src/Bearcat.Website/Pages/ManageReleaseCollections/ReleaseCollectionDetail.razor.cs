@@ -6,6 +6,7 @@ using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManageForumPostTemplates;
 using Bearcat.Website.Pages.ManageReleases;
 using Bearcat.Website.Pages.PostToForum;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +17,8 @@ public partial class ReleaseCollectionDetail(
     IReleaseCollectionReadRepository readRepository,
     DialogService dialogService,
     ToastService toastService,
-    NavigationManager navigationManager
+    NavigationManager navigationManager,
+    IScopedOperationRunner operationRunner
 )
 {
     [Parameter]
@@ -56,22 +58,23 @@ public partial class ReleaseCollectionDetail(
         isInitialized = true;
     }
 
-    private async Task ShowEditContentTypeDialogAsync()
+    private async Task ShowEditSettingsDialogAsync()
     {
         var parameters = new Dictionary<string, object?>
         {
-            [nameof(EditReleaseCollectionContentTypeDialog.ReleaseCollectionId)] =
-                ReleaseCollectionId,
-            [nameof(EditReleaseCollectionContentTypeDialog.ContentType)] =
+            [nameof(EditReleaseCollectionSettingsDialog.ReleaseCollectionId)] = ReleaseCollectionId,
+            [nameof(EditReleaseCollectionSettingsDialog.ContentType)] =
                 releaseCollection.ReleaseContentType,
+            [nameof(EditReleaseCollectionSettingsDialog.PrimaryLanguageCode)] =
+                releaseCollection.PrimaryLanguageCode,
         };
 
-        var dialog = await dialogService.OpenAsync<EditReleaseCollectionContentTypeDialog>(
+        var dialog = await dialogService.OpenAsync<EditReleaseCollectionSettingsDialog>(
             parameters,
             new DialogOpenOptions
             {
-                Title = L["ReleaseContentType"],
-                Description = L["EditContentTypeDescription"],
+                Title = L["EditCollectionSettings"],
+                Description = L["EditCollectionSettingsDescription"],
                 Size = DialogSize.Large,
                 ShowClose = true,
                 PreventClose = true,
@@ -83,7 +86,7 @@ public partial class ReleaseCollectionDetail(
             return;
         }
 
-        toastService.Success(L["ReleaseContentTypeUpdated"]);
+        toastService.Success(L["ReleaseCollectionSettingsUpdated"]);
         await LoadReleaseCollectionAsync();
     }
 
@@ -128,9 +131,10 @@ public partial class ReleaseCollectionDetail(
 
         try
         {
-            var service =
-                ScopedServices.GetRequiredService<ReleaseCollectionInfoResolutionService>();
-            var resolved = await service.ResolveAsync(ReleaseCollectionId);
+            var resolved = await operationRunner.RunAsync(
+                (ReleaseCollectionInfoResolutionService service) =>
+                    service.ResolveAsync(ReleaseCollectionId)
+            );
 
             if (resolved)
             {

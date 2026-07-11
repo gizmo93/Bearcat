@@ -17,6 +17,7 @@ using Bearcat.Domain.UseCases.ManageImageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageImageUploads;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageLinkCrypters;
+using Bearcat.Domain.UseCases.ManageMediaDatabases;
 using Bearcat.Domain.UseCases.ManageNfoDatabases;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManagePostedLocations;
@@ -28,11 +29,11 @@ using Bearcat.Domain.UseCases.ManageReleaseGroups;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
-using Bearcat.Domain.UseCases.ManageSeriesDatabases;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.ManageUploads.Progress;
+using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Microsoft.Extensions.DependencyInjection;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -67,6 +68,7 @@ public static class ServiceProviderConfig
             services.AddScoped<IForumPostRenderSource, ReleaseCollectionForumPostRenderSource>();
             services.AddScoped<ReleaseInfoService>();
             services.AddScoped<ReleaseInfoResolutionService>();
+            services.AddScoped<MediaMetadataResolver>();
             services.AddScoped<MediaMetadataService>();
             services.AddScoped<ReleaseTemplateService>();
             services.AddScoped<ForumPostTemplateService>();
@@ -94,7 +96,7 @@ public static class ServiceProviderConfig
             services.AddScoped<UploadConfigService>();
             services.AddScoped<LinkCrypterService>();
             services.AddScoped<NfoDatabaseRegistrationService>();
-            services.AddScoped<SeriesDatabaseRegistrationService>();
+            services.AddScoped<MediaDatabaseRegistrationService>();
             services.AddScoped<CollectionLinkCrypterContainerService>();
             services.AddScoped<LinkCrypterContainerService>();
             services.AddScoped<UploadConfigLinkCrypterService>();

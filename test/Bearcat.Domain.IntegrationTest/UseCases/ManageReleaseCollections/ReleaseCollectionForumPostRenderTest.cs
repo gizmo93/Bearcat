@@ -128,11 +128,11 @@ public class ReleaseCollectionForumPostRenderTest : BearcatIntegrationTest
             CreatedAt = DateTime.UtcNow,
             Metadata = new ReleaseCollectionMetadata
             {
-                SeriesDatabaseClassName = "TvdbSeriesDatabase",
+                MetadataDatabaseClassName = "TvdbMetadataDatabase",
                 Title = "Bodies",
                 Description = "Vier Detectives",
                 CoverUrl = "https://artworks.example/cover.jpg",
-                SeriesDatabaseUrl = "https://www.thetvdb.com/series/bodies",
+                MetadataDatabaseUrl = "https://www.thetvdb.com/series/bodies",
             },
         };
 
@@ -203,11 +203,11 @@ public class ReleaseCollectionForumPostRenderTest : BearcatIntegrationTest
             CreatedAt = DateTime.UtcNow,
             Metadata = new ReleaseCollectionMetadata
             {
-                SeriesDatabaseClassName = "TvdbSeriesDatabase",
+                MetadataDatabaseClassName = "TvdbMetadataDatabase",
                 Title = "Bodies",
                 Description = "Vier Detectives",
                 CoverUrl = "https://artworks.example/cover.jpg",
-                SeriesDatabaseUrl = "https://www.thetvdb.com/series/bodies",
+                MetadataDatabaseUrl = "https://www.thetvdb.com/series/bodies",
             },
         };
 

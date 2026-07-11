@@ -1,5 +1,5 @@
 using System.Linq.Expressions;
-using Bearcat.Abstractions.SeriesDatabase;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.PostQueue;
@@ -14,7 +14,7 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 public class ReleaseCollectionRepository(
     IBearcatReadDbContext dbRead,
     IBearcatWriteDbContext dbWrite,
-    ISeriesDatabaseFactory seriesDatabaseFactory
+    IMediaMetadataDatabaseFactory metadataDatabaseFactory
 ) : IReleaseCollectionReadRepository, IReleaseCollectionWriteRepository
 {
     private readonly Expression<Func<ReleaseCollection, bool>> isReadyForPostQueue = c =>
@@ -148,6 +148,7 @@ public class ReleaseCollectionRepository(
                 collection.ReleaseContentType,
                 collection.ReleaseGroupId,
                 ReleaseGroupName = collection.ReleaseGroup.Name,
+                collection.PrimaryLanguageCode,
                 collection.CreatedAt,
             })
             .FirstOrDefaultAsync(cancellationToken);
@@ -340,11 +341,11 @@ public class ReleaseCollectionRepository(
             )
             .Select(metadata => new
             {
-                metadata.SeriesDatabaseClassName,
+                metadata.MetadataDatabaseClassName,
                 metadata.Title,
                 metadata.Description,
                 metadata.CoverUrl,
-                metadata.SeriesDatabaseUrl,
+                metadata.MetadataDatabaseUrl,
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -355,6 +356,7 @@ public class ReleaseCollectionRepository(
             ReleaseContentType: collection.ReleaseContentType,
             ReleaseGroupId: collection.ReleaseGroupId,
             ReleaseGroupName: collection.ReleaseGroupName,
+            PrimaryLanguageCode: collection.PrimaryLanguageCode,
             CreatedAt: collection.CreatedAt,
             UploadSlots: uploadSlots
                 .Select(slot =>
@@ -407,11 +409,13 @@ public class ReleaseCollectionRepository(
             Metadata: metadata is null
                 ? null
                 : new ReleaseCollectionMetadataReadModel(
-                    SeriesDatabaseName: GetSeriesDatabaseName(metadata.SeriesDatabaseClassName),
+                    MetadataDatabaseName: GetMetadataDatabaseName(
+                        metadata.MetadataDatabaseClassName
+                    ),
                     Title: metadata.Title,
                     Description: metadata.Description,
                     CoverUrl: metadata.CoverUrl,
-                    SeriesDatabaseUrl: metadata.SeriesDatabaseUrl
+                    MetadataDatabaseUrl: metadata.MetadataDatabaseUrl
                 )
         );
     }
@@ -567,13 +571,13 @@ public class ReleaseCollectionRepository(
         return await dbRead.ReleaseCollections.CountAsync(isReadyForPostQueue, cancellationToken);
     }
 
-    private string GetSeriesDatabaseName(string seriesDatabaseClassName)
+    private string GetMetadataDatabaseName(string metadataDatabaseClassName)
     {
-        return seriesDatabaseFactory
+        return metadataDatabaseFactory
             .GetByClassName()
-            .TryGetValue(seriesDatabaseClassName, out var seriesDatabase)
-            ? seriesDatabase.Name
-            : seriesDatabaseClassName;
+            .TryGetValue(metadataDatabaseClassName, out var metadataDatabase)
+            ? metadataDatabase.Name
+            : metadataDatabaseClassName;
     }
 
     public async Task<
@@ -830,7 +834,7 @@ public class ReleaseCollectionRepository(
         IReadOnlyList<CollectionReleaseArchiveConfigTarget>
     > GetArchiveConfigTargetsForReleaseAsync(
         int releaseId,
-        IReadOnlyCollection<string> archiveConfigNames,
+        IReadOnlyList<string> archiveConfigNames,
         CancellationToken cancellationToken = default
     )
     {

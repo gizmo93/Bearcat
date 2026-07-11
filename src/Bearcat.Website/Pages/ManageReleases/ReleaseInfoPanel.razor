@@ -10,6 +10,22 @@
             <BbButton Variant="ButtonVariant.Outline"
                       Size="ButtonSize.Small"
                       Disabled="isLoading"
+                      OnClick="LoadReleaseInfoAsync">
+                <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
+                @L["Refresh"]
+            </BbButton>
+
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      Disabled="isLoading || isResolving"
+                      OnClick="RefreshMetadataAsync">
+                <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isResolving ? "animate-spin" : string.Empty)}")" />
+                @L["RefreshMetadata"]
+            </BbButton>
+
+            <BbButton Variant="ButtonVariant.Outline"
+                      Size="ButtonSize.Small"
+                      Disabled="isLoading"
                       OnClick="ShowEditReleaseInfoDialogAsync">
                 <LucideIcon Name="@(releaseInfo is null ? "plus" : "pencil")" class="h-4 w-4" />
                 @(releaseInfo is null ? L["AddReleaseInfo"] : L["EditReleaseInfo"])
@@ -26,32 +42,57 @@
                 </BbButton>
             }
 
-            <BbButton Variant="ButtonVariant.Outline"
-                      Size="ButtonSize.Small"
-                      Disabled="isLoading"
-                      OnClick="ShowEditReleaseNfoDialogAsync">
-                <LucideIcon Name="@(releaseInfo?.ReleaseNfo is null ? "file-plus" : "file-pen")" class="h-4 w-4" />
-                @(releaseInfo?.ReleaseNfo is null ? L["AddNfo"] : L["EditNfo"])
-            </BbButton>
-
-            @if (CanExtractMediaMetadata)
+            @if (releaseNfo is null)
             {
                 <BbButton Variant="ButtonVariant.Outline"
                           Size="ButtonSize.Small"
-                          Disabled="isLoading || isExtracting"
-                          OnClick="ExtractMediaMetadataAsync">
-                    <LucideIcon Name="clapperboard" class="@($"h-4 w-4 {(isExtracting ? "animate-spin" : string.Empty)}")" />
-                    @L["ExtractMediaMetadata"]
+                          Disabled="isLoading"
+                          OnClick="ShowEditReleaseNfoDialogAsync">
+                    <LucideIcon Name="file-plus" class="h-4 w-4" />
+                    @L["AddNfo"]
                 </BbButton>
             }
 
-            <BbButton Variant="ButtonVariant.Outline"
-                      Size="ButtonSize.Small"
-                      Disabled="isLoading"
-                      OnClick="LoadReleaseInfoAsync">
-                <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
-                @L["Refresh"]
-            </BbButton>
+            <BbDropdownMenu>
+                <BbDropdownMenuTrigger>
+                    <BbButton Variant="ButtonVariant.Ghost"
+                              Size="ButtonSize.IconSmall"
+                              Disabled="isLoading"
+                              AriaLabel="@L["OpenReleaseActions"]">
+                        <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                    </BbButton>
+                </BbDropdownMenuTrigger>
+                <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                    @if (releaseNfo is not null)
+                    {
+                        <BbDropdownMenuItem OnClick="ShowEditReleaseNfoDialogAsync">
+                            <Icon>
+                                <LucideIcon Name="file-pen" class="h-4 w-4" />
+                            </Icon>
+                            <ChildContent>@L["EditNfo"]</ChildContent>
+                        </BbDropdownMenuItem>
+                    }
+                    @if (CanExtractMediaMetadata)
+                    {
+                        <BbDropdownMenuItem Disabled="isExtracting" OnClick="ExtractMediaMetadataAsync">
+                            <Icon>
+                                <LucideIcon Name="clapperboard" class="@($"h-4 w-4 {(isExtracting ? "animate-spin" : string.Empty)}")" />
+                            </Icon>
+                            <ChildContent>@L["ExtractMediaMetadata"]</ChildContent>
+                        </BbDropdownMenuItem>
+                    }
+                    @if (releaseInfo is not null || releaseMetadata is not null)
+                    {
+                        <BbDropdownMenuSeparator />
+                        <BbDropdownMenuItem Class="text-destructive focus:text-destructive" OnClick="DeleteReleaseInfoAsync">
+                            <Icon>
+                                <LucideIcon Name="trash-2" class="h-4 w-4" />
+                            </Icon>
+                            <ChildContent>@L["DeleteReleaseInfo"]</ChildContent>
+                        </BbDropdownMenuItem>
+                    }
+                </BbDropdownMenuContent>
+            </BbDropdownMenu>
         </div>
     </div>
 
@@ -64,7 +105,7 @@
             </div>
         </div>
     }
-    else if (releaseInfo is null)
+    else if (releaseInfo is null && releaseMetadata is null)
     {
         <div class="bearcat-release-info-list">
             <div class="bearcat-release-empty">
@@ -76,20 +117,75 @@
     else
     {
         <div class="bearcat-release-info-list">
-            <article class="bearcat-release-info-item">
-                <div class="bearcat-release-info-layout">
-                    @if (!string.IsNullOrWhiteSpace(releaseInfo.CoverUrl))
+            @if (releaseMetadata is not null)
+            {
+                <article class="bearcat-release-info-item">
+                    <div class="bearcat-release-info-layout">
+                    @if (!string.IsNullOrWhiteSpace(releaseMetadata.CoverUrl))
                     {
-                        <a href="@releaseInfo.CoverUrl"
+                        <a href="@releaseMetadata.CoverUrl"
                            target="_blank"
                            rel="noreferrer noopener"
                            title="@L["OpenCoverInNewTab"]">
-                            <img src="@releaseInfo.CoverUrl"
-                                 alt="@releaseInfo.ReleaseName"
+                            <img src="@releaseMetadata.CoverUrl"
+                                 alt="@releaseMetadata.Title"
                                  class="bearcat-series-cover" />
                         </a>
                     }
 
+                    <div class="bearcat-release-info-content">
+                        <div class="min-w-0 space-y-2">
+                            <div class="bearcat-release-info-source-row">
+                                <span class="bearcat-release-info-source">
+                                    <LucideIcon Name="database" class="h-3.5 w-3.5" />
+                                    @GetDatabaseDisplayName(releaseMetadata.MetadataDatabaseClassName)
+                                </span>
+                                @if (!string.IsNullOrWhiteSpace(releaseMetadata.MetadataDatabaseUrl))
+                                {
+                                    <a class="bearcat-release-info-source-link"
+                                       href="@releaseMetadata.MetadataDatabaseUrl"
+                                       target="_blank"
+                                       rel="noreferrer noopener"
+                                       title="@releaseMetadata.MetadataDatabaseUrl"
+                                       aria-label="@L["OpenReleaseDatabase"]">
+                                        <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
+                                    </a>
+                                }
+                            </div>
+
+                            <h3 class="bearcat-release-info-title" title="@releaseMetadata.Title">
+                                @releaseMetadata.Title
+                            </h3>
+                        </div>
+
+                        <dl class="bearcat-release-info-facts">
+                            <div class="bearcat-release-info-fact">
+                                <dt>
+                                    <LucideIcon Name="tags" class="h-3.5 w-3.5" />
+                                    @L["Genre"]
+                                </dt>
+                                <dd>@GetValueOrDash(releaseMetadata.Genre)</dd>
+                            </div>
+                        </dl>
+
+                        @if (!string.IsNullOrWhiteSpace(releaseMetadata.Description))
+                        {
+                            <div class="bearcat-release-info-description">
+                                <div class="bearcat-release-info-external-heading">
+                                    <LucideIcon Name="align-left" class="h-3.5 w-3.5" />
+                                    <span>@L["Description"]</span>
+                                </div>
+                                <p>@releaseMetadata.Description</p>
+                            </div>
+                        }
+                    </div>
+                    </div>
+                </article>
+            }
+
+            @if (releaseInfo is not null)
+            {
+                <article class="bearcat-release-info-item">
                     <div class="bearcat-release-info-content">
                         <div class="min-w-0 space-y-2">
                             <div class="bearcat-release-info-source-row">
@@ -108,13 +204,6 @@
                                         <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
                                     </a>
                                 }
-                                <button type="button"
-                                        class="bearcat-release-info-source-link bearcat-release-info-delete-button"
-                                        title="@L["DeleteReleaseInfo"]"
-                                        aria-label="@L["DeleteReleaseInfo"]"
-                                        @onclick="@(async () => await DeleteReleaseInfoAsync(releaseInfo))">
-                                    <LucideIcon Name="trash-2" class="h-3.5 w-3.5" />
-                                </button>
                             </div>
 
                             <h3 class="bearcat-release-info-title" title="@releaseInfo.ReleaseName">
@@ -149,84 +238,78 @@
 
                             <div class="bearcat-release-info-fact">
                                 <dt>
-                                    <LucideIcon Name="tags" class="h-3.5 w-3.5" />
-                                    @L["Genre"]
-                                </dt>
-                                <dd>@GetValueOrDash(releaseInfo.Genre)</dd>
-                            </div>
-
-                            <div class="bearcat-release-info-fact">
-                                <dt>
                                     <LucideIcon Name="file-text" class="h-3.5 w-3.5" />
                                     NFO
                                 </dt>
-                                <dd>@GetNfoFileName(releaseInfo)</dd>
+                                <dd>@GetValueOrDash(releaseNfo?.FileName)</dd>
                             </div>
                         </dl>
 
-                    @if (!string.IsNullOrWhiteSpace(releaseInfo.Description))
-                    {
-                        <div class="bearcat-release-info-description">
+                        <div class="bearcat-release-info-external">
                             <div class="bearcat-release-info-external-heading">
-                                <LucideIcon Name="align-left" class="h-3.5 w-3.5" />
-                                <span>@L["Description"]</span>
+                                <LucideIcon Name="link" class="h-3.5 w-3.5" />
+                                <span>@L["ExternalInfos"]</span>
                             </div>
-                            <p>@releaseInfo.Description</p>
-                        </div>
-                    }
 
-                    <div class="bearcat-release-info-external">
-                        <div class="bearcat-release-info-external-heading">
-                            <LucideIcon Name="link" class="h-3.5 w-3.5" />
-                            <span>@L["ExternalInfos"]</span>
-                        </div>
-
-                        @if (releaseInfo.ExternalInfos.Count == 0)
-                        {
-                            <p class="text-sm text-muted-foreground">@L["NoExternalInfos"]</p>
-                        }
-                        else
-                        {
-                            <div class="bearcat-release-info-external-list">
-                                @foreach (var externalInfo in releaseInfo.ExternalInfos)
-                                {
-                                    <div class="bearcat-release-info-external-row">
-                                        <div class="bearcat-release-info-external-main">
-                                            <BbBadge Variant="BadgeVariant.Secondary">
-                                                @LocalizeExternalInfoType(externalInfo.Type)
-                                            </BbBadge>
-                                            <span class="bearcat-release-info-external-title" title="@externalInfo.Title">
-                                                @(externalInfo.Title ?? "-")
-                                            </span>
-                                        </div>
-
-                                        @if (externalInfo.Urls.Count == 0)
-                                        {
-                                            <p class="text-sm text-muted-foreground">@L["NoUrls"]</p>
-                                        }
-                                        else
-                                        {
-                                            <div class="bearcat-release-info-url-list">
-                                                @foreach (var url in externalInfo.Urls)
-                                                {
-                                                    <a class="bearcat-release-info-url"
-                                                       href="@url.Url"
-                                                       target="_blank"
-                                                       rel="noreferrer noopener"
-                                                       title="@url.Url"
-                                                       aria-label="@L["OpenExternalUrl"]">
-                                                        <span>@GetUrlLabel(url)</span>
-                                                        <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
-                                                    </a>
-                                                }
+                            @if (releaseInfo.ExternalInfos.Count == 0)
+                            {
+                                <p class="text-sm text-muted-foreground">@L["NoExternalInfos"]</p>
+                            }
+                            else
+                            {
+                                <div class="bearcat-release-info-external-list">
+                                    @foreach (var externalInfo in releaseInfo.ExternalInfos)
+                                    {
+                                        <div class="bearcat-release-info-external-row">
+                                            <div class="bearcat-release-info-external-main">
+                                                <BbBadge Variant="BadgeVariant.Secondary">
+                                                    @LocalizeExternalInfoType(externalInfo.Type)
+                                                </BbBadge>
+                                                <span class="bearcat-release-info-external-title" title="@externalInfo.Title">
+                                                    @(externalInfo.Title ?? "-")
+                                                </span>
                                             </div>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        }
+
+                                            @if (externalInfo.Urls.Count == 0)
+                                            {
+                                                <p class="text-sm text-muted-foreground">@L["NoUrls"]</p>
+                                            }
+                                            else
+                                            {
+                                                <div class="bearcat-release-info-url-list">
+                                                    @foreach (var url in externalInfo.Urls)
+                                                    {
+                                                        <a class="bearcat-release-info-url"
+                                                           href="@url.Url"
+                                                           target="_blank"
+                                                           rel="noreferrer noopener"
+                                                           title="@url.Url"
+                                                           aria-label="@L["OpenExternalUrl"]">
+                                                            <span>@GetUrlLabel(url)</span>
+                                                            <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
+                                                        </a>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <ReleaseExternalIdentifiersSection ExternalIdentifiers="externalIdentifiers" />
                     </div>
-                    </div>
+                </article>
+            }
+        </div>
+    }
+
+    @if (!isLoading && releaseInfo is null && externalIdentifiers.Count > 0)
+    {
+        <div class="bearcat-release-info-list">
+            <article class="bearcat-release-info-item">
+                <div class="bearcat-release-info-content">
+                    <ReleaseExternalIdentifiersSection ExternalIdentifiers="externalIdentifiers" />
                 </div>
             </article>
         </div>

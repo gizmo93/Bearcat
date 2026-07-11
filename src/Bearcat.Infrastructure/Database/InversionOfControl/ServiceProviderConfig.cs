@@ -12,6 +12,7 @@ using Bearcat.Domain.UseCases.ManageImageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageImageUploads.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
+using Bearcat.Domain.UseCases.ManageMediaDatabases.Repositories;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
@@ -21,10 +22,10 @@ using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
-using Bearcat.Domain.UseCases.ManageSeriesDatabases.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
+using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.DistributionSites;
 using Microsoft.EntityFrameworkCore;
@@ -183,14 +184,15 @@ public static class ServiceProviderConfig
                 NfoDatabaseRegistrationRepository
             >();
             services.AddScoped<
-                ISeriesDatabaseRegistrationReadRepository,
-                SeriesDatabaseRegistrationRepository
+                IMediaDatabaseRegistrationReadRepository,
+                MediaDatabaseRegistrationRepository
             >();
             services.AddScoped<
-                ISeriesDatabaseRegistrationWriteRepository,
-                SeriesDatabaseRegistrationRepository
+                IMediaDatabaseRegistrationWriteRepository,
+                MediaDatabaseRegistrationRepository
             >();
             services.AddScoped<IReleaseCollectionInfoRepository, ReleaseCollectionInfoRepository>();
+            services.AddScoped<IMediaMetadataResolverRepository, MediaMetadataResolverRepository>();
         }
     }
 }

@@ -40,8 +40,9 @@ public class QualityGateRepository(IBearcatWriteDbContext dbWrite) : IQualityGat
             .Include(r => r.ReleaseGroup)
                 .ThenInclude(g => g.QualityProfile!)
                     .ThenInclude(p => p.Rules)
-            .Include(r => r.ReleaseInfo!)
-                .ThenInclude(i => i.ReleaseNfo)
+            .Include(r => r.ReleaseInfo)
+            .Include(r => r.Metadata)
+            .Include(r => r.ReleaseNfo)
             .Include(r => r.MediaFiles)
             .Include(r => r.QualityIssues);
     }

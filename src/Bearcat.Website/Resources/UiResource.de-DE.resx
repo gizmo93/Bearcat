@@ -127,9 +127,9 @@
   <data name="DeleteRegistration" xml:space="preserve"><value>Registrierung löschen</value></data>
   <data name="DeleteRelease" xml:space="preserve"><value>Release löschen</value></data>
   <data name="DeleteReleaseConfirmation" xml:space="preserve"><value>Möchtest du das Release {0} wirklich löschen?</value></data>
-  <data name="DeleteReleaseInfo" xml:space="preserve"><value>Release-Info löschen</value></data>
-  <data name="DeleteReleaseInfoConfirmation" xml:space="preserve"><value>Release-Info {0} löschen? Der Hintergrundtask kann sie erneut abrufen.</value></data>
-  <data name="DeleteReleaseInfoTitle" xml:space="preserve"><value>Release-Info löschen</value></data>
+  <data name="DeleteReleaseInfo" xml:space="preserve"><value>Releaseinfos und Metadaten löschen</value></data>
+  <data name="DeleteReleaseInfoConfirmation" xml:space="preserve"><value>Releaseinfos und Metadaten für {0} löschen? Der Hintergrundtask kann sie erneut abrufen.</value></data>
+  <data name="DeleteReleaseInfoTitle" xml:space="preserve"><value>Releaseinfos und Metadaten löschen</value></data>
   <data name="DeleteReleaseTitle" xml:space="preserve"><value>Release {0} löschen</value></data>
   <data name="DeleteUploadConfig" xml:space="preserve"><value>Upload-Konfiguration löschen</value></data>
   <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Möchtest du die Upload-Konfiguration {0} wirklich löschen?</value></data>
@@ -141,7 +141,7 @@
   <data name="OpenCoverInNewTab" xml:space="preserve"><value>Cover in voller Größe in neuem Tab öffnen</value></data>
   <data name="SizeUnit" xml:space="preserve"><value>Größeneinheit</value></data>
   <data name="ReleaseDatabaseUrl" xml:space="preserve"><value>Release-Datenbank-URL</value></data>
-  <data name="SeriesDatabaseUrl" xml:space="preserve"><value>Serien-Datenbank-URL</value></data>
+  <data name="MetadataDatabaseUrl" xml:space="preserve"><value>Metadatenbank-URL</value></data>
   <data name="Title" xml:space="preserve"><value>Titel</value></data>
   <data name="EditReleaseInfo" xml:space="preserve"><value>Release-Info bearbeiten</value></data>
   <data name="AddReleaseInfo" xml:space="preserve"><value>Release-Info hinzufügen</value></data>
@@ -161,6 +161,8 @@
   <data name="Forced" xml:space="preserve"><value>Erzwungen</value></data>
   <data name="ReleaseInfoResolved" xml:space="preserve"><value>Release-Info gefunden</value></data>
   <data name="ReleaseInfoNotResolved" xml:space="preserve"><value>Keine Release-Info gefunden</value></data>
+  <data name="ReleaseMetadataResolved" xml:space="preserve"><value>Metadaten abgerufen</value></data>
+  <data name="ReleaseMetadataNotResolved" xml:space="preserve"><value>Keine passenden Metadaten gefunden</value></data>
   <data name="AddNfo" xml:space="preserve"><value>NFO hinzufügen</value></data>
   <data name="EditNfo" xml:space="preserve"><value>NFO bearbeiten</value></data>
   <data name="EditNfoDescription" xml:space="preserve"><value>Füge die NFO manuell hinzu oder bearbeite sie, z. B. wenn keine NFO-Datei existiert, keine heruntergeladen werden konnte oder die vorhandene falsch ist. Die NFO wird zusätzlich als Datei in den Release-Ordner geschrieben.</value></data>
@@ -363,6 +365,9 @@
   <data name="ReleaseContentTypeUpdated" xml:space="preserve"><value>Inhaltstyp aktualisiert</value></data>
   <data name="EditContentType" xml:space="preserve"><value>Inhaltstyp bearbeiten</value></data>
   <data name="EditContentTypeDescription" xml:space="preserve"><value>Wähle den Inhaltstyp für diese Release-Collection.</value></data>
+  <data name="EditCollectionSettings" xml:space="preserve"><value>Collection Einstellungen bearbeiten</value></data>
+  <data name="EditCollectionSettingsDescription" xml:space="preserve"><value>Wähle den Inhaltstyp und die Primärsprache für diese Release Collection.</value></data>
+  <data name="ReleaseCollectionSettingsUpdated" xml:space="preserve"><value>Collection Einstellungen aktualisiert</value></data>
   <data name="AnyReleaseContentType" xml:space="preserve"><value>Alle Inhaltstypen</value></data>
   <data name="ReleaseContentType.Movie" xml:space="preserve"><value>Film</value></data>
   <data name="ReleaseContentType.TvShowEpisode" xml:space="preserve"><value>Serienfolge</value></data>
@@ -535,6 +540,16 @@
   <data name="ExternalInfoType.Tv" xml:space="preserve"><value>TV</value></data>
   <data name="ExternalInfoType.Xxx" xml:space="preserve"><value>XXX</value></data>
   <data name="ExternalInfos" xml:space="preserve"><value>Externe Infos</value></data>
+  <data name="ExternalIdentifiers" xml:space="preserve"><value>Externe IDs</value></data>
+  <data name="ExternalIdentifierType.Imdb" xml:space="preserve"><value>IMDb</value></data>
+  <data name="ExternalIdentifierSource.Nfo" xml:space="preserve"><value>NFO</value></data>
+  <data name="ExternalIdentifierSource.Xrel" xml:space="preserve"><value>xREL</value></data>
+  <data name="ExternalIdentifierSource.Srrdb" xml:space="preserve"><value>SRRDB</value></data>
+  <data name="ExternalIdentifierSource.Manual" xml:space="preserve"><value>Manuell</value></data>
+  <data name="ExternalIdentifierSource.Tmdb" xml:space="preserve"><value>TMDB</value></data>
+  <data name="ExternalIdentifierSource.Tvdb" xml:space="preserve"><value>TVDB</value></data>
+  <data name="ImdbId" xml:space="preserve"><value>IMDb-ID</value></data>
+  <data name="ManualImdbIdHelp" xml:space="preserve"><value>IMDb-ID oder URL eingeben. Automatisch erkannte IDs bleiben unverändert.</value></data>
   <data name="HoursCount" xml:space="preserve"><value>{0} h</value></data>
   <data name="HoursUntilReupload" xml:space="preserve"><value>Stunden bis Reupload</value></data>
     <data name="HoursUntilReuploadHelp" xml:space="preserve"><value>Minimum 0; lädt Offline Links so schnell wie möglich wieder hoch.</value></data>
@@ -559,7 +574,7 @@
   <data name="ReleaseGroups" xml:space="preserve"><value>Release-Gruppen</value></data>
   <data name="ReleaseGroupsIntro" xml:space="preserve"><value>Steuere, welche Releases automatische Reuploads erstellen und wann.</value></data>
   <data name="ReleaseOverview" xml:space="preserve"><value>Release-Übersicht</value></data>
-  <data name="SelectReleaseGroup" xml:space="preserve"><value>Release-Gruppe auswählen</value></data>
+  <data name="SelectReleaseGroup" xml:space="preserve"><value>Gruppe auswählen</value></data>
   <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>Du musst eine Release-Gruppe auswählen</value></data>
   <data name="SelectAll" xml:space="preserve"><value>Alle auswählen</value></data>
   <data name="SelectedReleaseCount" xml:space="preserve"><value>{0} Release(s) ausgewählt</value></data>
@@ -802,24 +817,24 @@
   <data name="RemoveFromCollection" xml:space="preserve"><value>Aus Collection entfernen</value></data>
   <data name="RemoveReleaseFromCollectionConfirmation" xml:space="preserve"><value>{0} aus dieser Collection entfernen? Upload-Konfigurationen, die durch Collection-Upload-Slots erstellt wurden, werden gelöscht.</value></data>
   <data name="Remove" xml:space="preserve"><value>Entfernen</value></data>
-  <data name="SeriesDatabaseRegistrations" xml:space="preserve"><value>Seriendatenbank-Registrierungen</value></data>
-  <data name="SeriesDatabaseRegistrationsIntro" xml:space="preserve"><value>Aktiviere und verwalte Serien-Metadatenquellen</value></data>
-  <data name="SeriesDatabases" xml:space="preserve"><value>Seriendatenbanken</value></data>
-  <data name="SeriesDatabase" xml:space="preserve"><value>Seriendatenbank</value></data>
-  <data name="NewSeriesDatabase" xml:space="preserve"><value>Neue Seriendatenbank</value></data>
-  <data name="AddSeriesDatabase" xml:space="preserve"><value>Seriendatenbank hinzufügen</value></data>
-  <data name="SeriesDatabaseDialogDescription" xml:space="preserve"><value>Aktiviere eine Seriendatenbank und speichere Zugangsdaten, falls der Anbieter sie benötigt.</value></data>
-  <data name="SeriesDatabaseConfigurationHelp" xml:space="preserve"><value>Speichere die API-Zugangsdaten für die ausgewählte Seriendatenbank.</value></data>
-  <data name="SelectSeriesDatabase" xml:space="preserve"><value>Seriendatenbank auswählen</value></data>
-  <data name="SelectSeriesDatabaseRequired" xml:space="preserve"><value>Du musst eine Seriendatenbank auswählen.</value></data>
-  <data name="SeriesDatabaseAlreadyRegistered" xml:space="preserve"><value>Diese Seriendatenbank ist bereits registriert.</value></data>
-  <data name="OpenSeriesDatabaseActions" xml:space="preserve"><value>Seriendatenbank-Aktionen öffnen</value></data>
-  <data name="SeriesDatabaseRegistrationActivated" xml:space="preserve"><value>Seriendatenbank-Registrierung {0} aktiviert</value></data>
-  <data name="SeriesDatabaseRegistrationDeactivated" xml:space="preserve"><value>Seriendatenbank-Registrierung {0} deaktiviert</value></data>
-  <data name="DeleteSeriesDatabaseRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Seriendatenbank-Registrierung {0} wirklich löschen?</value></data>
-  <data name="SeriesMetadataSources" xml:space="preserve"><value>Serien-Metadatenquellen</value></data>
+  <data name="MediaDatabaseRegistrations" xml:space="preserve"><value>Metadatenquellen</value></data>
+  <data name="MediaDatabaseRegistrationsIntro" xml:space="preserve"><value>Aktiviere und verwalte Metadatenquellen für Filme und Serien</value></data>
+  <data name="MediaDatabases" xml:space="preserve"><value>Metadatenquellen</value></data>
+  <data name="MediaDatabase" xml:space="preserve"><value>Metadatenquelle</value></data>
+  <data name="NewMediaDatabase" xml:space="preserve"><value>Neue Metadatenquelle</value></data>
+  <data name="AddMediaDatabase" xml:space="preserve"><value>Metadatenquelle hinzufügen</value></data>
+  <data name="MediaDatabaseDialogDescription" xml:space="preserve"><value>Aktiviere eine Metadatenquelle und speichere Zugangsdaten, falls der Anbieter sie benötigt.</value></data>
+  <data name="MediaDatabaseConfigurationHelp" xml:space="preserve"><value>Speichere die API-Zugangsdaten für die ausgewählte Metadatenquelle.</value></data>
+  <data name="SelectMediaDatabase" xml:space="preserve"><value>Metadatenquelle auswählen</value></data>
+  <data name="SelectMediaDatabaseRequired" xml:space="preserve"><value>Du musst eine Metadatenquelle auswählen.</value></data>
+  <data name="MediaDatabaseAlreadyRegistered" xml:space="preserve"><value>Diese Metadatenquelle ist bereits registriert.</value></data>
+  <data name="OpenMediaDatabaseActions" xml:space="preserve"><value>Aktionen der Metadatenquelle öffnen</value></data>
+  <data name="MediaDatabaseRegistrationActivated" xml:space="preserve"><value>Metadatenquelle {0} aktiviert</value></data>
+  <data name="MediaDatabaseRegistrationDeactivated" xml:space="preserve"><value>Metadatenquelle {0} deaktiviert</value></data>
+  <data name="DeleteMediaDatabaseRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Metadatenquelle {0} wirklich löschen?</value></data>
+  <data name="MediaMetadataSources" xml:space="preserve"><value>Metadaten für Filme und Serien</value></data>
   <data name="SeriesMetadata" xml:space="preserve"><value>Serieninformationen</value></data>
-  <data name="SeriesMetadataDescription" xml:space="preserve"><value>Beschreibung und Cover aus einer Seriendatenbank.</value></data>
+  <data name="SeriesMetadataDescription" xml:space="preserve"><value>Beschreibung und Cover aus einer Metadatenbank.</value></data>
   <data name="RefreshMetadata" xml:space="preserve"><value>Metadaten abrufen</value></data>
   <data name="NoSeriesMetadataYet" xml:space="preserve"><value>Noch keine Serien-Metadaten abgerufen.</value></data>
   <data name="NoSeriesDescription" xml:space="preserve"><value>Keine Beschreibung verfügbar.</value></data>
@@ -937,4 +952,13 @@
     <data name="NotificationEntity.Release" xml:space="preserve">
         <value>Release</value>
     </data>
+  <data name="PrimaryLanguage" xml:space="preserve"><value>Primärsprache</value></data>
+  <data name="AnyLanguage" xml:space="preserve"><value>Alle Sprachen</value></data>
+  <data name="NotSet" xml:space="preserve"><value>&lt;Nicht gesetzt&gt;</value></data>
+  <data name="SelectLanguage" xml:space="preserve"><value>Sprache auswählen</value></data>
+  <data name="ChangePrimaryLanguage" xml:space="preserve"><value>Sprache ändern</value></data>
+  <data name="PrimaryLanguageChangedForReleases" xml:space="preserve"><value>Primärsprache für {0} Release(s) geändert.</value></data>
+  <data name="Unknown" xml:space="preserve"><value>Unbekannt</value></data>
+  <data name="SearchLanguage" xml:space="preserve"><value>Sprache suchen...</value></data>
+  <data name="NoLanguagesFound" xml:space="preserve"><value>Keine Sprachen gefunden.</value></data>
 </root>

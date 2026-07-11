@@ -9,5 +9,6 @@ public record EditReleaseInfoData(
     int? SizeNumber,
     string? SizeUnit,
     string? ReleaseDatabaseUrl,
-    string? Description
+    string? Description,
+    string? ImdbId
 );

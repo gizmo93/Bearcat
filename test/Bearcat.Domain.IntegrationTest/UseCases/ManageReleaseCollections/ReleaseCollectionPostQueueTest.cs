@@ -1,4 +1,4 @@
-using Bearcat.Abstractions.SeriesDatabase;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -21,7 +21,7 @@ public class ReleaseCollectionPostQueueTest : BearcatIntegrationTest
         repository = new ReleaseCollectionRepository(
             dbContext,
             dbContext,
-            Mock.Of<ISeriesDatabaseFactory>()
+            Mock.Of<IMediaMetadataDatabaseFactory>()
         );
     }
 

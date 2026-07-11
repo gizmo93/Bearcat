@@ -14,8 +14,6 @@ public class ReleaseCollectionService(
     TimeProvider timeProvider
 )
 {
-    private const string ManualSource = "Manual";
-
     public async Task<int> CreateAsync(
         string name,
         string key,
@@ -70,14 +68,17 @@ public class ReleaseCollectionService(
         var metadata = releaseCollection.Metadata;
         if (metadata is null)
         {
-            metadata = new ReleaseCollectionMetadata { SeriesDatabaseClassName = ManualSource };
+            metadata = new ReleaseCollectionMetadata
+            {
+                MetadataDatabaseClassName = ReleaseCollectionMetadata.ManualSource,
+            };
             releaseCollection.Metadata = metadata;
         }
 
         metadata.Title = CleanOptional(data.Title) ?? releaseCollection.Name;
         metadata.CoverUrl = newCoverUrl;
         metadata.Description = CleanOptional(data.Description);
-        metadata.SeriesDatabaseUrl = CleanOptional(data.SeriesDatabaseUrl);
+        metadata.MetadataDatabaseUrl = CleanOptional(data.MetadataDatabaseUrl);
 
         if (!string.Equals(previousCoverUrl, newCoverUrl, StringComparison.Ordinal))
         {
@@ -100,9 +101,10 @@ public class ReleaseCollectionService(
         }
     }
 
-    public async Task UpdateContentTypeAsync(
+    public async Task UpdateSettingsAsync(
         int releaseCollectionId,
         ReleaseContentType releaseContentType,
+        string? primaryLanguageCode,
         CancellationToken cancellationToken = default
     )
     {
@@ -111,6 +113,8 @@ public class ReleaseCollectionService(
             cancellationToken
         );
         releaseCollection.ReleaseContentType = releaseContentType;
+        releaseCollection.PrimaryLanguageCode = CleanOptional(primaryLanguageCode)
+            ?.ToLowerInvariant();
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
@@ -411,7 +415,7 @@ public class ReleaseCollectionService(
 
     public async Task UpdateSharedLinkCryptersAsync(
         int collectionUploadSlotId,
-        IReadOnlyCollection<CollectionUploadSlotLinkCrypterSettings> linkCrypterSettings,
+        IReadOnlyList<CollectionUploadSlotLinkCrypterSettings> linkCrypterSettings,
         CancellationToken cancellationToken = default
     )
     {

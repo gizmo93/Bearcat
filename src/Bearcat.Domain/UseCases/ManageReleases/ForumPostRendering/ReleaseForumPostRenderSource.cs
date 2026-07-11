@@ -36,6 +36,10 @@ public class ReleaseForumPostRenderSource(
         }
 
         var info = await releaseReadRepository.GetReleaseInfoAsync(entityId, cancellationToken);
+        var metadata = await releaseReadRepository.GetReleaseMetadataAsync(
+            entityId,
+            cancellationToken
+        );
 
         var nfo = (
             await releaseReadRepository.GetReleaseNfoAsync(entityId, cancellationToken)
@@ -51,9 +55,10 @@ public class ReleaseForumPostRenderSource(
         var renderModel = new ForumPostTemplateRenderModel
         {
             Release = ToReleaseModel(release, nfo, mediaFiles),
-            ReleaseInfo = info is null
-                ? ForumPostTemplateReleaseInfoModel.Empty
-                : ToReleaseInfoModel(info),
+            ReleaseInfo =
+                info is null && metadata is null
+                    ? ForumPostTemplateReleaseInfoModel.Empty
+                    : ToReleaseInfoModel(release.Name, info, metadata),
             Uploads = uploads,
         };
 
@@ -178,41 +183,46 @@ public class ReleaseForumPostRenderSource(
         };
     }
 
-    private static ForumPostTemplateReleaseInfoModel ToReleaseInfoModel(ReleaseInfoReadModel info)
+    private static ForumPostTemplateReleaseInfoModel ToReleaseInfoModel(
+        string releaseName,
+        ReleaseInfoReadModel? info,
+        ReleaseMetadataReadModel? metadata
+    )
     {
-        var size = info.SizeNumber is null
+        var size = info?.SizeNumber is null
             ? string.Empty
             : $"{info.SizeNumber} {info.SizeUnit}".Trim();
 
-        var externalInfos = info
-            .ExternalInfos.Select(externalInfo => new ForumPostTemplateExternalInfoModel
-            {
-                Type = externalInfo.Type.ToString(),
-                Title = externalInfo.Title ?? string.Empty,
-                Urls = externalInfo.Urls.Select(url => url.Url).ToList(),
-            })
-            .ToList();
+        var externalInfos =
+            info?.ExternalInfos.Select(externalInfo => new ForumPostTemplateExternalInfoModel
+                {
+                    Type = externalInfo.Type.ToString(),
+                    Title = externalInfo.Title ?? string.Empty,
+                    Urls = externalInfo.Urls.Select(url => url.Url).ToList(),
+                })
+                .ToList()
+            ?? [];
 
         return new ForumPostTemplateReleaseInfoModel
         {
-            ReleaseName = info.ReleaseName,
-            DatabaseUrl = info.ReleaseDatabaseUrl ?? string.Empty,
+            ReleaseName = info?.ReleaseName ?? metadata?.Title ?? releaseName,
+            DatabaseUrl = info?.ReleaseDatabaseUrl ?? metadata?.MetadataDatabaseUrl ?? string.Empty,
             Size = size,
-            SizeNumber = info.SizeNumber,
-            SizeUnit = info.SizeUnit ?? string.Empty,
-            VideoType = info.VideoType ?? string.Empty,
-            AudioType = info.AudioType ?? string.Empty,
-            Genre = info.Genre ?? string.Empty,
-            Description = info.Description ?? string.Empty,
+            SizeNumber = info?.SizeNumber,
+            SizeUnit = info?.SizeUnit ?? string.Empty,
+            VideoType = info?.VideoType ?? string.Empty,
+            AudioType = info?.AudioType ?? string.Empty,
+            Genre = metadata?.Genre ?? string.Empty,
+            Description = metadata?.Description ?? string.Empty,
             Video = new ForumPostTemplateMediaInfoModel
             {
-                Type = info.VideoType ?? string.Empty,
-                Format = info.VideoType ?? string.Empty,
+                Type = info?.VideoType ?? string.Empty,
+                Format = info?.VideoType ?? string.Empty,
             },
             Audio = new ForumPostTemplateMediaInfoModel
             {
-                Type = info.AudioType ?? string.Empty,
-                Format = info.AudioType ?? string.Empty,
+                Type = info?.AudioType ?? string.Empty,
+                Format = info?.AudioType ?? string.Empty,
             },
             ExternalInfos = externalInfos,
         };

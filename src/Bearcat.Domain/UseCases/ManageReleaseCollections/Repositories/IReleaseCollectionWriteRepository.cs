@@ -64,7 +64,7 @@ public interface IReleaseCollectionWriteRepository
         IReadOnlyList<CollectionReleaseArchiveConfigTarget>
     > GetArchiveConfigTargetsForReleaseAsync(
         int releaseId,
-        IReadOnlyCollection<string> archiveConfigNames,
+        IReadOnlyList<string> archiveConfigNames,
         CancellationToken cancellationToken = default
     );
 

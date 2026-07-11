@@ -8,6 +8,8 @@ public class ReleaseFolderAutomation
 
     public string? FolderNamePattern { get; set; }
 
+    public string? PrimaryLanguageCode { get; set; }
+
     public int ReleaseTemplateId { get; set; }
 
     public ReleaseTemplate ReleaseTemplate { get; set; } = null!;

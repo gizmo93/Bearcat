@@ -40,6 +40,7 @@ public class ReleaseFolderAutomationServiceTest : BearcatIntegrationTest
             "  /tmp/releases  ",
             " ",
             releaseTemplate.Id,
+            "de",
             true,
             CancellationToken.None
         );
@@ -52,6 +53,7 @@ public class ReleaseFolderAutomationServiceTest : BearcatIntegrationTest
         automation.BasePath.ShouldBe("/tmp/releases");
         automation.FolderNamePattern.ShouldBeNull();
         automation.ReleaseTemplateId.ShouldBe(releaseTemplate.Id);
+        automation.PrimaryLanguageCode.ShouldBe("de");
         automation.IsEnabled.ShouldBeTrue();
     }
 
@@ -69,6 +71,7 @@ public class ReleaseFolderAutomationServiceTest : BearcatIntegrationTest
             "/tmp/updated",
             "*1080p*",
             secondTemplate.Id,
+            "en",
             false,
             CancellationToken.None
         );
@@ -79,6 +82,7 @@ public class ReleaseFolderAutomationServiceTest : BearcatIntegrationTest
         result.BasePath.ShouldBe("/tmp/updated");
         result.FolderNamePattern.ShouldBe("*1080p*");
         result.ReleaseTemplateId.ShouldBe(secondTemplate.Id);
+        result.PrimaryLanguageCode.ShouldBe("en");
         result.IsEnabled.ShouldBeFalse();
     }
 

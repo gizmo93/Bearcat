@@ -19,7 +19,7 @@ public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite) : IReleaseWr
     }
 
     public async Task<IReadOnlyList<Release>> GetByIdsAsync(
-        IReadOnlyCollection<int> ids,
+        IReadOnlyList<int> ids,
         CancellationToken cancellationToken
     )
     {

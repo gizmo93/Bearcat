@@ -1,5 +1,5 @@
 using Bearcat.Abstractions.LinkCrypter;
-using Bearcat.Abstractions.SeriesDatabase;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageNotifications;
@@ -33,7 +33,7 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         repository = new ReleaseCollectionRepository(
             dbContext,
             dbContext,
-            Mock.Of<ISeriesDatabaseFactory>()
+            Mock.Of<IMediaMetadataDatabaseFactory>()
         );
         service = new ReleaseCollectionService(
             repository,
@@ -91,7 +91,7 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task UpdateContentTypeAsync_ValidData_UpdatesContentType()
+    public async Task UpdateSettingsAsync_ValidData_UpdatesSettings()
     {
         // Arrange
         var releaseGroup = new ReleaseGroup
@@ -112,13 +112,14 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         await dbContext.SaveChangesAsync();
 
         // Act
-        await service.UpdateContentTypeAsync(collection.Id, ReleaseContentType.Other);
+        await service.UpdateSettingsAsync(collection.Id, ReleaseContentType.Other, "DE");
 
         // Assert
         dbContext.ChangeTracker.Clear();
         var updated = await dbContext.ReleaseCollections.FindAsync(collection.Id);
 
         updated!.ReleaseContentType.ShouldBe(ReleaseContentType.Other);
+        updated.PrimaryLanguageCode.ShouldBe("de");
     }
 
     [Test]

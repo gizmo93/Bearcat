@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
@@ -69,6 +70,7 @@ public partial class ReleaseFolderAutomationsPage(
                     ReleaseFolderAutomationId = automation.ReleaseFolderAutomationId,
                     BasePath = automation.BasePath,
                     FolderNamePattern = automation.FolderNamePattern,
+                    PrimaryLanguageCode = automation.PrimaryLanguageCode ?? string.Empty,
                     ReleaseTemplateId = automation.ReleaseTemplateId,
                     IsEnabled = automation.IsEnabled,
                     IsEdit = true,
@@ -98,6 +100,12 @@ public partial class ReleaseFolderAutomationsPage(
         var service = ScopedServices.GetRequiredService<ReleaseFolderAutomationService>();
         await service.SetEnabledAsync(automation.ReleaseFolderAutomationId, !automation.IsEnabled);
         await LoadAutomationsAsync();
+    }
+
+    private static string GetLanguageDisplayName(string languageCode)
+    {
+        var culture = CultureInfo.GetCultureInfo(languageCode);
+        return $"{culture.NativeName} ({culture.TwoLetterISOLanguageName})";
     }
 
     private async Task DeleteAsync(ReleaseFolderAutomationReadModel automation)

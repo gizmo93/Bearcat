@@ -87,7 +87,7 @@ public class ReleaseCollectionForumPostRenderSource(
             Title = series.Title,
             Description = series.Description ?? string.Empty,
             CoverUrl = series.CoverUrl ?? string.Empty,
-            DatabaseUrl = series.SeriesDatabaseUrl ?? string.Empty,
+            DatabaseUrl = series.MetadataDatabaseUrl ?? string.Empty,
         };
     }
 }

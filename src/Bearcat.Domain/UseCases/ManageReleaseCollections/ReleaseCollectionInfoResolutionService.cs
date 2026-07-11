@@ -1,9 +1,9 @@
 using System.Text.RegularExpressions;
-using Bearcat.Abstractions.NfoDatabase;
-using Bearcat.Abstractions.SeriesDatabase;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
+using Bearcat.Domain.UseCases.ResolveMediaMetadata;
+using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -13,26 +13,18 @@ namespace Bearcat.Domain.UseCases.ManageReleaseCollections;
 
 public partial class ReleaseCollectionInfoResolutionService(
     IReleaseCollectionInfoRepository repository,
-    ISeriesDatabaseFactory seriesDatabaseFactory,
+    MediaMetadataResolver metadataResolver,
     ILogger<ReleaseCollectionInfoResolutionService> logger,
     TimeProvider timeProvider
 )
 {
     private const int MissingCollectionBatchSize = 50;
     private readonly TimeSpan lastCheckedThreshold = TimeSpan.FromDays(7);
-    private IReadOnlyList<ActiveSeriesDatabaseRegistrationReadModel>? activeRegistrations;
 
     public async Task<int> ProcessMissingCollectionMetadataAsync(
         CancellationToken cancellationToken = default
     )
     {
-        var registrations = await GetActiveSeriesDatabaseRegistrationsAsync(cancellationToken);
-
-        if (registrations.Count == 0)
-        {
-            return 0;
-        }
-
         var seenCollectionIds = new HashSet<int>();
         var totalResolvedCount = 0;
         var hasCollectionsWithoutMetadata = true;
@@ -40,7 +32,6 @@ public partial class ReleaseCollectionInfoResolutionService(
         while (hasCollectionsWithoutMetadata)
         {
             var (foundCollections, resolvedCount) = await ResolveBatchAsync(
-                registrations: registrations,
                 seenCollectionIds: seenCollectionIds,
                 cancellationToken: cancellationToken
             );
@@ -57,13 +48,6 @@ public partial class ReleaseCollectionInfoResolutionService(
         CancellationToken cancellationToken = default
     )
     {
-        var registrations = await GetActiveSeriesDatabaseRegistrationsAsync(cancellationToken);
-
-        if (registrations.Count == 0)
-        {
-            return false;
-        }
-
         var collection = await repository.GetByIdForResolutionAsync(
             releaseCollectionId,
             cancellationToken
@@ -74,12 +58,14 @@ public partial class ReleaseCollectionInfoResolutionService(
             return false;
         }
 
-        if (collection.Metadata is not null)
+        if (
+            collection.Metadata?.MetadataDatabaseClassName == ReleaseCollectionMetadata.ManualSource
+        )
         {
             return false;
         }
 
-        var resolved = await TryResolveAsync(collection, registrations, cancellationToken);
+        var resolved = await TryResolveAsync(collection, replaceExisting: true, cancellationToken);
         collection.MetadataCheckedAt = timeProvider.GetLocalNow();
         await SaveChangesSafelyAsync(collection, cancellationToken);
 
@@ -87,7 +73,6 @@ public partial class ReleaseCollectionInfoResolutionService(
     }
 
     private async Task<(bool FoundCollections, int ResolvedCount)> ResolveBatchAsync(
-        IReadOnlyList<ActiveSeriesDatabaseRegistrationReadModel> registrations,
         HashSet<int> seenCollectionIds,
         CancellationToken cancellationToken
     )
@@ -109,7 +94,11 @@ public partial class ReleaseCollectionInfoResolutionService(
 
             seenCollectionIds.Add(collection.Id);
 
-            var resolved = await TryResolveAsync(collection, registrations, cancellationToken);
+            var resolved = await TryResolveAsync(
+                collection,
+                replaceExisting: false,
+                cancellationToken
+            );
             collection.MetadataCheckedAt = timeProvider.GetLocalNow();
 
             if (resolved)
@@ -125,116 +114,47 @@ public partial class ReleaseCollectionInfoResolutionService(
 
     private async Task<bool> TryResolveAsync(
         ReleaseCollection collection,
-        IReadOnlyList<ActiveSeriesDatabaseRegistrationReadModel> registrations,
+        bool replaceExisting,
         CancellationToken cancellationToken
     )
     {
-        if (collection.Metadata is not null)
+        if (collection.Metadata is not null && !replaceExisting)
         {
             return false;
         }
 
-        var imdbId = ExtractImdbId(collection);
-        var seriesTitle = ExtractSeriesTitle(collection.Name);
+        var yearMatch = YearRegex().Match(collection.Name);
+        var lookup = new MediaMetadataLookup(
+            MediaKind: MediaKind.TvSeries,
+            ImdbId: ExtractImdbId(collection),
+            Title: ExtractSeriesTitle(collection.Name),
+            Year: yearMatch.Success ? int.Parse(yearMatch.Value) : null,
+            SeasonNumber: null,
+            EpisodeNumber: null,
+            LanguageCode: collection.PrimaryLanguageCode
+        );
 
-        foreach (var registration in registrations)
+        var resolved = await metadataResolver.ResolveAsync(lookup, cancellationToken);
+
+        if (resolved is null)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            try
-            {
-                var seriesDatabase = seriesDatabaseFactory.Get(
-                    registration.SeriesDatabaseClassName
-                );
-                var config = seriesDatabase.DeserializeConfig(registration.SerializedConfig);
-
-                var seriesInfo = await ResolveSeriesInfoAsync(
-                    seriesDatabase: seriesDatabase,
-                    config: config,
-                    imdbId: imdbId,
-                    seriesTitle: seriesTitle,
-                    cancellationToken: cancellationToken
-                );
-
-                if (seriesInfo is null)
-                {
-                    continue;
-                }
-
-                collection.Metadata = new ReleaseCollectionMetadata
-                {
-                    SeriesDatabaseClassName = registration.SeriesDatabaseClassName,
-                    Title = seriesInfo.Title,
-                    Description = seriesInfo.Description,
-                    CoverUrl = seriesInfo.CoverUrl,
-                    SeriesDatabaseUrl = seriesInfo.SeriesDatabaseUrl,
-                };
-
-                logger.LogInformation(
-                    "Resolved metadata for release collection {CollectionName} using {SeriesDatabase}",
-                    collection.Name,
-                    registration.SeriesDatabaseClassName
-                );
-
-                return true;
-            }
-            catch (SeriesDatabaseRateLimitExceededException exception)
-            {
-                logger.LogWarning(
-                    exception,
-                    "Rate limit reached while resolving metadata for collection {CollectionName} using {SeriesDatabase}",
-                    collection.Name,
-                    registration.SeriesDatabaseClassName
-                );
-
-                return false;
-            }
-            catch (Exception exception)
-            {
-                logger.LogWarning(
-                    exception,
-                    "Failed to resolve metadata for collection {CollectionName} using {SeriesDatabase}",
-                    collection.Name,
-                    registration.SeriesDatabaseClassName
-                );
-            }
+            return false;
         }
 
-        return false;
-    }
+        collection.Metadata ??= new ReleaseCollectionMetadata();
+        collection.Metadata.MetadataDatabaseClassName = resolved.DatabaseClassName;
+        collection.Metadata.Title = resolved.Metadata.Title;
+        collection.Metadata.Description = resolved.Metadata.Description;
+        collection.Metadata.CoverUrl = resolved.Metadata.CoverUrl;
+        collection.Metadata.MetadataDatabaseUrl = resolved.Metadata.DatabaseUrl;
 
-    private static async Task<SeriesInfo?> ResolveSeriesInfoAsync(
-        ISeriesDatabase seriesDatabase,
-        ISeriesDatabaseConfig config,
-        string? imdbId,
-        string? seriesTitle,
-        CancellationToken cancellationToken
-    )
-    {
-        if (!string.IsNullOrWhiteSpace(imdbId))
-        {
-            var byImdb = await seriesDatabase.GetSeriesInfoByImdbIdAsync(
-                config,
-                imdbId,
-                cancellationToken
-            );
+        logger.LogInformation(
+            "Resolved metadata for release collection {CollectionName} using {MetadataDatabase}",
+            collection.Name,
+            resolved.DatabaseClassName
+        );
 
-            if (byImdb is not null)
-            {
-                return byImdb;
-            }
-        }
-
-        if (!string.IsNullOrWhiteSpace(seriesTitle))
-        {
-            return await seriesDatabase.GetSeriesInfoByTitleAsync(
-                config,
-                seriesTitle,
-                cancellationToken
-            );
-        }
-
-        return null;
+        return true;
     }
 
     private async Task SaveChangesSafelyAsync(
@@ -259,49 +179,12 @@ public partial class ReleaseCollectionInfoResolutionService(
 
     private static string? ExtractImdbId(ReleaseCollection collection)
     {
-        foreach (var release in collection.Releases)
-        {
-            var nfoContent = release.ReleaseInfo?.ReleaseNfo?.Content;
-
-            if (string.IsNullOrWhiteSpace(nfoContent))
-            {
-                continue;
-            }
-
-            var match = ImdbIdRegex().Match(nfoContent);
-
-            if (match.Success)
-            {
-                return match.Value;
-            }
-        }
-
-        foreach (var release in collection.Releases)
-        {
-            var externalInfos = release.ReleaseInfo?.ExternalInfos;
-
-            if (externalInfos is null)
-            {
-                continue;
-            }
-
-            foreach (var url in externalInfos.SelectMany(externalInfo => externalInfo.Urls))
-            {
-                if (url.Type != UrlType.Imdb)
-                {
-                    continue;
-                }
-
-                var match = ImdbIdRegex().Match(url.Url);
-
-                if (match.Success)
-                {
-                    return match.Value;
-                }
-            }
-        }
-
-        return null;
+        return collection
+            .Releases.SelectMany(release => release.ExternalIdentifiers)
+            .Where(identifier => identifier.Type == ExternalIdentifierType.Imdb)
+            .OrderBy(identifier => identifier.Source)
+            .Select(identifier => identifier.Value)
+            .FirstOrDefault();
     }
 
     private static string? ExtractSeriesTitle(string collectionName)
@@ -313,32 +196,16 @@ public partial class ReleaseCollectionInfoResolutionService(
 
         var normalized = collectionName.Replace('.', ' ').Replace('_', ' ');
 
-        var seasonMatch = SeasonMarkerRegex().Match(normalized);
+        var titleMarker = TitleMarkerRegex().Match(normalized);
 
-        if (seasonMatch.Success)
+        if (titleMarker.Success)
         {
-            normalized = normalized[..seasonMatch.Index];
+            normalized = normalized[..titleMarker.Index];
         }
 
         normalized = WhitespaceRegex().Replace(normalized, " ").Trim();
 
         return string.IsNullOrWhiteSpace(normalized) ? null : normalized;
-    }
-
-    private async Task<
-        IReadOnlyList<ActiveSeriesDatabaseRegistrationReadModel>
-    > GetActiveSeriesDatabaseRegistrationsAsync(CancellationToken cancellationToken)
-    {
-        activeRegistrations ??= (
-            await repository.GetActiveSeriesDatabaseRegistrationsAsync(cancellationToken)
-        )
-            .OrderBy(registration =>
-                seriesDatabaseFactory.Get(registration.SeriesDatabaseClassName).ResolutionPriority
-            )
-            .ThenBy(registration => registration.SeriesDatabaseClassName)
-            .ToList();
-
-        return activeRegistrations;
     }
 
     private static bool IsDuplicateMetadataException(DbUpdateException exception)
@@ -351,11 +218,11 @@ public partial class ReleaseCollectionInfoResolutionService(
             };
     }
 
-    [GeneratedRegex(@"tt\d{7,8}", RegexOptions.IgnoreCase)]
-    private static partial Regex ImdbIdRegex();
+    [GeneratedRegex(@"\b(?:(?:19|20)\d{2}|S\d{1,2}(?:E\d{1,3})?)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex TitleMarkerRegex();
 
-    [GeneratedRegex(@"\b(S\d{1,2}(E\d{1,3})?|Season|Staffel)\b", RegexOptions.IgnoreCase)]
-    private static partial Regex SeasonMarkerRegex();
+    [GeneratedRegex(@"\b(?:19|20)\d{2}\b")]
+    private static partial Regex YearRegex();
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex WhitespaceRegex();

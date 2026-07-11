@@ -8,7 +8,7 @@ public sealed record ForumPostTemplateCollectionRenderModel
     public required ForumPostTemplateCollectionModel Collection { get; init; }
 
     [ForumPostTemplateVariable(
-        "Series metadata resolved from a series database.",
+        "Series metadata resolved from a metadata database.",
         IncludeChildren = true
     )]
     public required ForumPostTemplateSeriesModel Series { get; init; }

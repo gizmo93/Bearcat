@@ -1,31 +1,12 @@
-using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
 
-public class ReleaseCollectionInfoRepository(
-    IBearcatReadDbContext dbRead,
-    IBearcatWriteDbContext dbWrite,
-    ISecretProtector secretProtector
-) : IReleaseCollectionInfoRepository
+public class ReleaseCollectionInfoRepository(IBearcatWriteDbContext dbWrite)
+    : IReleaseCollectionInfoRepository
 {
-    public async Task<
-        IReadOnlyList<ActiveSeriesDatabaseRegistrationReadModel>
-    > GetActiveSeriesDatabaseRegistrationsAsync(CancellationToken cancellationToken = default)
-    {
-        return await dbRead
-            .SeriesDatabaseRegistrations.Where(registration => registration.IsActive)
-            .OrderBy(registration => registration.SeriesDatabaseClassName)
-            .Select(registration => new ActiveSeriesDatabaseRegistrationReadModel(
-                registration.SeriesDatabaseClassName,
-                secretProtector.Unprotect(registration.SerializedConfig)
-            ))
-            .ToListAsync(cancellationToken);
-    }
-
     public async Task<IReadOnlyList<ReleaseCollection>> GetCollectionsWithoutMetadataAsync(
         int count,
         DateTime lastCheckedThreshold,
@@ -91,8 +72,9 @@ public class ReleaseCollectionInfoRepository(
     {
         return query
             .Include(collection => collection.Releases)
-                .ThenInclude(release => release.ReleaseInfo)
-                    .ThenInclude(info => info!.ReleaseNfo)
+                .ThenInclude(release => release.ReleaseNfo)
+            .Include(collection => collection.Releases)
+                .ThenInclude(release => release.ExternalIdentifiers)
             .Include(collection => collection.Releases)
                 .ThenInclude(release => release.ReleaseInfo)
                     .ThenInclude(info => info!.ExternalInfos);

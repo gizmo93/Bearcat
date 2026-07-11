@@ -11,15 +11,22 @@ public class ReleaseInfoService(
     ILogger<ReleaseInfoService> logger
 )
 {
-    public async Task DeleteAsync(int releaseInfoId, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(int releaseId, CancellationToken cancellationToken = default)
     {
-        var releaseInfo = await repository.GetReleaseInfoByIdAsync(
-            releaseInfoId,
-            cancellationToken
-        );
-        repository.Remove(releaseInfo);
+        var release = await repository.GetReleaseWithInfoAsync(releaseId, cancellationToken);
 
-        releaseInfo.Release.ReleaseInfoCheckedAt = null;
+        if (release.ReleaseInfo is not null)
+        {
+            repository.Remove(release.ReleaseInfo);
+        }
+
+        if (release.Metadata is not null)
+        {
+            repository.Remove(release.Metadata);
+        }
+
+        release.ReleaseInfoCheckedAt = null;
+        release.MetadataCheckedAt = null;
 
         await repository.SaveChangesAsync(cancellationToken);
     }
@@ -32,7 +39,7 @@ public class ReleaseInfoService(
     {
         var release = await repository.GetReleaseForCoverUpdateAsync(releaseId, cancellationToken);
         var newCoverUrl = CleanOptional(data.CoverUrl);
-        var previousCoverUrl = release.ReleaseInfo?.CoverUrl;
+        var previousCoverUrl = release.Metadata?.CoverUrl;
 
         var releaseInfo = release.ReleaseInfo;
         if (releaseInfo is null)
@@ -42,14 +49,33 @@ public class ReleaseInfoService(
         }
 
         releaseInfo.ReleaseName = CleanOptional(data.ReleaseName) ?? release.Name;
-        releaseInfo.CoverUrl = newCoverUrl;
-        releaseInfo.Genre = CleanOptional(data.Genre);
         releaseInfo.VideoType = CleanOptional(data.VideoType);
         releaseInfo.AudioType = CleanOptional(data.AudioType);
         releaseInfo.SizeNumber = data.SizeNumber;
         releaseInfo.SizeUnit = CleanOptional(data.SizeUnit);
         releaseInfo.ReleaseDatabaseUrl = CleanOptional(data.ReleaseDatabaseUrl);
-        releaseInfo.Description = CleanOptional(data.Description);
+
+        var metadata = release.Metadata;
+        if (metadata is null)
+        {
+            metadata = new ReleaseMetadata
+            {
+                MetadataDatabaseClassName = ReleaseMetadata.ManualSource,
+            };
+            release.Metadata = metadata;
+        }
+
+        metadata.MetadataDatabaseClassName = ReleaseMetadata.ManualSource;
+        metadata.Title = releaseInfo.ReleaseName;
+        metadata.CoverUrl = newCoverUrl;
+        metadata.Genre = CleanOptional(data.Genre);
+        metadata.Description = CleanOptional(data.Description);
+
+        ReleaseExternalIdentifierService.SyncImdbIds(
+            release: release,
+            source: ExternalIdentifierSource.Manual,
+            values: [data.ImdbId]
+        );
 
         if (!string.Equals(previousCoverUrl, newCoverUrl, StringComparison.Ordinal))
         {
@@ -68,26 +94,31 @@ public class ReleaseInfoService(
     {
         var release = await repository.GetReleaseWithInfoAsync(releaseId, cancellationToken);
 
-        var releaseInfo = release.ReleaseInfo;
-        if (releaseInfo is null)
-        {
-            releaseInfo = ReleaseInfo.CreatePlaceholder(ReleaseInfo.ManualSource, release.Name);
-            release.ReleaseInfo = releaseInfo;
-        }
-
         var safeFileName = ReleaseNfoService.GetSafeNfoFileName(
             fileName ?? string.Empty,
             release.Name
         );
 
-        if (releaseInfo.ReleaseNfo is null)
+        if (release.ReleaseNfo is null)
         {
-            releaseInfo.ReleaseNfo = new ReleaseNfo { FileName = safeFileName, Content = content };
+            release.ReleaseNfo = new ReleaseNfo { FileName = safeFileName, Content = content };
         }
         else
         {
-            releaseInfo.ReleaseNfo.FileName = safeFileName;
-            releaseInfo.ReleaseNfo.Content = content;
+            release.ReleaseNfo.FileName = safeFileName;
+            release.ReleaseNfo.Content = content;
+        }
+
+        ReleaseExternalIdentifierService.SyncImdbIds(
+            release: release,
+            source: ExternalIdentifierSource.Nfo,
+            values: [content]
+        );
+        release.MetadataCheckedAt = null;
+
+        if (release.ReleaseCollection is not null)
+        {
+            release.ReleaseCollection.MetadataCheckedAt = null;
         }
 
         await repository.SaveChangesAsync(cancellationToken);

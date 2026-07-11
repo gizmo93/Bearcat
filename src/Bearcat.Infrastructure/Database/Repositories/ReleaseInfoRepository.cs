@@ -35,11 +35,41 @@ public class ReleaseInfoRepository(
     {
         return await dbWrite
             .Releases.Include(release => release.ReleaseInfo)
-                .ThenInclude(info => info!.ReleaseNfo)
-            .Where(release => release.ReleaseInfo == null || release.ReleaseInfo.ReleaseNfo == null)
+                .ThenInclude(info => info!.ExternalInfos)
+            .Include(release => release.ReleaseNfo)
+            .Include(release => release.Metadata)
+            .Include(release => release.ExternalIdentifiers)
             .Where(release =>
-                release.ReleaseInfoCheckedAt == null
-                || release.ReleaseInfoCheckedAt < lastCheckedThreshold
+                release.ReleaseInfo == null
+                || release.ReleaseNfo == null
+                || release.Metadata == null
+                || (
+                    release.Metadata.MetadataDatabaseClassName != ReleaseMetadata.ManualSource
+                    && release.Metadata.CoverUrl == null
+                )
+            )
+            .Where(release =>
+                (
+                    (release.ReleaseInfo == null || release.ReleaseNfo == null)
+                    && (
+                        release.ReleaseInfoCheckedAt == null
+                        || release.ReleaseInfoCheckedAt < lastCheckedThreshold
+                    )
+                )
+                || (
+                    (
+                        release.Metadata == null
+                        || (
+                            release.Metadata.MetadataDatabaseClassName
+                                != ReleaseMetadata.ManualSource
+                            && release.Metadata.CoverUrl == null
+                        )
+                    )
+                    && (
+                        release.MetadataCheckedAt == null
+                        || release.MetadataCheckedAt < lastCheckedThreshold
+                    )
+                )
             )
             .Where(release => !excludedReleaseIds.Contains(release.Id))
             .OrderBy(release => release.CreatedAt)
@@ -59,16 +89,6 @@ public class ReleaseInfoRepository(
         );
     }
 
-    public async Task<ReleaseInfo> GetReleaseInfoByIdAsync(
-        int releaseInfoId,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return await dbWrite
-            .ReleaseInfos.Include(r => r.Release)
-            .FirstAsync(info => info.Id == releaseInfoId, cancellationToken);
-    }
-
     public async Task<Release> GetReleaseForCoverUpdateAsync(
         int releaseId,
         CancellationToken cancellationToken = default
@@ -76,6 +96,8 @@ public class ReleaseInfoRepository(
     {
         return await dbWrite
             .Releases.Include(release => release.ReleaseInfo)
+            .Include(release => release.Metadata)
+            .Include(release => release.ExternalIdentifiers)
             .Include(release => release.ImageUploadConfigs)
                 .ThenInclude(config => config.ImageUploads)
             .FirstAsync(release => release.Id == releaseId, cancellationToken);
@@ -88,13 +110,22 @@ public class ReleaseInfoRepository(
     {
         return await dbWrite
             .Releases.Include(release => release.ReleaseInfo)
-                .ThenInclude(info => info!.ReleaseNfo)
+                .ThenInclude(info => info!.ExternalInfos)
+            .Include(release => release.Metadata)
+            .Include(release => release.ReleaseNfo)
+            .Include(release => release.ExternalIdentifiers)
+            .Include(release => release.ReleaseCollection)
             .FirstAsync(release => release.Id == releaseId, cancellationToken);
     }
 
     public void Remove(ReleaseInfo releaseInfo)
     {
         dbWrite.Remove(releaseInfo);
+    }
+
+    public void Remove(ReleaseMetadata metadata)
+    {
+        dbWrite.Remove(metadata);
     }
 
     public void Remove(ImageUpload imageUpload)
@@ -116,16 +147,16 @@ public class ReleaseInfoRepository(
             .Select(entry => entry.Entity)
             .ToList();
 
-        var pendingReleaseNfos = dbWrite
-            .ChangeTracker.Entries<ReleaseNfo>()
+        var pendingMetadata = dbWrite
+            .ChangeTracker.Entries<ReleaseMetadata>()
             .Where(entry => entry.State == EntityState.Added)
             .Select(entry => entry.Entity)
             .ToList();
 
         foreach (
             var entry in dbWrite
-                .ChangeTracker.Entries<ReleaseNfo>()
-                .Where(e => pendingReleaseNfos.Contains(e.Entity))
+                .ChangeTracker.Entries<ReleaseMetadata>()
+                .Where(entry => pendingMetadata.Contains(entry.Entity))
         )
         {
             entry.State = EntityState.Detached;
@@ -152,6 +183,11 @@ public class ReleaseInfoRepository(
         if (release.ReleaseInfo is not null && pendingReleaseInfos.Contains(release.ReleaseInfo))
         {
             release.ReleaseInfo = null;
+        }
+
+        if (release.Metadata is not null && pendingMetadata.Contains(release.Metadata))
+        {
+            release.Metadata = null;
         }
     }
 

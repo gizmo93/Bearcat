@@ -32,6 +32,15 @@
                                Placeholder="@L["SelectReleaseTemplate"]"
                                Options="ReleaseTemplateOptions" />
 
+            <BbFormFieldCombobox TValue="string"
+                                 @bind-Value="FormModel.PrimaryLanguageCode"
+                                 Label="@L["PrimaryLanguage"]"
+                                 SearchPlaceholder="@L["SearchLanguage"]"
+                                 EmptyMessage="@L["NoLanguagesFound"]"
+                                 InputClass="w-full"
+                                 MatchTriggerWidth="true"
+                                 Options="LanguageOptions" />
+
             <div class="flex items-center gap-2">
                 <BbCheckbox @bind-Checked="FormModel.IsEnabled"
                             Id="release-folder-automation-enabled"

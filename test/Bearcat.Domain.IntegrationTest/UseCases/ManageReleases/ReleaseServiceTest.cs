@@ -1,5 +1,5 @@
 using Bearcat.Abstractions.Archiver;
-using Bearcat.Abstractions.SeriesDatabase;
+using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
@@ -36,7 +36,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
                 new ReleaseCollectionRepository(
                     dbContext,
                     dbContext,
-                    Mock.Of<ISeriesDatabaseFactory>()
+                    Mock.Of<IMediaMetadataDatabaseFactory>()
                 ),
                 CreateTimeProvider()
             )
@@ -62,6 +62,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseType.Managed,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            null,
             CancellationToken.None
         );
 
@@ -93,6 +94,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             release.ReleaseFolderPath,
             ReleaseContentType.TvShowEpisode,
             releaseGroup.Id,
+            null,
             CancellationToken.None
         );
 
@@ -117,6 +119,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             "/tmp/release-updated",
             ReleaseContentType.Movie,
             secondGroup.Id,
+            null,
             CancellationToken.None
         );
 
@@ -171,6 +174,34 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         result.ShouldNotBeNull();
         result.Count.ShouldBe(2);
         result.ShouldAllBe(r => r.ReleaseGroupId == secondGroup.Id);
+    }
+
+    [TestCase("DE", "de")]
+    [TestCase("", null)]
+    public async Task UpdatePrimaryLanguageAsync_ReleasesExist_UpdatesPrimaryLanguages(
+        string primaryLanguageCode,
+        string? expectedLanguageCode
+    )
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Language group");
+        var firstRelease = await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.001");
+        var secondRelease = await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.002");
+        firstRelease.PrimaryLanguageCode = "en";
+        secondRelease.PrimaryLanguageCode = "en";
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await service.UpdatePrimaryLanguageAsync(
+            [firstRelease.Id, secondRelease.Id],
+            primaryLanguageCode,
+            CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var releases = await dbContext.Releases.OrderBy(release => release.Id).ToListAsync();
+        releases.ShouldAllBe(release => release.PrimaryLanguageCode == expectedLanguageCode);
     }
 
     [Test]
@@ -363,6 +394,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseType.Unmanaged,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            null,
             CancellationToken.None
         );
 
@@ -460,6 +492,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseType.Unmanaged,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            null,
             CancellationToken.None
         );
 
@@ -484,6 +517,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseType.Unmanaged,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            null,
             CancellationToken.None
         );
 
@@ -547,6 +581,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseType.Unmanaged,
             ReleaseContentType.Movie,
             releaseGroup.Id,
+            null,
             CancellationToken.None
         );
 

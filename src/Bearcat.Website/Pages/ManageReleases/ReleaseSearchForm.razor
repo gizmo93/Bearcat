@@ -15,6 +15,15 @@
                            Label="@L["ReleaseContentType"]"
                            Options="ReleaseContentTypeOptions" />
 
+        <BbFormFieldCombobox TValue="string"
+                             @bind-Value="selectedPrimaryLanguageCode"
+                             Label="@L["PrimaryLanguage"]"
+                             SearchPlaceholder="@L["SearchLanguage"]"
+                             EmptyMessage="@L["NoLanguagesFound"]"
+                             InputClass="w-full"
+                             MatchTriggerWidth="true"
+                             Options="PrimaryLanguageOptions" />
+
         <BbFormFieldSelect TValue="OnlineState?"
                            @bind-Value="selectedOnlineState"
                            Label="@L["OnlineState"]"
@@ -99,6 +108,8 @@
 </EditForm>
 
 @code {
+    private const string LanguageNotSetFilter = "__not_set__";
+
     [Parameter]
     public IReadOnlyList<HosterRegistrationReadModel> HosterRegistrations { get; set; } = [];
 
@@ -123,6 +134,7 @@
     private string? uploadId;
     private ReleaseType? selectedReleaseType;
     private ReleaseContentType? selectedReleaseContentType;
+    private string selectedPrimaryLanguageCode = string.Empty;
     private OnlineState? selectedOnlineState;
     private int? selectedHosterRegistrationId;
     private string selectedArchiverName = string.Empty;
@@ -136,6 +148,7 @@
         || HasActiveAdvancedFilters
         || selectedReleaseType is not null
         || selectedReleaseContentType is not null
+        || !string.IsNullOrWhiteSpace(selectedPrimaryLanguageCode)
         || selectedOnlineState is not null
         || selectedHosterRegistrationId is not null
         || !string.IsNullOrWhiteSpace(selectedArchiverName)
@@ -178,6 +191,21 @@
             Enum.GetValues<ReleaseContentType>()
                 .Select(type => new SelectOption<ReleaseContentType?>(type, L.Localize(type)))
         );
+
+    private IReadOnlyList<SelectOption<string>> PrimaryLanguageOptions =>
+        [
+            new(string.Empty, L["AnyLanguage"]),
+            new(LanguageNotSetFilter, L["NotSet"]),
+            .. CultureInfo
+                .GetCultures(CultureTypes.NeutralCultures)
+                .Where(culture => culture.TwoLetterISOLanguageName.Length == 2)
+                .DistinctBy(culture => culture.TwoLetterISOLanguageName)
+                .OrderBy(culture => culture.NativeName)
+                .Select(culture => new SelectOption<string>(
+                    culture.TwoLetterISOLanguageName,
+                    culture.NativeName
+                )),
+        ];
 
     private IEnumerable<SelectOption<int?>> HosterRegistrationOptions =>
         new[] { new SelectOption<int?>(null, L["AnyHosterConfig"]) }.Concat(
@@ -230,6 +258,7 @@
         uploadId = null;
         selectedReleaseType = null;
         selectedReleaseContentType = null;
+        selectedPrimaryLanguageCode = string.Empty;
         selectedOnlineState = null;
         selectedHosterRegistrationId = null;
         selectedArchiverName = string.Empty;
@@ -251,6 +280,12 @@
             SearchTerm: searchTerm,
             ReleaseType: selectedReleaseType,
             ReleaseContentType: selectedReleaseContentType,
+            PrimaryLanguageCode: selectedPrimaryLanguageCode switch
+            {
+                LanguageNotSetFilter => string.Empty,
+                "" => null,
+                _ => selectedPrimaryLanguageCode,
+            },
             OnlineState: selectedOnlineState,
             HosterRegistrationId: selectedHosterRegistrationId,
             ArchiverName: string.IsNullOrWhiteSpace(selectedArchiverName)

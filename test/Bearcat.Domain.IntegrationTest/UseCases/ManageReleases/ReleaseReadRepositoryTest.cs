@@ -61,6 +61,48 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task SearchReleasesAsync_PrimaryLanguageFilter_ReturnsMatchingRelease()
+    {
+        // Arrange
+        var germanRelease = await AddReleaseAsync("Bearcat.German.2026-GRP");
+        germanRelease.PrimaryLanguageCode = "de";
+        await AddReleaseAsync("Bearcat.English.2026-GRP");
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.SearchReleasesAsync(
+            new ReleaseSearchQuery(PrimaryLanguageCode: "DE"),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        result.Items.Single().ReleaseId.ShouldBe(germanRelease.Id);
+    }
+
+    [Test]
+    public async Task SearchReleasesAsync_PrimaryLanguageNotSetFilter_ReturnsMatchingRelease()
+    {
+        // Arrange
+        var germanRelease = await AddReleaseAsync("Bearcat.German.2026-GRP");
+        germanRelease.PrimaryLanguageCode = "de";
+        var releaseWithoutLanguage = await AddReleaseAsync("Bearcat.Unknown.2026-GRP");
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.SearchReleasesAsync(
+            new ReleaseSearchQuery(PrimaryLanguageCode: string.Empty),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        result.Items.Single().ReleaseId.ShouldBe(releaseWithoutLanguage.Id);
+    }
+
+    [Test]
     public async Task SearchReleasesAsync_DownloadLinkFilter_ReturnsMatchingRelease()
     {
         // Arrange
@@ -145,10 +187,6 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
                 SizeUnit = "GB",
                 VideoType = "WEB",
                 AudioType = "AC3",
-                Genre = "Drama, Sci-Fi",
-                Description = "Bearcat plot",
-                CoverUrl = "https://uploads2.xrel.to/img_cover/movie123.JPG",
-                ReleaseNfo = new ReleaseNfo { FileName = "bearcat.nfo", Content = "nfo content" },
                 ExternalInfos =
                 [
                     new ReleaseExternalInfo
@@ -172,11 +210,42 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
                 ],
             }
         );
+        release.Metadata = new ReleaseMetadata
+        {
+            MetadataDatabaseClassName = "XrelNfoDatabase",
+            Title = "Bearcat Movie",
+            Genre = "Drama, Sci-Fi",
+            Description = "Bearcat plot",
+            CoverUrl = "https://uploads2.xrel.to/img_cover/movie123.JPG",
+        };
+        release.ReleaseNfo = new ReleaseNfo { FileName = "bearcat.nfo", Content = "nfo content" };
+        release.ExternalIdentifiers.Add(
+            new ReleaseExternalIdentifier
+            {
+                Type = ExternalIdentifierType.Imdb,
+                Value = "tt1234567",
+                Source = ExternalIdentifierSource.Xrel,
+            }
+        );
+        release.ExternalIdentifiers.Add(
+            new ReleaseExternalIdentifier
+            {
+                Type = ExternalIdentifierType.Imdb,
+                Value = "tt1234567",
+                Source = ExternalIdentifierSource.Nfo,
+            }
+        );
         await dbContext.SaveChangesAsync();
         dbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetReleaseInfoAsync(release.Id, CancellationToken.None);
+        var metadata = await repository.GetReleaseMetadataAsync(release.Id, CancellationToken.None);
+        var nfo = await repository.GetReleaseNfoAsync(release.Id, CancellationToken.None);
+        var externalIdentifiers = await repository.GetReleaseExternalIdentifiersAsync(
+            release.Id,
+            CancellationToken.None
+        );
 
         // Assert
         var releaseInfo = result.ShouldNotBeNull();
@@ -187,12 +256,25 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         releaseInfo.SizeUnit.ShouldBe("GB");
         releaseInfo.VideoType.ShouldBe("WEB");
         releaseInfo.AudioType.ShouldBe("AC3");
-        releaseInfo.Genre.ShouldBe("Drama, Sci-Fi");
-        releaseInfo.Description.ShouldBe("Bearcat plot");
-        releaseInfo.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_cover/movie123.JPG");
-        releaseInfo.ReleaseNfo.ShouldNotBeNull();
-        releaseInfo.ReleaseNfo.FileName.ShouldBe("bearcat.nfo");
-        releaseInfo.ReleaseNfo.Content.ShouldBe("nfo content");
+
+        var releaseMetadata = metadata.ShouldNotBeNull();
+        releaseMetadata.MetadataDatabaseClassName.ShouldBe("XrelNfoDatabase");
+        releaseMetadata.Title.ShouldBe("Bearcat Movie");
+        releaseMetadata.Genre.ShouldBe("Drama, Sci-Fi");
+        releaseMetadata.Description.ShouldBe("Bearcat plot");
+        releaseMetadata.CoverUrl.ShouldBe("https://uploads2.xrel.to/img_cover/movie123.JPG");
+
+        var releaseNfo = nfo.ShouldNotBeNull();
+        releaseNfo.FileName.ShouldBe("bearcat.nfo");
+        releaseNfo.Content.ShouldBe("nfo content");
+
+        var externalIdentifier = externalIdentifiers.Single();
+        externalIdentifier.Type.ShouldBe(ExternalIdentifierType.Imdb);
+        externalIdentifier.Value.ShouldBe("tt1234567");
+        externalIdentifier.Sources.ShouldBe([
+            ExternalIdentifierSource.Nfo,
+            ExternalIdentifierSource.Xrel,
+        ]);
 
         var externalInfo = releaseInfo.ExternalInfos.Single();
         externalInfo.Type.ShouldBe(ExternalInfoType.Movie);
@@ -203,6 +285,32 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         externalInfo.Urls.ShouldContain(url =>
             url.Type == UrlType.Other && url.Url == "https://www.xrel.to/movie/123"
         );
+    }
+
+    [Test]
+    public async Task GetReleaseInfoAsync_ReleaseHasOnlyMetadata_ReturnsNoReleaseInfo()
+    {
+        // Arrange
+        var release = await AddReleaseAsync();
+        release.Metadata = new ReleaseMetadata
+        {
+            MetadataDatabaseClassName = "TmdbMetadataDatabase",
+            Title = "Bearcat Movie",
+            CoverUrl = "https://image.tmdb.org/bearcat.jpg",
+        };
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var releaseInfo = await repository.GetReleaseInfoAsync(release.Id, CancellationToken.None);
+        var metadata = await repository.GetReleaseMetadataAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        releaseInfo.ShouldBeNull();
+        metadata.ShouldNotBeNull();
+        metadata.MetadataDatabaseClassName.ShouldBe("TmdbMetadataDatabase");
+        metadata.Title.ShouldBe("Bearcat Movie");
+        metadata.CoverUrl.ShouldBe("https://image.tmdb.org/bearcat.jpg");
     }
 
     [Test]
@@ -217,9 +325,9 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
                 NfoDatabaseClassName = "XrelNfoDatabase",
                 ReleaseName = "Bearcat.Release.2026-GRP",
                 ExternalInfos = [],
-                ReleaseNfo = new ReleaseNfo { FileName = "bearcat.nfo", Content = "nfo content" },
             }
         );
+        release.ReleaseNfo = new ReleaseNfo { FileName = "bearcat.nfo", Content = "nfo content" };
         await dbContext.SaveChangesAsync();
         dbContext.ChangeTracker.Clear();
 
