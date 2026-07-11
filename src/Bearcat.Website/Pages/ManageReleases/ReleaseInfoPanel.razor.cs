@@ -28,6 +28,7 @@ public partial class ReleaseInfoPanel(
     private ReleaseInfoReadModel? releaseInfo;
     private ReleaseMetadataReadModel? releaseMetadata;
     private ReleaseNfoReadModel? releaseNfo;
+    private IReadOnlyList<ReleaseExternalIdentifierReadModel> externalIdentifiers = [];
     private IReadOnlyList<ReleaseMediaFileReadModel> mediaFiles = [];
     private bool isLoading;
     private bool isResolving;
@@ -51,6 +52,9 @@ public partial class ReleaseInfoPanel(
                 releaseInfo = await repository.GetReleaseInfoAsync(ReleaseId);
                 releaseMetadata = await repository.GetReleaseMetadataAsync(ReleaseId);
                 releaseNfo = await repository.GetReleaseNfoAsync(ReleaseId);
+                externalIdentifiers = await repository.GetReleaseExternalIdentifiersAsync(
+                    ReleaseId
+                );
                 mediaFiles = await repository.GetMediaFilesAsync(ReleaseId);
             });
         }
@@ -92,6 +96,7 @@ public partial class ReleaseInfoPanel(
             [nameof(EditReleaseInfoDialog.ReleaseName)] = ReleaseName,
             [nameof(EditReleaseInfoDialog.ReleaseInfo)] = releaseInfo,
             [nameof(EditReleaseInfoDialog.ReleaseMetadata)] = releaseMetadata,
+            [nameof(EditReleaseInfoDialog.ExternalIdentifiers)] = externalIdentifiers,
         };
 
         var dialog = await dialogService.OpenAsync<EditReleaseInfoDialog>(

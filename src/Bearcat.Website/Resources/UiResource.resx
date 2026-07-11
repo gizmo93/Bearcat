@@ -536,6 +536,16 @@
   <data name="ExternalInfoType.Tv" xml:space="preserve"><value>TV</value></data>
   <data name="ExternalInfoType.Xxx" xml:space="preserve"><value>XXX</value></data>
   <data name="ExternalInfos" xml:space="preserve"><value>External infos</value></data>
+  <data name="ExternalIdentifiers" xml:space="preserve"><value>External identifiers</value></data>
+  <data name="ExternalIdentifierType.Imdb" xml:space="preserve"><value>IMDb</value></data>
+  <data name="ExternalIdentifierSource.Nfo" xml:space="preserve"><value>NFO</value></data>
+  <data name="ExternalIdentifierSource.Xrel" xml:space="preserve"><value>xREL</value></data>
+  <data name="ExternalIdentifierSource.Srrdb" xml:space="preserve"><value>SRRDB</value></data>
+  <data name="ExternalIdentifierSource.Manual" xml:space="preserve"><value>Manual</value></data>
+  <data name="ExternalIdentifierSource.Tmdb" xml:space="preserve"><value>TMDB</value></data>
+  <data name="ExternalIdentifierSource.Tvdb" xml:space="preserve"><value>TVDB</value></data>
+  <data name="ImdbId" xml:space="preserve"><value>IMDb ID</value></data>
+  <data name="ManualImdbIdHelp" xml:space="preserve"><value>Enter an IMDb ID or URL. Automatically detected IDs remain unchanged.</value></data>
   <data name="HoursCount" xml:space="preserve"><value>{0} h</value></data>
   <data name="HoursUntilReupload" xml:space="preserve"><value>Hours until reupload</value></data>
   <data name="HoursUntilReuploadHelp" xml:space="preserve"><value>Minimum 0, which schedules immediately after files are confirmed offline.</value></data>

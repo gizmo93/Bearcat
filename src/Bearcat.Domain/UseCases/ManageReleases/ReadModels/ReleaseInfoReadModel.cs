@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.NfoDatabase;
+using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 
@@ -32,3 +33,9 @@ public record ReleaseExternalInfoReadModel(
 );
 
 public record ReleaseExternalInfoUrlReadModel(UrlType Type, string Url);
+
+public record ReleaseExternalIdentifierReadModel(
+    ExternalIdentifierType Type,
+    string Value,
+    IReadOnlyList<ExternalIdentifierSource> Sources
+);

@@ -683,7 +683,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
                 SizeNumber: 12,
                 SizeUnit: "GB",
                 ReleaseDatabaseUrl: null,
-                Description: "Manual description"
+                Description: "Manual description",
+                ImdbId: "https://www.imdb.com/title/tt1234567/"
             ),
             CancellationToken.None
         );
@@ -692,6 +693,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         var persistedRelease = await dbContext
             .Releases.Include(item => item.ReleaseInfo)
             .Include(item => item.Metadata)
+            .Include(item => item.ExternalIdentifiers)
             .SingleAsync();
 
         persistedRelease.ReleaseInfo!.VideoType.ShouldBe("WEB");
@@ -700,6 +702,11 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         persistedRelease.Metadata.Genre.ShouldBe("Drama");
         persistedRelease.Metadata.Description.ShouldBe("Manual description");
         persistedRelease.Metadata.CoverUrl.ShouldBe("https://images.test/cover.jpg");
+        persistedRelease.ExternalIdentifiers.ShouldContain(identifier =>
+            identifier.Type == ExternalIdentifierType.Imdb
+            && identifier.Value == "tt1234567"
+            && identifier.Source == ExternalIdentifierSource.Manual
+        );
     }
 
     [TestCase(false)]

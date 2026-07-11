@@ -97,6 +97,7 @@ public class ReleaseInfoRepository(
         return await dbWrite
             .Releases.Include(release => release.ReleaseInfo)
             .Include(release => release.Metadata)
+            .Include(release => release.ExternalIdentifiers)
             .Include(release => release.ImageUploadConfigs)
                 .ThenInclude(config => config.ImageUploads)
             .FirstAsync(release => release.Id == releaseId, cancellationToken);

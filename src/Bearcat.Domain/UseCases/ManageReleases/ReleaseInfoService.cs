@@ -76,6 +76,12 @@ public class ReleaseInfoService(
         releaseInfo.Genre = metadata.Genre;
         releaseInfo.Description = metadata.Description;
 
+        ReleaseExternalIdentifierService.SyncImdbIds(
+            release: release,
+            source: ExternalIdentifierSource.Manual,
+            values: [data.ImdbId]
+        );
+
         if (!string.Equals(previousCoverUrl, newCoverUrl, StringComparison.Ordinal))
         {
             RemoveUploadedImages(release.ImageUploadConfigs);

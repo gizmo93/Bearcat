@@ -775,6 +775,36 @@ public class ReleaseReadRepository(
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 
+    public async Task<
+        IReadOnlyList<ReleaseExternalIdentifierReadModel>
+    > GetReleaseExternalIdentifiersAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var identifiers = await dbRead
+            .ReleaseExternalIdentifiers.Where(identifier => identifier.ReleaseId == releaseId)
+            .OrderBy(identifier => identifier.Type)
+            .ThenBy(identifier => identifier.Value)
+            .ThenBy(identifier => identifier.Source)
+            .Select(identifier => new
+            {
+                identifier.Type,
+                identifier.Value,
+                identifier.Source,
+            })
+            .ToListAsync(cancellationToken);
+
+        return identifiers
+            .GroupBy(identifier => new { identifier.Type, identifier.Value })
+            .Select(group => new ReleaseExternalIdentifierReadModel(
+                group.Key.Type,
+                group.Key.Value,
+                group.Select(identifier => identifier.Source).Distinct().Order().ToList()
+            ))
+            .ToList();
+    }
+
     public async Task<IReadOnlyList<ReleaseMediaFileReadModel>> GetMediaFilesAsync(
         int releaseId,
         CancellationToken cancellationToken = default

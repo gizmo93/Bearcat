@@ -180,6 +180,22 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
             CoverUrl = "https://uploads2.xrel.to/img_cover/movie123.JPG",
         };
         release.ReleaseNfo = new ReleaseNfo { FileName = "bearcat.nfo", Content = "nfo content" };
+        release.ExternalIdentifiers.Add(
+            new ReleaseExternalIdentifier
+            {
+                Type = ExternalIdentifierType.Imdb,
+                Value = "tt1234567",
+                Source = ExternalIdentifierSource.Xrel,
+            }
+        );
+        release.ExternalIdentifiers.Add(
+            new ReleaseExternalIdentifier
+            {
+                Type = ExternalIdentifierType.Imdb,
+                Value = "tt1234567",
+                Source = ExternalIdentifierSource.Nfo,
+            }
+        );
         await dbContext.SaveChangesAsync();
         dbContext.ChangeTracker.Clear();
 
@@ -187,6 +203,10 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         var result = await repository.GetReleaseInfoAsync(release.Id, CancellationToken.None);
         var metadata = await repository.GetReleaseMetadataAsync(release.Id, CancellationToken.None);
         var nfo = await repository.GetReleaseNfoAsync(release.Id, CancellationToken.None);
+        var externalIdentifiers = await repository.GetReleaseExternalIdentifiersAsync(
+            release.Id,
+            CancellationToken.None
+        );
 
         // Assert
         var releaseInfo = result.ShouldNotBeNull();
@@ -208,6 +228,14 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         var releaseNfo = nfo.ShouldNotBeNull();
         releaseNfo.FileName.ShouldBe("bearcat.nfo");
         releaseNfo.Content.ShouldBe("nfo content");
+
+        var externalIdentifier = externalIdentifiers.Single();
+        externalIdentifier.Type.ShouldBe(ExternalIdentifierType.Imdb);
+        externalIdentifier.Value.ShouldBe("tt1234567");
+        externalIdentifier.Sources.ShouldBe([
+            ExternalIdentifierSource.Nfo,
+            ExternalIdentifierSource.Xrel,
+        ]);
 
         var externalInfo = releaseInfo.ExternalInfos.Single();
         externalInfo.Type.ShouldBe(ExternalInfoType.Movie);

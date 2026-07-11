@@ -1,0 +1,44 @@
+@if (ExternalIdentifiers.Count > 0)
+{
+    <div class="bearcat-release-info-external">
+        <div class="bearcat-release-info-external-heading">
+            <LucideIcon Name="fingerprint" class="h-3.5 w-3.5" />
+            <span>@L["ExternalIdentifiers"]</span>
+        </div>
+
+        <div class="bearcat-release-info-external-list">
+            @foreach (var identifier in ExternalIdentifiers)
+            {
+                <div class="bearcat-release-info-external-row">
+                    <div class="bearcat-release-info-external-main">
+                        <BbBadge Variant="BadgeVariant.Secondary">
+                            @L[$"ExternalIdentifierType.{identifier.Type}"]
+                        </BbBadge>
+                        <a class="bearcat-release-info-url"
+                           href="@($"https://www.imdb.com/title/{identifier.Value}")"
+                           target="_blank"
+                           rel="noreferrer noopener"
+                           title="@identifier.Value">
+                            <span>@identifier.Value</span>
+                            <LucideIcon Name="external-link" class="h-3.5 w-3.5" />
+                        </a>
+                    </div>
+
+                    <div class="bearcat-release-info-url-list">
+                        @foreach (var source in identifier.Sources)
+                        {
+                            <BbBadge Variant="BadgeVariant.Outline">
+                                @L[$"ExternalIdentifierSource.{source}"]
+                            </BbBadge>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<ReleaseExternalIdentifierReadModel> ExternalIdentifiers { get; set; } = [];
+}

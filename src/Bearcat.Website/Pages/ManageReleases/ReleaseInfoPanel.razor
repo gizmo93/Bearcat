@@ -296,9 +296,22 @@
                                 </div>
                             }
                         </div>
+
+                        <ReleaseExternalIdentifiersSection ExternalIdentifiers="externalIdentifiers" />
                     </div>
                 </article>
             }
+        </div>
+    }
+
+    @if (!isLoading && releaseInfo is null && externalIdentifiers.Count > 0)
+    {
+        <div class="bearcat-release-info-list">
+            <article class="bearcat-release-info-item">
+                <div class="bearcat-release-info-content">
+                    <ReleaseExternalIdentifiersSection ExternalIdentifiers="externalIdentifiers" />
+                </div>
+            </article>
         </div>
     }
 

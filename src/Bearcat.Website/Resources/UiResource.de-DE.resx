@@ -128,7 +128,7 @@
   <data name="DeleteRelease" xml:space="preserve"><value>Release löschen</value></data>
   <data name="DeleteReleaseConfirmation" xml:space="preserve"><value>Möchtest du das Release {0} wirklich löschen?</value></data>
   <data name="DeleteReleaseInfo" xml:space="preserve"><value>Releaseinfos und Metadaten löschen</value></data>
-  <data name="DeleteReleaseInfoConfirmation" xml:space="preserve"><value>Release-Infos und Metadaten für {0} löschen? Der Hintergrundtask kann sie erneut abrufen.</value></data>
+  <data name="DeleteReleaseInfoConfirmation" xml:space="preserve"><value>Releaseinfos und Metadaten für {0} löschen? Der Hintergrundtask kann sie erneut abrufen.</value></data>
   <data name="DeleteReleaseInfoTitle" xml:space="preserve"><value>Releaseinfos und Metadaten löschen</value></data>
   <data name="DeleteReleaseTitle" xml:space="preserve"><value>Release {0} löschen</value></data>
   <data name="DeleteUploadConfig" xml:space="preserve"><value>Upload-Konfiguration löschen</value></data>
@@ -537,6 +537,16 @@
   <data name="ExternalInfoType.Tv" xml:space="preserve"><value>TV</value></data>
   <data name="ExternalInfoType.Xxx" xml:space="preserve"><value>XXX</value></data>
   <data name="ExternalInfos" xml:space="preserve"><value>Externe Infos</value></data>
+  <data name="ExternalIdentifiers" xml:space="preserve"><value>Externe IDs</value></data>
+  <data name="ExternalIdentifierType.Imdb" xml:space="preserve"><value>IMDb</value></data>
+  <data name="ExternalIdentifierSource.Nfo" xml:space="preserve"><value>NFO</value></data>
+  <data name="ExternalIdentifierSource.Xrel" xml:space="preserve"><value>xREL</value></data>
+  <data name="ExternalIdentifierSource.Srrdb" xml:space="preserve"><value>SRRDB</value></data>
+  <data name="ExternalIdentifierSource.Manual" xml:space="preserve"><value>Manuell</value></data>
+  <data name="ExternalIdentifierSource.Tmdb" xml:space="preserve"><value>TMDB</value></data>
+  <data name="ExternalIdentifierSource.Tvdb" xml:space="preserve"><value>TVDB</value></data>
+  <data name="ImdbId" xml:space="preserve"><value>IMDb-ID</value></data>
+  <data name="ManualImdbIdHelp" xml:space="preserve"><value>IMDb-ID oder URL eingeben. Automatisch erkannte IDs bleiben unverändert.</value></data>
   <data name="HoursCount" xml:space="preserve"><value>{0} h</value></data>
   <data name="HoursUntilReupload" xml:space="preserve"><value>Stunden bis Reupload</value></data>
     <data name="HoursUntilReuploadHelp" xml:space="preserve"><value>Minimum 0; lädt Offline Links so schnell wie möglich wieder hoch.</value></data>
