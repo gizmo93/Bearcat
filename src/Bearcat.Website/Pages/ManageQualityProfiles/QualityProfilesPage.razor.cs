@@ -1,15 +1,15 @@
 using Bearcat.Domain.UseCases.ManageQualityProfiles;
 using Bearcat.Domain.UseCases.ManageQualityProfiles.ReadModels;
 using Bearcat.Domain.UseCases.ManageQualityProfiles.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageQualityProfiles;
 
 public partial class QualityProfilesPage(
-    IQualityProfileReadRepository readRepository,
     DialogService dialogService,
-    ToastService toastService
+    ToastService toastService,
+    IScopedOperationRunner operationRunner
 )
 {
     private IReadOnlyList<QualityProfileReadModel> profiles = [];
@@ -26,7 +26,9 @@ public partial class QualityProfilesPage(
 
         try
         {
-            profiles = await readRepository.GetAllAsync();
+            profiles = await operationRunner.RunAsync(
+                (IQualityProfileReadRepository repository) => repository.GetAllAsync()
+            );
         }
         finally
         {
@@ -41,7 +43,9 @@ public partial class QualityProfilesPage(
 
     private async Task ShowEditDialogAsync(QualityProfileReadModel profile)
     {
-        var detail = await readRepository.GetDetailAsync(profile.Id);
+        var detail = await operationRunner.RunAsync(
+            (IQualityProfileReadRepository repository) => repository.GetDetailAsync(profile.Id)
+        );
 
         if (detail is null)
         {
@@ -102,8 +106,9 @@ public partial class QualityProfilesPage(
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<QualityProfileService>();
-        await service.DeleteAsync(profile.Id);
+        await operationRunner.RunAsync(
+            (QualityProfileService service) => service.DeleteAsync(profile.Id)
+        );
 
         toastService.Success(L["QualityProfileDeleted", profile.Name]);
         await LoadProfilesAsync();

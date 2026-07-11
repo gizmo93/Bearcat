@@ -1,13 +1,14 @@
 using Bearcat.Domain.UseCases.ManageArchives.ReadModels;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManageArchives;
 
 public partial class ArchiveDetailDialog(
-    IArchiveReadRepository archiveReadRepository,
-    ToastService toastService
+    ToastService toastService,
+    IScopedOperationRunner operationRunner
 ) : ComponentBase
 {
     [Parameter]
@@ -22,7 +23,9 @@ public partial class ArchiveDetailDialog(
 
     protected override async Task OnInitializedAsync()
     {
-        var archive = await archiveReadRepository.GetByIdAsync(ArchiveId);
+        var archive = await operationRunner.RunAsync(
+            (IArchiveReadRepository repository) => repository.GetByIdAsync(ArchiveId)
+        );
 
         if (archive is null)
         {

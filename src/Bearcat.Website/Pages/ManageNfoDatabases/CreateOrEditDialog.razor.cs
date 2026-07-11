@@ -1,14 +1,14 @@
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.UseCases.ManageNfoDatabases;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageNfoDatabases;
 
-public partial class CreateOrEditDialog
+public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
 {
     [Parameter]
     public int? NfoDatabaseRegistrationId { get; set; }
@@ -17,8 +17,6 @@ public partial class CreateOrEditDialog
     public IDialogReference DialogRef { get; set; } = null!;
 
     private bool IsEditMode => NfoDatabaseRegistrationId.HasValue;
-    private INfoDatabaseRegistrationReadRepository readRepository = null!;
-    private INfoDatabaseFactory nfoDatabaseFactory = null!;
     private RegistrationFormModel formModel = new();
     private EditContext editContext = null!;
     private ValidationMessageStore validationMessageStore = null!;
@@ -31,10 +29,6 @@ public partial class CreateOrEditDialog
 
     protected override async Task OnInitializedAsync()
     {
-        readRepository =
-            ScopedServices.GetRequiredService<INfoDatabaseRegistrationReadRepository>();
-        nfoDatabaseFactory = ScopedServices.GetRequiredService<INfoDatabaseFactory>();
-
         await InitializeFormModelAsync();
         await InitializeNfoDatabasesAsync();
 
@@ -46,22 +40,22 @@ public partial class CreateOrEditDialog
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<NfoDatabaseRegistrationService>();
+        await operationRunner.RunAsync<NfoDatabaseRegistrationService>(async service =>
+        {
+            if (!IsEditMode)
+            {
+                await service.CreateAsync(
+                    className: formModel.ClassName!,
+                    configuration: formModel.Configuration
+                );
+                return;
+            }
 
-        if (!IsEditMode)
-        {
-            await service.CreateAsync(
-                className: formModel.ClassName!,
-                configuration: formModel.Configuration
-            );
-        }
-        else
-        {
             await service.UpdateAsync(
                 id: NfoDatabaseRegistrationId!.Value,
                 configuration: formModel.Configuration
             );
-        }
+        });
 
         await DialogRef.CloseAsync(DialogResult.Ok());
     }
@@ -120,7 +114,10 @@ public partial class CreateOrEditDialog
             return;
         }
 
-        var registration = await readRepository.GetByIdAsync(NfoDatabaseRegistrationId!.Value);
+        var registration = await operationRunner.RunAsync(
+            (INfoDatabaseRegistrationReadRepository repository) =>
+                repository.GetByIdAsync(NfoDatabaseRegistrationId!.Value)
+        );
 
         if (registration is null)
         {
@@ -133,7 +130,9 @@ public partial class CreateOrEditDialog
 
     private async Task InitializeNfoDatabasesAsync()
     {
-        var registrations = await readRepository.GetAllAsync();
+        var registrations = await operationRunner.RunAsync(
+            (INfoDatabaseRegistrationReadRepository repository) => repository.GetAllAsync()
+        );
         registeredClassNames = registrations
             .Where(registration =>
                 !IsEditMode || registration.Id != NfoDatabaseRegistrationId!.Value
@@ -141,10 +140,16 @@ public partial class CreateOrEditDialog
             .Select(registration => registration.NfoDatabaseClassName)
             .ToHashSet();
 
-        nfoDatabases = nfoDatabaseFactory
-            .GetNfoDatabases()
-            .Where(database => IsEditMode || !registeredClassNames.Contains(database.ClassName))
-            .ToList();
+        nfoDatabases = operationRunner.Run(
+            (INfoDatabaseFactory factory) =>
+                (IReadOnlyList<NfoDatabaseDto>)
+                    factory
+                        .GetNfoDatabases()
+                        .Where(database =>
+                            IsEditMode || !registeredClassNames.Contains(database.ClassName)
+                        )
+                        .ToList()
+        );
     }
 
     private async Task CancelAsync()

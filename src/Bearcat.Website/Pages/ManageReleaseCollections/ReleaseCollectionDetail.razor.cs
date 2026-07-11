@@ -9,12 +9,10 @@ using Bearcat.Website.Pages.PostToForum;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleaseCollections;
 
 public partial class ReleaseCollectionDetail(
-    IReleaseCollectionReadRepository readRepository,
     DialogService dialogService,
     ToastService toastService,
     NavigationManager navigationManager,
@@ -45,7 +43,10 @@ public partial class ReleaseCollectionDetail(
 
     private async Task LoadReleaseCollectionAsync()
     {
-        var detail = await readRepository.GetDetailAsync(ReleaseCollectionId);
+        var detail = await operationRunner.RunAsync(
+            (IReleaseCollectionReadRepository repository) =>
+                repository.GetDetailAsync(ReleaseCollectionId)
+        );
 
         if (detail is null)
         {
@@ -304,8 +305,10 @@ public partial class ReleaseCollectionDetail(
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<ReleaseCollectionService>();
-        await service.DeleteUploadSlotAsync(uploadSlot.CollectionUploadSlotId);
+        await operationRunner.RunAsync(
+            (ReleaseCollectionService service) =>
+                service.DeleteUploadSlotAsync(uploadSlot.CollectionUploadSlotId)
+        );
         await LoadReleaseCollectionAsync();
     }
 
@@ -351,8 +354,10 @@ public partial class ReleaseCollectionDetail(
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<ReleaseCollectionService>();
-        await service.RemoveReleaseAsync(ReleaseCollectionId, release.ReleaseId);
+        await operationRunner.RunAsync(
+            (ReleaseCollectionService service) =>
+                service.RemoveReleaseAsync(ReleaseCollectionId, release.ReleaseId)
+        );
         await LoadReleaseCollectionAsync();
     }
 
@@ -379,10 +384,12 @@ public partial class ReleaseCollectionDetail(
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<LinkCrypterContainerService>();
-        await service.DeleteFailedContainerAsync(
-            container.LinkCrypterContainerId,
-            CancellationToken.None
+        await operationRunner.RunAsync(
+            (LinkCrypterContainerService service) =>
+                service.DeleteFailedContainerAsync(
+                    container.LinkCrypterContainerId,
+                    CancellationToken.None
+                )
         );
         await LoadReleaseCollectionAsync();
     }

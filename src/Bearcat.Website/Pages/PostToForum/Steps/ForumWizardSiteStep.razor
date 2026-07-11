@@ -28,7 +28,7 @@ else
     public bool IsEmpty { get; set; }
 
     [Parameter]
-    public IEnumerable<SelectOption<int>> Options { get; set; } = [];
+    public IReadOnlyList<SelectOption<int>> Options { get; set; } = [];
 
     [Parameter]
     public int SelectedRegistrationId { get; set; }

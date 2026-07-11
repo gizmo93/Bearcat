@@ -3,16 +3,15 @@ using Bearcat.Domain.UseCases.ManageQualityProfiles.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleaseGroups;
 
 public partial class ReleaseGroupsPage(
-    IReleaseGroupReadRepository readRepository,
-    IQualityProfileReadRepository qualityProfileReadRepository,
     DialogService dialogService,
-    ToastService toastService
+    ToastService toastService,
+    IScopedOperationRunner operationRunner
 )
 {
     private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
@@ -29,7 +28,9 @@ public partial class ReleaseGroupsPage(
 
         try
         {
-            releaseGroups = await readRepository.GetAllAsync();
+            releaseGroups = await operationRunner.RunAsync(
+                (IReleaseGroupReadRepository repository) => repository.GetAllAsync()
+            );
         }
         finally
         {
@@ -43,7 +44,9 @@ public partial class ReleaseGroupsPage(
         {
             [nameof(CreateOrEditReleaseGroupDialog.FormModel)] = new ReleaseGroupFormModel(),
             [nameof(CreateOrEditReleaseGroupDialog.QualityProfiles)] =
-                await qualityProfileReadRepository.GetAllAsync(),
+                await operationRunner.RunAsync(
+                    (IQualityProfileReadRepository repository) => repository.GetAllAsync()
+                ),
         };
 
         var dialog = await dialogService.OpenAsync<CreateOrEditReleaseGroupDialog>(
@@ -78,7 +81,9 @@ public partial class ReleaseGroupsPage(
                 ReleaseGroupId = releaseGroup.ReleaseGroupId,
             },
             [nameof(CreateOrEditReleaseGroupDialog.QualityProfiles)] =
-                await qualityProfileReadRepository.GetAllAsync(),
+                await operationRunner.RunAsync(
+                    (IQualityProfileReadRepository repository) => repository.GetAllAsync()
+                ),
         };
 
         var dialog = await dialogService.OpenAsync<CreateOrEditReleaseGroupDialog>(
@@ -123,8 +128,9 @@ public partial class ReleaseGroupsPage(
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<ReleaseGroupService>();
-        await service.DeleteAsync(releaseGroup.ReleaseGroupId);
+        await operationRunner.RunAsync(
+            (ReleaseGroupService service) => service.DeleteAsync(releaseGroup.ReleaseGroupId)
+        );
         await LoadReleaseGroupsAsync();
     }
 }

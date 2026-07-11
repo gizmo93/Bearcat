@@ -1,26 +1,26 @@
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Primitives;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageApplicationConfigurations;
 
-public partial class ApplicationConfigurationsPage
+public partial class ApplicationConfigurationsPage(IScopedOperationRunner operationRunner)
 {
     private readonly Dictionary<string, string?> editorValues = [];
     private IReadOnlyList<ApplicationConfigurationDto> configurations = [];
-    private ApplicationConfigurationService configurationService = null!;
     private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
-        configurationService = ScopedServices.GetRequiredService<ApplicationConfigurationService>();
         await LoadAsync();
     }
 
     private async Task LoadAsync()
     {
         isLoading = true;
-        configurations = await configurationService.GetAllAsync(CancellationToken.None);
+        configurations = await operationRunner.RunAsync(
+            (ApplicationConfigurationService service) => service.GetAllAsync(CancellationToken.None)
+        );
         editorValues.Clear();
         isLoading = false;
     }
@@ -32,11 +32,14 @@ public partial class ApplicationConfigurationsPage
 
     private async Task SaveBoolAsync(ApplicationConfigurationPropertyDto property, bool value)
     {
-        await configurationService.SaveOverrideAsync(
-            configurationKey: property.ConfigurationKey,
-            propertyName: property.Name,
-            value: value,
-            cancellationToken: CancellationToken.None
+        await operationRunner.RunAsync(
+            (ApplicationConfigurationService service) =>
+                service.SaveOverrideAsync(
+                    configurationKey: property.ConfigurationKey,
+                    propertyName: property.Name,
+                    value: value,
+                    cancellationToken: CancellationToken.None
+                )
         );
         await LoadAsync();
     }
@@ -70,21 +73,27 @@ public partial class ApplicationConfigurationsPage
             value = int.TryParse(editorValue, out var intValue) ? intValue : 0;
         }
 
-        await configurationService.SaveOverrideAsync(
-            configurationKey: property.ConfigurationKey,
-            propertyName: property.Name,
-            value: value,
-            cancellationToken: CancellationToken.None
+        await operationRunner.RunAsync(
+            (ApplicationConfigurationService service) =>
+                service.SaveOverrideAsync(
+                    configurationKey: property.ConfigurationKey,
+                    propertyName: property.Name,
+                    value: value,
+                    cancellationToken: CancellationToken.None
+                )
         );
         await LoadAsync();
     }
 
     private async Task ResetOverrideAsync(ApplicationConfigurationPropertyDto property)
     {
-        await configurationService.ResetOverrideAsync(
-            configurationKey: property.ConfigurationKey,
-            propertyName: property.Name,
-            cancellationToken: CancellationToken.None
+        await operationRunner.RunAsync(
+            (ApplicationConfigurationService service) =>
+                service.ResetOverrideAsync(
+                    configurationKey: property.ConfigurationKey,
+                    propertyName: property.Name,
+                    cancellationToken: CancellationToken.None
+                )
         );
         await LoadAsync();
     }
@@ -111,14 +120,16 @@ public partial class ApplicationConfigurationsPage
         return property.ValueType == typeof(string) && property.Options.Count > 0;
     }
 
-    private IEnumerable<SelectOption<string>> GetSelectOptions(
+    private IReadOnlyList<SelectOption<string>> GetSelectOptions(
         ApplicationConfigurationPropertyDto property
     )
     {
-        return property.Options.Select(value => new SelectOption<string>(
-            value,
-            FormatOptionValue(property, value)
-        ));
+        return property
+            .Options.Select(value => new SelectOption<string>(
+                value,
+                FormatOptionValue(property, value)
+            ))
+            .ToList();
     }
 
     private string GetSelectClass(ApplicationConfigurationPropertyDto property)

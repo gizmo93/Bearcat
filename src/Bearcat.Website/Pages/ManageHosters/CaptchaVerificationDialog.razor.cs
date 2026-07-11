@@ -1,11 +1,12 @@
 using Bearcat.Domain.UseCases.ManageHosters;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageHosters;
 
-public partial class CaptchaVerificationDialog : OwningComponentBase
+public partial class CaptchaVerificationDialog(IScopedOperationRunner operationRunner)
+    : ComponentBase
 {
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
@@ -33,8 +34,10 @@ public partial class CaptchaVerificationDialog : OwningComponentBase
 
         try
         {
-            var service = ScopedServices.GetRequiredService<HosterRegistrationService>();
-            var result = await service.RequestCaptchaChallengeAsync(HosterRegistrationId);
+            var result = await operationRunner.RunAsync(
+                (HosterRegistrationService service) =>
+                    service.RequestCaptchaChallengeAsync(HosterRegistrationId)
+            );
 
             if (!result.IsSuccess)
             {
@@ -63,11 +66,9 @@ public partial class CaptchaVerificationDialog : OwningComponentBase
 
         try
         {
-            var service = ScopedServices.GetRequiredService<HosterRegistrationService>();
-            var result = await service.VerifyCaptchaAsync(
-                HosterRegistrationId,
-                challenge!,
-                captchaResponse
+            var result = await operationRunner.RunAsync(
+                (HosterRegistrationService service) =>
+                    service.VerifyCaptchaAsync(HosterRegistrationId, challenge!, captchaResponse)
             );
 
             if (!result.IsSuccess)

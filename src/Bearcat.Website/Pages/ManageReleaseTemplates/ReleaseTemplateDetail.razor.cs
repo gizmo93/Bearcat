@@ -2,18 +2,18 @@ using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleaseTemplates;
 
 public partial class ReleaseTemplateDetail(
-    IReleaseTemplateReadRepository readRepository,
     DialogService dialogService,
     ToastService toastService,
-    NavigationManager navigationManager
-) : OwningComponentBase
+    NavigationManager navigationManager,
+    IScopedOperationRunner operationRunner
+) : ComponentBase
 {
     [Parameter]
     public int ReleaseTemplateId { get; set; }
@@ -28,7 +28,10 @@ public partial class ReleaseTemplateDetail(
 
     private async Task LoadReleaseTemplateAsync()
     {
-        var detail = await readRepository.GetDetailAsync(ReleaseTemplateId);
+        var detail = await operationRunner.RunAsync(
+            (IReleaseTemplateReadRepository repository) =>
+                repository.GetDetailAsync(ReleaseTemplateId)
+        );
 
         if (detail is null)
         {
@@ -103,8 +106,10 @@ public partial class ReleaseTemplateDetail(
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
-        await service.DeleteAsync(releaseTemplate.ReleaseTemplateId);
+        await operationRunner.RunAsync(
+            (ReleaseTemplateService service) =>
+                service.DeleteAsync(releaseTemplate.ReleaseTemplateId)
+        );
         navigationManager.NavigateTo("/release-templates");
     }
 
@@ -195,8 +200,10 @@ public partial class ReleaseTemplateDetail(
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
-        await service.DeleteArchiveConfigTemplateAsync(archiveConfig.ArchiveConfigTemplateId);
+        await operationRunner.RunAsync(
+            (ReleaseTemplateService service) =>
+                service.DeleteArchiveConfigTemplateAsync(archiveConfig.ArchiveConfigTemplateId)
+        );
         await LoadReleaseTemplateAsync();
     }
 
@@ -207,8 +214,10 @@ public partial class ReleaseTemplateDetail(
             && releaseTemplate.ArchiveConfigTemplates.Count == 0
         )
         {
-            var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
-            await service.EnsureUnmanagedArchiveConfigTemplateAsync(ReleaseTemplateId);
+            await operationRunner.RunAsync(
+                (ReleaseTemplateService service) =>
+                    service.EnsureUnmanagedArchiveConfigTemplateAsync(ReleaseTemplateId)
+            );
             await LoadReleaseTemplateAsync();
         }
 
@@ -309,8 +318,10 @@ public partial class ReleaseTemplateDetail(
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
-        await service.DeleteUploadConfigTemplateAsync(uploadConfig.UploadConfigTemplateId);
+        await operationRunner.RunAsync(
+            (ReleaseTemplateService service) =>
+                service.DeleteUploadConfigTemplateAsync(uploadConfig.UploadConfigTemplateId)
+        );
         await LoadReleaseTemplateAsync();
     }
 
@@ -398,9 +409,11 @@ public partial class ReleaseTemplateDetail(
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
-        await service.DeleteImageUploadConfigTemplateAsync(
-            imageUploadConfig.ImageUploadConfigTemplateId
+        await operationRunner.RunAsync(
+            (ReleaseTemplateService service) =>
+                service.DeleteImageUploadConfigTemplateAsync(
+                    imageUploadConfig.ImageUploadConfigTemplateId
+                )
         );
         await LoadReleaseTemplateAsync();
     }
@@ -494,9 +507,11 @@ public partial class ReleaseTemplateDetail(
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
-        await service.DeleteCollectionImageUploadConfigTemplateAsync(
-            imageUploadConfig.ImageUploadConfigTemplateId
+        await operationRunner.RunAsync(
+            (ReleaseTemplateService service) =>
+                service.DeleteCollectionImageUploadConfigTemplateAsync(
+                    imageUploadConfig.ImageUploadConfigTemplateId
+                )
         );
         await LoadReleaseTemplateAsync();
     }
@@ -601,9 +616,11 @@ public partial class ReleaseTemplateDetail(
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
-        await service.DeleteUploadConfigLinkCrypterTemplateAsync(
-            linkCrypter.UploadConfigLinkCrypterTemplateId
+        await operationRunner.RunAsync(
+            (ReleaseTemplateService service) =>
+                service.DeleteUploadConfigLinkCrypterTemplateAsync(
+                    linkCrypter.UploadConfigLinkCrypterTemplateId
+                )
         );
         await LoadReleaseTemplateAsync();
     }

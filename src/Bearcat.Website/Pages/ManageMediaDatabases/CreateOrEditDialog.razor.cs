@@ -1,14 +1,14 @@
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.UseCases.ManageMediaDatabases;
 using Bearcat.Domain.UseCases.ManageMediaDatabases.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageMediaDatabases;
 
-public partial class CreateOrEditDialog
+public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
 {
     [Parameter]
     public int? MediaDatabaseRegistrationId { get; set; }
@@ -17,8 +17,6 @@ public partial class CreateOrEditDialog
     public IDialogReference DialogRef { get; set; } = null!;
 
     private bool IsEditMode => MediaDatabaseRegistrationId.HasValue;
-    private IMediaDatabaseRegistrationReadRepository readRepository = null!;
-    private IMediaMetadataDatabaseFactory metadataDatabaseFactory = null!;
     private RegistrationFormModel formModel = new();
     private EditContext editContext = null!;
     private ValidationMessageStore validationMessageStore = null!;
@@ -31,11 +29,6 @@ public partial class CreateOrEditDialog
 
     protected override async Task OnInitializedAsync()
     {
-        readRepository =
-            ScopedServices.GetRequiredService<IMediaDatabaseRegistrationReadRepository>();
-        metadataDatabaseFactory =
-            ScopedServices.GetRequiredService<IMediaMetadataDatabaseFactory>();
-
         await InitializeFormModelAsync();
         await InitializeMediaDatabasesAsync();
 
@@ -47,22 +40,22 @@ public partial class CreateOrEditDialog
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<MediaDatabaseRegistrationService>();
+        await operationRunner.RunAsync<MediaDatabaseRegistrationService>(async service =>
+        {
+            if (!IsEditMode)
+            {
+                await service.CreateAsync(
+                    className: formModel.ClassName!,
+                    configuration: formModel.Configuration
+                );
+                return;
+            }
 
-        if (!IsEditMode)
-        {
-            await service.CreateAsync(
-                className: formModel.ClassName!,
-                configuration: formModel.Configuration
-            );
-        }
-        else
-        {
             await service.UpdateAsync(
                 id: MediaDatabaseRegistrationId!.Value,
                 configuration: formModel.Configuration
             );
-        }
+        });
 
         await DialogRef.CloseAsync(DialogResult.Ok());
     }
@@ -124,7 +117,10 @@ public partial class CreateOrEditDialog
             return;
         }
 
-        var registration = await readRepository.GetByIdAsync(MediaDatabaseRegistrationId!.Value);
+        var registration = await operationRunner.RunAsync(
+            (IMediaDatabaseRegistrationReadRepository repository) =>
+                repository.GetByIdAsync(MediaDatabaseRegistrationId!.Value)
+        );
 
         if (registration is null)
         {
@@ -137,7 +133,9 @@ public partial class CreateOrEditDialog
 
     private async Task InitializeMediaDatabasesAsync()
     {
-        var registrations = await readRepository.GetAllAsync();
+        var registrations = await operationRunner.RunAsync(
+            (IMediaDatabaseRegistrationReadRepository repository) => repository.GetAllAsync()
+        );
         registeredClassNames = registrations
             .Where(registration =>
                 !IsEditMode || registration.Id != MediaDatabaseRegistrationId!.Value
@@ -145,10 +143,16 @@ public partial class CreateOrEditDialog
             .Select(registration => registration.MediaDatabaseClassName)
             .ToList();
 
-        mediaDatabases = metadataDatabaseFactory
-            .GetDatabases()
-            .Where(database => IsEditMode || !registeredClassNames.Contains(database.ClassName))
-            .ToList();
+        mediaDatabases = operationRunner.Run(
+            (IMediaMetadataDatabaseFactory factory) =>
+                (IReadOnlyList<MediaMetadataDatabaseDto>)
+                    factory
+                        .GetDatabases()
+                        .Where(database =>
+                            IsEditMode || !registeredClassNames.Contains(database.ClassName)
+                        )
+                        .ToList()
+        );
     }
 
     private async Task CancelAsync()

@@ -1,22 +1,22 @@
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace Bearcat.Website.Pages.ManageReleaseTemplates;
 
 public partial class CreateReleaseFromTemplateDialog(
-    IReleaseTemplateReadRepository readRepository,
     DialogService dialogService,
     IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig,
-    NavigationManager navigationManager
-) : OwningComponentBase
+    NavigationManager navigationManager,
+    IScopedOperationRunner operationRunner
+) : ComponentBase
 {
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
@@ -28,34 +28,40 @@ public partial class CreateReleaseFromTemplateDialog(
     private ValidationMessageStore messageStore = null!;
     private string? folderValidationMessage;
 
-    private IEnumerable<SelectOption<int?>> ReleaseTemplateOptions =>
-        releaseTemplates.Select(template => new SelectOption<int?>(
-            template.ReleaseTemplateId,
-            template.Name
-        ));
+    private IReadOnlyList<SelectOption<int?>> ReleaseTemplateOptions =>
+        releaseTemplates
+            .Select(template => new SelectOption<int?>(template.ReleaseTemplateId, template.Name))
+            .ToList();
 
     protected override async Task OnInitializedAsync()
     {
         editContext = new EditContext(formModel);
         messageStore = new ValidationMessageStore(editContext);
         editContext.OnValidationRequested += HandleValidationRequested;
-        releaseTemplates = await readRepository.GetAllAsync();
+        releaseTemplates = await operationRunner.RunAsync(
+            (IReleaseTemplateReadRepository repository) => repository.GetAllAsync()
+        );
     }
 
     private async Task HandleTemplateChangedAsync()
     {
         selectedTemplate = formModel.ReleaseTemplateId is null
             ? null
-            : await readRepository.GetDetailAsync(formModel.ReleaseTemplateId.Value);
+            : await operationRunner.RunAsync(
+                (IReleaseTemplateReadRepository repository) =>
+                    repository.GetDetailAsync(formModel.ReleaseTemplateId.Value)
+            );
     }
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<ReleaseService>();
-        var releaseId = await service.CreateFromTemplateAsync(
-            formModel.ReleaseTemplateId!.Value,
-            formModel.FolderPath,
-            formModel.Name
+        var releaseId = await operationRunner.RunAsync(
+            (ReleaseService service) =>
+                service.CreateFromTemplateAsync(
+                    formModel.ReleaseTemplateId!.Value,
+                    formModel.FolderPath,
+                    formModel.Name
+                )
         );
 
         await DialogRef.CloseAsync(DialogResult.Ok(releaseId));

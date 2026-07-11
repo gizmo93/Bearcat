@@ -1,14 +1,15 @@
 using Bearcat.Domain.UseCases.ManageQualityProfiles.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleaseGroups;
 
-public partial class CreateOrEditReleaseGroupDialog : OwningComponentBase
+public partial class CreateOrEditReleaseGroupDialog(IScopedOperationRunner operationRunner)
+    : ComponentBase
 {
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
@@ -22,7 +23,7 @@ public partial class CreateOrEditReleaseGroupDialog : OwningComponentBase
     private EditContext editContext = null!;
     private ValidationMessageStore? messageStore;
 
-    private IEnumerable<SelectOption<int?>> QualityProfileOptions =>
+    private IReadOnlyList<SelectOption<int?>> QualityProfileOptions =>
         [
             new SelectOption<int?>(null, L["NoQualityProfile"]),
             .. QualityProfiles.Select(profile => new SelectOption<int?>(profile.Id, profile.Name)),
@@ -37,27 +38,31 @@ public partial class CreateOrEditReleaseGroupDialog : OwningComponentBase
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<ReleaseGroupService>();
-
         if (FormModel is { IsEdit: true, ReleaseGroupId: not null })
         {
-            await service.UpdateAsync(
-                FormModel.ReleaseGroupId.Value,
-                FormModel.Name,
-                FormModel.EnableAutomaticReuploads,
-                FormModel.NumberOfHoursUntilReupload,
-                FormModel.QualityProfileId
+            await operationRunner.RunAsync(
+                (ReleaseGroupService service) =>
+                    service.UpdateAsync(
+                        FormModel.ReleaseGroupId.Value,
+                        FormModel.Name,
+                        FormModel.EnableAutomaticReuploads,
+                        FormModel.NumberOfHoursUntilReupload,
+                        FormModel.QualityProfileId
+                    )
             );
 
             await DialogRef.CloseAsync(DialogResult.Ok(FormModel.ReleaseGroupId.Value));
             return;
         }
 
-        var id = await service.CreateAsync(
-            FormModel.Name,
-            FormModel.EnableAutomaticReuploads,
-            FormModel.NumberOfHoursUntilReupload,
-            FormModel.QualityProfileId
+        var id = await operationRunner.RunAsync(
+            (ReleaseGroupService service) =>
+                service.CreateAsync(
+                    FormModel.Name,
+                    FormModel.EnableAutomaticReuploads,
+                    FormModel.NumberOfHoursUntilReupload,
+                    FormModel.QualityProfileId
+                )
         );
 
         await DialogRef.CloseAsync(DialogResult.Ok(id));

@@ -1,16 +1,17 @@
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
+using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageUploadConfigs;
 
-public partial class UploadConfigs(DialogService dialogService)
-    : OwningComponentBase,
-        IReloadableComponent
+public partial class UploadConfigs(
+    DialogService dialogService,
+    IScopedOperationRunner operationRunner
+) : ComponentBase, IReloadableComponent
 {
     [Parameter]
     [EditorRequired]
@@ -20,11 +21,9 @@ public partial class UploadConfigs(DialogService dialogService)
     public int? FocusUploadConfigId { get; set; }
 
     private IReadOnlyList<UploadConfigReadModel> uploadConfigs = [];
-    private IUploadConfigReadRepository readRepository = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        readRepository = ScopedServices.GetRequiredService<IUploadConfigReadRepository>();
         await LoadUploadConfigsAsync();
     }
 
@@ -98,14 +97,18 @@ public partial class UploadConfigs(DialogService dialogService)
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<UploadConfigService>();
-        await service.DeleteAsync(uploadConfigReadModel.UploadConfigId);
+        await operationRunner.RunAsync(
+            (UploadConfigService service) =>
+                service.DeleteAsync(uploadConfigReadModel.UploadConfigId)
+        );
         await LoadUploadConfigsAsync();
     }
 
     private async Task LoadUploadConfigsAsync()
     {
-        uploadConfigs = await readRepository.GetUploadConfigsAsync(ReleaseId);
+        uploadConfigs = await operationRunner.RunAsync(
+            (IUploadConfigReadRepository repository) => repository.GetUploadConfigsAsync(ReleaseId)
+        );
     }
 
     public async Task ReloadAsync()

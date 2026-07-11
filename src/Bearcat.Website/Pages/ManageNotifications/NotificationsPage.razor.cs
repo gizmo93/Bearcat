@@ -3,16 +3,18 @@ using Bearcat.Domain.UseCases.ManageNotifications.Dto;
 using Bearcat.Domain.UseCases.ManageNotifications.ReadModels;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageNotifications;
 
-public partial class NotificationsPage(NavigationManager navigationManager) : OwningComponentBase
+public partial class NotificationsPage(
+    NavigationManager navigationManager,
+    IScopedOperationRunner operationRunner
+) : ComponentBase
 {
     private IReadOnlyList<NotificationReadModel> notifications = [];
-    private INotificationReadRepository readRepository = null!;
     private int totalCount;
     private int pageIndex;
     private int pageSize = 10;
@@ -27,13 +29,13 @@ public partial class NotificationsPage(NavigationManager navigationManager) : Ow
     private string NotificationsTableKey =>
         $"{includeResolved}-{pageIndex}-{pageSize}-{totalCount}";
 
-    private IEnumerable<int?> PaginationItems
+    private IReadOnlyList<int?> PaginationItems
     {
         get
         {
             if (TotalPages <= 7)
             {
-                return Enumerable.Range(1, TotalPages).Select(page => (int?)page);
+                return Enumerable.Range(1, TotalPages).Select(page => (int?)page).ToList();
             }
 
             var pages = new List<int?> { 1 };
@@ -59,7 +61,6 @@ public partial class NotificationsPage(NavigationManager navigationManager) : Ow
 
     protected override async Task OnInitializedAsync()
     {
-        readRepository = ScopedServices.GetRequiredService<INotificationReadRepository>();
         await RefreshNotificationsAsync();
     }
 
@@ -69,13 +70,20 @@ public partial class NotificationsPage(NavigationManager navigationManager) : Ow
 
         try
         {
-            var result = await readRepository.SearchAsync(
-                new NotificationSearchQuery(pageIndex, pageSize, includeResolved)
+            var (result, currentUnresolvedCount) = await operationRunner.RunAsync(
+                async (INotificationReadRepository repository) =>
+                {
+                    var searchResult = await repository.SearchAsync(
+                        new NotificationSearchQuery(pageIndex, pageSize, includeResolved)
+                    );
+                    var count = await repository.CountUnresolvedAsync();
+                    return (searchResult, count);
+                }
             );
 
             notifications = result.Items;
             totalCount = result.TotalCount;
-            unresolvedCount = await readRepository.CountUnresolvedAsync();
+            unresolvedCount = currentUnresolvedCount;
             pageIndex = result.PageIndex;
             pageSize = result.PageSize;
 
@@ -93,15 +101,15 @@ public partial class NotificationsPage(NavigationManager navigationManager) : Ow
 
     private async Task ResolveNotificationAsync(int notificationId)
     {
-        var notificationService = ScopedServices.GetRequiredService<INotificationService>();
-        await notificationService.ResolveAsync(notificationId);
+        await operationRunner.RunAsync(
+            (INotificationService service) => service.ResolveAsync(notificationId)
+        );
         await RefreshNotificationsAsync();
     }
 
     private async Task ResolveAllNotificationsAsync()
     {
-        var notificationService = ScopedServices.GetRequiredService<INotificationService>();
-        await notificationService.ResolveAllAsync();
+        await operationRunner.RunAsync((INotificationService service) => service.ResolveAllAsync());
         pageIndex = 0;
         await RefreshNotificationsAsync();
     }

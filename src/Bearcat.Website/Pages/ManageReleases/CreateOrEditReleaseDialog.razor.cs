@@ -4,12 +4,12 @@ using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
+using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace Bearcat.Website.Pages.ManageReleases;
@@ -18,8 +18,8 @@ public partial class CreateOrEditReleaseDialog(
     DialogService dialogService,
     IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig,
     NavigationManager navigationManager,
-    IReleaseGroupReadRepository releaseGroupReadRepository
-) : OwningComponentBase
+    IScopedOperationRunner operationRunner
+) : ComponentBase
 {
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
@@ -94,7 +94,9 @@ public partial class CreateOrEditReleaseDialog(
         messageStore = new ValidationMessageStore(editContext);
         editContext.OnValidationRequested += HandleValidationRequested;
 
-        releaseGroups = await releaseGroupReadRepository.GetAllAsync();
+        releaseGroups = await operationRunner.RunAsync(
+            (IReleaseGroupReadRepository repository) => repository.GetAllAsync()
+        );
 
         if (releaseGroups.Count > 0 && formModel.ReleaseGroupId == 0)
         {
@@ -104,30 +106,34 @@ public partial class CreateOrEditReleaseDialog(
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<ReleaseService>();
-
         if (formModel.IsEdit && ReleaseId is not null)
         {
-            await service.UpdateAsync(
-                releaseId: ReleaseId.Value,
-                name: formModel.Name,
-                releaseFolderPath: formModel.FolderPath,
-                releaseContentType: formModel.ReleaseContentType,
-                releaseGroupId: formModel.ReleaseGroupId,
-                primaryLanguageCode: formModel.PrimaryLanguageCode
+            await operationRunner.RunAsync(
+                (ReleaseService service) =>
+                    service.UpdateAsync(
+                        releaseId: ReleaseId.Value,
+                        name: formModel.Name,
+                        releaseFolderPath: formModel.FolderPath,
+                        releaseContentType: formModel.ReleaseContentType,
+                        releaseGroupId: formModel.ReleaseGroupId,
+                        primaryLanguageCode: formModel.PrimaryLanguageCode
+                    )
             );
 
             await DialogRef.CloseAsync(DialogResult.Ok(ReleaseId.Value));
             return;
         }
 
-        var id = await service.CreateAsync(
-            name: formModel.Name,
-            releaseFolderPath: formModel.FolderPath,
-            releaseType: formModel.ReleaseType,
-            releaseContentType: formModel.ReleaseContentType,
-            releaseGroupId: formModel.ReleaseGroupId,
-            primaryLanguageCode: formModel.PrimaryLanguageCode
+        var id = await operationRunner.RunAsync(
+            (ReleaseService service) =>
+                service.CreateAsync(
+                    name: formModel.Name,
+                    releaseFolderPath: formModel.FolderPath,
+                    releaseType: formModel.ReleaseType,
+                    releaseContentType: formModel.ReleaseContentType,
+                    releaseGroupId: formModel.ReleaseGroupId,
+                    primaryLanguageCode: formModel.PrimaryLanguageCode
+                )
         );
 
         await DialogRef.CloseAsync(DialogResult.Ok(id));

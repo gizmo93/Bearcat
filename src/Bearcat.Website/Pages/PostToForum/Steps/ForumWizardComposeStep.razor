@@ -37,7 +37,7 @@
         {
             <BbFormFieldMultiSelect TValue="string"
                                     Values="SelectedPrefixIds"
-                                    ValuesChanged="SelectedPrefixIdsChanged"
+                                    ValuesChanged="HandleSelectedPrefixIdsChangedAsync"
                                     Label="@L["ThreadPrefixes"]"
                                     HelperText="@L["ThreadPrefixesHelp"]"
                                     Placeholder="@L["SelectThreadPrefixes"]"
@@ -63,7 +63,7 @@
     public bool HasTemplates { get; set; }
 
     [Parameter]
-    public IEnumerable<SelectOption<int>> TemplateOptions { get; set; } = [];
+    public IReadOnlyList<SelectOption<int>> TemplateOptions { get; set; } = [];
 
     [Parameter]
     public int SelectedTemplateId { get; set; }
@@ -87,19 +87,24 @@
     public bool HasPrefixes { get; set; }
 
     [Parameter]
-    public IEnumerable<SelectOption<string>> PrefixOptions { get; set; } = [];
+    public IReadOnlyList<SelectOption<string>> PrefixOptions { get; set; } = [];
 
     [Parameter]
-    public IEnumerable<string> SelectedPrefixIds { get; set; } = [];
+    public IReadOnlyList<string> SelectedPrefixIds { get; set; } = [];
 
     [Parameter]
-    public EventCallback<IEnumerable<string>> SelectedPrefixIdsChanged { get; set; }
+    public EventCallback<IReadOnlyList<string>> SelectedPrefixIdsChanged { get; set; }
 
     [Parameter]
     public string Body { get; set; } = string.Empty;
 
     [Parameter]
     public EventCallback<string> BodyChanged { get; set; }
+
+    private Task HandleSelectedPrefixIdsChangedAsync(IEnumerable<string> values)
+    {
+        return SelectedPrefixIdsChanged.InvokeAsync(values.ToList());
+    }
 
     private Task OnBodyChangedAsync(ChangeEventArgs args)
     {

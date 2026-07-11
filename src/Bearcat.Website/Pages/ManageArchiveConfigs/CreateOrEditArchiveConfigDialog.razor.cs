@@ -1,19 +1,19 @@
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
+using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace Bearcat.Website.Pages.ManageArchiveConfigs;
 
 public partial class CreateOrEditArchiveConfigDialog(
-    IArchiverFactory archiverFactory,
     IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig,
-    DialogService dialogService
-) : OwningComponentBase
+    DialogService dialogService,
+    IScopedOperationRunner operationRunner
+) : ComponentBase
 {
     [Parameter]
     public ArchiveConfigFormModel FormModel { get; set; } = null!;
@@ -32,16 +32,14 @@ public partial class CreateOrEditArchiveConfigDialog(
         archivers.FirstOrDefault(a => a.ClassName == FormModel.ArchiverName);
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
-    private ArchiveConfigService archiveConfigService = null!;
     private bool isEdit;
 
     protected override void OnInitialized()
     {
-        archivers = archiverFactory.GetArchivers();
+        archivers = operationRunner.Run((IArchiverFactory factory) => factory.GetArchivers());
         editContext = new EditContext(FormModel);
         messageStore = new ValidationMessageStore(editContext);
         editContext.OnValidationRequested += HandleValidationRequested;
-        archiveConfigService = ScopedServices.GetRequiredService<ArchiveConfigService>();
         isEdit = ArchiveConfigId is not null;
     }
 
@@ -49,25 +47,31 @@ public partial class CreateOrEditArchiveConfigDialog(
     {
         if (!isEdit)
         {
-            await archiveConfigService.CreateAsync(
-                releaseId: ReleaseId,
-                name: FormModel.Name!,
-                archiveFilesBasePath: FormModel.ArchiveFilesBasePath!,
-                archiverName: FormModel.ArchiverName!,
-                archiveNamePrefix: FormModel.ArchiveNamePrefix!,
-                archivePassword: FormModel.ArchivePassword,
-                archiveFileSizeMb: FormModel.ArchiveFileSizeMb
+            await operationRunner.RunAsync(
+                (ArchiveConfigService service) =>
+                    service.CreateAsync(
+                        releaseId: ReleaseId,
+                        name: FormModel.Name!,
+                        archiveFilesBasePath: FormModel.ArchiveFilesBasePath!,
+                        archiverName: FormModel.ArchiverName!,
+                        archiveNamePrefix: FormModel.ArchiveNamePrefix!,
+                        archivePassword: FormModel.ArchivePassword,
+                        archiveFileSizeMb: FormModel.ArchiveFileSizeMb
+                    )
             );
         }
         else
         {
-            await archiveConfigService.UpdateAsync(
-                archiveConfigId: ArchiveConfigId!.Value,
-                name: FormModel.Name!,
-                archiveFilesBasePath: FormModel.ArchiveFilesBasePath!,
-                archiveNamePrefix: FormModel.ArchiveNamePrefix!,
-                archivePassword: FormModel.ArchivePassword,
-                archiveFileSizeMb: FormModel.ArchiveFileSizeMb
+            await operationRunner.RunAsync(
+                (ArchiveConfigService service) =>
+                    service.UpdateAsync(
+                        archiveConfigId: ArchiveConfigId!.Value,
+                        name: FormModel.Name!,
+                        archiveFilesBasePath: FormModel.ArchiveFilesBasePath!,
+                        archiveNamePrefix: FormModel.ArchiveNamePrefix!,
+                        archivePassword: FormModel.ArchivePassword,
+                        archiveFileSizeMb: FormModel.ArchiveFileSizeMb
+                    )
             );
         }
 

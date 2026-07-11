@@ -2,14 +2,14 @@ using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.DistributionSite.Dto;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageDistributionSites;
 
-public partial class CreateOrEditDialog
+public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
 {
     [Parameter]
     public int? DistributionSiteRegistrationId { get; set; }
@@ -18,8 +18,6 @@ public partial class CreateOrEditDialog
     public IDialogReference DialogRef { get; set; } = null!;
 
     private bool IsEditMode => DistributionSiteRegistrationId.HasValue;
-    private IDistributionSiteRegistrationReadRepository readRepository = null!;
-    private IDistributionSiteFactory distributionSiteFactory = null!;
     private RegistrationFormModel formModel = new();
     private EditContext editContext = null!;
     private ValidationMessageStore validationMessageStore = null!;
@@ -33,12 +31,10 @@ public partial class CreateOrEditDialog
 
     protected override async Task OnInitializedAsync()
     {
-        readRepository =
-            ScopedServices.GetRequiredService<IDistributionSiteRegistrationReadRepository>();
-        distributionSiteFactory = ScopedServices.GetRequiredService<IDistributionSiteFactory>();
-
         await InitializeFormModelAsync();
-        distributionSites = distributionSiteFactory.GetDistributionSites();
+        distributionSites = operationRunner.Run(
+            (IDistributionSiteFactory factory) => factory.GetDistributionSites()
+        );
 
         editContext = new EditContext(formModel);
         editContext.OnValidationRequested += OnValidationRequested;
@@ -48,24 +44,24 @@ public partial class CreateOrEditDialog
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<DistributionSiteRegistrationService>();
+        await operationRunner.RunAsync<DistributionSiteRegistrationService>(async service =>
+        {
+            if (!IsEditMode)
+            {
+                await service.CreateAsync(
+                    name: formModel.Name!,
+                    className: formModel.ClassName!,
+                    configuration: formModel.Configuration
+                );
+                return;
+            }
 
-        if (!IsEditMode)
-        {
-            await service.CreateAsync(
-                name: formModel.Name!,
-                className: formModel.ClassName!,
-                configuration: formModel.Configuration
-            );
-        }
-        else
-        {
             await service.UpdateAsync(
                 id: DistributionSiteRegistrationId!.Value,
                 name: formModel.Name!,
                 configuration: formModel.Configuration
             );
-        }
+        });
 
         await DialogRef.CloseAsync(DialogResult.Ok());
     }
@@ -115,7 +111,10 @@ public partial class CreateOrEditDialog
             return;
         }
 
-        var registration = await readRepository.GetByIdAsync(DistributionSiteRegistrationId!.Value);
+        var registration = await operationRunner.RunAsync(
+            (IDistributionSiteRegistrationReadRepository repository) =>
+                repository.GetByIdAsync(DistributionSiteRegistrationId!.Value)
+        );
 
         if (registration is null)
         {

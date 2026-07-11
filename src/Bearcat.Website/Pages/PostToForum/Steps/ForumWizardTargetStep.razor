@@ -37,7 +37,7 @@
     public EventCallback OnNormalize { get; set; }
 
     [Parameter]
-    public IEnumerable<SelectOption<string>> TargetOptions { get; set; } = [];
+    public IReadOnlyList<SelectOption<string>> TargetOptions { get; set; } = [];
 
     [Parameter]
     public string? SelectedTargetId { get; set; }

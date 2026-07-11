@@ -1,6 +1,6 @@
 @using Bearcat.Domain.UseCases.ManageReleaseCollections
-@using Microsoft.Extensions.DependencyInjection
-@inherits OwningComponentBase
+@using Bearcat.Website.ScopedOperations
+@inject IScopedOperationRunner OperationRunner
 
 <div class="space-y-6">
     <BbFormFieldSelect TValue="ReleaseContentType"
@@ -76,11 +76,13 @@
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<ReleaseCollectionService>();
-        await service.UpdateSettingsAsync(
-            ReleaseCollectionId,
-            contentType,
-            primaryLanguageCode
+        await OperationRunner.RunAsync(
+            (ReleaseCollectionService service) =>
+                service.UpdateSettingsAsync(
+                    ReleaseCollectionId,
+                    contentType,
+                    primaryLanguageCode
+                )
         );
         await DialogRef.CloseAsync(DialogResult.Ok());
     }

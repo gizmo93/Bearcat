@@ -10,6 +10,22 @@ namespace Bearcat.Website.UnitTest.ScopedOperations;
 public class ScopedOperationRunnerTest
 {
     [Test]
+    public void RunCreatesANewScopeForEachOperation()
+    {
+        var services = new ServiceCollection();
+        services.AddScoped<ScopedMarker>();
+        services.AddSingleton<IScopedOperationRunner, ScopedOperationRunner>();
+
+        using var serviceProvider = services.BuildServiceProvider();
+        var runner = serviceProvider.GetRequiredService<IScopedOperationRunner>();
+
+        var first = runner.Run((ScopedMarker marker) => marker);
+        var second = runner.Run((ScopedMarker marker) => marker);
+
+        second.ShouldNotBeSameAs(first);
+    }
+
+    [Test]
     public async Task RunAsyncSharesOneDbContextWithinAnOperationAndNotBetweenOperations()
     {
         var services = new ServiceCollection();
@@ -62,4 +78,6 @@ public class ScopedOperationRunnerTest
     {
         public IBearcatWriteDbContext Context { get; } = context;
     }
+
+    private sealed class ScopedMarker;
 }

@@ -1,10 +1,11 @@
 using Bearcat.Abstractions;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Shared;
 
-public partial class FolderSelectionDialog(IFileSystemService fileSystemService) : ComponentBase
+public partial class FolderSelectionDialog(IScopedOperationRunner operationRunner) : ComponentBase
 {
     [Parameter]
     public IReadOnlyList<string> BaseFolderPaths { get; set; } = [];
@@ -20,7 +21,7 @@ public partial class FolderSelectionDialog(IFileSystemService fileSystemService)
     private string? searchText;
     private List<FolderSelectionNode> rootNodes = [];
 
-    private IEnumerable<FolderSelectionNode> filteredRootNodes =>
+    private IReadOnlyList<FolderSelectionNode> filteredRootNodes =>
         FilterNodes(rootNodes, searchText);
 
     protected override void OnInitialized()
@@ -81,7 +82,10 @@ public partial class FolderSelectionDialog(IFileSystemService fileSystemService)
             return node.Children;
         }
 
-        node.Children = fileSystemService.GetFoldersInPath(node.Path).Select(CreateNode).ToList();
+        node.Children = operationRunner.Run(
+            (IFileSystemService service) =>
+                service.GetFoldersInPath(node.Path).Select(CreateNode).ToList()
+        );
         node.ChildrenLoaded = true;
         node.HasChildren = node.Children.Count > 0;
 
@@ -230,21 +234,21 @@ public partial class FolderSelectionDialog(IFileSystemService fileSystemService)
             : fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
     }
 
-    private static IEnumerable<FolderSelectionNode> FilterNodes(
-        IEnumerable<FolderSelectionNode> nodes,
+    private static List<FolderSelectionNode> FilterNodes(
+        IReadOnlyList<FolderSelectionNode> nodes,
         string? search
     )
     {
         if (string.IsNullOrWhiteSpace(search))
         {
-            return nodes;
+            return nodes.ToList();
         }
 
         var filtered = new List<FolderSelectionNode>();
 
         foreach (var node in nodes)
         {
-            var matchingChildren = FilterNodes(node.Children, search).ToList();
+            var matchingChildren = FilterNodes(node.Children, search);
             var isMatch = node.Name.Contains(search, StringComparison.OrdinalIgnoreCase);
 
             if (!isMatch && matchingChildren.Count == 0)

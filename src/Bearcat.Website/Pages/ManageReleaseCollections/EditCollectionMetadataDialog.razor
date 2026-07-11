@@ -1,8 +1,8 @@
 @using System.ComponentModel.DataAnnotations
 @using Bearcat.Domain.UseCases.ManageReleaseCollections
 @using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto
-@using Microsoft.Extensions.DependencyInjection
-@inherits OwningComponentBase
+@using Bearcat.Website.ScopedOperations
+@inject IScopedOperationRunner OperationRunner
 
 <EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
     <DataAnnotationsValidator />
@@ -72,15 +72,17 @@
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<ReleaseCollectionService>();
-        await service.UpdateMetadataAsync(
-            ReleaseCollectionId,
-            new EditCollectionMetadataData(
-                Title: model.Title,
-                CoverUrl: model.CoverUrl,
-                Description: model.Description,
-                MetadataDatabaseUrl: model.MetadataDatabaseUrl
-            )
+        await OperationRunner.RunAsync(
+            (ReleaseCollectionService service) =>
+                service.UpdateMetadataAsync(
+                    ReleaseCollectionId,
+                    new EditCollectionMetadataData(
+                        Title: model.Title,
+                        CoverUrl: model.CoverUrl,
+                        Description: model.Description,
+                        MetadataDatabaseUrl: model.MetadataDatabaseUrl
+                    )
+                )
         );
 
         await DialogRef.CloseAsync(DialogResult.Ok(model.Title));

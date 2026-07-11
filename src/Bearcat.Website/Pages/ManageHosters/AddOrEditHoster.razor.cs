@@ -1,16 +1,14 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Domain.UseCases.ManageHosters;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace Bearcat.Website.Pages.ManageHosters;
 
-public partial class AddOrEditHoster(
-    IHosterFactory hosterFactory,
-    HosterRegistrationService hosterRegistrationService
-) : ComponentBase
+public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : ComponentBase
 {
     [Parameter]
     public HosterFormModel FormModel { get; set; } = new();
@@ -26,7 +24,9 @@ public partial class AddOrEditHoster(
 
     protected override void OnInitialized()
     {
-        hosterReadModels = hosterFactory.GetHosterReadModels();
+        hosterReadModels = operationRunner.Run(
+            (IHosterFactory factory) => factory.GetHosterReadModels()
+        );
         editContext = new EditContext(FormModel);
         editContext.OnValidationRequested += HandleValidationRequested;
         messageStore = new ValidationMessageStore(editContext);
@@ -43,21 +43,27 @@ public partial class AddOrEditHoster(
     {
         if (!FormModel.IsEdit)
         {
-            await hosterRegistrationService.RegisterHosterAsync(
-                name: FormModel.Name,
-                isActive: true,
-                configuration: FormModel.Configuration,
-                hosterClassName: FormModel.FullClassName,
-                maxParallelUploadsOverride: FormModel.MaxParallelUploadsOverride
+            await operationRunner.RunAsync(
+                (HosterRegistrationService service) =>
+                    service.RegisterHosterAsync(
+                        name: FormModel.Name,
+                        isActive: true,
+                        configuration: FormModel.Configuration,
+                        hosterClassName: FormModel.FullClassName,
+                        maxParallelUploadsOverride: FormModel.MaxParallelUploadsOverride
+                    )
             );
         }
         else
         {
-            await hosterRegistrationService.UpdateRegistrationAsync(
-                FormModel.HosterRegistrationId!.Value,
-                FormModel.Name,
-                FormModel.Configuration,
-                FormModel.MaxParallelUploadsOverride
+            await operationRunner.RunAsync(
+                (HosterRegistrationService service) =>
+                    service.UpdateRegistrationAsync(
+                        FormModel.HosterRegistrationId!.Value,
+                        FormModel.Name,
+                        FormModel.Configuration,
+                        FormModel.MaxParallelUploadsOverride
+                    )
             );
         }
 

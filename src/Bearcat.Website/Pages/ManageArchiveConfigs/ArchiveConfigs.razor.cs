@@ -7,7 +7,6 @@ using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace Bearcat.Website.Pages.ManageArchiveConfigs;
@@ -17,7 +16,7 @@ public partial class ArchiveConfigs(
     ToastService toastService,
     IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig,
     IScopedOperationRunner operationRunner
-) : OwningComponentBase, IReloadableComponent
+) : ComponentBase, IReloadableComponent
 {
     [Parameter]
     public int ReleaseId { get; set; }

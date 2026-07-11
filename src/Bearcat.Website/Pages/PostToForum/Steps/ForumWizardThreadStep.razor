@@ -18,7 +18,7 @@
     public string PostName { get; set; } = string.Empty;
 
     [Parameter]
-    public IEnumerable<SelectOption<string>> ThreadOptions { get; set; } = [];
+    public IReadOnlyList<SelectOption<string>> ThreadOptions { get; set; } = [];
 
     [Parameter]
     public string ThreadSelection { get; set; } = string.Empty;

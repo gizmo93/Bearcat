@@ -2,21 +2,21 @@ using System.Globalization;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace Bearcat.Website.Pages.ManageReleaseFolderAutomations;
 
 public partial class CreateOrEditReleaseFolderAutomationDialog(
-    IReleaseTemplateReadRepository releaseTemplateReadRepository,
     DialogService dialogService,
-    IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig
-) : OwningComponentBase
+    IOptions<WorkingDirectoriesConfig> workingDirectoriesConfig,
+    IScopedOperationRunner operationRunner
+) : ComponentBase
 {
     [Parameter]
     public ReleaseFolderAutomationFormModel FormModel { get; set; } = null!;
@@ -52,32 +52,38 @@ public partial class CreateOrEditReleaseFolderAutomationDialog(
         editContext = new EditContext(FormModel);
         messageStore = new ValidationMessageStore(editContext);
         editContext.OnValidationRequested += HandleValidationRequested;
-        releaseTemplates = await releaseTemplateReadRepository.GetAllAsync();
+        releaseTemplates = await operationRunner.RunAsync(
+            (IReleaseTemplateReadRepository repository) => repository.GetAllAsync()
+        );
     }
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<ReleaseFolderAutomationService>();
-
         if (FormModel.IsEdit && FormModel.ReleaseFolderAutomationId is not null)
         {
-            await service.UpdateAsync(
-                FormModel.ReleaseFolderAutomationId.Value,
-                FormModel.BasePath,
-                FormModel.FolderNamePattern,
-                FormModel.ReleaseTemplateId!.Value,
-                FormModel.PrimaryLanguageCode,
-                FormModel.IsEnabled
+            await operationRunner.RunAsync(
+                (ReleaseFolderAutomationService service) =>
+                    service.UpdateAsync(
+                        FormModel.ReleaseFolderAutomationId.Value,
+                        FormModel.BasePath,
+                        FormModel.FolderNamePattern,
+                        FormModel.ReleaseTemplateId!.Value,
+                        FormModel.PrimaryLanguageCode,
+                        FormModel.IsEnabled
+                    )
             );
         }
         else
         {
-            await service.CreateAsync(
-                FormModel.BasePath,
-                FormModel.FolderNamePattern,
-                FormModel.ReleaseTemplateId!.Value,
-                FormModel.PrimaryLanguageCode,
-                FormModel.IsEnabled
+            await operationRunner.RunAsync(
+                (ReleaseFolderAutomationService service) =>
+                    service.CreateAsync(
+                        FormModel.BasePath,
+                        FormModel.FolderNamePattern,
+                        FormModel.ReleaseTemplateId!.Value,
+                        FormModel.PrimaryLanguageCode,
+                        FormModel.IsEnabled
+                    )
             );
         }
 

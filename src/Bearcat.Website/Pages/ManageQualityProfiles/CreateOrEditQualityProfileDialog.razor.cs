@@ -4,15 +4,16 @@ using Bearcat.Domain.UseCases.ManageQualityProfiles.Dto;
 using Bearcat.Domain.UseCases.ManageQualityProfiles.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageQualityProfiles;
 
-public partial class CreateOrEditQualityProfileDialog : OwningComponentBase
+public partial class CreateOrEditQualityProfileDialog(IScopedOperationRunner operationRunner)
+    : ComponentBase
 {
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
@@ -23,18 +24,35 @@ public partial class CreateOrEditQualityProfileDialog : OwningComponentBase
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
 
-    private QualityCheckCatalog catalog = null!;
+    private IReadOnlyList<QualityCheckRuleType> ruleTypes = [];
+    private IReadOnlyDictionary<
+        QualityCheckRuleType,
+        IReadOnlyList<QualityCheckParameterDescriptor>
+    > parameterDescriptors =
+        new Dictionary<QualityCheckRuleType, IReadOnlyList<QualityCheckParameterDescriptor>>();
     private List<QualityCheckRuleEditModel> rules = [];
 
-    private IEnumerable<SelectOption<QualityCheckRuleType>> RuleTypeOptions =>
-        catalog.RuleTypes.Select(ruleType => new SelectOption<QualityCheckRuleType>(
-            ruleType,
-            L.Localize(ruleType)
-        ));
+    private IReadOnlyList<SelectOption<QualityCheckRuleType>> RuleTypeOptions =>
+        ruleTypes
+            .Select(ruleType => new SelectOption<QualityCheckRuleType>(
+                ruleType,
+                L.Localize(ruleType)
+            ))
+            .ToList();
 
     protected override void OnInitialized()
     {
-        catalog = ScopedServices.GetRequiredService<QualityCheckCatalog>();
+        (ruleTypes, parameterDescriptors) = operationRunner.Run(
+            (QualityCheckCatalog catalog) =>
+                (
+                    catalog.RuleTypes,
+                    (IReadOnlyDictionary<
+                        QualityCheckRuleType,
+                        IReadOnlyList<QualityCheckParameterDescriptor>
+                    >)
+                        catalog.RuleTypes.ToDictionary(ruleType => ruleType, catalog.GetParameters)
+                )
+        );
 
         editContext = new EditContext(FormModel);
         messageStore = new ValidationMessageStore(editContext);
@@ -48,7 +66,7 @@ public partial class CreateOrEditQualityProfileDialog : OwningComponentBase
         var values = QualityCheckParameterValues.Parse(rule.ParametersJson);
         var model = new QualityCheckRuleEditModel { RuleType = rule.RuleType };
 
-        foreach (var descriptor in catalog.GetParameters(rule.RuleType))
+        foreach (var descriptor in parameterDescriptors[rule.RuleType])
         {
             model.Parameters[descriptor.Key] = values.Read(descriptor);
         }
@@ -60,7 +78,7 @@ public partial class CreateOrEditQualityProfileDialog : OwningComponentBase
     {
         var model = new QualityCheckRuleEditModel { RuleType = ruleType };
 
-        foreach (var descriptor in catalog.GetParameters(ruleType))
+        foreach (var descriptor in parameterDescriptors[ruleType])
         {
             model.Parameters[descriptor.Key] = descriptor.DefaultValue;
         }
@@ -70,7 +88,7 @@ public partial class CreateOrEditQualityProfileDialog : OwningComponentBase
 
     private void AddRule()
     {
-        rules.Add(CreateRule(catalog.RuleTypes[0]));
+        rules.Add(CreateRule(ruleTypes[0]));
     }
 
     private void RemoveRule(QualityCheckRuleEditModel rule)
@@ -83,7 +101,7 @@ public partial class CreateOrEditQualityProfileDialog : OwningComponentBase
         rule.RuleType = ruleType;
         rule.Parameters.Clear();
 
-        foreach (var descriptor in catalog.GetParameters(ruleType))
+        foreach (var descriptor in parameterDescriptors[ruleType])
         {
             rule.Parameters[descriptor.Key] = descriptor.DefaultValue;
         }
@@ -112,7 +130,6 @@ public partial class CreateOrEditQualityProfileDialog : OwningComponentBase
 
     private async Task SaveAsync()
     {
-        var service = ScopedServices.GetRequiredService<QualityProfileService>();
         var inputs = rules
             .Select(rule => new QualityCheckRuleInput(
                 rule.RuleType,
@@ -122,12 +139,17 @@ public partial class CreateOrEditQualityProfileDialog : OwningComponentBase
 
         if (FormModel is { IsEdit: true, QualityProfileId: not null })
         {
-            await service.UpdateAsync(FormModel.QualityProfileId.Value, FormModel.Name, inputs);
+            await operationRunner.RunAsync(
+                (QualityProfileService service) =>
+                    service.UpdateAsync(FormModel.QualityProfileId.Value, FormModel.Name, inputs)
+            );
             await DialogRef.CloseAsync(DialogResult.Ok(FormModel.QualityProfileId.Value));
             return;
         }
 
-        var id = await service.CreateAsync(FormModel.Name, inputs);
+        var id = await operationRunner.RunAsync(
+            (QualityProfileService service) => service.CreateAsync(FormModel.Name, inputs)
+        );
         await DialogRef.CloseAsync(DialogResult.Ok(id));
     }
 

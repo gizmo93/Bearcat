@@ -6,14 +6,12 @@ using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Primitives;
 
 namespace Bearcat.Website.Pages.ManageReleaseCollections;
 
-public partial class ReleaseCollectionsPage(
-    IReleaseCollectionReadRepository readRepository,
-    IReleaseGroupReadRepository releaseGroupReadRepository
-)
+public partial class ReleaseCollectionsPage(IScopedOperationRunner operationRunner)
 {
     private readonly int[] pageSizes = [10, 20, 50, 100];
 
@@ -34,21 +32,26 @@ public partial class ReleaseCollectionsPage(
     private string CollectionsTableKey =>
         $"{pageIndex}-{pageSize}-{searchTerm}-{selectedReleaseContentType}-{selectedReleaseGroupId}";
 
-    private IEnumerable<SelectOption<int?>> ReleaseGroupOptions =>
-        new[] { new SelectOption<int?>(null, L["AllReleaseGroups"]) }.Concat(
-            releaseGroups.Select(group => new SelectOption<int?>(group.ReleaseGroupId, group.Name))
-        );
+    private IReadOnlyList<SelectOption<int?>> ReleaseGroupOptions =>
+        [
+            new(null, L["AllReleaseGroups"]),
+            .. releaseGroups.Select(group => new SelectOption<int?>(
+                group.ReleaseGroupId,
+                group.Name
+            )),
+        ];
 
-    private IEnumerable<SelectOption<ReleaseContentType?>> ReleaseContentTypeOptions =>
-        new SelectOption<ReleaseContentType?>[] { new(null, L["AnyReleaseContentType"]) }.Concat(
-            Enum.GetValues<ReleaseContentType>()
-                .Select(type => new SelectOption<ReleaseContentType?>(type, L.Localize(type)))
-        );
+    private IReadOnlyList<SelectOption<ReleaseContentType?>> ReleaseContentTypeOptions =>
+        [
+            new(null, L["AnyReleaseContentType"]),
+            .. Enum.GetValues<ReleaseContentType>()
+                .Select(type => new SelectOption<ReleaseContentType?>(type, L.Localize(type))),
+        ];
 
-    private IEnumerable<SelectOption<int>> PageSizeOptions =>
-        pageSizes.Select(size => new SelectOption<int>(size, size.ToString()));
+    private IReadOnlyList<SelectOption<int>> PageSizeOptions =>
+        pageSizes.Select(size => new SelectOption<int>(size, size.ToString())).ToList();
 
-    private IEnumerable<int?> PaginationItems
+    private IReadOnlyList<int?> PaginationItems
     {
         get
         {
@@ -80,7 +83,9 @@ public partial class ReleaseCollectionsPage(
 
     protected override async Task OnInitializedAsync()
     {
-        releaseGroups = await releaseGroupReadRepository.GetAllAsync();
+        releaseGroups = await operationRunner.RunAsync(
+            (IReleaseGroupReadRepository repository) => repository.GetAllAsync()
+        );
         await RefreshAsync();
     }
 
@@ -139,14 +144,17 @@ public partial class ReleaseCollectionsPage(
 
         try
         {
-            PagedResult<ReleaseCollectionReadModel> result = await readRepository.SearchAsync(
-                new ReleaseCollectionSearchQuery(
-                    SearchTerm: searchTerm,
-                    ReleaseContentType: selectedReleaseContentType,
-                    ReleaseGroupId: selectedReleaseGroupId,
-                    PageIndex: pageIndex,
-                    PageSize: pageSize
-                )
+            PagedResult<ReleaseCollectionReadModel> result = await operationRunner.RunAsync(
+                (IReleaseCollectionReadRepository repository) =>
+                    repository.SearchAsync(
+                        new ReleaseCollectionSearchQuery(
+                            SearchTerm: searchTerm,
+                            ReleaseContentType: selectedReleaseContentType,
+                            ReleaseGroupId: selectedReleaseGroupId,
+                            PageIndex: pageIndex,
+                            PageSize: pageSize
+                        )
+                    )
             );
 
             releaseCollections = result.Items;

@@ -6,18 +6,16 @@ using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleaseTemplates;
 
-public partial class CreateOrEditUploadConfigTemplateDialog(
-    IHosterConfigurationReadRepository hosterReadRepository,
-    IReleaseTemplateReadRepository releaseTemplateReadRepository
-) : OwningComponentBase
+public partial class CreateOrEditUploadConfigTemplateDialog(IScopedOperationRunner operationRunner)
+    : ComponentBase
 {
     [Parameter]
     public UploadConfigTemplateFormModel FormModel { get; set; } = null!;
@@ -40,23 +38,26 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
     private bool isUnmanagedReleaseTemplate;
     private bool usesReleaseCollections;
 
-    private IEnumerable<SelectOption<int?>> HosterOptions =>
+    private IReadOnlyList<SelectOption<int?>> HosterOptions =>
         hosterRegistrations
             .Where(hoster => hoster.IsActive || hoster.Id == FormModel.HosterRegistrationId)
             .OrderBy(hoster => hoster.Name)
-            .Select(hoster => new SelectOption<int?>(hoster.Id, hoster.Name));
+            .Select(hoster => new SelectOption<int?>(hoster.Id, hoster.Name))
+            .ToList();
 
-    private IEnumerable<SelectOption<int?>> ArchiveConfigOptions =>
+    private IReadOnlyList<SelectOption<int?>> ArchiveConfigOptions =>
         archiveConfigTemplates
             .OrderBy(config => config.Name)
-            .Select(config => new SelectOption<int?>(config.ArchiveConfigTemplateId, config.Name));
+            .Select(config => new SelectOption<int?>(config.ArchiveConfigTemplateId, config.Name))
+            .ToList();
 
-    private IEnumerable<SelectOption<CollectionUploadSlotPasswordPolicy>> PasswordPolicyOptions =>
+    private IReadOnlyList<SelectOption<CollectionUploadSlotPasswordPolicy>> PasswordPolicyOptions =>
         Enum.GetValues<CollectionUploadSlotPasswordPolicy>()
             .Select(policy => new SelectOption<CollectionUploadSlotPasswordPolicy>(
                 policy,
                 L.Localize(policy)
-            ));
+            ))
+            .ToList();
 
     private HosterRegistrationReadModel? SelectedHosterRegistration =>
         FormModel.HosterRegistrationId is null
@@ -84,8 +85,13 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
         editContext.OnValidationRequested += HandleValidationRequested;
         isEdit = UploadConfigTemplateId is not null;
 
-        hosterRegistrations = await hosterReadRepository.GetAllRegistrationsAsync();
-        var detail = await releaseTemplateReadRepository.GetDetailAsync(ReleaseTemplateId);
+        hosterRegistrations = await operationRunner.RunAsync(
+            (IHosterConfigurationReadRepository repository) => repository.GetAllRegistrationsAsync()
+        );
+        var detail = await operationRunner.RunAsync(
+            (IReleaseTemplateReadRepository repository) =>
+                repository.GetDetailAsync(ReleaseTemplateId)
+        );
         archiveConfigTemplates = detail?.ArchiveConfigTemplates ?? [];
         isUnmanagedReleaseTemplate = detail?.ReleaseType is ReleaseType.Unmanaged;
         usesReleaseCollections =
@@ -120,25 +126,25 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
     {
         PrepareCollectionUploadSlotForSave();
 
-        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
+        await operationRunner.RunAsync<ReleaseTemplateService>(async service =>
+        {
+            if (isEdit)
+            {
+                await service.UpdateUploadConfigTemplateAsync(
+                    UploadConfigTemplateId!.Value,
+                    FormModel.Name,
+                    FormModel.HosterRegistrationId!.Value,
+                    FormModel.ArchiveConfigTemplateId!.Value,
+                    CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
+                    FormModel.CollectionUploadSlotKey,
+                    FormModel.CollectionUploadSlotName,
+                    FormModel.CollectionUploadSlotIsRequired,
+                    FormModel.CollectionUploadSlotPasswordPolicy,
+                    FormModel.CollectionUploadSlotExpectedArchivePassword
+                );
+                return;
+            }
 
-        if (isEdit)
-        {
-            await service.UpdateUploadConfigTemplateAsync(
-                UploadConfigTemplateId!.Value,
-                FormModel.Name,
-                FormModel.HosterRegistrationId!.Value,
-                FormModel.ArchiveConfigTemplateId!.Value,
-                CanUsePremiumOnlyDownload && FormModel.PremiumOnlyDownload,
-                FormModel.CollectionUploadSlotKey,
-                FormModel.CollectionUploadSlotName,
-                FormModel.CollectionUploadSlotIsRequired,
-                FormModel.CollectionUploadSlotPasswordPolicy,
-                FormModel.CollectionUploadSlotExpectedArchivePassword
-            );
-        }
-        else
-        {
             await service.CreateUploadConfigTemplateAsync(
                 ReleaseTemplateId,
                 FormModel.Name,
@@ -151,7 +157,7 @@ public partial class CreateOrEditUploadConfigTemplateDialog(
                 FormModel.CollectionUploadSlotPasswordPolicy,
                 FormModel.CollectionUploadSlotExpectedArchivePassword
             );
-        }
+        });
 
         await DialogRef.CloseAsync(DialogResult.Ok());
     }

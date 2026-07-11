@@ -2,16 +2,16 @@ using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Website.Pages.ManageReleaseTemplates;
 
 public partial class ReleaseTemplatesPage(
-    IReleaseTemplateReadRepository readRepository,
     DialogService dialogService,
-    NavigationManager navigationManager
+    NavigationManager navigationManager,
+    IScopedOperationRunner operationRunner
 )
 {
     private IReadOnlyList<ReleaseTemplateSummaryReadModel> releaseTemplates = [];
@@ -28,7 +28,9 @@ public partial class ReleaseTemplatesPage(
 
         try
         {
-            releaseTemplates = await readRepository.GetAllAsync();
+            releaseTemplates = await operationRunner.RunAsync(
+                (IReleaseTemplateReadRepository repository) => repository.GetAllAsync()
+            );
         }
         finally
         {
@@ -127,8 +129,10 @@ public partial class ReleaseTemplatesPage(
             return;
         }
 
-        var service = ScopedServices.GetRequiredService<ReleaseTemplateService>();
-        await service.DeleteAsync(releaseTemplate.ReleaseTemplateId);
+        await operationRunner.RunAsync(
+            (ReleaseTemplateService service) =>
+                service.DeleteAsync(releaseTemplate.ReleaseTemplateId)
+        );
         await LoadReleaseTemplatesAsync();
     }
 }
