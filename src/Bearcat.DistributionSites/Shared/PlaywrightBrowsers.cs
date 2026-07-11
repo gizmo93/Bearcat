@@ -1,3 +1,5 @@
+using Microsoft.Playwright;
+
 namespace Bearcat.DistributionSites.Shared;
 
 internal static class PlaywrightBrowsers
@@ -23,7 +25,7 @@ internal static class PlaywrightBrowsers
             if (!HasChromium(browsersPath))
             {
                 Directory.CreateDirectory(browsersPath);
-                var exitCode = Microsoft.Playwright.Program.Main(["install", "chromium"]);
+                var exitCode = Program.Main(["install", "chromium"]);
                 if (exitCode != 0)
                 {
                     throw new InvalidOperationException(

@@ -669,9 +669,9 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
                     .ExtractAll(nfoContent)
                     .Select(imdbId => new ReleaseExternalIdentifier
                     {
-                        Type = Bearcat.Domain.ValueObjects.ExternalIdentifierType.Imdb,
+                        Type = ExternalIdentifierType.Imdb,
                         Value = imdbId,
-                        Source = Bearcat.Domain.ValueObjects.ExternalIdentifierSource.Nfo,
+                        Source = ExternalIdentifierSource.Nfo,
                     })
             );
         }
@@ -683,9 +683,9 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
                     .ExtractAll(imdbExternalUrl)
                     .Select(imdbId => new ReleaseExternalIdentifier
                     {
-                        Type = Bearcat.Domain.ValueObjects.ExternalIdentifierType.Imdb,
+                        Type = ExternalIdentifierType.Imdb,
                         Value = imdbId,
-                        Source = Bearcat.Domain.ValueObjects.ExternalIdentifierSource.Srrdb,
+                        Source = ExternalIdentifierSource.Srrdb,
                     })
             );
             releaseInfo.ExternalInfos.Add(

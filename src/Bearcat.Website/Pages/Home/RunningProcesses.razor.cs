@@ -3,7 +3,6 @@ using Bearcat.Domain.UseCases.ManageUploads.Progress;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Website.ScopedOperations;
-using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Website.Pages.Home;

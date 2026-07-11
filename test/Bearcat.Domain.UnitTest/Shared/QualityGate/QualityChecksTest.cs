@@ -1,7 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.Shared.QualityGate.Checks;
-using Bearcat.Domain.ValueObjects;
 using Shouldly;
 
 namespace Bearcat.Domain.UnitTest.Shared.QualityGate;

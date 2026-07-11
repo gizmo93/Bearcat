@@ -715,7 +715,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         var release = await AddReleaseAsync("Amok.1994.1080p.BluRay.x264-PL3X");
         release.ReleaseContentType = ReleaseContentType.Movie;
         release.PrimaryLanguageCode = "de";
-        release.ReleaseNfo = new Bearcat.Domain.Entities.ReleaseNfo
+        release.ReleaseNfo = new Entities.ReleaseNfo
         {
             FileName = "amok.nfo",
             Content = "https://www.imdb.com/title/tt0109093/",
@@ -867,7 +867,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             "Die.Wolke.2006.GERMAN.1080p.WEB.H264.iNTERNAL-SunDry",
             releaseInfoCheckedAt: DateTime.UtcNow
         );
-        release.ReleaseNfo = new Bearcat.Domain.Entities.ReleaseNfo
+        release.ReleaseNfo = new Entities.ReleaseNfo
         {
             FileName = "sundry-die.wolke.german.1080p.web.h264.nfo",
             Content = "https://www.imdb.com/title/tt0480083/",
