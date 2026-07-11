@@ -61,6 +61,48 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task SearchReleasesAsync_PrimaryLanguageFilter_ReturnsMatchingRelease()
+    {
+        // Arrange
+        var germanRelease = await AddReleaseAsync("Bearcat.German.2026-GRP");
+        germanRelease.PrimaryLanguageCode = "de";
+        await AddReleaseAsync("Bearcat.English.2026-GRP");
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.SearchReleasesAsync(
+            new ReleaseSearchQuery(PrimaryLanguageCode: "DE"),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        result.Items.Single().ReleaseId.ShouldBe(germanRelease.Id);
+    }
+
+    [Test]
+    public async Task SearchReleasesAsync_PrimaryLanguageNotSetFilter_ReturnsMatchingRelease()
+    {
+        // Arrange
+        var germanRelease = await AddReleaseAsync("Bearcat.German.2026-GRP");
+        germanRelease.PrimaryLanguageCode = "de";
+        var releaseWithoutLanguage = await AddReleaseAsync("Bearcat.Unknown.2026-GRP");
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.SearchReleasesAsync(
+            new ReleaseSearchQuery(PrimaryLanguageCode: string.Empty),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        result.Items.Single().ReleaseId.ShouldBe(releaseWithoutLanguage.Id);
+    }
+
+    [Test]
     public async Task SearchReleasesAsync_DownloadLinkFilter_ReturnsMatchingRelease()
     {
         // Arrange

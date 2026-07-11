@@ -412,7 +412,7 @@ public class ReleaseCollectionService(
 
     public async Task UpdateSharedLinkCryptersAsync(
         int collectionUploadSlotId,
-        IReadOnlyCollection<CollectionUploadSlotLinkCrypterSettings> linkCrypterSettings,
+        IReadOnlyList<CollectionUploadSlotLinkCrypterSettings> linkCrypterSettings,
         CancellationToken cancellationToken = default
     )
     {

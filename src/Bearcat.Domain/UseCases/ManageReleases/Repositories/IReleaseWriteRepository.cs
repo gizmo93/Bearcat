@@ -7,7 +7,7 @@ public interface IReleaseWriteRepository
     Task<Release> GetByIdAsync(int id, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<Release>> GetByIdsAsync(
-        IReadOnlyCollection<int> ids,
+        IReadOnlyList<int> ids,
         CancellationToken cancellationToken
     );
 

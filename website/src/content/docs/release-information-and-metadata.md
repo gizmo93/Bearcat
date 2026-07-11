@@ -52,6 +52,11 @@ Bearcat does not infer a language from release names. If the language is empty, 
 the metadata provider uses its own default language. Existing releases and automations therefore
 continue to work after an upgrade without receiving an assumed language.
 
+The release folder automation list shows the language assigned by each automation. On the
+**Releases** page, use the language filter to find releases with a specific language or select
+**Not set** to find releases without one. Select several releases to set or clear their language
+in one operation.
+
 ## How resolution works
 
 For a release, Bearcat performs these steps:
@@ -101,4 +106,3 @@ folder.
 Metadata entered manually is not overwritten by an automatic metadata refresh. If you want to
 start over, use **Delete release info and metadata** and resolve the release again. The stored NFO
 and extracted external IDs remain available for the next lookup.
-

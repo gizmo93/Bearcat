@@ -1233,6 +1233,15 @@ public class ReleaseReadRepository(
             releases = releases.Where(r => r.ReleaseContentType == query.ReleaseContentType.Value);
         }
 
+        if (query.PrimaryLanguageCode is not null)
+        {
+            var primaryLanguageCode = query.PrimaryLanguageCode.Trim().ToLowerInvariant();
+            releases =
+                primaryLanguageCode.Length == 0
+                    ? releases.Where(r => r.PrimaryLanguageCode == null)
+                    : releases.Where(r => r.PrimaryLanguageCode == primaryLanguageCode);
+        }
+
         if (query.HosterRegistrationId is not null)
         {
             releases = releases.Where(r =>

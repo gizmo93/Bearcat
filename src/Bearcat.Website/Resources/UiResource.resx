@@ -950,6 +950,11 @@
         <value>Release</value>
     </data>
   <data name="PrimaryLanguage" xml:space="preserve"><value>Primary language</value></data>
+  <data name="AnyLanguage" xml:space="preserve"><value>Any language</value></data>
+  <data name="NotSet" xml:space="preserve"><value>&lt;Not set&gt;</value></data>
+  <data name="SelectLanguage" xml:space="preserve"><value>Select language</value></data>
+  <data name="ChangePrimaryLanguage" xml:space="preserve"><value>Change language</value></data>
+  <data name="PrimaryLanguageChangedForReleases" xml:space="preserve"><value>Primary language changed for {0} release(s).</value></data>
   <data name="Unknown" xml:space="preserve"><value>Unknown</value></data>
   <data name="SearchLanguage" xml:space="preserve"><value>Search language...</value></data>
   <data name="NoLanguagesFound" xml:space="preserve"><value>No languages found.</value></data>

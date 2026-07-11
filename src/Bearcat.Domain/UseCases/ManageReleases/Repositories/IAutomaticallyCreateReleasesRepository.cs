@@ -9,12 +9,12 @@ public interface IAutomaticallyCreateReleasesRepository
     void Add(Notification notification);
 
     Task<HashSet<string>> GetExistingReleaseFolderPathsAsync(
-        IReadOnlyCollection<string> releaseFolderPaths,
+        IReadOnlyList<string> releaseFolderPaths,
         CancellationToken cancellationToken = default
     );
 
     Task<HashSet<string>> GetExistingArchiveFolderPathsAsync(
-        IReadOnlyCollection<string> archiveFolderPaths,
+        IReadOnlyList<string> archiveFolderPaths,
         CancellationToken cancellationToken = default
     );
 

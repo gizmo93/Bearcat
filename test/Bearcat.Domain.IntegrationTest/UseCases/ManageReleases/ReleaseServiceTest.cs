@@ -176,6 +176,34 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         result.ShouldAllBe(r => r.ReleaseGroupId == secondGroup.Id);
     }
 
+    [TestCase("DE", "de")]
+    [TestCase("", null)]
+    public async Task UpdatePrimaryLanguageAsync_ReleasesExist_UpdatesPrimaryLanguages(
+        string primaryLanguageCode,
+        string? expectedLanguageCode
+    )
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Language group");
+        var firstRelease = await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.001");
+        var secondRelease = await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.002");
+        firstRelease.PrimaryLanguageCode = "en";
+        secondRelease.PrimaryLanguageCode = "en";
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await service.UpdatePrimaryLanguageAsync(
+            [firstRelease.Id, secondRelease.Id],
+            primaryLanguageCode,
+            CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var releases = await dbContext.Releases.OrderBy(release => release.Id).ToListAsync();
+        releases.ShouldAllBe(release => release.PrimaryLanguageCode == expectedLanguageCode);
+    }
+
     [Test]
     public async Task DeleteAsync_ReleaseExists_RemovesRelease()
     {

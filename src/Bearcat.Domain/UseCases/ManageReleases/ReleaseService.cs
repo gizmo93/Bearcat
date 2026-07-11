@@ -86,7 +86,7 @@ public class ReleaseService(
     }
 
     public async Task UpdateReleaseGroupAsync(
-        IReadOnlyCollection<int> releaseIds,
+        IReadOnlyList<int> releaseIds,
         int releaseGroupId,
         CancellationToken cancellationToken = default
     )
@@ -101,6 +101,28 @@ public class ReleaseService(
         foreach (var release in releases)
         {
             release.ReleaseGroupId = releaseGroupId;
+        }
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdatePrimaryLanguageAsync(
+        IReadOnlyList<int> releaseIds,
+        string? primaryLanguageCode,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (releaseIds.Count == 0)
+        {
+            return;
+        }
+
+        var releases = await writeRepository.GetByIdsAsync(releaseIds, cancellationToken);
+        var normalizedLanguageCode = CleanOptional(primaryLanguageCode)?.ToLowerInvariant();
+
+        foreach (var release in releases)
+        {
+            release.PrimaryLanguageCode = normalizedLanguageCode;
         }
 
         await writeRepository.SaveChangesAsync(cancellationToken);

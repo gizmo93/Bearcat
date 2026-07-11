@@ -63,6 +63,20 @@
                     <LucideIcon Name="layers" class="h-4 w-4" />
                     @L["ChangeReleaseGroup"]
                 </BbButton>
+                <BbCombobox TValue="string"
+                            @bind-Value="selectedBulkPrimaryLanguageCode"
+                            Options="BulkLanguageOptions"
+                            SearchPlaceholder="@L["SearchLanguage"]"
+                            EmptyMessage="@L["NoLanguagesFound"]"
+                            Class="w-56"
+                            MatchTriggerWidth="true" />
+                <BbButton Variant="ButtonVariant.Outline"
+                          Size="ButtonSize.Small"
+                          Disabled="@(selectedBulkPrimaryLanguageCode == NoBulkLanguageSelected)"
+                          OnClick="ApplyBulkPrimaryLanguageAsync">
+                    <LucideIcon Name="languages" class="h-4 w-4" />
+                    @L["ChangePrimaryLanguage"]
+                </BbButton>
             </div>
         }
         else

@@ -110,7 +110,7 @@ public class ReleaseFolderAutomationRepository(
     }
 
     public async Task<HashSet<string>> GetExistingReleaseFolderPathsAsync(
-        IReadOnlyCollection<string> releaseFolderPaths,
+        IReadOnlyList<string> releaseFolderPaths,
         CancellationToken cancellationToken = default
     )
     {
@@ -124,7 +124,7 @@ public class ReleaseFolderAutomationRepository(
     }
 
     public async Task<HashSet<string>> GetExistingArchiveFolderPathsAsync(
-        IReadOnlyCollection<string> archiveFolderPaths,
+        IReadOnlyList<string> archiveFolderPaths,
         CancellationToken cancellationToken = default
     )
     {

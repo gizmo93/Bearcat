@@ -571,7 +571,7 @@
   <data name="ReleaseGroups" xml:space="preserve"><value>Release-Gruppen</value></data>
   <data name="ReleaseGroupsIntro" xml:space="preserve"><value>Steuere, welche Releases automatische Reuploads erstellen und wann.</value></data>
   <data name="ReleaseOverview" xml:space="preserve"><value>Release-Übersicht</value></data>
-  <data name="SelectReleaseGroup" xml:space="preserve"><value>Release-Gruppe auswählen</value></data>
+  <data name="SelectReleaseGroup" xml:space="preserve"><value>Gruppe auswählen</value></data>
   <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>Du musst eine Release-Gruppe auswählen</value></data>
   <data name="SelectAll" xml:space="preserve"><value>Alle auswählen</value></data>
   <data name="SelectedReleaseCount" xml:space="preserve"><value>{0} Release(s) ausgewählt</value></data>
@@ -950,6 +950,11 @@
         <value>Release</value>
     </data>
   <data name="PrimaryLanguage" xml:space="preserve"><value>Primärsprache</value></data>
+  <data name="AnyLanguage" xml:space="preserve"><value>Alle Sprachen</value></data>
+  <data name="NotSet" xml:space="preserve"><value>&lt;Nicht gesetzt&gt;</value></data>
+  <data name="SelectLanguage" xml:space="preserve"><value>Sprache auswählen</value></data>
+  <data name="ChangePrimaryLanguage" xml:space="preserve"><value>Sprache ändern</value></data>
+  <data name="PrimaryLanguageChangedForReleases" xml:space="preserve"><value>Primärsprache für {0} Release(s) geändert.</value></data>
   <data name="Unknown" xml:space="preserve"><value>Unbekannt</value></data>
   <data name="SearchLanguage" xml:space="preserve"><value>Sprache suchen...</value></data>
   <data name="NoLanguagesFound" xml:space="preserve"><value>Keine Sprachen gefunden.</value></data>

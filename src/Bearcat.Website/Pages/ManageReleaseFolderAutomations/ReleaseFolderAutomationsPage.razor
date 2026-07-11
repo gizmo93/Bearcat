@@ -76,6 +76,23 @@
                     <BbBadge Variant="BadgeVariant.Secondary">@L.Localize(automation.ReleaseContentType)</BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
+            <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="string"
+                               Header="@L["PrimaryLanguage"]"
+                               Property="@(automation => automation.PrimaryLanguageCode ?? string.Empty)"
+                               Width="170px">
+                <CellTemplate Context="automation">
+                    @if (string.IsNullOrWhiteSpace(automation.PrimaryLanguageCode))
+                    {
+                        <span class="text-sm text-muted-foreground">@L["NotSet"]</span>
+                    }
+                    else
+                    {
+                        <BbBadge Variant="BadgeVariant.Outline">
+                            @GetLanguageDisplayName(automation.PrimaryLanguageCode)
+                        </BbBadge>
+                    }
+                </CellTemplate>
+            </BbDataTableColumn>
             <BbDataTableColumn TData="ReleaseFolderAutomationReadModel" TValue="bool"
                                Header="@L["Status"]"
                                Property="@(automation => automation.IsEnabled)"

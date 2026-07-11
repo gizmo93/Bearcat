@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
@@ -25,6 +26,7 @@ public partial class AllReleasesPage(
     ToastService toastService
 )
 {
+    private const string NoBulkLanguageSelected = "__not_selected__";
     private readonly int[] pageSizes = [5, 10, 20, 50, 100];
 
     private IReadOnlyList<ReleaseReadModel> releases = [];
@@ -39,6 +41,7 @@ public partial class AllReleasesPage(
     private int pageIndex;
     private int pageSize = 5;
     private int selectedBulkReleaseGroupId;
+    private string selectedBulkPrimaryLanguageCode = NoBulkLanguageSelected;
     private bool isLoading;
 
     private int CurrentPage => totalCount == 0 ? 1 : pageIndex + 1;
@@ -56,6 +59,21 @@ public partial class AllReleasesPage(
         new[] { new SelectOption<int>(0, L["SelectReleaseGroup"]) }.Concat(
             releaseGroups.Select(group => new SelectOption<int>(group.ReleaseGroupId, group.Name))
         );
+
+    private IReadOnlyList<SelectOption<string>> BulkLanguageOptions =>
+        [
+            new(NoBulkLanguageSelected, L["SelectLanguage"]),
+            new(string.Empty, L["NotSet"]),
+            .. CultureInfo
+                .GetCultures(CultureTypes.NeutralCultures)
+                .Where(culture => culture.TwoLetterISOLanguageName.Length == 2)
+                .DistinctBy(culture => culture.TwoLetterISOLanguageName)
+                .OrderBy(culture => culture.NativeName)
+                .Select(culture => new SelectOption<string>(
+                    culture.TwoLetterISOLanguageName,
+                    culture.NativeName
+                )),
+        ];
 
     private IEnumerable<int?> PaginationItems
     {
@@ -255,6 +273,7 @@ public partial class AllReleasesPage(
     {
         selectedReleaseIds.Clear();
         selectedBulkReleaseGroupId = 0;
+        selectedBulkPrimaryLanguageCode = NoBulkLanguageSelected;
     }
 
     private async Task ApplyBulkReleaseGroupAsync()
@@ -271,6 +290,27 @@ public partial class AllReleasesPage(
         toastService.Success(L["ReleaseGroupChangedForReleases", releaseIds.Count]);
         selectedReleaseIds.Clear();
         selectedBulkReleaseGroupId = 0;
+        selectedBulkPrimaryLanguageCode = NoBulkLanguageSelected;
+        await RefreshReleasesAsync();
+    }
+
+    private async Task ApplyBulkPrimaryLanguageAsync()
+    {
+        if (
+            selectedReleaseIds.Count == 0
+            || selectedBulkPrimaryLanguageCode == NoBulkLanguageSelected
+        )
+        {
+            return;
+        }
+
+        var releaseIds = selectedReleaseIds.ToList();
+        await service.UpdatePrimaryLanguageAsync(releaseIds, selectedBulkPrimaryLanguageCode);
+
+        toastService.Success(L["PrimaryLanguageChangedForReleases", releaseIds.Count]);
+        selectedReleaseIds.Clear();
+        selectedBulkReleaseGroupId = 0;
+        selectedBulkPrimaryLanguageCode = NoBulkLanguageSelected;
         await RefreshReleasesAsync();
     }
 

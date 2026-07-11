@@ -6,6 +6,7 @@ public record ReleaseSearchQuery(
     string? SearchTerm = null,
     ReleaseType? ReleaseType = null,
     ReleaseContentType? ReleaseContentType = null,
+    string? PrimaryLanguageCode = null,
     OnlineState? OnlineState = null,
     int? HosterRegistrationId = null,
     string? ArchiverName = null,
