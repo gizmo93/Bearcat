@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.BackgroundTasks;
 using Bearcat.Abstractions.Configurations;
+using Bearcat.Abstractions.Notifications;
 using Bearcat.Abstractions.Security;
 using Bearcat.Abstractions.Updates;
 using Bearcat.Infrastructure.BackgroundTasks;
@@ -9,6 +10,7 @@ using Bearcat.Infrastructure.Configuration;
 using Bearcat.Infrastructure.Database.InversionOfControl;
 using Bearcat.Infrastructure.FileSystem;
 using Bearcat.Infrastructure.Security;
+using Bearcat.Infrastructure.Telegram;
 using Bearcat.Infrastructure.Updates;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,6 +49,12 @@ public static class ServiceProviderConfig
             );
             services.AddSingleton<IAppVersionProvider, AssemblyAppVersionProvider>();
             services.AddSingleton<IUpdateChecker, GitHubUpdateChecker>();
+            services.AddHttpClient("telegram", client => client.Timeout = TimeSpan.FromSeconds(40));
+            services.AddSingleton<TelegramConfigurationCache>();
+            services.AddScoped<TelegramNotificationService>();
+            services.AddScoped<ITelegramNotificationProcessor>(serviceProvider =>
+                serviceProvider.GetRequiredService<TelegramNotificationService>()
+            );
         }
     }
 }

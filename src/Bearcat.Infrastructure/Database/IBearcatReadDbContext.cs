@@ -32,6 +32,8 @@ public interface IBearcatReadDbContext
     public DbSet<UploadConfig> UploadConfigs { get; set; }
     public DbSet<UploadedFile> UploadedFiles { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<TelegramConfiguration> TelegramConfigurations { get; set; }
+    public DbSet<TelegramDelivery> TelegramDeliveries { get; set; }
     public DbSet<LinkCrypterRegistration> LinkCrypterRegistrations { get; set; }
     public DbSet<UploadConfigLinkCrypter> UploadConfigLinkCrypters { get; set; }
     public DbSet<LinkCrypterContainer> LinkCrypterContainers { get; set; }

@@ -33,6 +33,8 @@ public interface IBearcatWriteDbContext
     DbSet<UploadConfig> UploadConfigs { get; set; }
     DbSet<UploadedFile> UploadedFiles { get; set; }
     DbSet<Notification> Notifications { get; set; }
+    DbSet<TelegramConfiguration> TelegramConfigurations { get; set; }
+    DbSet<TelegramDelivery> TelegramDeliveries { get; set; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 

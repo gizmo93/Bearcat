@@ -1,0 +1,147 @@
+@page "/telegram"
+
+<PageTitle>@L["TelegramNotifications"] - Bearcat</PageTitle>
+
+<section class="mx-auto flex w-full max-w-3xl flex-col gap-4">
+    <div class="bearcat-page-header">
+        <div class="min-w-0">
+            <h1 class="text-3xl font-semibold tracking-tight">@L["TelegramNotifications"]</h1>
+            <p class="mt-2 max-w-2xl text-sm text-muted-foreground">
+                @L["TelegramNotificationsIntro"]
+            </p>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <BbCard Class="border-border/70 shadow-sm">
+            <BbCardContent Class="py-8">
+                <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                    <BbSpinner Size="SpinnerSize.Small" />
+                    <span>@L["Loading"]</span>
+                </div>
+            </BbCardContent>
+        </BbCard>
+    }
+    else
+    {
+        <BbCard Class="border-border/70 shadow-sm">
+            <BbCardHeader>
+                <BbCardTitle class="text-base">@L["TelegramBot"]</BbCardTitle>
+                <BbCardDescription>@L["TelegramBotHelp"]</BbCardDescription>
+            </BbCardHeader>
+            <BbCardContent>
+                <div class="space-y-4">
+                    @if (settings.IsConfigured)
+                    {
+                        <div class="flex items-center gap-2 text-sm">
+                            <BbBadge Variant="BadgeVariant.Secondary">@($"@{settings.BotUsername}")</BbBadge>
+                            <span class="text-muted-foreground">@L["TelegramTokenLeaveEmpty"]</span>
+                        </div>
+                    }
+
+                    <div class="grid gap-2">
+                        <BbLabel>@L["TelegramBotToken"]</BbLabel>
+                        <BbInput @bind-Value="botToken"
+                                 Type="InputType.Password"
+                                 Placeholder="@(settings.IsConfigured ? L["TelegramTokenUnchanged"] : L["TelegramBotTokenPlaceholder"])" />
+                    </div>
+
+                    <div class="grid gap-2">
+                        <BbLabel>@L["BearcatNotificationUrl"]</BbLabel>
+                        <BbInput @bind-Value="notificationBaseUrl" />
+                        <p class="text-xs text-muted-foreground">@L["BearcatNotificationUrlHelp"]</p>
+                    </div>
+
+                    <BbButton OnClick="SaveConfigurationAsync">
+                        @L["Save"]
+                    </BbButton>
+                </div>
+            </BbCardContent>
+        </BbCard>
+
+        @if (settings.IsConfigured)
+        {
+            <BbCard Class="border-border/70 shadow-sm">
+                <BbCardHeader>
+                    <BbCardTitle class="text-base">@L["TelegramRecipient"]</BbCardTitle>
+                    <BbCardDescription>@L["TelegramRecipientHelp"]</BbCardDescription>
+                </BbCardHeader>
+                <BbCardContent>
+                    @if (settings.IsConnected)
+                    {
+                        <div class="space-y-4">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <BbBadge Variant="BadgeVariant.Secondary">@L["Connected"]</BbBadge>
+                                <span class="text-sm">@settings.ChatName</span>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <BbButton Variant="ButtonVariant.Outline" OnClick="SendTestMessageAsync">
+                                    @L["SendTestNotification"]
+                                </BbButton>
+                                <BbButton Variant="ButtonVariant.Ghost" OnClick="DisconnectAsync">
+                                    @L["DisconnectTelegram"]
+                                </BbButton>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="space-y-4">
+                            @if (pairingUrl is null)
+                            {
+                                <BbButton OnClick="BeginPairingAsync">
+                                    <LucideIcon Name="send" class="h-4 w-4" />
+                                    @L["ConnectTelegram"]
+                                </BbButton>
+                            }
+                            else
+                            {
+                                <p class="text-sm text-muted-foreground">@L["TelegramPairingInstructions"]</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <a href="@pairingUrl"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90">
+                                        @L["OpenTelegram"]
+                                    </a>
+                                    <BbButton Variant="ButtonVariant.Outline" OnClick="RefreshConnectionAsync">
+                                        @L["CheckConnection"]
+                                    </BbButton>
+                                </div>
+                            }
+                        </div>
+                    }
+                </BbCardContent>
+            </BbCard>
+
+            <BbCard Class="border-border/70 shadow-sm">
+                <BbCardHeader>
+                    <BbCardTitle class="text-base">@L["ForwardNotificationTypes"]</BbCardTitle>
+                    <BbCardDescription>@L["ForwardNotificationTypesHelp"]</BbCardDescription>
+                </BbCardHeader>
+                <BbCardContent>
+                    <div class="space-y-4">
+                        <div class="flex flex-wrap gap-6">
+                            <div class="flex items-center gap-2">
+                                <BbCheckbox @bind-Checked="forwardInfo" Id="telegram-info" />
+                                <BbLabel For="telegram-info">@L["NotificationType.Info"]</BbLabel>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <BbCheckbox @bind-Checked="forwardWarning" Id="telegram-warning" />
+                                <BbLabel For="telegram-warning">@L["NotificationType.Warning"]</BbLabel>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <BbCheckbox @bind-Checked="forwardError" Id="telegram-error" />
+                                <BbLabel For="telegram-error">@L["NotificationType.Error"]</BbLabel>
+                            </div>
+                        </div>
+
+                        <BbButton OnClick="SaveLevelsAsync">@L["Save"]</BbButton>
+                    </div>
+                </BbCardContent>
+            </BbCard>
+        }
+    }
+</section>

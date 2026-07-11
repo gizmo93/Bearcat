@@ -18,6 +18,7 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
         <PackageReference Include="Npgsql" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+        <PackageReference Include="Telegram.Bot" />
     </ItemGroup>
 
     <ItemGroup>
