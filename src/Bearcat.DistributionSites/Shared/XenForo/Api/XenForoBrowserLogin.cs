@@ -1,5 +1,4 @@
 using Bearcat.Abstractions.DistributionSite.Dto;
-using Bearcat.DistributionSites.Shared;
 using Microsoft.Playwright;
 
 namespace Bearcat.DistributionSites.Shared.XenForo.Api;

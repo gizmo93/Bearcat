@@ -5,7 +5,6 @@ using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.IntegrationTest.Utils;
-using Microsoft.EntityFrameworkCore;
 using Moq;
 using Scriban.Runtime;
 using Shouldly;

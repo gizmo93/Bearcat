@@ -1,5 +1,6 @@
 @using Bearcat.Website.Formatting
-@inject Bearcat.Domain.Shared.TimeProvider TimeProvider
+@using TimeProvider = Bearcat.Domain.Shared.TimeProvider
+@inject TimeProvider TimeProvider
 
 @if (Value is not null)
 {

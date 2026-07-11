@@ -1,4 +1,3 @@
-using Bearcat.Domain.UseCases.ManageQualityProfiles.ReadModels;
 using Bearcat.Domain.UseCases.ManageQualityProfiles.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
