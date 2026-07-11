@@ -101,6 +101,7 @@ public sealed partial class XenForoForumClient : IDisposable
         var form = new List<KeyValuePair<string, string>>
         {
             new("keywords", keywords),
+            new("search_type", "post"),
             new("c[title_only]", "1"),
             new("order", "relevance"),
             new("grouped", "1"),
