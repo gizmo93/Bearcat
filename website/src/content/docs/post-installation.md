@@ -51,10 +51,18 @@ The global "Maximum parallel uploads" setting in "Configurations" still applies 
 See [Advanced Configuration](/Bearcat/advanced-configuration/#upload-concurrency) for the global setting.
 
 
-## Setting up link crypter accounts, and NFO databases
-The menu option "Crypter registrations" works the same way as the "Hoster registrations", but here you can set up your accounts for link crypters, that you want to use to create link containers for your releases.
-The menu option "NFO database registrations" will (currently) only allow you to activate xrel.to.
-That's optional and doesn't need any credentials, but it's needed if you automatically want to fetch release related information.
+## Setting up link crypters and metadata sources
+
+The menu option "Crypter registrations" works the same way as "Hoster registrations", but here
+you can set up the link crypter accounts used to create link containers for your releases.
+
+Open "NFO database registrations" to activate xREL and SRRDB. They provide scene release
+information, NFO files, and external IDs. They do not require credentials.
+
+Open "Metadata sources" to register TMDB or TheTVDB. These providers supply movie and TV titles,
+descriptions, genres, and cover images. They require an API key.
+
+See [Release Information and Metadata](/Bearcat/release-information-and-metadata/) to understand how the lookup works and how languages for Releases are set.
 
 ## Setting up image hoster accounts
 
@@ -95,9 +103,15 @@ It should be kind of a quick access to all information that you might need, if y
 ![overview.png](images/overview.png)
 
 
-### Release infos tab
-... shows metadata fetched from the active NFO database registrations.
+### Release info tab
+
+This tab separates scene release information from movie or TV metadata. It also shows the NFO,
+external IDs with their sources, and technical media data. You can resolve, refresh, or edit these
+values manually.
+
 ![release-infos-tab.png](images/release-infos-tab.png)
+
+See [Release Information and Metadata](/Bearcat/release-information-and-metadata/) for details.
 
 ### Archive configurations tab
 ... defines how Bearcat should create archive files.
@@ -125,7 +139,8 @@ This is separate from the normal file upload configuration.
 ![image-upload-config.png](images/image-upload-config.png)
 
 Bearcat only uploads an image when the release has a cover image URL.
-The cover URL normally comes from the release information that Bearcat fetched from an active NFO database registration.
+The cover URL normally comes from an active metadata source such as TMDB. A cover returned by xREL
+is kept as a fallback when the metadata source does not provide one.
 If no cover image is known for the release, there is nothing to upload and no image links will be created.
 
 ### Image uploads tab
@@ -166,7 +181,7 @@ The name is important if you want to use the image links in forum post templates
 For example, a configuration named `ImgBB Cover` can be used as `imagelinks.imgbb_cover.full` in a template.
 
 Bearcat uploads the cover image automatically once a cover URL exists for the release.
-If the release information does not contain a cover URL, Bearcat simply skips the image upload.
+If the release metadata does not contain a cover URL, Bearcat simply skips the image upload.
 
 ## Setting up release groups
 
@@ -242,9 +257,14 @@ Matching is case-insensitive.
 Select the release template and leave "Enabled" checked if the automation should start immediately.
 You can disable and re-enable automations later from the action menu in the automations list.
 
+The primary language is optional. When set, every release created by this automation receives that
+language and metadata providers use it for translated titles and descriptions. Leave it empty to
+use the provider's default language.
+
 The folder automation background task runs about every two minutes.
 For every matching direct subfolder, Bearcat checks whether a release with the same folder path already exists.
-If not, it creates a new release from the selected template, tries to fetch release information from the active NFO databases and adds a notification.
+If not, it creates a new release from the selected template, tries to resolve release information
+and metadata from the active sources, and adds a notification.
 The normal archive and upload background tasks then continue with archive creation, upload, online-state checks and link crypter container creation.
 
 If the selected template has "Collection detection" turned on, the newly created releases are also grouped into release collections automatically.

@@ -41,19 +41,25 @@ releases out of the wrong collection.
 
 ## What you find inside a collection
 
-A collection page is built from a few parts: the series information, the image uploads for the
+A collection page is built from a few parts: the series metadata, the image uploads for the
 series cover, the upload slots, and the releases that belong to it.
 
 ![release-collection-detail.png](images/release-collection-detail.png)
 
-### Series information
+### Series metadata
 
-Bearcat tries to look up the series behind a collection in a series database, the same way it
-resolves metadata for a single release. When it finds a match, the collection shows the series
-title, a short description, and the cover image. Use **Resolve metadata** if you want Bearcat to
-look again, for example after you renamed the collection.
+Bearcat looks up the series behind a collection through the active metadata sources, using the
+same resolver as a single release. TMDB and TheTVDB can provide series metadata. When Bearcat finds
+a match, the collection shows the series title, a short description, and the cover image. Use
+**Resolve metadata** to look again, for example after changing the name or primary language.
 
-These informations are available as part of the Forum Post Templates and a resolved cover image is uploaded to configured image hosters.
+The primary language controls translated titles and descriptions. If it is empty, the provider's
+default language is used. Bearcat can use an IMDb ID found on one of the collection's releases and
+falls back to a title search when no ID is available.
+
+The resolved values are available in forum post templates, and the cover image can be uploaded to
+configured image hosters. See [Release Information and Metadata](/Bearcat/release-information-and-metadata/)
+for the complete lookup flow.
 
 ### Image uploads
 
