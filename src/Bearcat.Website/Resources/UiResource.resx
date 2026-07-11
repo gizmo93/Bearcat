@@ -361,9 +361,9 @@
   <data name="ReleaseResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} releases</value></data>
   <data name="ReleaseSearchPlaceholder" xml:space="preserve"><value>Name or folder path</value></data>
   <data name="ReleaseContentType" xml:space="preserve"><value>Content type</value></data>
-  <data name="ReleaseContentTypeUpdated" xml:space="preserve"><value>Content type updated</value></data>
-  <data name="EditContentType" xml:space="preserve"><value>Edit content type</value></data>
-  <data name="EditContentTypeDescription" xml:space="preserve"><value>Choose the content type for this release collection.</value></data>
+  <data name="EditCollectionSettings" xml:space="preserve"><value>Edit collection settings</value></data>
+  <data name="EditCollectionSettingsDescription" xml:space="preserve"><value>Choose the content type and primary language for this release collection.</value></data>
+  <data name="ReleaseCollectionSettingsUpdated" xml:space="preserve"><value>Collection settings updated</value></data>
   <data name="AnyReleaseContentType" xml:space="preserve"><value>Any content type</value></data>
   <data name="ReleaseContentType.Movie" xml:space="preserve"><value>Movie</value></data>
   <data name="ReleaseContentType.TvShowEpisode" xml:space="preserve"><value>TV show episode</value></data>

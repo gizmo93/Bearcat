@@ -101,9 +101,10 @@ public class ReleaseCollectionService(
         }
     }
 
-    public async Task UpdateContentTypeAsync(
+    public async Task UpdateSettingsAsync(
         int releaseCollectionId,
         ReleaseContentType releaseContentType,
+        string? primaryLanguageCode,
         CancellationToken cancellationToken = default
     )
     {
@@ -112,6 +113,8 @@ public class ReleaseCollectionService(
             cancellationToken
         );
         releaseCollection.ReleaseContentType = releaseContentType;
+        releaseCollection.PrimaryLanguageCode = CleanOptional(primaryLanguageCode)
+            ?.ToLowerInvariant();
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }

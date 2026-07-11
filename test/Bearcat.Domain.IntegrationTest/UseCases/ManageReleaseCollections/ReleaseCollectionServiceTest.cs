@@ -91,7 +91,7 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task UpdateContentTypeAsync_ValidData_UpdatesContentType()
+    public async Task UpdateSettingsAsync_ValidData_UpdatesSettings()
     {
         // Arrange
         var releaseGroup = new ReleaseGroup
@@ -112,13 +112,14 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
         await dbContext.SaveChangesAsync();
 
         // Act
-        await service.UpdateContentTypeAsync(collection.Id, ReleaseContentType.Other);
+        await service.UpdateSettingsAsync(collection.Id, ReleaseContentType.Other, "DE");
 
         // Assert
         dbContext.ChangeTracker.Clear();
         var updated = await dbContext.ReleaseCollections.FindAsync(collection.Id);
 
         updated!.ReleaseContentType.ShouldBe(ReleaseContentType.Other);
+        updated.PrimaryLanguageCode.ShouldBe("de");
     }
 
     [Test]

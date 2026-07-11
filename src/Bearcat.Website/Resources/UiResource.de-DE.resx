@@ -365,6 +365,9 @@
   <data name="ReleaseContentTypeUpdated" xml:space="preserve"><value>Inhaltstyp aktualisiert</value></data>
   <data name="EditContentType" xml:space="preserve"><value>Inhaltstyp bearbeiten</value></data>
   <data name="EditContentTypeDescription" xml:space="preserve"><value>Wähle den Inhaltstyp für diese Release-Collection.</value></data>
+  <data name="EditCollectionSettings" xml:space="preserve"><value>Collection Einstellungen bearbeiten</value></data>
+  <data name="EditCollectionSettingsDescription" xml:space="preserve"><value>Wähle den Inhaltstyp und die Primärsprache für diese Release Collection.</value></data>
+  <data name="ReleaseCollectionSettingsUpdated" xml:space="preserve"><value>Collection Einstellungen aktualisiert</value></data>
   <data name="AnyReleaseContentType" xml:space="preserve"><value>Alle Inhaltstypen</value></data>
   <data name="ReleaseContentType.Movie" xml:space="preserve"><value>Film</value></data>
   <data name="ReleaseContentType.TvShowEpisode" xml:space="preserve"><value>Serienfolge</value></data>

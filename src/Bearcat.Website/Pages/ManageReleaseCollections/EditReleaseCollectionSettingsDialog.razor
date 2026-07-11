@@ -1,0 +1,92 @@
+@using Bearcat.Domain.UseCases.ManageReleaseCollections
+@using Microsoft.Extensions.DependencyInjection
+@inherits OwningComponentBase
+
+<div class="space-y-6">
+    <BbFormFieldSelect TValue="ReleaseContentType"
+                       @bind-Value="contentType"
+                       Label="@L["ReleaseContentType"]"
+                       DisplayTextSelector="GetContentTypeDisplayText"
+                       Options="ReleaseContentTypeOptions" />
+
+    <BbFormFieldCombobox TValue="string"
+                         @bind-Value="primaryLanguageCode"
+                         Label="@L["PrimaryLanguage"]"
+                         SearchPlaceholder="@L["SearchLanguage"]"
+                         EmptyMessage="@L["NoLanguagesFound"]"
+                         InputClass="w-full"
+                         MatchTriggerWidth="true"
+                         Options="LanguageOptions" />
+
+    <div class="flex justify-end gap-2">
+        <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+            @L["Cancel"]
+        </BbButton>
+        <BbButton OnClick="SaveAsync">
+            @L["Save"]
+        </BbButton>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public IDialogReference DialogRef { get; set; } = null!;
+
+    [Parameter]
+    public int ReleaseCollectionId { get; set; }
+
+    [Parameter]
+    public ReleaseContentType ContentType { get; set; }
+
+    [Parameter]
+    public string? PrimaryLanguageCode { get; set; }
+
+    private ReleaseContentType contentType;
+    private string primaryLanguageCode = string.Empty;
+
+    private IReadOnlyList<SelectOption<ReleaseContentType>> ReleaseContentTypeOptions =>
+        Enum.GetValues<ReleaseContentType>()
+            .Select(type => new SelectOption<ReleaseContentType>(type, L.Localize(type)))
+            .ToList();
+
+    private IReadOnlyList<SelectOption<string>> LanguageOptions =>
+        [
+            new(string.Empty, L["Unknown"]),
+            .. CultureInfo
+                .GetCultures(CultureTypes.NeutralCultures)
+                .Where(culture => culture.TwoLetterISOLanguageName.Length == 2)
+                .DistinctBy(culture => culture.TwoLetterISOLanguageName)
+                .OrderBy(culture => culture.NativeName)
+                .Select(culture => new SelectOption<string>(
+                    culture.TwoLetterISOLanguageName,
+                    culture.NativeName
+                )),
+        ];
+
+    protected override void OnInitialized()
+    {
+        contentType = ContentType;
+        primaryLanguageCode = PrimaryLanguageCode ?? string.Empty;
+    }
+
+    private string GetContentTypeDisplayText(ReleaseContentType releaseContentType)
+    {
+        return L.Localize(releaseContentType);
+    }
+
+    private async Task SaveAsync()
+    {
+        var service = ScopedServices.GetRequiredService<ReleaseCollectionService>();
+        await service.UpdateSettingsAsync(
+            ReleaseCollectionId,
+            contentType,
+            primaryLanguageCode
+        );
+        await DialogRef.CloseAsync(DialogResult.Ok());
+    }
+
+    private async Task CancelAsync()
+    {
+        await DialogRef.CancelAsync();
+    }
+}
