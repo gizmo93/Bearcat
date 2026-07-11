@@ -39,7 +39,7 @@ Only disable a task if you intentionally want to pause that part of the system, 
 | --- | ---: | --- |
 | Configuration cache refresh | Every 5 minutes | Reloads configuration overrides from the database into the in-memory configuration cache. Saving a value in the UI also updates the cache immediately, but this task keeps the cache in sync. |
 | Release folder automation | Every 2 minutes | Scans enabled release folder automations and creates releases from matching direct subfolders using the selected release template. A matching folder is only turned into a release once it looks finished (see ["Folder automation"](#folder-automation) below). |
-| Release info resolution | Every 10 minutes | Looks for releases without release information and tries to fetch metadata from active NFO database registrations such as xrel.to. |
+| Release info resolution | Every 10 minutes | Resolves missing scene release information, NFO files, external IDs, and movie or TV metadata through the active NFO databases and metadata sources. |
 | Archive creation | Every 20 seconds | Creates missing archives for uploads that are waiting for an archive. If a matching archive already exists, it can reuse it instead of creating a new one. |
 | Archive cleanup | Every 30 minutes | Deletes local archive folders after their linked uploads have completed, if automatic archive cleanup is enabled in "Configurations". |
 | Archive upload | Every 20 seconds | Uploads pending archive files to the configured hosters and updates upload progress and final upload state. |

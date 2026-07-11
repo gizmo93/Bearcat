@@ -81,18 +81,19 @@ Common variables:
 | --- | --- |
 | `{{ release.name }}` | Release name from Bearcat. |
 | `{{ release.nfo }}` | Content of the first `.nfo` file in the release folder. |
-| `{{ release_info.release_name }}` | Release name from the metadata source. |
-| `{{ release_info.database_url }}` | Release database URL, for example from xrel.to. |
-| `{{ release_info.size }}` | Formatted size from the metadata source. |
-| `{{ release_info.video.type }}` | Video type from the metadata source. |
-| `{{ release_info.audio.type }}` | Audio type from the metadata source. |
+| `{{ release_info.release_name }}` | Resolved scene release name, or the metadata title when no scene release information exists. |
+| `{{ release_info.database_url }}` | Release or metadata database URL. |
+| `{{ release_info.size }}` | Formatted size from the scene release information. |
+| `{{ release_info.video.type }}` | Video type from the scene release information. |
+| `{{ release_info.audio.type }}` | Audio type from the scene release information. |
+| `{{ release_info.genre }}` | Genre from the resolved metadata. |
+| `{{ release_info.description }}` | Description from the resolved metadata. |
 
 Loop variables:
 
 | Loop | Description |
 | --- | --- |
-| `{{ for info in release_infos }}` | Loops over all resolved release infos. |
-| `{{ for external_info in release_info.external_infos }}` | Loops over external metadata entries. |
+| `{{ for external_info in release_info.external_infos }}` | Loops over scene database entries such as movie or TV links. |
 | `{{ for url in external_info.urls }}` | Loops over URLs of an external metadata entry. |
 | `{{ for upload in uploads }}` | Loops over upload configurations. |
 | `{{ for link in upload.links }}` | Loops over direct hoster links of the latest upload. |
