@@ -45,6 +45,10 @@
                         <BbInput @bind-Value="botToken"
                                  Type="InputType.Password"
                                  Placeholder="@(settings.IsConfigured ? L["TelegramTokenUnchanged"] : L["TelegramBotTokenPlaceholder"])" />
+                        @if (settings.IsConnected)
+                        {
+                            <p class="text-xs text-destructive">@L["TelegramTokenChangeWarning"]</p>
+                        }
                     </div>
 
                     <div class="grid gap-2">
@@ -53,7 +57,7 @@
                         <p class="text-xs text-muted-foreground">@L["BearcatNotificationUrlHelp"]</p>
                     </div>
 
-                    <BbButton OnClick="SaveConfigurationAsync">
+                    <BbButton OnClick="SaveConfigurationAsync" Loading="isSavingConfiguration">
                         @L["Save"]
                     </BbButton>
                 </div>
@@ -76,11 +80,45 @@
                                 <span class="text-sm">@settings.ChatName</span>
                             </div>
 
+                            @if (deliveryStatus is not null)
+                            {
+                                <div class="flex flex-col gap-1 rounded-md border border-border/70 bg-muted/30 p-3 text-sm">
+                                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+                                        @if (deliveryStatus.FailedCount > 0)
+                                        {
+                                            <span class="font-medium text-destructive">@L["TelegramDeliveriesFailed", deliveryStatus.FailedCount]</span>
+                                        }
+                                        @if (deliveryStatus.PendingCount > 0)
+                                        {
+                                            <span class="text-muted-foreground">@L["TelegramDeliveriesPending", deliveryStatus.PendingCount]</span>
+                                        }
+                                        @if (deliveryStatus.FailedCount == 0 && deliveryStatus.PendingCount == 0)
+                                        {
+                                            <span class="text-muted-foreground">@L["TelegramAllDelivered"]</span>
+                                        }
+                                    </div>
+                                    <span class="text-xs text-muted-foreground">
+                                        @if (deliveryStatus.LastDeliveredAt is not null)
+                                        {
+                                            @L["TelegramLastDelivered", HumanizeLastDelivered(deliveryStatus.LastDeliveredAt.Value)]
+                                        }
+                                        else
+                                        {
+                                            @L["TelegramNothingDelivered"]
+                                        }
+                                    </span>
+                                    @if (deliveryStatus.LastError is not null)
+                                    {
+                                        <span class="text-xs text-destructive">@L["TelegramLastError", deliveryStatus.LastError]</span>
+                                    }
+                                </div>
+                            }
+
                             <div class="flex flex-wrap gap-2">
-                                <BbButton Variant="ButtonVariant.Outline" OnClick="SendTestMessageAsync">
+                                <BbButton Variant="ButtonVariant.Outline" OnClick="SendTestMessageAsync" Loading="isSendingTest">
                                     @L["SendTestNotification"]
                                 </BbButton>
-                                <BbButton Variant="ButtonVariant.Ghost" OnClick="DisconnectAsync">
+                                <BbButton Variant="ButtonVariant.Ghost" OnClick="DisconnectAsync" Loading="isDisconnecting">
                                     @L["DisconnectTelegram"]
                                 </BbButton>
                             </div>
@@ -99,7 +137,7 @@
                                        class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90">
                                         @L["OpenTelegram"]
                                     </a>
-                                    <BbButton Variant="ButtonVariant.Outline" OnClick="RefreshConnectionAsync">
+                                    <BbButton Variant="ButtonVariant.Outline" OnClick="RefreshConnectionAsync" Loading="isRefreshing">
                                         @L["CheckConnection"]
                                     </BbButton>
                                 </div>
@@ -108,17 +146,17 @@
                             {
                                 <p class="text-sm text-muted-foreground">@L["TelegramPairingInProgress"]</p>
                                 <div class="flex flex-wrap gap-2">
-                                    <BbButton Variant="ButtonVariant.Outline" OnClick="RefreshConnectionAsync">
+                                    <BbButton Variant="ButtonVariant.Outline" OnClick="RefreshConnectionAsync" Loading="isRefreshing">
                                         @L["CheckConnection"]
                                     </BbButton>
-                                    <BbButton Variant="ButtonVariant.Ghost" OnClick="BeginPairingAsync">
+                                    <BbButton Variant="ButtonVariant.Ghost" OnClick="BeginPairingAsync" Loading="isStartingPairing">
                                         @L["TelegramResendLink"]
                                     </BbButton>
                                 </div>
                             }
                             else
                             {
-                                <BbButton OnClick="BeginPairingAsync">
+                                <BbButton OnClick="BeginPairingAsync" Loading="isStartingPairing">
                                     <LucideIcon Name="send" class="h-4 w-4" />
                                     @L["ConnectTelegram"]
                                 </BbButton>
@@ -150,7 +188,7 @@
                             </div>
                         </div>
 
-                        <BbButton OnClick="SaveLevelsAsync">@L["Save"]</BbButton>
+                        <BbButton OnClick="SaveLevelsAsync" Loading="isSavingLevels">@L["Save"]</BbButton>
                     </div>
                 </BbCardContent>
             </BbCard>

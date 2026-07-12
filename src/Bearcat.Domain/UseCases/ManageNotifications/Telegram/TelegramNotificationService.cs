@@ -159,6 +159,13 @@ public sealed class TelegramNotificationService(
         );
     }
 
+    public async Task<TelegramDeliveryStatus> GetDeliveryStatusAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await readRepository.GetDeliveryStatusAsync(MaxDeliveryAttempts, cancellationToken);
+    }
+
     public bool HasPendingPairing => configurationCache.Current?.PairingTokenHash is not null;
 
     public async Task PollPairingAsync(CancellationToken cancellationToken)

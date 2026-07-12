@@ -70,4 +70,34 @@ public class TelegramNotificationReadRepository(IBearcatReadDbContext dbRead)
             )
             .MinAsync(notification => (int?)notification.Id, cancellationToken);
     }
+
+    public async Task<TelegramDeliveryStatus> GetDeliveryStatusAsync(
+        int maxAttempts,
+        CancellationToken cancellationToken
+    )
+    {
+        var pendingCount = await dbRead.TelegramDeliveries.CountAsync(
+            delivery => delivery.DeliveredAt == null && delivery.AttemptCount < maxAttempts,
+            cancellationToken
+        );
+
+        var failedCount = await dbRead.TelegramDeliveries.CountAsync(
+            delivery => delivery.DeliveredAt == null && delivery.AttemptCount >= maxAttempts,
+            cancellationToken
+        );
+
+        var lastDeliveredAt = await dbRead
+            .TelegramDeliveries.Where(delivery => delivery.DeliveredAt != null)
+            .MaxAsync(delivery => delivery.DeliveredAt, cancellationToken);
+
+        var lastError = await dbRead
+            .TelegramDeliveries.Where(delivery =>
+                delivery.DeliveredAt == null && delivery.LastError != null
+            )
+            .OrderByDescending(delivery => delivery.Id)
+            .Select(delivery => delivery.LastError)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return new TelegramDeliveryStatus(pendingCount, failedCount, lastDeliveredAt, lastError);
+    }
 }

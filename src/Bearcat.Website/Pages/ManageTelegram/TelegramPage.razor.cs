@@ -1,17 +1,22 @@
 using Bearcat.Domain.UseCases.ManageNotifications.Telegram;
+using Bearcat.Website.Formatting;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Website.Pages.ManageTelegram;
 
 public partial class TelegramPage(
     IScopedOperationRunner operationRunner,
     NavigationManager navigationManager,
-    ToastService toastService
+    ToastService toastService,
+    DialogService dialogService,
+    TimeProvider timeProvider
 )
 {
     private TelegramSettings settings = null!;
+    private TelegramDeliveryStatus? deliveryStatus;
     private string? botToken;
     private string notificationBaseUrl = string.Empty;
     private string? pairingUrl;
@@ -19,6 +24,12 @@ public partial class TelegramPage(
     private bool forwardWarning;
     private bool forwardError;
     private bool isLoading = true;
+    private bool isSavingConfiguration;
+    private bool isSavingLevels;
+    private bool isSendingTest;
+    private bool isStartingPairing;
+    private bool isRefreshing;
+    private bool isDisconnecting;
 
     protected override async Task OnInitializedAsync()
     {
@@ -36,11 +47,17 @@ public partial class TelegramPage(
         forwardInfo = settings.ForwardInfo;
         forwardWarning = settings.ForwardWarning;
         forwardError = settings.ForwardError;
+        deliveryStatus = settings.IsConnected
+            ? await operationRunner.RunAsync(
+                (TelegramNotificationService service) => service.GetDeliveryStatusAsync()
+            )
+            : null;
         isLoading = false;
     }
 
     private async Task SaveConfigurationAsync()
     {
+        isSavingConfiguration = true;
         try
         {
             await operationRunner.RunAsync(
@@ -56,10 +73,15 @@ public partial class TelegramPage(
         {
             toastService.Error(exception.Message);
         }
+        finally
+        {
+            isSavingConfiguration = false;
+        }
     }
 
     private async Task SaveLevelsAsync()
     {
+        isSavingLevels = true;
         try
         {
             await operationRunner.RunAsync(
@@ -72,10 +94,15 @@ public partial class TelegramPage(
         {
             toastService.Error(exception.Message);
         }
+        finally
+        {
+            isSavingLevels = false;
+        }
     }
 
     private async Task BeginPairingAsync()
     {
+        isStartingPairing = true;
         try
         {
             pairingUrl = await operationRunner.RunAsync(
@@ -86,20 +113,33 @@ public partial class TelegramPage(
         {
             toastService.Error(exception.Message);
         }
+        finally
+        {
+            isStartingPairing = false;
+        }
     }
 
     private async Task RefreshConnectionAsync()
     {
-        await LoadAsync();
-        if (settings.IsConnected)
+        isRefreshing = true;
+        try
         {
-            pairingUrl = null;
-            toastService.Success(L["TelegramConnected"]);
+            await LoadAsync();
+            if (settings.IsConnected)
+            {
+                pairingUrl = null;
+                toastService.Success(L["TelegramConnected"]);
+            }
+        }
+        finally
+        {
+            isRefreshing = false;
         }
     }
 
     private async Task SendTestMessageAsync()
     {
+        isSendingTest = true;
         try
         {
             await operationRunner.RunAsync(
@@ -111,10 +151,31 @@ public partial class TelegramPage(
         {
             toastService.Error(exception.Message);
         }
+        finally
+        {
+            isSendingTest = false;
+        }
     }
 
     private async Task DisconnectAsync()
     {
+        var result = await dialogService.ConfirmAsync(
+            L["DisconnectTelegram"],
+            L["DisconnectTelegramConfirmation"],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["DisconnectTelegram"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        isDisconnecting = true;
         try
         {
             await operationRunner.RunAsync(
@@ -127,5 +188,14 @@ public partial class TelegramPage(
         {
             toastService.Error(exception.Message);
         }
+        finally
+        {
+            isDisconnecting = false;
+        }
+    }
+
+    private string HumanizeLastDelivered(DateTime lastDeliveredAt)
+    {
+        return timeProvider.Humanize(lastDeliveredAt);
     }
 }

@@ -23,4 +23,9 @@ public interface ITelegramNotificationReadRepository
         int afterId,
         CancellationToken cancellationToken
     );
+
+    Task<TelegramDeliveryStatus> GetDeliveryStatusAsync(
+        int maxAttempts,
+        CancellationToken cancellationToken
+    );
 }

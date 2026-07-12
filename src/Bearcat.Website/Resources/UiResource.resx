@@ -984,4 +984,13 @@
   <data name="TelegramLevelsSaved" xml:space="preserve"><value>Notification types saved.</value></data>
   <data name="TelegramConnected" xml:space="preserve"><value>Telegram connected.</value></data>
   <data name="TestNotificationSent" xml:space="preserve"><value>Test notification sent.</value></data>
+  <data name="TelegramTokenChangeWarning" xml:space="preserve"><value>Entering a new token disconnects the current chat and you have to pair again.</value></data>
+  <data name="DisconnectTelegramConfirmation" xml:space="preserve"><value>This removes the connected chat and discards any notifications still waiting to be delivered. Continue?</value></data>
+  <data name="TelegramDeliveryStatus" xml:space="preserve"><value>Delivery status</value></data>
+  <data name="TelegramDeliveriesPending" xml:space="preserve"><value>{0} waiting to be delivered</value></data>
+  <data name="TelegramDeliveriesFailed" xml:space="preserve"><value>{0} gave up after repeated failures</value></data>
+  <data name="TelegramAllDelivered" xml:space="preserve"><value>All notifications delivered</value></data>
+  <data name="TelegramLastDelivered" xml:space="preserve"><value>Last delivered {0}</value></data>
+  <data name="TelegramNothingDelivered" xml:space="preserve"><value>Nothing delivered yet</value></data>
+  <data name="TelegramLastError" xml:space="preserve"><value>Last error: {0}</value></data>
 </root>
