@@ -130,6 +130,53 @@ public class UploadStateService(
         return true;
     }
 
+    public async Task<bool> CheckUploadStateNowAsync(
+        int uploadId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var upload = await uploadStateRepository.GetUploadForOnlineCheckAsync(
+            uploadId,
+            cancellationToken
+        );
+
+        if (upload is null || upload.UploadedFiles.Count == 0)
+        {
+            return false;
+        }
+
+        var hoster = hosterFactory.GetByName(
+            upload.UploadConfig.HosterRegistration.HosterClassName
+        );
+        var hosterConfig = hoster.DeserializeHosterConfig(
+            secretProtector.Unprotect(upload.UploadConfig.HosterRegistration.SerializedConfig)
+        );
+
+        logger.LogInformation(
+            "Checking online status on demand for Upload {UploadId} on hoster {Hoster}",
+            upload.Id,
+            hoster.Name
+        );
+
+        await UpdateOnlineStatusAsync(
+            hoster: hoster,
+            hosterConfig: hosterConfig,
+            upload: upload,
+            localNow: timeProvider.GetLocalNow(),
+            cancellationToken: cancellationToken
+        );
+
+        await uploadStateRepository.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation(
+            "Updated online status on demand for Upload {UploadId} to {OnlineState}",
+            upload.Id,
+            upload.OnlineState
+        );
+
+        return true;
+    }
+
     public async Task<bool> DeleteUploadAsync(
         int uploadId,
         CancellationToken cancellationToken = default

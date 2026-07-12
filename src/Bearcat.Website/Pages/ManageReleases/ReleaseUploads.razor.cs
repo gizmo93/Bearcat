@@ -189,6 +189,24 @@ public partial class ReleaseUploads(
         );
     }
 
+    private async Task CheckOnlineStateNowAsync(ReleaseUploadReadModel upload)
+    {
+        var checkedNow = await operationRunner.RunAsync(
+            (UploadStateService service) => service.CheckUploadStateNowAsync(upload.UploadId)
+        );
+
+        if (checkedNow)
+        {
+            toastService.Success(L["OnlineStateChecked", upload.UploadId]);
+        }
+        else
+        {
+            toastService.Error(L["OnlineStateCheckNotAvailable", upload.UploadId]);
+        }
+
+        await RefreshUploadsAsync();
+    }
+
     private async Task CreateManualReuploadAsync(ReleaseUploadReadModel upload)
     {
         await operationRunner.RunAsync(
@@ -333,6 +351,9 @@ public partial class ReleaseUploads(
             UploadState.Failed => BadgeVariant.Destructive,
             _ => BadgeVariant.Outline,
         };
+
+    private static bool CanCheckOnlineStateNow(ReleaseUploadReadModel upload) =>
+        upload is { UploadState: UploadState.Completed, LinkCount: > 0 };
 
     private static bool CanCreateManualReupload(ReleaseUploadReadModel upload) =>
         upload.CanCreateReupload;

@@ -521,6 +521,7 @@
   <data name="AutomaticReuploadsHelp" xml:space="preserve"><value>Create replacement uploads automatically when checked offline files are old enough.</value></data>
   <data name="ChangeReleaseGroup" xml:space="preserve"><value>Change group</value></data>
   <data name="CreateManualReupload" xml:space="preserve"><value>Create manual reupload</value></data>
+  <data name="CheckOnlineStateNow" xml:space="preserve"><value>Check online state now</value></data>
   <data name="ResumeUpload" xml:space="preserve"><value>Resume upload</value></data>
   <data name="DeleteReleaseGroupConfirmation" xml:space="preserve"><value>Are you sure you want to delete release group {0}?</value></data>
   <data name="DeselectAll" xml:space="preserve"><value>Deselect all</value></data>
@@ -555,6 +556,8 @@
   <data name="UploadCancellationNotAvailable" xml:space="preserve"><value>Upload #{0} can no longer be canceled.</value></data>
   <data name="UploadResumed" xml:space="preserve"><value>Upload #{0} resumed.</value></data>
   <data name="UploadResumeNotAvailable" xml:space="preserve"><value>Upload #{0} can not be resumed in its current state.</value></data>
+  <data name="OnlineStateChecked" xml:space="preserve"><value>Online state checked for upload #{0}.</value></data>
+  <data name="OnlineStateCheckNotAvailable" xml:space="preserve"><value>Upload #{0} has no links to check.</value></data>
   <data name="UploadActions" xml:space="preserve"><value>Upload actions</value></data>
   <data name="UploadDeleted" xml:space="preserve"><value>Upload #{0} deleted.</value></data>
   <data name="UploadDeleteNotAvailable" xml:space="preserve"><value>Upload #{0} can not be deleted in its current state.</value></data>

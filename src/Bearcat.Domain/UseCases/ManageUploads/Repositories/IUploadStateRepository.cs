@@ -20,6 +20,8 @@ public interface IUploadStateRepository
 
     Task<Upload> GetUploadForReuploadAsync(int uploadId, CancellationToken cancellationToken);
 
+    Task<Upload?> GetUploadForOnlineCheckAsync(int uploadId, CancellationToken cancellationToken);
+
     Task<Upload?> GetByIdAsync(int uploadId, CancellationToken cancellationToken);
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);

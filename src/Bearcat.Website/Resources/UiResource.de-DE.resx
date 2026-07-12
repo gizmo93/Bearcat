@@ -525,6 +525,7 @@
     <data name="AutomaticReuploadsHelp" xml:space="preserve"><value>Erstellt Ersatz-Uploads automatisch, wenn Links lange genug offline sind.</value></data>
   <data name="ChangeReleaseGroup" xml:space="preserve"><value>Gruppe ändern</value></data>
   <data name="CreateManualReupload" xml:space="preserve"><value>Manuellen Reupload erstellen</value></data>
+  <data name="CheckOnlineStateNow" xml:space="preserve"><value>Onlinestatus jetzt prüfen</value></data>
   <data name="ResumeUpload" xml:space="preserve"><value>Upload wiederaufnehmen</value></data>
   <data name="DeleteReleaseGroupConfirmation" xml:space="preserve"><value>Möchtest du die Release-Gruppe {0} wirklich löschen?</value></data>
   <data name="DeselectAll" xml:space="preserve"><value>Auswahl aufheben</value></data>
@@ -559,6 +560,8 @@
   <data name="UploadCancellationNotAvailable" xml:space="preserve"><value>Upload #{0} kann nicht mehr abgebrochen werden.</value></data>
   <data name="UploadResumed" xml:space="preserve"><value>Upload #{0} wiederaufgenommen.</value></data>
   <data name="UploadResumeNotAvailable" xml:space="preserve"><value>Upload #{0} kann in seinem aktuellen Status nicht wiederaufgenommen werden.</value></data>
+  <data name="OnlineStateChecked" xml:space="preserve"><value>Onlinestatus für Upload #{0} geprüft.</value></data>
+  <data name="OnlineStateCheckNotAvailable" xml:space="preserve"><value>Für Upload #{0} gibt es keine Links zum Prüfen.</value></data>
   <data name="UploadActions" xml:space="preserve"><value>Upload-Aktionen</value></data>
   <data name="UploadDeleted" xml:space="preserve"><value>Upload #{0} gelöscht.</value></data>
   <data name="UploadDeleteNotAvailable" xml:space="preserve"><value>Upload #{0} kann in seinem aktuellen Status nicht gelöscht werden.</value></data>

@@ -110,6 +110,19 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
             .FirstAsync(u => u.Id == uploadId, cancellationToken);
     }
 
+    public async Task<Upload?> GetUploadForOnlineCheckAsync(
+        int uploadId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .Uploads.AsSplitQuery()
+            .Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.HosterRegistration)
+            .Include(u => u.UploadedFiles)
+            .FirstOrDefaultAsync(u => u.Id == uploadId, cancellationToken);
+    }
+
     public async Task<Upload?> GetByIdAsync(int uploadId, CancellationToken cancellationToken)
     {
         return await dbWrite.Uploads.FirstOrDefaultAsync(u => u.Id == uploadId, cancellationToken);

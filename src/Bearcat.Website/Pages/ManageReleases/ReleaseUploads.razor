@@ -114,6 +114,11 @@
                             </BbButton>
                         </BbDropdownMenuTrigger>
                         <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                            <BbDropdownMenuItem Disabled="@(!CanCheckOnlineStateNow(upload))"
+                                                OnClick="@(async _ => await CheckOnlineStateNowAsync(upload))">
+                                @L["CheckOnlineStateNow"]
+                            </BbDropdownMenuItem>
+                            <BbDropdownMenuSeparator />
                             <BbDropdownMenuItem Disabled="@(upload.LinkCount == 0)"
                                                 OnClick="@(async _ => await ShowLinksDialogAsync(upload))">
                                 @L["ViewUploadLinks"]
