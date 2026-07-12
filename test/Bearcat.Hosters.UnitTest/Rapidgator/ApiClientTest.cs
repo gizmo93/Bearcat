@@ -256,6 +256,47 @@ public class ApiClientTest
     }
 
     [Test]
+    public async Task UploadFileAsync_ApiReturnsErrorStatus_ReturnsResponseForStatusVerification()
+    {
+        // Arrange
+        var handler = new RecordingUploadHandler(
+            """
+            {
+                "status": 500,
+                "response": {
+                    "upload": {
+                        "upload_id": "upload-id"
+                    }
+                }
+            }
+            """
+        );
+        using var httpClient = new HttpClient(handler);
+        var httpClientFactoryMock = new Mock<IHttpClientFactory>();
+        httpClientFactoryMock
+            .Setup(x => x.CreateClient(HttpClientProvider.UploadHttpClientName))
+            .Returns(httpClient);
+        var loggerMock = new Mock<ILogger<RapidgatorApiClient>>();
+        var client = new RapidgatorApiClient(
+            apiMock.Object,
+            new HttpClientProvider(httpClientFactoryMock.Object),
+            loggerMock.Object
+        );
+
+        // Act
+        var result = await client.UploadFileAsync(
+            "https://upload.rapidgator.test",
+            new MemoryStream([1, 2, 3]),
+            "archive.part65.rar",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Status.ShouldBe((int)HttpStatusCode.InternalServerError);
+        result.Response?.Upload?.UploadId.ShouldBe("upload-id");
+    }
+
+    [Test]
     public async Task CheckLinksAsync_OnlineFileInKnownFolder_MapsStatusAndDownloadCount()
     {
         // Arrange
@@ -417,7 +458,8 @@ public class ApiClientTest
         );
     }
 
-    private sealed class RecordingUploadHandler : HttpMessageHandler
+    private sealed class RecordingUploadHandler(string responseContent = "{\"status\":200}")
+        : HttpMessageHandler
     {
         public long? ContentLength { get; private set; }
 
@@ -431,7 +473,7 @@ public class ApiClientTest
             return Task.FromResult(
                 new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = new StringContent("{\"status\":200}"),
+                    Content = new StringContent(responseContent),
                 }
             );
         }
