@@ -111,7 +111,7 @@ public class RarArchiver(ILogger<RarArchiver> logger, IConfiguration configurati
         var solidPart = options.UseSolidArchive ? "-s" : "-s-";
         var sourceArchivePath = Path.TrimEndingDirectorySeparator(sourceFolderPath);
 
-        return $"a -ep1 {compressionPart} {solidPart} -v{targetFileSizeMb}m {passwordPart} \"{archiveFullPath}\" \"{sourceArchivePath}\"";
+        return $"a -ep1 {compressionPart} {solidPart} -v{targetFileSizeMb}M {passwordPart} \"{archiveFullPath}\" \"{sourceArchivePath}\"";
     }
 
     private string GetExecutablePath()
