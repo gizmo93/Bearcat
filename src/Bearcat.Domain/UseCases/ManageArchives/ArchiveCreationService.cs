@@ -27,8 +27,93 @@ public class ArchiveCreationService(
 
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
-        await repository.DeleteOrphanedArchivesAsync(cancellationToken);
+        await HandleInterruptedArchivesAsync(cancellationToken);
         await ProcessUploadsWithoutArchiveAsync(cancellationToken);
+    }
+
+    private async Task HandleInterruptedArchivesAsync(CancellationToken cancellationToken)
+    {
+        var interruptedArchives = await repository.GetInterruptedArchivesAsync(cancellationToken);
+
+        foreach (var archive in interruptedArchives)
+        {
+            if (AllArchiveFilesExistOnDisk(archive))
+            {
+                await RecoverInterruptedArchiveAsync(archive, cancellationToken);
+            }
+            else
+            {
+                DeleteInterruptedArchive(archive);
+            }
+
+            await repository.SaveChangesAsync(cancellationToken: cancellationToken);
+        }
+    }
+
+    private static bool AllArchiveFilesExistOnDisk(Archive archive)
+    {
+        return archive.ArchiveFiles.Count > 0
+            && archive.ArchiveFiles.All(f => File.Exists(f.FullFileName));
+    }
+
+    private async Task RecoverInterruptedArchiveAsync(
+        Archive archive,
+        CancellationToken cancellationToken
+    )
+    {
+        logger.LogInformation(
+            "Recovering interrupted archive {ArchiveId} by rehashing its {FileCount} existing files instead of repacking",
+            archive.Id,
+            archive.ArchiveFiles.Count
+        );
+
+        await HashArchiveFilesAsync(archive, archive.ArchiveConfig, cancellationToken);
+        FinalizeArchive(archive);
+    }
+
+    private void DeleteInterruptedArchive(Archive archive)
+    {
+        logger.LogInformation(
+            "Deleting interrupted archive {ArchiveId} because its files are incomplete on disk. Assigned uploads will be repacked",
+            archive.Id
+        );
+
+        fileSystemService.DeleteDirectoryIfExists(archive.ArchiveFolderPath);
+        repository.Remove(archive);
+    }
+
+    private static void FinalizeArchive(Archive archive)
+    {
+        archive.ArchiveState = ArchiveState.Created;
+
+        foreach (
+            var upload in archive.Uploads.Where(u => u.UploadState == UploadState.WaitingForArchive)
+        )
+        {
+            upload.UploadState = UploadState.Pending;
+        }
+    }
+
+    private async Task HashArchiveFilesAsync(
+        Archive archive,
+        ArchiveConfig archiveConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var archiver = archiverFactory.GetByName(archiveConfig.ArchiverName);
+
+        if (archiver.CanChangeHashInPlace)
+        {
+            await ChangeArchiveFileHashesAsync(
+                archive: archive,
+                knownHashes: await LoadKnownHashesAsync(archiveConfig.Id, cancellationToken),
+                cancellationToken: cancellationToken
+            );
+        }
+        else
+        {
+            await StoreArchiveFileHashesAsync(archive, cancellationToken);
+        }
     }
 
     private async Task ProcessUploadsWithoutArchiveAsync(CancellationToken cancellationToken)
@@ -460,28 +545,14 @@ public class ArchiveCreationService(
             return;
         }
 
-        foreach (var upload in uploads)
-        {
-            upload.UploadState = UploadState.Pending;
-        }
-
-        archive.ArchiveState = ArchiveState.Created;
         archive.ArchiveFiles = archiveResult
             .CreatedFileNames.Select(f => new ArchiveFile { FullFileName = f })
             .ToList();
 
-        if (archiver.CanChangeHashInPlace)
-        {
-            await ChangeArchiveFileHashesAsync(
-                archive: archive,
-                knownHashes: await LoadKnownHashesAsync(config.Id, cancellationToken),
-                cancellationToken: cancellationToken
-            );
-        }
-        else
-        {
-            await StoreArchiveFileHashesAsync(archive, cancellationToken);
-        }
+        await repository.SaveChangesAsync(cancellationToken: cancellationToken);
+
+        await HashArchiveFilesAsync(archive, config, cancellationToken);
+        FinalizeArchive(archive);
 
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 

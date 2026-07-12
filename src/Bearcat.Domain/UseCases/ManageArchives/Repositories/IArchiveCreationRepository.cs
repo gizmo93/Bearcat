@@ -38,5 +38,7 @@ public interface IArchiveCreationRepository
         CancellationToken cancellationToken
     );
 
-    Task DeleteOrphanedArchivesAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<Archive>> GetInterruptedArchivesAsync(CancellationToken cancellationToken);
+
+    void Remove(Archive archive);
 }

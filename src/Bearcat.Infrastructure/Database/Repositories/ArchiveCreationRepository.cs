@@ -105,11 +105,22 @@ public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite) : IArchiv
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task DeleteOrphanedArchivesAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Archive>> GetInterruptedArchivesAsync(
+        CancellationToken cancellationToken
+    )
     {
-        await dbWrite
-            .Archives.Where(a => a.ArchiveState == ArchiveState.Creating)
-            .ExecuteDeleteAsync(cancellationToken);
+        return await dbWrite
+            .Archives.Include(a => a.ArchiveFiles)
+            .Include(a => a.Uploads)
+            .Include(a => a.ArchiveConfig)
+            .Where(a => a.ArchiveState == ArchiveState.Creating)
+            .OrderBy(a => a.Id)
+            .ToListAsync(cancellationToken: cancellationToken);
+    }
+
+    public void Remove(Archive archive)
+    {
+        dbWrite.Remove(archive);
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
