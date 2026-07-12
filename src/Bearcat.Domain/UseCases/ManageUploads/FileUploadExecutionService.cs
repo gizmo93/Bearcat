@@ -138,6 +138,14 @@ public class FileUploadExecutionService(
         }
         catch (Exception ex)
         {
+            logger.LogError(
+                ex,
+                "Upload for file {FilePath} for upload {UploadId} failed unexpectedly: {Message}",
+                fileToUpload.FullFileName,
+                fileToUpload.UploadId,
+                ex.Message
+            );
+
             await resultWriter.WriteAsync(
                 new FileUploadCompleted(
                     UploadId: fileToUpload.UploadId,

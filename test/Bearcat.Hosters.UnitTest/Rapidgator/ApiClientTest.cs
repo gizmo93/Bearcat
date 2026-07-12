@@ -181,6 +181,27 @@ public class ApiClientTest
     }
 
     [Test]
+    public async Task GetFileStatusAsync_TokenAndUploadId_UsesQueryParameters()
+    {
+        // Arrange
+        var handler = new RecordingUploadHandler();
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://rapidgator.test/"),
+        };
+        var api = RestService.For<IRapidgatorApi>(httpClient);
+
+        // Act
+        await api.GetFileStatusAsync("token-value", "upload-id", CancellationToken.None);
+
+        // Assert
+        handler.RequestUri.ShouldNotBeNull();
+        handler.RequestUri.AbsolutePath.ShouldBe("/api/v2/file/upload_info");
+        handler.RequestUri.Query.ShouldContain("token=token-value");
+        handler.RequestUri.Query.ShouldContain("upload_id=upload-id");
+    }
+
+    [Test]
     public async Task ChangeFileModeAsync_Mode_PassesNumericModeToApi()
     {
         // Arrange
@@ -518,6 +539,8 @@ public class ApiClientTest
 
         public bool TransferEncodingChunked { get; private set; }
 
+        public Uri? RequestUri { get; private set; }
+
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken
@@ -526,6 +549,7 @@ public class ApiClientTest
             ContentType = request.Content?.Headers.ContentType?.MediaType;
             ContentTypeName = request.Content?.GetType().Name;
             TransferEncodingChunked = request.Headers.TransferEncodingChunked == true;
+            RequestUri = request.RequestUri;
 
             return Task.FromResult(
                 new HttpResponseMessage(HttpStatusCode.OK)

@@ -70,10 +70,10 @@ public interface IRapidgatorApi
         CancellationToken cancellationToken
     );
 
-    [Get("/api/v2/file/upload_info?upload_id={uploadId}&token={token}")]
+    [Get("/api/v2/file/upload_info")]
     Task<UploadFileResponse> GetFileStatusAsync(
-        string token,
-        string uploadId,
+        [Query] string token,
+        [Query] [AliasAs("upload_id")] string uploadId,
         CancellationToken cancellationToken
     );
 
