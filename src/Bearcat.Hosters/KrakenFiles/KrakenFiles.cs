@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
@@ -43,7 +44,7 @@ public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> l
                     attempt
                 );
 
-                await using var stream = File.OpenRead(fileDto.FullFileName);
+                await using var stream = SequentialFileReader.OpenRead(fileDto.FullFileName);
                 var response = await apiClient.UploadFileAsync(
                     config: config,
                     stream: new CountingStream(stream, progress),

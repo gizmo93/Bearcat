@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
@@ -199,7 +200,7 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger) : 
         CancellationToken cancellationToken
     )
     {
-        await using var stream = File.OpenRead(fileDto.FullFileName);
+        await using var stream = SequentialFileReader.OpenRead(fileDto.FullFileName);
 
         var uploadRequest = await apiClient.RequestUploadFileAsync(
             name: Path.GetFileName(fileDto.FullFileName),

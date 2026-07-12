@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Text.Json;
+using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
@@ -283,7 +284,7 @@ public abstract class XFilesharingHosterBase<TConfig>(
             throw new InvalidOperationException("Upload server response is missing upload data");
         }
 
-        await using var stream = File.OpenRead(fileDto.FullFileName);
+        await using var stream = SequentialFileReader.OpenRead(fileDto.FullFileName);
 
         var uploadResponse = await apiClient.UploadFileAsync(
             stream: new CountingStream(stream, progress),

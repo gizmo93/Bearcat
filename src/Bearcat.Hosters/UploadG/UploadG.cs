@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
@@ -42,7 +43,7 @@ public class UploadG(IUploadGApiClient apiClient, ILogger<UploadG> logger) : IHo
                     attempt
                 );
 
-                await using var stream = File.OpenRead(fileDto.FullFileName);
+                await using var stream = SequentialFileReader.OpenRead(fileDto.FullFileName);
                 var uploadResponse = await apiClient.UploadFileAsync(
                     config: config,
                     stream: new CountingStream(stream, progress),

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
@@ -259,7 +260,7 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
             cancellationToken
         );
 
-        await using var stream = File.OpenRead(fileDto.FullFileName);
+        await using var stream = SequentialFileReader.OpenRead(fileDto.FullFileName);
 
         return await apiClient.UploadFileAsync(
             uploadFormData: uploadFormData,

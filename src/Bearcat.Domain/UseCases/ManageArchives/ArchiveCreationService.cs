@@ -346,7 +346,7 @@ public class ArchiveCreationService(
         CancellationToken cancellationToken
     )
     {
-        await using var stream = File.OpenRead(fullFileName);
+        await using var stream = SequentialFileReader.OpenRead(fullFileName);
         using var md5 = MD5.Create();
         var hash = await md5.ComputeHashAsync(stream, cancellationToken);
 
