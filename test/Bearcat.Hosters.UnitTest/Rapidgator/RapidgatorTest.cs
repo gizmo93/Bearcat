@@ -161,6 +161,130 @@ public class RapidgatorTest
     }
 
     [Test]
+    public async Task UploadFileAsync_StatusFailsButRetryFindsExistingFile_ReturnsSuccess()
+    {
+        // Arrange
+        var filePath = CreateTemporaryFile("upload-content");
+        var fileName = Path.GetFileName(filePath);
+        var fileDto = new FileDto(Id: 45, FullFileName: filePath, UploadId: 145);
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+
+        apiClientMock
+            .SetupSequence(x =>
+                x.RequestUploadFileAsync(
+                    fileName,
+                    new FileInfo(filePath).Length,
+                    It.IsAny<string>(),
+                    null,
+                    config,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new UploadFileResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Response = new UploadFileResponse.ResponseObject
+                    {
+                        Upload = new UploadFileResponse.Upload
+                        {
+                            UploadId = "upload-id",
+                            Url = "https://upload.rapidgator.test",
+                            State = UploadStates.Uploading,
+                        },
+                    },
+                }
+            )
+            .ReturnsAsync(
+                new UploadFileResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Response = new UploadFileResponse.ResponseObject
+                    {
+                        Upload = new UploadFileResponse.Upload
+                        {
+                            State = UploadStates.Done,
+                            File = new UploadFileResponse.File
+                            {
+                                FileId = "file-id",
+                                Name = fileName,
+                                Url = $"https://rapidgator.net/file/file-id/{fileName}.html",
+                            },
+                        },
+                    },
+                }
+            );
+
+        apiClientMock
+            .Setup(x =>
+                x.UploadFileAsync(
+                    "https://upload.rapidgator.test",
+                    It.IsAny<Stream>(),
+                    fileName,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new UploadFileResponse
+                {
+                    Status = (int)HttpStatusCode.InternalServerError,
+                    Response = new UploadFileResponse.ResponseObject
+                    {
+                        Upload = new UploadFileResponse.Upload { UploadId = "upload-id" },
+                    },
+                }
+            );
+
+        apiClientMock
+            .Setup(x => x.GetUploadInfoAsync(config, "upload-id", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new UploadFileResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Response = new UploadFileResponse.ResponseObject
+                    {
+                        Upload = new UploadFileResponse.Upload
+                        {
+                            UploadId = "upload-id",
+                            State = UploadStates.Failed,
+                            StateLabel = "Failed",
+                            Error = new UploadFileResponse.UploadError
+                            {
+                                Code = 500,
+                                Message = "Processing failed",
+                            },
+                        },
+                    },
+                }
+            );
+
+        // Act
+        var result = await service.UploadFileAsync(
+            fileDto,
+            config,
+            NullUploadProgress.Instance,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result.FileUrl.ShouldBe("https://rapidgator.net/file/file-id");
+        result.ErrorMessages.ShouldBeEmpty();
+        apiClientMock.Verify(
+            x =>
+                x.RequestUploadFileAsync(
+                    fileName,
+                    new FileInfo(filePath).Length,
+                    It.IsAny<string>(),
+                    null,
+                    config,
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Exactly(2)
+        );
+    }
+
+    [Test]
     public async Task UploadFileAsync_PremiumOnlyDownload_RequestsPremiumOnlyMode()
     {
         // Arrange

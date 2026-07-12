@@ -27,6 +27,7 @@ public interface IRapidgatorApi
         [Query] long size,
         [Query] string hash,
         [Query] [AliasAs("folder_id")] string? folderId,
+        [Query] int multipart,
         CancellationToken cancellationToken
     );
 

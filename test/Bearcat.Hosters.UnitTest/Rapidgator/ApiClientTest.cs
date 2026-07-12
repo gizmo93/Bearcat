@@ -159,6 +159,7 @@ public class ApiClientTest
                     1024,
                     "hash",
                     "folder-id",
+                    0,
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -215,7 +216,7 @@ public class ApiClientTest
     }
 
     [Test]
-    public async Task UploadFileAsync_StreamLargerThanOneGiB_UsesLongContentLength()
+    public async Task UploadFileAsync_StreamLargerThanOneGiB_UsesRawChunkedUpload()
     {
         // Arrange
         const long fileSize = 1024L * 1024 * 1024 + 1;
@@ -251,8 +252,9 @@ public class ApiClientTest
 
         // Assert
         result.Status.ShouldBe((int)HttpStatusCode.OK);
-        handler.ContentLength.ShouldNotBeNull();
-        handler.ContentLength.Value.ShouldBeGreaterThan(fileSize);
+        handler.ContentType.ShouldBe("application/octet-stream");
+        handler.TransferEncodingChunked.ShouldBeTrue();
+        handler.ContentTypeName.ShouldBe(nameof(StreamContent));
     }
 
     [Test]
@@ -265,7 +267,11 @@ public class ApiClientTest
                 "status": 500,
                 "response": {
                     "upload": {
-                        "upload_id": "upload-id"
+                        "upload_id": "upload-id",
+                        "error": {
+                            "code": 42,
+                            "message": "Processing failed"
+                        }
                     }
                 }
             }
@@ -294,6 +300,8 @@ public class ApiClientTest
         // Assert
         result.Status.ShouldBe((int)HttpStatusCode.InternalServerError);
         result.Response?.Upload?.UploadId.ShouldBe("upload-id");
+        result.Response?.Upload?.Error?.Code.ShouldBe(42);
+        result.Response?.Upload?.Error?.Message.ShouldBe("Processing failed");
     }
 
     [Test]
@@ -461,14 +469,20 @@ public class ApiClientTest
     private sealed class RecordingUploadHandler(string responseContent = "{\"status\":200}")
         : HttpMessageHandler
     {
-        public long? ContentLength { get; private set; }
+        public string? ContentType { get; private set; }
+
+        public string? ContentTypeName { get; private set; }
+
+        public bool TransferEncodingChunked { get; private set; }
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken
         )
         {
-            ContentLength = request.Content?.Headers.ContentLength;
+            ContentType = request.Content?.Headers.ContentType?.MediaType;
+            ContentTypeName = request.Content?.GetType().Name;
+            TransferEncodingChunked = request.Headers.TransferEncodingChunked == true;
 
             return Task.FromResult(
                 new HttpResponseMessage(HttpStatusCode.OK)

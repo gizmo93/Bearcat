@@ -32,6 +32,15 @@ public class UploadFileResponse
 
         [JsonPropertyName("state_label")]
         public string StateLabel { get; set; } = null!;
+
+        public UploadError? Error { get; set; }
+    }
+
+    public class UploadError
+    {
+        public int Code { get; set; }
+
+        public string? Message { get; set; }
     }
 
     public class File

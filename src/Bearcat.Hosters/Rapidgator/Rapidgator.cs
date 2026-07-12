@@ -29,7 +29,7 @@ public class Rapidgator(
 
     public TimeSpan UploadRetryDelay { get; set; } = TimeSpan.FromSeconds(30);
 
-    public TimeSpan UploadStatusPollDelay { get; set; } = TimeSpan.FromSeconds(5);
+    public TimeSpan UploadStatusPollDelay { get; set; } = TimeSpan.FromSeconds(1);
 
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
@@ -305,6 +305,8 @@ public class Rapidgator(
 
         while (true)
         {
+            await Task.Delay(UploadStatusPollDelay, cancellationToken);
+
             try
             {
                 uploadStatus = await apiClient.GetUploadInfoAsync(
@@ -337,8 +339,6 @@ public class Rapidgator(
                 uploadStatus.Response.Upload.State,
                 JsonSerializer.Serialize(uploadStatus.Response)
             );
-
-            await Task.Delay(UploadStatusPollDelay, cancellationToken);
         }
 
         logger.LogInformation(
@@ -347,16 +347,28 @@ public class Rapidgator(
             uploadStatus.Response?.Upload?.State
         );
 
-        var errors = new List<string?> { uploadResult.Details, uploadStatus.Details }
-            .OfType<string>()
-            .ToList();
+        var uploadError = uploadStatus.Response?.Upload?.Error;
+
+        if (uploadError is not null)
+        {
+            throw new RetryException(FormatUploadError(uploadError));
+        }
+
+        if (uploadStatus.Response?.Upload?.State != UploadStates.Done)
+        {
+            throw new RetryException(
+                uploadStatus.Details
+                    ?? uploadStatus.Response?.Upload?.StateLabel
+                    ?? uploadResult.Details
+                    ?? $"Rapidgator upload ended with state {uploadStatus.Response?.Upload?.State}"
+            );
+        }
+
+        var errors = new List<string>();
 
         var changeModeSucceeded = true;
 
-        if (
-            uploadStatus.Response?.Upload?.State == UploadStates.Done
-            && fileDto.PremiumOnlyDownload
-        )
+        if (fileDto.PremiumOnlyDownload)
         {
             var fileId = uploadStatus.Response.Upload.File?.FileId;
             var changeFileModeErrors = await ChangeFileModeAsync(
@@ -370,8 +382,7 @@ public class Rapidgator(
         }
 
         return new UploadFileResult(
-            IsSuccess: uploadStatus.Response?.Upload?.State == UploadStates.Done
-                && changeModeSucceeded,
+            IsSuccess: changeModeSucceeded,
             FileDto: fileDto,
             ErrorMessages: errors,
             FileUrl: ShortenFileUrl(
@@ -419,5 +430,16 @@ public class Rapidgator(
 
         var fileNameWithHtml = $"/{Path.GetFileName(fileName)}.html";
         return fileUrl.Replace(fileNameWithHtml, string.Empty);
+    }
+
+    private static string FormatUploadError(UploadFileResponse.UploadError error)
+    {
+        var message = string.IsNullOrWhiteSpace(error.Message)
+            ? "Rapidgator did not provide an error message"
+            : error.Message;
+
+        return error.Code > 0
+            ? $"Rapidgator upload failed: {message} (code {error.Code})"
+            : $"Rapidgator upload failed: {message}";
     }
 }
