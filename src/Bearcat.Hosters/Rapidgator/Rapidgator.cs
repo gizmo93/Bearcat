@@ -342,19 +342,29 @@ public class Rapidgator(
         }
 
         logger.LogInformation(
-            "Finished upload of file {FileName} to Rapidgator with status {Status}",
+            "Finished upload of file {FileName} to Rapidgator with status {Status}. JSON: {Json}",
             fileDto.FullFileName,
-            uploadStatus.Response?.Upload?.State
+            uploadStatus.Response?.Upload?.State,
+            JsonSerializer.Serialize(uploadStatus.Response)
         );
+
+        var completedUpload = HasUploadedFile(uploadStatus.Response?.Upload)
+            ? uploadStatus.Response!.Upload
+            : null;
+
+        if (completedUpload is null && HasUploadedFile(uploadResult.Response?.Upload))
+        {
+            completedUpload = uploadResult.Response!.Upload;
+        }
 
         var uploadError = uploadStatus.Response?.Upload?.Error;
 
-        if (uploadError is not null)
+        if (completedUpload is null && uploadError is not null)
         {
             throw new RetryException(FormatUploadError(uploadError));
         }
 
-        if (uploadStatus.Response?.Upload?.State != UploadStates.Done)
+        if (completedUpload is null)
         {
             throw new RetryException(
                 uploadStatus.Details
@@ -370,7 +380,7 @@ public class Rapidgator(
 
         if (fileDto.PremiumOnlyDownload)
         {
-            var fileId = uploadStatus.Response.Upload.File?.FileId;
+            var fileId = completedUpload.File?.FileId;
             var changeFileModeErrors = await ChangeFileModeAsync(
                 fileId: fileId,
                 config: config,
@@ -386,7 +396,7 @@ public class Rapidgator(
             FileDto: fileDto,
             ErrorMessages: errors,
             FileUrl: ShortenFileUrl(
-                fileUrl: uploadStatus.Response?.Upload?.File?.Url,
+                fileUrl: completedUpload.File?.Url,
                 fileName: Path.GetFileName(fileDto.FullFileName)
             )
         );
@@ -441,5 +451,11 @@ public class Rapidgator(
         return error.Code > 0
             ? $"Rapidgator upload failed: {message} (code {error.Code})"
             : $"Rapidgator upload failed: {message}";
+    }
+
+    private static bool HasUploadedFile(UploadFileResponse.Upload? upload)
+    {
+        return !string.IsNullOrWhiteSpace(upload?.File?.FileId)
+            && !string.IsNullOrWhiteSpace(upload.File.Url);
     }
 }

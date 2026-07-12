@@ -52,7 +52,7 @@ public class RapidgatorTest
     }
 
     [Test]
-    public async Task UploadFileAsync_UploadEndpointReturnsErrorButStatusCompletes_ReturnsSuccess()
+    public async Task UploadFileAsync_StatusContainsErrorAndUploadedFile_ReturnsSuccess()
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
@@ -122,7 +122,14 @@ public class RapidgatorTest
                         Upload = new UploadFileResponse.Upload
                         {
                             UploadId = "upload-id",
-                            State = UploadStates.Done,
+                            State = UploadStates.Failed,
+                            StateLabel = "Fail",
+                            Error = new UploadFileResponse.UploadError
+                            {
+                                Code = 500,
+                                Message =
+                                    "Specified argument was out of the range of valid values.",
+                            },
                             File = new UploadFileResponse.File
                             {
                                 FileId = "file-id",
