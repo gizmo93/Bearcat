@@ -71,6 +71,7 @@ export default defineConfig({
                         { label: 'The upload lifecycle', slug: 'upload-lifecycle' },
                         { label: 'Quality Gates', slug: 'quality-gates' },
                         { label: 'Post Queue', slug: 'post-queue' },
+                        { label: 'Telegram Notifications', slug: 'telegram-notifications' },
 
                     ],
                 },
