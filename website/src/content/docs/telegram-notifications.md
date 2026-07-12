@@ -5,8 +5,9 @@ description: "Forward Bearcat notifications to a Telegram chat so you get pinged
 
 Bearcat can forward its notifications to a Telegram chat. That way you get a message on your
 phone when an upload finishes or something fails, without keeping the frontend open. Bearcat
-forwards the same info, warning and error notifications you see in the notification bell, each
-with a link back to the notification in Bearcat.
+forwards the same info, warning and error notifications you see in the notification bell. Each
+message includes the name of the related item (the release, upload or archive it is about) and a
+link back to the notification in Bearcat.
 
 Here is a forwarded warning as it arrives in Telegram. The link at the bottom opens the same
 notification in Bearcat:

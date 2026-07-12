@@ -32,6 +32,7 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
         service = new TelegramNotificationService(
             new TelegramConfigurationRepository(writeDbContext),
             new TelegramNotificationReadRepository(readDbContext),
+            new NotificationReadRepository(readDbContext),
             new TelegramDeliveryRepository(writeDbContext),
             NoOpSecretProtector.Instance,
             new TelegramClient(new TestHttpClientFactory(telegram)),
@@ -120,6 +121,58 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
         telegram.LastSentMessage.ShouldContain(
             $"http://bearcat.internal/notifications/{delivery.NotificationId}"
         );
+    }
+
+    [Test]
+    public async Task ProcessDeliveries_NotificationLinkedToRelease_IncludesEntityNameInMessage()
+    {
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = $"Release group {Guid.NewGuid():N}",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+            Releases = [],
+        };
+        var release = new Release
+        {
+            ReleaseGroup = releaseGroup,
+            Name = "Awesome.Movie.2026.WEB.H265-ZeroTwo",
+            CreatedAt = DateTime.UtcNow,
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = "/tmp/release",
+            ArchiveConfigs = [],
+            UploadConfigs = [],
+        };
+        writeDbContext.AddRange(releaseGroup, release);
+        writeDbContext.TelegramConfigurations.Add(
+            new TelegramConfiguration
+            {
+                EncryptedBotToken = "1234567:4TT8bAc8GHUspu3ERYn-KGcvsvGB9u_n4ddy",
+                BotUsername = "bearcat_bot",
+                NotificationBaseUrl = "http://bearcat.internal",
+                ChatId = 987654321,
+                ChatName = "Gizmo",
+                ForwardInfo = false,
+                ForwardWarning = true,
+                ForwardError = false,
+                ForwardNotificationsAfterId = 0,
+            }
+        );
+        writeDbContext.Notifications.Add(
+            new Notification
+            {
+                CreatedAt = DateTime.UtcNow,
+                NotificationType = NotificationType.Warning,
+                Message = "All files are offline on the hoster",
+                Release = release,
+            }
+        );
+        await writeDbContext.SaveChangesAsync();
+
+        await service.ProcessDeliveriesAsync(CancellationToken.None);
+
+        telegram.LastSentMessage.ShouldContain("All files are offline on the hoster");
+        telegram.LastSentMessage.ShouldContain("Release: Awesome.Movie.2026.WEB.H265-ZeroTwo");
     }
 
     private static TimeProvider CreateTimeProvider()

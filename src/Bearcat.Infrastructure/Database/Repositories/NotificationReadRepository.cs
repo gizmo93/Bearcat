@@ -47,6 +47,24 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
         return notification is null ? null : ToReadModel(notification);
     }
 
+    public async Task<IReadOnlyList<NotificationReadModel>> GetByIdsAsync(
+        IReadOnlyList<int> notificationIds,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (notificationIds.Count == 0)
+        {
+            return [];
+        }
+
+        var notifications = await BaseQuery()
+            .Where(n => notificationIds.Contains(n.Id))
+            .Select(ToProjection())
+            .ToListAsync(cancellationToken);
+
+        return notifications.Select(ToReadModel).ToList();
+    }
+
     public async Task<PagedResult<NotificationReadModel>> SearchAsync(
         NotificationSearchQuery query,
         CancellationToken cancellationToken = default
@@ -130,12 +148,12 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
     private static NotificationReadModel ToReadModel(NotificationProjection notification)
     {
         return new NotificationReadModel(
-            notification.Id,
-            notification.CreatedAt,
-            notification.ResolvedAt,
-            notification.NotificationType,
-            notification.Message,
-            CreateRelatedEntity(notification)
+            NotificationId: notification.Id,
+            CreatedAt: notification.CreatedAt,
+            ResolvedAt: notification.ResolvedAt,
+            NotificationType: notification.NotificationType,
+            Message: notification.Message,
+            RelatedEntity: CreateRelatedEntity(notification)
         );
     }
 

@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageNotifications.ReadModels;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -11,6 +12,7 @@ namespace Bearcat.Domain.UseCases.ManageNotifications.Telegram;
 public sealed class TelegramNotificationService(
     ITelegramConfigurationRepository configurationRepository,
     ITelegramNotificationReadRepository readRepository,
+    INotificationReadRepository notificationReadRepository,
     ITelegramDeliveryRepository deliveryRepository,
     ISecretProtector secretProtector,
     ITelegramClient telegramClient,
@@ -389,15 +391,17 @@ public sealed class TelegramNotificationService(
     )
     {
         var botToken = secretProtector.Unprotect(configuration.EncryptedBotToken);
+        var relatedEntities = await GetRelatedEntitiesAsync(deliveries, cancellationToken);
 
         foreach (var delivery in deliveries)
         {
             try
             {
+                relatedEntities.TryGetValue(delivery.NotificationId, out var relatedEntity);
                 await telegramClient.SendMessageAsync(
                     botToken,
                     configuration.ChatId!.Value,
-                    CreateMessage(configuration, delivery.Notification),
+                    CreateMessage(configuration, delivery.Notification, relatedEntity),
                     cancellationToken
                 );
                 delivery.DeliveredAt = timeProvider.GetLocalNow();
@@ -418,6 +422,29 @@ public sealed class TelegramNotificationService(
 
             await deliveryRepository.SaveChangesAsync(cancellationToken);
         }
+    }
+
+    private async Task<Dictionary<int, NotificationRelatedEntityReadModel>> GetRelatedEntitiesAsync(
+        List<TelegramDelivery> deliveries,
+        CancellationToken cancellationToken
+    )
+    {
+        if (deliveries.Count == 0)
+        {
+            return [];
+        }
+
+        var readModels = await notificationReadRepository.GetByIdsAsync(
+            deliveries.Select(delivery => delivery.NotificationId).ToList(),
+            cancellationToken
+        );
+
+        return readModels
+            .Where(readModel => readModel.RelatedEntity is not null)
+            .ToDictionary(
+                readModel => readModel.NotificationId,
+                readModel => readModel.RelatedEntity!
+            );
     }
 
     private async Task EnsureCacheInitializedAsync(CancellationToken cancellationToken)
@@ -494,7 +521,8 @@ public sealed class TelegramNotificationService(
 
     private static string CreateMessage(
         TelegramConfigurationState configuration,
-        Notification notification
+        Notification notification,
+        NotificationRelatedEntityReadModel? relatedEntity
     )
     {
         var icon = notification.NotificationType switch
@@ -505,6 +533,32 @@ public sealed class TelegramNotificationService(
             _ => "🔔",
         };
         var url = $"{configuration.NotificationBaseUrl}/notifications/{notification.Id}";
-        return $"{icon} Bearcat: {notification.NotificationType}\n\n{notification.Message}\n\n{url}";
+
+        var builder = new StringBuilder();
+        builder.Append(
+            $"{icon} Bearcat: {notification.NotificationType}\n\n{notification.Message}"
+        );
+
+        if (relatedEntity is not null)
+        {
+            builder.Append(
+                $"\n\n{DescribeEntityType(relatedEntity.EntityType)}: {relatedEntity.DisplayName}"
+            );
+        }
+
+        builder.Append($"\n\n{url}");
+        return builder.ToString();
+    }
+
+    private static string DescribeEntityType(string entityType)
+    {
+        return entityType switch
+        {
+            "Upload" => "Upload",
+            "Archive" => "Archive",
+            "LinkCrypterContainer" => "Link container",
+            "Release" => "Release",
+            _ => entityType,
+        };
     }
 }
