@@ -325,6 +325,7 @@ public class UploadFilesService(
                     UploadId: upload.Id,
                     ArchiveFileId: archiveFile.Id,
                     FullFileName: archiveFile.FullFileName,
+                    Md5Hash: archiveFile.Md5Hash,
                     FolderId: folderId,
                     HosterClassName: hosterClassName,
                     Hoster: hoster,
