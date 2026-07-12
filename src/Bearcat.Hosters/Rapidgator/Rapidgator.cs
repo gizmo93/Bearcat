@@ -261,35 +261,36 @@ public class Rapidgator(
             cancellationToken: cancellationToken
         );
 
-        // "Retried" because of "errors" but the file upload was actually successful
-        if (uploadRequest.Response?.Upload?.File?.FileId is not null)
+        var requestedUpload = uploadRequest.Response?.Upload;
+
+        if (HasUploadedFile(requestedUpload))
         {
             return new UploadFileResult(
                 IsSuccess: true,
                 FileDto: fileDto,
                 ErrorMessages: [],
                 FileUrl: ShortenFileUrl(
-                    fileUrl: uploadRequest.Response?.Upload?.File?.Url,
+                    fileUrl: requestedUpload!.File?.Url,
                     fileName: Path.GetFileName(fileDto.FullFileName)
                 )
             );
         }
 
-        if (uploadRequest.Response?.Upload?.Url is null)
+        if (requestedUpload?.Url is null)
         {
             throw new RetryException(
-                uploadRequest.Details ?? uploadRequest.Response?.Upload?.StateLabel ?? string.Empty
+                uploadRequest.Details ?? requestedUpload?.StateLabel ?? string.Empty
             );
         }
 
         logger.LogInformation(
             "Uploading file {FileName} to Rapidgator with URL {Url}",
             fileDto.FullFileName,
-            uploadRequest.Response.Upload.Url
+            requestedUpload.Url
         );
 
         var uploadResult = await apiClient.UploadFileAsync(
-            uploadUrl: uploadRequest.Response.Upload.Url,
+            uploadUrl: requestedUpload.Url,
             stream: new CountingStream(stream, progress),
             fileName: Path.GetFileName(fileDto.FullFileName),
             cancellationToken: cancellationToken
@@ -301,17 +302,28 @@ public class Rapidgator(
             JsonSerializer.Serialize(uploadResult)
         );
 
-        UploadFileResponse uploadStatus;
+        var uploadStatus = uploadResult;
 
-        while (true)
+        while (
+            uploadStatus.Response?.Upload?.State
+                is UploadStates.Uploading
+                    or UploadStates.Processing
+        )
         {
+            logger.LogInformation(
+                "File upload for file {File} still in progress, state label: {Label}. state: {State}, waiting for it to finish. JSON: {Json}",
+                fileDto.FullFileName,
+                uploadStatus.Response.Upload.StateLabel,
+                uploadStatus.Response.Upload.State,
+                JsonSerializer.Serialize(uploadStatus.Response)
+            );
+
             await Task.Delay(UploadStatusPollDelay, cancellationToken);
 
             try
             {
                 uploadStatus = await apiClient.GetUploadInfoAsync(
-                    uploadId: uploadResult.Response?.Upload?.UploadId
-                        ?? uploadRequest.Response.Upload.UploadId,
+                    uploadId: requestedUpload.UploadId,
                     config: config,
                     cancellationToken: cancellationToken
                 );
@@ -326,19 +338,6 @@ public class Rapidgator(
                 );
                 continue;
             }
-
-            if (uploadStatus.Response?.Upload?.State != UploadStates.Processing)
-            {
-                break;
-            }
-
-            logger.LogInformation(
-                "File upload for file {File} still in progress, state label: {Label}. state: {State}, waiting for it to finish. JSON: {Json}",
-                fileDto.FullFileName,
-                uploadStatus.Response.Upload.StateLabel,
-                uploadStatus.Response.Upload.State,
-                JsonSerializer.Serialize(uploadStatus.Response)
-            );
         }
 
         logger.LogInformation(

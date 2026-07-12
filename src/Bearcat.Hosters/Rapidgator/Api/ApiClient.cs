@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster.Dto;
@@ -36,7 +35,7 @@ public class ApiClient(
             size: size,
             hash: hash,
             folderId: folderId,
-            multipart: 0,
+            multipart: 1,
             cancellationToken: cancellationToken
         );
     }
@@ -164,17 +163,15 @@ public class ApiClient(
     )
     {
         using var httpClient = httpClientProvider.GetUploadClient();
+        using var multipartContent = new MultipartFormDataContent();
         using var streamContent = new StreamContent(stream);
+        multipartContent.Add(streamContent, "file", fileName);
 
-        streamContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, uploadUrl);
-        request.Content = streamContent;
-        request.Version = HttpVersion.Version11;
-        request.VersionPolicy = HttpVersionPolicy.RequestVersionExact;
-        request.Headers.TransferEncodingChunked = true;
-
-        using var httpResponse = await httpClient.SendAsync(request, cancellationToken);
+        using var httpResponse = await httpClient.PostAsync(
+            uploadUrl,
+            multipartContent,
+            cancellationToken
+        );
 
         if (!httpResponse.IsSuccessStatusCode)
         {

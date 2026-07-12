@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.Rapidgator;
 using Bearcat.Hosters.Rapidgator.Api;
@@ -159,7 +160,7 @@ public class ApiClientTest
                     1024,
                     "hash",
                     "folder-id",
-                    0,
+                    1,
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -216,7 +217,7 @@ public class ApiClientTest
     }
 
     [Test]
-    public async Task UploadFileAsync_StreamLargerThanOneGiB_UsesRawChunkedUpload()
+    public async Task UploadFileAsync_StreamLargerThanOneGiB_UsesMultipartUpload()
     {
         // Arrange
         const long fileSize = 1024L * 1024 * 1024 + 1;
@@ -252,9 +253,49 @@ public class ApiClientTest
 
         // Assert
         result.Status.ShouldBe((int)HttpStatusCode.OK);
-        handler.ContentType.ShouldBe("application/octet-stream");
-        handler.TransferEncodingChunked.ShouldBeTrue();
-        handler.ContentTypeName.ShouldBe(nameof(StreamContent));
+        handler.ContentType.ShouldBe("multipart/form-data");
+        handler.TransferEncodingChunked.ShouldBeFalse();
+        handler.ContentTypeName.ShouldBe(nameof(MultipartFormDataContent));
+    }
+
+    [Test]
+    public void UploadFileResponse_FileIsEmptyArrayOrObject_DeserializesBothForms()
+    {
+        // Arrange
+        const string uploadingJson = """
+            {
+                "response": {
+                    "upload": {
+                        "file": [],
+                        "state": 0
+                    }
+                },
+                "status": 200
+            }
+            """;
+        const string completedJson = """
+            {
+                "response": {
+                    "upload": {
+                        "file": {
+                            "file_id": "file-id",
+                            "url": "https://rapidgator.net/file/file-id"
+                        },
+                        "state": 2
+                    }
+                },
+                "status": 200
+            }
+            """;
+
+        // Act
+        var uploading = JsonSerializer.Deserialize<UploadFileResponse>(uploadingJson);
+        var completed = JsonSerializer.Deserialize<UploadFileResponse>(completedJson);
+
+        // Assert
+        uploading?.Response?.Upload?.File.ShouldBeNull();
+        completed?.Response?.Upload?.File?.FileId.ShouldBe("file-id");
+        completed?.Response?.Upload?.File?.Url.ShouldBe("https://rapidgator.net/file/file-id");
     }
 
     [Test]

@@ -106,7 +106,7 @@ public class RapidgatorTest
                     Status = (int)HttpStatusCode.OK,
                     Response = new UploadFileResponse.ResponseObject
                     {
-                        Upload = new UploadFileResponse.Upload { UploadId = "upload-id" },
+                        Upload = new UploadFileResponse.Upload { UploadId = "different-upload-id" },
                     },
                 }
             );
