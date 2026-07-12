@@ -9,12 +9,13 @@ forwards the same info, warning and error notifications you see in the notificat
 message includes the name of the related item (the release, upload or archive it is about) and a
 link back to the notification in Bearcat.
 
-Here is a forwarded warning as it arrives in Telegram. The link at the bottom opens the same
-notification in Bearcat:
+Here are a few forwarded notifications as they arrive in Telegram. Each one names the related
+item and links back to the notification in Bearcat:
 
 ![telegram-forwarded-message.png](images/telegram-forwarded-message.png)
 
-Following that link opens the notification details in Bearcat, together with the related item:
+Opening one of those links takes you to the notification details in Bearcat, together with the
+related item:
 
 ![telegram-notification-details.png](images/telegram-notification-details.png)
 
