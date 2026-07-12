@@ -1,6 +1,7 @@
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.InversionOfControl;
 using Bearcat.Website.ScopedOperations;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -26,7 +27,7 @@ public class ScopedOperationRunnerTest
     }
 
     [Test]
-    public async Task RunAsyncSharesOneDbContextWithinAnOperationAndNotBetweenOperations()
+    public async Task RunAsyncPreservesReadAndWriteContextSemantics()
     {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
@@ -58,15 +59,31 @@ public class ScopedOperationRunnerTest
         first.First.ShouldBeSameAs(first.Second);
         second.First.ShouldBeSameAs(second.Second);
         second.First.ShouldNotBeSameAs(first.First);
+        first.Read.ShouldNotBeSameAs(first.First);
+        first.ReadTracking.ShouldBe(QueryTrackingBehavior.NoTracking);
+        first.WriteTracking.ShouldBe(QueryTrackingBehavior.TrackAll);
     }
 
     private sealed class WriteService(
         FirstWriteRepository firstRepository,
-        SecondWriteRepository secondRepository
+        SecondWriteRepository secondRepository,
+        IBearcatReadDbContext readContext
     )
     {
-        public (IBearcatWriteDbContext First, IBearcatWriteDbContext Second) Contexts =>
-            (firstRepository.Context, secondRepository.Context);
+        public (
+            IBearcatWriteDbContext First,
+            IBearcatWriteDbContext Second,
+            IBearcatReadDbContext Read,
+            QueryTrackingBehavior ReadTracking,
+            QueryTrackingBehavior WriteTracking
+        ) Contexts =>
+            (
+                firstRepository.Context,
+                secondRepository.Context,
+                readContext,
+                ((BearcatDbContext)readContext).ChangeTracker.QueryTrackingBehavior,
+                ((BearcatDbContext)firstRepository.Context).ChangeTracker.QueryTrackingBehavior
+            );
     }
 
     private sealed class FirstWriteRepository(IBearcatWriteDbContext context)

@@ -123,6 +123,12 @@ public static class ServiceProviderConfig
             services.AddScoped<IUploadStateRepository, UploadStateRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
             services.AddScoped<INotificationReadRepository, NotificationReadRepository>();
+            services.AddScoped<ITelegramConfigurationRepository, TelegramConfigurationRepository>();
+            services.AddScoped<
+                ITelegramNotificationReadRepository,
+                TelegramNotificationReadRepository
+            >();
+            services.AddScoped<ITelegramDeliveryRepository, TelegramDeliveryRepository>();
             services.AddScoped<
                 IReleaseFolderAutomationReadRepository,
                 ReleaseFolderAutomationRepository

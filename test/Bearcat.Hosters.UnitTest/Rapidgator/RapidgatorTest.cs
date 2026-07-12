@@ -52,7 +52,7 @@ public class RapidgatorTest
     }
 
     [Test]
-    public async Task UploadFileAsync_UploadCompletes_ReturnsShortenedFileUrl()
+    public async Task UploadFileAsync_UploadEndpointReturnsErrorButStatusCompletes_ReturnsSuccess()
     {
         // Arrange
         var filePath = CreateTemporaryFile("upload-content");
@@ -78,7 +78,7 @@ public class RapidgatorTest
             .ReturnsAsync(
                 new UploadFileResponse
                 {
-                    Status = (int)HttpStatusCode.OK,
+                    Status = (int)HttpStatusCode.InternalServerError,
                     Response = new UploadFileResponse.ResponseObject
                     {
                         Upload = new UploadFileResponse.Upload

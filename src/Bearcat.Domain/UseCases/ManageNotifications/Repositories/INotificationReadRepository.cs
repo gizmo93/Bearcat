@@ -18,6 +18,11 @@ public interface INotificationReadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyList<NotificationReadModel>> GetByIdsAsync(
+        IReadOnlyList<int> notificationIds,
+        CancellationToken cancellationToken = default
+    );
+
     Task<PagedResult<NotificationReadModel>> SearchAsync(
         NotificationSearchQuery query,
         CancellationToken cancellationToken = default

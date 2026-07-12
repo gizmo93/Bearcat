@@ -64,6 +64,10 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<Notification> Notifications { get; set; } = null!;
 
+    public DbSet<TelegramConfiguration> TelegramConfigurations { get; set; } = null!;
+
+    public DbSet<TelegramDelivery> TelegramDeliveries { get; set; } = null!;
+
     public DbSet<LinkCrypterRegistration> LinkCrypterRegistrations { get; set; } = null!;
 
     public DbSet<UploadConfigLinkCrypter> UploadConfigLinkCrypters { get; set; } = null!;

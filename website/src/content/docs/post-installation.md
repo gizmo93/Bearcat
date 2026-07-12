@@ -19,6 +19,9 @@ They can be info messages, warnings or errors and can be linked to uploads, arch
 The bell shows the latest unresolved notifications and links to the full notification list.
 Once you have checked a notification, you can mark it as resolved so it no longer stays in the unresolved list.
 
+You can also forward these notifications to a Telegram chat to get pinged on your phone.
+See [Telegram Notifications](/Bearcat/telegram-notifications/).
+
 ## Setting up hoster accounts
 
 To set up your hoster accounts, click on the "Hoster registrations" link in the sidebar on the left and click "New hoster".

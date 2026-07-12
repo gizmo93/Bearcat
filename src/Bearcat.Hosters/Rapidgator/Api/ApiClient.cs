@@ -188,8 +188,11 @@ public class ApiClient(
 
         if (!((HttpStatusCode)response.Status).IsSuccessStatusCode)
         {
-            throw new HttpRequestException(
-                $"Upload failed for file {fileName} with message: {response.Details}"
+            logger.LogWarning(
+                "Rapidgator upload endpoint returned API status {Status} for file {FileName}: {Details}. Verifying the final upload status",
+                response.Status,
+                fileName,
+                response.Details
             );
         }
 

@@ -1,5 +1,4 @@
 using System.Net;
-using System.Security.Cryptography;
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
@@ -205,7 +204,7 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger) : 
         var uploadRequest = await apiClient.RequestUploadFileAsync(
             name: Path.GetFileName(fileDto.FullFileName),
             size: stream.Length,
-            hash: await CreateMd5HashAsync(stream, cancellationToken),
+            hash: await Md5FileHash.GetOrComputeAsync(fileDto.Md5Hash, stream, cancellationToken),
             folderId: fileDto.FolderId,
             config: config,
             cancellationToken: cancellationToken
@@ -290,16 +289,5 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger) : 
             ErrorMessages: errors,
             FileUrl: fileUrl
         );
-    }
-
-    private static async Task<string> CreateMd5HashAsync(
-        Stream stream,
-        CancellationToken cancellationToken
-    )
-    {
-        using var md5 = MD5.Create();
-        var hashBytes = await md5.ComputeHashAsync(stream, cancellationToken);
-        stream.Seek(0, SeekOrigin.Begin);
-        return Convert.ToHexStringLower(hashBytes);
     }
 }

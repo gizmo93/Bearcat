@@ -20,6 +20,7 @@ using Bearcat.Domain.UseCases.ManageLinkCrypters;
 using Bearcat.Domain.UseCases.ManageMediaDatabases;
 using Bearcat.Domain.UseCases.ManageNfoDatabases;
 using Bearcat.Domain.UseCases.ManageNotifications;
+using Bearcat.Domain.UseCases.ManageNotifications.Telegram;
 using Bearcat.Domain.UseCases.ManagePostedLocations;
 using Bearcat.Domain.UseCases.ManageQualityProfiles;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
@@ -90,6 +91,8 @@ public static class ServiceProviderConfig
             services.AddScoped<IQualityCheck, MediaInfoQualityCheck>();
             services.AddScoped<QualityCheckCatalog>();
             services.AddScoped<INotificationService, NotificationService>();
+            services.AddSingleton<TelegramConfigurationCache>();
+            services.AddScoped<TelegramNotificationService>();
             services.AddScoped<HosterCaptchaVerificationService>();
             services.AddScoped<ArchiveConfigService>();
             services.AddScoped<TimeProvider>();

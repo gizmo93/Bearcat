@@ -958,4 +958,39 @@
   <data name="Unknown" xml:space="preserve"><value>Unknown</value></data>
   <data name="SearchLanguage" xml:space="preserve"><value>Search language...</value></data>
   <data name="NoLanguagesFound" xml:space="preserve"><value>No languages found.</value></data>
+  <data name="TelegramNotifications" xml:space="preserve"><value>Telegram notifications</value></data>
+  <data name="TelegramNotificationsIntro" xml:space="preserve"><value>Forward selected Bearcat notifications to a Telegram chat.</value></data>
+  <data name="TelegramBot" xml:space="preserve"><value>Telegram bot</value></data>
+  <data name="TelegramBotHelp" xml:space="preserve"><value>Create a bot with @BotFather and enter its token here.</value></data>
+  <data name="TelegramBotToken" xml:space="preserve"><value>Bot token</value></data>
+  <data name="TelegramBotTokenPlaceholder" xml:space="preserve"><value>Paste the token from @BotFather</value></data>
+  <data name="TelegramTokenLeaveEmpty" xml:space="preserve"><value>Leave the token empty to keep the current bot.</value></data>
+  <data name="TelegramTokenUnchanged" xml:space="preserve"><value>Current token remains unchanged</value></data>
+  <data name="BearcatNotificationUrl" xml:space="preserve"><value>Bearcat URL</value></data>
+  <data name="BearcatNotificationUrlHelp" xml:space="preserve"><value>This URL is included in Telegram messages and may only be reachable through your VPN.</value></data>
+  <data name="TelegramRecipient" xml:space="preserve"><value>Recipient</value></data>
+  <data name="TelegramRecipientHelp" xml:space="preserve"><value>Connect the Telegram chat that should receive Bearcat notifications.</value></data>
+  <data name="ConnectTelegram" xml:space="preserve"><value>Connect Telegram</value></data>
+  <data name="DisconnectTelegram" xml:space="preserve"><value>Disconnect</value></data>
+  <data name="TelegramPairingInstructions" xml:space="preserve"><value>Open Telegram and press Start. The link expires after ten minutes.</value></data>
+  <data name="TelegramPairingInProgress" xml:space="preserve"><value>A pairing link was already sent and is still valid. Press Start in Telegram, then check the connection.</value></data>
+  <data name="TelegramResendLink" xml:space="preserve"><value>Generate a new link</value></data>
+  <data name="OpenTelegram" xml:space="preserve"><value>Open Telegram</value></data>
+  <data name="CheckConnection" xml:space="preserve"><value>Check connection</value></data>
+  <data name="ForwardNotificationTypes" xml:space="preserve"><value>Forwarded notification types</value></data>
+  <data name="ForwardNotificationTypesHelp" xml:space="preserve"><value>Choose which notification types Bearcat sends to Telegram.</value></data>
+  <data name="SendTestNotification" xml:space="preserve"><value>Send test notification</value></data>
+  <data name="TelegramConfigurationSaved" xml:space="preserve"><value>Telegram configuration saved.</value></data>
+  <data name="TelegramLevelsSaved" xml:space="preserve"><value>Notification types saved.</value></data>
+  <data name="TelegramConnected" xml:space="preserve"><value>Telegram connected.</value></data>
+  <data name="TestNotificationSent" xml:space="preserve"><value>Test notification sent.</value></data>
+  <data name="TelegramTokenChangeWarning" xml:space="preserve"><value>Entering a new token disconnects the current chat and you have to pair again.</value></data>
+  <data name="DisconnectTelegramConfirmation" xml:space="preserve"><value>This removes the connected chat and discards any notifications still waiting to be delivered. Continue?</value></data>
+  <data name="TelegramDeliveryStatus" xml:space="preserve"><value>Delivery status</value></data>
+  <data name="TelegramDeliveriesPending" xml:space="preserve"><value>{0} waiting to be delivered</value></data>
+  <data name="TelegramDeliveriesFailed" xml:space="preserve"><value>{0} gave up after repeated failures</value></data>
+  <data name="TelegramAllDelivered" xml:space="preserve"><value>All notifications delivered</value></data>
+  <data name="TelegramLastDelivered" xml:space="preserve"><value>Last delivered {0}</value></data>
+  <data name="TelegramNothingDelivered" xml:space="preserve"><value>Nothing delivered yet</value></data>
+  <data name="TelegramLastError" xml:space="preserve"><value>Last error: {0}</value></data>
 </root>

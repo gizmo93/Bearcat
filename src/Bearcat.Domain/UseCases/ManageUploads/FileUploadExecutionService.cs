@@ -40,7 +40,8 @@ public class FileUploadExecutionService(
                 FullFileName: fileToUpload.FullFileName,
                 UploadId: fileToUpload.UploadId,
                 FolderId: fileToUpload.FolderId,
-                PremiumOnlyDownload: context.Upload.PremiumOnlyDownload
+                PremiumOnlyDownload: context.Upload.PremiumOnlyDownload,
+                Md5Hash: fileToUpload.Md5Hash
             );
 
             var result = await fileToUpload.Hoster.UploadFileAsync(

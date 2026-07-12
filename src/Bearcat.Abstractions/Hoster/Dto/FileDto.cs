@@ -5,5 +5,6 @@ public record FileDto(
     string FullFileName,
     int UploadId,
     string? FolderId = null,
-    bool PremiumOnlyDownload = false
+    bool PremiumOnlyDownload = false,
+    string? Md5Hash = null
 );
