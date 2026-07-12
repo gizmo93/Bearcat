@@ -253,6 +253,7 @@ public class ApiClientTest
 
         // Assert
         result.Status.ShouldBe((int)HttpStatusCode.OK);
+        result.Response?.State.ShouldBe(UploadStates.Processing);
         handler.ContentType.ShouldBe("multipart/form-data");
         handler.TransferEncodingChunked.ShouldBeFalse();
         handler.ContentTypeName.ShouldBe(nameof(MultipartFormDataContent));
@@ -507,8 +508,9 @@ public class ApiClientTest
         );
     }
 
-    private sealed class RecordingUploadHandler(string responseContent = "{\"status\":200}")
-        : HttpMessageHandler
+    private sealed class RecordingUploadHandler(
+        string responseContent = "{\"status\":200,\"response\":{\"state\":\"1\"}}"
+    ) : HttpMessageHandler
     {
         public string? ContentType { get; private set; }
 

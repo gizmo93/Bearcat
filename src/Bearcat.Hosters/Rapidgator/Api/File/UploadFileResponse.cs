@@ -15,9 +15,10 @@ public class UploadFileResponse
     {
         public Upload? Upload { get; set; }
 
+        [JsonConverter(typeof(FileOrEmptyArrayConverter))]
         public File? File { get; set; }
 
-        public int State { get; set; }
+        public int? State { get; set; }
     }
 
     public class Upload
@@ -30,7 +31,7 @@ public class UploadFileResponse
         [JsonConverter(typeof(FileOrEmptyArrayConverter))]
         public File? File { get; set; }
 
-        public int State { get; set; }
+        public int? State { get; set; }
 
         [JsonPropertyName("state_label")]
         public string StateLabel { get; set; } = null!;

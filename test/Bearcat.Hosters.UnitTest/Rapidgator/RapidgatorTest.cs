@@ -106,7 +106,7 @@ public class RapidgatorTest
                     Status = (int)HttpStatusCode.OK,
                     Response = new UploadFileResponse.ResponseObject
                     {
-                        Upload = new UploadFileResponse.Upload { UploadId = "different-upload-id" },
+                        State = UploadStates.Processing,
                     },
                 }
             );
@@ -237,7 +237,11 @@ public class RapidgatorTest
                     Status = (int)HttpStatusCode.InternalServerError,
                     Response = new UploadFileResponse.ResponseObject
                     {
-                        Upload = new UploadFileResponse.Upload { UploadId = "upload-id" },
+                        Upload = new UploadFileResponse.Upload
+                        {
+                            UploadId = "upload-id",
+                            State = UploadStates.Processing,
+                        },
                     },
                 }
             );
@@ -346,7 +350,11 @@ public class RapidgatorTest
                     Status = (int)HttpStatusCode.OK,
                     Response = new UploadFileResponse.ResponseObject
                     {
-                        Upload = new UploadFileResponse.Upload { UploadId = "upload-id" },
+                        Upload = new UploadFileResponse.Upload
+                        {
+                            UploadId = "upload-id",
+                            State = UploadStates.Processing,
+                        },
                     },
                 }
             );

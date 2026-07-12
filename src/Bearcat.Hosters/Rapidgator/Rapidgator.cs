@@ -263,7 +263,7 @@ public class Rapidgator(
 
         var requestedUpload = uploadRequest.Response?.Upload;
 
-        if (HasUploadedFile(requestedUpload))
+        if (HasUploadedFile(requestedUpload?.File))
         {
             return new UploadFileResult(
                 IsSuccess: true,
@@ -304,17 +304,13 @@ public class Rapidgator(
 
         var uploadStatus = uploadResult;
 
-        while (
-            uploadStatus.Response?.Upload?.State
-                is UploadStates.Uploading
-                    or UploadStates.Processing
-        )
+        while (GetUploadState(uploadStatus) is UploadStates.Uploading or UploadStates.Processing)
         {
             logger.LogInformation(
                 "File upload for file {File} still in progress, state label: {Label}. state: {State}, waiting for it to finish. JSON: {Json}",
                 fileDto.FullFileName,
-                uploadStatus.Response.Upload.StateLabel,
-                uploadStatus.Response.Upload.State,
+                uploadStatus.Response?.Upload?.StateLabel,
+                GetUploadState(uploadStatus),
                 JsonSerializer.Serialize(uploadStatus.Response)
             );
 
@@ -343,33 +339,26 @@ public class Rapidgator(
         logger.LogInformation(
             "Finished upload of file {FileName} to Rapidgator with status {Status}. JSON: {Json}",
             fileDto.FullFileName,
-            uploadStatus.Response?.Upload?.State,
+            GetUploadState(uploadStatus),
             JsonSerializer.Serialize(uploadStatus.Response)
         );
 
-        var completedUpload = HasUploadedFile(uploadStatus.Response?.Upload)
-            ? uploadStatus.Response!.Upload
-            : null;
-
-        if (completedUpload is null && HasUploadedFile(uploadResult.Response?.Upload))
-        {
-            completedUpload = uploadResult.Response!.Upload;
-        }
+        var completedFile = GetUploadedFile(uploadStatus) ?? GetUploadedFile(uploadResult);
 
         var uploadError = uploadStatus.Response?.Upload?.Error;
 
-        if (completedUpload is null && uploadError is not null)
+        if (completedFile is null && uploadError is not null)
         {
             throw new RetryException(FormatUploadError(uploadError));
         }
 
-        if (completedUpload is null)
+        if (completedFile is null)
         {
             throw new RetryException(
                 uploadStatus.Details
                     ?? uploadStatus.Response?.Upload?.StateLabel
                     ?? uploadResult.Details
-                    ?? $"Rapidgator upload ended with state {uploadStatus.Response?.Upload?.State}"
+                    ?? $"Rapidgator upload ended with state {GetUploadState(uploadStatus)}"
             );
         }
 
@@ -379,9 +368,8 @@ public class Rapidgator(
 
         if (fileDto.PremiumOnlyDownload)
         {
-            var fileId = completedUpload.File?.FileId;
             var changeFileModeErrors = await ChangeFileModeAsync(
-                fileId: fileId,
+                fileId: completedFile.FileId,
                 config: config,
                 cancellationToken: cancellationToken
             );
@@ -395,7 +383,7 @@ public class Rapidgator(
             FileDto: fileDto,
             ErrorMessages: errors,
             FileUrl: ShortenFileUrl(
-                fileUrl: completedUpload.File?.Url,
+                fileUrl: completedFile.Url,
                 fileName: Path.GetFileName(fileDto.FullFileName)
             )
         );
@@ -452,9 +440,26 @@ public class Rapidgator(
             : $"Rapidgator upload failed: {message}";
     }
 
-    private static bool HasUploadedFile(UploadFileResponse.Upload? upload)
+    private static int? GetUploadState(UploadFileResponse response)
     {
-        return !string.IsNullOrWhiteSpace(upload?.File?.FileId)
-            && !string.IsNullOrWhiteSpace(upload.File.Url);
+        return response.Response?.Upload?.State ?? response.Response?.State;
+    }
+
+    private static UploadFileResponse.File? GetUploadedFile(UploadFileResponse response)
+    {
+        var nestedFile = response.Response?.Upload?.File;
+
+        if (HasUploadedFile(nestedFile))
+        {
+            return nestedFile;
+        }
+
+        var directFile = response.Response?.File;
+        return HasUploadedFile(directFile) ? directFile : null;
+    }
+
+    private static bool HasUploadedFile(UploadFileResponse.File? file)
+    {
+        return !string.IsNullOrWhiteSpace(file?.FileId) && !string.IsNullOrWhiteSpace(file.Url);
     }
 }
