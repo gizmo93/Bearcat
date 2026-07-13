@@ -27,6 +27,7 @@
                        Archivers="archiverOptions"
                        ReleaseGroups="releaseGroups"
                        LinkCrypterRegistrations="linkCrypterRegistrations"
+                       Query="searchQuery"
                        OnSearch="ApplySearchAsync" />
 
     <div class="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border/70 bg-muted/25 px-3 py-2">
@@ -210,7 +211,7 @@
                 <span>@L["RowsPerPage"]</span>
                 <BbSelect TValue="int"
                           @bind-Value="pageSize"
-                          @bind-Value:after="OnPageSizeChangedAsync"
+                          @bind-Value:after="OnPageSizeChanged"
                           Options="PageSizeOptions"
                           Class="w-24" />
             </label>
@@ -222,7 +223,7 @@
                         <BbPaginationItem>
                             <BbPaginationPrevious Disabled="@(CurrentPage <= 1)"
                                                   Text="@L["Previous"]"
-                                                  OnClick="GoToPreviousPageAsync" />
+                                                  Href="@(CurrentPage > 1 ? GetPageUri(CurrentPage - 1) : null)" />
                         </BbPaginationItem>
 
                         @foreach (var page in PaginationItems)
@@ -235,7 +236,7 @@
                                 else
                                 {
                                     <BbPaginationLink IsActive="@(page == CurrentPage)"
-                                                      OnClick="@(() => GoToPageAsync(page.Value))">
+                                                      Href="@GetPageUri(page.Value)">
                                         @(page.Value)
                                     </BbPaginationLink>
                                 }
@@ -245,7 +246,7 @@
                         <BbPaginationItem>
                             <BbPaginationNext Disabled="@(CurrentPage >= TotalPages)"
                                               Text="@L["Next"]"
-                                              OnClick="GoToNextPageAsync" />
+                                              Href="@(CurrentPage < TotalPages ? GetPageUri(CurrentPage + 1) : null)" />
                         </BbPaginationItem>
                     </BbPaginationContent>
                 </BbPagination>

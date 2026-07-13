@@ -14,17 +14,18 @@ using Bearcat.Website.Pages.ManageReleaseTemplates;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
+using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManageReleases;
 
 public partial class AllReleasesPage(
     DialogService dialogService,
     ToastService toastService,
-    IScopedOperationRunner operationRunner
-)
+    IScopedOperationRunner operationRunner,
+    NavigationManager navigationManager
+) : IReleaseSearchUrlValues
 {
     private const string NoBulkLanguageSelected = "__not_selected__";
-    private readonly int[] pageSizes = [5, 10, 20, 50, 100];
 
     private IReadOnlyList<ReleaseReadModel> releases = [];
     private IReadOnlyList<HosterRegistrationReadModel> hosterRegistrations = [];
@@ -33,12 +34,58 @@ public partial class AllReleasesPage(
     private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
     private readonly HashSet<int> selectedReleaseIds = [];
     private ReleaseSearchQuery searchQuery = new();
+    private ReleaseSearchUrlState? loadedState;
     private int totalCount;
     private int pageIndex;
-    private int pageSize = 5;
+    private int pageSize = ReleaseSearchUrl.DefaultPageSize;
     private int selectedBulkReleaseGroupId;
     private string selectedBulkPrimaryLanguageCode = NoBulkLanguageSelected;
     private bool isLoading;
+
+    [SupplyParameterFromQuery(Name = "q")]
+    public string? SearchTerm { get; set; }
+
+    [SupplyParameterFromQuery(Name = "type")]
+    public string? ReleaseType { get; set; }
+
+    [SupplyParameterFromQuery(Name = "content")]
+    public string? ReleaseContentType { get; set; }
+
+    [SupplyParameterFromQuery(Name = "lang")]
+    public string? Language { get; set; }
+
+    [SupplyParameterFromQuery(Name = "state")]
+    public string? OnlineState { get; set; }
+
+    [SupplyParameterFromQuery(Name = "hoster")]
+    public int? HosterRegistrationId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "archiver")]
+    public string? ArchiverName { get; set; }
+
+    [SupplyParameterFromQuery(Name = "crypter")]
+    public int? LinkCrypterRegistrationId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "group")]
+    public int? ReleaseGroupId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "posted")]
+    public string? PostedLocationUrl { get; set; }
+
+    [SupplyParameterFromQuery(Name = "link")]
+    public string? DownloadLink { get; set; }
+
+    [SupplyParameterFromQuery(Name = "file")]
+    public string? ArchiveFileName { get; set; }
+
+    [SupplyParameterFromQuery(Name = "upload")]
+    public string? UploadId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "page")]
+    public int? Page { get; set; }
+
+    [SupplyParameterFromQuery(Name = "size")]
+    public int? PageSize { get; set; }
 
     private int CurrentPage => totalCount == 0 ? 1 : pageIndex + 1;
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
@@ -48,8 +95,10 @@ public partial class AllReleasesPage(
     private bool AreAllVisibleReleasesSelected =>
         releases.Count > 0 && releases.All(r => selectedReleaseIds.Contains(r.ReleaseId));
 
-    private IReadOnlyList<SelectOption<int>> PageSizeOptions =>
-        pageSizes.Select(size => new SelectOption<int>(size, size.ToString())).ToList();
+    private static IReadOnlyList<SelectOption<int>> PageSizeOptions =>
+        ReleaseSearchUrl
+            .PageSizes.Select(size => new SelectOption<int>(size, size.ToString()))
+            .ToList();
 
     private IReadOnlyList<SelectOption<int>> ReleaseGroupOptions =>
         [
@@ -119,7 +168,31 @@ public partial class AllReleasesPage(
         releaseGroups = await operationRunner.RunAsync(
             (IReleaseGroupReadRepository repository) => repository.GetAllAsync()
         );
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var state = ReleaseSearchUrl.Parse(this);
+
+        if (state == loadedState)
+        {
+            return;
+        }
+
+        if (loadedState is not null && loadedState.Query != state.Query)
+        {
+            selectedReleaseIds.Clear();
+        }
+
+        searchQuery = state.Query;
+        pageIndex = state.PageIndex;
+        pageSize = state.PageSize;
         await RefreshReleasesAsync();
+    }
+
+    private string GetPageUri(int page)
+    {
+        return ReleaseSearchUrl.Build(searchQuery, page, pageSize);
     }
 
     private async Task DeleteReleaseAsync(ReleaseReadModel release)
@@ -246,7 +319,10 @@ public partial class AllReleasesPage(
             {
                 pageIndex = TotalPages - 1;
                 await RefreshReleasesAsync();
+                return;
             }
+
+            loadedState = new ReleaseSearchUrlState(searchQuery, pageIndex, pageSize);
         }
         finally
         {
@@ -256,10 +332,17 @@ public partial class AllReleasesPage(
 
     private async Task ApplySearchAsync(ReleaseSearchQuery query)
     {
-        searchQuery = query;
-        pageIndex = 0;
-        selectedReleaseIds.Clear();
-        await RefreshReleasesAsync();
+        var targetUri = navigationManager
+            .ToAbsoluteUri(ReleaseSearchUrl.Build(query, page: 1, pageSize))
+            .ToString();
+
+        if (targetUri == navigationManager.Uri)
+        {
+            await RefreshReleasesAsync();
+            return;
+        }
+
+        navigationManager.NavigateTo(targetUri);
     }
 
     private void ToggleReleaseSelection(int releaseId, bool selected)
@@ -332,31 +415,8 @@ public partial class AllReleasesPage(
         await RefreshReleasesAsync();
     }
 
-    private async Task GoToPageAsync(int page)
+    private void OnPageSizeChanged()
     {
-        var nextPageIndex = Math.Clamp(page - 1, 0, TotalPages - 1);
-        if (nextPageIndex == pageIndex)
-        {
-            return;
-        }
-
-        pageIndex = nextPageIndex;
-        await RefreshReleasesAsync();
-    }
-
-    private async Task GoToPreviousPageAsync()
-    {
-        await GoToPageAsync(CurrentPage - 1);
-    }
-
-    private async Task GoToNextPageAsync()
-    {
-        await GoToPageAsync(CurrentPage + 1);
-    }
-
-    private async Task OnPageSizeChangedAsync()
-    {
-        pageIndex = 0;
-        await RefreshReleasesAsync();
+        navigationManager.NavigateTo(ReleaseSearchUrl.Build(searchQuery, page: 1, pageSize));
     }
 }

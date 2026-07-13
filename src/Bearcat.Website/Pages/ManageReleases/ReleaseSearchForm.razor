@@ -1,22 +1,22 @@
-<EditForm Model="this" OnSubmit="ApplyFiltersAsync" class="bearcat-release-search">
+<EditForm Model="model" OnSubmit="ApplyFiltersAsync" class="bearcat-release-search">
     <div class="bearcat-release-search-grid">
         <BbFormFieldInput TValue="string"
-                          @bind-Value="searchTerm"
+                          @bind-Value="model.SearchTerm"
                           Label="@L["SearchReleases"]"
                           Placeholder="@L["ReleaseSearchPlaceholder"]" />
 
         <BbFormFieldSelect TValue="ReleaseType?"
-                           @bind-Value="selectedReleaseType"
+                           @bind-Value="model.ReleaseType"
                            Label="@L["ReleaseType"]"
                            Options="ReleaseTypeOptions" />
 
         <BbFormFieldSelect TValue="ReleaseContentType?"
-                           @bind-Value="selectedReleaseContentType"
+                           @bind-Value="model.ReleaseContentType"
                            Label="@L["ReleaseContentType"]"
                            Options="ReleaseContentTypeOptions" />
 
         <BbFormFieldCombobox TValue="string"
-                             @bind-Value="selectedPrimaryLanguageCode"
+                             @bind-Value="model.PrimaryLanguageCode"
                              Label="@L["PrimaryLanguage"]"
                              SearchPlaceholder="@L["SearchLanguage"]"
                              EmptyMessage="@L["NoLanguagesFound"]"
@@ -25,32 +25,32 @@
                              Options="PrimaryLanguageOptions" />
 
         <BbFormFieldSelect TValue="OnlineState?"
-                           @bind-Value="selectedOnlineState"
+                           @bind-Value="model.OnlineState"
                            Label="@L["OnlineState"]"
                            Options="OnlineStateOptions" />
 
         <BbFormFieldSelect TValue="int?"
-                           @bind-Value="selectedHosterRegistrationId"
+                           @bind-Value="model.HosterRegistrationId"
                            Label="@L["HosterRegistration"]"
                            Options="HosterRegistrationOptions" />
 
         <BbFormFieldSelect TValue="string"
-                           @bind-Value="selectedArchiverName"
+                           @bind-Value="model.ArchiverName"
                            Label="@L["Archiver"]"
                            Options="ArchiverOptions" />
 
         <BbFormFieldSelect TValue="int?"
-                           @bind-Value="selectedLinkCrypterRegistrationId"
+                           @bind-Value="model.LinkCrypterRegistrationId"
                            Label="@L["LinkCrypter"]"
                            Options="LinkCrypterRegistrationOptions" />
 
         <BbFormFieldSelect TValue="int"
-                           @bind-Value="selectedReleaseGroupId"
+                           @bind-Value="model.ReleaseGroupId"
                            Label="@L["ReleaseGroup"]"
                            Options="ReleaseGroupOptions" />
 
         <BbFormFieldInput TValue="string"
-                          @bind-Value="postedLocationUrl"
+                          @bind-Value="model.PostedLocationUrl"
                           Label="@L["PostedLocation"]"
                           Placeholder="@L["PostedLocationSearchPlaceholder"]" />
     </div>
@@ -70,17 +70,17 @@
         {
             <div class="bearcat-release-search-grid bearcat-release-search-advanced-grid">
                 <BbFormFieldInput TValue="string"
-                                  @bind-Value="downloadLink"
+                                  @bind-Value="model.DownloadLink"
                                   Label="@L["DownloadLink"]"
                                   Placeholder="@L["DownloadLinkSearchPlaceholder"]" />
 
                 <BbFormFieldInput TValue="string"
-                                  @bind-Value="archiveFileName"
+                                  @bind-Value="model.ArchiveFileName"
                                   Label="@L["RarFile"]"
                                   Placeholder="@L["RarFileSearchPlaceholder"]" />
 
                 <BbFormFieldInput TValue="string"
-                                  @bind-Value="uploadId"
+                                  @bind-Value="model.UploadId"
                                   Label="@L["UploadId"]"
                                   Placeholder="@L["UploadIdSearchPlaceholder"]" />
             </div>
@@ -108,8 +108,6 @@
 </EditForm>
 
 @code {
-    private const string LanguageNotSetFilter = "__not_set__";
-
     [Parameter]
     public IReadOnlyList<HosterRegistrationReadModel> HosterRegistrations { get; set; } = [];
 
@@ -123,45 +121,19 @@
     public IReadOnlyList<ReleaseGroupReadModel> ReleaseGroups { get; set; } = [];
 
     [Parameter]
+    public ReleaseSearchQuery Query { get; set; } = new();
+
+    [Parameter]
     public EventCallback<ReleaseSearchQuery> OnSearch { get; set; }
 
     private const string SearchButtonStyle = "width: 8.75rem; min-width: 8.75rem; height: 2.25rem; min-height: 2.25rem; padding: 0 0.85rem; justify-content: center;";
 
-    private string? searchTerm;
-    private string? postedLocationUrl;
-    private string? downloadLink;
-    private string? archiveFileName;
-    private string? uploadId;
-    private ReleaseType? selectedReleaseType;
-    private ReleaseContentType? selectedReleaseContentType;
-    private string selectedPrimaryLanguageCode = string.Empty;
-    private OnlineState? selectedOnlineState;
-    private int? selectedHosterRegistrationId;
-    private string selectedArchiverName = string.Empty;
-    private int? selectedLinkCrypterRegistrationId;
-    private int selectedReleaseGroupId;
+    private ReleaseSearchFormModel model = new();
     private bool showAdvancedSearch;
-
-    private bool HasActiveFilters =>
-        !string.IsNullOrWhiteSpace(searchTerm)
-        || !string.IsNullOrWhiteSpace(postedLocationUrl)
-        || HasActiveAdvancedFilters
-        || selectedReleaseType is not null
-        || selectedReleaseContentType is not null
-        || !string.IsNullOrWhiteSpace(selectedPrimaryLanguageCode)
-        || selectedOnlineState is not null
-        || selectedHosterRegistrationId is not null
-        || !string.IsNullOrWhiteSpace(selectedArchiverName)
-        || selectedLinkCrypterRegistrationId is not null
-        || selectedReleaseGroupId != 0;
-
-    private bool HasActiveAdvancedFilters =>
-        !string.IsNullOrWhiteSpace(downloadLink)
-        || !string.IsNullOrWhiteSpace(archiveFileName)
-        || !string.IsNullOrWhiteSpace(uploadId);
+    private ReleaseSearchQuery? syncedQuery;
 
     private string AdvancedSearchToggleClass =>
-        HasActiveAdvancedFilters
+        model.HasActiveAdvancedFilters
             ? "bearcat-release-search-advanced-toggle bearcat-release-search-advanced-toggle-active"
             : "bearcat-release-search-advanced-toggle";
 
@@ -195,7 +167,7 @@
     private IReadOnlyList<SelectOption<string>> PrimaryLanguageOptions =>
         [
             new(string.Empty, L["AnyLanguage"]),
-            new(LanguageNotSetFilter, L["NotSet"]),
+            new(ReleaseSearchFormModel.LanguageNotSetFilter, L["NotSet"]),
             .. CultureInfo
                 .GetCultures(CultureTypes.NeutralCultures)
                 .Where(culture => culture.TwoLetterISOLanguageName.Length == 2)
@@ -239,64 +211,42 @@
             ))
         );
 
-    private async Task ApplyFiltersAsync()
+    protected override void OnParametersSet()
     {
-        await OnSearch.InvokeAsync(CreateQuery());
-    }
-
-    private async Task ResetFiltersAsync()
-    {
-        if (!HasActiveFilters)
+        if (Query == syncedQuery)
         {
             return;
         }
 
-        searchTerm = null;
-        postedLocationUrl = null;
-        downloadLink = null;
-        archiveFileName = null;
-        uploadId = null;
-        selectedReleaseType = null;
-        selectedReleaseContentType = null;
-        selectedPrimaryLanguageCode = string.Empty;
-        selectedOnlineState = null;
-        selectedHosterRegistrationId = null;
-        selectedArchiverName = string.Empty;
-        selectedLinkCrypterRegistrationId = null;
-        selectedReleaseGroupId = 0;
+        syncedQuery = Query;
+        model = ReleaseSearchFormModel.FromQuery(Query);
+
+        if (model.HasActiveAdvancedFilters)
+        {
+            showAdvancedSearch = true;
+        }
+    }
+
+    private async Task ApplyFiltersAsync()
+    {
+        await OnSearch.InvokeAsync(model.ToQuery());
+    }
+
+    private async Task ResetFiltersAsync()
+    {
+        if (!model.HasActiveFilters)
+        {
+            return;
+        }
+
+        model = new ReleaseSearchFormModel();
         showAdvancedSearch = false;
 
-        await OnSearch.InvokeAsync(CreateQuery());
+        await OnSearch.InvokeAsync(model.ToQuery());
     }
 
     private void ToggleAdvancedSearch()
     {
         showAdvancedSearch = !showAdvancedSearch;
-    }
-
-    private ReleaseSearchQuery CreateQuery()
-    {
-        return new ReleaseSearchQuery(
-            SearchTerm: searchTerm,
-            ReleaseType: selectedReleaseType,
-            ReleaseContentType: selectedReleaseContentType,
-            PrimaryLanguageCode: selectedPrimaryLanguageCode switch
-            {
-                LanguageNotSetFilter => string.Empty,
-                "" => null,
-                _ => selectedPrimaryLanguageCode,
-            },
-            OnlineState: selectedOnlineState,
-            HosterRegistrationId: selectedHosterRegistrationId,
-            ArchiverName: string.IsNullOrWhiteSpace(selectedArchiverName)
-                ? null
-                : selectedArchiverName,
-            LinkCrypterRegistrationId: selectedLinkCrypterRegistrationId,
-            ReleaseGroupId: selectedReleaseGroupId == 0 ? null : selectedReleaseGroupId,
-            PostedLocationUrl: postedLocationUrl,
-            DownloadLink: downloadLink,
-            ArchiveFileName: archiveFileName,
-            UploadId: uploadId
-        );
     }
 }
