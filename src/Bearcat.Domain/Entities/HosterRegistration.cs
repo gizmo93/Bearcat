@@ -1,4 +1,6 @@
-﻿namespace Bearcat.Domain.Entities;
+﻿using Bearcat.Domain.ValueObjects;
+
+namespace Bearcat.Domain.Entities;
 
 public class HosterRegistration
 {
@@ -15,6 +17,10 @@ public class HosterRegistration
     public required string HosterClassName { get; set; }
 
     public int? MaxParallelUploadsOverride { get; set; }
+
+    public int? NumberOfHoursUntilReuploadOverride { get; set; }
+
+    public ReuploadTrigger? ReuploadTriggerOverride { get; set; }
 
     public List<UploadConfig> UploadConfigs { get; set; } = null!;
 }

@@ -26,6 +26,8 @@ public class Upload
 
     public DateTime? NotFullyOnlineSince { get; set; }
 
+    public DateTime? FullyOfflineSince { get; set; }
+
     public bool PremiumOnlyDownload { get; set; }
 
     public List<UploadedFile> UploadedFiles { get; set; } = null!;

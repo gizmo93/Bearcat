@@ -23,25 +23,26 @@
                  ShowPagination="@(hosters.Count > 10)"
                  InitialPageSize="10"
                  AriaLabel="@L["HosterRegistrations"]"
-                 Class="bearcat-data-table bearcat-registrations-table">
+                 Class="bearcat-data-table bearcat-registrations-table bearcat-hosters-table">
         <Columns>
             <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"
                                Header="@L["Name"]"
                                Property="@(hoster => hoster.Name)"
                                Sortable="true"
                                Filterable="true"
-                               Width="20%" />
+                               Width="165px" />
             <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"
                                Header="@L["Hoster"]"
                                Property="@(hoster => hoster.HosterName)"
                                Sortable="true"
                                Filterable="true"
-                               Width="16%" />
+                               Width="175px" />
             <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"
                                Header="@L["ParallelUploads"]"
                                Property="@(hoster => hoster.HosterName)"
-                               Width="170px">
+                               Width="135px">
                 <CellTemplate Context="hoster">
+                    <p class="bearcat-hosters-cell-label">@L["ParallelUploads"]</p>
                     @if (hoster.HasFixedParallelUploadLimit)
                     {
                         <span class="text-sm text-muted-foreground">@L["ParallelUploadsViaApi"]</span>
@@ -64,11 +65,43 @@
                     }
                 </CellTemplate>
             </BbDataTableColumn>
+            <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"
+                               Header="@L["Reupload"]"
+                               Property="@(hoster => hoster.HosterName)"
+                               Width="185px">
+                <CellTemplate Context="hoster">
+                    <p class="bearcat-hosters-cell-label">@L["Reupload"]</p>
+                    @if (hoster.NumberOfHoursUntilReuploadOverride is null && hoster.ReuploadTriggerOverride is null)
+                    {
+                        <span class="text-sm text-muted-foreground">@L["ReuploadFollowsReleaseGroup"]</span>
+                    }
+                    else
+                    {
+                        <div class="flex flex-col gap-1.5">
+                            @if (hoster.NumberOfHoursUntilReuploadOverride is { } hours)
+                            {
+                                <span class="inline-flex items-center gap-1.5 text-sm font-medium">
+                                    <LucideIcon Name="clock" class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    @L["HoursShort", hours]
+                                </span>
+                            }
+                            @if (hoster.ReuploadTriggerOverride is { } trigger)
+                            {
+                                <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                                    <LucideIcon Name="@(trigger is ReuploadTrigger.OnlyWhenFullyOffline ? "cloud-off" : "signal-low")"
+                                                class="h-3.5 w-3.5 shrink-0" />
+                                    @L.Localize(trigger)
+                                </span>
+                            }
+                        </div>
+                    }
+                </CellTemplate>
+            </BbDataTableColumn>
             <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="bool"
                                Header="@L["Active"]"
                                Property="@(hoster => hoster.IsActive)"
                                Sortable="true"
-                               Width="150px">
+                               Width="120px">
                 <CellTemplate Context="hoster">
                     @if (hoster.RequiresCaptchaVerification)
                     {
@@ -87,7 +120,7 @@
             <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"
                                Header="@L["Login"]"
                                Property="@(hoster => hoster.Name)"
-                               Width="260px">
+                               Width="190px">
                 <CellTemplate Context="hoster">
                     <div class="flex items-center gap-2 whitespace-nowrap">
                         <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => TryLoginAsync(hoster))">

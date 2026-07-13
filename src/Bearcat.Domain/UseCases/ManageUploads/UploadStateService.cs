@@ -389,6 +389,15 @@ public class UploadStateService(
         {
             upload.NotFullyOnlineSince = null;
         }
+
+        if (onlineState is OnlineState.Offline)
+        {
+            upload.FullyOfflineSince ??= localNow;
+        }
+        else
+        {
+            upload.FullyOfflineSince = null;
+        }
     }
 
     private void CreateOfflineNotificationIfNeeded(Upload upload, OnlineState previousOnlineState)
@@ -503,20 +512,33 @@ public class UploadStateService(
     private static bool IsAutomaticReuploadDue(Upload upload, DateTime localNow)
     {
         var releaseGroup = upload.UploadConfig.Release.ReleaseGroup;
+        var hosterRegistration = upload.UploadConfig.HosterRegistration;
 
         if (!releaseGroup.EnableAutomaticReuploads || upload.UploadedFiles.Count == 0)
         {
             return false;
         }
 
-        if (upload.NotFullyOnlineSince is null)
+        var trigger =
+            hosterRegistration.ReuploadTriggerOverride ?? ReuploadTrigger.PartiallyOrFullyOffline;
+
+        var offlineSince =
+            trigger is ReuploadTrigger.OnlyWhenFullyOffline
+                ? upload.FullyOfflineSince
+                : upload.NotFullyOnlineSince;
+
+        if (offlineSince is null)
         {
             return false;
         }
 
-        var threshold = localNow.AddHours(-releaseGroup.NumberOfHoursUntilReupload);
+        var numberOfHoursUntilReupload =
+            hosterRegistration.NumberOfHoursUntilReuploadOverride
+            ?? releaseGroup.NumberOfHoursUntilReupload;
 
-        return upload.NotFullyOnlineSince <= threshold;
+        var threshold = localNow.AddHours(-numberOfHoursUntilReupload);
+
+        return offlineSince <= threshold;
     }
 
     private static bool HasBlockingReupload(Upload upload)

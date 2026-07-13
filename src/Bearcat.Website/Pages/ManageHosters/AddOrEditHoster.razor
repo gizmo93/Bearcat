@@ -66,6 +66,26 @@
                         </p>
                     </div>
                 }
+
+                <div class="space-y-1">
+                    <BbFormFieldInput TValue="int?"
+                                      @bind-Value="FormModel.NumberOfHoursUntilReuploadOverride"
+                                      Label="@L["HoursUntilReuploadOverride"]"
+                                      Placeholder="@L["HoursUntilReuploadOverridePlaceholder"]" />
+                    <p class="text-xs text-muted-foreground">
+                        @L["HoursUntilReuploadOverrideHelp"]
+                    </p>
+                </div>
+
+                <div class="space-y-1">
+                    <BbFormFieldSelect TValue="ReuploadTrigger?"
+                                       @bind-Value="FormModel.ReuploadTriggerOverride"
+                                       Label="@L["ReuploadTriggerOverride"]"
+                                       Options="ReuploadTriggerOptions" />
+                    <p class="text-xs text-muted-foreground">
+                        @L["ReuploadTriggerOverrideHelp"]
+                    </p>
+                </div>
             }
         </div>
 

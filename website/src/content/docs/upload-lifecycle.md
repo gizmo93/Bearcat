@@ -198,12 +198,23 @@ If the check itself fails (the hoster errors out), Bearcat raises an error notif
 Automatic reuploads are driven by release groups. To get automatically reuploaded, all of the following must be true for the Release:
 
 - its release group has automatic reuploads enabled
-- the latest relevant upload is `Offline` or `PartiallyOnline`
+- the latest relevant upload is `Offline` or `PartiallyOnline` (subject to the hoster's reupload trigger, see below)
 - every uploaded file has been checked at least once
-- the release group's "Hours until reupload" threshold has been reached
+- the waiting time ("Hours until reupload") has passed since the upload went offline
 - there isn't already an online or *blocking* replacement upload for the same upload configuration
 
 A **blocking** replacement is any other upload for the same upload configuration that is `Online`, or in one of these "in progress" states: `Pending`, `Uploading`, `WaitingForArchive`, `Failed`, or `CancellationRequested`.
+
+### Per-hoster overrides
+
+By default the waiting time and the trigger both come from the release group, but a hoster registration can override each of them (see [Reupload overrides per hoster](/Bearcat/post-installation/#reupload-overrides-per-hoster)):
+
+- **Hours until reupload:** when the hoster sets its own value, it replaces the release group's "Hours until reupload" for uploads on that hoster.
+- **Reupload trigger:** decides which offline state makes a reupload due, and from when the waiting time is counted.
+  - **Partially or fully offline** (default): the upload is due once it is `Offline` or `PartiallyOnline`, and the waiting time is counted from the moment it first stopped being fully online.
+  - **Only when fully offline:** the upload is only due once it is fully `Offline`, and the waiting time is counted from the moment the last file went offline. While the upload is still `PartiallyOnline`, no reupload is scheduled, and if it drops back out of fully offline the timer starts over.
+
+The "Only when fully offline" trigger is useful for hosters that take files offline one at a time. Instead of reacting to each file with its own reupload, Bearcat waits for the whole upload to go offline and then reuploads once.
 
 When a reupload is due, Bearcat creates a new upload record for the same upload configuration, starting fresh at `WaitingForArchive`. From there it follows the normal path:
 

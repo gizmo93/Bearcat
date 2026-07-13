@@ -15,5 +15,7 @@ public class HosterRegistrationConfiguration : IEntityTypeConfiguration<HosterRe
         builder.Property(h => h.SerializedConfig).IsRequired().HasMaxLength(4000);
         builder.Property(h => h.HosterClassName).IsRequired().HasMaxLength(500);
         builder.Property(h => h.MaxParallelUploadsOverride);
+        builder.Property(h => h.NumberOfHoursUntilReuploadOverride).IsRequired(false);
+        builder.Property(h => h.ReuploadTriggerOverride).IsRequired(false);
     }
 }

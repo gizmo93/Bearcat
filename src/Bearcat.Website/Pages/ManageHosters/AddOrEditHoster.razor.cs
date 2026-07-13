@@ -1,8 +1,11 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Domain.UseCases.ManageHosters;
+using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
+using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 
@@ -18,6 +21,17 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
 
     private IReadOnlyList<HosterDto> hosterReadModels = [];
     private HosterDto? selectedHoster;
+
+    private IReadOnlyList<SelectOption<ReuploadTrigger?>> ReuploadTriggerOptions =>
+        [
+            new(null, L["ReuploadTriggerOverridePlaceholder"]),
+            .. Enum.GetValues<ReuploadTrigger>()
+                .Select(trigger => new SelectOption<ReuploadTrigger?>(
+                    trigger,
+                    L.Localize(trigger)
+                )),
+        ];
+
     private EditContext editContext = null!;
     private ValidationMessageStore? messageStore;
     private readonly HashSet<string> displayedPasswords = [];
@@ -50,7 +64,9 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
                         isActive: true,
                         configuration: FormModel.Configuration,
                         hosterClassName: FormModel.FullClassName,
-                        maxParallelUploadsOverride: FormModel.MaxParallelUploadsOverride
+                        maxParallelUploadsOverride: FormModel.MaxParallelUploadsOverride,
+                        numberOfHoursUntilReuploadOverride: FormModel.NumberOfHoursUntilReuploadOverride,
+                        reuploadTriggerOverride: FormModel.ReuploadTriggerOverride
                     )
             );
         }
@@ -62,7 +78,9 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
                         FormModel.HosterRegistrationId!.Value,
                         FormModel.Name,
                         FormModel.Configuration,
-                        FormModel.MaxParallelUploadsOverride
+                        FormModel.MaxParallelUploadsOverride,
+                        FormModel.NumberOfHoursUntilReuploadOverride,
+                        FormModel.ReuploadTriggerOverride
                     )
             );
         }

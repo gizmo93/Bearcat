@@ -53,6 +53,26 @@ The "Hoster registrations" table shows the effective value in the "Parallel uplo
 The global "Maximum parallel uploads" setting in "Configurations" still applies on top of the per-hoster limit, so the effective parallelism for a hoster is the smaller of the two values.
 See [Advanced Configuration](/Bearcat/advanced-configuration/#upload-concurrency) for the global setting.
 
+### Reupload overrides per hoster
+
+Automatic reuploads are configured on the release group: it decides whether they happen at all and how long Bearcat waits after files go offline ("Hours until reupload").
+See [Automatic reuploads](/Bearcat/upload-lifecycle/#7-automatic-reuploads) for the full behavior.
+
+Some hosters behave differently from the rest, so the "New hoster" and "Edit" dialog lets you override two reupload settings for a single registration. Leave a field empty to keep using the release group value.
+
+![Edit hoster dialog with the reupload override fields](images/edit-hoster-reupload-overrides.png)
+
+- **Hours until reupload (override):** replaces the release group's waiting time for this hoster only. Useful for hosters that briefly report files as offline before they come back: a longer wait avoids reuploading too early.
+- **Reupload trigger (override):** controls which offline state starts a reupload.
+  - **Partially or fully offline** (the release group's default behavior): reupload as soon as any file of the upload goes offline.
+  - **Only when fully offline:** wait until every file of the upload is offline before reuploading, and count the waiting time from the moment the last file went offline. This is handy for hosters that take files offline one by one (for example because they were rarely downloaded): instead of many small single-file reuploads, Bearcat waits for the whole upload to go offline and then reuploads once.
+
+The "Hoster registrations" table shows the effective settings in the "Reupload" column:
+
+![Hoster registrations table with the Reupload column](images/hoster-registrations-reupload-column.png)
+
+- Hosters without an override show "Release group defaults".
+- An override shows the hours next to a clock icon and the chosen trigger with its own icon.
 
 ## Setting up link crypters and metadata sources
 

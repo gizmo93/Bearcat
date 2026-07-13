@@ -62,6 +62,9 @@ public partial class AllHostersPage(
                 IsEdit = true,
                 HosterRegistrationId = hosterRegistration.Id,
                 MaxParallelUploadsOverride = hosterRegistration.MaxParallelUploadsOverride,
+                NumberOfHoursUntilReuploadOverride =
+                    hosterRegistration.NumberOfHoursUntilReuploadOverride,
+                ReuploadTriggerOverride = hosterRegistration.ReuploadTriggerOverride,
             },
         };
 

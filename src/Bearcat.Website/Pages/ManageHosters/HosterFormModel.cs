@@ -1,3 +1,5 @@
+using Bearcat.Domain.ValueObjects;
+
 namespace Bearcat.Website.Pages.ManageHosters;
 
 public class HosterFormModel
@@ -13,4 +15,8 @@ public class HosterFormModel
     public int? HosterRegistrationId { get; set; }
 
     public int? MaxParallelUploadsOverride { get; set; }
+
+    public int? NumberOfHoursUntilReuploadOverride { get; set; }
+
+    public ReuploadTrigger? ReuploadTriggerOverride { get; set; }
 }

@@ -620,6 +620,94 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task CheckUploadStatesAsync_HosterHoursOverrideShorterThanReleaseGroup_CreatesReuploadEarlier()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow.AddHours(-2),
+            uploadedFileLinks: ["https://hoster.test/1"],
+            enableAutomaticReuploads: true,
+            numberOfHoursUntilReuploadOverride: 1
+        );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var uploads = await dbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
+
+        uploads.Count.ShouldBe(2);
+        uploads.Single(u => u.Id != upload.Id).UploadState.ShouldBe(UploadState.WaitingForArchive);
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_OnlyWhenFullyOfflineTriggerAndPartiallyOnline_DoesNotCreateReupload()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.PartiallyOnline,
+            checkedAt: localNow.AddHours(-25),
+            uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"],
+            enableAutomaticReuploads: true,
+            reuploadTriggerOverride: ReuploadTrigger.OnlyWhenFullyOffline
+        );
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(
+                    true,
+                    [],
+                    new Dictionary<string, bool>
+                    {
+                        ["https://hoster.test/1"] = true,
+                        ["https://hoster.test/2"] = false,
+                    }
+                )
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var uploads = await dbContext.Uploads.ToListAsync();
+
+        uploads.Count.ShouldBe(1);
+        uploads.Single().Id.ShouldBe(upload.Id);
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_OnlyWhenFullyOfflineTriggerAndFullyOffline_CreatesReupload()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow.AddHours(-25),
+            uploadedFileLinks: ["https://hoster.test/1"],
+            enableAutomaticReuploads: true,
+            reuploadTriggerOverride: ReuploadTrigger.OnlyWhenFullyOffline
+        );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var uploads = await dbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
+
+        uploads.Count.ShouldBe(2);
+        uploads.Single(u => u.Id != upload.Id).UploadState.ShouldBe(UploadState.WaitingForArchive);
+    }
+
+    [Test]
     public async Task CheckUploadStatesAsync_InactiveHosterRegistrationAutomaticReuploadIsDue_DoesNotCreateReupload()
     {
         // Arrange
@@ -1367,7 +1455,9 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         bool hosterIsActive = true,
         QualityProfile? qualityProfile = null,
         ReleaseInfo? releaseInfo = null,
-        bool hasNfo = false
+        bool hasNfo = false,
+        int? numberOfHoursUntilReuploadOverride = null,
+        ReuploadTrigger? reuploadTriggerOverride = null
     )
     {
         var uploadConfig = await AddUploadConfigAsync(
@@ -1375,7 +1465,9 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             hosterIsActive,
             qualityProfile: qualityProfile,
             releaseInfo: releaseInfo,
-            hasNfo: hasNfo
+            hasNfo: hasNfo,
+            numberOfHoursUntilReuploadOverride: numberOfHoursUntilReuploadOverride,
+            reuploadTriggerOverride: reuploadTriggerOverride
         );
         var archive = new Archive
         {
@@ -1400,6 +1492,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             NotFullyOnlineSince = onlineState is OnlineState.PartiallyOnline or OnlineState.Offline
                 ? checkedAt
                 : null,
+            FullyOfflineSince = onlineState is OnlineState.Offline ? checkedAt : null,
             ErrorMessages = [],
             UploadedFiles = [],
         };
@@ -1431,7 +1524,9 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         DateTime? releaseCreatedAt = null,
         QualityProfile? qualityProfile = null,
         ReleaseInfo? releaseInfo = null,
-        bool hasNfo = false
+        bool hasNfo = false,
+        int? numberOfHoursUntilReuploadOverride = null,
+        ReuploadTrigger? reuploadTriggerOverride = null
     )
     {
         var releaseGroup = new ReleaseGroup
@@ -1469,6 +1564,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             SerializedConfig = SerializedHosterConfig,
             HosterClassName = HosterClassName,
             IsActive = hosterIsActive,
+            NumberOfHoursUntilReuploadOverride = numberOfHoursUntilReuploadOverride,
+            ReuploadTriggerOverride = reuploadTriggerOverride,
         };
         var uploadConfig = new UploadConfig
         {

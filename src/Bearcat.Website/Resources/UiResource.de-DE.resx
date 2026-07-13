@@ -612,11 +612,22 @@
   <data name="MaxParallelUploadsOverride" xml:space="preserve"><value>Maximale parallele Uploads</value></data>
   <data name="MaxParallelUploadsOverridePlaceholder" xml:space="preserve"><value>Hoster-Standard</value></data>
   <data name="MaxParallelUploadsOverrideHelp" xml:space="preserve"><value>Überschreibt das angenommene Limit paralleler Uploads für diesen Hoster. Leer lassen, um den Hoster-Standard ({0}) zu verwenden.</value></data>
+  <data name="HoursUntilReuploadOverride" xml:space="preserve"><value>Stunden bis Reupload (Override)</value></data>
+  <data name="HoursUntilReuploadOverridePlaceholder" xml:space="preserve"><value>Releasegruppen Standard</value></data>
+  <data name="HoursUntilReuploadOverrideHelp" xml:space="preserve"><value>Überschreibt die auf der Releasegruppe konfigurierten Stunden bis Reupload für diesen Hoster. Leer lassen, um die Einstellung der Releasegruppe zu verwenden.</value></data>
+  <data name="ReuploadTriggerOverride" xml:space="preserve"><value>Reupload Auslöser (Override)</value></data>
+  <data name="ReuploadTriggerOverridePlaceholder" xml:space="preserve"><value>Releasegruppen Standard</value></data>
+  <data name="ReuploadTriggerOverrideHelp" xml:space="preserve"><value>Legt fest, welcher Offline-Status für diesen Hoster einen Reupload auslöst. Leer lassen, um das Verhalten der Releasegruppe zu verwenden (teilweise oder komplett offline).</value></data>
+  <data name="ReuploadTrigger.PartiallyOrFullyOffline" xml:space="preserve"><value>Teilweise oder komplett offline</value></data>
+  <data name="ReuploadTrigger.OnlyWhenFullyOffline" xml:space="preserve"><value>Erst wenn komplett offline</value></data>
   <data name="ParallelUploads" xml:space="preserve"><value>Parallele Uploads</value></data>
   <data name="ParallelUploadsViaApi" xml:space="preserve"><value>Über API</value></data>
   <data name="DefaultValueWithNumber" xml:space="preserve"><value>Standard: {0}</value></data>
   <data name="DefaultValue" xml:space="preserve"><value>Default</value></data>
   <data name="Override" xml:space="preserve"><value>Override</value></data>
+  <data name="Reupload" xml:space="preserve"><value>Reupload</value></data>
+  <data name="ReuploadFollowsReleaseGroup" xml:space="preserve"><value>Release-Gruppen-Standard</value></data>
+  <data name="HoursShort" xml:space="preserve"><value>{0} h</value></data>
   <data name="ResetToDefault" xml:space="preserve"><value>Auf Default zurücksetzen</value></data>
   <data name="AddLinkCrypter" xml:space="preserve"><value>Link-Crypter hinzufügen</value></data>
   <data name="ArchiveConfigName" xml:space="preserve"><value>Archiv-Konfigurationsname</value></data>

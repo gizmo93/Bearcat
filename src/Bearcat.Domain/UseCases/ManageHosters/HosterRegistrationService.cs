@@ -5,6 +5,7 @@ using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
+using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageHosters;
 
@@ -21,6 +22,8 @@ public class HosterRegistrationService(
         Dictionary<string, string> configuration,
         string hosterClassName,
         int? maxParallelUploadsOverride = null,
+        int? numberOfHoursUntilReuploadOverride = null,
+        ReuploadTrigger? reuploadTriggerOverride = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -36,6 +39,8 @@ public class HosterRegistrationService(
             MaxParallelUploadsOverride = hoster.HasFixedParallelUploadLimit
                 ? null
                 : maxParallelUploadsOverride,
+            NumberOfHoursUntilReuploadOverride = numberOfHoursUntilReuploadOverride,
+            ReuploadTriggerOverride = reuploadTriggerOverride,
         };
 
         writeRepository.Add(registration);
@@ -62,6 +67,8 @@ public class HosterRegistrationService(
         string name,
         Dictionary<string, string> configuration,
         int? maxParallelUploadsOverride = null,
+        int? numberOfHoursUntilReuploadOverride = null,
+        ReuploadTrigger? reuploadTriggerOverride = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -76,6 +83,8 @@ public class HosterRegistrationService(
         registration.MaxParallelUploadsOverride = hoster.HasFixedParallelUploadLimit
             ? null
             : maxParallelUploadsOverride;
+        registration.NumberOfHoursUntilReuploadOverride = numberOfHoursUntilReuploadOverride;
+        registration.ReuploadTriggerOverride = reuploadTriggerOverride;
         foreach (var (key, value) in configuration)
         {
             mergedConfiguration[key] = value;

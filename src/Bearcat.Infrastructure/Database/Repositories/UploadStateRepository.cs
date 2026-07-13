@@ -63,6 +63,8 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
             .Uploads.AsSplitQuery()
             .Include(u => u.UploadedFiles)
             .Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.HosterRegistration)
+            .Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.Release)
                     .ThenInclude(r => r.ReleaseGroup)
                         .ThenInclude(g => g.QualityProfile!)

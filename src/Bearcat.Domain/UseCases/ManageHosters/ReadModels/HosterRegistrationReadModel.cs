@@ -1,4 +1,6 @@
-﻿namespace Bearcat.Domain.UseCases.ManageHosters.ReadModels;
+﻿using Bearcat.Domain.ValueObjects;
+
+namespace Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 
 public record HosterRegistrationReadModel(
     int Id,
@@ -11,6 +13,8 @@ public record HosterRegistrationReadModel(
     bool HasFixedParallelUploadLimit,
     int? DefaultMaximumParallelUploads,
     int? MaxParallelUploadsOverride,
+    int? NumberOfHoursUntilReuploadOverride,
+    ReuploadTrigger? ReuploadTriggerOverride,
     string HosterName,
     string FullClassName
 );

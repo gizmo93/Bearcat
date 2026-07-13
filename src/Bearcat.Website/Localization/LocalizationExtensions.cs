@@ -56,6 +56,11 @@ public static class LocalizationExtensions
         QualityCheckRuleType ruleType
     ) => localizer[$"QualityCheckRuleType.{ruleType}"];
 
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        ReuploadTrigger trigger
+    ) => localizer[$"ReuploadTrigger.{trigger}"];
+
     public static string LocalizeDescription(
         this IStringLocalizer<UiResource> localizer,
         ReleaseType releaseType

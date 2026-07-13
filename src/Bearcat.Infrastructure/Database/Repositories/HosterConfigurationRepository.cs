@@ -28,6 +28,8 @@ public class HosterConfigurationRepository(
                 h.RequiresCaptchaVerification,
                 h.HosterClassName,
                 h.MaxParallelUploadsOverride,
+                h.NumberOfHoursUntilReuploadOverride,
+                h.ReuploadTriggerOverride,
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -49,6 +51,8 @@ public class HosterConfigurationRepository(
                     hoster.HasFixedParallelUploadLimit,
                     hoster.DefaultMaximumParallelUploads,
                     h.MaxParallelUploadsOverride,
+                    h.NumberOfHoursUntilReuploadOverride,
+                    h.ReuploadTriggerOverride,
                     hoster.Name,
                     h.HosterClassName
                 );
