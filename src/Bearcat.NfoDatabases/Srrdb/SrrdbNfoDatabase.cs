@@ -6,10 +6,13 @@ using NfoReleaseNfo = Bearcat.Abstractions.NfoDatabase.ReleaseNfo;
 
 namespace Bearcat.NfoDatabases.Srrdb;
 
-public class SrrdbNfoDatabase(SrrdbClient client) : INfoDatabase, INfoProvider
+public partial class SrrdbNfoDatabase(SrrdbClient client) : INfoDatabase, INfoProvider
 {
-    private static readonly Regex WhitespaceRegex = new(@"\s+", RegexOptions.Compiled);
-    private static readonly Regex MultipleDotsRegex = new(@"\.{2,}", RegexOptions.Compiled);
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex WhitespaceRegex();
+
+    [GeneratedRegex(@"\.{2,}")]
+    private static partial Regex MultipleDotsRegex();
 
     public string Name => "srrDB";
 
@@ -143,8 +146,8 @@ public class SrrdbNfoDatabase(SrrdbClient client) : INfoDatabase, INfoProvider
 
     private static string NormalizeDirname(string dirname)
     {
-        var normalized = WhitespaceRegex.Replace(dirname.Trim(), ".");
-        normalized = MultipleDotsRegex.Replace(normalized, ".");
+        var normalized = WhitespaceRegex().Replace(dirname.Trim(), ".");
+        normalized = MultipleDotsRegex().Replace(normalized, ".");
         return normalized.Trim('.');
     }
 }

@@ -26,7 +26,7 @@
         <PackageVersion Include="AngleSharp" Version="0.17.1" />
         <PackageVersion Include="Microsoft.Playwright" Version="1.61.0" />
         <PackageVersion Include="Npgsql" Version="10.0.3" />
-        <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+        <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
         <PackageVersion Include="Refit" Version="13.1.0" />
         <PackageVersion Include="Refit.HttpClientFactory" Version="13.1.0" />
         <PackageVersion Include="NUnit" Version="4.6.1" />
@@ -37,15 +37,15 @@
         <PackageVersion Include="Respawn" Version="7.0.0" />
         <PackageVersion Include="Scriban" Version="7.2.5" />
         <PackageVersion Include="Shane32.Analyzers" Version="2.0.2" />
-        <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.28.0.143324" />
+        <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.29.0.143774" />
         <PackageVersion Include="Shouldly" Version="4.3.0" />
         <PackageVersion Include="Spectre.Console" Version="0.57.2" />
         <PackageVersion Include="Spectre.Console.Cli" Version="0.55.0" />
-        <PackageVersion Include="Testcontainers.PostgreSql" Version="4.12.0" />
+        <PackageVersion Include="Testcontainers.PostgreSql" Version="4.13.0" />
         <PackageVersion Include="Telegram.Bot" Version="22.10.1.1" />
-        <PackageVersion Include="Avalonia" Version="12.0.5" />
-        <PackageVersion Include="Avalonia.Desktop" Version="12.0.5" />
-        <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.0.5" />
-        <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.0.5" />
+        <PackageVersion Include="Avalonia" Version="12.1.0" />
+        <PackageVersion Include="Avalonia.Desktop" Version="12.1.0" />
+        <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.0" />
+        <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.0" />
     </ItemGroup>
 </Project>
