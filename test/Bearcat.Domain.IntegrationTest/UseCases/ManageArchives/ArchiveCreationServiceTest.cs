@@ -993,6 +993,101 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task ProcessAsync_FileOfflineInNewestUploadButOnlineInOlderUpload_DoesNotCarryOverStaleOnlineFile()
+    {
+        // Arrange
+        var upload = await AddUploadWaitingForArchiveAsync();
+
+        var existingArchiveFolder = Directory
+            .CreateDirectory(Path.Combine(archiveFilesBasePath, "existing"))
+            .FullName;
+
+        var archiveFilePath = Path.Combine(existingArchiveFolder, "existing.part1.rar");
+
+        await File.WriteAllTextAsync(archiveFilePath, "archive-data");
+
+        var archiveFile = new ArchiveFile { FullFileName = archiveFilePath };
+
+        var existingArchive = new Archive
+        {
+            ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
+            ArchiveFolderPath = existingArchiveFolder,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 512,
+            CreatedAt = DateTime.UtcNow,
+            ArchiveFiles = [archiveFile],
+            Uploads = [],
+            ErrorMessages = [],
+        };
+
+        var olderUpload = new Upload
+        {
+            UploadConfigId = upload.UploadConfigId,
+            Archive = existingArchive,
+            CreatedAt = DateTime.UtcNow.AddHours(-2),
+            UploadedAt = DateTime.UtcNow.AddHours(-2),
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Online,
+            ErrorMessages = [],
+            UploadedFiles =
+            [
+                new UploadedFile
+                {
+                    ArchiveFile = archiveFile,
+                    HosterFileLink = "https://hoster.example/stale-online",
+                    ExternalId = "external-stale",
+                    OnlineState = OnlineState.Online,
+                    CreatedAt = DateTime.UtcNow.AddHours(-2),
+                    CheckedAt = DateTime.UtcNow.AddHours(-2),
+                },
+            ],
+        };
+
+        dbContext.Archives.Add(existingArchive);
+        dbContext.Uploads.Add(olderUpload);
+        await dbContext.SaveChangesAsync();
+
+        var newestUpload = new Upload
+        {
+            UploadConfigId = upload.UploadConfigId,
+            Archive = existingArchive,
+            CreatedAt = DateTime.UtcNow.AddHours(-1),
+            UploadedAt = DateTime.UtcNow.AddHours(-1),
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Offline,
+            ErrorMessages = [],
+            UploadedFiles =
+            [
+                new UploadedFile
+                {
+                    ArchiveFile = archiveFile,
+                    HosterFileLink = "https://hoster.example/offline",
+                    ExternalId = "external-offline",
+                    OnlineState = OnlineState.Offline,
+                    CreatedAt = DateTime.UtcNow.AddHours(-1),
+                    CheckedAt = DateTime.UtcNow.AddHours(-1),
+                },
+            ],
+        };
+
+        dbContext.Uploads.Add(newestUpload);
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .SingleAsync(u => u.Id == upload.Id);
+
+        result.ArchiveId.ShouldBe(existingArchive.Id);
+        result.UploadState.ShouldBe(UploadState.Pending);
+        result.UploadedFiles.ShouldBeEmpty();
+    }
+
+    [Test]
     public async Task ProcessAsync_PreviousUploadOnDifferentUploadConfig_DoesNotCarryOverOnlineFiles()
     {
         // Arrange

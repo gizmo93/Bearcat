@@ -67,7 +67,9 @@ public class ArchiveCreationService(
             archive.ArchiveFiles.Count
         );
 
-        await HashArchiveFilesAsync(archive, archive.ArchiveConfig, cancellationToken);
+        var archiver = archiverFactory.GetByName(archive.ArchiveConfig.ArchiverName);
+
+        await HashArchiveFilesAsync(archive, archive.ArchiveConfig, archiver, cancellationToken);
         FinalizeArchive(archive);
     }
 
@@ -97,11 +99,10 @@ public class ArchiveCreationService(
     private async Task HashArchiveFilesAsync(
         Archive archive,
         ArchiveConfig archiveConfig,
+        IArchiver archiver,
         CancellationToken cancellationToken
     )
     {
-        var archiver = archiverFactory.GetByName(archiveConfig.ArchiverName);
-
         if (archiver.CanChangeHashInPlace)
         {
             await ChangeArchiveFileHashesAsync(
@@ -252,8 +253,8 @@ public class ArchiveCreationService(
             upload.ArchiveId = assignableArchive.Id;
             upload.UploadState = UploadState.Pending;
 
-            // Take the newest still online file for a previous upload of the current upload
-            // and copy it over to the new upload, so we only upload files that were offline (for PartiallyOnline uploads)
+            // Take the newest known state per archive file from previous uploads and copy it over
+            // if it is still online, so we only upload files that were offline (for PartiallyOnline uploads)
             CarryOverOnlineFiles(upload, assignableArchive);
         }
 
@@ -275,12 +276,12 @@ public class ArchiveCreationService(
                 u.Id != newUpload.Id && u.UploadConfigId == newUpload.UploadConfigId
             )
             .SelectMany(u => u.UploadedFiles)
+            .GroupBy(uf => uf.ArchiveFileId)
+            .Select(group => group.MaxBy(uf => uf.UploadId)!)
             .Where(uf =>
                 uf.OnlineState == OnlineState.Online
                 && !string.IsNullOrWhiteSpace(uf.HosterFileLink)
             )
-            .GroupBy(uf => uf.ArchiveFileId)
-            .Select(group => group.MaxBy(uf => uf.UploadId)!)
             .ToList();
 
         if (reusableOnlineFiles.Count == 0)
@@ -551,7 +552,7 @@ public class ArchiveCreationService(
 
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
-        await HashArchiveFilesAsync(archive, config, cancellationToken);
+        await HashArchiveFilesAsync(archive, config, archiver, cancellationToken);
         FinalizeArchive(archive);
 
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
