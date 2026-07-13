@@ -37,6 +37,26 @@ updates:
       - "/test/Bearcat.NfoDatabases.UnitTest"
     schedule:
       interval: "weekly"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+      major:
+        update-types:
+          - "major"
     ignore:
         - dependency-name: "AngleSharp*" # hard depencency of BlazorBlueprint
           versions: [">0.17.1"]
+  - package-ecosystem: "npm"
+    directory: "/website"
+    schedule:
+      interval: "weekly"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+      major:
+        update-types:
+          - "major"
