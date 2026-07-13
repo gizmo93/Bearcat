@@ -947,6 +947,87 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task SetUploadOfflineAsync_OnlineUpload_MarksUploadAndFilesOfflineAndCreatesWarning()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"]
+        );
+
+        // Act
+        var result = await service.SetUploadOfflineAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeTrue();
+
+        dbContext.ChangeTracker.Clear();
+        var updated = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .Include(u => u.Notifications)
+            .SingleAsync();
+
+        updated.OnlineState.ShouldBe(OnlineState.Offline);
+        updated.NotFullyOnlineSince.ShouldNotBeNull();
+        updated.FullyOfflineSince.ShouldNotBeNull();
+        updated.UploadedFiles.ShouldAllBe(f => f.OnlineState == OnlineState.Offline);
+        updated.UploadedFiles.ShouldAllBe(f => f.CheckedAt != null);
+        updated.Notifications.Single().NotificationType.ShouldBe(NotificationType.Warning);
+        updated.Notifications.Single().Message.ShouldBe("Upload manually marked as offline");
+    }
+
+    [Test]
+    public async Task SetUploadOfflineAsync_PartiallyOnlineUpload_MarksUploadOffline()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.PartiallyOnline,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+
+        // Act
+        var result = await service.SetUploadOfflineAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeTrue();
+
+        dbContext.ChangeTracker.Clear();
+        var updated = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+
+        updated.OnlineState.ShouldBe(OnlineState.Offline);
+        updated.UploadedFiles.ShouldAllBe(f => f.OnlineState == OnlineState.Offline);
+    }
+
+    [Test]
+    public async Task SetUploadOfflineAsync_AlreadyOfflineUpload_ReturnsFalse()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Offline,
+            checkedAt: localNow,
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+
+        // Act
+        var result = await service.SetUploadOfflineAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task SetUploadOfflineAsync_UploadDoesNotExist_ReturnsFalse()
+    {
+        // Act
+        var result = await service.SetUploadOfflineAsync(-1, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Test]
     public async Task CancelUploadAsync_UploadDoesNotExist_ReturnsFalse()
     {
         // Act

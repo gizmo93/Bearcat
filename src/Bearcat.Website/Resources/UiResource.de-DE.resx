@@ -562,6 +562,10 @@
   <data name="UploadResumeNotAvailable" xml:space="preserve"><value>Upload #{0} kann in seinem aktuellen Status nicht wiederaufgenommen werden.</value></data>
   <data name="OnlineStateChecked" xml:space="preserve"><value>Onlinestatus für Upload #{0} geprüft.</value></data>
   <data name="OnlineStateCheckNotAvailable" xml:space="preserve"><value>Für Upload #{0} gibt es keine Links zum Prüfen.</value></data>
+  <data name="SetUploadOffline" xml:space="preserve"><value>Offline setzen</value></data>
+  <data name="SetUploadOfflineConfirmation" xml:space="preserve"><value>Upload #{0} und alle seine Links als offline markieren? So kannst du einen vollständigen Reupload auslösen.</value></data>
+  <data name="UploadSetOffline" xml:space="preserve"><value>Upload #{0} und alle seine Links als offline markiert.</value></data>
+  <data name="UploadSetOfflineNotAvailable" xml:space="preserve"><value>Upload #{0} kann nur offline gesetzt werden, solange er online oder teilweise online ist.</value></data>
   <data name="UploadActions" xml:space="preserve"><value>Upload-Aktionen</value></data>
   <data name="UploadDeleted" xml:space="preserve"><value>Upload #{0} gelöscht.</value></data>
   <data name="UploadDeleteNotAvailable" xml:space="preserve"><value>Upload #{0} kann in seinem aktuellen Status nicht gelöscht werden.</value></data>

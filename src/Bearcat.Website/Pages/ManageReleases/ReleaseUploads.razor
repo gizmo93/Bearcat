@@ -118,6 +118,10 @@
                                                 OnClick="@(async _ => await CheckOnlineStateNowAsync(upload))">
                                 @L["CheckOnlineStateNow"]
                             </BbDropdownMenuItem>
+                            <BbDropdownMenuItem Disabled="@(!CanSetUploadOffline(upload))"
+                                                OnClick="@(async _ => await SetUploadOfflineAsync(upload))">
+                                @L["SetUploadOffline"]
+                            </BbDropdownMenuItem>
                             <BbDropdownMenuSeparator />
                             <BbDropdownMenuItem Disabled="@(upload.LinkCount == 0)"
                                                 OnClick="@(async _ => await ShowLinksDialogAsync(upload))">

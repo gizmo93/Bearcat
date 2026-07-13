@@ -207,6 +207,40 @@ public partial class ReleaseUploads(
         await RefreshUploadsAsync();
     }
 
+    private async Task SetUploadOfflineAsync(ReleaseUploadReadModel upload)
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["SetUploadOffline"],
+            L["SetUploadOfflineConfirmation", upload.UploadId],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["SetUploadOffline"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        var setOffline = await operationRunner.RunAsync(
+            (UploadStateService service) => service.SetUploadOfflineAsync(upload.UploadId)
+        );
+
+        if (setOffline)
+        {
+            toastService.Success(L["UploadSetOffline", upload.UploadId]);
+        }
+        else
+        {
+            toastService.Error(L["UploadSetOfflineNotAvailable", upload.UploadId]);
+        }
+
+        await RefreshUploadsAsync();
+    }
+
     private async Task CreateManualReuploadAsync(ReleaseUploadReadModel upload)
     {
         await operationRunner.RunAsync(
@@ -354,6 +388,9 @@ public partial class ReleaseUploads(
 
     private static bool CanCheckOnlineStateNow(ReleaseUploadReadModel upload) =>
         upload is { UploadState: UploadState.Completed, LinkCount: > 0 };
+
+    private static bool CanSetUploadOffline(ReleaseUploadReadModel upload) =>
+        upload.OnlineState is OnlineState.Online or OnlineState.PartiallyOnline;
 
     private static bool CanCreateManualReupload(ReleaseUploadReadModel upload) =>
         upload.CanCreateReupload;

@@ -177,6 +177,49 @@ public class UploadStateService(
         return true;
     }
 
+    public async Task<bool> SetUploadOfflineAsync(
+        int uploadId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var upload = await uploadStateRepository.GetUploadForOnlineCheckAsync(
+            uploadId: uploadId,
+            cancellationToken: cancellationToken
+        );
+
+        if (upload is null)
+        {
+            return false;
+        }
+
+        if (upload.OnlineState is not OnlineState.Online and not OnlineState.PartiallyOnline)
+        {
+            return false;
+        }
+
+        var localNow = timeProvider.GetLocalNow();
+
+        foreach (var file in upload.UploadedFiles)
+        {
+            file.OnlineState = OnlineState.Offline;
+            file.CheckedAt = localNow;
+        }
+
+        SetOnlineState(upload: upload, onlineState: OnlineState.Offline, localNow: localNow);
+
+        notificationService.CreateWarning(
+            message: "Upload manually marked as offline",
+            entity: upload,
+            selector: u => u.Upload
+        );
+
+        await uploadStateRepository.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Upload {UploadId} was manually marked as offline", upload.Id);
+
+        return true;
+    }
+
     public async Task<bool> DeleteUploadAsync(
         int uploadId,
         CancellationToken cancellationToken = default
