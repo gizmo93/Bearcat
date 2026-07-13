@@ -10,12 +10,12 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.39.2",
-    "@mermaid-js/layout-elk": "^0.2.1",
+    "@astrojs/starlight": "^0.41.3",
+    "@mermaid-js/layout-elk": "^0.2.2",
     "astro": "^6.4.7",
-    "astro-mermaid": "^2.0.2",
-    "mermaid": "^11.15.0",
-    "sharp": "^0.34.5",
-    "starlight-theme-nova": "^0.11.11"
+    "astro-mermaid": "^2.1.0",
+    "mermaid": "^11.16.0",
+    "sharp": "^0.35.3",
+    "starlight-theme-nova": "^0.12.1"
   }
 }
