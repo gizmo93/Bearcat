@@ -65,6 +65,7 @@ public partial class AllHostersPage(
                 NumberOfHoursUntilReuploadOverride =
                     hosterRegistration.NumberOfHoursUntilReuploadOverride,
                 ReuploadTriggerOverride = hosterRegistration.ReuploadTriggerOverride,
+                AlwaysReuploadAllFiles = hosterRegistration.AlwaysReuploadAllFiles,
             },
         };
 

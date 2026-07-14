@@ -618,6 +618,9 @@
   <data name="ReuploadTriggerOverride" xml:space="preserve"><value>Reupload trigger (override)</value></data>
   <data name="ReuploadTriggerOverridePlaceholder" xml:space="preserve"><value>Release group default</value></data>
   <data name="ReuploadTriggerOverrideHelp" xml:space="preserve"><value>Controls which offline state triggers a reupload for this hoster. Leave empty to use the release group behavior (partially or fully offline).</value></data>
+  <data name="AlwaysReuploadAllFiles" xml:space="preserve"><value>Always reupload all files</value></data>
+  <data name="AlwaysReuploadAllFilesHelp" xml:space="preserve"><value>When a reupload runs for this hoster, upload every file again instead of only the offline ones. Useful for hosters that delete files after a period without downloads, so all files get a fresh lifetime at once.</value></data>
+  <data name="AlwaysReuploadAllFilesShort" xml:space="preserve"><value>Full reuploads</value></data>
   <data name="ReuploadTrigger.PartiallyOrFullyOffline" xml:space="preserve"><value>Partially or fully offline</value></data>
   <data name="ReuploadTrigger.OnlyWhenFullyOffline" xml:space="preserve"><value>Only when fully offline</value></data>
   <data name="ParallelUploads" xml:space="preserve"><value>Parallel uploads</value></data>

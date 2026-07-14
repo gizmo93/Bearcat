@@ -121,6 +121,8 @@ The **"Archive creation"** background task looks for uploads in `WaitingForArchi
 
 **Reusing an archive carries over the files that are still online.** When a reupload reuses the *same* archive as a previous upload of the same upload configuration, Bearcat copies over the hoster links for the files that are still online and only uploads the ones that actually went offline. This makes recovering from a `PartiallyOnline` upload cheap: the surviving files stay where they are, and Bearcat just fills the gaps instead of sending everything up again. It only works when the same archive is reused, though. If a fresh archive has to be packed, its freshly packed files aren't compatible with the old ones, so the whole release is uploaded again.
 
+The carry-over can be turned off per hoster with the **"Always reupload all files"** switch. When it's on, a reupload for that hoster ignores the still-online files and uploads the whole archive again, even when the same archive is reused. See [Per-hoster overrides](#per-hoster-overrides) for when that helps.
+
 **No reusable archive? Create a new one.** If nothing can be reused, Bearcat builds a new archive from the release folder. The archive configuration decides:
 
 - where the archive files are written
@@ -213,8 +215,11 @@ By default the waiting time and the trigger both come from the release group, bu
 - **Reupload trigger:** decides which offline state makes a reupload due, and from when the waiting time is counted.
   - **Partially or fully offline** (default): the upload is due once it is `Offline` or `PartiallyOnline`, and the waiting time is counted from the moment it first stopped being fully online.
   - **Only when fully offline:** the upload is only due once it is fully `Offline`, and the waiting time is counted from the moment the last file went offline. While the upload is still `PartiallyOnline`, no reupload is scheduled, and if it drops back out of fully offline the timer starts over.
+- **Always reupload all files:** decides *what* a reupload sends up, rather than *when* it starts. By default a reupload keeps the files that are still online and only replaces the offline ones (see [Creating the archive](#3-creating-the-archive)). With this switch on, Bearcat skips that carry-over and uploads every file of the archive again.
 
 The "Only when fully offline" trigger is useful for hosters that take files offline one at a time. Instead of reacting to each file with its own reupload, Bearcat waits for the whole upload to go offline and then reuploads once.
+
+"Always reupload all files" targets the same kind of hoster from the other side: some delete files after a period without downloads (for example Nitroflare after 30 days), so files expire one by one over time. Replacing only the offline file each run would leave you reuploading a single file every hour as the rest keep dropping out. Reuploading everything at once instead gives all files a fresh lifetime together, so the whole upload expires as a unit rather than in a slow trickle.
 
 When a reupload is due, Bearcat creates a new upload record for the same upload configuration, starting fresh at `WaitingForArchive`. From there it follows the normal path:
 

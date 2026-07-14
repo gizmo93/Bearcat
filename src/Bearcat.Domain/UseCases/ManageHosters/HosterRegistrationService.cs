@@ -24,6 +24,7 @@ public class HosterRegistrationService(
         int? maxParallelUploadsOverride = null,
         int? numberOfHoursUntilReuploadOverride = null,
         ReuploadTrigger? reuploadTriggerOverride = null,
+        bool alwaysReuploadAllFiles = false,
         CancellationToken cancellationToken = default
     )
     {
@@ -41,6 +42,7 @@ public class HosterRegistrationService(
                 : maxParallelUploadsOverride,
             NumberOfHoursUntilReuploadOverride = numberOfHoursUntilReuploadOverride,
             ReuploadTriggerOverride = reuploadTriggerOverride,
+            AlwaysReuploadAllFiles = alwaysReuploadAllFiles,
         };
 
         writeRepository.Add(registration);
@@ -69,6 +71,7 @@ public class HosterRegistrationService(
         int? maxParallelUploadsOverride = null,
         int? numberOfHoursUntilReuploadOverride = null,
         ReuploadTrigger? reuploadTriggerOverride = null,
+        bool alwaysReuploadAllFiles = false,
         CancellationToken cancellationToken = default
     )
     {
@@ -85,6 +88,7 @@ public class HosterRegistrationService(
             : maxParallelUploadsOverride;
         registration.NumberOfHoursUntilReuploadOverride = numberOfHoursUntilReuploadOverride;
         registration.ReuploadTriggerOverride = reuploadTriggerOverride;
+        registration.AlwaysReuploadAllFiles = alwaysReuploadAllFiles;
         foreach (var (key, value) in configuration)
         {
             mergedConfiguration[key] = value;

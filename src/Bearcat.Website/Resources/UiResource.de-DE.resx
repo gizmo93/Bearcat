@@ -622,6 +622,9 @@
   <data name="ReuploadTriggerOverride" xml:space="preserve"><value>Reupload Auslöser (Override)</value></data>
   <data name="ReuploadTriggerOverridePlaceholder" xml:space="preserve"><value>Releasegruppen Standard</value></data>
   <data name="ReuploadTriggerOverrideHelp" xml:space="preserve"><value>Legt fest, welcher Offline-Status für diesen Hoster einen Reupload auslöst. Leer lassen, um das Verhalten der Releasegruppe zu verwenden (teilweise oder komplett offline).</value></data>
+  <data name="AlwaysReuploadAllFiles" xml:space="preserve"><value>Immer alle Dateien neu hochladen</value></data>
+  <data name="AlwaysReuploadAllFilesHelp" xml:space="preserve"><value>Wenn für diesen Hoster ein Reupload läuft, werden alle Dateien erneut hochgeladen statt nur der offline gegangenen. Nützlich für Hoster, die Dateien nach einer Zeit ohne Downloads löschen, damit alle Dateien auf einen Schlag wieder eine frische Lebenszeit erhalten.</value></data>
+  <data name="AlwaysReuploadAllFilesShort" xml:space="preserve"><value>Volle Reuploads</value></data>
   <data name="ReuploadTrigger.PartiallyOrFullyOffline" xml:space="preserve"><value>Teilweise oder komplett offline</value></data>
   <data name="ReuploadTrigger.OnlyWhenFullyOffline" xml:space="preserve"><value>Erst wenn komplett offline</value></data>
   <data name="ParallelUploads" xml:space="preserve"><value>Parallele Uploads</value></data>

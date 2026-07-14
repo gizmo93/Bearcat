@@ -66,7 +66,8 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
                         hosterClassName: FormModel.FullClassName,
                         maxParallelUploadsOverride: FormModel.MaxParallelUploadsOverride,
                         numberOfHoursUntilReuploadOverride: FormModel.NumberOfHoursUntilReuploadOverride,
-                        reuploadTriggerOverride: FormModel.ReuploadTriggerOverride
+                        reuploadTriggerOverride: FormModel.ReuploadTriggerOverride,
+                        alwaysReuploadAllFiles: FormModel.AlwaysReuploadAllFiles
                     )
             );
         }
@@ -80,7 +81,8 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
                         FormModel.Configuration,
                         FormModel.MaxParallelUploadsOverride,
                         FormModel.NumberOfHoursUntilReuploadOverride,
-                        FormModel.ReuploadTriggerOverride
+                        FormModel.ReuploadTriggerOverride,
+                        FormModel.AlwaysReuploadAllFiles
                     )
             );
         }

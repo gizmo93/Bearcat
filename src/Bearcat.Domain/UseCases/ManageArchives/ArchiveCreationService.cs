@@ -253,6 +253,11 @@ public class ArchiveCreationService(
             upload.ArchiveId = assignableArchive.Id;
             upload.UploadState = UploadState.Pending;
 
+            if (upload.UploadConfig.HosterRegistration.AlwaysReuploadAllFiles)
+            {
+                continue;
+            }
+
             // Take the newest known state per archive file from previous uploads and copy it over
             // if it is still online, so we only upload files that were offline (for PartiallyOnline uploads)
             CarryOverOnlineFiles(upload, assignableArchive);

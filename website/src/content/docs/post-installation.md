@@ -58,7 +58,7 @@ See [Advanced Configuration](/Bearcat/advanced-configuration/#upload-concurrency
 Automatic reuploads are configured on the release group: it decides whether they happen at all and how long Bearcat waits after files go offline ("Hours until reupload").
 See [Automatic reuploads](/Bearcat/upload-lifecycle/#7-automatic-reuploads) for the full behavior.
 
-Some hosters behave differently from the rest, so the "New hoster" and "Edit" dialog lets you override two reupload settings for a single registration. Leave a field empty to keep using the release group value.
+Some hosters behave differently from the rest, so the "New hoster" and "Edit" dialog lets you define in detail how reuploads behave for a single registration. For the two override fields, leave them empty to keep using the release group value.
 
 ![Edit hoster dialog with the reupload override fields](images/edit-hoster-reupload-overrides.png)
 
@@ -66,6 +66,7 @@ Some hosters behave differently from the rest, so the "New hoster" and "Edit" di
 - **Reupload trigger (override):** controls which offline state starts a reupload.
   - **Partially or fully offline** (the release group's default behavior): reupload as soon as any file of the upload goes offline.
   - **Only when fully offline:** wait until every file of the upload is offline before reuploading, and count the waiting time from the moment the last file went offline. This is handy for hosters that take files offline one by one (for example because they were rarely downloaded): instead of many small single-file reuploads, Bearcat waits for the whole upload to go offline and then reuploads once.
+- **Always reupload all files:** when a reupload runs for this hoster, upload every file again instead of only the offline ones. By default a reupload keeps the files that are still online and only replaces the offline ones. With this switch on, Bearcat replaces the whole upload. This is meant for hosters that delete files after a period without downloads (for example Nitroflare after 30 days): reuploading everything at once gives all files a fresh lifetime, so you avoid many single-file reuploads as they expire one by one.
 
 The "Hoster registrations" table shows the effective settings in the "Reupload" column:
 
@@ -73,6 +74,7 @@ The "Hoster registrations" table shows the effective settings in the "Reupload" 
 
 - Hosters without an override show "Release group defaults".
 - An override shows the hours next to a clock icon and the chosen trigger with its own icon.
+- Hosters set to "Always reupload all files" also show a "Full reuploads" line with a refresh icon.
 
 ## Setting up link crypters and metadata sources
 

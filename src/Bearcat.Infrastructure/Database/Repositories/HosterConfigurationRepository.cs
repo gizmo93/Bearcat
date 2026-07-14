@@ -30,6 +30,7 @@ public class HosterConfigurationRepository(
                 h.MaxParallelUploadsOverride,
                 h.NumberOfHoursUntilReuploadOverride,
                 h.ReuploadTriggerOverride,
+                h.AlwaysReuploadAllFiles,
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -53,6 +54,7 @@ public class HosterConfigurationRepository(
                     h.MaxParallelUploadsOverride,
                     h.NumberOfHoursUntilReuploadOverride,
                     h.ReuploadTriggerOverride,
+                    h.AlwaysReuploadAllFiles,
                     hoster.Name,
                     h.HosterClassName
                 );

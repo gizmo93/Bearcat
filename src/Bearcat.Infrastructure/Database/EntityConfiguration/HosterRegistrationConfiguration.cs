@@ -17,5 +17,6 @@ public class HosterRegistrationConfiguration : IEntityTypeConfiguration<HosterRe
         builder.Property(h => h.MaxParallelUploadsOverride);
         builder.Property(h => h.NumberOfHoursUntilReuploadOverride).IsRequired(false);
         builder.Property(h => h.ReuploadTriggerOverride).IsRequired(false);
+        builder.Property(h => h.AlwaysReuploadAllFiles).IsRequired();
     }
 }

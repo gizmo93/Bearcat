@@ -15,6 +15,7 @@ public record HosterRegistrationReadModel(
     int? MaxParallelUploadsOverride,
     int? NumberOfHoursUntilReuploadOverride,
     ReuploadTrigger? ReuploadTriggerOverride,
+    bool AlwaysReuploadAllFiles,
     string HosterName,
     string FullClassName
 );

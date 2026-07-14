@@ -22,5 +22,7 @@ public class HosterRegistration
 
     public ReuploadTrigger? ReuploadTriggerOverride { get; set; }
 
+    public bool AlwaysReuploadAllFiles { get; set; }
+
     public List<UploadConfig> UploadConfigs { get; set; } = null!;
 }

@@ -19,4 +19,6 @@ public class HosterFormModel
     public int? NumberOfHoursUntilReuploadOverride { get; set; }
 
     public ReuploadTrigger? ReuploadTriggerOverride { get; set; }
+
+    public bool AlwaysReuploadAllFiles { get; set; }
 }

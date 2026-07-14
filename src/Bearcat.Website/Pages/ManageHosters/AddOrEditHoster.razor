@@ -86,6 +86,10 @@
                         @L["ReuploadTriggerOverrideHelp"]
                     </p>
                 </div>
+
+                <BbFormFieldSwitch @bind-Checked="FormModel.AlwaysReuploadAllFiles"
+                                   Label="@L["AlwaysReuploadAllFiles"]"
+                                   HelperText="@L["AlwaysReuploadAllFilesHelp"]" />
             }
         </div>
 
