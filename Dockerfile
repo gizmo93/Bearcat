@@ -11,7 +11,7 @@ RUN dotnet restore src/Bearcat.Host/Bearcat.Host.csproj -a x64
 RUN dotnet publish src/Bearcat.Host/Bearcat.Host.csproj -a x64 --no-restore -o /App/out -p:Version=$BEARCAT_VERSION
 
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0.9-noble
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.10-noble
 
 ENV \
     ASPNETCORE_ENVIRONMENT=Production \
