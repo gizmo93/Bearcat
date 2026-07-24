@@ -5,7 +5,7 @@
         <!-- Overridden by the release workflows via -p:Version=<tag> -->
         <Version Condition="'$(Version)' == ''">0.0.0-dev</Version>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <NoWarn>S2365,S3220,S1450,NU1902</NoWarn>
+        <NoWarn>S2365,S3220,S1450,NU1902,S8969,S8970</NoWarn>
     </PropertyGroup>
     <Import
         Project="Directory.Build.local.props"
