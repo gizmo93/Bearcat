@@ -42,8 +42,8 @@ public partial class PostQueueIndicator(
                 enabled = configuration.GetValue<PostQueueConfiguration>(c => c.Enabled);
 
                 openCount = enabled
-                    ? await releaseRepository.CountPostQueueAsync()
-                        + await collectionRepository.CountPostQueueAsync()
+                    ? await releaseRepository.CountPostQueueAsync(pollingCancellation.Token)
+                        + await collectionRepository.CountPostQueueAsync(pollingCancellation.Token)
                     : 0;
             }
         );
