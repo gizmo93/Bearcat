@@ -29,7 +29,8 @@ public partial class QualityIssuesIndicator(
     private async Task RefreshCountAsync()
     {
         openCount = await operationRunner.RunAsync(
-            (IReleaseReadRepository repository) => repository.CountQualityIssuesQueueAsync(pollingCancellation.Token)
+            (IReleaseReadRepository repository) =>
+                repository.CountQualityIssuesQueueAsync(pollingCancellation.Token)
         );
     }
 

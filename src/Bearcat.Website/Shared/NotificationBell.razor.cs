@@ -79,7 +79,10 @@ public partial class NotificationBell(
         {
             await operationRunner.RunAsync<INotificationReadRepository>(async repository =>
             {
-                latestNotifications = await repository.GetLatestUnresolvedAsync(5, pollingCancellation.Token);
+                latestNotifications = await repository.GetLatestUnresolvedAsync(
+                    5,
+                    pollingCancellation.Token
+                );
                 unresolvedCount = await repository.CountUnresolvedAsync(pollingCancellation.Token);
             });
         }
@@ -92,7 +95,8 @@ public partial class NotificationBell(
     private async Task ResolveFromPreviewAsync(int notificationId)
     {
         await operationRunner.RunAsync(
-            (INotificationService service) => service.ResolveAsync(notificationId, pollingCancellation.Token)
+            (INotificationService service) =>
+                service.ResolveAsync(notificationId, pollingCancellation.Token)
         );
         await LoadPreviewAsync();
     }
@@ -100,7 +104,8 @@ public partial class NotificationBell(
     private async Task RefreshCountAsync()
     {
         unresolvedCount = await operationRunner.RunAsync(
-            (INotificationReadRepository repository) => repository.CountUnresolvedAsync(pollingCancellation.Token)
+            (INotificationReadRepository repository) =>
+                repository.CountUnresolvedAsync(pollingCancellation.Token)
         );
     }
 
