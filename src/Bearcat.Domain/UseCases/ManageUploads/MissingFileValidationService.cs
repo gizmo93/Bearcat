@@ -76,7 +76,8 @@ public class MissingFileValidationService(
             string.Join(", ", nonExistingFiles.Select(f => f.FullFileName))
         );
 
-        notificationService.CreateWarning(
+        notificationService.Create(
+            kind: NotificationKind.ArchiveFilesMissing,
             message: GetMissingFilesNotificationMessage(upload.UploadConfig.Release.ReleaseType),
             entity: upload,
             selector: n => n.Upload

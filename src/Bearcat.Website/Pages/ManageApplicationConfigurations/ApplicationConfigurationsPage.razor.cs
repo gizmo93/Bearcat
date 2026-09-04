@@ -1,4 +1,6 @@
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
+using Bearcat.Domain.UseCases.ManageNotifications;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Primitives;
 
@@ -9,6 +11,25 @@ public partial class ApplicationConfigurationsPage(IScopedOperationRunner operat
     private readonly Dictionary<string, string?> editorValues = [];
     private IReadOnlyList<ApplicationConfigurationDto> configurations = [];
     private bool isLoading = true;
+
+    private static IReadOnlyList<
+        IGrouping<NotificationGroup?, ApplicationConfigurationPropertyDto>
+    > GetPropertyGroups(ApplicationConfigurationDto configuration)
+    {
+        if (configuration.DisplayName != "NotificationSettings")
+        {
+            return [configuration.Properties.GroupBy(_ => (NotificationGroup?)null).Single()];
+        }
+
+        var groupsByPropertyName = NotificationDefinitions.All.ToDictionary(
+            definition => definition.Kind.ToString(),
+            definition => definition.Group
+        );
+
+        return configuration
+            .Properties.GroupBy(property => (NotificationGroup?)groupsByPropertyName[property.Name])
+            .ToList();
+    }
 
     protected override async Task OnInitializedAsync()
     {

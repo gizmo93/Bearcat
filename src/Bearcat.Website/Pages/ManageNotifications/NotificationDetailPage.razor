@@ -35,9 +35,10 @@
     <BbCard Class="border-border/70 shadow-sm">
         <BbCardHeader>
             <div class="flex flex-wrap items-center gap-2">
-                <BbBadge Variant="@GetNotificationVariant(notification.NotificationType)">
-                    @L.Localize(notification.NotificationType)
+                <BbBadge Variant="@GetNotificationVariant(notification.NotificationSeverity)">
+                    @L.Localize(notification.NotificationKind)
                 </BbBadge>
+                <span class="text-sm text-muted-foreground">@L.Localize(notification.NotificationSeverity)</span>
                 @if (notification.ResolvedAt is not null)
                 {
                     <span class="text-sm text-muted-foreground">@L["ResolvedAt"]: @notification.ResolvedAt.Value.ToString("g")</span>

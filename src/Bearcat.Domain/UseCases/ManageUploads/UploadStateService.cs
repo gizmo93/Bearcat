@@ -95,7 +95,8 @@ public class UploadStateService(
 
         upload.UploadState = UploadState.CancellationRequested;
 
-        notificationService.CreateInfo(
+        notificationService.Create(
+            kind: NotificationKind.UploadCancellationRequested,
             message: "Upload cancellation requested",
             entity: upload,
             selector: u => u.Upload
@@ -207,7 +208,8 @@ public class UploadStateService(
 
         SetOnlineState(upload: upload, onlineState: OnlineState.Offline, localNow: localNow);
 
-        notificationService.CreateWarning(
+        notificationService.Create(
+            kind: NotificationKind.UploadMarkedOffline,
             message: "Upload manually marked as offline",
             entity: upload,
             selector: u => u.Upload
@@ -371,7 +373,8 @@ public class UploadStateService(
                 && localNow - lastOnlineCheck.Value >= FailedCheckNotificationThreshold
             )
             {
-                notificationService.CreateError(
+                notificationService.Create(
+                    kind: NotificationKind.HosterStatusCheckFailed,
                     message: $"Failed to check file existence on hoster, Error messages: {string.Join(", ", result.ErrorMessages)}",
                     entity: upload,
                     selector: u => u.Upload
@@ -456,7 +459,8 @@ public class UploadStateService(
 
         var allOrSome = upload.OnlineState is OnlineState.Offline ? "All" : "Some";
 
-        notificationService.CreateWarning(
+        notificationService.Create(
+            kind: NotificationKind.FilesOffline,
             message: $"{allOrSome} files are offline on the hoster",
             entity: upload,
             selector: u => u.Upload
@@ -511,7 +515,8 @@ public class UploadStateService(
             PremiumOnlyDownload = upload.UploadConfig.PremiumOnlyDownload,
         };
 
-        notificationService.CreateInfo(
+        notificationService.Create(
+            kind: NotificationKind.AutomaticReuploadCreated,
             message: notificationMessage,
             entity: upload,
             selector: u => u.Upload
@@ -654,7 +659,8 @@ public class UploadStateService(
                 };
                 uploadStateRepository.Add(upload);
 
-                notificationService.CreateInfo(
+                notificationService.Create(
+                    kind: NotificationKind.InitialUploadCreated,
                     message: "Initial upload created for release",
                     entity: upload,
                     selector: u => u.Upload

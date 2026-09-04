@@ -3,28 +3,51 @@
 <PageTitle>@L["Notifications"] - Bearcat</PageTitle>
 
 <section class="mx-auto flex w-full max-w-6xl flex-col gap-4">
-    <div class="bearcat-page-header">
+    <div class="mb-2 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div class="min-w-0">
             <h1 class="text-3xl font-semibold tracking-tight">@L["Notifications"]</h1>
             <p class="mt-2 max-w-2xl text-sm text-muted-foreground">
                 @L["NotificationsIntro"]
             </p>
         </div>
-        <div class="flex flex-wrap items-center gap-3">
-            <label class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <BbSwitch @bind-Checked="includeResolved"
-                          @bind-Checked:after="OnIncludeResolvedChangedAsync"
-                          Size="SwitchSize.Small"
-                          AriaLabel="@L["ShowResolvedNotifications"]" />
-                <span>@L["ShowResolvedNotifications"]</span>
-            </label>
+        <BbButton Href="/configurations#notification-settings"
+                  Variant="ButtonVariant.Outline"
+                  Class="shrink-0 self-start gap-2.5 whitespace-nowrap">
+            <LucideIcon Name="settings" class="h-4 w-4 shrink-0" />
+            <span>@L["NotificationSettings"]</span>
+        </BbButton>
+    </div>
 
-            <BbButton Variant="ButtonVariant.Outline" OnClick="RefreshNotificationsAsync">
+    <div class="flex flex-wrap items-end gap-x-6 gap-y-4 rounded-lg border border-border bg-card p-4 sm:px-5">
+        <div class="flex min-w-0 grow basis-full flex-col gap-2 sm:max-w-96 sm:basis-72" role="group" aria-labelledby="notification-kind-filter-label">
+            <span id="notification-kind-filter-label" class="text-xs font-medium text-muted-foreground">@L["NotificationKindFilter"]</span>
+            <BbSelect TValue="NotificationKind?"
+                      @bind-Value="selectedNotificationKind"
+                      @bind-Value:after="OnNotificationKindChangedAsync"
+                      Options="NotificationKindOptions"
+                      Placeholder="@L["AllNotificationKinds"]"
+                      Class="w-full" />
+        </div>
+
+        <label class="flex min-h-10 shrink-0 items-center gap-2.5 text-sm font-medium whitespace-nowrap">
+            <BbSwitch @bind-Checked="includeResolved"
+                      @bind-Checked:after="OnIncludeResolvedChangedAsync"
+                      Size="SwitchSize.Small"
+                      AriaLabel="@L["ShowResolvedNotifications"]" />
+            <span>@L["ShowResolvedNotifications"]</span>
+        </label>
+
+        <div class="flex shrink-0 flex-wrap items-center gap-2 sm:ml-auto sm:flex-nowrap">
+            <BbButton Variant="ButtonVariant.Ghost"
+                      Disabled="isLoading"
+                      OnClick="RefreshNotificationsAsync">
                 <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
                 @L["Refresh"]
             </BbButton>
 
-            <BbButton Disabled="@(unresolvedCount == 0)" OnClick="ResolveAllNotificationsAsync">
+            <BbButton Variant="ButtonVariant.Outline"
+                      Disabled="@(isLoading || unresolvedCount == 0)"
+                      OnClick="ResolveAllNotificationsAsync">
                 <LucideIcon Name="check-check" class="h-4 w-4" />
                 @L["ResolveAllNotifications"]
             </BbButton>
@@ -42,12 +65,12 @@
                  Class="bearcat-data-table bearcat-notifications-table">
         <Columns>
             <BbDataTableColumn TData="NotificationReadModel" TValue="string"
-                               Header="@L["Type"]"
-                               Property="@(notification => notification.NotificationType.ToString())"
+                               Header="@L["NotificationSeverityLabel"]"
+                               Property="@(notification => notification.NotificationSeverity.ToString())"
                                Width="130px">
                 <CellTemplate Context="notification">
-                    <BbBadge Variant="@GetNotificationVariant(notification.NotificationType)">
-                        @L.Localize(notification.NotificationType)
+                    <BbBadge Variant="@GetNotificationVariant(notification.NotificationSeverity)">
+                        @L.Localize(notification.NotificationSeverity)
                     </BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>

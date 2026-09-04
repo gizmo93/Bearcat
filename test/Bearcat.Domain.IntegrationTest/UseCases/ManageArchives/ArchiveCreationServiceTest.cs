@@ -67,7 +67,11 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             archiverFactoryMock.Object,
             new FileSystemService(),
             CreateTimeProvider(),
-            new NotificationService(new NotificationRepository(dbContext), CreateTimeProvider()),
+            new NotificationService(
+                repository: new NotificationRepository(dbContext),
+                timeProvider: CreateTimeProvider(),
+                configurationProvider: CreateNotificationConfigurationProvider()
+            ),
             configurationProviderMock.Object
         );
     }
@@ -826,7 +830,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         result.ErrorMessages.ShouldBe(["Could not create archive"]);
         result.Uploads.Single().Id.ShouldBe(upload.Id);
         result.Uploads.Single().UploadState.ShouldBe(UploadState.WaitingForArchive);
-        result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Error);
+        result.Notifications.Single().NotificationSeverity.ShouldBe(NotificationSeverity.Error);
         result
             .Notifications.Single()
             .Message.ShouldBe("Failed to create archive: Could not create archive");

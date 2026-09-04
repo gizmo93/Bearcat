@@ -186,7 +186,8 @@ public class CollectionLinkCrypterContainerService(
 
         if (!result.IsSuccess)
         {
-            notificationService.CreateError(
+            notificationService.Create(
+                kind: NotificationKind.LinkCrypterContainerCreationFailed,
                 message: $"Failed to create collection link crypter container for upload slot {slot.Id} using link crypter {linkCrypterConfig.Id}. Errors: {string.Join("; ", result.ErrorMessages)}",
                 entity: container,
                 selector: n => n.LinkCrypterContainer
@@ -232,7 +233,8 @@ public class CollectionLinkCrypterContainerService(
 
         if (!result.IsSuccess)
         {
-            notificationService.CreateError(
+            notificationService.Create(
+                kind: NotificationKind.LinkCrypterContainerUpdateFailed,
                 message: $"Failed to update collection link crypter container {container.Id} using link crypter config Id {linkCrypterConfig.Id} with crypter {linkCrypterConfig.LinkCrypterRegistration.Name}. Errors: {result.ErrorMessage}",
                 entity: container,
                 selector: n => n.LinkCrypterContainer
@@ -271,7 +273,8 @@ public class CollectionLinkCrypterContainerService(
     {
         container.Errors = [errorMessage];
         container.State = LinkCrypterContainerState.CreationFailed;
-        notificationService.CreateError(
+        notificationService.Create(
+            kind: NotificationKind.CollectionLinkCrypterContainerInvalid,
             message: $"Collection link crypter container {container.Id} is invalid: {errorMessage}",
             entity: container,
             selector: n => n.LinkCrypterContainer

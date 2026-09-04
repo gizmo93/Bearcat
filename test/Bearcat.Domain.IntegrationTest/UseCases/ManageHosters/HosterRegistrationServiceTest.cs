@@ -4,6 +4,7 @@ using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageHosters;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.Security;
@@ -61,7 +62,13 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
             .Setup(h => h.TryLoginAsync(hosterConfigMock.Object, CancellationToken.None))
             .ThrowsAsync(new CaptchaVerificationRequiredException("Captcha required", 400, 2));
         notificationServiceMock
-            .Setup(n => n.CreateWarningAsync(It.IsAny<string>(), CancellationToken.None))
+            .Setup(n =>
+                n.CreateAsync(
+                    NotificationKind.CaptchaVerificationRequired,
+                    It.IsAny<string>(),
+                    CancellationToken.None
+                )
+            )
             .Returns(Task.CompletedTask);
 
         // Act
@@ -75,7 +82,8 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         updatedRegistration.RequiresCaptchaVerification.ShouldBeTrue();
         notificationServiceMock.Verify(
             n =>
-                n.CreateWarningAsync(
+                n.CreateAsync(
+                    NotificationKind.CaptchaVerificationRequired,
                     It.Is<string>(message => message.Contains("Captcha required")),
                     CancellationToken.None
                 ),
@@ -414,7 +422,13 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         // Arrange
         var registration = await AddHosterRegistrationAsync(isActive: true);
         notificationServiceMock
-            .Setup(n => n.CreateWarningAsync(It.IsAny<string>(), CancellationToken.None))
+            .Setup(n =>
+                n.CreateAsync(
+                    NotificationKind.CaptchaVerificationRequired,
+                    It.IsAny<string>(),
+                    CancellationToken.None
+                )
+            )
             .Returns(Task.CompletedTask);
 
         // Act
@@ -430,7 +444,8 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         updated.IsActive.ShouldBeFalse();
         notificationServiceMock.Verify(
             n =>
-                n.CreateWarningAsync(
+                n.CreateAsync(
+                    NotificationKind.CaptchaVerificationRequired,
                     It.Is<string>(message => message.Contains("captcha please")),
                     CancellationToken.None
                 ),

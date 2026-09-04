@@ -1,4 +1,5 @@
 ﻿using Bearcat.Domain.Entities;
+using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.Shared;
 
@@ -12,9 +13,10 @@ public class HosterCaptchaVerificationService(INotificationService notificationS
     {
         MarkRequired(registration);
 
-        await notificationService.CreateWarningAsync(
-            CreateMessage(registration, message),
-            cancellationToken
+        await notificationService.CreateAsync(
+            kind: NotificationKind.CaptchaVerificationRequired,
+            message: CreateMessage(registration, message),
+            cancellationToken: cancellationToken
         );
     }
 
@@ -23,7 +25,8 @@ public class HosterCaptchaVerificationService(INotificationService notificationS
         var registration = upload.UploadConfig.HosterRegistration;
         MarkRequired(registration);
 
-        notificationService.CreateWarning(
+        notificationService.Create(
+            kind: NotificationKind.CaptchaVerificationRequired,
             message: CreateMessage(registration, message),
             entity: upload,
             selector: n => n.Upload

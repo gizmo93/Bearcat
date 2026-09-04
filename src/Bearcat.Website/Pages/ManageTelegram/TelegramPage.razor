@@ -168,23 +168,23 @@
 
             <BbCard Class="border-border/70 shadow-sm">
                 <BbCardHeader>
-                    <BbCardTitle class="text-base">@L["ForwardNotificationTypes"]</BbCardTitle>
-                    <BbCardDescription>@L["ForwardNotificationTypesHelp"]</BbCardDescription>
+                    <BbCardTitle class="text-base">@L["ForwardNotificationSeverities"]</BbCardTitle>
+                    <BbCardDescription>@L["ForwardNotificationSeveritiesHelp"]</BbCardDescription>
                 </BbCardHeader>
                 <BbCardContent>
                     <div class="space-y-4">
                         <div class="flex flex-wrap gap-6">
                             <div class="flex items-center gap-2">
                                 <BbCheckbox @bind-Checked="forwardInfo" Id="telegram-info" />
-                                <BbLabel For="telegram-info">@L["NotificationType.Info"]</BbLabel>
+                                <BbLabel For="telegram-info">@L["NotificationSeverity.Info"]</BbLabel>
                             </div>
                             <div class="flex items-center gap-2">
                                 <BbCheckbox @bind-Checked="forwardWarning" Id="telegram-warning" />
-                                <BbLabel For="telegram-warning">@L["NotificationType.Warning"]</BbLabel>
+                                <BbLabel For="telegram-warning">@L["NotificationSeverity.Warning"]</BbLabel>
                             </div>
                             <div class="flex items-center gap-2">
                                 <BbCheckbox @bind-Checked="forwardError" Id="telegram-error" />
-                                <BbLabel For="telegram-error">@L["NotificationType.Error"]</BbLabel>
+                                <BbLabel For="telegram-error">@L["NotificationSeverity.Error"]</BbLabel>
                             </div>
                         </div>
 

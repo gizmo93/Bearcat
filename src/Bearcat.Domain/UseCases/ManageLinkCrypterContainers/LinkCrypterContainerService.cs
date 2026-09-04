@@ -206,7 +206,8 @@ public class LinkCrypterContainerService(
                 ? []
                 : [result.ErrorMessage];
             previousContainer.State = LinkCrypterContainerState.CreationFailed;
-            notificationService.CreateError(
+            notificationService.Create(
+                kind: NotificationKind.LinkCrypterContainerUpdateFailed,
                 message: $"Failed to update link crypter container for upload {upload.Id} using link crypter config Id {linkCrypterConfig.Id} with crypter {linkCrypterConfig.LinkCrypterRegistration.Name}. Errors: {result.ErrorMessage}",
                 entity: previousContainer,
                 selector: n => n.LinkCrypterContainer
@@ -291,7 +292,8 @@ public class LinkCrypterContainerService(
                 string.Join("; ", result.ErrorMessages)
             );
 
-            notificationService.CreateError(
+            notificationService.Create(
+                kind: NotificationKind.LinkCrypterContainerCreationFailed,
                 message: $"Failed to create link crypter container for upload {upload.Id} using link crypter {linkCrypterConfig.Id}. Errors: {string.Join("; ", result.ErrorMessages)}",
                 entity: container,
                 selector: n => n.LinkCrypterContainer

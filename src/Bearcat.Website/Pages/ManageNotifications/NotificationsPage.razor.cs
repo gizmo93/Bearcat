@@ -3,8 +3,10 @@ using Bearcat.Domain.UseCases.ManageNotifications.Dto;
 using Bearcat.Domain.UseCases.ManageNotifications.ReadModels;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
+using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManageNotifications;
@@ -21,13 +23,21 @@ public partial class NotificationsPage(
     private int unresolvedCount;
     private bool includeResolved;
     private bool isLoading;
+    private NotificationKind? selectedNotificationKind;
+
+    private IReadOnlyList<SelectOption<NotificationKind?>> NotificationKindOptions =>
+        [
+            new(null, L["AllNotificationKinds"]),
+            .. Enum.GetValues<NotificationKind>()
+                .Select(kind => new SelectOption<NotificationKind?>(kind, L.Localize(kind))),
+        ];
 
     private int CurrentPage => totalCount == 0 ? 1 : pageIndex + 1;
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
     private int FirstResult => totalCount == 0 ? 0 : pageIndex * pageSize + 1;
     private int LastResult => Math.Min(totalCount, (pageIndex + 1) * pageSize);
     private string NotificationsTableKey =>
-        $"{includeResolved}-{pageIndex}-{pageSize}-{totalCount}";
+        $"{selectedNotificationKind}-{includeResolved}-{pageIndex}-{pageSize}-{totalCount}";
 
     private IReadOnlyList<int?> PaginationItems
     {
@@ -74,7 +84,12 @@ public partial class NotificationsPage(
                 async (INotificationReadRepository repository) =>
                 {
                     var searchResult = await repository.SearchAsync(
-                        new NotificationSearchQuery(pageIndex, pageSize, includeResolved)
+                        new NotificationSearchQuery(
+                            PageIndex: pageIndex,
+                            PageSize: pageSize,
+                            IncludeResolved: includeResolved,
+                            NotificationKind: selectedNotificationKind
+                        )
                     );
                     var count = await repository.CountUnresolvedAsync();
                     return (searchResult, count);
@@ -120,6 +135,12 @@ public partial class NotificationsPage(
         await RefreshNotificationsAsync();
     }
 
+    private async Task OnNotificationKindChangedAsync()
+    {
+        pageIndex = 0;
+        await RefreshNotificationsAsync();
+    }
+
     private void OpenDetails(int notificationId)
     {
         navigationManager.NavigateTo($"/notifications/{notificationId}");
@@ -147,11 +168,11 @@ public partial class NotificationsPage(
         await GoToPageAsync(CurrentPage + 1);
     }
 
-    private static BadgeVariant GetNotificationVariant(NotificationType notificationType) =>
-        notificationType switch
+    private static BadgeVariant GetNotificationVariant(NotificationSeverity notificationSeverity) =>
+        notificationSeverity switch
         {
-            NotificationType.Error => BadgeVariant.Destructive,
-            NotificationType.Warning => BadgeVariant.Secondary,
+            NotificationSeverity.Error => BadgeVariant.Destructive,
+            NotificationSeverity.Warning => BadgeVariant.Secondary,
             _ => BadgeVariant.Outline,
         };
 

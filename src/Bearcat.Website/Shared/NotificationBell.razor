@@ -42,8 +42,8 @@
                     <div class="bearcat-notification-preview-row">
                         <a href="@($"/notifications/{notification.NotificationId}")" class="bearcat-notification-preview-link">
                             <span class="flex min-w-0 items-center gap-2">
-                                <BbBadge Variant="@GetNotificationVariant(notification.NotificationType)">
-                                    @L.Localize(notification.NotificationType)
+                                <BbBadge Variant="@GetNotificationVariant(notification.NotificationSeverity)">
+                                    @L.Localize(notification.NotificationSeverity)
                                 </BbBadge>
                                 <span class="truncate text-xs text-muted-foreground">@notification.CreatedAt.ToString("g")</span>
                             </span>

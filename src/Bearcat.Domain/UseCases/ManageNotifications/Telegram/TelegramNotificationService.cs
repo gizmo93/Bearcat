@@ -525,18 +525,18 @@ public sealed class TelegramNotificationService(
         NotificationRelatedEntityReadModel? relatedEntity
     )
     {
-        var icon = notification.NotificationType switch
+        var icon = notification.NotificationSeverity switch
         {
-            NotificationType.Info => "ℹ️",
-            NotificationType.Warning => "⚠️",
-            NotificationType.Error => "🔴",
+            NotificationSeverity.Info => "ℹ️",
+            NotificationSeverity.Warning => "⚠️",
+            NotificationSeverity.Error => "🔴",
             _ => "🔔",
         };
         var url = $"{configuration.NotificationBaseUrl}/notifications/{notification.Id}";
 
         var builder = new StringBuilder();
         builder.Append(
-            $"{icon} Bearcat: {notification.NotificationType}\n\n{notification.Message}"
+            $"{icon} Bearcat: {notification.NotificationSeverity}\n\n{notification.Message}"
         );
 
         if (relatedEntity is not null)

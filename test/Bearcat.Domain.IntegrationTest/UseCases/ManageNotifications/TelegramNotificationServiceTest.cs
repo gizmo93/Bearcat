@@ -90,20 +90,23 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
             new Notification
             {
                 CreatedAt = DateTime.UtcNow,
-                NotificationType = NotificationType.Info,
+                NotificationSeverity = NotificationSeverity.Info,
+                NotificationKind = NotificationKind.UploadCompleted,
                 Message = "Upload completed",
             },
             new Notification
             {
                 CreatedAt = DateTime.UtcNow,
-                NotificationType = NotificationType.Error,
+                NotificationSeverity = NotificationSeverity.Error,
+                NotificationKind = NotificationKind.UploadFailed,
                 Message = "Upload failed",
             },
             new Notification
             {
                 CreatedAt = DateTime.UtcNow,
                 ResolvedAt = DateTime.UtcNow,
-                NotificationType = NotificationType.Error,
+                NotificationSeverity = NotificationSeverity.Error,
+                NotificationKind = NotificationKind.UploadFailed,
                 Message = "Already resolved",
             }
         );
@@ -115,7 +118,7 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
         var delivery = await writeDbContext
             .TelegramDeliveries.Include(item => item.Notification)
             .SingleAsync();
-        delivery.Notification.NotificationType.ShouldBe(NotificationType.Error);
+        delivery.Notification.NotificationSeverity.ShouldBe(NotificationSeverity.Error);
         delivery.DeliveredAt.ShouldNotBeNull();
         telegram.LastSentMessage.ShouldContain("Upload failed");
         telegram.LastSentMessage.ShouldContain(
@@ -162,7 +165,8 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
             new Notification
             {
                 CreatedAt = DateTime.UtcNow,
-                NotificationType = NotificationType.Warning,
+                NotificationSeverity = NotificationSeverity.Warning,
+                NotificationKind = NotificationKind.FilesOffline,
                 Message = "All files are offline on the hoster",
                 Release = release,
             }

@@ -10,7 +10,9 @@ public class Notification
 
     public DateTime? ResolvedAt { get; set; }
 
-    public NotificationType NotificationType { get; set; }
+    public NotificationSeverity NotificationSeverity { get; set; }
+
+    public NotificationKind NotificationKind { get; set; }
 
     public string Message { get; set; } = null!;
 

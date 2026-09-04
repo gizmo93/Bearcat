@@ -1,4 +1,5 @@
-﻿using Bearcat.Application.InversionOfControl;
+﻿using Bearcat.Abstractions.Configurations;
+using Bearcat.Application.InversionOfControl;
 using Bearcat.Archivers.InversionOfControl;
 using Bearcat.DistributionSites.InversionOfControl;
 using Bearcat.Domain.InversionOfControl;
@@ -155,5 +156,9 @@ if (app.Environment.IsProduction() || isDesktopMode)
     var dbContext = scope.ServiceProvider.GetRequiredService<BearcatDbContext>();
     await dbContext.Database.MigrateAsync();
 }
+
+await app
+    .Services.GetRequiredService<IApplicationConfigurationOverrideCache>()
+    .RefreshAsync(CancellationToken.None);
 
 await app.RunAsync();

@@ -46,8 +46,9 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
 
         var repository = new LinkCrypterContainerCreationWriteRepository(dbContext);
         var notificationService = new NotificationService(
-            new NotificationRepository(dbContext),
-            CreateTimeProvider()
+            repository: new NotificationRepository(dbContext),
+            timeProvider: CreateTimeProvider(),
+            configurationProvider: CreateNotificationConfigurationProvider()
         );
 
         collectionContainerService = new CollectionLinkCrypterContainerService(
@@ -158,7 +159,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         result.State.ShouldBe(LinkCrypterContainerState.CreationFailed);
         result.ContainerUrl.ShouldBeEmpty();
         result.Errors.ShouldBe(["Could not create container"]);
-        result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Error);
+        result.Notifications.Single().NotificationSeverity.ShouldBe(NotificationSeverity.Error);
         result
             .Notifications.Single()
             .Message.ShouldContain("Failed to create link crypter container");

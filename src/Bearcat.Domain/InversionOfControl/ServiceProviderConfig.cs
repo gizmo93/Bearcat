@@ -108,6 +108,7 @@ public static class ServiceProviderConfig
             services.AddApplicationConfiguration<InitialUploadConfiguration>();
             services.AddApplicationConfiguration<FolderAutomationConfiguration>();
             services.AddApplicationConfiguration<UploadConcurrencyConfiguration>();
+            services.AddApplicationConfiguration<NotificationConfiguration>();
             services.AddApplicationConfiguration<PostQueueConfiguration>();
             services.AddSingleton<ApplicationConfigurationRegistry>();
             services.AddScoped<

@@ -79,6 +79,13 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
             notificationsQuery = notificationsQuery.Where(n => n.ResolvedAt == null);
         }
 
+        if (query.NotificationKind is not null)
+        {
+            notificationsQuery = notificationsQuery.Where(n =>
+                n.NotificationKind == query.NotificationKind
+            );
+        }
+
         var totalCount = await notificationsQuery.CountAsync(cancellationToken);
 
         var notifications = await notificationsQuery
@@ -108,7 +115,8 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
             n.Id,
             n.CreatedAt,
             n.ResolvedAt,
-            n.NotificationType,
+            n.NotificationSeverity,
+            n.NotificationKind,
             n.Message,
             n.UploadId,
             n.UploadId == null ? null : n.Upload!.UploadConfigId,
@@ -151,7 +159,8 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
             NotificationId: notification.Id,
             CreatedAt: notification.CreatedAt,
             ResolvedAt: notification.ResolvedAt,
-            NotificationType: notification.NotificationType,
+            NotificationSeverity: notification.NotificationSeverity,
+            NotificationKind: notification.NotificationKind,
             Message: notification.Message,
             RelatedEntity: CreateRelatedEntity(notification)
         );
@@ -232,7 +241,8 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
         int Id,
         DateTime CreatedAt,
         DateTime? ResolvedAt,
-        NotificationType NotificationType,
+        NotificationSeverity NotificationSeverity,
+        NotificationKind NotificationKind,
         string Message,
         int? UploadId,
         int? UploadConfigId,

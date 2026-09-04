@@ -1,5 +1,7 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
+using Bearcat.Abstractions.Configurations;
+using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
@@ -8,22 +10,24 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ManageNotifications;
 
-public class NotificationService(INotificationRepository repository, TimeProvider timeProvider)
-    : INotificationService
+public class NotificationService(
+    INotificationRepository repository,
+    TimeProvider timeProvider,
+    IApplicationConfigurationProvider configurationProvider
+) : INotificationService
 {
-    public async Task CreateInfoAsync(string message, CancellationToken cancellationToken)
+    public async Task CreateAsync(
+        NotificationKind kind,
+        string message,
+        CancellationToken cancellationToken
+    )
     {
-        await CreateAsync(NotificationType.Info, message, cancellationToken);
-    }
+        if (IsEnabled(kind))
+        {
+            repository.Add(CreateNotification(kind, message));
+        }
 
-    public async Task CreateWarningAsync(string message, CancellationToken cancellationToken)
-    {
-        await CreateAsync(NotificationType.Warning, message, cancellationToken);
-    }
-
-    public async Task CreateErrorAsync(string message, CancellationToken cancellationToken)
-    {
-        await CreateAsync(NotificationType.Error, message, cancellationToken);
+        await repository.SaveChangesAsync(cancellationToken);
     }
 
     public async Task ResolveAsync(
@@ -32,9 +36,9 @@ public class NotificationService(INotificationRepository repository, TimeProvide
     )
     {
         await repository.ResolveAsync(
-            notificationId,
-            timeProvider.GetLocalNow(),
-            cancellationToken
+            notificationId: notificationId,
+            resolvedAt: timeProvider.GetLocalNow(),
+            cancellationToken: cancellationToken
         );
     }
 
@@ -43,68 +47,75 @@ public class NotificationService(INotificationRepository repository, TimeProvide
         await repository.ResolveAllAsync(timeProvider.GetLocalNow(), cancellationToken);
     }
 
-    public void CreateInfo<TEntity>(
-        string message,
-        TEntity entity,
-        Expression<Func<Notification, TEntity?>> selector
-    )
-    {
-        Create(NotificationType.Info, message, entity, selector);
-    }
-
-    public void CreateWarning<TEntity>(
-        string message,
-        TEntity entity,
-        Expression<Func<Notification, TEntity?>> selector
-    )
-    {
-        Create(NotificationType.Warning, message, entity, selector);
-    }
-
-    public void CreateError<TEntity>(
-        string message,
-        TEntity entity,
-        Expression<Func<Notification, TEntity?>> selector
-    )
-    {
-        Create(NotificationType.Error, message, entity, selector);
-    }
-
     public void Create<TEntity>(
-        NotificationType type,
+        NotificationKind kind,
         string message,
         TEntity entity,
         Expression<Func<Notification, TEntity?>> selector
     )
     {
-        var notification = new Notification
+        if (!IsEnabled(kind))
         {
-            NotificationType = type,
-            Message = message,
-            CreatedAt = timeProvider.GetLocalNow(),
-        };
+            return;
+        }
+
+        var notification = CreateNotification(kind, message);
 
         var member = (MemberExpression)selector.Body;
         var property = (PropertyInfo)member.Member;
-        property.SetValue(notification, entity, null);
+        property.SetValue(obj: notification, value: entity, index: null);
 
         repository.Add(notification);
     }
 
-    private async Task CreateAsync(
-        NotificationType type,
-        string message,
-        CancellationToken cancellationToken
-    )
+    private Notification CreateNotification(NotificationKind kind, string message)
     {
-        var notification = new Notification
+        var definition = NotificationDefinitions.Get(kind);
+
+        return new Notification
         {
-            NotificationType = type,
+            NotificationKind = kind,
+            NotificationSeverity = definition.Severity,
             Message = message,
             CreatedAt = timeProvider.GetLocalNow(),
         };
+    }
 
-        repository.Add(notification);
-        await repository.SaveChangesAsync(cancellationToken);
+    private bool IsEnabled(NotificationKind kind)
+    {
+        NotificationDefinitions.Get(kind);
+        var configuration = configurationProvider.GetConfiguration<NotificationConfiguration>();
+
+        return kind switch
+        {
+            NotificationKind.ReleaseAutomaticallyCreated =>
+                configuration.ReleaseAutomaticallyCreated,
+            NotificationKind.ReleaseFolderMissing => configuration.ReleaseFolderMissing,
+            NotificationKind.ArchiveCreationFailed => configuration.ArchiveCreationFailed,
+            NotificationKind.ArchiveFilesMissing => configuration.ArchiveFilesMissing,
+            NotificationKind.InitialUploadCreated => configuration.InitialUploadCreated,
+            NotificationKind.UploadCompleted => configuration.UploadCompleted,
+            NotificationKind.UploadFailed => configuration.UploadFailed,
+            NotificationKind.UploadCancellationRequested =>
+                configuration.UploadCancellationRequested,
+            NotificationKind.UploadCanceled => configuration.UploadCanceled,
+            NotificationKind.FilesOffline => configuration.FilesOffline,
+            NotificationKind.UploadMarkedOffline => configuration.UploadMarkedOffline,
+            NotificationKind.HosterStatusCheckFailed => configuration.HosterStatusCheckFailed,
+            NotificationKind.AutomaticReuploadCreated => configuration.AutomaticReuploadCreated,
+            NotificationKind.CaptchaVerificationRequired =>
+                configuration.CaptchaVerificationRequired,
+            NotificationKind.LinkCrypterContainerCreationFailed =>
+                configuration.LinkCrypterContainerCreationFailed,
+            NotificationKind.LinkCrypterContainerUpdateFailed =>
+                configuration.LinkCrypterContainerUpdateFailed,
+            NotificationKind.CollectionLinkCrypterContainerInvalid =>
+                configuration.CollectionLinkCrypterContainerInvalid,
+            _ => throw new ArgumentOutOfRangeException(
+                paramName: nameof(kind),
+                actualValue: kind,
+                message: "Notifications must use a defined notification kind."
+            ),
+        };
     }
 }

@@ -43,8 +43,9 @@ public class ReleaseCollectionServiceTest : BearcatIntegrationTest
                 new Mock<ILinkCrypterFactory>().Object,
                 CreateTimeProvider(),
                 new NotificationService(
-                    new NotificationRepository(dbContext),
-                    CreateTimeProvider()
+                    repository: new NotificationRepository(dbContext),
+                    timeProvider: CreateTimeProvider(),
+                    configurationProvider: CreateNotificationConfigurationProvider()
                 ),
                 NoOpSecretProtector.Instance
             ),

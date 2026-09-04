@@ -126,11 +126,11 @@ public partial class NotificationBell(
         catch (OperationCanceledException) { }
     }
 
-    private static BadgeVariant GetNotificationVariant(NotificationType notificationType) =>
-        notificationType switch
+    private static BadgeVariant GetNotificationVariant(NotificationSeverity notificationSeverity) =>
+        notificationSeverity switch
         {
-            NotificationType.Error => BadgeVariant.Destructive,
-            NotificationType.Warning => BadgeVariant.Secondary,
+            NotificationSeverity.Error => BadgeVariant.Destructive,
+            NotificationSeverity.Warning => BadgeVariant.Secondary,
             _ => BadgeVariant.Outline,
         };
 

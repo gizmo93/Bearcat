@@ -470,7 +470,8 @@ public class ArchiveCreationService(
             foreach (var upload in uploads)
             {
                 upload.UploadState = UploadState.Failed;
-                notificationService.CreateError(
+                notificationService.Create(
+                    kind: NotificationKind.ReleaseFolderMissing,
                     message: $"Release folder path {releaseFolderPath} does not exist.",
                     entity: upload,
                     selector: n => n.Upload
@@ -540,7 +541,8 @@ public class ArchiveCreationService(
             archive.ArchiveState = ArchiveState.CreationFailed;
             archive.ErrorMessages.AddRange(archiveResult.ErrorMessages ?? []);
 
-            notificationService.CreateError(
+            notificationService.Create(
+                kind: NotificationKind.ArchiveCreationFailed,
                 message: $"Failed to create archive: {string.Join(", ", archiveResult.ErrorMessages ?? [])}",
                 entity: archive,
                 selector: n => n.Archive

@@ -6,7 +6,8 @@ public record NotificationReadModel(
     int NotificationId,
     DateTime CreatedAt,
     DateTime? ResolvedAt,
-    NotificationType NotificationType,
+    NotificationSeverity NotificationSeverity,
+    NotificationKind NotificationKind,
     string Message,
     NotificationRelatedEntityReadModel? RelatedEntity
 );

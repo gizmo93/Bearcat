@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Configurations;
 using Bearcat.Infrastructure.Database;
 using NUnit.Framework;
 
@@ -39,5 +40,44 @@ public abstract class BearcatIntegrationTest
         dbContexts.Add(dbContext);
 
         return dbContext;
+    }
+
+    protected static IApplicationConfigurationProvider CreateNotificationConfigurationProvider() =>
+        new TestApplicationConfigurationProvider();
+
+    private sealed class TestApplicationConfigurationProvider : IApplicationConfigurationProvider
+    {
+        public TConfiguration GetConfiguration<TConfiguration>()
+            where TConfiguration : IApplicationConfiguration, new() => new();
+
+        public bool GetValue<TConfiguration>(
+            System.Linq.Expressions.Expression<Func<TConfiguration, bool>> propertySelector
+        )
+            where TConfiguration : IApplicationConfiguration, new() =>
+            propertySelector.Compile()(new());
+
+        public int GetValue<TConfiguration>(
+            System.Linq.Expressions.Expression<Func<TConfiguration, int>> propertySelector
+        )
+            where TConfiguration : IApplicationConfiguration, new() =>
+            propertySelector.Compile()(new());
+
+        public int? GetValue<TConfiguration>(
+            System.Linq.Expressions.Expression<Func<TConfiguration, int?>> propertySelector
+        )
+            where TConfiguration : IApplicationConfiguration, new() =>
+            propertySelector.Compile()(new());
+
+        public string? GetValue<TConfiguration>(
+            System.Linq.Expressions.Expression<Func<TConfiguration, string?>> propertySelector
+        )
+            where TConfiguration : IApplicationConfiguration, new() =>
+            propertySelector.Compile()(new());
+
+        public TValue GetValue<TConfiguration, TValue>(
+            System.Linq.Expressions.Expression<Func<TConfiguration, TValue>> propertySelector
+        )
+            where TConfiguration : IApplicationConfiguration, new() =>
+            propertySelector.Compile()(new());
     }
 }

@@ -491,9 +491,9 @@
   <data name="NotificationResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} notifications</value></data>
   <data name="Notifications" xml:space="preserve"><value>Notifications</value></data>
   <data name="NotificationsIntro" xml:space="preserve"><value>Unresolved messages from uploads, archives, and link crypters.</value></data>
-  <data name="NotificationType.Error" xml:space="preserve"><value>Error</value></data>
-  <data name="NotificationType.Info" xml:space="preserve"><value>Info</value></data>
-  <data name="NotificationType.Warning" xml:space="preserve"><value>Warning</value></data>
+  <data name="NotificationSeverity.Error" xml:space="preserve"><value>Error</value></data>
+  <data name="NotificationSeverity.Info" xml:space="preserve"><value>Info</value></data>
+  <data name="NotificationSeverity.Warning" xml:space="preserve"><value>Warning</value></data>
   <data name="NoUnresolvedNotifications" xml:space="preserve"><value>No unresolved notifications</value></data>
   <data name="OpenNotifications" xml:space="preserve"><value>Open notifications</value></data>
   <data name="OpenRelatedEntity" xml:space="preserve"><value>Open related item</value></data>
@@ -998,8 +998,8 @@
   <data name="TelegramResendLink" xml:space="preserve"><value>Generate a new link</value></data>
   <data name="OpenTelegram" xml:space="preserve"><value>Open Telegram</value></data>
   <data name="CheckConnection" xml:space="preserve"><value>Check connection</value></data>
-  <data name="ForwardNotificationTypes" xml:space="preserve"><value>Forwarded notification types</value></data>
-  <data name="ForwardNotificationTypesHelp" xml:space="preserve"><value>Choose which notification types Bearcat sends to Telegram.</value></data>
+  <data name="ForwardNotificationSeverities" xml:space="preserve"><value>Forwarded severity levels</value></data>
+  <data name="ForwardNotificationSeveritiesHelp" xml:space="preserve"><value>Choose which notification severity levels Bearcat sends to Telegram.</value></data>
   <data name="SendTestNotification" xml:space="preserve"><value>Send test notification</value></data>
   <data name="TelegramConfigurationSaved" xml:space="preserve"><value>Telegram configuration saved.</value></data>
   <data name="TelegramLevelsSaved" xml:space="preserve"><value>Notification types saved.</value></data>
@@ -1014,4 +1014,33 @@
   <data name="TelegramLastDelivered" xml:space="preserve"><value>Last delivered {0}</value></data>
   <data name="TelegramNothingDelivered" xml:space="preserve"><value>Nothing delivered yet</value></data>
   <data name="TelegramLastError" xml:space="preserve"><value>Last error: {0}</value></data>
+  <data name="NotificationSettings" xml:space="preserve"><value>Notification settings</value></data>
+  <data name="NotificationSettingsDescription" xml:space="preserve"><value>Choose which events create notifications for this Bearcat instance. Changes apply only to future notifications; existing notifications and queued Telegram deliveries remain unchanged.</value></data>
+  <data name="NotificationGroup.Releases" xml:space="preserve"><value>Releases</value></data>
+  <data name="NotificationGroup.Archives" xml:space="preserve"><value>Archives</value></data>
+  <data name="NotificationGroup.Uploads" xml:space="preserve"><value>Uploads</value></data>
+  <data name="NotificationGroup.Availability" xml:space="preserve"><value>Availability</value></data>
+  <data name="NotificationGroup.Hosters" xml:space="preserve"><value>Hosters</value></data>
+  <data name="NotificationGroup.LinkCrypters" xml:space="preserve"><value>Link crypters</value></data>
+  <data name="NotificationKind.Legacy" xml:space="preserve"><value>Legacy notification</value></data>
+  <data name="NotificationKind.ReleaseAutomaticallyCreated" xml:space="preserve"><value>Release created automatically</value></data><data name="NotificationKind.ReleaseAutomaticallyCreated.Description" xml:space="preserve"><value>A release was created by folder automation.</value></data>
+  <data name="NotificationKind.ReleaseFolderMissing" xml:space="preserve"><value>Release folder missing</value></data><data name="NotificationKind.ReleaseFolderMissing.Description" xml:space="preserve"><value>The release folder required for processing was not found.</value></data>
+  <data name="NotificationKind.ArchiveCreationFailed" xml:space="preserve"><value>Archive creation failed</value></data><data name="NotificationKind.ArchiveCreationFailed.Description" xml:space="preserve"><value>An archive could not be created.</value></data>
+  <data name="NotificationKind.ArchiveFilesMissing" xml:space="preserve"><value>Archive files missing</value></data><data name="NotificationKind.ArchiveFilesMissing.Description" xml:space="preserve"><value>Files required for an upload are missing.</value></data>
+  <data name="NotificationKind.InitialUploadCreated" xml:space="preserve"><value>Initial upload created</value></data><data name="NotificationKind.InitialUploadCreated.Description" xml:space="preserve"><value>An initial upload was created automatically.</value></data>
+  <data name="NotificationKind.UploadCompleted" xml:space="preserve"><value>Upload completed</value></data><data name="NotificationKind.UploadCompleted.Description" xml:space="preserve"><value>An upload completed successfully.</value></data>
+  <data name="NotificationKind.UploadFailed" xml:space="preserve"><value>Upload failed</value></data><data name="NotificationKind.UploadFailed.Description" xml:space="preserve"><value>An upload failed.</value></data>
+  <data name="NotificationKind.UploadCancellationRequested" xml:space="preserve"><value>Upload cancellation requested</value></data><data name="NotificationKind.UploadCancellationRequested.Description" xml:space="preserve"><value>An upload cancellation was requested.</value></data>
+  <data name="NotificationKind.UploadCanceled" xml:space="preserve"><value>Upload canceled</value></data><data name="NotificationKind.UploadCanceled.Description" xml:space="preserve"><value>An upload was canceled.</value></data>
+  <data name="NotificationKind.FilesOffline" xml:space="preserve"><value>Files offline</value></data><data name="NotificationKind.FilesOffline.Description" xml:space="preserve"><value>Files on a hoster are offline.</value></data>
+  <data name="NotificationKind.UploadMarkedOffline" xml:space="preserve"><value>Upload marked offline</value></data><data name="NotificationKind.UploadMarkedOffline.Description" xml:space="preserve"><value>An upload was manually marked as offline.</value></data>
+  <data name="NotificationKind.HosterStatusCheckFailed" xml:space="preserve"><value>Hoster status check failed</value></data><data name="NotificationKind.HosterStatusCheckFailed.Description" xml:space="preserve"><value>File availability could not be checked.</value></data>
+  <data name="NotificationKind.AutomaticReuploadCreated" xml:space="preserve"><value>Automatic reupload created</value></data><data name="NotificationKind.AutomaticReuploadCreated.Description" xml:space="preserve"><value>A reupload was created automatically.</value></data>
+  <data name="NotificationKind.CaptchaVerificationRequired" xml:space="preserve"><value>CAPTCHA verification required</value></data><data name="NotificationKind.CaptchaVerificationRequired.Description" xml:space="preserve"><value>A hoster requires CAPTCHA verification.</value></data>
+  <data name="NotificationKind.LinkCrypterContainerCreationFailed" xml:space="preserve"><value>Link crypter container creation failed</value></data><data name="NotificationKind.LinkCrypterContainerCreationFailed.Description" xml:space="preserve"><value>A link crypter container could not be created.</value></data>
+  <data name="NotificationKind.LinkCrypterContainerUpdateFailed" xml:space="preserve"><value>Link crypter container update failed</value></data><data name="NotificationKind.LinkCrypterContainerUpdateFailed.Description" xml:space="preserve"><value>A link crypter container could not be updated.</value></data>
+  <data name="NotificationKind.CollectionLinkCrypterContainerInvalid" xml:space="preserve"><value>Collection link crypter container invalid</value></data><data name="NotificationKind.CollectionLinkCrypterContainerInvalid.Description" xml:space="preserve"><value>A collection link crypter container is invalid.</value></data>
+  <data name="NotificationSeverityLabel" xml:space="preserve"><value>Severity</value></data>
+  <data name="NotificationKindFilter" xml:space="preserve"><value>Notification type</value></data>
+  <data name="AllNotificationKinds" xml:space="preserve"><value>All notification types</value></data>
 </root>

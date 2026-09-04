@@ -338,7 +338,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         result.Id.ShouldBe(upload.Id);
         result.OnlineState.ShouldBe(OnlineState.PartiallyOnline);
         result.UploadedFiles.Count(f => f.OnlineState == OnlineState.Offline).ShouldBe(1);
-        result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Warning);
+        result.Notifications.Single().NotificationSeverity.ShouldBe(NotificationSeverity.Warning);
         result.Notifications.Single().Message.ShouldBe("Some files are offline on the hoster");
         hosterMock.VerifyAll();
         hosterFactoryMock.VerifyAll();
@@ -472,7 +472,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         result.Id.ShouldBe(upload.Id);
         result.OnlineState.ShouldBe(OnlineState.Online);
         result.UploadedFiles.Single().OnlineState.ShouldBe(OnlineState.Online);
-        result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Error);
+        result.Notifications.Single().NotificationSeverity.ShouldBe(NotificationSeverity.Error);
         result
             .Notifications.Single()
             .Message.ShouldBe(
@@ -536,7 +536,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         result.UploadConfigId.ShouldBe(uploadConfig.Id);
         result.UploadState.ShouldBe(UploadState.WaitingForArchive);
         result.OnlineState.ShouldBe(OnlineState.Unknown);
-        result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Info);
+        result.Notifications.Single().NotificationSeverity.ShouldBe(NotificationSeverity.Info);
         result.Notifications.Single().Message.ShouldBe("Initial upload created for release");
     }
 
@@ -973,7 +973,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         updated.FullyOfflineSince.ShouldNotBeNull();
         updated.UploadedFiles.ShouldAllBe(f => f.OnlineState == OnlineState.Offline);
         updated.UploadedFiles.ShouldAllBe(f => f.CheckedAt != null);
-        updated.Notifications.Single().NotificationType.ShouldBe(NotificationType.Warning);
+        updated.Notifications.Single().NotificationSeverity.ShouldBe(NotificationSeverity.Warning);
         updated.Notifications.Single().Message.ShouldBe("Upload manually marked as offline");
     }
 
@@ -1665,8 +1665,9 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     private UploadStateService CreateService(int initialUploadCooldownMinutes = 5)
     {
         var notificationService = new NotificationService(
-            new NotificationRepository(dbContext),
-            CreateTimeProvider()
+            repository: new NotificationRepository(dbContext),
+            timeProvider: CreateTimeProvider(),
+            configurationProvider: CreateNotificationConfigurationProvider()
         );
 
         return new UploadStateService(

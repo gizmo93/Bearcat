@@ -40,7 +40,8 @@ public class UploadFinalizationService(
         context.Upload.OnlineState = OnlineState.Online;
         context.Upload.UploadedAt = timeProvider.GetLocalNow();
 
-        notificationService.CreateInfo(
+        notificationService.Create(
+            kind: NotificationKind.UploadCompleted,
             message: "All files uploaded successfully",
             entity: context.Upload,
             selector: n => n.Upload
@@ -61,7 +62,8 @@ public class UploadFinalizationService(
         context.Upload.UploadState = UploadState.Failed;
         context.Upload.OnlineState = OnlineState.PartiallyOnline;
 
-        notificationService.CreateError(
+        notificationService.Create(
+            kind: NotificationKind.UploadFailed,
             message: "Some files failed to upload",
             entity: context.Upload,
             selector: n => n.Upload
@@ -82,7 +84,8 @@ public class UploadFinalizationService(
         context.Upload.UploadState = UploadState.Canceled;
         context.Upload.OnlineState = OnlineState.Unknown;
 
-        notificationService.CreateInfo(
+        notificationService.Create(
+            kind: NotificationKind.UploadCanceled,
             message: "Upload canceled",
             entity: context.Upload,
             selector: n => n.Upload

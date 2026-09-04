@@ -738,7 +738,8 @@ public class UploadFilesService(
             upload.UploadState = UploadState.Canceled;
             upload.OnlineState = OnlineState.Unknown;
 
-            notificationService.CreateInfo(
+            notificationService.Create(
+                kind: NotificationKind.UploadCanceled,
                 message: "Upload canceled",
                 entity: upload,
                 selector: n => n.Upload
@@ -785,7 +786,8 @@ public class UploadFilesService(
             upload.UploadState = UploadState.Canceled;
             upload.OnlineState = OnlineState.Unknown;
 
-            notificationService.CreateInfo(
+            notificationService.Create(
+                kind: NotificationKind.UploadCanceled,
                 message: "Upload canceled",
                 entity: upload,
                 selector: n => n.Upload

@@ -48,8 +48,13 @@ public static class LocalizationExtensions
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,
-        NotificationType type
-    ) => localizer[$"NotificationType.{type}"];
+        NotificationSeverity severity
+    ) => localizer[$"NotificationSeverity.{severity}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        NotificationKind kind
+    ) => localizer[$"NotificationKind.{kind}"];
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,

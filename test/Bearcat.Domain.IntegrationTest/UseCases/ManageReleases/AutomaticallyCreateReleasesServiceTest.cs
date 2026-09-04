@@ -59,7 +59,8 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
 
         var notificationService = new NotificationService(
             repository: notificationRepository,
-            timeProvider: CreateTimeProvider()
+            timeProvider: CreateTimeProvider(),
+            configurationProvider: CreateNotificationConfigurationProvider()
         );
 
         service = new AutomaticallyCreateReleasesService(
@@ -215,7 +216,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         uploadConfig.LinkCrypters.Single().Password.ShouldBe("container-secret");
 
         var notification = await dbContext.Notifications.SingleAsync();
-        notification.NotificationType.ShouldBe(NotificationType.Info);
+        notification.NotificationSeverity.ShouldBe(NotificationSeverity.Info);
         notification.Message.ShouldBe(
             "Release 'Bearcat.Release.1080p' was created automatically from template 'Managed template'"
         );

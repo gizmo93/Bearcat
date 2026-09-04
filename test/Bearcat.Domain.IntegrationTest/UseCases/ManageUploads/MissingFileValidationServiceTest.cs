@@ -31,8 +31,9 @@ public class MissingFileValidationServiceTest : BearcatIntegrationTest
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
 
         var notificationService = new NotificationService(
-            new NotificationRepository(dbContext),
-            CreateTimeProvider()
+            repository: new NotificationRepository(dbContext),
+            timeProvider: CreateTimeProvider(),
+            configurationProvider: CreateNotificationConfigurationProvider()
         );
 
         service = new MissingFileValidationService(

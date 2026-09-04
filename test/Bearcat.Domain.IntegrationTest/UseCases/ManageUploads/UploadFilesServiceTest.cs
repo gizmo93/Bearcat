@@ -72,8 +72,9 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             .Returns(new Dictionary<string, IHoster> { [HosterClassName] = hosterMock.Object });
 
         var notificationService = new NotificationService(
-            new NotificationRepository(dbContext),
-            CreateTimeProvider()
+            repository: new NotificationRepository(dbContext),
+            timeProvider: CreateTimeProvider(),
+            configurationProvider: CreateNotificationConfigurationProvider()
         );
 
         var uploadFilesRepository = new UploadFilesRepository(
@@ -197,7 +198,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             .HosterFileLink.ShouldBe("https://hoster.test/archive.part1.rar");
         result.UploadedFiles.Single().ExternalId.ShouldBe("external-file-id");
         result.UploadedFiles.Single().OnlineState.ShouldBe(OnlineState.Online);
-        result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Info);
+        result.Notifications.Single().NotificationSeverity.ShouldBe(NotificationSeverity.Info);
         result.Notifications.Single().Message.ShouldBe("All files uploaded successfully");
         VerifyUploadPipelineCalled(archiveFilePath);
     }
@@ -538,7 +539,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         result.UploadedAt.ShouldBeNull();
         result.UploadedFiles.Single().HosterFileLink.ShouldBeEmpty();
         result.UploadedFiles.Single().ErrorMessages.ShouldBe(["Upload failed"]);
-        result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Error);
+        result.Notifications.Single().NotificationSeverity.ShouldBe(NotificationSeverity.Error);
         result.Notifications.Single().Message.ShouldBe("Some files failed to upload");
         VerifyUploadPipelineCalled(archiveFilePath);
     }
@@ -607,7 +608,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         result.Id.ShouldBe(upload.Id);
         result.ArchiveId.ShouldBeNull();
         result.UploadState.ShouldBe(UploadState.WaitingForArchive);
-        result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Warning);
+        result.Notifications.Single().NotificationSeverity.ShouldBe(NotificationSeverity.Warning);
         result
             .Notifications.Single()
             .Message.ShouldBe(
@@ -644,7 +645,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         result.ArchiveId.ShouldBeNull();
         result.UploadState.ShouldBe(UploadState.WaitingForArchive);
         result.ErrorMessages.ShouldBeEmpty();
-        result.Notifications.Single().NotificationType.ShouldBe(NotificationType.Warning);
+        result.Notifications.Single().NotificationSeverity.ShouldBe(NotificationSeverity.Warning);
         result
             .Notifications.Single()
             .Message.ShouldBe(
@@ -1314,8 +1315,9 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         // Arrange
         var repository = new MissingCancellationUploadRepository();
         var notificationService = new NotificationService(
-            new NotificationRepository(dbContext),
-            CreateTimeProvider()
+            repository: new NotificationRepository(dbContext),
+            timeProvider: CreateTimeProvider(),
+            configurationProvider: CreateNotificationConfigurationProvider()
         );
 
         var captchaService = new HosterCaptchaVerificationService(notificationService);
@@ -1387,7 +1389,11 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             uploadFilesRepository,
             new FileSystemService(),
             Mock.Of<ILogger<MissingFileValidationService>>(),
-            new NotificationService(new NotificationRepository(dbContext), CreateTimeProvider())
+            new NotificationService(
+                repository: new NotificationRepository(dbContext),
+                timeProvider: CreateTimeProvider(),
+                configurationProvider: CreateNotificationConfigurationProvider()
+            )
         );
 
         // Act

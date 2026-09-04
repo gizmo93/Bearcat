@@ -41,9 +41,15 @@ public class TelegramNotificationReadRepository(IBearcatReadDbContext dbRead)
                 notification.Id > afterId
                 && notification.ResolvedAt == null
                 && (
-                    (notification.NotificationType == NotificationType.Info && forwardInfo)
-                    || (notification.NotificationType == NotificationType.Warning && forwardWarning)
-                    || (notification.NotificationType == NotificationType.Error && forwardError)
+                    (notification.NotificationSeverity == NotificationSeverity.Info && forwardInfo)
+                    || (
+                        notification.NotificationSeverity == NotificationSeverity.Warning
+                        && forwardWarning
+                    )
+                    || (
+                        notification.NotificationSeverity == NotificationSeverity.Error
+                        && forwardError
+                    )
                 )
                 && !dbRead.TelegramDeliveries.Any(delivery =>
                     delivery.NotificationId == notification.Id

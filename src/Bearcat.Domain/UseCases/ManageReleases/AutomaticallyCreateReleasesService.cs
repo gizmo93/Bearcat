@@ -201,7 +201,8 @@ public class AutomaticallyCreateReleasesService(
 
         repository.Add(release);
 
-        notificationService.CreateInfo(
+        notificationService.Create(
+            kind: NotificationKind.ReleaseAutomaticallyCreated,
             message: $"Release '{release.Name}' was created automatically from template '{candidate.Automation.ReleaseTemplate.Name}'",
             entity: release,
             selector: n => n.Release
