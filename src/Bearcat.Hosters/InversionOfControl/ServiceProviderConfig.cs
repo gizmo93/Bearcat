@@ -3,6 +3,7 @@ using Bearcat.Hosters.Alfafile.InversionOfControl;
 using Bearcat.Hosters.ClicknUpload.InversionOfControl;
 using Bearcat.Hosters.DataVaults.InversionOfControl;
 using Bearcat.Hosters.DDownload.InversionOfControl;
+using Bearcat.Hosters.Fast2Share.InversionOfControl;
 using Bearcat.Hosters.Fichier.InversionOfControl;
 using Bearcat.Hosters.FileQ.InversionOfControl;
 using Bearcat.Hosters.FileServe.InversionOfControl;
@@ -30,6 +31,7 @@ public static class ServiceProviderConfig
         services.AddClicknUpload();
         services.AddDataVaults();
         services.AddDdownload();
+        services.AddFast2Share();
         services.AddFileQ();
         services.AddFileServe();
         services.AddFileUpload();
