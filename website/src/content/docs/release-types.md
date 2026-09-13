@@ -1,5 +1,5 @@
 ---
-title: "Release Types"
+title: "Managed Releases and Existing Archives"
 description: "Understand managed and unmanaged releases in Bearcat."
 ---
 

@@ -1,5 +1,5 @@
 ---
-title: "Initial Setup"
+title: "Set Up Hoster Accounts and Your First Release"
 description: "Configure hoster accounts, release groups, release templates, and folder automations after installation."
 ---
 

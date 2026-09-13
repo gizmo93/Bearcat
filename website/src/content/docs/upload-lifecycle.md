@@ -1,5 +1,5 @@
 ---
-title: "Upload Lifecycle"
+title: "Automatic Uploads, Link Checks, and Reuploads"
 description: "Understand how Bearcat creates, uploads, checks, and refreshes release archives."
 ---
 

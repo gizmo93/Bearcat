@@ -1,5 +1,5 @@
 ---
-title: "Posting to Forums"
+title: "Prepare and Submit Forum Posts"
 description: "Prepare a forum draft from a release and open it with a ready to submit preview link. You still send the post yourself."
 ---
 

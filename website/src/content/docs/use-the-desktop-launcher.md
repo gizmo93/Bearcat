@@ -1,5 +1,5 @@
 ---
-title: "Desktop App"
+title: "Install Bearcat on Windows and macOS"
 description: "Run Bearcat locally on Windows or macOS with the desktop launcher."
 ---
 

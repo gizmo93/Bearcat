@@ -1,5 +1,5 @@
 ---
-title: "Post Queue"
+title: "Track Uploads Waiting for Forum Posts"
 description: "Keep track of which finished uploads you still need to post to your forums."
 ---
 

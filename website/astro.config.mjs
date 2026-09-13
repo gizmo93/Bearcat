@@ -17,7 +17,7 @@ export default defineConfig({
 		}),
 		starlight({
 			title: 'Bearcat Docs',
-			description: 'User documentation for Bearcat.',
+			description: 'Install and configure Bearcat to create archives, upload to one-click hosters, check links, and reupload offline files.',
 			plugins: [
 				starlightThemeNova({
 					nav: [

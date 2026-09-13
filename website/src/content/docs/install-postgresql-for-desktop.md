@@ -1,5 +1,5 @@
 ---
-title: "PostgreSQL Setup"
+title: "Set Up PostgreSQL for Bearcat"
 description: "Install and run PostgreSQL for Bearcat, for the Desktop app or the Windows service."
 ---
 

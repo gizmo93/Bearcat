@@ -1,8 +1,7 @@
 ---
-title: "filecrypt.cc"
+title: "Filecrypt API Access for Bearcat"
 ---
 
 ## API Key
 
-To be able to obtain an API key for [filecrypt.cc](https://www.filecrypt.cc/), you will need to ask for an invite, in order to be able to create an account there.
-Follow the links on their website to see, where.
+You need a [filecrypt.cc](https://www.filecrypt.cc/) account to create an API key. Registration requires an invite. The Filecrypt website links to places where you can request one.

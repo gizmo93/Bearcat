@@ -1,5 +1,5 @@
 ---
-title: "Docker Container"
+title: "Run Bearcat in Docker"
 description: "Host Bearcat with Docker on Linux, NAS devices, servers, Windows, or macOS."
 ---
 

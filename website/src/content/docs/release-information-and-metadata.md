@@ -1,5 +1,5 @@
 ---
-title: "Release Information and Metadata"
+title: "Configure Release and Media Metadata"
 description: "Configure metadata sources, choose a primary language, and understand how Bearcat resolves release data."
 ---
 

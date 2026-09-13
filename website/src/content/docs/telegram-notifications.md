@@ -1,5 +1,5 @@
 ---
-title: "Telegram Notifications"
+title: "Send Upload Notifications to Telegram"
 description: "Forward Bearcat notifications to a Telegram chat so you get pinged on your phone without keeping the UI open."
 ---
 

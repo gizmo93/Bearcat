@@ -1,5 +1,5 @@
 ---
-title: "Quality Gates"
+title: "Check Release Quality Before Uploading"
 description: "Block uploads until a release passes the quality checks you define."
 ---
 

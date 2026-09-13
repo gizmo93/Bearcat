@@ -1,5 +1,5 @@
 ---
-title: "Forum Post Templates"
+title: "Create BBCode Forum Post Templates"
 description: "Use BBCode and Scriban placeholders to prepare forum posts from release data."
 ---
 

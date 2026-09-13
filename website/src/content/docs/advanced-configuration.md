@@ -1,5 +1,5 @@
 ---
-title: "Advanced Configuration"
+title: "Configure Background Tasks and Upload Settings"
 description: "Tune background tasks, upload checks, and global Bearcat behavior."
 ---
 

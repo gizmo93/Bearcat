@@ -1,5 +1,5 @@
 ---
-title: "Windows Service"
+title: "Run Bearcat as a Windows Service"
 description: "Run Bearcat as an always-on Windows background service, configured through a small CLI."
 ---
 

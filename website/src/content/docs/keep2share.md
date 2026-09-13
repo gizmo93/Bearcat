@@ -1,5 +1,6 @@
 ---
-title: "Keep2Share"
+title: "Resolve Keep2Share Captchas in Bearcat"
+description: "Resolve Keep2Share captcha challenges in Bearcat and reactivate your hoster account."
 ---
 
 ## "Unicorn" captcha challenges

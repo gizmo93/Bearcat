@@ -1,5 +1,5 @@
 ---
-title: "Release Collections"
+title: "Group Related Releases into Collections"
 description: "Group related releases like a TV season and share their uploads and links."
 ---
 
