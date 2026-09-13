@@ -1,6 +1,7 @@
 ﻿using Bearcat.Abstractions.Hoster;
 using Bearcat.Hosters.Alfafile.InversionOfControl;
 using Bearcat.Hosters.ClicknUpload.InversionOfControl;
+using Bearcat.Hosters.CloudFam.InversionOfControl;
 using Bearcat.Hosters.DataVaults.InversionOfControl;
 using Bearcat.Hosters.DDownload.InversionOfControl;
 using Bearcat.Hosters.Fast2Share.InversionOfControl;
@@ -29,6 +30,7 @@ public static class ServiceProviderConfig
         services.AddAlfafile();
         services.AddRapidgator();
         services.AddClicknUpload();
+        services.AddCloudFam();
         services.AddDataVaults();
         services.AddDdownload();
         services.AddFast2Share();
