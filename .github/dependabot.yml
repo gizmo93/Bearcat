@@ -60,3 +60,8 @@ updates:
       major:
         update-types:
           - "major"
+    ignore:
+        - dependency-name: "mermaid" # astro-mermaid supports only mermaid 10/11
+          versions: [">=12"]
+        - dependency-name: "@mermaid-js/layout-elk" # tied to the mermaid major
+          versions: [">=1"]
