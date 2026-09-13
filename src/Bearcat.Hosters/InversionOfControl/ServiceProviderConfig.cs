@@ -9,6 +9,7 @@ using Bearcat.Hosters.Fichier.InversionOfControl;
 using Bearcat.Hosters.FileQ.InversionOfControl;
 using Bearcat.Hosters.FileServe.InversionOfControl;
 using Bearcat.Hosters.FileUpload.InversionOfControl;
+using Bearcat.Hosters.FreeDlink.InversionOfControl;
 using Bearcat.Hosters.GoFile.InversionOfControl;
 using Bearcat.Hosters.HxFile.InversionOfControl;
 using Bearcat.Hosters.Katfile.InversionOfControl;
@@ -38,6 +39,7 @@ public static class ServiceProviderConfig
         services.AddFileServe();
         services.AddFileUpload();
         services.AddFichier();
+        services.AddFreeDlink();
         services.AddGoFile();
         services.AddHxFile();
         services.AddKatfile();
