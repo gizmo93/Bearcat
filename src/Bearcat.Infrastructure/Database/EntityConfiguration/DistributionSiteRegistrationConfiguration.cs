@@ -22,5 +22,13 @@ public class DistributionSiteRegistrationConfiguration
             .IsRequired();
         builder.Property(registration => registration.IsActive).IsRequired();
         builder.Property(registration => registration.EncryptedSession).HasMaxLength(8000);
+
+        builder
+            .HasMany(registration => registration.PostingRules)
+            .WithOne(rule => rule.DistributionSiteRegistration)
+            .HasForeignKey(rule => rule.DistributionSiteRegistrationId)
+            .HasPrincipalKey(registration => registration.Id)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

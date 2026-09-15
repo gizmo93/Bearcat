@@ -9,6 +9,7 @@ using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
+using Bearcat.Domain.UseCases.ManageForumPostingRules;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
 using Bearcat.Domain.UseCases.ManageHosters;
@@ -74,6 +75,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ReleaseClassificationService>();
             services.AddScoped<ReleaseTemplateService>();
             services.AddScoped<ForumPostTemplateService>();
+            services.AddScoped<ForumPostingRuleService>();
             services.AddScoped<ArchiveCreationService>();
             services.AddScoped<ArchiveCleanupService>();
             services.AddScoped<UploadFilesService>();
