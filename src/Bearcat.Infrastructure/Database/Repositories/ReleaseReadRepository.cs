@@ -21,7 +21,7 @@ public class ReleaseReadRepository(
     ILinkCrypterFactory linkCrypterFactory
 ) : IReleaseReadRepository, IReleaseForumPostUploadRepository, IForumPostImageLinkRepository
 {
-    private static readonly Expression<Func<Release, bool>> IsReadyForPostQueue = r =>
+    internal static readonly Expression<Func<Release, bool>> IsReadyForPostQueue = r =>
         r.UploadConfigs.Any(uc =>
             uc.CollectionUploadSlotId == null
             && uc.HosterRegistration.IsActive

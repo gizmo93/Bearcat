@@ -81,4 +81,30 @@ public class DistributionSiteRegistrationService(
 
         await repository.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task SetAutomaticPostingAsync(
+        int id,
+        bool isEnabled,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var registration = await repository.GetByIdAsync(id, cancellationToken);
+
+        registration.EnableAutomaticPosting = isEnabled;
+
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task SetStripDotsForThreadSearchAsync(
+        int id,
+        bool isEnabled,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var registration = await repository.GetByIdAsync(id, cancellationToken);
+
+        registration.StripDotsForThreadSearch = isEnabled;
+
+        await repository.SaveChangesAsync(cancellationToken);
+    }
 }

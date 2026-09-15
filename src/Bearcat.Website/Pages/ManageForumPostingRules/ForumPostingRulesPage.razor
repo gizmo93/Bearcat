@@ -1,0 +1,223 @@
+@page "/distribution-site-registrations/{DistributionSiteRegistrationId:int}/posting-rules"
+@using Bearcat.Domain.UseCases.ManageForumPostingRules.ReadModels
+
+@if (!isInitialized)
+{
+    return;
+}
+
+<PageTitle>@L["ForumPostingRules"] - @registration.Name - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div class="min-w-0 space-y-2">
+            <a href="/distribution-site-registrations"
+               class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline">
+                <LucideIcon Name="arrow-left" class="h-4 w-4" />
+                @L["DistributionSiteRegistrations"]
+            </a>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["ForumPostingRules"]</h1>
+            <div class="flex flex-wrap items-center gap-2">
+                <BbBadge Variant="BadgeVariant.Outline">@registration.Name</BbBadge>
+                @if (!string.Equals(registration.Name, registration.DistributionSiteName, StringComparison.OrdinalIgnoreCase))
+                {
+                    <BbBadge Variant="BadgeVariant.Secondary">@registration.DistributionSiteName</BbBadge>
+                }
+            </div>
+            <p class="text-sm text-muted-foreground">@L["ForumPostingRulesIntro"]</p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewForumPostingRule"]
+        </BbButton>
+    </div>
+
+    <BbCard Class="border-border/70 shadow-sm">
+        <BbCardContent Class="space-y-4 p-4">
+            <div class="bearcat-section-header">
+                <div class="flex items-start gap-2">
+                    <LucideIcon Name="send-horizontal" class="mt-0.5 h-4 w-4 text-muted-foreground" />
+                    <div class="space-y-1">
+                        <p class="text-sm font-semibold">@L["AutomaticPosting"]</p>
+                        <p class="text-xs text-muted-foreground">@L["AutomaticPostingHelp"]</p>
+                    </div>
+                </div>
+
+                <BbSwitch Checked="registration.EnableAutomaticPosting"
+                          CheckedChanged="SetAutomaticPostingAsync"
+                          AriaLabel="@L["AutomaticPosting"]" />
+            </div>
+
+            <div class="bearcat-section-header border-t border-border/60 pt-4">
+                <div class="flex items-start gap-2">
+                    <LucideIcon Name="search" class="mt-0.5 h-4 w-4 text-muted-foreground" />
+                    <div class="space-y-1">
+                        <p class="text-sm font-semibold">@L["StripDotsForThreadSearch"]</p>
+                        <p class="text-xs text-muted-foreground">@L["StripDotsForThreadSearchHelp"]</p>
+                    </div>
+                </div>
+
+                <BbSwitch Checked="registration.StripDotsForThreadSearch"
+                          CheckedChanged="SetStripDotsForThreadSearchAsync"
+                          AriaLabel="@L["StripDotsForThreadSearch"]" />
+            </div>
+        </BbCardContent>
+    </BbCard>
+
+    @if (rules.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+            @L["NoForumPostingRulesYet"]
+        </div>
+    }
+    else
+    {
+        <div class="bearcat-config-list">
+            <div class="@($"bearcat-config-header {RuleGridClass}")">
+                <span>#</span>
+                <span>@L["Name"]</span>
+                <span>@L["Subforum"]</span>
+                <span>@L["Template"]</span>
+                <span>@L["ForumPostPostMode"]</span>
+                <span>@L["Enabled"]</span>
+                <span class="text-right">@L["Actions"]</span>
+            </div>
+
+            <BbSortable Items="rules"
+                        Handle=".drag-handle"
+                        Class="gap-0 divide-y divide-border/70"
+                        OnUpdate="ReorderByDragAsync"
+                        AriaLabel="@L["ForumPostingRules"]"
+                        Context="rule">
+                <ItemTemplate>
+                    <div class="@($"bearcat-config-row {RuleGridClass}")">
+                        <div>
+                            <p class="bearcat-mobile-label">#</p>
+                            <div class="flex items-center gap-1.5">
+                                <span class="drag-handle cursor-grab text-muted-foreground"
+                                      title="@L["DragToReorder"]"
+                                      aria-label="@L["DragToReorder"]">
+                                    <LucideIcon Name="grip-vertical" class="h-4 w-4" />
+                                </span>
+                                <span class="text-sm font-semibold text-muted-foreground">@(rules.IndexOf(rule) + 1)</span>
+                            </div>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["Name"]</p>
+                            <p class="truncate text-sm font-semibold" title="@rule.Name">@rule.Name</p>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["Subforum"]</p>
+                            <p class="truncate text-sm" title="@rule.TargetPathSnapshot">@rule.TargetPathSnapshot</p>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["Template"]</p>
+                            <p class="truncate text-sm" title="@rule.ForumPostTemplateName">@rule.ForumPostTemplateName</p>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["ForumPostPostMode"]</p>
+                            <p class="text-sm text-muted-foreground">@L.Localize(rule.PostMode)</p>
+                        </div>
+
+                        <div>
+                            <p class="bearcat-mobile-label">@L["Enabled"]</p>
+                            <BbSwitch Checked="rule.IsEnabled"
+                                      CheckedChanged="@(value => ToggleIsEnabledAsync(rule, value))"
+                                      AriaLabel="@L["Enabled"]" />
+                        </div>
+
+                        <div class="bearcat-config-actions">
+                            <BbDropdownMenu>
+                                <BbDropdownMenuTrigger>
+                                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["Actions"]">
+                                        <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                    </BbButton>
+                                </BbDropdownMenuTrigger>
+                                <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                                    <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(rule))">
+                                        @L["Edit"]
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(rule))">
+                                        @L["Delete"]
+                                    </BbDropdownMenuItem>
+                                </BbDropdownMenuContent>
+                            </BbDropdownMenu>
+                        </div>
+                    </div>
+                </ItemTemplate>
+            </BbSortable>
+        </div>
+    }
+
+    <BbCard Class="border-border/70 shadow-sm">
+        <BbCardHeader>
+            <div class="bearcat-section-header">
+                <div class="flex items-center gap-2">
+                    <LucideIcon Name="route" class="h-4 w-4" />
+                    <div>
+                        <BbCardTitle class="text-base">@L["ForumPostingRulePreview"]</BbCardTitle>
+                        <BbCardDescription>@L["ForumPostingRulePreviewDescription"]</BbCardDescription>
+                    </div>
+                </div>
+                <BbButton Variant="ButtonVariant.Secondary"
+                          Size="ButtonSize.Small"
+                          Disabled="isPreviewing"
+                          OnClick="RunPreviewAsync">
+                    <LucideIcon Name="play" class="@($"h-4 w-4 {(isPreviewing ? "animate-pulse" : string.Empty)}")" />
+                    @L["Preview"]
+                </BbButton>
+            </div>
+        </BbCardHeader>
+        <BbCardContent>
+            @if (previewResults is null)
+            {
+                <p class="text-sm text-muted-foreground">@L["ForumPostingRulePreviewHint"]</p>
+            }
+            else if (previewResults.Count == 0)
+            {
+                <div class="bearcat-release-empty">
+                    <LucideIcon Name="inbox" class="h-5 w-5" />
+                    <span>@L["NoReleasesFound"]</span>
+                </div>
+            }
+            else
+            {
+                <div class="space-y-2">
+                    <p class="text-xs text-muted-foreground">
+                        @L["ForumPostingRulePreviewSummary", MatchedCount, previewResults.Count]
+                    </p>
+
+                    <div class="divide-y divide-border/70 overflow-hidden rounded-lg border border-border/70">
+                        @foreach (var result in previewResults)
+                        {
+                            <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+                                <p class="min-w-0 flex-1 truncate text-sm" title="@result.ReleaseName">
+                                    @result.ReleaseName
+                                </p>
+
+                                @if (result.MatchedRuleName is null)
+                                {
+                                    <BbBadge Variant="BadgeVariant.Outline">@L["ForumPostingRuleNoMatch"]</BbBadge>
+                                }
+                                else
+                                {
+                                    <div class="flex min-w-0 flex-wrap items-center justify-end gap-2">
+                                        <BbBadge Variant="BadgeVariant.Default">@result.MatchedRuleName</BbBadge>
+                                        <span class="truncate text-xs text-muted-foreground" title="@result.TargetPathSnapshot">
+                                            @result.TargetPathSnapshot
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </BbCardContent>
+    </BbCard>
+</section>

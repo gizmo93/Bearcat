@@ -1,3 +1,4 @@
+using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -10,7 +11,7 @@ namespace Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
 public class ForumPostRenderService(
     IForumPostTemplateReadRepository templateReadRepository,
     IEnumerable<IForumPostRenderSource> renderSources
-)
+) : IForumPostContentRenderer
 {
     public IReadOnlyList<ForumPostTemplateVariableReadModel> GetVariables(
         ForumPostTemplateType type

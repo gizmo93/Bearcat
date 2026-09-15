@@ -11,6 +11,7 @@ public class PostedLocationConfiguration : IEntityTypeConfiguration<PostedLocati
         builder.HasKey(location => location.Id);
         builder.Property(location => location.ReleaseId).IsRequired(false);
         builder.Property(location => location.ReleaseCollectionId).IsRequired(false);
+        builder.Property(location => location.DistributionSiteRegistrationId).IsRequired(false);
         builder.Property(location => location.Url).HasMaxLength(2000).IsRequired();
         builder.Property(location => location.CreatedAt).HasPrecision(4).IsRequired();
 
@@ -25,6 +26,12 @@ public class PostedLocationConfiguration : IEntityTypeConfiguration<PostedLocati
             .WithMany(collection => collection.PostedLocations)
             .HasForeignKey(location => location.ReleaseCollectionId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .HasOne(location => location.DistributionSiteRegistration)
+            .WithMany()
+            .HasForeignKey(location => location.DistributionSiteRegistrationId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.ToTable(table =>
             table.HasCheckConstraint(

@@ -340,6 +340,9 @@ namespace BearCat.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<bool>("EnableAutomaticPosting")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("EncryptedSession")
                         .HasMaxLength(8000)
                         .HasColumnType("character varying(8000)");
@@ -356,6 +359,9 @@ namespace BearCat.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
+
+                    b.Property<bool>("StripDotsForThreadSearch")
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
@@ -396,6 +402,70 @@ namespace BearCat.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("ForumPostTemplates");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ForumPostingRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConditionJson")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("character varying(8000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<int>("DistributionSiteRegistrationId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ForumPostTemplateId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("PostMode")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TargetNodeId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("TargetPathSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ThreadPrefixId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ForumPostTemplateId");
+
+                    b.HasIndex("DistributionSiteRegistrationId", "SortOrder");
+
+                    b.ToTable("ForumPostingRules");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.HosterRegistration", b =>
@@ -836,6 +906,9 @@ namespace BearCat.Infrastructure.Migrations
                         .HasPrecision(4)
                         .HasColumnType("timestamp(4) without time zone");
 
+                    b.Property<int?>("DistributionSiteRegistrationId")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("ReleaseCollectionId")
                         .HasColumnType("integer");
 
@@ -848,6 +921,8 @@ namespace BearCat.Infrastructure.Migrations
                         .HasColumnType("character varying(2000)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DistributionSiteRegistrationId");
 
                     b.HasIndex("ReleaseCollectionId");
 
@@ -973,6 +1048,78 @@ namespace BearCat.Infrastructure.Migrations
                     b.HasIndex("ReleaseGroupId");
 
                     b.ToTable("Releases");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseClassification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ClassifiedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<int>("ContentType")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Episode")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("EpisodeEnd")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsMultiLanguage")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("LanguageSource")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ParserVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PrimaryLanguage")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ReleaseGroupToken")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("ReleaseId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Resolution")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ResolutionSource")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Season")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SourceSource")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int?>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReleaseId")
+                        .IsUnique();
+
+                    b.ToTable("ReleaseClassifications");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseCollection", b =>
@@ -1888,6 +2035,25 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("ReleaseCollection");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.ForumPostingRule", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.DistributionSiteRegistration", "DistributionSiteRegistration")
+                        .WithMany("PostingRules")
+                        .HasForeignKey("DistributionSiteRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bearcat.Domain.Entities.ForumPostTemplate", "ForumPostTemplate")
+                        .WithMany()
+                        .HasForeignKey("ForumPostTemplateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DistributionSiteRegistration");
+
+                    b.Navigation("ForumPostTemplate");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.ImageUpload", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.ImageUploadConfig", "ImageUploadConfig")
@@ -2038,6 +2204,11 @@ namespace BearCat.Infrastructure.Migrations
 
             modelBuilder.Entity("Bearcat.Domain.Entities.PostedLocation", b =>
                 {
+                    b.HasOne("Bearcat.Domain.Entities.DistributionSiteRegistration", "DistributionSiteRegistration")
+                        .WithMany()
+                        .HasForeignKey("DistributionSiteRegistrationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Bearcat.Domain.Entities.ReleaseCollection", "ReleaseCollection")
                         .WithMany("PostedLocations")
                         .HasForeignKey("ReleaseCollectionId")
@@ -2047,6 +2218,8 @@ namespace BearCat.Infrastructure.Migrations
                         .WithMany("PostedLocations")
                         .HasForeignKey("ReleaseId")
                         .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("DistributionSiteRegistration");
 
                     b.Navigation("Release");
 
@@ -2080,6 +2253,17 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("ReleaseCollection");
 
                     b.Navigation("ReleaseGroup");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseClassification", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
+                        .WithOne("Classification")
+                        .HasForeignKey("Bearcat.Domain.Entities.ReleaseClassification", "ReleaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Release");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.ReleaseCollection", b =>
@@ -2419,6 +2603,11 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("UploadConfigs");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.DistributionSiteRegistration", b =>
+                {
+                    b.Navigation("PostingRules");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.HosterRegistration", b =>
                 {
                     b.Navigation("UploadConfigs");
@@ -2460,6 +2649,8 @@ namespace BearCat.Infrastructure.Migrations
             modelBuilder.Entity("Bearcat.Domain.Entities.Release", b =>
                 {
                     b.Navigation("ArchiveConfigs");
+
+                    b.Navigation("Classification");
 
                     b.Navigation("ExternalIdentifiers");
 

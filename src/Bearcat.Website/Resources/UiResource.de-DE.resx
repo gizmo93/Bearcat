@@ -1025,6 +1025,7 @@
   <data name="NotificationGroup.Availability" xml:space="preserve"><value>Verfügbarkeit</value></data>
   <data name="NotificationGroup.Hosters" xml:space="preserve"><value>Hoster</value></data>
   <data name="NotificationGroup.LinkCrypters" xml:space="preserve"><value>Linkcrypter</value></data>
+  <data name="NotificationGroup.DistributionSites" xml:space="preserve"><value>Verteilungsseiten</value></data>
   <data name="NotificationKind.Legacy" xml:space="preserve"><value>Bestehende Benachrichtigung</value></data>
   <data name="NotificationKind.ReleaseAutomaticallyCreated" xml:space="preserve"><value>Release automatisch erstellt</value></data><data name="NotificationKind.ReleaseAutomaticallyCreated.Description" xml:space="preserve"><value>Ein Release wurde durch die Ordnerautomatisierung erstellt.</value></data>
   <data name="NotificationKind.ReleaseFolderMissing" xml:space="preserve"><value>Release-Ordner fehlt</value></data><data name="NotificationKind.ReleaseFolderMissing.Description" xml:space="preserve"><value>Der für die Verarbeitung benötigte Release-Ordner wurde nicht gefunden.</value></data>
@@ -1043,7 +1044,104 @@
   <data name="NotificationKind.LinkCrypterContainerCreationFailed" xml:space="preserve"><value>Linkcryptercontainer Erstellung fehlgeschlagen</value></data><data name="NotificationKind.LinkCrypterContainerCreationFailed.Description" xml:space="preserve"><value>Ein Linkcrypter-Container konnte nicht erstellt werden.</value></data>
   <data name="NotificationKind.LinkCrypterContainerUpdateFailed" xml:space="preserve"><value>Linkcryptercontainer Aktualisierung fehlgeschlagen</value></data><data name="NotificationKind.LinkCrypterContainerUpdateFailed.Description" xml:space="preserve"><value>Ein Linkcrypter-Container konnte nicht aktualisiert werden.</value></data>
   <data name="NotificationKind.CollectionLinkCrypterContainerInvalid" xml:space="preserve"><value>Collectionlinkcrypter Container ungültig</value></data><data name="NotificationKind.CollectionLinkCrypterContainerInvalid.Description" xml:space="preserve"><value>Ein Collection-Linkcrypter-Container ist ungültig.</value></data>
+  <data name="NotificationKind.AutomaticForumPostCreated" xml:space="preserve"><value>Automatischer Forenpost erstellt</value></data><data name="NotificationKind.AutomaticForumPostCreated.Description" xml:space="preserve"><value>Ein Release wurde automatisch in einem Forum gepostet.</value></data>
+  <data name="NotificationKind.AutomaticForumPostFailed" xml:space="preserve"><value>Automatischer Forenpost fehlgeschlagen</value></data><data name="NotificationKind.AutomaticForumPostFailed.Description" xml:space="preserve"><value>Ein Release konnte nicht automatisch in einem Forum gepostet werden.</value></data>
   <data name="NotificationSeverityLabel" xml:space="preserve"><value>Schweregrad</value></data>
   <data name="NotificationKindFilter" xml:space="preserve"><value>Benachrichtigungsart</value></data>
   <data name="AllNotificationKinds" xml:space="preserve"><value>Alle Benachrichtigungsarten</value></data>
+  <data name="ForumPostingRules" xml:space="preserve"><value>Postingregeln</value></data>
+  <data name="ForumPostingRulesIntro" xml:space="preserve"><value>Regeln bestimmen, in welches Unterforum ein Release gepostet wird. Die erste passende Regel gewinnt, sortiere sie daher von speziell nach allgemein.</value></data>
+  <data name="NewForumPostingRule" xml:space="preserve"><value>Neue Postingregel</value></data>
+  <data name="NoForumPostingRulesYet" xml:space="preserve"><value>Noch keine Postingregeln. Lege eine Regel an, um Releases automatisch einem Unterforum zuzuordnen.</value></data>
+  <data name="ForumPostingRuleDialogDescription" xml:space="preserve"><value>Lege fest, wann die Regel greift und wohin das Release gepostet wird.</value></data>
+  <data name="ForumPostingRuleNamePlaceholder" xml:space="preserve"><value>Zum Beispiel: Deutsche Filme 1080p</value></data>
+  <data name="DeleteForumPostingRuleConfirmation" xml:space="preserve"><value>Möchtest du die Postingregel {0} wirklich löschen?</value></data>
+  <data name="ForumPostingRuleEnabled" xml:space="preserve"><value>Postingregel {0} aktiviert</value></data>
+  <data name="ForumPostingRuleDisabled" xml:space="preserve"><value>Postingregel {0} deaktiviert</value></data>
+  <data name="ForumPostingRuleEnabledHelp" xml:space="preserve"><value>Deaktivierte Regeln werden beim Abgleich übersprungen.</value></data>
+  <data name="ForumPostingRuleConditionHelp" xml:space="preserve"><value>Die Regel greift für ein Release, wenn diese Bedingung zutrifft.</value></data>
+  <data name="ForumPostingRulePreview" xml:space="preserve"><value>Probelauf</value></data>
+  <data name="ForumPostingRulePreviewDescription" xml:space="preserve"><value>Gleicht die gespeicherten Regeln mit den neuesten Releases ab, ohne etwas zu posten.</value></data>
+  <data name="ForumPostingRulePreviewHint" xml:space="preserve"><value>Starte den Probelauf, um zu sehen, welche Regel welches Release übernehmen würde.</value></data>
+  <data name="ForumPostingRulePreviewSummary" xml:space="preserve"><value>{0} von {1} Releases haben eine Regel getroffen</value></data>
+  <data name="ForumPostingRuleNoMatch" xml:space="preserve"><value>Kein Treffer</value></data>
+  <data name="DragToReorder" xml:space="preserve"><value>Zum Sortieren ziehen</value></data>
+  <data name="ForumPostPostMode" xml:space="preserve"><value>Postingmodus</value></data>
+  <data name="ForumPostPostMode.ReplyToExistingElseNewThread" xml:space="preserve"><value>Auf bestehendes Thema antworten, sonst neues Thema</value></data>
+  <data name="ForumPostPostMode.AlwaysNewThread" xml:space="preserve"><value>Immer ein neues Thema erstellen</value></data>
+  <data name="LoadSubforums" xml:space="preserve"><value>Unterforen laden</value></data>
+  <data name="ReloadSubforums" xml:space="preserve"><value>Unterforen neu laden</value></data>
+  <data name="LoadSubforumsHelp" xml:space="preserve"><value>Beim Laden der Unterforen wird die Seite angemeldet, das kann einige Sekunden dauern. Das gespeicherte Unterforum bleibt ausgewählt, bis du ein anderes wählst.</value></data>
+  <data name="NoSubforumSelected" xml:space="preserve"><value>Noch kein Unterforum ausgewählt</value></data>
+  <data name="SubforumIsRequired" xml:space="preserve"><value>Ein Unterforum ist erforderlich.</value></data>
+  <data name="ThreadPrefix" xml:space="preserve"><value>Präfix</value></data>
+  <data name="LoadThreadPrefixes" xml:space="preserve"><value>Präfixe laden</value></data>
+  <data name="ReloadThreadPrefixes" xml:space="preserve"><value>Präfixe neu laden</value></data>
+  <data name="NoThreadPrefix" xml:space="preserve"><value>Kein Präfix</value></data>
+  <data name="ThreadPrefixRuleHelp" xml:space="preserve"><value>Optional. Präfixe können erst geladen werden, wenn die Unterforen geladen sind und ein Unterforum ausgewählt ist.</value></data>
+  <data name="ForumPostTemplateIsRequired" xml:space="preserve"><value>Eine Forenpostvorlage ist erforderlich.</value></data>
+  <data name="Condition" xml:space="preserve"><value>Bedingung</value></data>
+  <data name="ConditionField" xml:space="preserve"><value>Feld</value></data>
+  <data name="ConditionOperator" xml:space="preserve"><value>Operator</value></data>
+  <data name="ConditionValue" xml:space="preserve"><value>Wert</value></data>
+  <data name="ConditionValuePlaceholder" xml:space="preserve"><value>Wert</value></data>
+  <data name="ConditionSelectValue" xml:space="preserve"><value>Wert auswählen</value></data>
+  <data name="ConditionSelectValues" xml:space="preserve"><value>Werte auswählen</value></data>
+  <data name="ConditionAddValuePlaceholder" xml:space="preserve"><value>Wert hinzufügen</value></data>
+  <data name="ConditionNoValuesYet" xml:space="preserve"><value>Noch keine Werte</value></data>
+  <data name="ConditionAll" xml:space="preserve"><value>Alle (UND)</value></data>
+  <data name="ConditionAny" xml:space="preserve"><value>Mindestens eine (ODER)</value></data>
+  <data name="ConditionAllHelp" xml:space="preserve"><value>Jede Bedingung in dieser Gruppe muss zutreffen.</value></data>
+  <data name="ConditionAnyHelp" xml:space="preserve"><value>Mindestens eine Bedingung in dieser Gruppe muss zutreffen.</value></data>
+  <data name="ConditionNot" xml:space="preserve"><value>NICHT</value></data>
+  <data name="ConditionNotHelp" xml:space="preserve"><value>Trifft zu, wenn die Bedingung darunter nicht zutrifft.</value></data>
+  <data name="ConditionGroupEmpty" xml:space="preserve"><value>Noch keine Bedingungen</value></data>
+  <data name="AddCondition" xml:space="preserve"><value>Bedingung</value></data>
+  <data name="AddConditionGroup" xml:space="preserve"><value>Gruppe</value></data>
+  <data name="AddConditionNot" xml:space="preserve"><value>NICHT</value></data>
+  <data name="RemoveCondition" xml:space="preserve"><value>Bedingung entfernen</value></data>
+  <data name="RemoveValue" xml:space="preserve"><value>Wert entfernen</value></data>
+  <data name="RuleField.ReleaseName" xml:space="preserve"><value>Releasename</value></data>
+  <data name="RuleField.Resolution" xml:space="preserve"><value>Auflösung</value></data>
+  <data name="RuleField.PrimaryLanguage" xml:space="preserve"><value>Hauptsprache</value></data>
+  <data name="RuleField.IsMultiLanguage" xml:space="preserve"><value>Mehrsprachig</value></data>
+  <data name="RuleField.ContentType" xml:space="preserve"><value>Inhaltstyp</value></data>
+  <data name="RuleField.Source" xml:space="preserve"><value>Quelle</value></data>
+  <data name="RuleField.ReleaseGroupName" xml:space="preserve"><value>Releasegruppe</value></data>
+  <data name="RuleField.ReleaseGroupToken" xml:space="preserve"><value>Releasegruppenkürzel</value></data>
+  <data name="RuleField.Year" xml:space="preserve"><value>Jahr</value></data>
+  <data name="RuleField.Season" xml:space="preserve"><value>Staffel</value></data>
+  <data name="RuleField.Episode" xml:space="preserve"><value>Episode</value></data>
+  <data name="RuleConditionOperator.Equals" xml:space="preserve"><value>ist</value></data>
+  <data name="RuleConditionOperator.NotEquals" xml:space="preserve"><value>ist nicht</value></data>
+  <data name="RuleConditionOperator.In" xml:space="preserve"><value>ist eines von</value></data>
+  <data name="RuleConditionOperator.NotIn" xml:space="preserve"><value>ist keines von</value></data>
+  <data name="RuleConditionOperator.Like" xml:space="preserve"><value>passt auf Muster (%)</value></data>
+  <data name="RuleConditionOperator.NotLike" xml:space="preserve"><value>passt nicht auf Muster (%)</value></data>
+  <data name="RuleConditionOperator.Regex" xml:space="preserve"><value>passt auf Regex</value></data>
+  <data name="RuleConditionOperator.GreaterOrEqual" xml:space="preserve"><value>ist mindestens</value></data>
+  <data name="RuleConditionOperator.LessOrEqual" xml:space="preserve"><value>ist höchstens</value></data>
+  <data name="RuleConditionOperator.IsSet" xml:space="preserve"><value>ist gesetzt</value></data>
+  <data name="RuleConditionOperator.IsNotSet" xml:space="preserve"><value>ist nicht gesetzt</value></data>
+  <data name="AutoPost" xml:space="preserve"><value>Automatisches Posten</value></data>
+  <data name="AutoPostNow" xml:space="preserve"><value>Posten</value></data>
+  <data name="AutoPostAllMatchedSites" xml:space="preserve"><value>In alle passenden Foren posten</value></data>
+  <data name="AutoPostAlreadyPosted" xml:space="preserve"><value>Gepostet</value></data>
+  <data name="AutoPostNoMatchingRule" xml:space="preserve"><value>Keine passende Postingregel</value></data>
+  <data name="AutoPostNoSitesConfigured" xml:space="preserve"><value>Noch kein Forum mit Postingregeln vorhanden.</value></data>
+  <data name="AutoPostSucceeded" xml:space="preserve"><value>In {0} gepostet</value></data>
+  <data name="AutoPostFailed" xml:space="preserve"><value>Posten in {0} fehlgeschlagen</value></data>
+  <data name="AutoPostSkippedAlreadyPosted" xml:space="preserve"><value>Dieses Release wurde bereits in dieses Forum gepostet.</value></data>
+  <data name="AutoPostSkippedSiteUnavailable" xml:space="preserve"><value>Dieses Forum nimmt nicht mehr am automatischen Posten teil.</value></data>
+  <data name="AutoPostBlockedQualityGate" xml:space="preserve"><value>Automatisches Posten blockiert: Das Quality Gate wurde nicht bestanden.</value></data>
+  <data name="AutoPostBlockedClassification" xml:space="preserve"><value>Automatisches Posten blockiert: Das Release hat keine Klassifizierung.</value></data>
+  <data name="AutomaticPosting" xml:space="preserve"><value>Automatisches Posten</value></data>
+  <data name="AutomaticPostingHelp" xml:space="preserve"><value>Wenn aktiviert, werden Releases automatisch in diesem Forum gepostet, sobald eine Postingregel zutrifft.</value></data>
+  <data name="AutomaticPostingEnabled" xml:space="preserve"><value>Automatisches Posten für {0} aktiviert</value></data>
+  <data name="AutomaticPostingDisabled" xml:space="preserve"><value>Automatisches Posten für {0} deaktiviert</value></data>
+  <data name="AutomaticPostingBadge" xml:space="preserve"><value>Auto</value></data>
+  <data name="StripDotsForThreadSearch" xml:space="preserve"><value>Themensuche ohne Punkte</value></data>
+  <data name="StripDotsForThreadSearchHelp" xml:space="preserve"><value>Ersetzt die Punkte im Releasenamen bei der Themensuche in diesem Forum durch Leerzeichen. Ein neues Thema verwendet weiterhin den unveränderten Releasenamen als Titel.</value></data>
+  <data name="StripDotsForThreadSearchEnabled" xml:space="preserve"><value>Themensuche ohne Punkte für {0} aktiviert</value></data>
+  <data name="StripDotsForThreadSearchDisabled" xml:space="preserve"><value>Themensuche ohne Punkte für {0} deaktiviert</value></data>
 </root>

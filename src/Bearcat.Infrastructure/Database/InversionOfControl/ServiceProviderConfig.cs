@@ -5,6 +5,7 @@ using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks.Repositories;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
+using Bearcat.Domain.UseCases.ManageForumPostingRules.Repositories;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.UseCases.ManageImageHosters.Repositories;
@@ -25,6 +26,7 @@ using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
+using Bearcat.Domain.UseCases.PostToForums.Repositories;
 using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.DistributionSites;
@@ -80,6 +82,7 @@ public static class ServiceProviderConfig
             services.AddScoped<IImageUploadConfigReadRepository, ImageUploadConfigReadRepository>();
             services.AddScoped<IPostedLocationReadRepository, PostedLocationReadRepository>();
             services.AddScoped<IPostedLocationWriteRepository, PostedLocationWriteRepository>();
+            services.AddScoped<IAutoForumPostingRepository, AutoForumPostingRepository>();
             services.AddScoped<IBackgroundTaskStateReadRepository, BackgroundTaskStateRepository>();
             services.AddScoped<
                 IBackgroundTaskStateWriteRepository,
@@ -109,10 +112,13 @@ public static class ServiceProviderConfig
             services.AddScoped<IReleaseWriteRepository, ReleaseWriteRepository>();
             services.AddScoped<IReleaseInfoRepository, ReleaseInfoRepository>();
             services.AddScoped<IMediaMetadataRepository, MediaMetadataRepository>();
+            services.AddScoped<IReleaseClassificationRepository, ReleaseClassificationRepository>();
             services.AddScoped<IReleaseTemplateReadRepository, ReleaseTemplateRepository>();
             services.AddScoped<IReleaseTemplateWriteRepository, ReleaseTemplateRepository>();
             services.AddScoped<IForumPostTemplateReadRepository, ForumPostTemplateRepository>();
             services.AddScoped<IForumPostTemplateWriteRepository, ForumPostTemplateRepository>();
+            services.AddScoped<IForumPostingRuleReadRepository, ForumPostingRuleRepository>();
+            services.AddScoped<IForumPostingRuleWriteRepository, ForumPostingRuleRepository>();
             services.AddScoped<IReleaseGroupReadRepository, ReleaseGroupRepository>();
             services.AddScoped<IReleaseGroupWriteRepository, ReleaseGroupRepository>();
             services.AddScoped<IQualityProfileReadRepository, QualityProfileRepository>();

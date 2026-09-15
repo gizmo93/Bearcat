@@ -12,6 +12,7 @@ public class MediaMetadataService(
     IMediaMetadataRepository repository,
     IMediaMetadataExtractor extractor,
     IFileSystemService fileSystemService,
+    ReleaseClassificationService classificationService,
     TimeProvider timeProvider,
     ILogger<MediaMetadataService> logger
 )
@@ -31,6 +32,8 @@ public class MediaMetadataService(
             cancellationToken
         );
         release.MediaMetadataExtractedAt = timeProvider.GetLocalNow();
+
+        classificationService.Classify(release);
     }
 
     public async Task ExtractForReleaseAsync(
@@ -55,6 +58,8 @@ public class MediaMetadataService(
             cancellationToken
         );
         release.MediaMetadataExtractedAt = timeProvider.GetLocalNow();
+
+        classificationService.Classify(release);
 
         await repository.SaveChangesAsync(cancellationToken);
     }

@@ -3,12 +3,14 @@ using Bearcat.Domain.UseCases.ManageDistributionSites.ReadModels;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
+using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManageDistributionSites;
 
 public partial class AllDistributionSitesPage(
     DialogService dialogService,
     ToastService toastService,
+    NavigationManager navigationManager,
     IScopedOperationRunner operationRunner
 )
 {
@@ -75,6 +77,13 @@ public partial class AllDistributionSitesPage(
         {
             await LoadDistributionSitesAsync();
         }
+    }
+
+    private void NavigateToPostingRules(DistributionSiteRegistrationReadModel distributionSite)
+    {
+        navigationManager.NavigateTo(
+            $"/distribution-site-registrations/{distributionSite.DistributionSiteRegistrationId}/posting-rules"
+        );
     }
 
     private async Task ToggleIsActiveAsync(DistributionSiteRegistrationReadModel distributionSite)

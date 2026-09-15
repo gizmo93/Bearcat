@@ -133,6 +133,20 @@ public static class NotificationDefinitions
             DisplayName: "NotificationKind.CollectionLinkCrypterContainerInvalid",
             Description: "NotificationKind.CollectionLinkCrypterContainerInvalid.Description"
         ),
+        new(
+            Kind: NotificationKind.AutomaticForumPostCreated,
+            Severity: NotificationSeverity.Info,
+            Group: NotificationGroup.DistributionSites,
+            DisplayName: "NotificationKind.AutomaticForumPostCreated",
+            Description: "NotificationKind.AutomaticForumPostCreated.Description"
+        ),
+        new(
+            Kind: NotificationKind.AutomaticForumPostFailed,
+            Severity: NotificationSeverity.Error,
+            Group: NotificationGroup.DistributionSites,
+            DisplayName: "NotificationKind.AutomaticForumPostFailed",
+            Description: "NotificationKind.AutomaticForumPostFailed.Description"
+        ),
     ];
 
     public static NotificationDefinition Get(NotificationKind kind)

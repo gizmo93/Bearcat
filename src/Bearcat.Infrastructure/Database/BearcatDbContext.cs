@@ -98,6 +98,8 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<ReleaseMediaFile> ReleaseMediaFiles { get; set; } = null!;
 
+    public DbSet<ReleaseClassification> ReleaseClassifications { get; set; } = null!;
+
     public DbSet<ReleaseFolderObservation> ReleaseFolderObservations { get; set; } = null!;
 
     public DbSet<QualityProfile> QualityProfiles { get; set; } = null!;
@@ -105,6 +107,8 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
     public DbSet<QualityCheckRule> QualityCheckRules { get; set; } = null!;
 
     public DbSet<ReleaseQualityIssue> ReleaseQualityIssues { get; set; } = null!;
+
+    public DbSet<ForumPostingRule> ForumPostingRules { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

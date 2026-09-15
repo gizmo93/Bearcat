@@ -20,4 +20,6 @@ public enum NotificationKind
     LinkCrypterContainerCreationFailed = 16,
     LinkCrypterContainerUpdateFailed = 17,
     CollectionLinkCrypterContainerInvalid = 18,
+    AutomaticForumPostCreated = 19,
+    AutomaticForumPostFailed = 20,
 }

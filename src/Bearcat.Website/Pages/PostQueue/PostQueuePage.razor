@@ -190,6 +190,101 @@
                                     </div>
                                 }
                             </div>
+
+                            @{
+                                var plan = AutoPostPlanFor(item.ReleaseId);
+                            }
+
+                            <div class="space-y-2 border-t border-border/60 pt-3">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <LucideIcon Name="send" class="h-4 w-4 text-muted-foreground" />
+                                        <span class="text-xs font-medium text-muted-foreground">@L["AutoPost"]</span>
+                                    </div>
+
+                                    @if (plan.PendingSites.Count > 1)
+                                    {
+                                        <BbButton Variant="ButtonVariant.Outline"
+                                                  Size="ButtonSize.Small"
+                                                  Disabled="IsReleaseBusy(item.ReleaseId)"
+                                                  OnClick="@(() => PostToAllMatchedSitesAsync(plan))">
+                                            <LucideIcon Name="send-horizontal" class="h-4 w-4" />
+                                            @L["AutoPostAllMatchedSites"]
+                                        </BbButton>
+                                    }
+                                </div>
+
+                                @if (plan.BlockedReason is { } blockedReason)
+                                {
+                                    <p class="text-xs text-muted-foreground">@BlockedReasonText(blockedReason)</p>
+                                }
+                                else if (plan.Sites.Count == 0)
+                                {
+                                    <p class="text-xs text-muted-foreground">@L["AutoPostNoSitesConfigured"]</p>
+                                }
+                                else
+                                {
+                                    @foreach (var site in plan.Sites)
+                                    {
+                                        <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border/70 px-3 py-2">
+                                            <div class="min-w-0 space-y-0.5">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <span class="text-sm font-medium">@site.DistributionSiteRegistrationName</span>
+
+                                                    @if (site.AutomaticPostingEnabled)
+                                                    {
+                                                        <BbBadge Variant="BadgeVariant.Outline">@L["AutomaticPostingBadge"]</BbBadge>
+                                                    }
+                                                </div>
+
+                                                @if (site.Status == AutoPostSiteStatus.AlreadyPosted)
+                                                {
+                                                    <a href="@site.PostedUrl"
+                                                       target="_blank"
+                                                       rel="noopener noreferrer"
+                                                       class="block truncate text-xs text-muted-foreground hover:underline"
+                                                       title="@site.PostedUrl">
+                                                        @site.PostedUrl
+                                                    </a>
+                                                }
+                                                else if (site.Match is { } match)
+                                                {
+                                                    <p class="text-xs text-muted-foreground">
+                                                        @match.RuleName · @match.TargetPathSnapshot
+                                                    </p>
+                                                }
+                                                else
+                                                {
+                                                    <p class="text-xs text-muted-foreground">@L["AutoPostNoMatchingRule"]</p>
+                                                }
+
+                                                @if (SiteError(item.ReleaseId, site.DistributionSiteRegistrationId) is { } error)
+                                                {
+                                                    <p class="text-xs text-destructive">@error</p>
+                                                }
+                                            </div>
+
+                                            @if (site.Status == AutoPostSiteStatus.AlreadyPosted)
+                                            {
+                                                <BbBadge Variant="BadgeVariant.Secondary">
+                                                    <LucideIcon Name="check" class="mr-1 h-3 w-3" />
+                                                    @L["AutoPostAlreadyPosted"]
+                                                </BbBadge>
+                                            }
+                                            else if (site.Status == AutoPostSiteStatus.Matched)
+                                            {
+                                                <BbButton Size="ButtonSize.Small"
+                                                          Disabled="IsReleaseBusy(item.ReleaseId)"
+                                                          OnClick="@(() => PostToSiteAsync(item.ReleaseId, site))">
+                                                    <LucideIcon Name="@(IsSiteBusy(item.ReleaseId, site.DistributionSiteRegistrationId) ? "loader-circle" : "send")"
+                                                                class="@($"h-4 w-4 {(IsSiteBusy(item.ReleaseId, site.DistributionSiteRegistrationId) ? "animate-spin" : string.Empty)}")" />
+                                                    @L["AutoPostNow"]
+                                                </BbButton>
+                                            }
+                                        </div>
+                                    }
+                                }
+                            </div>
                         </BbCardContent>
                     </BbCard>
                 }

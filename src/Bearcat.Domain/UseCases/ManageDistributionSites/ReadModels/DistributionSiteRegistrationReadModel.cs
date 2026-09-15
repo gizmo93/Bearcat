@@ -8,5 +8,8 @@ public record DistributionSiteRegistrationReadModel(
     string DistributionSiteClassName,
     string DistributionSiteName,
     DistributionSiteKind Kind,
-    bool IsActive
+    bool IsActive,
+    bool EnableAutomaticPosting,
+    bool StripDotsForThreadSearch,
+    int PostingRuleCount
 );

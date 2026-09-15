@@ -20,7 +20,9 @@ public static class ServiceProviderConfig
             services.AddHostedService<CheckUploadStateBackgroundTask>();
             services.AddHostedService<LinkCrypterContainerBackgroundTask>();
             services.AddHostedService<QualityGateReevaluationBackgroundTask>();
+            services.AddHostedService<ReleaseClassificationBackgroundTask>();
             services.AddHostedService<TelegramNotificationBackgroundTask>();
+            services.AddHostedService<AutoForumPostingBackgroundTask>();
         }
     }
 }

@@ -1,0 +1,116 @@
+@using Bearcat.Domain.Shared.ForumPostingRules
+
+@if (Node.Kind is RuleConditionKind.Comparison)
+{
+    <ConditionComparisonRow Node="Node" OnRemove="OnRemove" />
+}
+else
+{
+    <div class="space-y-3 rounded-md border border-border/70 bg-muted/20 p-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+                @if (Node.Kind is RuleConditionKind.Not)
+                {
+                    <BbBadge Variant="BadgeVariant.Destructive">@L["ConditionNot"]</BbBadge>
+                    <span class="text-xs text-muted-foreground">@L["ConditionNotHelp"]</span>
+                }
+                else
+                {
+                    <BbSelect TValue="RuleConditionKind"
+                              Value="Node.Kind"
+                              ValueChanged="ChangeKind"
+                              Options="GroupKindOptions"
+                              Class="w-36" />
+                    <span class="text-xs text-muted-foreground">
+                        @(Node.Kind is RuleConditionKind.All ? L["ConditionAllHelp"] : L["ConditionAnyHelp"])
+                    </span>
+                }
+            </div>
+
+            <div class="flex items-center gap-1">
+                @if (CanAddChild)
+                {
+                    <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="AddComparison">
+                        <LucideIcon Name="plus" class="h-4 w-4" />
+                        @L["AddCondition"]
+                    </BbButton>
+                    <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="AddGroup">
+                        <LucideIcon Name="brackets" class="h-4 w-4" />
+                        @L["AddConditionGroup"]
+                    </BbButton>
+                    <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="AddNot">
+                        <LucideIcon Name="ban" class="h-4 w-4" />
+                        @L["AddConditionNot"]
+                    </BbButton>
+                }
+
+                @if (OnRemove.HasDelegate)
+                {
+                    <BbButton Variant="ButtonVariant.Ghost"
+                              Size="ButtonSize.IconSmall"
+                              AriaLabel="@L["RemoveCondition"]"
+                              OnClick="OnRemove">
+                        <LucideIcon Name="trash-2" class="h-4 w-4" />
+                    </BbButton>
+                }
+            </div>
+        </div>
+
+        @if (Node.Children.Count == 0)
+        {
+            <p class="text-xs text-muted-foreground">@L["ConditionGroupEmpty"]</p>
+        }
+        else
+        {
+            <div class="space-y-2">
+                @foreach (var child in Node.Children)
+                {
+                    <ConditionNodeEditor @key="child" Node="child" OnRemove="@(() => RemoveChild(child))" />
+                }
+            </div>
+        }
+    </div>
+}
+
+@code
+{
+    [Parameter]
+    public ConditionNodeModel Node { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnRemove { get; set; }
+
+    private bool CanAddChild =>
+        Node.IsGroup || (Node.Kind is RuleConditionKind.Not && Node.Children.Count == 0);
+
+    private IReadOnlyList<SelectOption<RuleConditionKind>> GroupKindOptions =>
+        [
+            new(RuleConditionKind.All, L["ConditionAll"]),
+            new(RuleConditionKind.Any, L["ConditionAny"]),
+        ];
+
+    private void ChangeKind(RuleConditionKind kind)
+    {
+        Node.Kind = kind;
+    }
+
+    private void AddComparison()
+    {
+        Node.Children.Add(ConditionModelMapper.CreateComparison());
+    }
+
+    private void AddGroup()
+    {
+        Node.Children.Add(ConditionModelMapper.CreateGroup(RuleConditionKind.All));
+    }
+
+    private void AddNot()
+    {
+        Node.Children.Add(ConditionModelMapper.CreateNot());
+    }
+
+    private void RemoveChild(ConditionNodeModel child)
+    {
+        Node.Children.Remove(child);
+    }
+}

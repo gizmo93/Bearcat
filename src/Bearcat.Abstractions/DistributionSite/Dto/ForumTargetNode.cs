@@ -6,5 +6,6 @@ public sealed record ForumTargetNode(
     ForumTargetId Id,
     string Title,
     bool CanReceivePosts,
-    IReadOnlyList<ForumTargetNode> Children
+    IReadOnlyList<ForumTargetNode> Children,
+    string? StableId = null
 );

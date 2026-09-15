@@ -12,6 +12,10 @@ public class PostedLocation
 
     public ReleaseCollection? ReleaseCollection { get; set; }
 
+    public int? DistributionSiteRegistrationId { get; set; }
+
+    public DistributionSiteRegistration? DistributionSiteRegistration { get; set; }
+
     public string Url { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; }

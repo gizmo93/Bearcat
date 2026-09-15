@@ -119,6 +119,45 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
         return await client.PrepareReplyDraftAsync(threadUrl, body, cancellationToken);
     }
 
+    public async Task<SubmittedPost> SubmitNewThreadAsync(
+        DistributionSession session,
+        ForumTargetId target,
+        string title,
+        IReadOnlyList<string> prefixIds,
+        string body,
+        CancellationToken cancellationToken
+    )
+    {
+        using var client = CreateClient(session);
+        return await client.SubmitNewThreadAsync(
+            forumUrl: target.Value,
+            title: title,
+            prefixIds: prefixIds,
+            message: body,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<SubmittedPost> SubmitReplyAsync(
+        DistributionSession session,
+        string threadUrl,
+        string body,
+        CancellationToken cancellationToken
+    )
+    {
+        using var client = CreateClient(session);
+        return await client.SubmitReplyAsync(threadUrl, body, cancellationToken);
+    }
+
+    public ForumTargetId ResolveTarget(string storedTargetId)
+    {
+        var trimmed = storedTargetId.Trim();
+
+        return trimmed.Length > 0 && trimmed.All(char.IsAsciiDigit)
+            ? new ForumTargetId($"{BaseUrl.TrimEnd('/')}/forums/{trimmed}/")
+            : new ForumTargetId(trimmed);
+    }
+
     public async Task<string?> ResolvePostedUrlAsync(
         DistributionSession session,
         ForumTargetId target,

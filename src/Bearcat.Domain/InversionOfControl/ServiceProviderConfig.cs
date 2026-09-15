@@ -1,6 +1,7 @@
 ﻿using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.Shared.QualityGate.Checks;
@@ -9,6 +10,7 @@ using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
+using Bearcat.Domain.UseCases.ManageForumPostingRules;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
 using Bearcat.Domain.UseCases.ManageHosters;
@@ -34,6 +36,7 @@ using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.ManageUploads.Progress;
+using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Microsoft.Extensions.DependencyInjection;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -71,8 +74,20 @@ public static class ServiceProviderConfig
             services.AddScoped<ReleaseInfoResolutionService>();
             services.AddScoped<MediaMetadataResolver>();
             services.AddScoped<MediaMetadataService>();
+            services.AddScoped<ReleaseClassificationService>();
             services.AddScoped<ReleaseTemplateService>();
             services.AddScoped<ForumPostTemplateService>();
+            services.AddScoped<ForumPostingRuleService>();
+            services.AddScoped<ForumPostingRulePreviewService>();
+            services.AddScoped<AutoForumPostingPlanService>();
+            services.AddScoped<AutoForumPostingExecutionService>();
+            services.AddScoped<AutoForumPostingRunner>();
+            services.AddScoped<IForumPostContentRenderer>(provider =>
+                provider.GetRequiredService<ForumPostRenderService>()
+            );
+            services.AddScoped<IForumPostSubmitter>(provider =>
+                provider.GetRequiredService<DistributionSiteSessionService>()
+            );
             services.AddScoped<ArchiveCreationService>();
             services.AddScoped<ArchiveCleanupService>();
             services.AddScoped<UploadFilesService>();
