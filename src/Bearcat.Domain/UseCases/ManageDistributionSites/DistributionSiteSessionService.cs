@@ -3,6 +3,7 @@ using Bearcat.Abstractions.DistributionSite.Dto;
 using Bearcat.Abstractions.DistributionSite.Results;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.AutoForumPosting;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 
 namespace Bearcat.Domain.UseCases.ManageDistributionSites;
@@ -12,7 +13,7 @@ public class DistributionSiteSessionService(
     IDistributionSessionStore sessionStore,
     IDistributionSiteFactory distributionSiteFactory,
     ISecretProtector secretProtector
-)
+) : IForumPostSubmitter
 {
     public async Task<TryLoginResult> TestLoginAsync(
         int registrationId,
@@ -56,6 +57,23 @@ public class DistributionSiteSessionService(
         return await forum.FindExistingThreadsAsync(
             session: session,
             target: target,
+            releaseName: releaseName,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<IReadOnlyList<ExistingThread>> FindExistingThreadsAsync(
+        int registrationId,
+        string targetNodeId,
+        string releaseName,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var (forum, session) = await EnsureForumSessionAsync(registrationId, cancellationToken);
+
+        return await forum.FindExistingThreadsAsync(
+            session: session,
+            target: forum.ResolveTarget(targetNodeId),
             releaseName: releaseName,
             cancellationToken: cancellationToken
         );

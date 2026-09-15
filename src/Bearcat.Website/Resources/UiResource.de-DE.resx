@@ -1046,15 +1046,15 @@
   <data name="NotificationSeverityLabel" xml:space="preserve"><value>Schweregrad</value></data>
   <data name="NotificationKindFilter" xml:space="preserve"><value>Benachrichtigungsart</value></data>
   <data name="AllNotificationKinds" xml:space="preserve"><value>Alle Benachrichtigungsarten</value></data>
-  <data name="ForumPostingRules" xml:space="preserve"><value>Posting-Regeln</value></data>
+  <data name="ForumPostingRules" xml:space="preserve"><value>Postingregeln</value></data>
   <data name="ForumPostingRulesIntro" xml:space="preserve"><value>Regeln bestimmen, in welches Unterforum ein Release gepostet wird. Die erste passende Regel gewinnt, sortiere sie daher von speziell nach allgemein.</value></data>
-  <data name="NewForumPostingRule" xml:space="preserve"><value>Neue Posting-Regel</value></data>
-  <data name="NoForumPostingRulesYet" xml:space="preserve"><value>Noch keine Posting-Regeln. Lege eine Regel an, um Releases automatisch einem Unterforum zuzuordnen.</value></data>
+  <data name="NewForumPostingRule" xml:space="preserve"><value>Neue Postingregel</value></data>
+  <data name="NoForumPostingRulesYet" xml:space="preserve"><value>Noch keine Postingregeln. Lege eine Regel an, um Releases automatisch einem Unterforum zuzuordnen.</value></data>
   <data name="ForumPostingRuleDialogDescription" xml:space="preserve"><value>Lege fest, wann die Regel greift und wohin das Release gepostet wird.</value></data>
   <data name="ForumPostingRuleNamePlaceholder" xml:space="preserve"><value>Zum Beispiel: Deutsche Filme 1080p</value></data>
-  <data name="DeleteForumPostingRuleConfirmation" xml:space="preserve"><value>Möchtest du die Posting-Regel {0} wirklich löschen?</value></data>
-  <data name="ForumPostingRuleEnabled" xml:space="preserve"><value>Posting-Regel {0} aktiviert</value></data>
-  <data name="ForumPostingRuleDisabled" xml:space="preserve"><value>Posting-Regel {0} deaktiviert</value></data>
+  <data name="DeleteForumPostingRuleConfirmation" xml:space="preserve"><value>Möchtest du die Postingregel {0} wirklich löschen?</value></data>
+  <data name="ForumPostingRuleEnabled" xml:space="preserve"><value>Postingregel {0} aktiviert</value></data>
+  <data name="ForumPostingRuleDisabled" xml:space="preserve"><value>Postingregel {0} deaktiviert</value></data>
   <data name="ForumPostingRuleEnabledHelp" xml:space="preserve"><value>Deaktivierte Regeln werden beim Abgleich übersprungen.</value></data>
   <data name="ForumPostingRuleConditionHelp" xml:space="preserve"><value>Die Regel greift für ein Release, wenn diese Bedingung zutrifft.</value></data>
   <data name="ForumPostingRulePreview" xml:space="preserve"><value>Probelauf</value></data>
@@ -1063,7 +1063,7 @@
   <data name="ForumPostingRulePreviewSummary" xml:space="preserve"><value>{0} von {1} Releases haben eine Regel getroffen</value></data>
   <data name="ForumPostingRuleNoMatch" xml:space="preserve"><value>Kein Treffer</value></data>
   <data name="DragToReorder" xml:space="preserve"><value>Zum Sortieren ziehen</value></data>
-  <data name="ForumPostPostMode" xml:space="preserve"><value>Posting-Modus</value></data>
+  <data name="ForumPostPostMode" xml:space="preserve"><value>Postingmodus</value></data>
   <data name="ForumPostPostMode.ReplyToExistingElseNewThread" xml:space="preserve"><value>Auf bestehendes Thema antworten, sonst neues Thema</value></data>
   <data name="ForumPostPostMode.AlwaysNewThread" xml:space="preserve"><value>Immer ein neues Thema erstellen</value></data>
   <data name="LoadSubforums" xml:space="preserve"><value>Unterforen laden</value></data>
@@ -1076,7 +1076,7 @@
   <data name="ReloadThreadPrefixes" xml:space="preserve"><value>Präfixe neu laden</value></data>
   <data name="NoThreadPrefix" xml:space="preserve"><value>Kein Präfix</value></data>
   <data name="ThreadPrefixRuleHelp" xml:space="preserve"><value>Optional. Präfixe können erst geladen werden, wenn die Unterforen geladen sind und ein Unterforum ausgewählt ist.</value></data>
-  <data name="ForumPostTemplateIsRequired" xml:space="preserve"><value>Eine Forenpost-Vorlage ist erforderlich.</value></data>
+  <data name="ForumPostTemplateIsRequired" xml:space="preserve"><value>Eine Forenpostvorlage ist erforderlich.</value></data>
   <data name="Condition" xml:space="preserve"><value>Bedingung</value></data>
   <data name="ConditionField" xml:space="preserve"><value>Feld</value></data>
   <data name="ConditionOperator" xml:space="preserve"><value>Operator</value></data>
@@ -1104,8 +1104,8 @@
   <data name="RuleField.IsMultiLanguage" xml:space="preserve"><value>Mehrsprachig</value></data>
   <data name="RuleField.ContentType" xml:space="preserve"><value>Inhaltstyp</value></data>
   <data name="RuleField.Source" xml:space="preserve"><value>Quelle</value></data>
-  <data name="RuleField.ReleaseGroupName" xml:space="preserve"><value>Release-Gruppe</value></data>
-  <data name="RuleField.ReleaseGroupToken" xml:space="preserve"><value>Release-Gruppen-Kürzel</value></data>
+  <data name="RuleField.ReleaseGroupName" xml:space="preserve"><value>Releasegruppe</value></data>
+  <data name="RuleField.ReleaseGroupToken" xml:space="preserve"><value>Releasegruppenkürzel</value></data>
   <data name="RuleField.Year" xml:space="preserve"><value>Jahr</value></data>
   <data name="RuleField.Season" xml:space="preserve"><value>Staffel</value></data>
   <data name="RuleField.Episode" xml:space="preserve"><value>Episode</value></data>
@@ -1120,4 +1120,16 @@
   <data name="RuleConditionOperator.LessOrEqual" xml:space="preserve"><value>ist höchstens</value></data>
   <data name="RuleConditionOperator.IsSet" xml:space="preserve"><value>ist gesetzt</value></data>
   <data name="RuleConditionOperator.IsNotSet" xml:space="preserve"><value>ist nicht gesetzt</value></data>
+  <data name="AutoPost" xml:space="preserve"><value>Automatisches Posten</value></data>
+  <data name="AutoPostNow" xml:space="preserve"><value>Posten</value></data>
+  <data name="AutoPostAllMatchedSites" xml:space="preserve"><value>In alle passenden Foren posten</value></data>
+  <data name="AutoPostAlreadyPosted" xml:space="preserve"><value>Gepostet</value></data>
+  <data name="AutoPostNoMatchingRule" xml:space="preserve"><value>Keine passende Postingregel</value></data>
+  <data name="AutoPostNoSitesConfigured" xml:space="preserve"><value>Noch kein Forum mit Postingregeln vorhanden.</value></data>
+  <data name="AutoPostSucceeded" xml:space="preserve"><value>In {0} gepostet</value></data>
+  <data name="AutoPostFailed" xml:space="preserve"><value>Posten in {0} fehlgeschlagen</value></data>
+  <data name="AutoPostSkippedAlreadyPosted" xml:space="preserve"><value>Dieses Release wurde bereits in dieses Forum gepostet.</value></data>
+  <data name="AutoPostSkippedSiteUnavailable" xml:space="preserve"><value>Dieses Forum nimmt nicht mehr am automatischen Posten teil.</value></data>
+  <data name="AutoPostBlockedQualityGate" xml:space="preserve"><value>Automatisches Posten blockiert: Das Quality Gate wurde nicht bestanden.</value></data>
+  <data name="AutoPostBlockedClassification" xml:space="preserve"><value>Automatisches Posten blockiert: Das Release hat keine Klassifizierung.</value></data>
 </root>

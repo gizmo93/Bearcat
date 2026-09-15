@@ -373,11 +373,19 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
         {
             if (IsCollection)
             {
-                await service.AddForCollectionAsync(EntityId, url);
+                await service.AddForCollectionAsync(
+                    releaseCollectionId: EntityId,
+                    url: url,
+                    distributionSiteRegistrationId: selectedRegistrationId
+                );
                 return;
             }
 
-            await service.AddForReleaseAsync(EntityId, url);
+            await service.AddForReleaseAsync(
+                releaseId: EntityId,
+                url: url,
+                distributionSiteRegistrationId: selectedRegistrationId
+            );
         });
 
         savedPostUrl = url.Trim();

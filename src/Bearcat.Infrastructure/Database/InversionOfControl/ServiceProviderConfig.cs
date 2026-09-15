@@ -1,4 +1,5 @@
-﻿using Bearcat.Domain.Shared.ForumPostRendering;
+﻿using Bearcat.Domain.Shared.AutoForumPosting;
+using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UseCases.Dashboard.Repositories;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
@@ -81,6 +82,7 @@ public static class ServiceProviderConfig
             services.AddScoped<IImageUploadConfigReadRepository, ImageUploadConfigReadRepository>();
             services.AddScoped<IPostedLocationReadRepository, PostedLocationReadRepository>();
             services.AddScoped<IPostedLocationWriteRepository, PostedLocationWriteRepository>();
+            services.AddScoped<IAutoForumPostingRepository, AutoForumPostingRepository>();
             services.AddScoped<IBackgroundTaskStateReadRepository, BackgroundTaskStateRepository>();
             services.AddScoped<
                 IBackgroundTaskStateWriteRepository,

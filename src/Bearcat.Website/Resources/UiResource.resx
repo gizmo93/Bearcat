@@ -1117,4 +1117,16 @@
   <data name="RuleConditionOperator.LessOrEqual" xml:space="preserve"><value>is at most</value></data>
   <data name="RuleConditionOperator.IsSet" xml:space="preserve"><value>is set</value></data>
   <data name="RuleConditionOperator.IsNotSet" xml:space="preserve"><value>is not set</value></data>
+  <data name="AutoPost" xml:space="preserve"><value>Automatic posting</value></data>
+  <data name="AutoPostNow" xml:space="preserve"><value>Post</value></data>
+  <data name="AutoPostAllMatchedSites" xml:space="preserve"><value>Post to all matched sites</value></data>
+  <data name="AutoPostAlreadyPosted" xml:space="preserve"><value>Posted</value></data>
+  <data name="AutoPostNoMatchingRule" xml:space="preserve"><value>No matching posting rule</value></data>
+  <data name="AutoPostNoSitesConfigured" xml:space="preserve"><value>No forum has posting rules yet.</value></data>
+  <data name="AutoPostSucceeded" xml:space="preserve"><value>Posted to {0}</value></data>
+  <data name="AutoPostFailed" xml:space="preserve"><value>Posting to {0} failed</value></data>
+  <data name="AutoPostSkippedAlreadyPosted" xml:space="preserve"><value>This release has already been posted to this forum.</value></data>
+  <data name="AutoPostSkippedSiteUnavailable" xml:space="preserve"><value>This forum no longer takes part in automatic posting.</value></data>
+  <data name="AutoPostBlockedQualityGate" xml:space="preserve"><value>Automatic posting is blocked: the quality gate has not passed.</value></data>
+  <data name="AutoPostBlockedClassification" xml:space="preserve"><value>Automatic posting is blocked: the release has no classification.</value></data>
 </root>

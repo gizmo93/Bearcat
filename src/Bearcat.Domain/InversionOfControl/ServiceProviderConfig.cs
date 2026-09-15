@@ -1,6 +1,7 @@
 ﻿using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.AutoForumPosting;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.Shared.QualityGate.Checks;
@@ -77,6 +78,14 @@ public static class ServiceProviderConfig
             services.AddScoped<ForumPostTemplateService>();
             services.AddScoped<ForumPostingRuleService>();
             services.AddScoped<ForumPostingRulePreviewService>();
+            services.AddScoped<AutoForumPostingPlanService>();
+            services.AddScoped<AutoForumPostingExecutionService>();
+            services.AddScoped<IForumPostContentRenderer>(provider =>
+                provider.GetRequiredService<ForumPostRenderService>()
+            );
+            services.AddScoped<IForumPostSubmitter>(provider =>
+                provider.GetRequiredService<DistributionSiteSessionService>()
+            );
             services.AddScoped<ArchiveCreationService>();
             services.AddScoped<ArchiveCleanupService>();
             services.AddScoped<UploadFilesService>();

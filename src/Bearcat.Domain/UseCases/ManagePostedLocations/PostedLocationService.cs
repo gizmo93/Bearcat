@@ -12,11 +12,16 @@ public class PostedLocationService(
     public Task<int> AddForReleaseAsync(
         int releaseId,
         string url,
+        int? distributionSiteRegistrationId = null,
         CancellationToken cancellationToken = default
     )
     {
         return AddAsync(
-            postedLocation: new PostedLocation { ReleaseId = releaseId },
+            postedLocation: new PostedLocation
+            {
+                ReleaseId = releaseId,
+                DistributionSiteRegistrationId = distributionSiteRegistrationId,
+            },
             url: url,
             cancellationToken: cancellationToken
         );
@@ -25,11 +30,16 @@ public class PostedLocationService(
     public Task<int> AddForCollectionAsync(
         int releaseCollectionId,
         string url,
+        int? distributionSiteRegistrationId = null,
         CancellationToken cancellationToken = default
     )
     {
         return AddAsync(
-            postedLocation: new PostedLocation { ReleaseCollectionId = releaseCollectionId },
+            postedLocation: new PostedLocation
+            {
+                ReleaseCollectionId = releaseCollectionId,
+                DistributionSiteRegistrationId = distributionSiteRegistrationId,
+            },
             url: url,
             cancellationToken: cancellationToken
         );
