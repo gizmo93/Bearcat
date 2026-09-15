@@ -20,7 +20,7 @@ public record ParsedReleaseName
 
     public ReleaseResolution Resolution { get; init; }
 
-    public string? Source { get; init; }
+    public ReleaseSource Source { get; init; }
 
     public string? Group { get; init; }
 
@@ -30,7 +30,7 @@ public record ParsedReleaseName
             Year is not null
             || Language is not null
             || Resolution != ReleaseResolution.Unknown
-            || Source is not null
+            || Source != ReleaseSource.Unknown
             || Season is not null
             || Episode is not null
         );

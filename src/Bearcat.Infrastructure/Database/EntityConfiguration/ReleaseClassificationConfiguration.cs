@@ -15,8 +15,16 @@ public class ReleaseClassificationConfiguration : IEntityTypeConfiguration<Relea
         builder.Property(classification => classification.Year).IsRequired(false);
         builder.Property(classification => classification.Season).IsRequired(false);
         builder.Property(classification => classification.Episode).IsRequired(false);
+        builder.Property(classification => classification.EpisodeEnd).IsRequired(false);
+        builder.Property(classification => classification.ContentType).IsRequired();
         builder.Property(classification => classification.Resolution).IsRequired();
         builder.Property(classification => classification.ResolutionSource).IsRequired();
+        builder.Property(classification => classification.Source).IsRequired();
+        builder.Property(classification => classification.SourceSource).IsRequired();
+        builder
+            .Property(classification => classification.ReleaseGroupToken)
+            .IsRequired(false)
+            .HasMaxLength(100);
         builder
             .Property(classification => classification.PrimaryLanguage)
             .IsRequired(false)

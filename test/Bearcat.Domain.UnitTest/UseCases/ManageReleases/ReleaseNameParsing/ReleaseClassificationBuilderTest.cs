@@ -146,6 +146,85 @@ public class ReleaseClassificationBuilderTest
         classification.LanguageSource.ShouldBe(ClassificationSource.ReleaseName);
     }
 
+    [Test]
+    public void Build_GermanMovie_CarriesSourceGroupTokenAndContentType()
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            "Movie.Name.2023.German.DL.1080p.BluRay.x264-GROUP",
+            []
+        );
+
+        // Assert
+        classification.Source.ShouldBe(ReleaseSource.BluRay);
+        classification.SourceSource.ShouldBe(ClassificationSource.ReleaseName);
+        classification.ReleaseGroupToken.ShouldBe("GROUP");
+        classification.ContentType.ShouldBe(ReleaseContentType.Movie);
+        classification.EpisodeEnd.ShouldBeNull();
+    }
+
+    [Test]
+    public void Build_GermanEpisode_CarriesSourceGroupTokenAndContentType()
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            "Show.Name.S01E03.German.720p.WEB.h264-GRP",
+            []
+        );
+
+        // Assert
+        classification.Source.ShouldBe(ReleaseSource.Web);
+        classification.SourceSource.ShouldBe(ClassificationSource.ReleaseName);
+        classification.ReleaseGroupToken.ShouldBe("GRP");
+        classification.ContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
+        classification.Season.ShouldBe(1);
+        classification.Episode.ShouldBe(3);
+    }
+
+    [Test]
+    public void Build_MultiEpisode_CarriesEpisodeEnd()
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            "Show.Name.S02E05-E06.German.DL.1080p.WEB-DL.x264-TVS",
+            []
+        );
+
+        // Assert
+        classification.Episode.ShouldBe(5);
+        classification.EpisodeEnd.ShouldBe(6);
+        classification.ContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
+        classification.Source.ShouldBe(ReleaseSource.WebDl);
+    }
+
+    [Test]
+    public void Build_NoSourceInName_LeavesSourceUnknown()
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build("Plain.Folder", []);
+
+        // Assert
+        classification.Source.ShouldBe(ReleaseSource.Unknown);
+        classification.SourceSource.ShouldBe(ClassificationSource.None);
+        classification.ReleaseGroupToken.ShouldBeNull();
+        classification.ContentType.ShouldBe(ReleaseContentType.Other);
+    }
+
+    [TestCase("Movie.Name.2023.German.DL.1080p.BluRay.x264-GROUP", ReleaseContentType.Movie)]
+    [TestCase("Show.Name.S01E03.German.720p.WEB.h264-GRP", ReleaseContentType.TvShowEpisode)]
+    [TestCase("Breaking.Bad.S03.1080p.BluRay.x264-GROUP", ReleaseContentType.TvShowEpisode)]
+    [TestCase("Some.Movie.German.1080p.BluRay.x264-GRP", ReleaseContentType.Movie)]
+    [TestCase("My Home Videos 2019", ReleaseContentType.Movie)]
+    [TestCase("My Home Videos", ReleaseContentType.Other)]
+    public void Build_ContentType_IsDerivedFromName(string releaseName, ReleaseContentType expected)
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(releaseName, []);
+
+        // Assert
+        classification.ContentType.ShouldBe(expected);
+    }
+
     private static ReleaseMediaFile VideoFile(
         int? height,
         params (string Language, bool IsDefault)[] audioStreams

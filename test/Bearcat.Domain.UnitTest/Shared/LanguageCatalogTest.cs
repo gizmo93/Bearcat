@@ -1,7 +1,7 @@
-using Bearcat.Domain.UseCases.ManageReleases.ReleaseNameParsing;
+using Bearcat.Domain.Shared;
 using Shouldly;
 
-namespace Bearcat.Domain.UnitTest.UseCases.ManageReleases.ReleaseNameParsing;
+namespace Bearcat.Domain.UnitTest.Shared;
 
 public class LanguageCatalogTest
 {

@@ -99,8 +99,13 @@ public class ReleaseClassificationService(
         target.Year = source.Year;
         target.Season = source.Season;
         target.Episode = source.Episode;
+        target.EpisodeEnd = source.EpisodeEnd;
+        target.ContentType = source.ContentType;
         target.Resolution = source.Resolution;
         target.ResolutionSource = source.ResolutionSource;
+        target.Source = source.Source;
+        target.SourceSource = source.SourceSource;
+        target.ReleaseGroupToken = source.ReleaseGroupToken;
         target.PrimaryLanguage = source.PrimaryLanguage;
         target.LanguageSource = source.LanguageSource;
         target.IsMultiLanguage = source.IsMultiLanguage;

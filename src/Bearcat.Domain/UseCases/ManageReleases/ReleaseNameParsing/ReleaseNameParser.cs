@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageReleases.ReleaseNameParsing;
@@ -33,25 +34,25 @@ public static partial class ReleaseNameParser
         "ml",
     };
 
-    private static readonly Dictionary<string, string> Sources = new(
+    private static readonly Dictionary<string, ReleaseSource> Sources = new(
         StringComparer.OrdinalIgnoreCase
     )
     {
-        ["bluray"] = "BluRay",
-        ["bdrip"] = "BDRip",
-        ["brrip"] = "BRRip",
-        ["web-dl"] = "WEB-DL",
-        ["webdl"] = "WEB-DL",
-        ["web"] = "WEB",
-        ["webrip"] = "WEBRip",
-        ["hdtv"] = "HDTV",
-        ["hdtvrip"] = "HDTVRip",
-        ["pdtv"] = "PDTV",
-        ["dvdrip"] = "DVDRip",
-        ["dvdr"] = "DVDR",
-        ["hdrip"] = "HDRip",
-        ["tvrip"] = "TVRip",
-        ["satrip"] = "SATRip",
+        ["bluray"] = ReleaseSource.BluRay,
+        ["bdrip"] = ReleaseSource.BdRip,
+        ["brrip"] = ReleaseSource.BrRip,
+        ["web-dl"] = ReleaseSource.WebDl,
+        ["webdl"] = ReleaseSource.WebDl,
+        ["web"] = ReleaseSource.Web,
+        ["webrip"] = ReleaseSource.WebRip,
+        ["hdtv"] = ReleaseSource.Hdtv,
+        ["hdtvrip"] = ReleaseSource.HdtvRip,
+        ["pdtv"] = ReleaseSource.Pdtv,
+        ["dvdrip"] = ReleaseSource.DvdRip,
+        ["dvdr"] = ReleaseSource.DvdR,
+        ["hdrip"] = ReleaseSource.HdRip,
+        ["tvrip"] = ReleaseSource.TvRip,
+        ["satrip"] = ReleaseSource.SatRip,
     };
 
     public static ParsedReleaseName Parse(string releaseName)
@@ -62,7 +63,7 @@ public static partial class ReleaseNameParser
         var resolution = ReleaseResolution.Unknown;
         string? language = null;
         var isMultiLanguage = false;
-        string? source = null;
+        var source = ReleaseSource.Unknown;
         int? year = null;
         int? season = null;
         int? episode = null;
@@ -91,7 +92,10 @@ public static partial class ReleaseNameParser
             }
             else if (Sources.TryGetValue(token, out var parsedSource))
             {
-                source ??= parsedSource;
+                if (source == ReleaseSource.Unknown)
+                {
+                    source = parsedSource;
+                }
             }
             else if (
                 TryParseSeasonEpisode(

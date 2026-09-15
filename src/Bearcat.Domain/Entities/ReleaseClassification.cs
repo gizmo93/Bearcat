@@ -18,9 +18,19 @@ public class ReleaseClassification
 
     public int? Episode { get; set; }
 
+    public int? EpisodeEnd { get; set; }
+
+    public ReleaseContentType ContentType { get; set; }
+
     public ReleaseResolution Resolution { get; set; }
 
     public ClassificationSource ResolutionSource { get; set; }
+
+    public ReleaseSource Source { get; set; }
+
+    public ClassificationSource SourceSource { get; set; }
+
+    public string? ReleaseGroupToken { get; set; }
 
     public string? PrimaryLanguage { get; set; }
 

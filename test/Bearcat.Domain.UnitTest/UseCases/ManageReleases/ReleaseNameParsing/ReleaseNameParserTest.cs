@@ -16,7 +16,7 @@ public class ReleaseNameParserTest
         parsed.Title.ShouldBe("The Matrix");
         parsed.Year.ShouldBe(1999);
         parsed.Resolution.ShouldBe(ReleaseResolution.R1080p);
-        parsed.Source.ShouldBe("BluRay");
+        parsed.Source.ShouldBe(ReleaseSource.BluRay);
         parsed.Group.ShouldBe("GROUP");
         parsed.Season.ShouldBeNull();
         parsed.Episode.ShouldBeNull();
@@ -35,13 +35,13 @@ public class ReleaseNameParserTest
         parsed.Episode.ShouldBe(10);
         parsed.EpisodeEnd.ShouldBeNull();
         parsed.Resolution.ShouldBe(ReleaseResolution.R720p);
-        parsed.Source.ShouldBe("HDTV");
+        parsed.Source.ShouldBe(ReleaseSource.Hdtv);
         parsed.Group.ShouldBe("LOL");
         parsed.Year.ShouldBeNull();
     }
 
     [Test]
-    public void Parse_WebDlWithHyphenSource_KeepsSourceIntact()
+    public void Parse_WebDlWithHyphenSource_MapsToWebDlSource()
     {
         // Act
         var parsed = ReleaseNameParser.Parse("Some.Movie.2023.2160p.WEB-DL.DDP5.1.H.265-GRP");
@@ -50,7 +50,7 @@ public class ReleaseNameParserTest
         parsed.Title.ShouldBe("Some Movie");
         parsed.Year.ShouldBe(2023);
         parsed.Resolution.ShouldBe(ReleaseResolution.R2160p);
-        parsed.Source.ShouldBe("WEB-DL");
+        parsed.Source.ShouldBe(ReleaseSource.WebDl);
         parsed.Group.ShouldBe("GRP");
     }
 
@@ -70,7 +70,7 @@ public class ReleaseNameParserTest
         parsed.Language.ShouldBe("German");
         parsed.IsMultiLanguage.ShouldBeTrue();
         parsed.Resolution.ShouldBe(ReleaseResolution.R1080p);
-        parsed.Source.ShouldBe("WEB");
+        parsed.Source.ShouldBe(ReleaseSource.Web);
         parsed.Group.ShouldBe("ZeroTwo");
     }
 
@@ -86,7 +86,7 @@ public class ReleaseNameParserTest
         parsed.Language.ShouldBe("German");
         parsed.IsMultiLanguage.ShouldBeFalse();
         parsed.Resolution.ShouldBe(ReleaseResolution.R1080p);
-        parsed.Source.ShouldBe("BluRay");
+        parsed.Source.ShouldBe(ReleaseSource.BluRay);
         parsed.Group.ShouldBe("PL3X");
     }
 
@@ -141,26 +141,31 @@ public class ReleaseNameParserTest
         parsed.Title.ShouldBe("Some Old Movie");
         parsed.Year.ShouldBe(1985);
         parsed.Resolution.ShouldBe(ReleaseResolution.Unknown);
-        parsed.Source.ShouldBe("DVDRip");
+        parsed.Source.ShouldBe(ReleaseSource.DvdRip);
     }
 
     [TestCase(
         "Frontier.Crucible.Land.der.Gesetzlosen.2025.German.BDRip.x264-LizardSquad",
         "Frontier Crucible Land der Gesetzlosen",
-        "BDRip",
+        ReleaseSource.BdRip,
         "LizardSquad"
     )]
-    [TestCase("Black.Diamond.2025.German.BDRiP.x264-CPTN", "Black Diamond", "BDRip", "CPTN")]
+    [TestCase(
+        "Black.Diamond.2025.German.BDRiP.x264-CPTN",
+        "Black Diamond",
+        ReleaseSource.BdRip,
+        "CPTN"
+    )]
     [TestCase(
         "Dick.und.Doof.werden.Papa.1936.German.HDTVRip.x264-NORETAiL",
         "Dick und Doof werden Papa",
-        "HDTVRip",
+        ReleaseSource.HdtvRip,
         "NORETAiL"
     )]
     public void Parse_SdReleaseWithRipSource_RecognizedWithoutResolution(
         string releaseName,
         string expectedTitle,
-        string expectedSource,
+        ReleaseSource expectedSource,
         string expectedGroup
     )
     {
@@ -221,7 +226,7 @@ public class ReleaseNameParserTest
         parsed.Year.ShouldBe(2024);
         parsed.Language.ShouldBe("German");
         parsed.Resolution.ShouldBe(ReleaseResolution.Unknown);
-        parsed.Source.ShouldBeNull();
+        parsed.Source.ShouldBe(ReleaseSource.Unknown);
         parsed.LooksLikeReleaseName.ShouldBeTrue();
     }
 
@@ -234,5 +239,83 @@ public class ReleaseNameParserTest
         // Assert
         parsed.LooksLikeReleaseName.ShouldBeFalse();
         parsed.Group.ShouldBeNull();
+    }
+
+    [TestCase("Some.Movie.2023.1080p.BluRay.x264-GRP", ReleaseSource.BluRay)]
+    [TestCase("Some.Movie.2023.1080p.BDRip.x264-GRP", ReleaseSource.BdRip)]
+    [TestCase("Some.Movie.2023.1080p.BRRip.x264-GRP", ReleaseSource.BrRip)]
+    [TestCase("Some.Movie.2023.1080p.WEB-DL.x264-GRP", ReleaseSource.WebDl)]
+    [TestCase("Some.Movie.2023.1080p.WEBDL.x264-GRP", ReleaseSource.WebDl)]
+    [TestCase("Some.Movie.2023.1080p.WEB.x264-GRP", ReleaseSource.Web)]
+    [TestCase("Some.Movie.2023.1080p.WEBRip.x264-GRP", ReleaseSource.WebRip)]
+    [TestCase("Some.Movie.2023.1080p.HDTV.x264-GRP", ReleaseSource.Hdtv)]
+    [TestCase("Some.Movie.2023.HDTVRip.x264-GRP", ReleaseSource.HdtvRip)]
+    [TestCase("Some.Movie.2023.PDTV.x264-GRP", ReleaseSource.Pdtv)]
+    [TestCase("Some.Movie.2023.DVDRip.x264-GRP", ReleaseSource.DvdRip)]
+    [TestCase("Some.Movie.2023.DVDR.x264-GRP", ReleaseSource.DvdR)]
+    [TestCase("Some.Movie.2023.HDRip.x264-GRP", ReleaseSource.HdRip)]
+    [TestCase("Some.Movie.2023.TVRip.x264-GRP", ReleaseSource.TvRip)]
+    [TestCase("Some.Movie.2023.SATRip.x264-GRP", ReleaseSource.SatRip)]
+    public void Parse_SourceToken_MapsToReleaseSource(
+        string releaseName,
+        ReleaseSource expectedSource
+    )
+    {
+        // Act
+        var parsed = ReleaseNameParser.Parse(releaseName);
+
+        // Assert
+        parsed.Source.ShouldBe(expectedSource);
+    }
+
+    [Test]
+    public void Parse_GermanDualLanguageMovie_ExtractsSourceAndGroup()
+    {
+        // Act
+        var parsed = ReleaseNameParser.Parse("Movie.Name.2023.German.DL.1080p.BluRay.x264-GROUP");
+
+        // Assert
+        parsed.Title.ShouldBe("Movie Name");
+        parsed.Year.ShouldBe(2023);
+        parsed.Language.ShouldBe("German");
+        parsed.IsMultiLanguage.ShouldBeTrue();
+        parsed.Resolution.ShouldBe(ReleaseResolution.R1080p);
+        parsed.Source.ShouldBe(ReleaseSource.BluRay);
+        parsed.Group.ShouldBe("GROUP");
+        parsed.Season.ShouldBeNull();
+        parsed.Episode.ShouldBeNull();
+    }
+
+    [Test]
+    public void Parse_GermanEpisode_ExtractsSeasonEpisodeSourceAndGroup()
+    {
+        // Act
+        var parsed = ReleaseNameParser.Parse("Show.Name.S01E03.German.720p.WEB.h264-GRP");
+
+        // Assert
+        parsed.Title.ShouldBe("Show Name");
+        parsed.Season.ShouldBe(1);
+        parsed.Episode.ShouldBe(3);
+        parsed.EpisodeEnd.ShouldBeNull();
+        parsed.Language.ShouldBe("German");
+        parsed.Resolution.ShouldBe(ReleaseResolution.R720p);
+        parsed.Source.ShouldBe(ReleaseSource.Web);
+        parsed.Group.ShouldBe("GRP");
+    }
+
+    [Test]
+    public void Parse_GermanMultiEpisode_ExtractsEpisodeEnd()
+    {
+        // Act
+        var parsed = ReleaseNameParser.Parse(
+            "Show.Name.S02E05-E06.German.DL.1080p.WEB-DL.x264-TVS"
+        );
+
+        // Assert
+        parsed.Season.ShouldBe(2);
+        parsed.Episode.ShouldBe(5);
+        parsed.EpisodeEnd.ShouldBe(6);
+        parsed.Source.ShouldBe(ReleaseSource.WebDl);
+        parsed.Group.ShouldBe("TVS");
     }
 }

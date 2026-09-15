@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Bearcat.Domain.UseCases.ManageReleases.ReleaseNameParsing;
+namespace Bearcat.Domain.Shared;
 
 public static class LanguageCatalog
 {

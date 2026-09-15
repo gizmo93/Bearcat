@@ -1,12 +1,13 @@
 using Bearcat.Abstractions.Media;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageReleases.ReleaseNameParsing;
 
 public static class ReleaseClassificationBuilder
 {
-    public const int CurrentParserVersion = 1;
+    public const int CurrentParserVersion = 2;
 
     public static ReleaseClassification Build(
         string releaseName,
@@ -30,13 +31,33 @@ public static class ReleaseClassificationBuilder
             Year = parsed.Year,
             Season = parsed.Season,
             Episode = parsed.Episode,
+            EpisodeEnd = parsed.EpisodeEnd,
+            ContentType = ResolveContentType(parsed),
             Resolution = resolution,
             ResolutionSource = resolutionSource,
+            Source = parsed.Source,
+            SourceSource =
+                parsed.Source == ReleaseSource.Unknown
+                    ? ClassificationSource.None
+                    : ClassificationSource.ReleaseName,
+            ReleaseGroupToken = parsed.Group,
             PrimaryLanguage = language,
             LanguageSource = languageSource,
             IsMultiLanguage = isMultiLanguage,
             ParserVersion = CurrentParserVersion,
         };
+    }
+
+    private static ReleaseContentType ResolveContentType(ParsedReleaseName parsed)
+    {
+        if (parsed.Season is not null || parsed.Episode is not null)
+        {
+            return ReleaseContentType.TvShowEpisode;
+        }
+
+        return parsed.Year is not null || parsed.LooksLikeReleaseName
+            ? ReleaseContentType.Movie
+            : ReleaseContentType.Other;
     }
 
     private static (ReleaseResolution Resolution, ClassificationSource Source) ResolveResolution(
