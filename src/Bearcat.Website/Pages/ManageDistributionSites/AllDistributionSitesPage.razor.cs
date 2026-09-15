@@ -13,6 +13,12 @@ public partial class AllDistributionSitesPage(
 )
 {
     private IReadOnlyList<DistributionSiteRegistrationReadModel> distributionSites = [];
+    private readonly HashSet<int> loginsInProgress = [];
+
+    private bool IsLoggingIn(DistributionSiteRegistrationReadModel distributionSite)
+    {
+        return loginsInProgress.Contains(distributionSite.DistributionSiteRegistrationId);
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -113,21 +119,31 @@ public partial class AllDistributionSitesPage(
 
     private async Task TestLoginAsync(DistributionSiteRegistrationReadModel distributionSite)
     {
-        var result = await operationRunner.RunAsync(
-            (DistributionSiteSessionService service) =>
-                service.TestLoginAsync(distributionSite.DistributionSiteRegistrationId)
-        );
+        loginsInProgress.Add(distributionSite.DistributionSiteRegistrationId);
 
-        if (result.IsSuccess)
+        try
         {
-            toastService.Success(L["LoginSuccessful", distributionSite.Name]);
-            await LoadDistributionSitesAsync();
-            return;
+            var result = await operationRunner.RunAsync(
+                (DistributionSiteSessionService service) =>
+                    service.TestLoginAsync(distributionSite.DistributionSiteRegistrationId)
+            );
+
+            if (result.IsSuccess)
+            {
+                toastService.Success(L["LoginSuccessful", distributionSite.Name]);
+            }
+            else
+            {
+                toastService.Error(
+                    L["LoginFailed", distributionSite.Name, result.ErrorMessage ?? string.Empty]
+                );
+            }
+        }
+        finally
+        {
+            loginsInProgress.Remove(distributionSite.DistributionSiteRegistrationId);
         }
 
-        toastService.Error(
-            L["LoginFailed", distributionSite.Name, result.ErrorMessage ?? string.Empty]
-        );
         await LoadDistributionSitesAsync();
     }
 }

@@ -65,7 +65,14 @@
                                Property="@(distributionSite => distributionSite.Name)"
                                Width="120px">
                 <CellTemplate Context="distributionSite">
-                    <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => TestLoginAsync(distributionSite))">
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Disabled="@IsLoggingIn(distributionSite)"
+                              OnClick="@(() => TestLoginAsync(distributionSite))">
+                        @if (IsLoggingIn(distributionSite))
+                        {
+                            <LucideIcon Name="loader-circle" class="h-4 w-4 animate-spin" />
+                        }
                         @L["TryLogin"]
                     </BbButton>
                 </CellTemplate>
