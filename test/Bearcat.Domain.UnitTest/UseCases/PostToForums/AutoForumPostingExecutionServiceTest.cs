@@ -65,7 +65,7 @@ public class AutoForumPostingExecutionServiceTest
 
         var newThread = submitter.NewThreads.ShouldHaveSingleItem();
         newThread.TargetNodeId.ShouldBe("42");
-        newThread.Title.ShouldBe(AutoPostTestFactory.ReleaseName);
+        newThread.Title.ShouldBe("Some Movie 2021 1080p BluRay - GROUP");
         newThread.PrefixIds.ShouldBe(["11"]);
     }
 
@@ -289,7 +289,7 @@ public class AutoForumPostingExecutionServiceTest
     }
 
     [Test]
-    public async Task ExecuteAsync_StripDotsEnabled_KeepsTheRawReleaseNameAsNewThreadTitle()
+    public async Task ExecuteAsync_StripDotsEnabled_UsesTheSearchedNameAsNewThreadTitle()
     {
         // Arrange
         var repository = RepositoryWith(
@@ -305,7 +305,9 @@ public class AutoForumPostingExecutionServiceTest
         submitter
             .SearchedReleaseNames.ShouldHaveSingleItem()
             .ShouldBe("Some Movie 2021 1080p BluRay - GROUP");
-        submitter.NewThreads.ShouldHaveSingleItem().Title.ShouldBe(AutoPostTestFactory.ReleaseName);
+        submitter
+            .NewThreads.ShouldHaveSingleItem()
+            .Title.ShouldBe("Some Movie 2021 1080p BluRay - GROUP");
     }
 
     [Test]

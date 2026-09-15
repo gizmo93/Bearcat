@@ -1141,7 +1141,7 @@
   <data name="AutomaticPostingDisabled" xml:space="preserve"><value>Automatisches Posten für {0} deaktiviert</value></data>
   <data name="AutomaticPostingBadge" xml:space="preserve"><value>Auto</value></data>
   <data name="StripDotsForThreadSearch" xml:space="preserve"><value>Themensuche ohne Punkte</value></data>
-  <data name="StripDotsForThreadSearchHelp" xml:space="preserve"><value>Ersetzt die Punkte im Releasenamen bei der Themensuche in diesem Forum durch Leerzeichen. Ein neues Thema verwendet weiterhin den unveränderten Releasenamen als Titel.</value></data>
+  <data name="StripDotsForThreadSearchHelp" xml:space="preserve"><value>Ersetzt die Punkte im Releasenamen bei der Themensuche in diesem Forum durch Leerzeichen. Ein neues Thema verwendet denselben Namen ohne Punkte als Titel.</value></data>
   <data name="StripDotsForThreadSearchEnabled" xml:space="preserve"><value>Themensuche ohne Punkte für {0} aktiviert</value></data>
   <data name="StripDotsForThreadSearchDisabled" xml:space="preserve"><value>Themensuche ohne Punkte für {0} deaktiviert</value></data>
 </root>

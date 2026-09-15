@@ -6,11 +6,14 @@ description: "Prepare a forum draft from a release and open it with a ready to s
 Bearcat can prepare a forum post for a release and hand you a draft inside the forum, with the
 title and body already filled in. You open a link, check the post, and submit it yourself.
 
-This is not full automation, and that is on purpose. Bearcat never sends a post for you. It saves
-a draft in the forum and gives you a preview link. You log into the same forum account in your
-browser, look the post over, and click submit. The reason is simple: nobody wants tools that post
-to forums on their own and turn into spam. This is a first step in that direction, with a person
-still doing the final click.
+This flow is not full automation, and that is on purpose. It saves a draft in the forum and gives
+you a preview link. You log into the same forum account in your browser, look the post over, and
+click submit. The reason is simple: nobody wants tools that post to forums on their own and turn
+into spam, so a person still does the final click.
+
+If you want Bearcat to send the post itself, set up
+[posting rules](/Bearcat/automatic-forum-posting/). Rules pick the subforum and the template per
+release, and you either press **Post** in the post queue or let a background task handle it.
 
 ## What you need first
 
@@ -111,8 +114,8 @@ The draft belongs to your forum account, so you need to be logged into the same 
 browser. If you are not, the editor will not show the prefilled text.
 
 Once you have submitted the post in the forum, click **I have posted** in the dialog. Bearcat then
-looks up the post you just made — the new reply in an existing thread, or the thread you just
-created — and stores its permalink under **Posted locations** on the release (or collection). If it
+looks up the post you just made (the new reply in an existing thread, or the thread you just
+created) and stores its permalink under **Posted locations** on the release (or collection). If it
 cannot find the post automatically (the forum's search index can lag for a few seconds), it shows a
 field where you paste the URL yourself.
 
@@ -120,9 +123,16 @@ Recording the post is separate from marking the release as posted: **I have post
 *where* you posted, while the [Post Queue](/Bearcat/post-queue/) tracks *whether* a release still
 needs posting at all.
 
+## Letting Bearcat submit the post
+
+Each forum registration can have a list of posting rules that define the subforum, the
+prefix and the template for a release. Based on rules you define, Bearcat can render the post, find or
+create the thread and submit it, either when you press **Post** in the post queue or automatically
+in the background. See [Automatic forum posting](/Bearcat/automatic-forum-posting/).
+
 ## Posted locations
 
-Every release and collection has a **Posted locations** list — the URLs where it has been published,
+Every release and collection has a **Posted locations** list: the URLs where it has been published,
 such as forum threads or WordPress pages. **Post to forum** fills it in for you, and you can also add
 or remove links by hand. Keep it up to date so you always know where to go if you ever need to swap
 out the download links.

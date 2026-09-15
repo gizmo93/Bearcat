@@ -1138,7 +1138,7 @@
   <data name="AutomaticPostingDisabled" xml:space="preserve"><value>Automatic posting disabled for {0}</value></data>
   <data name="AutomaticPostingBadge" xml:space="preserve"><value>Auto</value></data>
   <data name="StripDotsForThreadSearch" xml:space="preserve"><value>Thread search without dots</value></data>
-  <data name="StripDotsForThreadSearchHelp" xml:space="preserve"><value>Replaces the dots in the release name with spaces when searching this forum for an existing thread. A new thread still uses the unchanged release name as its title.</value></data>
+  <data name="StripDotsForThreadSearchHelp" xml:space="preserve"><value>Replaces the dots in the release name with spaces when searching this forum for an existing thread. A new thread uses the same spaced name as its title.</value></data>
   <data name="StripDotsForThreadSearchEnabled" xml:space="preserve"><value>Thread search without dots enabled for {0}</value></data>
   <data name="StripDotsForThreadSearchDisabled" xml:space="preserve"><value>Thread search without dots disabled for {0}</value></data>
 </root>

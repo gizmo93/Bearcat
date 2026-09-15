@@ -35,11 +35,11 @@ Bearcat.Cli.exe setup
 
 The setup asks you for:
 
-- **7z executable** – full path, or empty to use `PATH`
-- **rar executable** – full path, or empty to use `PATH`
-- **Release data directory** – where Bearcat looks for your release files
-- **Database host / port / name / user / password** – your PostgreSQL connection
-- **Web port** – the local HTTP port for the web UI (default `17208`)
+- **7z executable**: full path, or empty to use `PATH`
+- **rar executable**: full path, or empty to use `PATH`
+- **Release data directory**: where Bearcat looks for your release files
+- **Database host / port / name / user / password**: your PostgreSQL connection
+- **Web port**: the local HTTP port for the web UI (default `17208`)
 
 It then tests the database connection, writes the configuration file, registers and starts the `Bearcat` Windows service, and waits until the service reports healthy.
 

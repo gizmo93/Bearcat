@@ -67,6 +67,10 @@ Click "Copy forum post" and paste the result into your forum editor.
 
 ![render-template.png](images/render-template.png)
 
+Templates are also used without the dialog: a
+[posting rule](/Bearcat/automatic-forum-posting/) picks one template per subforum and renders it
+when Bearcat posts a release to a forum for you.
+
 If a value is not available for the release, Bearcat renders an empty text instead of crashing.
 For example, if no `.nfo` file exists in the release folder, `{{ release.nfo }}` renders as empty text.
 

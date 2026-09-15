@@ -168,18 +168,18 @@ public class AutoForumPostingExecutionService(
         CancellationToken cancellationToken
     )
     {
+        var postName = (
+            entry.StripDotsForThreadSearch
+                ? ReleaseNameFormatter.ToSpacedName(plan.ReleaseName)
+                : plan.ReleaseName
+        ).Trim();
+
         if (match.PostMode == ForumPostPostMode.ReplyToExistingElseNewThread)
         {
-            var searchName = (
-                entry.StripDotsForThreadSearch
-                    ? ReleaseNameFormatter.ToSpacedName(plan.ReleaseName)
-                    : plan.ReleaseName
-            ).Trim();
-
             var existingThreads = await submitter.FindExistingThreadsAsync(
                 registrationId: entry.DistributionSiteRegistrationId,
                 targetNodeId: match.TargetNodeId,
-                releaseName: searchName,
+                releaseName: postName,
                 cancellationToken: cancellationToken
             );
 
@@ -197,7 +197,7 @@ public class AutoForumPostingExecutionService(
         return await submitter.SubmitNewThreadAsync(
             registrationId: entry.DistributionSiteRegistrationId,
             targetNodeId: match.TargetNodeId,
-            title: plan.ReleaseName,
+            title: postName,
             prefixIds: match.ThreadPrefixId is null ? [] : [match.ThreadPrefixId],
             body: body,
             cancellationToken: cancellationToken

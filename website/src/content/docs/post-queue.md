@@ -35,6 +35,19 @@ under **Single releases**. That way a TV season stays one entry for the whole co
 of one entry per episode. See [Release Collections](/Bearcat/release-collections/) for how
 collections and their upload slots work.
 
+## Posting to a forum from the queue
+
+If you set up [posting rules](/Bearcat/automatic-forum-posting/) for a forum, every entry under
+**Single releases** also has an **Automatic posting** section. It shows per forum which rule matches the release
+and into which subforum that post would go.
+**Post** renders the template and submits the post for you, and **Post to all matched
+sites** works through every open forum at once. 
+A forum where automatic posting is active has an **Auto** badge.
+
+![posting-from-post-queue.png](images/posting-from-post-queue.png)
+
+Once no matched forum is left open, the release is marked as posted and leaves the queue.
+
 ## Marking something as posted
 
 When you have posted a release somewhere, click **Mark as posted** on its entry. The entry is then removed from the list.
