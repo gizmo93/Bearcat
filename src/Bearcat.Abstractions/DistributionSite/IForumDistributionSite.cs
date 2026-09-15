@@ -38,6 +38,22 @@ public interface IForumDistributionSite : IDistributionSite
         CancellationToken cancellationToken
     );
 
+    Task<SubmittedPost> SubmitNewThreadAsync(
+        DistributionSession session,
+        ForumTargetId target,
+        string title,
+        IReadOnlyList<string> prefixIds,
+        string body,
+        CancellationToken cancellationToken
+    );
+
+    Task<SubmittedPost> SubmitReplyAsync(
+        DistributionSession session,
+        string threadUrl,
+        string body,
+        CancellationToken cancellationToken
+    );
+
     Task<string?> ResolvePostedUrlAsync(
         DistributionSession session,
         ForumTargetId target,
@@ -46,4 +62,6 @@ public interface IForumDistributionSite : IDistributionSite
         string title,
         CancellationToken cancellationToken
     );
+
+    ForumTargetId ResolveTarget(string storedTargetId);
 }
