@@ -76,6 +76,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ReleaseTemplateService>();
             services.AddScoped<ForumPostTemplateService>();
             services.AddScoped<ForumPostingRuleService>();
+            services.AddScoped<ForumPostingRulePreviewService>();
             services.AddScoped<ArchiveCreationService>();
             services.AddScoped<ArchiveCleanupService>();
             services.AddScoped<UploadFilesService>();

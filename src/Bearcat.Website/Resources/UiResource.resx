@@ -1043,4 +1043,78 @@
   <data name="NotificationSeverityLabel" xml:space="preserve"><value>Severity</value></data>
   <data name="NotificationKindFilter" xml:space="preserve"><value>Notification type</value></data>
   <data name="AllNotificationKinds" xml:space="preserve"><value>All notification types</value></data>
+  <data name="ForumPostingRules" xml:space="preserve"><value>Posting rules</value></data>
+  <data name="ForumPostingRulesIntro" xml:space="preserve"><value>Rules decide in which subforum a release is posted. The first matching rule wins, so order them from specific to general.</value></data>
+  <data name="NewForumPostingRule" xml:space="preserve"><value>New posting rule</value></data>
+  <data name="NoForumPostingRulesYet" xml:space="preserve"><value>No posting rules yet. Add a rule to route releases to a subforum automatically.</value></data>
+  <data name="ForumPostingRuleDialogDescription" xml:space="preserve"><value>Define when the rule applies and where the release is posted.</value></data>
+  <data name="ForumPostingRuleNamePlaceholder" xml:space="preserve"><value>For example: German movies 1080p</value></data>
+  <data name="DeleteForumPostingRuleConfirmation" xml:space="preserve"><value>Are you sure you want to delete the posting rule {0}?</value></data>
+  <data name="ForumPostingRuleEnabled" xml:space="preserve"><value>Posting rule {0} enabled</value></data>
+  <data name="ForumPostingRuleDisabled" xml:space="preserve"><value>Posting rule {0} disabled</value></data>
+  <data name="ForumPostingRuleEnabledHelp" xml:space="preserve"><value>Disabled rules are skipped while matching.</value></data>
+  <data name="ForumPostingRuleConditionHelp" xml:space="preserve"><value>The rule applies to a release when this condition matches.</value></data>
+  <data name="ForumPostingRulePreview" xml:space="preserve"><value>Dry run</value></data>
+  <data name="ForumPostingRulePreviewDescription" xml:space="preserve"><value>Match the saved rules against the most recent releases without posting anything.</value></data>
+  <data name="ForumPostingRulePreviewHint" xml:space="preserve"><value>Start the dry run to see which rule would take each release.</value></data>
+  <data name="ForumPostingRulePreviewSummary" xml:space="preserve"><value>{0} of {1} releases matched a rule</value></data>
+  <data name="ForumPostingRuleNoMatch" xml:space="preserve"><value>No match</value></data>
+  <data name="DragToReorder" xml:space="preserve"><value>Drag to reorder</value></data>
+  <data name="ForumPostPostMode" xml:space="preserve"><value>Posting mode</value></data>
+  <data name="ForumPostPostMode.ReplyToExistingElseNewThread" xml:space="preserve"><value>Reply to an existing thread, otherwise start a new one</value></data>
+  <data name="ForumPostPostMode.AlwaysNewThread" xml:space="preserve"><value>Always start a new thread</value></data>
+  <data name="LoadSubforums" xml:space="preserve"><value>Load subforums</value></data>
+  <data name="ReloadSubforums" xml:space="preserve"><value>Reload subforums</value></data>
+  <data name="LoadSubforumsHelp" xml:space="preserve"><value>Loading the subforums signs in to the site and can take a few seconds. The stored subforum stays selected until you pick a different one.</value></data>
+  <data name="NoSubforumSelected" xml:space="preserve"><value>No subforum selected yet</value></data>
+  <data name="SubforumIsRequired" xml:space="preserve"><value>A subforum is required.</value></data>
+  <data name="ThreadPrefix" xml:space="preserve"><value>Prefix</value></data>
+  <data name="LoadThreadPrefixes" xml:space="preserve"><value>Load prefixes</value></data>
+  <data name="ReloadThreadPrefixes" xml:space="preserve"><value>Reload prefixes</value></data>
+  <data name="NoThreadPrefix" xml:space="preserve"><value>No prefix</value></data>
+  <data name="ThreadPrefixRuleHelp" xml:space="preserve"><value>Optional. Prefixes can only be loaded once the subforums are loaded and a subforum is selected.</value></data>
+  <data name="ForumPostTemplateIsRequired" xml:space="preserve"><value>A forum post template is required.</value></data>
+  <data name="Condition" xml:space="preserve"><value>Condition</value></data>
+  <data name="ConditionField" xml:space="preserve"><value>Field</value></data>
+  <data name="ConditionOperator" xml:space="preserve"><value>Operator</value></data>
+  <data name="ConditionValue" xml:space="preserve"><value>Value</value></data>
+  <data name="ConditionValuePlaceholder" xml:space="preserve"><value>Value</value></data>
+  <data name="ConditionSelectValue" xml:space="preserve"><value>Select a value</value></data>
+  <data name="ConditionSelectValues" xml:space="preserve"><value>Select values</value></data>
+  <data name="ConditionAddValuePlaceholder" xml:space="preserve"><value>Add a value</value></data>
+  <data name="ConditionNoValuesYet" xml:space="preserve"><value>No values yet</value></data>
+  <data name="ConditionAll" xml:space="preserve"><value>All (AND)</value></data>
+  <data name="ConditionAny" xml:space="preserve"><value>Any (OR)</value></data>
+  <data name="ConditionAllHelp" xml:space="preserve"><value>Every condition in this group has to match.</value></data>
+  <data name="ConditionAnyHelp" xml:space="preserve"><value>At least one condition in this group has to match.</value></data>
+  <data name="ConditionNot" xml:space="preserve"><value>NOT</value></data>
+  <data name="ConditionNotHelp" xml:space="preserve"><value>Matches when the condition below does not match.</value></data>
+  <data name="ConditionGroupEmpty" xml:space="preserve"><value>No conditions yet</value></data>
+  <data name="AddCondition" xml:space="preserve"><value>Condition</value></data>
+  <data name="AddConditionGroup" xml:space="preserve"><value>Group</value></data>
+  <data name="AddConditionNot" xml:space="preserve"><value>NOT</value></data>
+  <data name="RemoveCondition" xml:space="preserve"><value>Remove condition</value></data>
+  <data name="RemoveValue" xml:space="preserve"><value>Remove value</value></data>
+  <data name="RuleField.ReleaseName" xml:space="preserve"><value>Release name</value></data>
+  <data name="RuleField.Resolution" xml:space="preserve"><value>Resolution</value></data>
+  <data name="RuleField.PrimaryLanguage" xml:space="preserve"><value>Primary language</value></data>
+  <data name="RuleField.IsMultiLanguage" xml:space="preserve"><value>Multi-language</value></data>
+  <data name="RuleField.ContentType" xml:space="preserve"><value>Content type</value></data>
+  <data name="RuleField.Source" xml:space="preserve"><value>Source</value></data>
+  <data name="RuleField.ReleaseGroupName" xml:space="preserve"><value>Release group</value></data>
+  <data name="RuleField.ReleaseGroupToken" xml:space="preserve"><value>Release group tag</value></data>
+  <data name="RuleField.Year" xml:space="preserve"><value>Year</value></data>
+  <data name="RuleField.Season" xml:space="preserve"><value>Season</value></data>
+  <data name="RuleField.Episode" xml:space="preserve"><value>Episode</value></data>
+  <data name="RuleConditionOperator.Equals" xml:space="preserve"><value>is</value></data>
+  <data name="RuleConditionOperator.NotEquals" xml:space="preserve"><value>is not</value></data>
+  <data name="RuleConditionOperator.In" xml:space="preserve"><value>is one of</value></data>
+  <data name="RuleConditionOperator.NotIn" xml:space="preserve"><value>is none of</value></data>
+  <data name="RuleConditionOperator.Like" xml:space="preserve"><value>matches pattern (%)</value></data>
+  <data name="RuleConditionOperator.NotLike" xml:space="preserve"><value>does not match pattern (%)</value></data>
+  <data name="RuleConditionOperator.Regex" xml:space="preserve"><value>matches regex</value></data>
+  <data name="RuleConditionOperator.GreaterOrEqual" xml:space="preserve"><value>is at least</value></data>
+  <data name="RuleConditionOperator.LessOrEqual" xml:space="preserve"><value>is at most</value></data>
+  <data name="RuleConditionOperator.IsSet" xml:space="preserve"><value>is set</value></data>
+  <data name="RuleConditionOperator.IsNotSet" xml:space="preserve"><value>is not set</value></data>
 </root>

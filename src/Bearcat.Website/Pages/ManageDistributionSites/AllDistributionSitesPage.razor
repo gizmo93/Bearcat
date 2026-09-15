@@ -60,6 +60,28 @@
                     </BbBadge>
                 </CellTemplate>
             </BbDataTableColumn>
+            <BbDataTableColumn TData="DistributionSiteRegistrationReadModel" TValue="int"
+                               Header="@L["ForumPostingRules"]"
+                               Property="@(distributionSite => distributionSite.PostingRuleCount)"
+                               Sortable="true"
+                               Width="130px">
+                <CellTemplate Context="distributionSite">
+                    @if (distributionSite.Kind == DistributionSiteKind.Forum)
+                    {
+                        <BbButton Variant="ButtonVariant.Ghost"
+                                  Size="ButtonSize.Small"
+                                  AriaLabel="@L["ForumPostingRules"]"
+                                  OnClick="@(() => NavigateToPostingRules(distributionSite))">
+                            @distributionSite.PostingRuleCount
+                            <LucideIcon Name="arrow-right" class="h-3.5 w-3.5" />
+                        </BbButton>
+                    }
+                    else
+                    {
+                        <span class="text-sm text-muted-foreground">-</span>
+                    }
+                </CellTemplate>
+            </BbDataTableColumn>
             <BbDataTableColumn TData="DistributionSiteRegistrationReadModel" TValue="string"
                                Header="@L["Login"]"
                                Property="@(distributionSite => distributionSite.Name)"
@@ -86,6 +108,12 @@
                                 <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(distributionSite))">
                                     @L["EditRegistration"]
                                 </BbDropdownMenuItem>
+                                @if (distributionSite.Kind == DistributionSiteKind.Forum)
+                                {
+                                    <BbDropdownMenuItem OnClick="@(_ => NavigateToPostingRules(distributionSite))">
+                                        @L["ForumPostingRules"]
+                                    </BbDropdownMenuItem>
+                                }
                                 <BbDropdownMenuItem OnClick="@(async _ => await ToggleIsActiveAsync(distributionSite))">
                                     @(distributionSite.IsActive ? L["Disable"] : L["Enable"])
                                 </BbDropdownMenuItem>

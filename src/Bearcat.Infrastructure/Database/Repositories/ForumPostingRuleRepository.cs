@@ -63,6 +63,34 @@ public class ForumPostingRuleRepository(
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ForumPostingRule>> GetRulesForMatchingAsync(
+        int distributionSiteRegistrationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .ForumPostingRules.Where(rule =>
+                rule.DistributionSiteRegistrationId == distributionSiteRegistrationId
+            )
+            .OrderBy(rule => rule.SortOrder)
+            .ThenBy(rule => rule.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Release>> GetRecentReleasesForPreviewAsync(
+        int count,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .Releases.Include(release => release.Classification)
+            .Include(release => release.ReleaseGroup)
+            .OrderByDescending(release => release.CreatedAt)
+            .ThenByDescending(release => release.Id)
+            .Take(count)
+            .ToListAsync(cancellationToken);
+    }
+
     public void Add(ForumPostingRule rule)
     {
         dbWrite.Add(rule);

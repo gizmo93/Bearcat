@@ -1,3 +1,4 @@
+using Bearcat.Domain.Shared.ForumPostingRules;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Localization;
 
@@ -65,6 +66,21 @@ public static class LocalizationExtensions
         this IStringLocalizer<UiResource> localizer,
         ReuploadTrigger trigger
     ) => localizer[$"ReuploadTrigger.{trigger}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        ForumPostPostMode postMode
+    ) => localizer[$"ForumPostPostMode.{postMode}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        RuleConditionOperator conditionOperator
+    ) => localizer[$"RuleConditionOperator.{conditionOperator}"];
+
+    public static string LocalizeRuleField(
+        this IStringLocalizer<UiResource> localizer,
+        string fieldName
+    ) => localizer[$"RuleField.{fieldName}"];
 
     public static string LocalizeDescription(
         this IStringLocalizer<UiResource> localizer,

@@ -25,6 +25,7 @@ public class DistributionSiteRegistrationReadRepository(
                 registration.Name,
                 registration.DistributionSiteClassName,
                 registration.IsActive,
+                PostingRuleCount = registration.PostingRules.Count,
             })
             .ToListAsync(cancellationToken);
 
@@ -35,6 +36,7 @@ public class DistributionSiteRegistrationReadRepository(
                     name: registration.Name,
                     className: registration.DistributionSiteClassName,
                     isActive: registration.IsActive,
+                    postingRuleCount: registration.PostingRuleCount,
                     distributionSitesByClassName: distributionSitesByClassName
                 )
             )
@@ -54,6 +56,7 @@ public class DistributionSiteRegistrationReadRepository(
                 registration.Name,
                 registration.DistributionSiteClassName,
                 registration.IsActive,
+                PostingRuleCount = registration.PostingRules.Count,
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -67,6 +70,7 @@ public class DistributionSiteRegistrationReadRepository(
             name: registration.Name,
             className: registration.DistributionSiteClassName,
             isActive: registration.IsActive,
+            postingRuleCount: registration.PostingRuleCount,
             distributionSitesByClassName: DistributionSitesByClassName()
         );
     }
@@ -83,6 +87,7 @@ public class DistributionSiteRegistrationReadRepository(
         string name,
         string className,
         bool isActive,
+        int postingRuleCount,
         IReadOnlyDictionary<string, DistributionSiteDto> distributionSitesByClassName
     )
     {
@@ -94,7 +99,8 @@ public class DistributionSiteRegistrationReadRepository(
             DistributionSiteClassName: className,
             DistributionSiteName: distributionSite.Name,
             Kind: distributionSite.Kind,
-            IsActive: isActive
+            IsActive: isActive,
+            PostingRuleCount: postingRuleCount
         );
     }
 }

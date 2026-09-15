@@ -1,0 +1,203 @@
+@using Bearcat.Domain.Shared.ForumPostingRules
+
+<div class="space-y-3 rounded-md border border-border/70 bg-background p-3">
+    <div class="flex flex-wrap items-end gap-2">
+        <div class="min-w-40 flex-1">
+            <p class="mb-1 text-xs font-medium text-muted-foreground">@L["ConditionField"]</p>
+            <BbSelect TValue="string"
+                      Value="Node.Field"
+                      ValueChanged="ChangeField"
+                      Options="FieldOptions"
+                      Class="w-full" />
+        </div>
+
+        <div class="min-w-40 flex-1">
+            <p class="mb-1 text-xs font-medium text-muted-foreground">@L["ConditionOperator"]</p>
+            <BbSelect TValue="RuleConditionOperator"
+                      Value="Node.Operator"
+                      ValueChanged="ChangeOperator"
+                      Options="OperatorOptions"
+                      Class="w-full" />
+        </div>
+
+        <BbButton Variant="ButtonVariant.Ghost"
+                  Size="ButtonSize.IconSmall"
+                  AriaLabel="@L["RemoveCondition"]"
+                  OnClick="OnRemove">
+            <LucideIcon Name="trash-2" class="h-4 w-4" />
+        </BbButton>
+    </div>
+
+    @if (Descriptor is not null && ConditionModelMapper.NeedsValue(Node.Operator))
+    {
+        <div>
+            <p class="mb-1 text-xs font-medium text-muted-foreground">@L["ConditionValue"]</p>
+
+            @if (ConditionModelMapper.IsMultiValue(Node.Operator))
+            {
+                @if (Descriptor.ValueKind is RuleFieldValueKind.Enumeration)
+                {
+                    <BbMultiSelect TValue="string"
+                                   Values="Node.Values"
+                                   ValuesChanged="ChangeValues"
+                                   Options="OptionValues"
+                                   ShowSelectAll="false"
+                                   MatchTriggerWidth="true"
+                                   Placeholder="@L["ConditionSelectValues"]"
+                                   SearchPlaceholder="@L["Search"]"
+                                   Class="w-full" />
+                }
+                else
+                {
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <BbInput @bind-Value="pendingValue"
+                                     Placeholder="@L["ConditionAddValuePlaceholder"]"
+                                     class="flex-1" />
+                            <BbButton Variant="ButtonVariant.Outline"
+                                      Size="ButtonSize.Small"
+                                      OnClick="AddPendingValue">
+                                <LucideIcon Name="plus" class="h-4 w-4" />
+                                @L["Add"]
+                            </BbButton>
+                        </div>
+
+                        @if (Node.Values.Count == 0)
+                        {
+                            <p class="text-xs text-muted-foreground">@L["ConditionNoValuesYet"]</p>
+                        }
+                        else
+                        {
+                            <div class="flex flex-wrap gap-1">
+                                @foreach (var value in Node.Values.ToList())
+                                {
+                                    <BbBadge Variant="BadgeVariant.Secondary" Class="gap-1">
+                                        @value
+                                        <button type="button"
+                                                class="ml-1 opacity-70 hover:opacity-100"
+                                                aria-label="@L["RemoveValue"]"
+                                                @onclick="@(() => RemoveValue(value))">
+                                            <LucideIcon Name="x" class="h-3 w-3" />
+                                        </button>
+                                    </BbBadge>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            }
+            else if (Descriptor.ValueKind is RuleFieldValueKind.Enumeration)
+            {
+                <BbSelect TValue="string"
+                          Value="Node.Value"
+                          ValueChanged="ChangeValue"
+                          Options="OptionValues"
+                          Placeholder="@L["ConditionSelectValue"]"
+                          Class="w-full" />
+            }
+            else if (Descriptor.ValueKind is RuleFieldValueKind.Boolean)
+            {
+                <BbSelect TValue="string"
+                          Value="Node.Value"
+                          ValueChanged="ChangeValue"
+                          Options="BooleanOptions"
+                          Placeholder="@L["ConditionSelectValue"]"
+                          Class="w-full" />
+            }
+            else if (Descriptor.ValueKind is RuleFieldValueKind.Integer)
+            {
+                <BbInput Value="@Node.Value"
+                         ValueChanged="ChangeValue"
+                         Type="InputType.Number"
+                         class="w-full" />
+            }
+            else
+            {
+                <BbInput Value="@Node.Value"
+                         ValueChanged="ChangeValue"
+                         Placeholder="@L["ConditionValuePlaceholder"]"
+                         class="w-full" />
+            }
+        </div>
+    }
+</div>
+
+@code
+{
+    [Parameter]
+    public ConditionNodeModel Node { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnRemove { get; set; }
+
+    private string? pendingValue;
+
+    private RuleFieldDescriptor? Descriptor =>
+        RuleFieldCatalog.TryGet(Node.Field, out var descriptor) ? descriptor : null;
+
+    private IReadOnlyList<SelectOption<string>> FieldOptions =>
+        RuleFieldCatalog
+            .Fields.Select(catalogField => new SelectOption<string>(
+                catalogField.Name,
+                L.LocalizeRuleField(catalogField.Name)
+            ))
+            .ToList();
+
+    private IReadOnlyList<SelectOption<RuleConditionOperator>> OperatorOptions =>
+        (Descriptor?.AllowedOperators ?? [Node.Operator])
+            .Select(allowed => new SelectOption<RuleConditionOperator>(
+                allowed,
+                L.Localize(allowed)
+            ))
+            .ToList();
+
+    private IReadOnlyList<SelectOption<string>> OptionValues =>
+        (Descriptor?.Options ?? []).Select(option => new SelectOption<string>(option, option)).ToList();
+
+    private IReadOnlyList<SelectOption<string>> BooleanOptions =>
+        [new("true", L["Yes"]), new("false", L["No"])];
+
+    private void ChangeField(string? field)
+    {
+        ConditionModelMapper.ApplyField(Node, field);
+        pendingValue = null;
+    }
+
+    private void ChangeOperator(RuleConditionOperator conditionOperator)
+    {
+        ConditionModelMapper.ApplyOperator(Node, conditionOperator);
+        pendingValue = null;
+    }
+
+    private void ChangeValue(string? value)
+    {
+        Node.Value = value ?? string.Empty;
+    }
+
+    private void ChangeValues(IEnumerable<string>? values)
+    {
+        Node.Values = values?.ToList() ?? [];
+    }
+
+    private void AddPendingValue()
+    {
+        if (string.IsNullOrWhiteSpace(pendingValue))
+        {
+            return;
+        }
+
+        var value = pendingValue.Trim();
+
+        if (!Node.Values.Contains(value, StringComparer.OrdinalIgnoreCase))
+        {
+            Node.Values.Add(value);
+        }
+
+        pendingValue = null;
+    }
+
+    private void RemoveValue(string value)
+    {
+        Node.Values.Remove(value);
+    }
+}

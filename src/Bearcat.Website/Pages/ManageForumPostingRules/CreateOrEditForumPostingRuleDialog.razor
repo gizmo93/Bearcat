@@ -1,0 +1,140 @@
+@if (!isInitialized)
+{
+    return;
+}
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        @if (errorMessage is not null)
+        {
+            <div class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                @errorMessage
+            </div>
+        }
+
+        <BbFormFieldInput TValue="string"
+                          @bind-Value="formModel.Name"
+                          Label="@L["Name"]"
+                          Placeholder="@L["ForumPostingRuleNamePlaceholder"]" />
+
+        <div class="space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <label class="text-sm font-medium">@L["Subforum"]</label>
+                <BbButton Variant="ButtonVariant.Outline"
+                          Size="ButtonSize.Small"
+                          Disabled="isLoadingTargets"
+                          OnClick="LoadTargetsAsync">
+                    <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoadingTargets ? "animate-spin" : string.Empty)}")" />
+                    @(targetsLoaded ? L["ReloadSubforums"] : L["LoadSubforums"])
+                </BbButton>
+            </div>
+
+            @if (targetsLoaded)
+            {
+                <BbCombobox TValue="string"
+                            Value="formModel.TargetNodeId"
+                            ValueChanged="SelectTarget"
+                            Options="TargetOptions"
+                            Placeholder="@L["SelectSubforum"]"
+                            SearchPlaceholder="@L["Search"]"
+                            EmptyMessage="@L["NoSubforumFound"]"
+                            MatchTriggerWidth="true"
+                            Class="w-full" />
+            }
+            else
+            {
+                <div class="rounded-md border border-dashed border-border/70 px-3 py-2 text-sm">
+                    @(string.IsNullOrWhiteSpace(formModel.TargetPathSnapshot)
+                        ? L["NoSubforumSelected"]
+                        : formModel.TargetPathSnapshot)
+                </div>
+            }
+
+            <p class="text-xs text-muted-foreground">@L["LoadSubforumsHelp"]</p>
+
+            @if (targetsErrorMessage is not null)
+            {
+                <div class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    @targetsErrorMessage
+                </div>
+            }
+
+            <ValidationMessage For="@(() => formModel.TargetNodeId)" />
+        </div>
+
+        <div class="space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <label class="text-sm font-medium">@L["ThreadPrefix"]</label>
+                <BbButton Variant="ButtonVariant.Outline"
+                          Size="ButtonSize.Small"
+                          Disabled="@(isLoadingPrefixes || SelectedTargetUrl is null)"
+                          OnClick="LoadPrefixesAsync">
+                    <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoadingPrefixes ? "animate-spin" : string.Empty)}")" />
+                    @(prefixesLoaded ? L["ReloadThreadPrefixes"] : L["LoadThreadPrefixes"])
+                </BbButton>
+            </div>
+
+            @if (prefixesLoaded)
+            {
+                <BbSelect TValue="string"
+                          @bind-Value="formModel.ThreadPrefixId"
+                          Options="PrefixOptions"
+                          Placeholder="@L["NoThreadPrefix"]"
+                          Class="w-full" />
+            }
+            else
+            {
+                <div class="rounded-md border border-dashed border-border/70 px-3 py-2 text-sm">
+                    @(string.IsNullOrWhiteSpace(formModel.ThreadPrefixId)
+                        ? L["NoThreadPrefix"]
+                        : formModel.ThreadPrefixId)
+                </div>
+            }
+
+            <p class="text-xs text-muted-foreground">@L["ThreadPrefixRuleHelp"]</p>
+
+            @if (prefixesErrorMessage is not null)
+            {
+                <div class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    @prefixesErrorMessage
+                </div>
+            }
+        </div>
+
+        <BbFormFieldSelect TValue="int"
+                           @bind-Value="formModel.ForumPostTemplateId"
+                           Label="@L["ForumPostTemplate"]"
+                           Placeholder="@L["SelectForumPostTemplate"]"
+                           Options="TemplateOptions" />
+        <ValidationMessage For="@(() => formModel.ForumPostTemplateId)" />
+
+        <BbFormFieldSelect TValue="ForumPostPostMode"
+                           @bind-Value="formModel.PostMode"
+                           Label="@L["ForumPostPostMode"]"
+                           Options="PostModeOptions" />
+
+        <BbFormFieldSwitch @bind-Checked="formModel.IsEnabled"
+                           Label="@L["Enabled"]"
+                           HelperText="@L["ForumPostingRuleEnabledHelp"]" />
+
+        <div class="space-y-2">
+            <div>
+                <p class="text-sm font-medium">@L["Condition"]</p>
+                <p class="text-xs text-muted-foreground">@L["ForumPostingRuleConditionHelp"]</p>
+            </div>
+
+            <ConditionNodeEditor Node="conditionRoot" />
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit" Disabled="isSaving">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

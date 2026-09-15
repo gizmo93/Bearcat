@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using AngleSharp.Dom;
@@ -565,7 +566,8 @@ public sealed partial class XenForoForumClient : IDisposable
                 Id: id,
                 Title: title,
                 CanReceivePosts: canReceivePosts,
-                Children: Children.Select(child => child.Build()).ToList()
+                Children: Children.Select(child => child.Build()).ToList(),
+                StableId: ExtractNodeId(id.Value)?.ToString(CultureInfo.InvariantCulture)
             );
         }
     }

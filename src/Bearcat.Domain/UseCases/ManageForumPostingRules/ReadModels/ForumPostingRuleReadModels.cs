@@ -17,6 +17,13 @@ public record ForumPostingRuleSummaryReadModel(
     DateTime UpdatedAt
 );
 
+public record ForumPostingRulePreviewReadModel(
+    int ReleaseId,
+    string ReleaseName,
+    string? MatchedRuleName,
+    string? TargetPathSnapshot
+);
+
 public record ForumPostingRuleDetailReadModel(
     int ForumPostingRuleId,
     int DistributionSiteRegistrationId,
