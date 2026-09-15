@@ -1,5 +1,5 @@
 using Bearcat.Domain.UseCases.ManageImageUploads.ReadModels;
-using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.UseCases.ManageImageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
@@ -31,7 +31,8 @@ public partial class ReleaseImageUploads(
         try
         {
             imageUploads = await operationRunner.RunAsync(
-                (IReleaseReadRepository repository) => repository.GetImageUploadsAsync(ReleaseId)
+                (IImageUploadReadRepository repository) =>
+                    repository.GetImageUploadsAsync(ReleaseId)
             );
         }
         finally

@@ -1,7 +1,7 @@
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
-using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;

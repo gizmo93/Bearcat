@@ -1,6 +1,7 @@
 ﻿using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.ManageReleaseCollections;
+using Bearcat.Domain.Shared.CollectionAssignment;
+using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -12,7 +13,7 @@ public class ReleaseService(
     IReleaseWriteRepository writeRepository,
     TimeProvider timeProvider,
     IArchiverFactory archiverFactory,
-    ReleaseCollectionAssignmentService releaseCollectionAssignmentService
+    IReleaseCollectionAssigner releaseCollectionAssigner
 )
 {
     public async Task<int> CreateAsync(
@@ -266,7 +267,7 @@ public class ReleaseService(
 
         release.CreatedAt = localNow;
 
-        await releaseCollectionAssignmentService.AssignFromTemplateAsync(
+        await releaseCollectionAssigner.AssignFromTemplateAsync(
             release: release,
             releaseTemplate: releaseTemplate,
             uploadConfigMatches: releaseData.UploadConfigMatches,

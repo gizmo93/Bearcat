@@ -1,6 +1,5 @@
 ﻿using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.UseCases.ManageImageUploads.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.ValueObjects;
@@ -98,17 +97,6 @@ public interface IReleaseReadRepository
     Task<IReadOnlyList<ReleaseUploadContainerLinkReadModel>> GetUploadContainerLinksAsync(
         int releaseId,
         int uploadId,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<IReadOnlyList<ReleaseImageUploadReadModel>> GetImageUploadsAsync(
-        int releaseId,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<IReadOnlyList<ReleaseImageUploadUrlReadModel>> GetImageUploadUrlsAsync(
-        int releaseId,
-        int imageUploadId,
         CancellationToken cancellationToken = default
     );
 }

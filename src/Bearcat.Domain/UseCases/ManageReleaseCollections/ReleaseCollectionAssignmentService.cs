@@ -1,6 +1,6 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
-using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -9,7 +9,7 @@ namespace Bearcat.Domain.UseCases.ManageReleaseCollections;
 public class ReleaseCollectionAssignmentService(
     IReleaseCollectionWriteRepository writeRepository,
     TimeProvider timeProvider
-)
+) : IReleaseCollectionAssigner
 {
     private readonly Dictionary<
         ReleaseCollectionCacheKey,

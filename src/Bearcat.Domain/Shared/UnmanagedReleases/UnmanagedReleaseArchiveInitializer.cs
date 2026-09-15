@@ -2,7 +2,7 @@ using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.ValueObjects;
 
-namespace Bearcat.Domain.UseCases.ManageReleases;
+namespace Bearcat.Domain.Shared.UnmanagedReleases;
 
 public static class UnmanagedReleaseArchiveInitializer
 {

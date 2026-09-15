@@ -1,6 +1,6 @@
 using System.Text;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
+using Bearcat.Domain.Shared.LinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -10,7 +10,7 @@ namespace Bearcat.Domain.UseCases.ManageReleaseCollections;
 
 public class ReleaseCollectionService(
     IReleaseCollectionWriteRepository writeRepository,
-    CollectionLinkCrypterContainerService collectionContainerService,
+    ICollectionLinkCrypterContainerUpdater collectionContainerUpdater,
     TimeProvider timeProvider
 )
 {
@@ -439,7 +439,7 @@ public class ReleaseCollectionService(
 
         await writeRepository.SaveChangesAsync(cancellationToken);
 
-        await collectionContainerService.UpdateContainersAsync(
+        await collectionContainerUpdater.UpdateContainersAsync(
             collectionUploadSlotId,
             cancellationToken
         );

@@ -5,7 +5,7 @@ using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.UseCases.ManageReleaseCollections;
+using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -19,7 +19,7 @@ public class AutomaticallyCreateReleasesService(
     MediaMetadataService mediaMetadataService,
     TimeProvider timeProvider,
     IArchiverFactory archiverFactory,
-    ReleaseCollectionAssignmentService releaseCollectionAssignmentService,
+    IReleaseCollectionAssigner releaseCollectionAssigner,
     IApplicationConfigurationProvider configuration,
     INotificationService notificationService
 )
@@ -188,7 +188,7 @@ public class AutomaticallyCreateReleasesService(
         release.CreatedAt = localNow;
         release.PrimaryLanguageCode = candidate.Automation.PrimaryLanguageCode;
 
-        await releaseCollectionAssignmentService.AssignFromTemplateAsync(
+        await releaseCollectionAssigner.AssignFromTemplateAsync(
             release: release,
             releaseTemplate: candidate.Automation.ReleaseTemplate,
             uploadConfigMatches: releaseData.UploadConfigMatches,

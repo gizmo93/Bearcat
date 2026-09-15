@@ -1,4 +1,4 @@
-namespace Bearcat.Domain.UseCases.ManageReleases;
+namespace Bearcat.Domain.Shared.UnmanagedReleases;
 
 public enum ArchiveFolderChangeResult
 {

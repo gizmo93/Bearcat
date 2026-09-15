@@ -1,8 +1,11 @@
 ﻿using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.Shared.ForumPostRendering;
+using Bearcat.Domain.Shared.LinkCrypterContainers;
+using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.Shared.QualityGate.Checks;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
@@ -37,7 +40,6 @@ using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.ManageUploads.Progress;
 using Bearcat.Domain.UseCases.PostToForums;
-using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Microsoft.Extensions.DependencyInjection;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -61,6 +63,9 @@ public static class ServiceProviderConfig
             services.AddScoped<AutomaticallyCreateReleasesService>();
             services.AddScoped<ReleaseCollectionService>();
             services.AddScoped<ReleaseCollectionAssignmentService>();
+            services.AddScoped<IReleaseCollectionAssigner>(provider =>
+                provider.GetRequiredService<ReleaseCollectionAssignmentService>()
+            );
             services.AddScoped<ReleaseCollectionInfoResolutionService>();
             services.AddScoped<ReleaseGroupService>();
             services.AddScoped<QualityProfileService>();
@@ -116,6 +121,9 @@ public static class ServiceProviderConfig
             services.AddScoped<NfoDatabaseRegistrationService>();
             services.AddScoped<MediaDatabaseRegistrationService>();
             services.AddScoped<CollectionLinkCrypterContainerService>();
+            services.AddScoped<ICollectionLinkCrypterContainerUpdater>(provider =>
+                provider.GetRequiredService<CollectionLinkCrypterContainerService>()
+            );
             services.AddScoped<LinkCrypterContainerService>();
             services.AddScoped<UploadConfigLinkCrypterService>();
             services.AddApplicationConfiguration<ArchiveCleanupConfiguration>();

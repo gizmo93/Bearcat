@@ -1,7 +1,7 @@
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Microsoft.Extensions.Logging;
 
-namespace Bearcat.Domain.UseCases.ResolveMediaMetadata;
+namespace Bearcat.Domain.Shared.MediaMetadataResolution;
 
 public class MediaMetadataResolver(
     IMediaMetadataResolverRepository repository,

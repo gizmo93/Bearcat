@@ -2,6 +2,7 @@ using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.LinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -16,7 +17,7 @@ public class CollectionLinkCrypterContainerService(
     TimeProvider timeProvider,
     INotificationService notificationService,
     ISecretProtector secretProtector
-)
+) : ICollectionLinkCrypterContainerUpdater
 {
     public async Task UpdateContainersAsync(
         int collectionUploadSlotId,

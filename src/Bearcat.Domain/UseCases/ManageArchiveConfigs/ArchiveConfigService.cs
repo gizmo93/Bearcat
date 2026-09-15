@@ -1,6 +1,6 @@
 ﻿using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 

@@ -1,5 +1,5 @@
 using Bearcat.Abstractions.Security;
-using Bearcat.Domain.UseCases.ResolveMediaMetadata;
+using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;

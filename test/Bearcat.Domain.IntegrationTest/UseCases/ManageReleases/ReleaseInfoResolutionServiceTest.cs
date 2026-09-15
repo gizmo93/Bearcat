@@ -1,9 +1,9 @@
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
-using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;

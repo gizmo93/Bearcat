@@ -1,8 +1,8 @@
 using System.Text.RegularExpressions;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
-using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

@@ -1,4 +1,5 @@
 ﻿using Bearcat.Domain.Shared.ForumPostRendering;
+using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.UseCases.Dashboard.Repositories;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
@@ -27,7 +28,6 @@ using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.UseCases.PostToForums.Repositories;
-using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.DistributionSites;
 using Microsoft.EntityFrameworkCore;
@@ -109,6 +109,7 @@ public static class ServiceProviderConfig
                 ImageUploadConfigWriteRepository
             >();
             services.AddScoped<IImageUploadRepository, ImageUploadRepository>();
+            services.AddScoped<IImageUploadReadRepository, ImageUploadReadRepository>();
             services.AddScoped<IReleaseWriteRepository, ReleaseWriteRepository>();
             services.AddScoped<IReleaseInfoRepository, ReleaseInfoRepository>();
             services.AddScoped<IMediaMetadataRepository, MediaMetadataRepository>();

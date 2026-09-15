@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.CollectionAssignment;
 
 namespace Bearcat.Domain.UseCases.ManageReleases;
 

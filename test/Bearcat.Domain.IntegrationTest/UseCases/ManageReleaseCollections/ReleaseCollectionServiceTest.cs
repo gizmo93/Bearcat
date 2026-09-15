@@ -1,11 +1,11 @@
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Dto;
-using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;

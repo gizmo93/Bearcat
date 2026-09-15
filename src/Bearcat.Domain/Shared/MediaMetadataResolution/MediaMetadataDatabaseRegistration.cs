@@ -1,3 +1,3 @@
-namespace Bearcat.Domain.UseCases.ResolveMediaMetadata;
+namespace Bearcat.Domain.Shared.MediaMetadataResolution;
 
 public record MediaMetadataDatabaseRegistration(string ClassName, string SerializedConfig);

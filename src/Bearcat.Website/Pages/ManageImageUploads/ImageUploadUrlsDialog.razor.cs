@@ -1,5 +1,5 @@
 using Bearcat.Domain.UseCases.ManageImageUploads.ReadModels;
-using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.UseCases.ManageImageUploads.Repositories;
 using Bearcat.Website.ScopedOperations;
 using Microsoft.AspNetCore.Components;
 
@@ -18,7 +18,7 @@ public partial class ImageUploadUrlsDialog(IScopedOperationRunner operationRunne
     protected override async Task OnInitializedAsync()
     {
         urls = await operationRunner.RunAsync(
-            (IReleaseReadRepository repository) =>
+            (IImageUploadReadRepository repository) =>
                 repository.GetImageUploadUrlsAsync(ReleaseId, ImageUploadId)
         );
     }

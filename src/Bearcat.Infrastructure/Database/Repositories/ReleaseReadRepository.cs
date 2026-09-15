@@ -6,7 +6,6 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.Shared.PostQueue;
-using Bearcat.Domain.UseCases.ManageImageUploads.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
@@ -1141,45 +1140,6 @@ public class ReleaseReadRepository(
                 Errors: container.Errors
             ))
             .ToList();
-    }
-
-    public async Task<IReadOnlyList<ReleaseImageUploadReadModel>> GetImageUploadsAsync(
-        int releaseId,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return await dbRead
-            .ImageUploads.Where(upload => upload.ImageUploadConfig.ReleaseId == releaseId)
-            .OrderByDescending(upload => upload.UploadedAt ?? upload.CreatedAt)
-            .ThenByDescending(upload => upload.Id)
-            .Select(upload => new ReleaseImageUploadReadModel(
-                upload.Id,
-                upload.ImageUploadConfig.Name,
-                upload.ImageUploadConfig.ImageHosterRegistration.Name,
-                upload.CreatedAt,
-                upload.UploadedAt,
-                upload.UploadState,
-                upload.ImageUrls.Count,
-                upload.ErrorMessages.ToList()
-            ))
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<ReleaseImageUploadUrlReadModel>> GetImageUploadUrlsAsync(
-        int releaseId,
-        int imageUploadId,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return await dbRead
-            .ImageUploadUrls.Where(url =>
-                url.ImageUploadId == imageUploadId
-                && url.ImageUpload.ImageUploadConfig.ReleaseId == releaseId
-            )
-            .OrderBy(url => url.ImageSize)
-            .ThenBy(url => url.Id)
-            .Select(url => new ReleaseImageUploadUrlReadModel(url.ImageSize, url.Url))
-            .ToListAsync(cancellationToken);
     }
 
     private static Expression<Func<Release, ReleaseReadModel>> ToReleaseReadModel()

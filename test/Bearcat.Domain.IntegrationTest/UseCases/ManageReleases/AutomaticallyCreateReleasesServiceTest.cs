@@ -6,10 +6,10 @@ using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
-using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -70,7 +70,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
             mediaMetadataService: CreateMediaMetadataService(),
             timeProvider: CreateTimeProvider(),
             archiverFactory: archiverFactory.Object,
-            releaseCollectionAssignmentService: new ReleaseCollectionAssignmentService(
+            releaseCollectionAssigner: new ReleaseCollectionAssignmentService(
                 new ReleaseCollectionRepository(
                     dbRead: dbContext,
                     dbWrite: dbContext,
