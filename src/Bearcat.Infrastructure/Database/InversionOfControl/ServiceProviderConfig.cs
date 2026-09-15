@@ -1,5 +1,4 @@
-﻿using Bearcat.Domain.Shared.AutoForumPosting;
-using Bearcat.Domain.Shared.ForumPostRendering;
+﻿using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UseCases.Dashboard.Repositories;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
@@ -27,6 +26,7 @@ using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
+using Bearcat.Domain.UseCases.PostToForums.Repositories;
 using Bearcat.Domain.UseCases.ResolveMediaMetadata;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.DistributionSites;

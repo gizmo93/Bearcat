@@ -1,4 +1,4 @@
-using Bearcat.Domain.Shared.AutoForumPosting;
+using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.ValueObjects;

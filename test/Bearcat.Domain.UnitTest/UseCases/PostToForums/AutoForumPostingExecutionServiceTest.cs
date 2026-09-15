@@ -1,10 +1,10 @@
 using Bearcat.Abstractions.DistributionSite.Dto;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.Shared.AutoForumPosting;
+using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.ValueObjects;
 using Shouldly;
 
-namespace Bearcat.Domain.UnitTest.Shared.AutoForumPosting;
+namespace Bearcat.Domain.UnitTest.UseCases.PostToForums;
 
 public class AutoForumPostingExecutionServiceTest
 {
@@ -34,7 +34,7 @@ public class AutoForumPostingExecutionServiceTest
         submitter.NewThreads.ShouldBeEmpty();
         submitter
             .SearchedReleaseNames.ShouldHaveSingleItem()
-            .ShouldBe(AutoPostTestFactory.ReleaseName);
+            .ShouldBe("Some Movie 2021 1080p BluRay - GROUP");
 
         var reply = submitter.Replies.ShouldHaveSingleItem();
         reply.RegistrationId.ShouldBe(5);
@@ -158,7 +158,8 @@ public class AutoForumPostingExecutionServiceTest
             new AutoForumPostingPlanService(repository),
             repository,
             new FakeForumPostContentRenderer { Errors = ["Unknown variable"] },
-            submitter
+            submitter,
+            new FakeNotificationService()
         );
 
         // Act
@@ -267,6 +268,67 @@ public class AutoForumPostingExecutionServiceTest
         result.SkipReason.ShouldBe(AutoPostSkipReason.SiteNotConfigured);
     }
 
+    [Test]
+    public async Task ExecuteAsync_StripDotsDisabled_SearchesWithTheRawReleaseName()
+    {
+        // Arrange
+        var repository = RepositoryWith(
+            AutoPostTestFactory.Rule(
+                postMode: ForumPostPostMode.ReplyToExistingElseNewThread,
+                stripDotsForThreadSearch: false
+            )
+        );
+        var submitter = new FakeForumPostSubmitter();
+        var service = ServiceWith(repository, submitter);
+
+        // Act
+        await service.ExecuteAsync(releaseId: 1, distributionSiteRegistrationId: 5);
+
+        // Assert
+        submitter
+            .SearchedReleaseNames.ShouldHaveSingleItem()
+            .ShouldBe(AutoPostTestFactory.ReleaseName);
+    }
+
+    [Test]
+    public async Task ExecuteAsync_StripDotsEnabled_KeepsTheRawReleaseNameAsNewThreadTitle()
+    {
+        // Arrange
+        var repository = RepositoryWith(
+            AutoPostTestFactory.Rule(postMode: ForumPostPostMode.ReplyToExistingElseNewThread)
+        );
+        var submitter = new FakeForumPostSubmitter();
+        var service = ServiceWith(repository, submitter);
+
+        // Act
+        await service.ExecuteAsync(releaseId: 1, distributionSiteRegistrationId: 5);
+
+        // Assert
+        submitter
+            .SearchedReleaseNames.ShouldHaveSingleItem()
+            .ShouldBe("Some Movie 2021 1080p BluRay - GROUP");
+        submitter.NewThreads.ShouldHaveSingleItem().Title.ShouldBe(AutoPostTestFactory.ReleaseName);
+    }
+
+    [Test]
+    public async Task ExecuteAsync_SkippedRelease_CreatesNoNotification()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release(qualityGateState: QualityGateState.Failed)],
+            Registrations = [AutoPostTestFactory.Registration(id: 5)],
+        };
+        var notificationService = new FakeNotificationService();
+        var service = ServiceWith(repository, new FakeForumPostSubmitter(), notificationService);
+
+        // Act
+        await service.ExecuteAsync(releaseId: 1, distributionSiteRegistrationId: 5);
+
+        // Assert
+        notificationService.Created.ShouldBeEmpty();
+    }
+
     private static FakeAutoForumPostingRepository RepositoryWith(ForumPostingRule rule)
     {
         return new FakeAutoForumPostingRepository
@@ -278,14 +340,16 @@ public class AutoForumPostingExecutionServiceTest
 
     private static AutoForumPostingExecutionService ServiceWith(
         FakeAutoForumPostingRepository repository,
-        FakeForumPostSubmitter submitter
+        FakeForumPostSubmitter submitter,
+        FakeNotificationService? notificationService = null
     )
     {
         return new AutoForumPostingExecutionService(
             new AutoForumPostingPlanService(repository),
             repository,
             new FakeForumPostContentRenderer(),
-            submitter
+            submitter,
+            notificationService ?? new FakeNotificationService()
         );
     }
 }

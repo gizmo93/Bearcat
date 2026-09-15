@@ -1,12 +1,12 @@
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
-using Bearcat.Domain.Shared.AutoForumPosting;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Website.Formatting;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;

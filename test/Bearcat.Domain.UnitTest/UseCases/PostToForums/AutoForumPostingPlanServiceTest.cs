@@ -1,8 +1,8 @@
-using Bearcat.Domain.Shared.AutoForumPosting;
+using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.ValueObjects;
 using Shouldly;
 
-namespace Bearcat.Domain.UnitTest.Shared.AutoForumPosting;
+namespace Bearcat.Domain.UnitTest.UseCases.PostToForums;
 
 public class AutoForumPostingPlanServiceTest
 {

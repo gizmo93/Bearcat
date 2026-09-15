@@ -9,5 +9,6 @@ public record DistributionSiteRegistrationReadModel(
     string DistributionSiteName,
     DistributionSiteKind Kind,
     bool IsActive,
+    bool EnableAutomaticPosting,
     int PostingRuleCount
 );

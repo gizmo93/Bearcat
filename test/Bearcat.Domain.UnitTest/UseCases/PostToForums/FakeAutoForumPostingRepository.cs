@@ -1,7 +1,8 @@
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.Shared.AutoForumPosting;
+using Bearcat.Domain.UseCases.PostToForums;
+using Bearcat.Domain.UseCases.PostToForums.Repositories;
 
-namespace Bearcat.Domain.UnitTest.Shared.AutoForumPosting;
+namespace Bearcat.Domain.UnitTest.UseCases.PostToForums;
 
 public sealed class FakeAutoForumPostingRepository : IAutoForumPostingRepository
 {
@@ -15,6 +16,8 @@ public sealed class FakeAutoForumPostingRepository : IAutoForumPostingRepository
 
     public List<int> MarkedReleaseIds { get; } = [];
 
+    public int PlanningRoundCount { get; private set; }
+
     public Task<IReadOnlyList<AutoPostRegistration>> GetForumRegistrationsWithEnabledRulesAsync(
         CancellationToken cancellationToken = default
     )
@@ -22,11 +25,20 @@ public sealed class FakeAutoForumPostingRepository : IAutoForumPostingRepository
         return Task.FromResult<IReadOnlyList<AutoPostRegistration>>(Registrations);
     }
 
+    public Task<IReadOnlyList<int>> GetQueuedReleaseIdsAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        return Task.FromResult<IReadOnlyList<int>>(Releases.Select(release => release.Id).ToList());
+    }
+
     public Task<IReadOnlyList<Release>> GetReleasesForRoutingAsync(
         IReadOnlyList<int> releaseIds,
         CancellationToken cancellationToken = default
     )
     {
+        PlanningRoundCount++;
+
         return Task.FromResult<IReadOnlyList<Release>>(
             Releases.Where(release => releaseIds.Contains(release.Id)).ToList()
         );

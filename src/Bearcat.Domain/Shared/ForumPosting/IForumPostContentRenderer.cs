@@ -1,6 +1,6 @@
 using Bearcat.Domain.Shared.ForumPostRendering;
 
-namespace Bearcat.Domain.Shared.AutoForumPosting;
+namespace Bearcat.Domain.Shared.ForumPosting;
 
 public interface IForumPostContentRenderer
 {

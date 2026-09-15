@@ -111,6 +111,8 @@ public class NotificationService(
                 configuration.LinkCrypterContainerUpdateFailed,
             NotificationKind.CollectionLinkCrypterContainerInvalid =>
                 configuration.CollectionLinkCrypterContainerInvalid,
+            NotificationKind.AutomaticForumPostCreated => configuration.AutomaticForumPostCreated,
+            NotificationKind.AutomaticForumPostFailed => configuration.AutomaticForumPostFailed,
             _ => throw new ArgumentOutOfRangeException(
                 paramName: nameof(kind),
                 actualValue: kind,

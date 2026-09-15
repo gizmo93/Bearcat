@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.DistributionSite;
+using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Domain.UseCases.ManageDistributionSites.ReadModels;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Domain.UseCases.ManageForumPostingRules;
@@ -154,6 +155,22 @@ public partial class ForumPostingRulesPage(
         );
         await LoadRulesAsync();
         previewResults = null;
+    }
+
+    private async Task SetAutomaticPostingAsync(bool isEnabled)
+    {
+        await operationRunner.RunAsync(
+            (DistributionSiteRegistrationService service) =>
+                service.SetAutomaticPostingAsync(DistributionSiteRegistrationId, isEnabled)
+        );
+
+        registration = registration with { EnableAutomaticPosting = isEnabled };
+
+        toastService.Success(
+            isEnabled
+                ? L["AutomaticPostingEnabled", registration.Name]
+                : L["AutomaticPostingDisabled", registration.Name]
+        );
     }
 
     private async Task ReorderByDragAsync((int OldIndex, int NewIndex) move)

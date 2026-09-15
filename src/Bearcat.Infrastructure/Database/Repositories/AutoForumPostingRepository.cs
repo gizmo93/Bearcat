@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.Shared.AutoForumPosting;
+using Bearcat.Domain.UseCases.PostToForums;
+using Bearcat.Domain.UseCases.PostToForums.Repositories;
 using Microsoft.EntityFrameworkCore;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -35,6 +36,7 @@ public class AutoForumPostingRepository(
             {
                 registration.Id,
                 registration.Name,
+                registration.EnableAutomaticPosting,
                 EnabledRules = registration
                     .PostingRules.Where(rule => rule.IsEnabled)
                     .OrderBy(rule => rule.SortOrder)
@@ -47,9 +49,21 @@ public class AutoForumPostingRepository(
             .Select(registration => new AutoPostRegistration(
                 DistributionSiteRegistrationId: registration.Id,
                 Name: registration.Name,
+                EnableAutomaticPosting: registration.EnableAutomaticPosting,
                 EnabledRules: registration.EnabledRules
             ))
             .ToList();
+    }
+
+    public async Task<IReadOnlyList<int>> GetQueuedReleaseIdsAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .Releases.Where(ReleaseReadRepository.IsReadyForPostQueue)
+            .OrderBy(release => release.Id)
+            .Select(release => release.Id)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<Release>> GetReleasesForRoutingAsync(

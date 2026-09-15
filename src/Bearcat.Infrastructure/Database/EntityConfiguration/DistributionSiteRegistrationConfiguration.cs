@@ -21,6 +21,7 @@ public class DistributionSiteRegistrationConfiguration
             .HasMaxLength(4000)
             .IsRequired();
         builder.Property(registration => registration.IsActive).IsRequired();
+        builder.Property(registration => registration.EnableAutomaticPosting).IsRequired();
         builder.Property(registration => registration.EncryptedSession).HasMaxLength(8000);
 
         builder

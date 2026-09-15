@@ -1,10 +1,14 @@
 using Bearcat.Domain.Entities;
 
-namespace Bearcat.Domain.Shared.AutoForumPosting;
+namespace Bearcat.Domain.UseCases.PostToForums.Repositories;
 
 public interface IAutoForumPostingRepository
 {
     Task<IReadOnlyList<AutoPostRegistration>> GetForumRegistrationsWithEnabledRulesAsync(
+        CancellationToken cancellationToken = default
+    );
+
+    Task<IReadOnlyList<int>> GetQueuedReleaseIdsAsync(
         CancellationToken cancellationToken = default
     );
 

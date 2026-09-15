@@ -110,4 +110,16 @@ public class NotificationConfiguration : IApplicationConfiguration
         "NotificationKind.CollectionLinkCrypterContainerInvalid.Description"
     )]
     public bool CollectionLinkCrypterContainerInvalid { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
+        "NotificationKind.AutomaticForumPostCreated",
+        "NotificationKind.AutomaticForumPostCreated.Description"
+    )]
+    public bool AutomaticForumPostCreated { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
+        "NotificationKind.AutomaticForumPostFailed",
+        "NotificationKind.AutomaticForumPostFailed.Description"
+    )]
+    public bool AutomaticForumPostFailed { get; set; } = true;
 }

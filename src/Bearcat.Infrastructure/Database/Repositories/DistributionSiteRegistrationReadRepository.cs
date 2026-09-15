@@ -25,6 +25,7 @@ public class DistributionSiteRegistrationReadRepository(
                 registration.Name,
                 registration.DistributionSiteClassName,
                 registration.IsActive,
+                registration.EnableAutomaticPosting,
                 PostingRuleCount = registration.PostingRules.Count,
             })
             .ToListAsync(cancellationToken);
@@ -36,6 +37,7 @@ public class DistributionSiteRegistrationReadRepository(
                     name: registration.Name,
                     className: registration.DistributionSiteClassName,
                     isActive: registration.IsActive,
+                    enableAutomaticPosting: registration.EnableAutomaticPosting,
                     postingRuleCount: registration.PostingRuleCount,
                     distributionSitesByClassName: distributionSitesByClassName
                 )
@@ -56,6 +58,7 @@ public class DistributionSiteRegistrationReadRepository(
                 registration.Name,
                 registration.DistributionSiteClassName,
                 registration.IsActive,
+                registration.EnableAutomaticPosting,
                 PostingRuleCount = registration.PostingRules.Count,
             })
             .FirstOrDefaultAsync(cancellationToken);
@@ -70,6 +73,7 @@ public class DistributionSiteRegistrationReadRepository(
             name: registration.Name,
             className: registration.DistributionSiteClassName,
             isActive: registration.IsActive,
+            enableAutomaticPosting: registration.EnableAutomaticPosting,
             postingRuleCount: registration.PostingRuleCount,
             distributionSitesByClassName: DistributionSitesByClassName()
         );
@@ -87,6 +91,7 @@ public class DistributionSiteRegistrationReadRepository(
         string name,
         string className,
         bool isActive,
+        bool enableAutomaticPosting,
         int postingRuleCount,
         IReadOnlyDictionary<string, DistributionSiteDto> distributionSitesByClassName
     )
@@ -100,6 +105,7 @@ public class DistributionSiteRegistrationReadRepository(
             DistributionSiteName: distributionSite.Name,
             Kind: distributionSite.Kind,
             IsActive: isActive,
+            EnableAutomaticPosting: enableAutomaticPosting,
             PostingRuleCount: postingRuleCount
         );
     }

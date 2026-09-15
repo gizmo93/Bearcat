@@ -12,6 +12,8 @@ public class DistributionSiteRegistration
 
     public bool IsActive { get; set; }
 
+    public bool EnableAutomaticPosting { get; set; }
+
     public string? EncryptedSession { get; set; }
 
     public List<ForumPostingRule> PostingRules { get; set; } = [];

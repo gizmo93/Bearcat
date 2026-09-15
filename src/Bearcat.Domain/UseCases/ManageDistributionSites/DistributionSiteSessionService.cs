@@ -3,7 +3,7 @@ using Bearcat.Abstractions.DistributionSite.Dto;
 using Bearcat.Abstractions.DistributionSite.Results;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.Shared.AutoForumPosting;
+using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 
 namespace Bearcat.Domain.UseCases.ManageDistributionSites;

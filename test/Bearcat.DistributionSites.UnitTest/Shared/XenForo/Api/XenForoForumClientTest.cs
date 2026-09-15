@@ -38,6 +38,40 @@ public class XenForoForumClientTest
     }
 
     [Test]
+    public async Task SearchThreadsAsync_SeveralResults_OrdersThreadsByThreadIdAscending()
+    {
+        // Arrange
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(_ => HtmlResponse("<html data-csrf=\"token\"></html>"));
+        handler.Enqueue(_ =>
+            HtmlResponse(
+                """
+                <html>
+                    <div class="contentRow-title"><a href="/threads/newest.300/">Newest</a></div>
+                    <div class="contentRow-title"><a href="/threads/unparsable/">Unparsable</a></div>
+                    <div class="contentRow-title"><a href="/threads/oldest.12/post-98">Oldest</a></div>
+                    <div class="contentRow-title"><a href="/threads/middle.150/">Middle</a></div>
+                </html>
+                """
+            )
+        );
+
+        using var client = CreateClient(handler);
+
+        // Act
+        var threads = await client.SearchThreadsAsync(
+            "Some Movie",
+            "https://www.data-load.me/forums/uhd-4k.9/",
+            CancellationToken.None
+        );
+
+        // Assert
+        threads
+            .Select(thread => thread.Title)
+            .ShouldBe(["Oldest", "Middle", "Newest", "Unparsable"]);
+    }
+
+    [Test]
     public async Task GetForumTreeAsync_ForumWithNodeIdInUrl_ExposesStableId()
     {
         // Arrange

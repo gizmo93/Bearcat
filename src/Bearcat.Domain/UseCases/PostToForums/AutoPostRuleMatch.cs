@@ -1,6 +1,6 @@
 using Bearcat.Domain.ValueObjects;
 
-namespace Bearcat.Domain.Shared.AutoForumPosting;
+namespace Bearcat.Domain.UseCases.PostToForums;
 
 public sealed record AutoPostRuleMatch(
     int ForumPostingRuleId,
@@ -9,5 +9,6 @@ public sealed record AutoPostRuleMatch(
     string TargetPathSnapshot,
     string? ThreadPrefixId,
     int ForumPostTemplateId,
-    ForumPostPostMode PostMode
+    ForumPostPostMode PostMode,
+    bool StripDotsForThreadSearch
 );

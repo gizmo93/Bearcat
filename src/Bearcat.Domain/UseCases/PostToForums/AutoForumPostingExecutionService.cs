@@ -1,13 +1,17 @@
 using Bearcat.Abstractions.DistributionSite.Dto;
+using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.ForumPosting;
+using Bearcat.Domain.UseCases.PostToForums.Repositories;
 using Bearcat.Domain.ValueObjects;
 
-namespace Bearcat.Domain.Shared.AutoForumPosting;
+namespace Bearcat.Domain.UseCases.PostToForums;
 
 public class AutoForumPostingExecutionService(
     AutoForumPostingPlanService planService,
     IAutoForumPostingRepository repository,
     IForumPostContentRenderer contentRenderer,
-    IForumPostSubmitter submitter
+    IForumPostSubmitter submitter,
+    INotificationService notificationService
 )
 {
     public async Task<AutoPostExecutionResult> ExecuteAsync(
@@ -32,6 +36,15 @@ public class AutoForumPostingExecutionService(
             return AutoPostExecutionResult.Skipped(AutoPostSkipReason.SiteNotConfigured);
         }
 
+        return await ExecuteAsync(plan, entry, cancellationToken);
+    }
+
+    public async Task<AutoPostExecutionResult> ExecuteAsync(
+        ReleaseAutoPostPlan plan,
+        AutoPostSiteEntry entry,
+        CancellationToken cancellationToken = default
+    )
+    {
         if (entry.Status == AutoPostSiteStatus.AlreadyPosted)
         {
             return AutoPostExecutionResult.Skipped(AutoPostSkipReason.AlreadyPosted);
@@ -42,12 +55,36 @@ public class AutoForumPostingExecutionService(
             return AutoPostExecutionResult.Skipped(AutoPostSkipReason.NoMatch);
         }
 
+        var result = await TryPostAsync(
+            plan: plan,
+            registrationId: entry.DistributionSiteRegistrationId,
+            match: entry.Match,
+            cancellationToken: cancellationToken
+        );
+
+        await NotifyAsync(
+            releaseName: plan.ReleaseName,
+            distributionSiteRegistrationName: entry.DistributionSiteRegistrationName,
+            result: result,
+            cancellationToken: cancellationToken
+        );
+
+        return result;
+    }
+
+    private async Task<AutoPostExecutionResult> TryPostAsync(
+        ReleaseAutoPostPlan plan,
+        int registrationId,
+        AutoPostRuleMatch match,
+        CancellationToken cancellationToken
+    )
+    {
         try
         {
             return await PostAsync(
                 plan: plan,
-                registrationId: distributionSiteRegistrationId,
-                match: entry.Match,
+                registrationId: registrationId,
+                match: match,
                 cancellationToken: cancellationToken
             );
         }
@@ -55,6 +92,31 @@ public class AutoForumPostingExecutionService(
         {
             return AutoPostExecutionResult.Failed([exception.Message]);
         }
+    }
+
+    private async Task NotifyAsync(
+        string releaseName,
+        string distributionSiteRegistrationName,
+        AutoPostExecutionResult result,
+        CancellationToken cancellationToken
+    )
+    {
+        if (result.Status == AutoPostExecutionStatus.Posted)
+        {
+            await notificationService.CreateAsync(
+                kind: NotificationKind.AutomaticForumPostCreated,
+                message: $"Release '{releaseName}' was posted automatically to '{distributionSiteRegistrationName}': {result.PostedUrl}",
+                cancellationToken: cancellationToken
+            );
+
+            return;
+        }
+
+        await notificationService.CreateAsync(
+            kind: NotificationKind.AutomaticForumPostFailed,
+            message: $"Automatic posting of release '{releaseName}' to '{distributionSiteRegistrationName}' failed: {string.Join(" ", result.Errors)}",
+            cancellationToken: cancellationToken
+        );
     }
 
     private async Task<AutoPostExecutionResult> PostAsync(
@@ -111,7 +173,9 @@ public class AutoForumPostingExecutionService(
             var existingThreads = await submitter.FindExistingThreadsAsync(
                 registrationId: registrationId,
                 targetNodeId: match.TargetNodeId,
-                releaseName: plan.ReleaseName,
+                releaseName: match.StripDotsForThreadSearch
+                    ? ReleaseNameFormatter.ToSpacedName(plan.ReleaseName)
+                    : plan.ReleaseName,
                 cancellationToken: cancellationToken
             );
 

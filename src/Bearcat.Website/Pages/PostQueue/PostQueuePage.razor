@@ -228,7 +228,14 @@
                                     {
                                         <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border/70 px-3 py-2">
                                             <div class="min-w-0 space-y-0.5">
-                                                <span class="text-sm font-medium">@site.DistributionSiteRegistrationName</span>
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <span class="text-sm font-medium">@site.DistributionSiteRegistrationName</span>
+
+                                                    @if (site.AutomaticPostingEnabled)
+                                                    {
+                                                        <BbBadge Variant="BadgeVariant.Outline">@L["AutomaticPostingBadge"]</BbBadge>
+                                                    }
+                                                </div>
 
                                                 @if (site.Status == AutoPostSiteStatus.AlreadyPosted)
                                                 {

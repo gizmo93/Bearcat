@@ -58,6 +58,7 @@ public class ForumPostingRuleRepository(
                 rule.ForumPostTemplateId,
                 rule.ForumPostTemplate.Name,
                 rule.PostMode,
+                rule.StripDotsForThreadSearch,
                 rule.IsEnabled
             ))
             .FirstOrDefaultAsync(cancellationToken);

@@ -1,6 +1,6 @@
 using Bearcat.Abstractions.DistributionSite.Dto;
 
-namespace Bearcat.Domain.Shared.AutoForumPosting;
+namespace Bearcat.Domain.Shared.ForumPosting;
 
 public interface IForumPostSubmitter
 {

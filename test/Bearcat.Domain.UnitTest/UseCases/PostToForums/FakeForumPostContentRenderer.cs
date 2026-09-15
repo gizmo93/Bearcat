@@ -1,7 +1,7 @@
-using Bearcat.Domain.Shared.AutoForumPosting;
+using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.Shared.ForumPostRendering;
 
-namespace Bearcat.Domain.UnitTest.Shared.AutoForumPosting;
+namespace Bearcat.Domain.UnitTest.UseCases.PostToForums;
 
 public sealed class FakeForumPostContentRenderer : IForumPostContentRenderer
 {

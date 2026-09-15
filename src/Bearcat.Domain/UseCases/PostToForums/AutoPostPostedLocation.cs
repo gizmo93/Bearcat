@@ -1,4 +1,4 @@
-namespace Bearcat.Domain.Shared.AutoForumPosting;
+namespace Bearcat.Domain.UseCases.PostToForums;
 
 public sealed record AutoPostPostedLocation(
     int ReleaseId,

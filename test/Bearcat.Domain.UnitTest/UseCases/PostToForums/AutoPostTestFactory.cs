@@ -1,9 +1,9 @@
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.Shared.AutoForumPosting;
 using Bearcat.Domain.Shared.ForumPostingRules;
+using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.ValueObjects;
 
-namespace Bearcat.Domain.UnitTest.Shared.AutoForumPosting;
+namespace Bearcat.Domain.UnitTest.UseCases.PostToForums;
 
 public static class AutoPostTestFactory
 {
@@ -34,6 +34,7 @@ public static class AutoPostTestFactory
         ForumPostPostMode postMode = ForumPostPostMode.AlwaysNewThread,
         string? threadPrefixId = null,
         int forumPostTemplateId = 7,
+        bool stripDotsForThreadSearch = true,
         bool isEnabled = true
     )
     {
@@ -54,6 +55,7 @@ public static class AutoPostTestFactory
             ThreadPrefixId = threadPrefixId,
             ForumPostTemplateId = forumPostTemplateId,
             PostMode = postMode,
+            StripDotsForThreadSearch = stripDotsForThreadSearch,
             IsEnabled = isEnabled,
         };
     }
@@ -64,6 +66,11 @@ public static class AutoPostTestFactory
         params ForumPostingRule[] rules
     )
     {
-        return new AutoPostRegistration(id, name, rules.Length == 0 ? [Rule()] : rules);
+        return new AutoPostRegistration(
+            id,
+            name,
+            EnableAutomaticPosting: false,
+            rules.Length == 0 ? [Rule()] : rules
+        );
     }
 }

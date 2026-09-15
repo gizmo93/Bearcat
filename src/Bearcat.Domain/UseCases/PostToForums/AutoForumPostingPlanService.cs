@@ -1,8 +1,9 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ForumPostingRules;
+using Bearcat.Domain.UseCases.PostToForums.Repositories;
 using Bearcat.Domain.ValueObjects;
 
-namespace Bearcat.Domain.Shared.AutoForumPosting;
+namespace Bearcat.Domain.UseCases.PostToForums;
 
 public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
 {
@@ -106,6 +107,7 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
             return new AutoPostSiteEntry(
                 DistributionSiteRegistrationId: registration.DistributionSiteRegistrationId,
                 DistributionSiteRegistrationName: registration.Name,
+                AutomaticPostingEnabled: registration.EnableAutomaticPosting,
                 Status: AutoPostSiteStatus.AlreadyPosted,
                 PostedUrl: postedLocation.Url,
                 Match: null
@@ -119,6 +121,7 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
             return new AutoPostSiteEntry(
                 DistributionSiteRegistrationId: registration.DistributionSiteRegistrationId,
                 DistributionSiteRegistrationName: registration.Name,
+                AutomaticPostingEnabled: registration.EnableAutomaticPosting,
                 Status: AutoPostSiteStatus.NoMatch,
                 PostedUrl: null,
                 Match: null
@@ -128,6 +131,7 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
         return new AutoPostSiteEntry(
             DistributionSiteRegistrationId: registration.DistributionSiteRegistrationId,
             DistributionSiteRegistrationName: registration.Name,
+            AutomaticPostingEnabled: registration.EnableAutomaticPosting,
             Status: AutoPostSiteStatus.Matched,
             PostedUrl: null,
             Match: new AutoPostRuleMatch(
@@ -137,7 +141,8 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
                 TargetPathSnapshot: rule.TargetPathSnapshot,
                 ThreadPrefixId: rule.ThreadPrefixId,
                 ForumPostTemplateId: rule.ForumPostTemplateId,
-                PostMode: rule.PostMode
+                PostMode: rule.PostMode,
+                StripDotsForThreadSearch: rule.StripDotsForThreadSearch
             )
         );
     }

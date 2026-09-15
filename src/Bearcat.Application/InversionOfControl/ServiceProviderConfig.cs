@@ -22,6 +22,7 @@ public static class ServiceProviderConfig
             services.AddHostedService<QualityGateReevaluationBackgroundTask>();
             services.AddHostedService<ReleaseClassificationBackgroundTask>();
             services.AddHostedService<TelegramNotificationBackgroundTask>();
+            services.AddHostedService<AutoForumPostingBackgroundTask>();
         }
     }
 }

@@ -1,7 +1,7 @@
 using Bearcat.Abstractions.DistributionSite.Dto;
-using Bearcat.Domain.Shared.AutoForumPosting;
+using Bearcat.Domain.Shared.ForumPosting;
 
-namespace Bearcat.Domain.UnitTest.Shared.AutoForumPosting;
+namespace Bearcat.Domain.UnitTest.UseCases.PostToForums;
 
 public sealed class FakeForumPostSubmitter : IForumPostSubmitter
 {
@@ -12,6 +12,8 @@ public sealed class FakeForumPostSubmitter : IForumPostSubmitter
     public string ReplyUrl { get; init; } = "https://forum.test/threads/existing#post-2";
 
     public Exception? ThrowOnSubmit { get; init; }
+
+    public HashSet<int> FailingRegistrationIds { get; init; } = [];
 
     public List<SubmittedNewThread> NewThreads { get; } = [];
 
@@ -40,10 +42,7 @@ public sealed class FakeForumPostSubmitter : IForumPostSubmitter
         CancellationToken cancellationToken = default
     )
     {
-        if (ThrowOnSubmit is not null)
-        {
-            throw ThrowOnSubmit;
-        }
+        FailWhenRequested(registrationId);
 
         NewThreads.Add(
             new SubmittedNewThread(registrationId, targetNodeId, title, prefixIds, body)
@@ -59,13 +58,23 @@ public sealed class FakeForumPostSubmitter : IForumPostSubmitter
         CancellationToken cancellationToken = default
     )
     {
+        FailWhenRequested(registrationId);
+
+        Replies.Add(new SubmittedReply(registrationId, threadUrl, body));
+
+        return Task.FromResult(new SubmittedPost(ReplyUrl));
+    }
+
+    private void FailWhenRequested(int registrationId)
+    {
         if (ThrowOnSubmit is not null)
         {
             throw ThrowOnSubmit;
         }
 
-        Replies.Add(new SubmittedReply(registrationId, threadUrl, body));
-
-        return Task.FromResult(new SubmittedPost(ReplyUrl));
+        if (FailingRegistrationIds.Contains(registrationId))
+        {
+            throw new InvalidOperationException($"Submit to {registrationId} failed");
+        }
     }
 }

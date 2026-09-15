@@ -1,4 +1,4 @@
-namespace Bearcat.Domain.UnitTest.Shared.AutoForumPosting;
+namespace Bearcat.Domain.UnitTest.UseCases.PostToForums;
 
 public sealed record SubmittedNewThread(
     int RegistrationId,

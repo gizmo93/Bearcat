@@ -10,5 +10,6 @@ public record ForumPostingRuleInput(
     string? ThreadPrefixId,
     int ForumPostTemplateId,
     ForumPostPostMode PostMode,
+    bool StripDotsForThreadSearch,
     bool IsEnabled
 );

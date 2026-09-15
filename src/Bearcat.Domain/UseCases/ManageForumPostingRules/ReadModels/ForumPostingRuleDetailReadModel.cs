@@ -14,5 +14,6 @@ public record ForumPostingRuleDetailReadModel(
     int ForumPostTemplateId,
     string ForumPostTemplateName,
     ForumPostPostMode PostMode,
+    bool StripDotsForThreadSearch,
     bool IsEnabled
 );

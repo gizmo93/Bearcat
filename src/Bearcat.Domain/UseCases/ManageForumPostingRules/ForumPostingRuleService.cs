@@ -31,6 +31,7 @@ public class ForumPostingRuleService(IForumPostingRuleWriteRepository writeRepos
             ThreadPrefixId = NormalizeOptional(input.ThreadPrefixId),
             ForumPostTemplateId = input.ForumPostTemplateId,
             PostMode = input.PostMode,
+            StripDotsForThreadSearch = input.StripDotsForThreadSearch,
             IsEnabled = input.IsEnabled,
             CreatedAt = now,
             UpdatedAt = now,
@@ -58,6 +59,7 @@ public class ForumPostingRuleService(IForumPostingRuleWriteRepository writeRepos
         rule.ThreadPrefixId = NormalizeOptional(input.ThreadPrefixId);
         rule.ForumPostTemplateId = input.ForumPostTemplateId;
         rule.PostMode = input.PostMode;
+        rule.StripDotsForThreadSearch = input.StripDotsForThreadSearch;
         rule.IsEnabled = input.IsEnabled;
         rule.UpdatedAt = DateTime.UtcNow;
 

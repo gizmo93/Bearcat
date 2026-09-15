@@ -8,4 +8,5 @@ public enum NotificationGroup
     Availability = 4,
     Hosters = 5,
     LinkCrypters = 6,
+    DistributionSites = 7,
 }

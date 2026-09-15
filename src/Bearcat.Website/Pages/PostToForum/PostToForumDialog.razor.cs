@@ -8,6 +8,7 @@ using Bearcat.Domain.UseCases.ManageForumPostTemplates.Rendering;
 using Bearcat.Domain.UseCases.ManageForumPostTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManagePostedLocations;
 using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
+using Bearcat.Domain.UseCases.PostToForums;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
@@ -401,18 +402,7 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
 
     private void NormalizeReleaseName()
     {
-        var normalized = postName.Replace('.', ' ');
-
-        // Add whitespaces between the hyphens where the release group is => <release name> - <release group>
-        var lastHyphen = normalized.LastIndexOf('-');
-        if (lastHyphen > 0 && lastHyphen < normalized.Length - 1)
-        {
-            var beforeGroup = normalized[..lastHyphen].TrimEnd();
-            var group = normalized[(lastHyphen + 1)..].TrimStart();
-            normalized = $"{beforeGroup} - {group}";
-        }
-
-        postName = normalized;
+        postName = ReleaseNameFormatter.ToSpacedName(postName);
     }
 
     private void GoBack()

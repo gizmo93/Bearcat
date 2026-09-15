@@ -145,7 +145,12 @@ public sealed partial class XenForoForumClient : IDisposable
             }
         }
 
-        return results;
+        return results
+            .Select(thread => new { Thread = thread, ThreadId = ExtractThreadId(thread.Url) })
+            .OrderBy(entry => entry.ThreadId is null)
+            .ThenBy(entry => entry.ThreadId ?? 0)
+            .Select(entry => entry.Thread)
+            .ToList();
     }
 
     public async Task<IReadOnlyList<ThreadPrefix>> GetThreadPrefixesAsync(
@@ -762,6 +767,13 @@ public sealed partial class XenForoForumClient : IDisposable
         return match.Success ? int.Parse(match.Groups[1].Value) : null;
     }
 
+    private static int? ExtractThreadId(string threadUrl)
+    {
+        var match = ThreadIdPattern().Match(threadUrl);
+
+        return match.Success ? int.Parse(match.Groups[1].Value) : null;
+    }
+
     private static Uri EnsureTrailingSlash(string url)
     {
         return new Uri(url.EndsWith('/') ? url : url + "/");
@@ -774,6 +786,9 @@ public sealed partial class XenForoForumClient : IDisposable
 
     [GeneratedRegex(@"(\d+)$")]
     private static partial Regex NodeIdPattern();
+
+    [GeneratedRegex(@"/threads/(?:[^/]*\.)?(\d+)(?:/|$)")]
+    private static partial Regex ThreadIdPattern();
 
     private sealed class NodeBuilder(ForumTargetId id, string title, bool canReceivePosts)
     {

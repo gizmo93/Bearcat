@@ -1022,6 +1022,7 @@
   <data name="NotificationGroup.Availability" xml:space="preserve"><value>Availability</value></data>
   <data name="NotificationGroup.Hosters" xml:space="preserve"><value>Hosters</value></data>
   <data name="NotificationGroup.LinkCrypters" xml:space="preserve"><value>Link crypters</value></data>
+  <data name="NotificationGroup.DistributionSites" xml:space="preserve"><value>Distribution sites</value></data>
   <data name="NotificationKind.Legacy" xml:space="preserve"><value>Legacy notification</value></data>
   <data name="NotificationKind.ReleaseAutomaticallyCreated" xml:space="preserve"><value>Release created automatically</value></data><data name="NotificationKind.ReleaseAutomaticallyCreated.Description" xml:space="preserve"><value>A release was created by folder automation.</value></data>
   <data name="NotificationKind.ReleaseFolderMissing" xml:space="preserve"><value>Release folder missing</value></data><data name="NotificationKind.ReleaseFolderMissing.Description" xml:space="preserve"><value>The release folder required for processing was not found.</value></data>
@@ -1040,6 +1041,8 @@
   <data name="NotificationKind.LinkCrypterContainerCreationFailed" xml:space="preserve"><value>Link crypter container creation failed</value></data><data name="NotificationKind.LinkCrypterContainerCreationFailed.Description" xml:space="preserve"><value>A link crypter container could not be created.</value></data>
   <data name="NotificationKind.LinkCrypterContainerUpdateFailed" xml:space="preserve"><value>Link crypter container update failed</value></data><data name="NotificationKind.LinkCrypterContainerUpdateFailed.Description" xml:space="preserve"><value>A link crypter container could not be updated.</value></data>
   <data name="NotificationKind.CollectionLinkCrypterContainerInvalid" xml:space="preserve"><value>Collection link crypter container invalid</value></data><data name="NotificationKind.CollectionLinkCrypterContainerInvalid.Description" xml:space="preserve"><value>A collection link crypter container is invalid.</value></data>
+  <data name="NotificationKind.AutomaticForumPostCreated" xml:space="preserve"><value>Automatic forum post created</value></data><data name="NotificationKind.AutomaticForumPostCreated.Description" xml:space="preserve"><value>A release was posted automatically to a forum.</value></data>
+  <data name="NotificationKind.AutomaticForumPostFailed" xml:space="preserve"><value>Automatic forum post failed</value></data><data name="NotificationKind.AutomaticForumPostFailed.Description" xml:space="preserve"><value>A release could not be posted automatically to a forum.</value></data>
   <data name="NotificationSeverityLabel" xml:space="preserve"><value>Severity</value></data>
   <data name="NotificationKindFilter" xml:space="preserve"><value>Notification type</value></data>
   <data name="AllNotificationKinds" xml:space="preserve"><value>All notification types</value></data>
@@ -1129,4 +1132,11 @@
   <data name="AutoPostSkippedSiteUnavailable" xml:space="preserve"><value>This forum no longer takes part in automatic posting.</value></data>
   <data name="AutoPostBlockedQualityGate" xml:space="preserve"><value>Automatic posting is blocked: the quality gate has not passed.</value></data>
   <data name="AutoPostBlockedClassification" xml:space="preserve"><value>Automatic posting is blocked: the release has no classification.</value></data>
+  <data name="AutomaticPosting" xml:space="preserve"><value>Automatic posting</value></data>
+  <data name="AutomaticPostingHelp" xml:space="preserve"><value>When enabled, releases are posted to this forum automatically as soon as a posting rule matches.</value></data>
+  <data name="AutomaticPostingEnabled" xml:space="preserve"><value>Automatic posting enabled for {0}</value></data>
+  <data name="AutomaticPostingDisabled" xml:space="preserve"><value>Automatic posting disabled for {0}</value></data>
+  <data name="AutomaticPostingBadge" xml:space="preserve"><value>Auto</value></data>
+  <data name="StripDotsForThreadSearch" xml:space="preserve"><value>Thread search without dots</value></data>
+  <data name="StripDotsForThreadSearchHelp" xml:space="preserve"><value>Replaces the dots in the release name with spaces while searching for an existing thread. A new thread still uses the unchanged release name as its title.</value></data>
 </root>
