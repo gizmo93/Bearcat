@@ -921,7 +921,7 @@
   <data name="ForumPostBodyRequired" xml:space="preserve"><value>The post text must not be empty.</value></data>
   <data name="PrepareDraft" xml:space="preserve"><value>Prepare draft</value></data>
   <data name="DraftPrepared" xml:space="preserve"><value>Draft prepared</value></data>
-  <data name="DraftPreparedHelp" xml:space="preserve"><value>Open the link in a new tab — title and text are prefilled. Review it and submit it yourself. You must be logged into the same forum account in your browser.</value></data>
+  <data name="DraftPreparedHelp" xml:space="preserve"><value>Open the link in a new tab: title and text are prefilled. Review it and submit it yourself. You must be logged into the same forum account in your browser.</value></data>
   <data name="OpenDraftInForum" xml:space="preserve"><value>Open draft in forum</value></data>
     <data name="ReleaseNameHelp" xml:space="preserve"><value>Used to search existing threads and as the new thread title. Some forums require spaces instead of dots.</value></data>
   <data name="ReleaseNameRequired" xml:space="preserve"><value>A release name is required.</value></data>

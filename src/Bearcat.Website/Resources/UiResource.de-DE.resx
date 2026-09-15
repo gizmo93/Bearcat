@@ -924,7 +924,7 @@
   <data name="ForumPostBodyRequired" xml:space="preserve"><value>Der Beitragstext darf nicht leer sein.</value></data>
   <data name="PrepareDraft" xml:space="preserve"><value>Entwurf vorbereiten</value></data>
   <data name="DraftPrepared" xml:space="preserve"><value>Entwurf vorbereitet</value></data>
-  <data name="DraftPreparedHelp" xml:space="preserve"><value>Öffne den Link in einem neuen Tab — Titel und Text sind vorausgefüllt. Prüfe ihn und sende ihn selbst ab. Du musst im Browser mit demselben Forum-Konto angemeldet sein.</value></data>
+  <data name="DraftPreparedHelp" xml:space="preserve"><value>Öffne den Link in einem neuen Tab: Titel und Text sind vorausgefüllt. Prüfe ihn und sende ihn selbst ab. Du musst im Browser mit demselben Forumkonto angemeldet sein.</value></data>
   <data name="OpenDraftInForum" xml:space="preserve"><value>Entwurf im Forum öffnen</value></data>
   <data name="ReleaseNameHelp" xml:space="preserve"><value>Wird für die Themensuche und als Titel des neuen Themas verwendet. Manche Foren verlangen Leerzeichen statt Punkte.</value></data>
   <data name="ReleaseNameRequired" xml:space="preserve"><value>Ein Release-Name ist erforderlich.</value></data>
