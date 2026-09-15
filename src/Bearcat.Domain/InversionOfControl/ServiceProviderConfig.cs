@@ -71,6 +71,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ReleaseInfoResolutionService>();
             services.AddScoped<MediaMetadataResolver>();
             services.AddScoped<MediaMetadataService>();
+            services.AddScoped<ReleaseClassificationService>();
             services.AddScoped<ReleaseTemplateService>();
             services.AddScoped<ForumPostTemplateService>();
             services.AddScoped<ArchiveCreationService>();
