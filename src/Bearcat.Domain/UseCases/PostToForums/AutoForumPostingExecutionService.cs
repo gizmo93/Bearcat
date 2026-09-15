@@ -57,7 +57,7 @@ public class AutoForumPostingExecutionService(
 
         var result = await TryPostAsync(
             plan: plan,
-            registrationId: entry.DistributionSiteRegistrationId,
+            entry: entry,
             match: entry.Match,
             cancellationToken: cancellationToken
         );
@@ -74,7 +74,7 @@ public class AutoForumPostingExecutionService(
 
     private async Task<AutoPostExecutionResult> TryPostAsync(
         ReleaseAutoPostPlan plan,
-        int registrationId,
+        AutoPostSiteEntry entry,
         AutoPostRuleMatch match,
         CancellationToken cancellationToken
     )
@@ -83,7 +83,7 @@ public class AutoForumPostingExecutionService(
         {
             return await PostAsync(
                 plan: plan,
-                registrationId: registrationId,
+                entry: entry,
                 match: match,
                 cancellationToken: cancellationToken
             );
@@ -121,7 +121,7 @@ public class AutoForumPostingExecutionService(
 
     private async Task<AutoPostExecutionResult> PostAsync(
         ReleaseAutoPostPlan plan,
-        int registrationId,
+        AutoPostSiteEntry entry,
         AutoPostRuleMatch match,
         CancellationToken cancellationToken
     )
@@ -138,7 +138,7 @@ public class AutoForumPostingExecutionService(
         }
 
         var submittedPost = await SubmitAsync(
-            registrationId: registrationId,
+            entry: entry,
             plan: plan,
             match: match,
             body: rendered.Content,
@@ -147,7 +147,7 @@ public class AutoForumPostingExecutionService(
 
         await repository.RecordPostedLocationAsync(
             releaseId: plan.ReleaseId,
-            distributionSiteRegistrationId: registrationId,
+            distributionSiteRegistrationId: entry.DistributionSiteRegistrationId,
             url: submittedPost.Url,
             cancellationToken: cancellationToken
         );
@@ -161,7 +161,7 @@ public class AutoForumPostingExecutionService(
     }
 
     private async Task<SubmittedPost> SubmitAsync(
-        int registrationId,
+        AutoPostSiteEntry entry,
         ReleaseAutoPostPlan plan,
         AutoPostRuleMatch match,
         string body,
@@ -170,19 +170,23 @@ public class AutoForumPostingExecutionService(
     {
         if (match.PostMode == ForumPostPostMode.ReplyToExistingElseNewThread)
         {
-            var existingThreads = await submitter.FindExistingThreadsAsync(
-                registrationId: registrationId,
-                targetNodeId: match.TargetNodeId,
-                releaseName: match.StripDotsForThreadSearch
+            var searchName = (
+                entry.StripDotsForThreadSearch
                     ? ReleaseNameFormatter.ToSpacedName(plan.ReleaseName)
-                    : plan.ReleaseName,
+                    : plan.ReleaseName
+            ).Trim();
+
+            var existingThreads = await submitter.FindExistingThreadsAsync(
+                registrationId: entry.DistributionSiteRegistrationId,
+                targetNodeId: match.TargetNodeId,
+                releaseName: searchName,
                 cancellationToken: cancellationToken
             );
 
             if (existingThreads.Count > 0)
             {
                 return await submitter.SubmitReplyAsync(
-                    registrationId: registrationId,
+                    registrationId: entry.DistributionSiteRegistrationId,
                     threadUrl: existingThreads[0].Url,
                     body: body,
                     cancellationToken: cancellationToken
@@ -191,7 +195,7 @@ public class AutoForumPostingExecutionService(
         }
 
         return await submitter.SubmitNewThreadAsync(
-            registrationId: registrationId,
+            registrationId: entry.DistributionSiteRegistrationId,
             targetNodeId: match.TargetNodeId,
             title: plan.ReleaseName,
             prefixIds: match.ThreadPrefixId is null ? [] : [match.ThreadPrefixId],

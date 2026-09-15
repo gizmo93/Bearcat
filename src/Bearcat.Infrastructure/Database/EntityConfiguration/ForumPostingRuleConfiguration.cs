@@ -19,7 +19,6 @@ public class ForumPostingRuleConfiguration : IEntityTypeConfiguration<ForumPosti
         builder.Property(rule => rule.ThreadPrefixId).IsRequired(false).HasMaxLength(100);
         builder.Property(rule => rule.ForumPostTemplateId).IsRequired();
         builder.Property(rule => rule.PostMode).IsRequired();
-        builder.Property(rule => rule.StripDotsForThreadSearch).IsRequired();
         builder.Property(rule => rule.IsEnabled).IsRequired();
         builder.Property(rule => rule.CreatedAt).IsRequired().HasPrecision(4);
         builder.Property(rule => rule.UpdatedAt).IsRequired().HasPrecision(4);

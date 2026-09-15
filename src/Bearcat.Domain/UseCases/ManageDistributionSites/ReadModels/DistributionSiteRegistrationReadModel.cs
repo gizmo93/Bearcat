@@ -10,5 +10,6 @@ public record DistributionSiteRegistrationReadModel(
     DistributionSiteKind Kind,
     bool IsActive,
     bool EnableAutomaticPosting,
+    bool StripDotsForThreadSearch,
     int PostingRuleCount
 );

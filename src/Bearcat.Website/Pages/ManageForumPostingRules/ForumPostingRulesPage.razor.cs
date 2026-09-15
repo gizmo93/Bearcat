@@ -173,6 +173,22 @@ public partial class ForumPostingRulesPage(
         );
     }
 
+    private async Task SetStripDotsForThreadSearchAsync(bool isEnabled)
+    {
+        await operationRunner.RunAsync(
+            (DistributionSiteRegistrationService service) =>
+                service.SetStripDotsForThreadSearchAsync(DistributionSiteRegistrationId, isEnabled)
+        );
+
+        registration = registration with { StripDotsForThreadSearch = isEnabled };
+
+        toastService.Success(
+            isEnabled
+                ? L["StripDotsForThreadSearchEnabled", registration.Name]
+                : L["StripDotsForThreadSearchDisabled", registration.Name]
+        );
+    }
+
     private async Task ReorderByDragAsync((int OldIndex, int NewIndex) move)
     {
         if (

@@ -360,6 +360,9 @@ namespace BearCat.Infrastructure.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<bool>("StripDotsForThreadSearch")
+                        .HasColumnType("boolean");
+
                     b.HasKey("Id");
 
                     b.ToTable("DistributionSiteRegistrations");
@@ -437,9 +440,6 @@ namespace BearCat.Infrastructure.Migrations
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
-
-                    b.Property<bool>("StripDotsForThreadSearch")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("TargetNodeId")
                         .IsRequired()

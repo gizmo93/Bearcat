@@ -26,6 +26,7 @@ public class DistributionSiteRegistrationReadRepository(
                 registration.DistributionSiteClassName,
                 registration.IsActive,
                 registration.EnableAutomaticPosting,
+                registration.StripDotsForThreadSearch,
                 PostingRuleCount = registration.PostingRules.Count,
             })
             .ToListAsync(cancellationToken);
@@ -38,6 +39,7 @@ public class DistributionSiteRegistrationReadRepository(
                     className: registration.DistributionSiteClassName,
                     isActive: registration.IsActive,
                     enableAutomaticPosting: registration.EnableAutomaticPosting,
+                    stripDotsForThreadSearch: registration.StripDotsForThreadSearch,
                     postingRuleCount: registration.PostingRuleCount,
                     distributionSitesByClassName: distributionSitesByClassName
                 )
@@ -59,6 +61,7 @@ public class DistributionSiteRegistrationReadRepository(
                 registration.DistributionSiteClassName,
                 registration.IsActive,
                 registration.EnableAutomaticPosting,
+                registration.StripDotsForThreadSearch,
                 PostingRuleCount = registration.PostingRules.Count,
             })
             .FirstOrDefaultAsync(cancellationToken);
@@ -74,6 +77,7 @@ public class DistributionSiteRegistrationReadRepository(
             className: registration.DistributionSiteClassName,
             isActive: registration.IsActive,
             enableAutomaticPosting: registration.EnableAutomaticPosting,
+            stripDotsForThreadSearch: registration.StripDotsForThreadSearch,
             postingRuleCount: registration.PostingRuleCount,
             distributionSitesByClassName: DistributionSitesByClassName()
         );
@@ -92,6 +96,7 @@ public class DistributionSiteRegistrationReadRepository(
         string className,
         bool isActive,
         bool enableAutomaticPosting,
+        bool stripDotsForThreadSearch,
         int postingRuleCount,
         IReadOnlyDictionary<string, DistributionSiteDto> distributionSitesByClassName
     )
@@ -106,6 +111,7 @@ public class DistributionSiteRegistrationReadRepository(
             Kind: distributionSite.Kind,
             IsActive: isActive,
             EnableAutomaticPosting: enableAutomaticPosting,
+            StripDotsForThreadSearch: stripDotsForThreadSearch,
             PostingRuleCount: postingRuleCount
         );
     }

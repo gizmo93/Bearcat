@@ -108,6 +108,7 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
                 DistributionSiteRegistrationId: registration.DistributionSiteRegistrationId,
                 DistributionSiteRegistrationName: registration.Name,
                 AutomaticPostingEnabled: registration.EnableAutomaticPosting,
+                StripDotsForThreadSearch: registration.StripDotsForThreadSearch,
                 Status: AutoPostSiteStatus.AlreadyPosted,
                 PostedUrl: postedLocation.Url,
                 Match: null
@@ -122,6 +123,7 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
                 DistributionSiteRegistrationId: registration.DistributionSiteRegistrationId,
                 DistributionSiteRegistrationName: registration.Name,
                 AutomaticPostingEnabled: registration.EnableAutomaticPosting,
+                StripDotsForThreadSearch: registration.StripDotsForThreadSearch,
                 Status: AutoPostSiteStatus.NoMatch,
                 PostedUrl: null,
                 Match: null
@@ -132,6 +134,7 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
             DistributionSiteRegistrationId: registration.DistributionSiteRegistrationId,
             DistributionSiteRegistrationName: registration.Name,
             AutomaticPostingEnabled: registration.EnableAutomaticPosting,
+            StripDotsForThreadSearch: registration.StripDotsForThreadSearch,
             Status: AutoPostSiteStatus.Matched,
             PostedUrl: null,
             Match: new AutoPostRuleMatch(
@@ -141,8 +144,7 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
                 TargetPathSnapshot: rule.TargetPathSnapshot,
                 ThreadPrefixId: rule.ThreadPrefixId,
                 ForumPostTemplateId: rule.ForumPostTemplateId,
-                PostMode: rule.PostMode,
-                StripDotsForThreadSearch: rule.StripDotsForThreadSearch
+                PostMode: rule.PostMode
             )
         );
     }

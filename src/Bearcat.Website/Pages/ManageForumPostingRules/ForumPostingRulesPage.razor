@@ -34,7 +34,7 @@
     </div>
 
     <BbCard Class="border-border/70 shadow-sm">
-        <BbCardContent Class="p-4">
+        <BbCardContent Class="space-y-4 p-4">
             <div class="bearcat-section-header">
                 <div class="flex items-start gap-2">
                     <LucideIcon Name="send-horizontal" class="mt-0.5 h-4 w-4 text-muted-foreground" />
@@ -47,6 +47,20 @@
                 <BbSwitch Checked="registration.EnableAutomaticPosting"
                           CheckedChanged="SetAutomaticPostingAsync"
                           AriaLabel="@L["AutomaticPosting"]" />
+            </div>
+
+            <div class="bearcat-section-header border-t border-border/60 pt-4">
+                <div class="flex items-start gap-2">
+                    <LucideIcon Name="search" class="mt-0.5 h-4 w-4 text-muted-foreground" />
+                    <div class="space-y-1">
+                        <p class="text-sm font-semibold">@L["StripDotsForThreadSearch"]</p>
+                        <p class="text-xs text-muted-foreground">@L["StripDotsForThreadSearchHelp"]</p>
+                    </div>
+                </div>
+
+                <BbSwitch Checked="registration.StripDotsForThreadSearch"
+                          CheckedChanged="SetStripDotsForThreadSearchAsync"
+                          AriaLabel="@L["StripDotsForThreadSearch"]" />
             </div>
         </BbCardContent>
     </BbCard>

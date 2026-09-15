@@ -4,7 +4,7 @@ public static class ReleaseNameFormatter
 {
     public static string ToSpacedName(string releaseName)
     {
-        var spaced = releaseName.Replace('.', ' ');
+        var spaced = releaseName.Replace('.', ' ').Trim();
 
         var lastHyphen = spaced.LastIndexOf('-');
 

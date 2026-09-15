@@ -9,6 +9,5 @@ public sealed record AutoPostRuleMatch(
     string TargetPathSnapshot,
     string? ThreadPrefixId,
     int ForumPostTemplateId,
-    ForumPostPostMode PostMode,
-    bool StripDotsForThreadSearch
+    ForumPostPostMode PostMode
 );

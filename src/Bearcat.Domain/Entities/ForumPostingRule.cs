@@ -29,8 +29,6 @@ public class ForumPostingRule
     public ForumPostPostMode PostMode { get; set; } =
         ForumPostPostMode.ReplyToExistingElseNewThread;
 
-    public bool StripDotsForThreadSearch { get; set; } = true;
-
     public bool IsEnabled { get; set; }
 
     public DateTime CreatedAt { get; set; }

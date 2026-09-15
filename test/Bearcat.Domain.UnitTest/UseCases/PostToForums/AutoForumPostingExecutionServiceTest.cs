@@ -273,10 +273,8 @@ public class AutoForumPostingExecutionServiceTest
     {
         // Arrange
         var repository = RepositoryWith(
-            AutoPostTestFactory.Rule(
-                postMode: ForumPostPostMode.ReplyToExistingElseNewThread,
-                stripDotsForThreadSearch: false
-            )
+            AutoPostTestFactory.Rule(postMode: ForumPostPostMode.ReplyToExistingElseNewThread),
+            stripDotsForThreadSearch: false
         );
         var submitter = new FakeForumPostSubmitter();
         var service = ServiceWith(repository, submitter);
@@ -329,12 +327,21 @@ public class AutoForumPostingExecutionServiceTest
         notificationService.Created.ShouldBeEmpty();
     }
 
-    private static FakeAutoForumPostingRepository RepositoryWith(ForumPostingRule rule)
+    private static FakeAutoForumPostingRepository RepositoryWith(
+        ForumPostingRule rule,
+        bool stripDotsForThreadSearch = true
+    )
     {
         return new FakeAutoForumPostingRepository
         {
             Releases = [AutoPostTestFactory.Release()],
-            Registrations = [AutoPostTestFactory.Registration(id: 5, name: "Board", rule)],
+            Registrations =
+            [
+                AutoPostTestFactory.Registration(id: 5, name: "Board", rule) with
+                {
+                    StripDotsForThreadSearch = stripDotsForThreadSearch,
+                },
+            ],
         };
     }
 

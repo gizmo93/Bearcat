@@ -37,6 +37,7 @@ public class AutoForumPostingRepository(
                 registration.Id,
                 registration.Name,
                 registration.EnableAutomaticPosting,
+                registration.StripDotsForThreadSearch,
                 EnabledRules = registration
                     .PostingRules.Where(rule => rule.IsEnabled)
                     .OrderBy(rule => rule.SortOrder)
@@ -50,6 +51,7 @@ public class AutoForumPostingRepository(
                 DistributionSiteRegistrationId: registration.Id,
                 Name: registration.Name,
                 EnableAutomaticPosting: registration.EnableAutomaticPosting,
+                StripDotsForThreadSearch: registration.StripDotsForThreadSearch,
                 EnabledRules: registration.EnabledRules
             ))
             .ToList();

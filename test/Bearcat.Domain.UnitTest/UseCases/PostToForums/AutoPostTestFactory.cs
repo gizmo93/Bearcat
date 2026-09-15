@@ -34,7 +34,6 @@ public static class AutoPostTestFactory
         ForumPostPostMode postMode = ForumPostPostMode.AlwaysNewThread,
         string? threadPrefixId = null,
         int forumPostTemplateId = 7,
-        bool stripDotsForThreadSearch = true,
         bool isEnabled = true
     )
     {
@@ -55,7 +54,6 @@ public static class AutoPostTestFactory
             ThreadPrefixId = threadPrefixId,
             ForumPostTemplateId = forumPostTemplateId,
             PostMode = postMode,
-            StripDotsForThreadSearch = stripDotsForThreadSearch,
             IsEnabled = isEnabled,
         };
     }
@@ -70,6 +68,7 @@ public static class AutoPostTestFactory
             id,
             name,
             EnableAutomaticPosting: false,
+            StripDotsForThreadSearch: true,
             rules.Length == 0 ? [Rule()] : rules
         );
     }

@@ -145,7 +145,6 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
             ThreadPrefixId = detail.ThreadPrefixId ?? NoThreadPrefixValue,
             ForumPostTemplateId = detail.ForumPostTemplateId,
             PostMode = detail.PostMode,
-            StripDotsForThreadSearch = detail.StripDotsForThreadSearch,
             IsEnabled = detail.IsEnabled,
         };
         conditionRoot = ConditionModelMapper.FromJson(detail.ConditionJson);
@@ -241,7 +240,6 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
                 : formModel.ThreadPrefixId,
             ForumPostTemplateId: formModel.ForumPostTemplateId,
             PostMode: formModel.PostMode,
-            StripDotsForThreadSearch: formModel.StripDotsForThreadSearch,
             IsEnabled: formModel.IsEnabled
         );
 
