@@ -63,7 +63,8 @@ public class FileUploadExecutionService(
                     FileUrl: result.FileUrl,
                     ExternalId: result.ExternalId,
                     IsSuccess: result.IsSuccess,
-                    Errors: result.ErrorMessages
+                    Errors: result.ErrorMessages,
+                    Md5Hash: fileToUpload.Md5Hash
                 ),
                 processCancellationToken
             );

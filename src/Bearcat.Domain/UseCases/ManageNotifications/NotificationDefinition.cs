@@ -43,6 +43,13 @@ public static class NotificationDefinitions
             Description: "NotificationKind.ArchiveFilesMissing.Description"
         ),
         new(
+            Kind: NotificationKind.ArchiveRestoreFailed,
+            Severity: NotificationSeverity.Error,
+            Group: NotificationGroup.Archives,
+            DisplayName: "NotificationKind.ArchiveRestoreFailed",
+            Description: "NotificationKind.ArchiveRestoreFailed.Description"
+        ),
+        new(
             Kind: NotificationKind.InitialUploadCreated,
             Severity: NotificationSeverity.Info,
             Group: NotificationGroup.Uploads,

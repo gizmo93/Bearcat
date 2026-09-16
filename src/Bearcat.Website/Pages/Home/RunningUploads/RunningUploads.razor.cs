@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.ManageUploads.Progress;
 using Bearcat.Domain.ValueObjects;
@@ -24,20 +25,47 @@ public partial class RunningUploads(
         new Dictionary<int, UploadProgressSnapshot>();
 
     [Parameter]
+    public IReadOnlyList<Archive> RestoringArchives { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyDictionary<int, DownloadProgressSnapshot> DownloadProgress { get; set; } =
+        new Dictionary<int, DownloadProgressSnapshot>();
+
+    [Parameter]
     public EventCallback OnUploadCanceled { get; set; }
 
     private readonly HashSet<int> showDetailIds = [];
+
+    private readonly HashSet<int> showDownloadDetailIds = [];
 
     private IEnumerable<Upload> SortedUploads => Uploads.OrderByDescending(u => u.UploadState);
 
     private IReadOnlyList<Upload> ExpandedUploads =>
         SortedUploads.Where(upload => showDetailIds.Contains(upload.Id)).ToList();
 
+    private IReadOnlyList<Archive> ExpandedRestores =>
+        RestoringArchives
+            .Where(archive =>
+                showDownloadDetailIds.Contains(archive.Id)
+                && DownloadProgress.ContainsKey(archive.Id)
+            )
+            .ToList();
+
     private void ToggleShowUploadDetails(int uploadId)
     {
         if (!showDetailIds.Remove(uploadId))
         {
             showDetailIds.Add(uploadId);
+        }
+
+        StateHasChanged();
+    }
+
+    private void ToggleShowDownloadDetails(int archiveId)
+    {
+        if (!showDownloadDetailIds.Remove(archiveId))
+        {
+            showDownloadDetailIds.Add(archiveId);
         }
 
         StateHasChanged();
@@ -94,8 +122,31 @@ public partial class RunningUploads(
         return UploadProgress.TryGetValue(upload.Id, out var snapshot) ? snapshot.Percentage : 0;
     }
 
+    private double GetDownloadProgress(Archive archive)
+    {
+        return DownloadProgress.TryGetValue(archive.Id, out var snapshot) ? snapshot.Percentage : 0;
+    }
+
+    private DownloadProgressSnapshot? GetDownloadSnapshot(int archiveId)
+    {
+        return DownloadProgress.GetValueOrDefault(archiveId);
+    }
+
+    private string GetDownloadHosterName(Archive archive)
+    {
+        return DownloadProgress.TryGetValue(archive.Id, out var snapshot)
+            ? snapshot.HosterName
+            : "-";
+    }
+
     private double TotalUploadBytesPerSecond =>
         UploadProgress
+            .Values.Select(snapshot => snapshot.BytesPerSecond)
+            .Where(speed => speed > 0)
+            .Sum();
+
+    private double TotalDownloadBytesPerSecond =>
+        DownloadProgress
             .Values.Select(snapshot => snapshot.BytesPerSecond)
             .Where(speed => speed > 0)
             .Sum();
@@ -103,6 +154,13 @@ public partial class RunningUploads(
     private string? FormatUploadSpeed(int uploadId)
     {
         return UploadProgress.TryGetValue(uploadId, out var snapshot)
+            ? FormatSpeed(snapshot.BytesPerSecond)
+            : null;
+    }
+
+    private string? FormatDownloadSpeed(int archiveId)
+    {
+        return DownloadProgress.TryGetValue(archiveId, out var snapshot)
             ? FormatSpeed(snapshot.BytesPerSecond)
             : null;
     }

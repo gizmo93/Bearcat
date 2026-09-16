@@ -6,6 +6,8 @@ public interface IReleaseWriteRepository
 {
     Task<Release> GetByIdAsync(int id, CancellationToken cancellationToken);
 
+    Task<Release> GetForRemoteConversionAsync(int id, CancellationToken cancellationToken);
+
     Task<IReadOnlyList<Release>> GetByIdsAsync(
         IReadOnlyList<int> ids,
         CancellationToken cancellationToken

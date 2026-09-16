@@ -1,0 +1,49 @@
+@using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress
+
+<section class="rounded-lg border border-border/70 bg-background">
+    <div class="border-b border-border/70 px-4 py-3">
+        <div class="flex items-center justify-between gap-3">
+            <div>
+                <p class="text-sm font-medium">@L["DownloadStatus"]</p>
+                <p class="text-xs text-muted-foreground">
+                    @L["DownloadStatusSubtitle", Archive.Id, Archive.ArchiveConfig.Name, Snapshot.HosterName]
+                </p>
+            </div>
+
+            <BbBadge Variant="BadgeVariant.Default">
+                @L.Localize(Archive.ArchiveState)
+            </BbBadge>
+        </div>
+    </div>
+
+    <BbDataTable TData="DownloadFileProgressSnapshot"
+                 Data="Snapshot.Files"
+                 ShowToolbar="false"
+                 ShowPagination="@(Snapshot.Files.Count > 10)"
+                 InitialPageSize="10"
+                 AriaLabel="@L["DownloadFileStatus"]"
+                 Class="border-0">
+        <Columns>
+            <BbDataTableColumn TData="DownloadFileProgressSnapshot" TValue="string"
+                               Header="@L["File"]"
+                               Property="@(file => file.FileName)"
+                               Sortable="true"
+                               Filterable="true" />
+            <BbDataTableColumn TData="DownloadFileProgressSnapshot" TValue="double"
+                               Header="@L["Progress"]"
+                               Property="@(file => file.Percentage)"
+                               Sortable="true"
+                               MinWidth="200px">
+                <CellTemplate Context="file">
+                    <div class="flex items-center gap-3">
+                        <div class="flex min-w-[9rem] flex-1 items-center gap-3">
+                            <BbProgress Value="file.Percentage" Class="w-full" />
+                            <span class="w-12 text-right text-xs text-muted-foreground">@file.Percentage%</span>
+                        </div>
+                        <span class="text-xs tabular-nums text-muted-foreground">@FormatTransferred(file)</span>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+    </BbDataTable>
+</section>

@@ -6,5 +6,6 @@ public record HosterDto(
     IReadOnlyList<string> ConfigurationKeys,
     bool SupportsPremiumOnlyDownloads,
     bool HasFixedParallelUploadLimit,
-    int? DefaultMaximumParallelUploads
+    int? DefaultMaximumParallelUploads,
+    bool SupportsDownload
 );

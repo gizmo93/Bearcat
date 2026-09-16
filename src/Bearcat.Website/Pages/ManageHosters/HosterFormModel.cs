@@ -21,4 +21,6 @@ public class HosterFormModel
     public ReuploadTrigger? ReuploadTriggerOverride { get; set; }
 
     public bool AlwaysReuploadAllFiles { get; set; }
+
+    public bool UseForMirrorDownloads { get; set; }
 }

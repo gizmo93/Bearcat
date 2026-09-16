@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.Rapidgator;
 using Bearcat.Hosters.Rapidgator.Api;
@@ -30,6 +31,7 @@ public class ApiClientTest
         apiClient = new RapidgatorApiClient(
             apiMock.Object,
             new HttpClientProvider(httpClientFactoryMock.Object),
+            new HosterFileDownloader(new HttpClientProvider(httpClientFactoryMock.Object)),
             loggerMock.Object
         );
     }
@@ -252,6 +254,7 @@ public class ApiClientTest
         var client = new RapidgatorApiClient(
             apiMock.Object,
             new HttpClientProvider(httpClientFactoryMock.Object),
+            new HosterFileDownloader(new HttpClientProvider(httpClientFactoryMock.Object)),
             loggerMock.Object
         );
         await using var stream = new FileStream(
@@ -349,6 +352,7 @@ public class ApiClientTest
         var client = new RapidgatorApiClient(
             apiMock.Object,
             new HttpClientProvider(httpClientFactoryMock.Object),
+            new HosterFileDownloader(new HttpClientProvider(httpClientFactoryMock.Object)),
             loggerMock.Object
         );
 
@@ -440,6 +444,108 @@ public class ApiClientTest
     }
 
     [Test]
+    public async Task GetFileSizesAsync_ResponseCarriesSizes_MapsThemPerFileUrl()
+    {
+        // Arrange
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+        var firstFileUrl = "https://rapidgator.net/file/abc123";
+        var secondFileUrl = "https://rapidgator.net/file/def456";
+
+        SetupLogin();
+
+        apiMock
+            .Setup(x =>
+                x.CheckLinkAsync("token", It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new CheckLinksResponse
+                    {
+                        Status = (int)HttpStatusCode.OK,
+                        Responses =
+                        [
+                            new CheckLinksResponse.ResponseObject
+                            {
+                                Url = firstFileUrl,
+                                Filename = "archive.part01.rar",
+                                Size = 104857600,
+                                Status = "ACCESS",
+                            },
+                            new CheckLinksResponse.ResponseObject
+                            {
+                                Url = secondFileUrl,
+                                Filename = "archive.part02.rar",
+                                Size = null,
+                                Status = "DELETED",
+                            },
+                        ],
+                    }
+                )
+            );
+
+        // Act
+        var result = await apiClient.GetFileSizesAsync(
+            config,
+            [firstFileUrl, secondFileUrl],
+            CancellationToken.None
+        );
+
+        // Assert
+        result[firstFileUrl].ShouldBe(104857600);
+        result.ShouldNotContainKey(secondFileUrl);
+    }
+
+    [Test]
+    public async Task GetFileSizesAsync_MoreLinksThanBatchSize_ChecksThemInBatches()
+    {
+        // Arrange
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+        var fileUrls = Enumerable
+            .Range(1, 26)
+            .Select(index => $"https://rapidgator.net/file/file-{index}")
+            .ToList();
+
+        SetupLogin();
+
+        var requestedBatches = new List<string>();
+
+        apiMock
+            .Setup(x =>
+                x.CheckLinkAsync("token", It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                (string _, string links, CancellationToken _) =>
+                {
+                    requestedBatches.Add(links);
+
+                    return CreateApiResponse(
+                        new CheckLinksResponse
+                        {
+                            Status = (int)HttpStatusCode.OK,
+                            Responses = links
+                                .Split(',')
+                                .Select(link => new CheckLinksResponse.ResponseObject
+                                {
+                                    Url = link,
+                                    Filename = "archive.rar",
+                                    Size = 1000,
+                                    Status = "ACCESS",
+                                })
+                                .ToList(),
+                        }
+                    );
+                }
+            );
+
+        // Act
+        var result = await apiClient.GetFileSizesAsync(config, fileUrls, CancellationToken.None);
+
+        // Assert
+        requestedBatches.Count.ShouldBe(2);
+        result.Count.ShouldBe(26);
+    }
+
+    [Test]
     public async Task CheckLinksAsync_OfflineFile_DoesNotFetchFolderContent()
     {
         // Arrange
@@ -490,6 +596,100 @@ public class ApiClientTest
                 ),
             Times.Never
         );
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_ApiReturnsDownloadUrl_WritesFileToTargetPath()
+    {
+        // Arrange
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+        SetupLogin();
+        apiMock
+            .Setup(x => x.DownloadFileAsync("token", "file-id", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new DownloadFileResponse
+                    {
+                        Status = (int)HttpStatusCode.OK,
+                        Response = new DownloadFileResponse.DownloadResponseObject
+                        {
+                            DownloadUrl = "https://pr3.rapidgator.test/download",
+                            Delay = 0,
+                        },
+                    }
+                )
+            );
+
+        var handler = new RecordingDownloadHandler("archive-payload");
+        using var httpClient = new HttpClient(handler);
+        var httpClientFactoryMock = new Mock<IHttpClientFactory>();
+        httpClientFactoryMock
+            .Setup(x => x.CreateClient(HttpClientProvider.DownloadHttpClientName))
+            .Returns(httpClient);
+        var httpClientProvider = new HttpClientProvider(httpClientFactoryMock.Object);
+        var client = new RapidgatorApiClient(
+            apiMock.Object,
+            httpClientProvider,
+            new HosterFileDownloader(httpClientProvider),
+            new Mock<ILogger<RapidgatorApiClient>>().Object
+        );
+
+        var targetFilePath = Path.Join(Path.GetTempPath(), $"{Guid.NewGuid()}.rar");
+
+        // Act
+        await client.DownloadFileAsync(
+            config: config,
+            fileUrl: "https://rapidgator.net/file/file-id/archive.part01.rar.html",
+            targetFilePath: targetFilePath,
+            progress: NullDownloadProgress.Instance,
+            expectedSizeBytes: null,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        handler.RequestUri?.ToString().ShouldBe("https://pr3.rapidgator.test/download");
+        (await File.ReadAllTextAsync(targetFilePath)).ShouldBe("archive-payload");
+        File.Exists(targetFilePath + ".part").ShouldBeFalse();
+
+        File.Delete(targetFilePath);
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_ApiReturnsNoDownloadUrl_ThrowsAndLeavesNoPartFile()
+    {
+        // Arrange
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+        SetupLogin();
+        apiMock
+            .Setup(x => x.DownloadFileAsync("token", "file-id", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new DownloadFileResponse
+                    {
+                        Status = (int)HttpStatusCode.NotFound,
+                        Details = "Error: File not found",
+                    }
+                )
+            );
+
+        var targetFilePath = Path.Join(Path.GetTempPath(), $"{Guid.NewGuid()}.rar");
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.DownloadFileAsync(
+                config: config,
+                fileUrl: "https://rapidgator.net/file/file-id/archive.part01.rar.html",
+                targetFilePath: targetFilePath,
+                progress: NullDownloadProgress.Instance,
+                expectedSizeBytes: null,
+                cancellationToken: CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Error: File not found");
+        File.Exists(targetFilePath).ShouldBeFalse();
+        File.Exists(targetFilePath + ".part").ShouldBeFalse();
     }
 
     private void SetupLogin()
@@ -549,6 +749,26 @@ public class ApiClientTest
             ContentType = request.Content?.Headers.ContentType?.MediaType;
             ContentTypeName = request.Content?.GetType().Name;
             TransferEncodingChunked = request.Headers.TransferEncodingChunked == true;
+            RequestUri = request.RequestUri;
+
+            return Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(responseContent),
+                }
+            );
+        }
+    }
+
+    private sealed class RecordingDownloadHandler(string responseContent) : HttpMessageHandler
+    {
+        public Uri? RequestUri { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
+        {
             RequestUri = request.RequestUri;
 
             return Task.FromResult(

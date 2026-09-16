@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Headers;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Hosters.Fichier;
 using Bearcat.Hosters.Fichier.Api;
+using Bearcat.Hosters.Fichier.Api.Download;
 using Bearcat.Hosters.Fichier.Api.File;
 using Bearcat.Hosters.Fichier.Api.Folder;
 using Bearcat.Hosters.Shared;
@@ -31,9 +33,14 @@ public class ApiClientTest
             .Setup(x => x.CreateClient(ApiClient.UploadHttpClientName))
             .Returns(() => new HttpClient(httpMessageHandler, disposeHandler: false));
 
+        httpClientFactoryMock
+            .Setup(x => x.CreateClient(HttpClientProvider.DownloadHttpClientName))
+            .Returns(() => new HttpClient(httpMessageHandler, disposeHandler: false));
+
         apiClient = new ApiClient(
             apiMock.Object,
             new HttpClientProvider(httpClientFactoryMock.Object),
+            new HosterFileDownloader(new HttpClientProvider(httpClientFactoryMock.Object)),
             loggerMock.Object
         )
         {
@@ -329,6 +336,243 @@ public class ApiClientTest
 
         // Assert
         result.ShouldNotContainKey(fileUrl);
+    }
+
+    [Test]
+    public async Task GetFileSizesAsync_FileInfoReportsSize_MapsItPerFileUrl()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+        var onlineFileUrl = "https://1fichier.com/?abc";
+        var offlineFileUrl = "https://1fichier.com/?def";
+
+        apiMock
+            .Setup(x =>
+                x.GetFileInfoAsync(
+                    It.IsAny<string>(),
+                    It.Is<FileInfoRequest>(request => request.Url == onlineFileUrl),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    HttpStatusCode.OK,
+                    new FileInfoResponse
+                    {
+                        Url = onlineFileUrl,
+                        Filename = "archive.part01.rar",
+                        Size = 104857600,
+                    }
+                )
+            );
+
+        apiMock
+            .Setup(x =>
+                x.GetFileInfoAsync(
+                    It.IsAny<string>(),
+                    It.Is<FileInfoRequest>(request => request.Url == offlineFileUrl),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                CreateApiResponse<FileInfoResponse>(HttpStatusCode.NotFound, content: null)
+            );
+
+        // Act
+        var result = await apiClient.GetFileSizesAsync(
+            config,
+            [onlineFileUrl, offlineFileUrl],
+            CancellationToken.None
+        );
+
+        // Assert
+        result[onlineFileUrl].ShouldBe(104857600);
+        result.ShouldNotContainKey(offlineFileUrl);
+    }
+
+    [Test]
+    public async Task GetFileSizesAsync_PersistentRateLimiting_OmitsFile()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+        var fileUrl = "https://1fichier.com/?abc";
+
+        apiMock
+            .Setup(x =>
+                x.GetFileInfoAsync(
+                    It.IsAny<string>(),
+                    It.Is<FileInfoRequest>(request => request.Url == fileUrl),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                CreateApiResponse<FileInfoResponse>(HttpStatusCode.TooManyRequests, content: null)
+            );
+
+        // Act
+        var result = await apiClient.GetFileSizesAsync(config, [fileUrl], CancellationToken.None);
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_TokenEndpointReturnsUrl_WritesFileToTargetPath()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x =>
+                x.GetDownloadTokenAsync(
+                    "Bearer api-key",
+                    It.Is<DownloadTokenRequest>(r => r.Url == "https://1fichier.com/?abc123"),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    HttpStatusCode.OK,
+                    new DownloadTokenResponse
+                    {
+                        Status = "OK",
+                        Url = "https://node.1fichier.test/token",
+                    }
+                )
+            );
+
+        httpMessageHandler.Enqueue(request =>
+        {
+            request.RequestUri!.ToString().ShouldBe("https://node.1fichier.test/token");
+
+            return Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("archive-payload"),
+                }
+            );
+        });
+
+        var targetFilePath = Path.Join(Path.GetTempPath(), $"{Guid.NewGuid()}.rar");
+
+        // Act
+        await apiClient.DownloadFileAsync(
+            config: config,
+            fileUrl: "https://1fichier.com/?abc123",
+            targetFilePath: targetFilePath,
+            progress: NullDownloadProgress.Instance,
+            expectedSizeBytes: null,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        (await File.ReadAllTextAsync(targetFilePath)).ShouldBe("archive-payload");
+        httpMessageHandler.PendingRequests.ShouldBe(0);
+
+        File.Delete(targetFilePath);
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_TokenEndpointRateLimited_RetriesUntilTokenIsIssued()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+        var attempt = 0;
+
+        apiMock
+            .Setup(x =>
+                x.GetDownloadTokenAsync(
+                    "Bearer api-key",
+                    It.IsAny<DownloadTokenRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(() =>
+            {
+                attempt++;
+
+                return attempt == 1
+                    ? CreateApiResponse<DownloadTokenResponse>(
+                        HttpStatusCode.TooManyRequests,
+                        content: null
+                    )
+                    : CreateApiResponse(
+                        HttpStatusCode.OK,
+                        new DownloadTokenResponse
+                        {
+                            Status = "OK",
+                            Url = "https://node.1fichier.test/token",
+                        }
+                    );
+            });
+
+        httpMessageHandler.Enqueue(_ =>
+            Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("archive-payload"),
+                }
+            )
+        );
+
+        var targetFilePath = Path.Join(Path.GetTempPath(), $"{Guid.NewGuid()}.rar");
+
+        // Act
+        await apiClient.DownloadFileAsync(
+            config: config,
+            fileUrl: "https://1fichier.com/?abc123",
+            targetFilePath: targetFilePath,
+            progress: NullDownloadProgress.Instance,
+            expectedSizeBytes: null,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        attempt.ShouldBe(2);
+        (await File.ReadAllTextAsync(targetFilePath)).ShouldBe("archive-payload");
+
+        File.Delete(targetFilePath);
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_TokenEndpointReturnsKo_ThrowsAndLeavesNoPartFile()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x =>
+                x.GetDownloadTokenAsync(
+                    "Bearer api-key",
+                    It.IsAny<DownloadTokenRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    HttpStatusCode.OK,
+                    new DownloadTokenResponse { Status = "KO", Message = "Resource not found" }
+                )
+            );
+
+        var targetFilePath = Path.Join(Path.GetTempPath(), $"{Guid.NewGuid()}.rar");
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.DownloadFileAsync(
+                config: config,
+                fileUrl: "https://1fichier.com/?abc123",
+                targetFilePath: targetFilePath,
+                progress: NullDownloadProgress.Instance,
+                expectedSizeBytes: null,
+                cancellationToken: CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldContain("Resource not found");
+        File.Exists(targetFilePath).ShouldBeFalse();
+        File.Exists(targetFilePath + ".part").ShouldBeFalse();
     }
 
     private static ApiResponse<T> CreateApiResponse<T>(HttpStatusCode statusCode, T? content)

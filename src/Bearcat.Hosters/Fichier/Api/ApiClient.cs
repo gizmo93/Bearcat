@@ -3,6 +3,8 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Hoster;
+using Bearcat.Hosters.Fichier.Api.Download;
 using Bearcat.Hosters.Fichier.Api.File;
 using Bearcat.Hosters.Fichier.Api.Folder;
 using Bearcat.Hosters.Fichier.Api.Upload;
@@ -16,6 +18,7 @@ namespace Bearcat.Hosters.Fichier.Api;
 public class ApiClient(
     IFichierApi api,
     HttpClientProvider httpClientProvider,
+    HosterFileDownloader fileDownloader,
     ILogger<ApiClient> logger
 ) : IFichierApiClient
 {
@@ -26,6 +29,8 @@ public class ApiClient(
     private const int MaxParallelLinkChecks = 3;
 
     private const int MaxLinkCheckAttempts = 3;
+
+    private const int MaxDownloadTokenAttempts = 5;
 
     private const int RootFolderId = 0;
 
@@ -155,6 +160,33 @@ public class ApiClient(
             .ToDictionary(result => result.FileUrl, result => result.IsOnline!.Value);
     }
 
+    public async Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
+        FichierConfig config,
+        IReadOnlyList<string> fileUrls,
+        CancellationToken cancellationToken
+    )
+    {
+        using var semaphore = new SemaphoreSlim(MaxParallelLinkChecks);
+
+        var checkTasks = fileUrls
+            .Distinct()
+            .Select(fileUrl =>
+                CheckLinkAsync(
+                    config: config,
+                    fileUrl: fileUrl,
+                    semaphore: semaphore,
+                    cancellationToken: cancellationToken
+                )
+            )
+            .ToList();
+
+        var results = await Task.WhenAll(checkTasks);
+
+        return results
+            .Where(result => result.SizeBytes is > 0)
+            .ToDictionary(result => result.FileUrl, result => result.SizeBytes!.Value);
+    }
+
     public async Task<UserInfoResponse> GetUserInfoAsync(
         FichierConfig config,
         CancellationToken cancellationToken
@@ -175,6 +207,99 @@ public class ApiClient(
         }
 
         return response.Content;
+    }
+
+    public async Task DownloadFileAsync(
+        FichierConfig config,
+        string fileUrl,
+        string targetFilePath,
+        IDownloadProgress progress,
+        long? expectedSizeBytes,
+        CancellationToken cancellationToken
+    )
+    {
+        var downloadUrl = await GetDownloadUrlAsync(config, fileUrl, cancellationToken);
+
+        await fileDownloader.DownloadToFileAsync(
+            downloadUrl: downloadUrl,
+            targetFilePath: targetFilePath,
+            progress: progress,
+            expectedSizeBytes: expectedSizeBytes,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task<string> GetDownloadUrlAsync(
+        FichierConfig config,
+        string fileUrl,
+        CancellationToken cancellationToken
+    )
+    {
+        foreach (var attempt in Enumerable.Range(1, MaxDownloadTokenAttempts))
+        {
+            try
+            {
+                var response = await api.GetDownloadTokenAsync(
+                    GetAuthorizationHeader(config.ApiKey),
+                    new DownloadTokenRequest { Url = fileUrl },
+                    cancellationToken
+                );
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return ReadDownloadUrl(response.Content, fileUrl);
+                }
+
+                if (response.StatusCode != HttpStatusCode.TooManyRequests)
+                {
+                    var errorContent = response.Error is ApiException apiException
+                        ? apiException.Content
+                        : response.Error?.Message;
+
+                    throw new HttpRequestException(
+                        $"1fichier download token request for {fileUrl} failed with status code {response.StatusCode}: {errorContent}"
+                    );
+                }
+
+                logger.LogInformation(
+                    "Rate limited by 1fichier API while requesting a download token for {FileUrl}, waiting before retrying (Attempt {Attempt})",
+                    fileUrl,
+                    attempt
+                );
+            }
+            catch (ApiException exception)
+                when (exception.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                logger.LogInformation(
+                    exception,
+                    "Rate limited by 1fichier API while requesting a download token for {FileUrl}, waiting before retrying (Attempt {Attempt})",
+                    fileUrl,
+                    attempt
+                );
+            }
+
+            await Task.Delay(RateLimitRetryDelay, cancellationToken);
+        }
+
+        throw new HttpRequestException(
+            $"1fichier kept rate limiting the download token request for {fileUrl}"
+        );
+    }
+
+    private static string ReadDownloadUrl(DownloadTokenResponse? response, string fileUrl)
+    {
+        if (
+            response is null
+            || !string.Equals(response.Status, "OK", StringComparison.OrdinalIgnoreCase)
+            || string.IsNullOrWhiteSpace(response.Url)
+        )
+        {
+            throw new HttpRequestException(
+                $"1fichier did not return a download URL for {fileUrl}: {response?.Message ?? response?.Status ?? "unknown error"}"
+            );
+        }
+
+        return response.Url;
     }
 
     private async Task UploadToServerAsync(
@@ -288,7 +413,7 @@ public class ApiClient(
         return endUploadResponse;
     }
 
-    private async Task<(string FileUrl, bool? IsOnline)> CheckLinkAsync(
+    private async Task<(string FileUrl, bool? IsOnline, long? SizeBytes)> CheckLinkAsync(
         FichierConfig config,
         string fileUrl,
         SemaphoreSlim semaphore,
@@ -309,7 +434,7 @@ public class ApiClient(
 
                 if (response.StatusCode == HttpStatusCode.NotFound)
                 {
-                    return (fileUrl, false);
+                    return (fileUrl, false, null);
                 }
 
                 if (response.StatusCode == HttpStatusCode.TooManyRequests)
@@ -322,16 +447,16 @@ public class ApiClient(
                 }
                 else
                 {
-                    return (
-                        fileUrl,
+                    var isOnline =
                         response.IsSuccessStatusCode
-                            && response.Content is { Url: not null }
-                            && !string.Equals(
-                                response.Content.Status,
-                                "KO",
-                                StringComparison.OrdinalIgnoreCase
-                            )
-                    );
+                        && response.Content is { Url: not null }
+                        && !string.Equals(
+                            response.Content.Status,
+                            "KO",
+                            StringComparison.OrdinalIgnoreCase
+                        );
+
+                    return (fileUrl, isOnline, isOnline ? response.Content?.Size : null);
                 }
             }
             catch (ApiException exception)
@@ -346,7 +471,7 @@ public class ApiClient(
             }
             catch (ApiException exception) when (exception.StatusCode == HttpStatusCode.NotFound)
             {
-                return (fileUrl, false);
+                return (fileUrl, false, null);
             }
             finally
             {
@@ -359,7 +484,7 @@ public class ApiClient(
             }
         }
 
-        return (fileUrl, null);
+        return (fileUrl, null, null);
     }
 
     private static string GetAuthorizationHeader(string apiKey)

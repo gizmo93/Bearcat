@@ -50,7 +50,7 @@ public sealed class QualityGateEvaluator(
 
     public void EvaluateAndApply(Release release, DateTime evaluatedAt)
     {
-        if (release.ReleaseType is ReleaseType.Unmanaged)
+        if (release.ReleaseType is ReleaseType.Unmanaged or ReleaseType.Remote)
         {
             return;
         }

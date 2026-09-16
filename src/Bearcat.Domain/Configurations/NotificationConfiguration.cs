@@ -34,6 +34,12 @@ public class NotificationConfiguration : IApplicationConfiguration
     public bool ArchiveFilesMissing { get; set; } = true;
 
     [ApplicationConfigurationProperty(
+        "NotificationKind.ArchiveRestoreFailed",
+        "NotificationKind.ArchiveRestoreFailed.Description"
+    )]
+    public bool ArchiveRestoreFailed { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
         "NotificationKind.InitialUploadCreated",
         "NotificationKind.InitialUploadCreated.Description"
     )]

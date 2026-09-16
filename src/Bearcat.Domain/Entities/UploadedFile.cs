@@ -20,6 +20,8 @@ public class UploadedFile
 
     public string? HosterFolderId { get; set; }
 
+    public string? Md5Hash { get; set; }
+
     public List<string> ErrorMessages { get; set; } = [];
 
     public OnlineState OnlineState { get; set; }

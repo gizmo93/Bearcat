@@ -509,6 +509,9 @@ namespace BearCat.Infrastructure.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<bool>("UseForMirrorDownloads")
+                        .HasColumnType("boolean");
+
                     b.HasKey("Id");
 
                     b.ToTable("HosterRegistrations");
@@ -1954,6 +1957,10 @@ namespace BearCat.Infrastructure.Migrations
 
                     b.Property<string>("HosterFolderId")
                         .HasColumnType("text");
+
+                    b.Property<string>("Md5Hash")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<int>("OnlineState")
                         .HasColumnType("integer");

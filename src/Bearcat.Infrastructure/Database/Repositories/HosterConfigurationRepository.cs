@@ -31,6 +31,7 @@ public class HosterConfigurationRepository(
                 h.NumberOfHoursUntilReuploadOverride,
                 h.ReuploadTriggerOverride,
                 h.AlwaysReuploadAllFiles,
+                h.UseForMirrorDownloads,
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -55,6 +56,8 @@ public class HosterConfigurationRepository(
                     h.NumberOfHoursUntilReuploadOverride,
                     h.ReuploadTriggerOverride,
                     h.AlwaysReuploadAllFiles,
+                    hoster is IHosterWithDownload,
+                    h.UseForMirrorDownloads,
                     hoster.Name,
                     h.HosterClassName
                 );

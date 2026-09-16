@@ -1,6 +1,7 @@
 ﻿using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.UseCases.Dashboard.Repositories;
+using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
@@ -126,6 +127,7 @@ public static class ServiceProviderConfig
             services.AddScoped<IQualityProfileWriteRepository, QualityProfileRepository>();
             services.AddScoped<IArchiveCreationRepository, ArchiveCreationRepository>();
             services.AddScoped<IArchiveCleanupRepository, ArchiveCleanupRepository>();
+            services.AddScoped<IArchiveRestoreRepository, ArchiveRestoreRepository>();
             services.AddScoped<IUploadFilesRepository, UploadFilesRepository>();
             services.AddScoped<IUploadStateRepository, UploadStateRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();

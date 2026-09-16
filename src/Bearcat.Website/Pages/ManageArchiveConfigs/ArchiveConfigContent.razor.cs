@@ -22,6 +22,7 @@ public partial class ArchiveConfigContent(DialogService dialogService)
             ArchiveState.CreationFailed => BadgeVariant.Destructive,
             ArchiveState.MissingFiles => BadgeVariant.Destructive,
             ArchiveState.Creating => BadgeVariant.Secondary,
+            ArchiveState.Restoring => BadgeVariant.Secondary,
             _ => BadgeVariant.Outline,
         };
 

@@ -1,5 +1,4 @@
-﻿using System.Security.Cryptography;
-using Bearcat.Abstractions;
+﻿using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
@@ -302,6 +301,7 @@ public class ArchiveCreationService(
                 HosterFileLink = source.HosterFileLink,
                 ExternalId = source.ExternalId,
                 HosterFolderId = source.HosterFolderId,
+                Md5Hash = source.Md5Hash,
                 OnlineState = OnlineState.Online,
                 CreatedAt = source.CreatedAt,
                 CheckedAt = source.CheckedAt,
@@ -379,7 +379,7 @@ public class ArchiveCreationService(
             do
             {
                 await AppendNullByteAsync(archiveFile.FullFileName, cancellationToken);
-                hash = await ComputeMd5HashAsync(archiveFile.FullFileName, cancellationToken);
+                hash = await Md5FileHash.ComputeAsync(archiveFile.FullFileName, cancellationToken);
             } while (!knownHashes.Add(hash));
 
             archiveFile.Md5Hash = hash;
@@ -410,7 +410,7 @@ public class ArchiveCreationService(
                 continue;
             }
 
-            archiveFile.Md5Hash = await ComputeMd5HashAsync(
+            archiveFile.Md5Hash = await Md5FileHash.ComputeAsync(
                 archiveFile.FullFileName,
                 cancellationToken
             );
@@ -430,18 +430,6 @@ public class ArchiveCreationService(
         );
         stream.WriteByte(0);
         await stream.FlushAsync(cancellationToken);
-    }
-
-    private static async Task<string> ComputeMd5HashAsync(
-        string fullFileName,
-        CancellationToken cancellationToken
-    )
-    {
-        await using var stream = SequentialFileReader.OpenRead(fullFileName);
-        using var md5 = MD5.Create();
-        var hash = await md5.ComputeHashAsync(stream, cancellationToken);
-
-        return Convert.ToHexString(hash);
     }
 
     private async Task CreateArchiveAsync(

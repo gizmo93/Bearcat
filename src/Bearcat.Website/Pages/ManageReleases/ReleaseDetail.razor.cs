@@ -187,6 +187,89 @@ public partial class ReleaseDetail(
 
     private bool IsUnmanaged => release.ReleaseType is ReleaseType.Unmanaged;
 
+    private bool IsRemote => release.ReleaseType is ReleaseType.Remote;
+
+    private async Task ConvertToRemoteAsync()
+    {
+        var preview = await operationRunner.RunAsync(
+            (ReleaseService service) => service.GetRemoteConversionPreviewAsync(release.ReleaseId)
+        );
+
+        if (!preview.CanConvert)
+        {
+            toastService.Error(L["ConvertToRemoteNotReady"]);
+            return;
+        }
+
+        var confirmation = L[
+            "ConvertToRemoteConfirmation",
+            string.Join(", ", preview.MirrorHosterNames),
+            preview.DeletableArchiveFolderPaths.Count == 0
+                ? L["ConvertToRemoteNoArchiveFolders"].Value
+                : string.Join(Environment.NewLine, preview.DeletableArchiveFolderPaths)
+        ];
+
+        var result = await dialogService.ConfirmAsync(
+            L["ConvertToRemoteTitle", release.Name],
+            confirmation,
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["ConvertToRemote"],
+                CancelText = L["Cancel"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            await operationRunner.RunAsync(
+                (ReleaseService service) => service.ConvertToRemoteAsync(release.ReleaseId)
+            );
+            toastService.Success(L["ReleaseConvertedToRemote", release.Name]);
+            await ReloadReleaseAsync();
+        }
+        catch (InvalidOperationException exception)
+        {
+            toastService.Error(exception.Message);
+        }
+    }
+
+    private async Task ConvertRemoteToUnmanagedAsync()
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["ConvertRemoteToUnmanagedTitle", release.Name],
+            L["ConvertRemoteToUnmanagedConfirmation"],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["ConvertRemoteToUnmanaged"],
+                CancelText = L["Cancel"],
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            await operationRunner.RunAsync(
+                (ReleaseService service) => service.ConvertRemoteToUnmanagedAsync(release.ReleaseId)
+            );
+            toastService.Success(L["ReleaseConvertedToUnmanaged", release.Name]);
+            await ReloadReleaseAsync();
+        }
+        catch (InvalidOperationException exception)
+        {
+            toastService.Error(exception.Message);
+        }
+    }
+
     private async Task ConvertToUnmanagedAsync()
     {
         var preview = await operationRunner.RunAsync(

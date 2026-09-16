@@ -18,6 +18,25 @@ public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite) : IReleaseWr
             .FirstAsync(r => r.Id == id, cancellationToken);
     }
 
+    public async Task<Release> GetForRemoteConversionAsync(
+        int id,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .Releases.AsSplitQuery()
+            .Include(r => r.ArchiveConfigs)
+                .ThenInclude(c => c.Archives)
+            .Include(r => r.ArchiveConfigs)
+                .ThenInclude(c => c.UploadConfigs)
+                    .ThenInclude(uc => uc.HosterRegistration)
+            .Include(r => r.ArchiveConfigs)
+                .ThenInclude(c => c.UploadConfigs)
+                    .ThenInclude(uc => uc.Uploads)
+                        .ThenInclude(u => u.UploadedFiles)
+            .FirstAsync(r => r.Id == id, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Release>> GetByIdsAsync(
         IReadOnlyList<int> ids,
         CancellationToken cancellationToken

@@ -1,4 +1,5 @@
 ﻿using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.Shared.UnmanagedReleases;
@@ -13,6 +14,7 @@ public class ReleaseService(
     IReleaseWriteRepository writeRepository,
     TimeProvider timeProvider,
     IArchiverFactory archiverFactory,
+    IHosterFactory hosterFactory,
     IReleaseCollectionAssigner releaseCollectionAssigner
 )
 {
@@ -230,6 +232,147 @@ public class ReleaseService(
         release.ReleaseFolderPath = releaseFolderPath;
 
         await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<RemoteConversionPreview> GetRemoteConversionPreviewAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var release = await writeRepository.GetForRemoteConversionAsync(
+            releaseId,
+            cancellationToken
+        );
+
+        var mirrorUploads = GetMirrorUploadsPerArchiveConfig(release);
+
+        var canConvert =
+            release.ReleaseType is ReleaseType.Unmanaged
+            && release.ArchiveConfigs.Count > 0
+            && mirrorUploads.Count == release.ArchiveConfigs.Count;
+
+        var deletableArchiveFolderPaths = release
+            .ArchiveConfigs.SelectMany(config => config.Archives)
+            .Where(archive => archive.ArchiveState is ArchiveState.Created)
+            .Select(archive => archive.ArchiveFolderPath)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToList();
+
+        var mirrorHosterNames = mirrorUploads
+            .Values.Select(upload => upload.UploadConfig.HosterRegistration.Name)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToList();
+
+        return new RemoteConversionPreview(
+            CanConvert: canConvert,
+            DeletableArchiveFolderPaths: deletableArchiveFolderPaths,
+            MirrorHosterNames: mirrorHosterNames
+        );
+    }
+
+    public async Task ConvertToRemoteAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var release = await writeRepository.GetForRemoteConversionAsync(
+            releaseId,
+            cancellationToken
+        );
+
+        if (release.ReleaseType is not ReleaseType.Unmanaged)
+        {
+            throw new InvalidOperationException(
+                "Only unmanaged releases can be converted to remote."
+            );
+        }
+
+        var mirrorUploads = GetMirrorUploadsPerArchiveConfig(release);
+
+        if (
+            release.ArchiveConfigs.Count == 0
+            || mirrorUploads.Count != release.ArchiveConfigs.Count
+        )
+        {
+            throw new InvalidOperationException(
+                "Every archive config must have a fully online upload on a hoster that is enabled for mirror downloads before the release can be converted to remote."
+            );
+        }
+
+        release.ReleaseType = ReleaseType.Remote;
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ConvertRemoteToUnmanagedAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
+
+        if (release.ReleaseType is not ReleaseType.Remote)
+        {
+            throw new InvalidOperationException(
+                "Only remote releases can be converted to unmanaged."
+            );
+        }
+
+        if (release.ArchiveConfigs.Count == 0 || !AllLatestArchivesAreCreated(release))
+        {
+            throw new InvalidOperationException(
+                "All archives must be restored on disk before the release can be converted to unmanaged."
+            );
+        }
+
+        release.ReleaseType = ReleaseType.Unmanaged;
+
+        await writeRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    private Dictionary<int, Upload> GetMirrorUploadsPerArchiveConfig(Release release)
+    {
+        var mirrorUploads = new Dictionary<int, Upload>();
+
+        foreach (var archiveConfig in release.ArchiveConfigs)
+        {
+            var mirrorUpload = archiveConfig
+                .UploadConfigs.Where(IsMirrorCapable)
+                .SelectMany(uploadConfig => uploadConfig.Uploads)
+                .Where(upload =>
+                    upload.UploadedFiles.Count > 0
+                    && upload.UploadedFiles.All(file =>
+                        file.OnlineState == OnlineState.Online
+                        && !string.IsNullOrWhiteSpace(file.HosterFileLink)
+                    )
+                )
+                .MaxBy(upload => upload.Id);
+
+            if (mirrorUpload is not null)
+            {
+                mirrorUploads[archiveConfig.Id] = mirrorUpload;
+            }
+        }
+
+        return mirrorUploads;
+    }
+
+    private bool IsMirrorCapable(UploadConfig uploadConfig)
+    {
+        var registration = uploadConfig.HosterRegistration;
+
+        return registration.IsActive
+            && registration.UseForMirrorDownloads
+            && hosterFactory.GetByName(registration.HosterClassName) is IHosterWithDownload;
+    }
+
+    private static bool AllLatestArchivesAreCreated(Release release)
+    {
+        return release.ArchiveConfigs.All(config =>
+            config.Archives.MaxBy(archive => archive.Id)?.ArchiveState is ArchiveState.Created
+        );
     }
 
     private static bool AllArchiveConfigsHaveCreatedArchive(Release release)

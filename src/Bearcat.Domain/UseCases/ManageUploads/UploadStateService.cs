@@ -534,7 +534,7 @@ public class UploadStateService(
     {
         // We can't execute most checks of unmanaged Releases as we just have a set of RAR files to work with
         // and no Release folder with uncompressed data, so we skip them.
-        if (release.ReleaseType is ReleaseType.Unmanaged)
+        if (release.ReleaseType is ReleaseType.Unmanaged or ReleaseType.Remote)
         {
             return true;
         }

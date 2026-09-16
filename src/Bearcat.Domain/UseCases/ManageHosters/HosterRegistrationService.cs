@@ -25,6 +25,7 @@ public class HosterRegistrationService(
         int? numberOfHoursUntilReuploadOverride = null,
         ReuploadTrigger? reuploadTriggerOverride = null,
         bool alwaysReuploadAllFiles = false,
+        bool useForMirrorDownloads = false,
         CancellationToken cancellationToken = default
     )
     {
@@ -43,6 +44,7 @@ public class HosterRegistrationService(
             NumberOfHoursUntilReuploadOverride = numberOfHoursUntilReuploadOverride,
             ReuploadTriggerOverride = reuploadTriggerOverride,
             AlwaysReuploadAllFiles = alwaysReuploadAllFiles,
+            UseForMirrorDownloads = useForMirrorDownloads && hoster is IHosterWithDownload,
         };
 
         writeRepository.Add(registration);
@@ -72,6 +74,7 @@ public class HosterRegistrationService(
         int? numberOfHoursUntilReuploadOverride = null,
         ReuploadTrigger? reuploadTriggerOverride = null,
         bool alwaysReuploadAllFiles = false,
+        bool useForMirrorDownloads = false,
         CancellationToken cancellationToken = default
     )
     {
@@ -89,6 +92,7 @@ public class HosterRegistrationService(
         registration.NumberOfHoursUntilReuploadOverride = numberOfHoursUntilReuploadOverride;
         registration.ReuploadTriggerOverride = reuploadTriggerOverride;
         registration.AlwaysReuploadAllFiles = alwaysReuploadAllFiles;
+        registration.UseForMirrorDownloads = useForMirrorDownloads && hoster is IHosterWithDownload;
         foreach (var (key, value) in configuration)
         {
             mergedConfiguration[key] = value;

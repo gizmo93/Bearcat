@@ -22,7 +22,8 @@ public class HosterFactory(IServiceProvider serviceProvider) : IHosterFactory
                 ConfigurationKeys: h.ConfigurationKeys,
                 SupportsPremiumOnlyDownloads: h.SupportsPremiumOnlyDownloads,
                 HasFixedParallelUploadLimit: h.HasFixedParallelUploadLimit,
-                DefaultMaximumParallelUploads: h.DefaultMaximumParallelUploads
+                DefaultMaximumParallelUploads: h.DefaultMaximumParallelUploads,
+                SupportsDownload: h is IHosterWithDownload
             ))
             .ToList();
     }

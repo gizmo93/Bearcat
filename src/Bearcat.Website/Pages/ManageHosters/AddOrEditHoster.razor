@@ -90,6 +90,13 @@
                 <BbFormFieldSwitch @bind-Checked="FormModel.AlwaysReuploadAllFiles"
                                    Label="@L["AlwaysReuploadAllFiles"]"
                                    HelperText="@L["AlwaysReuploadAllFilesHelp"]" />
+
+                @if (selectedHoster.SupportsDownload)
+                {
+                    <BbFormFieldSwitch @bind-Checked="FormModel.UseForMirrorDownloads"
+                                       Label="@L["UseForMirrorDownloads"]"
+                                       HelperText="@L["UseForMirrorDownloadsHelp"]" />
+                }
             }
         </div>
 

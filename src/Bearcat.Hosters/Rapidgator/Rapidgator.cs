@@ -18,7 +18,7 @@ public class Rapidgator(
     IRapidgatorApiClient apiClient,
     IRapidgatorApi rapidgatorApi,
     ILogger<Rapidgator> logger
-) : IHosterWithFolders
+) : IHosterWithFolders, IHosterWithDownload
 {
     public string Name => "Rapidgator";
 
@@ -241,6 +241,58 @@ public class Rapidgator(
         var config = hosterConfig.As<RapidgatorConfig>();
 
         await apiClient.MoveFileToFolderAsync(config, fileUrl, folderId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
+        IReadOnlyList<string> fileUrls,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        return await apiClient.GetFileSizesAsync(
+            config: hosterConfig.As<RapidgatorConfig>(),
+            fileUrls: fileUrls,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<DownloadFileResult> DownloadFileAsync(
+        DownloadFileDto file,
+        string targetFilePath,
+        IHosterConfig hosterConfig,
+        IDownloadProgress progress,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<RapidgatorConfig>();
+
+        try
+        {
+            await apiClient.DownloadFileAsync(
+                config: config,
+                fileUrl: file.HosterFileLink,
+                targetFilePath: targetFilePath,
+                progress: progress,
+                expectedSizeBytes: file.ExpectedSizeBytes,
+                cancellationToken: cancellationToken
+            );
+
+            return new DownloadFileResult(IsSuccess: true, ErrorMessages: []);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(
+                ex,
+                "Failed to download file {FileLink} from Rapidgator: {Message}",
+                file.HosterFileLink,
+                ex.InnerException?.Message ?? ex.Message
+            );
+
+            return new DownloadFileResult(
+                IsSuccess: false,
+                ErrorMessages: [ex.InnerException?.Message ?? ex.Message]
+            );
+        }
     }
 
     private async Task<UploadFileResult> UploadFileInternalAsync(

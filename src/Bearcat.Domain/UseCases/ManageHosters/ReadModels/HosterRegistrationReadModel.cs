@@ -16,6 +16,8 @@ public record HosterRegistrationReadModel(
     int? NumberOfHoursUntilReuploadOverride,
     ReuploadTrigger? ReuploadTriggerOverride,
     bool AlwaysReuploadAllFiles,
+    bool SupportsDownload,
+    bool UseForMirrorDownloads,
     string HosterName,
     string FullClassName
 );

@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
@@ -32,6 +33,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             new ReleaseWriteRepository(dbContext),
             CreateTimeProvider(),
             archiverFactory.Object,
+            Mock.Of<IHosterFactory>(),
             new ReleaseCollectionAssignmentService(
                 new ReleaseCollectionRepository(
                     dbContext,

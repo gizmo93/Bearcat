@@ -655,6 +655,7 @@ public class UploadFilesService(
                 HosterFileLink = result.FileUrl ?? string.Empty,
                 ExternalId = result.ExternalId,
                 HosterFolderId = context.Upload.HosterFolderId,
+                Md5Hash = result.IsSuccess ? result.Md5Hash ?? archiveFile.Md5Hash : null,
                 ErrorMessages = result.Errors.ToList(),
                 OnlineState = result.IsSuccess ? OnlineState.Online : OnlineState.Unknown,
                 CreatedAt = timeProvider.GetLocalNow(),

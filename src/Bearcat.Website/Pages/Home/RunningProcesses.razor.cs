@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
 using Bearcat.Domain.UseCases.ManageUploads.Progress;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -9,6 +10,7 @@ namespace Bearcat.Website.Pages.Home;
 
 public sealed partial class RunningProcesses(
     IUploadProgressTracker uploadProgressTracker,
+    IDownloadProgressTracker downloadProgressTracker,
     IScopedOperationRunner operationRunner
 ) : IDisposable
 {
@@ -18,9 +20,15 @@ public sealed partial class RunningProcesses(
     private IReadOnlyDictionary<int, UploadProgressSnapshot> uploadProgress =
         new Dictionary<int, UploadProgressSnapshot>();
 
-    private IReadOnlyList<Archive> runningArchives = [];
+    private IReadOnlyList<Archive> creatingArchives = [];
 
-    private bool SomethingIsRunning => runningUploads.Count > 0 || runningArchives.Count > 0;
+    private IReadOnlyList<Archive> restoringArchives = [];
+
+    private IReadOnlyDictionary<int, DownloadProgressSnapshot> downloadProgress =
+        new Dictionary<int, DownloadProgressSnapshot>();
+
+    private bool SomethingIsRunning =>
+        runningUploads.Count > 0 || creatingArchives.Count > 0 || restoringArchives.Count > 0;
 
     private bool autoRefresh = true;
 
@@ -75,11 +83,26 @@ public sealed partial class RunningProcesses(
         CancellationToken cancellationToken
     )
     {
-        runningArchives = await dbRead
+        var archives = await dbRead
             .Archives.Include(a => a.ArchiveConfig)
                 .ThenInclude(ac => ac.Release)
-            .Where(a => a.ArchiveState == ArchiveState.Creating)
+            .Where(a =>
+                a.ArchiveState == ArchiveState.Creating || a.ArchiveState == ArchiveState.Restoring
+            )
             .ToListAsync(cancellationToken);
+
+        creatingArchives = archives
+            .Where(archive => archive.ArchiveState == ArchiveState.Creating)
+            .ToList();
+
+        restoringArchives = archives
+            .Where(archive => archive.ArchiveState == ArchiveState.Restoring)
+            .ToList();
+
+        downloadProgress = restoringArchives
+            .Select(archive => downloadProgressTracker.Get(archive.Id))
+            .Where(snapshot => snapshot is not null)
+            .ToDictionary(snapshot => snapshot!.ArchiveId, snapshot => snapshot!);
     }
 
     private void ToggleAutoRefresh()

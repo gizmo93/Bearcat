@@ -77,6 +77,13 @@ public interface IRapidgatorApi
         CancellationToken cancellationToken
     );
 
+    [Get("/api/v2/file/download")]
+    Task<ApiResponse<DownloadFileResponse>> DownloadFileAsync(
+        [Query] string token,
+        [Query] [AliasAs("file_id")] string fileId,
+        CancellationToken cancellationToken
+    );
+
     [Get("/api/v2/file/check_link")]
     Task<ApiResponse<CheckLinksResponse>> CheckLinkAsync(
         [Query] string token,

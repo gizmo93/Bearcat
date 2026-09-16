@@ -14,6 +14,7 @@ public static class ServiceProviderConfig
             services.AddHostedService<ReleaseInfoResolutionBackgroundTask>();
             services.AddHostedService<ReleaseCollectionInfoResolutionBackgroundTask>();
             services.AddHostedService<ArchivingBackgroundTask>();
+            services.AddHostedService<ArchiveRestoreBackgroundTask>();
             services.AddHostedService<ArchiveCleanupBackgroundTask>();
             services.AddHostedService<ArchiveUploadBackgroundTask>();
             services.AddHostedService<ImageUploadBackgroundTask>();

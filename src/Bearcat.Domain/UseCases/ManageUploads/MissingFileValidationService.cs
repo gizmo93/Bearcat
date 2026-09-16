@@ -47,8 +47,17 @@ public class MissingFileValidationService(
             return false;
         }
 
+        var carriedOverArchiveFileIds = upload
+            .UploadedFiles.Where(uf =>
+                uf.OnlineState == OnlineState.Online
+                && !string.IsNullOrWhiteSpace(uf.HosterFileLink)
+            )
+            .Select(uf => uf.ArchiveFileId)
+            .ToHashSet();
+
         var nonExistingFiles = upload
-            .Archive!.ArchiveFiles.Where(af =>
+            .Archive!.ArchiveFiles.Where(af => !carriedOverArchiveFileIds.Contains(af.Id))
+            .Where(af =>
                 !fileSystemService.FileExists(af.FullFileName)
                 || af.Archive.ArchiveState != ArchiveState.Created
             )
@@ -103,6 +112,8 @@ public class MissingFileValidationService(
                 "The archive assigned upload has missing files, triggering re-packaging",
             ReleaseType.Unmanaged =>
                 "The archive assigned upload has missing files. Refresh the unmanaged archive after providing the archive files.",
+            ReleaseType.Remote =>
+                "The archive assigned upload has missing files. Bearcat will restore them from an online mirror.",
             _ => throw new ArgumentOutOfRangeException(
                 nameof(releaseType),
                 $"Unknown release type, {releaseType}"

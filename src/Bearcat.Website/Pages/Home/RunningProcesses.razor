@@ -45,14 +45,18 @@
             @if (SomethingIsRunning)
             {
                 <div class="space-y-6">
-                    @if (runningUploads.Count > 0)
+                    @if (runningUploads.Count > 0 || restoringArchives.Count > 0)
                     {
-                        <RunningUploads Uploads="runningUploads" UploadProgress="uploadProgress" OnUploadCanceled="LoadDataAsync" />
+                        <RunningUploads Uploads="runningUploads"
+                                        UploadProgress="uploadProgress"
+                                        RestoringArchives="restoringArchives"
+                                        DownloadProgress="downloadProgress"
+                                        OnUploadCanceled="LoadDataAsync" />
                     }
 
-                    @if (runningArchives.Count > 0)
+                    @if (creatingArchives.Count > 0)
                     {
-                        <RunningArchives Archives="runningArchives" />
+                        <RunningArchives Archives="creatingArchives" />
                     }
                 </div>
             }

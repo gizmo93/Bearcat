@@ -1,3 +1,4 @@
+using Bearcat.Hosters.Fichier.Api.Download;
 using Bearcat.Hosters.Fichier.Api.File;
 using Bearcat.Hosters.Fichier.Api.Folder;
 using Bearcat.Hosters.Fichier.Api.User;
@@ -11,6 +12,13 @@ public interface IFichierApi
     Task<ApiResponse<FileInfoResponse>> GetFileInfoAsync(
         [Header("Authorization")] string authorization,
         [Body] FileInfoRequest request,
+        CancellationToken cancellationToken
+    );
+
+    [Post("/download/get_token.cgi")]
+    Task<ApiResponse<DownloadTokenResponse>> GetDownloadTokenAsync(
+        [Header("Authorization")] string authorization,
+        [Body] DownloadTokenRequest request,
         CancellationToken cancellationToken
     );
 

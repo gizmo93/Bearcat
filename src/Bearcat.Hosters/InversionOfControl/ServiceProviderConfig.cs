@@ -58,6 +58,15 @@ public static class ServiceProviderConfig
             }
         );
 
+        services.AddHttpClient(
+            name: HttpClientProvider.DownloadHttpClientName,
+            configureClient: c =>
+            {
+                c.Timeout = Timeout.InfiniteTimeSpan;
+            }
+        );
+
         services.AddScoped<HttpClientProvider>();
+        services.AddScoped<HosterFileDownloader>();
     }
 }

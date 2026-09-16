@@ -8,6 +8,8 @@ using Bearcat.Domain.Shared.LinkCrypterContainers;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.Shared.QualityGate.Checks;
+using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
+using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives;
@@ -95,6 +97,8 @@ public static class ServiceProviderConfig
             );
             services.AddScoped<ArchiveCreationService>();
             services.AddScoped<ArchiveCleanupService>();
+            services.AddScoped<ArchiveRestoreService>();
+            services.AddSingleton<IDownloadProgressTracker, DownloadProgressTracker>();
             services.AddScoped<UploadFilesService>();
             services.AddScoped<UploadFinalizationService>();
             services.AddScoped<FileUploadExecutionService>();
@@ -131,6 +135,7 @@ public static class ServiceProviderConfig
             services.AddApplicationConfiguration<InitialUploadConfiguration>();
             services.AddApplicationConfiguration<FolderAutomationConfiguration>();
             services.AddApplicationConfiguration<UploadConcurrencyConfiguration>();
+            services.AddApplicationConfiguration<DownloadConfiguration>();
             services.AddApplicationConfiguration<NotificationConfiguration>();
             services.AddApplicationConfiguration<PostQueueConfiguration>();
             services.AddSingleton<ApplicationConfigurationRegistry>();

@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Rapidgator.Api.File;
@@ -14,9 +15,12 @@ namespace Bearcat.Hosters.Rapidgator.Api;
 public class ApiClient(
     IRapidgatorApi api,
     HttpClientProvider httpClientProvider,
+    HosterFileDownloader fileDownloader,
     ILogger<ApiClient> logger
 ) : IRapidgatorApiClient
 {
+    private const int CheckLinkBatchSize = 25;
+
     private readonly KeyedAuthTokenCache authTokenCache = new(TimeSpan.FromSeconds(400));
 
     public async Task<UploadFileResponse> RequestUploadFileAsync(
@@ -133,6 +137,62 @@ public class ApiClient(
         }
     }
 
+    public async Task DownloadFileAsync(
+        RapidgatorConfig config,
+        string fileUrl,
+        string targetFilePath,
+        IDownloadProgress progress,
+        long? expectedSizeBytes,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileId =
+            ExtractFileId(fileUrl)
+            ?? throw new HttpRequestException(
+                $"Could not extract Rapidgator file id from URL {fileUrl}"
+            );
+
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+
+        var response = await api.DownloadFileAsync(
+            token: token,
+            fileId: fileId,
+            cancellationToken: cancellationToken
+        );
+
+        var content = response.Content;
+        var downloadUrl = content?.Response?.DownloadUrl;
+
+        if (!((HttpStatusCode)(content?.Status ?? 0)).IsSuccessStatusCode || downloadUrl is null)
+        {
+            throw new HttpRequestException(
+                content?.Details
+                    ?? $"Rapidgator did not return a download URL for file {fileUrl} (status {content?.Status})"
+            );
+        }
+
+        var delay = content!.Response!.Delay;
+
+        if (delay > 0)
+        {
+            logger.LogInformation(
+                "Rapidgator requested a delay of {DelaySeconds} seconds before downloading file {FileUrl}",
+                delay,
+                fileUrl
+            );
+
+            await Task.Delay(TimeSpan.FromSeconds(delay), cancellationToken);
+        }
+
+        await fileDownloader.DownloadToFileAsync(
+            downloadUrl: downloadUrl,
+            targetFilePath: targetFilePath,
+            progress: progress,
+            expectedSizeBytes: expectedSizeBytes,
+            cancellationToken: cancellationToken
+        );
+    }
+
     private static string? ExtractFileId(string fileUrl)
     {
         if (!Uri.TryCreate(fileUrl, UriKind.Absolute, out var uri))
@@ -215,6 +275,32 @@ public class ApiClient(
         return response;
     }
 
+    public async Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
+        RapidgatorConfig config,
+        IReadOnlyList<string> fileUrls,
+        CancellationToken cancellationToken
+    )
+    {
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+        var sizePerFileUrl = new Dictionary<string, long>();
+
+        foreach (var linksBatch in fileUrls.Distinct().Chunk(CheckLinkBatchSize))
+        {
+            var response = await api.CheckLinkAsync(
+                token: token,
+                links: string.Join(',', linksBatch),
+                cancellationToken: cancellationToken
+            );
+
+            foreach (var file in (response.Content?.Responses ?? []).Where(f => f.Size is > 0))
+            {
+                sizePerFileUrl[file.Url] = file.Size!.Value;
+            }
+        }
+
+        return sizePerFileUrl;
+    }
+
     public async Task<IReadOnlyDictionary<string, LinkCheckStatus>> CheckLinksAsync(
         RapidgatorConfig config,
         IReadOnlyList<FileUrlToCheckDto> files,
@@ -225,7 +311,7 @@ public class ApiClient(
 
         var responses = new List<CheckLinksResponse>();
 
-        foreach (var linksBatch in files.Select(file => file.Url).Chunk(25))
+        foreach (var linksBatch in files.Select(file => file.Url).Chunk(CheckLinkBatchSize))
         {
             var response = await api.CheckLinkAsync(
                 token: token,

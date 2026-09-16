@@ -93,6 +93,7 @@ public class NotificationService(
             NotificationKind.ReleaseFolderMissing => configuration.ReleaseFolderMissing,
             NotificationKind.ArchiveCreationFailed => configuration.ArchiveCreationFailed,
             NotificationKind.ArchiveFilesMissing => configuration.ArchiveFilesMissing,
+            NotificationKind.ArchiveRestoreFailed => configuration.ArchiveRestoreFailed,
             NotificationKind.InitialUploadCreated => configuration.InitialUploadCreated,
             NotificationKind.UploadCompleted => configuration.UploadCompleted,
             NotificationKind.UploadFailed => configuration.UploadFailed,

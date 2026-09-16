@@ -101,6 +101,13 @@
                                 @L["AlwaysReuploadAllFilesShort"]
                             </span>
                         }
+                        @if (hoster.UseForMirrorDownloads)
+                        {
+                            <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <LucideIcon Name="cloud-download" class="h-3.5 w-3.5 shrink-0" />
+                                @L["UseForMirrorDownloadsShort"]
+                            </span>
+                        }
                     </div>
                 </CellTemplate>
             </BbDataTableColumn>

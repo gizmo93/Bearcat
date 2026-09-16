@@ -7,4 +7,5 @@ public enum ArchiveState
     CreationFailed = 3,
     MissingFiles = 4,
     Deleted = 5,
+    Restoring = 6,
 }

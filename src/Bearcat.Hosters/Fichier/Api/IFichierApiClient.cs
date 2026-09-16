@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Hosters.Fichier.Api.Upload;
 using Bearcat.Hosters.Fichier.Api.User;
 
@@ -32,8 +33,23 @@ public interface IFichierApiClient
         CancellationToken cancellationToken
     );
 
+    Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
+        FichierConfig config,
+        IReadOnlyList<string> fileUrls,
+        CancellationToken cancellationToken
+    );
+
     Task<UserInfoResponse> GetUserInfoAsync(
         FichierConfig config,
+        CancellationToken cancellationToken
+    );
+
+    Task DownloadFileAsync(
+        FichierConfig config,
+        string fileUrl,
+        string targetFilePath,
+        IDownloadProgress progress,
+        long? expectedSizeBytes,
         CancellationToken cancellationToken
     );
 }

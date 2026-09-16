@@ -67,7 +67,8 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
                         maxParallelUploadsOverride: FormModel.MaxParallelUploadsOverride,
                         numberOfHoursUntilReuploadOverride: FormModel.NumberOfHoursUntilReuploadOverride,
                         reuploadTriggerOverride: FormModel.ReuploadTriggerOverride,
-                        alwaysReuploadAllFiles: FormModel.AlwaysReuploadAllFiles
+                        alwaysReuploadAllFiles: FormModel.AlwaysReuploadAllFiles,
+                        useForMirrorDownloads: FormModel.UseForMirrorDownloads
                     )
             );
         }
@@ -82,7 +83,8 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
                         FormModel.MaxParallelUploadsOverride,
                         FormModel.NumberOfHoursUntilReuploadOverride,
                         FormModel.ReuploadTriggerOverride,
-                        FormModel.AlwaysReuploadAllFiles
+                        FormModel.AlwaysReuploadAllFiles,
+                        FormModel.UseForMirrorDownloads
                     )
             );
         }
@@ -141,6 +143,11 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
             : hosterReadModels.First(h => h.HosterClassName == FormModel.FullClassName);
 
         displayedPasswords.Clear();
+
+        if (selectedHoster is null or { SupportsDownload: false })
+        {
+            FormModel.UseForMirrorDownloads = false;
+        }
 
         if (!FormModel.IsEdit)
         {

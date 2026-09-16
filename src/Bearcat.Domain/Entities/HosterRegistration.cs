@@ -24,5 +24,7 @@ public class HosterRegistration
 
     public bool AlwaysReuploadAllFiles { get; set; }
 
+    public bool UseForMirrorDownloads { get; set; }
+
     public List<UploadConfig> UploadConfigs { get; set; } = null!;
 }

@@ -99,7 +99,46 @@ public class MissingFileValidationServiceTest : BearcatIntegrationTest
         archiveState.ShouldBe(ArchiveState.MissingFiles);
     }
 
-    private async Task<Upload> AddPendingUploadWithArchiveAsync(string archiveFilePath)
+    [Test]
+    public async Task GetUploadsWithMissingFilesAsync_MissingFileIsCarriedOverAndOnline_DoesNotSkipUpload()
+    {
+        // Arrange
+        var missingArchiveFilePath = Path.Combine(tempRootPath, "missing", "archive.part1.rar");
+        var upload = await AddPendingUploadWithArchiveAsync(
+            missingArchiveFilePath,
+            uploadedFileOnlineState: OnlineState.Online
+        );
+
+        dbContext.ChangeTracker.Clear();
+
+        var trackedUpload = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .Include(u => u.UploadConfig)
+                .ThenInclude(uc => uc.Release)
+            .Include(u => u.Archive)
+                .ThenInclude(a => a!.ArchiveFiles)
+            .SingleAsync(u => u.Id == upload.Id);
+
+        // Act
+        var uploadsToSkip = await service.GetUploadsWithMissingFilesAsync(
+            [trackedUpload],
+            CancellationToken.None
+        );
+
+        // Assert
+        uploadsToSkip.ShouldBeEmpty();
+
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+
+        result.UploadState.ShouldBe(UploadState.Pending);
+        result.ArchiveId.ShouldNotBeNull();
+    }
+
+    private async Task<Upload> AddPendingUploadWithArchiveAsync(
+        string archiveFilePath,
+        OnlineState uploadedFileOnlineState = OnlineState.Offline
+    )
     {
         var releaseGroup = new ReleaseGroup
         {
@@ -165,7 +204,7 @@ public class MissingFileValidationServiceTest : BearcatIntegrationTest
                     ArchiveFile = archiveFile,
                     HosterFileLink = "https://hoster.test/dead-link",
                     ErrorMessages = [],
-                    OnlineState = OnlineState.Online,
+                    OnlineState = uploadedFileOnlineState,
                     CreatedAt = DateTime.UtcNow,
                     CheckedAt = DateTime.UtcNow,
                 },

@@ -8,5 +8,6 @@ public record FileUploadCompleted(
     string? ExternalId,
     bool IsSuccess,
     IReadOnlyList<string> Errors,
+    string? Md5Hash = null,
     bool WasCanceled = false
 );

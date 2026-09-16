@@ -24,4 +24,5 @@ public enum NotificationKind
     AutomaticForumPostFailed = 20,
     AutomaticForumPostUpdated = 21,
     AutomaticForumPostUpdateFailed = 22,
+    ArchiveRestoreFailed = 23,
 }

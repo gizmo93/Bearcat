@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.Rapidgator.Api.File;
 using Bearcat.Hosters.Shared;
@@ -35,6 +36,12 @@ public interface IRapidgatorApiClient
         CancellationToken cancellationToken
     );
 
+    Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
+        RapidgatorConfig config,
+        IReadOnlyList<string> fileUrls,
+        CancellationToken cancellationToken
+    );
+
     Task<IReadOnlyDictionary<string, LinkCheckStatus>> CheckLinksAsync(
         RapidgatorConfig config,
         IReadOnlyList<FileUrlToCheckDto> files,
@@ -51,6 +58,15 @@ public interface IRapidgatorApiClient
         RapidgatorConfig config,
         string fileUrl,
         string folderId,
+        CancellationToken cancellationToken
+    );
+
+    Task DownloadFileAsync(
+        RapidgatorConfig config,
+        string fileUrl,
+        string targetFilePath,
+        IDownloadProgress progress,
+        long? expectedSizeBytes,
         CancellationToken cancellationToken
     );
 }
