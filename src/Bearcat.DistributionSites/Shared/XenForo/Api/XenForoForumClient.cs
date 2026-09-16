@@ -281,7 +281,8 @@ public sealed partial class XenForoForumClient : IDisposable
             pageUrl: new Uri(baseUri, editPath),
             actionMarker: editPath,
             overrides: [new KeyValuePair<string, string>("message", message)],
-            cancellationToken: cancellationToken
+            cancellationToken: cancellationToken,
+            keepExistingFieldValues: true
         );
     }
 
@@ -592,7 +593,8 @@ public sealed partial class XenForoForumClient : IDisposable
         Uri pageUrl,
         string actionMarker,
         List<KeyValuePair<string, string>> overrides,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        bool keepExistingFieldValues = false
     )
     {
         var document = await GetDocumentAsync(pageUrl.ToString(), cancellationToken);
@@ -603,7 +605,10 @@ public sealed partial class XenForoForumClient : IDisposable
                 $"Could not locate the '{actionMarker}' form at {pageUrl}."
             );
 
-        var fields = CollectHiddenFields(form, overrides);
+        var fields = keepExistingFieldValues
+            ? CollectFormFields(form, overrides)
+            : CollectHiddenFields(form, overrides);
+
         fields.AddRange(overrides);
 
         if (fields.TrueForAll(field => field.Key != "_xfToken"))
@@ -639,15 +644,61 @@ public sealed partial class XenForoForumClient : IDisposable
             );
     }
 
+    private static List<KeyValuePair<string, string>> CollectFormFields(
+        IElement form,
+        List<KeyValuePair<string, string>> overrides
+    )
+    {
+        var overridden = BuildOverriddenNames(overrides);
+        var fields = new List<KeyValuePair<string, string>>();
+
+        foreach (var control in form.QuerySelectorAll("input, select, textarea"))
+        {
+            var name = control.GetAttribute("name");
+
+            if (string.IsNullOrEmpty(name) || overridden.Contains(NormalizeFieldName(name)))
+            {
+                continue;
+            }
+
+            fields.AddRange(
+                ReadControlValues(control)
+                    .Select(value => new KeyValuePair<string, string>(name, value))
+            );
+        }
+
+        return fields;
+    }
+
+    private static IReadOnlyList<string> ReadControlValues(IElement control)
+    {
+        return control switch
+        {
+            IHtmlSelectElement select => select
+                .SelectedOptions.Select(option => option.Value)
+                .ToList(),
+            IHtmlTextAreaElement textArea => [textArea.Value],
+            IHtmlInputElement input => ReadInputValues(input),
+            _ => [],
+        };
+    }
+
+    private static IReadOnlyList<string> ReadInputValues(IHtmlInputElement input)
+    {
+        if (input.Type is "submit" or "reset" or "button" or "image" or "file")
+        {
+            return [];
+        }
+
+        return input.Type is "checkbox" or "radio" && !input.IsChecked ? [] : [input.Value];
+    }
+
     private static List<KeyValuePair<string, string>> CollectHiddenFields(
         IElement form,
         List<KeyValuePair<string, string>> overrides
     )
     {
-        var overridden = overrides
-            .Select(field => NormalizeFieldName(field.Key))
-            .Append("_xfResponseType")
-            .ToHashSet(StringComparer.Ordinal);
+        var overridden = BuildOverriddenNames(overrides);
 
         return form.QuerySelectorAll("input[type='hidden']")
             .Select(input => new KeyValuePair<string, string>(
@@ -658,6 +709,16 @@ public sealed partial class XenForoForumClient : IDisposable
                 field.Key.Length > 0 && !overridden.Contains(NormalizeFieldName(field.Key))
             )
             .ToList();
+    }
+
+    private static HashSet<string> BuildOverriddenNames(
+        List<KeyValuePair<string, string>> overrides
+    )
+    {
+        return overrides
+            .Select(field => NormalizeFieldName(field.Key))
+            .Append("_xfResponseType")
+            .ToHashSet(StringComparer.Ordinal);
     }
 
     private static Uri ResolveFormAction(IElement form, Uri pageUrl)

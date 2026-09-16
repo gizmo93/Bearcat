@@ -282,6 +282,169 @@ public class XenForoForumClientTest
         exception.Message.ShouldContain("This thread is closed.");
     }
 
+    [Test]
+    public async Task EditPostAsync_FirstPostOfThread_KeepsTitleAndPrefixAndOverridesMessage()
+    {
+        // Arrange
+        string? requestBody = null;
+        string? requestUri = null;
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(_ => HtmlResponse(EditPostPage));
+        handler.Enqueue(async request =>
+        {
+            requestUri = request.RequestUri?.ToString();
+            requestBody = await request.Content!.ReadAsStringAsync();
+            return JsonResponse(
+                """
+                {"status":"ok","redirect":"https://www.data-load.me/threads/my-release.42/post-99"}
+                """
+            );
+        });
+
+        using var client = CreateClient(handler);
+
+        // Act
+        var submitted = await client.EditPostAsync(
+            postedUrl: "https://www.data-load.me/threads/my-release.42/post-99",
+            message: "Reupped body",
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        submitted.Url.ShouldBe("https://www.data-load.me/threads/my-release.42/post-99");
+        requestUri.ShouldBe("https://www.data-load.me/posts/99/edit");
+        requestBody.ShouldNotBeNull();
+        requestBody.ShouldContain("title=My+Release");
+        requestBody.ShouldContain("prefix_id=7");
+        requestBody.ShouldContain("tags=action%2Cthriller");
+        requestBody.ShouldContain("_xfToken=form-token");
+        requestBody.ShouldContain("attachment_hash=hash-789");
+        requestBody.ShouldContain("message=Reupped+body");
+        requestBody.ShouldContain("_xfResponseType=json");
+        requestBody.ShouldNotContain("message=Old+body");
+        requestBody.ShouldNotContain("_xfResponseType=html");
+        requestBody.ShouldNotContain("silent");
+        requestBody.ShouldNotContain("save");
+    }
+
+    [Test]
+    public async Task EditPostAsync_MultiSelectAndCheckedBoxes_SubmitsEverySelectedValue()
+    {
+        // Arrange
+        string? requestBody = null;
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(_ => HtmlResponse(EditPostWithMultiSelectPage));
+        handler.Enqueue(async request =>
+        {
+            requestBody = await request.Content!.ReadAsStringAsync();
+            return JsonResponse(
+                """
+                {"status":"ok","redirect":"/threads/my-release.42/post-99"}
+                """
+            );
+        });
+
+        using var client = CreateClient(handler);
+
+        // Act
+        await client.EditPostAsync(
+            postedUrl: "https://www.data-load.me/posts/99/",
+            message: "Reupped body",
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        requestBody.ShouldNotBeNull();
+        requestBody.ShouldContain("prefix_id%5B%5D=3");
+        requestBody.ShouldContain("prefix_id%5B%5D=7");
+        requestBody.ShouldContain("sticky=1");
+        requestBody.ShouldNotContain("lock");
+    }
+
+    [Test]
+    public async Task EditPostAsync_ThreadUrlWithoutPostId_EditsTheFirstPostOfTheLoggedInUser()
+    {
+        // Arrange
+        string? requestUri = null;
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(_ => HtmlResponse(LoggedInHomePage));
+        handler.Enqueue(_ => HtmlResponse(ThreadWithPostsPage));
+        handler.Enqueue(_ => HtmlResponse(EditPostPage));
+        handler.Enqueue(request =>
+        {
+            requestUri = request.RequestUri?.ToString();
+            return JsonResponse(
+                """
+                {"status":"ok","redirect":"/threads/my-release.42/post-99"}
+                """
+            );
+        });
+
+        using var client = CreateClient(handler);
+
+        // Act
+        await client.EditPostAsync(
+            postedUrl: "https://www.data-load.me/threads/my-release.42/",
+            message: "Reupped body",
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        requestUri.ShouldBe("https://www.data-load.me/posts/99/edit");
+    }
+
+    private const string EditPostPage = """
+        <html data-csrf="page-token">
+            <form action="/posts/99/edit" method="post">
+                <input type="hidden" name="_xfToken" value="form-token">
+                <input type="hidden" name="attachment_hash" value="hash-789">
+                <input type="hidden" name="_xfResponseType" value="html">
+                <input type="text" name="title" value="My Release">
+                <input type="text" name="tags" value="action,thriller">
+                <input type="checkbox" name="silent" value="1">
+                <input type="submit" name="save" value="Save changes">
+                <select name="prefix_id">
+                    <option value="0">None</option>
+                    <option value="7" selected>UHD</option>
+                </select>
+                <textarea name="message">Old body</textarea>
+            </form>
+        </html>
+        """;
+
+    private const string EditPostWithMultiSelectPage = """
+        <html data-csrf="page-token">
+            <form action="/posts/99/edit" method="post">
+                <input type="hidden" name="_xfToken" value="form-token">
+                <input type="checkbox" name="sticky" value="1" checked>
+                <input type="checkbox" name="lock" value="1">
+                <select name="prefix_id[]" multiple>
+                    <option value="3" selected>Movie</option>
+                    <option value="5">Series</option>
+                    <option value="7" selected>UHD</option>
+                </select>
+                <textarea name="message">Old body</textarea>
+            </form>
+        </html>
+        """;
+
+    private const string LoggedInHomePage = """
+        <html data-csrf="page-token">
+            <a class="p-navgroup-link--user"><span class="p-navgroup-linkText">Bearcat</span></a>
+        </html>
+        """;
+
+    private const string ThreadWithPostsPage = """
+        <html data-csrf="page-token">
+            <article class="message message--post" data-author="Someone">
+                <div class="message-attribution-main"><a href="/threads/my-release.42/post-98"></a></div>
+            </article>
+            <article class="message message--post" data-author="Bearcat">
+                <div class="message-attribution-main"><a href="/threads/my-release.42/post-99"></a></div>
+            </article>
+        </html>
+        """;
+
     private const string NewThreadPage = """
         <html data-csrf="page-token">
             <form action="/forums/uhd-4k.9/post-thread" method="post">
