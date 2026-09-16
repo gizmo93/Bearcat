@@ -268,6 +268,53 @@ public sealed partial class XenForoForumClient : IDisposable
         );
     }
 
+    public async Task<SubmittedPost> EditPostAsync(
+        string postedUrl,
+        string message,
+        CancellationToken cancellationToken
+    )
+    {
+        var postId = await ResolvePostIdAsync(postedUrl, cancellationToken);
+        var editPath = $"posts/{postId}/edit";
+
+        return await SubmitFormAsync(
+            pageUrl: new Uri(baseUri, editPath),
+            actionMarker: editPath,
+            overrides: [new KeyValuePair<string, string>("message", message)],
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task<string> ResolvePostIdAsync(
+        string postedUrl,
+        CancellationToken cancellationToken
+    )
+    {
+        if (ExtractPostId(postedUrl) is { } knownPostId)
+        {
+            return knownPostId;
+        }
+
+        var username =
+            await GetLoggedInUsernameAsync(cancellationToken)
+            ?? throw new InvalidOperationException(
+                "Could not determine the logged in XenForo user."
+            );
+
+        var document = await GetDocumentAsync(postedUrl, cancellationToken);
+
+        var permalink =
+            ExtractPostPermalink(FindUserPost(document, username, takeLast: false))
+            ?? throw new InvalidOperationException(
+                $"Could not locate a post of '{username}' at {postedUrl}."
+            );
+
+        return ExtractPostId(permalink)
+            ?? throw new InvalidOperationException(
+                $"Could not determine the post id of {permalink}."
+            );
+    }
+
     public async Task<string?> GetLoggedInUsernameAsync(CancellationToken cancellationToken)
     {
         var document = await GetDocumentAsync("/", cancellationToken);
@@ -767,6 +814,13 @@ public sealed partial class XenForoForumClient : IDisposable
         return match.Success ? int.Parse(match.Groups[1].Value) : null;
     }
 
+    private static string? ExtractPostId(string postUrl)
+    {
+        var match = PostIdPattern().Match(postUrl);
+
+        return match.Success ? match.Groups[1].Value : null;
+    }
+
     private static int? ExtractThreadId(string threadUrl)
     {
         var match = ThreadIdPattern().Match(threadUrl);
@@ -789,6 +843,9 @@ public sealed partial class XenForoForumClient : IDisposable
 
     [GeneratedRegex(@"/threads/(?:[^/]*\.)?(\d+)(?:/|$)")]
     private static partial Regex ThreadIdPattern();
+
+    [GeneratedRegex(@"(?:/posts/|post-)(\d+)")]
+    private static partial Regex PostIdPattern();
 
     private sealed class NodeBuilder(ForumTargetId id, string title, bool canReceivePosts)
     {

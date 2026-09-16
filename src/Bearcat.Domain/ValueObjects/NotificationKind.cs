@@ -22,4 +22,6 @@ public enum NotificationKind
     CollectionLinkCrypterContainerInvalid = 18,
     AutomaticForumPostCreated = 19,
     AutomaticForumPostFailed = 20,
+    AutomaticForumPostUpdated = 21,
+    AutomaticForumPostUpdateFailed = 22,
 }

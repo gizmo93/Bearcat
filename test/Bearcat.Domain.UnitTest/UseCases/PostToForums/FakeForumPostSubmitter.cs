@@ -19,6 +19,10 @@ public sealed class FakeForumPostSubmitter : IForumPostSubmitter
 
     public List<SubmittedReply> Replies { get; } = [];
 
+    public List<EditedPost> EditedPosts { get; } = [];
+
+    public string EditedPostUrl { get; init; } = "https://forum.test/threads/existing/post-2";
+
     public List<string> SearchedReleaseNames { get; } = [];
 
     public Task<IReadOnlyList<ExistingThread>> FindExistingThreadsAsync(
@@ -63,6 +67,20 @@ public sealed class FakeForumPostSubmitter : IForumPostSubmitter
         Replies.Add(new SubmittedReply(registrationId, threadUrl, body));
 
         return Task.FromResult(new SubmittedPost(ReplyUrl));
+    }
+
+    public Task<SubmittedPost> EditPostAsync(
+        int registrationId,
+        string postedUrl,
+        string body,
+        CancellationToken cancellationToken = default
+    )
+    {
+        FailWhenRequested(registrationId);
+
+        EditedPosts.Add(new EditedPost(registrationId, postedUrl, body));
+
+        return Task.FromResult(new SubmittedPost(EditedPostUrl));
     }
 
     private void FailWhenRequested(int registrationId)

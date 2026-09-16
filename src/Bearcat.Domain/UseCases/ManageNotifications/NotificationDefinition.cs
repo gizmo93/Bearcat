@@ -147,6 +147,20 @@ public static class NotificationDefinitions
             DisplayName: "NotificationKind.AutomaticForumPostFailed",
             Description: "NotificationKind.AutomaticForumPostFailed.Description"
         ),
+        new(
+            Kind: NotificationKind.AutomaticForumPostUpdated,
+            Severity: NotificationSeverity.Info,
+            Group: NotificationGroup.DistributionSites,
+            DisplayName: "NotificationKind.AutomaticForumPostUpdated",
+            Description: "NotificationKind.AutomaticForumPostUpdated.Description"
+        ),
+        new(
+            Kind: NotificationKind.AutomaticForumPostUpdateFailed,
+            Severity: NotificationSeverity.Error,
+            Group: NotificationGroup.DistributionSites,
+            DisplayName: "NotificationKind.AutomaticForumPostUpdateFailed",
+            Description: "NotificationKind.AutomaticForumPostUpdateFailed.Description"
+        ),
     ];
 
     public static NotificationDefinition Get(NotificationKind kind)

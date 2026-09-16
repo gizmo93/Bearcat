@@ -75,6 +75,8 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
 
     private bool IsCollection => TemplateType == ForumPostTemplateType.ReleaseCollection;
 
+    private int? SelectedTemplateIdOrNull => selectedTemplateId == 0 ? null : selectedTemplateId;
+
     private IReadOnlyList<SelectOption<int>> RegistrationOptions =>
         registrations
             .Select(registration => new SelectOption<int>(
@@ -377,7 +379,8 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
                 await service.AddForCollectionAsync(
                     releaseCollectionId: EntityId,
                     url: url,
-                    distributionSiteRegistrationId: selectedRegistrationId
+                    distributionSiteRegistrationId: selectedRegistrationId,
+                    forumPostTemplateId: SelectedTemplateIdOrNull
                 );
                 return;
             }
@@ -385,7 +388,8 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
             await service.AddForReleaseAsync(
                 releaseId: EntityId,
                 url: url,
-                distributionSiteRegistrationId: selectedRegistrationId
+                distributionSiteRegistrationId: selectedRegistrationId,
+                forumPostTemplateId: SelectedTemplateIdOrNull
             );
         });
 

@@ -1141,4 +1141,17 @@
   <data name="StripDotsForThreadSearchHelp" xml:space="preserve"><value>Replaces the dots in the release name with spaces when searching this forum for an existing thread. A new thread uses the same spaced name as its title.</value></data>
   <data name="StripDotsForThreadSearchEnabled" xml:space="preserve"><value>Thread search without dots enabled for {0}</value></data>
   <data name="StripDotsForThreadSearchDisabled" xml:space="preserve"><value>Thread search without dots disabled for {0}</value></data>
+  <data name="AutoPostUpdatePost" xml:space="preserve"><value>Update post</value></data>
+  <data name="AutoPostContentOutdated" xml:space="preserve"><value>Post content is outdated</value></data>
+  <data name="AutoPostUpdateSucceeded" xml:space="preserve"><value>Post in {0} updated</value></data>
+  <data name="AutoPostUpdateFailed" xml:space="preserve"><value>Updating the post in {0} failed</value></data>
+  <data name="AutoPostUpdateNotPosted" xml:space="preserve"><value>This release has not been posted to this forum yet.</value></data>
+  <data name="UpdatePostedLocationTitle" xml:space="preserve"><value>Update forum post</value></data>
+  <data name="UpdatePostedLocationDescription" xml:space="preserve"><value>Renders the template again and replaces the content of the existing post.</value></data>
+  <data name="UpdatePostedLocationConfirmation" xml:space="preserve"><value>The content of this post is replaced completely. Manual changes in the forum are lost.</value></data>
+  <data name="UpdatePostedLocationSucceeded" xml:space="preserve"><value>Forum post updated</value></data>
+  <data name="NotificationKind.AutomaticForumPostUpdated" xml:space="preserve"><value>Forum post updated</value></data>
+  <data name="NotificationKind.AutomaticForumPostUpdated.Description" xml:space="preserve"><value>An existing forum post was updated with freshly rendered content.</value></data>
+  <data name="NotificationKind.AutomaticForumPostUpdateFailed" xml:space="preserve"><value>Forum post update failed</value></data>
+  <data name="NotificationKind.AutomaticForumPostUpdateFailed.Description" xml:space="preserve"><value>An existing forum post could not be updated.</value></data>
 </root>

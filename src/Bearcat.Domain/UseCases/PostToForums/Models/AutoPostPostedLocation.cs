@@ -1,7 +1,8 @@
-namespace Bearcat.Domain.UseCases.ManagePostedLocations.ReadModels;
+namespace Bearcat.Domain.UseCases.PostToForums.Models;
 
-public record PostedLocationReadModel(
+public sealed record AutoPostPostedLocation(
     int PostedLocationId,
+    int ReleaseId,
     int? DistributionSiteRegistrationId,
     int? ForumPostTemplateId,
     string Url,

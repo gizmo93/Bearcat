@@ -13,6 +13,7 @@ public class PostedLocationService(
         int releaseId,
         string url,
         int? distributionSiteRegistrationId = null,
+        int? forumPostTemplateId = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -21,6 +22,7 @@ public class PostedLocationService(
             {
                 ReleaseId = releaseId,
                 DistributionSiteRegistrationId = distributionSiteRegistrationId,
+                ForumPostTemplateId = forumPostTemplateId,
             },
             url: url,
             cancellationToken: cancellationToken
@@ -31,6 +33,7 @@ public class PostedLocationService(
         int releaseCollectionId,
         string url,
         int? distributionSiteRegistrationId = null,
+        int? forumPostTemplateId = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -39,6 +42,7 @@ public class PostedLocationService(
             {
                 ReleaseCollectionId = releaseCollectionId,
                 DistributionSiteRegistrationId = distributionSiteRegistrationId,
+                ForumPostTemplateId = forumPostTemplateId,
             },
             url: url,
             cancellationToken: cancellationToken
@@ -72,6 +76,7 @@ public class PostedLocationService(
 
         postedLocation.Url = url.Trim();
         postedLocation.CreatedAt = timeProvider.GetLocalNow();
+        postedLocation.ContentUpdatedAt = postedLocation.CreatedAt;
 
         writeRepository.Add(postedLocation);
         await writeRepository.SaveChangesAsync(cancellationToken);

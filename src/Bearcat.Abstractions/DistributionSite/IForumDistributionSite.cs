@@ -54,6 +54,13 @@ public interface IForumDistributionSite : IDistributionSite
         CancellationToken cancellationToken
     );
 
+    Task<SubmittedPost> EditPostAsync(
+        DistributionSession session,
+        string postedUrl,
+        string body,
+        CancellationToken cancellationToken
+    );
+
     Task<string?> ResolvePostedUrlAsync(
         DistributionSession session,
         ForumTargetId target,

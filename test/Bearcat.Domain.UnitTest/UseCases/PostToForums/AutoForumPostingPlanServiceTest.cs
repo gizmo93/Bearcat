@@ -1,4 +1,5 @@
 using Bearcat.Domain.UseCases.PostToForums;
+using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.ValueObjects;
 using Shouldly;
 
@@ -74,7 +75,7 @@ public class AutoForumPostingPlanServiceTest
         {
             Releases = [AutoPostTestFactory.Release()],
             Registrations = [AutoPostTestFactory.Registration(id: 5)],
-            PostedLocations = [new AutoPostPostedLocation(1, 5, "https://forum.test/threads/1")],
+            PostedLocations = [AutoPostTestFactory.PostedLocation()],
         };
         var service = new AutoForumPostingPlanService(repository);
 
@@ -89,6 +90,140 @@ public class AutoForumPostingPlanServiceTest
     }
 
     [Test]
+    public async Task GetPlanAsync_AlreadyPosted_KeepsTheMatchingRuleAndTheStoredTemplate()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release()],
+            Registrations = [AutoPostTestFactory.Registration(id: 5)],
+            PostedLocations =
+            [
+                AutoPostTestFactory.PostedLocation(postedLocationId: 9, forumPostTemplateId: 3),
+            ],
+        };
+        var service = new AutoForumPostingPlanService(repository);
+
+        // Act
+        var plan = await service.GetPlanAsync(releaseId: 1);
+
+        // Assert
+        var site = plan.Sites.ShouldHaveSingleItem();
+        site.Status.ShouldBe(AutoPostSiteStatus.AlreadyPosted);
+        site.PostedLocationId.ShouldBe(9);
+        site.StoredForumPostTemplateId.ShouldBe(3);
+        site.Match.ShouldNotBeNull().ForumPostTemplateId.ShouldBe(7);
+        site.ResolvedForumPostTemplateId.ShouldBe(3);
+    }
+
+    [Test]
+    public async Task GetPlanAsync_AlreadyPostedWithoutStoredTemplate_FallsBackToTheRuleTemplate()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release()],
+            Registrations = [AutoPostTestFactory.Registration(id: 5)],
+            PostedLocations = [AutoPostTestFactory.PostedLocation()],
+        };
+        var service = new AutoForumPostingPlanService(repository);
+
+        // Act
+        var plan = await service.GetPlanAsync(releaseId: 1);
+
+        // Assert
+        plan.Sites.ShouldHaveSingleItem().ResolvedForumPostTemplateId.ShouldBe(7);
+    }
+
+    [Test]
+    public async Task GetPlanAsync_UploadNewerThanThePost_NeedsContentUpdate()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release()],
+            Registrations = [AutoPostTestFactory.Registration(id: 5)],
+            PostedLocations = [AutoPostTestFactory.PostedLocation()],
+            LatestUploadCompletionTimes = { [1] = AutoPostTestFactory.ReuploadedAt },
+        };
+        var service = new AutoForumPostingPlanService(repository);
+
+        // Act
+        var plan = await service.GetPlanAsync(releaseId: 1);
+
+        // Assert
+        plan.Sites.ShouldHaveSingleItem().NeedsContentUpdate.ShouldBeTrue();
+        plan.UpdatableSites.ShouldHaveSingleItem().DistributionSiteRegistrationId.ShouldBe(5);
+    }
+
+    [Test]
+    public async Task GetPlanAsync_ContentUpdatedAfterTheUpload_NeedsNoContentUpdate()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release()],
+            Registrations = [AutoPostTestFactory.Registration(id: 5)],
+            PostedLocations =
+            [
+                AutoPostTestFactory.PostedLocation(
+                    contentUpdatedAt: AutoPostTestFactory.ReuploadedAt.AddMinutes(5)
+                ),
+            ],
+            LatestUploadCompletionTimes = { [1] = AutoPostTestFactory.ReuploadedAt },
+        };
+        var service = new AutoForumPostingPlanService(repository);
+
+        // Act
+        var plan = await service.GetPlanAsync(releaseId: 1);
+
+        // Assert
+        plan.Sites.ShouldHaveSingleItem().NeedsContentUpdate.ShouldBeFalse();
+        plan.UpdatableSites.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPlanAsync_ReleaseWithoutCompletedUploads_NeedsNoContentUpdate()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release()],
+            Registrations = [AutoPostTestFactory.Registration(id: 5)],
+            PostedLocations = [AutoPostTestFactory.PostedLocation()],
+        };
+        var service = new AutoForumPostingPlanService(repository);
+
+        // Act
+        var plan = await service.GetPlanAsync(releaseId: 1);
+
+        // Assert
+        plan.Sites.ShouldHaveSingleItem().NeedsContentUpdate.ShouldBeFalse();
+        plan.UpdatableSites.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetPlanAsync_ManualRegistration_HasNoAutomaticallyUpdatableSites()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release()],
+            Registrations = [AutoPostTestFactory.Registration(id: 5)],
+            PostedLocations = [AutoPostTestFactory.PostedLocation()],
+            LatestUploadCompletionTimes = { [1] = AutoPostTestFactory.ReuploadedAt },
+        };
+        var service = new AutoForumPostingPlanService(repository);
+
+        // Act
+        var plan = await service.GetPlanAsync(releaseId: 1);
+
+        // Assert
+        plan.UpdatableSites.ShouldHaveSingleItem();
+        plan.AutomaticallyUpdatableSites.ShouldBeEmpty();
+    }
+
+    [Test]
     public async Task GetPlanAsync_PostedLocationWithoutRegistration_IsIgnored()
     {
         // Arrange
@@ -96,7 +231,13 @@ public class AutoForumPostingPlanServiceTest
         {
             Releases = [AutoPostTestFactory.Release()],
             Registrations = [AutoPostTestFactory.Registration(id: 5)],
-            PostedLocations = [new AutoPostPostedLocation(1, null, "https://manual.test/1")],
+            PostedLocations =
+            [
+                AutoPostTestFactory.PostedLocation(
+                    distributionSiteRegistrationId: null,
+                    url: "https://manual.test/1"
+                ),
+            ],
         };
         var service = new AutoForumPostingPlanService(repository);
 

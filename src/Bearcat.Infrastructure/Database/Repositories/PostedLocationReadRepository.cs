@@ -17,8 +17,11 @@ public class PostedLocationReadRepository(IBearcatReadDbContext dbRead)
             .OrderBy(location => location.Id)
             .Select(location => new PostedLocationReadModel(
                 location.Id,
+                location.DistributionSiteRegistrationId,
+                location.ForumPostTemplateId,
                 location.Url,
-                location.CreatedAt
+                location.CreatedAt,
+                location.ContentUpdatedAt
             ))
             .ToListAsync(cancellationToken);
     }
@@ -33,8 +36,11 @@ public class PostedLocationReadRepository(IBearcatReadDbContext dbRead)
             .OrderBy(location => location.Id)
             .Select(location => new PostedLocationReadModel(
                 location.Id,
+                location.DistributionSiteRegistrationId,
+                location.ForumPostTemplateId,
                 location.Url,
-                location.CreatedAt
+                location.CreatedAt,
+                location.ContentUpdatedAt
             ))
             .ToListAsync(cancellationToken);
     }

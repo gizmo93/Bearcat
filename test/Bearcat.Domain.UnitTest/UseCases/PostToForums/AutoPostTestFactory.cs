@@ -1,6 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ForumPostingRules;
-using Bearcat.Domain.UseCases.PostToForums;
+using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UnitTest.UseCases.PostToForums;
@@ -8,6 +8,39 @@ namespace Bearcat.Domain.UnitTest.UseCases.PostToForums;
 public static class AutoPostTestFactory
 {
     public const string ReleaseName = "Some.Movie.2021.1080p.BluRay-GROUP";
+
+    public static readonly DateTime PostedAt = new(2026, 9, 10, 20, 0, 0, DateTimeKind.Unspecified);
+
+    public static readonly DateTime ReuploadedAt = new(
+        2026,
+        9,
+        14,
+        20,
+        0,
+        0,
+        DateTimeKind.Unspecified
+    );
+
+    public static AutoPostPostedLocation PostedLocation(
+        int postedLocationId = 1,
+        int releaseId = 1,
+        int? distributionSiteRegistrationId = 5,
+        int? forumPostTemplateId = null,
+        string url = "https://forum.test/threads/1",
+        DateTime? createdAt = null,
+        DateTime? contentUpdatedAt = null
+    )
+    {
+        return new AutoPostPostedLocation(
+            PostedLocationId: postedLocationId,
+            ReleaseId: releaseId,
+            DistributionSiteRegistrationId: distributionSiteRegistrationId,
+            ForumPostTemplateId: forumPostTemplateId,
+            Url: url,
+            CreatedAt: createdAt ?? PostedAt,
+            ContentUpdatedAt: contentUpdatedAt
+        );
+    }
 
     public static Release Release(
         int id = 1,

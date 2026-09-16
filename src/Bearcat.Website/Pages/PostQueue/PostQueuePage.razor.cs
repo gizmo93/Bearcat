@@ -7,6 +7,7 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.PostToForums;
+using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Website.Formatting;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
@@ -164,13 +165,62 @@ public partial class PostQueuePage(
         }
     }
 
+    private static bool CanUpdatePost(AutoPostSiteEntry site)
+    {
+        return site.PostedLocationId is not null && site.ResolvedForumPostTemplateId is not null;
+    }
+
+    private async Task UpdatePostAsync(int releaseId, AutoPostSiteEntry site)
+    {
+        busySites.Add((releaseId, site.DistributionSiteRegistrationId));
+        siteErrors.Remove((releaseId, site.DistributionSiteRegistrationId));
+
+        try
+        {
+            var result = await operationRunner.RunAsync(
+                (AutoForumPostingService service) =>
+                    service.UpdateAsync(releaseId, site.DistributionSiteRegistrationId)
+            );
+
+            if (result.Status == AutoPostUpdateStatus.Updated)
+            {
+                toastService.Success(
+                    L["AutoPostUpdateSucceeded", site.DistributionSiteRegistrationName]
+                );
+
+                if (result.ReleaseMarkedPosted)
+                {
+                    await LoadAsync();
+                    return;
+                }
+            }
+            else
+            {
+                siteErrors[(releaseId, site.DistributionSiteRegistrationId)] =
+                    result.Status == AutoPostUpdateStatus.Skipped
+                        ? UpdateSkipReasonText(result)
+                        : string.Join(" ", result.Errors);
+
+                toastService.Error(
+                    L["AutoPostUpdateFailed", site.DistributionSiteRegistrationName]
+                );
+            }
+
+            await ReloadAutoPostPlanAsync(releaseId);
+        }
+        finally
+        {
+            busySites.Remove((releaseId, site.DistributionSiteRegistrationId));
+        }
+    }
+
     private async Task<bool> ExecuteAndApplyAsync(int releaseId, AutoPostSiteEntry site)
     {
         siteErrors.Remove((releaseId, site.DistributionSiteRegistrationId));
 
         var result = await operationRunner.RunAsync(
-            (AutoForumPostingExecutionService service) =>
-                service.ExecuteAsync(releaseId, site.DistributionSiteRegistrationId)
+            (AutoForumPostingService service) =>
+                service.PostAsync(releaseId, site.DistributionSiteRegistrationId)
         );
 
         if (result.Status == AutoPostExecutionStatus.Posted)
@@ -213,6 +263,18 @@ public partial class PostQueuePage(
             AutoPostSkipReason.NoMatch => L["AutoPostNoMatchingRule"],
             _ => L["AutoPostSkippedSiteUnavailable"],
         };
+    }
+
+    private string UpdateSkipReasonText(AutoPostUpdateResult result)
+    {
+        if (result.BlockedReason is not null)
+        {
+            return BlockedReasonText(result.BlockedReason.Value);
+        }
+
+        return result.SkipReason == AutoPostUpdateSkipReason.NotPosted
+            ? L["AutoPostUpdateNotPosted"]
+            : L["AutoPostSkippedSiteUnavailable"];
     }
 
     private string BlockedReasonText(AutoPostBlockedReason reason)

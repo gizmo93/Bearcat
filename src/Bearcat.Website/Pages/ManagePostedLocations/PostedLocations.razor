@@ -41,6 +41,16 @@
                                title="@location.Url">
                                 @location.Url
                             </a>
+                            @if (location.DistributionSiteRegistrationId is not null)
+                            {
+                                <BbButton Variant="ButtonVariant.Ghost"
+                                          Size="ButtonSize.IconSmall"
+                                          AriaLabel="@L["AutoPostUpdatePost"]"
+                                          Disabled="isBusy"
+                                          OnClick="@(() => UpdateAsync(location))">
+                                    <LucideIcon Name="refresh-cw" class="h-4 w-4" />
+                                </BbButton>
+                            }
                             <BbButton Variant="ButtonVariant.Ghost"
                                       Size="ButtonSize.IconSmall"
                                       AriaLabel="@L["Delete"]"

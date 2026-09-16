@@ -149,6 +149,17 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
         return await client.SubmitReplyAsync(threadUrl, body, cancellationToken);
     }
 
+    public async Task<SubmittedPost> EditPostAsync(
+        DistributionSession session,
+        string postedUrl,
+        string body,
+        CancellationToken cancellationToken
+    )
+    {
+        using var client = CreateClient(session);
+        return await client.EditPostAsync(postedUrl, body, cancellationToken);
+    }
+
     public ForumTargetId ResolveTarget(string storedTargetId)
     {
         var trimmed = storedTargetId.Trim();

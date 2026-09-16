@@ -1,6 +1,6 @@
 using Bearcat.Domain.ValueObjects;
 
-namespace Bearcat.Domain.UseCases.PostToForums;
+namespace Bearcat.Domain.UseCases.PostToForums.Models;
 
 public sealed record AutoPostRuleMatch(
     int ForumPostingRuleId,

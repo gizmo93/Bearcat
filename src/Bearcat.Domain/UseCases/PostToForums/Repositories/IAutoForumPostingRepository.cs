@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.PostToForums.Models;
 
 namespace Bearcat.Domain.UseCases.PostToForums.Repositories;
 
@@ -22,10 +23,28 @@ public interface IAutoForumPostingRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyDictionary<int, DateTime>> GetLatestUploadCompletionTimesAsync(
+        IReadOnlyList<int> releaseIds,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<AutoPostUpdateTarget> GetUpdateTargetAsync(
+        int postedLocationId,
+        CancellationToken cancellationToken = default
+    );
+
     Task RecordPostedLocationAsync(
         int releaseId,
         int distributionSiteRegistrationId,
         string url,
+        int forumPostTemplateId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task MarkPostedLocationUpdatedAsync(
+        int postedLocationId,
+        string url,
+        int forumPostTemplateId,
         CancellationToken cancellationToken = default
     );
 

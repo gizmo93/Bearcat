@@ -1,0 +1,33 @@
+<div class="space-y-4">
+    <p class="text-sm text-muted-foreground">@L["UpdatePostedLocationConfirmation"]</p>
+
+    <div class="rounded-md border border-border/70 px-3 py-2 text-xs break-all">@PostedUrl</div>
+
+    @if (ForumPostTemplateId is null)
+    {
+        @if (templates.Count == 0)
+        {
+            <div class="bearcat-release-empty">
+                <LucideIcon Name="inbox" class="h-5 w-5" />
+                <span>@L["NoForumPostTemplatesFound"]</span>
+            </div>
+        }
+        else
+        {
+            <BbFormFieldSelect TValue="int"
+                               @bind-Value="selectedTemplateId"
+                               Label="@L["ForumPostTemplate"]"
+                               Placeholder="@L["SelectForumPostTemplate"]"
+                               Options="TemplateOptions" />
+        }
+    }
+
+    <div class="flex justify-end gap-2">
+        <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+            @L["Cancel"]
+        </BbButton>
+        <BbButton Disabled="selectedTemplateId == 0" OnClick="ConfirmAsync">
+            @L["AutoPostUpdatePost"]
+        </BbButton>
+    </div>
+</div>

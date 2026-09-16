@@ -158,9 +158,41 @@ Instead of the forum list, the entry shows a short reason:
 The background task uses the same checks, so a blocked release is skipped there as well and picked
 up again once it is ready.
 
+## Updating a post after a reupload
+
+Direct download links break when files go offline and a release is uploaded again. If your post
+carries those links instead of a link crypter container, the post has to be rewritten. Bearcat can
+do that for you: it renders the template again, which always reads the current state of the release,
+and replaces the content of the existing post completely.
+
+A reupload puts the release back into the post queue. Forums it was already posted to now show
+**Post content is outdated** next to the stored link, together with an **Update post** button.
+Pressing it renders the template and overwrites the post in place. The stored link, the template
+used and the time of the update are saved on the posted location.
+
+The "Automatic forum posting" background task does the same on its own for every forum that has
+**Automatic posting** switched on and a template it can use. Once nothing is left to post and
+nothing is left to update, the release is marked as posted and leaves the queue again.
+
+Which template is used is decided in this order:
+
+1. the template you pick in the dialog,
+2. the template the post was created with,
+3. the template of the posting rule that matches the release today.
+
+Posts created before this feature have no stored template, so they fall back to the current rule or
+to the template you pick.
+
+You can also update a single post from the **Posted locations** card on a release or a collection.
+Every entry that belongs to a distribution site has an update button there, which works for posts
+that Bearcat created and for posts you confirmed by hand. A confirmation dialog appears first,
+because the content of the post is replaced completely and manual changes in the forum are lost.
+Collections can only be updated this way, the background task handles single releases.
+
 ## Notifications
 
-Every automatic post creates a notification, whether it worked or not.
+Every automatic post creates a notification, whether it worked or not. Updated posts and failed
+updates have their own notification kinds, so you can switch them off separately.
 
 ## Posted locations and duplicates
 

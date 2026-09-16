@@ -16,7 +16,13 @@ public class PostedLocation
 
     public DistributionSiteRegistration? DistributionSiteRegistration { get; set; }
 
+    public int? ForumPostTemplateId { get; set; }
+
+    public ForumPostTemplate? ForumPostTemplate { get; set; }
+
     public string Url { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; }
+
+    public DateTime? ContentUpdatedAt { get; set; }
 }

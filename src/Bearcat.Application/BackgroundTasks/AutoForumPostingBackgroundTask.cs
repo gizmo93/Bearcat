@@ -31,11 +31,12 @@ public class AutoForumPostingBackgroundTask(
             );
         }
 
-        if (result.PostedCount > 0 || result.FailedCount > 0)
+        if (result.PostedCount > 0 || result.UpdatedCount > 0 || result.FailedCount > 0)
         {
             logger.LogInformation(
-                "Automatic forum posting created {PostedCount} posts and failed {FailedCount} times",
+                "Automatic forum posting created {PostedCount} posts, updated {UpdatedCount} posts and failed {FailedCount} times",
                 result.PostedCount,
+                result.UpdatedCount,
                 result.FailedCount
             );
         }

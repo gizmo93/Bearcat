@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.PostToForums;
+using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.ValueObjects;
 using Shouldly;
 
@@ -162,6 +163,144 @@ public class AutoForumPostingRunnerTest
         repository.PlanningRoundCount.ShouldBe(2);
     }
 
+    [Test]
+    public async Task RunAsync_StalePostOnAnAutomaticSite_UpdatesItAndMarksTheReleasePosted()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release()],
+            Registrations = [AutomaticRegistration(id: 5, name: "Automatic")],
+            PostedLocations =
+            [
+                AutoPostTestFactory.PostedLocation(postedLocationId: 9, forumPostTemplateId: 3),
+            ],
+            LatestUploadCompletionTimes = { [1] = AutoPostTestFactory.ReuploadedAt },
+            Now = AutoPostTestFactory.ReuploadedAt.AddHours(1),
+        };
+        var submitter = new FakeForumPostSubmitter();
+        var runner = RunnerWith(repository, submitter);
+
+        // Act
+        var result = await runner.RunAsync();
+
+        // Assert
+        result.UpdatedCount.ShouldBe(1);
+        result.PostedCount.ShouldBe(0);
+        result.FailedCount.ShouldBe(0);
+        submitter.EditedPosts.ShouldHaveSingleItem().RegistrationId.ShouldBe(5);
+        repository.UpdatedPostedLocations.ShouldHaveSingleItem().PostedLocationId.ShouldBe(9);
+        repository.MarkedReleaseIds.ShouldBe([1]);
+    }
+
+    [Test]
+    public async Task RunAsync_StalePostOnAManualSite_UpdatesNothingAndKeepsTheReleaseQueued()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release()],
+            Registrations = [AutoPostTestFactory.Registration(id: 5, name: "Manual")],
+            PostedLocations =
+            [
+                AutoPostTestFactory.PostedLocation(postedLocationId: 9, forumPostTemplateId: 3),
+            ],
+            LatestUploadCompletionTimes = { [1] = AutoPostTestFactory.ReuploadedAt },
+        };
+        var submitter = new FakeForumPostSubmitter();
+        var runner = RunnerWith(repository, submitter);
+
+        // Act
+        var result = await runner.RunAsync();
+
+        // Assert
+        result.UpdatedCount.ShouldBe(0);
+        submitter.EditedPosts.ShouldBeEmpty();
+        repository.MarkedReleaseIds.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task RunAsync_FailingUpdate_ReportsAFailureAndKeepsTheReleaseInTheQueue()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release()],
+            Registrations = [AutomaticRegistration(id: 5, name: "Automatic")],
+            PostedLocations =
+            [
+                AutoPostTestFactory.PostedLocation(postedLocationId: 9, forumPostTemplateId: 3),
+            ],
+            LatestUploadCompletionTimes = { [1] = AutoPostTestFactory.ReuploadedAt },
+        };
+        var submitter = new FakeForumPostSubmitter { FailingRegistrationIds = [5] };
+        var runner = RunnerWith(repository, submitter);
+
+        // Act
+        var result = await runner.RunAsync();
+
+        // Assert
+        result.UpdatedCount.ShouldBe(0);
+        result.Failures.ShouldHaveSingleItem().DistributionSiteRegistrationId.ShouldBe(5);
+        repository.MarkedReleaseIds.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task RunAsync_NoRuleMatchesAnywhere_DoesNotMarkTheReleasePosted()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release(resolution: ReleaseResolution.R720p)],
+            Registrations = [AutomaticRegistration(id: 5, name: "Automatic")],
+        };
+        var submitter = new FakeForumPostSubmitter();
+        var runner = RunnerWith(repository, submitter);
+
+        // Act
+        var result = await runner.RunAsync();
+
+        // Assert
+        result.PostedCount.ShouldBe(0);
+        result.UpdatedCount.ShouldBe(0);
+        submitter.NewThreads.ShouldBeEmpty();
+        repository.MarkedReleaseIds.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task RunAsync_StaleAutomaticSiteAndStaleManualSite_DoesNotMarkTheReleasePosted()
+    {
+        // Arrange
+        var repository = new FakeAutoForumPostingRepository
+        {
+            Releases = [AutoPostTestFactory.Release()],
+            Registrations =
+            [
+                AutomaticRegistration(id: 5, name: "Automatic"),
+                AutoPostTestFactory.Registration(id: 6, name: "Manual"),
+            ],
+            PostedLocations =
+            [
+                AutoPostTestFactory.PostedLocation(postedLocationId: 9, forumPostTemplateId: 3),
+                AutoPostTestFactory.PostedLocation(
+                    postedLocationId: 10,
+                    distributionSiteRegistrationId: 6,
+                    forumPostTemplateId: 3
+                ),
+            ],
+            LatestUploadCompletionTimes = { [1] = AutoPostTestFactory.ReuploadedAt },
+            Now = AutoPostTestFactory.ReuploadedAt.AddHours(1),
+        };
+        var runner = RunnerWith(repository, new FakeForumPostSubmitter());
+
+        // Act
+        var result = await runner.RunAsync();
+
+        // Assert
+        result.UpdatedCount.ShouldBe(1);
+        repository.MarkedReleaseIds.ShouldBeEmpty();
+    }
+
     private static AutoPostRegistration AutomaticRegistration(
         int id,
         string name,
@@ -185,7 +324,7 @@ public class AutoForumPostingRunnerTest
         return new AutoForumPostingRunner(
             repository,
             planService,
-            new AutoForumPostingExecutionService(
+            new AutoForumPostingService(
                 planService,
                 repository,
                 new FakeForumPostContentRenderer(),

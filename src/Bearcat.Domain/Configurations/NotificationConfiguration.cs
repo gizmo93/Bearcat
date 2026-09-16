@@ -122,4 +122,16 @@ public class NotificationConfiguration : IApplicationConfiguration
         "NotificationKind.AutomaticForumPostFailed.Description"
     )]
     public bool AutomaticForumPostFailed { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
+        "NotificationKind.AutomaticForumPostUpdated",
+        "NotificationKind.AutomaticForumPostUpdated.Description"
+    )]
+    public bool AutomaticForumPostUpdated { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
+        "NotificationKind.AutomaticForumPostUpdateFailed",
+        "NotificationKind.AutomaticForumPostUpdateFailed.Description"
+    )]
+    public bool AutomaticForumPostUpdateFailed { get; set; } = true;
 }

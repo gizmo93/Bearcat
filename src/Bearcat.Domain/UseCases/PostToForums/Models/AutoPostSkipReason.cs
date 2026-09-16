@@ -1,4 +1,4 @@
-namespace Bearcat.Domain.UseCases.PostToForums;
+namespace Bearcat.Domain.UseCases.PostToForums.Models;
 
 public enum AutoPostSkipReason
 {

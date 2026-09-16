@@ -1,15 +1,21 @@
 using Bearcat.Domain.UseCases.ManagePostedLocations;
 using Bearcat.Domain.UseCases.ManagePostedLocations.ReadModels;
 using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
+using Bearcat.Domain.UseCases.PostToForums;
+using Bearcat.Domain.UseCases.PostToForums.Models;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
+using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.ManagePostedLocations;
 
-public partial class PostedLocations(IScopedOperationRunner operationRunner)
-    : ComponentBase,
-        IReloadableComponent
+public partial class PostedLocations(
+    IScopedOperationRunner operationRunner,
+    DialogService dialogService,
+    ToastService toastService
+) : ComponentBase, IReloadableComponent
 {
     [Parameter]
     public int? ReleaseId { get; set; }
@@ -60,6 +66,55 @@ public partial class PostedLocations(IScopedOperationRunner operationRunner)
             });
 
             newUrl = string.Empty;
+            await ReloadAsync();
+        });
+    }
+
+    private async Task UpdateAsync(PostedLocationReadModel location)
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(UpdatePostedLocationDialog.PostedUrl)] = location.Url,
+            [nameof(UpdatePostedLocationDialog.ForumPostTemplateId)] = location.ForumPostTemplateId,
+            [nameof(UpdatePostedLocationDialog.TemplateType)] = ReleaseCollectionId is null
+                ? ForumPostTemplateType.Release
+                : ForumPostTemplateType.ReleaseCollection,
+        };
+
+        var dialog = await dialogService.OpenAsync<UpdatePostedLocationDialog>(
+            parameters,
+            new DialogOpenOptions
+            {
+                Title = L["UpdatePostedLocationTitle"],
+                Description = L["UpdatePostedLocationDescription"],
+                ShowClose = true,
+            }
+        );
+
+        if (dialog.Cancelled)
+        {
+            return;
+        }
+
+        var forumPostTemplateId = dialog.GetData<int>();
+
+        await RunBusyAsync(async () =>
+        {
+            var result = await operationRunner.RunAsync(
+                (AutoForumPostingService service) =>
+                    service.UpdatePostedLocationAsync(
+                        location.PostedLocationId,
+                        forumPostTemplateId
+                    )
+            );
+
+            if (result.Status != AutoPostUpdateStatus.Updated)
+            {
+                errorMessage = string.Join(" ", result.Errors);
+                return;
+            }
+
+            toastService.Success(L["UpdatePostedLocationSucceeded"]);
             await ReloadAsync();
         });
     }

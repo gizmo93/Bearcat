@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ForumPostingRules;
+using Bearcat.Domain.UseCases.PostToForums.Models;
 using Bearcat.Domain.UseCases.PostToForums.Repositories;
 using Bearcat.Domain.ValueObjects;
 
@@ -34,6 +35,11 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
             cancellationToken
         );
 
+        var latestUploadTimes = await repository.GetLatestUploadCompletionTimesAsync(
+            releaseIds,
+            cancellationToken
+        );
+
         return releaseIds
             .Select(releaseId =>
                 BuildPlan(
@@ -41,7 +47,13 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
                     registrations: registrations,
                     postedLocations: postedLocations
                         .Where(location => location.ReleaseId == releaseId)
-                        .ToList()
+                        .ToList(),
+                    latestUploadCompletedAt: latestUploadTimes.TryGetValue(
+                        releaseId,
+                        out var latestUploadCompletedAt
+                    )
+                        ? latestUploadCompletedAt
+                        : null
                 )
             )
             .ToList();
@@ -50,7 +62,8 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
     private static ReleaseAutoPostPlan BuildPlan(
         Release release,
         IReadOnlyList<AutoPostRegistration> registrations,
-        IReadOnlyList<AutoPostPostedLocation> postedLocations
+        IReadOnlyList<AutoPostPostedLocation> postedLocations,
+        DateTime? latestUploadCompletedAt
     )
     {
         var blockedReason = FindBlockedReason(release);
@@ -68,7 +81,9 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
         var context = ReleaseRoutingContext.FromRelease(release);
 
         var sites = registrations
-            .Select(registration => BuildSiteEntry(registration, context, postedLocations))
+            .Select(registration =>
+                BuildSiteEntry(registration, context, postedLocations, latestUploadCompletedAt)
+            )
             .ToList();
 
         return new ReleaseAutoPostPlan(
@@ -95,9 +110,24 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
     private static AutoPostSiteEntry BuildSiteEntry(
         AutoPostRegistration registration,
         ReleaseRoutingContext context,
-        IReadOnlyList<AutoPostPostedLocation> postedLocations
+        IReadOnlyList<AutoPostPostedLocation> postedLocations,
+        DateTime? latestUploadCompletedAt
     )
     {
+        var rule = ForumPostingRuleMatcher.FindFirstMatch(registration.EnabledRules, context);
+
+        var match = rule is null
+            ? null
+            : new AutoPostRuleMatch(
+                ForumPostingRuleId: rule.Id,
+                RuleName: rule.Name,
+                TargetNodeId: rule.TargetNodeId,
+                TargetPathSnapshot: rule.TargetPathSnapshot,
+                ThreadPrefixId: rule.ThreadPrefixId,
+                ForumPostTemplateId: rule.ForumPostTemplateId,
+                PostMode: rule.PostMode
+            );
+
         var postedLocation = postedLocations.FirstOrDefault(location =>
             location.DistributionSiteRegistrationId == registration.DistributionSiteRegistrationId
         );
@@ -111,22 +141,10 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
                 StripDotsForThreadSearch: registration.StripDotsForThreadSearch,
                 Status: AutoPostSiteStatus.AlreadyPosted,
                 PostedUrl: postedLocation.Url,
-                Match: null
-            );
-        }
-
-        var rule = ForumPostingRuleMatcher.FindFirstMatch(registration.EnabledRules, context);
-
-        if (rule is null)
-        {
-            return new AutoPostSiteEntry(
-                DistributionSiteRegistrationId: registration.DistributionSiteRegistrationId,
-                DistributionSiteRegistrationName: registration.Name,
-                AutomaticPostingEnabled: registration.EnableAutomaticPosting,
-                StripDotsForThreadSearch: registration.StripDotsForThreadSearch,
-                Status: AutoPostSiteStatus.NoMatch,
-                PostedUrl: null,
-                Match: null
+                Match: match,
+                PostedLocationId: postedLocation.PostedLocationId,
+                StoredForumPostTemplateId: postedLocation.ForumPostTemplateId,
+                NeedsContentUpdate: IsOutdated(postedLocation, latestUploadCompletedAt)
             );
         }
 
@@ -135,17 +153,21 @@ public class AutoForumPostingPlanService(IAutoForumPostingRepository repository)
             DistributionSiteRegistrationName: registration.Name,
             AutomaticPostingEnabled: registration.EnableAutomaticPosting,
             StripDotsForThreadSearch: registration.StripDotsForThreadSearch,
-            Status: AutoPostSiteStatus.Matched,
+            Status: match is null ? AutoPostSiteStatus.NoMatch : AutoPostSiteStatus.Matched,
             PostedUrl: null,
-            Match: new AutoPostRuleMatch(
-                ForumPostingRuleId: rule.Id,
-                RuleName: rule.Name,
-                TargetNodeId: rule.TargetNodeId,
-                TargetPathSnapshot: rule.TargetPathSnapshot,
-                ThreadPrefixId: rule.ThreadPrefixId,
-                ForumPostTemplateId: rule.ForumPostTemplateId,
-                PostMode: rule.PostMode
-            )
+            Match: match,
+            PostedLocationId: null,
+            StoredForumPostTemplateId: null,
+            NeedsContentUpdate: false
         );
+    }
+
+    private static bool IsOutdated(
+        AutoPostPostedLocation postedLocation,
+        DateTime? latestUploadCompletedAt
+    )
+    {
+        return latestUploadCompletedAt is { } uploadedAt
+            && (postedLocation.ContentUpdatedAt ?? postedLocation.CreatedAt) < uploadedAt;
     }
 }

@@ -1144,4 +1144,17 @@
   <data name="StripDotsForThreadSearchHelp" xml:space="preserve"><value>Ersetzt die Punkte im Releasenamen bei der Themensuche in diesem Forum durch Leerzeichen. Ein neues Thema verwendet denselben Namen ohne Punkte als Titel.</value></data>
   <data name="StripDotsForThreadSearchEnabled" xml:space="preserve"><value>Themensuche ohne Punkte für {0} aktiviert</value></data>
   <data name="StripDotsForThreadSearchDisabled" xml:space="preserve"><value>Themensuche ohne Punkte für {0} deaktiviert</value></data>
+  <data name="AutoPostUpdatePost" xml:space="preserve"><value>Post aktualisieren</value></data>
+  <data name="AutoPostContentOutdated" xml:space="preserve"><value>Postinhalt ist veraltet</value></data>
+  <data name="AutoPostUpdateSucceeded" xml:space="preserve"><value>Post in {0} aktualisiert</value></data>
+  <data name="AutoPostUpdateFailed" xml:space="preserve"><value>Aktualisieren des Posts in {0} fehlgeschlagen</value></data>
+  <data name="AutoPostUpdateNotPosted" xml:space="preserve"><value>Dieses Release wurde noch nicht in dieses Forum gepostet.</value></data>
+  <data name="UpdatePostedLocationTitle" xml:space="preserve"><value>Forumspost aktualisieren</value></data>
+  <data name="UpdatePostedLocationDescription" xml:space="preserve"><value>Rendert die Vorlage erneut und ersetzt den Inhalt des vorhandenen Posts.</value></data>
+  <data name="UpdatePostedLocationConfirmation" xml:space="preserve"><value>Der Inhalt dieses Posts wird vollständig ersetzt. Manuelle Änderungen im Forum gehen verloren.</value></data>
+  <data name="UpdatePostedLocationSucceeded" xml:space="preserve"><value>Forumspost aktualisiert</value></data>
+  <data name="NotificationKind.AutomaticForumPostUpdated" xml:space="preserve"><value>Forumspost aktualisiert</value></data>
+  <data name="NotificationKind.AutomaticForumPostUpdated.Description" xml:space="preserve"><value>Ein vorhandener Forumspost wurde mit frisch gerendertem Inhalt aktualisiert.</value></data>
+  <data name="NotificationKind.AutomaticForumPostUpdateFailed" xml:space="preserve"><value>Aktualisieren des Forumsposts fehlgeschlagen</value></data>
+  <data name="NotificationKind.AutomaticForumPostUpdateFailed.Description" xml:space="preserve"><value>Ein vorhandener Forumspost konnte nicht aktualisiert werden.</value></data>
 </root>

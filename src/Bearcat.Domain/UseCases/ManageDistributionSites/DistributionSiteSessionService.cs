@@ -153,6 +153,17 @@ public class DistributionSiteSessionService(
         return await forum.SubmitReplyAsync(session, threadUrl, body, cancellationToken);
     }
 
+    public async Task<SubmittedPost> EditPostAsync(
+        int registrationId,
+        string postedUrl,
+        string body,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var (forum, session) = await EnsureForumSessionAsync(registrationId, cancellationToken);
+        return await forum.EditPostAsync(session, postedUrl, body, cancellationToken);
+    }
+
     public async Task<string?> ResolvePostedUrlAsync(
         int registrationId,
         ForumTargetId target,

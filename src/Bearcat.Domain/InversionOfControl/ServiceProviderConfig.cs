@@ -85,7 +85,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ForumPostingRuleService>();
             services.AddScoped<ForumPostingRulePreviewService>();
             services.AddScoped<AutoForumPostingPlanService>();
-            services.AddScoped<AutoForumPostingExecutionService>();
+            services.AddScoped<AutoForumPostingService>();
             services.AddScoped<AutoForumPostingRunner>();
             services.AddScoped<IForumPostContentRenderer>(provider =>
                 provider.GetRequiredService<ForumPostRenderService>()

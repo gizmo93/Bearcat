@@ -12,8 +12,10 @@ public class PostedLocationConfiguration : IEntityTypeConfiguration<PostedLocati
         builder.Property(location => location.ReleaseId).IsRequired(false);
         builder.Property(location => location.ReleaseCollectionId).IsRequired(false);
         builder.Property(location => location.DistributionSiteRegistrationId).IsRequired(false);
+        builder.Property(location => location.ForumPostTemplateId).IsRequired(false);
         builder.Property(location => location.Url).HasMaxLength(2000).IsRequired();
         builder.Property(location => location.CreatedAt).HasPrecision(4).IsRequired();
+        builder.Property(location => location.ContentUpdatedAt).HasPrecision(4).IsRequired(false);
 
         builder
             .HasOne(location => location.Release)
@@ -31,6 +33,12 @@ public class PostedLocationConfiguration : IEntityTypeConfiguration<PostedLocati
             .HasOne(location => location.DistributionSiteRegistration)
             .WithMany()
             .HasForeignKey(location => location.DistributionSiteRegistrationId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder
+            .HasOne(location => location.ForumPostTemplate)
+            .WithMany()
+            .HasForeignKey(location => location.ForumPostTemplateId)
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.ToTable(table =>

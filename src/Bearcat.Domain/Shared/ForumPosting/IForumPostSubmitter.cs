@@ -26,4 +26,11 @@ public interface IForumPostSubmitter
         string body,
         CancellationToken cancellationToken = default
     );
+
+    Task<SubmittedPost> EditPostAsync(
+        int registrationId,
+        string postedUrl,
+        string body,
+        CancellationToken cancellationToken = default
+    );
 }
