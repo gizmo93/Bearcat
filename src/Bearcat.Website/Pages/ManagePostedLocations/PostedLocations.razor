@@ -43,13 +43,23 @@
                             </a>
                             @if (location.DistributionSiteRegistrationId is not null)
                             {
-                                <BbButton Variant="ButtonVariant.Ghost"
-                                          Size="ButtonSize.IconSmall"
-                                          AriaLabel="@L["AutoPostUpdatePost"]"
-                                          Disabled="isBusy"
-                                          OnClick="@(() => UpdateAsync(location))">
-                                    <LucideIcon Name="refresh-cw" class="h-4 w-4" />
-                                </BbButton>
+                                <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
+                                    <BbTooltipTrigger>
+                                        <span class="inline-flex">
+                                            <BbButton Variant="ButtonVariant.Ghost"
+                                                      Size="ButtonSize.IconSmall"
+                                                      AriaLabel="@L["UpdatePostedLocationTitle"]"
+                                                      Disabled="isBusy"
+                                                      OnClick="@(() => UpdateAsync(location))">
+                                                <LucideIcon Name="file-pen" class="h-4 w-4" />
+                                            </BbButton>
+                                        </span>
+                                    </BbTooltipTrigger>
+                                    <BbTooltipContent Class="max-w-xs text-xs">
+                                        <p class="font-medium">@L["UpdatePostedLocationTitle"]</p>
+                                        <p>@L["UpdatePostedLocationDescription"]</p>
+                                    </BbTooltipContent>
+                                </BbTooltip>
                             }
                             <BbButton Variant="ButtonVariant.Ghost"
                                       Size="ButtonSize.IconSmall"

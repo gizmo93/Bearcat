@@ -286,7 +286,7 @@
                                                                   Size="ButtonSize.Small"
                                                                   Disabled="IsReleaseBusy(item.ReleaseId)"
                                                                   OnClick="@(() => UpdatePostAsync(item.ReleaseId, site))">
-                                                            <LucideIcon Name="@(IsSiteBusy(item.ReleaseId, site.DistributionSiteRegistrationId) ? "loader-circle" : "refresh-cw")"
+                                                            <LucideIcon Name="@(IsSiteBusy(item.ReleaseId, site.DistributionSiteRegistrationId) ? "loader-circle" : "file-pen")"
                                                                         class="@($"h-4 w-4 {(IsSiteBusy(item.ReleaseId, site.DistributionSiteRegistrationId) ? "animate-spin" : string.Empty)}")" />
                                                             @L["AutoPostUpdatePost"]
                                                         </BbButton>
