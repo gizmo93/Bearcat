@@ -23,10 +23,11 @@ information and NFO files:
 - **xREL** has good coverage for German scene releases.
 - **SRRDB** also covers many English and international scene releases and can provide NFO files
   and IMDb IDs.
+- **PreDB** covers similar amounts of releases as SRRDB, but has stricter API limits. If an NFO needs to be resolved and both SRRDB and PreDB are activated, Bearcat will first try to get it from SRRDB before it tries PreDB.
 
 ![nfo-database-setup.png](images/nfo-database-setup.png)
 
-xREL and SRRDB do not require account credentials.
+xREL, SRRDB and PreDB do not require account credentials.
 
 Open **Metadata sources** to register providers for movie and TV metadata:
 
