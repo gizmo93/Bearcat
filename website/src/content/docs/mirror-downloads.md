@@ -44,6 +44,15 @@ that hoster: it keeps uploading exactly as before, it is just also allowed to se
 Mirror downloads currently work with **Rapidgator** and **1fichier** only, and both need a premium
 account.
 
+## Cancel a running download
+
+Running mirror downloads show up on the start page under "Running transfers", with progress, speed
+and a per file breakdown. Each row has a cancel button.
+
+Canceling discards the partial download and cancels the uploads that were waiting for that archive,
+so they do not start over on the next run. The archive goes back to the state it had before, and
+your files on the hoster are not touched. Create a manual reupload when you want to try again.
+
 ## Verification and failures
 
 Bearcat stores the MD5 hash of every file it uploads. After a mirror download it hashes the

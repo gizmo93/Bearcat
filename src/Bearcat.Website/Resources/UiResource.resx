@@ -68,6 +68,9 @@
   <data name="ReleaseConvertedToManaged" xml:space="preserve"><value>{0} was converted to managed.</value></data>
   <data name="CancelUpload" xml:space="preserve"><value>Cancel upload</value></data>
   <data name="CancelUploadConfirmation" xml:space="preserve"><value>Cancel upload #{0}? Running file transfers will be stopped as soon as the worker sees the request.</value></data>
+  <data name="CancelDownload" xml:space="preserve"><value>Cancel download</value></data>
+  <data name="CancelDownloadTitle" xml:space="preserve"><value>Cancel mirror download</value></data>
+  <data name="CancelDownloadConfirmation" xml:space="preserve"><value>Cancel the mirror download of archive #{0}? The partial download is discarded and the uploads waiting for this archive are canceled.</value></data>
   <data name="Close" xml:space="preserve"><value>Close</value></data>
   <data name="CopyAllLinks" xml:space="preserve"><value>Copy all links</value></data>
   <data name="CopyImageUrls" xml:space="preserve"><value>Copy image URLs</value></data>
@@ -554,6 +557,8 @@
   <data name="ManualReuploadCreated" xml:space="preserve"><value>Manual reupload created for upload #{0}.</value></data>
   <data name="UploadCancellationRequested" xml:space="preserve"><value>Cancellation requested for upload #{0}.</value></data>
   <data name="UploadCancellationNotAvailable" xml:space="preserve"><value>Upload #{0} can no longer be canceled.</value></data>
+  <data name="DownloadCancellationRequested" xml:space="preserve"><value>Cancellation requested for the mirror download of archive #{0}.</value></data>
+  <data name="DownloadAlreadyFinished" xml:space="preserve"><value>The mirror download of archive #{0} already finished.</value></data>
   <data name="UploadResumed" xml:space="preserve"><value>Upload #{0} resumed.</value></data>
   <data name="UploadResumeNotAvailable" xml:space="preserve"><value>Upload #{0} can not be resumed in its current state.</value></data>
   <data name="OnlineStateChecked" xml:space="preserve"><value>Online state checked for upload #{0}.</value></data>

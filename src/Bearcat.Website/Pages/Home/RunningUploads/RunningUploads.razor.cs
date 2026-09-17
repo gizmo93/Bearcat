@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Cancellation;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.ManageUploads.Progress;
@@ -13,7 +14,8 @@ namespace Bearcat.Website.Pages.Home.RunningUploads;
 public partial class RunningUploads(
     DialogService dialogService,
     ToastService toastService,
-    IScopedOperationRunner operationRunner
+    IScopedOperationRunner operationRunner,
+    IDownloadCancellationRegistry downloadCancellationRegistry
 ) : ComponentBase
 {
     [Parameter]
@@ -116,6 +118,33 @@ public partial class RunningUploads(
 
     private static bool CanCancelUpload(Upload upload) =>
         upload.UploadState is UploadState.Pending or UploadState.Uploading;
+
+    private async Task CancelDownloadAsync(Archive archive)
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["CancelDownloadTitle"],
+            L["CancelDownloadConfirmation", archive.Id],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["CancelDownload"],
+                CancelText = L["Close"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        if (downloadCancellationRegistry.RequestCancellation(archive.Id))
+        {
+            toastService.Success(L["DownloadCancellationRequested", archive.Id]);
+            return;
+        }
+
+        toastService.Error(L["DownloadAlreadyFinished", archive.Id]);
+    }
 
     private double GetUploadProgress(Upload upload)
     {

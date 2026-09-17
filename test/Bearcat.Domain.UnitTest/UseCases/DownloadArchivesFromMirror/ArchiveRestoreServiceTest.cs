@@ -7,6 +7,7 @@ using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
+using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Cancellation;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -23,6 +24,7 @@ public class ArchiveRestoreServiceTest
     private Mock<INotificationService> notificationServiceMock = null!;
     private Mock<IHosterFactory> hosterFactoryMock = null!;
     private RecordingDownloadProgressTracker downloadProgressTracker = null!;
+    private DownloadCancellationRegistry cancellationRegistry = null!;
     private string restoreFolderPath = null!;
 
     [SetUp]
@@ -31,6 +33,7 @@ public class ArchiveRestoreServiceTest
         repository = new FakeArchiveRestoreRepository();
         downloadHoster = new FakeDownloadHoster();
         downloadProgressTracker = new RecordingDownloadProgressTracker();
+        cancellationRegistry = new DownloadCancellationRegistry();
         restoreFolderPath = Path.Join(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(restoreFolderPath);
 
@@ -181,6 +184,84 @@ public class ArchiveRestoreServiceTest
     }
 
     [Test]
+    public async Task ProcessAsync_UserCancelsRunningDownload_DiscardsRestoreAndCancelsWaitingUploads()
+    {
+        // Arrange
+        var scenario = CreateScenario();
+        downloadHoster.BlockUntilCanceled = true;
+        var service = CreateService();
+
+        // Act
+        var processTask = service.ProcessAsync(CancellationToken.None);
+        await downloadHoster.DownloadStarted.Task;
+        var cancellationRequested = cancellationRegistry.RequestCancellation(scenario.Archive.Id);
+        await processTask;
+
+        // Assert
+        cancellationRequested.ShouldBeTrue();
+        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Deleted);
+        fileSystemServiceMock.Verify(x => x.DeleteDirectoryIfExists(restoreFolderPath), Times.Once);
+        scenario.WaitingUpload.UploadState.ShouldBe(UploadState.Canceled);
+        scenario.WaitingUpload.ErrorMessages.ShouldBeEmpty();
+        VerifyUploadCanceledNotification(Times.Once());
+        VerifyRestoreFailedNotification(Times.Never());
+        cancellationRegistry.RequestCancellation(scenario.Archive.Id).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_HosterReportsCancellationAsFailure_StillTakesTheCancelPath()
+    {
+        // Arrange
+        var scenario = CreateScenario();
+        downloadHoster.BlockUntilCanceled = true;
+        downloadHoster.ReportCancellationAsFailure = true;
+        var service = CreateService();
+
+        // Act
+        var processTask = service.ProcessAsync(CancellationToken.None);
+        await downloadHoster.DownloadStarted.Task;
+        cancellationRegistry.RequestCancellation(scenario.Archive.Id);
+        await processTask;
+
+        // Assert
+        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Deleted);
+        scenario.WaitingUpload.UploadState.ShouldBe(UploadState.Canceled);
+        VerifyUploadCanceledNotification(Times.Once());
+        VerifyRestoreFailedNotification(Times.Never());
+    }
+
+    [Test]
+    public void RequestCancellation_NoRestoreIsRunning_ReturnsFalse()
+    {
+        // Arrange
+        var registry = new DownloadCancellationRegistry();
+
+        // Act
+        var result = registry.RequestCancellation(4711);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Test]
+    public void RequestCancellation_ArchiveIsRegistered_CancelsTheTokenOnce()
+    {
+        // Arrange
+        var registry = new DownloadCancellationRegistry();
+        var token = registry.Register(3);
+
+        // Act
+        var firstResult = registry.RequestCancellation(3);
+        registry.Unregister(3);
+        var secondResult = registry.RequestCancellation(3);
+
+        // Assert
+        firstResult.ShouldBeTrue();
+        token.IsCancellationRequested.ShouldBeTrue();
+        secondResult.ShouldBeFalse();
+    }
+
+    [Test]
     public async Task ProcessAsync_ArchiveStuckInRestoring_DiscardsFolderAndMarksArchiveDeleted()
     {
         // Arrange
@@ -229,7 +310,22 @@ public class ArchiveRestoreServiceTest
             notificationServiceMock.Object,
             configurationProviderMock.Object,
             downloadProgressTracker,
+            cancellationRegistry,
             NullLogger<ArchiveRestoreService>.Instance
+        );
+    }
+
+    private void VerifyUploadCanceledNotification(Times times)
+    {
+        notificationServiceMock.Verify(
+            x =>
+                x.Create(
+                    NotificationKind.UploadCanceled,
+                    It.IsAny<string>(),
+                    It.IsAny<Upload>(),
+                    It.IsAny<Expression<Func<Notification, Upload?>>>()
+                ),
+            times
         );
     }
 

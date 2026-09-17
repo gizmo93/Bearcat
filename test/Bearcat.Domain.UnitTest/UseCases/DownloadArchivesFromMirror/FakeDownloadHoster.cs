@@ -16,6 +16,13 @@ public sealed class FakeDownloadHoster : IHosterWithDownload
 
     public Exception? FileSizeLookupException { get; set; }
 
+    public bool BlockUntilCanceled { get; set; }
+
+    public bool ReportCancellationAsFailure { get; set; }
+
+    public TaskCompletionSource DownloadStarted { get; } =
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
+
     public Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
         IReadOnlyList<string> fileUrls,
         IHosterConfig hosterConfig,
@@ -58,6 +65,23 @@ public sealed class FakeDownloadHoster : IHosterWithDownload
             ExpectedSizeBytesPerLink[file.HosterFileLink] = file.ExpectedSizeBytes;
         }
 
+        DownloadStarted.TrySetResult();
+
+        if (BlockUntilCanceled)
+        {
+            await WaitForCancellationAsync(cancellationToken);
+
+            if (ReportCancellationAsFailure)
+            {
+                return new DownloadFileResult(
+                    IsSuccess: false,
+                    ErrorMessages: ["The connection was closed"]
+                );
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+
         var content = ContentPerLink.GetValueOrDefault(file.HosterFileLink, "payload");
 
         progress.BeginFile(content.Length);
@@ -66,6 +90,17 @@ public sealed class FakeDownloadHoster : IHosterWithDownload
         progress.ReportBytesTransferred(content.Length);
 
         return new DownloadFileResult(IsSuccess: true, ErrorMessages: []);
+    }
+
+    private static async Task WaitForCancellationAsync(CancellationToken cancellationToken)
+    {
+        var completion = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
+
+        await using var registration = cancellationToken.Register(() => completion.TrySetResult());
+
+        await completion.Task;
     }
 
     public IHosterConfig DeserializeHosterConfig(string serializedConfig) =>

@@ -68,6 +68,9 @@
   <data name="ReleaseConvertedToManaged" xml:space="preserve"><value>{0} wurde in Managed umgewandelt.</value></data>
   <data name="CancelUpload" xml:space="preserve"><value>Upload abbrechen</value></data>
   <data name="CancelUploadConfirmation" xml:space="preserve"><value>Upload #{0} abbrechen? Laufende Dateiübertragungen werden gestoppt, sobald der Worker die Anfrage sieht.</value></data>
+  <data name="CancelDownload" xml:space="preserve"><value>Download abbrechen</value></data>
+  <data name="CancelDownloadTitle" xml:space="preserve"><value>Mirrordownload abbrechen</value></data>
+  <data name="CancelDownloadConfirmation" xml:space="preserve"><value>Mirrordownload von Archiv #{0} abbrechen? Der teilweise geladene Stand wird verworfen und die auf dieses Archiv wartenden Uploads werden abgebrochen.</value></data>
     <data name="Close" xml:space="preserve"><value>Schliessen</value></data>
   <data name="CopyAllLinks" xml:space="preserve"><value>Alle Links kopieren</value></data>
   <data name="CopyImageUrls" xml:space="preserve"><value>Bild-URLs kopieren</value></data>
@@ -558,6 +561,8 @@
   <data name="ManualReuploadCreated" xml:space="preserve"><value>Manueller Reupload für Upload #{0} erstellt.</value></data>
   <data name="UploadCancellationRequested" xml:space="preserve"><value>Abbruch für Upload #{0} angefragt.</value></data>
   <data name="UploadCancellationNotAvailable" xml:space="preserve"><value>Upload #{0} kann nicht mehr abgebrochen werden.</value></data>
+  <data name="DownloadCancellationRequested" xml:space="preserve"><value>Abbruch für den Mirrordownload von Archiv #{0} angefragt.</value></data>
+  <data name="DownloadAlreadyFinished" xml:space="preserve"><value>Der Mirrordownload von Archiv #{0} ist bereits abgeschlossen.</value></data>
   <data name="UploadResumed" xml:space="preserve"><value>Upload #{0} wiederaufgenommen.</value></data>
   <data name="UploadResumeNotAvailable" xml:space="preserve"><value>Upload #{0} kann in seinem aktuellen Status nicht wiederaufgenommen werden.</value></data>
   <data name="OnlineStateChecked" xml:space="preserve"><value>Onlinestatus für Upload #{0} geprüft.</value></data>

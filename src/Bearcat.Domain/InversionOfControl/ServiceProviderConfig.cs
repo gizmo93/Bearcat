@@ -10,6 +10,7 @@ using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.Shared.QualityGate.Checks;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
+using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Cancellation;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
@@ -103,6 +104,7 @@ public static class ServiceProviderConfig
             services.AddScoped<LocalArchiveDeleter>();
             services.AddScoped<ArchiveRestoreService>();
             services.AddSingleton<IDownloadProgressTracker, DownloadProgressTracker>();
+            services.AddSingleton<IDownloadCancellationRegistry, DownloadCancellationRegistry>();
             services.AddScoped<UploadFilesService>();
             services.AddScoped<UploadFinalizationService>();
             services.AddScoped<FileUploadExecutionService>();

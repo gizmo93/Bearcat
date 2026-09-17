@@ -261,6 +261,21 @@
                         </div>
                     </CellTemplate>
                 </BbDataTableColumn>
+                <BbDataTableColumn TData="Archive" TValue="int"
+                                   Header=""
+                                   Property="@(archive => archive.Id)"
+                                   Width="56px">
+                    <CellTemplate Context="archive">
+                        <div class="flex justify-end">
+                            <BbButton Variant="ButtonVariant.Ghost"
+                                      Size="ButtonSize.IconSmall"
+                                      AriaLabel="@L["CancelDownload"]"
+                                      OnClick="@(() => CancelDownloadAsync(archive))">
+                                <LucideIcon Name="ban" class="h-4 w-4" />
+                            </BbButton>
+                        </div>
+                    </CellTemplate>
+                </BbDataTableColumn>
             </Columns>
         </BbDataTable>
 

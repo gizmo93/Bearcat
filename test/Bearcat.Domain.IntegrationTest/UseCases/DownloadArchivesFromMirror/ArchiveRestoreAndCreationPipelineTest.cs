@@ -6,6 +6,7 @@ using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
+using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Cancellation;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageNotifications;
@@ -83,6 +84,7 @@ public class ArchiveRestoreAndCreationPipelineTest : BearcatIntegrationTest
             notificationService,
             new DefaultConfigurationProvider(),
             new DownloadProgressTracker(),
+            new DownloadCancellationRegistry(),
             NullLogger<ArchiveRestoreService>.Instance
         );
 
