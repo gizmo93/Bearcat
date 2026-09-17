@@ -149,7 +149,7 @@ For **RAR**, the nonce plus the 0-byte append (see above) already guarantee a ne
 
 The compression and solid-mode parts of these strategies still apply to RAR too; only the 1 MB size bump is skipped, because RAR doesn't need it. Bearcat also falls back to this repackaging strategy for RAR archives that were created before it started tracking hashes (their stored hash is still empty): the first reupload repacks such an archive with the strategy above, and from then on it uses the cheaper append approach.
 
-One thing to keep in mind: if "Archive cleanup" later deletes an archive locally, Bearcat can no longer reuse it. A future reupload will simply pack a fresh archive when needed.
+One thing to keep in mind: if the archive is later deleted locally, Bearcat can no longer reuse the files on disk. A future reupload then downloads them back from a mirror hoster when one is configured, and only packs a fresh archive if no mirror is available. See [Mirror Downloads](/Bearcat/mirror-downloads/).
 
 ## 4. Uploading to the hoster
 
@@ -254,6 +254,13 @@ Whether updating is possible depends on the link crypter provider and its API. S
 
 ## 10. Cleanup after a successful upload
 
-Cleanup is optional. If automatic archive cleanup is **disabled**, Bearcat keeps the local archive folders around after upload.
+Cleanup is optional and both of its rules are disabled by default. With auto cleanup off, Bearcat keeps your release folder and your local archive files.
 
-If it's **enabled**, the **"Archive cleanup"** background task deletes the local archive folder once all linked uploads have completed. To be clear about what this touches: it only removes Bearcat's own generated archive folder. It never deletes your release source folder, and it never deletes anything from the hoster.
+With it on, the **"Auto cleanup"** background task works on retention periods:
+
+- After the release folder period, a managed release is converted to unmanaged and you get a notification with the release folder path. Bearcat never deletes that folder itself.
+- After the archive period, the local archive files are deleted, but only when the archives can be restored from a mirror hoster or repacked from a release folder.
+
+The archive period counts from the last upload of the archive configuration, so every reupload restarts it. Nothing is ever deleted from the hoster.
+
+Once the local archive is gone, a later reupload gets its files back from a [mirror hoster](/Bearcat/mirror-downloads/), and falls back to repacking for managed releases. See [Auto cleanup](/Bearcat/advanced-configuration/#auto-cleanup) for the settings and the exact preconditions.

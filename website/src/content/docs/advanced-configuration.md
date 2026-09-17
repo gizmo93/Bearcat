@@ -40,8 +40,8 @@ Only disable a task if you intentionally want to pause that part of the system, 
 | Configuration cache refresh | Every 5 minutes | Reloads configuration overrides from the database into the in-memory configuration cache. Saving a value in the UI also updates the cache immediately, but this task keeps the cache in sync. |
 | Release folder automation | Every 2 minutes | Scans enabled release folder automations and creates releases from matching direct subfolders using the selected release template. A matching folder is only turned into a release once it looks finished (see ["Folder automation"](#folder-automation) below). |
 | Release info resolution | Every 10 minutes | Resolves missing scene release information, NFO files, external IDs, and movie or TV metadata through the active NFO databases and metadata sources. |
-| Archive creation | Every 20 seconds | Creates missing archives for uploads that are waiting for an archive. If a matching archive already exists, it can reuse it instead of creating a new one. |
-| Archive cleanup | Every 30 minutes | Deletes local archive folders after their linked uploads have completed, if automatic archive cleanup is enabled in "Configurations". |
+| Archive creation & restore | Every 20 seconds | Restores archive files from a mirror hoster when they are no longer on disk, then creates missing archives for uploads that are waiting for an archive. If a matching archive already exists, it can reuse it instead of creating a new one. |
+| Auto cleanup | Every 30 minutes | Converts managed releases to unmanaged and deletes local archive files once their retention periods have passed, if the matching rule is enabled in "Configurations". |
 | Archive upload | Every 20 seconds | Uploads pending archive files to the configured hosters and updates upload progress and final upload state. |
 | Image upload | Every 30 seconds | Uploads release cover images to configured image hosters when a cover image URL is available. |
 | Upload state check | Every 20 seconds | Checks whether uploaded files are still online, creates initial upload records after the configured cooldown and schedules automatic reuploads when release group rules allow it. |
@@ -52,8 +52,6 @@ Only disable a task if you intentionally want to pause that part of the system, 
 Open "Configurations"   in the sidebar to change global application behavior.
 Each configuration property shows its current value and its default value.
 
-![configurations-page.png](images/configurations-page.png)
-
 When you change a value, Bearcat stores it as an override.
 Overridden values show an "Override" badge.
 Use the reset button next to a property to remove the override and return to the default.
@@ -61,26 +59,62 @@ Use the reset button next to a property to remove the override and return to the
 Configuration changes are stored in the database.
 They survive container restarts.
 
-### Archive cleanup
+### Auto cleanup
 
-"Archive cleanup" controls whether Bearcat removes local archive folders after uploads finish.
+"Auto cleanup" frees disk space once a release has been online for a while.
+It has two independent rules, and both are disabled by default:
 
-The available setting is:
+- "Convert releases to unmanaged automatically" with "Convert to unmanaged after (days)", default `14`.
+- "Delete local archives automatically" with "Delete local archives after (days)", default `30`.
 
-- "Automatic cleanup" defaults to disabled.
+You can enable either one on its own.
+The "Auto cleanup" background task runs the release folder rule first and the archive rule second, so a release gets converted to unmanaged before its archives are considered.
 
-When automatic cleanup is enabled, the "Archive cleanup" background task deletes archive folders that match all of these conditions:
+![auto-cleanup-config.png](images/auto-cleanup-config.png)
 
-- The archive is in the "Created" state.
-- The archive is linked to at least one upload.
-- All linked uploads have a completed upload timestamp.
+Bearcat never deletes your release folder.
+That decision stays with you, which is the same rule the manual "Convert to unmanaged" action follows.
 
-After deleting the archive folder from disk, Bearcat marks the archive as deleted in the database.
-This cleanup only affects the local archive folder that Bearcat created for upload preparation.
-It does not delete the release source folder and it does not delete files from the hoster.
+#### Convert releases to unmanaged automatically
 
-Leave automatic cleanup disabled if you want to inspect generated archive files manually or keep them as a local backup.
-Enable it if your archive folder is temporary storage and you want Bearcat to free disk space after successful uploads.
+This rule automatically converts a release from Managed (= all its raw files are available in case of repacks) to Unmanaged (= raw files are not considered anymore, only existing Archives get reuploaded).
+The clock starts at the date the uploads were posted, or at the first finished upload when the release was never marked as posted.
+A release with neither is never converted.
+
+When the period has passed, Bearcat checks that:
+
+- No upload of the release is running.
+- Every archive configuration has a local archive, or an online mirror on a hoster that is enabled for [mirror downloads](/Bearcat/mirror-downloads/).
+
+If that is the case, Bearcat switches the release to unmanaged, forgets the release folder path, and creates a notification.
+The notification contains the release folder path, because after the conversion Bearcat no longer stores it.
+Delete the folder yourself if you want.
+
+If any archive is stored inside the release folder, the notification says so and asks you to delete only the release data and keep the archive files.
+
+#### Delete local archives automatically
+
+This rule deletes the local archive files of an archive configuration.
+The clock starts at the last finished upload of that archive configuration, so every reupload restarts the period.
+
+Bearcat only deletes when the archives stay recoverable:
+
+- A fully online upload exists on a hoster that is enabled for [mirror downloads](/Bearcat/mirror-downloads/), or
+- the release is managed and still has a release folder to repack from.
+
+It deletes the archive files one by one and removes the archive folder only when it is empty afterwards.
+After that the archive is marked as deleted in the database.
+
+Uploads on the hoster are never touched.
+
+#### Exclude single releases
+
+Both rules skip releases with the "Exclude from auto cleanup" checkbox set.
+You find it in the release dialog, when creating a release and when editing one.
+
+![exclude-from-auto-cleanup.png](images/exclude-from-auto-cleanup.png)
+
+Use it for releases whose raw files or archives you want to keep on disk, no matter which retention periods are configured.
 
 ### Archive repackaging
 

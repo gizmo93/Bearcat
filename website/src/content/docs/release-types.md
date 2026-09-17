@@ -10,7 +10,7 @@ They differ in who creates the archive files.
 | Model | Archive files are created by | Best for | What Bearcat does |
 | --- | --- | --- | --- |
 | Managed | Bearcat | Releases where you have raw files and want Bearcat to pack them | Creates archives, uploads them, checks online state, and can create replacement archives for reuploads. |
-| Unmanaged | You or another tool | Releases where archive files already exist | Uses existing archive files, uploads them, checks online state, and waits for refreshed archives when files are missing or replaced. |
+| Unmanaged | You or another tool | Releases where archive files already exist | Uses existing archive files, uploads them, checks online state, and restores missing files from a mirror hoster or waits for refreshed archives. |
 
 ## Managed Releases
 
@@ -32,6 +32,9 @@ Bearcat creates an archive configuration and assumes the archiver based on the f
 
 If an unmanaged upload finds that local archive files are missing, Bearcat marks the archive as missing, unlinks it from the upload, and puts the upload back into `WaitingForArchive`.
 Bearcat does not repack unmanaged releases because it does not have the raw files.
+
+If one of your hosters is enabled for [mirror downloads](/Bearcat/mirror-downloads/) and still has the files online, Bearcat downloads them back from there and the reupload continues on its own.
+Only without such a mirror does it wait for you.
 
 After you restore or replace the archive files, either change the archive folder to the place where the new archives are located or use the unmanaged archive refresh action so Bearcat can use them for pending reuploads.
 ![unmanaged-releases-refresh-folder.png](images/unmanaged-releases-refresh-folder.png)
