@@ -1,3 +1,4 @@
+using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.MediaMetadataDatabase;
@@ -41,7 +42,8 @@ public class ReleaseServiceTest : BearcatIntegrationTest
                     Mock.Of<IMediaMetadataDatabaseFactory>()
                 ),
                 CreateTimeProvider()
-            )
+            ),
+            Mock.Of<IFileSystemService>()
         );
     }
 

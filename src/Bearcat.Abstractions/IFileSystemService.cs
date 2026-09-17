@@ -8,7 +8,9 @@ public interface IFileSystemService
     string CreateTempDirectory(string basePath);
     bool FileExists(string filePath);
     bool DirectoryExists(string path);
+    void DeleteFileIfExists(string filePath);
     void DeleteDirectoryIfExists(string path);
+    void DeleteDirectoryIfEmpty(string path);
     IReadOnlyList<string> DeleteDirectoriesByNameRecursively(string rootPath, string directoryName);
 }
 

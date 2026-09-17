@@ -187,34 +187,35 @@ public partial class ReleaseDetail(
 
     private bool IsUnmanaged => release.ReleaseType is ReleaseType.Unmanaged;
 
-    private bool IsRemote => release.ReleaseType is ReleaseType.Remote;
-
-    private async Task ConvertToRemoteAsync()
+    private async Task DeleteLocalArchivesAsync()
     {
         var preview = await operationRunner.RunAsync(
-            (ReleaseService service) => service.GetRemoteConversionPreviewAsync(release.ReleaseId)
+            (ReleaseService service) => service.GetArchiveDeletionPreviewAsync(release.ReleaseId)
         );
 
-        if (!preview.CanConvert)
+        if (!preview.CanDelete)
         {
-            toastService.Error(L["ConvertToRemoteNotReady"]);
+            toastService.Error(L["DeleteLocalArchivesNotReady"]);
             return;
         }
 
-        var confirmation = L[
-            "ConvertToRemoteConfirmation",
-            string.Join(", ", preview.MirrorHosterNames),
-            preview.DeletableArchiveFolderPaths.Count == 0
-                ? L["ConvertToRemoteNoArchiveFolders"].Value
-                : string.Join(Environment.NewLine, preview.DeletableArchiveFolderPaths)
-        ];
+        var confirmation = IsUnmanaged
+            ? L[
+                "DeleteLocalArchivesConfirmationMirror",
+                string.Join(", ", preview.MirrorHosterNames),
+                string.Join(Environment.NewLine, preview.DeletableArchiveFolderPaths)
+            ]
+            : L[
+                "DeleteLocalArchivesConfirmationManaged",
+                string.Join(Environment.NewLine, preview.DeletableArchiveFolderPaths)
+            ];
 
         var result = await dialogService.ConfirmAsync(
-            L["ConvertToRemoteTitle", release.Name],
+            L["DeleteLocalArchivesTitle", release.Name],
             confirmation,
             new ConfirmDialogOptions
             {
-                ConfirmText = L["ConvertToRemote"],
+                ConfirmText = L["DeleteLocalArchives"],
                 CancelText = L["Cancel"],
                 Destructive = true,
             }
@@ -228,40 +229,9 @@ public partial class ReleaseDetail(
         try
         {
             await operationRunner.RunAsync(
-                (ReleaseService service) => service.ConvertToRemoteAsync(release.ReleaseId)
+                (ReleaseService service) => service.DeleteLocalArchivesAsync(release.ReleaseId)
             );
-            toastService.Success(L["ReleaseConvertedToRemote", release.Name]);
-            await ReloadReleaseAsync();
-        }
-        catch (InvalidOperationException exception)
-        {
-            toastService.Error(exception.Message);
-        }
-    }
-
-    private async Task ConvertRemoteToUnmanagedAsync()
-    {
-        var result = await dialogService.ConfirmAsync(
-            L["ConvertRemoteToUnmanagedTitle", release.Name],
-            L["ConvertRemoteToUnmanagedConfirmation"],
-            new ConfirmDialogOptions
-            {
-                ConfirmText = L["ConvertRemoteToUnmanaged"],
-                CancelText = L["Cancel"],
-            }
-        );
-
-        if (!result.Confirmed)
-        {
-            return;
-        }
-
-        try
-        {
-            await operationRunner.RunAsync(
-                (ReleaseService service) => service.ConvertRemoteToUnmanagedAsync(release.ReleaseId)
-            );
-            toastService.Success(L["ReleaseConvertedToUnmanaged", release.Name]);
+            toastService.Success(L["LocalArchivesDeleted", release.Name]);
             await ReloadReleaseAsync();
         }
         catch (InvalidOperationException exception)

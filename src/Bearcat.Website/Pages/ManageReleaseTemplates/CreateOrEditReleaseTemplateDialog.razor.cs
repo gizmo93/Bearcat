@@ -31,7 +31,6 @@ public partial class CreateOrEditReleaseTemplateDialog(IScopedOperationRunner op
 
     private IReadOnlyList<SelectOption<ReleaseType>> ReleaseTypeOptions =>
         Enum.GetValues<ReleaseType>()
-            .Where(type => type is not ReleaseType.Remote)
             .Select(type => new SelectOption<ReleaseType>(type, L.Localize(type)))
             .ToList();
 

@@ -23,7 +23,11 @@ public sealed class FakeFileSystemService : IFileSystemService
 
     public bool FileExists(string filePath) => throw new NotSupportedException();
 
+    public void DeleteFileIfExists(string filePath) => throw new NotSupportedException();
+
     public void DeleteDirectoryIfExists(string path) => throw new NotSupportedException();
+
+    public void DeleteDirectoryIfEmpty(string path) => throw new NotSupportedException();
 
     public IReadOnlyList<string> DeleteDirectoriesByNameRecursively(
         string rootPath,

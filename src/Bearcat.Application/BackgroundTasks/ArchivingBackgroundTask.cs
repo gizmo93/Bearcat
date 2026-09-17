@@ -1,4 +1,5 @@
-﻿using Bearcat.Domain.UseCases.ManageArchives;
+﻿using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
+using Bearcat.Domain.UseCases.ManageArchives;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +10,7 @@ public class ArchivingBackgroundTask(
     ILogger<ArchivingBackgroundTask> logger
 ) : AbstractBackgroundTask(serviceScopeFactory, logger)
 {
-    protected override string DisplayName => "Archive creation";
+    protected override string DisplayName => "Archive creation & restore";
 
     protected override TimeSpan DefaultInterval => TimeSpan.FromSeconds(20);
 
@@ -18,6 +19,9 @@ public class ArchivingBackgroundTask(
         CancellationToken stoppingToken
     )
     {
+        var archiveRestoreService = serviceProvider.GetRequiredService<ArchiveRestoreService>();
+        await archiveRestoreService.ProcessAsync(stoppingToken);
+
         var archiveCreationService = serviceProvider.GetRequiredService<ArchiveCreationService>();
         await archiveCreationService.ProcessAsync(stoppingToken);
     }

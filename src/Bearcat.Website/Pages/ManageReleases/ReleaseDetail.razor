@@ -80,16 +80,10 @@
                             <BbDropdownMenuItem OnClick="ConvertToManagedAsync">
                                 @L["ConvertToManaged"]
                             </BbDropdownMenuItem>
-                            <BbDropdownMenuItem OnClick="ConvertToRemoteAsync">
-                                @L["ConvertToRemote"]
-                            </BbDropdownMenuItem>
                         }
-                        @if (IsRemote)
-                        {
-                            <BbDropdownMenuItem OnClick="ConvertRemoteToUnmanagedAsync">
-                                @L["ConvertRemoteToUnmanaged"]
-                            </BbDropdownMenuItem>
-                        }
+                        <BbDropdownMenuItem OnClick="DeleteLocalArchivesAsync">
+                            @L["DeleteLocalArchives"]
+                        </BbDropdownMenuItem>
                         <BbDropdownMenuItem OnClick="DeleteReleaseAsync">
                             @L["DeleteRelease"]
                         </BbDropdownMenuItem>

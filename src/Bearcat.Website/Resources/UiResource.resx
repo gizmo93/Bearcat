@@ -1154,27 +1154,22 @@
   <data name="NotificationKind.AutomaticForumPostUpdated.Description" xml:space="preserve"><value>An existing forum post was updated with freshly rendered content.</value></data>
   <data name="NotificationKind.AutomaticForumPostUpdateFailed" xml:space="preserve"><value>Forum post update failed</value></data>
   <data name="NotificationKind.AutomaticForumPostUpdateFailed.Description" xml:space="preserve"><value>An existing forum post could not be updated.</value></data>
-  <data name="ReleaseType.Remote" xml:space="preserve"><value>Remote</value></data>
-  <data name="ReleaseType.Remote.Description" xml:space="preserve"><value>Neither release data nor archives are stored locally. Bearcat downloads archives from an online mirror when a reupload is needed</value></data>
   <data name="ArchiveState.Restoring" xml:space="preserve"><value>Restoring</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed" xml:space="preserve"><value>Archive restore failed</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed.Description" xml:space="preserve"><value>An archive could not be restored from an online mirror.</value></data>
   <data name="MirrorDownloads" xml:space="preserve"><value>Mirror downloads</value></data>
-  <data name="MirrorDownloadsDescription" xml:space="preserve"><value>Controls how archives of remote releases are downloaded from online mirrors.</value></data>
+  <data name="MirrorDownloadsDescription" xml:space="preserve"><value>Controls how archives are downloaded from online mirrors when they are no longer stored locally.</value></data>
   <data name="MaxParallelDownloads" xml:space="preserve"><value>Maximum parallel downloads</value></data>
   <data name="MaxParallelDownloadsDescription" xml:space="preserve"><value>The upper limit of archive files downloaded at the same time while restoring an archive from a mirror.</value></data>
   <data name="UseForMirrorDownloads" xml:space="preserve"><value>Use for mirror downloads</value></data>
-  <data name="UseForMirrorDownloadsHelp" xml:space="preserve"><value>Allow Bearcat to download archive files from this hoster when a remote release needs to be restored for a reupload.</value></data>
+  <data name="UseForMirrorDownloadsHelp" xml:space="preserve"><value>Allow Bearcat to download archive files from this hoster when local archives need to be restored for a reupload.</value></data>
   <data name="UseForMirrorDownloadsShort" xml:space="preserve"><value>Mirror downloads</value></data>
-  <data name="ConvertToRemote" xml:space="preserve"><value>Convert to remote</value></data>
-  <data name="ConvertToRemoteTitle" xml:space="preserve"><value>Convert {0} to a remote release</value></data>
-  <data name="ConvertToRemoteConfirmation" xml:space="preserve"><value>The hosters are kept as the long-term storage of this release. Bearcat will download the archives from these mirrors when a reupload is needed: {0}. Bearcat never deletes your files, so you can now remove these archive folders yourself: {1}</value></data>
-  <data name="ConvertToRemoteNoArchiveFolders" xml:space="preserve"><value>no archive folders left on disk</value></data>
-  <data name="ConvertToRemoteNotReady" xml:space="preserve"><value>Every archive config needs a fully online upload on a hoster that is enabled for mirror downloads before the release can be converted to remote.</value></data>
-  <data name="ReleaseConvertedToRemote" xml:space="preserve"><value>Release {0} converted to remote</value></data>
-  <data name="ConvertRemoteToUnmanaged" xml:space="preserve"><value>Convert to unmanaged</value></data>
-  <data name="ConvertRemoteToUnmanagedTitle" xml:space="preserve"><value>Convert {0} to an unmanaged release</value></data>
-  <data name="ConvertRemoteToUnmanagedConfirmation" xml:space="preserve"><value>The archives are back on disk and Bearcat will stop restoring them from a mirror. Do you want to continue?</value></data>
+  <data name="DeleteLocalArchives" xml:space="preserve"><value>Delete local archives</value></data>
+  <data name="DeleteLocalArchivesTitle" xml:space="preserve"><value>Delete local archives of {0}</value></data>
+  <data name="DeleteLocalArchivesConfirmationMirror" xml:space="preserve"><value>The hosters serve as the long-term storage of this release. Bearcat will download the archives from these mirrors when a reupload is needed: {0}. These archive folders will be emptied and deleted now: {1}</value></data>
+  <data name="DeleteLocalArchivesConfirmationManaged" xml:space="preserve"><value>Bearcat will restore the archives from an online mirror when a reupload is needed, or repackage them from the release folder. These archive folders will be emptied and deleted now: {0}</value></data>
+  <data name="DeleteLocalArchivesNotReady" xml:space="preserve"><value>Local archives can only be deleted when no uploads are running and every archive config has a fully online upload on a hoster that is enabled for mirror downloads (or the release folder still exists for managed releases).</value></data>
+  <data name="LocalArchivesDeleted" xml:space="preserve"><value>Local archives of {0} deleted</value></data>
   <data name="RunningTransfers" xml:space="preserve"><value>Running transfers</value></data>
   <data name="RunningTransfersDescription" xml:space="preserve"><value>Uploads to hosters and mirror downloads that are currently running.</value></data>
   <data name="TotalDownloadSpeed" xml:space="preserve"><value>Download total</value></data>

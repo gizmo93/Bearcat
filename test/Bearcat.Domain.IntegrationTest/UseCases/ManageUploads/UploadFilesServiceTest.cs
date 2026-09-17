@@ -612,7 +612,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         result
             .Notifications.Single()
             .Message.ShouldBe(
-                "The archive assigned upload has missing files, triggering re-packaging"
+                "The archive assigned upload has missing files. Bearcat will restore them from an online mirror or repackage the release."
             );
         archive.ArchiveState.ShouldBe(ArchiveState.MissingFiles);
         hosterFactoryMock.Verify(f => f.GetHostersByName(), Times.Never);
@@ -649,7 +649,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         result
             .Notifications.Single()
             .Message.ShouldBe(
-                "The archive assigned upload has missing files. Refresh the unmanaged archive after providing the archive files."
+                "The archive assigned upload has missing files. Bearcat will restore them from an online mirror if available, otherwise refresh the unmanaged archive after providing the archive files."
             );
         archive.ArchiveState.ShouldBe(ArchiveState.MissingFiles);
         hosterFactoryMock.Verify(f => f.GetHostersByName(), Times.Never);

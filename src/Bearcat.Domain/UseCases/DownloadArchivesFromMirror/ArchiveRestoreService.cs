@@ -128,6 +128,30 @@ public class ArchiveRestoreService(
 
         if (selectedSourceUpload is null)
         {
+            var release = waitingUploads[0].UploadConfig.Release;
+
+            if (release.ReleaseType is ReleaseType.Managed)
+            {
+                logger.LogInformation(
+                    "No online mirror is available to restore {FileCount} archive files of archive {ArchiveId}, the release will be repackaged from the release folder instead",
+                    neededArchiveFiles.Count,
+                    archive.Id
+                );
+
+                return;
+            }
+
+            if (archive.ArchiveState is ArchiveState.MissingFiles)
+            {
+                logger.LogInformation(
+                    "No online mirror is available to restore {FileCount} archive files of archive {ArchiveId}, waiting for the user to provide the archive files",
+                    neededArchiveFiles.Count,
+                    archive.Id
+                );
+
+                return;
+            }
+
             logger.LogWarning(
                 "Could not find an online mirror to restore {FileCount} archive files of archive {ArchiveId}",
                 neededArchiveFiles.Count,

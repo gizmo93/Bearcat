@@ -80,6 +80,16 @@ public class FileSystemService : IFileSystemService
         return Directory.Exists(path);
     }
 
+    public void DeleteFileIfExists(string filePath)
+    {
+        if (!File.Exists(filePath))
+        {
+            return;
+        }
+
+        File.Delete(filePath);
+    }
+
     public void DeleteDirectoryIfExists(string path)
     {
         if (!Directory.Exists(path))
@@ -88,6 +98,21 @@ public class FileSystemService : IFileSystemService
         }
 
         Directory.Delete(path, recursive: true);
+    }
+
+    public void DeleteDirectoryIfEmpty(string path)
+    {
+        if (!Directory.Exists(path))
+        {
+            return;
+        }
+
+        if (Directory.EnumerateFileSystemEntries(path).Any())
+        {
+            return;
+        }
+
+        Directory.Delete(path, recursive: false);
     }
 
     public IReadOnlyList<string> DeleteDirectoriesByNameRecursively(

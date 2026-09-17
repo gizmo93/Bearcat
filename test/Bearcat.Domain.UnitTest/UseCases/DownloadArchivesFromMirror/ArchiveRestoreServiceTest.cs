@@ -249,7 +249,7 @@ public class ArchiveRestoreServiceTest
 
     private Scenario CreateScenario()
     {
-        var release = new Release { Id = 1, ReleaseType = ReleaseType.Remote };
+        var release = new Release { Id = 1, ReleaseType = ReleaseType.Unmanaged };
         var archiveConfig = new ArchiveConfig
         {
             Id = 7,

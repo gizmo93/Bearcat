@@ -30,7 +30,14 @@ public class ArchiveRestoreRepository(IBearcatWriteDbContext dbWrite) : IArchive
             .Where(u =>
                 u.ArchiveId == null
                 && u.UploadState == UploadState.WaitingForArchive
-                && u.UploadConfig.Release.ReleaseType == ReleaseType.Remote
+                && dbWrite
+                    .Archives.Where(a => a.ArchiveConfigId == u.UploadConfig.ArchiveConfigId)
+                    .OrderByDescending(a => a.Id)
+                    .Take(1)
+                    .Any(a =>
+                        a.ArchiveState == ArchiveState.Deleted
+                        || a.ArchiveState == ArchiveState.MissingFiles
+                    )
             )
             .OrderBy(u => u.Id)
             .ToListAsync(cancellationToken);

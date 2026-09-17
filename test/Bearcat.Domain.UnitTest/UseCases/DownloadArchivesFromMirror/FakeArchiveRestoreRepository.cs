@@ -32,7 +32,12 @@ public class FakeArchiveRestoreRepository : IArchiveRestoreRepository
                 .Where(u =>
                     u.ArchiveId is null
                     && u.UploadState == UploadState.WaitingForArchive
-                    && u.UploadConfig.Release.ReleaseType == ReleaseType.Remote
+                    && Archives
+                        .Where(a => a.ArchiveConfigId == u.UploadConfig.ArchiveConfigId)
+                        .MaxBy(a => a.Id)
+                        ?.ArchiveState
+                        is ArchiveState.Deleted
+                            or ArchiveState.MissingFiles
                 )
                 .ToList()
         );

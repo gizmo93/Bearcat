@@ -19,20 +19,7 @@ public class ArchiveCleanupRepository(IBearcatWriteDbContext dbWrite) : IArchive
                 a.ArchiveState == ArchiveState.Created
                 && a.Uploads.Any()
                 && a.Uploads.All(u => u.UploadedAt != null)
-                && (
-                    a.ArchiveConfig.Release.ReleaseType == ReleaseType.Managed
-                    || (
-                        a.ArchiveConfig.Release.ReleaseType == ReleaseType.Remote
-                        && !dbWrite.Uploads.Any(u =>
-                            u.UploadConfig.ArchiveConfigId == a.ArchiveConfigId
-                            && (
-                                u.UploadState == UploadState.WaitingForArchive
-                                || u.UploadState == UploadState.Pending
-                                || u.UploadState == UploadState.Uploading
-                            )
-                        )
-                    )
-                )
+                && a.ArchiveConfig.Release.ReleaseType == ReleaseType.Managed
             )
             .OrderBy(a => a.Id)
             .ToListAsync(cancellationToken);

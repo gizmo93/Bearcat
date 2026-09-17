@@ -109,11 +109,9 @@ public class MissingFileValidationService(
         return releaseType switch
         {
             ReleaseType.Managed =>
-                "The archive assigned upload has missing files, triggering re-packaging",
+                "The archive assigned upload has missing files. Bearcat will restore them from an online mirror or repackage the release.",
             ReleaseType.Unmanaged =>
-                "The archive assigned upload has missing files. Refresh the unmanaged archive after providing the archive files.",
-            ReleaseType.Remote =>
-                "The archive assigned upload has missing files. Bearcat will restore them from an online mirror.",
+                "The archive assigned upload has missing files. Bearcat will restore them from an online mirror if available, otherwise refresh the unmanaged archive after providing the archive files.",
             _ => throw new ArgumentOutOfRangeException(
                 nameof(releaseType),
                 $"Unknown release type, {releaseType}"

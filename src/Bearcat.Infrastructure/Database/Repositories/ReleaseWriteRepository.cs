@@ -18,7 +18,7 @@ public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite) : IReleaseWr
             .FirstAsync(r => r.Id == id, cancellationToken);
     }
 
-    public async Task<Release> GetForRemoteConversionAsync(
+    public async Task<Release> GetForArchiveDeletionAsync(
         int id,
         CancellationToken cancellationToken
     )
@@ -27,6 +27,7 @@ public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite) : IReleaseWr
             .Releases.AsSplitQuery()
             .Include(r => r.ArchiveConfigs)
                 .ThenInclude(c => c.Archives)
+                    .ThenInclude(a => a.ArchiveFiles)
             .Include(r => r.ArchiveConfigs)
                 .ThenInclude(c => c.UploadConfigs)
                     .ThenInclude(uc => uc.HosterRegistration)

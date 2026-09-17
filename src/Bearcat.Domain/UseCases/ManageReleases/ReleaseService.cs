@@ -1,4 +1,5 @@
-﻿using Bearcat.Abstractions.Archiver;
+﻿using Bearcat.Abstractions;
+using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.CollectionAssignment;
@@ -15,7 +16,8 @@ public class ReleaseService(
     TimeProvider timeProvider,
     IArchiverFactory archiverFactory,
     IHosterFactory hosterFactory,
-    IReleaseCollectionAssigner releaseCollectionAssigner
+    IReleaseCollectionAssigner releaseCollectionAssigner,
+    IFileSystemService fileSystemService
 )
 {
     public async Task<int> CreateAsync(
@@ -234,26 +236,25 @@ public class ReleaseService(
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<RemoteConversionPreview> GetRemoteConversionPreviewAsync(
+    public async Task<ArchiveDeletionPreview> GetArchiveDeletionPreviewAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     )
     {
-        var release = await writeRepository.GetForRemoteConversionAsync(
+        var release = await writeRepository.GetForArchiveDeletionAsync(
             releaseId,
             cancellationToken
         );
 
         var mirrorUploads = GetMirrorUploadsPerArchiveConfig(release);
+        var deletableArchives = GetDeletableArchives(release);
 
-        var canConvert =
-            release.ReleaseType is ReleaseType.Unmanaged
-            && release.ArchiveConfigs.Count > 0
-            && mirrorUploads.Count == release.ArchiveConfigs.Count;
+        var canDelete =
+            deletableArchives.Count > 0
+            && !HasActiveUploads(release)
+            && IsRecoverable(release, mirrorUploads);
 
-        var deletableArchiveFolderPaths = release
-            .ArchiveConfigs.SelectMany(config => config.Archives)
-            .Where(archive => archive.ArchiveState is ArchiveState.Created)
+        var deletableArchiveFolderPaths = deletableArchives
             .Select(archive => archive.ArchiveFolderPath)
             .Distinct(StringComparer.Ordinal)
             .OrderBy(path => path, StringComparer.Ordinal)
@@ -265,71 +266,90 @@ public class ReleaseService(
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToList();
 
-        return new RemoteConversionPreview(
-            CanConvert: canConvert,
+        return new ArchiveDeletionPreview(
+            CanDelete: canDelete,
             DeletableArchiveFolderPaths: deletableArchiveFolderPaths,
             MirrorHosterNames: mirrorHosterNames
         );
     }
 
-    public async Task ConvertToRemoteAsync(
+    public async Task DeleteLocalArchivesAsync(
         int releaseId,
         CancellationToken cancellationToken = default
     )
     {
-        var release = await writeRepository.GetForRemoteConversionAsync(
+        var release = await writeRepository.GetForArchiveDeletionAsync(
             releaseId,
             cancellationToken
         );
 
-        if (release.ReleaseType is not ReleaseType.Unmanaged)
+        var deletableArchives = GetDeletableArchives(release);
+
+        if (deletableArchives.Count == 0)
         {
             throw new InvalidOperationException(
-                "Only unmanaged releases can be converted to remote."
+                "This release has no local archives that could be deleted."
             );
         }
 
-        var mirrorUploads = GetMirrorUploadsPerArchiveConfig(release);
-
-        if (
-            release.ArchiveConfigs.Count == 0
-            || mirrorUploads.Count != release.ArchiveConfigs.Count
-        )
+        if (HasActiveUploads(release))
         {
             throw new InvalidOperationException(
-                "Every archive config must have a fully online upload on a hoster that is enabled for mirror downloads before the release can be converted to remote."
+                "Local archives cannot be deleted while uploads of this release are still running."
             );
         }
 
-        release.ReleaseType = ReleaseType.Remote;
+        if (!IsRecoverable(release, GetMirrorUploadsPerArchiveConfig(release)))
+        {
+            throw new InvalidOperationException(
+                "Every archive config must have a fully online upload on a hoster that is enabled for mirror downloads, or the release must be a managed release with a release folder, before the local archives can be deleted."
+            );
+        }
+
+        foreach (var archive in deletableArchives)
+        {
+            foreach (var archiveFile in archive.ArchiveFiles)
+            {
+                fileSystemService.DeleteFileIfExists(archiveFile.FullFileName);
+            }
+
+            fileSystemService.DeleteDirectoryIfEmpty(archive.ArchiveFolderPath);
+            archive.ArchiveState = ArchiveState.Deleted;
+        }
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task ConvertRemoteToUnmanagedAsync(
-        int releaseId,
-        CancellationToken cancellationToken = default
-    )
+    private static List<Archive> GetDeletableArchives(Release release)
     {
-        var release = await writeRepository.GetByIdAsync(releaseId, cancellationToken);
+        return release
+            .ArchiveConfigs.SelectMany(config => config.Archives)
+            .Where(archive => archive.ArchiveState is ArchiveState.Created)
+            .ToList();
+    }
 
-        if (release.ReleaseType is not ReleaseType.Remote)
-        {
-            throw new InvalidOperationException(
-                "Only remote releases can be converted to unmanaged."
+    private static bool HasActiveUploads(Release release)
+    {
+        return release
+            .ArchiveConfigs.SelectMany(config => config.UploadConfigs)
+            .SelectMany(uploadConfig => uploadConfig.Uploads)
+            .Any(upload =>
+                upload.UploadState
+                    is UploadState.WaitingForArchive
+                        or UploadState.Pending
+                        or UploadState.Uploading
             );
+    }
+
+    private static bool IsRecoverable(Release release, Dictionary<int, Upload> mirrorUploads)
+    {
+        if (mirrorUploads.Count == release.ArchiveConfigs.Count)
+        {
+            return true;
         }
 
-        if (release.ArchiveConfigs.Count == 0 || !AllLatestArchivesAreCreated(release))
-        {
-            throw new InvalidOperationException(
-                "All archives must be restored on disk before the release can be converted to unmanaged."
-            );
-        }
-
-        release.ReleaseType = ReleaseType.Unmanaged;
-
-        await writeRepository.SaveChangesAsync(cancellationToken);
+        return release.ReleaseType is ReleaseType.Managed
+            && !string.IsNullOrWhiteSpace(release.ReleaseFolderPath);
     }
 
     private Dictionary<int, Upload> GetMirrorUploadsPerArchiveConfig(Release release)
@@ -366,13 +386,6 @@ public class ReleaseService(
         return registration.IsActive
             && registration.UseForMirrorDownloads
             && hosterFactory.GetByName(registration.HosterClassName) is IHosterWithDownload;
-    }
-
-    private static bool AllLatestArchivesAreCreated(Release release)
-    {
-        return release.ArchiveConfigs.All(config =>
-            config.Archives.MaxBy(archive => archive.Id)?.ArchiveState is ArchiveState.Created
-        );
     }
 
     private static bool AllArchiveConfigsHaveCreatedArchive(Release release)
