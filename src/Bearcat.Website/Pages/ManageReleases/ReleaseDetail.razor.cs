@@ -137,6 +137,7 @@ public partial class ReleaseDetail(
                 ReleaseContentType = release.ReleaseContentType,
                 PrimaryLanguageCode = release.PrimaryLanguageCode ?? string.Empty,
                 ReleaseGroupId = release.ReleaseGroupId,
+                ExcludeFromAutoCleanup = release.ExcludeFromAutoCleanup,
                 IsEdit = true,
             },
         };

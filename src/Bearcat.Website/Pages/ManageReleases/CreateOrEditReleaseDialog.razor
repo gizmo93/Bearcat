@@ -64,6 +64,18 @@
                 </div>
             }
 
+            <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                    <BbCheckbox @bind-Checked="formModel.ExcludeFromAutoCleanup"
+                                Id="exclude-from-auto-cleanup"
+                                AriaLabel="@L["ExcludeFromAutoCleanup"]" />
+                    <BbLabel For="exclude-from-auto-cleanup">
+                        @L["ExcludeFromAutoCleanup"]
+                    </BbLabel>
+                </div>
+                <p class="text-sm text-muted-foreground">@L["ExcludeFromAutoCleanupHelp"]</p>
+            </div>
+
             <div class="rounded-lg border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
                 @L.LocalizeDescription(formModel.ReleaseType)
             </div>

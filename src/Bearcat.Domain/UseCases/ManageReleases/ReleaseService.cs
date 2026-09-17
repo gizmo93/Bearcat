@@ -1,7 +1,6 @@
-﻿using Bearcat.Abstractions;
-using Bearcat.Abstractions.Archiver;
-using Bearcat.Abstractions.Hoster;
+﻿using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
@@ -15,9 +14,9 @@ public class ReleaseService(
     IReleaseWriteRepository writeRepository,
     TimeProvider timeProvider,
     IArchiverFactory archiverFactory,
-    IHosterFactory hosterFactory,
     IReleaseCollectionAssigner releaseCollectionAssigner,
-    IFileSystemService fileSystemService
+    MirrorCoverageEvaluator mirrorCoverageEvaluator,
+    LocalArchiveDeleter localArchiveDeleter
 )
 {
     public async Task<int> CreateAsync(
@@ -27,6 +26,7 @@ public class ReleaseService(
         ReleaseContentType releaseContentType,
         int releaseGroupId,
         string? primaryLanguageCode,
+        bool excludeFromAutoCleanup = false,
         CancellationToken cancellationToken = default
     )
     {
@@ -42,6 +42,7 @@ public class ReleaseService(
             PrimaryLanguageCode = CleanOptional(primaryLanguageCode)?.ToLowerInvariant(),
             ReleaseGroupId = releaseGroupId,
             ReleaseFolderPath = isUnmanaged ? null : releaseFolderPath,
+            ExcludeFromAutoCleanup = excludeFromAutoCleanup,
             ArchiveConfigs = [],
             UploadConfigs = [],
             ImageUploadConfigs = [],
@@ -72,6 +73,7 @@ public class ReleaseService(
         ReleaseContentType releaseContentType,
         int releaseGroupId,
         string? primaryLanguageCode,
+        bool excludeFromAutoCleanup = false,
         CancellationToken cancellationToken = default
     )
     {
@@ -86,6 +88,7 @@ public class ReleaseService(
         release.ReleaseContentType = releaseContentType;
         release.ReleaseGroupId = releaseGroupId;
         release.PrimaryLanguageCode = CleanOptional(primaryLanguageCode)?.ToLowerInvariant();
+        release.ExcludeFromAutoCleanup = excludeFromAutoCleanup;
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }
@@ -246,13 +249,11 @@ public class ReleaseService(
             cancellationToken
         );
 
-        var mirrorUploads = GetMirrorUploadsPerArchiveConfig(release);
+        var mirrorUploads = mirrorCoverageEvaluator.GetMirrorUploadsPerArchiveConfig(release);
         var deletableArchives = GetDeletableArchives(release);
 
         var canDelete =
-            deletableArchives.Count > 0
-            && !HasActiveUploads(release)
-            && IsRecoverable(release, mirrorUploads);
+            deletableArchives.Count > 0 && !HasActiveUploads(release) && IsRecoverable(release);
 
         var deletableArchiveFolderPaths = deletableArchives
             .Select(archive => archive.ArchiveFolderPath)
@@ -299,7 +300,7 @@ public class ReleaseService(
             );
         }
 
-        if (!IsRecoverable(release, GetMirrorUploadsPerArchiveConfig(release)))
+        if (!IsRecoverable(release))
         {
             throw new InvalidOperationException(
                 "Every archive config must have a fully online upload on a hoster that is enabled for mirror downloads, or the release must be a managed release with a release folder, before the local archives can be deleted."
@@ -308,13 +309,7 @@ public class ReleaseService(
 
         foreach (var archive in deletableArchives)
         {
-            foreach (var archiveFile in archive.ArchiveFiles)
-            {
-                fileSystemService.DeleteFileIfExists(archiveFile.FullFileName);
-            }
-
-            fileSystemService.DeleteDirectoryIfEmpty(archive.ArchiveFolderPath);
-            archive.ArchiveState = ArchiveState.Deleted;
+            localArchiveDeleter.DeleteLocalArchive(archive);
         }
 
         await writeRepository.SaveChangesAsync(cancellationToken);
@@ -341,51 +336,13 @@ public class ReleaseService(
             );
     }
 
-    private static bool IsRecoverable(Release release, Dictionary<int, Upload> mirrorUploads)
+    private bool IsRecoverable(Release release)
     {
-        if (mirrorUploads.Count == release.ArchiveConfigs.Count)
-        {
-            return true;
-        }
-
-        return release.ReleaseType is ReleaseType.Managed
-            && !string.IsNullOrWhiteSpace(release.ReleaseFolderPath);
-    }
-
-    private Dictionary<int, Upload> GetMirrorUploadsPerArchiveConfig(Release release)
-    {
-        var mirrorUploads = new Dictionary<int, Upload>();
-
-        foreach (var archiveConfig in release.ArchiveConfigs)
-        {
-            var mirrorUpload = archiveConfig
-                .UploadConfigs.Where(IsMirrorCapable)
-                .SelectMany(uploadConfig => uploadConfig.Uploads)
-                .Where(upload =>
-                    upload.UploadedFiles.Count > 0
-                    && upload.UploadedFiles.All(file =>
-                        file.OnlineState == OnlineState.Online
-                        && !string.IsNullOrWhiteSpace(file.HosterFileLink)
-                    )
-                )
-                .MaxBy(upload => upload.Id);
-
-            if (mirrorUpload is not null)
-            {
-                mirrorUploads[archiveConfig.Id] = mirrorUpload;
-            }
-        }
-
-        return mirrorUploads;
-    }
-
-    private bool IsMirrorCapable(UploadConfig uploadConfig)
-    {
-        var registration = uploadConfig.HosterRegistration;
-
-        return registration.IsActive
-            && registration.UseForMirrorDownloads
-            && hosterFactory.GetByName(registration.HosterClassName) is IHosterWithDownload;
+        return mirrorCoverageEvaluator.HasFullMirrorCoverage(release)
+            || (
+                release.ReleaseType is ReleaseType.Managed
+                && !string.IsNullOrWhiteSpace(release.ReleaseFolderPath)
+            );
     }
 
     private static bool AllArchiveConfigsHaveCreatedArchive(Release release)

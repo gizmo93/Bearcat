@@ -116,7 +116,8 @@ public partial class CreateOrEditReleaseDialog(
                         releaseFolderPath: formModel.FolderPath,
                         releaseContentType: formModel.ReleaseContentType,
                         releaseGroupId: formModel.ReleaseGroupId,
-                        primaryLanguageCode: formModel.PrimaryLanguageCode
+                        primaryLanguageCode: formModel.PrimaryLanguageCode,
+                        excludeFromAutoCleanup: formModel.ExcludeFromAutoCleanup
                     )
             );
 
@@ -132,7 +133,8 @@ public partial class CreateOrEditReleaseDialog(
                     releaseType: formModel.ReleaseType,
                     releaseContentType: formModel.ReleaseContentType,
                     releaseGroupId: formModel.ReleaseGroupId,
-                    primaryLanguageCode: formModel.PrimaryLanguageCode
+                    primaryLanguageCode: formModel.PrimaryLanguageCode,
+                    excludeFromAutoCleanup: formModel.ExcludeFromAutoCleanup
                 )
         );
 

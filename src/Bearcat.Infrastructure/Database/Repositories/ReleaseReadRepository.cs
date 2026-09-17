@@ -1157,7 +1157,8 @@ public class ReleaseReadRepository(
             entity
                 .UploadConfigs.Where(uc => uc.Uploads.Any(u => u.OnlineState == OnlineState.Online))
                 .Distinct()
-                .Count()
+                .Count(),
+            entity.ExcludeFromAutoCleanup
         );
     }
 

@@ -1,10 +1,10 @@
 using Bearcat.Domain.Entities;
 
-namespace Bearcat.Domain.UseCases.ManageArchives.Repositories;
+namespace Bearcat.Domain.UseCases.ManageReleases.Repositories;
 
-public interface IArchiveCleanupRepository
+public interface IReleaseFolderRetirementRepository
 {
-    Task<IReadOnlyList<Archive>> GetDeletableArchivesAsync(
+    Task<IReadOnlyList<Release>> GetConversionCandidatesAsync(
         DateTime cutoff,
         CancellationToken cancellationToken
     );

@@ -16,6 +16,12 @@ public class NotificationConfiguration : IApplicationConfiguration
     public bool ReleaseAutomaticallyCreated { get; set; } = true;
 
     [ApplicationConfigurationProperty(
+        "NotificationKind.ReleaseAutoConvertedToUnmanaged",
+        "NotificationKind.ReleaseAutoConvertedToUnmanaged.Description"
+    )]
+    public bool ReleaseAutoConvertedToUnmanaged { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
         "NotificationKind.ReleaseFolderMissing",
         "NotificationKind.ReleaseFolderMissing.Description"
     )]

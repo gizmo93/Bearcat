@@ -1,52 +1,58 @@
-using Bearcat.Abstractions;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
+using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
+using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ManageArchives;
 
 public class ArchiveCleanupService(
     IArchiveCleanupRepository repository,
     IApplicationConfigurationProvider configuration,
-    IApplicationConfigurationOverrideCache overrideCache,
-    IFileSystemService fileSystemService,
+    MirrorCoverageEvaluator mirrorCoverageEvaluator,
+    LocalArchiveDeleter localArchiveDeleter,
+    TimeProvider timeProvider,
     ILogger<ArchiveCleanupService> logger
 )
 {
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
-        if (!overrideCache.IsInitialized)
-        {
-            logger.LogDebug("Archive cleanup skipped until configuration cache is initialized");
-            return;
-        }
-
-        var autoCleanupEnabled = configuration.GetValue<ArchiveCleanupConfiguration>(c =>
-            c.AutoCleanup
+        var autoDeleteEnabled = configuration.GetValue<ArchiveCleanupConfiguration>(c =>
+            c.AutoDeleteArchives
         );
 
-        if (!autoCleanupEnabled)
+        if (!autoDeleteEnabled)
         {
             return;
         }
 
-        var archives = await repository.GetDeletableArchivesAsync(cancellationToken);
+        var retentionDays = configuration.GetValue<ArchiveCleanupConfiguration>(c =>
+            c.ArchiveRetentionDays
+        );
+        var cutoff = timeProvider.GetLocalNow().AddDays(-retentionDays);
 
-        if (archives.Count == 0)
-        {
-            return;
-        }
-
-        logger.LogInformation("Cleaning up {ArchiveCount} uploaded archives", archives.Count);
+        var archives = await repository.GetDeletableArchivesAsync(cutoff, cancellationToken);
+        var deletedArchiveCount = 0;
 
         foreach (var archive in archives)
         {
+            if (!IsRecoverable(archive))
+            {
+                logger.LogDebug(
+                    "Archive {ArchiveId} stays on disk because it has neither an online mirror nor a release folder to repack from",
+                    archive.Id
+                );
+
+                continue;
+            }
+
             try
             {
-                fileSystemService.DeleteDirectoryIfExists(archive.ArchiveFolderPath);
-                archive.ArchiveState = ArchiveState.Deleted;
+                localArchiveDeleter.DeleteLocalArchive(archive);
+                deletedArchiveCount++;
 
                 logger.LogInformation(
                     "Deleted archive {ArchiveId} at {ArchiveFolderPath}",
@@ -65,6 +71,22 @@ public class ArchiveCleanupService(
             }
         }
 
+        if (deletedArchiveCount == 0)
+        {
+            return;
+        }
+
         await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    private bool IsRecoverable(Archive archive)
+    {
+        var release = archive.ArchiveConfig.Release;
+
+        return mirrorCoverageEvaluator.FindMirrorUpload(archive.ArchiveConfig) is not null
+            || (
+                release.ReleaseType is ReleaseType.Managed
+                && !string.IsNullOrWhiteSpace(release.ReleaseFolderPath)
+            );
     }
 }

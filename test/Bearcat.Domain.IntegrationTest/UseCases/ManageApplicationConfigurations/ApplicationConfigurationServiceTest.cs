@@ -16,7 +16,7 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageApplicationConfiguration
 public class ApplicationConfigurationServiceTest : BearcatIntegrationTest
 {
     private const string ConfigurationKey = "ArchiveCleanup";
-    private const string PropertyName = "AutoCleanup";
+    private const string PropertyName = "AutoConvertToUnmanaged";
 
     private Mock<IApplicationConfigurationOverrideCache> overrideCacheMock = null!;
     private BearcatDbContext readDbContext = null!;
@@ -69,15 +69,32 @@ public class ApplicationConfigurationServiceTest : BearcatIntegrationTest
         configuration.DisplayName.ShouldBe("ArchiveCleanup");
         configuration.Description.ShouldBe("ArchiveCleanupDescription");
 
-        var property = configuration.Properties.Single();
+        var property = configuration.Properties.Single(p => p.Name == PropertyName);
         property.ConfigurationKey.ShouldBe(ConfigurationKey);
-        property.Name.ShouldBe(PropertyName);
-        property.DisplayName.ShouldBe("AutoCleanup");
-        property.Description.ShouldBe("AutoCleanupDescription");
+        property.DisplayName.ShouldBe("AutoConvertToUnmanaged");
+        property.Description.ShouldBe("AutoConvertToUnmanagedDescription");
         property.ValueType.ShouldBe(typeof(bool));
         property.DefaultValue.ShouldBe(false);
         property.CurrentValue.ShouldBe(false);
         property.IsOverridden.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task GetAllAsync_ConfigurationHasSeveralProperties_KeepsDeclarationOrder()
+    {
+        // Act
+        var result = await service.GetAllAsync(CancellationToken.None);
+
+        // Assert
+        result
+            .Single()
+            .Properties.Select(p => p.Name)
+            .ShouldBe([
+                "AutoConvertToUnmanaged",
+                "ReleaseFolderRetentionDays",
+                "AutoDeleteArchives",
+                "ArchiveRetentionDays",
+            ]);
     }
 
     [Test]
@@ -92,7 +109,7 @@ public class ApplicationConfigurationServiceTest : BearcatIntegrationTest
         // Assert
         result.ShouldNotBeNull();
 
-        var property = result.Single().Properties.Single();
+        var property = result.Single().Properties.Single(p => p.Name == PropertyName);
         property.DefaultValue.ShouldBe(false);
         property.CurrentValue.ShouldBe(true);
         property.IsOverridden.ShouldBeTrue();

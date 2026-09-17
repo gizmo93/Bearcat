@@ -16,5 +16,7 @@ public class ReleaseFormModel
 
     public string FolderPath { get; set; } = string.Empty;
 
+    public bool ExcludeFromAutoCleanup { get; set; }
+
     public bool IsEdit { get; set; }
 }

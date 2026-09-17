@@ -90,6 +90,8 @@ public class NotificationService(
         {
             NotificationKind.ReleaseAutomaticallyCreated =>
                 configuration.ReleaseAutomaticallyCreated,
+            NotificationKind.ReleaseAutoConvertedToUnmanaged =>
+                configuration.ReleaseAutoConvertedToUnmanaged,
             NotificationKind.ReleaseFolderMissing => configuration.ReleaseFolderMissing,
             NotificationKind.ArchiveCreationFailed => configuration.ArchiveCreationFailed,
             NotificationKind.ArchiveFilesMissing => configuration.ArchiveFilesMissing,

@@ -54,6 +54,8 @@ public class Release
 
     public DateTime? UploadsPostedAt { get; set; }
 
+    public bool ExcludeFromAutoCleanup { get; set; }
+
     public QualityGateState QualityGateState { get; set; } = QualityGateState.NotEvaluated;
 
     public DateTime? QualityGateEvaluatedAt { get; set; }

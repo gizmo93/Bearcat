@@ -1,6 +1,7 @@
 ﻿using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.Shared.ForumPosting;
 using Bearcat.Domain.Shared.ForumPostRendering;
@@ -97,6 +98,9 @@ public static class ServiceProviderConfig
             );
             services.AddScoped<ArchiveCreationService>();
             services.AddScoped<ArchiveCleanupService>();
+            services.AddScoped<ReleaseFolderRetirementService>();
+            services.AddScoped<MirrorCoverageEvaluator>();
+            services.AddScoped<LocalArchiveDeleter>();
             services.AddScoped<ArchiveRestoreService>();
             services.AddSingleton<IDownloadProgressTracker, DownloadProgressTracker>();
             services.AddScoped<UploadFilesService>();

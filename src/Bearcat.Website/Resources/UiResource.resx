@@ -583,8 +583,8 @@
   <data name="SelectedReleaseCount" xml:space="preserve"><value>{0} release(s) selected</value></data>
   <data name="ApplicationConfigurationsIntro" xml:space="preserve"><value>Global settings for app behavior that applies across releases and background work.</value></data>
   <data name="ApplicationConfigurationsSubtitle" xml:space="preserve"><value>Defaults and user overrides</value></data>
-  <data name="ArchiveCleanup" xml:space="preserve"><value>Archive cleanup</value></data>
-  <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Controls when local archive folders are removed after uploads finish.</value></data>
+  <data name="ArchiveCleanup" xml:space="preserve"><value>Auto cleanup</value></data>
+  <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Controls when release folders are released for deletion and when local archive files are deleted. Bearcat never deletes the release folder itself.</value></data>
   <data name="ArchiveRepackaging" xml:space="preserve"><value>Archive repackaging</value></data>
   <data name="ArchiveRepackagingDescription" xml:space="preserve"><value>Controls how archive files are changed before reuploads.</value></data>
   <data name="ArchiveRepackagingStrategy" xml:space="preserve"><value>Repackaging strategy</value></data>
@@ -592,8 +592,14 @@
   <data name="ArchiveRepackagingStrategy.IncrementArchiveFileSize" xml:space="preserve"><value>Change archive file size by 1 MB</value></data>
   <data name="ArchiveRepackagingStrategy.NonceOnly" xml:space="preserve"><value>Nonce only, no compression</value></data>
   <data name="ArchiveRepackagingStrategy.SolidCompression" xml:space="preserve"><value>Solid archive with compression</value></data>
-  <data name="AutoCleanup" xml:space="preserve"><value>Automatic cleanup</value></data>
-    <data name="AutoCleanupDescription" xml:space="preserve"><value>Delete local archive folders after all linked uploads were completed successfully.</value></data>
+  <data name="AutoConvertToUnmanaged" xml:space="preserve"><value>Convert releases to unmanaged automatically</value></data>
+  <data name="AutoConvertToUnmanagedDescription" xml:space="preserve"><value>Converts a managed release to unmanaged once its retention expired and creates a notification with the release folder path. Bearcat never deletes the release folder itself, you decide when to remove it.</value></data>
+  <data name="ReleaseFolderRetentionDays" xml:space="preserve"><value>Convert to unmanaged after (days)</value></data>
+  <data name="ReleaseFolderRetentionDaysDescription" xml:space="preserve"><value>Days since the uploads of a release were posted, or since its first upload finished when it was never marked as posted.</value></data>
+  <data name="AutoDeleteArchives" xml:space="preserve"><value>Delete local archives automatically</value></data>
+  <data name="AutoDeleteArchivesDescription" xml:space="preserve"><value>Deletes the local archive files of an archive config once its retention expired. Only runs when the archives can be restored from an online mirror or repackaged from an existing release folder.</value></data>
+  <data name="ArchiveRetentionDays" xml:space="preserve"><value>Delete local archives after (days)</value></data>
+  <data name="ArchiveRetentionDaysDescription" xml:space="preserve"><value>Days since the last upload of an archive config finished. Every reupload restarts this period.</value></data>
   <data name="Configurations" xml:space="preserve"><value>Configurations</value></data>
   <data name="InitialUpload" xml:space="preserve"><value>Initial uploads</value></data>
   <data name="InitialUploadDescription" xml:space="preserve"><value>Controls when the first upload is created for a newly created release.</value></data>
@@ -1025,6 +1031,7 @@
   <data name="NotificationGroup.DistributionSites" xml:space="preserve"><value>Distribution sites</value></data>
   <data name="NotificationKind.Legacy" xml:space="preserve"><value>Legacy notification</value></data>
   <data name="NotificationKind.ReleaseAutomaticallyCreated" xml:space="preserve"><value>Release created automatically</value></data><data name="NotificationKind.ReleaseAutomaticallyCreated.Description" xml:space="preserve"><value>A release was created by folder automation.</value></data>
+  <data name="NotificationKind.ReleaseAutoConvertedToUnmanaged" xml:space="preserve"><value>Release converted to unmanaged</value></data><data name="NotificationKind.ReleaseAutoConvertedToUnmanaged.Description" xml:space="preserve"><value>A release was converted to unmanaged because its release folder retention expired and the release folder can be deleted.</value></data>
   <data name="NotificationKind.ReleaseFolderMissing" xml:space="preserve"><value>Release folder missing</value></data><data name="NotificationKind.ReleaseFolderMissing.Description" xml:space="preserve"><value>The release folder required for processing was not found.</value></data>
   <data name="NotificationKind.ArchiveCreationFailed" xml:space="preserve"><value>Archive creation failed</value></data><data name="NotificationKind.ArchiveCreationFailed.Description" xml:space="preserve"><value>An archive could not be created.</value></data>
   <data name="NotificationKind.ArchiveFilesMissing" xml:space="preserve"><value>Archive files missing</value></data><data name="NotificationKind.ArchiveFilesMissing.Description" xml:space="preserve"><value>Files required for an upload are missing.</value></data>
@@ -1164,6 +1171,8 @@
   <data name="UseForMirrorDownloads" xml:space="preserve"><value>Use for mirror downloads</value></data>
   <data name="UseForMirrorDownloadsHelp" xml:space="preserve"><value>Allow Bearcat to download archive files from this hoster when local archives need to be restored for a reupload.</value></data>
   <data name="UseForMirrorDownloadsShort" xml:space="preserve"><value>Mirror downloads</value></data>
+  <data name="ExcludeFromAutoCleanup" xml:space="preserve"><value>Exclude from auto cleanup</value></data>
+  <data name="ExcludeFromAutoCleanupHelp" xml:space="preserve"><value>Keeps the release folder and the local archives of this release untouched, no matter which retention periods are configured.</value></data>
   <data name="DeleteLocalArchives" xml:space="preserve"><value>Delete local archives</value></data>
   <data name="DeleteLocalArchivesTitle" xml:space="preserve"><value>Delete local archives of {0}</value></data>
   <data name="DeleteLocalArchivesConfirmationMirror" xml:space="preserve"><value>The hosters serve as the long-term storage of this release. Bearcat will download the archives from these mirrors when a reupload is needed: {0}. These archive folders will be emptied and deleted now: {1}</value></data>

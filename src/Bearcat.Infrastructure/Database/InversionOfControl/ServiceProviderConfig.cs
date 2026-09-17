@@ -127,6 +127,10 @@ public static class ServiceProviderConfig
             services.AddScoped<IQualityProfileWriteRepository, QualityProfileRepository>();
             services.AddScoped<IArchiveCreationRepository, ArchiveCreationRepository>();
             services.AddScoped<IArchiveCleanupRepository, ArchiveCleanupRepository>();
+            services.AddScoped<
+                IReleaseFolderRetirementRepository,
+                ReleaseFolderRetirementRepository
+            >();
             services.AddScoped<IArchiveRestoreRepository, ArchiveRestoreRepository>();
             services.AddScoped<IUploadFilesRepository, UploadFilesRepository>();
             services.AddScoped<IUploadStateRepository, UploadStateRepository>();

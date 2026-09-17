@@ -3,6 +3,7 @@ using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
@@ -34,7 +35,6 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             new ReleaseWriteRepository(dbContext),
             CreateTimeProvider(),
             archiverFactory.Object,
-            Mock.Of<IHosterFactory>(),
             new ReleaseCollectionAssignmentService(
                 new ReleaseCollectionRepository(
                     dbContext,
@@ -43,7 +43,8 @@ public class ReleaseServiceTest : BearcatIntegrationTest
                 ),
                 CreateTimeProvider()
             ),
-            Mock.Of<IFileSystemService>()
+            new MirrorCoverageEvaluator(Mock.Of<IHosterFactory>()),
+            new LocalArchiveDeleter(Mock.Of<IFileSystemService>())
         );
     }
 
@@ -67,6 +68,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseContentType.Movie,
             releaseGroup.Id,
             null,
+            false,
             CancellationToken.None
         );
 
@@ -99,6 +101,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseContentType.TvShowEpisode,
             releaseGroup.Id,
             null,
+            false,
             CancellationToken.None
         );
 
@@ -124,6 +127,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseContentType.Movie,
             secondGroup.Id,
             null,
+            false,
             CancellationToken.None
         );
 
@@ -399,6 +403,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseContentType.Movie,
             releaseGroup.Id,
             null,
+            false,
             CancellationToken.None
         );
 
@@ -497,6 +502,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseContentType.Movie,
             releaseGroup.Id,
             null,
+            false,
             CancellationToken.None
         );
 
@@ -522,6 +528,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseContentType.Movie,
             releaseGroup.Id,
             null,
+            false,
             CancellationToken.None
         );
 
@@ -586,6 +593,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             ReleaseContentType.Movie,
             releaseGroup.Id,
             null,
+            false,
             CancellationToken.None
         );
 

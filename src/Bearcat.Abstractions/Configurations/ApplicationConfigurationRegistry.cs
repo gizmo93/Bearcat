@@ -68,6 +68,7 @@ public class ApplicationConfigurationRegistry
         var key = attribute?.Key ?? type.FullName ?? type.Name;
         var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
             .Where(p => p.CanRead && p.CanWrite && IsSupportedType(p.PropertyType))
+            .OrderBy(p => p.MetadataToken)
             .Select(p =>
             {
                 var propertyAttribute =
@@ -84,7 +85,6 @@ public class ApplicationConfigurationRegistry
                     Options: optionsAttribute?.Values ?? []
                 );
             })
-            .OrderBy(p => p.DisplayName)
             .ToList();
 
         return new ApplicationConfigurationDefinition(

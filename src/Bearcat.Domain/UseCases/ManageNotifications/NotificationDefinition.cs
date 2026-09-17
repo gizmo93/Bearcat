@@ -22,6 +22,13 @@ public static class NotificationDefinitions
             Description: "NotificationKind.ReleaseAutomaticallyCreated.Description"
         ),
         new(
+            Kind: NotificationKind.ReleaseAutoConvertedToUnmanaged,
+            Severity: NotificationSeverity.Info,
+            Group: NotificationGroup.Releases,
+            DisplayName: "NotificationKind.ReleaseAutoConvertedToUnmanaged",
+            Description: "NotificationKind.ReleaseAutoConvertedToUnmanaged.Description"
+        ),
+        new(
             Kind: NotificationKind.ReleaseFolderMissing,
             Severity: NotificationSeverity.Error,
             Group: NotificationGroup.Releases,

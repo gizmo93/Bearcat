@@ -25,4 +25,5 @@ public enum NotificationKind
     AutomaticForumPostUpdated = 21,
     AutomaticForumPostUpdateFailed = 22,
     ArchiveRestoreFailed = 23,
+    ReleaseAutoConvertedToUnmanaged = 24,
 }

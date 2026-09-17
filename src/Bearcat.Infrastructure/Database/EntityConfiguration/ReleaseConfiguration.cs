@@ -19,6 +19,7 @@ public class ReleaseConfiguration : IEntityTypeConfiguration<Release>
         builder.Property(r => r.MetadataCheckedAt).HasPrecision(4).IsRequired(false);
         builder.Property(r => r.MediaMetadataExtractedAt).HasPrecision(4).IsRequired(false);
         builder.Property(r => r.UploadsPostedAt).HasPrecision(4).IsRequired(false);
+        builder.Property(r => r.ExcludeFromAutoCleanup).IsRequired();
         builder.Property(r => r.ReleaseCollectionId).IsRequired(false);
         builder.Property(r => r.QualityGateState).IsRequired();
         builder.Property(r => r.QualityGateEvaluatedAt).HasPrecision(4).IsRequired(false);
