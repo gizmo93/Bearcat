@@ -22,6 +22,7 @@ export default defineConfig({
 				starlightThemeNova({
 					nav: [
 						{ label: 'Start', href: '/Bearcat/' },
+						{ label: 'API', href: '/Bearcat/api/' },
 						{ label: 'GitHub', href: 'https://github.com/gizmo93/Bearcat' },
 					],
 					stylingSystem: 'css',
@@ -83,6 +84,7 @@ export default defineConfig({
 						{ label: 'Forum Post Templates', slug: 'forum-post-templates' },
 						{ label: 'Posting to Forums', slug: 'posting-to-forums' },
 						{ label: 'Automatic Forum Posting', slug: 'automatic-forum-posting' },
+						{ label: 'REST API', slug: 'rest-api' },
 					],
 				},
                 {

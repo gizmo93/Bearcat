@@ -8,6 +8,7 @@
         <Project Path="src/Bearcat.Abstractions/Bearcat.Abstractions.csproj" />
     </Folder>
     <Folder Name="/3_Core/">
+        <Project Path="src/Bearcat.Api/Bearcat.Api.csproj" />
         <Project Path="src/Bearcat.Application/Bearcat.Application.csproj" />
         <Project Path="src/Bearcat.Domain/Bearcat.Domain.csproj" />
         <Project Path="src/Bearcat.Infrastructure/Bearcat.Infrastructure.csproj" />

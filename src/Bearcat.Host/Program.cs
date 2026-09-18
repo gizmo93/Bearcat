@@ -1,4 +1,5 @@
 ﻿using Bearcat.Abstractions.Configurations;
+using Bearcat.Api.InversionOfControl;
 using Bearcat.Application.InversionOfControl;
 using Bearcat.Archivers.InversionOfControl;
 using Bearcat.DistributionSites.InversionOfControl;
@@ -29,6 +30,7 @@ if (OperatingSystem.IsWindows())
 }
 
 var isDesktopMode = builder.Configuration.GetValue("Bearcat:DesktopMode", false);
+var isOpenApiSpecOnly = builder.Configuration.GetValue("Bearcat:OpenApiSpecOnly", false);
 
 builder.Services.AddBearcatBlueprintComponents(builder.Configuration);
 builder.Services.Configure<HostOptions>(options =>
@@ -76,7 +78,11 @@ if (!isRunningInContainer)
     }
 }
 
-builder.Services.AddApplication();
+if (!isOpenApiSpecOnly)
+{
+    builder.Services.AddApplication();
+}
+
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddDomain();
 builder.Services.AddHosters();
@@ -87,12 +93,26 @@ builder.Services.AddLinkCrypters();
 builder.Services.AddMedia();
 builder.Services.AddNfoDatabases();
 builder.Services.AddMediaDatabases();
+builder.Services.AddApi();
 
 var app = builder.Build();
+
+if (isOpenApiSpecOnly)
+{
+    app.MapControllers();
+    app.MapApi();
+    await app.RunAsync();
+    return;
+}
 
 await app.Services.GetRequiredService<IEncryptionKeyProvider>().InitializeAsync();
 
 // Configure the HTTP request pipeline.
+app.UseWhen(
+    context => context.Request.Path.StartsWithSegments("/api"),
+    branch => branch.UseExceptionHandler()
+);
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
@@ -118,6 +138,7 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 app.MapControllers();
+app.MapApi();
 app.MapGet("/health", () => Results.Ok(new { Status = "Healthy" }));
 
 app.MapGet(

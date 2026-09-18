@@ -178,6 +178,7 @@ public static class ServiceProviderConfig
                 IApplicationConfigurationOverrideWriteRepository,
                 ApplicationConfigurationOverrideRepository
             >();
+            services.AddScoped<IUploadReadRepository, UploadReadRepository>();
             services.AddScoped<IUploadConfigReadRepository, UploadConfigReadRepository>();
             services.AddScoped<IUploadConfigWriteRepository, UploadConfigWriteRepository>();
             services.AddScoped<

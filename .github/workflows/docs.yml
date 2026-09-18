@@ -7,6 +7,8 @@ on:
     paths:
       - website/**
       - docs/user-documentation/**
+      - src/Bearcat.Api/**
+      - src/Bearcat.Domain/ValueObjects/**
       - .github/workflows/docs.yml
   workflow_dispatch:
 
@@ -41,6 +43,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
         working-directory: website
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Generate OpenAPI spec
+        run: bash scripts/generate-openapi-spec.sh
 
       - name: Build docs
         run: npm run build
