@@ -40,6 +40,22 @@ Focused test projects can also be run directly, for example:
 dotnet test test/Bearcat.Domain.UnitTest/Bearcat.Domain.UnitTest.csproj
 ```
 
+## OpenAPI Spec
+
+The docs website in `website/` contains an API reference page that renders `website/public/openapi/v1.json`. That file is generated and gitignored, so it is missing after a fresh checkout.
+
+Generate it once before starting the docs dev server:
+
+```bash
+bash scripts/generate-openapi-spec.sh
+cd website
+npm run dev
+```
+
+The API reference is then available at `http://localhost:4321/Bearcat/api/`.
+
+The script starts `Bearcat.Host` in OpenAPI spec only mode (`Bearcat:OpenApiSpecOnly`), which maps the API endpoints without touching the database or starting background tasks, downloads the spec and stops the host again. It therefore needs no local database. The docs workflow generates the file the same way before building the website, so the spec is never committed.
+
 ## Database Migrations
 
 Entity Framework migrations are created from the infrastructure project:

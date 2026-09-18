@@ -31,6 +31,7 @@ public static class ServiceProviderConfig
                         (document, context, cancellationToken) =>
                         {
                             document.Info.Title = "Bearcat API";
+                            document.Servers?.Clear();
                             return Task.CompletedTask;
                         }
                     );

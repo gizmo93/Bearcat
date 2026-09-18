@@ -7,6 +7,8 @@ on:
     paths:
       - website/**
       - docs/user-documentation/**
+      - src/Bearcat.Api/**
+      - src/Bearcat.Domain/ValueObjects/**
       - .github/workflows/docs.yml
   workflow_dispatch:
 
@@ -41,6 +43,61 @@ jobs:
       - name: Install dependencies
         run: npm ci
         working-directory: website
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Generate OpenAPI spec
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://localhost:5599
+          Bearcat__OpenApiSpecOnly: "true"
+        run: |
+          set -euo pipefail
+
+          spec_url="http://localhost:5599/openapi/v1.json"
+          target_file="website/public/openapi/v1.json"
+
+          dotnet build src/Bearcat.Host --configuration Release
+
+          dotnet run --project src/Bearcat.Host --configuration Release --no-build --no-launch-profile &
+          host_pid=$!
+
+          cleanup() {
+            kill "$host_pid" 2>/dev/null || true
+            wait "$host_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --output /dev/null "$spec_url"; then
+              break
+            fi
+
+            if ! kill -0 "$host_pid" 2>/dev/null; then
+              echo "The Bearcat host exited before serving the OpenAPI spec."
+              exit 1
+            fi
+
+            if [ "$attempt" -eq 60 ]; then
+              echo "The OpenAPI host did not serve $spec_url in time."
+              exit 1
+            fi
+
+            sleep 1
+          done
+
+          mkdir -p "$(dirname "$target_file")"
+          curl --fail --silent --output "$target_file" "$spec_url"
+
+          node -e "JSON.parse(require('fs').readFileSync('$target_file', 'utf8'))"
+
+          if ! grep -q '"Bearcat API"' "$target_file"; then
+            echo "The generated OpenAPI spec does not contain the expected API title."
+            exit 1
+          fi
 
       - name: Build docs
         run: npm run build
