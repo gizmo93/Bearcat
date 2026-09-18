@@ -16,15 +16,18 @@ cleanup() {
 
 trap cleanup EXIT
 
+echo "Building Bearcat host..."
+dotnet build "$repo_root/src/Bearcat.Host"
+
 echo "Starting Bearcat host in OpenAPI spec only mode..."
 ASPNETCORE_ENVIRONMENT=Development \
   ASPNETCORE_URLS="$host_url" \
   Bearcat__OpenApiSpecOnly=true \
-  dotnet run --project "$repo_root/src/Bearcat.Host" --no-launch-profile &
+  dotnet run --project "$repo_root/src/Bearcat.Host" --no-build --no-launch-profile &
 host_pid=$!
 
 echo "Waiting for $spec_url..."
-for attempt in $(seq 1 120); do
+for attempt in $(seq 1 60); do
   if curl --fail --silent --output /dev/null "$spec_url"; then
     break
   fi
@@ -34,7 +37,7 @@ for attempt in $(seq 1 120); do
     exit 1
   fi
 
-  if [ "$attempt" -eq 120 ]; then
+  if [ "$attempt" -eq 60 ]; then
     echo "The Bearcat host did not serve $spec_url in time." >&2
     exit 1
   fi
@@ -47,6 +50,16 @@ curl --fail --silent --output "$target_file" "$spec_url"
 
 if [ ! -s "$target_file" ]; then
   echo "The generated OpenAPI spec at $target_file is empty." >&2
+  exit 1
+fi
+
+if ! python3 -c "import json, sys; json.load(open(sys.argv[1]))" "$target_file"; then
+  echo "The generated OpenAPI spec at $target_file is not valid JSON." >&2
+  exit 1
+fi
+
+if ! grep -q '"Bearcat API"' "$target_file"; then
+  echo "The generated OpenAPI spec does not contain the expected API title." >&2
   exit 1
 fi
 
