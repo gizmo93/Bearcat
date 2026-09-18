@@ -1,6 +1,6 @@
 using Bearcat.Domain.ValueObjects;
 
-namespace Bearcat.Api.Contracts;
+namespace Bearcat.Api.Contracts.Releases;
 
 public record ReleaseSearchRequest
 {

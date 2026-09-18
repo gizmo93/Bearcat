@@ -1,4 +1,6 @@
 using Bearcat.Api.Contracts;
+using Bearcat.Api.Contracts.Archives;
+using Bearcat.Api.Contracts.Releases;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Microsoft.AspNetCore.Http;
@@ -36,7 +38,8 @@ public class ReleasesController(IReleaseReadRepository releaseReadRepository) : 
         );
 
         var result = await releaseReadRepository.SearchReleasesAsync(query, cancellationToken);
-        List<ReleaseResponse> items = [.. result.Items.Select(ReleaseResponse.FromReadModel)];
+
+        var items = result.Items.Select(ReleaseResponse.FromReadModel).ToList();
 
         return Ok(
             new PagedResponse<ReleaseResponse>(
@@ -65,5 +68,51 @@ public class ReleasesController(IReleaseReadRepository releaseReadRepository) : 
         }
 
         return Ok(ReleaseResponse.FromReadModel(release));
+    }
+
+    [HttpGet("{releaseId:int}/metadata")]
+    [ProducesResponseType(typeof(ReleaseMetadataResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ReleaseMetadataResponse>> GetMetadataAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var metadata = await releaseReadRepository.GetReleaseMetadataAsync(
+            releaseId: releaseId,
+            cancellationToken: cancellationToken
+        );
+
+        if (metadata is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(ReleaseMetadataResponse.FromReadModel(metadata));
+    }
+
+    [HttpGet("{releaseId:int}/archives")]
+    [ProducesResponseType(typeof(IReadOnlyList<ArchiveConfigResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IReadOnlyList<ArchiveConfigResponse>>> GetArchivesAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var release = await releaseReadRepository.GetReleaseAsync(releaseId, cancellationToken);
+
+        if (release is null)
+        {
+            return NotFound();
+        }
+
+        var archiveConfigs = await releaseReadRepository.GetArchiveConfigsAsync(
+            releaseId: releaseId,
+            cancellationToken: cancellationToken
+        );
+
+        var items = archiveConfigs.Select(ArchiveConfigResponse.FromReadModel).ToList();
+
+        return Ok(items);
     }
 }

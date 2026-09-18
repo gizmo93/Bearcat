@@ -988,6 +988,18 @@ public class ReleaseReadRepository(
         return new PagedResult<ReleaseUploadReadModel>(uploads, totalCount, pageIndex, pageSize);
     }
 
+    public async Task<bool> UploadExistsAsync(
+        int releaseId,
+        int uploadId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead.Uploads.AnyAsync(
+            u => u.Id == uploadId && u.UploadConfig.ReleaseId == releaseId,
+            cancellationToken
+        );
+    }
+
     public async Task<PagedResult<ReleaseUploadLinkReadModel>> SearchUploadLinksAsync(
         ReleaseUploadLinkSearchQuery query,
         CancellationToken cancellationToken = default

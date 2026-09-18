@@ -82,6 +82,12 @@ public interface IReleaseReadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<bool> UploadExistsAsync(
+        int releaseId,
+        int uploadId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<PagedResult<ReleaseUploadLinkReadModel>> SearchUploadLinksAsync(
         ReleaseUploadLinkSearchQuery query,
         CancellationToken cancellationToken = default
