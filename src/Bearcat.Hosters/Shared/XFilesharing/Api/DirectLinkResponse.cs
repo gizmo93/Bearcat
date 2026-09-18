@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Bearcat.Hosters.Shared.XFilesharing.Api;
 
-public class FileInfoResponse
+public class DirectLinkResponse
 {
     [JsonPropertyName("msg")]
     public string Msg { get; set; } = null!;
@@ -11,5 +11,5 @@ public class FileInfoResponse
     public int Status { get; set; }
 
     [JsonPropertyName("result")]
-    public FileInfoResult[] Results { get; set; } = [];
+    public DirectLinkResult? Result { get; set; }
 }

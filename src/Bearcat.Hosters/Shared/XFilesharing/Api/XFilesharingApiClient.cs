@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Hosters.Extensions;
 using Refit;
 
@@ -11,7 +12,8 @@ namespace Bearcat.Hosters.Shared.XFilesharing.Api;
 public abstract class XFilesharingApiClient<TApi>(
     TApi api,
     HttpClientProvider httpClientProvider,
-    XFilesharingUploadOptions uploadOptions
+    XFilesharingUploadOptions uploadOptions,
+    HosterFileDownloader fileDownloader
 ) : IXFilesharingApiClient
     where TApi : IXFilesharingApi
 {
@@ -46,6 +48,86 @@ public abstract class XFilesharingApiClient<TApi>(
         }
 
         return result;
+    }
+
+    public async Task<Dictionary<string, long>> GetFileSizesAsync(
+        string apiKey,
+        IReadOnlySet<string> fileCodes,
+        CancellationToken cancellationToken
+    )
+    {
+        var result = new Dictionary<string, long>();
+
+        foreach (var batch in fileCodes.Chunk(50))
+        {
+            var response = await api.GetFileInfoAsync(
+                apiKey,
+                string.Join(',', batch),
+                cancellationToken
+            );
+
+            foreach (var file in response.Results.Where(file => file.FileCode is not null))
+            {
+                var size = ParseSize(file.Size);
+
+                if (size is not null)
+                {
+                    result[file.FileCode!] = size.Value;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public async Task DownloadFileAsync(
+        string apiKey,
+        string fileCode,
+        string targetFilePath,
+        IDownloadProgress progress,
+        long? expectedSizeBytes,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await api.GetDirectLinkAsync(
+            apiKey: apiKey,
+            fileCode: fileCode,
+            cancellationToken: cancellationToken
+        );
+
+        var downloadUrl = response.Result?.Url;
+
+        if (
+            !((HttpStatusCode)response.Status).IsSuccessStatusCode
+            || string.IsNullOrWhiteSpace(downloadUrl)
+        )
+        {
+            throw new HttpRequestException(
+                string.IsNullOrWhiteSpace(response.Msg)
+                    ? $"XFilesharing did not return a download URL for file {fileCode} (status {response.Status})"
+                    : response.Msg
+            );
+        }
+
+        await fileDownloader.DownloadToFileAsync(
+            downloadUrl: downloadUrl,
+            targetFilePath: targetFilePath,
+            progress: progress,
+            expectedSizeBytes: expectedSizeBytes ?? ParseSize(response.Result?.Size),
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private static long? ParseSize(string? size)
+    {
+        return long.TryParse(
+            size,
+            NumberStyles.Integer,
+            CultureInfo.InvariantCulture,
+            out var parsedSize
+        )
+            ? parsedSize
+            : null;
     }
 
     protected static int? ParseDownloadCount(string? downloads)

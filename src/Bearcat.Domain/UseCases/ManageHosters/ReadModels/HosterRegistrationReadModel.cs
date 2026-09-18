@@ -17,6 +17,7 @@ public record HosterRegistrationReadModel(
     ReuploadTrigger? ReuploadTriggerOverride,
     bool AlwaysReuploadAllFiles,
     bool SupportsDownload,
+    bool DownloadRequiresPremium,
     bool UseForMirrorDownloads,
     string HosterName,
     string FullClassName

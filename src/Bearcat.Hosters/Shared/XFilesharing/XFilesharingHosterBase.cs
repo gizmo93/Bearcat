@@ -139,6 +139,92 @@ public abstract class XFilesharingHosterBase<TConfig>(
         }
     }
 
+    public async Task<DownloadFileResult> DownloadFileAsync(
+        DownloadFileDto file,
+        string targetFilePath,
+        IHosterConfig hosterConfig,
+        IDownloadProgress progress,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<TConfig>();
+
+        try
+        {
+            var fileCode =
+                ExtractFileCode(file.HosterFileLink)
+                ?? throw new InvalidOperationException(
+                    $"Could not extract file code from URL {file.HosterFileLink}"
+                );
+
+            await apiClient.DownloadFileAsync(
+                apiKey: config.ApiKey,
+                fileCode: fileCode,
+                targetFilePath: targetFilePath,
+                progress: progress,
+                expectedSizeBytes: file.ExpectedSizeBytes,
+                cancellationToken: cancellationToken
+            );
+
+            return new DownloadFileResult(IsSuccess: true, ErrorMessages: []);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(
+                ex,
+                "Failed to download file {FileLink} from {HosterName}: {Message}",
+                file.HosterFileLink,
+                Name,
+                ex.InnerException?.Message ?? ex.Message
+            );
+
+            return new DownloadFileResult(
+                IsSuccess: false,
+                ErrorMessages: [ex.InnerException?.Message ?? ex.Message]
+            );
+        }
+    }
+
+    public async Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
+        IReadOnlyList<string> fileUrls,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<TConfig>();
+
+        var fileUrlByFileCode = fileUrls
+            .Distinct()
+            .Select(url => new { Url = url, FileCode = ExtractFileCode(url) })
+            .Where(file => !string.IsNullOrWhiteSpace(file.FileCode))
+            .GroupBy(file => file.FileCode!)
+            .ToDictionary(group => group.Key, group => group.First().Url);
+
+        try
+        {
+            var sizes = await apiClient.GetFileSizesAsync(
+                apiKey: config.ApiKey,
+                fileCodes: fileUrlByFileCode.Keys.ToHashSet(),
+                cancellationToken: cancellationToken
+            );
+
+            return sizes
+                .Where(kvp => fileUrlByFileCode.ContainsKey(kvp.Key))
+                .ToDictionary(kvp => fileUrlByFileCode[kvp.Key], kvp => kvp.Value);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(
+                ex,
+                "Failed to look up file sizes on {HosterName}: {Message}",
+                Name,
+                ex.InnerException?.Message ?? ex.Message
+            );
+
+            return new Dictionary<string, long>();
+        }
+    }
+
     public IHosterConfig DeserializeHosterConfig(string serializedConfig)
     {
         var config = JsonSerializer.Deserialize<TConfig>(serializedConfig);

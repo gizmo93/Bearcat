@@ -3,7 +3,11 @@ using Bearcat.Hosters.Shared.XFilesharing.Api;
 
 namespace Bearcat.Hosters.FreeDlink.Api;
 
-public class ApiClient(IFreeDlinkApi api, HttpClientProvider httpClientProvider)
+public class ApiClient(
+    IFreeDlinkApi api,
+    HttpClientProvider httpClientProvider,
+    HosterFileDownloader fileDownloader
+)
     : XFilesharingApiClient<IFreeDlinkApi>(
         api,
         httpClientProvider,
@@ -11,7 +15,8 @@ public class ApiClient(IFreeDlinkApi api, HttpClientProvider httpClientProvider)
             AddRegisteredUserTypeField: false,
             AddUploadTypeQueryString: false,
             ForceHttpUploadScheme: false
-        )
+        ),
+        fileDownloader
     ),
         IFreeDlinkApiClient
 {

@@ -17,6 +17,13 @@ public interface IXFilesharingApi
         CancellationToken cancellationToken
     );
 
+    [Get("/file/direct_link")]
+    Task<DirectLinkResponse> GetDirectLinkAsync(
+        [Query] [AliasAs("key")] string apiKey,
+        [Query] [AliasAs("file_code")] string fileCode,
+        CancellationToken cancellationToken
+    );
+
     [Get("/upload/server")]
     Task<ApiResponse<RequestUploadResponse>> RequestUploadAsync(
         [Query] [AliasAs("key")] string apiKey,

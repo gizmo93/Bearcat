@@ -372,6 +372,8 @@ public class ArchiveRestoreAndCreationPipelineTest : BearcatIntegrationTest
 
         public bool SupportsPremiumOnlyDownloads => false;
 
+        public bool DownloadRequiresPremium => false;
+
         public bool HasFixedParallelUploadLimit => false;
 
         public int? DefaultMaximumParallelUploads => 1;

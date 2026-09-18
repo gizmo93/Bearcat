@@ -18,10 +18,12 @@ public class ApiClientTest
     {
         apiMock = new Mock<IDDownloadApi>(MockBehavior.Strict);
         var httpClientFactoryMock = new Mock<IHttpClientFactory>();
+        var httpClientProvider = new HttpClientProvider(httpClientFactoryMock.Object);
 
         apiClient = new ApiClient(
             apiMock.Object,
-            new HttpClientProvider(httpClientFactoryMock.Object)
+            httpClientProvider,
+            new HosterFileDownloader(httpClientProvider)
         );
     }
 

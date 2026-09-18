@@ -7,5 +7,6 @@ public record HosterDto(
     bool SupportsPremiumOnlyDownloads,
     bool HasFixedParallelUploadLimit,
     int? DefaultMaximumParallelUploads,
-    bool SupportsDownload
+    bool SupportsDownload,
+    bool DownloadRequiresPremium
 );

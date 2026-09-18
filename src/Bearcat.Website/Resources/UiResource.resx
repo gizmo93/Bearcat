@@ -1171,6 +1171,7 @@
   <data name="NotificationKind.ArchiveRestoreFailed.Description" xml:space="preserve"><value>An archive could not be restored from an online mirror.</value></data>
   <data name="MirrorDownloads" xml:space="preserve"><value>Mirror downloads</value></data>
   <data name="MirrorDownloadsDescription" xml:space="preserve"><value>Controls how archives are downloaded from online mirrors when they are no longer stored locally.</value></data>
+  <data name="MirrorDownloadsRequirePremium" xml:space="preserve"><value>Mirror downloads from this hoster require a premium account.</value></data>
   <data name="MaxParallelDownloads" xml:space="preserve"><value>Maximum parallel downloads</value></data>
   <data name="MaxParallelDownloadsDescription" xml:space="preserve"><value>The upper limit of archive files downloaded at the same time while restoring an archive from a mirror.</value></data>
   <data name="UseForMirrorDownloads" xml:space="preserve"><value>Use for mirror downloads</value></data>

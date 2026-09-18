@@ -7,13 +7,16 @@ namespace Bearcat.Hosters.DataVaults;
 
 public class DataVaults(IDataVaultsApiClient apiClient, ILogger<DataVaults> logger)
     : XFilesharingHosterBase<DataVaultsConfig>(apiClient, logger),
-        IHosterWithFileSizeLimit
+        IHosterWithFileSizeLimit,
+        IHosterWithDownload
 {
     public override string Name => "datavaults.co";
 
     protected override string FileUrlFormat => "https://datavaults.co/{0}";
 
     public override bool SupportsPremiumOnlyDownloads => false;
+
+    public bool DownloadRequiresPremium => false;
 
     protected override int MaximumParallelUploads => 5;
 

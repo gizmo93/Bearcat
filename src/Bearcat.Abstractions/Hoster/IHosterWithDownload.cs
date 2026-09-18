@@ -5,6 +5,8 @@ namespace Bearcat.Abstractions.Hoster;
 
 public interface IHosterWithDownload : IHoster
 {
+    bool DownloadRequiresPremium { get; }
+
     Task<DownloadFileResult> DownloadFileAsync(
         DownloadFileDto file,
         string targetFilePath,

@@ -3,7 +3,11 @@ using Bearcat.Hosters.Shared.XFilesharing.Api;
 
 namespace Bearcat.Hosters.Katfile.Api;
 
-public class ApiClient(IKatfileApi api, HttpClientProvider httpClientProvider)
+public class ApiClient(
+    IKatfileApi api,
+    HttpClientProvider httpClientProvider,
+    HosterFileDownloader fileDownloader
+)
     : XFilesharingApiClient<IKatfileApi>(
         api,
         httpClientProvider,
@@ -11,7 +15,8 @@ public class ApiClient(IKatfileApi api, HttpClientProvider httpClientProvider)
             AddRegisteredUserTypeField: false,
             AddUploadTypeQueryString: false,
             ForceHttpUploadScheme: false
-        )
+        ),
+        fileDownloader
     ),
         IKatfileApiClient
 {

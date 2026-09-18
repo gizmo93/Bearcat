@@ -96,6 +96,11 @@
                     <BbFormFieldSwitch @bind-Checked="FormModel.UseForMirrorDownloads"
                                        Label="@L["UseForMirrorDownloads"]"
                                        HelperText="@L["UseForMirrorDownloadsHelp"]" />
+
+                    @if (selectedHoster.DownloadRequiresPremium)
+                    {
+                        <p class="text-xs text-muted-foreground">@L["MirrorDownloadsRequirePremium"]</p>
+                    }
                 }
             }
         </div>

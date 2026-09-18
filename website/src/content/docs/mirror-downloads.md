@@ -41,8 +41,23 @@ that hoster: it keeps uploading exactly as before, it is just also allowed to se
 
 ![enable-hoster-mirror-download.png](images/enable-hoster-mirror-download.png)
 
-Mirror downloads currently work with **Rapidgator** and **1fichier** only, and both need a premium
-account.
+### Hosters that support mirror downloads
+
+Not every hoster allows file downloads using its API, so the **"Use for mirror downloads"**
+switch only shows up for the ones that do:
+
+| Hoster | Premium account needed |
+| --- | --- |
+| Rapidgator | Yes |
+| 1fichier | Yes |
+| HxFile.co | Yes |
+| DDownload | No |
+| datavaults.co | No |
+| file-upload.org | No |
+| Uploady.io | No |
+
+Where a premium account is needed, Bearcat shows a hint next to the switch. Uploads to those hosters
+work with a free account either way, only the download does not.
 
 ## Cancel a running download
 

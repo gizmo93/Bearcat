@@ -57,6 +57,7 @@ public class HosterConfigurationRepository(
                     h.ReuploadTriggerOverride,
                     h.AlwaysReuploadAllFiles,
                     hoster is IHosterWithDownload,
+                    (hoster as IHosterWithDownload)?.DownloadRequiresPremium ?? false,
                     h.UseForMirrorDownloads,
                     hoster.Name,
                     h.HosterClassName

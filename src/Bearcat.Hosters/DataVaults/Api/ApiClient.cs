@@ -3,7 +3,11 @@ using Bearcat.Hosters.Shared.XFilesharing.Api;
 
 namespace Bearcat.Hosters.DataVaults.Api;
 
-public class ApiClient(IDataVaultsApi api, HttpClientProvider httpClientProvider)
+public class ApiClient(
+    IDataVaultsApi api,
+    HttpClientProvider httpClientProvider,
+    HosterFileDownloader fileDownloader
+)
     : XFilesharingApiClient<IDataVaultsApi>(
         api,
         httpClientProvider,
@@ -11,7 +15,8 @@ public class ApiClient(IDataVaultsApi api, HttpClientProvider httpClientProvider
             AddRegisteredUserTypeField: true,
             AddUploadTypeQueryString: false,
             ForceHttpUploadScheme: false
-        )
+        ),
+        fileDownloader
     ),
         IDataVaultsApiClient
 {
