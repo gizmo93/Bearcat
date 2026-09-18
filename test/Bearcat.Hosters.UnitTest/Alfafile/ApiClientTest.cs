@@ -1,4 +1,5 @@
 using System.Net;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Hosters.Alfafile;
 using Bearcat.Hosters.Alfafile.Api;
 using Bearcat.Hosters.Alfafile.Api.File;
@@ -20,15 +21,23 @@ public class ApiClientTest
         Password = "password",
     };
 
+    private readonly List<string> temporaryFiles = [];
+
     private Mock<IAlfafileApi> apiMock = null!;
+    private RecordingDownloadHandler downloadHandler = null!;
     private ApiClient apiClient = null!;
 
     [SetUp]
     public void SetUp()
     {
         apiMock = new Mock<IAlfafileApi>(MockBehavior.Strict);
+        downloadHandler = new RecordingDownloadHandler();
         var httpClientFactoryMock = new Mock<IHttpClientFactory>();
         var loggerMock = new Mock<ILogger<ApiClient>>();
+
+        httpClientFactoryMock
+            .Setup(x => x.CreateClient(HttpClientProvider.DownloadHttpClientName))
+            .Returns(() => new HttpClient(downloadHandler, disposeHandler: false));
 
         apiMock
             .Setup(x =>
@@ -69,11 +78,98 @@ public class ApiClientTest
         apiClient = new ApiClient(
             apiMock.Object,
             new HttpClientProvider(httpClientFactoryMock.Object),
+            new HosterFileDownloader(new HttpClientProvider(httpClientFactoryMock.Object)),
             loggerMock.Object
         )
         {
             RateLimitRetryDelay = TimeSpan.Zero,
         };
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        downloadHandler.Dispose();
+
+        foreach (var temporaryFile in temporaryFiles.Where(File.Exists))
+        {
+            File.Delete(temporaryFile);
+        }
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_ApiReturnsDownloadUrl_WritesFileToTargetPath()
+    {
+        // Arrange
+        var targetFilePath = CreateTemporaryFilePath();
+
+        apiMock
+            .Setup(x => x.DownloadFileAsync("auth-token", "ACsST", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new DownloadFileResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Response = new DownloadFileResponse.ResponseObject
+                    {
+                        DownloadUrl = "https://s114.alfafile.net/download/72b2831b",
+                    },
+                }
+            );
+
+        downloadHandler.RespondWith("archive-content");
+
+        // Act
+        await apiClient.DownloadFileAsync(
+            config: config,
+            fileUrl: "https://alfafile.net/file/ACsST",
+            targetFilePath: targetFilePath,
+            progress: NullDownloadProgress.Instance,
+            expectedSizeBytes: 15,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        (await File.ReadAllTextAsync(targetFilePath)).ShouldBe("archive-content");
+        downloadHandler
+            .RequestedUrls.ShouldHaveSingleItem()
+            .ShouldBe("https://s114.alfafile.net/download/72b2831b");
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_ApiReportsDownloadDelay_ThrowsWithDetailsAndSkipsDownload()
+    {
+        // Arrange
+        const string details =
+            "Conflict. Delay between downloads must be not less than 120 minutes. Try again in 119 minutes.";
+        var targetFilePath = CreateTemporaryFilePath();
+
+        apiMock
+            .Setup(x => x.DownloadFileAsync("auth-token", "ACsST", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new DownloadFileResponse
+                {
+                    Status = (int)HttpStatusCode.Conflict,
+                    Response = null,
+                    Details = details,
+                }
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.DownloadFileAsync(
+                config: config,
+                fileUrl: "https://alfafile.net/file/ACsST",
+                targetFilePath: targetFilePath,
+                progress: NullDownloadProgress.Instance,
+                expectedSizeBytes: null,
+                cancellationToken: CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe(details);
+        downloadHandler.RequestedUrls.ShouldBeEmpty();
+        File.Exists(targetFilePath).ShouldBeFalse();
     }
 
     [Test]
@@ -472,6 +568,43 @@ public class ApiClientTest
                 CancellationToken.None
             )
         );
+    }
+
+    private string CreateTemporaryFilePath()
+    {
+        var filePath = Path.Join(Path.GetTempPath(), $"{Guid.NewGuid()}.rar");
+        temporaryFiles.Add(filePath);
+        temporaryFiles.Add(filePath + ".part");
+
+        return filePath;
+    }
+
+    private sealed class RecordingDownloadHandler : HttpMessageHandler
+    {
+        private string content = string.Empty;
+
+        public List<string> RequestedUrls { get; } = [];
+
+        public void RespondWith(string responseContent)
+        {
+            content = responseContent;
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
+        {
+            RequestedUrls.Add(request.RequestUri!.ToString());
+
+            return Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(content),
+                    RequestMessage = request,
+                }
+            );
+        }
     }
 
     private static void UpdateMaximum(ref int maximum, int current)

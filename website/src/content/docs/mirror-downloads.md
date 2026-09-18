@@ -50,6 +50,7 @@ switch only shows up for the ones that do:
 | --- | --- |
 | Rapidgator | Yes |
 | 1fichier | Yes |
+| Alfafile | Yes |
 | HxFile.co | Yes |
 | DDownload | No |
 | datavaults.co | No |
@@ -58,6 +59,10 @@ switch only shows up for the ones that do:
 
 Where a premium account is needed, Bearcat shows a hint next to the switch. Uploads to those hosters
 work with a free account either way, only the download does not.
+
+Alfafile is a special case: its API allows to create download links for free accounts, but free accounts
+can only start one download every 120 minutes and have 500 MB of traffic in total, which is
+not enough to restore a multi part archive.
 
 ## Cancel a running download
 

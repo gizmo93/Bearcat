@@ -345,6 +345,157 @@ public class AlfafileTest
         result.ShouldBeOfType<AlfafileConfig>().Username.ShouldBe("user@example.test");
     }
 
+    [Test]
+    public void DownloadRequiresPremium_FreeAccountsAreRateLimited_IsTrue()
+    {
+        // Arrange
+        // Act
+        var requiresPremium = service.DownloadRequiresPremium;
+
+        // Assert
+        requiresPremium.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_ApiClientSucceeds_ForwardsFileLinkAndReturnsSuccess()
+    {
+        // Arrange
+        var config = new AlfafileConfig { Username = "user@example.test", Password = "password" };
+        var targetFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.rar");
+
+        apiClientMock
+            .Setup(x =>
+                x.DownloadFileAsync(
+                    config,
+                    "https://alfafile.net/file/ACsST",
+                    targetFilePath,
+                    NullDownloadProgress.Instance,
+                    2048L,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await service.DownloadFileAsync(
+            new DownloadFileDto(
+                HosterFileLink: "https://alfafile.net/file/ACsST",
+                ExternalId: null,
+                ExpectedSizeBytes: 2048
+            ),
+            targetFilePath,
+            config,
+            NullDownloadProgress.Instance,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result.ErrorMessages.ShouldBeEmpty();
+        apiClientMock.VerifyAll();
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_ApiClientThrows_ReturnsFailureWithMessage()
+    {
+        // Arrange
+        var config = new AlfafileConfig { Username = "user@example.test", Password = "password" };
+        var targetFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.rar");
+
+        apiClientMock
+            .Setup(x =>
+                x.DownloadFileAsync(
+                    config,
+                    "https://alfafile.net/file/ACsST",
+                    targetFilePath,
+                    NullDownloadProgress.Instance,
+                    null,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(
+                new HttpRequestException(
+                    "Conflict. Delay between downloads must be not less than 120 minutes."
+                )
+            );
+
+        // Act
+        var result = await service.DownloadFileAsync(
+            new DownloadFileDto(
+                HosterFileLink: "https://alfafile.net/file/ACsST",
+                ExternalId: null,
+                ExpectedSizeBytes: null
+            ),
+            targetFilePath,
+            config,
+            NullDownloadProgress.Instance,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeFalse();
+        result.ErrorMessages.ShouldBe([
+            "Conflict. Delay between downloads must be not less than 120 minutes.",
+        ]);
+    }
+
+    [Test]
+    public async Task GetFileSizesAsync_ClientReturnsSizes_MapsThemBackToFileUrls()
+    {
+        // Arrange
+        var config = new AlfafileConfig { Username = "user@example.test", Password = "password" };
+        const string firstFileUrl = "https://alfafile.net/file/ACsST";
+        const string secondFileUrl = "https://alfafile.net/file/GH";
+
+        apiClientMock
+            .Setup(x =>
+                x.GetFileSizesAsync(
+                    config,
+                    new[] { firstFileUrl, secondFileUrl },
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(new Dictionary<string, long> { [firstFileUrl] = 2097152 });
+
+        // Act
+        var result = await service.GetFileSizesAsync(
+            [firstFileUrl, secondFileUrl],
+            config,
+            CancellationToken.None
+        );
+
+        // Assert
+        result[firstFileUrl].ShouldBe(2097152);
+        result.ShouldNotContainKey(secondFileUrl);
+    }
+
+    [Test]
+    public async Task GetFileSizesAsync_ClientThrows_ReturnsEmptyDictionary()
+    {
+        // Arrange
+        var config = new AlfafileConfig { Username = "user@example.test", Password = "password" };
+
+        apiClientMock
+            .Setup(x =>
+                x.GetFileSizesAsync(
+                    config,
+                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(new HttpRequestException("Login failed"));
+
+        // Act
+        var result = await service.GetFileSizesAsync(
+            ["https://alfafile.net/file/ACsST"],
+            config,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
     private string CreateTemporaryFile(string content)
     {
         var filePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.bin");

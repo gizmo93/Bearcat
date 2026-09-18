@@ -67,6 +67,13 @@ public interface IAlfafileApi
         CancellationToken cancellationToken
     );
 
+    [Get("/api/v1/file/download")]
+    Task<DownloadFileResponse> DownloadFileAsync(
+        [Query] string token,
+        [Query] [AliasAs("file_id")] string fileId,
+        CancellationToken cancellationToken
+    );
+
     [Get("/api/v1/file/move")]
     Task<MoveFileResponse> MoveFileAsync(
         [Query] string token,

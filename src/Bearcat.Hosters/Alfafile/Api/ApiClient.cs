@@ -2,6 +2,7 @@ using System.Net;
 using System.Security.Authentication;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Hosters.Alfafile.Api.File;
 using Bearcat.Hosters.Alfafile.Api.User;
 using Bearcat.Hosters.Extensions;
@@ -14,6 +15,7 @@ namespace Bearcat.Hosters.Alfafile.Api;
 public class ApiClient(
     IAlfafileApi api,
     HttpClientProvider httpClientProvider,
+    HosterFileDownloader fileDownloader,
     ILogger<ApiClient> logger
 ) : IAlfafileApiClient
 {
@@ -223,6 +225,80 @@ public class ApiClient(
                         : null
                 )
             );
+    }
+
+    public async Task DownloadFileAsync(
+        AlfafileConfig config,
+        string fileUrl,
+        string targetFilePath,
+        IDownloadProgress progress,
+        long? expectedSizeBytes,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileId =
+            GetFileId(fileUrl)
+            ?? throw new HttpRequestException(
+                $"Could not extract Alfafile file id from URL {fileUrl}"
+            );
+
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+
+        var response = await api.DownloadFileAsync(
+            token: token,
+            fileId: fileId,
+            cancellationToken: cancellationToken
+        );
+
+        var downloadUrl = response.Response?.DownloadUrl;
+
+        if (
+            !((HttpStatusCode)response.Status).IsSuccessStatusCode
+            || string.IsNullOrWhiteSpace(downloadUrl)
+        )
+        {
+            throw new HttpRequestException(
+                response.Details
+                    ?? $"Alfafile did not return a download URL for file {fileUrl} (status {response.Status})"
+            );
+        }
+
+        await fileDownloader.DownloadToFileAsync(
+            downloadUrl: downloadUrl,
+            targetFilePath: targetFilePath,
+            progress: progress,
+            expectedSizeBytes: expectedSizeBytes,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
+        AlfafileConfig config,
+        IReadOnlyList<string> fileUrls,
+        CancellationToken cancellationToken
+    )
+    {
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+
+        using var semaphore = new SemaphoreSlim(MaxParallelLinkChecks);
+
+        var checkTasks = fileUrls
+            .Distinct()
+            .Select(fileUrl =>
+                CheckLinkAsync(
+                    token: token,
+                    fileUrl: fileUrl,
+                    semaphore: semaphore,
+                    cancellationToken: cancellationToken
+                )
+            )
+            .ToList();
+
+        var results = await Task.WhenAll(checkTasks);
+
+        return results
+            .Where(result => result.File is { Size: > 0 })
+            .ToDictionary(result => result.FileUrl, result => result.File!.Size);
     }
 
     private async Task<Dictionary<string, int?>> GetDownloadCountsByFileIdAsync(

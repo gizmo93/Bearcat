@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Hosters.Alfafile.Api.File;
 using Bearcat.Hosters.Alfafile.Api.User;
 using Bearcat.Hosters.Shared;
@@ -48,4 +49,19 @@ public interface IAlfafileApiClient
     );
 
     Task<InfoResponse> GetUserInfoAsync(AlfafileConfig config, CancellationToken cancellationToken);
+
+    Task DownloadFileAsync(
+        AlfafileConfig config,
+        string fileUrl,
+        string targetFilePath,
+        IDownloadProgress progress,
+        long? expectedSizeBytes,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
+        AlfafileConfig config,
+        IReadOnlyList<string> fileUrls,
+        CancellationToken cancellationToken
+    );
 }
