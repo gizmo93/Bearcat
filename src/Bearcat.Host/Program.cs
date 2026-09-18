@@ -1,4 +1,5 @@
 ﻿using Bearcat.Abstractions.Configurations;
+using Bearcat.Api.InversionOfControl;
 using Bearcat.Application.InversionOfControl;
 using Bearcat.Archivers.InversionOfControl;
 using Bearcat.DistributionSites.InversionOfControl;
@@ -87,12 +88,18 @@ builder.Services.AddLinkCrypters();
 builder.Services.AddMedia();
 builder.Services.AddNfoDatabases();
 builder.Services.AddMediaDatabases();
+builder.Services.AddApi();
 
 var app = builder.Build();
 
 await app.Services.GetRequiredService<IEncryptionKeyProvider>().InitializeAsync();
 
 // Configure the HTTP request pipeline.
+app.UseWhen(
+    context => context.Request.Path.StartsWithSegments("/api"),
+    branch => branch.UseExceptionHandler()
+);
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
@@ -118,6 +125,7 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 app.MapControllers();
+app.MapApi();
 app.MapGet("/health", () => Results.Ok(new { Status = "Healthy" }));
 
 app.MapGet(

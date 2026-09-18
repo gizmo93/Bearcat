@@ -19,6 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Bearcat.Api\Bearcat.Api.csproj" />
         <ProjectReference Include="..\Bearcat.Application\Bearcat.Application.csproj" />
         <ProjectReference Include="..\Bearcat.Archivers\Bearcat.Archivers.csproj" />
         <ProjectReference Include="..\Bearcat.DistributionSites\Bearcat.DistributionSites.csproj" />
