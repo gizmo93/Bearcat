@@ -27,6 +27,7 @@ public record ReleaseSearchRequest
 
     /// <summary>
     /// Only return releases posted to a location whose url contains this value.
+    /// For example "https://www.my-forum.com" will list all releases that were posted to that forum.
     /// </summary>
     public string? PostedLocationUrl { get; init; }
 
