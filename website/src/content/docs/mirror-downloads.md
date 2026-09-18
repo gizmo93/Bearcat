@@ -52,6 +52,8 @@ switch only shows up for the ones that do:
 | 1fichier | Yes |
 | Alfafile | Yes |
 | HxFile.co | Yes |
+| Keep2Share | Yes |
+| Fast2Share.com | Yes |
 | DDownload | No |
 | datavaults.co | No |
 | file-upload.org | No |
@@ -63,6 +65,12 @@ work with a free account either way, only the download does not.
 Alfafile is a special case: its API allows to create download links for free accounts, but free accounts
 can only start one download every 120 minutes and have 500 MB of traffic in total, which is
 not enough to restore a multi part archive.
+
+Fast2Share makes free accounts wait about a minute per file before it returns a download link.
+Bearcat does not implement such things (it is not JDownloader), so non premium accounts will return an error instead.
+
+Keep2Share returns download links to free accounts, but throttles them to roughly 50 KB/s and
+one download at a time, so restoring an archive that way takes hours.
 
 ## Cancel a running download
 

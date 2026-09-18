@@ -21,5 +21,7 @@ public class GetFilesInfoResponse
 
         [JsonPropertyName("is_available")]
         public bool? IsAvailable { get; set; }
+
+        public long? Size { get; set; }
     }
 }

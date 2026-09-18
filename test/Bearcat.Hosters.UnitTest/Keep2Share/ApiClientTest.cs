@@ -1,34 +1,56 @@
 using System.Net;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.Keep2Share;
 using Bearcat.Hosters.Keep2Share.Api;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Refit;
 using Shouldly;
 
 namespace Bearcat.Hosters.UnitTest.Keep2Share;
 
 public class ApiClientTest
 {
+    private readonly List<string> temporaryFiles = [];
+
     private Mock<IKeep2ShareApi> apiMock = null!;
+    private RecordingDownloadHandler downloadHandler = null!;
     private ApiClient apiClient = null!;
 
     [SetUp]
     public void SetUp()
     {
         apiMock = new Mock<IKeep2ShareApi>(MockBehavior.Strict);
+        downloadHandler = new RecordingDownloadHandler();
         var httpClientFactoryMock = new Mock<IHttpClientFactory>();
         var loggerMock = new Mock<ILogger<ApiClient>>();
+
+        httpClientFactoryMock
+            .Setup(x => x.CreateClient(HttpClientProvider.DownloadHttpClientName))
+            .Returns(() => new HttpClient(downloadHandler, disposeHandler: false));
 
         apiClient = new ApiClient(
             apiMock.Object,
             new HttpClientProvider(httpClientFactoryMock.Object),
+            new HosterFileDownloader(new HttpClientProvider(httpClientFactoryMock.Object)),
             loggerMock.Object
         )
         {
             RateLimitRetryDelay = TimeSpan.Zero,
         };
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        downloadHandler.Dispose();
+
+        foreach (var temporaryFile in temporaryFiles.Where(File.Exists))
+        {
+            File.Delete(temporaryFile);
+        }
     }
 
     [Test]
@@ -343,6 +365,331 @@ public class ApiClientTest
         );
         exception.Code.ShouldBe((int)HttpStatusCode.BadRequest);
         exception.ErrorCode.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_ApiReturnsUrl_WritesFileToTargetPath()
+    {
+        // Arrange
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
+        var targetFilePath = CreateTemporaryFilePath();
+
+        SetupLogin();
+
+        apiMock
+            .Setup(x =>
+                x.GetUrlAsync(
+                    It.Is<GetUrlRequest>(request =>
+                        request.AuthToken == "auth-token" && request.FileId == "abc123def456"
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new GetUrlResponse
+                {
+                    Status = "success",
+                    Code = (int)HttpStatusCode.OK,
+                    Url = "https://dl.k2s.test/download/abc123def456",
+                }
+            );
+
+        downloadHandler.RespondWith("archive-content");
+
+        // Act
+        await apiClient.DownloadFileAsync(
+            config: config,
+            fileUrl: "https://keep2share.cc/file/abc123def456",
+            targetFilePath: targetFilePath,
+            progress: NullDownloadProgress.Instance,
+            expectedSizeBytes: 15,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        (await File.ReadAllTextAsync(targetFilePath)).ShouldBe("archive-content");
+        downloadHandler
+            .RequestedUrls.ShouldHaveSingleItem()
+            .ShouldBe("https://dl.k2s.test/download/abc123def456");
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_ApiReturnsNoUrl_ThrowsWithMessageAndSkipsDownload()
+    {
+        // Arrange
+        const string message = "Please verify your request via re captcha challenge";
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
+        var targetFilePath = CreateTemporaryFilePath();
+
+        SetupLogin();
+
+        apiMock
+            .Setup(x => x.GetUrlAsync(It.IsAny<GetUrlRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new GetUrlResponse
+                {
+                    Status = "error",
+                    Code = (int)HttpStatusCode.NotAcceptable,
+                    ErrorCode = 33,
+                    Message = message,
+                }
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.DownloadFileAsync(
+                config: config,
+                fileUrl: "https://keep2share.cc/file/abc123def456",
+                targetFilePath: targetFilePath,
+                progress: NullDownloadProgress.Instance,
+                expectedSizeBytes: null,
+                cancellationToken: CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe(message);
+        downloadHandler.RequestedUrls.ShouldBeEmpty();
+        File.Exists(targetFilePath).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_ApiThrowsErrorResponse_ThrowsWithApiMessageAndSkipsDownload()
+    {
+        // Arrange
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
+        var targetFilePath = CreateTemporaryFilePath();
+
+        SetupLogin();
+
+        apiMock
+            .Setup(x => x.GetUrlAsync(It.IsAny<GetUrlRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(
+                await CreateApiExceptionAsync(
+                    HttpStatusCode.NotAcceptable,
+                    """{"status":"error","code":406,"message":"File not found","errorCode":20}"""
+                )
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.DownloadFileAsync(
+                config: config,
+                fileUrl: "https://keep2share.cc/file/abc123def456",
+                targetFilePath: targetFilePath,
+                progress: NullDownloadProgress.Instance,
+                expectedSizeBytes: null,
+                cancellationToken: CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("File not found");
+        downloadHandler.RequestedUrls.ShouldBeEmpty();
+        File.Exists(targetFilePath).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_ApiThrowsCaptchaResponse_ThrowsCaptchaRequired()
+    {
+        // Arrange
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
+        var targetFilePath = CreateTemporaryFilePath();
+
+        SetupLogin();
+
+        apiMock
+            .Setup(x => x.GetUrlAsync(It.IsAny<GetUrlRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(
+                await CreateApiExceptionAsync(
+                    HttpStatusCode.NotAcceptable,
+                    """{"status":"error","code":406,"message":"Please verify your request via re captcha challenge","errorCode":33}"""
+                )
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<CaptchaVerificationRequiredException>(() =>
+            apiClient.DownloadFileAsync(
+                config: config,
+                fileUrl: "https://keep2share.cc/file/abc123def456",
+                targetFilePath: targetFilePath,
+                progress: NullDownloadProgress.Instance,
+                expectedSizeBytes: null,
+                cancellationToken: CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Please verify your request via re captcha challenge");
+        exception.ErrorCode.ShouldBe(33);
+        downloadHandler.RequestedUrls.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_ApiThrowsUnparseableBody_ThrowsWithExceptionMessage()
+    {
+        // Arrange
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
+        var targetFilePath = CreateTemporaryFilePath();
+
+        SetupLogin();
+
+        apiMock
+            .Setup(x => x.GetUrlAsync(It.IsAny<GetUrlRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(
+                await CreateApiExceptionAsync(
+                    HttpStatusCode.InternalServerError,
+                    "<html>Internal Server Error</html>"
+                )
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.DownloadFileAsync(
+                config: config,
+                fileUrl: "https://keep2share.cc/file/abc123def456",
+                targetFilePath: targetFilePath,
+                progress: NullDownloadProgress.Instance,
+                expectedSizeBytes: null,
+                cancellationToken: CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.ShouldBeOfType<HttpRequestException>();
+        exception.Message.ShouldNotBeNullOrWhiteSpace();
+        downloadHandler.RequestedUrls.ShouldBeEmpty();
+        File.Exists(targetFilePath).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task GetFileSizesAsync_ApiReturnsSizes_MapsThemBackToFileUrls()
+    {
+        // Arrange
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
+
+        SetupLogin();
+
+        apiMock
+            .Setup(x =>
+                x.GetFilesInfoAsync(
+                    It.Is<GetFilesInfoRequest>(request =>
+                        request.AuthToken == "auth-token" && request.Ids.Count == 2
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new GetFilesInfoResponse
+                {
+                    Status = "success",
+                    Code = (int)HttpStatusCode.OK,
+                    Files =
+                    [
+                        new GetFilesInfoResponse.FileInfo
+                        {
+                            Id = "abc123def456",
+                            IsAvailable = true,
+                            Size = 106954766,
+                        },
+                        new GetFilesInfoResponse.FileInfo
+                        {
+                            Id = "ghi789jkl012",
+                            IsAvailable = false,
+                        },
+                    ],
+                }
+            );
+
+        // Act
+        var result = await apiClient.GetFileSizesAsync(
+            config,
+            ["https://keep2share.cc/file/abc123def456", "https://keep2share.cc/file/ghi789jkl012"],
+            CancellationToken.None
+        );
+
+        // Assert
+        result["https://keep2share.cc/file/abc123def456"].ShouldBe(106954766);
+        result.ShouldNotContainKey("https://keep2share.cc/file/ghi789jkl012");
+    }
+
+    private static async Task<ApiException> CreateApiExceptionAsync(
+        HttpStatusCode statusCode,
+        string content
+    )
+    {
+        var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            "https://keep2share.cc/api/v2/geturl"
+        );
+        var response = new HttpResponseMessage(statusCode)
+        {
+            RequestMessage = request,
+            Content = new StringContent(content),
+        };
+
+        return await ApiException.Create(request, HttpMethod.Post, response, new RefitSettings());
+    }
+
+    private string CreateTemporaryFilePath()
+    {
+        var targetFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.rar");
+        temporaryFiles.Add(targetFilePath);
+        temporaryFiles.Add(targetFilePath + ".part");
+
+        return targetFilePath;
+    }
+
+    private sealed class RecordingDownloadHandler : HttpMessageHandler
+    {
+        private string content = string.Empty;
+
+        public List<string> RequestedUrls { get; } = [];
+
+        public void RespondWith(string responseContent)
+        {
+            content = responseContent;
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
+        {
+            RequestedUrls.Add(request.RequestUri!.ToString());
+
+            return Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(content),
+                    RequestMessage = request,
+                }
+            );
+        }
     }
 
     private void SetupLogin()

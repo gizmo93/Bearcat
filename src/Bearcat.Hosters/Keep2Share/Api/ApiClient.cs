@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Hosters.Extensions;
@@ -13,6 +14,7 @@ namespace Bearcat.Hosters.Keep2Share.Api;
 public class ApiClient(
     IKeep2ShareApi api,
     HttpClientProvider httpClientProvider,
+    HosterFileDownloader fileDownloader,
     ILogger<ApiClient> logger
 ) : IKeep2ShareApiClient
 {
@@ -343,6 +345,120 @@ public class ApiClient(
         return statusPerFileUrl;
     }
 
+    public async Task DownloadFileAsync(
+        Keep2ShareConfig config,
+        string fileUrl,
+        string targetFilePath,
+        IDownloadProgress progress,
+        long? expectedSizeBytes,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileId = TryExtractFileId(fileUrl);
+
+        if (string.IsNullOrWhiteSpace(fileId))
+        {
+            throw new HttpRequestException(
+                $"Could not extract Keep2Share file id from URL {fileUrl}"
+            );
+        }
+
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+
+        GetUrlResponse response;
+
+        try
+        {
+            response = await api.GetUrlAsync(
+                new GetUrlRequest(AuthToken: token, FileId: fileId),
+                cancellationToken
+            );
+        }
+        catch (ApiException exception)
+        {
+            ThrowIfCaptchaVerificationRequired(exception);
+
+            var errorMessage = TryDeserializeErrorResponse<GetUrlResponse>(
+                exception,
+                out var errorResponse
+            )
+                ? errorResponse!.Message
+                : null;
+
+            throw new HttpRequestException(
+                string.IsNullOrWhiteSpace(errorMessage) ? exception.Message : errorMessage
+            );
+        }
+
+        if (response.Status != "success" || string.IsNullOrWhiteSpace(response.Url))
+        {
+            throw new HttpRequestException(
+                response.Message
+                    ?? $"Keep2Share did not return a download URL for file {fileUrl} (status={response.Status}, code={response.Code})"
+            );
+        }
+
+        await fileDownloader.DownloadToFileAsync(
+            downloadUrl: response.Url,
+            targetFilePath: targetFilePath,
+            progress: progress,
+            expectedSizeBytes: expectedSizeBytes,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
+        Keep2ShareConfig config,
+        IReadOnlyList<string> fileUrls,
+        CancellationToken cancellationToken
+    )
+    {
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+        var sizePerFileUrl = new Dictionary<string, long>();
+
+        var fileUrlsByFileId = fileUrls
+            .Distinct()
+            .Select(fileUrl => new { FileUrl = fileUrl, FileId = TryExtractFileId(fileUrl) })
+            .Where(file => file.FileId is not null)
+            .GroupBy(file => file.FileId!)
+            .ToDictionary(group => group.Key, group => group.Select(file => file.FileUrl).ToList());
+
+        foreach (var fileIdBatch in fileUrlsByFileId.Keys.Chunk(MaxFilesInfoBatchSize))
+        {
+            var response = await GetFilesInfoAsync(token, fileIdBatch, cancellationToken);
+
+            if (response.Status != "success")
+            {
+                ThrowIfCaptchaVerificationRequired(
+                    response.Code,
+                    response.ErrorCode,
+                    response.Message
+                );
+
+                throw new HttpRequestException(
+                    $"Keep2Share files info request failed with status={response.Status}, code={response.Code}, errorCode={response.ErrorCode?.ToString() ?? "null"}, message={response.Message ?? "null"}"
+                );
+            }
+
+            foreach (
+                var file in response.Files.Where(file => file.Id is not null && file.Size is > 0)
+            )
+            {
+                if (!fileUrlsByFileId.TryGetValue(file.Id, out var urls))
+                {
+                    continue;
+                }
+
+                foreach (var url in urls)
+                {
+                    sizePerFileUrl[url] = file.Size!.Value;
+                }
+            }
+        }
+
+        return sizePerFileUrl;
+    }
+
     private async Task<GetFilesInfoResponse> GetFilesInfoAsync(
         string token,
         IReadOnlyList<string> fileIds,
@@ -499,7 +615,7 @@ public class ApiClient(
             );
         }
         catch (ApiException ex)
-            when (TryDeserializeLoginResponse(ex, out response)
+            when (TryDeserializeErrorResponse(ex, out response)
                 || ex.StatusCode == HttpStatusCode.NotAcceptable
                 || ex.StatusCode == HttpStatusCode.BadRequest
             )
@@ -539,7 +655,7 @@ public class ApiClient(
 
     private static void ThrowIfCaptchaVerificationRequired(ApiException exception)
     {
-        if (TryDeserializeLoginResponse(exception, out var response))
+        if (TryDeserializeErrorResponse<LoginResponse>(exception, out var response))
         {
             var code = response!.Code != 0 ? response.Code : (int)exception.StatusCode;
 
@@ -580,10 +696,8 @@ public class ApiClient(
             || code == (int)HttpStatusCode.BadRequest && errorCode == 2;
     }
 
-    private static bool TryDeserializeLoginResponse(
-        ApiException exception,
-        out LoginResponse? response
-    )
+    private static bool TryDeserializeErrorResponse<T>(ApiException exception, out T? response)
+        where T : class
     {
         response = null;
 
@@ -594,10 +708,7 @@ public class ApiClient(
 
         try
         {
-            response = JsonSerializer.Deserialize<LoginResponse>(
-                exception.Content,
-                JsonSerializerOptions
-            );
+            response = JsonSerializer.Deserialize<T>(exception.Content, JsonSerializerOptions);
             return response is not null;
         }
         catch (JsonException)

@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.Shared;
 
@@ -36,6 +37,22 @@ public interface IFast2ShareApiClient
     );
 
     Task<bool> IsApiKeyValidAsync(Fast2ShareConfig config, CancellationToken cancellationToken);
+
+    Task DownloadFileAsync(
+        Fast2ShareConfig config,
+        string fileUrl,
+        string? externalId,
+        string targetFilePath,
+        IDownloadProgress progress,
+        long? expectedSizeBytes,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
+        Fast2ShareConfig config,
+        IReadOnlyList<string> fileUrls,
+        CancellationToken cancellationToken
+    );
 }
 
 public record Fast2ShareUploadResult(string Uuid, string FileUrl, bool Deduped);

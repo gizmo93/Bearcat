@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Results;
 
 namespace Bearcat.Hosters.Keep2Share.Api;
@@ -47,6 +48,21 @@ public interface IKeep2ShareApiClient
     );
 
     Task<IReadOnlyDictionary<string, bool>> CheckLinksAsync(
+        Keep2ShareConfig config,
+        IReadOnlyList<string> fileUrls,
+        CancellationToken cancellationToken
+    );
+
+    Task DownloadFileAsync(
+        Keep2ShareConfig config,
+        string fileUrl,
+        string targetFilePath,
+        IDownloadProgress progress,
+        long? expectedSizeBytes,
+        CancellationToken cancellationToken
+    );
+
+    Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
         Keep2ShareConfig config,
         IReadOnlyList<string> fileUrls,
         CancellationToken cancellationToken

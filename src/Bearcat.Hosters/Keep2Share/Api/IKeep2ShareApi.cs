@@ -49,6 +49,12 @@ public interface IKeep2ShareApi
         CancellationToken cancellationToken
     );
 
+    [Post("/geturl")]
+    Task<GetUrlResponse> GetUrlAsync(
+        [Body] GetUrlRequest request,
+        CancellationToken cancellationToken
+    );
+
     [Post("/updateFiles")]
     Task<UpdateFilesResponse> UpdateFilesAsync(
         [Body] UpdateFilesRequest request,

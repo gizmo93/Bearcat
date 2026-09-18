@@ -52,6 +52,13 @@ public interface IFast2ShareApi
         CancellationToken cancellationToken
     );
 
+    [Get("/v1/files/{uuid}/download")]
+    Task<ApiResponse<FileDownloadResponse>> GetFileDownloadAsync(
+        [Header("Authorization")] string authorization,
+        string uuid,
+        CancellationToken cancellationToken
+    );
+
     [Post("/v1/files/{uuid}/move")]
     Task<ApiResponse<MoveFileResponse>> MoveFileAsync(
         [Header("Authorization")] string authorization,

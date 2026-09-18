@@ -1,6 +1,7 @@
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.Fast2Share;
 using Bearcat.Hosters.Fast2Share.Api;
@@ -16,8 +17,11 @@ public class ApiClientTest
 {
     private const string Uuid = "9jUMitPVq3AN";
 
+    private readonly List<string> temporaryFiles = [];
+
     private Mock<IFast2ShareApi> apiMock = null!;
     private Mock<IHttpClientFactory> httpClientFactoryMock = null!;
+    private RecordingDownloadHandler downloadHandler = null!;
     private ApiClient apiClient = null!;
     private Fast2ShareConfig config = null!;
     private string filePath = null!;
@@ -27,11 +31,17 @@ public class ApiClientTest
     {
         apiMock = new Mock<IFast2ShareApi>(MockBehavior.Strict);
         httpClientFactoryMock = new Mock<IHttpClientFactory>(MockBehavior.Strict);
+        downloadHandler = new RecordingDownloadHandler();
         var loggerMock = new Mock<ILogger<ApiClient>>();
+
+        httpClientFactoryMock
+            .Setup(x => x.CreateClient(HttpClientProvider.DownloadHttpClientName))
+            .Returns(() => new HttpClient(downloadHandler, disposeHandler: false));
 
         apiClient = new ApiClient(
             apiMock.Object,
             new HttpClientProvider(httpClientFactoryMock.Object),
+            new HosterFileDownloader(new HttpClientProvider(httpClientFactoryMock.Object)),
             loggerMock.Object
         )
         {
@@ -46,7 +56,13 @@ public class ApiClientTest
     [TearDown]
     public void TearDown()
     {
+        downloadHandler.Dispose();
         File.Delete(filePath);
+
+        foreach (var temporaryFile in temporaryFiles.Where(File.Exists))
+        {
+            File.Delete(temporaryFile);
+        }
     }
 
     [Test]
@@ -433,6 +449,209 @@ public class ApiClientTest
 
         // Assert
         result.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_ApiReturnsReadyLink_WritesFileToTargetPath()
+    {
+        // Arrange
+        var targetFilePath = CreateTemporaryFilePath();
+
+        apiMock
+            .Setup(x =>
+                x.GetFileDownloadAsync("Bearer f2s_api-key", Uuid, It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    HttpStatusCode.OK,
+                    new FileDownloadResponse(
+                        Status: "ready",
+                        DownloadUrl: "https://fast2share.com/d/MFZKTVc4",
+                        Seconds: null,
+                        Size: 106954766,
+                        ExpiresIn: 300
+                    )
+                )
+            );
+
+        downloadHandler.RespondWith("archive-content");
+
+        // Act
+        await apiClient.DownloadFileAsync(
+            config: config,
+            fileUrl: $"https://f2s.im/f/{Uuid}",
+            externalId: null,
+            targetFilePath: targetFilePath,
+            progress: NullDownloadProgress.Instance,
+            expectedSizeBytes: 106954766,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        (await File.ReadAllTextAsync(targetFilePath)).ShouldBe("archive-content");
+        downloadHandler
+            .RequestedUrls.ShouldHaveSingleItem()
+            .ShouldBe("https://fast2share.com/d/MFZKTVc4");
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_ApiAsksToWait_ThrowsWithWaitTimeAndSkipsDownload()
+    {
+        // Arrange
+        var targetFilePath = CreateTemporaryFilePath();
+
+        apiMock
+            .Setup(x =>
+                x.GetFileDownloadAsync("Bearer f2s_api-key", Uuid, It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    HttpStatusCode.OK,
+                    new FileDownloadResponse(
+                        Status: "wait",
+                        DownloadUrl: null,
+                        Seconds: 45,
+                        Size: 106954766,
+                        ExpiresIn: null
+                    )
+                )
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.DownloadFileAsync(
+                config: config,
+                fileUrl: $"https://f2s.im/f/{Uuid}",
+                externalId: null,
+                targetFilePath: targetFilePath,
+                progress: NullDownloadProgress.Instance,
+                expectedSizeBytes: null,
+                cancellationToken: CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe(
+            $"Fast2Share did not issue a download link for file https://f2s.im/f/{Uuid} and asked to wait 45 seconds"
+        );
+        downloadHandler.RequestedUrls.ShouldBeEmpty();
+        File.Exists(targetFilePath).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_ExternalId_ResolvesUuidFromExternalId()
+    {
+        // Arrange
+        var targetFilePath = CreateTemporaryFilePath();
+
+        apiMock
+            .Setup(x =>
+                x.GetFileDownloadAsync(
+                    "Bearer f2s_api-key",
+                    "PNjtUDAm0Lzg",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    HttpStatusCode.OK,
+                    new FileDownloadResponse(
+                        Status: "ready",
+                        DownloadUrl: "https://fast2share.com/d/MFZKTVc4",
+                        Seconds: null,
+                        Size: 15,
+                        ExpiresIn: 300
+                    )
+                )
+            );
+
+        downloadHandler.RespondWith("archive-content");
+
+        // Act
+        await apiClient.DownloadFileAsync(
+            config: config,
+            fileUrl: "https://fast2share.com/checker",
+            externalId: "PNjtUDAm0Lzg",
+            targetFilePath: targetFilePath,
+            progress: NullDownloadProgress.Instance,
+            expectedSizeBytes: null,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        (await File.ReadAllTextAsync(targetFilePath)).ShouldBe("archive-content");
+        apiMock.VerifyAll();
+    }
+
+    [Test]
+    public async Task GetFileSizesAsync_ApiReturnsFile_MapsSizeToFileUrl()
+    {
+        // Arrange
+        var fileUrl = $"https://f2s.im/f/{Uuid}";
+
+        apiMock
+            .Setup(x => x.GetFileAsync("Bearer f2s_api-key", Uuid, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse(
+                    HttpStatusCode.OK,
+                    new FileResponse(
+                        Uuid: Uuid,
+                        Name: "archive.rar",
+                        Size: 184320,
+                        Status: "completed",
+                        Downloads: 23,
+                        ShareUrl: fileUrl
+                    )
+                )
+            );
+
+        // Act
+        var result = await apiClient.GetFileSizesAsync(
+            config,
+            [fileUrl, "https://fast2share.com/checker"],
+            CancellationToken.None
+        );
+
+        // Assert
+        result[fileUrl].ShouldBe(184320);
+        result.ShouldNotContainKey("https://fast2share.com/checker");
+    }
+
+    private string CreateTemporaryFilePath()
+    {
+        var targetFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.rar");
+        temporaryFiles.Add(targetFilePath);
+        temporaryFiles.Add(targetFilePath + ".part");
+
+        return targetFilePath;
+    }
+
+    private sealed class RecordingDownloadHandler : HttpMessageHandler
+    {
+        private string content = string.Empty;
+
+        public List<string> RequestedUrls { get; } = [];
+
+        public void RespondWith(string responseContent)
+        {
+            content = responseContent;
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
+        {
+            RequestedUrls.Add(request.RequestUri!.ToString());
+
+            return Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(content),
+                    RequestMessage = request,
+                }
+            );
+        }
     }
 
     private void SetupValidApiKey()

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,7 @@ namespace Bearcat.Hosters.Fast2Share.Api;
 public class ApiClient(
     IFast2ShareApi api,
     HttpClientProvider httpClientProvider,
+    HosterFileDownloader fileDownloader,
     ILogger<ApiClient> logger
 ) : IFast2ShareApiClient
 {
@@ -29,6 +31,10 @@ public class ApiClient(
     private const string StatusNeedHash = "need_hash";
 
     private const string StatusExists = "exists";
+
+    private const string StatusWait = "wait";
+
+    private const string StatusReady = "ready";
 
     private const int MaxParallelLinkChecks = 5;
 
@@ -236,6 +242,128 @@ public class ApiClient(
         );
 
         return response.StatusCode == HttpStatusCode.OK;
+    }
+
+    public async Task DownloadFileAsync(
+        Fast2ShareConfig config,
+        string fileUrl,
+        string? externalId,
+        string targetFilePath,
+        IDownloadProgress progress,
+        long? expectedSizeBytes,
+        CancellationToken cancellationToken
+    )
+    {
+        var uuid = externalId is { Length: > 0 } ? externalId : ExtractUuid(fileUrl);
+
+        if (string.IsNullOrWhiteSpace(uuid))
+        {
+            throw new HttpRequestException(
+                $"Could not extract Fast2Share file uuid from URL {fileUrl}"
+            );
+        }
+
+        var response = await api.GetFileDownloadAsync(
+            GetAuthorizationHeader(config.ApiKey),
+            uuid,
+            cancellationToken
+        );
+
+        if (!response.IsSuccessStatusCode || response.Content is null)
+        {
+            throw new HttpRequestException(
+                $"Fast2Share download request failed with status code {response.StatusCode}: {GetErrorMessage(response)}"
+            );
+        }
+
+        var downloadTicket = response.Content;
+
+        if (IsStatus(downloadTicket.Status, StatusWait))
+        {
+            throw new HttpRequestException(
+                $"Fast2Share did not issue a download link for file {fileUrl} and asked to wait {downloadTicket.Seconds ?? 0} seconds"
+            );
+        }
+
+        if (
+            !IsStatus(downloadTicket.Status, StatusReady)
+            || string.IsNullOrWhiteSpace(downloadTicket.DownloadUrl)
+        )
+        {
+            throw new HttpRequestException(
+                $"Fast2Share did not issue a download link for file {fileUrl} and reported status {downloadTicket.Status ?? "unknown"}"
+            );
+        }
+
+        await fileDownloader.DownloadToFileAsync(
+            downloadUrl: downloadTicket.DownloadUrl,
+            targetFilePath: targetFilePath,
+            progress: progress,
+            expectedSizeBytes: expectedSizeBytes ?? downloadTicket.Size,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    public async Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
+        Fast2ShareConfig config,
+        IReadOnlyList<string> fileUrls,
+        CancellationToken cancellationToken
+    )
+    {
+        var authorization = GetAuthorizationHeader(config.ApiKey);
+        using var semaphore = new SemaphoreSlim(MaxParallelLinkChecks);
+
+        var sizeTasks = fileUrls
+            .Distinct()
+            .Select(fileUrl =>
+                GetFileSizeAsync(authorization, fileUrl, semaphore, cancellationToken)
+            )
+            .ToList();
+
+        var results = await Task.WhenAll(sizeTasks);
+
+        return results
+            .Where(result => result.Size is > 0)
+            .ToDictionary(result => result.FileUrl, result => result.Size!.Value);
+    }
+
+    private async Task<(string FileUrl, long? Size)> GetFileSizeAsync(
+        string authorization,
+        string fileUrl,
+        SemaphoreSlim semaphore,
+        CancellationToken cancellationToken
+    )
+    {
+        var uuid = ExtractUuid(fileUrl);
+
+        if (uuid is null)
+        {
+            return (fileUrl, null);
+        }
+
+        await semaphore.WaitAsync(cancellationToken);
+
+        try
+        {
+            var response = await api.GetFileAsync(authorization, uuid, cancellationToken);
+
+            return (fileUrl, response.IsSuccessStatusCode ? response.Content?.Size : null);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogWarning(
+                ex,
+                "Failed to look up the Fast2Share file size for {FileUrl}: {Message}",
+                fileUrl,
+                ex.InnerException?.Message ?? ex.Message
+            );
+
+            return (fileUrl, null);
+        }
+        finally
+        {
+            semaphore.Release();
+        }
     }
 
     private async Task<CreateUploadResponse> CreateUploadAsync(

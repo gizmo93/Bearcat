@@ -11,7 +11,8 @@ using Microsoft.Extensions.Logging;
 namespace Bearcat.Hosters.Fast2Share;
 
 public class Fast2Share(IFast2ShareApiClient apiClient, ILogger<Fast2Share> logger)
-    : IHosterWithFolders
+    : IHosterWithFolders,
+        IHosterWithDownload
 {
     private const int MaxParallelUploads = 10;
 
@@ -20,6 +21,8 @@ public class Fast2Share(IFast2ShareApiClient apiClient, ILogger<Fast2Share> logg
     public string Name => "Fast2Share.com";
 
     public bool SupportsPremiumOnlyDownloads => false;
+
+    public bool DownloadRequiresPremium => true;
 
     public IReadOnlyList<string> ConfigurationKeys => [nameof(Fast2ShareConfig.ApiKey)];
 
@@ -196,6 +199,74 @@ public class Fast2Share(IFast2ShareApiClient apiClient, ILogger<Fast2Share> logg
             folderId,
             cancellationToken
         );
+    }
+
+    public async Task<DownloadFileResult> DownloadFileAsync(
+        DownloadFileDto file,
+        string targetFilePath,
+        IHosterConfig hosterConfig,
+        IDownloadProgress progress,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<Fast2ShareConfig>();
+
+        try
+        {
+            await apiClient.DownloadFileAsync(
+                config: config,
+                fileUrl: file.HosterFileLink,
+                externalId: file.ExternalId,
+                targetFilePath: targetFilePath,
+                progress: progress,
+                expectedSizeBytes: file.ExpectedSizeBytes,
+                cancellationToken: cancellationToken
+            );
+
+            return new DownloadFileResult(IsSuccess: true, ErrorMessages: []);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(
+                ex,
+                "Failed to download file {FileLink} from Fast2Share: {Message}",
+                file.HosterFileLink,
+                ex.InnerException?.Message ?? ex.Message
+            );
+
+            return new DownloadFileResult(
+                IsSuccess: false,
+                ErrorMessages: [ex.InnerException?.Message ?? ex.Message]
+            );
+        }
+    }
+
+    public async Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
+        IReadOnlyList<string> fileUrls,
+        IHosterConfig hosterConfig,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = hosterConfig.As<Fast2ShareConfig>();
+
+        try
+        {
+            return await apiClient.GetFileSizesAsync(
+                config: config,
+                fileUrls: fileUrls,
+                cancellationToken: cancellationToken
+            );
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(
+                ex,
+                "Failed to look up file sizes on Fast2Share: {Message}",
+                ex.InnerException?.Message ?? ex.Message
+            );
+
+            return new Dictionary<string, long>();
+        }
     }
 
     public async Task<TryLoginResult> TryLoginAsync(

@@ -239,4 +239,146 @@ public class Fast2ShareTest
         result.IsSuccess.ShouldBeFalse();
         result.ErrorMessage.ShouldBe("Invalid credentials");
     }
+
+    [Test]
+    public void DownloadRequiresPremium_FreeAccountsHaveToWait_IsTrue()
+    {
+        // Arrange
+        // Act
+        var requiresPremium = service.DownloadRequiresPremium;
+
+        // Assert
+        requiresPremium.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_ApiClientSucceeds_ForwardsFileLinkAndReturnsSuccess()
+    {
+        // Arrange
+        var targetFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.rar");
+
+        apiClientMock
+            .Setup(x =>
+                x.DownloadFileAsync(
+                    config,
+                    $"https://f2s.im/f/{Uuid}",
+                    Uuid,
+                    targetFilePath,
+                    NullDownloadProgress.Instance,
+                    2048L,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await service.DownloadFileAsync(
+            new DownloadFileDto(
+                HosterFileLink: $"https://f2s.im/f/{Uuid}",
+                ExternalId: Uuid,
+                ExpectedSizeBytes: 2048
+            ),
+            targetFilePath,
+            config,
+            NullDownloadProgress.Instance,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result.ErrorMessages.ShouldBeEmpty();
+        apiClientMock.VerifyAll();
+    }
+
+    [Test]
+    public async Task DownloadFileAsync_ApiClientThrows_ReturnsFailureWithMessage()
+    {
+        // Arrange
+        var targetFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.rar");
+
+        apiClientMock
+            .Setup(x =>
+                x.DownloadFileAsync(
+                    config,
+                    $"https://f2s.im/f/{Uuid}",
+                    null,
+                    targetFilePath,
+                    NullDownloadProgress.Instance,
+                    null,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(new HttpRequestException("Fast2Share returned no download URL"));
+
+        // Act
+        var result = await service.DownloadFileAsync(
+            new DownloadFileDto(
+                HosterFileLink: $"https://f2s.im/f/{Uuid}",
+                ExternalId: null,
+                ExpectedSizeBytes: null
+            ),
+            targetFilePath,
+            config,
+            NullDownloadProgress.Instance,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeFalse();
+        result.ErrorMessages.ShouldBe(["Fast2Share returned no download URL"]);
+    }
+
+    [Test]
+    public async Task GetFileSizesAsync_ClientReturnsSizes_MapsThemBackToFileUrls()
+    {
+        // Arrange
+        const string firstFileUrl = "https://f2s.im/f/9jUMitPVq3AN";
+        const string secondFileUrl = "https://f2s.im/f/PNjtUDAm0Lzg";
+
+        apiClientMock
+            .Setup(x =>
+                x.GetFileSizesAsync(
+                    config,
+                    new[] { firstFileUrl, secondFileUrl },
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(new Dictionary<string, long> { [firstFileUrl] = 106954766 });
+
+        // Act
+        var result = await service.GetFileSizesAsync(
+            [firstFileUrl, secondFileUrl],
+            config,
+            CancellationToken.None
+        );
+
+        // Assert
+        result[firstFileUrl].ShouldBe(106954766);
+        result.ShouldNotContainKey(secondFileUrl);
+    }
+
+    [Test]
+    public async Task GetFileSizesAsync_ClientThrows_ReturnsEmptyDictionary()
+    {
+        // Arrange
+        apiClientMock
+            .Setup(x =>
+                x.GetFileSizesAsync(
+                    config,
+                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(new HttpRequestException("Invalid credentials"));
+
+        // Act
+        var result = await service.GetFileSizesAsync(
+            [$"https://f2s.im/f/{Uuid}"],
+            config,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
 }
