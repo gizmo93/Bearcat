@@ -12,6 +12,9 @@ namespace Bearcat.Api.Controllers;
 [Route("api/v1/releases")]
 public class ReleasesController(IReleaseReadRepository releaseReadRepository) : ControllerBase
 {
+    /// <summary>
+    /// Search releases.
+    /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResponse<ReleaseResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResponse<ReleaseResponse>>> SearchAsync(
@@ -52,6 +55,9 @@ public class ReleasesController(IReleaseReadRepository releaseReadRepository) : 
         );
     }
 
+    /// <summary>
+    /// Get a release.
+    /// </summary>
     [HttpGet("{releaseId:int}")]
     [ProducesResponseType(typeof(ReleaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -70,6 +76,9 @@ public class ReleasesController(IReleaseReadRepository releaseReadRepository) : 
         return Ok(ReleaseResponse.FromReadModel(release));
     }
 
+    /// <summary>
+    /// Get release metadata.
+    /// </summary>
     [HttpGet("{releaseId:int}/metadata")]
     [ProducesResponseType(typeof(ReleaseMetadataResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -91,6 +100,9 @@ public class ReleasesController(IReleaseReadRepository releaseReadRepository) : 
         return Ok(ReleaseMetadataResponse.FromReadModel(metadata));
     }
 
+    /// <summary>
+    /// List archive configurations of a release.
+    /// </summary>
     [HttpGet("{releaseId:int}/archives")]
     [ProducesResponseType(typeof(IReadOnlyList<ArchiveConfigResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

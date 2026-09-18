@@ -9,6 +9,9 @@ namespace Bearcat.Api.Controllers;
 [Route("api/v1/archives")]
 public class ArchivesController(IArchiveReadRepository archiveReadRepository) : ControllerBase
 {
+    /// <summary>
+    /// Get an archive with its files.
+    /// </summary>
     [HttpGet("{archiveId:int}")]
     [ProducesResponseType(typeof(ArchiveResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

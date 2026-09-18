@@ -11,6 +11,9 @@ namespace Bearcat.Api.Controllers;
 [Route("api/v1/releases/{releaseId:int}/uploads")]
 public class ReleaseUploadsController(IReleaseReadRepository releaseReadRepository) : ControllerBase
 {
+    /// <summary>
+    /// Search uploads of a release.
+    /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResponse<UploadResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -48,6 +51,9 @@ public class ReleaseUploadsController(IReleaseReadRepository releaseReadReposito
         );
     }
 
+    /// <summary>
+    /// Search download links of an upload.
+    /// </summary>
     [HttpGet("{uploadId:int}/links")]
     [ProducesResponseType(typeof(PagedResponse<UploadLinkResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -85,6 +91,9 @@ public class ReleaseUploadsController(IReleaseReadRepository releaseReadReposito
         );
     }
 
+    /// <summary>
+    /// List link crypter container links of an upload.
+    /// </summary>
     [HttpGet("{uploadId:int}/linkcrypter-links")]
     [ProducesResponseType(typeof(IReadOnlyList<LinkCrypterLinkResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

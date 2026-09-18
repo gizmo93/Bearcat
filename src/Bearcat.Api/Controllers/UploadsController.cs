@@ -11,6 +11,9 @@ namespace Bearcat.Api.Controllers;
 [Route("api/v1/uploads")]
 public class UploadsController(IUploadReadRepository uploadReadRepository) : ControllerBase
 {
+    /// <summary>
+    /// Search uploads across all releases.
+    /// </summary>
     [HttpGet]
     [ProducesResponseType(
         typeof(PagedResponse<UploadSearchResultResponse>),
