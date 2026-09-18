@@ -656,6 +656,45 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task ProcessAsync_PendingUploadWithoutArchive_MovesUploadBackToWaitingForArchive()
+    {
+        // Arrange
+        var uploadConfig = await AddUploadConfigAsync();
+        var upload = new Upload
+        {
+            UploadConfigId = uploadConfig.Id,
+            CreatedAt = DateTime.UtcNow,
+            UploadState = UploadState.Pending,
+            OnlineState = OnlineState.Unknown,
+            ErrorMessages = [],
+            UploadedFiles = [],
+        };
+        dbContext.Uploads.Add(upload);
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Uploads.SingleAsync();
+
+        result.Id.ShouldBe(upload.Id);
+        result.ArchiveId.ShouldBeNull();
+        result.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        hosterMock.Verify(
+            h =>
+                h.UploadFileAsync(
+                    It.IsAny<FileDto>(),
+                    It.IsAny<IHosterConfig>(),
+                    It.IsAny<IUploadProgress>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
     public async Task ProcessAsync_CancellationRequestedUploadExists_MarksUploadCanceled()
     {
         // Arrange

@@ -1133,6 +1133,35 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         updatedUpload.UploadState.ShouldBe(UploadState.Pending);
     }
 
+    [Test]
+    public async Task ResumeUploadAsync_CanceledUploadWithoutArchive_SetsUploadWaitingForArchive()
+    {
+        // Arrange
+        var uploadConfig = await AddUploadConfigAsync(enableAutomaticReuploads: false);
+        var upload = new Upload
+        {
+            UploadConfigId = uploadConfig.Id,
+            CreatedAt = DateTime.UtcNow,
+            UploadState = UploadState.Canceled,
+            OnlineState = OnlineState.Unknown,
+            UploadedFiles = [],
+            ErrorMessages = [],
+        };
+        dbContext.Uploads.Add(upload);
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.ResumeUploadAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var updatedUpload = await dbContext.Uploads.SingleAsync();
+
+        result.ShouldBeTrue();
+        updatedUpload.ArchiveId.ShouldBeNull();
+        updatedUpload.UploadState.ShouldBe(UploadState.WaitingForArchive);
+    }
+
     [TestCase(UploadState.Pending)]
     [TestCase(UploadState.Uploading)]
     [TestCase(UploadState.Completed)]

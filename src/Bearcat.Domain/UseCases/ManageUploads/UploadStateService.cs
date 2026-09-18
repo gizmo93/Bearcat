@@ -124,7 +124,9 @@ public class UploadStateService(
             return false;
         }
 
-        upload.UploadState = UploadState.Pending;
+        upload.UploadState = upload.ArchiveId is null
+            ? UploadState.WaitingForArchive
+            : UploadState.Pending;
 
         await uploadStateRepository.SaveChangesAsync(cancellationToken);
 

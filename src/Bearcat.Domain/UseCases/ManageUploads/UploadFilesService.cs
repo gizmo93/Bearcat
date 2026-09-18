@@ -192,6 +192,17 @@ public class UploadFilesService(
 
         foreach (var upload in uploads)
         {
+            if (upload.ArchiveId is null)
+            {
+                logger.LogInformation(
+                    "Pending upload {UploadId} has no archive assigned, moving it back to waiting for archive",
+                    upload.Id
+                );
+
+                upload.UploadState = UploadState.WaitingForArchive;
+                continue;
+            }
+
             trackedUploadIds.Add(upload.Id);
 
             var hosterClassName = upload.UploadConfig.HosterRegistration.HosterClassName;
