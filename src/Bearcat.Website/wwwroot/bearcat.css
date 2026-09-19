@@ -2104,6 +2104,69 @@ a {
     white-space: pre;
 }
 
+.bearcat-classification-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.45rem;
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
+}
+
+.bearcat-classification-grid {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+.bearcat-classification-row {
+    display: grid;
+    min-width: 0;
+    gap: 0.15rem;
+}
+
+@media (min-width: 640px) {
+    .bearcat-classification-row {
+        grid-template-columns: 10rem minmax(0, 1fr);
+        gap: 0.15rem 1rem;
+        align-items: center;
+    }
+}
+
+.bearcat-classification-row dt {
+    color: var(--muted-foreground);
+    font-weight: 600;
+}
+
+.bearcat-classification-row dd {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    color: var(--foreground);
+    overflow-wrap: anywhere;
+}
+
+.bearcat-classification-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 1rem;
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--muted-foreground);
+}
+
+.bearcat-classification-footer span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
 .bearcat-release-info-external-row {
     display: grid;
     min-width: 0;

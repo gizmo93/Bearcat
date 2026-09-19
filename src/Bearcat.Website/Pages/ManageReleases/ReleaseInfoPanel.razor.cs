@@ -30,6 +30,7 @@ public partial class ReleaseInfoPanel(
     private ReleaseNfoReadModel? releaseNfo;
     private IReadOnlyList<ReleaseExternalIdentifierReadModel> externalIdentifiers = [];
     private IReadOnlyList<ReleaseMediaFileReadModel> mediaFiles = [];
+    private ReleaseClassificationReadModel? classification;
     private bool isLoading;
     private bool isResolving;
     private bool isExtracting;
@@ -56,6 +57,7 @@ public partial class ReleaseInfoPanel(
                     ReleaseId
                 );
                 mediaFiles = await repository.GetMediaFilesAsync(ReleaseId);
+                classification = await repository.GetClassificationAsync(ReleaseId);
             });
         }
         finally

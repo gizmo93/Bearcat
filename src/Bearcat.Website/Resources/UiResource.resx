@@ -372,6 +372,59 @@
   <data name="ReleaseContentType.TvShowEpisode" xml:space="preserve"><value>TV show episode</value></data>
   <data name="ReleaseContentType.Other" xml:space="preserve"><value>Other</value></data>
   <data name="ReleaseContentType.Game" xml:space="preserve"><value>Game</value></data>
+  <data name="Classification" xml:space="preserve"><value>Classification</value></data>
+  <data name="MultiLanguage" xml:space="preserve"><value>Multi-language</value></data>
+  <data name="ParserVersion" xml:space="preserve"><value>Parser version</value></data>
+  <data name="Year" xml:space="preserve"><value>Year</value></data>
+  <data name="Season" xml:space="preserve"><value>Season</value></data>
+  <data name="Episode" xml:space="preserve"><value>Episode</value></data>
+  <data name="Resolution" xml:space="preserve"><value>Resolution</value></data>
+  <data name="Source" xml:space="preserve"><value>Source</value></data>
+  <data name="Platform" xml:space="preserve"><value>Platform</value></data>
+  <data name="ReleaseGroupToken" xml:space="preserve"><value>Release group tag</value></data>
+  <data name="ReleaseResolution.Unknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="ReleaseResolution.Sd" xml:space="preserve"><value>SD</value></data>
+  <data name="ReleaseResolution.R480p" xml:space="preserve"><value>480p</value></data>
+  <data name="ReleaseResolution.R576p" xml:space="preserve"><value>576p</value></data>
+  <data name="ReleaseResolution.R720p" xml:space="preserve"><value>720p</value></data>
+  <data name="ReleaseResolution.R1080p" xml:space="preserve"><value>1080p</value></data>
+  <data name="ReleaseResolution.R2160p" xml:space="preserve"><value>2160p</value></data>
+  <data name="ReleaseSource.Unknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="ReleaseSource.BluRay" xml:space="preserve"><value>Blu-ray</value></data>
+  <data name="ReleaseSource.BdRip" xml:space="preserve"><value>BDRip</value></data>
+  <data name="ReleaseSource.BrRip" xml:space="preserve"><value>BRRip</value></data>
+  <data name="ReleaseSource.WebDl" xml:space="preserve"><value>WEB-DL</value></data>
+  <data name="ReleaseSource.Web" xml:space="preserve"><value>WEB</value></data>
+  <data name="ReleaseSource.WebRip" xml:space="preserve"><value>WEBRip</value></data>
+  <data name="ReleaseSource.Hdtv" xml:space="preserve"><value>HDTV</value></data>
+  <data name="ReleaseSource.HdtvRip" xml:space="preserve"><value>HDTVRip</value></data>
+  <data name="ReleaseSource.Pdtv" xml:space="preserve"><value>PDTV</value></data>
+  <data name="ReleaseSource.DvdRip" xml:space="preserve"><value>DVDRip</value></data>
+  <data name="ReleaseSource.DvdR" xml:space="preserve"><value>DVDR</value></data>
+  <data name="ReleaseSource.HdRip" xml:space="preserve"><value>HDRip</value></data>
+  <data name="ReleaseSource.TvRip" xml:space="preserve"><value>TVRip</value></data>
+  <data name="ReleaseSource.SatRip" xml:space="preserve"><value>SATRip</value></data>
+  <data name="ReleasePlatform.Unknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="ReleasePlatform.Windows" xml:space="preserve"><value>Windows</value></data>
+  <data name="ReleasePlatform.MacOs" xml:space="preserve"><value>macOS</value></data>
+  <data name="ReleasePlatform.Linux" xml:space="preserve"><value>Linux</value></data>
+  <data name="ReleasePlatform.Amiga" xml:space="preserve"><value>Amiga</value></data>
+  <data name="ReleasePlatform.Nes" xml:space="preserve"><value>NES</value></data>
+  <data name="ReleasePlatform.Snes" xml:space="preserve"><value>SNES</value></data>
+  <data name="ReleasePlatform.ZxSpectrum" xml:space="preserve"><value>ZX Spectrum</value></data>
+  <data name="ReleasePlatform.Commodore64" xml:space="preserve"><value>C64</value></data>
+  <data name="ReleasePlatform.PlayStation3" xml:space="preserve"><value>PlayStation 3</value></data>
+  <data name="ReleasePlatform.PlayStation4" xml:space="preserve"><value>PlayStation 4</value></data>
+  <data name="ReleasePlatform.PlayStation5" xml:space="preserve"><value>PlayStation 5</value></data>
+  <data name="ReleasePlatform.Xbox360" xml:space="preserve"><value>Xbox 360</value></data>
+  <data name="ReleasePlatform.XboxOne" xml:space="preserve"><value>Xbox One</value></data>
+  <data name="ReleasePlatform.XboxSeries" xml:space="preserve"><value>Xbox Series</value></data>
+  <data name="ReleasePlatform.NintendoSwitch" xml:space="preserve"><value>Nintendo Switch</value></data>
+  <data name="ClassificationSource.None" xml:space="preserve"><value>None</value></data>
+  <data name="ClassificationSource.ReleaseName" xml:space="preserve"><value>Release name</value></data>
+  <data name="ClassificationSource.MediaInfo" xml:space="preserve"><value>MediaInfo</value></data>
+  <data name="ClassificationSource.ReleaseInfo" xml:space="preserve"><value>Release info</value></data>
+  <data name="ClassificationSource.Nfo" xml:space="preserve"><value>NFO</value></data>
   <data name="ReleaseType" xml:space="preserve"><value>Release type</value></data>
   <data name="ReleaseType.Managed" xml:space="preserve"><value>Managed</value></data>
   <data name="ReleaseType.Managed.Description" xml:space="preserve"><value>Bearcat creates the archives and manages uploads automatically</value></data>
@@ -474,6 +527,7 @@
   <data name="UploadTarget" xml:space="preserve"><value>Upload target</value></data>
   <data name="UrlType.Imdb" xml:space="preserve"><value>IMDB</value></data>
   <data name="UrlType.Other" xml:space="preserve"><value>Other</value></data>
+  <data name="UrlType.Steam" xml:space="preserve"><value>Steam</value></data>
   <data name="VideoType" xml:space="preserve"><value>Video</value></data>
   <data name="CheckedAt" xml:space="preserve"><value>Checked at</value></data>
   <data name="Downloads" xml:space="preserve"><value>Downloads</value></data>
