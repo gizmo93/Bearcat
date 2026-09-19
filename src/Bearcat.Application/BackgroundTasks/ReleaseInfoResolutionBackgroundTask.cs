@@ -1,4 +1,4 @@
-using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

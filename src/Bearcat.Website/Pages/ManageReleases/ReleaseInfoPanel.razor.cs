@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
+using Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;

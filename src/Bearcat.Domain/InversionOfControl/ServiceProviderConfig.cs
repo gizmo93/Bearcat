@@ -38,6 +38,7 @@ using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
+using Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
@@ -81,6 +82,9 @@ public static class ServiceProviderConfig
             services.AddScoped<IForumPostRenderSource, ReleaseCollectionForumPostRenderSource>();
             services.AddScoped<ReleaseInfoService>();
             services.AddScoped<ReleaseInfoResolutionService>();
+            services.AddScoped<ReleaseNfoResolver>();
+            services.AddScoped<ReleaseInfoResolver>();
+            services.AddScoped<ReleaseMetadataResolver>();
             services.AddScoped<MediaMetadataResolver>();
             services.AddScoped<MediaMetadataService>();
             services.AddScoped<ReleaseClassificationService>();
