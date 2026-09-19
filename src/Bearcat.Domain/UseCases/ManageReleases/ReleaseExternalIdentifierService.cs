@@ -11,24 +11,56 @@ public static class ReleaseExternalIdentifierService
         IReadOnlyList<string?> values
     )
     {
-        var imdbIds = values
-            .SelectMany(ImdbIdParser.ExtractAll)
+        Sync(
+            release: release,
+            type: ExternalIdentifierType.Imdb,
+            source: source,
+            values: values,
+            extractor: Parsers.ImdbIdParser.ExtractAll
+        );
+    }
+
+    public static void SyncSteamAppIds(
+        Release release,
+        ExternalIdentifierSource source,
+        IReadOnlyList<string?> values
+    )
+    {
+        Sync(
+            release: release,
+            type: ExternalIdentifierType.Steam,
+            source: source,
+            values: values,
+            extractor: Parsers.SteamAppIdParser.ExtractAll
+        );
+    }
+
+    private static void Sync(
+        Release release,
+        ExternalIdentifierType type,
+        ExternalIdentifierSource source,
+        IReadOnlyList<string?> values,
+        Func<string?, IReadOnlyList<string>> extractor
+    )
+    {
+        var extractedValues = values
+            .SelectMany(extractor)
             .Distinct(StringComparer.Ordinal)
             .ToHashSet(StringComparer.Ordinal);
 
         release.ExternalIdentifiers.RemoveAll(identifier =>
-            identifier.Type == ExternalIdentifierType.Imdb
+            identifier.Type == type
             && identifier.Source == source
-            && !imdbIds.Contains(identifier.Value)
+            && !extractedValues.Contains(identifier.Value)
         );
 
-        foreach (var imdbId in imdbIds)
+        foreach (var extractedValue in extractedValues)
         {
             if (
                 release.ExternalIdentifiers.Any(identifier =>
-                    identifier.Type == ExternalIdentifierType.Imdb
+                    identifier.Type == type
                     && identifier.Source == source
-                    && identifier.Value == imdbId
+                    && identifier.Value == extractedValue
                 )
             )
             {
@@ -38,8 +70,8 @@ public static class ReleaseExternalIdentifierService
             release.ExternalIdentifiers.Add(
                 new ReleaseExternalIdentifier
                 {
-                    Type = ExternalIdentifierType.Imdb,
-                    Value = imdbId,
+                    Type = type,
+                    Value = extractedValue,
                     Source = source,
                 }
             );

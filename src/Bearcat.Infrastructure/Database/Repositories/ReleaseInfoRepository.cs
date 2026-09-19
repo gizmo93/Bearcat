@@ -39,6 +39,8 @@ public class ReleaseInfoRepository(
             .Include(release => release.ReleaseNfo)
             .Include(release => release.Metadata)
             .Include(release => release.ExternalIdentifiers)
+            .Include(release => release.Classification)
+            .Include(release => release.MediaFiles)
             .Where(release =>
                 release.ReleaseInfo == null
                 || release.ReleaseNfo == null
@@ -115,6 +117,8 @@ public class ReleaseInfoRepository(
             .Include(release => release.ReleaseNfo)
             .Include(release => release.ExternalIdentifiers)
             .Include(release => release.ReleaseCollection)
+            .Include(release => release.Classification)
+            .Include(release => release.MediaFiles)
             .FirstAsync(release => release.Id == releaseId, cancellationToken);
     }
 
@@ -153,6 +157,21 @@ public class ReleaseInfoRepository(
             .Select(entry => entry.Entity)
             .ToList();
 
+        var pendingClassifications = dbWrite
+            .ChangeTracker.Entries<ReleaseClassification>()
+            .Where(entry => entry.State == EntityState.Added)
+            .Select(entry => entry.Entity)
+            .ToList();
+
+        foreach (
+            var entry in dbWrite
+                .ChangeTracker.Entries<ReleaseClassification>()
+                .Where(entry => pendingClassifications.Contains(entry.Entity))
+        )
+        {
+            entry.State = EntityState.Detached;
+        }
+
         foreach (
             var entry in dbWrite
                 .ChangeTracker.Entries<ReleaseMetadata>()
@@ -188,6 +207,14 @@ public class ReleaseInfoRepository(
         if (release.Metadata is not null && pendingMetadata.Contains(release.Metadata))
         {
             release.Metadata = null;
+        }
+
+        if (
+            release.Classification is not null
+            && pendingClassifications.Contains(release.Classification)
+        )
+        {
+            release.Classification = null;
         }
     }
 

@@ -8,6 +8,7 @@ namespace Bearcat.Domain.UseCases.ManageReleases;
 
 public class ReleaseInfoService(
     IReleaseInfoRepository repository,
+    ReleaseClassificationService classificationService,
     ILogger<ReleaseInfoService> logger
 )
 {
@@ -114,6 +115,14 @@ public class ReleaseInfoService(
             source: ExternalIdentifierSource.Nfo,
             values: [content]
         );
+        ReleaseExternalIdentifierService.SyncSteamAppIds(
+            release: release,
+            source: ExternalIdentifierSource.Nfo,
+            values: [content]
+        );
+
+        classificationService.Classify(release);
+
         release.MetadataCheckedAt = null;
 
         if (release.ReleaseCollection is not null)

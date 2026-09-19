@@ -1080,6 +1080,9 @@ namespace BearCat.Infrastructure.Migrations
                     b.Property<int>("ContentType")
                         .HasColumnType("integer");
 
+                    b.Property<int>("ContentTypeSource")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("Episode")
                         .HasColumnType("integer");
 
@@ -1093,6 +1096,12 @@ namespace BearCat.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("ParserVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Platform")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PlatformSource")
                         .HasColumnType("integer");
 
                     b.Property<string>("PrimaryLanguage")
@@ -1384,6 +1393,9 @@ namespace BearCat.Infrastructure.Migrations
                     b.Property<string>("AudioType")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("ContentKind")
+                        .HasColumnType("integer");
 
                     b.Property<string>("NfoDatabaseClassName")
                         .IsRequired()

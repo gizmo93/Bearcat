@@ -5,4 +5,5 @@ public enum ReleaseContentType
     Movie = 1,
     TvShowEpisode = 2,
     Other = 3,
+    Game = 4,
 }

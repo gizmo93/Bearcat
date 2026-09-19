@@ -1,3 +1,5 @@
+using Bearcat.Abstractions.NfoDatabase;
+
 namespace Bearcat.Domain.Entities;
 
 public class ReleaseInfo
@@ -24,6 +26,8 @@ public class ReleaseInfo
     public string? VideoType { get; set; }
 
     public string? AudioType { get; set; }
+
+    public ExternalInfoType? ContentKind { get; set; }
 
     public List<ReleaseExternalInfo> ExternalInfos { get; set; } = [];
 

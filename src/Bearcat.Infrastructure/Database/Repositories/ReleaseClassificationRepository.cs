@@ -15,6 +15,8 @@ public class ReleaseClassificationRepository(IBearcatWriteDbContext dbWrite)
         return await dbWrite
             .Releases.Include(release => release.MediaFiles)
             .Include(release => release.Classification)
+            .Include(release => release.ReleaseInfo)
+            .Include(release => release.ReleaseNfo)
             .FirstOrDefaultAsync(release => release.Id == releaseId, cancellationToken);
     }
 
@@ -28,6 +30,8 @@ public class ReleaseClassificationRepository(IBearcatWriteDbContext dbWrite)
         return await dbWrite
             .Releases.Include(release => release.MediaFiles)
             .Include(release => release.Classification)
+            .Include(release => release.ReleaseInfo)
+            .Include(release => release.ReleaseNfo)
             .Where(release => !excludedReleaseIds.Contains(release.Id))
             .Where(release =>
                 release.Classification == null
@@ -36,6 +40,11 @@ public class ReleaseClassificationRepository(IBearcatWriteDbContext dbWrite)
             .OrderBy(release => release.Id)
             .Take(count)
             .ToListAsync(cancellationToken);
+    }
+
+    public void ClearChangeTracker()
+    {
+        dbWrite.ChangeTracker.Clear();
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)

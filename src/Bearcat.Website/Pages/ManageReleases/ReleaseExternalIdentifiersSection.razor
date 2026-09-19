@@ -15,7 +15,7 @@
                             @L[$"ExternalIdentifierType.{identifier.Type}"]
                         </BbBadge>
                         <a class="bearcat-release-info-url"
-                           href="@($"https://www.imdb.com/title/{identifier.Value}")"
+                           href="@GetIdentifierUrl(identifier)"
                            target="_blank"
                            rel="noreferrer noopener"
                            title="@identifier.Value">
@@ -41,4 +41,19 @@
 @code {
     [Parameter]
     public IReadOnlyList<ReleaseExternalIdentifierReadModel> ExternalIdentifiers { get; set; } = [];
+
+    private static string GetIdentifierUrl(ReleaseExternalIdentifierReadModel identifier)
+    {
+        return identifier.Type switch
+        {
+            ExternalIdentifierType.Imdb => $"https://www.imdb.com/title/{identifier.Value}",
+            ExternalIdentifierType.Steam =>
+                $"https://store.steampowered.com/app/{identifier.Value}",
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(identifier),
+                identifier.Type,
+                null
+            ),
+        };
+    }
 }

@@ -17,6 +17,9 @@ public class ReleaseClassificationConfiguration : IEntityTypeConfiguration<Relea
         builder.Property(classification => classification.Episode).IsRequired(false);
         builder.Property(classification => classification.EpisodeEnd).IsRequired(false);
         builder.Property(classification => classification.ContentType).IsRequired();
+        builder.Property(classification => classification.ContentTypeSource).IsRequired();
+        builder.Property(classification => classification.Platform).IsRequired();
+        builder.Property(classification => classification.PlatformSource).IsRequired();
         builder.Property(classification => classification.Resolution).IsRequired();
         builder.Property(classification => classification.ResolutionSource).IsRequired();
         builder.Property(classification => classification.Source).IsRequired();

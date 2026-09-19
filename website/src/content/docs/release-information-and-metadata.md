@@ -29,10 +29,11 @@ information and NFO files:
 
 xREL, SRRDB and PreDB do not require account credentials.
 
-Open **Metadata sources** to register providers for movie and TV metadata:
+Open **Metadata sources** to register providers for movie, TV and game metadata:
 
 - **The Movie Database (TMDB)** supports movies, TV series, and TV episodes.
 - **TheTVDB** supports TV series.
+- **Steam** to lookup informations about games
 
 ![mediametadata-sources.png](images/mediametadata-sources.png)
 

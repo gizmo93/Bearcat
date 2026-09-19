@@ -880,6 +880,37 @@ public class ReleaseReadRepository(
             .ToList();
     }
 
+    public async Task<ReleaseClassificationReadModel?> GetClassificationAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .Releases.Where(release => release.Id == releaseId && release.Classification != null)
+            .Select(release => new ReleaseClassificationReadModel(
+                release.Classification!.Title,
+                release.Classification.Year,
+                release.Classification.Season,
+                release.Classification.Episode,
+                release.Classification.EpisodeEnd,
+                release.Classification.ContentType,
+                release.Classification.ContentTypeSource,
+                release.Classification.Platform,
+                release.Classification.PlatformSource,
+                release.Classification.Resolution,
+                release.Classification.ResolutionSource,
+                release.Classification.Source,
+                release.Classification.SourceSource,
+                release.Classification.ReleaseGroupToken,
+                release.Classification.PrimaryLanguage,
+                release.Classification.LanguageSource,
+                release.Classification.IsMultiLanguage,
+                release.Classification.ParserVersion,
+                release.Classification.ClassifiedAt
+            ))
+            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+    }
+
     public async Task<IReadOnlyList<ArchiveConfigReadModel>> GetArchiveConfigsAsync(
         int releaseId,
         CancellationToken cancellationToken

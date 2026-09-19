@@ -127,6 +127,7 @@ public partial class ReleaseCollectionInfoResolutionService(
         var lookup = new MediaMetadataLookup(
             MediaKind: MediaKind.TvSeries,
             ImdbId: ExtractImdbId(collection),
+            SteamAppId: null,
             Title: ExtractSeriesTitle(collection.Name),
             Year: yearMatch.Success ? int.Parse(yearMatch.Value) : null,
             SeasonNumber: null,

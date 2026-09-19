@@ -73,7 +73,9 @@ public class XrelNfoDatabaseTest
                         Externals:
                         [
                             new XrelExternalInfoExternal(
-                                Plot: "Movie &quot;plot&quot;<br />\n<br />\nSecond line"
+                                Plot: "Movie &quot;plot&quot;<br />\n<br />\nSecond line",
+                                LinkUrl: null,
+                                Source: null
                             ),
                         ]
                     )

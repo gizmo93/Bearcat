@@ -21,6 +21,26 @@ public static class LocalizationExtensions
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,
+        ReleaseResolution resolution
+    ) => localizer[$"ReleaseResolution.{resolution}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        ReleaseSource source
+    ) => localizer[$"ReleaseSource.{source}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        ReleasePlatform platform
+    ) => localizer[$"ReleasePlatform.{platform}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        ClassificationSource source
+    ) => localizer[$"ClassificationSource.{source}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
         ReleaseCollectionDetectionMode mode
     ) => localizer[$"ReleaseCollectionDetectionMode.{mode}"];
 

@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
+using Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
@@ -30,6 +31,7 @@ public partial class ReleaseInfoPanel(
     private ReleaseNfoReadModel? releaseNfo;
     private IReadOnlyList<ReleaseExternalIdentifierReadModel> externalIdentifiers = [];
     private IReadOnlyList<ReleaseMediaFileReadModel> mediaFiles = [];
+    private ReleaseClassificationReadModel? classification;
     private bool isLoading;
     private bool isResolving;
     private bool isExtracting;
@@ -56,6 +58,7 @@ public partial class ReleaseInfoPanel(
                     ReleaseId
                 );
                 mediaFiles = await repository.GetMediaFilesAsync(ReleaseId);
+                classification = await repository.GetClassificationAsync(ReleaseId);
             });
         }
         finally

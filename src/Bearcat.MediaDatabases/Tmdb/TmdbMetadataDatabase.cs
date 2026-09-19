@@ -20,7 +20,7 @@ public class TmdbMetadataDatabase(ITmdbApi api) : IMediaMetadataDatabase
 
     public IReadOnlyList<string> ConfigurationKeys => [TmdbConfig.ApiKeyConfigKey];
 
-    public async Task<MediaMetadata?> GetByImdbIdAsync(
+    public async Task<MediaMetadata?> GetByExternalIdAsync(
         IMediaMetadataDatabaseConfig config,
         MediaMetadataLookup lookup,
         CancellationToken cancellationToken = default

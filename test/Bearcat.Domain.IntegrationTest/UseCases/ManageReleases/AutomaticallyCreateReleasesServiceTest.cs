@@ -10,6 +10,7 @@ using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -33,6 +34,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
 
     private BearcatDbContext dbContext = null!;
     private Mock<INfoDatabaseFactory> nfoDatabaseFactoryMock = null!;
+    private Dictionary<string, INfoDatabase> nfoDatabasesByClassName = null!;
     private string tempRootPath = null!;
     private AutomaticallyCreateReleasesService service = null!;
     private int stabilityMinutes;
@@ -45,6 +47,10 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         minimumFolderSizeMegabytes = 0;
         dbContext = Database.CreateDbContext();
         nfoDatabaseFactoryMock = new Mock<INfoDatabaseFactory>(MockBehavior.Strict);
+        nfoDatabasesByClassName = [];
+        nfoDatabaseFactoryMock
+            .Setup(factory => factory.GetByClassName())
+            .Returns(nfoDatabasesByClassName);
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
 
         Directory.CreateDirectory(tempRootPath);
@@ -783,13 +789,37 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
 
     private ReleaseInfoResolutionService CreateReleaseInfoResolutionService()
     {
+        var releaseInfoRepository = new ReleaseInfoRepository(
+            dbContext,
+            dbContext,
+            NoOpSecretProtector.Instance
+        );
+
         return new ReleaseInfoResolutionService(
-            new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
+            releaseInfoRepository,
             nfoDatabaseFactoryMock.Object,
-            new MediaMetadataResolver(
-                new MediaMetadataResolverRepository(dbContext, NoOpSecretProtector.Instance),
-                new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict).Object,
-                NullLogger<MediaMetadataResolver>.Instance
+            new ReleaseNfoResolver(
+                nfoDatabaseFactoryMock.Object,
+                NullLogger<ReleaseNfoResolver>.Instance
+            ),
+            new ReleaseInfoResolver(
+                releaseInfoRepository,
+                nfoDatabaseFactoryMock.Object,
+                NullLogger<ReleaseInfoResolver>.Instance
+            ),
+            new ReleaseMetadataResolver(
+                new MediaMetadataResolver(
+                    new MediaMetadataResolverRepository(dbContext, NoOpSecretProtector.Instance),
+                    new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict).Object,
+                    NullLogger<MediaMetadataResolver>.Instance
+                ),
+                nfoDatabaseFactoryMock.Object,
+                NullLogger<ReleaseMetadataResolver>.Instance
+            ),
+            new ReleaseClassificationService(
+                new ReleaseClassificationRepository(dbContext),
+                CreateTimeProvider(),
+                NullLogger<ReleaseClassificationService>.Instance
             ),
             NullLogger<ReleaseInfoResolutionService>.Instance,
             CreateTimeProvider()
@@ -848,6 +878,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
         nfoDatabaseFactoryMock
             .Setup(factory => factory.Get(className))
             .Returns(nfoDatabaseMock.Object);
+        nfoDatabasesByClassName[className] = nfoDatabaseMock.Object;
     }
 
     private async Task<NfoDatabaseRegistration> AddNfoDatabaseRegistrationAsync(
@@ -890,7 +921,8 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
                         new Url(UrlType.Other, "https://www.xrel.to/movie/123"),
                     ]
                 ),
-            ]
+            ],
+            ContentKind: ExternalInfoType.Movie
         );
     }
 

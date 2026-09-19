@@ -22,6 +22,10 @@ public record ParsedReleaseName
 
     public ReleaseSource Source { get; init; }
 
+    public ReleasePlatform Platform { get; init; }
+
+    public bool HasGameMarkers { get; init; }
+
     public string? Group { get; init; }
 
     public bool LooksLikeReleaseName =>

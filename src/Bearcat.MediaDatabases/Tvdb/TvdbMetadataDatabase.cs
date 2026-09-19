@@ -15,7 +15,7 @@ public class TvdbMetadataDatabase(TvdbClient client) : IMediaMetadataDatabase
 
     public IReadOnlyList<string> ConfigurationKeys => [TvdbConfig.ApiKeyConfigKey];
 
-    public async Task<MediaMetadata?> GetByImdbIdAsync(
+    public async Task<MediaMetadata?> GetByExternalIdAsync(
         IMediaMetadataDatabaseConfig config,
         MediaMetadataLookup lookup,
         CancellationToken cancellationToken = default

@@ -93,7 +93,8 @@ public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpC
             Description: NormalizeDescription(
                 details?.Externals?.FirstOrDefault(d => !string.IsNullOrWhiteSpace(d.Plot))?.Plot
             ),
-            CoverUrl: coverUrl
+            CoverUrl: coverUrl,
+            ExternalUrls: MapExternalLinks(details?.Externals)
         );
     }
 
@@ -113,7 +114,8 @@ public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpC
             Genre: externalInfoEnrichment?.Genre,
             Description: externalInfoEnrichment?.Description,
             CoverUrl: externalInfoEnrichment?.CoverUrl,
-            ExternalInfos: MapExternalInfos(release.ExtInfo)
+            ExternalInfos: MapExternalInfos(release.ExtInfo, externalInfoEnrichment?.ExternalUrls),
+            ContentKind: MapContentKind(release.ExtInfo)
         );
     }
 
@@ -131,11 +133,15 @@ public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpC
             Genre: externalInfoEnrichment?.Genre,
             Description: externalInfoEnrichment?.Description,
             CoverUrl: externalInfoEnrichment?.CoverUrl,
-            ExternalInfos: MapExternalInfos(release.ExtInfo)
+            ExternalInfos: MapExternalInfos(release.ExtInfo, externalInfoEnrichment?.ExternalUrls),
+            ContentKind: MapContentKind(release.ExtInfo)
         );
     }
 
-    private static IReadOnlyList<ExternalInfo> MapExternalInfos(XrelExternalInfo? externalInfo)
+    private static IReadOnlyList<ExternalInfo> MapExternalInfos(
+        XrelExternalInfo? externalInfo,
+        IReadOnlyList<Url>? externalUrls
+    )
     {
         if (externalInfo is null)
         {
@@ -152,6 +158,11 @@ public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpC
         if (externalInfo.Uris is not null)
         {
             urls.AddRange(externalInfo.Uris.Select(MapUri).Where(url => url is not null)!);
+        }
+
+        if (externalUrls is not null)
+        {
+            urls.AddRange(externalUrls);
         }
 
         return
@@ -265,6 +276,42 @@ public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpC
         return new Url(UrlType.Other, uri);
     }
 
+    private static IReadOnlyList<Url> MapExternalLinks(
+        IReadOnlyList<XrelExternalInfoExternal>? externals
+    )
+    {
+        if (externals is null)
+        {
+            return [];
+        }
+
+        return externals
+            .Where(external => !string.IsNullOrWhiteSpace(external.LinkUrl))
+            .Select(external => new Url(MapExternalLinkType(external), external.LinkUrl!))
+            .ToList();
+    }
+
+    private static UrlType MapExternalLinkType(XrelExternalInfoExternal external)
+    {
+        return IsSteamLink(external) ? UrlType.Steam : UrlType.Other;
+    }
+
+    private static bool IsSteamLink(XrelExternalInfoExternal external)
+    {
+        if (external.Source?.Name?.Equals("Steam", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return true;
+        }
+
+        return Uri.TryCreate(external.LinkUrl, UriKind.Absolute, out var uri)
+            && uri.Host.Equals("store.steampowered.com", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static ExternalInfoType? MapContentKind(XrelExternalInfo? externalInfo)
+    {
+        return externalInfo is null ? null : MapExternalInfoType(externalInfo.Type);
+    }
+
     private static bool IsImageMedia(XrelExternalInfoMedia media)
     {
         return media.Type?.Equals("image", StringComparison.OrdinalIgnoreCase) == true
@@ -277,7 +324,7 @@ public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpC
         {
             "movie" => ExternalInfoType.Movie,
             "tv" => ExternalInfoType.Tv,
-            "game" => ExternalInfoType.Game,
+            "game" or "master_game" => ExternalInfoType.Game,
             "console" => ExternalInfoType.Console,
             "software" => ExternalInfoType.Software,
             "xxx" => ExternalInfoType.Xxx,
@@ -351,6 +398,7 @@ public partial class XrelNfoDatabase(XrelClient client, IHttpClientFactory httpC
     private sealed record XrelExternalInfoEnrichment(
         string? Genre,
         string? Description,
-        string? CoverUrl
+        string? CoverUrl,
+        IReadOnlyList<Url> ExternalUrls
     );
 }

@@ -1,0 +1,173 @@
+@if (Classification is not null)
+{
+    <div class="bearcat-release-info-external">
+        <div class="bearcat-release-info-external-heading">
+            <LucideIcon Name="scan-search" class="h-3.5 w-3.5" />
+            <span>@L["Classification"]</span>
+        </div>
+
+        <div class="bearcat-media-list">
+            <BbCollapsible DefaultOpen="false" Class="bearcat-media-collapsible">
+                <BbCollapsibleTrigger AsChild="false" Class="bearcat-media-trigger">
+                    <LucideIcon Name="chevron-down" class="bearcat-media-chevron h-4 w-4" />
+                    <span class="bearcat-media-trigger-main">
+                        <span class="bearcat-release-info-external-title" title="@Classification.Title">
+                            @Classification.Title
+                        </span>
+                    </span>
+                    <span class="bearcat-classification-meta">
+                        <BbBadge Variant="BadgeVariant.Secondary">
+                            @L.Localize(Classification.ContentType)
+                        </BbBadge>
+                        @if (Classification.Resolution != ReleaseResolution.Unknown)
+                        {
+                            <BbBadge Variant="BadgeVariant.Secondary">
+                                @L.Localize(Classification.Resolution)
+                            </BbBadge>
+                        }
+                        @if (Classification.Platform != ReleasePlatform.Unknown)
+                        {
+                            <BbBadge Variant="BadgeVariant.Secondary">
+                                @L.Localize(Classification.Platform)
+                            </BbBadge>
+                        }
+                    </span>
+                </BbCollapsibleTrigger>
+                <BbCollapsibleContent Class="bearcat-media-content">
+                    <dl class="bearcat-classification-grid">
+                        <div class="bearcat-classification-row">
+                            <dt>@L["ReleaseContentType"]</dt>
+                            <dd>
+                                <span>@L.Localize(Classification.ContentType)</span>
+                                @if (Classification.ContentTypeSource != ClassificationSource.None)
+                                {
+                                    <BbBadge Variant="BadgeVariant.Outline">
+                                        @L.Localize(Classification.ContentTypeSource)
+                                    </BbBadge>
+                                }
+                            </dd>
+                        </div>
+
+                        @if (Classification.Year is not null)
+                        {
+                            <div class="bearcat-classification-row">
+                                <dt>@L["Year"]</dt>
+                                <dd>
+                                    <span>@Classification.Year</span>
+                                </dd>
+                            </div>
+                        }
+
+                        @if (Classification.Season is not null)
+                        {
+                            <div class="bearcat-classification-row">
+                                <dt>@L["Season"]</dt>
+                                <dd>
+                                    <span>@FormatSeason(Classification.Season.Value)</span>
+                                </dd>
+                            </div>
+                        }
+
+                        @if (Classification.Episode is not null)
+                        {
+                            <div class="bearcat-classification-row">
+                                <dt>@L["Episode"]</dt>
+                                <dd>
+                                    <span>@FormatEpisode(Classification.Episode.Value, Classification.EpisodeEnd)</span>
+                                </dd>
+                            </div>
+                        }
+
+                        @if (Classification.Resolution != ReleaseResolution.Unknown)
+                        {
+                            <div class="bearcat-classification-row">
+                                <dt>@L["Resolution"]</dt>
+                                <dd>
+                                    <span>@L.Localize(Classification.Resolution)</span>
+                                    @if (
+                                        Classification.ResolutionSource != ClassificationSource.None
+                                    )
+                                    {
+                                        <BbBadge Variant="BadgeVariant.Outline">
+                                            @L.Localize(Classification.ResolutionSource)
+                                        </BbBadge>
+                                    }
+                                </dd>
+                            </div>
+                        }
+
+                        @if (Classification.Source != ReleaseSource.Unknown)
+                        {
+                            <div class="bearcat-classification-row">
+                                <dt>@L["Source"]</dt>
+                                <dd>
+                                    <span>@L.Localize(Classification.Source)</span>
+                                    @if (Classification.SourceSource != ClassificationSource.None)
+                                    {
+                                        <BbBadge Variant="BadgeVariant.Outline">
+                                            @L.Localize(Classification.SourceSource)
+                                        </BbBadge>
+                                    }
+                                </dd>
+                            </div>
+                        }
+
+                        @if (Classification.Platform != ReleasePlatform.Unknown)
+                        {
+                            <div class="bearcat-classification-row">
+                                <dt>@L["Platform"]</dt>
+                                <dd>
+                                    <span>@L.Localize(Classification.Platform)</span>
+                                    @if (Classification.PlatformSource != ClassificationSource.None)
+                                    {
+                                        <BbBadge Variant="BadgeVariant.Outline">
+                                            @L.Localize(Classification.PlatformSource)
+                                        </BbBadge>
+                                    }
+                                </dd>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(Classification.PrimaryLanguage))
+                        {
+                            <div class="bearcat-classification-row">
+                                <dt>@L["Language"]</dt>
+                                <dd>
+                                    <span>@Classification.PrimaryLanguage</span>
+                                    @if (Classification.LanguageSource != ClassificationSource.None)
+                                    {
+                                        <BbBadge Variant="BadgeVariant.Outline">
+                                            @L.Localize(Classification.LanguageSource)
+                                        </BbBadge>
+                                    }
+                                    @if (Classification.IsMultiLanguage)
+                                    {
+                                        <BbBadge Variant="BadgeVariant.Secondary">@L["MultiLanguage"]</BbBadge>
+                                    }
+                                </dd>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(Classification.ReleaseGroupToken))
+                        {
+                            <div class="bearcat-classification-row">
+                                <dt>@L["ReleaseGroupToken"]</dt>
+                                <dd>
+                                    <span>@Classification.ReleaseGroupToken</span>
+                                </dd>
+                            </div>
+                        }
+                    </dl>
+
+                    <div class="bearcat-classification-footer">
+                        <span>
+                            <LucideIcon Name="clock" class="h-3.5 w-3.5" />
+                            @HumanizeClassifiedAt(Classification.ClassifiedAt)
+                        </span>
+                        <span title="@L["ParserVersion"]">v@(Classification.ParserVersion)</span>
+                    </div>
+                </BbCollapsibleContent>
+            </BbCollapsible>
+        </div>
+    </div>
+}

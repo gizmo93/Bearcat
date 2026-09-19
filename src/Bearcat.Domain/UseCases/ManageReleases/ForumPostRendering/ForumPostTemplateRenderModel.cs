@@ -9,6 +9,7 @@ public sealed record ForumPostTemplateRenderModel
         {
             Release = ForumPostTemplateReleaseModel.Empty,
             ReleaseInfo = ForumPostTemplateReleaseInfoModel.Empty,
+            Classification = ForumPostTemplateClassificationModel.Empty,
             Uploads = [],
         };
 
@@ -17,6 +18,9 @@ public sealed record ForumPostTemplateRenderModel
 
     [ForumPostTemplateVariable("First resolved release info.", IncludeChildren = true)]
     public required ForumPostTemplateReleaseInfoModel ReleaseInfo { get; init; }
+
+    [ForumPostTemplateVariable("Parsed release classification.", IncludeChildren = true)]
+    public required ForumPostTemplateClassificationModel Classification { get; init; }
 
     [ForumPostTemplateVariable(
         "Loop over upload configurations.",
@@ -34,6 +38,10 @@ public sealed record ForumPostTemplateReleaseModel
             Name = string.Empty,
             PrimaryLanguage = string.Empty,
             Nfo = string.Empty,
+            SteamAppId = string.Empty,
+            SteamUrl = string.Empty,
+            ImdbId = string.Empty,
+            ImdbUrl = string.Empty,
             MainVideo = ForumPostTemplateMediaFileModel.Empty,
             MediaFiles = [],
         };
@@ -46,6 +54,18 @@ public sealed record ForumPostTemplateReleaseModel
 
     [ForumPostTemplateVariable("Stored NFO content for the release.")]
     public required string Nfo { get; init; }
+
+    [ForumPostTemplateVariable("Steam app id, e.g. 1172710.")]
+    public required string SteamAppId { get; init; }
+
+    [ForumPostTemplateVariable("Steam store page URL.")]
+    public required string SteamUrl { get; init; }
+
+    [ForumPostTemplateVariable("IMDb id, e.g. tt0133093.")]
+    public required string ImdbId { get; init; }
+
+    [ForumPostTemplateVariable("IMDb title URL.")]
+    public required string ImdbUrl { get; init; }
 
     [ForumPostTemplateVariable("Main video file (largest video file).", IncludeChildren = true)]
     public required ForumPostTemplateMediaFileModel MainVideo { get; init; }
@@ -308,4 +328,52 @@ public sealed record ForumPostTemplateExternalInfoModel
 
     [ForumPostTemplateVariable("Loop over URLs for this external info.", LoopVariable = "url")]
     public required IReadOnlyList<string> Urls { get; init; }
+}
+
+public sealed record ForumPostTemplateClassificationModel
+{
+    public static ForumPostTemplateClassificationModel Empty { get; } =
+        new()
+        {
+            Title = string.Empty,
+            ContentType = string.Empty,
+            Platform = string.Empty,
+            Resolution = string.Empty,
+            Source = string.Empty,
+            Year = null,
+            Season = null,
+            Episode = null,
+            ReleaseGroupToken = string.Empty,
+            IsMultiLanguage = false,
+        };
+
+    [ForumPostTemplateVariable("Parsed title from the release name.")]
+    public required string Title { get; init; }
+
+    [ForumPostTemplateVariable("Content type, e.g. Movie or Game.")]
+    public required string ContentType { get; init; }
+
+    [ForumPostTemplateVariable("Platform, e.g. Windows or NintendoSwitch.")]
+    public required string Platform { get; init; }
+
+    [ForumPostTemplateVariable("Resolution, e.g. 1080p or 2160p.")]
+    public required string Resolution { get; init; }
+
+    [ForumPostTemplateVariable("Source, e.g. BluRay or WebDl.")]
+    public required string Source { get; init; }
+
+    [ForumPostTemplateVariable("Release year.")]
+    public required int? Year { get; init; }
+
+    [ForumPostTemplateVariable("Season number.")]
+    public required int? Season { get; init; }
+
+    [ForumPostTemplateVariable("Episode number.")]
+    public required int? Episode { get; init; }
+
+    [ForumPostTemplateVariable("Release group tag parsed from the release name.")]
+    public required string ReleaseGroupToken { get; init; }
+
+    [ForumPostTemplateVariable("Whether the release contains multiple languages.")]
+    public required bool IsMultiLanguage { get; init; }
 }

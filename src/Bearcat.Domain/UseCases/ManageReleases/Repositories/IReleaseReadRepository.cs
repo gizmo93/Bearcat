@@ -72,6 +72,11 @@ public interface IReleaseReadRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<ReleaseClassificationReadModel?> GetClassificationAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<IReadOnlyList<ArchiveConfigReadModel>> GetArchiveConfigsAsync(
         int releaseId,
         CancellationToken cancellationToken

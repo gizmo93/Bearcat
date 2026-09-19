@@ -56,7 +56,8 @@ public partial class SrrdbNfoDatabase(SrrdbClient client) : INfoDatabase, INfoPr
             Genre: null,
             Description: null,
             CoverUrl: null,
-            ExternalInfos: MapExternalInfos(imdb)
+            ExternalInfos: MapExternalInfos(imdb),
+            ContentKind: null
         );
     }
 

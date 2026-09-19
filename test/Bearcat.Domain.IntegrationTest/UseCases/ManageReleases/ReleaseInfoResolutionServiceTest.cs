@@ -4,6 +4,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -28,6 +29,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
 
     private BearcatDbContext dbContext = null!;
     private Mock<INfoDatabaseFactory> nfoDatabaseFactoryMock = null!;
+    private Dictionary<string, INfoDatabase> nfoDatabasesByClassName = null!;
     private Mock<IMediaMetadataDatabaseFactory> metadataDatabaseFactoryMock = null!;
     private ReleaseInfoResolutionService service = null!;
     private readonly List<string> tempReleaseFolders = [];
@@ -37,15 +39,43 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     {
         dbContext = Database.CreateDbContext();
         nfoDatabaseFactoryMock = new Mock<INfoDatabaseFactory>(MockBehavior.Strict);
+        nfoDatabasesByClassName = [];
+        nfoDatabaseFactoryMock
+            .Setup(factory => factory.GetByClassName())
+            .Returns(nfoDatabasesByClassName);
         metadataDatabaseFactoryMock = new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict);
 
+        var releaseInfoRepository = new ReleaseInfoRepository(
+            dbContext,
+            dbContext,
+            NoOpSecretProtector.Instance
+        );
+
         service = new ReleaseInfoResolutionService(
-            new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
+            releaseInfoRepository,
             nfoDatabaseFactoryMock.Object,
-            new MediaMetadataResolver(
-                new MediaMetadataResolverRepository(dbContext, NoOpSecretProtector.Instance),
-                metadataDatabaseFactoryMock.Object,
-                new Mock<ILogger<MediaMetadataResolver>>().Object
+            new ReleaseNfoResolver(
+                nfoDatabaseFactoryMock.Object,
+                new Mock<ILogger<ReleaseNfoResolver>>().Object
+            ),
+            new ReleaseInfoResolver(
+                releaseInfoRepository,
+                nfoDatabaseFactoryMock.Object,
+                new Mock<ILogger<ReleaseInfoResolver>>().Object
+            ),
+            new ReleaseMetadataResolver(
+                new MediaMetadataResolver(
+                    new MediaMetadataResolverRepository(dbContext, NoOpSecretProtector.Instance),
+                    metadataDatabaseFactoryMock.Object,
+                    new Mock<ILogger<MediaMetadataResolver>>().Object
+                ),
+                nfoDatabaseFactoryMock.Object,
+                new Mock<ILogger<ReleaseMetadataResolver>>().Object
+            ),
+            new ReleaseClassificationService(
+                new ReleaseClassificationRepository(dbContext),
+                CreateTimeProvider(),
+                new Mock<ILogger<ReleaseClassificationService>>().Object
             ),
             new Mock<ILogger<ReleaseInfoResolutionService>>().Object,
             CreateTimeProvider()
@@ -315,6 +345,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         nfoDatabaseFactoryMock
             .Setup(factory => factory.Get(emptyDatabaseClassName))
             .Returns(emptyDatabaseMock.Object);
+        nfoDatabasesByClassName[emptyDatabaseClassName] = emptyDatabaseMock.Object;
 
         SetupNfoDatabase(
             WorkingDatabaseClassName,
@@ -609,10 +640,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     public async Task UpdateNfoAsync_ManualNfo_PersistsNfoAndImdbWithoutReleaseInfoPlaceholder()
     {
         var release = await AddReleaseAsync("Manual.Nfo.Release.2026-GRP");
-        var infoService = new ReleaseInfoService(
-            new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
-            new Mock<ILogger<ReleaseInfoService>>().Object
-        );
+        var infoService = CreateReleaseInfoService();
 
         await infoService.UpdateNfoAsync(
             release.Id,
@@ -646,10 +674,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         release.ReleaseInfoCheckedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync();
 
-        var infoService = new ReleaseInfoService(
-            new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
-            new Mock<ILogger<ReleaseInfoService>>().Object
-        );
+        var infoService = CreateReleaseInfoService();
 
         await infoService.DeleteAsync(release.Id, CancellationToken.None);
 
@@ -664,10 +689,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     public async Task UpdateReleaseInfoAsync_ManualValues_PersistsSceneInfoAndMetadata()
     {
         var release = await AddReleaseAsync("Manual.Release.2026-GRP");
-        var infoService = new ReleaseInfoService(
-            new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
-            new Mock<ILogger<ReleaseInfoService>>().Object
-        );
+        var infoService = CreateReleaseInfoService();
 
         await infoService.UpdateReleaseInfoAsync(
             release.Id,
@@ -753,7 +775,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         database.Setup(item => item.DeserializeConfig(SerializedConfig)).Returns(config);
         database
             .Setup(item =>
-                item.GetByImdbIdAsync(
+                item.GetByExternalIdAsync(
                     config,
                     It.Is<MediaMetadataLookup>(lookup =>
                         lookup.MediaKind == MediaKind.Movie
@@ -820,7 +842,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         database.Setup(item => item.DeserializeConfig(SerializedConfig)).Returns(config);
         database
             .Setup(item =>
-                item.GetByImdbIdAsync(
+                item.GetByExternalIdAsync(
                     config,
                     It.Is<MediaMetadataLookup>(lookup => lookup.ImdbId == "tt1234567"),
                     It.IsAny<CancellationToken>()
@@ -924,6 +946,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         nfoDatabaseFactoryMock
             .Setup(factory => factory.Get(className))
             .Returns(nfoDatabaseMock.Object);
+        nfoDatabasesByClassName[className] = nfoDatabaseMock.Object;
 
         return nfoDatabaseMock;
     }
@@ -955,6 +978,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         nfoDatabaseFactoryMock
             .Setup(factory => factory.Get(WorkingDatabaseClassName))
             .Returns(nfoDatabaseMock.Object);
+        nfoDatabasesByClassName[WorkingDatabaseClassName] = nfoDatabaseMock.Object;
 
         return nfoDatabaseMock;
     }
@@ -984,6 +1008,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         nfoDatabaseFactoryMock
             .Setup(factory => factory.Get(className))
             .Returns(nfoDatabaseMock.Object);
+        nfoDatabasesByClassName[className] = nfoDatabaseMock.Object;
 
         return providerMock;
     }
@@ -1072,7 +1097,21 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
                         new Url(UrlType.Other, "https://www.xrel.to/movie/123"),
                     ]
                 ),
-            ]
+            ],
+            ContentKind: ExternalInfoType.Movie
+        );
+    }
+
+    private ReleaseInfoService CreateReleaseInfoService()
+    {
+        return new ReleaseInfoService(
+            new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
+            new ReleaseClassificationService(
+                new ReleaseClassificationRepository(dbContext),
+                CreateTimeProvider(),
+                new Mock<ILogger<ReleaseClassificationService>>().Object
+            ),
+            new Mock<ILogger<ReleaseInfoService>>().Object
         );
     }
 

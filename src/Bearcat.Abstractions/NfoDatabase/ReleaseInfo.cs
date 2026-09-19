@@ -9,5 +9,6 @@ public record ReleaseInfo(
     string? Genre,
     string? Description,
     string? CoverUrl,
-    IReadOnlyList<ExternalInfo> ExternalInfos
+    IReadOnlyList<ExternalInfo> ExternalInfos,
+    ExternalInfoType? ContentKind
 );

@@ -53,13 +53,26 @@ public class ReleaseForumPostRenderSource(
             cancellationToken
         );
 
+        var externalIdentifiers = await releaseReadRepository.GetReleaseExternalIdentifiersAsync(
+            entityId,
+            cancellationToken
+        );
+
+        var classification = await releaseReadRepository.GetClassificationAsync(
+            entityId,
+            cancellationToken
+        );
+
         var renderModel = new ForumPostTemplateRenderModel
         {
-            Release = ToReleaseModel(release, nfo, mediaFiles),
+            Release = ToReleaseModel(release, nfo, mediaFiles, externalIdentifiers),
             ReleaseInfo =
                 info is null && metadata is null
                     ? ForumPostTemplateReleaseInfoModel.Empty
                     : ToReleaseInfoModel(release.Name, info, metadata),
+            Classification = classification is null
+                ? ForumPostTemplateClassificationModel.Empty
+                : ToClassificationModel(classification),
             Uploads = uploads,
         };
 
@@ -76,22 +89,74 @@ public class ReleaseForumPostRenderSource(
     private static ForumPostTemplateReleaseModel ToReleaseModel(
         ReleaseReadModel release,
         string? nfo,
-        IReadOnlyList<ReleaseMediaFileReadModel> mediaFiles
+        IReadOnlyList<ReleaseMediaFileReadModel> mediaFiles,
+        IReadOnlyList<ReleaseExternalIdentifierReadModel> externalIdentifiers
     )
     {
         var mediaFileModels = mediaFiles.Select(ToMediaFileModel).ToList();
         var mainVideo = ReleaseMediaFileSelector.SelectMainVideo(mediaFiles);
+
+        var steamAppId = FindIdentifierValue(externalIdentifiers, ExternalIdentifierType.Steam);
+        var imdbId = FindIdentifierValue(externalIdentifiers, ExternalIdentifierType.Imdb);
 
         return new ForumPostTemplateReleaseModel
         {
             Name = release.Name,
             PrimaryLanguage = GetLanguageName(release.PrimaryLanguageCode),
             Nfo = nfo ?? string.Empty,
+            SteamAppId = steamAppId,
+            SteamUrl =
+                steamAppId.Length == 0
+                    ? string.Empty
+                    : $"https://store.steampowered.com/app/{steamAppId}",
+            ImdbId = imdbId,
+            ImdbUrl = imdbId.Length == 0 ? string.Empty : $"https://www.imdb.com/title/{imdbId}",
             MainVideo = mainVideo is null
                 ? ForumPostTemplateMediaFileModel.Empty
                 : ToMediaFileModel(mainVideo),
             MediaFiles = mediaFileModels,
         };
+    }
+
+    private static string FindIdentifierValue(
+        IReadOnlyList<ReleaseExternalIdentifierReadModel> externalIdentifiers,
+        ExternalIdentifierType type
+    )
+    {
+        return externalIdentifiers.FirstOrDefault(identifier => identifier.Type == type)?.Value
+            ?? string.Empty;
+    }
+
+    private static ForumPostTemplateClassificationModel ToClassificationModel(
+        ReleaseClassificationReadModel classification
+    )
+    {
+        return new ForumPostTemplateClassificationModel
+        {
+            Title = classification.Title,
+            ContentType = classification.ContentType.ToString(),
+            Platform = ToEnumName(classification.Platform, ReleasePlatform.Unknown),
+            Resolution = ToResolutionName(classification.Resolution),
+            Source = ToEnumName(classification.Source, ReleaseSource.Unknown),
+            Year = classification.Year,
+            Season = classification.Season,
+            Episode = classification.Episode,
+            ReleaseGroupToken = classification.ReleaseGroupToken ?? string.Empty,
+            IsMultiLanguage = classification.IsMultiLanguage,
+        };
+    }
+
+    private static string ToEnumName<TEnum>(TEnum value, TEnum unknown)
+        where TEnum : struct, Enum
+    {
+        return value.Equals(unknown) ? string.Empty : value.ToString();
+    }
+
+    private static string ToResolutionName(ReleaseResolution resolution)
+    {
+        var name = ToEnumName(resolution, ReleaseResolution.Unknown);
+
+        return name.Length > 1 && name[0] == 'R' && char.IsDigit(name[1]) ? name[1..] : name;
     }
 
     private static string GetLanguageName(string? languageCode)

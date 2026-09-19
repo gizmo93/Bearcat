@@ -22,6 +22,12 @@ public class ReleaseClassification
 
     public ReleaseContentType ContentType { get; set; }
 
+    public ClassificationSource ContentTypeSource { get; set; }
+
+    public ReleasePlatform Platform { get; set; }
+
+    public ClassificationSource PlatformSource { get; set; }
+
     public ReleaseResolution Resolution { get; set; }
 
     public ClassificationSource ResolutionSource { get; set; }

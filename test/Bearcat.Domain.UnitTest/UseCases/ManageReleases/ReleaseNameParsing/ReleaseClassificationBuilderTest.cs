@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.ReleaseNameParsing;
 using Bearcat.Domain.ValueObjects;
@@ -16,7 +17,9 @@ public class ReleaseClassificationBuilderTest
         // Act
         var classification = ReleaseClassificationBuilder.Build(
             "The.Matrix.1999.1080p.BluRay.x264-GROUP",
-            mediaFiles
+            mediaFiles,
+            contentKind: null,
+            nfoContent: null
         );
 
         // Assert
@@ -33,7 +36,9 @@ public class ReleaseClassificationBuilderTest
         // Act
         var classification = ReleaseClassificationBuilder.Build(
             "Black.Diamond.2025.German.BDRip.x264-CPTN",
-            mediaFiles
+            mediaFiles,
+            contentKind: null,
+            nfoContent: null
         );
 
         // Assert
@@ -52,7 +57,12 @@ public class ReleaseClassificationBuilderTest
         var mediaFiles = new List<ReleaseMediaFile> { VideoFile(height) };
 
         // Act
-        var classification = ReleaseClassificationBuilder.Build("Plain.Folder", mediaFiles);
+        var classification = ReleaseClassificationBuilder.Build(
+            "Plain.Folder",
+            mediaFiles,
+            contentKind: null,
+            nfoContent: null
+        );
 
         // Assert
         classification.Resolution.ShouldBe(expected);
@@ -67,7 +77,9 @@ public class ReleaseClassificationBuilderTest
         // Act
         var classification = ReleaseClassificationBuilder.Build(
             "Amok.1994.German.DL.1080p.BluRay.x264-PL3X",
-            mediaFiles
+            mediaFiles,
+            contentKind: null,
+            nfoContent: null
         );
 
         // Assert
@@ -88,7 +100,9 @@ public class ReleaseClassificationBuilderTest
         // Act
         var classification = ReleaseClassificationBuilder.Build(
             "Some.Movie.2020-GROUP",
-            mediaFiles
+            mediaFiles,
+            contentKind: null,
+            nfoContent: null
         );
 
         // Assert
@@ -106,7 +120,9 @@ public class ReleaseClassificationBuilderTest
         // Act
         var classification = ReleaseClassificationBuilder.Build(
             "Some.Movie.2020-GROUP",
-            mediaFiles
+            mediaFiles,
+            contentKind: null,
+            nfoContent: null
         );
 
         // Assert
@@ -120,7 +136,9 @@ public class ReleaseClassificationBuilderTest
         // Act
         var classification = ReleaseClassificationBuilder.Build(
             "Breaking.Bad.S03E10.720p.HDTV.x264-LOL",
-            []
+            [],
+            contentKind: null,
+            nfoContent: null
         );
 
         // Assert
@@ -136,7 +154,9 @@ public class ReleaseClassificationBuilderTest
         // Act
         var classification = ReleaseClassificationBuilder.Build(
             "Some.Old.Movie.1985.German.DVDRip.x264-GRP",
-            []
+            [],
+            contentKind: null,
+            nfoContent: null
         );
 
         // Assert
@@ -152,7 +172,9 @@ public class ReleaseClassificationBuilderTest
         // Act
         var classification = ReleaseClassificationBuilder.Build(
             "Movie.Name.2023.German.DL.1080p.BluRay.x264-GROUP",
-            []
+            [],
+            contentKind: null,
+            nfoContent: null
         );
 
         // Assert
@@ -169,7 +191,9 @@ public class ReleaseClassificationBuilderTest
         // Act
         var classification = ReleaseClassificationBuilder.Build(
             "Show.Name.S01E03.German.720p.WEB.h264-GRP",
-            []
+            [],
+            contentKind: null,
+            nfoContent: null
         );
 
         // Assert
@@ -187,7 +211,9 @@ public class ReleaseClassificationBuilderTest
         // Act
         var classification = ReleaseClassificationBuilder.Build(
             "Show.Name.S02E05-E06.German.DL.1080p.WEB-DL.x264-TVS",
-            []
+            [],
+            contentKind: null,
+            nfoContent: null
         );
 
         // Assert
@@ -201,7 +227,12 @@ public class ReleaseClassificationBuilderTest
     public void Build_NoSourceInName_LeavesSourceUnknown()
     {
         // Act
-        var classification = ReleaseClassificationBuilder.Build("Plain.Folder", []);
+        var classification = ReleaseClassificationBuilder.Build(
+            "Plain.Folder",
+            [],
+            contentKind: null,
+            nfoContent: null
+        );
 
         // Assert
         classification.Source.ShouldBe(ReleaseSource.Unknown);
@@ -219,10 +250,270 @@ public class ReleaseClassificationBuilderTest
     public void Build_ContentType_IsDerivedFromName(string releaseName, ReleaseContentType expected)
     {
         // Act
-        var classification = ReleaseClassificationBuilder.Build(releaseName, []);
+        var classification = ReleaseClassificationBuilder.Build(
+            releaseName,
+            [],
+            contentKind: null,
+            nfoContent: null
+        );
 
         // Assert
         classification.ContentType.ShouldBe(expected);
+    }
+
+    [TestCase("Sunken.Realms-RUNE")]
+    [TestCase("Nightwater-TENOKE")]
+    public void Build_GameReleaseGroup_IsClassifiedAsGame(string releaseName)
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            releaseName,
+            [],
+            contentKind: null,
+            nfoContent: null
+        );
+
+        // Assert
+        classification.ContentType.ShouldBe(ReleaseContentType.Game);
+        classification.ContentTypeSource.ShouldBe(ClassificationSource.ReleaseName);
+    }
+
+    [TestCase("Vultures.Scavengers.of.Death.Update.v1.1.6-TENOKE", "Vultures Scavengers of Death")]
+    [TestCase("Shape.of.Dreams.v1.4.0-RUNE", "Shape of Dreams")]
+    public void Build_GameVersionMarker_IsClassifiedAsGameWithoutVersionInTitle(
+        string releaseName,
+        string expectedTitle
+    )
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            releaseName,
+            [],
+            contentKind: null,
+            nfoContent: null
+        );
+
+        // Assert
+        classification.ContentType.ShouldBe(ReleaseContentType.Game);
+        classification.ContentTypeSource.ShouldBe(ClassificationSource.ReleaseName);
+        classification.Title.ShouldBe(expectedTitle);
+    }
+
+    [TestCase("Sid_Meiers_Civilization_VII_v1.5.0_Linux-Razor1911", ReleasePlatform.Linux)]
+    [TestCase("Pyrga_v1.43_NES-MiRAGE", ReleasePlatform.Nes)]
+    public void Build_PlatformTokenInName_IsCarriedToClassification(
+        string releaseName,
+        ReleasePlatform expectedPlatform
+    )
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            releaseName,
+            [],
+            contentKind: null,
+            nfoContent: null
+        );
+
+        // Assert
+        classification.ContentType.ShouldBe(ReleaseContentType.Game);
+        classification.Platform.ShouldBe(expectedPlatform);
+        classification.PlatformSource.ShouldBe(ClassificationSource.ReleaseName);
+    }
+
+    [Test]
+    public void Build_GameWithoutPlatformToken_DefaultsToWindows()
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            "Dune.Awakening-RUNE",
+            [],
+            contentKind: null,
+            nfoContent: null
+        );
+
+        // Assert
+        classification.ContentType.ShouldBe(ReleaseContentType.Game);
+        classification.Platform.ShouldBe(ReleasePlatform.Windows);
+        classification.PlatformSource.ShouldBe(ClassificationSource.None);
+    }
+
+    [Test]
+    public void Build_ContentKindGame_WinsOverNameHeuristics()
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            "The.Matrix.1999.1080p.BluRay.x264-GROUP",
+            [],
+            contentKind: ExternalInfoType.Game,
+            nfoContent: null
+        );
+
+        // Assert
+        classification.ContentType.ShouldBe(ReleaseContentType.Game);
+        classification.ContentTypeSource.ShouldBe(ClassificationSource.ReleaseInfo);
+        classification.Platform.ShouldBe(ReleasePlatform.Windows);
+    }
+
+    [Test]
+    public void Build_NfoWithSteamAppUrl_IsClassifiedAsGame()
+    {
+        // Arrange
+        var nfoContent = "Release notes\nhttp://store.steampowered.com/app/1172710/\nEnjoy";
+
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            "Dune.Awakening-GRP",
+            [],
+            contentKind: null,
+            nfoContent: nfoContent
+        );
+
+        // Assert
+        classification.ContentType.ShouldBe(ReleaseContentType.Game);
+        classification.ContentTypeSource.ShouldBe(ClassificationSource.Nfo);
+    }
+
+    [Test]
+    public void Build_NfoWithSteamAppUrlAndContentKindMovie_StaysMovie()
+    {
+        // Arrange
+        var nfoContent = "Release notes\nhttp://store.steampowered.com/app/1172710/\nEnjoy";
+
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            "The.Matrix.1999.1080p.BluRay.x264-GROUP",
+            [],
+            contentKind: ExternalInfoType.Movie,
+            nfoContent: nfoContent
+        );
+
+        // Assert
+        classification.ContentType.ShouldBe(ReleaseContentType.Movie);
+        classification.ContentTypeSource.ShouldBe(ClassificationSource.ReleaseName);
+    }
+
+    [Test]
+    public void Build_GameMarkerWithStandaloneYear_IsNotClassifiedAsGame()
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            "Der.Film.Update.2020-GRP",
+            [],
+            contentKind: null,
+            nfoContent: null
+        );
+
+        // Assert
+        classification.ContentType.ShouldNotBe(ReleaseContentType.Game);
+    }
+
+    [Test]
+    public void Build_MovieWithResolution_StaysMovieAndHasNoPlatform()
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            "The.Matrix.1999.1080p.BluRay.x264-GROUP",
+            [],
+            contentKind: null,
+            nfoContent: null
+        );
+
+        // Assert
+        classification.ContentType.ShouldBe(ReleaseContentType.Movie);
+        classification.ContentTypeSource.ShouldBe(ClassificationSource.ReleaseName);
+        classification.Platform.ShouldBe(ReleasePlatform.Unknown);
+        classification.PlatformSource.ShouldBe(ClassificationSource.None);
+    }
+
+    [TestCase("The.Switch.2010.German.DL.1080p.BluRay.x264-GROUP", "The Switch")]
+    [TestCase("Win.Win.2011.1080p.BluRay.x264-GROUP", "Win Win")]
+    public void Build_MovieTitleContainingPlatformWord_KeepsFullTitle(
+        string releaseName,
+        string expectedTitle
+    )
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            releaseName,
+            [],
+            contentKind: null,
+            nfoContent: null
+        );
+
+        // Assert
+        classification.Title.ShouldBe(expectedTitle);
+        classification.ContentType.ShouldBe(ReleaseContentType.Movie);
+    }
+
+    [Test]
+    public void Build_RepackWithoutResolutionOrSource_IsNotClassifiedAsGame()
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            "Some.Doku.2023.GERMAN.DOKU.REPACK.DL.AC3-GROUP",
+            [],
+            contentKind: null,
+            nfoContent: null
+        );
+
+        // Assert
+        classification.ContentType.ShouldNotBe(ReleaseContentType.Game);
+    }
+
+    [Test]
+    public void Build_ContentKindSoftware_SuppressesGameNameHeuristic()
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            "Sandy.Knoll.Software.Metes.and.Bounds.Pro.v6.1-GROUP",
+            [],
+            contentKind: ExternalInfoType.Software,
+            nfoContent: null
+        );
+
+        // Assert
+        classification.ContentType.ShouldNotBe(ReleaseContentType.Game);
+        classification.Platform.ShouldBe(ReleasePlatform.Unknown);
+        classification.PlatformSource.ShouldBe(ClassificationSource.None);
+    }
+
+    [Test]
+    public void Build_ContentKindConsole_IsGameWithoutPlatformAssumption()
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            "Some.Game.Name-GRP",
+            [],
+            contentKind: ExternalInfoType.Console,
+            nfoContent: null
+        );
+
+        // Assert
+        classification.ContentType.ShouldBe(ReleaseContentType.Game);
+        classification.ContentTypeSource.ShouldBe(ClassificationSource.ReleaseInfo);
+        classification.Platform.ShouldBe(ReleasePlatform.Unknown);
+        classification.PlatformSource.ShouldBe(ClassificationSource.None);
+    }
+
+    [TestCase("Some.Game.Name.PS5-GRP", ReleasePlatform.PlayStation5)]
+    [TestCase("Some.Game.Name.NSW-GRP", ReleasePlatform.NintendoSwitch)]
+    public void Build_ContentKindConsoleWithPlatformToken_TakesPlatformFromName(
+        string releaseName,
+        ReleasePlatform expectedPlatform
+    )
+    {
+        // Act
+        var classification = ReleaseClassificationBuilder.Build(
+            releaseName,
+            [],
+            contentKind: ExternalInfoType.Console,
+            nfoContent: null
+        );
+
+        // Assert
+        classification.ContentType.ShouldBe(ReleaseContentType.Game);
+        classification.Platform.ShouldBe(expectedPlatform);
+        classification.PlatformSource.ShouldBe(ClassificationSource.ReleaseName);
     }
 
     private static ReleaseMediaFile VideoFile(

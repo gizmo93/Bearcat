@@ -14,6 +14,8 @@ public static class RuleFieldCatalog
 
     public const string ContentType = "ContentType";
 
+    public const string Platform = "Platform";
+
     public const string Source = "Source";
 
     public const string ReleaseGroupName = "ReleaseGroupName";
@@ -87,6 +89,18 @@ public static class RuleFieldCatalog
             ],
             Enum.GetNames<ReleaseContentType>(),
             context => context.ContentType
+        ),
+        new RuleFieldDescriptor(
+            Platform,
+            RuleFieldValueKind.Enumeration,
+            [
+                RuleConditionOperator.Equals,
+                RuleConditionOperator.NotEquals,
+                RuleConditionOperator.In,
+                RuleConditionOperator.NotIn,
+            ],
+            Enum.GetNames<ReleasePlatform>(),
+            context => context.Platform
         ),
         new RuleFieldDescriptor(
             Source,

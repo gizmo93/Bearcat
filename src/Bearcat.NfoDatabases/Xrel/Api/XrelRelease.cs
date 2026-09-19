@@ -42,7 +42,11 @@ public record XrelExternalInfoDetails(
     [property: JsonPropertyName("externals")] IReadOnlyList<XrelExternalInfoExternal>? Externals
 );
 
-public record XrelExternalInfoExternal([property: JsonPropertyName("plot")] string? Plot);
+public record XrelExternalInfoExternal(
+    [property: JsonPropertyName("plot")] string? Plot,
+    [property: JsonPropertyName("link_url")] string? LinkUrl,
+    [property: JsonPropertyName("source")] XrelExternalInfoExternalSource? Source
+);
 
 public record XrelExternalInfoMedia(
     [property: JsonPropertyName("type")] string? Type,
