@@ -53,19 +53,24 @@ public partial class ReleaseMetadataResolver(
 
         var normalizedName = release.Name.Replace('.', ' ').Replace('_', ' ');
         var titleMarker = TitleMarkerRegex().Match(normalizedName);
+        
         var title = titleMarker.Success
             ? normalizedName[..titleMarker.Index].Trim()
             : normalizedName.Trim();
+        
         var yearMatch = YearRegex().Match(normalizedName);
         var episodeMatch = EpisodeRegex().Match(normalizedName);
+        
         var externalTitle = release
             .ReleaseInfo?.ExternalInfos.Select(info => info.Title)
             .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+        
         var imdbId = release
             .ExternalIdentifiers.Where(identifier => identifier.Type == ExternalIdentifierType.Imdb)
             .OrderBy(identifier => identifier.Source)
             .Select(identifier => identifier.Value)
             .FirstOrDefault();
+        
         var steamAppId = release
             .ExternalIdentifiers.Where(identifier =>
                 identifier.Type == ExternalIdentifierType.Steam
@@ -101,15 +106,19 @@ public partial class ReleaseMetadataResolver(
         release.Metadata ??= new ReleaseMetadata();
         release.Metadata.MetadataDatabaseClassName = resolved.DatabaseClassName;
         release.Metadata.Title = resolved.Metadata.Title;
+        
         release.Metadata.Genre = string.IsNullOrWhiteSpace(resolved.Metadata.Genre)
             ? existingMetadata?.Genre
             : resolved.Metadata.Genre;
+        
         release.Metadata.Description = string.IsNullOrWhiteSpace(resolved.Metadata.Description)
             ? existingMetadata?.Description
             : resolved.Metadata.Description;
+        
         release.Metadata.CoverUrl = string.IsNullOrWhiteSpace(resolved.Metadata.CoverUrl)
             ? existingMetadata?.CoverUrl
             : resolved.Metadata.CoverUrl;
+        
         release.Metadata.MetadataDatabaseUrl = string.IsNullOrWhiteSpace(
             resolved.Metadata.DatabaseUrl
         )
