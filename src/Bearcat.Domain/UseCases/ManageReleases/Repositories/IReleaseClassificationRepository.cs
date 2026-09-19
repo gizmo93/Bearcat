@@ -16,5 +16,7 @@ public interface IReleaseClassificationRepository
         CancellationToken cancellationToken = default
     );
 
+    void ClearChangeTracker();
+
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

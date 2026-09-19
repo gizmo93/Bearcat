@@ -47,6 +47,11 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
                 metadataDatabaseFactoryMock.Object,
                 new Mock<ILogger<MediaMetadataResolver>>().Object
             ),
+            new ReleaseClassificationService(
+                new ReleaseClassificationRepository(dbContext),
+                CreateTimeProvider(),
+                new Mock<ILogger<ReleaseClassificationService>>().Object
+            ),
             new Mock<ILogger<ReleaseInfoResolutionService>>().Object,
             CreateTimeProvider()
         );
@@ -1072,7 +1077,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
                         new Url(UrlType.Other, "https://www.xrel.to/movie/123"),
                     ]
                 ),
-            ]
+            ],
+            ContentKind: ExternalInfoType.Movie
         );
     }
 

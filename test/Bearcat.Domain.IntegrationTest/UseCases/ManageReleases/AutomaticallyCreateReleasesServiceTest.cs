@@ -791,6 +791,11 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
                 new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict).Object,
                 NullLogger<MediaMetadataResolver>.Instance
             ),
+            new ReleaseClassificationService(
+                new ReleaseClassificationRepository(dbContext),
+                CreateTimeProvider(),
+                NullLogger<ReleaseClassificationService>.Instance
+            ),
             NullLogger<ReleaseInfoResolutionService>.Instance,
             CreateTimeProvider()
         );
@@ -890,7 +895,8 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
                         new Url(UrlType.Other, "https://www.xrel.to/movie/123"),
                     ]
                 ),
-            ]
+            ],
+            ContentKind: ExternalInfoType.Movie
         );
     }
 

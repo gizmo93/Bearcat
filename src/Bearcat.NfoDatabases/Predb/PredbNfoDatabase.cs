@@ -46,7 +46,8 @@ public partial class PredbNfoDatabase(PredbClient client) : INfoDatabase, INfoPr
             Genre: string.IsNullOrWhiteSpace(release.Genre) ? null : release.Genre,
             Description: null,
             CoverUrl: null,
-            ExternalInfos: []
+            ExternalInfos: [],
+            ContentKind: MapContentKind(release.Section)
         );
     }
 
@@ -82,6 +83,13 @@ public partial class PredbNfoDatabase(PredbClient client) : INfoDatabase, INfoPr
     public INfoDatabaseConfig DeserializeConfig(string serializedConfig)
     {
         return new PredbConfig();
+    }
+
+    private static ExternalInfoType? MapContentKind(string? section)
+    {
+        return section?.StartsWith("GAMES", StringComparison.OrdinalIgnoreCase) == true
+            ? ExternalInfoType.Game
+            : null;
     }
 
     private static ReleaseInfoSize? GetSize(double? megabytes)

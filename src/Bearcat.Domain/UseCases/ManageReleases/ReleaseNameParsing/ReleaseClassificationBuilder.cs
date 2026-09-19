@@ -1,17 +1,50 @@
+using System.Text.RegularExpressions;
 using Bearcat.Abstractions.Media;
+using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageReleases.ReleaseNameParsing;
 
-public static class ReleaseClassificationBuilder
+public static partial class ReleaseClassificationBuilder
 {
-    public const int CurrentParserVersion = 2;
+    public const int CurrentParserVersion = 3;
+
+    private static readonly HashSet<string> GameReleaseGroups = new(
+        StringComparer.OrdinalIgnoreCase
+    )
+    {
+        "RUNE",
+        "TENOKE",
+        "ElAmigos",
+        "DODI",
+        "FitGirl",
+        "SKIDROW",
+        "CODEX",
+        "PLAZA",
+        "EMPRESS",
+        "GOLDBERG",
+        "FLT",
+        "RAZOR1911",
+        "RazorDOX",
+        "bADkARMA",
+        "MiRAGE",
+        "FCKDRM",
+        "TiNYiSO",
+        "DARKSiDERS",
+        "HOODLUM",
+        "Unleashed",
+        "CPY",
+        "STEAMPUNKS",
+        "ANOMALY",
+    };
 
     public static ReleaseClassification Build(
         string releaseName,
-        IReadOnlyList<ReleaseMediaFile> mediaFiles
+        IReadOnlyList<ReleaseMediaFile> mediaFiles,
+        ExternalInfoType? contentKind,
+        string? nfoContent
     )
     {
         var parsed = ReleaseNameParser.Parse(releaseName);
@@ -24,6 +57,8 @@ public static class ReleaseClassificationBuilder
 
         var (resolution, resolutionSource) = ResolveResolution(parsed, metadata);
         var (language, languageSource, isMultiLanguage) = ResolveLanguage(parsed, metadata);
+        var (contentType, contentTypeSource) = ResolveContentType(parsed, contentKind, nfoContent);
+        var (platform, platformSource) = ResolvePlatform(parsed, contentType, contentKind);
 
         return new ReleaseClassification
         {
@@ -32,7 +67,10 @@ public static class ReleaseClassificationBuilder
             Season = parsed.Season,
             Episode = parsed.Episode,
             EpisodeEnd = parsed.EpisodeEnd,
-            ContentType = ResolveContentType(parsed),
+            ContentType = contentType,
+            ContentTypeSource = contentTypeSource,
+            Platform = platform,
+            PlatformSource = platformSource,
             Resolution = resolution,
             ResolutionSource = resolutionSource,
             Source = parsed.Source,
@@ -48,16 +86,79 @@ public static class ReleaseClassificationBuilder
         };
     }
 
-    private static ReleaseContentType ResolveContentType(ParsedReleaseName parsed)
+    private static (ReleaseContentType ContentType, ClassificationSource Source) ResolveContentType(
+        ParsedReleaseName parsed,
+        ExternalInfoType? contentKind,
+        string? nfoContent
+    )
     {
-        if (parsed.Season is not null || parsed.Episode is not null)
+        if (contentKind is ExternalInfoType.Game or ExternalInfoType.Console)
         {
-            return ReleaseContentType.TvShowEpisode;
+            return (ReleaseContentType.Game, ClassificationSource.ReleaseInfo);
         }
 
-        return parsed.Year is not null || parsed.LooksLikeReleaseName
-            ? ReleaseContentType.Movie
-            : ReleaseContentType.Other;
+        if (parsed.Season is not null || parsed.Episode is not null)
+        {
+            return (ReleaseContentType.TvShowEpisode, ClassificationSource.ReleaseName);
+        }
+
+        if (
+            contentKind is null
+            && nfoContent is not null
+            && SteamAppUrlPattern().IsMatch(nfoContent)
+        )
+        {
+            return (ReleaseContentType.Game, ClassificationSource.Nfo);
+        }
+
+        if (contentKind is null && LooksLikeGame(parsed))
+        {
+            return (ReleaseContentType.Game, ClassificationSource.ReleaseName);
+        }
+
+        if (parsed.Year is not null || parsed.LooksLikeReleaseName)
+        {
+            return (ReleaseContentType.Movie, ClassificationSource.ReleaseName);
+        }
+
+        return (ReleaseContentType.Other, ClassificationSource.None);
+    }
+
+    private static bool LooksLikeGame(ParsedReleaseName parsed)
+    {
+        if (
+            parsed.Resolution != ReleaseResolution.Unknown
+            || parsed.Source != ReleaseSource.Unknown
+            || parsed.Year is not null
+        )
+        {
+            return false;
+        }
+
+        return parsed.HasGameMarkers
+            || parsed.Platform != ReleasePlatform.Unknown
+            || (parsed.Group is not null && GameReleaseGroups.Contains(parsed.Group));
+    }
+
+    private static (ReleasePlatform Platform, ClassificationSource Source) ResolvePlatform(
+        ParsedReleaseName parsed,
+        ReleaseContentType contentType,
+        ExternalInfoType? contentKind
+    )
+    {
+        if (contentType != ReleaseContentType.Game)
+        {
+            return (ReleasePlatform.Unknown, ClassificationSource.None);
+        }
+
+        if (parsed.Platform != ReleasePlatform.Unknown)
+        {
+            return (parsed.Platform, ClassificationSource.ReleaseName);
+        }
+
+        return contentKind == ExternalInfoType.Console
+            ? (ReleasePlatform.Unknown, ClassificationSource.None)
+            : (ReleasePlatform.Windows, ClassificationSource.None);
     }
 
     private static (ReleaseResolution Resolution, ClassificationSource Source) ResolveResolution(
@@ -127,4 +228,7 @@ public static class ReleaseClassificationBuilder
             _ => ReleaseResolution.R480p,
         };
     }
+
+    [GeneratedRegex(@"store\.steampowered\.com/app/\d+", RegexOptions.IgnoreCase)]
+    private static partial Regex SteamAppUrlPattern();
 }

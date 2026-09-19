@@ -20,6 +20,7 @@ public partial class ReleaseInfoResolutionService(
     IReleaseInfoRepository repository,
     INfoDatabaseFactory nfoDatabaseFactory,
     MediaMetadataResolver metadataResolver,
+    ReleaseClassificationService classificationService,
     ILogger<ReleaseInfoResolutionService> logger,
     TimeProvider timeProvider
 )
@@ -151,6 +152,11 @@ public partial class ReleaseInfoResolutionService(
         var metadataAttached =
             metadataNeedsResolution
             && await TryResolveAndAttachMetadataAsync(release, cancellationToken);
+
+        if (nfoAttached || releaseInfoAttached)
+        {
+            classificationService.Classify(release);
+        }
 
         if (releaseInfoNeedsResolution)
         {
@@ -626,6 +632,7 @@ public partial class ReleaseInfoResolutionService(
             SizeUnit = releaseInfo.Size?.Unit,
             VideoType = releaseInfo.VideoType,
             AudioType = releaseInfo.AudioType,
+            ContentKind = releaseInfo.ContentKind,
             ExternalInfos = releaseInfo
                 .ExternalInfos.Select(externalInfo => new ReleaseExternalInfo
                 {
@@ -665,7 +672,9 @@ public partial class ReleaseInfoResolutionService(
             is PostgresException
             {
                 SqlState: PostgresErrorCodes.UniqueViolation,
-                ConstraintName: "IX_ReleaseInfos_ReleaseId" or "IX_ReleaseMetadata_ReleaseId",
+                ConstraintName: "IX_ReleaseInfos_ReleaseId"
+                    or "IX_ReleaseMetadata_ReleaseId"
+                    or "IX_ReleaseClassifications_ReleaseId",
             };
     }
 

@@ -4,4 +4,5 @@ public enum UrlType
 {
     Imdb = 1,
     Other = 2,
+    Steam = 3,
 }

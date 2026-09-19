@@ -18,6 +18,7 @@ public class ReleaseInfoConfiguration : IEntityTypeConfiguration<ReleaseInfo>
         builder.Property(info => info.SizeUnit).IsRequired(false).HasMaxLength(50);
         builder.Property(info => info.VideoType).IsRequired(false).HasMaxLength(100);
         builder.Property(info => info.AudioType).IsRequired(false).HasMaxLength(100);
+        builder.Property(info => info.ContentKind).IsRequired(false);
 
         builder.HasIndex(info => info.ReleaseId).IsUnique();
 

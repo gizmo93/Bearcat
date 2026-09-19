@@ -4,17 +4,20 @@ using System.Collections.Generic;
 using Bearcat.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace BearCat.Infrastructure.Migrations
+namespace Bearcat.Infrastructure.Migrations
 {
     [DbContext(typeof(BearcatDbContext))]
-    partial class BearcatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260919151230_AddReleaseInfoContentKind")]
+    partial class AddReleaseInfoContentKind
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1080,9 +1083,6 @@ namespace BearCat.Infrastructure.Migrations
                     b.Property<int>("ContentType")
                         .HasColumnType("integer");
 
-                    b.Property<int>("ContentTypeSource")
-                        .HasColumnType("integer");
-
                     b.Property<int?>("Episode")
                         .HasColumnType("integer");
 
@@ -1096,12 +1096,6 @@ namespace BearCat.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("ParserVersion")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Platform")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("PlatformSource")
                         .HasColumnType("integer");
 
                     b.Property<string>("PrimaryLanguage")

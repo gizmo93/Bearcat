@@ -14,6 +14,8 @@ public class MediaMetadataRepository(IBearcatWriteDbContext dbWrite) : IMediaMet
         return await dbWrite
             .Releases.Include(release => release.MediaFiles)
             .Include(release => release.Classification)
+            .Include(release => release.ReleaseInfo)
+            .Include(release => release.ReleaseNfo)
             .FirstOrDefaultAsync(release => release.Id == releaseId, cancellationToken);
     }
 

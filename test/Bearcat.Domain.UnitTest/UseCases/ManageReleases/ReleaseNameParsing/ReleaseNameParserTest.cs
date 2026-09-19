@@ -318,4 +318,86 @@ public class ReleaseNameParserTest
         parsed.Source.ShouldBe(ReleaseSource.WebDl);
         parsed.Group.ShouldBe("TVS");
     }
+
+    [Test]
+    public void Parse_MultiWithLanguageCount_IsDetectedAsMultiLanguage()
+    {
+        // Act
+        var parsed = ReleaseNameParser.Parse(
+            "Assassins.Creed.Mirage.Master.Assassin.Edition.MULTi14-ElAmigos"
+        );
+
+        // Assert
+        parsed.Title.ShouldBe("Assassins Creed Mirage Master Assassin Edition");
+        parsed.IsMultiLanguage.ShouldBeTrue();
+        parsed.Group.ShouldBe("ElAmigos");
+    }
+
+    [TestCase("Sid_Meiers_Civilization_VII_v1.5.0_Linux-Razor1911", ReleasePlatform.Linux)]
+    [TestCase("Pyrga_v1.43_NES-MiRAGE", ReleasePlatform.Nes)]
+    [TestCase("Some.Game.v1.0.MacOS-GRP", ReleasePlatform.MacOs)]
+    [TestCase("Some.Game.v1.0.PS5-GRP", ReleasePlatform.PlayStation5)]
+    public void Parse_PlatformToken_MapsToReleasePlatform(
+        string releaseName,
+        ReleasePlatform expectedPlatform
+    )
+    {
+        // Act
+        var parsed = ReleaseNameParser.Parse(releaseName);
+
+        // Assert
+        parsed.Platform.ShouldBe(expectedPlatform);
+    }
+
+    [Test]
+    public void Parse_GameWithVersion_StopsTitleAtVersionToken()
+    {
+        // Act
+        var parsed = ReleaseNameParser.Parse("Sid_Meiers_Civilization_VII_v1.5.0_Linux-Razor1911");
+
+        // Assert
+        parsed.Title.ShouldBe("Sid Meiers Civilization VII");
+        parsed.HasGameMarkers.ShouldBeTrue();
+        parsed.Platform.ShouldBe(ReleasePlatform.Linux);
+        parsed.Group.ShouldBe("Razor1911");
+    }
+
+    [TestCase("Vultures.Scavengers.of.Death.Update.v1.1.6-TENOKE", "Vultures Scavengers of Death")]
+    [TestCase("Shape.of.Dreams.v1.4.0-RUNE", "Shape of Dreams")]
+    [TestCase("ChainStaff_Time_Trials_Plus_8_Trainer-RazorDOX", "ChainStaff Time Trials Plus 8")]
+    [TestCase(
+        "Firefighting.Simulator.Ignite.Motor.Vehicle.Accident.Update.v1.0070.incl.DLC-RUNE",
+        "Firefighting Simulator Ignite Motor Vehicle Accident"
+    )]
+    public void Parse_GameMarker_IsDetectedAndEndsTitle(string releaseName, string expectedTitle)
+    {
+        // Act
+        var parsed = ReleaseNameParser.Parse(releaseName);
+
+        // Assert
+        parsed.HasGameMarkers.ShouldBeTrue();
+        parsed.Title.ShouldBe(expectedTitle);
+    }
+
+    [Test]
+    public void Parse_GameMarkerWordInMovieName_DoesNotTruncateTitle()
+    {
+        // Act
+        var parsed = ReleaseNameParser.Parse("Status.Update.2018.1080p.WEB.h264-GRP");
+
+        // Assert
+        parsed.Title.ShouldBe("Status Update");
+        parsed.Year.ShouldBe(2018);
+    }
+
+    [Test]
+    public void Parse_MovieWithoutGameMarkers_HasNoGameMarkersAndNoPlatform()
+    {
+        // Act
+        var parsed = ReleaseNameParser.Parse("The.Matrix.1999.1080p.BluRay.x264-GROUP");
+
+        // Assert
+        parsed.HasGameMarkers.ShouldBeFalse();
+        parsed.Platform.ShouldBe(ReleasePlatform.Unknown);
+    }
 }

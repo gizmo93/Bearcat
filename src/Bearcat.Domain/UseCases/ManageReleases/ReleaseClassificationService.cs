@@ -1,7 +1,9 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.ReleaseNameParsing;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ManageReleases;
@@ -40,9 +42,20 @@ public class ReleaseClassificationService(
                 totalClassified++;
             }
 
-            await repository.SaveChangesAsync(cancellationToken);
-
             hasPendingReleases = releases.Count > 0;
+
+            try
+            {
+                await repository.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException exception) when (IsDuplicateClassificationException(exception))
+            {
+                logger.LogInformation(
+                    exception,
+                    "Classification batch conflicted with another worker, will retry on next pass"
+                );
+                repository.ClearChangeTracker();
+            }
         }
 
         return totalClassified;
@@ -72,7 +85,12 @@ public class ReleaseClassificationService(
 
     public void Classify(Release release)
     {
-        var built = ReleaseClassificationBuilder.Build(release.Name, release.MediaFiles);
+        var built = ReleaseClassificationBuilder.Build(
+            releaseName: release.Name,
+            mediaFiles: release.MediaFiles,
+            contentKind: release.ReleaseInfo?.ContentKind,
+            nfoContent: release.ReleaseNfo?.Content
+        );
         built.ClassifiedAt = timeProvider.GetLocalNow();
 
         if (release.Classification is null)
@@ -101,6 +119,9 @@ public class ReleaseClassificationService(
         target.Episode = source.Episode;
         target.EpisodeEnd = source.EpisodeEnd;
         target.ContentType = source.ContentType;
+        target.ContentTypeSource = source.ContentTypeSource;
+        target.Platform = source.Platform;
+        target.PlatformSource = source.PlatformSource;
         target.Resolution = source.Resolution;
         target.ResolutionSource = source.ResolutionSource;
         target.Source = source.Source;
@@ -111,5 +132,15 @@ public class ReleaseClassificationService(
         target.IsMultiLanguage = source.IsMultiLanguage;
         target.ParserVersion = source.ParserVersion;
         target.ClassifiedAt = source.ClassifiedAt;
+    }
+
+    private static bool IsDuplicateClassificationException(DbUpdateException exception)
+    {
+        return exception.InnerException
+            is PostgresException
+            {
+                SqlState: PostgresErrorCodes.UniqueViolation,
+                ConstraintName: "IX_ReleaseClassifications_ReleaseId",
+            };
     }
 }

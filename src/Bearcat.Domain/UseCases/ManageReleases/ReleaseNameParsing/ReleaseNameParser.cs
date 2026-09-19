@@ -34,6 +34,40 @@ public static partial class ReleaseNameParser
         "ml",
     };
 
+    private static readonly Dictionary<string, ReleasePlatform> Platforms = new(
+        StringComparer.OrdinalIgnoreCase
+    )
+    {
+        ["pc"] = ReleasePlatform.Windows,
+        ["windows"] = ReleasePlatform.Windows,
+        ["macos"] = ReleasePlatform.MacOs,
+        ["macosx"] = ReleasePlatform.MacOs,
+        ["osx"] = ReleasePlatform.MacOs,
+        ["linux"] = ReleasePlatform.Linux,
+        ["amiga"] = ReleasePlatform.Amiga,
+        ["nes"] = ReleasePlatform.Nes,
+        ["snes"] = ReleasePlatform.Snes,
+        ["zxs"] = ReleasePlatform.ZxSpectrum,
+        ["c64"] = ReleasePlatform.Commodore64,
+        ["ps3"] = ReleasePlatform.PlayStation3,
+        ["ps4"] = ReleasePlatform.PlayStation4,
+        ["ps5"] = ReleasePlatform.PlayStation5,
+        ["x360"] = ReleasePlatform.Xbox360,
+        ["xbox360"] = ReleasePlatform.Xbox360,
+        ["xboxone"] = ReleasePlatform.XboxOne,
+        ["xboxsx"] = ReleasePlatform.XboxSeries,
+        ["nsw"] = ReleasePlatform.NintendoSwitch,
+    };
+
+    private static readonly HashSet<string> GameMarkers = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "update",
+        "dlc",
+        "trainer",
+        "gog",
+        "drmfree",
+    };
+
     private static readonly Dictionary<string, ReleaseSource> Sources = new(
         StringComparer.OrdinalIgnoreCase
     )
@@ -64,15 +98,22 @@ public static partial class ReleaseNameParser
         string? language = null;
         var isMultiLanguage = false;
         var source = ReleaseSource.Unknown;
+        var platform = ReleasePlatform.Unknown;
+        var hasGameMarkers = false;
         int? year = null;
         int? season = null;
         int? episode = null;
         int? episodeEnd = null;
         int? firstAnchorIndex = null;
 
+        var hasResolutionOrSourceToken = tokens.Any(token =>
+            Resolutions.ContainsKey(token) || Sources.ContainsKey(token)
+        );
+
         for (var index = 0; index < tokens.Length; index++)
         {
             var token = tokens[index];
+            var nextToken = index + 1 < tokens.Length ? tokens[index + 1] : null;
             var isAnchor = true;
 
             if (Resolutions.TryGetValue(token, out var parsedResolution))
@@ -82,11 +123,18 @@ public static partial class ReleaseNameParser
                     resolution = parsedResolution;
                 }
             }
+            else if (Platforms.TryGetValue(token, out var parsedPlatform))
+            {
+                if (platform == ReleasePlatform.Unknown)
+                {
+                    platform = parsedPlatform;
+                }
+            }
             else if (LanguageCatalog.TryResolveName(token, out var parsedLanguage))
             {
                 language ??= parsedLanguage;
             }
-            else if (MultiLanguageMarkers.Contains(token))
+            else if (IsMultiLanguageMarker(token))
             {
                 isMultiLanguage = true;
             }
@@ -114,6 +162,11 @@ public static partial class ReleaseNameParser
             {
                 year ??= int.Parse(token);
             }
+            else if (IsGameMarker(token, nextToken))
+            {
+                hasGameMarkers = true;
+                isAnchor = !hasResolutionOrSourceToken;
+            }
             else
             {
                 isAnchor = false;
@@ -138,8 +191,35 @@ public static partial class ReleaseNameParser
             IsMultiLanguage = isMultiLanguage,
             Resolution = resolution,
             Source = source,
+            Platform = platform,
+            HasGameMarkers = hasGameMarkers,
             Group = group,
         };
+    }
+
+    private static bool IsMultiLanguageMarker(string token)
+    {
+        return MultiLanguageMarkers.Contains(token) || MultiLanguagePattern().IsMatch(token);
+    }
+
+    private static bool IsGameMarker(string token, string? nextToken)
+    {
+        if (GameMarkers.Contains(token) || VersionPattern().IsMatch(token))
+        {
+            return true;
+        }
+
+        if (
+            token.Equals("build", StringComparison.OrdinalIgnoreCase)
+            && nextToken is not null
+            && nextToken.All(char.IsAsciiDigit)
+        )
+        {
+            return true;
+        }
+
+        return token.Equals("early", StringComparison.OrdinalIgnoreCase)
+            && nextToken?.Equals("access", StringComparison.OrdinalIgnoreCase) == true;
     }
 
     private static (string Body, string? Group) ExtractGroup(string name)
@@ -203,6 +283,12 @@ public static partial class ReleaseNameParser
             )
             && int.TryParse(token, out _);
     }
+
+    [GeneratedRegex(@"^multi\d+$", RegexOptions.IgnoreCase)]
+    private static partial Regex MultiLanguagePattern();
+
+    [GeneratedRegex(@"^v\d+(?:\.\d+)*[a-z]?$", RegexOptions.IgnoreCase)]
+    private static partial Regex VersionPattern();
 
     [GeneratedRegex(@"^[A-Za-z0-9][A-Za-z0-9_.]{0,29}$")]
     private static partial Regex GroupPattern();
