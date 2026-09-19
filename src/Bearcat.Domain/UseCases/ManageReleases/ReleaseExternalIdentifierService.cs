@@ -16,7 +16,7 @@ public static class ReleaseExternalIdentifierService
             type: ExternalIdentifierType.Imdb,
             source: source,
             values: values,
-            extractor: ImdbIdParser.ExtractAll
+            extractor: Parsers.ImdbIdParser.ExtractAll
         );
     }
 
@@ -31,7 +31,7 @@ public static class ReleaseExternalIdentifierService
             type: ExternalIdentifierType.Steam,
             source: source,
             values: values,
-            extractor: SteamAppIdParser.ExtractAll
+            extractor: Parsers.SteamAppIdParser.ExtractAll
         );
     }
 

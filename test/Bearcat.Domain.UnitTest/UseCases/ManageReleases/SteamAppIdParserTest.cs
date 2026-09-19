@@ -1,4 +1,5 @@
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleases.Parsers;
 using Shouldly;
 
 namespace Bearcat.Domain.UnitTest.UseCases.ManageReleases;

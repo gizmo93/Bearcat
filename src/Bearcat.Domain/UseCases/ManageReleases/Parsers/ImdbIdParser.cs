@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace Bearcat.Domain.UseCases.ManageReleases;
+namespace Bearcat.Domain.UseCases.ManageReleases.Parsers;
 
 public static partial class ImdbIdParser
 {
