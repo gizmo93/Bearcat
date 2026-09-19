@@ -27,6 +27,7 @@ public partial class ReleaseInfoResolutionService(
 {
     private const int MissingReleaseBatchSize = 50;
     private IReadOnlyList<ActiveNfoDatabaseRegistrationReadModel>? activeNfoDatabaseRegistrations;
+    private HashSet<string>? nfoDatabaseClassNames;
     private readonly TimeSpan lastCheckedThreshold = TimeSpan.FromDays(1);
 
     public async Task<int> ProcessMissingReleaseInfosAsync(
@@ -124,7 +125,10 @@ public partial class ReleaseInfoResolutionService(
                 release.Metadata is null
                 || (
                     release.Metadata.MetadataDatabaseClassName != ReleaseMetadata.ManualSource
-                    && string.IsNullOrWhiteSpace(release.Metadata.CoverUrl)
+                    && (
+                        string.IsNullOrWhiteSpace(release.Metadata.CoverUrl)
+                        || IsNfoDatabaseMetadata(release.Metadata)
+                    )
                 )
             )
             && (
@@ -215,6 +219,7 @@ public partial class ReleaseInfoResolutionService(
         {
             ReleaseContentType.Movie => MediaKind.Movie,
             ReleaseContentType.TvShowEpisode => MediaKind.TvEpisode,
+            ReleaseContentType.Game => MediaKind.Game,
             _ => (MediaKind?)null,
         };
 
@@ -238,11 +243,19 @@ public partial class ReleaseInfoResolutionService(
             .OrderBy(identifier => identifier.Source)
             .Select(identifier => identifier.Value)
             .FirstOrDefault();
+        var steamAppId = release
+            .ExternalIdentifiers.Where(identifier =>
+                identifier.Type == ExternalIdentifierType.Steam
+            )
+            .OrderBy(identifier => identifier.Source)
+            .Select(identifier => identifier.Value)
+            .FirstOrDefault();
 
         var resolved = await metadataResolver.ResolveAsync(
             new MediaMetadataLookup(
                 MediaKind: mediaKind.Value,
                 ImdbId: imdbId,
+                SteamAppId: steamAppId,
                 Title: externalTitle ?? title,
                 Year: yearMatch.Success ? int.Parse(yearMatch.Value) : null,
                 SeasonNumber: episodeMatch.Success
@@ -687,6 +700,15 @@ public partial class ReleaseInfoResolutionService(
             .ToList();
 
         return activeNfoDatabaseRegistrations;
+    }
+
+    private bool IsNfoDatabaseMetadata(ReleaseMetadata metadata)
+    {
+        nfoDatabaseClassNames ??= nfoDatabaseFactory
+            .GetByClassName()
+            .Keys.ToHashSet(StringComparer.Ordinal);
+
+        return nfoDatabaseClassNames.Contains(metadata.MetadataDatabaseClassName);
     }
 
     private static bool IsDuplicateReleaseDataException(DbUpdateException exception)

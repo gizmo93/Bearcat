@@ -71,7 +71,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
         var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
         database
             .Setup(seriesDatabase =>
-                seriesDatabase.GetByImdbIdAsync(
+                seriesDatabase.GetByExternalIdAsync(
                     config,
                     It.Is<MediaMetadataLookup>(lookup =>
                         lookup.MediaKind == MediaKind.TvSeries
@@ -106,7 +106,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
 
         database.Verify(
             seriesDatabase =>
-                seriesDatabase.GetByImdbIdAsync(
+                seriesDatabase.GetByExternalIdAsync(
                     config,
                     It.Is<MediaMetadataLookup>(lookup => lookup.ImdbId == "tt1234567"),
                     It.IsAny<CancellationToken>()
@@ -140,7 +140,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
         var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
         database
             .Setup(seriesDatabase =>
-                seriesDatabase.GetByImdbIdAsync(
+                seriesDatabase.GetByExternalIdAsync(
                     config,
                     It.Is<MediaMetadataLookup>(lookup => lookup.ImdbId == "tt7654321"),
                     It.IsAny<CancellationToken>()
@@ -162,7 +162,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
 
         database.Verify(
             seriesDatabase =>
-                seriesDatabase.GetByImdbIdAsync(
+                seriesDatabase.GetByExternalIdAsync(
                     config,
                     It.Is<MediaMetadataLookup>(lookup => lookup.ImdbId == "tt7654321"),
                     It.IsAny<CancellationToken>()
@@ -294,7 +294,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
         );
         firstDatabase
             .Setup(seriesDatabase =>
-                seriesDatabase.GetByImdbIdAsync(
+                seriesDatabase.GetByExternalIdAsync(
                     firstConfig,
                     It.Is<MediaMetadataLookup>(lookup => lookup.ImdbId == "tt1111111"),
                     It.IsAny<CancellationToken>()
@@ -317,7 +317,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
         );
         secondDatabase
             .Setup(seriesDatabase =>
-                seriesDatabase.GetByImdbIdAsync(
+                seriesDatabase.GetByExternalIdAsync(
                     secondConfig,
                     It.Is<MediaMetadataLookup>(lookup => lookup.ImdbId == "tt1111111"),
                     It.IsAny<CancellationToken>()
@@ -339,7 +339,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
 
         firstDatabase.Verify(
             seriesDatabase =>
-                seriesDatabase.GetByImdbIdAsync(
+                seriesDatabase.GetByExternalIdAsync(
                     firstConfig,
                     It.Is<MediaMetadataLookup>(lookup => lookup.ImdbId == "tt1111111"),
                     It.IsAny<CancellationToken>()
@@ -364,7 +364,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
         var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
         database
             .Setup(seriesDatabase =>
-                seriesDatabase.GetByImdbIdAsync(
+                seriesDatabase.GetByExternalIdAsync(
                     config,
                     It.Is<MediaMetadataLookup>(lookup => lookup.ImdbId == "tt1234567"),
                     It.IsAny<CancellationToken>()
@@ -400,7 +400,7 @@ public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
         var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
         database
             .Setup(seriesDatabase =>
-                seriesDatabase.GetByImdbIdAsync(
+                seriesDatabase.GetByExternalIdAsync(
                     config,
                     It.Is<MediaMetadataLookup>(lookup => lookup.ImdbId == "tt1234567"),
                     It.IsAny<CancellationToken>()

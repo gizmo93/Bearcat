@@ -11,7 +11,7 @@ namespace Bearcat.MediaDatabases.UnitTest.Tmdb;
 public class TmdbMetadataDatabaseTest
 {
     [Test]
-    public async Task GetByImdbIdAsync_MovieFound_MapsMetadata()
+    public async Task GetByExternalIdAsync_MovieFound_MapsMetadata()
     {
         var api = new Mock<ITmdbApi>(MockBehavior.Strict);
         api.Setup(item =>
@@ -37,9 +37,18 @@ public class TmdbMetadataDatabaseTest
             );
         var database = new TmdbMetadataDatabase(api.Object);
 
-        var metadata = await database.GetByImdbIdAsync(
+        var metadata = await database.GetByExternalIdAsync(
             new TmdbConfig("secret"),
-            new MediaMetadataLookup(MediaKind.Movie, "tt0109093", "Amok", 1994, null, null, "de")
+            new MediaMetadataLookup(
+                MediaKind.Movie,
+                "tt0109093",
+                null,
+                "Amok",
+                1994,
+                null,
+                null,
+                "de"
+            )
         );
 
         metadata.ShouldNotBeNull();
@@ -76,6 +85,7 @@ public class TmdbMetadataDatabaseTest
             new TmdbConfig("secret"),
             new MediaMetadataLookup(
                 MediaKind.TvEpisode,
+                null,
                 null,
                 "Agent Kim Reactivated",
                 null,

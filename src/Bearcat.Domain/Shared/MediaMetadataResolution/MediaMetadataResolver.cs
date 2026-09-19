@@ -41,9 +41,16 @@ public class MediaMetadataResolver(
                 var config = database.DeserializeConfig(registration.SerializedConfig);
                 MediaMetadata? metadata = null;
 
-                if (!string.IsNullOrWhiteSpace(lookup.ImdbId))
+                if (
+                    !string.IsNullOrWhiteSpace(lookup.ImdbId)
+                    || !string.IsNullOrWhiteSpace(lookup.SteamAppId)
+                )
                 {
-                    metadata = await database.GetByImdbIdAsync(config, lookup, cancellationToken);
+                    metadata = await database.GetByExternalIdAsync(
+                        config,
+                        lookup,
+                        cancellationToken
+                    );
                 }
 
                 if (metadata is null && !string.IsNullOrWhiteSpace(lookup.Title))

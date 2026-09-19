@@ -749,7 +749,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         database.Setup(item => item.DeserializeConfig(SerializedConfig)).Returns(config);
         database
             .Setup(item =>
-                item.GetByImdbIdAsync(
+                item.GetByExternalIdAsync(
                     config,
                     It.Is<MediaMetadataLookup>(lookup =>
                         lookup.MediaKind == MediaKind.Movie
@@ -816,7 +816,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         database.Setup(item => item.DeserializeConfig(SerializedConfig)).Returns(config);
         database
             .Setup(item =>
-                item.GetByImdbIdAsync(
+                item.GetByExternalIdAsync(
                     config,
                     It.Is<MediaMetadataLookup>(lookup => lookup.ImdbId == "tt1234567"),
                     It.IsAny<CancellationToken>()

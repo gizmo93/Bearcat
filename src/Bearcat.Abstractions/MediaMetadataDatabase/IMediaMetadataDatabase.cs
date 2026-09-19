@@ -10,7 +10,7 @@ public interface IMediaMetadataDatabase
 
     IReadOnlyList<string> ConfigurationKeys { get; }
 
-    Task<MediaMetadata?> GetByImdbIdAsync(
+    Task<MediaMetadata?> GetByExternalIdAsync(
         IMediaMetadataDatabaseConfig config,
         MediaMetadataLookup lookup,
         CancellationToken cancellationToken = default
