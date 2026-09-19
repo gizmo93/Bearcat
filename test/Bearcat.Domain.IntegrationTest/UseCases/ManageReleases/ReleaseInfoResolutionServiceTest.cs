@@ -614,10 +614,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     public async Task UpdateNfoAsync_ManualNfo_PersistsNfoAndImdbWithoutReleaseInfoPlaceholder()
     {
         var release = await AddReleaseAsync("Manual.Nfo.Release.2026-GRP");
-        var infoService = new ReleaseInfoService(
-            new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
-            new Mock<ILogger<ReleaseInfoService>>().Object
-        );
+        var infoService = CreateReleaseInfoService();
 
         await infoService.UpdateNfoAsync(
             release.Id,
@@ -651,10 +648,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         release.ReleaseInfoCheckedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync();
 
-        var infoService = new ReleaseInfoService(
-            new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
-            new Mock<ILogger<ReleaseInfoService>>().Object
-        );
+        var infoService = CreateReleaseInfoService();
 
         await infoService.DeleteAsync(release.Id, CancellationToken.None);
 
@@ -669,10 +663,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     public async Task UpdateReleaseInfoAsync_ManualValues_PersistsSceneInfoAndMetadata()
     {
         var release = await AddReleaseAsync("Manual.Release.2026-GRP");
-        var infoService = new ReleaseInfoService(
-            new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
-            new Mock<ILogger<ReleaseInfoService>>().Object
-        );
+        var infoService = CreateReleaseInfoService();
 
         await infoService.UpdateReleaseInfoAsync(
             release.Id,
@@ -1079,6 +1070,19 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
                 ),
             ],
             ContentKind: ExternalInfoType.Movie
+        );
+    }
+
+    private ReleaseInfoService CreateReleaseInfoService()
+    {
+        return new ReleaseInfoService(
+            new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
+            new ReleaseClassificationService(
+                new ReleaseClassificationRepository(dbContext),
+                CreateTimeProvider(),
+                new Mock<ILogger<ReleaseClassificationService>>().Object
+            ),
+            new Mock<ILogger<ReleaseInfoService>>().Object
         );
     }
 

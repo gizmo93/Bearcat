@@ -547,6 +547,7 @@
   <data name="ExternalInfos" xml:space="preserve"><value>Externe Infos</value></data>
   <data name="ExternalIdentifiers" xml:space="preserve"><value>Externe IDs</value></data>
   <data name="ExternalIdentifierType.Imdb" xml:space="preserve"><value>IMDb</value></data>
+  <data name="ExternalIdentifierType.Steam" xml:space="preserve"><value>Steam</value></data>
   <data name="ExternalIdentifierSource.Nfo" xml:space="preserve"><value>NFO</value></data>
   <data name="ExternalIdentifierSource.Xrel" xml:space="preserve"><value>xREL</value></data>
   <data name="ExternalIdentifierSource.Srrdb" xml:space="preserve"><value>SRRDB</value></data>

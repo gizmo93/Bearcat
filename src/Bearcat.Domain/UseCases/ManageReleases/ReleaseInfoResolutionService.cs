@@ -323,9 +323,18 @@ public partial class ReleaseInfoResolutionService(
         if (release.ReleaseInfo is not null)
         {
             ReleaseExternalIdentifierService.SyncImdbIds(
-                release,
-                GetExternalIdentifierSource(release.ReleaseInfo.NfoDatabaseClassName),
-                release
+                release: release,
+                source: GetExternalIdentifierSource(release.ReleaseInfo.NfoDatabaseClassName),
+                values: release
+                    .ReleaseInfo.ExternalInfos.SelectMany(info => info.Urls)
+                    .Select(url => url.Url)
+                    .ToList()
+            );
+
+            ReleaseExternalIdentifierService.SyncSteamAppIds(
+                release: release,
+                source: GetExternalIdentifierSource(release.ReleaseInfo.NfoDatabaseClassName),
+                values: release
                     .ReleaseInfo.ExternalInfos.SelectMany(info => info.Urls)
                     .Select(url => url.Url)
                     .ToList()
@@ -408,6 +417,15 @@ public partial class ReleaseInfoResolutionService(
                 }
 
                 ReleaseExternalIdentifierService.SyncImdbIds(
+                    release,
+                    GetExternalIdentifierSource(registration.NfoDatabaseClassName),
+                    releaseInfo
+                        .ExternalInfos.SelectMany(info => info.Urls)
+                        .Select(url => url.Value)
+                        .ToList()
+                );
+
+                ReleaseExternalIdentifierService.SyncSteamAppIds(
                     release,
                     GetExternalIdentifierSource(registration.NfoDatabaseClassName),
                     releaseInfo
@@ -572,9 +590,14 @@ public partial class ReleaseInfoResolutionService(
     {
         release.ReleaseNfo = new DomainReleaseNfo { FileName = fileName, Content = content };
         ReleaseExternalIdentifierService.SyncImdbIds(
-            release,
-            ExternalIdentifierSource.Nfo,
-            [content]
+            release: release,
+            source: ExternalIdentifierSource.Nfo,
+            values: [content]
+        );
+        ReleaseExternalIdentifierService.SyncSteamAppIds(
+            release: release,
+            source: ExternalIdentifierSource.Nfo,
+            values: [content]
         );
     }
 
