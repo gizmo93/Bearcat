@@ -264,6 +264,68 @@ public class RuleConditionEvaluatorTest
     }
 
     [Test]
+    public void IsMatch_PlatformEquals_MatchesWindowsOnly()
+    {
+        // Arrange
+        var condition = RuleCondition.Compare(
+            RuleFieldCatalog.Platform,
+            RuleConditionOperator.Equals,
+            "Windows"
+        );
+
+        // Act + Assert
+        RuleConditionEvaluator
+            .IsMatch(condition, ContextWith(platform: ReleasePlatform.Windows))
+            .ShouldBeTrue();
+        RuleConditionEvaluator
+            .IsMatch(condition, ContextWith(platform: ReleasePlatform.Unknown))
+            .ShouldBeFalse();
+    }
+
+    [Test]
+    public void IsMatch_PlatformIn_MatchesAnyListedPlatform()
+    {
+        // Arrange
+        var condition = RuleCondition.CompareMany(
+            RuleFieldCatalog.Platform,
+            RuleConditionOperator.In,
+            "Windows",
+            "NintendoSwitch"
+        );
+
+        // Act + Assert
+        RuleConditionEvaluator
+            .IsMatch(condition, ContextWith(platform: ReleasePlatform.Windows))
+            .ShouldBeTrue();
+        RuleConditionEvaluator
+            .IsMatch(condition, ContextWith(platform: ReleasePlatform.NintendoSwitch))
+            .ShouldBeTrue();
+        RuleConditionEvaluator
+            .IsMatch(condition, ContextWith(platform: ReleasePlatform.Unknown))
+            .ShouldBeFalse();
+    }
+
+    [Test]
+    public void IsMatch_PlatformGreaterOrEqual_IsNotAllowed()
+    {
+        // Arrange
+        var condition = RuleCondition.Compare(
+            RuleFieldCatalog.Platform,
+            RuleConditionOperator.GreaterOrEqual,
+            "Windows"
+        );
+
+        // Act
+        var isMatch = RuleConditionEvaluator.IsMatch(
+            condition,
+            ContextWith(platform: ReleasePlatform.NintendoSwitch)
+        );
+
+        // Assert
+        isMatch.ShouldBeFalse();
+    }
+
+    [Test]
     public void IsMatch_UnknownField_ReturnsFalse()
     {
         // Arrange
@@ -409,6 +471,7 @@ public class RuleConditionEvaluatorTest
         string? primaryLanguage = "English",
         bool isMultiLanguage = false,
         ReleaseContentType contentType = ReleaseContentType.Movie,
+        ReleasePlatform platform = ReleasePlatform.Unknown,
         ReleaseSource source = ReleaseSource.BluRay,
         string? releaseGroupName = "Movies",
         string? releaseGroupToken = "GROUP",
@@ -423,6 +486,7 @@ public class RuleConditionEvaluatorTest
             PrimaryLanguage: primaryLanguage,
             IsMultiLanguage: isMultiLanguage,
             ContentType: contentType,
+            Platform: platform,
             Source: source,
             ReleaseGroupName: releaseGroupName,
             ReleaseGroupToken: releaseGroupToken,

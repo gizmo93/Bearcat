@@ -127,6 +127,7 @@ public class ForumPostingRuleMatcherTest
             PrimaryLanguage: "English",
             IsMultiLanguage: false,
             ContentType: ReleaseContentType.Movie,
+            Platform: ReleasePlatform.Unknown,
             Source: ReleaseSource.BluRay,
             ReleaseGroupName: "Movies",
             ReleaseGroupToken: "GROUP",

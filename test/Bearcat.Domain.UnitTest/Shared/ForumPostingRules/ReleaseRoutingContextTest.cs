@@ -22,6 +22,7 @@ public class ReleaseRoutingContextTest
                 Season = 2,
                 Episode = 5,
                 ContentType = ReleaseContentType.TvShowEpisode,
+                Platform = ReleasePlatform.Windows,
                 Resolution = ReleaseResolution.R1080p,
                 Source = ReleaseSource.WebDl,
                 ReleaseGroupToken = "GROUP",
@@ -39,6 +40,7 @@ public class ReleaseRoutingContextTest
         context.PrimaryLanguage.ShouldBe("English");
         context.IsMultiLanguage.ShouldBeTrue();
         context.ContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
+        context.Platform.ShouldBe(ReleasePlatform.Windows);
         context.Source.ShouldBe(ReleaseSource.WebDl);
         context.ReleaseGroupName.ShouldBe("Series");
         context.ReleaseGroupToken.ShouldBe("GROUP");
@@ -61,6 +63,7 @@ public class ReleaseRoutingContextTest
         context.Resolution.ShouldBe(ReleaseResolution.Unknown);
         context.Source.ShouldBe(ReleaseSource.Unknown);
         context.ContentType.ShouldBe(ReleaseContentType.Other);
+        context.Platform.ShouldBe(ReleasePlatform.Unknown);
         context.PrimaryLanguage.ShouldBeNull();
         context.IsMultiLanguage.ShouldBeFalse();
         context.ReleaseGroupName.ShouldBeNull();

@@ -1174,6 +1174,7 @@
   <data name="RuleField.PrimaryLanguage" xml:space="preserve"><value>Hauptsprache</value></data>
   <data name="RuleField.IsMultiLanguage" xml:space="preserve"><value>Mehrsprachig</value></data>
   <data name="RuleField.ContentType" xml:space="preserve"><value>Inhaltstyp</value></data>
+  <data name="RuleField.Platform" xml:space="preserve"><value>Plattform</value></data>
   <data name="RuleField.Source" xml:space="preserve"><value>Quelle</value></data>
   <data name="RuleField.ReleaseGroupName" xml:space="preserve"><value>Releasegruppe</value></data>
   <data name="RuleField.ReleaseGroupToken" xml:space="preserve"><value>Releasegruppenkürzel</value></data>
