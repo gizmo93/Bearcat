@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.DistributionSite.Dto;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
@@ -44,24 +45,33 @@ public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
 
     private async Task SaveAsync()
     {
-        await operationRunner.RunAsync<DistributionSiteRegistrationService>(async service =>
+        try
         {
-            if (!IsEditMode)
+            await operationRunner.RunAsync<DistributionSiteRegistrationService>(async service =>
             {
-                await service.CreateAsync(
+                if (!IsEditMode)
+                {
+                    await service.CreateAsync(
+                        name: formModel.Name!,
+                        className: formModel.ClassName!,
+                        configuration: formModel.Configuration
+                    );
+                    return;
+                }
+
+                await service.UpdateAsync(
+                    id: DistributionSiteRegistrationId!.Value,
                     name: formModel.Name!,
-                    className: formModel.ClassName!,
                     configuration: formModel.Configuration
                 );
-                return;
-            }
-
-            await service.UpdateAsync(
-                id: DistributionSiteRegistrationId!.Value,
-                name: formModel.Name!,
-                configuration: formModel.Configuration
-            );
-        });
+            });
+        }
+        catch (ValidationException exception)
+        {
+            validationMessageStore.Add(() => formModel.Configuration, exception.Message);
+            editContext.NotifyValidationStateChanged();
+            return;
+        }
 
         await DialogRef.CloseAsync(DialogResult.Ok());
     }
@@ -88,17 +98,20 @@ public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
             return;
         }
 
-        var missingKeys = SelectedDistributionSite
-            .ConfigurationKeys.Where(key =>
-                string.IsNullOrWhiteSpace(formModel.Configuration.GetValueOrDefault(key))
+        var missingFields = SelectedDistributionSite
+            .ConfigurationFields.Where(field =>
+                string.IsNullOrWhiteSpace(formModel.Configuration.GetValueOrDefault(field.Key))
             )
             .ToList();
 
-        foreach (var key in missingKeys)
+        foreach (var field in missingFields)
         {
             validationMessageStore.Add(
                 () => formModel.Configuration,
-                L["ConfigurationValueMustBeProvided", key]
+                L[
+                    "ConfigurationValueMustBeProvided",
+                    field.LabelResourceKey is { } labelResourceKey ? L[labelResourceKey] : field.Key
+                ]
             );
         }
     }
@@ -126,6 +139,7 @@ public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
         {
             Name = registration.Name,
             ClassName = registration.DistributionSiteClassName,
+            Configuration = new Dictionary<string, string>(registration.Configuration),
         };
     }
 
@@ -164,12 +178,5 @@ public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
         }
 
         formModel.Configuration[key] = value;
-    }
-
-    private static bool IsSecretField(string key)
-    {
-        return key.Contains("password", StringComparison.OrdinalIgnoreCase)
-            || key.Contains("apikey", StringComparison.OrdinalIgnoreCase)
-            || key.Contains("token", StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -24,8 +24,19 @@ Open **Distribution sites** in the sidebar and add one. Pick the forum, enter yo
 password, and save. Your password is stored encrypted. Mark the site active and use the test login
 to check that the account works.
 
-Supported forums right now are boerse.cx and data-load.me. Both run on XenForo, so more XenForo
-forums can be added without much effort.
+Bearcat includes dedicated integrations for boerse.cx and data-load.me. Use those when available.
+
+For another XenForo forum, select **XenForo (generic)** and enter its base URL, username and
+password. Include the installation directory, for example `https://example.org/community/`.
+Use the final URL shown in your browser after redirects. You can add several XenForo forums as separate distribution sites, each with its own account
+and posting rules.
+
+The generic integration uses the same forum operations as the dedicated integrations, but
+compatibility is not guaranteed. It requires friendly URLs and the standard XenForo forms.
+Routing through `index.php`, SSO, CAPTCHA and interactive two-factor login are not supported.
+Custom themes, required thread fields and add-ons may prevent individual operations from working.
+Test the login and prepare a draft before enabling automatic posting. A successful login alone
+does not confirm that posting works.
 
 ## Posting a release
 

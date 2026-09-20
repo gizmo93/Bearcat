@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.DistributionSite.Dto;
+using Bearcat.Abstractions.Security;
 using Bearcat.Domain.UseCases.ManageDistributionSites.ReadModels;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,8 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 
 public class DistributionSiteRegistrationReadRepository(
     IBearcatReadDbContext dbRead,
-    IDistributionSiteFactory distributionSiteFactory
+    IDistributionSiteFactory distributionSiteFactory,
+    ISecretProtector secretProtector
 ) : IDistributionSiteRegistrationReadRepository
 {
     public async Task<IReadOnlyList<DistributionSiteRegistrationReadModel>> GetAllAsync(
@@ -24,6 +26,7 @@ public class DistributionSiteRegistrationReadRepository(
                 registration.Id,
                 registration.Name,
                 registration.DistributionSiteClassName,
+                registration.SerializedConfig,
                 registration.IsActive,
                 registration.EnableAutomaticPosting,
                 registration.StripDotsForThreadSearch,
@@ -37,6 +40,7 @@ public class DistributionSiteRegistrationReadRepository(
                     id: registration.Id,
                     name: registration.Name,
                     className: registration.DistributionSiteClassName,
+                    serializedConfig: registration.SerializedConfig,
                     isActive: registration.IsActive,
                     enableAutomaticPosting: registration.EnableAutomaticPosting,
                     stripDotsForThreadSearch: registration.StripDotsForThreadSearch,
@@ -59,6 +63,7 @@ public class DistributionSiteRegistrationReadRepository(
                 registration.Id,
                 registration.Name,
                 registration.DistributionSiteClassName,
+                registration.SerializedConfig,
                 registration.IsActive,
                 registration.EnableAutomaticPosting,
                 registration.StripDotsForThreadSearch,
@@ -75,6 +80,7 @@ public class DistributionSiteRegistrationReadRepository(
             id: registration.Id,
             name: registration.Name,
             className: registration.DistributionSiteClassName,
+            serializedConfig: registration.SerializedConfig,
             isActive: registration.IsActive,
             enableAutomaticPosting: registration.EnableAutomaticPosting,
             stripDotsForThreadSearch: registration.StripDotsForThreadSearch,
@@ -90,10 +96,11 @@ public class DistributionSiteRegistrationReadRepository(
             .ToDictionary(distributionSite => distributionSite.ClassName);
     }
 
-    private static DistributionSiteRegistrationReadModel ToReadModel(
+    private DistributionSiteRegistrationReadModel ToReadModel(
         int id,
         string name,
         string className,
+        string serializedConfig,
         bool isActive,
         bool enableAutomaticPosting,
         bool stripDotsForThreadSearch,
@@ -102,6 +109,13 @@ public class DistributionSiteRegistrationReadRepository(
     )
     {
         var distributionSite = distributionSitesByClassName[className];
+        var site = distributionSiteFactory.Get(className);
+        var config = site.DeserializeConfig(secretProtector.Unprotect(serializedConfig));
+        var configuredSite = site.WithConfiguration(config);
+        var configurationValues = config.ToDictionary();
+        var editableConfiguration = distributionSite
+            .ConfigurationFields.Where(field => field.PrefillOnEdit && !field.IsSecret)
+            .ToDictionary(field => field.Key, field => configurationValues[field.Key]);
 
         return new DistributionSiteRegistrationReadModel(
             DistributionSiteRegistrationId: id,
@@ -112,7 +126,9 @@ public class DistributionSiteRegistrationReadRepository(
             IsActive: isActive,
             EnableAutomaticPosting: enableAutomaticPosting,
             StripDotsForThreadSearch: stripDotsForThreadSearch,
-            PostingRuleCount: postingRuleCount
+            PostingRuleCount: postingRuleCount,
+            BaseUrl: configuredSite.BaseUrl,
+            Configuration: editableConfiguration
         );
     }
 }

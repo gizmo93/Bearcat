@@ -11,5 +11,7 @@ public record DistributionSiteRegistrationReadModel(
     bool IsActive,
     bool EnableAutomaticPosting,
     bool StripDotsForThreadSearch,
-    int PostingRuleCount
+    int PostingRuleCount,
+    string BaseUrl,
+    IReadOnlyDictionary<string, string> Configuration
 );

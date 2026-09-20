@@ -1205,4 +1205,6 @@
   <data name="DownloadStatus" xml:space="preserve"><value>Downloadstatus</value></data>
   <data name="DownloadStatusSubtitle" xml:space="preserve"><value>Wiederherstellung von Archiv #{0} für {1} von {2}</value></data>
   <data name="DownloadFileStatus" xml:space="preserve"><value>Downloadfortschritt pro Datei</value></data>
+  <data name="GenericXenForoHelp" xml:space="preserve"><value>Für XenForo-Foren ohne eigene Bearcat-Integration. Die Kompatibilität ist nicht garantiert. Verwende eine explizite Integration, wenn eine verfügbar ist. Gib die Forum-URL einschließlich des Installationsverzeichnisses an. Erfordert lesbare URLs; index.php-Routing, SSO, CAPTCHA und Zwei-Faktor-Anmeldung werden nicht unterstützt.</value></data>
+  <data name="ForumBaseUrl" xml:space="preserve"><value>Forum-URL</value></data>
 </root>

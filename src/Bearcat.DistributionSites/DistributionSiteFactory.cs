@@ -17,7 +17,8 @@ public sealed class DistributionSiteFactory(IServiceProvider serviceProvider)
                 Kind: site is IForumDistributionSite
                     ? DistributionSiteKind.Forum
                     : DistributionSiteKind.Blog,
-                ConfigurationKeys: site.ConfigurationKeys
+                ConfigurationFields: site.ConfigurationFields,
+                ConfigurationHelpResourceKey: site.ConfigurationHelpResourceKey
             ))
             .ToList();
     }
@@ -25,5 +26,13 @@ public sealed class DistributionSiteFactory(IServiceProvider serviceProvider)
     public IDistributionSite Get(string className)
     {
         return serviceProvider.GetRequiredKeyedService<IDistributionSite>(className);
+    }
+
+    public IDistributionSite Create(string className, string serializedConfig)
+    {
+        var site = Get(className);
+        var config = site.DeserializeConfig(serializedConfig);
+
+        return site.WithConfiguration(config);
     }
 }

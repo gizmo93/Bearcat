@@ -393,6 +393,290 @@ public class XenForoForumClientTest
         requestUri.ShouldBe("https://www.data-load.me/posts/99/edit");
     }
 
+    [Test]
+    public async Task GetForumTreeAsync_Subdirectory_ResolvesRelativeForumLinks()
+    {
+        // Arrange
+        string? requestUrl = null;
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(request =>
+        {
+            requestUrl = request.RequestUri!.AbsoluteUri;
+            return HtmlResponse(
+                """
+                <div class="node node--forum">
+                    <div class="node-title"><a href="forums/movies.9/">Movies</a></div>
+                    <div class="node-subNodesFlat"><a href="forums/series.10/">Series</a></div>
+                </div>
+                """
+            );
+        });
+        using var client = CreateClient(handler, "https://example.org/community/");
+
+        // Act
+        var tree = await client.GetForumTreeAsync(CancellationToken.None);
+
+        // Assert
+        requestUrl.ShouldBe("https://example.org/community/");
+        var forum = tree.ShouldHaveSingleItem();
+        forum.Id.Value.ShouldBe("https://example.org/community/forums/movies.9/");
+        forum
+            .Children.ShouldHaveSingleItem()
+            .Id.Value.ShouldBe("https://example.org/community/forums/series.10/");
+    }
+
+    [Test]
+    public async Task SearchThreadsAsync_Subdirectory_KeepsSearchAndResultsInsideInstallation()
+    {
+        // Arrange
+        var requestUrls = new List<string>();
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(request =>
+        {
+            requestUrls.Add(request.RequestUri!.AbsoluteUri);
+            return HtmlResponse("<html data-csrf='token'></html>");
+        });
+        handler.Enqueue(request =>
+        {
+            requestUrls.Add(request.RequestUri!.AbsoluteUri);
+            return HtmlResponse(
+                """
+                <div class="contentRow-title"><a href="threads/movie.42/">Movie</a></div>
+                """
+            );
+        });
+        using var client = CreateClient(handler, "https://example.org/community/");
+
+        // Act
+        var results = await client.SearchThreadsAsync(
+            keywords: "Movie",
+            forumUrl: "https://example.org/community/forums/9/",
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        requestUrls.ShouldBe([
+            "https://example.org/community/search/",
+            "https://example.org/community/search/search",
+        ]);
+        results
+            .ShouldHaveSingleItem()
+            .Url.ShouldBe("https://example.org/community/threads/movie.42/");
+    }
+
+    [Test]
+    public async Task SubmitNewThreadAsync_Subdirectory_ResolvesFormActionAgainstForumBaseUrl()
+    {
+        // Arrange
+        var requestUrls = new List<string>();
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(request =>
+        {
+            requestUrls.Add(request.RequestUri!.AbsoluteUri);
+            return HtmlResponse(
+                """
+                <html data-csrf="token">
+                    <form action="forums/9/post-thread"><input type="hidden" name="_xfToken" value="token"></form>
+                </html>
+                """
+            );
+        });
+        handler.Enqueue(request =>
+        {
+            requestUrls.Add(request.RequestUri!.AbsoluteUri);
+            return JsonResponse("""{"status":"ok","redirect":"threads/movie.42/"}""");
+        });
+        using var client = CreateClient(handler, "https://example.org/community/");
+
+        // Act
+        var result = await client.SubmitNewThreadAsync(
+            forumUrl: "https://example.org/community/forums/9/",
+            title: "Movie",
+            prefixIds: [],
+            message: "Body",
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        requestUrls.ShouldBe([
+            "https://example.org/community/forums/9/post-thread",
+            "https://example.org/community/forums/9/post-thread",
+        ]);
+        result.Url.ShouldBe("https://example.org/community/threads/movie.42/");
+    }
+
+    [Test]
+    public async Task IsLoggedInAsync_SessionCookies_OnlySendsMatchingDomainAndPath()
+    {
+        // Arrange
+        string? cookieHeader = null;
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(request =>
+        {
+            cookieHeader = string.Join("; ", request.Headers.GetValues("Cookie"));
+            return HtmlResponse("<html data-logged-in='true'></html>");
+        });
+        var session = new DistributionSession(
+            "Bearcat",
+            [
+                new SessionCookie(
+                    Name: "xf_user",
+                    Value: "mine",
+                    Domain: "example.org",
+                    Path: "/community/"
+                ),
+                new SessionCookie(
+                    Name: "other_path",
+                    Value: "hidden",
+                    Domain: "example.org",
+                    Path: "/admin/"
+                ),
+                new SessionCookie(
+                    Name: "other_domain",
+                    Value: "hidden",
+                    Domain: "other.example",
+                    Path: "/"
+                ),
+            ]
+        );
+        using var client = CreateClient(
+            handler: handler,
+            baseUrl: "https://example.org/community/",
+            session: session
+        );
+
+        // Act
+        var loggedIn = await client.IsLoggedInAsync(CancellationToken.None);
+
+        // Assert
+        loggedIn.ShouldBeTrue();
+        cookieHeader.ShouldBe("xf_user=mine");
+    }
+
+    [Test]
+    public async Task SearchThreadsAsync_Redirect_UsesGetAndAcceptsUpdatedCookies()
+    {
+        // Arrange
+        HttpMethod? searchMethod = null;
+        HttpMethod? redirectMethod = null;
+        HttpContent? redirectContent = null;
+        string? redirectUrl = null;
+        string? redirectCookies = null;
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(_ => HtmlResponse("<html data-csrf='token'></html>"));
+        handler.Enqueue(request =>
+        {
+            searchMethod = request.Method;
+            var response = new HttpResponseMessage(HttpStatusCode.Redirect);
+            response.Headers.Location = new Uri("/community/search/42/", UriKind.Relative);
+            response.Headers.Add("Set-Cookie", "xf_session=updated; Path=/community/");
+            return response;
+        });
+        handler.Enqueue(request =>
+        {
+            redirectMethod = request.Method;
+            redirectContent = request.Content;
+            redirectUrl = request.RequestUri!.AbsoluteUri;
+            redirectCookies = string.Join("; ", request.Headers.GetValues("Cookie"));
+            return HtmlResponse("<html></html>");
+        });
+        using var client = CreateClient(handler, "https://example.org/community/");
+
+        // Act
+        await client.SearchThreadsAsync(
+            keywords: "Movie",
+            forumUrl: null,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        searchMethod.ShouldBe(HttpMethod.Post);
+        redirectMethod.ShouldBe(HttpMethod.Get);
+        redirectContent.ShouldBeNull();
+        redirectUrl.ShouldBe("https://example.org/community/search/42/");
+        redirectCookies.ShouldBe("xf_session=updated");
+    }
+
+    [TestCase(HttpStatusCode.TemporaryRedirect)]
+    [TestCase(HttpStatusCode.PermanentRedirect)]
+    public async Task SearchThreadsAsync_MethodPreservingRedirect_ResendsForm(HttpStatusCode status)
+    {
+        // Arrange
+        HttpMethod? redirectMethod = null;
+        string? redirectUrl = null;
+        string? redirectBody = null;
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(_ => HtmlResponse("<html data-csrf='token'></html>"));
+        handler.Enqueue(_ => new HttpResponseMessage(status)
+        {
+            Headers = { Location = new Uri("/search/redirected", UriKind.Relative) },
+        });
+        handler.Enqueue(async request =>
+        {
+            redirectMethod = request.Method;
+            redirectUrl = request.RequestUri!.AbsoluteUri;
+            redirectBody = await request.Content!.ReadAsStringAsync();
+            return HtmlResponse("<html></html>");
+        });
+        using var client = CreateClient(handler, "https://example.org/");
+
+        // Act
+        await client.SearchThreadsAsync(
+            keywords: "Movie",
+            forumUrl: null,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        redirectMethod.ShouldBe(HttpMethod.Post);
+        redirectUrl.ShouldBe("https://example.org/search/redirected");
+        redirectBody.ShouldNotBeNull();
+        redirectBody.ShouldContain("keywords=Movie");
+        redirectBody.ShouldContain("_xfToken=token");
+    }
+
+    [Test]
+    public void SubmitReplyAsync_ForeignFormAction_DoesNotSendPostOrCookies()
+    {
+        // Arrange
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(_ =>
+            HtmlResponse(
+                """
+                <html data-csrf="token"><form action="https://other.example/add-reply"></form></html>
+                """
+            )
+        );
+        using var client = CreateClient(handler, "https://example.org/");
+
+        // Act & Assert
+        Should.ThrowAsync<InvalidOperationException>(() =>
+            client.SubmitReplyAsync(
+                threadUrl: "https://example.org/threads/42/",
+                message: "Body",
+                cancellationToken: CancellationToken.None
+            )
+        );
+    }
+
+    [TestCase("https://other.example/")]
+    [TestCase("http://example.org/")]
+    public void IsLoggedInAsync_ForeignOrInsecureRedirect_DoesNotFollow(string redirectUrl)
+    {
+        // Arrange
+        using var handler = new TestHttpMessageHandler();
+        handler.Enqueue(_ => new HttpResponseMessage(HttpStatusCode.Redirect)
+        {
+            Headers = { Location = new Uri(redirectUrl) },
+        });
+        using var client = CreateClient(handler, "https://example.org/");
+
+        // Act & Assert
+        Should.ThrowAsync<InvalidOperationException>(() =>
+            client.IsLoggedInAsync(CancellationToken.None)
+        );
+    }
+
     private const string EditPostPage = """
         <html data-csrf="page-token">
             <form action="/posts/99/edit" method="post">
@@ -469,7 +753,11 @@ public class XenForoForumClientTest
         </html>
         """;
 
-    private static XenForoForumClient CreateClient(HttpMessageHandler handler)
+    private static XenForoForumClient CreateClient(
+        HttpMessageHandler handler,
+        string baseUrl = "https://www.data-load.me/",
+        DistributionSession? session = null
+    )
     {
         var httpClientFactory = new Mock<IHttpClientFactory>(MockBehavior.Strict);
         httpClientFactory
@@ -477,9 +765,9 @@ public class XenForoForumClientTest
             .Returns(() => new HttpClient(handler, disposeHandler: false));
 
         return new XenForoForumClient(
-            httpClientFactory.Object,
-            new Uri("https://www.data-load.me/"),
-            new DistributionSession("Bearcat", [])
+            httpClientFactory: httpClientFactory.Object,
+            baseUri: new Uri(baseUrl),
+            session: session ?? new DistributionSession("Bearcat", [])
         );
     }
 

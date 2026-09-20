@@ -125,16 +125,10 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
     > OrderByPostingHistoryAsync(List<DistributionSiteRegistrationReadModel> forums)
     {
         var postedHosts = await GetPostedHostsAsync();
-        return operationRunner.Run(
-            (IDistributionSiteFactory factory) =>
-                (IReadOnlyList<DistributionSiteRegistrationReadModel>)
-                    forums
-                        .OrderBy(registration =>
-                            HasAlreadyPosted(registration, factory, postedHosts) ? 1 : 0
-                        )
-                        .ThenBy(registration => registration.Name, StringComparer.OrdinalIgnoreCase)
-                        .ToList()
-        );
+        return forums
+            .OrderBy(registration => HasAlreadyPosted(registration, postedHosts) ? 1 : 0)
+            .ThenBy(registration => registration.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private async Task<HashSet<string>> GetPostedHostsAsync()
@@ -160,13 +154,10 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
 
     private static bool HasAlreadyPosted(
         DistributionSiteRegistrationReadModel registration,
-        IDistributionSiteFactory factory,
         HashSet<string> postedHosts
     )
     {
-        var site = factory.Get(registration.DistributionSiteClassName);
-
-        return Uri.TryCreate(site.BaseUrl, UriKind.Absolute, out var uri)
+        return Uri.TryCreate(registration.BaseUrl, UriKind.Absolute, out var uri)
             && postedHosts.Contains(NormalizeHost(uri.Host));
     }
 

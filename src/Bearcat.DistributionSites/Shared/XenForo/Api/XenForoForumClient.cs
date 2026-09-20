@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -16,6 +17,7 @@ public sealed partial class XenForoForumClient : IDisposable
     private readonly Uri baseUri;
     private readonly HttpClient http;
     private readonly HtmlParser parser = new();
+    private readonly CookieContainer cookies = new();
 
     public XenForoForumClient(
         IHttpClientFactory httpClientFactory,
@@ -32,15 +34,23 @@ public sealed partial class XenForoForumClient : IDisposable
         http.DefaultRequestHeaders.Accept.ParseAdd(
             "text/html,application/xhtml+xml,application/xml;q=0.9"
         );
-        http.DefaultRequestHeaders.TryAddWithoutValidation(
-            "Cookie",
-            string.Join("; ", session.Cookies.Select(cookie => $"{cookie.Name}={cookie.Value}"))
-        );
+
+        foreach (var cookie in session.Cookies)
+        {
+            cookies.Add(
+                new Cookie(
+                    name: cookie.Name,
+                    value: cookie.Value,
+                    path: cookie.Path,
+                    domain: cookie.Domain
+                )
+            );
+        }
     }
 
     public async Task<bool> IsLoggedInAsync(CancellationToken cancellationToken)
     {
-        var document = await GetDocumentAsync("/", cancellationToken);
+        var document = await GetDocumentAsync("", cancellationToken);
         var loggedIn = document.QuerySelector("html")?.GetAttribute("data-logged-in");
 
         return string.Equals(loggedIn, "true", StringComparison.OrdinalIgnoreCase);
@@ -50,7 +60,7 @@ public sealed partial class XenForoForumClient : IDisposable
         CancellationToken cancellationToken
     )
     {
-        var document = await GetDocumentAsync("/", cancellationToken);
+        var document = await GetDocumentAsync("", cancellationToken);
 
         var roots = new List<NodeBuilder>();
         NodeBuilder? currentCategory = null;
@@ -98,7 +108,7 @@ public sealed partial class XenForoForumClient : IDisposable
         CancellationToken cancellationToken
     )
     {
-        var token = ExtractToken(await GetDocumentAsync("/search/", cancellationToken));
+        var token = ExtractToken(await GetDocumentAsync("search/", cancellationToken));
 
         var form = new List<KeyValuePair<string, string>>
         {
@@ -115,11 +125,14 @@ public sealed partial class XenForoForumClient : IDisposable
             form.Add(new KeyValuePair<string, string>("c[nodes][0]", nodeId.ToString()));
         }
 
-        using var response = await http.PostAsync(
-            requestUri: "/search/search",
-            content: new FormUrlEncodedContent(form),
-            cancellationToken: cancellationToken
-        );
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            new Uri(baseUri, "search/search")
+        )
+        {
+            Content = new FormUrlEncodedContent(form),
+        };
+        using var response = await SendAsync(request, cancellationToken);
 
         response.EnsureSuccessStatusCode();
 
@@ -318,7 +331,7 @@ public sealed partial class XenForoForumClient : IDisposable
 
     public async Task<string?> GetLoggedInUsernameAsync(CancellationToken cancellationToken)
     {
-        var document = await GetDocumentAsync("/", cancellationToken);
+        var document = await GetDocumentAsync("", cancellationToken);
         var username = document
             .QuerySelector(".p-navgroup-link--user .p-navgroup-linkText")
             ?.TextContent.Trim();
@@ -513,15 +526,18 @@ public sealed partial class XenForoForumClient : IDisposable
         )
         {
             var href = link.GetAttribute("href");
-            if (
-                string.IsNullOrWhiteSpace(href)
-                || !href.Contains("/forum", StringComparison.Ordinal)
-            )
+            if (string.IsNullOrWhiteSpace(href))
             {
                 continue;
             }
 
-            var absolute = new Uri(baseUri, href).ToString();
+            var uri = new Uri(baseUri, href);
+            if (!uri.AbsolutePath.Contains("/forums/", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var absolute = uri.ToString();
             if (seen.Add(absolute))
             {
                 subforums.Add(
@@ -559,7 +575,7 @@ public sealed partial class XenForoForumClient : IDisposable
 
     private async Task SaveDraftAsync(
         Uri draftUrl,
-        IEnumerable<KeyValuePair<string, string>> fields,
+        IReadOnlyCollection<KeyValuePair<string, string>> fields,
         string token,
         CancellationToken cancellationToken
     )
@@ -574,7 +590,7 @@ public sealed partial class XenForoForumClient : IDisposable
         request.Content = new FormUrlEncodedContent(form);
         request.Headers.Add("X-Requested-With", "XMLHttpRequest");
 
-        using var response = await http.SendAsync(request, cancellationToken);
+        using var response = await SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -627,7 +643,7 @@ public sealed partial class XenForoForumClient : IDisposable
         };
         request.Headers.Add("X-Requested-With", "XMLHttpRequest");
 
-        using var response = await http.SendAsync(request, cancellationToken);
+        using var response = await SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -721,10 +737,10 @@ public sealed partial class XenForoForumClient : IDisposable
             .ToHashSet(StringComparer.Ordinal);
     }
 
-    private static Uri ResolveFormAction(IElement form, Uri pageUrl)
+    private Uri ResolveFormAction(IElement form, Uri pageUrl)
     {
         var action = form.GetAttribute("action");
-        return string.IsNullOrWhiteSpace(action) ? pageUrl : new Uri(pageUrl, action);
+        return string.IsNullOrWhiteSpace(action) ? pageUrl : new Uri(baseUri, action);
     }
 
     private static string NormalizeFieldName(string name)
@@ -849,8 +865,97 @@ public sealed partial class XenForoForumClient : IDisposable
         CancellationToken cancellationToken
     )
     {
-        var html = await http.GetStringAsync(url, cancellationToken);
+        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(baseUri, url));
+        using var response = await SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var html = await response.Content.ReadAsStringAsync(cancellationToken);
         return await parser.ParseDocumentAsync(html, cancellationToken);
+    }
+
+    private async Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request,
+        CancellationToken cancellationToken,
+        int redirectCount = 0
+    )
+    {
+        var requestUri = request.RequestUri!;
+        if (requestUri.Scheme != baseUri.Scheme || requestUri.Authority != baseUri.Authority)
+        {
+            throw new InvalidOperationException(
+                "The forum request points to a different site. Configure the forum's final URL after redirects."
+            );
+        }
+
+        request.Headers.Remove("Cookie");
+        var cookieHeader = cookies.GetCookieHeader(requestUri);
+        if (cookieHeader.Length > 0)
+        {
+            request.Headers.TryAddWithoutValidation("Cookie", cookieHeader);
+        }
+
+        var response = await http.SendAsync(request, cancellationToken);
+        if (response.Headers.TryGetValues("Set-Cookie", out var setCookies))
+        {
+            foreach (var cookie in setCookies)
+            {
+                cookies.SetCookies(requestUri, cookie);
+            }
+        }
+
+        if (
+            response.Headers.Location is null
+            || response.StatusCode
+                is not (
+                    HttpStatusCode.MovedPermanently
+                    or HttpStatusCode.Redirect
+                    or HttpStatusCode.SeeOther
+                    or HttpStatusCode.TemporaryRedirect
+                    or HttpStatusCode.PermanentRedirect
+                )
+        )
+        {
+            return response;
+        }
+
+        using (response)
+        {
+            if (redirectCount == 10)
+            {
+                throw new HttpRequestException("Too many redirects from the forum.");
+            }
+
+            var redirectUri = new Uri(requestUri, response.Headers.Location);
+            var useGet =
+                response.StatusCode == HttpStatusCode.SeeOther
+                || (
+                    request.Method == HttpMethod.Post
+                    && response.StatusCode
+                        is HttpStatusCode.MovedPermanently
+                            or HttpStatusCode.Redirect
+                );
+
+            using var redirectedRequest = new HttpRequestMessage(
+                useGet ? HttpMethod.Get : request.Method,
+                redirectUri
+            );
+
+            if (!useGet)
+            {
+                redirectedRequest.Content = request.Content;
+            }
+
+            foreach (var header in request.Headers)
+            {
+                redirectedRequest.Headers.TryAddWithoutValidation(header.Key, header.Value);
+            }
+
+            return await SendAsync(
+                request: redirectedRequest,
+                cancellationToken: cancellationToken,
+                redirectCount: redirectCount + 1
+            );
+        }
     }
 
     private static string ExtractToken(IDocument document)

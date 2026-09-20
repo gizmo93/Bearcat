@@ -4,5 +4,6 @@ public sealed record DistributionSiteDto(
     string Name,
     string ClassName,
     DistributionSiteKind Kind,
-    IReadOnlyList<string> ConfigurationKeys
+    IReadOnlyList<DistributionSiteConfigurationField> ConfigurationFields,
+    string? ConfigurationHelpResourceKey
 );

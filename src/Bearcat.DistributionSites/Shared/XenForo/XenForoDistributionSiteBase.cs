@@ -16,13 +16,15 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
 
     public virtual PostContentFormat ContentFormat => PostContentFormat.BBCode;
 
-    public IReadOnlyList<string> ConfigurationKeys =>
+    public virtual IReadOnlyList<DistributionSiteConfigurationField> ConfigurationFields =>
         [
-            nameof(IXenForoDistributionSiteConfig.Username),
-            nameof(IXenForoDistributionSiteConfig.Password),
+            new(Key: nameof(IXenForoDistributionSiteConfig.Username)),
+            new(Key: nameof(IXenForoDistributionSiteConfig.Password), IsSecret: true),
         ];
 
-    public IDistributionSiteConfig DeserializeConfig(string serializedConfig)
+    public virtual string? ConfigurationHelpResourceKey => null;
+
+    public virtual IDistributionSiteConfig DeserializeConfig(string serializedConfig)
     {
         return JsonSerializer.Deserialize<TConfig>(serializedConfig)
             ?? throw new InvalidOperationException(
@@ -30,8 +32,14 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
             );
     }
 
-    public string SerializeConfig(Dictionary<string, string> config) =>
+    public virtual string SerializeConfig(Dictionary<string, string> config) =>
         JsonSerializer.Serialize(config);
+
+    public virtual IDistributionSite WithConfiguration(IDistributionSiteConfig config)
+    {
+        // Sites with a fixed URL only need their configuration when logging in.
+        return this;
+    }
 
     public Task<DistributionSession?> LogInAsync(
         IDistributionSiteConfig config,
@@ -203,6 +211,10 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
     private XenForoForumClient CreateClient(DistributionSession session)
     {
         var baseUri = new Uri(BaseUrl.EndsWith('/') ? BaseUrl : BaseUrl + "/");
-        return new XenForoForumClient(httpClientFactory, baseUri, session);
+        return new XenForoForumClient(
+            httpClientFactory: httpClientFactory,
+            baseUri: baseUri,
+            session: session
+        );
     }
 }

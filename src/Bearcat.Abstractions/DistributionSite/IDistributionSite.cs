@@ -10,11 +10,15 @@ public interface IDistributionSite
 
     PostContentFormat ContentFormat { get; }
 
-    IReadOnlyList<string> ConfigurationKeys { get; }
+    IReadOnlyList<DistributionSiteConfigurationField> ConfigurationFields { get; }
+
+    string? ConfigurationHelpResourceKey { get; }
 
     IDistributionSiteConfig DeserializeConfig(string serializedConfig);
 
     string SerializeConfig(Dictionary<string, string> config);
+
+    IDistributionSite WithConfiguration(IDistributionSiteConfig config);
 
     Task<DistributionSession?> LogInAsync(
         IDistributionSiteConfig config,

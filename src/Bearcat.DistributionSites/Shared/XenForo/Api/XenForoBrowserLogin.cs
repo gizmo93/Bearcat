@@ -105,7 +105,7 @@ public static class XenForoBrowserLogin
             return true;
         }
 
-        var loginLink = page.Locator("a.p-navgroup-link--logIn, a[href='/login/']");
-        return await loginLink.CountAsync() == 0;
+        var loggedIn = await page.Locator("html").GetAttributeAsync("data-logged-in");
+        return string.Equals(loggedIn, "true", StringComparison.OrdinalIgnoreCase);
     }
 }

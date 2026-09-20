@@ -32,19 +32,25 @@
                         </p>
                     </div>
 
-                    @foreach (var key in SelectedDistributionSite.ConfigurationKeys)
+                    @if (SelectedDistributionSite.ConfigurationHelpResourceKey is { } helpResourceKey)
                     {
-                        var isSecretField = IsSecretField(key);
+                        <p class="text-sm text-muted-foreground">@L[helpResourceKey]</p>
+                    }
+
+                    @foreach (var field in SelectedDistributionSite.ConfigurationFields)
+                    {
+                        var key = field.Key;
 
                         <div class="grid gap-2">
-                            <label class="text-sm font-medium">@key</label>
+                            <label class="text-sm font-medium">@(field.LabelResourceKey is { } labelResourceKey ? L[labelResourceKey] : key)</label>
                             <div class="flex items-center gap-2">
                                 <BbInput Value="@formModel.Configuration.GetValueOrDefault(key)"
                                          ValueChanged="@(value => OnConfigurationValueChanged(key, value))"
-                                         Type="@(isSecretField && !displayedSecrets.Contains(key) ? InputType.Password : InputType.Text)"
+                                         Placeholder="@field.Placeholder"
+                                         Type="@(field.IsSecret && !displayedSecrets.Contains(key) ? InputType.Password : InputType.Text)"
                                          class="flex-1" />
 
-                                @if (isSecretField)
+                                @if (field.IsSecret)
                                 {
                                     <BbButton Variant="ButtonVariant.Ghost"
                                               Size="ButtonSize.IconSmall"

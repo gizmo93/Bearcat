@@ -1202,4 +1202,6 @@
   <data name="DownloadStatus" xml:space="preserve"><value>Download status</value></data>
   <data name="DownloadStatusSubtitle" xml:space="preserve"><value>Restore of archive #{0} for {1} from {2}</value></data>
   <data name="DownloadFileStatus" xml:space="preserve"><value>Download progress per file</value></data>
+  <data name="GenericXenForoHelp" xml:space="preserve"><value>For XenForo forums without a dedicated Bearcat integration. Compatibility is not guaranteed. Use a dedicated integration when available. Enter the forum base URL including its installation directory. Requires friendly URLs; index.php routing, SSO, CAPTCHA and two-factor login are not supported.</value></data>
+  <data name="ForumBaseUrl" xml:space="preserve"><value>Forum URL</value></data>
 </root>
