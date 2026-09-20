@@ -45,7 +45,6 @@
                         <LucideIcon Name="archive" class="h-4 w-4" />
                         <div>
                             <BbCardTitle class="text-base">@L["ArchiveConfigurations"]</BbCardTitle>
-                            <BbCardDescription>@L["ArchiveConfigTemplatesDescription"]</BbCardDescription>
                         </div>
                     </div>
                     @if (releaseTemplate.ReleaseType is ReleaseType.Managed)
@@ -134,7 +133,6 @@
                         <LucideIcon Name="upload" class="h-4 w-4" />
                         <div>
                             <BbCardTitle class="text-base">@L["UploadConfigurations"]</BbCardTitle>
-                            <BbCardDescription>@L["UploadConfigTemplatesDescription"]</BbCardDescription>
                         </div>
                     </div>
                     <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="ShowAddUploadConfigDialogAsync">
@@ -297,7 +295,6 @@
                         <LucideIcon Name="image" class="h-4 w-4" />
                         <div>
                             <BbCardTitle class="text-base">@L["ImageUploadConfigurations"]</BbCardTitle>
-                            <BbCardDescription>@L["ImageUploadConfigTemplatesDescription"]</BbCardDescription>
                         </div>
                     </div>
                     <BbButton Variant="ButtonVariant.Secondary" Size="ButtonSize.Small" OnClick="ShowAddImageUploadConfigDialogAsync">

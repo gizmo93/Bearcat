@@ -22,14 +22,12 @@
   <data name="AddNfoDatabase" xml:space="preserve"><value>Add NFO database</value></data>
   <data name="AddUploadConfig" xml:space="preserve"><value>Add Upload Config</value></data>
   <data name="AdvancedSearch" xml:space="preserve"><value>Advanced search</value></data>
-  <data name="ArchiveAndUploadConfiguration" xml:space="preserve"><value>Archive and upload configuration</value></data>
   <data name="ArchiveConfig" xml:space="preserve"><value>Archive config</value></data>
   <data name="ArchiveConfigRequired" xml:space="preserve"><value>Archive config is required.</value></data>
   <data name="ArchiveFileSizeExceedsHosterLimit" xml:space="preserve"><value>The archive file size ({0} MB) exceeds the hoster's maximum file size of {1} MB.</value></data>
   <data name="ArchiveConfiguration" xml:space="preserve"><value>Archive configuration</value></data>
   <data name="ArchiveConfigurationDialogDescription" xml:space="preserve"><value>Configure how archives are created for this release.</value></data>
   <data name="ArchiveConfigurations" xml:space="preserve"><value>Archive configurations</value></data>
-  <data name="ArchiveConfigurationsDescription" xml:space="preserve"><value>Archiver setup and generated archive history.</value></data>
   <data name="ArchiveDetailDescription" xml:space="preserve"><value>Generated archive files and metadata.</value></data>
   <data name="ArchiveFileSizeMb" xml:space="preserve"><value>Archive file size (MB)</value></data>
   <data name="ArchiveFileSizeMustBeZeroOrGreater" xml:space="preserve"><value>Archive file size must be zero or greater</value></data>
@@ -67,7 +65,7 @@
   <data name="ConvertToManaged" xml:space="preserve"><value>Convert to managed</value></data>
   <data name="ReleaseConvertedToManaged" xml:space="preserve"><value>{0} was converted to managed.</value></data>
   <data name="CancelUpload" xml:space="preserve"><value>Cancel upload</value></data>
-  <data name="CancelUploadConfirmation" xml:space="preserve"><value>Cancel upload #{0}? Running file transfers will be stopped as soon as the worker sees the request.</value></data>
+  <data name="CancelUploadConfirmation" xml:space="preserve"><value>Cancel upload #{0}? Running transfers may take a moment to stop.</value></data>
   <data name="CancelDownload" xml:space="preserve"><value>Cancel download</value></data>
   <data name="CancelDownloadTitle" xml:space="preserve"><value>Cancel mirror download</value></data>
   <data name="CancelDownloadConfirmation" xml:space="preserve"><value>Cancel the mirror download of archive #{0}? The partial download is discarded and the uploads waiting for this archive are canceled.</value></data>
@@ -98,13 +96,11 @@
   <data name="ContainerLinksTitle" xml:space="preserve"><value>Upload #{0} container links</value></data>
   <data name="StatusImageId" xml:space="preserve"><value>Status image ID</value></data>
   <data name="Containers" xml:space="preserve"><value>Containers</value></data>
-  <data name="ContainersAndValidation" xml:space="preserve"><value>Containers and validation</value></data>
   <data name="CreateRelease" xml:space="preserve"><value>Create release</value></data>
   <data name="CreateReleaseDescription" xml:space="preserve"><value>Define the release type and choose its source folder.</value></data>
   <data name="CreatedAt" xml:space="preserve"><value>Created at</value></data>
-  <data name="CredentialsAndLoginChecks" xml:space="preserve"><value>Credentials and login checks</value></data>
   <data name="Crypter" xml:space="preserve"><value>Crypter</value></data>
-  <data name="CrypterDialogDescription" xml:space="preserve"><value>Store crypter configuration and verify connectivity when needed.</value></data>
+  <data name="CrypterDialogDescription" xml:space="preserve"><value>Enter the account details for this link crypter.</value></data>
   <data name="CrypterRegistrations" xml:space="preserve"><value>Crypter registrations</value></data>
   <data name="Crypters" xml:space="preserve"><value>Crypters</value></data>
   <data name="CurrentlyNothingRunning" xml:space="preserve"><value>Currently nothing is running.</value></data>
@@ -200,7 +196,6 @@
   <data name="FolderPath" xml:space="preserve"><value>Folder path</value></data>
   <data name="FolderSelectionTree" xml:space="preserve"><value>Folder selection tree</value></data>
   <data name="Home" xml:space="preserve"><value>Home</value></data>
-    <data name="HomeIntro" xml:space="preserve"><value>Monitor running archive creations and uploads</value></data>
   <data name="Hoster" xml:space="preserve"><value>Hoster</value></data>
   <data name="Genre" xml:space="preserve"><value>Genre</value></data>
   <data name="HosterConfigurationHelp" xml:space="preserve"><value>Provide the required values for the selected hoster.</value></data>
@@ -211,7 +206,6 @@
   <data name="HosterRegistrationRequired" xml:space="preserve"><value>Hoster registration is required.</value></data>
   <data name="HideFileColumn" xml:space="preserve"><value>Hide file</value></data>
   <data name="HosterRegistrations" xml:space="preserve"><value>Hoster registrations</value></data>
-  <data name="HosterRegistrationsIntro" xml:space="preserve"><value>Manage hoster credentials, activation state, and login validation.</value></data>
   <data name="HosterTarget" xml:space="preserve"><value>Hoster target</value></data>
   <data name="Hosters" xml:space="preserve"><value>Hosters</value></data>
   <data name="Id" xml:space="preserve"><value>Id</value></data>
@@ -225,18 +219,14 @@
   <data name="ImageHosterRegistrationActivated" xml:space="preserve"><value>Image hoster registration {0} activated</value></data>
   <data name="ImageHosterRegistrationDeactivated" xml:space="preserve"><value>Image hoster registration {0} deactivated</value></data>
   <data name="ImageHosterRegistrations" xml:space="preserve"><value>Image hoster registrations</value></data>
-  <data name="ImageHosterRegistrationsIntro" xml:space="preserve"><value>Manage image hoster registrations and do login checks.</value></data>
   <data name="ImageHosters" xml:space="preserve"><value>Image hosters</value></data>
   <data name="ImageSize" xml:space="preserve"><value>Image size</value></data>
   <data name="ImageUploadConfig" xml:space="preserve"><value>Image upload config</value></data>
   <data name="ImageUploadConfigDialogDescription" xml:space="preserve"><value>Define where release images should be uploaded.</value></data>
   <data name="ImageUploadConfigurations" xml:space="preserve"><value>Image upload configurations</value></data>
-  <data name="ImageUploadConfigurationsDescription" xml:space="preserve"><value>Image hoster targets for release covers.</value></data>
   <data name="ImageUploadConfigTemplateDialogDescription" xml:space="preserve"><value>Define image hoster targets for releases created from this template.</value></data>
-  <data name="ImageUploadConfigTemplatesDescription" xml:space="preserve"><value>Image hoster targets applied to releases created from this template.</value></data>
   <data name="ImageUploadTarget" xml:space="preserve"><value>Image upload target</value></data>
   <data name="ImageUploads" xml:space="preserve"><value>Image uploads</value></data>
-  <data name="ImageUploadsAndValidation" xml:space="preserve"><value>Image uploads and validation</value></data>
   <data name="ImageUploadUrls" xml:space="preserve"><value>Image upload URLs</value></data>
   <data name="Inactive" xml:space="preserve"><value>Inactive</value></data>
   <data name="Language" xml:space="preserve"><value>Language</value></data>
@@ -254,12 +244,10 @@
   <data name="LinkCrypterRegistrationActivated" xml:space="preserve"><value>Link crypter registration {0} activated</value></data>
   <data name="LinkCrypterRegistrationDeactivated" xml:space="preserve"><value>Link crypter registration {0} deactivated</value></data>
   <data name="LinkCrypterRegistrations" xml:space="preserve"><value>Link crypter registrations</value></data>
-  <data name="LinkCrypterRegistrationsIntro" xml:space="preserve"><value>Manage crypter configurations, active state, and login checks.</value></data>
   <data name="LinkCrypterSettings" xml:space="preserve"><value>Settings</value></data>
   <data name="ManagedByReleaseCollection" xml:space="preserve"><value>Managed on collection page</value></data>
   <data name="LinkCrypterLinks" xml:space="preserve"><value>Link crypter links</value></data>
   <data name="LinkCrypters" xml:space="preserve"><value>Link crypters</value></data>
-  <data name="LinkCryptersDescription" xml:space="preserve"><value>Optional containers for distributed upload links.</value></data>
   <data name="Links" xml:space="preserve"><value>Links</value></data>
   <data name="Login" xml:space="preserve"><value>Login</value></data>
   <data name="LoginFailed" xml:space="preserve"><value>Login for registration {0} failed: {1}</value></data>
@@ -276,7 +264,6 @@
   <data name="NfoDatabaseRegistrationActivated" xml:space="preserve"><value>NFO database registration {0} activated</value></data>
   <data name="NfoDatabaseRegistrationDeactivated" xml:space="preserve"><value>NFO database registration {0} deactivated</value></data>
   <data name="NfoDatabaseRegistrations" xml:space="preserve"><value>NFO database registrations</value></data>
-    <data name="NfoDatabaseRegistrationsIntro" xml:space="preserve"><value>Enable and manage metadata sources</value></data>
   <data name="NfoDatabases" xml:space="preserve"><value>NFO databases</value></data>
   <data name="NewHoster" xml:space="preserve"><value>New hoster</value></data>
   <data name="NewImageHoster" xml:space="preserve"><value>New image hoster</value></data>
@@ -293,7 +280,7 @@
   <data name="NoImageUploadConfigurationsYet" xml:space="preserve"><value>No image upload configurations yet.</value></data>
   <data name="NoImageUploadConfigTemplatesYet" xml:space="preserve"><value>No image upload config templates yet.</value></data>
   <data name="CollectionImageUploadConfigurations" xml:space="preserve"><value>Collection image upload configurations</value></data>
-  <data name="CollectionImageUploadConfigTemplatesDescription" xml:space="preserve"><value>Image hoster targets applied to the collection covers of releases created from this template.</value></data>
+  <data name="CollectionImageUploadConfigTemplatesDescription" xml:space="preserve"><value>Upload the collection cover once for all releases in the collection.</value></data>
   <data name="NoCollectionImageUploadConfigTemplatesYet" xml:space="preserve"><value>No collection image upload config templates yet.</value></data>
   <data name="AddCollectionImageUploadConfig" xml:space="preserve"><value>Add collection image upload config</value></data>
   <data name="CollectionImageUploadConfigTemplateDialogDescription" xml:space="preserve"><value>Define image hoster targets for the collection covers of releases created from this template.</value></data>
@@ -359,8 +346,6 @@
   <data name="ReleaseInfo" xml:space="preserve"><value>Release info</value></data>
   <data name="ReleaseInfoDeleted" xml:space="preserve"><value>Release info deleted</value></data>
   <data name="ReleaseOnlineStateDistribution" xml:space="preserve"><value>Release online state</value></data>
-  <data name="ReleaseOnlineStateDistributionDescription" xml:space="preserve"><value>Total releases by current online state.</value></data>
-    <data name="ReleaseRootsAndOnlineState" xml:space="preserve"><value>Search and manage releases</value></data>
   <data name="ReleaseResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} releases</value></data>
   <data name="ReleaseSearchPlaceholder" xml:space="preserve"><value>Name or folder path</value></data>
   <data name="ReleaseContentType" xml:space="preserve"><value>Content type</value></data>
@@ -431,7 +416,6 @@
   <data name="ReleaseType.Unmanaged" xml:space="preserve"><value>Unmanaged</value></data>
   <data name="ReleaseType.Unmanaged.Description" xml:space="preserve"><value>You create the archives and Bearcat just uploads them</value></data>
   <data name="Releases" xml:space="preserve"><value>Releases</value></data>
-    <data name="ReleasesIntro" xml:space="preserve"><value>Manage releases and inspect their current online state.</value></data>
   <data name="Reload" xml:space="preserve"><value>Reload</value></data>
   <data name="ResetFilters" xml:space="preserve"><value>Reset filters</value></data>
   <data name="RowsPerPage" xml:space="preserve"><value>Rows per page</value></data>
@@ -439,9 +423,7 @@
   <data name="RarFileSearchPlaceholder" xml:space="preserve"><value>Filename or path</value></data>
   <data name="RunningAndPendingUploads" xml:space="preserve"><value>Running and pending uploads</value></data>
   <data name="RunningArchives" xml:space="preserve"><value>Running archives</value></data>
-  <data name="RunningArchivesDescription" xml:space="preserve"><value>Archives that are currently being created.</value></data>
   <data name="RunningProcesses" xml:space="preserve"><value>Running processes</value></data>
-  <data name="RunningProcessesDescription" xml:space="preserve"><value>Live view of pending uploads, mirror downloads, and archive creation.</value></data>
   <data name="RunningUploads" xml:space="preserve"><value>Running uploads</value></data>
   <data name="RunningUploadsDescription" xml:space="preserve"><value>Upload queues, status, and per-file progress.</value></data>
   <data name="Save" xml:space="preserve"><value>Save</value></data>
@@ -493,11 +475,10 @@
   <data name="UnhandledError" xml:space="preserve"><value>An unhandled error has occurred.</value></data>
   <data name="Upload" xml:space="preserve"><value>Upload</value></data>
   <data name="UploadConfig" xml:space="preserve"><value>Upload config</value></data>
-  <data name="UploadConfigDialogDescription" xml:space="preserve"><value>Define where archives go and keep track of distributed links.</value></data>
+  <data name="UploadConfigDialogDescription" xml:space="preserve"><value>Choose the hoster and archive configuration for this upload.</value></data>
   <data name="UploadConfigLinkCrypters" xml:space="preserve"><value>Upload config link crypters</value></data>
     <data name="UploadConfigs" xml:space="preserve"><value>Total upload configs</value></data>
   <data name="UploadConfigurations" xml:space="preserve"><value>Upload configurations</value></data>
-  <data name="UploadConfigurationsDescription" xml:space="preserve"><value>Hoster targets and link distribution metadata.</value></data>
   <data name="UploadFileStatus" xml:space="preserve"><value>Upload file status</value></data>
   <data name="UploadLink" xml:space="preserve"><value>Upload link</value></data>
   <data name="UploadLinkResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} upload links</value></data>
@@ -542,7 +523,6 @@
   <data name="Loading" xml:space="preserve"><value>Loading</value></data>
   <data name="Message" xml:space="preserve"><value>Message</value></data>
   <data name="NotificationDetails" xml:space="preserve"><value>Notification details</value></data>
-  <data name="NotificationDetailsSubtitle" xml:space="preserve"><value>Message and context</value></data>
   <data name="NotificationEntity.Archive" xml:space="preserve"><value>Archive</value></data>
   <data name="NotificationEntity.LinkCrypterContainer" xml:space="preserve"><value>Link crypter</value></data>
   <data name="NotificationEntity.Upload" xml:space="preserve"><value>Upload</value></data>
@@ -568,7 +548,6 @@
   <data name="ReimportArchiveFolderConfirmation" xml:space="preserve"><value>The folder contains a different set of archive files. Importing them as a new archive version resets the upload status for this archive.</value></data>
   <data name="Continue" xml:space="preserve"><value>Continue</value></data>
   <data name="Unlinked" xml:space="preserve"><value>Unlinked</value></data>
-  <data name="UnresolvedNotifications" xml:space="preserve"><value>Unresolved notifications</value></data>
   <data name="UnresolvedNotificationsCount" xml:space="preserve"><value>{0} unresolved</value></data>
   <data name="NoNotificationsFound" xml:space="preserve"><value>No notifications found</value></data>
   <data name="ShowResolvedNotifications" xml:space="preserve"><value>Show resolved</value></data>
@@ -642,8 +621,6 @@
   <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>You must select a release group</value></data>
   <data name="SelectAll" xml:space="preserve"><value>Select all</value></data>
   <data name="SelectedReleaseCount" xml:space="preserve"><value>{0} release(s) selected</value></data>
-  <data name="ApplicationConfigurationsIntro" xml:space="preserve"><value>Global settings for app behavior that applies across releases and background work.</value></data>
-  <data name="ApplicationConfigurationsSubtitle" xml:space="preserve"><value>Defaults and user overrides</value></data>
   <data name="ArchiveCleanup" xml:space="preserve"><value>Auto cleanup</value></data>
   <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Controls when release folders are released for deletion and when local archive files are deleted. Bearcat never deletes the release folder itself.</value></data>
   <data name="ArchiveRepackaging" xml:space="preserve"><value>Archive repackaging</value></data>
@@ -654,7 +631,7 @@
   <data name="ArchiveRepackagingStrategy.NonceOnly" xml:space="preserve"><value>Nonce only, no compression</value></data>
   <data name="ArchiveRepackagingStrategy.SolidCompression" xml:space="preserve"><value>Solid archive with compression</value></data>
   <data name="AutoConvertToUnmanaged" xml:space="preserve"><value>Convert releases to unmanaged automatically</value></data>
-  <data name="AutoConvertToUnmanagedDescription" xml:space="preserve"><value>Converts a managed release to unmanaged once its retention expired and creates a notification with the release folder path. Bearcat never deletes the release folder itself, you decide when to remove it.</value></data>
+  <data name="AutoConvertToUnmanagedDescription" xml:space="preserve"><value>Converts a release to unmanaged after the retention period and sends a notification with the release folder path. Bearcat does not delete the folder. You can then delete the raw files yourself.</value></data>
   <data name="ReleaseFolderRetentionDays" xml:space="preserve"><value>Convert to unmanaged after (days)</value></data>
   <data name="ReleaseFolderRetentionDaysDescription" xml:space="preserve"><value>Days since the uploads of a release were posted, or since its first upload finished when it was never marked as posted.</value></data>
   <data name="AutoDeleteArchives" xml:space="preserve"><value>Delete local archives automatically</value></data>
@@ -671,7 +648,7 @@
   <data name="FolderAutomationStabilityMinutes" xml:space="preserve"><value>Folder stability (minutes)</value></data>
   <data name="FolderAutomationStabilityMinutesDescription" xml:space="preserve"><value>A watched folder is only turned into a release once its total file count and size have stayed unchanged for at least this many minutes. This avoids creating releases while files are still being copied into the folder.</value></data>
   <data name="FolderAutomationMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimum folder size (MB)</value></data>
-  <data name="FolderAutomationMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Watched folders smaller than this are ignored and not turned into releases. This skips empty or near-empty folders. Set to 0 to disable.</value></data>
+  <data name="FolderAutomationMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Ignore watched folders smaller than this size. Set to 0 to disable the size check.</value></data>
   <data name="UploadConcurrency" xml:space="preserve"><value>Upload concurrency</value></data>
   <data name="UploadConcurrencyDescription" xml:space="preserve"><value>Controls how many file uploads run in parallel across all hosters.</value></data>
   <data name="MaxParallelUploads" xml:space="preserve"><value>Maximum parallel uploads</value></data>
@@ -686,7 +663,7 @@
   <data name="ReuploadTriggerOverridePlaceholder" xml:space="preserve"><value>Release group default</value></data>
   <data name="ReuploadTriggerOverrideHelp" xml:space="preserve"><value>Controls which offline state triggers a reupload for this hoster. Leave empty to use the release group behavior (partially or fully offline).</value></data>
   <data name="AlwaysReuploadAllFiles" xml:space="preserve"><value>Always reupload all files</value></data>
-  <data name="AlwaysReuploadAllFilesHelp" xml:space="preserve"><value>When a reupload runs for this hoster, upload every file again instead of only the offline ones. Useful for hosters that delete files after a period without downloads, so all files get a fresh lifetime at once.</value></data>
+  <data name="AlwaysReuploadAllFilesHelp" xml:space="preserve"><value>Reupload every file, including those still online. For hosters that delete inactive files, this restarts the retention period for all files together.</value></data>
   <data name="AlwaysReuploadAllFilesShort" xml:space="preserve"><value>Full reuploads</value></data>
   <data name="ReuploadTrigger.PartiallyOrFullyOffline" xml:space="preserve"><value>Partially or fully offline</value></data>
   <data name="ReuploadTrigger.OnlyWhenFullyOffline" xml:space="preserve"><value>Only when fully offline</value></data>
@@ -703,7 +680,6 @@
   <data name="ArchiveConfigName" xml:space="preserve"><value>Archive config name</value></data>
   <data name="ArchiveConfigNamePlaceholder" xml:space="preserve"><value>Name shown for this archive config</value></data>
     <data name="ArchiveConfigTemplateDialogDescription" xml:space="preserve"><value>Define the archiver, archive output path, password, and archive naming behavior</value></data>
-  <data name="ArchiveConfigTemplatesDescription" xml:space="preserve"><value>Archive settings copied when a release is created from this template.</value></data>
   <data name="ArchiveNamePreview" xml:space="preserve"><value>Archive name:</value></data>
   <data name="CreateArchiveConfigTemplateFirst" xml:space="preserve"><value>Create an archive configuration template first.</value></data>
   <data name="CreateReleaseFromTemplate" xml:space="preserve"><value>Create release from template</value></data>
@@ -722,13 +698,11 @@
   <data name="OpenReleaseTemplateActions" xml:space="preserve"><value>Open release template actions</value></data>
   <data name="PasswordProtected" xml:space="preserve"><value>Password protected</value></data>
     <data name="ReleaseName" xml:space="preserve"><value>Release name</value></data>
-  <data name="ReleaseMetadataSources" xml:space="preserve"><value>Release metadata sources</value></data>
   <data name="ReleaseTemplate" xml:space="preserve"><value>Release template</value></data>
   <data name="ReleaseTemplateDialogDescription" xml:space="preserve"><value>Set the template name, release type, and release group.</value></data>
   <data name="ReleaseTemplateNamePlaceholder" xml:space="preserve"><value>Name the release template</value></data>
   <data name="ReleaseTemplates" xml:space="preserve"><value>Release templates</value></data>
   <data name="ReleaseTemplatesIntro" xml:space="preserve"><value>Reusable release setup for archive, upload, and link crypter configurations.</value></data>
-  <data name="ReleaseTemplatesSubtitle" xml:space="preserve"><value>Reusable release setup</value></data>
   <data name="SaveAsTemplate" xml:space="preserve"><value>Save as template</value></data>
   <data name="SaveAsTemplateDescription" xml:space="preserve"><value>Create a release template from this release's current archive, upload, and link crypter configuration.</value></data>
   <data name="SelectArchiveConfigurationRequired" xml:space="preserve"><value>You must select an archive configuration.</value></data>
@@ -736,8 +710,7 @@
   <data name="SelectReleaseTemplate" xml:space="preserve"><value>Select release template</value></data>
   <data name="SelectReleaseTemplateRequired" xml:space="preserve"><value>You must select a release template.</value></data>
   <data name="UploadConfigTemplateNameHelp" xml:space="preserve"><value>Leave empty to use the hoster registration name.</value></data>
-    <data name="UploadConfigTemplateDialogDescription" xml:space="preserve"><value>Define the hoster target, archive config, link distribution metadata, and link crypters</value></data>
-    <data name="UploadConfigTemplatesDescription" xml:space="preserve"><value>Upload settings used when a release is created from this template.</value></data>
+    <data name="UploadConfigTemplateDialogDescription" xml:space="preserve"><value>Choose the hoster and archive settings for releases created from this template.</value></data>
   <data name="UseHosterNamePlaceholder" xml:space="preserve"><value>Use hoster name</value></data>
   <data name="UseReleaseNameAsArchiveName" xml:space="preserve"><value>Use release name as archive name</value></data>
   <data name="AllFolders" xml:space="preserve"><value>All folders</value></data>
@@ -754,7 +727,6 @@
   <data name="ReleaseFolderAutomationDialogDescription" xml:space="preserve"><value>Scan direct subfolders of a base path and create releases from a selected template.</value></data>
   <data name="ReleaseFolderAutomations" xml:space="preserve"><value>Folder automations</value></data>
   <data name="ReleaseFolderAutomationsIntro" xml:space="preserve"><value>Create releases automatically from matching direct subfolders.</value></data>
-  <data name="ReleaseFolderAutomationsSubtitle" xml:space="preserve"><value>Automatic release creation</value></data>
   <data name="Registrations" xml:space="preserve"><value>Registrations</value></data>
   <data name="SelectReleaseBaseFolder" xml:space="preserve"><value>Select release base folder</value></data>
   <data name="SelectReleaseBaseFolderDescription" xml:space="preserve"><value>Choose the folder whose direct subfolders should be scanned.</value></data>
@@ -762,8 +734,6 @@
   <data name="BackgroundTaskDisabled" xml:space="preserve"><value>{0} disabled</value></data>
   <data name="BackgroundTaskEnabled" xml:space="preserve"><value>{0} enabled</value></data>
   <data name="BackgroundTasks" xml:space="preserve"><value>Background tasks</value></data>
-  <data name="BackgroundTasksIntro" xml:space="preserve"><value>Monitor scheduled work, last execution times, and health status.</value></data>
-    <data name="BackgroundTasksSubtitle" xml:space="preserve"><value>Job health</value></data>
   <data name="Duration" xml:space="preserve"><value>Duration</value></data>
   <data name="Error" xml:space="preserve"><value>Error</value></data>
   <data name="Errors" xml:space="preserve"><value>Errors</value></data>
@@ -801,8 +771,6 @@
   <data name="ForumPostTemplateBodyPlaceholder" xml:space="preserve"><value>Write BBCode with {{ release.name }} variables</value></data>
   <data name="ForumPostTemplateNamePlaceholder" xml:space="preserve"><value>Name this forum post template</value></data>
   <data name="ForumPostTemplates" xml:space="preserve"><value>Forum post templates</value></data>
-    <data name="ForumPostTemplatesIntro" xml:space="preserve"><value>Manage e.g. BBCode templates for posting completed releases.</value></data>
-    <data name="ForumPostTemplatesSubtitle" xml:space="preserve"><value>BBCode templates with dynamic content</value></data>
   <data name="NewForumPostTemplate" xml:space="preserve"><value>New forum post template</value></data>
   <data name="NoForumPostTemplatesFound" xml:space="preserve"><value>No forum post templates found.</value></data>
   <data name="NoVariablesFound" xml:space="preserve"><value>No variables found.</value></data>
@@ -850,7 +818,7 @@
     <data name="CollectionUploadSlotNamePlaceholder" xml:space="preserve"><value>e.g. the Name of the Hoster</value></data>
   <data name="CollectionUploadSlotRequired" xml:space="preserve"><value>Expected on every release</value></data>
   <data name="CollectionUploadSlots" xml:space="preserve"><value>Upload slots</value></data>
-  <data name="CollectionUploadSlotsDescription" xml:space="preserve"><value>Upload groups that can collect links from multiple releases into shared containers.</value></data>
+  <data name="CollectionUploadSlotsDescription" xml:space="preserve"><value>Use the same upload settings for multiple releases and collect their links in shared containers.</value></data>
   <data name="CollectionUploadSlotPasswordPolicy.Ignore" xml:space="preserve"><value>Ignore</value></data>
   <data name="CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue" xml:space="preserve"><value>Must equal expected value</value></data>
   <data name="CollectionUploadSlotPasswordPolicy.MustMatchAcrossReleases" xml:space="preserve"><value>Must match across releases</value></data>
@@ -867,12 +835,8 @@
   <data name="OpenReleaseCollectionActions" xml:space="preserve"><value>Open release collection actions</value></data>
   <data name="PasswordPolicy" xml:space="preserve"><value>Password policy</value></data>
   <data name="ReleaseCollection" xml:space="preserve"><value>Release collection</value></data>
-  <data name="ReleaseCollectionReleasesDescription" xml:space="preserve"><value>Releases assigned to this collection.</value></data>
   <data name="ReleaseCollectionResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} collections</value></data>
   <data name="ReleaseCollections" xml:space="preserve"><value>Release collections</value></data>
-  <data name="ReleaseCollectionsIntro" xml:space="preserve"><value>Find and manage grouped releases such as seasons of TV shows</value></data>
-  <data name="ReleaseCollectionsSubtitle" xml:space="preserve"><value>Grouped releases</value></data>
-  <data name="ReleaseCollectionSubtitle" xml:space="preserve"><value>Grouped releases</value></data>
   <data name="ReleaseCollectionDetectionMode" xml:space="preserve"><value>Collection detection</value></data>
   <data name="ReleaseCollectionDetectionMode.CustomRegex" xml:space="preserve"><value>Custom regex</value></data>
   <data name="ReleaseCollectionDetectionMode.SeriesEpisodePattern" xml:space="preserve"><value>Series episode pattern</value></data>
@@ -903,7 +867,6 @@
   <data name="RemoveReleaseFromCollectionConfirmation" xml:space="preserve"><value>Remove {0} from this collection? Upload configurations created by collection upload slots will be deleted.</value></data>
   <data name="Remove" xml:space="preserve"><value>Remove</value></data>
   <data name="MediaDatabaseRegistrations" xml:space="preserve"><value>Metadata sources</value></data>
-  <data name="MediaDatabaseRegistrationsIntro" xml:space="preserve"><value>Enable and manage metadata sources for movies and series</value></data>
   <data name="MediaDatabases" xml:space="preserve"><value>Metadata sources</value></data>
   <data name="MediaDatabase" xml:space="preserve"><value>Metadata source</value></data>
   <data name="NewMediaDatabase" xml:space="preserve"><value>New metadata source</value></data>
@@ -917,9 +880,7 @@
   <data name="MediaDatabaseRegistrationActivated" xml:space="preserve"><value>Metadata source {0} activated</value></data>
   <data name="MediaDatabaseRegistrationDeactivated" xml:space="preserve"><value>Metadata source {0} deactivated</value></data>
   <data name="DeleteMediaDatabaseRegistrationConfirmation" xml:space="preserve"><value>Are you sure you want to delete metadata source {0}?</value></data>
-  <data name="MediaMetadataSources" xml:space="preserve"><value>Movie and series metadata</value></data>
   <data name="SeriesMetadata" xml:space="preserve"><value>Series information</value></data>
-  <data name="SeriesMetadataDescription" xml:space="preserve"><value>Description and cover resolved from a metadata database.</value></data>
   <data name="RefreshMetadata" xml:space="preserve"><value>Resolve metadata</value></data>
   <data name="NoSeriesMetadataYet" xml:space="preserve"><value>No series metadata resolved yet.</value></data>
   <data name="NoSeriesDescription" xml:space="preserve"><value>No description available.</value></data>
@@ -930,7 +891,6 @@
   <data name="IHavePosted" xml:space="preserve"><value>I have posted</value></data>
   <data name="PostedLocation" xml:space="preserve"><value>Posted location</value></data>
   <data name="PostedLocations" xml:space="preserve"><value>Posted locations</value></data>
-  <data name="PostedLocationsDescription" xml:space="preserve"><value>Where this has been posted (forum threads, pages, ...). Add or remove links manually.</value></data>
   <data name="NoPostedLocationsYet" xml:space="preserve"><value>No posted locations yet.</value></data>
   <data name="PostedLocationUrlPlaceholder" xml:space="preserve"><value>https://forum.example/threads/...</value></data>
   <data name="PostedLocationSearchPlaceholder" xml:space="preserve"><value>Forum post or page URL</value></data>
@@ -948,7 +908,7 @@
   <data name="PostQueueDisabled" xml:space="preserve"><value>The post queue is disabled. You can enable it in the configurations.</value></data>
   <data name="PostQueueConfigurationDescription" xml:space="preserve"><value>Controls the post queue that tracks uploads you still need to post somewhere.</value></data>
   <data name="PostQueueEnabled" xml:space="preserve"><value>Enable post queue</value></data>
-  <data name="PostQueueEnabledDescription" xml:space="preserve"><value>Show the post queue indicator in the menu. Disable it if you do not work with the queue.</value></data>
+  <data name="PostQueueEnabledDescription" xml:space="preserve"><value>Show the post queue and its menu indicator.</value></data>
   <data name="PostQueueWorkflowTitle" xml:space="preserve"><value>Posting</value></data>
   <data name="PostQueueProgress" xml:space="preserve"><value>{0} of {1}</value></data>
   <data name="Skip" xml:space="preserve"><value>Skip</value></data>
@@ -957,7 +917,6 @@
   <data name="CopyTitle" xml:space="preserve"><value>Copy title</value></data>
   <data name="DistributionSites" xml:space="preserve"><value>Distribution sites</value></data>
   <data name="DistributionSiteRegistrations" xml:space="preserve"><value>Distribution site registrations</value></data>
-  <data name="DistributionSiteRegistrationsIntro" xml:space="preserve"><value>Manage distribution sites and check whether login works.</value></data>
   <data name="NewDistributionSite" xml:space="preserve"><value>New distribution site</value></data>
   <data name="DistributionSite" xml:space="preserve"><value>Distribution site</value></data>
   <data name="AddDistributionSite" xml:space="preserve"><value>Add distribution site</value></data>
@@ -1000,13 +959,11 @@
   <data name="Workflows" xml:space="preserve"><value>Workflows</value></data>
   <data name="QualityIssues" xml:space="preserve"><value>Quality issues</value></data>
   <data name="QualityIssuesDescription" xml:space="preserve"><value>Releases that do not pass their quality gate and thus are not uploaded automatically.</value></data>
-  <data name="QualityIssuesSubtitle" xml:space="preserve"><value>Releases blocked by the quality gate</value></data>
   <data name="QualityIssuesNothingOpen" xml:space="preserve"><value>No releases are currently blocked by the quality gate.</value></data>
   <data name="LastChecked" xml:space="preserve"><value>Last checked</value></data>
   <data name="Recheck" xml:space="preserve"><value>Re-check</value></data>
   <data name="ApproveManually" xml:space="preserve"><value>Approve manually</value></data>
   <data name="QualityProfiles" xml:space="preserve"><value>Quality profiles</value></data>
-  <data name="QualityProfilesSubtitle" xml:space="preserve"><value>Reusable quality checks for release groups</value></data>
   <data name="QualityProfilesIntro" xml:space="preserve"><value>Define sets of quality checks and assign them to release groups.</value></data>
   <data name="NewQualityProfile" xml:space="preserve"><value>New quality profile</value></data>
   <data name="NoQualityProfilesFound" xml:space="preserve"><value>No quality profiles found.</value></data>
@@ -1047,7 +1004,6 @@
   <data name="SearchLanguage" xml:space="preserve"><value>Search language...</value></data>
   <data name="NoLanguagesFound" xml:space="preserve"><value>No languages found.</value></data>
   <data name="TelegramNotifications" xml:space="preserve"><value>Telegram notifications</value></data>
-  <data name="TelegramNotificationsIntro" xml:space="preserve"><value>Forward selected Bearcat notifications to a Telegram chat.</value></data>
   <data name="TelegramBot" xml:space="preserve"><value>Telegram bot</value></data>
   <data name="TelegramBotHelp" xml:space="preserve"><value>Create a bot with @BotFather and enter its token here.</value></data>
   <data name="TelegramBotToken" xml:space="preserve"><value>Bot token</value></data>
@@ -1057,7 +1013,6 @@
   <data name="BearcatNotificationUrl" xml:space="preserve"><value>Bearcat URL</value></data>
   <data name="BearcatNotificationUrlHelp" xml:space="preserve"><value>This URL is included in Telegram messages and may only be reachable through your VPN.</value></data>
   <data name="TelegramRecipient" xml:space="preserve"><value>Recipient</value></data>
-  <data name="TelegramRecipientHelp" xml:space="preserve"><value>Connect the Telegram chat that should receive Bearcat notifications.</value></data>
   <data name="ConnectTelegram" xml:space="preserve"><value>Connect Telegram</value></data>
   <data name="DisconnectTelegram" xml:space="preserve"><value>Disconnect</value></data>
   <data name="TelegramPairingInstructions" xml:space="preserve"><value>Open Telegram and press Start. The link expires after ten minutes.</value></data>
@@ -1066,7 +1021,6 @@
   <data name="OpenTelegram" xml:space="preserve"><value>Open Telegram</value></data>
   <data name="CheckConnection" xml:space="preserve"><value>Check connection</value></data>
   <data name="ForwardNotificationSeverities" xml:space="preserve"><value>Forwarded severity levels</value></data>
-  <data name="ForwardNotificationSeveritiesHelp" xml:space="preserve"><value>Choose which notification severity levels Bearcat sends to Telegram.</value></data>
   <data name="SendTestNotification" xml:space="preserve"><value>Send test notification</value></data>
   <data name="TelegramConfigurationSaved" xml:space="preserve"><value>Telegram configuration saved.</value></data>
   <data name="TelegramLevelsSaved" xml:space="preserve"><value>Notification types saved.</value></data>
@@ -1243,7 +1197,6 @@
   <data name="DeleteLocalArchivesNotReady" xml:space="preserve"><value>Local archives can only be deleted when no uploads are running and every archive config has a fully online upload on a hoster that is enabled for mirror downloads (or the release folder still exists for managed releases).</value></data>
   <data name="LocalArchivesDeleted" xml:space="preserve"><value>Local archives of {0} deleted</value></data>
   <data name="RunningTransfers" xml:space="preserve"><value>Running transfers</value></data>
-  <data name="RunningTransfersDescription" xml:space="preserve"><value>Uploads to hosters and mirror downloads that are currently running.</value></data>
   <data name="TotalDownloadSpeed" xml:space="preserve"><value>Download total</value></data>
   <data name="ToggleDownloadDetails" xml:space="preserve"><value>Toggle download details</value></data>
   <data name="DownloadStatus" xml:space="preserve"><value>Download status</value></data>

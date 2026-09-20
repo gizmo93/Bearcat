@@ -15,21 +15,19 @@
   <data name="Actions" xml:space="preserve"><value>Aktionen</value></data>
   <data name="Active" xml:space="preserve"><value>Aktiv</value></data>
   <data name="Add" xml:space="preserve"><value>Hinzufügen</value></data>
-  <data name="AddArchiveConfiguration" xml:space="preserve"><value>Archiv-Konfiguration hinzufügen</value></data>
+  <data name="AddArchiveConfiguration" xml:space="preserve"><value>Archivkonfiguration hinzufügen</value></data>
   <data name="AddCrypter" xml:space="preserve"><value>Crypter hinzufügen</value></data>
   <data name="AddHoster" xml:space="preserve"><value>Hoster hinzufügen</value></data>
-  <data name="AddLinkCrypterContainer" xml:space="preserve"><value>Link-Crypter-Container hinzufügen</value></data>
+  <data name="AddLinkCrypterContainer" xml:space="preserve"><value>Linkcryptercontainer hinzufügen</value></data>
   <data name="AddNfoDatabase" xml:space="preserve"><value>NFO-Datenbank hinzufügen</value></data>
-  <data name="AddUploadConfig" xml:space="preserve"><value>Upload-Konfiguration hinzufügen</value></data>
+  <data name="AddUploadConfig" xml:space="preserve"><value>Uploadkonfiguration hinzufügen</value></data>
   <data name="AdvancedSearch" xml:space="preserve"><value>Erweiterte Suche</value></data>
-  <data name="ArchiveAndUploadConfiguration" xml:space="preserve"><value>Archiv- und Upload-Konfiguration</value></data>
-  <data name="ArchiveConfig" xml:space="preserve"><value>Archiv-Konfig.</value></data>
-  <data name="ArchiveConfigRequired" xml:space="preserve"><value>Archiv-Konfiguration ist erforderlich.</value></data>
-  <data name="ArchiveFileSizeExceedsHosterLimit" xml:space="preserve"><value>Die Archiv-Dateigröße ({0} MB) überschreitet die maximale Dateigröße des Hosters von {1} MB.</value></data>
-  <data name="ArchiveConfiguration" xml:space="preserve"><value>Archiv-Konfiguration</value></data>
+  <data name="ArchiveConfig" xml:space="preserve"><value>Archivkonfig.</value></data>
+  <data name="ArchiveConfigRequired" xml:space="preserve"><value>Archivkonfiguration ist erforderlich.</value></data>
+  <data name="ArchiveFileSizeExceedsHosterLimit" xml:space="preserve"><value>Die Archivdateigröße ({0} MB) überschreitet die maximale Dateigröße des Hosters von {1} MB.</value></data>
+  <data name="ArchiveConfiguration" xml:space="preserve"><value>Archivkonfiguration</value></data>
   <data name="ArchiveConfigurationDialogDescription" xml:space="preserve"><value>Lege fest, wie Archive für dieses Release erstellt werden.</value></data>
-  <data name="ArchiveConfigurations" xml:space="preserve"><value>Archiv-Konfigurationen</value></data>
-  <data name="ArchiveConfigurationsDescription" xml:space="preserve"><value>Archiver-Setup und erzeugte Archivhistorie.</value></data>
+  <data name="ArchiveConfigurations" xml:space="preserve"><value>Archivkonfigurationen</value></data>
   <data name="ArchiveDetailDescription" xml:space="preserve"><value>Erzeugte Archivdateien und Metadaten.</value></data>
     <data name="ArchiveFileSizeMb" xml:space="preserve"><value>Archivdateigrösse (MB)</value></data>
     <data name="ArchiveFileSizeMustBeZeroOrGreater" xml:space="preserve"><value>Die Archivdateigrösse muss null oder grösser sein</value></data>
@@ -45,17 +43,17 @@
   <data name="Archiver" xml:space="preserve"><value>Archiver</value></data>
   <data name="Archives" xml:space="preserve"><value>Archive</value></data>
   <data name="AnyArchiver" xml:space="preserve"><value>Alle Archiver</value></data>
-  <data name="AnyHosterConfig" xml:space="preserve"><value>Alle Hoster-Konfigurationen</value></data>
-  <data name="AnyLinkCrypterConfig" xml:space="preserve"><value>Alle Link-Crypter-Konfigurationen</value></data>
-  <data name="AnyReleaseGroup" xml:space="preserve"><value>Alle Release-Gruppen</value></data>
-  <data name="AnyReleaseType" xml:space="preserve"><value>Alle Release-Typen</value></data>
-  <data name="AnyOnlineState" xml:space="preserve"><value>Jeder Online-Status</value></data>
-  <data name="AllUploadConfigs" xml:space="preserve"><value>Alle Upload-Konfigurationen</value></data>
-  <data name="AutoRefresh" xml:space="preserve"><value>Auto-Aktualisierung</value></data>
+  <data name="AnyHosterConfig" xml:space="preserve"><value>Alle Hosterkonfigurationen</value></data>
+  <data name="AnyLinkCrypterConfig" xml:space="preserve"><value>Alle Linkcrypterkonfigurationen</value></data>
+  <data name="AnyReleaseGroup" xml:space="preserve"><value>Alle Releasegruppen</value></data>
+  <data name="AnyReleaseType" xml:space="preserve"><value>Alle Releasetypen</value></data>
+  <data name="AnyOnlineState" xml:space="preserve"><value>Jeder Onlinestatus</value></data>
+  <data name="AllUploadConfigs" xml:space="preserve"><value>Alle Uploadkonfigurationen</value></data>
+  <data name="AutoRefresh" xml:space="preserve"><value>Autoaktualisierung</value></data>
   <data name="BasePathRequired" xml:space="preserve"><value>Basispfad ist erforderlich</value></data>
   <data name="Browse" xml:space="preserve"><value>Durchsuchen</value></data>
   <data name="BrowseArchiveFolders" xml:space="preserve"><value>Archivordner durchsuchen</value></data>
-  <data name="BrowseReleaseFolders" xml:space="preserve"><value>Release-Ordner durchsuchen</value></data>
+  <data name="BrowseReleaseFolders" xml:space="preserve"><value>Releaseordner durchsuchen</value></data>
   <data name="BuiltWithBlazorBlueprint" xml:space="preserve"><value>Erstellt mit BlazorBlueprint</value></data>
   <data name="Cancel" xml:space="preserve"><value>Abbrechen</value></data>
   <data name="ConvertToUnmanaged" xml:space="preserve"><value>In Unmanaged umwandeln</value></data>
@@ -67,7 +65,7 @@
   <data name="ConvertToManaged" xml:space="preserve"><value>In Managed umwandeln</value></data>
   <data name="ReleaseConvertedToManaged" xml:space="preserve"><value>{0} wurde in Managed umgewandelt.</value></data>
   <data name="CancelUpload" xml:space="preserve"><value>Upload abbrechen</value></data>
-  <data name="CancelUploadConfirmation" xml:space="preserve"><value>Upload #{0} abbrechen? Laufende Dateiübertragungen werden gestoppt, sobald der Worker die Anfrage sieht.</value></data>
+  <data name="CancelUploadConfirmation" xml:space="preserve"><value>Upload #{0} abbrechen? Es kann einen Moment dauern, bis laufende Übertragungen stoppen.</value></data>
   <data name="CancelDownload" xml:space="preserve"><value>Download abbrechen</value></data>
   <data name="CancelDownloadTitle" xml:space="preserve"><value>Mirrordownload abbrechen</value></data>
   <data name="CancelDownloadConfirmation" xml:space="preserve"><value>Mirrordownload von Archiv #{0} abbrechen? Der teilweise geladene Stand wird verworfen und die auf dieses Archiv wartenden Uploads werden abgebrochen.</value></data>
@@ -88,45 +86,43 @@
   <data name="ConfigurationNamePlaceholder" xml:space="preserve"><value>Namen für die Konfiguration eingeben</value></data>
   <data name="ConfigurationValueMustBeProvided" xml:space="preserve"><value>Du musst einen Wert für „{0}“ angeben</value></data>
   <data name="ConfigurationValueRequired" xml:space="preserve"><value>Konfiguration „{0}“ ist erforderlich</value></data>
-  <data name="ContainerPassword" xml:space="preserve"><value>Container-Passwort</value></data>
+  <data name="ContainerPassword" xml:space="preserve"><value>Containerpasswort</value></data>
   <data name="ContainerPasswordPlaceholder" xml:space="preserve"><value>Optionales Passwort für den Container setzen</value></data>
   <data name="ContainerLink" xml:space="preserve"><value>Containerlink</value></data>
-  <data name="ContainerDownload" xml:space="preserve"><value>Container-Download</value></data>
+  <data name="ContainerDownload" xml:space="preserve"><value>Containerdownload</value></data>
   <data name="ContainerDownloadShort" xml:space="preserve"><value>DLC</value></data>
   <data name="ContainerLinks" xml:space="preserve"><value>Containerlinks</value></data>
-  <data name="ContainerLinksDialogDescription" xml:space="preserve"><value>Link-Crypter-Container, die für Upload-Konfiguration {0} erzeugt wurden.</value></data>
+  <data name="ContainerLinksDialogDescription" xml:space="preserve"><value>Linkcryptercontainer, die für Uploadkonfiguration {0} erzeugt wurden.</value></data>
   <data name="ContainerLinksTitle" xml:space="preserve"><value>Containerlinks für Upload #{0}</value></data>
   <data name="StatusImageId" xml:space="preserve"><value>Statusbild-ID</value></data>
   <data name="Containers" xml:space="preserve"><value>Container</value></data>
-  <data name="ContainersAndValidation" xml:space="preserve"><value>Container und Validierung</value></data>
   <data name="CreateRelease" xml:space="preserve"><value>Release erstellen</value></data>
-  <data name="CreateReleaseDescription" xml:space="preserve"><value>Lege den Release-Typ fest und wähle den Quellordner.</value></data>
+  <data name="CreateReleaseDescription" xml:space="preserve"><value>Lege den Releasetyp fest und wähle den Quellordner.</value></data>
   <data name="CreatedAt" xml:space="preserve"><value>Erstellt am</value></data>
-  <data name="CredentialsAndLoginChecks" xml:space="preserve"><value>Zugangsdaten und Login-Prüfungen</value></data>
   <data name="Crypter" xml:space="preserve"><value>Crypter</value></data>
-  <data name="CrypterDialogDescription" xml:space="preserve"><value>Speichere die Crypter-Konfiguration und prüfe bei Bedarf die Verbindung.</value></data>
-  <data name="CrypterRegistrations" xml:space="preserve"><value>Crypter-Registrierungen</value></data>
+  <data name="CrypterDialogDescription" xml:space="preserve"><value>Gib die Zugangsdaten für diesen Linkcrypter ein.</value></data>
+  <data name="CrypterRegistrations" xml:space="preserve"><value>Crypterregistrierungen</value></data>
   <data name="Crypters" xml:space="preserve"><value>Crypter</value></data>
   <data name="CurrentlyNothingRunning" xml:space="preserve"><value>Aktuell läuft nichts.</value></data>
   <data name="Dashboard" xml:space="preserve"><value>Dashboard</value></data>
   <data name="DateRange" xml:space="preserve"><value>Zeitraum</value></data>
   <data name="Delete" xml:space="preserve"><value>Löschen</value></data>
-  <data name="DeleteArchiveConfig" xml:space="preserve"><value>Archiv-Konfiguration löschen</value></data>
-  <data name="DeleteArchiveConfigConfirmation" xml:space="preserve"><value>Möchtest du die Archiv-Konfiguration {0} wirklich löschen (Archiver: {1})?</value></data>
+  <data name="DeleteArchiveConfig" xml:space="preserve"><value>Archivkonfiguration löschen</value></data>
+  <data name="DeleteArchiveConfigConfirmation" xml:space="preserve"><value>Möchtest du die Archivkonfiguration {0} wirklich löschen (Archiver: {1})?</value></data>
   <data name="DeleteConfig" xml:space="preserve"><value>Konfiguration löschen</value></data>
-  <data name="DeleteHosterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Hoster-Registrierung {0} wirklich löschen? Dadurch werden auch Uploads entfernt, die zu dieser Registrierung gehören.</value></data>
-  <data name="DeleteImageHosterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Bildhoster-Registrierung {0} wirklich löschen?</value></data>
+  <data name="DeleteHosterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Hosterregistrierung {0} wirklich löschen? Dadurch werden auch Uploads entfernt, die zu dieser Registrierung gehören.</value></data>
+  <data name="DeleteImageHosterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Bildhosterregistrierung {0} wirklich löschen?</value></data>
     <data name="DeleteImageUploadConfig" xml:space="preserve"><value>Bilduploadkonfiguration löschen</value></data>
     <data name="DeleteImageUploadConfigConfirmation" xml:space="preserve"><value>Möchtest du die Bilduploadkonfiguration {0} wirklich löschen?</value></data>
     <data name="DeleteImageUploadConfigTemplateConfirmation" xml:space="preserve"><value>Möchtest du die Bilduploadkonfigurationsvorlage {0} wirklich löschen?</value></data>
   <data name="DeleteLink" xml:space="preserve"><value>Link löschen</value></data>
-  <data name="DeleteLinkCrypterContainer" xml:space="preserve"><value>Link-Crypter-Container löschen</value></data>
-  <data name="DeleteLinkCrypterContainerConfirmation" xml:space="preserve"><value>Möchtest du diesen fehlgeschlagenen Link Crypter Container wirklich löschen? Beim nächsten Durchlauf wird automatisch ein neuer erstellt.</value></data>
-  <data name="DeleteLinkCrypterContainerConfig" xml:space="preserve"><value>Link-Crypter-Container-Konfiguration löschen</value></data>
-  <data name="DeleteLinkCrypterContainerConfigConfirmation" xml:space="preserve"><value>Möchtest du diese Link-Crypter-Container-Konfiguration wirklich löschen?</value></data>
-  <data name="DeleteLinkCrypterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Link-Crypter-Registrierung {0} wirklich löschen?</value></data>
+  <data name="DeleteLinkCrypterContainer" xml:space="preserve"><value>Linkcryptercontainer löschen</value></data>
+  <data name="DeleteLinkCrypterContainerConfirmation" xml:space="preserve"><value>Möchtest du diesen fehlgeschlagenen Linkcryptercontainer wirklich löschen? Beim nächsten Durchlauf wird automatisch ein neuer erstellt.</value></data>
+  <data name="DeleteLinkCrypterContainerConfig" xml:space="preserve"><value>Linkcryptercontainerkonfiguration löschen</value></data>
+  <data name="DeleteLinkCrypterContainerConfigConfirmation" xml:space="preserve"><value>Möchtest du diese Linkcryptercontainerkonfiguration wirklich löschen?</value></data>
+  <data name="DeleteLinkCrypterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Linkcrypterregistrierung {0} wirklich löschen?</value></data>
   <data name="DeleteNamedItem" xml:space="preserve"><value>{0} löschen</value></data>
-  <data name="DeleteNfoDatabaseRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die NFO-Datenbank-Registrierung {0} wirklich löschen?</value></data>
+  <data name="DeleteNfoDatabaseRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die NFO-Datenbankregistrierung {0} wirklich löschen?</value></data>
   <data name="DeleteRegistration" xml:space="preserve"><value>Registrierung löschen</value></data>
   <data name="DeleteRelease" xml:space="preserve"><value>Release löschen</value></data>
   <data name="DeleteReleaseConfirmation" xml:space="preserve"><value>Möchtest du das Release {0} wirklich löschen?</value></data>
@@ -134,22 +130,22 @@
   <data name="DeleteReleaseInfoConfirmation" xml:space="preserve"><value>Releaseinfos und Metadaten für {0} löschen? Der Hintergrundtask kann sie erneut abrufen.</value></data>
   <data name="DeleteReleaseInfoTitle" xml:space="preserve"><value>Releaseinfos und Metadaten löschen</value></data>
   <data name="DeleteReleaseTitle" xml:space="preserve"><value>Release {0} löschen</value></data>
-  <data name="DeleteUploadConfig" xml:space="preserve"><value>Upload-Konfiguration löschen</value></data>
-  <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Möchtest du die Upload-Konfiguration {0} wirklich löschen?</value></data>
+  <data name="DeleteUploadConfig" xml:space="preserve"><value>Uploadkonfiguration löschen</value></data>
+  <data name="DeleteUploadConfigConfirmation" xml:space="preserve"><value>Möchtest du die Uploadkonfiguration {0} wirklich löschen?</value></data>
   <data name="DownloadCover" xml:space="preserve"><value>Cover herunterladen</value></data>
   <data name="CoverUrl" xml:space="preserve"><value>Cover-URL</value></data>
   <data name="CoverUrlPlaceholder" xml:space="preserve"><value>https://example.com/cover.jpg</value></data>
   <data name="CoverUrlHelp" xml:space="preserve"><value>Setze die Cover-URL manuell. Falls sie bereits zu ImageHostern hochgeladen wurde, werden diese Uploads entfernt und mit dem neuen Cover erneut hochgeladen.</value></data>
-  <data name="CoverPreview" xml:space="preserve"><value>Cover-Vorschau</value></data>
+  <data name="CoverPreview" xml:space="preserve"><value>Covervorschau</value></data>
   <data name="OpenCoverInNewTab" xml:space="preserve"><value>Cover in voller Größe in neuem Tab öffnen</value></data>
   <data name="SizeUnit" xml:space="preserve"><value>Größeneinheit</value></data>
-  <data name="ReleaseDatabaseUrl" xml:space="preserve"><value>Release-Datenbank-URL</value></data>
+  <data name="ReleaseDatabaseUrl" xml:space="preserve"><value>Releasedatenbank-URL</value></data>
   <data name="MetadataDatabaseUrl" xml:space="preserve"><value>Metadatenbank-URL</value></data>
   <data name="Title" xml:space="preserve"><value>Titel</value></data>
-  <data name="EditReleaseInfo" xml:space="preserve"><value>Release-Info bearbeiten</value></data>
-  <data name="AddReleaseInfo" xml:space="preserve"><value>Release-Info hinzufügen</value></data>
-  <data name="EditReleaseInfoDescription" xml:space="preserve"><value>Bearbeite die Release-Info manuell, z. B. wenn keine Datenbank einen Treffer geliefert hat. Beim Ändern des Covers wird es erneut zu den ImageHostern hochgeladen.</value></data>
-  <data name="ReleaseInfoUpdated" xml:space="preserve"><value>Release-Info aktualisiert</value></data>
+  <data name="EditReleaseInfo" xml:space="preserve"><value>Releaseinfo bearbeiten</value></data>
+  <data name="AddReleaseInfo" xml:space="preserve"><value>Releaseinfo hinzufügen</value></data>
+  <data name="EditReleaseInfoDescription" xml:space="preserve"><value>Bearbeite die Releaseinfo manuell, z. B. wenn keine Datenbank einen Treffer geliefert hat. Beim Ändern des Covers wird es erneut zu den ImageHostern hochgeladen.</value></data>
+  <data name="ReleaseInfoUpdated" xml:space="preserve"><value>Releaseinfo aktualisiert</value></data>
   <data name="ResolveReleaseInfo" xml:space="preserve"><value>Jetzt auflösen</value></data>
   <data name="ExtractMediaMetadata" xml:space="preserve"><value>Mediendaten extrahieren</value></data>
   <data name="MediaMetadata" xml:space="preserve"><value>Mediendateien</value></data>
@@ -162,19 +158,19 @@
   <data name="Subtitle" xml:space="preserve"><value>Untertitel</value></data>
   <data name="Default" xml:space="preserve"><value>Standard</value></data>
   <data name="Forced" xml:space="preserve"><value>Erzwungen</value></data>
-  <data name="ReleaseInfoResolved" xml:space="preserve"><value>Release-Info gefunden</value></data>
-  <data name="ReleaseInfoNotResolved" xml:space="preserve"><value>Keine Release-Info gefunden</value></data>
+  <data name="ReleaseInfoResolved" xml:space="preserve"><value>Releaseinfo gefunden</value></data>
+  <data name="ReleaseInfoNotResolved" xml:space="preserve"><value>Keine Releaseinfo gefunden</value></data>
   <data name="ReleaseMetadataResolved" xml:space="preserve"><value>Metadaten abgerufen</value></data>
   <data name="ReleaseMetadataNotResolved" xml:space="preserve"><value>Keine passenden Metadaten gefunden</value></data>
   <data name="AddNfo" xml:space="preserve"><value>NFO hinzufügen</value></data>
   <data name="EditNfo" xml:space="preserve"><value>NFO bearbeiten</value></data>
-  <data name="EditNfoDescription" xml:space="preserve"><value>Füge die NFO manuell hinzu oder bearbeite sie, z. B. wenn keine NFO-Datei existiert, keine heruntergeladen werden konnte oder die vorhandene falsch ist. Die NFO wird zusätzlich als Datei in den Release-Ordner geschrieben.</value></data>
+  <data name="EditNfoDescription" xml:space="preserve"><value>Füge die NFO manuell hinzu oder bearbeite sie, z. B. wenn keine NFO-Datei existiert, keine heruntergeladen werden konnte oder die vorhandene falsch ist. Die NFO wird zusätzlich als Datei in den Releaseordner geschrieben.</value></data>
   <data name="NfoUpdated" xml:space="preserve"><value>NFO aktualisiert</value></data>
   <data name="NfoFileName" xml:space="preserve"><value>NFO-Dateiname</value></data>
   <data name="NfoFileNamePlaceholder" xml:space="preserve"><value>release.nfo</value></data>
   <data name="NfoContent" xml:space="preserve"><value>NFO-Inhalt</value></data>
   <data name="EditMetadata" xml:space="preserve"><value>Metadaten bearbeiten</value></data>
-  <data name="EditMetadataDescription" xml:space="preserve"><value>Bearbeite die Serien-Metadaten manuell, z. B. wenn keine Datenbank einen Treffer geliefert hat. Beim Ändern des Covers wird es erneut zu den ImageHostern hochgeladen.</value></data>
+  <data name="EditMetadataDescription" xml:space="preserve"><value>Bearbeite die Serienmetadaten manuell, z. B. wenn keine Datenbank einen Treffer geliefert hat. Beim Ändern des Covers wird es erneut zu den ImageHostern hochgeladen.</value></data>
   <data name="MetadataUpdated" xml:space="preserve"><value>Metadaten aktualisiert</value></data>
   <data name="DownloadLink" xml:space="preserve"><value>Downloadlink</value></data>
   <data name="DownloadLinkSearchPlaceholder" xml:space="preserve"><value>Teil eines Links einfügen</value></data>
@@ -184,12 +180,12 @@
   <data name="Description" xml:space="preserve"><value>Beschreibung</value></data>
   <data name="Disable" xml:space="preserve"><value>Deaktivieren</value></data>
   <data name="Edit" xml:space="preserve"><value>Bearbeiten</value></data>
-  <data name="EditArchiveConfiguration" xml:space="preserve"><value>Archiv-Konfiguration bearbeiten</value></data>
+  <data name="EditArchiveConfiguration" xml:space="preserve"><value>Archivkonfiguration bearbeiten</value></data>
   <data name="EditConfig" xml:space="preserve"><value>Konfiguration bearbeiten</value></data>
-  <data name="EditLinkCrypterContainer" xml:space="preserve"><value>Link-Crypter-Container bearbeiten</value></data>
+  <data name="EditLinkCrypterContainer" xml:space="preserve"><value>Linkcryptercontainer bearbeiten</value></data>
   <data name="EditNamedItem" xml:space="preserve"><value>{0} bearbeiten</value></data>
   <data name="EditRegistration" xml:space="preserve"><value>Registrierung bearbeiten</value></data>
-  <data name="EditUploadConfig" xml:space="preserve"><value>Upload-Konfiguration bearbeiten</value></data>
+  <data name="EditUploadConfig" xml:space="preserve"><value>Uploadkonfiguration bearbeiten</value></data>
   <data name="Enable" xml:space="preserve"><value>Aktivieren</value></data>
   <data name="EnableRefresh" xml:space="preserve"><value>Aktualisierung aktivieren</value></data>
   <data name="FieldCount" xml:space="preserve"><value>{0} Feld(er)</value></data>
@@ -200,50 +196,44 @@
   <data name="FolderPath" xml:space="preserve"><value>Ordnerpfad</value></data>
   <data name="FolderSelectionTree" xml:space="preserve"><value>Ordnerauswahlbaum</value></data>
   <data name="Home" xml:space="preserve"><value>Home</value></data>
-    <data name="HomeIntro" xml:space="preserve"><value>Überwache laufende Archiverstellungen und Uploads</value></data>
   <data name="Hoster" xml:space="preserve"><value>Hoster</value></data>
   <data name="Genre" xml:space="preserve"><value>Genre</value></data>
   <data name="HosterConfigurationHelp" xml:space="preserve"><value>Gib die benötigten Werte für den ausgewählten Hoster an.</value></data>
-  <data name="HosterDialogDescription" xml:space="preserve"><value>Speichere Hoster-Zugangsdaten und Konfigurationen für Uploads.</value></data>
-  <data name="HosterRegistration" xml:space="preserve"><value>Hoster-Registrierung</value></data>
-  <data name="HosterRegistrationActivated" xml:space="preserve"><value>Hoster-Registrierung {0} aktiviert</value></data>
-  <data name="HosterRegistrationDeactivated" xml:space="preserve"><value>Hoster-Registrierung {0} deaktiviert</value></data>
-  <data name="HosterRegistrationRequired" xml:space="preserve"><value>Hoster-Registrierung ist erforderlich.</value></data>
+  <data name="HosterDialogDescription" xml:space="preserve"><value>Speichere Hosterzugangsdaten und Konfigurationen für Uploads.</value></data>
+  <data name="HosterRegistration" xml:space="preserve"><value>Hosterregistrierung</value></data>
+  <data name="HosterRegistrationActivated" xml:space="preserve"><value>Hosterregistrierung {0} aktiviert</value></data>
+  <data name="HosterRegistrationDeactivated" xml:space="preserve"><value>Hosterregistrierung {0} deaktiviert</value></data>
+  <data name="HosterRegistrationRequired" xml:space="preserve"><value>Hosterregistrierung ist erforderlich.</value></data>
   <data name="HideFileColumn" xml:space="preserve"><value>Datei ausblenden</value></data>
-  <data name="HosterRegistrations" xml:space="preserve"><value>Hoster-Registrierungen</value></data>
-  <data name="HosterRegistrationsIntro" xml:space="preserve"><value>Verwalte Hoster-Zugangsdaten, Aktivierungsstatus und Login-Prüfung.</value></data>
-  <data name="HosterTarget" xml:space="preserve"><value>Hoster-Ziel</value></data>
+  <data name="HosterRegistrations" xml:space="preserve"><value>Hosterregistrierungen</value></data>
+  <data name="HosterTarget" xml:space="preserve"><value>Hosterziel</value></data>
   <data name="Hosters" xml:space="preserve"><value>Hoster</value></data>
   <data name="Id" xml:space="preserve"><value>ID</value></data>
   <data name="ImageHoster" xml:space="preserve"><value>Bildhoster</value></data>
   <data name="AddImageHoster" xml:space="preserve"><value>Bildhoster hinzufügen</value></data>
     <data name="AddImageUploadConfig" xml:space="preserve"><value>Bilduploadkonfiguration hinzufügen</value></data>
   <data name="ImageHosterConfigurationHelp" xml:space="preserve"><value>Gib die API-Zugangsdaten für den ausgewählten Bildhoster an.</value></data>
-  <data name="ImageHosterDialogDescription" xml:space="preserve"><value>Füge Bildhoster-Zugangsdaten hinzu.</value></data>
-  <data name="ImageHosterRegistration" xml:space="preserve"><value>Bildhoster-Registrierung</value></data>
-  <data name="ImageHosterRegistrationRequired" xml:space="preserve"><value>Bildhoster-Registrierung ist erforderlich.</value></data>
-  <data name="ImageHosterRegistrationActivated" xml:space="preserve"><value>Bildhoster-Registrierung {0} aktiviert</value></data>
-  <data name="ImageHosterRegistrationDeactivated" xml:space="preserve"><value>Bildhoster-Registrierung {0} deaktiviert</value></data>
-  <data name="ImageHosterRegistrations" xml:space="preserve"><value>Bildhoster-Registrierungen</value></data>
-  <data name="ImageHosterRegistrationsIntro" xml:space="preserve"><value>Verwalte Bildhoster-API-Keys und prüfe, ob das Login funktioniert</value></data>
+  <data name="ImageHosterDialogDescription" xml:space="preserve"><value>Füge Bildhosterzugangsdaten hinzu.</value></data>
+  <data name="ImageHosterRegistration" xml:space="preserve"><value>Bildhosterregistrierung</value></data>
+  <data name="ImageHosterRegistrationRequired" xml:space="preserve"><value>Bildhosterregistrierung ist erforderlich.</value></data>
+  <data name="ImageHosterRegistrationActivated" xml:space="preserve"><value>Bildhosterregistrierung {0} aktiviert</value></data>
+  <data name="ImageHosterRegistrationDeactivated" xml:space="preserve"><value>Bildhosterregistrierung {0} deaktiviert</value></data>
+  <data name="ImageHosterRegistrations" xml:space="preserve"><value>Bildhosterregistrierungen</value></data>
   <data name="ImageHosters" xml:space="preserve"><value>Bildhoster</value></data>
   <data name="ImageSize" xml:space="preserve"><value>Bildgröße</value></data>
     <data name="ImageUploadConfig" xml:space="preserve"><value>Bilduploadkonfiguration</value></data>
-  <data name="ImageUploadConfigDialogDescription" xml:space="preserve"><value>Lege fest, wohin Release-Bilder hochgeladen werden.</value></data>
+  <data name="ImageUploadConfigDialogDescription" xml:space="preserve"><value>Lege fest, wohin Releasebilder hochgeladen werden.</value></data>
     <data name="ImageUploadConfigurations" xml:space="preserve"><value>Bilduploadkonfigurationen</value></data>
-  <data name="ImageUploadConfigurationsDescription" xml:space="preserve"><value>Bildhoster-Ziele für Release-Cover.</value></data>
-  <data name="ImageUploadConfigTemplateDialogDescription" xml:space="preserve"><value>Lege Bildhoster-Ziele für Releases aus dieser Vorlage fest.</value></data>
-  <data name="ImageUploadConfigTemplatesDescription" xml:space="preserve"><value>Bildhoster-Ziele, die auf Releases aus dieser Vorlage angewendet werden.</value></data>
-  <data name="ImageUploadTarget" xml:space="preserve"><value>Bild-Upload-Ziel</value></data>
-  <data name="ImageUploads" xml:space="preserve"><value>Bild-Uploads</value></data>
-  <data name="ImageUploadsAndValidation" xml:space="preserve"><value>Bild-Uploads und Validierung</value></data>
-  <data name="ImageUploadUrls" xml:space="preserve"><value>Bild-Upload-URLs</value></data>
+  <data name="ImageUploadConfigTemplateDialogDescription" xml:space="preserve"><value>Lege Bildhosterziele für Releases aus dieser Vorlage fest.</value></data>
+  <data name="ImageUploadTarget" xml:space="preserve"><value>Bilduploadziel</value></data>
+  <data name="ImageUploads" xml:space="preserve"><value>Bilduploads</value></data>
+  <data name="ImageUploadUrls" xml:space="preserve"><value>Bildupload-URLs</value></data>
   <data name="Inactive" xml:space="preserve"><value>Inaktiv</value></data>
   <data name="Language" xml:space="preserve"><value>Sprache</value></data>
   <data name="LatestUpload" xml:space="preserve"><value>Letzter Upload</value></data>
-  <data name="LinkCrypter" xml:space="preserve"><value>Link-Crypter</value></data>
-  <data name="LinkCrypterConfigurationHelp" xml:space="preserve"><value>Gib alle benötigten Werte für den ausgewählten Link-Crypter an.</value></data>
-  <data name="LinkCrypterContainerDialogDescription" xml:space="preserve"><value>Hänge einen Link-Crypter an diese Upload-Konfiguration an.</value></data>
+  <data name="LinkCrypter" xml:space="preserve"><value>Linkcrypter</value></data>
+  <data name="LinkCrypterConfigurationHelp" xml:space="preserve"><value>Gib alle benötigten Werte für den ausgewählten Linkcrypter an.</value></data>
+  <data name="LinkCrypterContainerDialogDescription" xml:space="preserve"><value>Hänge einen Linkcrypter an diese Uploadkonfiguration an.</value></data>
   <data name="LinkCrypterContainerState.Created" xml:space="preserve"><value>Erstellt</value></data>
   <data name="LinkCrypterContainerState.CreationFailed" xml:space="preserve"><value>Erstellung fehlgeschlagen</value></data>
   <data name="ArchiveState.Created" xml:space="preserve"><value>Erstellt</value></data>
@@ -251,91 +241,88 @@
   <data name="ArchiveState.CreationFailed" xml:space="preserve"><value>Erstellung fehlgeschlagen</value></data>
   <data name="ArchiveState.Deleted" xml:space="preserve"><value>Gelöscht</value></data>
   <data name="ArchiveState.MissingFiles" xml:space="preserve"><value>Dateien fehlen</value></data>
-  <data name="LinkCrypterRegistrationActivated" xml:space="preserve"><value>Link-Crypter-Registrierung {0} aktiviert</value></data>
-  <data name="LinkCrypterRegistrationDeactivated" xml:space="preserve"><value>Link-Crypter-Registrierung {0} deaktiviert</value></data>
-  <data name="LinkCrypterRegistrations" xml:space="preserve"><value>Link-Crypter-Registrierungen</value></data>
-  <data name="LinkCrypterRegistrationsIntro" xml:space="preserve"><value>Verwalte Crypter-Konfigurationen, Aktivierungsstatus und Login-Prüfungen.</value></data>
+  <data name="LinkCrypterRegistrationActivated" xml:space="preserve"><value>Linkcrypterregistrierung {0} aktiviert</value></data>
+  <data name="LinkCrypterRegistrationDeactivated" xml:space="preserve"><value>Linkcrypterregistrierung {0} deaktiviert</value></data>
+  <data name="LinkCrypterRegistrations" xml:space="preserve"><value>Linkcrypterregistrierungen</value></data>
   <data name="LinkCrypterSettings" xml:space="preserve"><value>Einstellungen</value></data>
-  <data name="ManagedByReleaseCollection" xml:space="preserve"><value>Auf Collection-Seite verwaltet</value></data>
-  <data name="LinkCrypterLinks" xml:space="preserve"><value>Link-Crypter-Links</value></data>
-  <data name="LinkCrypters" xml:space="preserve"><value>Link-Crypter</value></data>
-  <data name="LinkCryptersDescription" xml:space="preserve"><value>Optionale Container für verteilte Upload-Links.</value></data>
+  <data name="ManagedByReleaseCollection" xml:space="preserve"><value>Auf Collectionseite verwaltet</value></data>
+  <data name="LinkCrypterLinks" xml:space="preserve"><value>Linkcrypterlinks</value></data>
+  <data name="LinkCrypters" xml:space="preserve"><value>Linkcrypter</value></data>
   <data name="Links" xml:space="preserve"><value>Links</value></data>
   <data name="Login" xml:space="preserve"><value>Login</value></data>
   <data name="LoginFailed" xml:space="preserve"><value>Login für Registrierung {0} fehlgeschlagen: {1}</value></data>
   <data name="LoginSuccessful" xml:space="preserve"><value>Login für Registrierung {0} erfolgreich</value></data>
   <data name="Name" xml:space="preserve"><value>Name</value></data>
-  <data name="NameImageUploadConfigPlaceholder" xml:space="preserve"><value>Optional - andernfalls wird der Bildhoster-Name verwendet</value></data>
+  <data name="NameImageUploadConfigPlaceholder" xml:space="preserve"><value>Optional - andernfalls wird der Bildhostername verwendet</value></data>
   <data name="NameIsRequired" xml:space="preserve"><value>Name ist erforderlich</value></data>
-  <data name="NameUploadConfigPlaceholder" xml:space="preserve"><value>Upload-Konfiguration benennen</value></data>
+  <data name="NameUploadConfigPlaceholder" xml:space="preserve"><value>Uploadkonfiguration benennen</value></data>
   <data name="NameYourRelease" xml:space="preserve"><value>Release benennen</value></data>
   <data name="NfoDatabase" xml:space="preserve"><value>NFO-Datenbank</value></data>
   <data name="NfoDatabaseAlreadyRegistered" xml:space="preserve"><value>Diese NFO-Datenbank ist bereits registriert.</value></data>
   <data name="NfoDatabaseConfigurationHelp" xml:space="preserve"><value>Speichere optionale Zugangsdaten für die ausgewählte NFO-Datenbank.</value></data>
   <data name="NfoDatabaseDialogDescription" xml:space="preserve"><value>Aktiviere eine NFO-Datenbank und speichere Zugangsdaten, falls der Anbieter sie benötigt.</value></data>
-  <data name="NfoDatabaseRegistrationActivated" xml:space="preserve"><value>NFO-Datenbank-Registrierung {0} aktiviert</value></data>
-  <data name="NfoDatabaseRegistrationDeactivated" xml:space="preserve"><value>NFO-Datenbank-Registrierung {0} deaktiviert</value></data>
-  <data name="NfoDatabaseRegistrations" xml:space="preserve"><value>NFO-Datenbank-Registrierungen</value></data>
-    <data name="NfoDatabaseRegistrationsIntro" xml:space="preserve"><value>Aktiviere und verwalte Metadatenquellen</value></data>
+  <data name="NfoDatabaseRegistrationActivated" xml:space="preserve"><value>NFO-Datenbankregistrierung {0} aktiviert</value></data>
+  <data name="NfoDatabaseRegistrationDeactivated" xml:space="preserve"><value>NFO-Datenbankregistrierung {0} deaktiviert</value></data>
+  <data name="NfoDatabaseRegistrations" xml:space="preserve"><value>NFO-Datenbankregistrierungen</value></data>
   <data name="NfoDatabases" xml:space="preserve"><value>NFO-Datenbanken</value></data>
   <data name="NewHoster" xml:space="preserve"><value>Neuer Hoster</value></data>
   <data name="NewImageHoster" xml:space="preserve"><value>Neuer Bildhoster</value></data>
-  <data name="NewLinkCrypter" xml:space="preserve"><value>Neuer Link-Crypter</value></data>
+  <data name="NewLinkCrypter" xml:space="preserve"><value>Neuer Linkcrypter</value></data>
   <data name="NewNfoDatabase" xml:space="preserve"><value>Neue NFO-Datenbank</value></data>
   <data name="NewRelease" xml:space="preserve"><value>Neues Release</value></data>
   <data name="Next" xml:space="preserve"><value>Weiter</value></data>
   <data name="No" xml:space="preserve"><value>Nein</value></data>
   <data name="NotFullyOnlineSince" xml:space="preserve"><value>Nicht vollständig online seit</value></data>
   <data name="NoArchivePassword" xml:space="preserve"><value>Kein Archivpasswort</value></data>
-  <data name="NoArchiveConfigurationsYet" xml:space="preserve"><value>Noch keine Archiv-Konfigurationen.</value></data>
+  <data name="NoArchiveConfigurationsYet" xml:space="preserve"><value>Noch keine Archivkonfigurationen.</value></data>
   <data name="NoContainerLinksFound" xml:space="preserve"><value>Keine Containerlinks gefunden</value></data>
   <data name="NoDistributionTargets" xml:space="preserve"><value>Keine Verteilziele</value></data>
     <data name="NoImageUploadConfigurationsYet" xml:space="preserve"><value>Noch keine Bilduploadkonfigurationen.</value></data>
     <data name="NoImageUploadConfigTemplatesYet" xml:space="preserve"><value>Noch keine Bilduploadkonfigurationsvorlagen.</value></data>
   <data name="CollectionImageUploadConfigurations" xml:space="preserve"><value>Release Collection Bilduploadkonfigurationen</value></data>
-  <data name="CollectionImageUploadConfigTemplatesDescription" xml:space="preserve"><value>Bildhoster-Ziele, die auf die Coverbilder von Releases Collections aus dieser Vorlage angewendet werden.</value></data>
+  <data name="CollectionImageUploadConfigTemplatesDescription" xml:space="preserve"><value>Lädt das Cover der Collection einmal für alle zugehörigen Releases hoch.</value></data>
   <data name="NoCollectionImageUploadConfigTemplatesYet" xml:space="preserve"><value>Noch keine Collection Bilduploadkonfigurationsvorlagen.</value></data>
   <data name="AddCollectionImageUploadConfig" xml:space="preserve"><value>Collection Bilduploadkonfiguration hinzufügen</value></data>
-    <data name="CollectionImageUploadConfigTemplateDialogDescription" xml:space="preserve"><value>Lege Bildhoster-Ziele für die Coverbilder von Release Collections aus dieser Vorlage fest.</value></data>
-  <data name="CollectionImageUploads" xml:space="preserve"><value>Bild-Uploads</value></data>
-  <data name="CollectionImageUploadsDescription" xml:space="preserve"><value>Bildhoster-Ziele für das Coverbild dieser Collection.</value></data>
+    <data name="CollectionImageUploadConfigTemplateDialogDescription" xml:space="preserve"><value>Lege Bildhosterziele für die Coverbilder von Release Collections aus dieser Vorlage fest.</value></data>
+  <data name="CollectionImageUploads" xml:space="preserve"><value>Bilduploads</value></data>
+  <data name="CollectionImageUploadsDescription" xml:space="preserve"><value>Bildhosterziele für das Coverbild dieser Collection.</value></data>
   <data name="NoCollectionImageUploadsYet" xml:space="preserve"><value>Noch keine Bilduploadkonfiguration.</value></data>
   <data name="ImageUploadPending" xml:space="preserve"><value>Noch nicht hochgeladen</value></data>
-  <data name="NoImageUploadsFound" xml:space="preserve"><value>Keine Bild-Uploads gefunden</value></data>
-  <data name="NoImageUploadUrlsFound" xml:space="preserve"><value>Keine Bild-Upload-URLs gefunden</value></data>
+  <data name="NoImageUploadsFound" xml:space="preserve"><value>Keine Bilduploads gefunden</value></data>
+  <data name="NoImageUploadUrlsFound" xml:space="preserve"><value>Keine Bildupload-URLs gefunden</value></data>
   <data name="NoLatestUpload" xml:space="preserve"><value>Noch kein Upload</value></data>
-  <data name="NoLinkCrypterLinks" xml:space="preserve"><value>Keine Link-Crypter-Links</value></data>
+  <data name="NoLinkCrypterLinks" xml:space="preserve"><value>Keine Linkcrypterlinks</value></data>
   <data name="NoConfigurationRequired" xml:space="preserve"><value>Keine Konfiguration erforderlich</value></data>
   <data name="NoExternalInfos" xml:space="preserve"><value>Keine externen Infos</value></data>
   <data name="NoNfoFileAvailable" xml:space="preserve"><value>Keine NFO-Datei verfügbar</value></data>
   <data name="Nfo" xml:space="preserve"><value>NFO</value></data>
-  <data name="NfoFileAlreadyExists" xml:space="preserve"><value>Im Release-Ordner liegt bereits eine NFO-Datei.</value></data>
+  <data name="NfoFileAlreadyExists" xml:space="preserve"><value>Im Releaseordner liegt bereits eine NFO-Datei.</value></data>
   <data name="NfoFileSaveFailed" xml:space="preserve"><value>NFO-Datei konnte nicht gespeichert werden: {0}</value></data>
   <data name="NfoFileSaved" xml:space="preserve"><value>NFO-Datei {0} gespeichert.</value></data>
-  <data name="NoReleaseInfoYet" xml:space="preserve"><value>Noch keine Release-Info.</value></data>
+  <data name="NoReleaseInfoYet" xml:space="preserve"><value>Noch keine Releaseinfo.</value></data>
   <data name="NoReleasesFound" xml:space="preserve"><value>Keine Releases gefunden</value></data>
   <data name="NoTargets" xml:space="preserve"><value>Keine Ziele</value></data>
-  <data name="NoUploadConfigurationsYet" xml:space="preserve"><value>Noch keine Upload-Konfigurationen.</value></data>
+  <data name="NoUploadConfigurationsYet" xml:space="preserve"><value>Noch keine Uploadkonfigurationen.</value></data>
   <data name="NoUploadLinksFound" xml:space="preserve"><value>Keine Uploadlinks gefunden</value></data>
   <data name="NoUploadsFound" xml:space="preserve"><value>Keine Uploads gefunden</value></data>
   <data name="NoUrls" xml:space="preserve"><value>Keine URLs</value></data>
     <data name="OnlineConfigs" xml:space="preserve"><value>Uploads online</value></data>
-  <data name="OnlineState" xml:space="preserve"><value>Online-Status</value></data>
+  <data name="OnlineState" xml:space="preserve"><value>Onlinestatus</value></data>
   <data name="OnlineState.Offline" xml:space="preserve"><value>Offline</value></data>
   <data name="OnlineState.Online" xml:space="preserve"><value>Online</value></data>
   <data name="OnlineState.PartiallyOnline" xml:space="preserve"><value>Teilweise online</value></data>
   <data name="OnlineState.Unknown" xml:space="preserve"><value>Unbekannt</value></data>
-  <data name="OpenArchiveConfigActions" xml:space="preserve"><value>Aktionen für Archiv-Konfiguration öffnen</value></data>
+  <data name="OpenArchiveConfigActions" xml:space="preserve"><value>Aktionen für Archivkonfiguration öffnen</value></data>
   <data name="OpenDetails" xml:space="preserve"><value>Details öffnen</value></data>
-  <data name="OpenHosterActions" xml:space="preserve"><value>Hoster-Aktionen öffnen</value></data>
+  <data name="OpenHosterActions" xml:space="preserve"><value>Hosteraktionen öffnen</value></data>
   <data name="OpenImageHosterActions" xml:space="preserve"><value>Aktionen öffnen</value></data>
     <data name="OpenImageUploadConfigActions" xml:space="preserve"><value>Aktionen öffnen</value></data>
-  <data name="OpenLinkCrypterActions" xml:space="preserve"><value>Link-Crypter-Aktionen öffnen</value></data>
-  <data name="OpenNfoDatabaseActions" xml:space="preserve"><value>NFO-Datenbank-Aktionen öffnen</value></data>
+  <data name="OpenLinkCrypterActions" xml:space="preserve"><value>Linkcrypteraktionen öffnen</value></data>
+  <data name="OpenNfoDatabaseActions" xml:space="preserve"><value>NFO-Datenbankaktionen öffnen</value></data>
   <data name="OpenExternalUrl" xml:space="preserve"><value>Externe URL öffnen</value></data>
-  <data name="OpenReleaseDatabase" xml:space="preserve"><value>Release-Datenbank öffnen</value></data>
-  <data name="OpenReleaseActions" xml:space="preserve"><value>Release-Aktionen öffnen</value></data>
-  <data name="OpenUploadConfigActions" xml:space="preserve"><value>Upload-Konfigurationsaktionen öffnen</value></data>
+  <data name="OpenReleaseDatabase" xml:space="preserve"><value>Releasedatenbank öffnen</value></data>
+  <data name="OpenReleaseActions" xml:space="preserve"><value>Releaseaktionen öffnen</value></data>
+  <data name="OpenUploadConfigActions" xml:space="preserve"><value>Uploadkonfigurationsaktionen öffnen</value></data>
   <data name="Password" xml:space="preserve"><value>Passwort</value></data>
   <data name="PauseRefresh" xml:space="preserve"><value>Aktualisierung pausieren</value></data>
   <data name="Pending" xml:space="preserve"><value>Ausstehend</value></data>
@@ -351,23 +338,20 @@
   <data name="ChangeArchiveFolderDialogDescription" xml:space="preserve"><value>Wähle den Ordner, der die Archivdateien dieser Konfiguration enthält</value></data>
   <data name="Registration" xml:space="preserve"><value>Registrierung</value></data>
   <data name="Release" xml:space="preserve"><value>Release</value></data>
-  <data name="ReleaseDetails" xml:space="preserve"><value>Release-Details</value></data>
-  <data name="ReleaseFolder" xml:space="preserve"><value>Release-Ordner</value></data>
+  <data name="ReleaseDetails" xml:space="preserve"><value>Releasedetails</value></data>
+  <data name="ReleaseFolder" xml:space="preserve"><value>Releaseordner</value></data>
   <data name="ArchiveFolder" xml:space="preserve"><value>Archivordner</value></data>
   <data name="NoArchivesYet" xml:space="preserve"><value>Noch keine Archive</value></data>
-  <data name="ReleaseFolderMissing" xml:space="preserve"><value>Der Release-Ordner existiert nicht.</value></data>
-  <data name="ReleaseInfo" xml:space="preserve"><value>Release-Info</value></data>
-  <data name="ReleaseInfoDeleted" xml:space="preserve"><value>Release-Info gelöscht</value></data>
-  <data name="ReleaseMetadataSources" xml:space="preserve"><value>Release-Metadatenquellen</value></data>
-  <data name="ReleaseOnlineStateDistribution" xml:space="preserve"><value>Release-Online-Status</value></data>
-  <data name="ReleaseOnlineStateDistributionDescription" xml:space="preserve"><value>Gesamtanzahl der Releases nach aktuellem Online-Status.</value></data>
-    <data name="ReleaseRootsAndOnlineState" xml:space="preserve"><value>Suche und verwalte Releases</value></data>
+  <data name="ReleaseFolderMissing" xml:space="preserve"><value>Der Releaseordner existiert nicht.</value></data>
+  <data name="ReleaseInfo" xml:space="preserve"><value>Releaseinfo</value></data>
+  <data name="ReleaseInfoDeleted" xml:space="preserve"><value>Releaseinfo gelöscht</value></data>
+  <data name="ReleaseOnlineStateDistribution" xml:space="preserve"><value>Releaseonlinestatus</value></data>
   <data name="ReleaseResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Releases</value></data>
   <data name="ReleaseSearchPlaceholder" xml:space="preserve"><value>Name oder Ordnerpfad</value></data>
   <data name="ReleaseContentType" xml:space="preserve"><value>Inhaltstyp</value></data>
   <data name="ReleaseContentTypeUpdated" xml:space="preserve"><value>Inhaltstyp aktualisiert</value></data>
   <data name="EditContentType" xml:space="preserve"><value>Inhaltstyp bearbeiten</value></data>
-  <data name="EditContentTypeDescription" xml:space="preserve"><value>Wähle den Inhaltstyp für diese Release-Collection.</value></data>
+  <data name="EditContentTypeDescription" xml:space="preserve"><value>Wähle den Inhaltstyp für diese Releasecollection.</value></data>
   <data name="EditCollectionSettings" xml:space="preserve"><value>Collection Einstellungen bearbeiten</value></data>
   <data name="EditCollectionSettingsDescription" xml:space="preserve"><value>Wähle den Inhaltstyp und die Primärsprache für diese Release Collection.</value></data>
   <data name="ReleaseCollectionSettingsUpdated" xml:space="preserve"><value>Collection Einstellungen aktualisiert</value></data>
@@ -429,13 +413,12 @@
   <data name="ClassificationSource.MediaInfo" xml:space="preserve"><value>MediaInfo</value></data>
   <data name="ClassificationSource.ReleaseInfo" xml:space="preserve"><value>Releaseinfo</value></data>
   <data name="ClassificationSource.Nfo" xml:space="preserve"><value>NFO</value></data>
-  <data name="ReleaseType" xml:space="preserve"><value>Release-Typ</value></data>
+  <data name="ReleaseType" xml:space="preserve"><value>Releasetyp</value></data>
   <data name="ReleaseType.Managed" xml:space="preserve"><value>Managed</value></data>
   <data name="ReleaseType.Managed.Description" xml:space="preserve"><value>Bearcat erstellt die Archive und verwaltet Uploads automatisch</value></data>
   <data name="ReleaseType.Unmanaged" xml:space="preserve"><value>Unmanaged</value></data>
   <data name="ReleaseType.Unmanaged.Description" xml:space="preserve"><value>Du erstellst die Archive und Bearcat lädt sie nur hoch</value></data>
   <data name="Releases" xml:space="preserve"><value>Releases</value></data>
-    <data name="ReleasesIntro" xml:space="preserve"><value>Verwalte Releases und prüfe ihren aktuellen Online-Status.</value></data>
   <data name="Reload" xml:space="preserve"><value>Neu laden</value></data>
   <data name="ResetFilters" xml:space="preserve"><value>Filter zurücksetzen</value></data>
   <data name="RowsPerPage" xml:space="preserve"><value>Zeilen pro Seite</value></data>
@@ -443,17 +426,15 @@
   <data name="RarFileSearchPlaceholder" xml:space="preserve"><value>Dateiname oder Pfad</value></data>
   <data name="RunningAndPendingUploads" xml:space="preserve"><value>Laufende und ausstehende Uploads</value></data>
   <data name="RunningArchives" xml:space="preserve"><value>Laufende Archive</value></data>
-  <data name="RunningArchivesDescription" xml:space="preserve"><value>Archive, die gerade erstellt werden.</value></data>
   <data name="RunningProcesses" xml:space="preserve"><value>Laufende Prozesse</value></data>
-  <data name="RunningProcessesDescription" xml:space="preserve"><value>Live-Ansicht ausstehender Uploads, Mirrordownloads und Archiverstellung.</value></data>
   <data name="RunningUploads" xml:space="preserve"><value>Laufende Uploads</value></data>
-  <data name="RunningUploadsDescription" xml:space="preserve"><value>Upload-Warteschlangen, Status und Fortschritt pro Datei.</value></data>
+  <data name="RunningUploadsDescription" xml:space="preserve"><value>Uploadwarteschlangen, Status und Fortschritt pro Datei.</value></data>
   <data name="Save" xml:space="preserve"><value>Speichern</value></data>
   <data name="SaveNfoFile" xml:space="preserve"><value>NFO-Datei speichern</value></data>
   <data name="Search" xml:space="preserve"><value>Suchen</value></data>
   <data name="SearchFolders" xml:space="preserve"><value>Ordner suchen</value></data>
   <data name="SearchReleases" xml:space="preserve"><value>Releases suchen</value></data>
-  <data name="SelectArchiveConfiguration" xml:space="preserve"><value>Archiv-Konfiguration auswählen</value></data>
+  <data name="SelectArchiveConfiguration" xml:space="preserve"><value>Archivkonfiguration auswählen</value></data>
   <data name="SelectArchiveFolder" xml:space="preserve"><value>Ordner auswählen, in dem die Archivdateien erstellt werden</value></data>
   <data name="SelectArchiveFolderDescription" xml:space="preserve"><value>Wähle, wo Bearcat Archivdateien erstellen soll.</value></data>
   <data name="SelectExistingArchiveFolder" xml:space="preserve"><value>Archivordner auswählen</value></data>
@@ -463,19 +444,19 @@
   <data name="SelectCrypter" xml:space="preserve"><value>Crypter auswählen</value></data>
   <data name="SelectFolderRequired" xml:space="preserve"><value>Du musst einen Ordner auswählen</value></data>
   <data name="SelectHoster" xml:space="preserve"><value>Hoster auswählen</value></data>
-  <data name="SelectHosterRegistration" xml:space="preserve"><value>Hoster-Registrierung auswählen</value></data>
+  <data name="SelectHosterRegistration" xml:space="preserve"><value>Hosterregistrierung auswählen</value></data>
   <data name="SelectHosterRequired" xml:space="preserve"><value>Du musst einen Hoster auswählen</value></data>
   <data name="SelectImageHoster" xml:space="preserve"><value>Bildhoster auswählen</value></data>
-  <data name="SelectImageHosterRegistration" xml:space="preserve"><value>Bildhoster-Registrierung auswählen</value></data>
+  <data name="SelectImageHosterRegistration" xml:space="preserve"><value>Bildhosterregistrierung auswählen</value></data>
   <data name="SelectImageHosterRequired" xml:space="preserve"><value>Du musst einen Bildhoster auswählen.</value></data>
-  <data name="SelectLinkCrypter" xml:space="preserve"><value>Link-Crypter auswählen</value></data>
-  <data name="SelectLinkCrypterRequired" xml:space="preserve"><value>Du musst einen Link-Crypter auswählen.</value></data>
+  <data name="SelectLinkCrypter" xml:space="preserve"><value>Linkcrypter auswählen</value></data>
+  <data name="SelectLinkCrypterRequired" xml:space="preserve"><value>Du musst einen Linkcrypter auswählen.</value></data>
   <data name="SelectNfoDatabase" xml:space="preserve"><value>NFO-Datenbank auswählen</value></data>
   <data name="SelectNfoDatabaseRequired" xml:space="preserve"><value>Du musst eine NFO-Datenbank auswählen.</value></data>
-  <data name="SelectReleaseFolder" xml:space="preserve"><value>Release-Ordner auswählen</value></data>
-  <data name="SelectReleaseFolderDescription" xml:space="preserve"><value>Wähle unten einen Ordner als Release-Wurzel.</value></data>
-  <data name="SelectReleaseType" xml:space="preserve"><value>Release-Typ auswählen</value></data>
-  <data name="SelectReleaseTypeRequired" xml:space="preserve"><value>Du musst einen Release-Typ auswählen</value></data>
+  <data name="SelectReleaseFolder" xml:space="preserve"><value>Releaseordner auswählen</value></data>
+  <data name="SelectReleaseFolderDescription" xml:space="preserve"><value>Wähle unten einen Ordner als Releasewurzel.</value></data>
+  <data name="SelectReleaseType" xml:space="preserve"><value>Releasetyp auswählen</value></data>
+  <data name="SelectReleaseTypeRequired" xml:space="preserve"><value>Du musst einen Releasetyp auswählen</value></data>
   <data name="Selected" xml:space="preserve"><value>Ausgewählt</value></data>
   <data name="ShowFileColumn" xml:space="preserve"><value>Datei anzeigen</value></data>
   <data name="ShowHiddenContent" xml:space="preserve"><value>Verborgenen Inhalt anzeigen</value></data>
@@ -484,11 +465,11 @@
     <data name="SizePerArchiveMb" xml:space="preserve"><value>Grösse pro Archiv (MB)</value></data>
   <data name="State" xml:space="preserve"><value>Status</value></data>
   <data name="Status" xml:space="preserve"><value>Status</value></data>
-    <data name="ToggleArchiveConfigDetails" xml:space="preserve"><value>Archiv-Konfigurationsdetails umschalten</value></data>
+    <data name="ToggleArchiveConfigDetails" xml:space="preserve"><value>Archivkonfigurationsdetails umschalten</value></data>
   <data name="ToggleConfigurationDetails" xml:space="preserve"><value>Konfigurationsdetails umschalten</value></data>
   <data name="TogglePasswordVisibility" xml:space="preserve"><value>Passwortsichtbarkeit umschalten</value></data>
-  <data name="ToggleUploadConfigDetails" xml:space="preserve"><value>Upload-Konfigurationsdetails umschalten</value></data>
-  <data name="ToggleUploadDetails" xml:space="preserve"><value>Upload-Details umschalten</value></data>
+  <data name="ToggleUploadConfigDetails" xml:space="preserve"><value>Uploadkonfigurationsdetails umschalten</value></data>
+  <data name="ToggleUploadDetails" xml:space="preserve"><value>Uploaddetails umschalten</value></data>
   <data name="ToggleVisibility" xml:space="preserve"><value>Sichtbarkeit umschalten</value></data>
   <data name="TotalConfigured" xml:space="preserve"><value>insgesamt konfiguriert</value></data>
   <data name="TotalReleases" xml:space="preserve"><value>Releases gesamt</value></data>
@@ -496,18 +477,17 @@
   <data name="TryLogin" xml:space="preserve"><value>Login testen</value></data>
   <data name="UnhandledError" xml:space="preserve"><value>Ein unbehandelter Fehler ist aufgetreten.</value></data>
   <data name="Upload" xml:space="preserve"><value>Upload</value></data>
-  <data name="UploadConfig" xml:space="preserve"><value>Upload-Konfig.</value></data>
-  <data name="UploadConfigDialogDescription" xml:space="preserve"><value>Lege fest, wohin Archive gehen, und verfolge verteilte Links.</value></data>
-  <data name="UploadConfigLinkCrypters" xml:space="preserve"><value>Upload-Konfigurations-Link-Crypter</value></data>
+  <data name="UploadConfig" xml:space="preserve"><value>Uploadkonfig.</value></data>
+  <data name="UploadConfigDialogDescription" xml:space="preserve"><value>Wähle den Hoster und die Archivkonfiguration für diesen Upload.</value></data>
+  <data name="UploadConfigLinkCrypters" xml:space="preserve"><value>Linkcrypter der Uploadkonfiguration</value></data>
     <data name="UploadConfigs" xml:space="preserve"><value>Upload Konfigs</value></data>
-  <data name="UploadConfigurations" xml:space="preserve"><value>Upload-Konfigurationen</value></data>
-  <data name="UploadConfigurationsDescription" xml:space="preserve"><value>Hoster-Ziele und Metadaten zur Linkverteilung.</value></data>
-  <data name="UploadFileStatus" xml:space="preserve"><value>Upload-Dateistatus</value></data>
+  <data name="UploadConfigurations" xml:space="preserve"><value>Uploadkonfigurationen</value></data>
+  <data name="UploadFileStatus" xml:space="preserve"><value>Uploaddateistatus</value></data>
   <data name="UploadLink" xml:space="preserve"><value>Uploadlink</value></data>
   <data name="UploadLinkResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Uploadlinks</value></data>
   <data name="UploadLinks" xml:space="preserve"><value>Uploadlinks</value></data>
   <data name="UploadLinksCopied" xml:space="preserve"><value>{0} Uploadlinks kopiert.</value></data>
-  <data name="UploadLinksDialogDescription" xml:space="preserve"><value>Links, die für Upload-Konfiguration {0} erzeugt wurden.</value></data>
+  <data name="UploadLinksDialogDescription" xml:space="preserve"><value>Links, die für Uploadkonfiguration {0} erzeugt wurden.</value></data>
   <data name="UploadedAt" xml:space="preserve"><value>Hochgeladen am</value></data>
   <data name="UploadsPerDay" xml:space="preserve"><value>Uploads pro Tag</value></data>
   <data name="UploadsPerDayByHoster" xml:space="preserve"><value>Abgeschlossene Uploads nach Hoster aufgeteilt.</value></data>
@@ -516,7 +496,7 @@
   <data name="UploadLinksTitle" xml:space="preserve"><value>Links für Upload #{0}</value></data>
   <data name="Uploads" xml:space="preserve"><value>Uploads</value></data>
   <data name="UploadResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Uploads</value></data>
-  <data name="ReleaseUploads" xml:space="preserve"><value>Release-Uploads</value></data>
+  <data name="ReleaseUploads" xml:space="preserve"><value>Releaseuploads</value></data>
   <data name="Url" xml:space="preserve"><value>URL</value></data>
   <data name="Urls" xml:space="preserve"><value>URLs</value></data>
   <data name="UploadState.Completed" xml:space="preserve"><value>Abgeschlossen</value></data>
@@ -526,9 +506,9 @@
   <data name="UploadState.WaitingForArchive" xml:space="preserve"><value>Wartet auf Archiv</value></data>
   <data name="UploadState.CancellationRequested" xml:space="preserve"><value>Abbruch angefragt</value></data>
   <data name="UploadState.Canceled" xml:space="preserve"><value>Abgebrochen</value></data>
-  <data name="UploadStatus" xml:space="preserve"><value>Upload-Status</value></data>
+  <data name="UploadStatus" xml:space="preserve"><value>Uploadstatus</value></data>
   <data name="UploadStatusSubtitle" xml:space="preserve"><value>Upload #{0} für {1}</value></data>
-  <data name="UploadTarget" xml:space="preserve"><value>Upload-Ziel</value></data>
+  <data name="UploadTarget" xml:space="preserve"><value>Uploadziel</value></data>
   <data name="UrlType.Imdb" xml:space="preserve"><value>IMDB</value></data>
   <data name="UrlType.Other" xml:space="preserve"><value>Andere</value></data>
   <data name="UrlType.Steam" xml:space="preserve"><value>Steam</value></data>
@@ -536,7 +516,7 @@
   <data name="CheckedAt" xml:space="preserve"><value>Geprüft am</value></data>
   <data name="Downloads" xml:space="preserve"><value>Downloads</value></data>
   <data name="IndividualDownloads" xml:space="preserve"><value>Einzeldownloads</value></data>
-  <data name="IndividualDownloadsHint" xml:space="preserve"><value>Summe aller Part-Downloadzahlen über alle Uploads dieser Konfiguration.</value></data>
+  <data name="IndividualDownloadsHint" xml:space="preserve"><value>Summe aller Downloadzahlen der Archivteile über alle Uploads dieser Konfiguration.</value></data>
   <data name="CompleteDownloads" xml:space="preserve"><value>Vollständige Downloads</value></data>
   <data name="CompleteDownloadsHint" xml:space="preserve"><value>Geschätzte Anzahl vollständiger Downloads: die Summe der durchschnittlichen Downloadzahl pro Upload.</value></data>
   <data name="ViewContainerLinks" xml:space="preserve"><value>Containerlinks anzeigen</value></data>
@@ -545,14 +525,13 @@
     <data name="Yes" xml:space="preserve"><value>Ja</value></data>
   <data name="Loading" xml:space="preserve"><value>Lädt</value></data>
   <data name="Message" xml:space="preserve"><value>Meldung</value></data>
-  <data name="NotificationDetails" xml:space="preserve"><value>Notification-Details</value></data>
-  <data name="NotificationDetailsSubtitle" xml:space="preserve"><value>Meldung und Bezug</value></data>
+  <data name="NotificationDetails" xml:space="preserve"><value>Notificationdetails</value></data>
   <data name="NotificationEntity.Archive" xml:space="preserve"><value>Archiv</value></data>
-  <data name="NotificationEntity.LinkCrypterContainer" xml:space="preserve"><value>Link-Crypter</value></data>
+  <data name="NotificationEntity.LinkCrypterContainer" xml:space="preserve"><value>Linkcrypter</value></data>
   <data name="NotificationEntity.Upload" xml:space="preserve"><value>Upload</value></data>
   <data name="NotificationResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Notifications</value></data>
   <data name="Notifications" xml:space="preserve"><value>Notifications</value></data>
-  <data name="NotificationsIntro" xml:space="preserve"><value>Ungelöste Meldungen aus Uploads, Archiven und Link-Cryptern.</value></data>
+  <data name="NotificationsIntro" xml:space="preserve"><value>Ungelöste Meldungen aus Uploads, Archiven und Linkcryptern.</value></data>
   <data name="NotificationSeverity.Error" xml:space="preserve"><value>Fehler</value></data>
   <data name="NotificationSeverity.Info" xml:space="preserve"><value>Info</value></data>
   <data name="NotificationSeverity.Warning" xml:space="preserve"><value>Warnung</value></data>
@@ -569,10 +548,9 @@
   <data name="ArchiveFolderRelocated" xml:space="preserve"><value>Archivordner aktualisiert.</value></data>
   <data name="ArchiveFolderReimported" xml:space="preserve"><value>Archivdateien neu eingelesen.</value></data>
   <data name="ReimportArchiveFolder" xml:space="preserve"><value>Archivdateien neu einlesen?</value></data>
-  <data name="ReimportArchiveFolderConfirmation" xml:space="preserve"><value>Der Ordner enthält einen anderen Satz an Archivdateien. Wenn du sie als neue Archiv-Version übernimmst, wird der Upload-Status dieses Archivs zurückgesetzt.</value></data>
+  <data name="ReimportArchiveFolderConfirmation" xml:space="preserve"><value>Der Ordner enthält einen anderen Satz an Archivdateien. Wenn du sie als neue Archivversion übernimmst, wird der Uploadstatus dieses Archivs zurückgesetzt.</value></data>
   <data name="Continue" xml:space="preserve"><value>Fortfahren</value></data>
   <data name="Unlinked" xml:space="preserve"><value>Nicht verknüpft</value></data>
-  <data name="UnresolvedNotifications" xml:space="preserve"><value>Ungelöste Notifications</value></data>
   <data name="UnresolvedNotificationsCount" xml:space="preserve"><value>{0} ungelöst</value></data>
   <data name="NoNotificationsFound" xml:space="preserve"><value>Keine Notifications gefunden</value></data>
   <data name="ShowResolvedNotifications" xml:space="preserve"><value>Erledigte anzeigen</value></data>
@@ -580,15 +558,15 @@
   <data name="ViewAllNotifications" xml:space="preserve"><value>Alle ungelösten anzeigen</value></data>
   <data name="AssignedReleases" xml:space="preserve"><value>Zugewiesene Releases</value></data>
   <data name="AutomaticReuploads" xml:space="preserve"><value>Automatische Reuploads</value></data>
-    <data name="AutomaticReuploadsHelp" xml:space="preserve"><value>Erstellt Ersatz-Uploads automatisch, wenn Links lange genug offline sind.</value></data>
+    <data name="AutomaticReuploadsHelp" xml:space="preserve"><value>Erstellt Ersatzuploads automatisch, wenn Links lange genug offline sind.</value></data>
   <data name="ChangeReleaseGroup" xml:space="preserve"><value>Gruppe ändern</value></data>
   <data name="CreateManualReupload" xml:space="preserve"><value>Manuellen Reupload erstellen</value></data>
   <data name="CheckOnlineStateNow" xml:space="preserve"><value>Onlinestatus jetzt prüfen</value></data>
   <data name="ResumeUpload" xml:space="preserve"><value>Upload wiederaufnehmen</value></data>
-  <data name="DeleteReleaseGroupConfirmation" xml:space="preserve"><value>Möchtest du die Release-Gruppe {0} wirklich löschen?</value></data>
+  <data name="DeleteReleaseGroupConfirmation" xml:space="preserve"><value>Möchtest du die Releasegruppe {0} wirklich löschen?</value></data>
   <data name="DeselectAll" xml:space="preserve"><value>Auswahl aufheben</value></data>
   <data name="Disabled" xml:space="preserve"><value>Deaktiviert</value></data>
-  <data name="EditReleaseDescription" xml:space="preserve"><value>Release-Name und Zuordnung bearbeiten.</value></data>
+  <data name="EditReleaseDescription" xml:space="preserve"><value>Releasename und Zuordnung bearbeiten.</value></data>
   <data name="Enabled" xml:space="preserve"><value>Aktiviert</value></data>
   <data name="AudioType" xml:space="preserve"><value>Audio</value></data>
   <data name="ExternalInfoType.Console" xml:space="preserve"><value>Konsole</value></data>
@@ -627,38 +605,36 @@
   <data name="SetUploadOfflineConfirmation" xml:space="preserve"><value>Upload #{0} und alle seine Links als offline markieren? So kannst du einen vollständigen Reupload auslösen.</value></data>
   <data name="UploadSetOffline" xml:space="preserve"><value>Upload #{0} und alle seine Links als offline markiert.</value></data>
   <data name="UploadSetOfflineNotAvailable" xml:space="preserve"><value>Upload #{0} kann nur offline gesetzt werden, solange er online oder teilweise online ist.</value></data>
-  <data name="UploadActions" xml:space="preserve"><value>Upload-Aktionen</value></data>
+  <data name="UploadActions" xml:space="preserve"><value>Uploadaktionen</value></data>
   <data name="UploadDeleted" xml:space="preserve"><value>Upload #{0} gelöscht.</value></data>
   <data name="UploadDeleteNotAvailable" xml:space="preserve"><value>Upload #{0} kann in seinem aktuellen Status nicht gelöscht werden.</value></data>
-  <data name="NewReleaseGroup" xml:space="preserve"><value>Neue Release-Gruppe</value></data>
-  <data name="NoReleaseGroupsFound" xml:space="preserve"><value>Keine Release-Gruppen gefunden</value></data>
+  <data name="NewReleaseGroup" xml:space="preserve"><value>Neue Releasegruppe</value></data>
+  <data name="NoReleaseGroupsFound" xml:space="preserve"><value>Keine Releasegruppen gefunden</value></data>
   <data name="NoReleasesSelected" xml:space="preserve"><value>Keine Releases ausgewählt</value></data>
-  <data name="OpenReleaseGroupActions" xml:space="preserve"><value>Release-Gruppen-Aktionen öffnen</value></data>
-  <data name="ReleaseGroup" xml:space="preserve"><value>Release-Gruppe</value></data>
-  <data name="ReleaseGroupChangedForReleases" xml:space="preserve"><value>Release-Gruppe für {0} Release(s) geändert.</value></data>
-  <data name="ReleaseGroupDeleteBlocked" xml:space="preserve"><value>Release-Gruppe {0} ist noch Releases zugewiesen.</value></data>
+  <data name="OpenReleaseGroupActions" xml:space="preserve"><value>Aktionen für Releasegruppen öffnen</value></data>
+  <data name="ReleaseGroup" xml:space="preserve"><value>Releasegruppe</value></data>
+  <data name="ReleaseGroupChangedForReleases" xml:space="preserve"><value>Releasegruppe für {0} Release(s) geändert.</value></data>
+  <data name="ReleaseGroupDeleteBlocked" xml:space="preserve"><value>Releasegruppe {0} ist noch Releases zugewiesen.</value></data>
   <data name="ReleaseGroupDialogDescription" xml:space="preserve"><value>Konfiguriere automatische Reuploads für zugewiesene Releases.</value></data>
-  <data name="ReleaseGroupNamePlaceholder" xml:space="preserve"><value>Release-Gruppe benennen</value></data>
-  <data name="ReleaseGroups" xml:space="preserve"><value>Release-Gruppen</value></data>
+  <data name="ReleaseGroupNamePlaceholder" xml:space="preserve"><value>Releasegruppe benennen</value></data>
+  <data name="ReleaseGroups" xml:space="preserve"><value>Releasegruppen</value></data>
   <data name="ReleaseGroupsIntro" xml:space="preserve"><value>Steuere, welche Releases automatische Reuploads erstellen und wann.</value></data>
-  <data name="ReleaseOverview" xml:space="preserve"><value>Release-Übersicht</value></data>
+  <data name="ReleaseOverview" xml:space="preserve"><value>Releaseübersicht</value></data>
   <data name="SelectReleaseGroup" xml:space="preserve"><value>Gruppe auswählen</value></data>
-  <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>Du musst eine Release-Gruppe auswählen</value></data>
+  <data name="SelectReleaseGroupRequired" xml:space="preserve"><value>Du musst eine Releasegruppe auswählen</value></data>
   <data name="SelectAll" xml:space="preserve"><value>Alle auswählen</value></data>
   <data name="SelectedReleaseCount" xml:space="preserve"><value>{0} Release(s) ausgewählt</value></data>
-    <data name="ApplicationConfigurationsIntro" xml:space="preserve"><value>Globale Einstellungen für App-Verhalten, für Releases und Hintergrundprozesse.</value></data>
-  <data name="ApplicationConfigurationsSubtitle" xml:space="preserve"><value>Defaults und User-Overrides</value></data>
   <data name="ArchiveCleanup" xml:space="preserve"><value>Automatisches Aufräumen</value></data>
   <data name="ArchiveCleanupDescription" xml:space="preserve"><value>Steuert, wann Releaseordner zum Löschen freigegeben und wann lokale Archivdateien gelöscht werden. Bearcat löscht den Releaseordner nie selbst.</value></data>
-  <data name="ArchiveRepackaging" xml:space="preserve"><value>Archiv-Repackaging</value></data>
+  <data name="ArchiveRepackaging" xml:space="preserve"><value>Archivrepackaging</value></data>
   <data name="ArchiveRepackagingDescription" xml:space="preserve"><value>Steuert, wie Archivdateien vor Reuploads verändert werden.</value></data>
-  <data name="ArchiveRepackagingStrategy" xml:space="preserve"><value>Repackaging-Strategie</value></data>
+  <data name="ArchiveRepackagingStrategy" xml:space="preserve"><value>Repackagingstrategie</value></data>
     <data name="ArchiveRepackagingStrategyDescription" xml:space="preserve"><value>Erlaubte Werte: NonceOnly, SolidCompression, IncrementArchiveFileSize. Der Default erhöht die Grösse pro Part bei jedem neuen Archiv um 1 MB.</value></data>
     <data name="ArchiveRepackagingStrategy.IncrementArchiveFileSize" xml:space="preserve"><value>Archivdateigrösse um 1 MB verändern</value></data>
   <data name="ArchiveRepackagingStrategy.NonceOnly" xml:space="preserve"><value>Nur Nonce, keine Kompression</value></data>
   <data name="ArchiveRepackagingStrategy.SolidCompression" xml:space="preserve"><value>Solid Archive mit Kompression</value></data>
   <data name="AutoConvertToUnmanaged" xml:space="preserve"><value>Releases automatisch in Unmanaged umwandeln</value></data>
-  <data name="AutoConvertToUnmanagedDescription" xml:space="preserve"><value>Wandelt ein managed Release nach Ablauf der Aufbewahrung in Unmanaged um und erstellt eine Benachrichtigung mit dem Pfad des Releaseordners. Bearcat löscht den Releaseordner nie selbst, du entscheidest, wann er verschwindet.</value></data>
+  <data name="AutoConvertToUnmanagedDescription" xml:space="preserve"><value>Wandelt ein Release nach Ablauf der Aufbewahrungsfrist in Unmanaged um und meldet den Pfad des Releaseordners. Bearcat löscht den Ordner nicht. Die Rohdateien kannst du anschließend selbst löschen.</value></data>
   <data name="ReleaseFolderRetentionDays" xml:space="preserve"><value>In Unmanaged umwandeln nach (Tagen)</value></data>
   <data name="ReleaseFolderRetentionDaysDescription" xml:space="preserve"><value>Tage seit dem Posten der Uploads eines Releases, oder seit dem ersten abgeschlossenen Upload, wenn es nie als gepostet markiert wurde.</value></data>
   <data name="AutoDeleteArchives" xml:space="preserve"><value>Lokale Archive automatisch löschen</value></data>
@@ -670,27 +646,27 @@
   <data name="InitialUploadDescription" xml:space="preserve"><value>Steuert, wann der erste Upload für ein neu erstelltes Release angelegt wird.</value></data>
   <data name="InitialUploadCooldownMinutes" xml:space="preserve"><value>Cooldown für initiale Uploads (Minuten)</value></data>
     <data name="InitialUploadCooldownMinutesDescription" xml:space="preserve"><value>So viele Minuten nach dem Erstellen des Releases warten, bevor der erste Upload gestartet wird.</value></data>
-  <data name="FolderAutomation" xml:space="preserve"><value>Ordner-Automation</value></data>
+  <data name="FolderAutomation" xml:space="preserve"><value>Ordnerautomation</value></data>
   <data name="FolderAutomationDescription" xml:space="preserve"><value>Steuert, wie überwachte Ordner automatisch in Releases umgewandelt werden.</value></data>
   <data name="FolderAutomationStabilityMinutes" xml:space="preserve"><value>Ordner Stabilität (Minuten)</value></data>
   <data name="FolderAutomationStabilityMinutesDescription" xml:space="preserve"><value>Ein überwachter Ordner wird erst dann in ein Release umgewandelt, wenn sich Dateianzahl und Gesamtgrösse mindestens so viele Minuten lang nicht mehr verändert haben. So werden keine Releases erstellt, während noch Dateien in den Ordner kopiert werden.</value></data>
   <data name="FolderAutomationMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimale Ordnergrösse (MB)</value></data>
-  <data name="FolderAutomationMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Überwachte Ordner, die kleiner sind, werden ignoriert und nicht in Releases umgewandelt. So werden leere oder fast leere Ordner übersprungen. 0 zum Deaktivieren.</value></data>
-  <data name="UploadConcurrency" xml:space="preserve"><value>Upload-Parallelität</value></data>
-  <data name="UploadConcurrencyDescription" xml:space="preserve"><value>Steuert, wie viele Datei-Uploads über alle Hoster hinweg gleichzeitig laufen.</value></data>
+  <data name="FolderAutomationMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Überwachte Ordner unter dieser Größe werden ignoriert. Mit 0 deaktivierst du die Größenprüfung.</value></data>
+  <data name="UploadConcurrency" xml:space="preserve"><value>Uploadparallelität</value></data>
+  <data name="UploadConcurrencyDescription" xml:space="preserve"><value>Steuert, wie viele Dateiuploads über alle Hoster hinweg gleichzeitig laufen.</value></data>
   <data name="MaxParallelUploads" xml:space="preserve"><value>Maximale parallele Uploads</value></data>
-  <data name="MaxParallelUploadsDescription" xml:space="preserve"><value>Das globale Limit gleichzeitig laufender Datei-Uploads über alle Hoster hinweg.</value></data>
+  <data name="MaxParallelUploadsDescription" xml:space="preserve"><value>Das globale Limit gleichzeitig laufender Dateiuploads über alle Hoster hinweg.</value></data>
   <data name="MaxParallelUploadsOverride" xml:space="preserve"><value>Maximale parallele Uploads</value></data>
-  <data name="MaxParallelUploadsOverridePlaceholder" xml:space="preserve"><value>Hoster-Standard</value></data>
-  <data name="MaxParallelUploadsOverrideHelp" xml:space="preserve"><value>Überschreibt das angenommene Limit paralleler Uploads für diesen Hoster. Leer lassen, um den Hoster-Standard ({0}) zu verwenden.</value></data>
+  <data name="MaxParallelUploadsOverridePlaceholder" xml:space="preserve"><value>Hosterstandard</value></data>
+  <data name="MaxParallelUploadsOverrideHelp" xml:space="preserve"><value>Überschreibt das angenommene Limit paralleler Uploads für diesen Hoster. Leer lassen, um den Hosterstandard ({0}) zu verwenden.</value></data>
   <data name="HoursUntilReuploadOverride" xml:space="preserve"><value>Stunden bis Reupload (Override)</value></data>
   <data name="HoursUntilReuploadOverridePlaceholder" xml:space="preserve"><value>Releasegruppen Standard</value></data>
   <data name="HoursUntilReuploadOverrideHelp" xml:space="preserve"><value>Überschreibt die auf der Releasegruppe konfigurierten Stunden bis Reupload für diesen Hoster. Leer lassen, um die Einstellung der Releasegruppe zu verwenden.</value></data>
   <data name="ReuploadTriggerOverride" xml:space="preserve"><value>Reupload Auslöser (Override)</value></data>
   <data name="ReuploadTriggerOverridePlaceholder" xml:space="preserve"><value>Releasegruppen Standard</value></data>
-  <data name="ReuploadTriggerOverrideHelp" xml:space="preserve"><value>Legt fest, welcher Offline-Status für diesen Hoster einen Reupload auslöst. Leer lassen, um das Verhalten der Releasegruppe zu verwenden (teilweise oder komplett offline).</value></data>
+  <data name="ReuploadTriggerOverrideHelp" xml:space="preserve"><value>Legt fest, welcher Offlinestatus für diesen Hoster einen Reupload auslöst. Leer lassen, um das Verhalten der Releasegruppe zu verwenden (teilweise oder komplett offline).</value></data>
   <data name="AlwaysReuploadAllFiles" xml:space="preserve"><value>Immer alle Dateien neu hochladen</value></data>
-  <data name="AlwaysReuploadAllFilesHelp" xml:space="preserve"><value>Wenn für diesen Hoster ein Reupload läuft, werden alle Dateien erneut hochgeladen statt nur der offline gegangenen. Nützlich für Hoster, die Dateien nach einer Zeit ohne Downloads löschen, damit alle Dateien auf einen Schlag wieder eine frische Lebenszeit erhalten.</value></data>
+  <data name="AlwaysReuploadAllFilesHelp" xml:space="preserve"><value>Lädt alle Dateien erneut hoch, auch die noch verfügbaren. Bei Hostern, die inaktive Dateien löschen, beginnt damit die Aufbewahrungsfrist für alle Dateien gleichzeitig neu.</value></data>
   <data name="AlwaysReuploadAllFilesShort" xml:space="preserve"><value>Volle Reuploads</value></data>
   <data name="ReuploadTrigger.PartiallyOrFullyOffline" xml:space="preserve"><value>Teilweise oder komplett offline</value></data>
   <data name="ReuploadTrigger.OnlyWhenFullyOffline" xml:space="preserve"><value>Erst wenn komplett offline</value></data>
@@ -700,80 +676,74 @@
   <data name="DefaultValue" xml:space="preserve"><value>Default</value></data>
   <data name="Override" xml:space="preserve"><value>Override</value></data>
   <data name="Reupload" xml:space="preserve"><value>Reupload</value></data>
-  <data name="ReuploadFollowsReleaseGroup" xml:space="preserve"><value>Release-Gruppen-Standard</value></data>
+  <data name="ReuploadFollowsReleaseGroup" xml:space="preserve"><value>Standard der Releasegruppe</value></data>
   <data name="HoursShort" xml:space="preserve"><value>{0} h</value></data>
   <data name="ResetToDefault" xml:space="preserve"><value>Auf Default zurücksetzen</value></data>
-  <data name="AddLinkCrypter" xml:space="preserve"><value>Link-Crypter hinzufügen</value></data>
-  <data name="ArchiveConfigName" xml:space="preserve"><value>Archiv-Konfigurationsname</value></data>
-  <data name="ArchiveConfigNamePlaceholder" xml:space="preserve"><value>Anzeigename für diese Archiv-Konfiguration</value></data>
-    <data name="ArchiveConfigTemplateDialogDescription" xml:space="preserve"><value>Lege Archiver, Archiv-Zielordner, Passwort und Archivnamen-Verhalten fest</value></data>
-  <data name="ArchiveConfigTemplatesDescription" xml:space="preserve"><value>Archiv-Einstellungen, die beim Erstellen eines Releases aus diesem Template kopiert werden.</value></data>
+  <data name="AddLinkCrypter" xml:space="preserve"><value>Linkcrypter hinzufügen</value></data>
+  <data name="ArchiveConfigName" xml:space="preserve"><value>Archivkonfigurationsname</value></data>
+  <data name="ArchiveConfigNamePlaceholder" xml:space="preserve"><value>Anzeigename für diese Archivkonfiguration</value></data>
+    <data name="ArchiveConfigTemplateDialogDescription" xml:space="preserve"><value>Lege Archiver, Archivzielordner, Passwort und Benennung der Archive fest</value></data>
   <data name="ArchiveNamePreview" xml:space="preserve"><value>Archivname:</value></data>
-  <data name="CreateArchiveConfigTemplateFirst" xml:space="preserve"><value>Erstelle zuerst ein Archiv-Konfigurationstemplate.</value></data>
+  <data name="CreateArchiveConfigTemplateFirst" xml:space="preserve"><value>Erstelle zuerst ein Archivkonfigurationstemplate.</value></data>
   <data name="CreateReleaseFromTemplate" xml:space="preserve"><value>Release aus Template erstellen</value></data>
-  <data name="CreateReleaseFromTemplateDescription" xml:space="preserve"><value>Wähle ein Template und einen Release-Ordner. Der Release-Name wird standardmässig aus dem Ordnernamen gesetzt.</value></data>
-  <data name="DeleteArchiveConfigTemplateConfirmation" xml:space="preserve"><value>Archiv-Konfigurationstemplate {0} löschen? Verwendende Upload-Konfigurationstemplates werden ebenfalls entfernt.</value></data>
-  <data name="DeleteLinkCrypterTemplateConfirmation" xml:space="preserve"><value>Link-Crypter-Template {0} löschen?</value></data>
-  <data name="DeleteReleaseTemplateConfirmation" xml:space="preserve"><value>Release-Template {0} löschen?</value></data>
-  <data name="DeleteUploadConfigTemplateConfirmation" xml:space="preserve"><value>Upload-Konfigurationstemplate {0} löschen?</value></data>
+  <data name="CreateReleaseFromTemplateDescription" xml:space="preserve"><value>Wähle ein Template und einen Releaseordner. Der Releasename wird standardmässig aus dem Ordnernamen gesetzt.</value></data>
+  <data name="DeleteArchiveConfigTemplateConfirmation" xml:space="preserve"><value>Archivkonfigurationstemplate {0} löschen? Verwendende Uploadkonfigurationstemplates werden ebenfalls entfernt.</value></data>
+  <data name="DeleteLinkCrypterTemplateConfirmation" xml:space="preserve"><value>Linkcryptertemplate {0} löschen?</value></data>
+  <data name="DeleteReleaseTemplateConfirmation" xml:space="preserve"><value>Releasetemplate {0} löschen?</value></data>
+  <data name="DeleteUploadConfigTemplateConfirmation" xml:space="preserve"><value>Uploadkonfigurationstemplate {0} löschen?</value></data>
   <data name="LinkCrypterTemplateDialogDescription" xml:space="preserve"><value>Wähle, wo Bearcat Container erstellt und welche Einstellungen in Releases kopiert werden.</value></data>
   <data name="NewFromTemplate" xml:space="preserve"><value>Neu aus Template</value></data>
-  <data name="NewReleaseTemplate" xml:space="preserve"><value>Neues Release-Template</value></data>
-  <data name="NoArchiveConfigTemplatesYet" xml:space="preserve"><value>Noch keine Archiv-Konfigurationstemplates.</value></data>
-  <data name="NoLinkCryptersYet" xml:space="preserve"><value>Noch keine Link-Crypter.</value></data>
-  <data name="NoReleaseTemplatesFound" xml:space="preserve"><value>Keine Release-Templates gefunden</value></data>
-  <data name="NoUploadConfigTemplatesYet" xml:space="preserve"><value>Noch keine Upload-Konfigurationstemplates.</value></data>
-  <data name="OpenReleaseTemplateActions" xml:space="preserve"><value>Release-Template-Aktionen öffnen</value></data>
+  <data name="NewReleaseTemplate" xml:space="preserve"><value>Neues Releasetemplate</value></data>
+  <data name="NoArchiveConfigTemplatesYet" xml:space="preserve"><value>Noch keine Archivkonfigurationstemplates.</value></data>
+  <data name="NoLinkCryptersYet" xml:space="preserve"><value>Noch keine Linkcrypter.</value></data>
+  <data name="NoReleaseTemplatesFound" xml:space="preserve"><value>Keine Releasetemplates gefunden</value></data>
+  <data name="NoUploadConfigTemplatesYet" xml:space="preserve"><value>Noch keine Uploadkonfigurationstemplates.</value></data>
+  <data name="OpenReleaseTemplateActions" xml:space="preserve"><value>Aktionen für Releasetemplates öffnen</value></data>
   <data name="PasswordProtected" xml:space="preserve"><value>Passwortgeschützt</value></data>
     <data name="ReleaseName" xml:space="preserve"><value>Release Name</value></data>
-  <data name="ReleaseTemplate" xml:space="preserve"><value>Release-Template</value></data>
-  <data name="ReleaseTemplateDialogDescription" xml:space="preserve"><value>Lege Template-Name, Release-Typ und Release-Gruppe fest.</value></data>
-  <data name="ReleaseTemplateNamePlaceholder" xml:space="preserve"><value>Release-Template benennen</value></data>
-  <data name="ReleaseTemplates" xml:space="preserve"><value>Release-Templates</value></data>
-  <data name="ReleaseTemplatesIntro" xml:space="preserve"><value>Wiederverwendbares Release-Setup für Archiv-, Upload- und Link-Crypter-Konfigurationen.</value></data>
-  <data name="ReleaseTemplatesSubtitle" xml:space="preserve"><value>Wiederverwendbares Release-Setup</value></data>
+  <data name="ReleaseTemplate" xml:space="preserve"><value>Releasetemplate</value></data>
+  <data name="ReleaseTemplateDialogDescription" xml:space="preserve"><value>Lege Templatename, Releasetyp und Releasegruppe fest.</value></data>
+  <data name="ReleaseTemplateNamePlaceholder" xml:space="preserve"><value>Releasetemplate benennen</value></data>
+  <data name="ReleaseTemplates" xml:space="preserve"><value>Releasetemplates</value></data>
+  <data name="ReleaseTemplatesIntro" xml:space="preserve"><value>Wiederverwendbares Releasesetup für Archiv-, Upload- und Linkcrypterkonfigurationen.</value></data>
   <data name="SaveAsTemplate" xml:space="preserve"><value>Als Template speichern</value></data>
-  <data name="SaveAsTemplateDescription" xml:space="preserve"><value>Erstellt ein Release-Template aus der aktuellen Archiv-, Upload- und Link-Crypter-Konfiguration dieses Releases.</value></data>
-  <data name="SelectArchiveConfigurationRequired" xml:space="preserve"><value>Du musst eine Archiv-Konfiguration auswählen.</value></data>
-  <data name="SelectHosterRegistrationRequired" xml:space="preserve"><value>Du musst eine Hoster-Registrierung auswählen.</value></data>
-  <data name="SelectReleaseTemplate" xml:space="preserve"><value>Release-Template auswählen</value></data>
-  <data name="SelectReleaseTemplateRequired" xml:space="preserve"><value>Du musst ein Release-Template auswählen.</value></data>
-  <data name="UploadConfigTemplateNameHelp" xml:space="preserve"><value>Leer lassen, um den Namen der Hoster-Registrierung zu verwenden.</value></data>
-    <data name="UploadConfigTemplateDialogDescription" xml:space="preserve"><value>Lege Hoster, Archiv-Konfiguration, Linkverteilung und Link-Crypter fest</value></data>
-    <data name="UploadConfigTemplatesDescription" xml:space="preserve"><value>Upload-Einstellungen, die verwendet werden</value></data>
-  <data name="UseHosterNamePlaceholder" xml:space="preserve"><value>Hoster-Namen verwenden</value></data>
-  <data name="UseReleaseNameAsArchiveName" xml:space="preserve"><value>Release-Name als Archivname verwenden</value></data>
+  <data name="SaveAsTemplateDescription" xml:space="preserve"><value>Erstellt ein Releasetemplate aus der aktuellen Archiv-, Upload- und Linkcrypterkonfiguration dieses Releases.</value></data>
+  <data name="SelectArchiveConfigurationRequired" xml:space="preserve"><value>Du musst eine Archivkonfiguration auswählen.</value></data>
+  <data name="SelectHosterRegistrationRequired" xml:space="preserve"><value>Du musst eine Hosterregistrierung auswählen.</value></data>
+  <data name="SelectReleaseTemplate" xml:space="preserve"><value>Releasetemplate auswählen</value></data>
+  <data name="SelectReleaseTemplateRequired" xml:space="preserve"><value>Du musst ein Releasetemplate auswählen.</value></data>
+  <data name="UploadConfigTemplateNameHelp" xml:space="preserve"><value>Leer lassen, um den Namen der Hosterregistrierung zu verwenden.</value></data>
+    <data name="UploadConfigTemplateDialogDescription" xml:space="preserve"><value>Wähle den Hoster und die Archiveinstellungen für Releases aus dieser Vorlage.</value></data>
+  <data name="UseHosterNamePlaceholder" xml:space="preserve"><value>Hosternamen verwenden</value></data>
+  <data name="UseReleaseNameAsArchiveName" xml:space="preserve"><value>Releasename als Archivname verwenden</value></data>
   <data name="AllFolders" xml:space="preserve"><value>Alle Ordner</value></data>
-  <data name="DeleteReleaseFolderAutomation" xml:space="preserve"><value>Release-Ordner-Automatisierung löschen</value></data>
+  <data name="DeleteReleaseFolderAutomation" xml:space="preserve"><value>Releaseordnerautomatisierung löschen</value></data>
   <data name="DeleteReleaseFolderAutomationConfirmation" xml:space="preserve"><value>Automatisierung für {0} löschen?</value></data>
-  <data name="EditReleaseFolderAutomation" xml:space="preserve"><value>Release-Ordner-Automatisierung bearbeiten</value></data>
-  <data name="FolderNamePattern" xml:space="preserve"><value>Ordnernamen-Pattern</value></data>
+  <data name="EditReleaseFolderAutomation" xml:space="preserve"><value>Releaseordnerautomatisierung bearbeiten</value></data>
+  <data name="FolderNamePattern" xml:space="preserve"><value>Muster für Ordnernamen</value></data>
   <data name="FolderNamePatternHelp" xml:space="preserve"><value>Nutze einfache Wildcards wie *1080p*. Regex wird nicht unterstützt.</value></data>
   <data name="FolderNamePatternPlaceholder" xml:space="preserve"><value>*1080p*</value></data>
-  <data name="NewReleaseFolderAutomation" xml:space="preserve"><value>Neue Ordner-Automatisierung</value></data>
-  <data name="NoReleaseFolderAutomationsFound" xml:space="preserve"><value>Keine Release-Ordner-Automatisierungen gefunden</value></data>
-  <data name="OpenReleaseFolderAutomationActions" xml:space="preserve"><value>Release-Ordner-Automatisierungsaktionen öffnen</value></data>
-  <data name="ReleaseBasePath" xml:space="preserve"><value>Release-Basispfad</value></data>
+  <data name="NewReleaseFolderAutomation" xml:space="preserve"><value>Neue Ordnerautomatisierung</value></data>
+  <data name="NoReleaseFolderAutomationsFound" xml:space="preserve"><value>Keine Releaseordnerautomatisierungen gefunden</value></data>
+  <data name="OpenReleaseFolderAutomationActions" xml:space="preserve"><value>Aktionen für Releaseordnerautomatisierungen öffnen</value></data>
+  <data name="ReleaseBasePath" xml:space="preserve"><value>Releasebasispfad</value></data>
     <data name="ReleaseFolderAutomationDialogDescription" xml:space="preserve"><value>Scannt direkte Unterordner eines Pfads und erstellt Releases aus einem gewählten Template.</value></data>
-  <data name="ReleaseFolderAutomations" xml:space="preserve"><value>Ordner-Automatisierungen</value></data>
+  <data name="ReleaseFolderAutomations" xml:space="preserve"><value>Ordnerautomatisierungen</value></data>
   <data name="ReleaseFolderAutomationsIntro" xml:space="preserve"><value>Erstellt Releases automatisch aus passenden direkten Unterordnern.</value></data>
-  <data name="ReleaseFolderAutomationsSubtitle" xml:space="preserve"><value>Automatische Release-Erstellung</value></data>
   <data name="Registrations" xml:space="preserve"><value>Registrierungen</value></data>
-  <data name="SelectReleaseBaseFolder" xml:space="preserve"><value>Release-Basisordner auswählen</value></data>
+  <data name="SelectReleaseBaseFolder" xml:space="preserve"><value>Releasebasisordner auswählen</value></data>
   <data name="SelectReleaseBaseFolderDescription" xml:space="preserve"><value>Wähle den Ordner, dessen direkte Unterordner gescannt werden sollen.</value></data>
   <data name="Settings" xml:space="preserve"><value>Einstellungen</value></data>
   <data name="BackgroundTaskDisabled" xml:space="preserve"><value>{0} deaktiviert</value></data>
   <data name="BackgroundTaskEnabled" xml:space="preserve"><value>{0} aktiviert</value></data>
-  <data name="BackgroundTasks" xml:space="preserve"><value>Background-Tasks</value></data>
-    <data name="BackgroundTasksIntro" xml:space="preserve"><value>Hintergrundtasks, letzte Ausführungszeiten und Status</value></data>
-    <data name="BackgroundTasksSubtitle" xml:space="preserve"><value>Task Ausführungsstatus</value></data>
+  <data name="BackgroundTasks" xml:space="preserve"><value>Hintergrundaufgaben</value></data>
   <data name="Duration" xml:space="preserve"><value>Dauer</value></data>
   <data name="Error" xml:space="preserve"><value>Fehler</value></data>
   <data name="Errors" xml:space="preserve"><value>Fehler</value></data>
   <data name="Finished" xml:space="preserve"><value>Ende</value></data>
   <data name="LastError" xml:space="preserve"><value>Letzter Fehler</value></data>
   <data name="NeverRun" xml:space="preserve"><value>Noch nie gelaufen</value></data>
-  <data name="NoBackgroundTasks" xml:space="preserve"><value>Noch keine Background-Tasks registriert</value></data>
+  <data name="NoBackgroundTasks" xml:space="preserve"><value>Noch keine Hintergrundaufgaben registriert</value></data>
   <data name="Running" xml:space="preserve"><value>Läuft</value></data>
   <data name="SetBackgroundTaskActiveState" xml:space="preserve"><value>Aktivierungsstatus für {0} setzen</value></data>
   <data name="Interval" xml:space="preserve"><value>Intervall</value></data>
@@ -799,114 +769,107 @@
   </data>
   <data name="AvailableVariables" xml:space="preserve"><value>Verfügbare Variablen</value></data>
   <data name="CopyForumPost" xml:space="preserve"><value>Forenpost kopieren</value></data>
-  <data name="DeleteForumPostTemplateConfirmation" xml:space="preserve"><value>Möchtest du die Forenpost-Vorlage {0} wirklich löschen?</value></data>
-  <data name="ForumPostTemplate" xml:space="preserve"><value>Forenpost-Vorlage</value></data>
+  <data name="DeleteForumPostTemplateConfirmation" xml:space="preserve"><value>Möchtest du die Forenpostvorlage {0} wirklich löschen?</value></data>
+  <data name="ForumPostTemplate" xml:space="preserve"><value>Forenpostvorlage</value></data>
   <data name="ForumPostTemplateBodyPlaceholder" xml:space="preserve"><value>BBCode mit {{ release.name }} Variablen schreiben</value></data>
-  <data name="ForumPostTemplateNamePlaceholder" xml:space="preserve"><value>Namen für diese Forenpost-Vorlage eingeben</value></data>
-  <data name="ForumPostTemplates" xml:space="preserve"><value>Forenpost-Vorlagen</value></data>
-    <data name="ForumPostTemplatesIntro" xml:space="preserve"><value>Verwalte zB BBCode-Vorlagen zum Posten fertiger Releases.</value></data>
-    <data name="ForumPostTemplatesSubtitle" xml:space="preserve"><value>BBCode-Vorlagen mit dynamischem Inhalt</value></data>
-  <data name="NewForumPostTemplate" xml:space="preserve"><value>Neue Forenpost-Vorlage</value></data>
-  <data name="NoForumPostTemplatesFound" xml:space="preserve"><value>Keine Forenpost-Vorlagen gefunden.</value></data>
+  <data name="ForumPostTemplateNamePlaceholder" xml:space="preserve"><value>Namen für diese Forenpostvorlage eingeben</value></data>
+  <data name="ForumPostTemplates" xml:space="preserve"><value>Forenpostvorlagen</value></data>
+  <data name="NewForumPostTemplate" xml:space="preserve"><value>Neue Forenpostvorlage</value></data>
+  <data name="NoForumPostTemplatesFound" xml:space="preserve"><value>Keine Forenpostvorlagen gefunden.</value></data>
   <data name="NoVariablesFound" xml:space="preserve"><value>Keine Variablen gefunden.</value></data>
   <data name="Render" xml:space="preserve"><value>Rendern</value></data>
   <data name="RenderedForumPost" xml:space="preserve"><value>Gerenderter Forenpost</value></data>
   <data name="RenderForumPost" xml:space="preserve"><value>Forenpost rendern</value></data>
-  <data name="RenderForumPostDescription" xml:space="preserve"><value>Rendere dieses Release mit einer Forenpost-Vorlage.</value></data>
+  <data name="RenderForumPostDescription" xml:space="preserve"><value>Rendere dieses Release mit einer Forenpostvorlage.</value></data>
   <data name="RenderForumPostForRelease" xml:space="preserve"><value>Forenpost für {0} rendern</value></data>
   <data name="RenderForumPostForCollection" xml:space="preserve"><value>Forenpost für {0} rendern</value></data>
   <data name="ForumPostTemplateType" xml:space="preserve"><value>Typ</value></data>
   <data name="ForumPostTemplateTypeRelease" xml:space="preserve"><value>Release</value></data>
-  <data name="ForumPostTemplateTypeReleaseCollection" xml:space="preserve"><value>Release-Collection</value></data>
+  <data name="ForumPostTemplateTypeReleaseCollection" xml:space="preserve"><value>Releasecollection</value></data>
   <data name="SearchVariables" xml:space="preserve"><value>Variablen suchen</value></data>
-  <data name="SelectForumPostTemplate" xml:space="preserve"><value>Forenpost-Vorlage auswählen</value></data>
+  <data name="SelectForumPostTemplate" xml:space="preserve"><value>Forenpostvorlage auswählen</value></data>
   <data name="Template" xml:space="preserve"><value>Vorlage</value></data>
   <data name="Templates" xml:space="preserve"><value>Vorlagen</value></data>
-  <data name="TemplateSyntaxValid" xml:space="preserve"><value>Template-Syntax ist gültig.</value></data>
+  <data name="TemplateSyntaxValid" xml:space="preserve"><value>Templatesyntax ist gültig.</value></data>
   <data name="ToggleTemplates" xml:space="preserve"><value>Vorlagen ein- oder ausklappen</value></data>
   <data name="ToggleVariables" xml:space="preserve"><value>Variablen ein- oder ausklappen</value></data>
   <data name="Validate" xml:space="preserve"><value>Prüfen</value></data>
-  <data name="CaptchaCode" xml:space="preserve"><value>Captcha-Code</value></data>
+  <data name="CaptchaCode" xml:space="preserve"><value>Captchacode</value></data>
   <data name="CaptchaRequired" xml:space="preserve"><value>Captcha nötig</value></data>
-  <data name="OpenCaptchaPage" xml:space="preserve"><value>Captcha-Seite öffnen</value></data>
+  <data name="OpenCaptchaPage" xml:space="preserve"><value>Captchaseite öffnen</value></data>
   <data name="RequestChallenge" xml:space="preserve"><value>Challenge holen</value></data>
   <data name="RequestingChallenge" xml:space="preserve"><value>Challenge wird geholt...</value></data>
   <data name="SolveCaptcha" xml:space="preserve"><value>Captcha lösen</value></data>
   <data name="SolveCaptchaShort" xml:space="preserve"><value>Captcha</value></data>
   <data name="Unlock" xml:space="preserve"><value>Freischalten</value></data>
   <data name="PremiumOnlyDownload" xml:space="preserve"><value>Premium only</value></data>
-  <data name="PremiumOnlyDownloadHelp" xml:space="preserve"><value>Nur Premium-Benutzer können Dateien herunterladen, die mit dieser Konfiguration hochgeladen wurden.</value></data>
+  <data name="PremiumOnlyDownloadHelp" xml:space="preserve"><value>Nur Premiumbenutzer können Dateien herunterladen, die mit dieser Konfiguration hochgeladen wurden.</value></data>
   <data name="VerifyingCaptcha" xml:space="preserve"><value>Prüfe...</value></data>
-  <data name="AllReleaseGroups" xml:space="preserve"><value>Alle Release-Gruppen</value></data>
+  <data name="AllReleaseGroups" xml:space="preserve"><value>Alle Releasegruppen</value></data>
   <data name="Back" xml:space="preserve"><value>Zurück</value></data>
   <data name="CollectionUploadGroupName" xml:space="preserve"><value>Gruppenname</value></data>
   <data name="CollectionUploadGroupNameRequired" xml:space="preserve"><value>Der Gruppenname ist erforderlich.</value></data>
-  <data name="CollectionContainer" xml:space="preserve"><value>Collection-Container</value></data>
-  <data name="CollectionUploadSlot" xml:space="preserve"><value>Collection-Container</value></data>
+  <data name="CollectionContainer" xml:space="preserve"><value>Collectioncontainer</value></data>
+  <data name="CollectionUploadSlot" xml:space="preserve"><value>Collectioncontainer</value></data>
   <data name="CollectionUploadSlotExpectedArchivePasswordRequired" xml:space="preserve"><value>Das erwartete Archivpasswort ist für diese Passwortregel nötig.</value></data>
-  <data name="CollectionUploadSlotHelp" xml:space="preserve"><value>Teilt passende Uploads aus derselben Release-Collection.</value></data>
-  <data name="CollectionUploadSlotKeyAlreadyExists" xml:space="preserve"><value>In dieser Collection gibt es bereits einen Upload-Slot mit diesem Namen.</value></data>
-  <data name="CollectionUploadSlotKeyCouldNotBeDerived" xml:space="preserve"><value>Der Slot-Name muss mindestens einen Buchstaben oder eine Zahl enthalten.</value></data>
-  <data name="CollectionUploadSlotKey" xml:space="preserve"><value>Slot-Key</value></data>
+  <data name="CollectionUploadSlotHelp" xml:space="preserve"><value>Teilt passende Uploads aus derselben Releasecollection.</value></data>
+  <data name="CollectionUploadSlotKeyAlreadyExists" xml:space="preserve"><value>In dieser Collection gibt es bereits einen Uploadslot mit diesem Namen.</value></data>
+  <data name="CollectionUploadSlotKeyCouldNotBeDerived" xml:space="preserve"><value>Der Slotname muss mindestens einen Buchstaben oder eine Zahl enthalten.</value></data>
+  <data name="CollectionUploadSlotKey" xml:space="preserve"><value>Slotkey</value></data>
   <data name="CollectionUploadSlotArchiveConfigHelp" xml:space="preserve"><value>Wähle, welche Archive hochgeladen werden sollen.</value></data>
-  <data name="CollectionUploadSlotName" xml:space="preserve"><value>Name der Upload-Gruppe</value></data>
+  <data name="CollectionUploadSlotName" xml:space="preserve"><value>Name der Uploadgruppe</value></data>
     <data name="CollectionUploadSlotNamePlaceholder" xml:space="preserve"><value>zB der Hostername</value></data>
   <data name="CollectionUploadSlotRequired" xml:space="preserve"><value>Bei jedem Release erwartet</value></data>
-  <data name="CollectionUploadSlots" xml:space="preserve"><value>Upload-Slots</value></data>
-  <data name="CollectionUploadSlotsDescription" xml:space="preserve"><value>Upload-Gruppen, die Links aus mehreren Releases in gemeinsamen Containern sammeln können.</value></data>
+  <data name="CollectionUploadSlots" xml:space="preserve"><value>Uploadslots</value></data>
+  <data name="CollectionUploadSlotsDescription" xml:space="preserve"><value>Verwende dieselben Uploadeinstellungen für mehrere Releases und sammle ihre Links in gemeinsamen Containern.</value></data>
   <data name="CollectionUploadSlotPasswordPolicy.Ignore" xml:space="preserve"><value>Ignorieren</value></data>
   <data name="CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue" xml:space="preserve"><value>Muss erwartetem Wert entsprechen</value></data>
   <data name="CollectionUploadSlotPasswordPolicy.MustMatchAcrossReleases" xml:space="preserve"><value>Muss über Releases übereinstimmen</value></data>
   <data name="ContainerScope" xml:space="preserve"><value>Container erstellen für</value></data>
   <data name="ExpectedArchivePassword" xml:space="preserve"><value>Erwartetes Archivpasswort</value></data>
   <data name="LinkCrypterContainerScope.Release" xml:space="preserve"><value>Jedes Release einzeln</value></data>
-  <data name="LinkCrypterContainerScope.ReleaseCollection" xml:space="preserve"><value>Die ganze Release-Collection</value></data>
-  <data name="NoReleaseCollectionsFound" xml:space="preserve"><value>Keine Release-Collections gefunden</value></data>
-  <data name="NoCollectionUploadSlotsFound" xml:space="preserve"><value>Keine Upload-Slots gefunden</value></data>
-  <data name="CreateCollectionUploadSlotDialogDescription" xml:space="preserve"><value>Erstellt pro Release eine neue Upload-Konfiguration mit dem gewählten Hoster.</value></data>
-  <data name="DeleteCollectionUploadSlot" xml:space="preserve"><value>Upload-Slot löschen</value></data>
-  <data name="DeleteCollectionUploadSlotConfirmation" xml:space="preserve"><value>Upload-Slot {0} löschen? Dadurch werden {1} Upload-Konfigurationen, {2} Uploads und {3} erzeugte Containerlinks aus der Datenbank entfernt.</value></data>
-  <data name="NewCollectionUploadSlot" xml:space="preserve"><value>Neuer Upload-Slot</value></data>
-  <data name="OpenReleaseCollectionActions" xml:space="preserve"><value>Release-Collection-Aktionen öffnen</value></data>
+  <data name="LinkCrypterContainerScope.ReleaseCollection" xml:space="preserve"><value>Die ganze Releasecollection</value></data>
+  <data name="NoReleaseCollectionsFound" xml:space="preserve"><value>Keine Releasecollections gefunden</value></data>
+  <data name="NoCollectionUploadSlotsFound" xml:space="preserve"><value>Keine Uploadslots gefunden</value></data>
+  <data name="CreateCollectionUploadSlotDialogDescription" xml:space="preserve"><value>Erstellt pro Release eine neue Uploadkonfiguration mit dem gewählten Hoster.</value></data>
+  <data name="DeleteCollectionUploadSlot" xml:space="preserve"><value>Uploadslot löschen</value></data>
+  <data name="DeleteCollectionUploadSlotConfirmation" xml:space="preserve"><value>Uploadslot {0} löschen? Dadurch werden {1} Uploadkonfigurationen, {2} Uploads und {3} erzeugte Containerlinks aus der Datenbank entfernt.</value></data>
+  <data name="NewCollectionUploadSlot" xml:space="preserve"><value>Neuer Uploadslot</value></data>
+  <data name="OpenReleaseCollectionActions" xml:space="preserve"><value>Aktionen für Releasecollections öffnen</value></data>
   <data name="PasswordPolicy" xml:space="preserve"><value>Passwortregel</value></data>
-  <data name="ReleaseCollection" xml:space="preserve"><value>Release-Collection</value></data>
-  <data name="ReleaseCollectionReleasesDescription" xml:space="preserve"><value>Releases, die dieser Collection zugeordnet sind.</value></data>
+  <data name="ReleaseCollection" xml:space="preserve"><value>Releasecollection</value></data>
   <data name="ReleaseCollectionResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Collections</value></data>
-  <data name="ReleaseCollections" xml:space="preserve"><value>Release-Collections</value></data>
-  <data name="ReleaseCollectionsIntro" xml:space="preserve"><value>Finde und verwalte gruppierte Releases wie zB. Serienstaffeln</value></data>
-  <data name="ReleaseCollectionsSubtitle" xml:space="preserve"><value>Gruppierte Releases</value></data>
-  <data name="ReleaseCollectionSubtitle" xml:space="preserve"><value>Gruppierte Releases</value></data>
-  <data name="ReleaseCollectionDetectionMode" xml:space="preserve"><value>Collection-Erkennung</value></data>
+  <data name="ReleaseCollections" xml:space="preserve"><value>Releasecollections</value></data>
+  <data name="ReleaseCollectionDetectionMode" xml:space="preserve"><value>Collectionerkennung</value></data>
   <data name="ReleaseCollectionDetectionMode.CustomRegex" xml:space="preserve"><value>Eigenes Regex</value></data>
-  <data name="ReleaseCollectionDetectionMode.SeriesEpisodePattern" xml:space="preserve"><value>Serienfolgen-Pattern</value></data>
-  <data name="ReleaseCollectionKeyTemplate" xml:space="preserve"><value>Collection-Key-Template</value></data>
-  <data name="ReleaseCollectionKeyTemplateRequired" xml:space="preserve"><value>Das Collection-Key-Template ist für eigenes Regex nötig.</value></data>
-  <data name="ReleaseCollectionNameTemplate" xml:space="preserve"><value>Collection-Name-Template</value></data>
-  <data name="ReleaseCollectionNameTemplateRequired" xml:space="preserve"><value>Das Collection-Name-Template ist für eigenes Regex nötig.</value></data>
-  <data name="ReleaseCollectionPattern" xml:space="preserve"><value>Collection-Regex-Pattern</value></data>
-  <data name="ReleaseCollectionPatternRequired" xml:space="preserve"><value>Das Collection-Regex-Pattern ist für eigenes Regex nötig.</value></data>
+  <data name="ReleaseCollectionDetectionMode.SeriesEpisodePattern" xml:space="preserve"><value>Muster für Serienfolgen</value></data>
+  <data name="ReleaseCollectionKeyTemplate" xml:space="preserve"><value>Vorlage für den Collectionschlüssel</value></data>
+  <data name="ReleaseCollectionKeyTemplateRequired" xml:space="preserve"><value>Die Vorlage für den Collectionschlüssel ist für eigene reguläre Ausdrücke erforderlich.</value></data>
+  <data name="ReleaseCollectionNameTemplate" xml:space="preserve"><value>Vorlage für den Collectionnamen</value></data>
+  <data name="ReleaseCollectionNameTemplateRequired" xml:space="preserve"><value>Die Vorlage für den Collectionnamen ist für eigene reguläre Ausdrücke erforderlich.</value></data>
+  <data name="ReleaseCollectionPattern" xml:space="preserve"><value>Regex für die Collection</value></data>
+  <data name="ReleaseCollectionPatternRequired" xml:space="preserve"><value>Für diese Erkennung ist ein regulärer Ausdruck erforderlich.</value></data>
   <data name="Reset" xml:space="preserve"><value>Zurücksetzen</value></data>
   <data name="Required" xml:space="preserve"><value>Erforderlich</value></data>
   <data name="SearchReleaseCollections" xml:space="preserve"><value>Collections suchen</value></data>
   <data name="SharedLinkCrypters" xml:space="preserve"><value>Container erstellen bei</value></data>
   <data name="NoSharedLinkCrypters" xml:space="preserve"><value>Keiner</value></data>
-  <data name="EditSharedLinkCrypters" xml:space="preserve"><value>Container-Link-Crypter bearbeiten</value></data>
-  <data name="SharedLinkCryptersDialogDescription" xml:space="preserve"><value>Verwalte die Link-Crypter und Einstellungen für die gemeinsamen Container dieser Upload-Gruppe.</value></data>
-  <data name="SharedLinkCryptersDialogHelp" xml:space="preserve"><value>Änderungen werden auf alle Upload-Konfigurationen dieser Collection-Upload-Gruppe angewendet.</value></data>
-  <data name="NoLinkCryptersFound" xml:space="preserve"><value>Keine Link-Crypter gefunden</value></data>
-  <data name="UseReleaseCollections" xml:space="preserve"><value>Release-Collections verwenden</value></data>
-  <data name="UseCollectionUploadSlot" xml:space="preserve"><value>Diese Upload-Konfiguration über die Collection teilen</value></data>
-  <data name="UseCollectionUploadSlotHelp" xml:space="preserve"><value>Erzeugt einen gemeinsamen Collection-Container für diese Gruppe.</value></data>
+  <data name="EditSharedLinkCrypters" xml:space="preserve"><value>Linkcrypter für Container bearbeiten</value></data>
+  <data name="SharedLinkCryptersDialogDescription" xml:space="preserve"><value>Verwalte die Linkcrypter und Einstellungen für die gemeinsamen Container dieser Uploadgruppe.</value></data>
+  <data name="SharedLinkCryptersDialogHelp" xml:space="preserve"><value>Änderungen werden auf alle Uploadkonfigurationen dieser Uploadgruppe der Collection angewendet.</value></data>
+  <data name="NoLinkCryptersFound" xml:space="preserve"><value>Keine Linkcrypter gefunden</value></data>
+  <data name="UseReleaseCollections" xml:space="preserve"><value>Releasecollections verwenden</value></data>
+  <data name="UseCollectionUploadSlot" xml:space="preserve"><value>Diese Uploadkonfiguration über die Collection teilen</value></data>
+  <data name="UseCollectionUploadSlotHelp" xml:space="preserve"><value>Erzeugt einen gemeinsamen Collectioncontainer für diese Gruppe.</value></data>
   <data name="AddRelease" xml:space="preserve"><value>Release hinzufügen</value></data>
-  <data name="AddReleaseToCollectionDescription" xml:space="preserve"><value>Suche nach einem Release in der gleichen Release-Gruppe, um es dieser Collection hinzuzufügen.</value></data>
+  <data name="AddReleaseToCollectionDescription" xml:space="preserve"><value>Suche nach einem Release in der gleichen Releasegruppe, um es dieser Collection hinzuzufügen.</value></data>
   <data name="SearchRelease" xml:space="preserve"><value>Suchen</value></data>
-  <data name="SearchReleasePlaceholder" xml:space="preserve"><value>Nach Release-Name suchen</value></data>
+  <data name="SearchReleasePlaceholder" xml:space="preserve"><value>Nach Releasename suchen</value></data>
   <data name="NoAvailableReleasesFound" xml:space="preserve"><value>Keine verfügbaren Releases gefunden.</value></data>
   <data name="RemoveFromCollection" xml:space="preserve"><value>Aus Collection entfernen</value></data>
-  <data name="RemoveReleaseFromCollectionConfirmation" xml:space="preserve"><value>{0} aus dieser Collection entfernen? Upload-Konfigurationen, die durch Collection-Upload-Slots erstellt wurden, werden gelöscht.</value></data>
+  <data name="RemoveReleaseFromCollectionConfirmation" xml:space="preserve"><value>{0} aus dieser Collection entfernen? Uploadkonfigurationen, die durch Uploadslots der Collection erstellt wurden, werden gelöscht.</value></data>
   <data name="Remove" xml:space="preserve"><value>Entfernen</value></data>
   <data name="MediaDatabaseRegistrations" xml:space="preserve"><value>Metadatenquellen</value></data>
-  <data name="MediaDatabaseRegistrationsIntro" xml:space="preserve"><value>Aktiviere und verwalte Metadatenquellen für Filme und Serien</value></data>
   <data name="MediaDatabases" xml:space="preserve"><value>Metadatenquellen</value></data>
   <data name="MediaDatabase" xml:space="preserve"><value>Metadatenquelle</value></data>
   <data name="NewMediaDatabase" xml:space="preserve"><value>Neue Metadatenquelle</value></data>
@@ -920,27 +883,24 @@
   <data name="MediaDatabaseRegistrationActivated" xml:space="preserve"><value>Metadatenquelle {0} aktiviert</value></data>
   <data name="MediaDatabaseRegistrationDeactivated" xml:space="preserve"><value>Metadatenquelle {0} deaktiviert</value></data>
   <data name="DeleteMediaDatabaseRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Metadatenquelle {0} wirklich löschen?</value></data>
-  <data name="MediaMetadataSources" xml:space="preserve"><value>Metadaten für Filme und Serien</value></data>
   <data name="SeriesMetadata" xml:space="preserve"><value>Serieninformationen</value></data>
-  <data name="SeriesMetadataDescription" xml:space="preserve"><value>Beschreibung und Cover aus einer Metadatenbank.</value></data>
   <data name="RefreshMetadata" xml:space="preserve"><value>Metadaten abrufen</value></data>
-  <data name="NoSeriesMetadataYet" xml:space="preserve"><value>Noch keine Serien-Metadaten abgerufen.</value></data>
+  <data name="NoSeriesMetadataYet" xml:space="preserve"><value>Noch keine Serienmetadaten abgerufen.</value></data>
   <data name="NoSeriesDescription" xml:space="preserve"><value>Keine Beschreibung verfügbar.</value></data>
-  <data name="SeriesMetadataResolved" xml:space="preserve"><value>Serien-Metadaten abgerufen.</value></data>
+  <data name="SeriesMetadataResolved" xml:space="preserve"><value>Serienmetadaten abgerufen.</value></data>
   <data name="SeriesMetadataNotResolved" xml:space="preserve"><value>Keine passende Serie gefunden.</value></data>
   <data name="UpdateAvailable" xml:space="preserve"><value>Update auf {0}</value></data>
-  <data name="UpdateAvailableTooltip" xml:space="preserve"><value>Version {0} ist verfügbar. Zum Öffnen der Release-Seite klicken.</value></data>
+  <data name="UpdateAvailableTooltip" xml:space="preserve"><value>Version {0} ist verfügbar. Zum Öffnen der Releaseseite klicken.</value></data>
   <data name="IHavePosted" xml:space="preserve"><value>Ich habe gepostet</value></data>
   <data name="PostedLocation" xml:space="preserve"><value>Veröffentlicht unter</value></data>
-  <data name="PostedLocations" xml:space="preserve"><value>Veröffentlichungs-Orte</value></data>
-  <data name="PostedLocationsDescription" xml:space="preserve"><value>Wo dies veröffentlicht wurde (Forenthreads, Seiten, …). Links manuell hinzufügen oder entfernen.</value></data>
-  <data name="NoPostedLocationsYet" xml:space="preserve"><value>Noch keine Veröffentlichungs-Orte.</value></data>
+  <data name="PostedLocations" xml:space="preserve"><value>Veröffentlichungsorte</value></data>
+  <data name="NoPostedLocationsYet" xml:space="preserve"><value>Noch keine Veröffentlichungsorte.</value></data>
   <data name="PostedLocationUrlPlaceholder" xml:space="preserve"><value>https://forum.beispiel/threads/...</value></data>
   <data name="PostedLocationSearchPlaceholder" xml:space="preserve"><value>Forenpost- oder Seiten-URL</value></data>
   <data name="PostedLocationRecorded" xml:space="preserve"><value>Gespeichert, wo du gepostet hast.</value></data>
   <data name="PostedLocationManualHelp" xml:space="preserve"><value>Der Beitrag konnte nicht automatisch erkannt werden. Füge die URL deines Posts ein, um sie zu speichern.</value></data>
   <data name="PostedLocationUrlRequired" xml:space="preserve"><value>Eine URL ist erforderlich.</value></data>
-  <data name="PostQueue" xml:space="preserve"><value>Post-Warteschlange</value></data>
+  <data name="PostQueue" xml:space="preserve"><value>Postwarteschlange</value></data>
   <data name="PostQueueDescription" xml:space="preserve"><value>Releases und Collections mit neuen Uploads, die du noch irgendwo posten musst.</value></data>
   <data name="Collections" xml:space="preserve"><value>Collections</value></data>
   <data name="SingleReleases" xml:space="preserve"><value>Einzelreleases</value></data>
@@ -948,10 +908,10 @@
   <data name="Open" xml:space="preserve"><value>Öffnen</value></data>
   <data name="MarkPosted" xml:space="preserve"><value>Als gepostet markieren</value></data>
   <data name="PostQueueNothingOpen" xml:space="preserve"><value>Nichts offen zum Posten.</value></data>
-  <data name="PostQueueDisabled" xml:space="preserve"><value>Die Post-Warteschlange ist deaktiviert. Du kannst sie in den Konfigurationen aktivieren.</value></data>
-  <data name="PostQueueConfigurationDescription" xml:space="preserve"><value>Steuert die Post-Warteschlange, die Uploads erfasst, die du noch irgendwo posten musst.</value></data>
-  <data name="PostQueueEnabled" xml:space="preserve"><value>Post-Warteschlange aktivieren</value></data>
-  <data name="PostQueueEnabledDescription" xml:space="preserve"><value>Zeigt die Post Warteschlange und ihre Anzeige im Menü. Deaktiviere sie, wenn du nicht mit der Warteschlange arbeitest.</value></data>
+  <data name="PostQueueDisabled" xml:space="preserve"><value>Die Postwarteschlange ist deaktiviert. Du kannst sie in den Konfigurationen aktivieren.</value></data>
+  <data name="PostQueueConfigurationDescription" xml:space="preserve"><value>Steuert die Postwarteschlange, die Uploads erfasst, die du noch irgendwo posten musst.</value></data>
+  <data name="PostQueueEnabled" xml:space="preserve"><value>Postwarteschlange aktivieren</value></data>
+  <data name="PostQueueEnabledDescription" xml:space="preserve"><value>Zeigt die Postwarteschlange und ihren Indikator im Menü an.</value></data>
   <data name="PostQueueWorkflowTitle" xml:space="preserve"><value>Posten</value></data>
   <data name="PostQueueProgress" xml:space="preserve"><value>{0} von {1}</value></data>
   <data name="Skip" xml:space="preserve"><value>Überspringen</value></data>
@@ -960,7 +920,6 @@
   <data name="CopyTitle" xml:space="preserve"><value>Titel kopieren</value></data>
   <data name="DistributionSites" xml:space="preserve"><value>Verteilungsseiten</value></data>
   <data name="DistributionSiteRegistrations" xml:space="preserve"><value>Verteilungsseiten Registrierungen</value></data>
-  <data name="DistributionSiteRegistrationsIntro" xml:space="preserve"><value>Verwalte Verteilungsseiten und prüfe, ob das Login funktioniert.</value></data>
   <data name="NewDistributionSite" xml:space="preserve"><value>Neue Verteilungsseite</value></data>
   <data name="DistributionSite" xml:space="preserve"><value>Verteilungsseite</value></data>
   <data name="AddDistributionSite" xml:space="preserve"><value>Verteilungsseite hinzufügen</value></data>
@@ -994,7 +953,7 @@
   <data name="DraftPreparedHelp" xml:space="preserve"><value>Öffne den Link in einem neuen Tab: Titel und Text sind vorausgefüllt. Prüfe ihn und sende ihn selbst ab. Du musst im Browser mit demselben Forumkonto angemeldet sein.</value></data>
   <data name="OpenDraftInForum" xml:space="preserve"><value>Entwurf im Forum öffnen</value></data>
   <data name="ReleaseNameHelp" xml:space="preserve"><value>Wird für die Themensuche und als Titel des neuen Themas verwendet. Manche Foren verlangen Leerzeichen statt Punkte.</value></data>
-  <data name="ReleaseNameRequired" xml:space="preserve"><value>Ein Release-Name ist erforderlich.</value></data>
+  <data name="ReleaseNameRequired" xml:space="preserve"><value>Ein Releasename ist erforderlich.</value></data>
   <data name="NoSubforumFound" xml:space="preserve"><value>Kein Unterforum gefunden.</value></data>
   <data name="ThreadPrefixes" xml:space="preserve"><value>Präfixe</value></data>
   <data name="ThreadPrefixesHelp" xml:space="preserve"><value>Optional. Wähle die laut Forenregeln passenden Präfixe.</value></data>
@@ -1003,13 +962,11 @@
   <data name="Workflows" xml:space="preserve"><value>Workflows</value></data>
   <data name="QualityIssues" xml:space="preserve"><value>Qualitätsprobleme</value></data>
   <data name="QualityIssuesDescription" xml:space="preserve"><value>Releases, die ihr Quality Gate nicht erfüllen und deshalb nicht automatisch hochgeladen werden.</value></data>
-  <data name="QualityIssuesSubtitle" xml:space="preserve"><value>Vom Quality Gate blockierte Releases</value></data>
-  <data name="QualityIssuesNothingOpen" xml:space="preserve"><value>Aktuell werden keine Releases vom Quality-Gate blockiert.</value></data>
+  <data name="QualityIssuesNothingOpen" xml:space="preserve"><value>Aktuell werden keine Releases vom Qualitygate blockiert.</value></data>
   <data name="LastChecked" xml:space="preserve"><value>Zuletzt geprüft</value></data>
   <data name="Recheck" xml:space="preserve"><value>Neu prüfen</value></data>
   <data name="ApproveManually" xml:space="preserve"><value>Manuell freigeben</value></data>
   <data name="QualityProfiles" xml:space="preserve"><value>Qualitätsprofile</value></data>
-  <data name="QualityProfilesSubtitle" xml:space="preserve"><value>Wiederverwendbare Qualitätsprüfungen für Releasegruppen</value></data>
   <data name="QualityProfilesIntro" xml:space="preserve"><value>Definiere Sätze von Qualitätsprüfungen und weise sie Releasegruppen zu.</value></data>
   <data name="NewQualityProfile" xml:space="preserve"><value>Neues Qualitätsprofil</value></data>
   <data name="NoQualityProfilesFound" xml:space="preserve"><value>Keine Qualitätsprofile gefunden.</value></data>
@@ -1017,7 +974,7 @@
   <data name="AssignedGroups" xml:space="preserve"><value>Zugewiesene Gruppen</value></data>
   <data name="QualityProfileDialogDescription" xml:space="preserve"><value>Lege fest, welche Prüfungen ein Release bestehen muss, bevor Uploads erstellt werden.</value></data>
   <data name="QualityProfileDeleted" xml:space="preserve"><value>Qualitätsprofil „{0}" gelöscht.</value></data>
-  <data name="DeleteQualityProfileConfirmation" xml:space="preserve"><value>Möchtest du das Qualitätsprofil „{0}" wirklich löschen? Zugewiesene Release-Gruppen haben danach kein Profil mehr.</value></data>
+  <data name="DeleteQualityProfileConfirmation" xml:space="preserve"><value>Möchtest du das Qualitätsprofil „{0}" wirklich löschen? Zugewiesene Releasegruppen haben danach kein Profil mehr.</value></data>
   <data name="QualityProfileNamePlaceholder" xml:space="preserve"><value>z. B. Filme Standard</value></data>
   <data name="QualityChecks" xml:space="preserve"><value>Qualitätsprüfungen</value></data>
   <data name="AddQualityCheck" xml:space="preserve"><value>Prüfung hinzufügen</value></data>
@@ -1032,7 +989,7 @@
   <data name="QualityCheckNoConfiguration" xml:space="preserve"><value>Dieser Check hat keine zusätzliche Konfiguration.</value></data>
   <data name="QualityCheckRuleType.FilePatternPresent" xml:space="preserve"><value>Datei mit Muster vorhanden</value></data>
   <data name="QualityCheckRuleType.MinimumFolderSize" xml:space="preserve"><value>Mindestgröße des Ordners</value></data>
-  <data name="QualityCheckRuleType.RequiredReleaseInfo" xml:space="preserve"><value>Erforderliche Release-Infos</value></data>
+  <data name="QualityCheckRuleType.RequiredReleaseInfo" xml:space="preserve"><value>Erforderliche Releaseinfos</value></data>
   <data name="QualityCheckRuleType.MediaInfoPresent" xml:space="preserve"><value>MediaInfo vorhanden</value></data>
   <data name="QualityProfile" xml:space="preserve"><value>Qualitätsprofil</value></data>
   <data name="NoQualityProfile" xml:space="preserve"><value>Kein Qualitätsprofil</value></data>
@@ -1050,17 +1007,15 @@
   <data name="SearchLanguage" xml:space="preserve"><value>Sprache suchen...</value></data>
   <data name="NoLanguagesFound" xml:space="preserve"><value>Keine Sprachen gefunden.</value></data>
   <data name="TelegramNotifications" xml:space="preserve"><value>Telegram Notifications</value></data>
-  <data name="TelegramNotificationsIntro" xml:space="preserve"><value>Leite ausgewählte Bearcat Notifications an einen Telegram Chat weiter.</value></data>
-  <data name="TelegramBot" xml:space="preserve"><value>Telegram-Bot</value></data>
+  <data name="TelegramBot" xml:space="preserve"><value>Telegrambot</value></data>
   <data name="TelegramBotHelp" xml:space="preserve"><value>Erstelle mit @BotFather einen Bot und trage hier sein Token ein.</value></data>
-  <data name="TelegramBotToken" xml:space="preserve"><value>Bot-Token</value></data>
+  <data name="TelegramBotToken" xml:space="preserve"><value>Bottoken</value></data>
   <data name="TelegramBotTokenPlaceholder" xml:space="preserve"><value>Token von @BotFather einfügen</value></data>
   <data name="TelegramTokenLeaveEmpty" xml:space="preserve"><value>Lasse das Token leer, um den aktuellen Bot beizubehalten.</value></data>
   <data name="TelegramTokenUnchanged" xml:space="preserve"><value>Aktuelles Token bleibt unverändert</value></data>
   <data name="BearcatNotificationUrl" xml:space="preserve"><value>Bearcat URL</value></data>
   <data name="BearcatNotificationUrlHelp" xml:space="preserve"><value>Diese URL wird in Telegram Nachrichten eingefügt und darf nur über dein VPN erreichbar sein.</value></data>
   <data name="TelegramRecipient" xml:space="preserve"><value>Empfänger</value></data>
-  <data name="TelegramRecipientHelp" xml:space="preserve"><value>Verbinde den Telegram Chat, der Bearcat Notifications erhalten soll.</value></data>
   <data name="ConnectTelegram" xml:space="preserve"><value>Telegram verbinden</value></data>
   <data name="DisconnectTelegram" xml:space="preserve"><value>Verbindung trennen</value></data>
   <data name="TelegramPairingInstructions" xml:space="preserve"><value>Öffne Telegram und drücke Start. Der Link läuft nach zehn Minuten ab.</value></data>
@@ -1069,7 +1024,6 @@
   <data name="OpenTelegram" xml:space="preserve"><value>Telegram öffnen</value></data>
   <data name="CheckConnection" xml:space="preserve"><value>Verbindung prüfen</value></data>
   <data name="ForwardNotificationSeverities" xml:space="preserve"><value>Weitergeleitete Schweregrade</value></data>
-  <data name="ForwardNotificationSeveritiesHelp" xml:space="preserve"><value>Wähle, welche Schweregrade Bearcat an Telegram sendet.</value></data>
   <data name="SendTestNotification" xml:space="preserve"><value>Test Notification senden</value></data>
   <data name="TelegramConfigurationSaved" xml:space="preserve"><value>Telegramkonfiguration gespeichert.</value></data>
   <data name="TelegramLevelsSaved" xml:space="preserve"><value>Notificationtypen gespeichert.</value></data>
@@ -1096,7 +1050,7 @@
   <data name="NotificationKind.Legacy" xml:space="preserve"><value>Bestehende Benachrichtigung</value></data>
   <data name="NotificationKind.ReleaseAutomaticallyCreated" xml:space="preserve"><value>Release automatisch erstellt</value></data><data name="NotificationKind.ReleaseAutomaticallyCreated.Description" xml:space="preserve"><value>Ein Release wurde durch die Ordnerautomatisierung erstellt.</value></data>
   <data name="NotificationKind.ReleaseAutoConvertedToUnmanaged" xml:space="preserve"><value>Release in Unmanaged umgewandelt</value></data><data name="NotificationKind.ReleaseAutoConvertedToUnmanaged.Description" xml:space="preserve"><value>Ein Release wurde in Unmanaged umgewandelt, weil die Aufbewahrung seines Releaseordners abgelaufen ist und der Releaseordner gelöscht werden kann.</value></data>
-  <data name="NotificationKind.ReleaseFolderMissing" xml:space="preserve"><value>Release-Ordner fehlt</value></data><data name="NotificationKind.ReleaseFolderMissing.Description" xml:space="preserve"><value>Der für die Verarbeitung benötigte Release-Ordner wurde nicht gefunden.</value></data>
+  <data name="NotificationKind.ReleaseFolderMissing" xml:space="preserve"><value>Releaseordner fehlt</value></data><data name="NotificationKind.ReleaseFolderMissing.Description" xml:space="preserve"><value>Der für die Verarbeitung benötigte Releaseordner wurde nicht gefunden.</value></data>
   <data name="NotificationKind.ArchiveCreationFailed" xml:space="preserve"><value>Archiverstellung fehlgeschlagen</value></data><data name="NotificationKind.ArchiveCreationFailed.Description" xml:space="preserve"><value>Ein Archiv konnte nicht erstellt werden.</value></data>
   <data name="NotificationKind.ArchiveFilesMissing" xml:space="preserve"><value>Archivdateien fehlen</value></data><data name="NotificationKind.ArchiveFilesMissing.Description" xml:space="preserve"><value>Für einen Upload benötigte Dateien fehlen.</value></data>
   <data name="NotificationKind.InitialUploadCreated" xml:space="preserve"><value>Initialer Upload erstellt</value></data><data name="NotificationKind.InitialUploadCreated.Description" xml:space="preserve"><value>Ein initialer Upload wurde automatisch erstellt.</value></data>
@@ -1106,12 +1060,12 @@
   <data name="NotificationKind.UploadCanceled" xml:space="preserve"><value>Upload abgebrochen</value></data><data name="NotificationKind.UploadCanceled.Description" xml:space="preserve"><value>Ein Upload wurde abgebrochen.</value></data>
   <data name="NotificationKind.FilesOffline" xml:space="preserve"><value>Dateien offline</value></data><data name="NotificationKind.FilesOffline.Description" xml:space="preserve"><value>Dateien bei einem Hoster sind offline.</value></data>
   <data name="NotificationKind.UploadMarkedOffline" xml:space="preserve"><value>Upload als offline markiert</value></data><data name="NotificationKind.UploadMarkedOffline.Description" xml:space="preserve"><value>Ein Upload wurde manuell als offline markiert.</value></data>
-  <data name="NotificationKind.HosterStatusCheckFailed" xml:space="preserve"><value>Hoster-Statusprüfung fehlgeschlagen</value></data><data name="NotificationKind.HosterStatusCheckFailed.Description" xml:space="preserve"><value>Die Verfügbarkeit der Dateien konnte nicht geprüft werden.</value></data>
+  <data name="NotificationKind.HosterStatusCheckFailed" xml:space="preserve"><value>Hosterstatusprüfung fehlgeschlagen</value></data><data name="NotificationKind.HosterStatusCheckFailed.Description" xml:space="preserve"><value>Die Verfügbarkeit der Dateien konnte nicht geprüft werden.</value></data>
   <data name="NotificationKind.AutomaticReuploadCreated" xml:space="preserve"><value>Automatischer Reupload erstellt</value></data><data name="NotificationKind.AutomaticReuploadCreated.Description" xml:space="preserve"><value>Ein Reupload wurde automatisch erstellt.</value></data>
   <data name="NotificationKind.CaptchaVerificationRequired" xml:space="preserve"><value>CAPTCHA-Verifizierung erforderlich</value></data><data name="NotificationKind.CaptchaVerificationRequired.Description" xml:space="preserve"><value>Ein Hoster erfordert eine CAPTCHA-Verifizierung.</value></data>
-  <data name="NotificationKind.LinkCrypterContainerCreationFailed" xml:space="preserve"><value>Linkcryptercontainer Erstellung fehlgeschlagen</value></data><data name="NotificationKind.LinkCrypterContainerCreationFailed.Description" xml:space="preserve"><value>Ein Linkcrypter-Container konnte nicht erstellt werden.</value></data>
-  <data name="NotificationKind.LinkCrypterContainerUpdateFailed" xml:space="preserve"><value>Linkcryptercontainer Aktualisierung fehlgeschlagen</value></data><data name="NotificationKind.LinkCrypterContainerUpdateFailed.Description" xml:space="preserve"><value>Ein Linkcrypter-Container konnte nicht aktualisiert werden.</value></data>
-  <data name="NotificationKind.CollectionLinkCrypterContainerInvalid" xml:space="preserve"><value>Collectionlinkcrypter Container ungültig</value></data><data name="NotificationKind.CollectionLinkCrypterContainerInvalid.Description" xml:space="preserve"><value>Ein Collection-Linkcrypter-Container ist ungültig.</value></data>
+  <data name="NotificationKind.LinkCrypterContainerCreationFailed" xml:space="preserve"><value>Linkcryptercontainer konnte nicht erstellt werden</value></data><data name="NotificationKind.LinkCrypterContainerCreationFailed.Description" xml:space="preserve"><value>Ein Linkcryptercontainer konnte nicht erstellt werden.</value></data>
+  <data name="NotificationKind.LinkCrypterContainerUpdateFailed" xml:space="preserve"><value>Linkcryptercontainer konnte nicht aktualisiert werden</value></data><data name="NotificationKind.LinkCrypterContainerUpdateFailed.Description" xml:space="preserve"><value>Ein Linkcryptercontainer konnte nicht aktualisiert werden.</value></data>
+  <data name="NotificationKind.CollectionLinkCrypterContainerInvalid" xml:space="preserve"><value>Linkcryptercontainer der Collection ist ungültig</value></data><data name="NotificationKind.CollectionLinkCrypterContainerInvalid.Description" xml:space="preserve"><value>Ein Linkcryptercontainer der Collection ist ungültig.</value></data>
   <data name="NotificationKind.AutomaticForumPostCreated" xml:space="preserve"><value>Automatischer Forenpost erstellt</value></data><data name="NotificationKind.AutomaticForumPostCreated.Description" xml:space="preserve"><value>Ein Release wurde automatisch in einem Forum gepostet.</value></data>
   <data name="NotificationKind.AutomaticForumPostFailed" xml:space="preserve"><value>Automatischer Forenpost fehlgeschlagen</value></data><data name="NotificationKind.AutomaticForumPostFailed.Description" xml:space="preserve"><value>Ein Release konnte nicht automatisch in einem Forum gepostet werden.</value></data>
   <data name="NotificationSeverityLabel" xml:space="preserve"><value>Schweregrad</value></data>
@@ -1231,7 +1185,7 @@
   <data name="NotificationKind.ArchiveRestoreFailed.Description" xml:space="preserve"><value>Ein Archiv konnte nicht von einem Onlinemirror wiederhergestellt werden.</value></data>
   <data name="MirrorDownloads" xml:space="preserve"><value>Mirrordownloads</value></data>
   <data name="MirrorDownloadsDescription" xml:space="preserve"><value>Steuert, wie Archive von Onlinemirrors geladen werden, wenn sie nicht mehr lokal liegen.</value></data>
-  <data name="MirrorDownloadsRequirePremium" xml:space="preserve"><value>Mirrordownloads von diesem Hoster benötigen einen Premium-Account.</value></data>
+  <data name="MirrorDownloadsRequirePremium" xml:space="preserve"><value>Mirrordownloads von diesem Hoster benötigen einen Premiumaccount.</value></data>
   <data name="MaxParallelDownloads" xml:space="preserve"><value>Maximale parallele Downloads</value></data>
   <data name="MaxParallelDownloadsDescription" xml:space="preserve"><value>Die Obergrenze gleichzeitig geladener Archivdateien beim Wiederherstellen eines Archivs von einem Mirror.</value></data>
   <data name="UseForMirrorDownloads" xml:space="preserve"><value>Für Mirrordownloads verwenden</value></data>
@@ -1246,7 +1200,6 @@
   <data name="DeleteLocalArchivesNotReady" xml:space="preserve"><value>Lokale Archive können nur gelöscht werden, wenn keine Uploads laufen und jede Archivkonfiguration einen vollständig online stehenden Upload auf einem Hoster mit aktivierten Mirrordownloads hat (oder bei Managedreleases der Releaseordner noch existiert).</value></data>
   <data name="LocalArchivesDeleted" xml:space="preserve"><value>Lokale Archive von {0} gelöscht</value></data>
   <data name="RunningTransfers" xml:space="preserve"><value>Laufende Übertragungen</value></data>
-  <data name="RunningTransfersDescription" xml:space="preserve"><value>Uploads zu Hostern und Mirrordownloads, die gerade laufen.</value></data>
   <data name="TotalDownloadSpeed" xml:space="preserve"><value>Download gesamt</value></data>
   <data name="ToggleDownloadDetails" xml:space="preserve"><value>Downloaddetails umschalten</value></data>
   <data name="DownloadStatus" xml:space="preserve"><value>Downloadstatus</value></data>

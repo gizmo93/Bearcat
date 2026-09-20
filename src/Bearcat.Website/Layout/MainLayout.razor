@@ -34,10 +34,6 @@
             <BbSidebarTrigger />
             <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-medium">@CurrentPageTitle</p>
-                @if (!string.IsNullOrWhiteSpace(CurrentPageSubtitle))
-                {
-                    <p class="truncate text-xs text-muted-foreground">@CurrentPageSubtitle</p>
-                }
             </div>
             <UpdateBanner />
             <QualityIssuesIndicator />
@@ -73,8 +69,7 @@
 </div>
 
 @code {
-    private string CurrentPageTitle => GetPageTitle().Title;
-    private string CurrentPageSubtitle => GetPageTitle().Subtitle;
+    private string CurrentPageTitle => GetPageTitle();
 
     protected override void OnInitialized()
     {
@@ -86,35 +81,35 @@
         InvokeAsync(StateHasChanged);
     }
 
-    private (string Title, string Subtitle) GetPageTitle()
+    private string GetPageTitle()
     {
         var path = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Split('?', '#')[0].Trim('/');
 
         return path switch
         {
-            "" => (L["Home"], string.Empty),
-            "dashboard" => (L["Dashboard"], string.Empty),
-            "hoster-registrations" => (L["HosterRegistrations"], L["CredentialsAndLoginChecks"]),
-            "link-crypter-registrations" => (L["CrypterRegistrations"], L["ContainersAndValidation"]),
-            "image-hoster-registrations" => (L["ImageHosterRegistrations"], L["ImageUploadsAndValidation"]),
-            "nfo-database-registrations" => (L["NfoDatabaseRegistrations"], L["ReleaseMetadataSources"]),
-            "media-database-registrations" => (L["MediaDatabaseRegistrations"], L["MediaMetadataSources"]),
-            "notifications" => (L["Notifications"], L["UnresolvedNotifications"]),
-            var notification when notification.StartsWith("notifications/", StringComparison.OrdinalIgnoreCase) => (L["NotificationDetails"], L["NotificationDetailsSubtitle"]),
-            "releases" => (L["Releases"], L["ReleaseRootsAndOnlineState"]),
-            var release when release.StartsWith("releases/", StringComparison.OrdinalIgnoreCase) => (L["ReleaseDetails"], L["ArchiveAndUploadConfiguration"]),
-            "release-templates" => (L["ReleaseTemplates"], L["ReleaseTemplatesSubtitle"]),
-            var template when template.StartsWith("release-templates/", StringComparison.OrdinalIgnoreCase) => (L["ReleaseTemplate"], L["ArchiveAndUploadConfiguration"]),
-            "release-collections" => (L["ReleaseCollections"], L["ReleaseCollectionsSubtitle"]),
-            var collection when collection.StartsWith("release-collections/", StringComparison.OrdinalIgnoreCase) => (L["ReleaseCollection"], L["ReleaseCollectionSubtitle"]),
-            "forum-post-templates" => (L["ForumPostTemplates"], L["ForumPostTemplatesSubtitle"]),
-            "release-folder-automations" => (L["ReleaseFolderAutomations"], L["ReleaseFolderAutomationsSubtitle"]),
-            "configurations" => (L["Configurations"], L["ApplicationConfigurationsSubtitle"]),
-            "background-tasks" => (L["BackgroundTasks"], L["BackgroundTasksSubtitle"]),
-            "release-groups" => (L["ReleaseGroups"], string.Empty),
-            "quality-issues" => (L["QualityIssues"], L["QualityIssuesSubtitle"]),
-            "quality-profiles" => (L["QualityProfiles"], L["QualityProfilesSubtitle"]),
-            _ => ("Bearcat", string.Empty)
+            "" => L["Home"],
+            "dashboard" => L["Dashboard"],
+            "hoster-registrations" => L["HosterRegistrations"],
+            "link-crypter-registrations" => L["CrypterRegistrations"],
+            "image-hoster-registrations" => L["ImageHosterRegistrations"],
+            "nfo-database-registrations" => L["NfoDatabaseRegistrations"],
+            "media-database-registrations" => L["MediaDatabaseRegistrations"],
+            "notifications" => L["Notifications"],
+            var notification when notification.StartsWith("notifications/", StringComparison.OrdinalIgnoreCase) => L["NotificationDetails"],
+            "releases" => L["Releases"],
+            var release when release.StartsWith("releases/", StringComparison.OrdinalIgnoreCase) => L["ReleaseDetails"],
+            "release-templates" => L["ReleaseTemplates"],
+            var template when template.StartsWith("release-templates/", StringComparison.OrdinalIgnoreCase) => L["ReleaseTemplate"],
+            "release-collections" => L["ReleaseCollections"],
+            var collection when collection.StartsWith("release-collections/", StringComparison.OrdinalIgnoreCase) => L["ReleaseCollection"],
+            "forum-post-templates" => L["ForumPostTemplates"],
+            "release-folder-automations" => L["ReleaseFolderAutomations"],
+            "configurations" => L["Configurations"],
+            "background-tasks" => L["BackgroundTasks"],
+            "release-groups" => L["ReleaseGroups"],
+            "quality-issues" => L["QualityIssues"],
+            "quality-profiles" => L["QualityProfiles"],
+            _ => "Bearcat"
         };
     }
 
