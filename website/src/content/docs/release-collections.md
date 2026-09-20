@@ -3,20 +3,14 @@ title: "Group Related Releases into Collections"
 description: "Group related releases like a TV season and share their uploads and links."
 ---
 
-A release collection is a group of releases that belong together, for example all
-episodes of a TV show season. Instead of treating every episode as its own island,
-Bearcat keeps them side by side so you can manage their uploads and links in one place.
+A release collection groups related releases, for example all episodes of a TV show season.
+You can manage their upload settings and share their download links from the collection page.
 
 ## Why you would use one
 
-Imagine you have a full season with ten episodes. Without collections you upload each
-episode on its own, and you end up with ten separate sets of links scattered across ten
-releases. Putting a forum post together from that is tedious, and keeping the password and
-settings the same on every episode is easy to get wrong.
-
-A collection fixes this. You group the episodes once, decide where they should be uploaded,
-and Bearcat handles the rest for the whole season at the same time. The result is one tidy
-set of links for the season instead of ten loose ones.
+For a TV season, you can set the hoster, archive settings and password policy once for all
+episodes. A collection can also gather their download links into one link crypter container
+that you can share in a forum post.
 
 ## How a collection is created
 
@@ -72,15 +66,13 @@ There are two ways to set this up:
 - **On a release template.** When collection detection is on, a template gains a **Collection
   image upload configurations** section. Every hoster you add there is applied to the collection
   that the template's releases land in, so new collections come with their cover uploads already
-  configured. The section only appears while collection detection is on, because without a
-  collection there would be nothing to upload.
+  configured.
 - **Directly on the collection.** Open a collection and use **Add** in the image uploads part to
   point the cover at another hoster by hand. This is handy for collections you put together
   yourself.
 
-If you leave the name empty, Bearcat names the configuration after the hoster. When you edit an
-existing entry you can change the name, but not the hoster, since repointing an upload to a
-different hoster rarely makes sense.
+If you leave the name empty, Bearcat names the configuration after the hoster. You can rename
+an existing entry. To use a different hoster, add a new image upload configuration.
 
 Once the cover has been uploaded, each entry shows its state and the image links, grouped by
 size. You can copy a single link or all of them at once. These same links are available in a

@@ -46,17 +46,17 @@ These are the variables you need to set and what they are for:
 - `POSTGRES_USER`: The username for the PostgreSQL database
 - `POSTGRES_PASSWORD`: The password for the PostgreSQL database
 - `POSTGRES_DB`: The name of the PostgreSQL database
-- `POSTGRES_CPU_LIMIT`: The CPU limit for the PostgreSQL container. This is optional, but it can help to prevent the database from consuming too much CPU resources on your machine. You can set it to a value like `0.5` for 50% of a single CPU core, or `1` for 100% of a single CPU core.
-- `POSTGRES_MEMORY_LIMIT`: The memory limit for the PostgreSQL container. This is optional, but it can help to prevent the database from consuming too much memory resources on your machine. You can set it to a value like `512m` for 512 megabytes, or `1g` for 1 gigabyte.
-- `POSTGRES_PORT`: The port on which the PostgreSQL database will be accessible. This is optional, but it can be useful if you want to connect to the database from outside the Docker network. The default value is `5432`, which is the default port for PostgreSQL. If that one is already used for something else on your machine, feel free to choose a different one
+- `POSTGRES_CPU_LIMIT`: Optional CPU limit for the PostgreSQL container, measured in CPU cores. For example, `0.5` limits it to half a core and `1` to one core.
+- `POSTGRES_MEMORY_LIMIT`: Optional memory limit for the PostgreSQL container, for example `512m` for 512 megabytes or `1g` for 1 gigabyte.
+- `POSTGRES_PORT`: The host port for connections to PostgreSQL from outside the Docker network. Defaults to `5432`. Choose another port if it is already in use.
 
 ### Bearcat related
 - `BEARCAT_PORT`: The port on which Bearcat web frontend will be accessible. If you don't set this, Bearcat will run at port 8080.
-- `RELEASES_DIR`: The directory on the host machine where Bearcat will look for release files to upload. This is required, as Bearcat needs to know where your release files are located. You can set it to any directory on your machine, even network folders that are mounted on the host machine, but make sure that the directory exists and that Bearcat has read and write permissions to it.
+- `RELEASES_DIR`: Required path to your release files on the host machine. Mounted network folders work too. The directory must exist, and Bearcat needs read and write access to it.
 - `BEARCAT_DATA_DIR`: The directory on the host machine where Bearcat stores application data that must survive container updates. Bearcat creates `bearcat.key` there on first start. This key is required to decrypt stored hoster, link crypter, and NFO database account configurations.
-- `BEARCAT_IMAGE`: The name of the Bearcat Docker image to use. This is optional, but it can be useful if you want to use a custom built image of Bearcat instead of the one from Docker Hub. The default value is `ghcr.io/justanotherx265/bearcat:latest`, which is the latest version of Bearcat from GitHub Container Registry. If you want to use a custom image version, you can set it there
-- `BEARCAT_CPU_LIMIT`: The CPU limit for the Bearcat container. This is optional, but it can help to prevent Bearcat from consuming too much CPU resources on your machine. You can set it to a value like `0.5` for 50% of a single CPU core, or `1` for 100% of a single CPU core.
-- `BEARCAT_MEMORY_LIMIT`: The memory limit for the Bearcat container. This is
+- `BEARCAT_IMAGE`: The Docker image to run. Defaults to `ghcr.io/justanotherx265/bearcat:latest` from GitHub Container Registry. Change it to use a specific version or your own image.
+- `BEARCAT_CPU_LIMIT`: Optional CPU limit for the Bearcat container, measured in CPU cores. For example, `0.5` limits it to half a core and `1` to one core.
+- `BEARCAT_MEMORY_LIMIT`: Optional memory limit for the Bearcat container, for example `512m` for 512 megabytes or `1g` for 1 gigabyte.
 
 
 Then run the following command in the terminal from the directory where the `docker-compose.yml` file is located:

@@ -3,10 +3,9 @@ title: "Track Uploads Waiting for Forum Posts"
 description: "Keep track of which finished uploads you still need to post to your forums."
 ---
 
-Bearcat uploads your releases and builds the links, but the last step is still yours: pasting
-the forum post somewhere. The post queue keeps track of which releases and collections have new
-uploads that you have not posted yet, so you do not have to remember it or open a dozen tabs to
-check.
+The post queue lists releases and collections with new uploads that you have not posted yet.
+From there, you can prepare forum posts, submit them through posting rules, or mark releases
+as posted after sharing them yourself.
 
 ## Where to find it
 
@@ -77,8 +76,7 @@ The workflow bar gives you three actions:
 - **Leave workflow** ends the run and takes you back to the post queue page.
 
 When you reach the end of the list, Bearcat returns you to the post queue page. If you worked
-through everything, the queue is empty and shows "Nothing waiting to be posted." That is the whole
-idea: once you are through the list, you know everything is handled.
+through everything, the queue is empty and shows "Nothing waiting to be posted."
 
 If you want to start in the middle, click **Open** on a specific entry. That starts the workflow
 at that release instead of the top of the list.

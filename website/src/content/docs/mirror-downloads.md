@@ -123,6 +123,3 @@ hold other files.
 Auto cleanup can delete local archives on a retention period and
 leave the restore to the mirrors. See
 [Auto cleanup](/Bearcat/advanced-configuration/#auto-cleanup) for the two rules and their settings.
-
-This means, archives can leave your disk after a while, the hosters keep them, and
-Bearcat downloads them back when a reupload needs them.

@@ -88,8 +88,8 @@ works:
 
 Bearcat retries a failed delivery with an increasing delay. If it keeps failing (for example
 because the bot was blocked or the chat was deleted), Bearcat stops retrying that notification
-after several attempts instead of retrying forever. A blank box that says everything was
-delivered means there is nothing to worry about.
+after several attempts. When all notifications have been delivered, the status box shows that
+there are no pending deliveries.
 
 ## Disconnecting
 

@@ -7,7 +7,7 @@ Bearcat is a Web Application that runs in your Browser.
 
 But to make it easier for you to start and stop it if you want to run it on your Windows or macOS machine, Bearcat offers a small Launcher App, that starts Bearcat, keeps it visible through a tray icon, opens the web UI in your browser, and stops Bearcat when you quit the app.
 
-This is my recommended local setup for macOS on Apple Silicon because the Desktop app runs natively on ARM and helps you to get the most out of your fast Apple Silicon Mac.
+I recommend the Desktop app for local use on an Apple Silicon Mac because it runs natively on ARM.
 
 On Windows, the Desktop app and the [Windows service](/Bearcat/use-the-windows-service/) are the two recommended options, and they run the exact same Bearcat. Use the Desktop app when you want to start and stop Bearcat on demand. Use the Windows service when you want it always on, for example on a server or on a PC where Bearcat should run permanently in the background.
 

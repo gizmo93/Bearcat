@@ -123,7 +123,7 @@ The **"Archive creation"** background task looks for uploads in `WaitingForArchi
 
 The carry-over can be turned off per hoster with the **"Always reupload all files"** switch. When it's on, a reupload for that hoster ignores the still-online files and uploads the whole archive again, even when the same archive is reused. See [Per-hoster overrides](#per-hoster-overrides) for when that helps.
 
-**No reusable archive? Create a new one.** If nothing can be reused, Bearcat builds a new archive from the release folder. The archive configuration decides:
+If no archive can be reused, Bearcat creates a new one from the release folder. The archive configuration decides:
 
 - where the archive files are written
 - which archiver is used
@@ -137,7 +137,7 @@ If packing succeeds, the archive becomes `Created` and the upload moves to `Pend
 
 ### The nonce file and repackaging
 
-Just before packing, Bearcat writes a tiny `__nonce.txt` file with a random value into the release folder. It's a small, harmless file that changes between runs, and that little change is what helps reuploads come out with different hashes than before.
+Before packing, Bearcat writes a random value to `__nonce.txt` in the release folder. The value changes on each run so that repacking can produce different archive hashes.
 
 For **RAR**, the nonce plus the 0-byte append (see above) already guarantee a new hash for every part. RAR packs at the part size from the archive configuration and is then adjusted in place, so its parts stay essentially at your configured size (give or take a few appended bytes) instead of growing by a megabyte on every reupload. That matters for hosters that enforce a maximum size per file.
 
@@ -149,7 +149,7 @@ For **RAR**, the nonce plus the 0-byte append (see above) already guarantee a ne
 
 The compression and solid-mode parts of these strategies still apply to RAR too; only the 1 MB size bump is skipped, because RAR doesn't need it. Bearcat also falls back to this repackaging strategy for RAR archives that were created before it started tracking hashes (their stored hash is still empty): the first reupload repacks such an archive with the strategy above, and from then on it uses the cheaper append approach.
 
-One thing to keep in mind: if the archive is later deleted locally, Bearcat can no longer reuse the files on disk. A future reupload then downloads them back from a mirror hoster when one is configured, and only packs a fresh archive if no mirror is available. See [Mirror Downloads](/Bearcat/mirror-downloads/).
+If you delete the local archive, a later reupload downloads the files back from a configured mirror hoster. If no mirror is available, Bearcat needs the release folder to pack a new archive. See [Mirror Downloads](/Bearcat/mirror-downloads/).
 
 ## 4. Uploading to the hoster
 
@@ -246,7 +246,7 @@ A manual reupload creates a new upload record and then follows the normal archiv
 
 On a reupload Bearcat will try to re-use the existing link crypter container, is possible.
 
-If an earlier upload for the same upload configuration already has a container for the same link crypter configuration, Bearcat tries to **update** that container with the new hoster links. When that works, the public container URL stays the same and only the links inside it change, which is great for anyone who already shared the link.
+If an earlier upload for the same upload configuration already has a container for the same link crypter configuration, Bearcat tries to **update** that container with the new hoster links. When that works, the container URL stays the same, so you do not need to replace it in existing forum posts.
 
 If the update fails, Bearcat falls back to creating a brand-new container, and the new upload may end up with a new container URL.
 

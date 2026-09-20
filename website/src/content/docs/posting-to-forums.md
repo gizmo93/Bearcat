@@ -3,13 +3,9 @@ title: "Prepare and Submit Forum Posts"
 description: "Prepare a forum draft from a release and open it with a ready to submit preview link. You still send the post yourself."
 ---
 
-Bearcat can prepare a forum post for a release and hand you a draft inside the forum, with the
-title and body already filled in. You open a link, check the post, and submit it yourself.
-
-This flow is not full automation, and that is on purpose. It saves a draft in the forum and gives
-you a preview link. You log into the same forum account in your browser, look the post over, and
-click submit. The reason is simple: nobody wants tools that post to forums on their own and turn
-into spam, so a person still does the final click.
+Bearcat can save a draft in the forum with the title and body filled in from a release.
+Open the draft link in a browser where you are logged into the same forum account, check the
+post, and submit it.
 
 If you want Bearcat to send the post itself, set up
 [posting rules](/Bearcat/automatic-forum-posting/). Rules pick the subforum and the template per
