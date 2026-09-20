@@ -7,7 +7,7 @@ hero:
   tagline: "Create archives, upload to one-click hosters, and reupload files when links go offline."
   image:
     file: ../../assets/bearcat-archive-hero.png
-    alt: "Bearcat holding a RAR archive upload"
+    alt: "Bearcat holding a RAR archive"
   actions:
     - text: "Getting started"
       link: "/Bearcat/#installing--running-bearcat"
@@ -16,46 +16,74 @@ hero:
 import { CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
 
 ## What is Bearcat?
-Bearcat manages uploads to Rapidgator, DDownload, Keep2Share, and other one-click hosters. It runs on your own desktop, NAS, or server and provides a web interface for managing releases, archives, and upload links.
 
-Features:
+Bearcat runs on your desktop, NAS, or server. You manage your releases in a web interface,
+and Bearcat creates archives, uploads them to your hosters, checks the links, and reuploads
+files that go offline.
 
-- Automatically pack your release files into RAR or 7zip
-- Upload your archive files to one-click hosters like Rapidgator, Nitroflare, and more
-- Upload release cover images to image hosters, so you can use them in forum posts
-- Check the state of your uploads and trigger automatic re-uploads if something is offline
-- Use your hosters as long-term storage: delete local archives to free disk space and let Bearcat [download them back from a mirror](/Bearcat/mirror-downloads/) when a reupload needs them
-- Resolve scene release information through xREL and SRRDB, then fetch movie or TV metadata from TMDB and TheTVDB
-- Read technical media metadata (resolution, codecs, audio and subtitle tracks) from your video files with MediaInfo, so you can put it into forum posts
-- Generate forum-ready BBCode for your release posts, including links, NFO content, and more
-- Keep track of which finished uploads you still need to post to a forum or so with a [guided post queue](/Bearcat/post-queue/)
-- [Half automated creation of forum posts](/Bearcat/posting-to-forums/)
-- [Automatically post releases to forums](/Bearcat/automatic-forum-posting/)
+You can:
 
-![GUI](images/gui.png)
+- Pack releases into RAR or 7z archives, or upload archives you already have.
+- Upload to Rapidgator, DDownload, Keep2Share, and the other hosters listed below.
+- Free local disk space and [restore archives from a mirror hoster](/Bearcat/mirror-downloads/) when a reupload needs them.
+- Look up release information and NFOs through xREL and SRRDB, movie or TV metadata through TMDB and TheTVDB and game metadata through Steam.
+- Read resolution, codecs, and audio and subtitle tracks from your video files with MediaInfo.
+- Upload cover images and use them alongside download links and NFOs in [BBCode templates](/Bearcat/forum-post-templates/).
+- [Prepare forum drafts](/Bearcat/posting-to-forums/) for review or [post automatically](/Bearcat/automatic-forum-posting/) using rules you configure.
+- Track releases you still need to post with the [post queue](/Bearcat/post-queue/).
 
+![Bearcat web interface](images/gui.png)
 
+## Installing & running Bearcat
 
+<CardGrid>
+	<LinkCard
+		title="Desktop app"
+		description="Start and stop Bearcat on demand on Windows or macOS."
+		href="/Bearcat/use-the-desktop-launcher/"
+	/>
+	<LinkCard
+		title="Windows service"
+		description="Run Bearcat in the background, even when you are not logged in."
+		href="/Bearcat/use-the-windows-service/"
+	/>
+	<LinkCard
+		title="Docker container"
+		description="Run Bearcat on Linux, a NAS, or a server with Docker."
+		href="/Bearcat/use-the-docker-image/"
+	/>
+	<LinkCard
+		title="Initial setup"
+		description="Add your hoster accounts and create your first release after installation."
+		href="/Bearcat/post-installation/"
+	/>
+</CardGrid>
 
-<Aside type="tip">
-	Bearcat is self-hosted: you run it on your own desktop machine, NAS, or server and keep control of the database, account configuration, and release data.
+<Aside type="note">
+	Bearcat bundles Chromium for posting to forums through a browser. This adds about 260 MB to the application size.
 </Aside>
 
-## Can I also bring my own archives and let Bearcat just upload them?
-Yes, you can!
-You can either bring your own archives or let Bearcat pack your release files for you.
-[Click here to learn more about release types](/Bearcat/release-types/).
+## Common questions
 
-## Do I have to keep every archive on my disk?
-No.
-Mark a hoster as a mirror and Bearcat can download the archive files back from it when a reupload needs them.
-You can delete local archives yourself or let Bearcat do it after a retention period.
-Note that this only works with hosters that allow downloads through their API, and some of them need a premium account.
-[Click here to learn more about mirror downloads](/Bearcat/mirror-downloads/).
+### Can I upload existing archives?
 
-## Which hosters and linkcrypters are supported?
+Yes. Bearcat can upload archives you created yourself. These are called unmanaged releases.
+For managed releases, Bearcat creates the archives from your release files.
+See [release types](/Bearcat/release-types/) for how the two work.
 
-Hosters:
+### Do I have to keep every archive on disk?
+
+No. If you enable a hoster as a mirror, Bearcat can download the archives again when a reupload
+needs them. You can delete local copies yourself or set a retention period for automatic cleanup.
+
+The hoster must support downloads through its API, and some hosters require a premium account.
+See [mirror downloads](/Bearcat/mirror-downloads/) for supported hosters and setup instructions.
+
+<span id="which-hosters-and-linkcrypters-are-supported" />
+
+## Supported services
+
+### File hosters
 
 - Rapidgator
 - DDownload
@@ -73,89 +101,55 @@ Hosters:
 - Clicknupload.click
 - HxFile.co
 - file-upload.org
-- datavaults.co (100MB file size limit!)
+- datavaults.co (maximum file size: 100 MB)
 - Fast2Share.com
 - CloudFam.io
-- freedl.ink (1MB minimum file size!)
+- freedl.ink (minimum file size: 1 MB)
 
-Link crypters:
+### Linkcrypters
 
 - Hide.cx
 - Keeplinks
 - tolink.to
 - [filecrypt.cc](/Bearcat/filecrypt/)
 
-Image hosters:
+### Image hosters
 
 - ImgBB
-- pixhost.to (no API key needed!)
+- pixhost.to (no API key needed)
 - pixelfox.cc
-- directupload.eu (no API key needed!)
+- directupload.eu (no API key needed)
 
-Forums:
+### Forums
 
-- Basic support for XenForo (currently data-load.me & boerse.cx)
-
-
-## Installing & running Bearcat 
-
-<Aside type="note">
-Regarding the size of the Bearcat package:
-To enable the semi-automatic posting to forums, Bearcat uses Playwright, with is a framework to use a browser to programmatically access a website and navigate on it.
-This requires a headless version of Chromium to be installed and that headless version currently comes bundled with Bearcat, which adds about 260MB to the actual application size.
-The alternative would be, to not bundle it. Then the app would download it the first time it's required. Maybe this will be the way to go in the future.
-</Aside>
-
-<CardGrid>
-	<LinkCard
-		title="Desktop app"
-		description="Run Bearcat on demand on Windows or macOS with the launcher."
-		href="/Bearcat/use-the-desktop-launcher/"
-	/>
-	<LinkCard
-		title="Windows service"
-		description="Run Bearcat always-on in the background on a Windows PC or server."
-		href="/Bearcat/use-the-windows-service/"
-	/>
-	<LinkCard
-		title="Docker container"
-		description="Host Bearcat on Linux, NAS devices, or servers."
-		href="/Bearcat/use-the-docker-image/"
-	/>
-	<LinkCard
-		title="Initial setup"
-		description="Connect accounts, configure templates, and create your first release."
-		href="/Bearcat/post-installation/"
-	/>
-</CardGrid>
-
+Basic XenForo support is available for data-load.me and boerse.cx.
 
 ## Learn more
 
 <CardGrid>
 	<LinkCard
 		title="Upload lifecycle"
-		description="See how releases move from archives to upload checks and reuploads."
+		description="How Bearcat creates archives, checks upload links, and schedules reuploads."
 		href="/Bearcat/upload-lifecycle/"
 	/>
 	<LinkCard
 		title="Release collections"
-		description="Group related releases like a TV season and share their uploads and links."
+		description="Use shared upload settings and container links for a TV season or other related releases."
 		href="/Bearcat/release-collections/"
 	/>
 	<LinkCard
 		title="Release information and metadata"
-		description="Configure metadata sources, languages, NFO lookup, and manual fallback."
+		description="Choose metadata sources and languages, look up NFOs, and correct missing or incorrect information."
 		href="/Bearcat/release-information-and-metadata/"
 	/>
 	<LinkCard
 		title="Forum post templates"
-		description="Generate forum-ready BBCode from release data, NFO content, and links."
+		description="Build forum posts with release details, cover images, NFOs, and download links."
 		href="/Bearcat/forum-post-templates/"
 	/>
 	<LinkCard
 		title="Advanced configuration"
-		description="Tune background tasks and global behavior once the basics are running."
+		description="Set upload limits, configure automatic cleanup, and manage background tasks."
 		href="/Bearcat/advanced-configuration/"
 	/>
 </CardGrid>
