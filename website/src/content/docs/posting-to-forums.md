@@ -7,9 +7,7 @@ Bearcat can save a draft in the forum with the title and body filled in from a r
 Open the draft link in a browser where you are logged into the same forum account, check the
 post, and submit it.
 
-If you want Bearcat to send the post itself, set up
-[posting rules](/Bearcat/automatic-forum-posting/). Rules pick the subforum and the template per
-release, and you either press **Post** in the post queue or let a background task handle it.
+To let Bearcat submit posts for you, use [posting rules](/Bearcat/automatic-forum-posting/).
 
 ## What you need first
 
@@ -24,8 +22,7 @@ Open **Distribution sites** in the sidebar and add one. Pick the forum, enter yo
 password, and save. Your password is stored encrypted. Mark the site active and use the test login
 to check that the account works.
 
-Supported forums right now are boerse.cx and data-load.me. Both run on XenForo, so more XenForo
-forums can be added without much effort.
+Supported forums are boerse.cx and data-load.me.
 
 ## Posting a release
 
@@ -37,59 +34,59 @@ post**.
 Bearcat walks you through a few steps:
 
 1. Pick the distribution site you want to post to.
-![distribution-site-selection.png](images/distribution-site-selection.png)
-2. Pick the subforum. The field is searchable, so you can type part of the name. Here you can also
-   edit the release name. Release names use dots, but some forums want spaces instead.
-   The **Dots → spaces** button rewrites the dots to spaces and turns the last hyphen, the release
-   group, into a spaced separator. The name you set here is used both to search for an existing
-   thread and as the title of a new thread.
-![subforum-selection.png](images/subforum-selection.png)
+   ![distribution-site-selection.png](images/distribution-site-selection.png)
+2. Search for and select a subforum. You can also edit the release name, which Bearcat uses
+   to search for existing threads and name new ones. **Dots → spaces** replaces dots with spaces
+   and adds spaces around the final hyphen before the release group.
+   ![subforum-selection.png](images/subforum-selection.png)
 3. Bearcat searches the subforum for a thread that matches the name. If it finds one, it defaults
    to posting a reply into that thread. If it finds none, it starts a new thread.
 
-<figure>
+   <figure>
 
-![Existing thread found](images/existing-thread-found.png)
+   ![Existing thread found](images/existing-thread-found.png)
 
-<figcaption>Existing thread found</figcaption>
-</figure>
+   <figcaption>Existing thread found</figcaption>
+   </figure>
 
-<figure>
+   <figure>
 
-![No existing thread found](images/no-existing-thread-found.png)
+   ![No existing thread found](images/no-existing-thread-found.png)
 
-<figcaption>No existing thread found</figcaption>
-</figure>
+   <figcaption>No existing thread found</figcaption>
+   </figure>
 
 4. Pick a forum post template. Bearcat renders it with the release and shows the post body, which
    you can still edit. For a new thread you also set the title, and if the subforum uses prefixes
    (for example 1080p or x265) you can pick them here.
 
-<figure>
+   <figure>
 
-![add-to-existing-topic.png](images/add-to-existing-topic.png)
+   ![add-to-existing-topic.png](images/add-to-existing-topic.png)
 
-<figcaption>Template selection for existing thread => Adding just a new message to a topic</figcaption>
-</figure>
+   <figcaption>Prepare a reply to an existing thread</figcaption>
+   </figure>
 
-<figure>
+   <figure>
 
-![create-new-thread.png](images/create-new-thread.png)
+   ![create-new-thread.png](images/create-new-thread.png)
 
-<figcaption>Template selection for new thread => Create a new forum thread + message</figcaption>
-</figure>
+   <figcaption>Prepare a new thread</figcaption>
+   </figure>
 
 
 5. Click **Prepare draft**. Bearcat saves the draft in the forum and shows an **Open draft in
    forum** link.
 
-![draft-created.png](images/draft-created.png)
+   ![draft-created.png](images/draft-created.png)
 
 ## Sending the post
 
-Open the **Open draft in forum** link in the same browser where you are logged into that forum
-account. The forum editor opens with the title and body already filled in. Read it, use the
-forum's own preview if you want, and submit.
+1. Click **Open draft in forum** in a browser logged into the same forum account. Otherwise,
+   the editor will not show the draft.
+2. Review the title and body, use the forum's preview if needed, and submit the post.
+3. Back in Bearcat, click **I have posted** to save the post URL under **Posted locations**.
+   If Bearcat cannot find it yet, paste the URL yourself. The forum's search index can take a few seconds to update.
 
 <figure>
 
@@ -106,40 +103,21 @@ forum's own preview if you want, and submit.
 </figure>
 
 
-The draft belongs to your forum account, so you need to be logged into the same account in your
-browser. If you are not, the editor will not show the prefilled text.
-
-Once you have submitted the post in the forum, click **I have posted** in the dialog. Bearcat then
-looks up the post you just made (the new reply in an existing thread, or the thread you just
-created) and stores its permalink under **Posted locations** on the release (or collection). If it
-cannot find the post automatically (the forum's search index can lag for a few seconds), it shows a
-field where you paste the URL yourself.
-
-Recording the post is separate from marking the release as posted: **I have posted** remembers
-*where* you posted, while the [Post Queue](/Bearcat/post-queue/) tracks *whether* a release still
-needs posting at all.
+**I have posted** saves the URL but does not remove the release from the
+[post queue](/Bearcat/post-queue/). Use **Mark as posted** there when you have finished posting.
 
 ## Letting Bearcat submit the post
 
-Each forum registration can have a list of posting rules that define the subforum, the
-prefix and the template for a release. Based on rules you define, Bearcat can render the post, find or
-create the thread and submit it, either when you press **Post** in the post queue or automatically
-in the background. See [Automatic forum posting](/Bearcat/automatic-forum-posting/).
+[Posting rules](/Bearcat/automatic-forum-posting/) choose the subforum, prefix and template.
+Run them with **Post** in the post queue or enable automatic posting in the background.
 
 ## Posted locations
 
-Every release and collection has a **Posted locations** list: the URLs where it has been published,
-such as forum threads or WordPress pages. **Post to forum** fills it in for you, and you can also add
-or remove links by hand. Keep it up to date so you always know where to go if you ever need to swap
-out the download links.
+**Posted locations** lists the URLs where a release or collection has been published,
+such as forum threads or WordPress pages. Confirming a forum post adds its URL here.
+You can also add or remove links by hand.
 
 ## How this fits with templates and the post queue
 
-The post body comes from your [forum post templates](/Bearcat/forum-post-templates/). The same
-template you would render and copy by hand is what Bearcat uses to build the draft, so you set the
-post up once and reuse it.
-
-The [Post Queue](/Bearcat/post-queue/) tells you which releases still need posting. For a forum you
-set up as a distribution site, **Post to forum** is the faster way to handle that step, since you
-do not have to copy and paste the rendered text into the forum yourself. The final submit and the
-**Mark as posted** step stay in your hands.
+[Forum post templates](/Bearcat/forum-post-templates/) provide the post body for both copied posts
+and forum drafts. The [post queue](/Bearcat/post-queue/) lists releases that still need posting.

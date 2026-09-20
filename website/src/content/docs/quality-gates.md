@@ -3,26 +3,18 @@ title: "Check Release Quality Before Uploading"
 description: "Block uploads until a release passes the quality checks you define."
 ---
 
-Quality gates let you define rules that a release has to satisfy before Bearcat uploads it. If a
-release fails its checks, Bearcat does not create uploads for that release anymore and puts the release on a list so
-you can fix it or manually approve it. This way a missing NFO, an empty cover, or a folder that
-is too small does not end up online.
+Quality gates prevent new uploads until a release passes your checks or you approve it manually.
+Use them to catch missing NFOs, cover images, or incomplete release folders before uploading.
 
-Quality gates are optional. A release group without a quality profile behaves exactly as before, so
-nothing changes until you opt in.
-
-Quality gates apply to [managed releases](/Bearcat/release-types/) only. Unmanaged releases have no
-raw files or release folder for Bearcat to inspect, so they are skipped entirely: they never appear
-in the quality issues list and their uploads are never held back by a profile.
+They apply only to [managed releases](/Bearcat/release-types/) in groups with a quality profile.
+Unmanaged releases and groups without a profile skip these checks.
 
 ## How it fits together
 
-There are two pieces:
-
 - A **quality profile** is a reusable set of checks (for example "NFO present" and "folder at least
   100 MB").
-- A **release group** can have one quality profile assigned. Every release in that group has to pass
-  the profile before its uploads are created.
+- A **release group** can use one quality profile. Each managed release must pass its checks or
+  receive manual approval before Bearcat creates uploads.
 
 Several release groups can share the same profile, so you only define your rules once.
 
@@ -49,7 +41,7 @@ checks pass.
 ## Assigning a profile to a release group
 
 Open the release group (under **Configuration**, **Release Groups**) and pick a
-quality profile in the **Quality profile** field. Leave it empty to keep the group ungated. The
+quality profile in the **Quality profile** field. Leave it empty to skip quality checks. The
 release groups list shows which profile each group uses.
 
 ![assign-quality-profile-to-release-group.png](images/assign-quality-profile-to-release-group.png)
@@ -74,7 +66,7 @@ You do not have to trigger the checks yourself. Bearcat evaluates a release:
 
 - right before it would create an upload,
 - periodically in the background through the **"Quality gate re-evaluation"** task (every 30 minutes
-  by default; you can change the interval on the [Background Tasks](/Bearcat/upload-lifecycle/)
+  by default; you can change the interval on the [Background Tasks](/Bearcat/advanced-configuration/#background-tasks)
   page), and
 - on demand when you press **Recheck** on a release in the quality issues list.
 
@@ -96,8 +88,7 @@ evaluated. For every entry you have three actions:
   and so on). The next evaluation picks up the change, or you can recheck right away.
 - **Recheck** evaluates the release again immediately, which is handy after you fixed something.
 - **Approve manually** marks the release as **manually approved**. Bearcat then creates its uploads
-  even though a check failed, and stops re-evaluating it. Use this for the cases where you know
-  better than the rule.
+  even though a check failed, and stops re-evaluating it.
 
 ![quality-gate-list.png](images/quality-gate-list.png)
 

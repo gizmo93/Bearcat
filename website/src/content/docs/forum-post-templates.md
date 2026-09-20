@@ -3,17 +3,9 @@ title: "Create BBCode Forum Post Templates"
 description: "Use BBCode and Scriban placeholders to prepare forum posts from release data."
 ---
 
-Forum post templates help you prepare the text that you want to paste into a forum after a release is ready.
-Most forums accept BBCode, so a template can contain normal BBCode and placeholders that Bearcat replaces with data from the selected release.
-
-This is useful when your posts should always follow the same structure, for example:
-
-- release name at the top
-- language, size and media information
-- NFO content inside a spoiler block
-- download sections for Rapidgator, DDownload or other upload configurations
-- cover image links from the image hosters, that you have configured
-- link crypter container links
+Forum post templates combine BBCode with placeholders for release data, download links and images.
+Write a template once, then use it to copy posts by hand or submit them through
+[posting rules](/Bearcat/automatic-forum-posting/).
 
 ![forum-post-templates-page.png](images/forum-post-templates-page.png)
 
@@ -24,7 +16,7 @@ Open "Forum post templates" in the sidebar.
 Click "New forum post template", enter a name and write the template body.
 The template body can contain plain text, BBCode and Scriban placeholders.
 
-Example:
+Start with a release name, size and some link crypter links:
 
 ```text
 [CENTER]
@@ -52,9 +44,8 @@ For example, if your image upload configuration is named `ImgBB Cover`:
 [IMG]{{ imagelinks.imgbb_cover.full }}[/IMG]
 ```
 
-Click "Validate" to check the template syntax.
-Validation checks whether the Scriban syntax is valid.
-It does not require the selected release to have values for every variable.
+Click **Validate** to check the Scriban syntax. This does not check whether the release has
+values for every variable.
 
 ## Rendering a forum post
 
@@ -71,8 +62,59 @@ Templates are also used without the dialog: a
 [posting rule](/Bearcat/automatic-forum-posting/) picks one template per subforum and renders it
 when Bearcat posts a release to a forum for you.
 
-If a value is not available for the release, Bearcat renders an empty text instead of crashing.
-For example, if no `.nfo` file exists in the release folder, `{{ release.nfo }}` renders as empty text.
+Missing values render as empty text. For example, `{{ release.nfo }}` stays empty if the
+release folder has no `.nfo` file.
+
+## Scriban basics
+
+Bearcat uses Scriban syntax for placeholders.
+
+Print a value:
+
+```text
+{{ release.name }}
+```
+
+Loop over a list:
+
+```text
+{{ for upload in uploads }}
+[B]{{ upload.name }}[/B]
+{{ end }}
+```
+
+Only render a block when a value exists:
+
+```text
+{{ if release.nfo }}
+[SPOILER="NFO"]
+{{ release.nfo }}
+[/SPOILER]
+{{ end }}
+```
+
+For a post with an NFO and link crypter links:
+
+```text
+[CENTER]
+[B]{{ release.name }}[/B]
+Size: {{ release_info.size }}
+
+[SPOILER="NFO"]
+{{ release.nfo }}
+[/SPOILER]
+
+{{ for upload in uploads }}
+[B]{{ upload.name }}[/B]
+{{ for crypter in upload.link_crypters }}
+[URL='{{ crypter.container_link }}']{{ crypter.name }}[/URL]
+{{ end }}
+
+{{ end }}
+[/CENTER]
+```
+
+See the [Scriban documentation](https://scriban.github.io/docs/language/) for more syntax and examples.
 
 ## Available variables
 
@@ -122,16 +164,14 @@ Inside `upload.link_crypters`, these variables are available:
 
 ## Media information
 
-For managed releases, Bearcat can read technical metadata from the video files in the release folder
-(container, duration, video/audio/subtitle streams) using [MediaInfo](https://mediaarea.net/en/MediaInfo).
-This lets you put resolution, codecs, runtime, languages or a complete MediaInfo dump into your forum post.
+For managed releases, Bearcat reads video metadata with [MediaInfo](https://mediaarea.net/en/MediaInfo).
+You can include individual values or the full MediaInfo output in a post.
 
 ### When are the media metadata parsed?
 
-Media metadata are read from the raw video files, so they are only available for managed releases.
+Bearcat needs access to the raw video files to read their metadata:
 
-- **Automatically** when a release is created automatically from a release template (right after the
-  release info is resolved). This only happens for managed releases.
+- **Automatically** when a managed release is created from a release template, after its release info is resolved.
 - **Manually** at any time with the "Extract media metadata" button on a release's "Release info" panel.
   Use this to (re-)parse the files, for example after the files changed or for releases that were not
   created automatically.
@@ -140,8 +180,24 @@ The button re-reads every video file and replaces the previously stored metadata
 
 ### Main video
 
-`release.main_video` points to the largest video file in the release, which is usually the actual video, the rest is usually samples.
-This is a shortcut so you do not have to loop over `release.media_files` for the common case.
+`release.main_video` is the largest video file in the release. Use it when you want to show
+information about the main video without looping over all files.
+
+To include the full MediaInfo output:
+
+```text
+[SPOILER="MediaInfo"]
+{{ release.main_video.media_info }}
+[/SPOILER]
+```
+
+Or a short technical summary built from individual fields:
+
+```text
+Video: {{ release.main_video.video.codec }} {{ release.main_video.video.resolution }}
+Audio: {{ release.main_video.default_audio.codec }} {{ release.main_video.default_audio.channel_layout }}
+Runtime: {{ release.main_video.duration }}
+```
 
 | Variable | Description |
 | --- | --- |
@@ -205,22 +261,6 @@ Inside `file.subtitle_streams`, these variables are available:
 | `{{ subtitle.forced }}` | Whether the subtitle is forced. |
 | `{{ subtitle.is_default }}` | Whether this is the default stream. |
 
-Example that posts a raw MediaInfo dump of the main video inside a spoiler:
-
-```text
-[SPOILER="MediaInfo"]
-{{ release.main_video.media_info }}
-[/SPOILER]
-```
-
-Or a short technical summary built from individual fields:
-
-```text
-Video: {{ release.main_video.video.codec }} {{ release.main_video.video.resolution }}
-Audio: {{ release.main_video.default_audio.codec }} {{ release.main_video.default_audio.channel_layout }}
-Runtime: {{ release.main_video.duration }}
-```
-
 ## Image links
 
 Image links are available through `imagelinks`.
@@ -252,36 +292,6 @@ That is useful if you are not sure how the name will be normalized.
 
 Bearcat can only render image links after the cover image was uploaded.
 If a release has no cover image, or the image upload has not completed yet, the value stays empty.
-
-## Scriban basics
-
-Bearcat uses Scriban syntax for placeholders.
-
-Print a value:
-
-```text
-{{ release.name }}
-```
-
-Loop over a list:
-
-```text
-{{ for upload in uploads }}
-[B]{{ upload.name }}[/B]
-{{ end }}
-```
-
-Only render a block when a value exists:
-
-```text
-{{ if release.nfo }}
-[SPOILER="NFO"]
-{{ release.nfo }}
-[/SPOILER]
-{{ end }}
-```
-
-Check out the [Scriban documentation](https://scriban.github.io/docs/language/) for more details and examples.
 
 ## Practical tips
 

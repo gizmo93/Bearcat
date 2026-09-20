@@ -5,74 +5,73 @@ description: "Host Bearcat with Docker on Linux, NAS devices, servers, Windows, 
 
 Docker is the recommended setup for Linux, NAS, and server deployments.
 
-On Windows, Docker still works, but it is no longer the recommended option: prefer the [Windows service](/Bearcat/use-the-windows-service/) for always-on use or the [Desktop app](/Bearcat/use-the-desktop-launcher/) for on-demand use. On Windows the container reads your release files through a bind mount into a Linux VM, which is noticeably slower than the native Windows options. Use Docker on Windows only if you explicitly want a container-based setup.
+On Windows, prefer the [Windows service](/Bearcat/use-the-windows-service/) for always-on use or the [Desktop app](/Bearcat/use-the-desktop-launcher/) for on-demand use. Docker also works, but reading release files through its Linux VM is slower than with the native options.
 
-For local desktop use on macOS Apple Silicon, prefer the Bearcat Desktop app. The Docker image is published as `linux/amd64` because the official RAR command line tools are only available for Linux x64, while the Desktop app can run natively on Apple Silicon.
+On Apple Silicon Macs, prefer the native [Desktop app](/Bearcat/use-the-desktop-launcher/). The Docker image uses `linux/amd64` because its bundled RAR tools require Linux x64.
 
 ## Initial setup
 
 ### Windows
-To run local Docker containers, I recommend to install Docker Desktop (https://www.docker.com/products/docker-desktop/) or Rancher Desktop (https://rancherdesktop.io).
-Docker Desktop is faster and easier to set up than Rancher and it's free for non-commercial use.
+Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) or [Rancher Desktop](https://rancherdesktop.io).
 
-## macOS
-On macOS, you can also use Docker Desktop (https://www.docker.com/products/docker-desktop/) or Rancher Desktop (https://rancherdesktop.io) or OrbStack (https://orbstack.dev).
-All of these options work, however, I personally recommend OrbStack.
-It's designed to be macOS-only and thus it has the best performance and lowest memory footprint. The free version should be enough to run Bearcat.
-Bearcat is developed on macOS and I personally use OrbStack to run containers locally.
+### macOS
+Install [Docker Desktop](https://www.docker.com/products/docker-desktop/), [Rancher Desktop](https://rancherdesktop.io), or [OrbStack](https://orbstack.dev). I use OrbStack to run containers while developing Bearcat on macOS.
 
 ![Bearcat running in OrbStack on macOS](images/bearcat-orbstack.png)
 
-## Linux
-Docker Desktop and Rancher Desktop are also available for Linux.
-For futher infos on how to set them up, please check their documentation.
-As Docker is a Linux native technology, Docker containers basically run "natively" on Linux, while on Windows and macOS a small Linux VM runs these containers.
+### Linux
+Docker containers run directly on Linux. Docker Desktop and Rancher Desktop are also available; follow their documentation for installation.
 
-## Synology NAS
-Synology NAS with an x86_64 CPU architecture support Docker ("Container Manager").
-You just need to install the respective package from the Synology Package Manager.
+### Synology NAS
+On a supported x86_64 Synology NAS, install **Container Manager** from Package Manager.
 
 
 ## Running Bearcat
 
-To get started with Docker, you can use the provided `docker-compose.yml` file.
-Copy the `.env.example` file to `.env` and set the variables in that file according to your needs.
+Use the repository's `docker-compose.yml` and copy `.env.example` to `.env`.
+Before starting the containers:
 
-These are the variables you need to set and what they are for:
+1. Set `RELEASES_DIR` to your release folder. It must exist and allow Bearcat to read and write files. Mounted network folders work too.
+2. Choose a `POSTGRES_PASSWORD`.
+3. Check `POSTGRES_DATA_DIR` and `BEARCAT_DATA_DIR`. These folders keep your database and application data between container updates.
+
+The remaining settings control ports, database names, resource limits, and the image version.
 
 ### Database related
 
-- `POSTGRES_DATA_DIR`: The directory on the host machine where PostgreSQL data will be stored. This allows you to persist your database data even if the container is removed. Also, it allows you to create backups of your database
-- `POSTGRES_USER`: The username for the PostgreSQL database
-- `POSTGRES_PASSWORD`: The password for the PostgreSQL database
-- `POSTGRES_DB`: The name of the PostgreSQL database
-- `POSTGRES_CPU_LIMIT`: Optional CPU limit for the PostgreSQL container, measured in CPU cores. For example, `0.5` limits it to half a core and `1` to one core.
-- `POSTGRES_MEMORY_LIMIT`: Optional memory limit for the PostgreSQL container, for example `512m` for 512 megabytes or `1g` for 1 gigabyte.
-- `POSTGRES_PORT`: The host port for connections to PostgreSQL from outside the Docker network. Defaults to `5432`. Choose another port if it is already in use.
+| Variable | Purpose |
+| --- | --- |
+| `POSTGRES_DATA_DIR` | Host directory for persistent PostgreSQL data. |
+| `POSTGRES_USER` | PostgreSQL username. |
+| `POSTGRES_PASSWORD` | PostgreSQL password. |
+| `POSTGRES_DB` | Database name. |
+| `POSTGRES_PORT` | Host port for database connections, normally `5432`. Change it if that port is already in use. |
+| `POSTGRES_CPU_LIMIT` | CPU limit in cores, for example `0.5` for half a core. |
+| `POSTGRES_MEMORY_LIMIT` | Memory limit, for example `512m` or `1g`. |
 
 ### Bearcat related
-- `BEARCAT_PORT`: The port on which Bearcat web frontend will be accessible. If you don't set this, Bearcat will run at port 8080.
-- `RELEASES_DIR`: Required path to your release files on the host machine. Mounted network folders work too. The directory must exist, and Bearcat needs read and write access to it.
-- `BEARCAT_DATA_DIR`: The directory on the host machine where Bearcat stores application data that must survive container updates. Bearcat creates `bearcat.key` there on first start. This key is required to decrypt stored hoster, link crypter, and NFO database account configurations.
-- `BEARCAT_IMAGE`: The Docker image to run. Defaults to `ghcr.io/justanotherx265/bearcat:latest` from GitHub Container Registry. Change it to use a specific version or your own image.
-- `BEARCAT_CPU_LIMIT`: Optional CPU limit for the Bearcat container, measured in CPU cores. For example, `0.5` limits it to half a core and `1` to one core.
-- `BEARCAT_MEMORY_LIMIT`: Optional memory limit for the Bearcat container, for example `512m` for 512 megabytes or `1g` for 1 gigabyte.
 
+| Variable | Purpose |
+| --- | --- |
+| `RELEASES_DIR` | Host directory containing your release files. Required. |
+| `BEARCAT_DATA_DIR` | Persistent application data, including the `bearcat.key` encryption key created on first start. |
+| `BEARCAT_PORT` | Web interface port, normally `8080`. |
+| `BEARCAT_IMAGE` | Image to run. Defaults to `ghcr.io/gizmo93/bearcat:latest`; change it to select a version or your own image. |
+| `BEARCAT_CPU_LIMIT` | CPU limit in cores, for example `0.5` for half a core. |
+| `BEARCAT_MEMORY_LIMIT` | Memory limit, for example `512m` or `1g`. |
 
-Then run the following command in the terminal from the directory where the `docker-compose.yml` file is located:
+From the directory containing `docker-compose.yml`, run:
 
 ```bash
 docker compose up -d
 ```
 
-That one will start the Bearcat and PostgreSQL container with the settings you did in your .env file.
-Depending on the performance of your machine it might take a while and the command will in the end tell you, if all containers could be started successfully.
+This starts Bearcat and PostgreSQL using your `.env` settings. The first start may take a while.
 
 
 ## Updating Bearcat
 
-The default .env file uses the latest image of Bearcat, the moment you run docker compose up.
-If there is a new version out and you want to update your instance, execute the following command in the terminal from the directory where the `docker-compose.yml` file is located:
+The example `.env` uses the `latest` image tag. To download and start a newer image, run these commands from the directory containing `docker-compose.yml`:
 
 ```bash
 docker compose pull

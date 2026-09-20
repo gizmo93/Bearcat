@@ -3,15 +3,12 @@ title: "Install Bearcat on Windows and macOS"
 description: "Run Bearcat locally on Windows or macOS with the desktop launcher."
 ---
 
-Bearcat is a Web Application that runs in your Browser.
+Bearcat Desktop starts Bearcat and opens it in your browser. Use the tray menu to start and stop it, or quit the app to stop Bearcat.
 
-But to make it easier for you to start and stop it if you want to run it on your Windows or macOS machine, Bearcat offers a small Launcher App, that starts Bearcat, keeps it visible through a tray icon, opens the web UI in your browser, and stops Bearcat when you quit the app.
+On Windows, use the Desktop app for on-demand use or the [Windows service](/Bearcat/use-the-windows-service/) to keep Bearcat running continuously. Both run the same application.
+On Apple Silicon Macs, I recommend the Desktop app because it runs natively on ARM.
 
-I recommend the Desktop app for local use on an Apple Silicon Mac because it runs natively on ARM.
-
-On Windows, the Desktop app and the [Windows service](/Bearcat/use-the-windows-service/) are the two recommended options, and they run the exact same Bearcat. Use the Desktop app when you want to start and stop Bearcat on demand. Use the Windows service when you want it always on, for example on a server or on a PC where Bearcat should run permanently in the background.
-
-The Desktop uses YOUR OWN PostgreSQL server. It does not ship with PostgreSQL.
+Install PostgreSQL separately before you start.
 
 | macOS | Windows |
 | --- | --- |
@@ -24,7 +21,7 @@ The Desktop uses YOUR OWN PostgreSQL server. It does not ship with PostgreSQL.
 - 7z command line executable
 - A release data directory on your local machine
 
-For PostgreSQL setup instructions, see [Installing PostgreSQL For The Desktop App](/Bearcat/install-postgresql-for-desktop/).
+For PostgreSQL setup instructions, see [Set Up PostgreSQL for Bearcat](/Bearcat/install-postgresql-for-desktop/).
 
 ## Downloading the newest release
 You can get the latest release of the Desktop app from the [GitHub releases page](https://github.com/gizmo93/Bearcat/releases).
@@ -33,8 +30,7 @@ You can get the latest release of the Desktop app from the [GitHub releases page
 
 ### macOS Gatekeeper
 
-The macOS download is packaged as an `.app` bundle and is ad-hoc signed, because I don't have a Apple Developer License.
-This means, that per default, macOS will put the app into "quarantine" and block you from executing it.
+The macOS app is ad-hoc signed because I don't have an Apple Developer License. macOS may quarantine the download and block it from opening.
 If macOS reports that the app is damaged after downloading it from GitHub, move the app to `/Applications`, open the Terminal and remove the quarantine attribute:
 
 ```bash
@@ -77,10 +73,9 @@ C:\Program Files\7-Zip\7z.exe
 
 ### Bearcat Host
 
-Optional path to a published `Bearcat.Host` executable or `Bearcat.Host.dll`.
-Usually you don't need to touch that one as the executables are found automatically.
+Leave this empty to let the launcher find `Bearcat.Host` automatically. If detection fails, select the published executable or `Bearcat.Host.dll`.
 
-During development, this field can also stay empty if the launcher can find the local repository. If auto-detection does not work, choose the built or published host manually.
+For development builds, the launcher can also find the host in the local repository.
 
 ### PostgreSQL settings
 
@@ -92,7 +87,7 @@ The Desktop app uses your own PostgreSQL server. Enter:
 - Username: PostgreSQL user.
 - Password: PostgreSQL password.
 
-The database does not need to exist before first start. Bearcat runs database migrations on startup in Desktop mode and can create the target database if the PostgreSQL user has permission to do so.
+Bearcat updates the database schema on startup. It can also create the database if the PostgreSQL user has permission.
 
 ### Web port
 
@@ -133,13 +128,11 @@ Without `bearcat.key`, Bearcat cannot decrypt stored account configurations.
 
 ## Starting Bearcat
 
-Use `Start Bearcat` from the app window or the tray menu. When the health check succeeds, the app can open Bearcat at:
+Choose `Start Bearcat` in the app window or tray menu. Once Bearcat is ready, you can open it at:
 
 ```text
 http://127.0.0.1:<web-port>
 ```
-
-The Desktop app starts `Bearcat.Host` with workstation garbage collection, so local desktop runs use less memory than the default server GC configuration used for container/server deployments.
 
 Closing the settings window hides it. Bearcat keeps running until you choose `Stop` or `Quit Bearcat`.
 

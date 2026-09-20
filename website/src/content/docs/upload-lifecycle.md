@@ -3,9 +3,8 @@ title: "Automatic Uploads, Link Checks, and Reuploads"
 description: "Understand how Bearcat creates, uploads, checks, and refreshes release archives."
 ---
 
-This page explains to you everything that happens after you create a release and tell Bearcat where it should go.
-
-If you like long flow charts, you can expand the diagram below for the whole upload lifecycle.
+After you add an upload configuration, Bearcat prepares the archive, uploads it, and checks its links.
+Release groups can also enable automatic reuploads when files go offline.
 
 <details>
 <summary>Show the full upload lifecycle diagram</summary>
@@ -84,89 +83,53 @@ flowchart TD
 
 ## 1. Release and upload configuration
 
-A release on its own is just a description: the source folder and a bit of setup around it. Creating a release does **not** upload anything yet.
-
-The lifecycle only kicks off once a release has at least one **upload configuration**. An upload configuration connects these pieces together:
+Creating a release does **not** upload anything yet. Add an **upload configuration** to connect:
 
 - the release
 - the hoster registration
 - the archive configuration
 - optional link crypter configurations
 
-Each upload configuration runs its own lifecycle. So if you want the same release on two hosters (say Rapidgator and DDownload), you create two upload configurations, and Bearcat handles each one independently.
-
-Or let's say you want to upload the *same* release to the *same* hoster but in different archive sizes, because you want to post it in different forums, thats also possible.
+Each upload configuration runs independently. To upload a release to two hosters, create one
+configuration for each. You can also use separate configurations for different archive sizes on the same hoster.
 
 ## 2. The first upload
 
-Bearcat doesn't create the first upload the instant you save an upload configuration. Instead it waits for the **"Initial upload cooldown"** you set under "Configurations" (default: `5` minutes).
+Bearcat waits for the **Initial upload cooldown** before creating the first upload. Set it under
+**Configurations**; the default is `5` minutes. This gives you time to finish setup and copy the release files.
 
-The **"Upload state check"** background task then picks up any upload configuration that is still missing its first upload and creates one. That upload starts in the `WaitingForArchive` state.
-
-The cooldown is there to allow you to finish setting up the release before Bearcat starts archiving and uploading. Also, it prevents problems from folders that aren't yet fully copied.
-
-If you'd rather skip the wait, set the cooldown to `0` and the first upload is created on the very next upload state check.
+After the cooldown, the **Upload state check** background task creates the upload in the
+`WaitingForArchive` state. Set the cooldown to `0` to create it on the next check.
 
 ## 3. Creating the archive
 
-The **"Archive creation"** background task looks for uploads in `WaitingForArchive` that don't have an archive yet, and gives each one an archive to upload.
+The **Archive creation** background task prepares an archive for each upload in `WaitingForArchive`:
 
-**Can an existing archive be reused?** For every matching upload, Bearcat first checks whether a finished archive already exists for the same archive configuration. If one does, it simply assigns that archive and moves the upload to `Pending`, so there is no need to pack the same files twice.
+1. Reuse a finished archive for the same archive configuration, if possible.
+2. Restore missing local files from a configured [mirror hoster](/Bearcat/mirror-downloads/).
+3. If neither is possible, create a new archive from the release folder.
 
-**Reuploads need a MD5 hash change.** For reuploads, Bearcat also checks whether that archive was already uploaded to the same *type* of hoster before. If so, the archive files need new hashes before they go up again, because hosters often recognise an already-seen file by its MD5 hash.
+Only [managed releases](/Bearcat/release-types/) can be repacked. Unmanaged releases need existing
+archive files or a mirror from which to restore them.
 
-- If the archiver can change hashes **in place** (currently only RAR), Bearcat appends harmless 0-bytes to each archive file until its MD5 hash is one that hasn't been used for this archive configuration before. Bearcat stores the MD5 hash of every archive file it produces, so it knows which hashes are already taken, even after the original files are long gone. The archive still extracts without issues.
-- Before doing that, Bearcat makes sure no other active upload is currently using the archive. If one is, it waits and tries again on the next run.
-- If the archiver *can't* safely change hashes in place (7Zip!), Bearcat leaves the existing files alone and packs a fresh archive instead.
+The archive configuration sets the archiver, output folder, filename prefix, password, and part size.
+After packing succeeds, the archive becomes `Created` and the upload moves to `Pending`. If packing
+fails, their states become `CreationFailed` and `Failed`.
 
-**Reusing an archive carries over the files that are still online.** When a reupload reuses the *same* archive as a previous upload of the same upload configuration, Bearcat copies over the hoster links for the files that are still online and only uploads the ones that actually went offline. This makes recovering from a `PartiallyOnline` upload cheap: the surviving files stay where they are, and Bearcat just fills the gaps instead of sending everything up again. It only works when the same archive is reused, though. If a fresh archive has to be packed, its freshly packed files aren't compatible with the old ones, so the whole release is uploaded again.
-
-The carry-over can be turned off per hoster with the **"Always reupload all files"** switch. When it's on, a reupload for that hoster ignores the still-online files and uploads the whole archive again, even when the same archive is reused. See [Per-hoster overrides](#per-hoster-overrides) for when that helps.
-
-If no archive can be reused, Bearcat creates a new one from the release folder. The archive configuration decides:
-
-- where the archive files are written
-- which archiver is used
-- the archive file name prefix
-- the archive password
-- the archive part size
-
-If packing succeeds, the archive becomes `Created` and the upload moves to `Pending`. If it fails, the archive becomes `CreationFailed` and the upload becomes `Failed`.
-
-> **Note:** Bearcat only *creates* new archives for **managed** releases. Unmanaged releases ("bring your own archives") always already have an archive configuration and archive, so Bearcat just uses what's there.
-
-### The nonce file and repackaging
-
-Before packing, Bearcat writes a random value to `__nonce.txt` in the release folder. The value changes on each run so that repacking can produce different archive hashes.
-
-For **RAR**, the nonce plus the 0-byte append (see above) already guarantee a new hash for every part. RAR packs at the part size from the archive configuration and is then adjusted in place, so its parts stay essentially at your configured size (give or take a few appended bytes) instead of growing by a megabyte on every reupload. That matters for hosters that enforce a maximum size per file.
-
-**7-Zip can't be tweaked after packing**, because its split volumes form one continuous stream, so touching any part would corrupt it. For 7-Zip the only way to get different files is to vary the *content* while packing, and the **"Archive repackaging"** configuration controls how:
-
-- **"Change archive file size by 1 MB"** (default): packs without compression and without solid mode, but bumps the archive part size up by `1` MB compared to the latest archive for the same configuration. That reliably shifts the resulting parts without paying for compression CPU time.
-- **"Nonce only, no compression"**: only `__nonce.txt` changes, packed without compression or solid mode. Lowest CPU cost, but the lowest chance that *every* part ends up with a new MD5 hash.
-- **"Solid archive with compression"**: packs with solid mode and compression. Costs more CPU, but makes the `__nonce.txt` change ripple through the whole archive much more reliably.
-
-The compression and solid-mode parts of these strategies still apply to RAR too; only the 1 MB size bump is skipped, because RAR doesn't need it. Bearcat also falls back to this repackaging strategy for RAR archives that were created before it started tracking hashes (their stored hash is still empty): the first reupload repacks such an archive with the strategy above, and from then on it uses the cheaper append approach.
-
-If you delete the local archive, a later reupload downloads the files back from a configured mirror hoster. If no mirror is available, Bearcat needs the release folder to pack a new archive. See [Mirror Downloads](/Bearcat/mirror-downloads/).
+For reuploads, Bearcat may need to change the archive hashes or repack the files. See
+[Archive reuse and repackaging](#archive-reuse-and-repackaging) for the details.
 
 ## 4. Uploading to the hoster
 
-The **"Archive upload"** background task takes care of `Pending` uploads. While files are going up, the upload sits in the `Uploading` state.
+The **Archive upload** background task starts `Pending` uploads and changes their state to `Uploading`.
 
-When every archive file uploads successfully, the upload becomes:
+| Result | Upload state | Online state |
+| --- | --- | --- |
+| All files uploaded | `Completed` | `Online` |
+| Some files failed | `Failed` | `PartiallyOnline` |
 
-- `Completed`
-- `Online`
-- stamped with an upload timestamp
-
-If some files don't make it, the upload becomes:
-
-- `Failed`
-- `PartiallyOnline`
-
-You can watch all of this live on the release detail page under the **"Uploads"** tab. The **"Overview"** tab shows the latest upload per upload configuration.
+Bearcat records a timestamp for successful uploads. Follow progress on the release detail page
+under **Uploads**. **Overview** shows the latest upload for each upload configuration.
 
 ## 5. Link crypter containers
 
@@ -197,7 +160,7 @@ If the check itself fails (the hoster errors out), Bearcat raises an error notif
 
 ## 7. Automatic reuploads
 
-Automatic reuploads are driven by release groups. To get automatically reuploaded, all of the following must be true for the Release:
+Bearcat creates an automatic reupload when all of these conditions are met:
 
 - its release group has automatic reuploads enabled
 - the latest relevant upload is `Offline` or `PartiallyOnline` (subject to the hoster's reupload trigger, see below)
@@ -205,29 +168,35 @@ Automatic reuploads are driven by release groups. To get automatically reuploade
 - the waiting time ("Hours until reupload") has passed since the upload went offline
 - there isn't already an online or *blocking* replacement upload for the same upload configuration
 
-A **blocking** replacement is any other upload for the same upload configuration that is `Online`, or in one of these "in progress" states: `Pending`, `Uploading`, `WaitingForArchive`, `Failed`, or `CancellationRequested`.
+A replacement upload blocks another reupload if it is `Online` or has the state `Pending`,
+`Uploading`, `WaitingForArchive`, `Failed`, or `CancellationRequested`. This prevents duplicate
+replacements for the same upload configuration.
 
-### Per-hoster overrides
-
-By default the waiting time and the trigger both come from the release group, but a hoster registration can override each of them (see [Reupload overrides per hoster](/Bearcat/post-installation/#reupload-overrides-per-hoster)):
-
-- **Hours until reupload:** when the hoster sets its own value, it replaces the release group's "Hours until reupload" for uploads on that hoster.
-- **Reupload trigger:** decides which offline state makes a reupload due, and from when the waiting time is counted.
-  - **Partially or fully offline** (default): the upload is due once it is `Offline` or `PartiallyOnline`, and the waiting time is counted from the moment it first stopped being fully online.
-  - **Only when fully offline:** the upload is only due once it is fully `Offline`, and the waiting time is counted from the moment the last file went offline. While the upload is still `PartiallyOnline`, no reupload is scheduled, and if it drops back out of fully offline the timer starts over.
-- **Always reupload all files:** decides *what* a reupload sends up, rather than *when* it starts. By default a reupload keeps the files that are still online and only replaces the offline ones (see [Creating the archive](#3-creating-the-archive)). With this switch on, Bearcat skips that carry-over and uploads every file of the archive again.
-
-The "Only when fully offline" trigger is useful for hosters that take files offline one at a time. Instead of reacting to each file with its own reupload, Bearcat waits for the whole upload to go offline and then reuploads once.
-
-"Always reupload all files" targets the same kind of hoster from the other side: some delete files after a period without downloads (for example Nitroflare after 30 days), so files expire one by one over time. Replacing only the offline file each run would leave you reuploading a single file every hour as the rest keep dropping out. Reuploading everything at once instead gives all files a fresh lifetime together, so the whole upload expires as a unit rather than in a slow trickle.
-
-When a reupload is due, Bearcat creates a new upload record for the same upload configuration, starting fresh at `WaitingForArchive`. From there it follows the normal path:
+When a reupload is due, Bearcat creates a new upload record for the same upload configuration:
 
 ```text
 WaitingForArchive -> Pending -> Uploading -> Completed
 ```
 
-If an existing archive can still be reused, the reupload skips packing. When that same archive is reused, the reupload also keeps the files that are still online and only sends up the ones that went offline (see [Creating the archive](#3-creating-the-archive)), so recovering a `PartiallyOnline` upload only moves the missing parts. Otherwise it builds a new archive from the release folder and uploads everything, just like the first time.
+If it reuses the same archive as a previous upload, Bearcat keeps that upload's still-online links
+and uploads only the offline files. A newly packed archive must be uploaded in full because its
+parts cannot be combined with the old ones.
+
+### Per-hoster overrides
+
+A hoster registration can override the release group's waiting time and trigger. See
+[Reupload overrides per hoster](/Bearcat/post-installation/#reupload-overrides-per-hoster) for setup.
+
+- **Hours until reupload:** replaces the release group's waiting time for this hoster.
+- **Reupload trigger:** controls when that waiting time starts:
+  - **Partially or fully offline** (default): starts when the first file goes offline.
+  - **Only when fully offline:** starts when the last file goes offline. No reupload is scheduled
+    while any file remains online. If a file comes back online, the timer resets.
+- **Always reupload all files:** uploads every archive part, including those that are still online.
+
+For hosters that remove files one at a time, **Only when fully offline** avoids repeated reuploads
+while parts are still online. If files expire after a period without downloads, **Always reupload
+all files** gives them a new upload date together.
 
 ## 8. Manual reuploads
 
@@ -244,13 +213,12 @@ A manual reupload creates a new upload record and then follows the normal archiv
 
 ## 9. What happens to link crypter containers on a reupload?
 
-On a reupload Bearcat will try to re-use the existing link crypter container, is possible.
+Bearcat tries to update the existing container for the same upload configuration and link crypter
+configuration.
+If the update succeeds, the URL stays the same, so existing forum posts need no changes.
 
-If an earlier upload for the same upload configuration already has a container for the same link crypter configuration, Bearcat tries to **update** that container with the new hoster links. When that works, the container URL stays the same, so you do not need to replace it in existing forum posts.
-
-If the update fails, Bearcat falls back to creating a brand-new container, and the new upload may end up with a new container URL.
-
-Whether updating is possible depends on the link crypter provider and its API. Some support it, some don't, and when they don't, Bearcat just creates a fresh container.
+If the provider cannot update containers or the update fails, Bearcat creates a new container.
+Its URL may differ from the old one.
 
 ## 10. Cleanup after a successful upload
 
@@ -264,3 +232,37 @@ With it on, the **"Auto cleanup"** background task works on retention periods:
 The archive period counts from the last upload of the archive configuration, so every reupload restarts it. Nothing is ever deleted from the hoster.
 
 Once the local archive is gone, a later reupload gets its files back from a [mirror hoster](/Bearcat/mirror-downloads/), and falls back to repacking for managed releases. See [Auto cleanup](/Bearcat/advanced-configuration/#auto-cleanup) for the settings and the exact preconditions.
+
+## Archive reuse and repackaging
+
+Hosters often recognise files by their MD5 hash. If an archive was previously uploaded to the same
+type of hoster, Bearcat needs new hashes before uploading it again.
+
+- **RAR:** Bearcat appends zero bytes until each file has a hash not yet used for this archive
+  configuration. The archive still extracts normally. Bearcat keeps the hash history even after
+  local files are deleted.
+- **7-Zip:** split volumes cannot be changed this way without corrupting the archive, so Bearcat
+  creates a new archive instead.
+
+Before changing a reused archive, Bearcat checks whether another active upload is using it.
+If so, it waits until a later run.
+
+### The nonce file and repackaging
+
+Before packing, Bearcat writes a new random value to `__nonce.txt` in the release folder.
+The changed content helps produce different archive hashes.
+
+For RAR, the nonce and appended zero bytes ensure each part gets a new hash. Parts remain close to
+the configured size, with only a few extra bytes. This matters when a hoster limits file sizes.
+
+For 7-Zip, **Archive repackaging** controls how Bearcat produces different files:
+
+| Strategy | Packing settings | Trade-off |
+| --- | --- | --- |
+| **Change archive file size by 1 MB** (default) | No compression or solid mode; part size grows by `1` MB from the latest archive | Changes the parts without compression work |
+| **Nonce only, no compression** | Changes only `__nonce.txt`; no compression or solid mode | Low CPU use, but some parts may keep their old hash |
+| **Solid archive with compression** | Solid mode and compression | Higher CPU use; the nonce change affects the archive more reliably |
+
+The compression and solid-mode settings also apply to RAR, but the `1` MB size increase does not.
+RAR archives created before hash tracking was introduced are repacked once using the selected
+strategy. Later reuploads can use the appended-byte method.

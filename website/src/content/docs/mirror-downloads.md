@@ -3,13 +3,10 @@ title: "Use Hosters as Long-Term Storage"
 description: "Let Bearcat download archive files back from a hoster when a reupload needs them, instead of keeping every archive on local disk."
 ---
 
-Mirror downloads turn your hosters into long-term storage. You mark a hoster as a mirror, and from
-then on Bearcat can download the archive files back from that hoster whenever a reupload needs them.
-The local copy of an archive becomes optional, so you can free the disk space it takes up and still
-keep the release reuploadable.
+Enable a hoster as a mirror so Bearcat can restore archive files when a reupload needs them.
+You can then delete local archives to free disk space, as long as a mirror still has the required files online.
 
 This works for both [managed and unmanaged releases](/Bearcat/release-types/).
-
 
 ![running-mirror-download.png](images/running-mirror-download.png)
 
@@ -21,7 +18,7 @@ A mirror download happens when all of the following are true:
 - The newest archive of that archive configuration is deleted or has missing files.
 - A mirror hoster still has every needed file online.
 
-Bearcat provisions the archive files for an upload in this order:
+Bearcat looks for archive files in this order:
 
 1. Use the local archive files if they are still on disk.
 2. Download them from a mirror hoster.
@@ -36,8 +33,7 @@ has some files online, those are carried over and only the missing ones are down
 
 ## Enable a hoster as a mirror
 
-Open the hoster registration and turn on **"Use for mirror downloads"**. Nothing else changes for
-that hoster: it keeps uploading exactly as before, it is just also allowed to serve files back.
+Open the hoster registration and turn on **Use for mirror downloads**.
 
 ![enable-hoster-mirror-download.png](images/enable-hoster-mirror-download.png)
 
@@ -59,18 +55,18 @@ switch only shows up for the ones that do:
 | file-upload.org | No |
 | Uploady.io | No |
 
-Where a premium account is needed, Bearcat shows a hint next to the switch. Uploads to those hosters
-work with a free account either way, only the download does not.
+Bearcat shows a hint beside the switch when a premium account is needed. Free accounts can still
+upload to these hosters.
 
-Alfafile is a special case: its API allows to create download links for free accounts, but free accounts
-can only start one download every 120 minutes and have 500 MB of traffic in total, which is
-not enough to restore a multi part archive.
+<details>
+<summary>Why some hosters need a premium account</summary>
 
-Fast2Share makes free accounts wait about a minute per file before it returns a download link.
-Bearcat does not implement such things (it is not JDownloader), so non premium accounts will return an error instead.
+- **Alfafile:** free accounts allow one download every 120 minutes and only 500 MB of total traffic.
+- **Fast2Share:** free accounts have a waiting period for each file. Bearcat does not support this,
+  so mirror downloads with a free account fail.
+- **Keep2Share:** free downloads are limited to roughly 50 KB/s and one connection at a time.
 
-Keep2Share returns download links to free accounts, but throttles them to roughly 50 KB/s and
-one download at a time, so restoring an archive that way takes hours.
+</details>
 
 ## Cancel a running download
 

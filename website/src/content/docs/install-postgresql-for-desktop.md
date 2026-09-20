@@ -5,7 +5,7 @@ description: "Install and run PostgreSQL for Bearcat, for the Desktop app or the
 
 Bearcat needs a PostgreSQL database to store its data.
 
-It does not ship with PostgreSQL, so you need to provide it yourself. Both the Desktop app and the [Windows service](/Bearcat/use-the-windows-service/) connect to your own PostgreSQL server.
+Both the Desktop app and the [Windows service](/Bearcat/use-the-windows-service/) connect to a PostgreSQL server you install separately.
 
 Use PostgreSQL 18. Older PostgreSQL versions are currently untested.
 
@@ -23,15 +23,65 @@ Password: choose-a-password
 
 You can use different values, but enter the same values in your Bearcat configuration.
 
+## PostgreSQL In Docker
+
+I recommend Docker for PostgreSQL on Windows. Bearcat itself can still run natively as the Desktop app or Windows service.
+
+Create a persistent data directory on your host machine:
+
+```bash
+mkdir -p ~/Bearcat/postgres-data
+```
+
+Choose a folder you can easily back up. This folder contains the PostgreSQL database files.
+
+Start PostgreSQL 18:
+
+```bash
+docker run -d \
+  --name bearcat-postgres \
+  -e POSTGRES_USER=bearcat \
+  -e POSTGRES_PASSWORD=choose-a-password \
+  -e POSTGRES_DB=bearcat \
+  -p 5432:5432 \
+  -v ~/Bearcat/postgres-data:/var/lib/postgresql \
+  postgres:18
+```
+
+On Windows PowerShell, use a Windows path instead:
+
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\Bearcat\postgres-data"
+
+docker run -d `
+  --name bearcat-postgres `
+  -e POSTGRES_USER=bearcat `
+  -e POSTGRES_PASSWORD=choose-a-password `
+  -e POSTGRES_DB=bearcat `
+  -p 5432:5432 `
+  -v "$env:USERPROFILE\Bearcat\postgres-data:/var/lib/postgresql" `
+  postgres:18
+```
+
+Enter the [connection settings above](#recommended-settings) in Bearcat, using the password you chose for the container.
+
+To stop the database:
+
+```bash
+docker stop bearcat-postgres
+```
+
+To start it again later:
+
+```bash
+docker start bearcat-postgres
+```
+
+Do not delete the data directory unless you intentionally want to delete the Bearcat database. For backups, stop the container first so PostgreSQL has flushed all files cleanly.
+
 ## Windows
 
-On Windows you have two ways to run PostgreSQL: in Docker, or with the native installer.
-
-:::tip[Recommended on Windows]
-Run PostgreSQL in Docker (see [PostgreSQL In Docker](#postgresql-in-docker) below). It keeps the database self-contained, easy to back up, and easy to remove again. The native installer registers an always-running Windows service and a system-wide install that is more tedious to get rid of later.
-:::
-
-If you prefer a native install, follow the steps below.
+Use [PostgreSQL in Docker](#postgresql-in-docker) above, or follow these steps for a native installation. The native installer runs PostgreSQL as a Windows service.
 
 ### Native installer
 
@@ -44,11 +94,12 @@ During installation:
 - The installer creates a superuser named `postgres` and asks you to set its password. You choose only the password here, not the user name.
 - Stack Builder is optional and not required by Bearcat.
 
-After installation you need a user and a database for Bearcat. You have two options:
+Choose the account Bearcat should use:
 
-**Use the `postgres` superuser directly (simplest).** In your Bearcat configuration, enter `postgres` as the username and the password you set during installation, and `bearcat` as the database name. Bearcat creates the database and applies migrations on first start.
+- **Installer account:** Enter `postgres` and the password you chose during installation in Bearcat. This uses the PostgreSQL superuser.
+- **Separate account:** Open **pgAdmin 4**, connect as `postgres`, and create a login role named `bearcat`. Set a password and enable **Can create databases?** Then enter this account in Bearcat.
 
-**Create a dedicated `bearcat` user.** Open **pgAdmin 4** (installed alongside PostgreSQL), connect as `postgres`, and create a new login role named `bearcat`: set a password and enable **Can create databases?** in its privileges. Then use that account in your Bearcat configuration. Bearcat creates the `bearcat` database on first start.
+Set the database name to `bearcat`. Bearcat creates it and applies migrations on first start.
 
 ## macOS
 
@@ -81,70 +132,6 @@ CREATE DATABASE bearcat OWNER bearcat;
 ```
 
 Enter the same host, port, database, username, and password in your Bearcat configuration.
-
-## PostgreSQL In Docker
-
-If you prefer not to install PostgreSQL directly on your operating system, you can run only PostgreSQL in Docker and still run Bearcat natively with the Desktop app or the Windows service. On Windows this is the recommended way to run PostgreSQL.
-
-Create a persistent data directory on your host machine:
-
-```bash
-mkdir -p ~/Bearcat/postgres-data
-```
-
-Choose a folder you can easily back up. This folder contains the PostgreSQL database files.
-
-Start PostgreSQL 18:
-
-```bash
-docker run -d \
-  --name bearcat-postgres \
-  -e POSTGRES_USER=bearcat \
-  -e POSTGRES_PASSWORD=choose-a-password \
-  -e POSTGRES_DB=bearcat \
-  -p 5432:5432 \
-  -v ~/Bearcat/postgres-data:/var/lib/postgresql/data \
-  postgres:18
-```
-
-On Windows PowerShell, use a Windows path instead:
-
-```powershell
-New-Item -ItemType Directory -Force "$env:USERPROFILE\Bearcat\postgres-data"
-
-docker run -d `
-  --name bearcat-postgres `
-  -e POSTGRES_USER=bearcat `
-  -e POSTGRES_PASSWORD=choose-a-password `
-  -e POSTGRES_DB=bearcat `
-  -p 5432:5432 `
-  -v "$env:USERPROFILE\Bearcat\postgres-data:/var/lib/postgresql/data" `
-  postgres:18
-```
-
-Use these settings in your Bearcat configuration:
-
-```text
-Host: localhost
-Port: 5432
-Database: bearcat
-Username: bearcat
-Password: choose-a-password
-```
-
-To stop the database:
-
-```bash
-docker stop bearcat-postgres
-```
-
-To start it again later:
-
-```bash
-docker start bearcat-postgres
-```
-
-Do not delete the data directory unless you intentionally want to delete the Bearcat database. For backups, stop the container first so PostgreSQL has flushed all files cleanly.
 
 ## Troubleshooting
 

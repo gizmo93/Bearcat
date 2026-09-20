@@ -3,11 +3,10 @@ title: "Run Bearcat as a Windows Service"
 description: "Run Bearcat as an always-on Windows background service, configured through a small CLI."
 ---
 
-Bearcat is a web application that runs in your browser. Running it as a Windows service lets it start automatically with the machine and keep running in the background, even when no user is logged in.
+Run Bearcat as a Windows service to start it automatically with the machine and keep it running when no user is logged in.
+For on-demand use, choose the [Desktop app](/Bearcat/use-the-desktop-launcher/) instead. Both run the same application.
 
-This is the recommended setup if you want Bearcat to be **always on**: on a Windows Server, or on a Windows PC where you want it running permanently. If you'd rather start and stop Bearcat by hand when you need it, use the [Desktop app](/Bearcat/use-the-desktop-launcher/) instead. Both run the exact same Bearcat, so you can switch later without losing data.
-
-The service uses YOUR OWN PostgreSQL server. It does not ship with PostgreSQL. For PostgreSQL setup instructions, see [Installing PostgreSQL For The Desktop App](/Bearcat/install-postgresql-for-desktop/).
+Install PostgreSQL separately. See [Set Up PostgreSQL for Bearcat](/Bearcat/install-postgresql-for-desktop/).
 
 ## Requirements
 
@@ -21,7 +20,7 @@ The service uses YOUR OWN PostgreSQL server. It does not ship with PostgreSQL. F
 
 Get the latest Windows Service package from the [GitHub releases page](https://github.com/gizmo93/Bearcat/releases) and extract it to a folder of your choice, for example `C:\Program Files\Bearcat`.
 
-The folder contains both `Bearcat.Host.exe` (the application that runs as the service) and `Bearcat.Cli.exe` (the small command line tool you use to install and manage it).
+The package includes `Bearcat.Host.exe`, which runs the service, and `Bearcat.Cli.exe`, which installs and configures it.
 
 ## Installing
 
@@ -94,7 +93,7 @@ The service logs to the Windows **Event Log**. Open the **Event Viewer**, go to 
 
 ## Logging More
 
-By default Bearcat only logs warnings and errors. If you need more detail to track down a problem, add a `Logging` section to `config.json` and restart the service. The file is layered on top of the built-in settings, so you only need to add what you want to change:
+Bearcat logs warnings and errors by default. For more detail, add the following `Logging` section to `config.json`. Keep your existing connection, paths, and port values:
 
 ```json
 {

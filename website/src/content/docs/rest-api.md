@@ -3,9 +3,8 @@ title: "Use the REST API"
 description: "Query releases, archives and uploads through the Bearcat REST API."
 ---
 
-Bearcat offers a (currently) read-only REST API to query your releases, archives
-and uploads. The API is part of the running Bearcat host, so it is available on the same address and
-port as the web UI.
+Use Bearcat's read-only REST API to query releases, archives, and uploads.
+It uses the same address and port as the web interface.
 
 ## Endpoints and documentation
 
@@ -16,17 +15,15 @@ port as the web UI.
 If Bearcat runs on `http://localhost:5000`, the interactive documentation is at
 `http://localhost:5000/api/docs` and the spec at `http://localhost:5000/openapi/v1.json`.
 
-To see all endpoints with their parameters and schemas, you can also use the browsable reference at
-[https://gizmo93.github.io/Bearcat/api/](https://gizmo93.github.io/Bearcat/api/).
+The [API reference](/Bearcat/api/) also lists the endpoints, parameters, and schemas.
 
 ## Authentication
 
-Currently no authentication. Bearcat is meant to run inside a private network, and the API is open to anyone who
-can reach the host. Do not expose the Bearcat host to the internet without putting your own
+The API has no authentication. Anyone who can reach the Bearcat host can access it.
+Keep Bearcat on a private network, or add your own
 authentication in front of it (for example a reverse proxy with basic auth or a VPN).
 
 ## Generating a client
 
-The Bearcat API follows the Open API standard, so you can just use the available openapi.json, to generate a client for the programming language you are using.
-Point a code generator such as [Kiota](https://learn.microsoft.com/openapi/kiota/) or
-[NSwag](https://github.com/RicoSuter/NSwag) at `/openapi/v1.json` and let it create a typed client for you.
+Point an OpenAPI code generator such as [Kiota](https://learn.microsoft.com/openapi/kiota/) or
+[NSwag](https://github.com/RicoSuter/NSwag) at your host's `/openapi/v1.json` to generate a typed client.

@@ -56,16 +56,12 @@ When you have posted a release somewhere, click **Mark as posted** on its entry.
 If you have several releases to post, the workflow walks you through them one by one instead of
 making you pick from the list each time.
 
-Click **Start workflow** on the single releases or the collections part. Bearcat takes you to the
-first release detail page and shows a workflow bar at the top with your progress. From there you
-can render the forum post the usual way on the **Overview** tab. See
-[Forum post templates](/Bearcat/forum-post-templates/) for how rendering works.
+Click **Start workflow** under single releases or collections to open the first release.
+The workflow bar shows your progress.
 
-If you set up a forum as a distribution site, you can also use **Post to forum** on the **Overview**
-tab instead of copying the rendered text by hand. It builds the post from the same forum post
-templates and prepares a draft with a preview link, so you only have to check it and submit. It does
-not submit for you, so mark the release as posted here once the post is up. See
-[Posting to Forums](/Bearcat/posting-to-forums/).
+On **Overview**, use [**Render forum post**](/Bearcat/forum-post-templates/#rendering-a-forum-post)
+to copy the text or [**Post to forum**](/Bearcat/posting-to-forums/) to prepare a draft.
+Submit the post in the forum, then return to the workflow bar.
 
 ![post-queue-toolbar.png](images/post-queue-toolbar.png)
 
@@ -83,9 +79,7 @@ at that release instead of the top of the list.
 
 ## Turning the post queue off
 
-If you do not work with the post queue, you can switch it off. Open **Configurations** and disable
-the post queue there. The header icon then disappears, Bearcat stops counting open items, and the
-post queue page shows a short note instead of the lists. You can turn it back on at any time, and
-the icon comes back without a restart.
+Disable the post queue under **Configurations** to hide its header icon and stop counting pending items.
+The queue page then shows a note instead of the lists. You can enable it again without restarting Bearcat.
 
 ![post-queue-config.png](images/post-queue-config.png)

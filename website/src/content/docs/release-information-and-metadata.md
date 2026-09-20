@@ -23,7 +23,8 @@ information and NFO files:
 - **xREL** has good coverage for German scene releases.
 - **SRRDB** also covers many English and international scene releases and can provide NFO files
   and IMDb IDs.
-- **PreDB** covers similar amounts of releases as SRRDB, but has stricter API limits. If an NFO needs to be resolved and both SRRDB and PreDB are activated, Bearcat will first try to get it from SRRDB before it tries PreDB.
+- **PreDB** has similar coverage to SRRDB, but stricter API limits. When both are enabled,
+  Bearcat tries SRRDB first for NFO files.
 
 ![nfo-database-setup.png](images/nfo-database-setup.png)
 
@@ -31,14 +32,15 @@ xREL, SRRDB and PreDB do not require account credentials.
 
 Open **Metadata sources** to register providers for movie, TV and game metadata:
 
-- **The Movie Database (TMDB)** supports movies, TV series, and TV episodes.
-- **TheTVDB** supports TV series.
-- **Steam** to lookup informations about games
+| Provider | Metadata | Credentials |
+| --- | --- | --- |
+| **The Movie Database (TMDB)** | Movies, TV series, and episodes | API key |
+| **TheTVDB** | TV series | API key |
+| **Steam** | Games | None |
 
 ![mediametadata-sources.png](images/mediametadata-sources.png)
 
-Both metadata providers require an API key. Use **Try login** after saving a registration to
-check the key.
+Use **Try login** after saving a registration to check the connection and any required API key.
 
 Bearcat checks active providers in its built-in order and uses the first matching result. A
 metadata provider cover is preferred over a scene database cover when it is available. Values
@@ -56,9 +58,8 @@ folder patterns such as `*.GERMAN.*` when separate automations handle different 
 
 ![folder-automation-language.png](images/folder-automation-language.png)
 
-Bearcat does not infer a language from release names. If the language is empty, it stays empty and
-the metadata provider uses its own default language. Existing releases and automations therefore
-continue to work after an upgrade without receiving an assumed language.
+Bearcat does not infer a language from release names. If none is set, the metadata provider uses
+its default language.
 
 The release folder automation list shows the language assigned by each automation. 
 

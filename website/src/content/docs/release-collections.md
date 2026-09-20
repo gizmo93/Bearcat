@@ -4,7 +4,6 @@ description: "Group related releases like a TV season and share their uploads an
 ---
 
 A release collection groups related releases, for example all episodes of a TV show season.
-You can manage their upload settings and share their download links from the collection page.
 
 ## Why you would use one
 
@@ -14,11 +13,10 @@ that you can share in a forum post.
 
 ## How a collection is created
 
-Collections are usually created for you automatically. On a release template you can turn on
-**Collection detection**. When it is on, Bearcat looks at the name of every new release made
-from that template and decides whether it belongs to a collection.
+Enable **Collection detection** on a release template to create collections automatically.
+Bearcat checks the name of each new release created from that template for a matching collection.
 
-There are two ways to detect:
+Choose how Bearcat groups releases:
 
 - **Series episode pattern** reads names like `Show.S01E01` and groups everything from the
   same show and season together.
@@ -29,9 +27,32 @@ When a matching release shows up, Bearcat either creates a new collection or add
 to the one that already exists. You can find all of your collections on the **Release
 collections** page and open any of them to see the details.
 
-If a release was not picked up automatically, you can open a collection and use **Add release**
-to add it by hand. You can only add releases from the same release group, which keeps unrelated
-releases out of the wrong collection.
+To add a release manually, open a collection and select **Add release**. Only releases from the
+same release group can be added.
+
+## Upload slots
+
+Create an upload slot to use the same upload settings for every release in the collection.
+
+When you create a slot you choose:
+
+- A name, such as "Rapidgator passworded".
+- The hoster to upload to.
+- The archive configuration to use for each release.
+- Whether to restrict downloads to premium users, if supported by the hoster.
+- A password policy for all releases in the slot.
+
+You can have several slots in one collection, for example one slot per hoster, and each slot
+keeps its own settings across all releases.
+
+## Container links
+
+A slot can also create container links through your link crypters. A container link gathers the
+download links from every release in the slot into a single link, so one link covers the whole
+season instead of one link per episode.
+
+Use **Edit container link crypters** to choose the crypters for a slot. The password and other
+crypter settings apply to all uploads in that slot.
 
 ## What you find inside a collection
 
@@ -42,10 +63,8 @@ series cover, the upload slots, and the releases that belong to it.
 
 ### Series metadata
 
-Bearcat looks up the series behind a collection through the active metadata sources, using the
-same resolver as a single release. TMDB and TheTVDB can provide series metadata. When Bearcat finds
-a match, the collection shows the series title, a short description, and the cover image. Use
-**Resolve metadata** to look again, for example after changing the name or primary language.
+Bearcat uses active metadata sources such as TMDB and TheTVDB to find the series title,
+description, and cover. Select **Resolve metadata** to search again after changing the name or language.
 
 The primary language controls translated titles and descriptions. If it is empty, the provider's
 default language is used. Bearcat can use an IMDb ID found on one of the collection's releases and
@@ -57,19 +76,12 @@ for the complete lookup flow.
 
 ### Image uploads
 
-The cover image of a series often needs to live on an image hoster before you can use it in a
-forum post. The **Image uploads** part of the collection takes care of that: it uploads the
-series cover to the image hosters you choose and keeps the resulting links ready for you.
+**Image uploads** uploads the series cover to your image hosters for use in forum posts.
+You can configure this in two places:
 
-There are two ways to set this up:
-
-- **On a release template.** When collection detection is on, a template gains a **Collection
-  image upload configurations** section. Every hoster you add there is applied to the collection
-  that the template's releases land in, so new collections come with their cover uploads already
-  configured.
-- **Directly on the collection.** Open a collection and use **Add** in the image uploads part to
-  point the cover at another hoster by hand. This is handy for collections you put together
-  yourself.
+- **On a release template:** enable collection detection, then add hosters under **Collection
+  image upload configurations**. Bearcat applies them to the collections that receive the template's releases.
+- **On a collection:** select **Add** under **Image uploads** and choose a hoster.
 
 If you leave the name empty, Bearcat names the configuration after the hoster. You can rename
 an existing entry. To use a different hoster, add a new image upload configuration.
@@ -81,31 +93,4 @@ See [Forum post templates](/Bearcat/forum-post-templates/) for the details.
 
 ### Releases
 
-This is simply the list of releases in the collection. From here you can view the upload links
-of a release or remove a release from the collection if it does not belong.
-
-### Upload slots
-
-An upload slot is a shared upload group for the whole collection. You create a slot once, and
-Bearcat sets up one upload for every release in the collection using the same settings.
-
-When you create a slot you choose:
-
-- A name, so you can tell your slots apart, for example "Rapidgator passworded".
-- The hoster the files should be uploaded to.
-- The archive configuration, meaning which archives of each release should go up.
-- Whether downloads are for premium users only, if the hoster supports that.
-- A password policy, so you can make sure every release in the slot uses the password you expect.
-
-You can have several slots in one collection, for example one slot per hoster, and each slot
-keeps its own settings across all releases.
-
-## Container links
-
-A slot can also create container links through your link crypters. A container link gathers the
-download links from every release in the slot into a single link, so one link covers the whole
-season instead of one link per episode.
-
-The password and the other crypter options you set apply to every release in the slot, so the
-whole collection stays consistent. You manage which crypters a slot uses with **Edit container
-link crypters**, and any change there is applied to all uploads in that slot.
+View each release's upload links or remove releases from the collection.

@@ -3,14 +3,11 @@ title: "Post Releases to Forums Automatically"
 description: "Enable and configure rule based automatic forum posting"
 ---
 
-[Posting to Forums](/Bearcat/posting-to-forums/) prepares a draft that you check and submit yourself.
-Posting rules remove that last step: a rule decides which subforum a release belongs in, and Bearcat
-renders the template, finds or creates the thread and sends the post. You can trigger that per release
-from the post queue, or let a background task do it automatically.
+Posting rules let Bearcat choose a subforum, fill in a template and submit the post.
+Run them with **Post** in the [post queue](/Bearcat/post-queue/) or enable automatic posting.
+To review and submit drafts yourself, use [Posting to Forums](/Bearcat/posting-to-forums/).
 
-Every forum registration has its own rule list. Rules are ordered and the first matching rule wins.
-If no rule matches, the release is not posted to that forum automatically, to prevent mistakes from happening
-(e.g. posting into the wrong subforum).
+Each forum has its own rules. The first matching rule wins. If none matches, Bearcat skips that forum.
 
 ## What you need first
 
@@ -34,15 +31,12 @@ Click the number to open the page, or use **Posting rules** in the row menu.
 
 Two switches at the top of the page apply to the whole forum registration.
 
-**Automatic posting** is off by default. While it is off, rules are only used for the preview and for
-the **Post** button in the post queue, so nothing is sent without you pressing something. Switch it
-on and the "Automatic forum posting" background task posts every matching release that is waiting in
-the post queue, every 15 minutes by default. The interval can be changed on the
-[Background tasks](/Bearcat/advanced-configuration/#background-tasks) page.
+**Automatic posting** is off by default. You can still preview rules and use **Post** in the post queue.
+When enabled, the "Automatic forum posting" background task posts matching releases in the queue every 15 minutes by default.
+Change the interval under [Background tasks](/Bearcat/advanced-configuration/#background-tasks).
 
-**Thread search without dots** is on by default. Release names use dots, most forum thread titles use
-spaces, so Bearcat replaces the dots with spaces when it searches the forum for an existing thread.
-A new thread gets the same spaced name as its title, switch it off and both the search and new thread titles use the dotted release name.
+**Thread search without dots** is on by default. Bearcat replaces dots with spaces when searching
+for threads and naming new ones. Turn it off to use the dotted release name for both.
 
 ## Adding a rule
 
@@ -89,15 +83,21 @@ Each comparison row picks a field, an operator and a value:
 | Season | Number |
 | Episode | Number |
 
-Which operators a field offers depends on its type. The release name supports *is*, *is not*, the two
-pattern operators and *matches regex*. Release group and release group tag swap the regex for
-*is one of*, *is none of*, *is set* and *is not set*. The primary language has the list and set
-operators but no patterns. Resolution, year, season and episode can be compared with *is at least*
-and *is at most*.
+The available operators depend on the field:
 
-*matches pattern (%)* uses `%` as a placeholder for any text and matches the whole value, so
-`%German%` matches anywhere in the name and `%-FLAME` matches names ending in that group. Patterns
-and regular expressions ignore case. A regular expression that is invalid or too slow counts as
+| Field | Operators |
+| --- | --- |
+| Release name | *is*, *is not*, pattern matching and *matches regex* |
+| Release group, release group tag | *is*, *is not*, pattern matching, *is one of*, *is none of*, *is set*, *is not set* |
+| Primary language | *is*, *is not*, *is one of*, *is none of*, *is set*, *is not set* |
+| Resolution, year, season, episode | Include *is at least* and *is at most* |
+
+With *matches pattern (%)*, `%` stands for any text. The pattern must match the whole value:
+
+- `%German%` matches names containing `German`.
+- `%-FLAME` matches names ending in `-FLAME`.
+
+Patterns and regular expressions ignore case. An invalid or slow regular expression counts as
 no match instead of failing the rule.
 
 Most fields come from the release classification, which Bearcat derives from the release name and,
@@ -110,13 +110,10 @@ move it. Put specific rules above general ones.
 
 ## Dry run
 
-The **Dry run** card at the bottom of the page matches the saved rules against the most recent
-releases without posting anything. Click **Preview** and you get a list of releases with the rule
-that would take each one and its subforum, or **No match**. Use it after you changed the order or
-added a condition, to see whether the rules do what you expect before you switch automatic posting
-on.
+Save your rules, then click **Preview** in the **Dry run** card at the bottom of the page.
+It checks recent releases and shows the matching rule and subforum, or **No match**, without posting.
 
-The dry run uses the rules as they are saved, so save a rule first if you want to see its effect.
+Run a preview after changing conditions or rule order, before enabling automatic posting.
 
 ![rule-dry-run.png](images/rule-dry-run.png)
 
@@ -160,34 +157,36 @@ up again once it is ready.
 
 ## Updating a post after a reupload
 
-Direct download links break when files go offline and a release is uploaded again. If your post
-carries those links instead of a link crypter container, the post has to be rewritten. Bearcat can
-do that for you: it renders the template again, which always reads the current state of the release,
-and replaces the content of the existing post completely.
+After a reupload, Bearcat can update existing posts with the new download links.
+It renders the template again and **replaces the entire post, including any edits you made in the forum**.
+This is useful for posts containing direct download links instead of a link crypter container.
 
-A reupload puts the release back into the post queue. Forums it was already posted to now show
-**Post content is outdated** next to the stored link, together with an **Update post** button.
-Pressing it renders the template and overwrites the post in place. The stored link, the template
-used and the time of the update are saved on the posted location.
+### Updating from the queue
 
-The "Automatic forum posting" background task does the same on its own for every forum that has
-**Automatic posting** switched on and a template it can use. Once nothing is left to post and
-nothing is left to update, the release is marked as posted and leaves the queue again.
+A reupload puts the release back in the post queue. Previously used forums show
+**Post content is outdated** next to the stored link. Click **Update post** to replace the post.
+Bearcat records the post URL, template and update time under **Posted locations**.
 
-Which template is used is decided in this order:
+For forums with **Automatic posting** enabled, the background task updates posts automatically
+if a template is available. The release leaves the queue once all posts and updates are complete.
 
-1. the template you pick in the dialog,
-2. the template the post was created with,
-3. the template of the posting rule that matches the release today.
+### Choosing a template
 
-Posts created before this feature have no stored template, so they fall back to the current rule or
-to the template you pick.
+Bearcat uses the first available template in this order:
 
-You can also update a single post from the **Posted locations** card on a release or a collection.
-Every entry that belongs to a distribution site has an update button there, which works for posts
-that Bearcat created and for posts you confirmed by hand. A confirmation dialog appears first,
-because the content of the post is replaced completely and manual changes in the forum are lost.
-Collections can only be updated this way, the background task handles single releases.
+1. The template you pick in the dialog.
+2. The template the post was created with.
+3. The template of the rule that currently matches the release.
+
+Older posts may have no stored template. Choose one in the dialog or make sure a posting rule matches.
+
+### Updating from posted locations
+
+You can also update a post from **Posted locations** on a release or collection. The update button
+is available for entries linked to a distribution site, including posts you confirmed by hand.
+A dialog asks you to confirm the replacement.
+
+Collections can only be updated this way. The background task handles single releases.
 
 ## Notifications
 
@@ -196,6 +195,5 @@ updates have their own notification kinds, so you can switch them off separately
 
 ## Posted locations and duplicates
 
-A release stores in which forum it already got posted. That is how Bearcat tracks already posted things and shows **Posted** instead of offering the post again. It
-also means the background task cannot post a release twice to the same forum, even if the rules
-change in between.
+Bearcat records each forum in **Posted locations** and shows **Posted** instead of offering to post again.
+The background task skips those forums, even if the rules have changed.
