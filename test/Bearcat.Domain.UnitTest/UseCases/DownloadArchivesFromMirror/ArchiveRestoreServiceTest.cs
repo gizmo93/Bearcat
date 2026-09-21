@@ -22,6 +22,7 @@ public class ArchiveRestoreServiceTest
 {
     private FakeArchiveRestoreRepository repository = null!;
     private FakeDownloadHoster downloadHoster = null!;
+    private FakeDownloadHoster secondaryDownloadHoster = null!;
     private Mock<IFileSystemService> fileSystemServiceMock = null!;
     private Mock<INotificationService> notificationServiceMock = null!;
     private Mock<IHosterFactory> hosterFactoryMock = null!;
@@ -35,6 +36,7 @@ public class ArchiveRestoreServiceTest
     {
         repository = new FakeArchiveRestoreRepository();
         downloadHoster = new FakeDownloadHoster();
+        secondaryDownloadHoster = new FakeDownloadHoster();
         downloadProgressTracker = new RecordingDownloadProgressTracker();
         cancellationRegistry = new DownloadCancellationRegistry();
         restoreFolderPath = Path.Join(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -63,6 +65,9 @@ public class ArchiveRestoreServiceTest
 
         hosterFactoryMock = new Mock<IHosterFactory>();
         hosterFactoryMock.Setup(x => x.GetByName("FakeDownloadHoster")).Returns(downloadHoster);
+        hosterFactoryMock
+            .Setup(x => x.GetByName("SecondaryFakeDownloadHoster"))
+            .Returns(secondaryDownloadHoster);
         hosterFactoryMock
             .Setup(x => x.GetByName("HosterWithoutDownload"))
             .Returns(Mock.Of<IHoster>());
@@ -241,8 +246,8 @@ public class ArchiveRestoreServiceTest
 
         var errorMessage = scenario.WaitingUpload.ErrorMessages.Single();
         errorMessage.ShouldContain("archive.part02.rar");
-        errorMessage.ShouldContain("Mirror");
-        errorMessage.ShouldContain("3 of 3 attempts");
+        errorMessage.ShouldContain("Mirror (3 attempts)");
+        errorMessage.ShouldContain("up to 3 attempts per mirror");
         errorMessage.ShouldContain("2 of 2 archive files");
         errorMessage.ShouldContain("InternalServerError");
 
@@ -315,6 +320,168 @@ public class ArchiveRestoreServiceTest
         scenario.WaitingUpload.UploadState.ShouldBe(UploadState.Canceled);
         VerifyUploadCanceledNotification(Times.Once());
         VerifyRestoreFailedNotification(Times.Never());
+    }
+
+    [Test]
+    public async Task ProcessAsync_UserCancelsWhileTheFirstHosterFails_DoesNotFallBackToTheSecondHoster()
+    {
+        // Arrange
+        var scenario = CreateScenario();
+        downloadHoster.BlockUntilCanceled = true;
+        downloadHoster.ReportCancellationAsFailure = true;
+        AddSecondaryMirrorUpload(scenario, [2, 3]);
+        var service = CreateService();
+
+        // Act
+        var processTask = service.ProcessAsync(CancellationToken.None);
+        await downloadHoster.DownloadStarted.Task;
+        cancellationRegistry.RequestCancellation(scenario.Archive.Id);
+        await processTask;
+
+        // Assert
+        secondaryDownloadHoster.DownloadedLinks.ShouldBeEmpty();
+        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Deleted);
+        fileSystemServiceMock.Verify(x => x.DeleteDirectoryIfExists(restoreFolderPath), Times.Once);
+        scenario.WaitingUpload.UploadState.ShouldBe(UploadState.Canceled);
+        scenario.WaitingUpload.ErrorMessages.ShouldBeEmpty();
+        VerifyUploadCanceledNotification(Times.Once());
+        VerifyRestoreFailedNotification(Times.Never());
+    }
+
+    [Test]
+    public async Task ProcessAsync_FileIsMissingOnTheFirstHoster_FallsBackToTheSecondHoster()
+    {
+        // Arrange
+        var scenario = CreateScenario();
+        downloadHoster.MissingLinks.Add("https://mirror.test/file-2");
+        AddSecondaryMirrorUpload(scenario, [2]);
+        var missingFile = scenario.DonorUpload.UploadedFiles.Single(file =>
+            file.ArchiveFileId == 2
+        );
+        var checkedAtBefore = missingFile.CheckedAt;
+        var service = CreateService();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        secondaryDownloadHoster.DownloadedLinks.ShouldBe(["https://mirror2.test/file-2"]);
+        missingFile.OnlineState.ShouldBe(OnlineState.Offline);
+        missingFile.CheckedAt.ShouldNotBe(checkedAtBefore);
+        VerifyRestoreFailedNotification(Times.Never());
+    }
+
+    [Test]
+    public async Task ProcessAsync_FirstHosterExhaustsAllAttempts_FallsBackToTheSecondHoster()
+    {
+        // Arrange
+        var scenario = CreateScenario();
+        downloadHoster.AlwaysFails = true;
+        AddSecondaryMirrorUpload(scenario, [2, 3]);
+        var service = CreateService();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        downloadHoster.DownloadAttemptsPerLink["https://mirror.test/file-2"].ShouldBe(3);
+        downloadHoster.DownloadAttemptsPerLink["https://mirror.test/file-3"].ShouldBe(3);
+        secondaryDownloadHoster.DownloadedLinks.ShouldBe(
+            ["https://mirror2.test/file-2", "https://mirror2.test/file-3"],
+            ignoreOrder: true
+        );
+        VerifyRestoreFailedNotification(Times.Never());
+    }
+
+    [Test]
+    public async Task ProcessAsync_NoUploadCoversAllFiles_CombinesTheSourcesOfBothUploads()
+    {
+        // Arrange
+        var scenario = CreateScenario();
+        scenario.DonorUpload.UploadedFiles.RemoveAll(file => file.ArchiveFileId == 3);
+        AddSecondaryMirrorUpload(scenario, [3]);
+        var service = CreateService();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        downloadHoster.DownloadedLinks.ShouldBe(["https://mirror.test/file-2"]);
+        secondaryDownloadHoster.DownloadedLinks.ShouldBe(["https://mirror2.test/file-3"]);
+        scenario
+            .Archive.ArchiveFiles[2]
+            .FullFileName.ShouldBe(Path.Join(restoreFolderPath, "archive.part03.rar"));
+        VerifyRestoreFailedNotification(Times.Never());
+    }
+
+    [Test]
+    public async Task ProcessAsync_AllHostersFail_ReportsEveryHosterInTheFailureChain()
+    {
+        // Arrange
+        var scenario = CreateScenario();
+        downloadHoster.AlwaysFails = true;
+        secondaryDownloadHoster.AlwaysFails = true;
+        AddSecondaryMirrorUpload(scenario, [2, 3]);
+        var service = CreateService();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Deleted);
+        scenario.WaitingUpload.UploadState.ShouldBe(UploadState.Failed);
+
+        var errorMessage = scenario.WaitingUpload.ErrorMessages.Single();
+        errorMessage.ShouldContain("Mirror (3 attempts)");
+        errorMessage.ShouldContain("Mirror2 (3 attempts)");
+        errorMessage.ShouldContain("2 of 2 archive files");
+        restoreFailedMessages.Single().ShouldBe(errorMessage);
+    }
+
+    [Test]
+    public async Task ProcessAsync_ManagedReleaseAndOneFileHasNoSource_KeepsTheArchiveForRepacking()
+    {
+        // Arrange
+        var scenario = CreateScenario();
+        scenario.Archive.ArchiveConfig.Release.ReleaseType = ReleaseType.Managed;
+        scenario.DonorUpload.UploadedFiles.RemoveAll(file => file.ArchiveFileId == 3);
+        var service = CreateService();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        downloadHoster.DownloadedLinks.ShouldBeEmpty();
+        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Deleted);
+        scenario.Archive.ArchiveFolderPath.ShouldBe("/gone");
+        scenario.WaitingUpload.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        VerifyRestoreFailedNotification(Times.Never());
+    }
+
+    [Test]
+    public async Task ProcessAsync_FallsBackToAnotherHoster_TracksThatHosterForTheFile()
+    {
+        // Arrange
+        var scenario = CreateScenario();
+        downloadHoster.MissingLinks.Add("https://mirror.test/file-2");
+        AddSecondaryMirrorUpload(scenario, [2]);
+        var service = CreateService();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        downloadProgressTracker.BegunFiles.ShouldBe(
+            [new BegunFile(2, "Mirror2"), new BegunFile(3, "Mirror")],
+            ignoreOrder: true
+        );
+        downloadProgressTracker
+            .PlannedFilesPerArchiveId[3]
+            .ShouldAllBe(file => file.HosterName == "Mirror");
     }
 
     [Test]
@@ -548,6 +715,53 @@ public class ArchiveRestoreServiceTest
         return new Scenario(archive, donorUpload, waitingUpload);
     }
 
+    private void AddSecondaryMirrorUpload(Scenario scenario, IReadOnlyList<int> archiveFileIds)
+    {
+        var archiveConfig = scenario.Archive.ArchiveConfig;
+
+        var registration = new HosterRegistration
+        {
+            Id = 13,
+            Name = "Mirror2",
+            SerializedConfig = "protected",
+            HosterClassName = "SecondaryFakeDownloadHoster",
+            IsActive = true,
+            UseForMirrorDownloads = true,
+            MirrorPriority = 200,
+        };
+
+        var uploadConfig = new UploadConfig
+        {
+            Id = 23,
+            ArchiveConfigId = archiveConfig.Id,
+            ArchiveConfig = archiveConfig,
+            HosterRegistrationId = registration.Id,
+            HosterRegistration = registration,
+            Release = archiveConfig.Release,
+        };
+
+        var upload = new Upload
+        {
+            Id = 34,
+            ArchiveId = scenario.Archive.Id,
+            UploadConfigId = uploadConfig.Id,
+            UploadConfig = uploadConfig,
+            UploadState = UploadState.Completed,
+            UploadedFiles = archiveFileIds
+                .Select(archiveFileId =>
+                    CreateUploadedFile(
+                        uploadId: 34,
+                        archiveFileId: archiveFileId,
+                        link: $"https://mirror2.test/file-{archiveFileId}"
+                    )
+                )
+                .ToList(),
+        };
+
+        repository.Uploads.Add(upload);
+        repository.SerializedConfigs[registration.Id] = "protected";
+    }
+
     private sealed class RecordingDownloadProgressTracker : IDownloadProgressTracker
     {
         private readonly DownloadProgressTracker inner = new();
@@ -557,22 +771,28 @@ public class ArchiveRestoreServiceTest
             IReadOnlyList<PlannedDownloadFile>
         > PlannedFilesPerArchiveId { get; } = new();
 
-        public Dictionary<int, string> HosterNamePerArchiveId { get; } = new();
+        public List<BegunFile> BegunFiles { get; } = [];
 
-        public void StartTracking(
-            int archiveId,
-            string hosterName,
-            IReadOnlyList<PlannedDownloadFile> plannedFiles
-        )
+        public void StartTracking(int archiveId, IReadOnlyList<PlannedDownloadFile> plannedFiles)
         {
             PlannedFilesPerArchiveId[archiveId] = plannedFiles;
-            HosterNamePerArchiveId[archiveId] = hosterName;
-            inner.StartTracking(archiveId, hosterName, plannedFiles);
+            inner.StartTracking(archiveId, plannedFiles);
         }
 
-        public void BeginFile(int archiveId, int archiveFileId, string fileName, long? totalBytes)
+        public void BeginFile(
+            int archiveId,
+            int archiveFileId,
+            string fileName,
+            string hosterName,
+            long? totalBytes
+        )
         {
-            inner.BeginFile(archiveId, archiveFileId, fileName, totalBytes);
+            lock (BegunFiles)
+            {
+                BegunFiles.Add(new BegunFile(archiveFileId, hosterName));
+            }
+
+            inner.BeginFile(archiveId, archiveFileId, fileName, hosterName, totalBytes);
         }
 
         public void AddBytes(int archiveId, int archiveFileId, long bytes)
@@ -603,6 +823,8 @@ public class ArchiveRestoreServiceTest
             CheckedAt = new DateTime(2026, 9, 16, 12, 0, 0, DateTimeKind.Local),
         };
     }
+
+    private sealed record BegunFile(int ArchiveFileId, string HosterName);
 
     private sealed record Scenario(Archive Archive, Upload DonorUpload, Upload WaitingUpload);
 }

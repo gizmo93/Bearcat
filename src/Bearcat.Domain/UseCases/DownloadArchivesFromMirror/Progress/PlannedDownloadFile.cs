@@ -1,3 +1,8 @@
 namespace Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
 
-public sealed record PlannedDownloadFile(int ArchiveFileId, string FileName, long? SizeBytes);
+public sealed record PlannedDownloadFile(
+    int ArchiveFileId,
+    string FileName,
+    string HosterName,
+    long? SizeBytes
+);

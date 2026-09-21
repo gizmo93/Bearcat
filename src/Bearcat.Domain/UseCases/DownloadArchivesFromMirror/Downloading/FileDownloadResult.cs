@@ -4,16 +4,20 @@ public sealed record FileDownloadResult(
     int ArchiveFileId,
     string TargetFilePath,
     string FileName,
-    string HosterName,
-    string HosterFileLink,
     bool IsSuccess,
     string? Md5Hash,
+    string? HosterName,
     int Attempts,
-    bool IsFileMissing,
-    IReadOnlyList<string> ErrorMessages
+    IReadOnlyList<SourceFailure> SourceFailures
 )
 {
-    public string ErrorText => string.Join(" | ", ErrorMessages);
+    public string ErrorText =>
+        string.Join(
+            "; ",
+            SourceFailures.Select(failure =>
+                $"{failure.HosterName} ({failure.Attempts} attempts): {string.Join(" | ", failure.ErrorMessages)}"
+            )
+        );
 
     public static FileDownloadResult Succeeded(
         PlannedFileDownload download,
@@ -25,32 +29,25 @@ public sealed record FileDownloadResult(
             ArchiveFileId: download.ArchiveFileId,
             TargetFilePath: download.TargetFilePath,
             FileName: Path.GetFileName(download.TargetFilePath),
-            HosterName: hosterName,
-            HosterFileLink: download.UploadedFile.HosterFileLink,
             IsSuccess: true,
             Md5Hash: md5Hash,
+            HosterName: hosterName,
             Attempts: attempts,
-            IsFileMissing: false,
-            ErrorMessages: []
+            SourceFailures: []
         );
 
     public static FileDownloadResult Failed(
         PlannedFileDownload download,
-        string hosterName,
-        int attempts,
-        bool isFileMissing,
-        IReadOnlyList<string> errorMessages
+        IReadOnlyList<SourceFailure> sourceFailures
     ) =>
         new(
             ArchiveFileId: download.ArchiveFileId,
             TargetFilePath: download.TargetFilePath,
             FileName: Path.GetFileName(download.TargetFilePath),
-            HosterName: hosterName,
-            HosterFileLink: download.UploadedFile.HosterFileLink,
             IsSuccess: false,
             Md5Hash: null,
-            Attempts: attempts,
-            IsFileMissing: isFileMissing,
-            ErrorMessages: errorMessages
+            HosterName: null,
+            Attempts: 0,
+            SourceFailures: sourceFailures
         );
 }

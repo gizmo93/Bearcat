@@ -23,8 +23,14 @@ public class DownloadProgressTrackerTest
     {
         // Arrange
         var tracker = new DownloadProgressTracker();
-        tracker.StartTracking(1, "Rapidgator", [Planned(1, "archive.part01.rar", 1000)]);
-        tracker.BeginFile(1, archiveFileId: 1, fileName: "archive.part01.rar", totalBytes: 1000);
+        tracker.StartTracking(1, [Planned(1, "archive.part01.rar", 1000)]);
+        tracker.BeginFile(
+            1,
+            archiveFileId: 1,
+            fileName: "archive.part01.rar",
+            hosterName: "Rapidgator",
+            totalBytes: 1000
+        );
 
         // Act
         tracker.StopTracking(1);
@@ -40,7 +46,7 @@ public class DownloadProgressTrackerTest
         var tracker = new DownloadProgressTracker();
 
         // Act
-        tracker.StartTracking(1, "Rapidgator", []);
+        tracker.StartTracking(1, []);
         var snapshot = tracker.Get(1);
 
         // Assert
@@ -60,7 +66,6 @@ public class DownloadProgressTrackerTest
         // Act
         tracker.StartTracking(
             1,
-            "Rapidgator",
             [Planned(1, "archive.part01.rar", 600), Planned(2, "archive.part02.rar", 400)]
         );
         var snapshot = tracker.Get(1);
@@ -84,7 +89,6 @@ public class DownloadProgressTrackerTest
         var tracker = new DownloadProgressTracker();
         tracker.StartTracking(
             1,
-            "Rapidgator",
             [
                 Planned(1, "archive.part01.rar", 1000),
                 Planned(2, "archive.part02.rar", 1000),
@@ -93,9 +97,21 @@ public class DownloadProgressTrackerTest
         );
 
         // Act
-        tracker.BeginFile(1, archiveFileId: 1, fileName: "archive.part01.rar", totalBytes: 1000);
+        tracker.BeginFile(
+            1,
+            archiveFileId: 1,
+            fileName: "archive.part01.rar",
+            hosterName: "Rapidgator",
+            totalBytes: 1000
+        );
         tracker.AddBytes(1, archiveFileId: 1, bytes: 1000);
-        tracker.BeginFile(1, archiveFileId: 2, fileName: "archive.part02.rar", totalBytes: 1000);
+        tracker.BeginFile(
+            1,
+            archiveFileId: 2,
+            fileName: "archive.part02.rar",
+            hosterName: "Rapidgator",
+            totalBytes: 1000
+        );
         tracker.AddBytes(1, archiveFileId: 2, bytes: 1000);
         var snapshot = tracker.Get(1);
 
@@ -116,12 +132,17 @@ public class DownloadProgressTrackerTest
         var tracker = new DownloadProgressTracker();
         tracker.StartTracking(
             1,
-            "Rapidgator",
             [Planned(1, "archive.part01.rar", 1000), Planned(2, "archive.part02.rar", null)]
         );
 
         // Act
-        tracker.BeginFile(1, archiveFileId: 1, fileName: "archive.part01.rar", totalBytes: 1000);
+        tracker.BeginFile(
+            1,
+            archiveFileId: 1,
+            fileName: "archive.part01.rar",
+            hosterName: "Rapidgator",
+            totalBytes: 1000
+        );
         tracker.AddBytes(1, archiveFileId: 1, bytes: 1000);
         var snapshot = tracker.Get(1);
 
@@ -138,10 +159,16 @@ public class DownloadProgressTrackerTest
     {
         // Arrange
         var tracker = new DownloadProgressTracker();
-        tracker.StartTracking(1, "Rapidgator", [Planned(1, "archive.part01.rar", 1000)]);
+        tracker.StartTracking(1, [Planned(1, "archive.part01.rar", 1000)]);
 
         // Act
-        tracker.BeginFile(1, archiveFileId: 1, fileName: "archive.part01.rar", totalBytes: null);
+        tracker.BeginFile(
+            1,
+            archiveFileId: 1,
+            fileName: "archive.part01.rar",
+            hosterName: "Rapidgator",
+            totalBytes: null
+        );
         tracker.AddBytes(1, archiveFileId: 1, bytes: 250);
         var snapshot = tracker.Get(1);
 
@@ -156,10 +183,16 @@ public class DownloadProgressTrackerTest
     {
         // Arrange
         var tracker = new DownloadProgressTracker();
-        tracker.StartTracking(1, "Rapidgator", [Planned(1, "archive.part01.rar", 1000)]);
+        tracker.StartTracking(1, [Planned(1, "archive.part01.rar", 1000)]);
 
         // Act
-        tracker.BeginFile(1, archiveFileId: 1, fileName: "archive.part01.rar", totalBytes: 2000);
+        tracker.BeginFile(
+            1,
+            archiveFileId: 1,
+            fileName: "archive.part01.rar",
+            hosterName: "Rapidgator",
+            totalBytes: 2000
+        );
         tracker.AddBytes(1, archiveFileId: 1, bytes: 500);
         var snapshot = tracker.Get(1);
 
@@ -174,8 +207,14 @@ public class DownloadProgressTrackerTest
     {
         // Arrange
         var tracker = new DownloadProgressTracker();
-        tracker.StartTracking(1, "Rapidgator", [Planned(7, "archive.part01.rar", 1000)]);
-        tracker.BeginFile(1, archiveFileId: 7, fileName: "archive.part01.rar", totalBytes: 1000);
+        tracker.StartTracking(1, [Planned(7, "archive.part01.rar", 1000)]);
+        tracker.BeginFile(
+            1,
+            archiveFileId: 7,
+            fileName: "archive.part01.rar",
+            hosterName: "Rapidgator",
+            totalBytes: 1000
+        );
 
         // Act
         tracker.AddBytes(1, archiveFileId: 7, bytes: 250);
@@ -201,11 +240,22 @@ public class DownloadProgressTrackerTest
         var tracker = new DownloadProgressTracker();
         tracker.StartTracking(
             1,
-            "Rapidgator",
             [Planned(1, "archive.part01.rar", 600), Planned(2, "archive.part02.rar", 400)]
         );
-        tracker.BeginFile(1, archiveFileId: 1, fileName: "archive.part01.rar", totalBytes: 600);
-        tracker.BeginFile(1, archiveFileId: 2, fileName: "archive.part02.rar", totalBytes: 400);
+        tracker.BeginFile(
+            1,
+            archiveFileId: 1,
+            fileName: "archive.part01.rar",
+            hosterName: "Rapidgator",
+            totalBytes: 600
+        );
+        tracker.BeginFile(
+            1,
+            archiveFileId: 2,
+            fileName: "archive.part02.rar",
+            hosterName: "Rapidgator",
+            totalBytes: 400
+        );
 
         // Act
         tracker.AddBytes(1, archiveFileId: 1, bytes: 300);
@@ -229,11 +279,22 @@ public class DownloadProgressTrackerTest
         var tracker = new DownloadProgressTracker();
         tracker.StartTracking(
             1,
-            "Rapidgator",
             [Planned(1, "archive.part01.rar", 600), Planned(2, "archive.part02.rar", null)]
         );
-        tracker.BeginFile(1, archiveFileId: 1, fileName: "archive.part01.rar", totalBytes: 600);
-        tracker.BeginFile(1, archiveFileId: 2, fileName: "archive.part02.rar", totalBytes: null);
+        tracker.BeginFile(
+            1,
+            archiveFileId: 1,
+            fileName: "archive.part01.rar",
+            hosterName: "Rapidgator",
+            totalBytes: 600
+        );
+        tracker.BeginFile(
+            1,
+            archiveFileId: 2,
+            fileName: "archive.part02.rar",
+            hosterName: "Rapidgator",
+            totalBytes: null
+        );
 
         // Act
         tracker.AddBytes(1, archiveFileId: 1, bytes: 300);
@@ -255,8 +316,14 @@ public class DownloadProgressTrackerTest
     {
         // Arrange
         var tracker = new DownloadProgressTracker();
-        tracker.StartTracking(1, "Rapidgator", [Planned(1, "archive.part01.rar", 1000)]);
-        tracker.BeginFile(1, archiveFileId: 1, fileName: "archive.part01.rar", totalBytes: 1000);
+        tracker.StartTracking(1, [Planned(1, "archive.part01.rar", 1000)]);
+        tracker.BeginFile(
+            1,
+            archiveFileId: 1,
+            fileName: "archive.part01.rar",
+            hosterName: "Rapidgator",
+            totalBytes: 1000
+        );
 
         // Act
         tracker.AddBytes(1, archiveFileId: 1, bytes: 1500);
@@ -275,16 +342,33 @@ public class DownloadProgressTrackerTest
         var tracker = new DownloadProgressTracker();
         tracker.StartTracking(
             1,
-            "Rapidgator",
             [Planned(1, "archive.part01.rar", 600), Planned(2, "archive.part02.rar", 400)]
         );
-        tracker.BeginFile(1, archiveFileId: 1, fileName: "archive.part01.rar", totalBytes: 600);
-        tracker.BeginFile(1, archiveFileId: 2, fileName: "archive.part02.rar", totalBytes: 400);
+        tracker.BeginFile(
+            1,
+            archiveFileId: 1,
+            fileName: "archive.part01.rar",
+            hosterName: "Rapidgator",
+            totalBytes: 600
+        );
+        tracker.BeginFile(
+            1,
+            archiveFileId: 2,
+            fileName: "archive.part02.rar",
+            hosterName: "Rapidgator",
+            totalBytes: 400
+        );
         tracker.AddBytes(1, archiveFileId: 1, bytes: 400);
         tracker.AddBytes(1, archiveFileId: 2, bytes: 200);
 
         // Act
-        tracker.BeginFile(1, archiveFileId: 1, fileName: "archive.part01.rar", totalBytes: 600);
+        tracker.BeginFile(
+            1,
+            archiveFileId: 1,
+            fileName: "archive.part01.rar",
+            hosterName: "Rapidgator",
+            totalBytes: 600
+        );
         tracker.AddBytes(1, archiveFileId: 1, bytes: 100);
         var snapshot = tracker.Get(1);
 
@@ -313,6 +397,7 @@ public class DownloadProgressTrackerTest
         return new PlannedDownloadFile(
             ArchiveFileId: archiveFileId,
             FileName: fileName,
+            HosterName: "Rapidgator",
             SizeBytes: sizeBytes
         );
     }

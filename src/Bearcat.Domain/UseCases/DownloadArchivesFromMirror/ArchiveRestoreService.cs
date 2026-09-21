@@ -124,20 +124,26 @@ public class ArchiveRestoreService(
             return;
         }
 
-        var selectedSourceUpload = mirrorSourceResolver.FindSourceUpload(
+        var plan = mirrorSourceResolver.ResolveSources(
             uploadsOfArchive: uploadsOfArchive,
             neededArchiveFiles: neededArchiveFiles
         );
 
-        if (selectedSourceUpload is null)
+        if (plan.FilesWithoutSource.Count > 0)
         {
             var release = waitingUploads[0].UploadConfig.Release;
+
+            var fileNamesWithoutSource = string.Join(
+                ", ",
+                plan.FilesWithoutSource.Select(file => Path.GetFileName(file.FullFileName))
+            );
 
             if (release.ReleaseType is ReleaseType.Managed)
             {
                 logger.LogInformation(
-                    "No online mirror is available to restore {FileCount} archive files of archive {ArchiveId}, the release will be repackaged from the release folder instead",
-                    neededArchiveFiles.Count,
+                    "No online mirror is available to restore {FileCount} archive files ({FileNames}) of archive {ArchiveId}, the release will be repackaged from the release folder instead",
+                    plan.FilesWithoutSource.Count,
+                    fileNamesWithoutSource,
                     archive.Id
                 );
 
@@ -147,8 +153,9 @@ public class ArchiveRestoreService(
             if (archive.ArchiveState is ArchiveState.MissingFiles)
             {
                 logger.LogInformation(
-                    "No online mirror is available to restore {FileCount} archive files of archive {ArchiveId}, waiting for the user to provide the archive files",
-                    neededArchiveFiles.Count,
+                    "No online mirror is available to restore {FileCount} archive files ({FileNames}) of archive {ArchiveId}, waiting for the user to provide the archive files",
+                    plan.FilesWithoutSource.Count,
+                    fileNamesWithoutSource,
                     archive.Id
                 );
 
@@ -156,8 +163,9 @@ public class ArchiveRestoreService(
             }
 
             logger.LogWarning(
-                "Could not find an online mirror to restore {FileCount} archive files of archive {ArchiveId}",
-                neededArchiveFiles.Count,
+                "Could not find an online mirror to restore {FileCount} archive files ({FileNames}) of archive {ArchiveId}",
+                plan.FilesWithoutSource.Count,
+                fileNamesWithoutSource,
                 archive.Id
             );
 
@@ -178,10 +186,10 @@ public class ArchiveRestoreService(
             return;
         }
 
-        await RestoreFromSourceUploadAsync(
+        await RestoreFromMirrorsAsync(
             archive: archive,
             neededArchiveFiles: neededArchiveFiles,
-            selectedSourceUpload: selectedSourceUpload,
+            plan: plan,
             waitingUploads: waitingUploads,
             cancellationToken: cancellationToken
         );
@@ -201,24 +209,17 @@ public class ArchiveRestoreService(
         );
     }
 
-    private async Task RestoreFromSourceUploadAsync(
+    private async Task RestoreFromMirrorsAsync(
         Archive archive,
         IReadOnlyList<ArchiveFile> neededArchiveFiles,
-        SelectedSourceUpload selectedSourceUpload,
+        MirrorSourcePlan plan,
         IReadOnlyList<Upload> waitingUploads,
         CancellationToken cancellationToken
     )
     {
         var previousArchiveState = archive.ArchiveState;
-        var registration = selectedSourceUpload.Upload.UploadConfig.HosterRegistration;
-        var hoster = (IHosterWithDownload)hosterFactory.GetByName(registration.HosterClassName);
         var downloadSettings = ReadDownloadSettings();
-
-        var hosterConfig = hoster.DeserializeHosterConfig(
-            secretProtector.Unprotect(
-                await repository.GetSerializedConfigAsync(registration.Id, cancellationToken)
-            )
-        );
+        var hosters = await ResolveHostersAsync(plan, cancellationToken);
 
         var restoreFolderPath = fileSystemService.CreateTempDirectory(
             archive.ArchiveConfig.ArchiveFilesBasePath
@@ -230,11 +231,10 @@ public class ArchiveRestoreService(
         await repository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
-            "Restoring {FileCount} archive files of archive {ArchiveId} from upload {DonorUploadId} on hoster {HosterName} into {RestoreFolderPath}",
+            "Restoring {FileCount} archive files of archive {ArchiveId} from the hosters {HosterNames} into {RestoreFolderPath}",
             neededArchiveFiles.Count,
             archive.Id,
-            selectedSourceUpload.Upload.Id,
-            registration.Name,
+            string.Join(", ", hosters.Values.Select(resolved => resolved.Registration.Name)),
             restoreFolderPath
         );
 
@@ -251,25 +251,17 @@ public class ArchiveRestoreService(
 
             try
             {
-                var sizePerFileUrl = await GetFileSizesAsync(
-                    hoster: hoster,
-                    hosterConfig: hosterConfig,
-                    fileUrls: neededArchiveFiles
-                        .Select(archiveFile =>
-                            selectedSourceUpload
-                                .UploadedFilesByArchiveFileId[archiveFile.Id]
-                                .HosterFileLink
-                        )
-                        .ToList(),
+                var sizePerFileUrl = await GetFirstSourceFileSizesAsync(
+                    neededArchiveFiles: neededArchiveFiles,
+                    plan: plan,
+                    hosters: hosters,
                     cancellationToken: linkedTokenSource.Token
                 );
 
                 var downloads = neededArchiveFiles
                     .Select(archiveFile =>
                     {
-                        var uploadedFile = selectedSourceUpload.UploadedFilesByArchiveFileId[
-                            archiveFile.Id
-                        ];
+                        var sources = plan.SourcesPerArchiveFileId[archiveFile.Id];
 
                         return new PlannedFileDownload(
                             ArchiveFileId: archiveFile.Id,
@@ -278,22 +270,20 @@ public class ArchiveRestoreService(
                                 Path.GetFileName(archiveFile.FullFileName)
                             ),
                             ExpectedSizeBytes: sizePerFileUrl.TryGetValue(
-                                uploadedFile.HosterFileLink,
+                                sources[0].UploadedFile.HosterFileLink,
                                 out var sizeBytes
                             )
                                 ? sizeBytes
                                 : null,
-                            UploadedFile: uploadedFile
+                            Sources: sources
                         );
                     })
                     .ToList();
 
                 results = await mirrorDownloadCoordinator.RunDownloadsAsync(
                     archiveId: archive.Id,
-                    hosterName: registration.Name,
                     downloads: downloads,
-                    hoster: hoster,
-                    hosterConfig: hosterConfig,
+                    hosters: hosters,
                     downloadSettings: downloadSettings,
                     cancellationToken: linkedTokenSource.Token
                 );
@@ -334,8 +324,6 @@ public class ArchiveRestoreService(
                     restoreFolderPath: restoreFolderPath,
                     failures: failures,
                     totalFileCount: results.Count,
-                    hosterName: registration.Name,
-                    sourceUploadId: selectedSourceUpload.Upload.Id,
                     maxAttempts: downloadSettings.MaxAttempts,
                     waitingUploads: waitingUploads,
                     cancellationToken: cancellationToken
@@ -414,8 +402,6 @@ public class ArchiveRestoreService(
         string restoreFolderPath,
         IReadOnlyList<FileDownloadResult> failures,
         int totalFileCount,
-        string hosterName,
-        int sourceUploadId,
         int maxAttempts,
         IReadOnlyList<Upload> waitingUploads,
         CancellationToken cancellationToken
@@ -424,22 +410,17 @@ public class ArchiveRestoreService(
         foreach (var failure in failures)
         {
             logger.LogError(
-                "Failed to download archive file {ArchiveFileId} ({FileName}) of archive {ArchiveId} from hoster {HosterName} at {HosterFileLink} after {Attempts} attempts: {ErrorMessage}",
+                "Failed to download archive file {ArchiveFileId} ({FileName}) of archive {ArchiveId} from any online mirror: {FailureChain}",
                 failure.ArchiveFileId,
                 failure.FileName,
                 archive.Id,
-                failure.HosterName,
-                failure.HosterFileLink,
-                failure.Attempts,
                 failure.ErrorText
             );
         }
 
         logger.LogError(
-            "Failed to restore archive {ArchiveId} from hoster {HosterName} (source upload {SourceUploadId}): {FailedFileCount} of {TotalFileCount} archive files could not be downloaded",
+            "Failed to restore archive {ArchiveId}: {FailedFileCount} of {TotalFileCount} archive files could not be downloaded from any online mirror",
             archive.Id,
-            hosterName,
-            sourceUploadId,
             failures.Count,
             totalFileCount
         );
@@ -449,7 +430,6 @@ public class ArchiveRestoreService(
         archive.ArchiveState = previousArchiveState;
 
         var errorMessage = BuildFailureMessage(
-            hosterName: hosterName,
             failures: failures,
             totalFileCount: totalFileCount,
             maxAttempts: maxAttempts
@@ -468,7 +448,6 @@ public class ArchiveRestoreService(
     }
 
     private static string BuildFailureMessage(
-        string hosterName,
         IReadOnlyList<FileDownloadResult> failures,
         int totalFileCount,
         int maxAttempts
@@ -476,12 +455,80 @@ public class ArchiveRestoreService(
     {
         var fileDetails = string.Join(
             "; ",
-            failures.Select(failure =>
-                $"{failure.FileName} (failed after {failure.Attempts} of {maxAttempts} attempts): {failure.ErrorText}"
-            )
+            failures.Select(failure => $"{failure.FileName}: {failure.ErrorText}")
         );
 
-        return $"Archive restore failed: {failures.Count} of {totalFileCount} archive files could not be downloaded from the mirror on {hosterName} with up to {maxAttempts} attempts per file. {fileDetails}";
+        return $"Archive restore failed: {failures.Count} of {totalFileCount} archive files could not be downloaded from any online mirror (up to {maxAttempts} attempts per mirror). {fileDetails}";
+    }
+
+    private async Task<Dictionary<int, ResolvedMirrorHoster>> ResolveHostersAsync(
+        MirrorSourcePlan plan,
+        CancellationToken cancellationToken
+    )
+    {
+        var registrations = plan
+            .SourcesPerArchiveFileId.Values.SelectMany(selector: sources => sources)
+            .Select(selector: source => source.Registration)
+            .DistinctBy(keySelector: registration => registration.Id)
+            .ToList();
+
+        var hosters = new Dictionary<int, ResolvedMirrorHoster>();
+
+        foreach (var registration in registrations)
+        {
+            var hoster = (IHosterWithDownload)
+                hosterFactory.GetByName(name: registration.HosterClassName);
+
+            var hosterConfig = hoster.DeserializeHosterConfig(
+                serializedConfig: secretProtector.Unprotect(
+                    protectedValue: await repository.GetSerializedConfigAsync(
+                        hosterRegistrationId: registration.Id,
+                        cancellationToken: cancellationToken
+                    )
+                )
+            );
+
+            hosters[key: registration.Id] = new ResolvedMirrorHoster(
+                Registration: registration,
+                Hoster: hoster,
+                Config: hosterConfig
+            );
+        }
+
+        return hosters;
+    }
+
+    private async Task<Dictionary<string, long>> GetFirstSourceFileSizesAsync(
+        IReadOnlyList<ArchiveFile> neededArchiveFiles,
+        MirrorSourcePlan plan,
+        IReadOnlyDictionary<int, ResolvedMirrorHoster> hosters,
+        CancellationToken cancellationToken
+    )
+    {
+        var sizePerFileUrl = new Dictionary<string, long>();
+
+        var firstSourcesPerRegistrationId = neededArchiveFiles
+            .Select(archiveFile => plan.SourcesPerArchiveFileId[archiveFile.Id][0])
+            .GroupBy(source => source.Registration.Id);
+
+        foreach (var group in firstSourcesPerRegistrationId)
+        {
+            var resolved = hosters[group.Key];
+
+            var sizes = await GetFileSizesAsync(
+                hoster: resolved.Hoster,
+                hosterConfig: resolved.Config,
+                fileUrls: group.Select(source => source.UploadedFile.HosterFileLink).ToList(),
+                cancellationToken: cancellationToken
+            );
+
+            foreach (var entry in sizes)
+            {
+                sizePerFileUrl[entry.Key] = entry.Value;
+            }
+        }
+
+        return sizePerFileUrl;
     }
 
     private async Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(

@@ -11,24 +11,22 @@ public sealed class DownloadProgressTracker : IDownloadProgressTracker
 
     private readonly ConcurrentDictionary<int, DownloadSpeedState> states = new();
 
-    public void StartTracking(
-        int archiveId,
-        string hosterName,
-        IReadOnlyList<PlannedDownloadFile> plannedFiles
-    )
+    public void StartTracking(int archiveId, IReadOnlyList<PlannedDownloadFile> plannedFiles)
     {
-        states[archiveId] = new DownloadSpeedState(
-            Stopwatch.GetTimestamp(),
-            hosterName,
-            plannedFiles
-        );
+        states[archiveId] = new DownloadSpeedState(Stopwatch.GetTimestamp(), plannedFiles);
     }
 
-    public void BeginFile(int archiveId, int archiveFileId, string fileName, long? totalBytes)
+    public void BeginFile(
+        int archiveId,
+        int archiveFileId,
+        string fileName,
+        string hosterName,
+        long? totalBytes
+    )
     {
         if (states.TryGetValue(archiveId, out var state))
         {
-            state.BeginFile(archiveFileId, fileName, totalBytes);
+            state.BeginFile(archiveFileId, fileName, hosterName, totalBytes);
         }
     }
 
@@ -68,7 +66,6 @@ public sealed class DownloadProgressTracker : IDownloadProgressTracker
 
         return new DownloadProgressSnapshot(
             ArchiveId: archiveId,
-            HosterName: state.HosterName,
             BytesPerSecond: bytesPerSecond,
             DownloadedBytes: downloadedBytes,
             TotalBytes: totalBytes,
@@ -78,8 +75,6 @@ public sealed class DownloadProgressTracker : IDownloadProgressTracker
 
     private sealed class DownloadSpeedState
     {
-        public string HosterName { get; }
-
         private readonly Lock gate = new();
 
         private readonly Queue<Sample> samples;
@@ -92,24 +87,28 @@ public sealed class DownloadProgressTracker : IDownloadProgressTracker
 
         public DownloadSpeedState(
             long startTimestamp,
-            string hosterName,
             IReadOnlyList<PlannedDownloadFile> plannedFiles
         )
         {
-            HosterName = hosterName;
             samples = new Queue<Sample>([new Sample(startTimestamp, CumulativeBytes: 0)]);
             lastSampleTimestamp = startTimestamp;
             progressPerFile = plannedFiles.ToDictionary(
                 file => file.ArchiveFileId,
                 file => new FileProgress(
                     FileName: file.FileName,
+                    HosterName: file.HosterName,
                     DownloadedBytes: 0,
                     TotalBytes: file.SizeBytes ?? 0
                 )
             );
         }
 
-        public void BeginFile(int archiveFileId, string fileName, long? totalBytes)
+        public void BeginFile(
+            int archiveFileId,
+            string fileName,
+            string hosterName,
+            long? totalBytes
+        )
         {
             lock (gate)
             {
@@ -119,6 +118,7 @@ public sealed class DownloadProgressTracker : IDownloadProgressTracker
 
                 progressPerFile[archiveFileId] = new FileProgress(
                     FileName: fileName,
+                    HosterName: hosterName,
                     DownloadedBytes: 0,
                     TotalBytes: totalBytes ?? knownTotalBytes
                 );
@@ -184,6 +184,7 @@ public sealed class DownloadProgressTracker : IDownloadProgressTracker
                     .Select(entry => new DownloadFileProgressSnapshot(
                         ArchiveFileId: entry.Key,
                         FileName: entry.Value.FileName,
+                        HosterName: entry.Value.HosterName,
                         DownloadedBytes: entry.Value.TotalBytes > 0
                             ? Math.Min(entry.Value.DownloadedBytes, entry.Value.TotalBytes)
                             : entry.Value.DownloadedBytes,
@@ -209,6 +210,7 @@ public sealed class DownloadProgressTracker : IDownloadProgressTracker
 
         private readonly record struct FileProgress(
             string FileName,
+            string HosterName,
             long DownloadedBytes,
             long TotalBytes
         );

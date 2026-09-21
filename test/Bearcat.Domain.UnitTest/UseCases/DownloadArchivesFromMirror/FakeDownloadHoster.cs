@@ -24,6 +24,8 @@ public sealed class FakeDownloadHoster : IHosterWithDownload
 
     public bool ReportsFileAsMissing { get; set; }
 
+    public HashSet<string> MissingLinks { get; } = [];
+
     public string FailureMessage { get; set; } =
         "Download request failed with status code 500 (InternalServerError)";
 
@@ -84,7 +86,7 @@ public sealed class FakeDownloadHoster : IHosterWithDownload
 
         DownloadStarted.TrySetResult();
 
-        if (ReportsFileAsMissing)
+        if (ReportsFileAsMissing || MissingLinks.Contains(file.HosterFileLink))
         {
             return new DownloadFileResult(
                 IsSuccess: false,

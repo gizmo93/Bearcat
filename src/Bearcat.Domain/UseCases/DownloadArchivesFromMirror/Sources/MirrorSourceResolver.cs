@@ -57,14 +57,14 @@ public class MirrorSourceResolver(IHosterFactory hosterFactory)
             .ToHashSet();
     }
 
-    public SelectedSourceUpload? FindSourceUpload(
+    public MirrorSourcePlan ResolveSources(
         IReadOnlyList<Upload> uploadsOfArchive,
         IReadOnlyList<ArchiveFile> neededArchiveFiles
     )
     {
         var neededArchiveFileIds = neededArchiveFiles.Select(file => file.Id).ToHashSet();
 
-        var candidates = new List<SelectedSourceUpload>();
+        var candidatesPerArchiveFileId = new Dictionary<int, List<MirrorSource>>();
 
         foreach (var upload in uploadsOfArchive)
         {
@@ -80,7 +80,7 @@ public class MirrorSourceResolver(IHosterFactory hosterFactory)
                 continue;
             }
 
-            var newestFilePerArchiveFileId = upload
+            var newestUploadedFiles = upload
                 .UploadedFiles.Where(uploadedFile =>
                     neededArchiveFileIds.Contains(uploadedFile.ArchiveFileId)
                 )
@@ -89,29 +89,48 @@ public class MirrorSourceResolver(IHosterFactory hosterFactory)
                 .Where(uploadedFile =>
                     uploadedFile.OnlineState == OnlineState.Online
                     && !string.IsNullOrWhiteSpace(uploadedFile.HosterFileLink)
-                )
-                .ToDictionary(uploadedFile => uploadedFile.ArchiveFileId);
+                );
 
-            if (newestFilePerArchiveFileId.Count != neededArchiveFileIds.Count)
+            foreach (var uploadedFile in newestUploadedFiles)
             {
-                continue;
-            }
-
-            candidates.Add(
-                new SelectedSourceUpload(
-                    Upload: upload,
-                    UploadedFilesByArchiveFileId: newestFilePerArchiveFileId,
-                    LastCheckedAt: newestFilePerArchiveFileId
-                        .Values.Select(uploadedFile => uploadedFile.CheckedAt)
-                        .Max(),
-                    MirrorPriority: registration.MirrorPriority
+                if (
+                    !candidatesPerArchiveFileId.TryGetValue(
+                        uploadedFile.ArchiveFileId,
+                        out var candidates
+                    )
                 )
-            );
+                {
+                    candidates = [];
+                    candidatesPerArchiveFileId[uploadedFile.ArchiveFileId] = candidates;
+                }
+
+                candidates.Add(
+                    new MirrorSource(
+                        Registration: registration,
+                        Upload: upload,
+                        UploadedFile: uploadedFile
+                    )
+                );
+            }
         }
 
-        return candidates
-            .OrderBy(candidate => candidate.MirrorPriority)
-            .ThenByDescending(candidate => candidate.LastCheckedAt)
-            .FirstOrDefault();
+        var sourcesPerArchiveFileId = candidatesPerArchiveFileId.ToDictionary(
+            entry => entry.Key,
+            IReadOnlyList<MirrorSource> (entry) =>
+                entry
+                    .Value.OrderBy(source => source.Registration.MirrorPriority)
+                    .ThenByDescending(source => source.UploadedFile.CheckedAt)
+                    .ThenByDescending(source => source.UploadedFile.Id)
+                    .ToList()
+        );
+
+        var filesWithoutSource = neededArchiveFiles
+            .Where(file => !sourcesPerArchiveFileId.ContainsKey(file.Id))
+            .ToList();
+
+        return new MirrorSourcePlan(
+            SourcesPerArchiveFileId: sourcesPerArchiveFileId,
+            FilesWithoutSource: filesWithoutSource
+        );
     }
 }

@@ -1,4 +1,3 @@
-using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
 
 namespace Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
@@ -10,10 +9,8 @@ public class MirrorDownloadCoordinator(
 {
     public async Task<IReadOnlyList<FileDownloadResult>> RunDownloadsAsync(
         int archiveId,
-        string hosterName,
         IReadOnlyList<PlannedFileDownload> downloads,
-        IHosterWithDownload hoster,
-        IHosterConfig hosterConfig,
+        IReadOnlyDictionary<int, ResolvedMirrorHoster> hosters,
         DownloadSettings downloadSettings,
         CancellationToken cancellationToken
     )
@@ -21,12 +18,12 @@ public class MirrorDownloadCoordinator(
         using var semaphore = new SemaphoreSlim(downloadSettings.MaxParallelDownloads);
 
         downloadProgressTracker.StartTracking(
-            archiveId,
-            hosterName,
-            downloads
+            archiveId: archiveId,
+            plannedFiles: downloads
                 .Select(download => new PlannedDownloadFile(
                     ArchiveFileId: download.ArchiveFileId,
                     FileName: Path.GetFileName(download.TargetFilePath),
+                    HosterName: download.Sources[0].Registration.Name,
                     SizeBytes: download.ExpectedSizeBytes
                 ))
                 .ToList()
@@ -37,10 +34,8 @@ public class MirrorDownloadCoordinator(
             var downloadTasks = downloads.Select(download =>
                 archiveFileDownloader.DownloadAndVerifyAsync(
                     archiveId: archiveId,
-                    hosterName: hosterName,
                     download: download,
-                    hoster: hoster,
-                    hosterConfig: hosterConfig,
+                    hosters: hosters,
                     semaphore: semaphore,
                     downloadSettings: downloadSettings,
                     cancellationToken: cancellationToken

@@ -3,6 +3,7 @@ namespace Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
 public sealed record DownloadFileProgressSnapshot(
     int ArchiveFileId,
     string FileName,
+    string HosterName,
     long DownloadedBytes,
     long TotalBytes
 )

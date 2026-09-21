@@ -1,4 +1,4 @@
-using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 
 namespace Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 
@@ -6,5 +6,5 @@ public sealed record PlannedFileDownload(
     int ArchiveFileId,
     string TargetFilePath,
     long? ExpectedSizeBytes,
-    UploadedFile UploadedFile
+    IReadOnlyList<MirrorSource> Sources
 );
