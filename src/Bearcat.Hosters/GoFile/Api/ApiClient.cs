@@ -25,7 +25,7 @@ public class ApiClient(
 
     private const int MaxLinkCheckAttempts = 3;
 
-    private const string WebsiteToken = "4fd6sg89d7s6";
+    private const string UserAgent = "Bearcat";
 
     public async Task<Response> GetAccountAsync(
         string apiKey,
@@ -104,7 +104,7 @@ public class ApiClient(
         var existingFolderId = await GetExistingRootFolderIdAsync(
             rootFolderId: accountInfos.Data.RootFolder,
             folderName: folderName,
-            apiToken: apiToken,
+            apiKey: apiKey,
             cancellationToken: cancellationToken
         );
 
@@ -163,18 +163,33 @@ public class ApiClient(
     private async Task<string?> GetExistingRootFolderIdAsync(
         string rootFolderId,
         string folderName,
-        string apiToken,
+        string apiKey,
         CancellationToken cancellationToken
     )
     {
-        var rootFolder = await api.GetContentAsync(
-            folderId: rootFolderId,
-            apiToken: apiToken,
-            contentFilter: folderName,
-            sortField: "createTime",
-            sortDirection: 1,
-            cancellationToken: cancellationToken
-        );
+        GetContent.Response rootFolder;
+
+        try
+        {
+            rootFolder = await api.GetContentAsync(
+                folderId: rootFolderId,
+                apiToken: GetAuthorizationHeader(apiKey),
+                userAgent: UserAgent,
+                contentFilter: folderName,
+                sortField: "createTime",
+                sortDirection: 1,
+                cancellationToken: cancellationToken
+            );
+        }
+        catch (ApiException exception) when (IsNotPremiumError(exception))
+        {
+            logger.LogInformation(
+                exception,
+                "GoFile content listing requires premium, skipping duplicate folder detection"
+            );
+
+            return null;
+        }
 
         if (!string.Equals(rootFolder.Status, "ok", StringComparison.OrdinalIgnoreCase))
         {
@@ -191,6 +206,12 @@ public class ApiClient(
             ?.Id;
     }
 
+    private static bool IsNotPremiumError(ApiException exception)
+    {
+        return exception.StatusCode == HttpStatusCode.Unauthorized
+            && (exception.Content?.Contains("error-notPremium") ?? false);
+    }
+
     public async Task<
         IReadOnlyDictionary<string, (bool IsOnline, string? ErrorMessage)>
     > CheckOnlineStatusAsync(
@@ -201,14 +222,12 @@ public class ApiClient(
     {
         using var semaphore = new SemaphoreSlim(MaxParallelLinkChecks);
 
-        var apiToken = GetAuthorizationHeader(apiKey);
-
         var checkOnlineStatusTasks = fileUrls
             .Distinct()
             .Select(fileUrl =>
                 CheckFileOnlineStatusAsync(
                     fileUrl: fileUrl,
-                    apiToken: apiToken,
+                    apiKey: apiKey,
                     semaphore: semaphore,
                     cancellationToken: cancellationToken
                 )
@@ -231,7 +250,7 @@ public class ApiClient(
         string? ErrorMessage
     )> CheckFileOnlineStatusAsync(
         string fileUrl,
-        string apiToken,
+        string apiKey,
         SemaphoreSlim semaphore,
         CancellationToken cancellationToken
     )
@@ -253,12 +272,27 @@ public class ApiClient(
                     CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 timeoutCancellationTokenSource.CancelAfter(FileCheckTimeout);
 
-                var response = await api.GetFileInfoAsync(
-                    fileId: fileId,
-                    apiToken: apiToken,
-                    websiteToken: WebsiteToken,
-                    cancellationToken: timeoutCancellationTokenSource.Token
-                );
+                GetFileInfo.Response response;
+
+                try
+                {
+                    response = await api.GetFileInfoAsync(
+                        fileId: fileId,
+                        apiToken: GetAuthorizationHeader(apiKey),
+                        userAgent: UserAgent,
+                        cancellationToken: timeoutCancellationTokenSource.Token
+                    );
+                }
+                catch (ApiException exception) when (IsNotPremiumError(exception))
+                {
+                    logger.LogInformation(
+                        exception,
+                        "GoFile file check requires premium for {FileUrl}, assuming the file is online",
+                        fileUrl
+                    );
+
+                    return (fileUrl, IsOnline: true, ErrorMessage: null);
+                }
 
                 var isOnline =
                     string.Equals(response.Status, "ok", StringComparison.OrdinalIgnoreCase)
@@ -281,26 +315,6 @@ public class ApiClient(
             catch (OperationCanceledException)
             {
                 throw;
-            }
-            catch (ApiException exception)
-                when (exception.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                var notPremiumError = exception.Content?.Contains("error-notPremium") ?? false;
-
-                if (notPremiumError)
-                {
-                    logger.LogInformation(
-                        exception,
-                        "GoFile API returned notPremium error. Assuming all files are online"
-                    );
-                    return (fileUrl, IsOnline: true, ErrorMessage: null);
-                }
-
-                return (
-                    FileUrl: fileUrl,
-                    IsOnline: false,
-                    ErrorMessage: exception.InnerException?.Message ?? exception.Message
-                );
             }
             catch (ApiException exception)
                 when (exception.StatusCode == HttpStatusCode.TooManyRequests)

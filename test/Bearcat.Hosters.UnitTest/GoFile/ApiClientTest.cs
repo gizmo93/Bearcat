@@ -1,8 +1,10 @@
+using System.Net;
 using Bearcat.Hosters.GoFile.Api;
 using Bearcat.Hosters.GoFile.Api.GetFileInfo;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Refit;
 using Shouldly;
 using GoFileApiClient = Bearcat.Hosters.GoFile.Api.ApiClient;
 
@@ -41,6 +43,7 @@ public class ApiClientTest
                 x.GetContentAsync(
                     "root-folder-id",
                     "Bearer api-key",
+                    "Bearcat",
                     "release-folder",
                     "createTime",
                     1,
@@ -105,6 +108,7 @@ public class ApiClientTest
                 x.GetContentAsync(
                     "root-folder-id",
                     "Bearer api-key",
+                    "Bearcat",
                     "release-folder",
                     "createTime",
                     1,
@@ -132,27 +136,38 @@ public class ApiClientTest
                     },
                 }
             );
+        SetupCreateFolder();
+
+        // Act
+        var result = await apiClient.CreateUploadFolderIdAsync(
+            "api-key",
+            "release-folder",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("created-folder-id");
+    }
+
+    [Test]
+    public async Task CreateUploadFolderIdAsync_ContentListingNeedsPremium_CreatesFolder()
+    {
+        // Arrange
+        SetupAccountRootFolder();
         apiMock
             .Setup(x =>
-                x.CreateFolderAsync(
+                x.GetContentAsync(
+                    "root-folder-id",
                     "Bearer api-key",
-                    It.Is<Bearcat.Hosters.GoFile.Api.CreateFolder.Request>(request =>
-                        request.ParentFolderId == "root-folder-id"
-                        && request.FolderName == "release-folder"
-                    ),
+                    "Bearcat",
+                    "release-folder",
+                    "createTime",
+                    1,
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync(
-                new Bearcat.Hosters.GoFile.Api.CreateFolder.Response
-                {
-                    Status = "ok",
-                    Data = new Bearcat.Hosters.GoFile.Api.CreateFolder.Data
-                    {
-                        Id = "created-folder-id",
-                    },
-                }
-            );
+            .ThrowsAsync(await CreateNotPremiumExceptionAsync());
+        SetupCreateFolder();
 
         // Act
         var result = await apiClient.CreateUploadFolderIdAsync(
@@ -193,7 +208,7 @@ public class ApiClientTest
                 x.GetFileInfoAsync(
                     It.IsAny<string>(),
                     "Bearer api-key",
-                    "4fd6sg89d7s6",
+                    "Bearcat",
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -243,7 +258,7 @@ public class ApiClientTest
                 x.GetFileInfoAsync(
                     "folder-id",
                     "Bearer api-key",
-                    "4fd6sg89d7s6",
+                    "Bearcat",
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -308,7 +323,7 @@ public class ApiClientTest
                 x.GetFileInfoAsync(
                     "file-id",
                     "Bearer api-key",
-                    "4fd6sg89d7s6",
+                    "Bearcat",
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -330,6 +345,134 @@ public class ApiClientTest
         // Assert
         result[fileUrl].IsOnline.ShouldBeFalse();
         result[fileUrl].ErrorMessage.ShouldBe("GoFile file check timed out after 10 milliseconds");
+    }
+
+    [Test]
+    public async Task CheckOnlineStatusAsync_FileFound_ReturnsOnline()
+    {
+        // Arrange
+        var fileUrl = "https://gofile.io/d/file-id";
+
+        SetupAccountFileInfo(
+            new Response
+            {
+                Status = "ok",
+                Data = new Data { Id = "file-id", Type = "file" },
+            }
+        );
+
+        // Act
+        var result = await apiClient.CheckOnlineStatusAsync(
+            [fileUrl],
+            "api-key",
+            CancellationToken.None
+        );
+
+        // Assert
+        result[fileUrl].IsOnline.ShouldBeTrue();
+        result[fileUrl].ErrorMessage.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task CheckOnlineStatusAsync_UnknownFile_ReturnsOffline()
+    {
+        // Arrange
+        var fileUrl = "https://gofile.io/d/00000000-0000-0000-0000-000000000000";
+
+        SetupAccountFileInfo(new Response { Status = "error-notFound" });
+
+        // Act
+        var result = await apiClient.CheckOnlineStatusAsync(
+            [fileUrl],
+            "api-key",
+            CancellationToken.None
+        );
+
+        // Assert
+        result[fileUrl].IsOnline.ShouldBeFalse();
+        result[fileUrl].ErrorMessage.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task CheckOnlineStatusAsync_FileCheckNeedsPremium_ReturnsOnline()
+    {
+        // Arrange
+        var fileUrl = "https://gofile.io/d/file-id";
+
+        apiMock
+            .Setup(x =>
+                x.GetFileInfoAsync(
+                    "file-id",
+                    "Bearer api-key",
+                    "Bearcat",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(await CreateNotPremiumExceptionAsync());
+
+        // Act
+        var result = await apiClient.CheckOnlineStatusAsync(
+            [fileUrl],
+            "api-key",
+            CancellationToken.None
+        );
+
+        // Assert
+        result[fileUrl].IsOnline.ShouldBeTrue();
+        result[fileUrl].ErrorMessage.ShouldBeNull();
+    }
+
+    private void SetupAccountFileInfo(Response response)
+    {
+        apiMock
+            .Setup(x =>
+                x.GetFileInfoAsync(
+                    It.IsAny<string>(),
+                    "Bearer api-key",
+                    "Bearcat",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(response);
+    }
+
+    private void SetupCreateFolder()
+    {
+        apiMock
+            .Setup(x =>
+                x.CreateFolderAsync(
+                    "Bearer api-key",
+                    It.Is<Bearcat.Hosters.GoFile.Api.CreateFolder.Request>(request =>
+                        request.ParentFolderId == "root-folder-id"
+                        && request.FolderName == "release-folder"
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new Bearcat.Hosters.GoFile.Api.CreateFolder.Response
+                {
+                    Status = "ok",
+                    Data = new Bearcat.Hosters.GoFile.Api.CreateFolder.Data
+                    {
+                        Id = "created-folder-id",
+                    },
+                }
+            );
+    }
+
+    private static async Task<ApiException> CreateNotPremiumExceptionAsync()
+    {
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            "https://api.gofile.io/contents/root-folder-id"
+        );
+        using var response = new HttpResponseMessage(HttpStatusCode.Unauthorized)
+        {
+            Content = new StringContent("""{"status":"error-notPremium","data":{}}"""),
+        };
+
+        return await ApiException.Create(request, HttpMethod.Get, response, new RefitSettings());
     }
 
     private void SetupAccountRootFolder()

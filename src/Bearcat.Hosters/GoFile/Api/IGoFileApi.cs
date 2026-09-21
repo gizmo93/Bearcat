@@ -30,6 +30,7 @@ public interface IGoFileApi
     Task<GetContent.Response> GetContentAsync(
         string folderId,
         [Header("Authorization")] string apiToken,
+        [Header("User-Agent")] string userAgent,
         [Query] string? contentFilter = null,
         [Query] string? sortField = null,
         [Query] int? sortDirection = null,
@@ -40,7 +41,7 @@ public interface IGoFileApi
     Task<GetFileInfo.Response> GetFileInfoAsync(
         string fileId,
         [Header("Authorization")] string apiToken,
-        [Header("X-Website-Token")] string websiteToken,
+        [Header("User-Agent")] string userAgent,
         CancellationToken cancellationToken = default
     );
 
