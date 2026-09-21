@@ -177,28 +177,7 @@ public abstract class XFilesharingApiClient<TApi>(
     {
         using var httpClient = httpClientProvider.GetUploadClient();
 
-        using var multipartForm = new MultipartFormDataContent();
-
-        var sessionIdContent = new StringContent(sessionId);
-        sessionIdContent.Headers.ContentType = null;
-        sessionIdContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
-        {
-            Name = "\"sess_id\"",
-        };
-        multipartForm.Add(sessionIdContent, "sess_id");
-
-        if (uploadOptions.AddRegisteredUserTypeField)
-        {
-            var userTypeContent = new StringContent(uploadOptions.UserTypeFieldValue);
-            userTypeContent.Headers.ContentType = null;
-            userTypeContent.Headers.ContentDisposition = new ContentDispositionHeaderValue(
-                "form-data"
-            )
-            {
-                Name = "\"utype\"",
-            };
-            multipartForm.Add(userTypeContent, "utype");
-        }
+        using var multipartForm = AddHosterSpecificUploadFields(CreateUploadForm(sessionId));
 
         var fileContent = new StreamContent(stream);
         fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
@@ -328,6 +307,43 @@ public abstract class XFilesharingApiClient<TApi>(
         );
 
         EnsureSuccess(response.Status, response.Msg, "XFilesharing file properties update failed");
+    }
+
+    protected virtual MultipartFormDataContent AddHosterSpecificUploadFields(
+        MultipartFormDataContent multipartForm
+    )
+    {
+        return multipartForm;
+    }
+
+    protected static void AddFormField(
+        MultipartFormDataContent multipartForm,
+        string name,
+        string value
+    )
+    {
+        var content = new StringContent(value);
+        content.Headers.ContentType = null;
+        content.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+        {
+            Name = $"\"{name}\"",
+        };
+
+        multipartForm.Add(content, name);
+    }
+
+    private MultipartFormDataContent CreateUploadForm(string sessionId)
+    {
+        var multipartForm = new MultipartFormDataContent();
+
+        AddFormField(multipartForm, name: "sess_id", value: sessionId);
+
+        if (uploadOptions.AddRegisteredUserTypeField)
+        {
+            AddFormField(multipartForm, name: "utype", value: uploadOptions.UserTypeFieldValue);
+        }
+
+        return multipartForm;
     }
 
     private string PrepareUploadUrl(string uploadUrl)

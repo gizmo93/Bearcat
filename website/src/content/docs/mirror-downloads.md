@@ -60,6 +60,7 @@ switch only shows up for the ones that do:
 | HxFile.co | Yes |
 | Keep2Share | Yes |
 | Fast2Share.com | Yes |
+| mega4upload.net | Yes |
 | DDownload | No |
 | datavaults.co | No |
 | file-upload.org | No |
@@ -75,6 +76,8 @@ upload to these hosters.
 - **Fast2Share:** free accounts have a waiting period for each file. Bearcat does not support this,
   so mirror downloads with a free account fail.
 - **Keep2Share:** free downloads are limited to roughly 50 KB/s and one connection at a time.
+- **mega4upload.net:** downloads need a premium account and an API key that has the
+  `download` scope. Ask mega4upload support to add the scope to your key.
 
 </details>
 
