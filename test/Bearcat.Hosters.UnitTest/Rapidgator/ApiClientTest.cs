@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.Rapidgator;
 using Bearcat.Hosters.Rapidgator.Api;
 using Bearcat.Hosters.Rapidgator.Api.File;
@@ -655,7 +656,7 @@ public class ApiClientTest
     }
 
     [Test]
-    public async Task DownloadFileAsync_ApiReturnsNoDownloadUrl_ThrowsAndLeavesNoPartFile()
+    public async Task DownloadFileAsync_ApiReportsFileNotFound_ThrowsHosterFileNotFound()
     {
         // Arrange
         var config = new RapidgatorConfig { Username = "user", Password = "password" };
@@ -675,7 +676,7 @@ public class ApiClientTest
         var targetFilePath = Path.Join(Path.GetTempPath(), $"{Guid.NewGuid()}.rar");
 
         // Act
-        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+        var exception = await Should.ThrowAsync<HosterFileNotFoundException>(() =>
             apiClient.DownloadFileAsync(
                 config: config,
                 fileUrl: "https://rapidgator.net/file/file-id/archive.part01.rar.html",

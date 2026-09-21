@@ -167,10 +167,7 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger)
                 ex.InnerException?.Message ?? ex.Message
             );
 
-            return new DownloadFileResult(
-                IsSuccess: false,
-                ErrorMessages: [ex.InnerException?.Message ?? ex.Message]
-            );
+            return DownloadFailure.FromException(ex);
         }
     }
 

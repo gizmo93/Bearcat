@@ -1,3 +1,7 @@
 namespace Bearcat.Abstractions.Hoster.Results;
 
-public record DownloadFileResult(bool IsSuccess, IReadOnlyList<string> ErrorMessages);
+public record DownloadFileResult(
+    bool IsSuccess,
+    IReadOnlyList<string> ErrorMessages,
+    bool IsFileMissing = false
+);

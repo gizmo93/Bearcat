@@ -229,10 +229,7 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger)
                 ex.InnerException?.Message ?? ex.Message
             );
 
-            return new DownloadFileResult(
-                IsSuccess: false,
-                ErrorMessages: [ex.InnerException?.Message ?? ex.Message]
-            );
+            return DownloadFailure.FromException(ex);
         }
     }
 

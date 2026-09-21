@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Rapidgator.Api.File;
 using Bearcat.Hosters.Rapidgator.Api.Folder;
@@ -165,10 +166,13 @@ public class ApiClient(
 
         if (!((HttpStatusCode)(content?.Status ?? 0)).IsSuccessStatusCode || downloadUrl is null)
         {
-            throw new HttpRequestException(
+            var message =
                 content?.Details
-                    ?? $"Rapidgator did not return a download URL for file {fileUrl} (status {content?.Status})"
-            );
+                ?? $"Rapidgator did not return a download URL for file {fileUrl} (status {content?.Status})";
+
+            throw content?.Status is (int)HttpStatusCode.NotFound
+                ? new HosterFileNotFoundException(message)
+                : new HttpRequestException(message);
         }
 
         var delay = content!.Response!.Delay;

@@ -25,6 +25,7 @@ public class ArchiveRestoreServiceTest
     private Mock<IHosterFactory> hosterFactoryMock = null!;
     private RecordingDownloadProgressTracker downloadProgressTracker = null!;
     private DownloadCancellationRegistry cancellationRegistry = null!;
+    private List<string> restoreFailedMessages = null!;
     private string restoreFolderPath = null!;
 
     [SetUp]
@@ -42,7 +43,21 @@ public class ArchiveRestoreServiceTest
             .Setup(x => x.CreateTempDirectory(It.IsAny<string>()))
             .Returns(() => restoreFolderPath);
 
+        restoreFailedMessages = [];
+
         notificationServiceMock = new Mock<INotificationService>();
+        notificationServiceMock
+            .Setup(x =>
+                x.Create(
+                    NotificationKind.ArchiveRestoreFailed,
+                    It.IsAny<string>(),
+                    It.IsAny<Archive>(),
+                    It.IsAny<Expression<Func<Notification, Archive?>>>()
+                )
+            )
+            .Callback<NotificationKind, string, Archive, Expression<Func<Notification, Archive?>>>(
+                (_, message, _, _) => restoreFailedMessages.Add(message)
+            );
 
         hosterFactoryMock = new Mock<IHosterFactory>();
         hosterFactoryMock.Setup(x => x.GetByName("FakeDownloadHoster")).Returns(downloadHoster);
@@ -176,11 +191,81 @@ public class ArchiveRestoreServiceTest
         // Assert
         scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Deleted);
         fileSystemServiceMock.Verify(x => x.DeleteDirectoryIfExists(restoreFolderPath), Times.Once);
+        downloadHoster.DownloadAttemptsPerLink["https://mirror.test/file-2"].ShouldBe(3);
         scenario.WaitingUpload.UploadState.ShouldBe(UploadState.Failed);
         scenario.WaitingUpload.ErrorMessages.ShouldContain(message =>
             message.Contains("Archive restore failed")
         );
+        restoreFailedMessages.Single().ShouldContain("MD5 mismatch");
         VerifyRestoreFailedNotification(Times.Once());
+    }
+
+    [Test]
+    public async Task ProcessAsync_DownloadFailsOnceAndThenSucceeds_RestoresTheArchive()
+    {
+        // Arrange
+        var scenario = CreateScenario();
+        downloadHoster.FailedAttemptsBeforeSuccess = 1;
+        var service = CreateService();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        downloadHoster.DownloadAttemptsPerLink["https://mirror.test/file-2"].ShouldBe(2);
+        downloadHoster.DownloadAttemptsPerLink["https://mirror.test/file-3"].ShouldBe(2);
+        downloadHoster.DownloadedLinks.Count.ShouldBe(4);
+        VerifyRestoreFailedNotification(Times.Never());
+    }
+
+    [Test]
+    public async Task ProcessAsync_DownloadAlwaysFails_RetriesUntilTheAttemptLimitIsReached()
+    {
+        // Arrange
+        var scenario = CreateScenario();
+        downloadHoster.AlwaysFails = true;
+        var service = CreateService();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        downloadHoster.DownloadAttemptsPerLink["https://mirror.test/file-2"].ShouldBe(3);
+        downloadHoster.DownloadAttemptsPerLink["https://mirror.test/file-3"].ShouldBe(3);
+        downloadHoster.DownloadedLinks.Count.ShouldBe(6);
+        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Deleted);
+        scenario.WaitingUpload.UploadState.ShouldBe(UploadState.Failed);
+
+        var errorMessage = scenario.WaitingUpload.ErrorMessages.Single();
+        errorMessage.ShouldContain("archive.part02.rar");
+        errorMessage.ShouldContain("Mirror");
+        errorMessage.ShouldContain("3 of 3 attempts");
+        errorMessage.ShouldContain("2 of 2 archive files");
+        errorMessage.ShouldContain("InternalServerError");
+
+        restoreFailedMessages.Single().ShouldBe(errorMessage);
+    }
+
+    [Test]
+    public async Task ProcessAsync_MirrorFileIsGone_FailsWithoutRetrying()
+    {
+        // Arrange
+        var scenario = CreateScenario();
+        downloadHoster.ReportsFileAsMissing = true;
+        var service = CreateService();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        downloadHoster.DownloadAttemptsPerLink["https://mirror.test/file-2"].ShouldBe(1);
+        downloadHoster.DownloadAttemptsPerLink["https://mirror.test/file-3"].ShouldBe(1);
+        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Deleted);
+        restoreFailedMessages.Single().ShouldContain("does not exist on Mirror any more");
+        scenario
+            .WaitingUpload.ErrorMessages.Single()
+            .ShouldContain("does not exist on Mirror any more");
     }
 
     [Test]
@@ -292,12 +377,15 @@ public class ArchiveRestoreServiceTest
     {
         var configurationProviderMock = new Mock<IApplicationConfigurationProvider>();
         configurationProviderMock
-            .Setup(x =>
-                x.GetValue<DownloadConfiguration>(
-                    It.IsAny<Expression<Func<DownloadConfiguration, int>>>()
-                )
-            )
-            .Returns(2);
+            .Setup(x => x.GetConfiguration<DownloadConfiguration>())
+            .Returns(() =>
+                new DownloadConfiguration
+                {
+                    MaxParallelDownloads = 2,
+                    MaxDownloadAttempts = 3,
+                    DownloadRetryDelaySeconds = 0,
+                }
+            );
 
         var secretProtectorMock = new Mock<ISecretProtector>();
         secretProtectorMock.Setup(x => x.Unprotect(It.IsAny<string>())).Returns("{}");

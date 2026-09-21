@@ -258,10 +258,7 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
                 ex.InnerException?.Message ?? ex.Message
             );
 
-            return new DownloadFileResult(
-                IsSuccess: false,
-                ErrorMessages: [ex.InnerException?.Message ?? ex.Message]
-            );
+            return DownloadFailure.FromException(ex);
         }
     }
 
