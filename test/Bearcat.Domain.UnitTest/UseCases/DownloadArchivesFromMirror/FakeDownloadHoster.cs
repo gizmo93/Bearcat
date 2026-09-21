@@ -16,6 +16,19 @@ public sealed class FakeDownloadHoster : IHosterWithDownload
 
     public Exception? FileSizeLookupException { get; set; }
 
+    public Dictionary<string, int> DownloadAttemptsPerLink { get; } = new();
+
+    public int FailedAttemptsBeforeSuccess { get; set; }
+
+    public bool AlwaysFails { get; set; }
+
+    public bool ReportsFileAsMissing { get; set; }
+
+    public HashSet<string> MissingLinks { get; } = [];
+
+    public string FailureMessage { get; set; } =
+        "Download request failed with status code 500 (InternalServerError)";
+
     public bool BlockUntilCanceled { get; set; }
 
     public bool ReportCancellationAsFailure { get; set; }
@@ -61,13 +74,31 @@ public sealed class FakeDownloadHoster : IHosterWithDownload
         CancellationToken cancellationToken
     )
     {
+        int attempt;
+
         lock (DownloadedLinks)
         {
             DownloadedLinks.Add(file.HosterFileLink);
             ExpectedSizeBytesPerLink[file.HosterFileLink] = file.ExpectedSizeBytes;
+            attempt = DownloadAttemptsPerLink.GetValueOrDefault(file.HosterFileLink) + 1;
+            DownloadAttemptsPerLink[file.HosterFileLink] = attempt;
         }
 
         DownloadStarted.TrySetResult();
+
+        if (ReportsFileAsMissing || MissingLinks.Contains(file.HosterFileLink))
+        {
+            return new DownloadFileResult(
+                IsSuccess: false,
+                ErrorMessages: [FailureMessage],
+                IsFileMissing: true
+            );
+        }
+
+        if (AlwaysFails || attempt <= FailedAttemptsBeforeSuccess)
+        {
+            return new DownloadFileResult(IsSuccess: false, ErrorMessages: [FailureMessage]);
+        }
 
         if (BlockUntilCanceled)
         {

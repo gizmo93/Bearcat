@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.Shared;
 using Moq;
 using Shouldly;
@@ -88,6 +89,76 @@ public class HosterFileDownloaderTest
         progress.TotalBytes.ShouldBeNull();
     }
 
+    [Test]
+    public async Task DownloadToFileAsync_ServerRespondsWithServerError_ThrowsWithStatusUrlAndBody()
+    {
+        // Arrange
+        var downloader = CreateFailingDownloader(
+            statusCode: HttpStatusCode.InternalServerError,
+            responseContent: "<html>\n  <body>Internal   Server   Error</body>\n</html>"
+        );
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            downloader.DownloadToFileAsync(
+                downloadUrl: "https://hoster.test/download/file-1?token=secret-token",
+                targetFilePath: targetFilePath,
+                progress: new RecordingDownloadProgress(),
+                expectedSizeBytes: null,
+                cancellationToken: CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe(
+            "Download request for https://hoster.test/download/file-1 failed with status code 500 (InternalServerError): <html> <body>Internal Server Error</body> </html>"
+        );
+        exception.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
+        exception.Message.ShouldNotContain("secret-token");
+    }
+
+    [Test]
+    public async Task DownloadToFileAsync_ServerRespondsWithNotFound_ThrowsHosterFileNotFound()
+    {
+        // Arrange
+        var downloader = CreateFailingDownloader(
+            statusCode: HttpStatusCode.NotFound,
+            responseContent: "File not found"
+        );
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterFileNotFoundException>(() =>
+            downloader.DownloadToFileAsync(
+                downloadUrl: "https://hoster.test/download/file-1?token=secret-token",
+                targetFilePath: targetFilePath,
+                progress: new RecordingDownloadProgress(),
+                expectedSizeBytes: null,
+                cancellationToken: CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe(
+            "Download request for https://hoster.test/download/file-1 failed with status code 404 (NotFound): File not found"
+        );
+        File.Exists(targetFilePath).ShouldBeFalse();
+    }
+
+    private static HosterFileDownloader CreateFailingDownloader(
+        HttpStatusCode statusCode,
+        string responseContent
+    )
+    {
+        var httpClient = new HttpClient(new StubFailureHandler(statusCode, responseContent));
+
+        var httpClientFactoryMock = new Mock<IHttpClientFactory>();
+        httpClientFactoryMock
+            .Setup(x => x.CreateClient(HttpClientProvider.DownloadHttpClientName))
+            .Returns(httpClient);
+
+        return new HosterFileDownloader(new HttpClientProvider(httpClientFactoryMock.Object));
+    }
+
     private static HosterFileDownloader CreateDownloader(bool announceContentLength)
     {
         var httpClient = new HttpClient(
@@ -130,6 +201,23 @@ public class HosterFileDownloaderTest
 
             return Task.FromResult(
                 new HttpResponseMessage(HttpStatusCode.OK) { Content = content }
+            );
+        }
+    }
+
+    private sealed class StubFailureHandler(HttpStatusCode statusCode, string responseContent)
+        : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
+        {
+            return Task.FromResult(
+                new HttpResponseMessage(statusCode)
+                {
+                    Content = new StringContent(responseContent, Encoding.UTF8),
+                }
             );
         }
     }

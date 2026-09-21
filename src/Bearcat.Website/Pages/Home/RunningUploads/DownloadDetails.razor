@@ -29,6 +29,11 @@
                                Property="@(file => file.FileName)"
                                Sortable="true"
                                Filterable="true" />
+            <BbDataTableColumn TData="DownloadFileProgressSnapshot" TValue="string"
+                               Header="@L["Hoster"]"
+                               Property="@(file => file.HosterName)"
+                               Sortable="true"
+                               Filterable="true" />
             <BbDataTableColumn TData="DownloadFileProgressSnapshot" TValue="double"
                                Header="@L["Progress"]"
                                Property="@(file => file.Percentage)"

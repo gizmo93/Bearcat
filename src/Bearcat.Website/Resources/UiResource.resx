@@ -1187,6 +1187,10 @@
   <data name="MirrorPriorityHelp" xml:space="preserve"><value>Lower numbers are preferred when Bearcat picks a mirror to restore archive files from.</value></data>
   <data name="MaxParallelDownloads" xml:space="preserve"><value>Maximum parallel downloads</value></data>
   <data name="MaxParallelDownloadsDescription" xml:space="preserve"><value>The upper limit of archive files downloaded at the same time while restoring an archive from a mirror.</value></data>
+  <data name="MaxDownloadAttempts" xml:space="preserve"><value>Maximum download attempts</value></data>
+  <data name="MaxDownloadAttemptsDescription" xml:space="preserve"><value>How often a single archive file is downloaded again before the restore of the archive fails.</value></data>
+  <data name="DownloadRetryDelaySeconds" xml:space="preserve"><value>Download retry delay (seconds)</value></data>
+  <data name="DownloadRetryDelaySecondsDescription" xml:space="preserve"><value>How long Bearcat waits before it downloads an archive file again after a failed attempt.</value></data>
   <data name="UseForMirrorDownloads" xml:space="preserve"><value>Use for mirror downloads</value></data>
   <data name="UseForMirrorDownloadsHelp" xml:space="preserve"><value>Allow Bearcat to download archive files from this hoster when local archives need to be restored for a reupload.</value></data>
   <data name="UseForMirrorDownloadsShortWithPriority" xml:space="preserve"><value>Mirror downloads (Prio: {0})</value></data>

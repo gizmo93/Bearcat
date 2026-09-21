@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.Extensions;
 using Refit;
 
@@ -102,11 +103,13 @@ public abstract class XFilesharingApiClient<TApi>(
             || string.IsNullOrWhiteSpace(downloadUrl)
         )
         {
-            throw new HttpRequestException(
-                string.IsNullOrWhiteSpace(response.Msg)
-                    ? $"XFilesharing did not return a download URL for file {fileCode} (status {response.Status})"
-                    : response.Msg
-            );
+            var message = string.IsNullOrWhiteSpace(response.Msg)
+                ? $"XFilesharing did not return a download URL for file {fileCode} (status {response.Status})"
+                : response.Msg;
+
+            throw response.Status is (int)HttpStatusCode.NotFound
+                ? new HosterFileNotFoundException(message)
+                : new HttpRequestException(message);
         }
 
         await fileDownloader.DownloadToFileAsync(
