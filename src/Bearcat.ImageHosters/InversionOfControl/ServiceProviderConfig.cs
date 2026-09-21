@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.ImageHoster;
 using Bearcat.ImageHosters.DirectUpload.InversionOfControl;
 using Bearcat.ImageHosters.ImgBb.InversionOfControl;
+using Bearcat.ImageHosters.LoePic.InversionOfControl;
 using Bearcat.ImageHosters.PixelFox.InversionOfControl;
 using Bearcat.ImageHosters.PixHost.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,7 @@ public static class ServiceProviderConfig
             services.AddImgBb();
             services.AddPixHost();
             services.AddPixelFox();
+            services.AddLoePic();
             services.AddDirectUpload();
             services.AddScoped<IImageHosterFactory, ImageHosterFactory>();
         }
