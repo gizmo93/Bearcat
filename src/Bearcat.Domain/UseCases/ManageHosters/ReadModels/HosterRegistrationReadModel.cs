@@ -19,6 +19,7 @@ public record HosterRegistrationReadModel(
     bool SupportsDownload,
     bool DownloadRequiresPremium,
     bool UseForMirrorDownloads,
+    int MirrorPriority,
     string HosterName,
     string FullClassName
 );

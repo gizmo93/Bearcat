@@ -297,12 +297,16 @@ public class ArchiveRestoreService(
                     UploadedFilesByArchiveFileId: newestFilePerArchiveFileId,
                     LastCheckedAt: newestFilePerArchiveFileId
                         .Values.Select(uploadedFile => uploadedFile.CheckedAt)
-                        .Max()
+                        .Max(),
+                    MirrorPriority: registration.MirrorPriority
                 )
             );
         }
 
-        return candidates.OrderByDescending(candidate => candidate.LastCheckedAt).FirstOrDefault();
+        return candidates
+            .OrderBy(candidate => candidate.MirrorPriority)
+            .ThenByDescending(candidate => candidate.LastCheckedAt)
+            .FirstOrDefault();
     }
 
     private async Task RestoreFromSourceUploadAsync(
@@ -696,7 +700,8 @@ public class ArchiveRestoreService(
     private sealed record SelectedSourceUpload(
         Upload Upload,
         Dictionary<int, UploadedFile> UploadedFilesByArchiveFileId,
-        DateTime? LastCheckedAt
+        DateTime? LastCheckedAt,
+        int MirrorPriority
     );
 
     private sealed record PlannedDownload(

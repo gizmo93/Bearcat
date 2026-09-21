@@ -68,7 +68,8 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
                         numberOfHoursUntilReuploadOverride: FormModel.NumberOfHoursUntilReuploadOverride,
                         reuploadTriggerOverride: FormModel.ReuploadTriggerOverride,
                         alwaysReuploadAllFiles: FormModel.AlwaysReuploadAllFiles,
-                        useForMirrorDownloads: FormModel.UseForMirrorDownloads
+                        useForMirrorDownloads: FormModel.UseForMirrorDownloads,
+                        mirrorPriority: FormModel.MirrorPriority
                     )
             );
         }
@@ -84,7 +85,8 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
                         FormModel.NumberOfHoursUntilReuploadOverride,
                         FormModel.ReuploadTriggerOverride,
                         FormModel.AlwaysReuploadAllFiles,
-                        FormModel.UseForMirrorDownloads
+                        FormModel.UseForMirrorDownloads,
+                        FormModel.MirrorPriority
                     )
             );
         }

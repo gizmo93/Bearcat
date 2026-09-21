@@ -32,6 +32,7 @@ public class HosterConfigurationRepository(
                 h.ReuploadTriggerOverride,
                 h.AlwaysReuploadAllFiles,
                 h.UseForMirrorDownloads,
+                h.MirrorPriority,
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -59,6 +60,7 @@ public class HosterConfigurationRepository(
                     hoster is IHosterWithDownload,
                     (hoster as IHosterWithDownload)?.DownloadRequiresPremium ?? false,
                     h.UseForMirrorDownloads,
+                    h.MirrorPriority,
                     hoster.Name,
                     h.HosterClassName
                 );

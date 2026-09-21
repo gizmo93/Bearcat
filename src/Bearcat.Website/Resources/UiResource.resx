@@ -1183,11 +1183,13 @@
   <data name="MirrorDownloads" xml:space="preserve"><value>Mirror downloads</value></data>
   <data name="MirrorDownloadsDescription" xml:space="preserve"><value>Controls how archives are downloaded from online mirrors when they are no longer stored locally.</value></data>
   <data name="MirrorDownloadsRequirePremium" xml:space="preserve"><value>Mirror downloads from this hoster require a premium account.</value></data>
+  <data name="MirrorPriority" xml:space="preserve"><value>Mirror priority</value></data>
+  <data name="MirrorPriorityHelp" xml:space="preserve"><value>Lower numbers are preferred when Bearcat picks a mirror to restore archive files from.</value></data>
   <data name="MaxParallelDownloads" xml:space="preserve"><value>Maximum parallel downloads</value></data>
   <data name="MaxParallelDownloadsDescription" xml:space="preserve"><value>The upper limit of archive files downloaded at the same time while restoring an archive from a mirror.</value></data>
   <data name="UseForMirrorDownloads" xml:space="preserve"><value>Use for mirror downloads</value></data>
   <data name="UseForMirrorDownloadsHelp" xml:space="preserve"><value>Allow Bearcat to download archive files from this hoster when local archives need to be restored for a reupload.</value></data>
-  <data name="UseForMirrorDownloadsShort" xml:space="preserve"><value>Mirror downloads</value></data>
+  <data name="UseForMirrorDownloadsShortWithPriority" xml:space="preserve"><value>Mirror downloads (Prio: {0})</value></data>
   <data name="ExcludeFromAutoCleanup" xml:space="preserve"><value>Exclude from auto cleanup</value></data>
   <data name="ExcludeFromAutoCleanupHelp" xml:space="preserve"><value>Keeps the release folder and the local archives of this release untouched, no matter which retention periods are configured.</value></data>
   <data name="DeleteLocalArchives" xml:space="preserve"><value>Delete local archives</value></data>

@@ -97,6 +97,18 @@
                                        Label="@L["UseForMirrorDownloads"]"
                                        HelperText="@L["UseForMirrorDownloadsHelp"]" />
 
+                    @if (FormModel.UseForMirrorDownloads)
+                    {
+                        <div class="space-y-1">
+                            <BbFormFieldInput TValue="int"
+                                              @bind-Value="FormModel.MirrorPriority"
+                                              Label="@L["MirrorPriority"]" />
+                            <p class="text-xs text-muted-foreground">
+                                @L["MirrorPriorityHelp"]
+                            </p>
+                        </div>
+                    }
+
                     @if (selectedHoster.DownloadRequiresPremium)
                     {
                         <p class="text-xs text-muted-foreground">@L["MirrorDownloadsRequirePremium"]</p>

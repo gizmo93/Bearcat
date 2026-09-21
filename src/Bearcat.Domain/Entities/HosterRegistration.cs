@@ -26,5 +26,7 @@ public class HosterRegistration
 
     public bool UseForMirrorDownloads { get; set; }
 
+    public int MirrorPriority { get; set; } = 100;
+
     public List<UploadConfig> UploadConfigs { get; set; } = null!;
 }

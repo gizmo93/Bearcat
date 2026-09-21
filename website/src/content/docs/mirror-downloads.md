@@ -37,6 +37,16 @@ Open the hoster registration and turn on **Use for mirror downloads**.
 
 ![enable-hoster-mirror-download.png](images/enable-hoster-mirror-download.png)
 
+### Mirror priority
+
+Enabling **Use for mirror downloads** shows the **Mirror priority** field. It defaults to `100`.
+Lower numbers are preferred: a mirror with priority `10` is chosen before one with priority `100`.
+
+Bearcat only considers active mirror registrations with all required files marked online.
+If several mirrors have the same priority, it chooses the one with the most recent file check.
+
+The hoster list shows the priority next to **Mirror downloads**, for example **Mirror downloads (100)**.
+
 ### Hosters that support mirror downloads
 
 Not every hoster allows file downloads using its API, so the **"Use for mirror downloads"**

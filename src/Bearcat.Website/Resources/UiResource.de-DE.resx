@@ -1186,11 +1186,13 @@
   <data name="MirrorDownloads" xml:space="preserve"><value>Mirrordownloads</value></data>
   <data name="MirrorDownloadsDescription" xml:space="preserve"><value>Steuert, wie Archive von Onlinemirrors geladen werden, wenn sie nicht mehr lokal liegen.</value></data>
   <data name="MirrorDownloadsRequirePremium" xml:space="preserve"><value>Mirrordownloads von diesem Hoster benötigen einen Premiumaccount.</value></data>
+  <data name="MirrorPriority" xml:space="preserve"><value>Mirrorpriorität</value></data>
+  <data name="MirrorPriorityHelp" xml:space="preserve"><value>Niedrigere Zahlen werden bevorzugt, wenn Bearcat einen Mirror zum Wiederherstellen von Archivdateien auswählt.</value></data>
   <data name="MaxParallelDownloads" xml:space="preserve"><value>Maximale parallele Downloads</value></data>
   <data name="MaxParallelDownloadsDescription" xml:space="preserve"><value>Die Obergrenze gleichzeitig geladener Archivdateien beim Wiederherstellen eines Archivs von einem Mirror.</value></data>
   <data name="UseForMirrorDownloads" xml:space="preserve"><value>Für Mirrordownloads verwenden</value></data>
   <data name="UseForMirrorDownloadsHelp" xml:space="preserve"><value>Erlaubt Bearcat, Archivdateien von diesem Hoster zu laden, wenn lokale Archive für einen Reupload wiederhergestellt werden müssen.</value></data>
-  <data name="UseForMirrorDownloadsShort" xml:space="preserve"><value>Mirrordownloads</value></data>
+  <data name="UseForMirrorDownloadsShortWithPriority" xml:space="preserve"><value>Mirrordownloads (Prio: {0})</value></data>
   <data name="ExcludeFromAutoCleanup" xml:space="preserve"><value>Vom automatischen Aufräumen ausnehmen</value></data>
   <data name="ExcludeFromAutoCleanupHelp" xml:space="preserve"><value>Lässt den Releaseordner und die lokalen Archive dieses Releases unangetastet, egal welche Aufbewahrungsfristen eingestellt sind.</value></data>
   <data name="DeleteLocalArchives" xml:space="preserve"><value>Lokale Archive löschen</value></data>
