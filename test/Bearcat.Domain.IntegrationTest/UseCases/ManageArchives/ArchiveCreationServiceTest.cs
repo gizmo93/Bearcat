@@ -60,6 +60,13 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                 )
             )
             .Returns(ArchiveRepackagingStrategies.IncrementArchiveFileSize);
+        configurationProviderMock
+            .Setup(p =>
+                p.GetValue<ArchiveRepackagingConfiguration>(
+                    It.IsAny<Expression<Func<ArchiveRepackagingConfiguration, int>>>()
+                )
+            )
+            .Returns(2);
 
         service = new ArchiveCreationService(
             new ArchiveCreationRepository(dbContext),

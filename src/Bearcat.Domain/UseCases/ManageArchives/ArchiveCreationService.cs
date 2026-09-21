@@ -24,6 +24,8 @@ public class ArchiveCreationService(
     private const string UniqueFileName = "__nonce.txt";
     private const string SynologyMetadataFolderName = "@eaDir";
 
+    private readonly Lock knownHashesLock = new();
+
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
         await HandleInterruptedArchivesAsync(cancellationToken);
@@ -362,28 +364,41 @@ public class ArchiveCreationService(
         CancellationToken cancellationToken
     )
     {
-        foreach (var archiveFile in archive.ArchiveFiles)
-        {
-            if (!File.Exists(archiveFile.FullFileName))
+        await Parallel.ForEachAsync(
+            archive.ArchiveFiles,
+            CreateHashingParallelOptions(cancellationToken),
+            async (archiveFile, fileCancellationToken) =>
             {
-                logger.LogWarning(
-                    "Cannot change MD5 hash for missing archive file {ArchiveFileName} in archive {ArchiveId}",
-                    archiveFile.FullFileName,
-                    archive.Id
-                );
+                if (!File.Exists(archiveFile.FullFileName))
+                {
+                    logger.LogWarning(
+                        "Cannot change MD5 hash for missing archive file {ArchiveFileName} in archive {ArchiveId}",
+                        archiveFile.FullFileName,
+                        archive.Id
+                    );
 
-                continue;
+                    return;
+                }
+
+                string hash;
+                bool hashIsNew;
+                do
+                {
+                    await AppendNullByteAsync(archiveFile.FullFileName, fileCancellationToken);
+                    hash = await Md5FileHash.ComputeAsync(
+                        archiveFile.FullFileName,
+                        fileCancellationToken
+                    );
+
+                    lock (knownHashesLock)
+                    {
+                        hashIsNew = knownHashes.Add(hash);
+                    }
+                } while (!hashIsNew);
+
+                archiveFile.Md5Hash = hash;
             }
-
-            string hash;
-            do
-            {
-                await AppendNullByteAsync(archiveFile.FullFileName, cancellationToken);
-                hash = await Md5FileHash.ComputeAsync(archiveFile.FullFileName, cancellationToken);
-            } while (!knownHashes.Add(hash));
-
-            archiveFile.Md5Hash = hash;
-        }
+        );
 
         logger.LogInformation(
             "Changed MD5 hash for {FileCount} archive files in archive {ArchiveId}",
@@ -397,24 +412,42 @@ public class ArchiveCreationService(
         CancellationToken cancellationToken
     )
     {
-        foreach (var archiveFile in archive.ArchiveFiles)
-        {
-            if (!File.Exists(archiveFile.FullFileName))
+        await Parallel.ForEachAsync(
+            archive.ArchiveFiles,
+            CreateHashingParallelOptions(cancellationToken),
+            async (archiveFile, fileCancellationToken) =>
             {
-                logger.LogWarning(
-                    "Cannot compute MD5 hash for missing archive file {ArchiveFileName} in archive {ArchiveId}",
+                if (!File.Exists(archiveFile.FullFileName))
+                {
+                    logger.LogWarning(
+                        "Cannot compute MD5 hash for missing archive file {ArchiveFileName} in archive {ArchiveId}",
+                        archiveFile.FullFileName,
+                        archive.Id
+                    );
+
+                    return;
+                }
+
+                archiveFile.Md5Hash = await Md5FileHash.ComputeAsync(
                     archiveFile.FullFileName,
-                    archive.Id
+                    fileCancellationToken
                 );
-
-                continue;
             }
+        );
+    }
 
-            archiveFile.Md5Hash = await Md5FileHash.ComputeAsync(
-                archiveFile.FullFileName,
-                cancellationToken
-            );
-        }
+    private ParallelOptions CreateHashingParallelOptions(CancellationToken cancellationToken)
+    {
+        return new ParallelOptions
+        {
+            MaxDegreeOfParallelism = Math.Max(
+                1,
+                configurationProvider.GetValue<ArchiveRepackagingConfiguration>(c =>
+                    c.MaxParallelHashOperations
+                )
+            ),
+            CancellationToken = cancellationToken,
+        };
     }
 
     private static async Task AppendNullByteAsync(

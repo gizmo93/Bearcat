@@ -1190,6 +1190,8 @@
   <data name="MirrorPriorityHelp" xml:space="preserve"><value>Niedrigere Zahlen werden bevorzugt, wenn Bearcat einen Mirror zum Wiederherstellen von Archivdateien auswählt.</value></data>
   <data name="MaxParallelDownloads" xml:space="preserve"><value>Maximale parallele Downloads</value></data>
   <data name="MaxParallelDownloadsDescription" xml:space="preserve"><value>Die Obergrenze gleichzeitig geladener Archivdateien beim Wiederherstellen eines Archivs von einem Mirror.</value></data>
+  <data name="MaxParallelHashOperations" xml:space="preserve"><value>Maximale parallele Hashvorgänge</value></data>
+  <data name="MaxParallelHashOperationsDescription" xml:space="preserve"><value>Maximalanzahl gleichzeitig gehashter Archivdateien. Höhere Werte beschleunigen das Hashen auf SSDs, bei Festplatten vermeidet ein niedriger Wert Overhead.</value></data>
   <data name="MaxDownloadAttempts" xml:space="preserve"><value>Maximale Downloadversuche</value></data>
   <data name="MaxDownloadAttemptsDescription" xml:space="preserve"><value>Wie oft eine einzelne Archivdatei erneut geladen wird, bevor die Wiederherstellung des Archivs fehlschlägt.</value></data>
   <data name="DownloadRetryDelaySeconds" xml:space="preserve"><value>Wiederholungsverzögerung (Sekunden)</value></data>

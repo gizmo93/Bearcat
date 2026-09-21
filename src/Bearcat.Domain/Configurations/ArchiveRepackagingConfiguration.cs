@@ -19,6 +19,12 @@ public class ArchiveRepackagingConfiguration : IApplicationConfiguration
         ArchiveRepackagingStrategies.IncrementArchiveFileSize
     )]
     public string Strategy { get; set; } = ArchiveRepackagingStrategies.IncrementArchiveFileSize;
+
+    [ApplicationConfigurationProperty(
+        "MaxParallelHashOperations",
+        "MaxParallelHashOperationsDescription"
+    )]
+    public int MaxParallelHashOperations { get; set; } = 2;
 }
 
 public static class ArchiveRepackagingStrategies
