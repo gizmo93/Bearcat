@@ -7,7 +7,9 @@ using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Cancellation;
+using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
+using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.ValueObjects;
@@ -76,6 +78,8 @@ public class ArchiveRestoreAndCreationPipelineTest : BearcatIntegrationTest
             configurationProvider: CreateNotificationConfigurationProvider()
         );
 
+        var downloadProgressTracker = new DownloadProgressTracker();
+
         restoreService = new ArchiveRestoreService(
             new ArchiveRestoreRepository(dbContext),
             hosterFactoryMock.Object,
@@ -83,8 +87,15 @@ public class ArchiveRestoreAndCreationPipelineTest : BearcatIntegrationTest
             NoOpSecretProtector.Instance,
             notificationService,
             new DefaultConfigurationProvider(),
-            new DownloadProgressTracker(),
             new DownloadCancellationRegistry(),
+            new MirrorSourceResolver(hosterFactoryMock.Object),
+            new MirrorDownloadCoordinator(
+                downloadProgressTracker,
+                new ArchiveFileDownloader(
+                    downloadProgressTracker,
+                    NullLogger<ArchiveFileDownloader>.Instance
+                )
+            ),
             NullLogger<ArchiveRestoreService>.Instance
         );
 

@@ -8,7 +8,9 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Cancellation;
+using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
+using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -397,8 +399,15 @@ public class ArchiveRestoreServiceTest
             secretProtectorMock.Object,
             notificationServiceMock.Object,
             configurationProviderMock.Object,
-            downloadProgressTracker,
             cancellationRegistry,
+            new MirrorSourceResolver(hosterFactoryMock.Object),
+            new MirrorDownloadCoordinator(
+                downloadProgressTracker,
+                new ArchiveFileDownloader(
+                    downloadProgressTracker,
+                    NullLogger<ArchiveFileDownloader>.Instance
+                )
+            ),
             NullLogger<ArchiveRestoreService>.Instance
         );
     }

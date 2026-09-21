@@ -1,16 +1,15 @@
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
-using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Cancellation;
-using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
+using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
+using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.ValueObjects;
-using Humanizer;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
@@ -22,13 +21,12 @@ public class ArchiveRestoreService(
     ISecretProtector secretProtector,
     INotificationService notificationService,
     IApplicationConfigurationProvider configurationProvider,
-    IDownloadProgressTracker downloadProgressTracker,
     IDownloadCancellationRegistry cancellationRegistry,
+    MirrorSourceResolver mirrorSourceResolver,
+    MirrorDownloadCoordinator mirrorDownloadCoordinator,
     ILogger<ArchiveRestoreService> logger
 )
 {
-    private const int MaxErrorMessageLength = 500;
-
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
         await CleanupOrphanedArchiveRestoresAsync(cancellationToken);
@@ -110,7 +108,7 @@ public class ArchiveRestoreService(
             cancellationToken
         );
 
-        var neededArchiveFiles = GetNeededArchiveFiles(
+        var neededArchiveFiles = MirrorSourceResolver.GetNeededArchiveFiles(
             archive: archive,
             waitingUploads: waitingUploads,
             uploadsOfArchive: uploadsOfArchive
@@ -126,7 +124,7 @@ public class ArchiveRestoreService(
             return;
         }
 
-        var selectedSourceUpload = FindSourceUpload(
+        var selectedSourceUpload = mirrorSourceResolver.FindSourceUpload(
             uploadsOfArchive: uploadsOfArchive,
             neededArchiveFiles: neededArchiveFiles
         );
@@ -203,115 +201,6 @@ public class ArchiveRestoreService(
         );
     }
 
-    private static IReadOnlyList<ArchiveFile> GetNeededArchiveFiles(
-        Archive archive,
-        IReadOnlyList<Upload> waitingUploads,
-        IReadOnlyList<Upload> uploadsOfArchive
-    )
-    {
-        var neededArchiveFileIds = new HashSet<int>();
-
-        foreach (var upload in waitingUploads)
-        {
-            if (upload.UploadConfig.HosterRegistration.AlwaysReuploadAllFiles)
-            {
-                neededArchiveFileIds.UnionWith(archive.ArchiveFiles.Select(file => file.Id));
-                continue;
-            }
-
-            var carriedOverArchiveFileIds = GetCarriedOverArchiveFileIds(
-                newUpload: upload,
-                previousUploads: uploadsOfArchive
-            );
-
-            neededArchiveFileIds.UnionWith(
-                archive
-                    .ArchiveFiles.Where(file => !carriedOverArchiveFileIds.Contains(file.Id))
-                    .Select(file => file.Id)
-            );
-        }
-
-        return archive.ArchiveFiles.Where(file => neededArchiveFileIds.Contains(file.Id)).ToList();
-    }
-
-    private static HashSet<int> GetCarriedOverArchiveFileIds(
-        Upload newUpload,
-        IReadOnlyList<Upload> previousUploads
-    )
-    {
-        return previousUploads
-            .Where(upload =>
-                upload.Id != newUpload.Id && upload.UploadConfigId == newUpload.UploadConfigId
-            )
-            .SelectMany(upload => upload.UploadedFiles)
-            .GroupBy(uploadedFile => uploadedFile.ArchiveFileId)
-            .Select(group => group.MaxBy(uploadedFile => uploadedFile.UploadId)!)
-            .Where(uploadedFile =>
-                uploadedFile.OnlineState == OnlineState.Online
-                && !string.IsNullOrWhiteSpace(uploadedFile.HosterFileLink)
-            )
-            .Select(uploadedFile => uploadedFile.ArchiveFileId)
-            .ToHashSet();
-    }
-
-    private SelectedSourceUpload? FindSourceUpload(
-        IReadOnlyList<Upload> uploadsOfArchive,
-        IReadOnlyList<ArchiveFile> neededArchiveFiles
-    )
-    {
-        var neededArchiveFileIds = neededArchiveFiles.Select(file => file.Id).ToHashSet();
-
-        var candidates = new List<SelectedSourceUpload>();
-
-        foreach (var upload in uploadsOfArchive)
-        {
-            var registration = upload.UploadConfig.HosterRegistration;
-
-            if (!registration.IsActive || !registration.UseForMirrorDownloads)
-            {
-                continue;
-            }
-
-            if (hosterFactory.GetByName(registration.HosterClassName) is not IHosterWithDownload)
-            {
-                continue;
-            }
-
-            var newestFilePerArchiveFileId = upload
-                .UploadedFiles.Where(uploadedFile =>
-                    neededArchiveFileIds.Contains(uploadedFile.ArchiveFileId)
-                )
-                .GroupBy(uploadedFile => uploadedFile.ArchiveFileId)
-                .Select(group => group.MaxBy(uploadedFile => uploadedFile.Id)!)
-                .Where(uploadedFile =>
-                    uploadedFile.OnlineState == OnlineState.Online
-                    && !string.IsNullOrWhiteSpace(uploadedFile.HosterFileLink)
-                )
-                .ToDictionary(uploadedFile => uploadedFile.ArchiveFileId);
-
-            if (newestFilePerArchiveFileId.Count != neededArchiveFileIds.Count)
-            {
-                continue;
-            }
-
-            candidates.Add(
-                new SelectedSourceUpload(
-                    Upload: upload,
-                    UploadedFilesByArchiveFileId: newestFilePerArchiveFileId,
-                    LastCheckedAt: newestFilePerArchiveFileId
-                        .Values.Select(uploadedFile => uploadedFile.CheckedAt)
-                        .Max(),
-                    MirrorPriority: registration.MirrorPriority
-                )
-            );
-        }
-
-        return candidates
-            .OrderBy(candidate => candidate.MirrorPriority)
-            .ThenByDescending(candidate => candidate.LastCheckedAt)
-            .FirstOrDefault();
-    }
-
     private async Task RestoreFromSourceUploadAsync(
         Archive archive,
         IReadOnlyList<ArchiveFile> neededArchiveFiles,
@@ -358,7 +247,7 @@ public class ArchiveRestoreService(
                 userCancellationToken
             );
 
-            IReadOnlyList<DownloadResult> results;
+            IReadOnlyList<FileDownloadResult> results;
 
             try
             {
@@ -382,7 +271,7 @@ public class ArchiveRestoreService(
                             archiveFile.Id
                         ];
 
-                        return new PlannedDownload(
+                        return new PlannedFileDownload(
                             ArchiveFileId: archiveFile.Id,
                             TargetFilePath: Path.Join(
                                 restoreFolderPath,
@@ -399,7 +288,7 @@ public class ArchiveRestoreService(
                     })
                     .ToList();
 
-                results = await RunDownloadsAsync(
+                results = await mirrorDownloadCoordinator.RunDownloadsAsync(
                     archiveId: archive.Id,
                     hosterName: registration.Name,
                     downloads: downloads,
@@ -523,7 +412,7 @@ public class ArchiveRestoreService(
         Archive archive,
         ArchiveState previousArchiveState,
         string restoreFolderPath,
-        IReadOnlyList<DownloadResult> failures,
+        IReadOnlyList<FileDownloadResult> failures,
         int totalFileCount,
         string hosterName,
         int sourceUploadId,
@@ -580,7 +469,7 @@ public class ArchiveRestoreService(
 
     private static string BuildFailureMessage(
         string hosterName,
-        IReadOnlyList<DownloadResult> failures,
+        IReadOnlyList<FileDownloadResult> failures,
         int totalFileCount,
         int maxAttempts
     )
@@ -628,352 +517,5 @@ public class ArchiveRestoreService(
             RetryDelay: TimeSpan.FromSeconds(configuration.DownloadRetryDelaySeconds),
             MaxParallelDownloads: Math.Max(1, configuration.MaxParallelDownloads)
         );
-    }
-
-    private async Task<IReadOnlyList<DownloadResult>> RunDownloadsAsync(
-        int archiveId,
-        string hosterName,
-        IReadOnlyList<PlannedDownload> downloads,
-        IHosterWithDownload hoster,
-        IHosterConfig hosterConfig,
-        DownloadSettings downloadSettings,
-        CancellationToken cancellationToken
-    )
-    {
-        using var semaphore = new SemaphoreSlim(downloadSettings.MaxParallelDownloads);
-
-        downloadProgressTracker.StartTracking(
-            archiveId,
-            hosterName,
-            downloads
-                .Select(download => new PlannedDownloadFile(
-                    ArchiveFileId: download.ArchiveFileId,
-                    FileName: Path.GetFileName(download.TargetFilePath),
-                    SizeBytes: download.ExpectedSizeBytes
-                ))
-                .ToList()
-        );
-
-        try
-        {
-            var downloadTasks = downloads.Select(download =>
-                DownloadAndVerifyAsync(
-                    archiveId: archiveId,
-                    hosterName: hosterName,
-                    download: download,
-                    hoster: hoster,
-                    hosterConfig: hosterConfig,
-                    semaphore: semaphore,
-                    downloadSettings: downloadSettings,
-                    cancellationToken: cancellationToken
-                )
-            );
-
-            return await Task.WhenAll(downloadTasks);
-        }
-        finally
-        {
-            downloadProgressTracker.StopTracking(archiveId);
-        }
-    }
-
-    private async Task<DownloadResult> DownloadAndVerifyAsync(
-        int archiveId,
-        string hosterName,
-        PlannedDownload download,
-        IHosterWithDownload hoster,
-        IHosterConfig hosterConfig,
-        SemaphoreSlim semaphore,
-        DownloadSettings downloadSettings,
-        CancellationToken cancellationToken
-    )
-    {
-        await semaphore.WaitAsync(cancellationToken);
-
-        var fileName = Path.GetFileName(download.TargetFilePath);
-        var maxAttempts = downloadSettings.MaxAttempts;
-        var errorMessages = new HashSet<string>();
-        var attemptsMade = 0;
-
-        try
-        {
-            foreach (var attempt in Enumerable.Range(1, maxAttempts))
-            {
-                attemptsMade = attempt;
-
-                var outcome = await RunDownloadAttemptAsync(
-                    archiveId: archiveId,
-                    hosterName: hosterName,
-                    download: download,
-                    hoster: hoster,
-                    hosterConfig: hosterConfig,
-                    cancellationToken: cancellationToken
-                );
-
-                if (outcome.ErrorMessage is null)
-                {
-                    if (attempt > 1)
-                    {
-                        logger.LogInformation(
-                            "Download of {FileName} from hoster {HosterName} succeeded on attempt {Attempt} of {MaxAttempts}",
-                            fileName,
-                            hosterName,
-                            attempt,
-                            maxAttempts
-                        );
-                    }
-
-                    return DownloadResult.Succeeded(
-                        download: download,
-                        hosterName: hosterName,
-                        md5Hash: outcome.Md5Hash!,
-                        attempts: attempt
-                    );
-                }
-
-                logger.LogWarning(
-                    outcome.Exception,
-                    "Download attempt {Attempt} of {MaxAttempts} for archive file {ArchiveFileId} ({FileName}) of archive {ArchiveId} from hoster {HosterName} at {HosterFileLink} failed: {ErrorMessage}",
-                    attempt,
-                    maxAttempts,
-                    download.ArchiveFileId,
-                    fileName,
-                    archiveId,
-                    hosterName,
-                    download.UploadedFile.HosterFileLink,
-                    outcome.ErrorMessage
-                );
-
-                if (outcome.IsFileMissing)
-                {
-                    return DownloadResult.Failed(
-                        download: download,
-                        hosterName: hosterName,
-                        attempts: attempt,
-                        isFileMissing: true,
-                        errorMessages:
-                        [
-                            $"The file does not exist on {hosterName} any more: {Truncate(outcome.ErrorMessage)}",
-                        ]
-                    );
-                }
-                
-                errorMessages.Add(Truncate(outcome.ErrorMessage));
-
-                if (attempt == maxAttempts || cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
-
-                logger.LogInformation(
-                    "Retrying the download of {FileName} from hoster {HosterName} in {RetryDelaySeconds} seconds (attempt {NextAttempt} of {MaxAttempts})",
-                    fileName,
-                    hosterName,
-                    downloadSettings.RetryDelay.TotalSeconds,
-                    attempt + 1,
-                    maxAttempts
-                );
-
-                if (downloadSettings.RetryDelay > TimeSpan.Zero)
-                {
-                    await Task.Delay(downloadSettings.RetryDelay, cancellationToken);
-                }
-            }
-
-            return DownloadResult.Failed(
-                download: download,
-                hosterName: hosterName,
-                attempts: attemptsMade,
-                isFileMissing: false,
-                errorMessages: errorMessages.ToList()
-            );
-        }
-        finally
-        {
-            semaphore.Release();
-        }
-    }
-
-    private async Task<AttemptOutcome> RunDownloadAttemptAsync(
-        int archiveId,
-        string hosterName,
-        PlannedDownload download,
-        IHosterWithDownload hoster,
-        IHosterConfig hosterConfig,
-        CancellationToken cancellationToken
-    )
-    {
-        try
-        {
-            var result = await hoster.DownloadFileAsync(
-                file: new DownloadFileDto(
-                    HosterFileLink: download.UploadedFile.HosterFileLink,
-                    ExternalId: download.UploadedFile.ExternalId,
-                    ExpectedSizeBytes: download.ExpectedSizeBytes
-                ),
-                targetFilePath: download.TargetFilePath,
-                hosterConfig: hosterConfig,
-                progress: new DownloadProgressReporter(
-                    tracker: downloadProgressTracker,
-                    archiveId: archiveId,
-                    archiveFileId: download.ArchiveFileId,
-                    fileName: Path.GetFileName(download.TargetFilePath)
-                ),
-                cancellationToken: cancellationToken
-            );
-
-            if (!result.IsSuccess)
-            {
-                return new AttemptOutcome(
-                    Md5Hash: null,
-                    ErrorMessage: JoinErrorMessages(result.ErrorMessages),
-                    Exception: null,
-                    IsFileMissing: result.IsFileMissing
-                );
-            }
-
-            return await VerifyDownloadAsync(
-                download: download,
-                hosterName: hosterName,
-                cancellationToken: cancellationToken
-            );
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            return new AttemptOutcome(
-                Md5Hash: null,
-                ErrorMessage: ex.InnerException?.Message ?? ex.Message,
-                Exception: ex,
-                IsFileMissing: false
-            );
-        }
-    }
-
-    private static async Task<AttemptOutcome> VerifyDownloadAsync(
-        PlannedDownload download,
-        string hosterName,
-        CancellationToken cancellationToken
-    )
-    {
-        var actualHash = await Md5FileHash.ComputeAsync(download.TargetFilePath, cancellationToken);
-        var expectedHash = download.UploadedFile.Md5Hash;
-
-        if (
-            expectedHash is not null
-            && !string.Equals(expectedHash, actualHash, StringComparison.OrdinalIgnoreCase)
-        )
-        {
-            var sizeOnDisk = new FileInfo(download.TargetFilePath).Length;
-
-            return new AttemptOutcome(
-                Md5Hash: null,
-                ErrorMessage: $"MD5 mismatch for {Path.GetFileName(download.TargetFilePath)} downloaded from {hosterName}: expected {expectedHash}, got {actualHash} ({sizeOnDisk.Bytes().Humanize("0.0")} on disk)",
-                Exception: null,
-                IsFileMissing: false
-            );
-        }
-
-        return new AttemptOutcome(
-            Md5Hash: actualHash,
-            ErrorMessage: null,
-            Exception: null,
-            IsFileMissing: false
-        );
-    }
-
-    private static string JoinErrorMessages(IReadOnlyList<string> errorMessages)
-    {
-        var joined = string.Join(" | ", errorMessages.Where(message => message.Length > 0));
-
-        return joined.Length > 0 ? joined : "The hoster did not report an error message";
-    }
-
-    private static string Truncate(string errorMessage)
-    {
-        return errorMessage.Length > MaxErrorMessageLength
-            ? errorMessage[..MaxErrorMessageLength]
-            : errorMessage;
-    }
-
-    private sealed record SelectedSourceUpload(
-        Upload Upload,
-        Dictionary<int, UploadedFile> UploadedFilesByArchiveFileId,
-        DateTime? LastCheckedAt,
-        int MirrorPriority
-    );
-
-    private sealed record PlannedDownload(
-        int ArchiveFileId,
-        string TargetFilePath,
-        long? ExpectedSizeBytes,
-        UploadedFile UploadedFile
-    );
-
-    private sealed record DownloadSettings(
-        int MaxAttempts,
-        TimeSpan RetryDelay,
-        int MaxParallelDownloads
-    );
-
-    private sealed record AttemptOutcome(
-        string? Md5Hash,
-        string? ErrorMessage,
-        Exception? Exception,
-        bool IsFileMissing
-    );
-
-    private sealed record DownloadResult(
-        int ArchiveFileId,
-        string TargetFilePath,
-        string FileName,
-        string HosterName,
-        string HosterFileLink,
-        bool IsSuccess,
-        string? Md5Hash,
-        int Attempts,
-        bool IsFileMissing,
-        IReadOnlyList<string> ErrorMessages
-    )
-    {
-        public string ErrorText => string.Join(" | ", ErrorMessages);
-
-        public static DownloadResult Succeeded(
-            PlannedDownload download,
-            string hosterName,
-            string md5Hash,
-            int attempts
-        ) =>
-            new(
-                ArchiveFileId: download.ArchiveFileId,
-                TargetFilePath: download.TargetFilePath,
-                FileName: Path.GetFileName(download.TargetFilePath),
-                HosterName: hosterName,
-                HosterFileLink: download.UploadedFile.HosterFileLink,
-                IsSuccess: true,
-                Md5Hash: md5Hash,
-                Attempts: attempts,
-                IsFileMissing: false,
-                ErrorMessages: []
-            );
-
-        public static DownloadResult Failed(
-            PlannedDownload download,
-            string hosterName,
-            int attempts,
-            bool isFileMissing,
-            IReadOnlyList<string> errorMessages
-        ) =>
-            new(
-                ArchiveFileId: download.ArchiveFileId,
-                TargetFilePath: download.TargetFilePath,
-                FileName: Path.GetFileName(download.TargetFilePath),
-                HosterName: hosterName,
-                HosterFileLink: download.UploadedFile.HosterFileLink,
-                IsSuccess: false,
-                Md5Hash: null,
-                Attempts: attempts,
-                IsFileMissing: isFileMissing,
-                ErrorMessages: errorMessages
-            );
     }
 }
