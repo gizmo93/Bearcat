@@ -98,15 +98,13 @@
                                 else
                                 {
                                     <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
-                                        <BbTooltipTrigger>
-                                            <span class="inline-flex">
-                                                <BbButton Variant="ButtonVariant.Ghost"
-                                                          Size="ButtonSize.IconSmall"
-                                                          OnClick="@(async _ => await ChangeArchiveFolderAsync(config))"
-                                                          AriaLabel="@L["ChangeArchiveFolder"]">
-                                                    <LucideIcon Name="folder-sync" class="h-4 w-4" />
-                                                </BbButton>
-                                            </span>
+                                        <BbTooltipTrigger AsChild="true">
+                                            <BbButton Variant="ButtonVariant.Ghost"
+                                                      Size="ButtonSize.IconSmall"
+                                                      OnClick="@(async _ => await ChangeArchiveFolderAsync(config))"
+                                                      AriaLabel="@L["ChangeArchiveFolder"]">
+                                                <LucideIcon Name="folder-sync" class="h-4 w-4" />
+                                            </BbButton>
                                         </BbTooltipTrigger>
                                         <BbTooltipContent Class="max-w-xs text-xs">
                                             @L["ChangeArchiveFolderTooltip"]

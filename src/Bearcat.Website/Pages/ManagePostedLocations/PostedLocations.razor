@@ -43,16 +43,14 @@
                             @if (location.DistributionSiteRegistrationId is not null)
                             {
                                 <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">
-                                    <BbTooltipTrigger>
-                                        <span class="inline-flex">
-                                            <BbButton Variant="ButtonVariant.Ghost"
-                                                      Size="ButtonSize.IconSmall"
-                                                      AriaLabel="@L["UpdatePostedLocationTitle"]"
-                                                      Disabled="isBusy"
-                                                      OnClick="@(() => UpdateAsync(location))">
-                                                <LucideIcon Name="file-pen" class="h-4 w-4" />
-                                            </BbButton>
-                                        </span>
+                                    <BbTooltipTrigger AsChild="true">
+                                        <BbButton Variant="ButtonVariant.Ghost"
+                                                  Size="ButtonSize.IconSmall"
+                                                  AriaLabel="@L["UpdatePostedLocationTitle"]"
+                                                  Disabled="isBusy"
+                                                  OnClick="@(() => UpdateAsync(location))">
+                                            <LucideIcon Name="file-pen" class="h-4 w-4" />
+                                        </BbButton>
                                     </BbTooltipTrigger>
                                     <BbTooltipContent Class="max-w-xs text-xs">
                                         <p class="font-medium">@L["UpdatePostedLocationTitle"]</p>
