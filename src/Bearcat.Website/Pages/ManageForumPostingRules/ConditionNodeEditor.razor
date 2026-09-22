@@ -6,7 +6,7 @@
 }
 else
 {
-    <div class="space-y-3 rounded-md border border-border/70 bg-muted/20 p-3">
+    <div class="@($"space-y-3 rounded-md border border-border/70 bg-muted/20 p-3 {AccentBorderClass}")">
         <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex flex-wrap items-center gap-2">
                 @if (Node.Kind is RuleConditionKind.Not)
@@ -65,7 +65,10 @@ else
             <div class="space-y-2">
                 @foreach (var child in Node.Children)
                 {
-                    <ConditionNodeEditor @key="child" Node="child" OnRemove="@(() => RemoveChild(child))" />
+                    <ConditionNodeEditor @key="child"
+                                         Node="child"
+                                         Depth="Depth + 1"
+                                         OnRemove="@(() => RemoveChild(child))" />
                 }
             </div>
         }
@@ -78,7 +81,21 @@ else
     public ConditionNodeModel Node { get; set; } = null!;
 
     [Parameter]
+    public int Depth { get; set; }
+
+    [Parameter]
     public EventCallback OnRemove { get; set; }
+
+    private string AccentBorderClass =>
+        Depth == 0
+            ? string.Empty
+            : (Depth % 4) switch
+            {
+                0 => "border-l-4 border-l-primary",
+                1 => "border-l-4 border-l-blue-500",
+                2 => "border-l-4 border-l-purple-500",
+                _ => "border-l-4 border-l-orange-500",
+            };
 
     private bool CanAddChild =>
         Node.IsGroup || (Node.Kind is RuleConditionKind.Not && Node.Children.Count == 0);

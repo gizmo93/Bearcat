@@ -1104,10 +1104,13 @@
   <data name="ForumPostTemplateIsRequired" xml:space="preserve"><value>Eine Forenpostvorlage ist erforderlich.</value></data>
   <data name="Condition" xml:space="preserve"><value>Bedingung</value></data>
   <data name="ConditionField" xml:space="preserve"><value>Feld</value></data>
+  <data name="ConditionSelectField" xml:space="preserve"><value>Feld auswählen</value></data>
+  <data name="NoRuleFieldFound" xml:space="preserve"><value>Kein Feld gefunden.</value></data>
   <data name="ConditionOperator" xml:space="preserve"><value>Operator</value></data>
   <data name="ConditionValue" xml:space="preserve"><value>Wert</value></data>
   <data name="ConditionValuePlaceholder" xml:space="preserve"><value>Wert</value></data>
   <data name="ConditionSelectValue" xml:space="preserve"><value>Wert auswählen</value></data>
+  <data name="NoConditionValueFound" xml:space="preserve"><value>Kein Wert gefunden.</value></data>
   <data name="ConditionSelectValues" xml:space="preserve"><value>Werte auswählen</value></data>
   <data name="ConditionAddValuePlaceholder" xml:space="preserve"><value>Wert hinzufügen</value></data>
   <data name="ConditionNoValuesYet" xml:space="preserve"><value>Noch keine Werte</value></data>

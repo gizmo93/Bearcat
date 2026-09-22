@@ -1101,10 +1101,13 @@
   <data name="ForumPostTemplateIsRequired" xml:space="preserve"><value>A forum post template is required.</value></data>
   <data name="Condition" xml:space="preserve"><value>Condition</value></data>
   <data name="ConditionField" xml:space="preserve"><value>Field</value></data>
+  <data name="ConditionSelectField" xml:space="preserve"><value>Select field</value></data>
+  <data name="NoRuleFieldFound" xml:space="preserve"><value>No field found.</value></data>
   <data name="ConditionOperator" xml:space="preserve"><value>Operator</value></data>
   <data name="ConditionValue" xml:space="preserve"><value>Value</value></data>
   <data name="ConditionValuePlaceholder" xml:space="preserve"><value>Value</value></data>
   <data name="ConditionSelectValue" xml:space="preserve"><value>Select a value</value></data>
+  <data name="NoConditionValueFound" xml:space="preserve"><value>No value found.</value></data>
   <data name="ConditionSelectValues" xml:space="preserve"><value>Select values</value></data>
   <data name="ConditionAddValuePlaceholder" xml:space="preserve"><value>Add a value</value></data>
   <data name="ConditionNoValuesYet" xml:space="preserve"><value>No values yet</value></data>
