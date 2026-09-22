@@ -6,9 +6,8 @@ description: "Block uploads until a release passes the quality checks you define
 Quality gates prevent new uploads until a release passes your checks or you approve it manually.
 Use them to catch missing NFOs, cover images, or incomplete release folders before uploading.
 
-Every release gets a gate state. Releases in groups without a quality profile pass automatically.
-[Unmanaged releases](/Bearcat/release-types/) have no release folder, so for them Bearcat runs only
-the **Required release infos** check and skips the checks that inspect the release folder.
+[Unmanaged releases](/Bearcat/release-types/) have no release folder, so only the
+**Required release infos** check runs for them. Groups without a quality profile pass the gate.
 
 ## How it fits together
 
@@ -34,9 +33,8 @@ profile**. Give it a name and add one or more checks. Each check has its own set
   cover image, the description, and/or the NFO.
 - **Media info present**: media info has to have been extracted for the release.
 
-**File with pattern present**, **Minimum folder size** and **Media info present** need the release
-folder. Bearcat skips them for unmanaged releases, so an unmanaged release is only held back by
-**Required release infos**.
+The checks that look at the release folder (file pattern, folder size, media info) are skipped for
+unmanaged releases.
 
 You can mix as many checks as you like in one profile. A release passes the gate only when **all**
 checks pass.
@@ -46,9 +44,8 @@ checks pass.
 ## Assigning a profile to a release group
 
 Open the release group (under **Configuration**, **Release Groups**) and pick a
-quality profile in the **Quality profile** field. Leave it empty if the group needs no checks: its
-releases then pass the gate automatically. The release groups list shows which profile each group
-uses.
+quality profile in the **Quality profile** field. Leave it empty if the group does not need any
+checks. The release groups list shows which profile each group uses.
 
 ![assign-quality-profile-to-release-group.png](images/assign-quality-profile-to-release-group.png)
 
@@ -76,15 +73,13 @@ You do not have to trigger the checks yourself. Bearcat evaluates a release:
   page), and
 - on demand when you press **Recheck** on a release in the quality issues list.
 
-The background task picks up every release that has failed or has not been evaluated yet. This also
-covers releases created before quality gates existed.
+The background task looks at every release that failed or was never evaluated, so older releases
+get their state too.
 
-When you edit the checks of a quality profile, or pick a different profile for a release group,
-Bearcat resets the gate state of the affected releases to **Not evaluated**. The background task
-then evaluates them again against the new rules within one interval.
+If you change the checks of a profile or give a release group a different profile, the affected
+releases go back to **Not evaluated** and are checked again on the next run.
 
-Manually approved releases are left untouched by the automatic evaluations and by these resets, so
-an approval sticks until you change it.
+Manually approved releases are never touched by any of this. An approval sticks until you change it.
 
 ## The quality issues list
 
@@ -100,7 +95,6 @@ evaluated. For every entry you have three actions:
 - **Open** takes you to the release so you can fix what is missing (add the NFO, fill in the cover,
   and so on). The next evaluation picks up the change, or you can recheck right away.
 - **Recheck** evaluates the release again immediately, which is handy after you fixed something.
-  This works for every release in the list, managed or unmanaged.
 - **Approve manually** marks the release as **manually approved**. Bearcat then creates its uploads
   even though a check failed, and stops re-evaluating it.
 

@@ -14,8 +14,8 @@ Each forum has its own rules. The first matching rule wins. If none matches, Bea
 - A forum added under **Distribution sites**, with a working login.
 - At least one [forum post template](/Bearcat/forum-post-templates/) that the rule can render.
 - Releases that reach the [post queue](/Bearcat/post-queue/), pass their
-  [quality gate](/Bearcat/quality-gates/) and have a classification. Releases in groups without
-  a quality profile pass the gate automatically.
+  [quality gate](/Bearcat/quality-gates/) and have a classification. Groups without a quality
+  profile pass the gate.
 
 ## Opening the posting rules page
 
@@ -147,8 +147,8 @@ Collections currently have no automatic posting section. Rules match single rele
 Instead of the forum list, the entry shows a short reason:
 
 - **Automatic posting is blocked: the quality gate has not passed.** The release has to be
-  [passed or manually approved](/Bearcat/quality-gates/). A release that has not been evaluated yet
-  is picked up by the quality gate background task within one interval.
+  [passed or manually approved](/Bearcat/quality-gates/). If it was not evaluated yet, the quality
+  gate background task takes care of that on its next run.
 - **Automatic posting is blocked: the release has no classification.** Classification runs in the
   background every 30 minutes and after media metadata are extracted. Wait for the next run, or
   extract the media metadata on the release to trigger it.

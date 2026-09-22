@@ -39,9 +39,8 @@ for pending reuploads.
 
 ![unmanaged-releases-refresh-folder.png](images/unmanaged-releases-refresh-folder.png)
 
-[Quality gates](/Bearcat/quality-gates/) check unmanaged releases only for the required release
-infos (cover, description, NFO). The checks that inspect the release folder are skipped because there
-are no raw files to look at.
+[Quality gates](/Bearcat/quality-gates/) only check the release infos (cover, description, NFO) of
+unmanaged releases. There is no release folder to look at, so the other checks are skipped.
 
 ## Converting between types
 
