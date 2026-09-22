@@ -31,8 +31,17 @@ public partial class CopyButton(IJSRuntime jsRuntime, ToastService toastService)
     {
         try
         {
-            await jsRuntime.InvokeAsync<bool>("bearcat.copyText", Value);
-            toastService.Success(L["Copied"]);
+            var result = await jsRuntime.InvokeAsync<bool?>("bearcat.takeCopyResult");
+            var copied = result ?? await jsRuntime.InvokeAsync<bool>("bearcat.copyText", Value);
+
+            if (copied)
+            {
+                toastService.Success(L["Copied"]);
+            }
+            else
+            {
+                toastService.Error(L["CopyFailed"]);
+            }
         }
         catch (JSException)
         {

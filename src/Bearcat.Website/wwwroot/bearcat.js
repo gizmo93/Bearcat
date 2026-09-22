@@ -1,3 +1,22 @@
+function copyWithTextarea(text) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.inset = "0 auto auto 0";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus({ preventScroll: true });
+    textarea.select();
+    textarea.setSelectionRange(0, text.length);
+
+    try {
+        return document.execCommand("copy");
+    } finally {
+        document.body.removeChild(textarea);
+    }
+}
+
 export async function copyText(text) {
     if (!text) {
         throw new Error("No clipboard text provided");
@@ -12,27 +31,48 @@ export async function copyText(text) {
         }
     }
 
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.setAttribute("readonly", "");
-    textarea.style.position = "fixed";
-    textarea.style.inset = "0 auto auto 0";
-    textarea.style.opacity = "0";
-    document.body.appendChild(textarea);
-    textarea.focus({ preventScroll: true });
-    textarea.select();
-    textarea.setSelectionRange(0, text.length);
+    if (!copyWithTextarea(text)) {
+        throw new Error("Clipboard copy failed");
+    }
 
-    try {
-        const copied = document.execCommand("copy");
-        if (!copied) {
-            throw new Error("Clipboard copy failed");
+    return true;
+}
+
+const pendingCopies = [];
+const maxPendingCopies = 8;
+
+function copyInGesture(text) {
+    if (!text) {
+        return Promise.resolve(false);
+    }
+
+    if (window.isSecureContext && navigator.clipboard?.writeText) {
+        return navigator.clipboard.writeText(text).then(() => true, () => false);
+    }
+
+    return Promise.resolve(copyWithTextarea(text));
+}
+
+document.addEventListener(
+    "click",
+    event => {
+        const element = event.target.closest?.("[data-bearcat-copy]");
+        if (!element || element.disabled || element.getAttribute("aria-disabled") === "true") {
+            return;
         }
 
-        return true;
-    } finally {
-        document.body.removeChild(textarea);
-    }
+        while (pendingCopies.length >= maxPendingCopies) {
+            pendingCopies.shift();
+        }
+
+        pendingCopies.push(copyInGesture(element.dataset.bearcatCopy));
+    },
+    true
+);
+
+export async function takeCopyResult() {
+    const pending = pendingCopies.shift();
+    return pending === undefined ? null : await pending;
 }
 
 export function setCookie(key, value) {
@@ -145,6 +185,7 @@ const lineNumberedTextarea = (() => {
 
 window.bearcat = {
     copyText,
+    takeCopyResult,
     setCookie,
     updateScrollAwareHeader,
     lineNumberedTextarea,

@@ -58,7 +58,7 @@
                         </Icon>
                         <ChildContent>@L["SaveNfoFile"]</ChildContent>
                     </BbDropdownMenuItem>
-                    <BbDropdownMenuItem Disabled="@(!CanCopyNfo)" OnClick="CopyNfoAsync">
+                    <BbDropdownMenuItem Disabled="@(!CanCopyNfo)" data-bearcat-copy="@nfoContent" OnClick="CopyNfoAsync">
                         <Icon>
                             <LucideIcon Name="clipboard-copy" class="h-4 w-4" />
                         </Icon>

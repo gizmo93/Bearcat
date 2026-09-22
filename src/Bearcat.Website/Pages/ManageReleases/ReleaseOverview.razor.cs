@@ -164,8 +164,18 @@ public partial class ReleaseOverview(
 
         try
         {
-            await jsRuntime.InvokeAsync<bool>("bearcat.copyText", nfoContent);
-            toastService.Success(L["Copied"]);
+            var result = await jsRuntime.InvokeAsync<bool?>("bearcat.takeCopyResult");
+            var copied =
+                result ?? await jsRuntime.InvokeAsync<bool>("bearcat.copyText", nfoContent);
+
+            if (copied)
+            {
+                toastService.Success(L["Copied"]);
+            }
+            else
+            {
+                toastService.Error(L["CopyFailed"]);
+            }
         }
         catch (JSException)
         {

@@ -4,6 +4,7 @@
           Disabled="@(Disabled || string.IsNullOrEmpty(Value))"
           AriaLabel="@Label"
           title="@Label"
+          data-bearcat-copy="@Value"
           OnClick="CopyAsync">
     <LucideIcon Name="@Icon" class="h-4 w-4" />
     @if (ShowLabel)
