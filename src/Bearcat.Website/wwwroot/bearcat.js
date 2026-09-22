@@ -183,10 +183,52 @@ const lineNumberedTextarea = (() => {
     return { attach, refresh };
 })();
 
+const logView = (() => {
+    const registry = new WeakMap();
+    const bottomThreshold = 24;
+
+    function isAtBottom(element) {
+        return (
+            element.scrollHeight - element.scrollTop - element.clientHeight <= bottomThreshold
+        );
+    }
+
+    function attach(element) {
+        if (!element || registry.has(element)) {
+            return;
+        }
+
+        const state = { pinned: true };
+        const onScroll = () => {
+            state.pinned = isAtBottom(element);
+        };
+
+        registry.set(element, state);
+        element.addEventListener("scroll", onScroll, { passive: true });
+        element.scrollTop = element.scrollHeight;
+    }
+
+    function scrollToBottomIfPinned(element) {
+        if (!element) {
+            return;
+        }
+
+        const state = registry.get(element);
+        if (state && !state.pinned) {
+            return;
+        }
+
+        element.scrollTop = element.scrollHeight;
+    }
+
+    return { attach, scrollToBottomIfPinned };
+})();
+
 window.bearcat = {
     copyText,
     takeCopyResult,
     setCookie,
     updateScrollAwareHeader,
     lineNumberedTextarea,
+    logView,
 };

@@ -9,11 +9,13 @@ using Bearcat.Infrastructure.BackgroundTasks;
 using Bearcat.Infrastructure.Configuration;
 using Bearcat.Infrastructure.Database.InversionOfControl;
 using Bearcat.Infrastructure.FileSystem;
+using Bearcat.Infrastructure.Logging;
 using Bearcat.Infrastructure.Security;
 using Bearcat.Infrastructure.Telegram;
 using Bearcat.Infrastructure.Updates;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Infrastructure.InversionOfControl;
 
@@ -32,6 +34,8 @@ public static class ServiceProviderConfig
                 ApplicationConfigurationOverrideCache
             >();
             services.AddSingleton<IBackgroundTaskScheduleCache, BackgroundTaskScheduleCache>();
+            services.AddSingleton<LogStreamBroadcaster>();
+            services.AddSingleton<ILoggerProvider, LogStreamLoggerProvider>();
 
             services.AddHttpClient(
                 GitHubUpdateChecker.HttpClientName,

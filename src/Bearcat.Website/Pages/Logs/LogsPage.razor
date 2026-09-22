@@ -1,0 +1,64 @@
+@page "/logs"
+
+<PageTitle>@L["Logs"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["Logs"]</h1>
+            <p class="text-sm text-muted-foreground">@L["LogsDescription"]</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <BbBadge Variant="@(isStreaming ? BadgeVariant.Secondary : BadgeVariant.Outline)">
+                @(isStreaming ? L["StreamingActive"] : L["StreamingPaused"])
+            </BbBadge>
+
+            <BbButton Variant="@(isStreaming ? ButtonVariant.Outline : ButtonVariant.Default)"
+                      Class="bearcat-page-action"
+                      OnClick="ToggleStreaming"
+                      AriaLabel="@(isStreaming ? L["PauseStreaming"] : L["ResumeStreaming"])">
+                <LucideIcon Name="@(isStreaming ? "pause" : "play")" class="h-4 w-4" />
+                @(isStreaming ? L["PauseStreaming"] : L["ResumeStreaming"])
+            </BbButton>
+
+            <BbButton Variant="ButtonVariant.Outline"
+                      Class="bearcat-page-action"
+                      OnClick="ClearLines"
+                      Disabled="@(lines.Count == 0)"
+                      AriaLabel="@L["ClearLogs"]">
+                <LucideIcon Name="trash-2" class="h-4 w-4" />
+                @L["ClearLogs"]
+            </BbButton>
+        </div>
+    </div>
+
+    <div @ref="logContainer"
+         role="log"
+         aria-label="@L["Logs"]"
+         class="h-[70vh] overflow-y-auto rounded-lg border border-border bg-background p-3 font-mono text-xs leading-5">
+        @if (lines.Count == 0)
+        {
+            <p class="p-4 text-sm text-muted-foreground">@L["NoLogEntries"]</p>
+        }
+        else
+        {
+            @foreach (var line in lines)
+            {
+                <div class="flex gap-2">
+                    <span class="shrink-0 text-muted-foreground">@FormatTimestamp(line)</span>
+                    <span class="w-8 shrink-0 font-semibold @LevelClass(line.Level)">@FormatLevel(line.Level)</span>
+                    <span class="shrink-0 whitespace-nowrap text-muted-foreground" title="@line.Category">@FormatCategory(line.Category)</span>
+                    <span class="min-w-0 grow break-words whitespace-pre-wrap @LevelClass(line.Level)">@line.Message</span>
+                </div>
+
+                @if (line.Exception is null)
+                {
+                    continue;
+                }
+
+                <pre class="mt-1 mb-2 ml-6 break-words whitespace-pre-wrap text-destructive">@line.Exception</pre>
+            }
+        }
+    </div>
+</section>

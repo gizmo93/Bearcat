@@ -1215,4 +1215,12 @@
   <data name="DownloadStatus" xml:space="preserve"><value>Downloadstatus</value></data>
   <data name="DownloadStatusSubtitle" xml:space="preserve"><value>Wiederherstellung von Archiv #{0} für {1} von {2}</value></data>
   <data name="DownloadFileStatus" xml:space="preserve"><value>Downloadfortschritt pro Datei</value></data>
+  <data name="Logs" xml:space="preserve"><value>Logs</value></data>
+  <data name="LogsDescription" xml:space="preserve"><value>Liveausgabe des Anwendungslogs</value></data>
+  <data name="PauseStreaming" xml:space="preserve"><value>Pausieren</value></data>
+  <data name="ResumeStreaming" xml:space="preserve"><value>Fortsetzen</value></data>
+  <data name="StreamingActive" xml:space="preserve"><value>Streaming läuft</value></data>
+  <data name="StreamingPaused" xml:space="preserve"><value>Pausiert</value></data>
+  <data name="ClearLogs" xml:space="preserve"><value>Leeren</value></data>
+  <data name="NoLogEntries" xml:space="preserve"><value>Noch keine Logeinträge.</value></data>
 </root>
