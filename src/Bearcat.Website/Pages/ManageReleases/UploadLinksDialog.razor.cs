@@ -39,7 +39,6 @@ public partial class UploadLinksDialog(IScopedOperationRunner operationRunner)
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
     private int FirstResult => totalCount == 0 ? 0 : pageIndex * pageSize + 1;
     private int LastResult => Math.Min(totalCount, (pageIndex + 1) * pageSize);
-    private string CopyTextAreaId => $"upload-links-copy-{UploadId}";
     private string LinksText => string.Join(Environment.NewLine, allUploadLinks);
     private string LinksTableKey =>
         $"{showFileColumn}-{selectedOnlineState}-{pageIndex}-{pageSize}";

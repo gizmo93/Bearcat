@@ -294,25 +294,6 @@ public partial class ReleaseOverview(
             _ => BadgeVariant.Outline,
         };
 
-    private static string GetContainerCopyTargetId(
-        ReleaseOverviewUploadReadModel upload,
-        ReleaseOverviewLinkCrypterLinkReadModel link
-    ) => $"release-overview-container-{upload.UploadId}-{link.LinkCrypterContainerId}";
-
-    private static string GetPasswordCopyTargetId(ReleaseOverviewUploadReadModel upload) =>
-        $"release-overview-password-{upload.UploadId}";
-
-    private static string GetImageUrlsCopyTargetId(
-        ReleaseOverviewImageUploadReadModel imageUpload
-    ) =>
-        $"release-overview-image-urls-{imageUpload.ImageUploadConfigId}-{imageUpload.ImageUploadId}";
-
-    private static string GetImageUrlCopyTargetId(
-        ReleaseOverviewImageUploadReadModel imageUpload,
-        ReleaseOverviewImageUploadUrlReadModel imageUrl
-    ) =>
-        $"release-overview-image-url-{imageUpload.ImageUploadConfigId}-{imageUpload.ImageUploadId}-{imageUrl.ImageSize}";
-
     private static string GetImageUrlsText(ReleaseOverviewImageUploadReadModel imageUpload) =>
         string.Join(Environment.NewLine, imageUpload.ImageUrls.Select(url => url.Url));
 

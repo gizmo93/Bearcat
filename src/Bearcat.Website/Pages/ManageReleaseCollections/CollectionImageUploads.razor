@@ -31,8 +31,6 @@
             <div class="bearcat-release-overview-image-list">
                 @foreach (var config in imageUploads)
                 {
-                    var imageUrlsCopyTargetId = GetImageUrlsCopyTargetId(config);
-
                     <article class="bearcat-release-overview-image-item">
                         <div class="bearcat-release-overview-image-main">
                             <div class="min-w-0">
@@ -63,20 +61,9 @@
                                     <ErrorMessagesTooltip Messages="config.ErrorMessages" />
                                 }
 
-                                <textarea id="@imageUrlsCopyTargetId" hidden readonly>@GetImageUrlsText(config)</textarea>
-                                <button type="button"
-                                        class="bearcat-copy-button bearcat-copy-icon-button"
-                                        disabled="@(config.ImageUrls.Count == 0)"
-                                        aria-label="@L["CopyImageUrls"]"
-                                        title="@L["CopyImageUrls"]"
-                                        data-copy-target="@imageUrlsCopyTargetId"
-                                        data-copy-label="@L["CopyImageUrls"]"
-                                        data-copy-success-label="@L["Copied"]"
-                                        data-copy-failure-label="@L["CopyFailed"]"
-                                        onclick="window.bearcat.copyFromTarget(this)">
-                                    <LucideIcon Name="copy" class="h-4 w-4" />
-                                    <span class="sr-only bearcat-copy-button-label">@L["CopyImageUrls"]</span>
-                                </button>
+                                <CopyButton Value="@GetImageUrlsText(config)"
+                                            Label="@L["CopyImageUrls"]"
+                                            Disabled="@(config.ImageUrls.Count == 0)" />
 
                                 <BbDropdownMenu>
                                     <BbDropdownMenuTrigger>
@@ -105,8 +92,6 @@
                             <div class="bearcat-release-overview-image-url-list">
                                 @foreach (var imageUrl in config.ImageUrls)
                                 {
-                                    var imageUrlCopyTargetId = GetImageUrlCopyTargetId(config, imageUrl);
-
                                     <div class="bearcat-release-overview-image-url">
                                         <BbBadge Variant="BadgeVariant.Secondary">@imageUrl.ImageSize</BbBadge>
                                         <a class="bearcat-upload-link"
@@ -116,19 +101,9 @@
                                            title="@imageUrl.Url">
                                             @imageUrl.Url
                                         </a>
-                                        <textarea id="@imageUrlCopyTargetId" hidden readonly>@imageUrl.Url</textarea>
-                                        <button type="button"
-                                                class="bearcat-copy-button bearcat-copy-icon-button bearcat-release-overview-link-copy"
-                                                aria-label="@L["CopyLink"]"
-                                                title="@L["CopyLink"]"
-                                                data-copy-target="@imageUrlCopyTargetId"
-                                                data-copy-label="@L["CopyLink"]"
-                                                data-copy-success-label="@L["Copied"]"
-                                                data-copy-failure-label="@L["CopyFailed"]"
-                                                onclick="window.bearcat.copyFromTarget(this)">
-                                            <LucideIcon Name="copy" class="h-4 w-4" />
-                                            <span class="sr-only bearcat-copy-button-label">@L["CopyLink"]</span>
-                                        </button>
+                                        <CopyButton Value="@imageUrl.Url"
+                                                    Label="@L["CopyLink"]"
+                                                    Class="bearcat-release-overview-link-copy" />
                                     </div>
                                 }
                             </div>

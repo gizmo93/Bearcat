@@ -121,15 +121,6 @@ public partial class CollectionImageUploads(
         await RefreshAsync();
     }
 
-    private static string GetImageUrlsCopyTargetId(CollectionImageUploadReadModel config) =>
-        $"collection-image-urls-{config.ImageUploadConfigId}-{config.ImageUploadId}";
-
-    private static string GetImageUrlCopyTargetId(
-        CollectionImageUploadReadModel config,
-        CollectionImageUploadUrlReadModel imageUrl
-    ) =>
-        $"collection-image-url-{config.ImageUploadConfigId}-{config.ImageUploadId}-{imageUrl.ImageSize}";
-
     private static string GetImageUrlsText(CollectionImageUploadReadModel config) =>
         string.Join(Environment.NewLine, config.ImageUrls.Select(url => url.Url));
 

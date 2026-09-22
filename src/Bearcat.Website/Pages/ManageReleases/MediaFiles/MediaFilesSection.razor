@@ -83,17 +83,7 @@
                             <details class="bearcat-media-raw">
                                 <summary>MediaInfo</summary>
                                 <div class="bearcat-media-raw-body">
-                                    <textarea id="mediainfo-@file.MediaFileId" hidden readonly>@file.MediaInfoText</textarea>
-                                    <button type="button"
-                                            class="bearcat-copy-button bearcat-media-copy"
-                                            data-copy-target="mediainfo-@file.MediaFileId"
-                                            data-copy-label="@L["Copy"]"
-                                            data-copy-success-label="@L["Copied"]"
-                                            data-copy-failure-label="@L["CopyFailed"]"
-                                            onclick="window.bearcat.copyFromTarget(this)">
-                                        <LucideIcon Name="copy" class="h-4 w-4" />
-                                        <span class="bearcat-copy-button-label">@L["Copy"]</span>
-                                    </button>
+                                    <CopyButton Value="@file.MediaInfoText" Label="@L["Copy"]" ShowLabel="true" />
                                     <pre>@file.MediaInfoText</pre>
                                 </div>
                             </details>

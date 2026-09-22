@@ -17,19 +17,10 @@
         </div>
 
         <div class="bearcat-upload-filter-row justify-end">
-            <textarea id="@CopyTextAreaId" hidden readonly>@ContainerLinksText</textarea>
-
-            <button type="button"
-                    class="bearcat-copy-button"
-                    disabled="@(ContainerLinks.Count == 0)"
-                    data-copy-target="@CopyTextAreaId"
-                    data-copy-label="@L["CopyAllLinks"]"
-                    data-copy-success-label="@L["Copied"]"
-                    data-copy-failure-label="@L["CopyFailed"]"
-                    onclick="window.bearcat.copyFromTarget(this)">
-                <LucideIcon Name="copy" class="h-4 w-4" />
-                <span class="bearcat-copy-button-label">@L["CopyAllLinks"]</span>
-            </button>
+            <CopyButton Value="@ContainerLinksText"
+                        Label="@L["CopyAllLinks"]"
+                        ShowLabel="true"
+                        Disabled="@(ContainerLinks.Count == 0)" />
         </div>
     </div>
 

@@ -35,7 +35,6 @@ public partial class UploadContainerLinksDialog(
             .Where(link => !string.IsNullOrWhiteSpace(link))
             .ToList();
 
-    private string CopyTextAreaId => $"container-links-copy-{UploadId}";
     private string ContainerLinksText => string.Join(Environment.NewLine, ContainerLinks);
 
     protected override async Task OnInitializedAsync()

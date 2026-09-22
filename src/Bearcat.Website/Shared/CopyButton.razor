@@ -1,0 +1,13 @@
+<BbButton Variant="ButtonVariant.Outline"
+          Size="@(ShowLabel ? ButtonSize.Small : ButtonSize.IconSmall)"
+          Class="@ButtonClass"
+          Disabled="@(Disabled || string.IsNullOrEmpty(Value))"
+          AriaLabel="@Label"
+          title="@Label"
+          OnClick="CopyAsync">
+    <LucideIcon Name="@Icon" class="h-4 w-4" />
+    @if (ShowLabel)
+    {
+        @Label
+    }
+</BbButton>

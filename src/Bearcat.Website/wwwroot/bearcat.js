@@ -35,28 +35,6 @@ export async function copyText(text) {
     }
 }
 
-function setButtonLabel(button, label) {
-    const labelElement = button.querySelector(".bearcat-copy-button-label");
-    if (labelElement) {
-        labelElement.textContent = label;
-    }
-}
-
-export async function copyFromTarget(button) {
-    const targetId = button.dataset.copyTarget;
-    const target = targetId ? document.getElementById(targetId) : null;
-    const originalLabel = button.dataset.copyLabel || button.textContent;
-
-    try {
-        await copyText(target?.value || "");
-        setButtonLabel(button, button.dataset.copySuccessLabel || originalLabel);
-    } catch {
-        setButtonLabel(button, button.dataset.copyFailureLabel || originalLabel);
-    } finally {
-        window.setTimeout(() => setButtonLabel(button, originalLabel), 1400);
-    }
-}
-
 export function setCookie(key, value) {
     try {
         const oneYearInSeconds = 60 * 60 * 24 * 365;
@@ -166,7 +144,6 @@ const lineNumberedTextarea = (() => {
 })();
 
 window.bearcat = {
-    copyFromTarget,
     copyText,
     setCookie,
     updateScrollAwareHeader,

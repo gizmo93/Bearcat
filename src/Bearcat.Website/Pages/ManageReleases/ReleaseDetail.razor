@@ -27,19 +27,7 @@
                         <h1 class="bearcat-release-title font-semibold">
                             @release.Name
                         </h1>
-                        <textarea id="release-title-copy-@ReleaseId" hidden readonly>@release.Name</textarea>
-                        <button type="button"
-                                class="bearcat-copy-button bearcat-copy-icon-button"
-                                aria-label="@L["CopyTitle"]"
-                                title="@L["CopyTitle"]"
-                                data-copy-target="release-title-copy-@ReleaseId"
-                                data-copy-label="@L["CopyTitle"]"
-                                data-copy-success-label="@L["Copied"]"
-                                data-copy-failure-label="@L["CopyFailed"]"
-                                onclick="window.bearcat.copyFromTarget(this)">
-                            <LucideIcon Name="copy" class="h-4 w-4" />
-                            <span class="sr-only bearcat-copy-button-label">@L["CopyTitle"]</span>
-                        </button>
+                        <CopyButton Value="@release.Name" Label="@L["CopyTitle"]" />
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <BbTooltip Placement="PopoverPlacement.BottomStart" DelayDuration="150">

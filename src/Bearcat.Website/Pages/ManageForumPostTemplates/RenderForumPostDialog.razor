@@ -42,17 +42,11 @@
         </div>
 
         <div class="flex flex-wrap justify-end gap-2">
-            <button type="button"
-                    class="bearcat-copy-button"
-                    disabled="@string.IsNullOrWhiteSpace(renderedContent)"
-                    data-copy-target="@RenderedCopyTargetId"
-                    data-copy-label="@L["CopyForumPost"]"
-                    data-copy-success-label="@L["Copied"]"
-                    data-copy-failure-label="@L["CopyFailed"]"
-                    onclick="window.bearcat.copyFromTarget(this)">
-                <LucideIcon Name="clipboard-copy" class="h-4 w-4" />
-                <span class="bearcat-copy-button-label">@L["CopyForumPost"]</span>
-            </button>
+            <CopyButton Value="@renderedContent"
+                        Label="@L["CopyForumPost"]"
+                        ShowLabel="true"
+                        Icon="clipboard-copy"
+                        Disabled="@string.IsNullOrWhiteSpace(renderedContent)" />
 
             <BbButton Variant="ButtonVariant.Outline" Disabled="isRendering" OnClick="RenderAsync">
                 <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isRendering ? "animate-spin" : string.Empty)}")" />
