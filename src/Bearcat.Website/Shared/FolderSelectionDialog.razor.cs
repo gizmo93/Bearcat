@@ -18,11 +18,7 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
 
     private string? selectedItem;
     private HashSet<string> expandedItems = [];
-    private string? searchText;
     private List<FolderSelectionNode> rootNodes = [];
-
-    private IReadOnlyList<FolderSelectionNode> filteredRootNodes =>
-        FilterNodes(rootNodes, searchText);
 
     protected override void OnInitialized()
     {
@@ -55,24 +51,9 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
         await DialogRef.CancelAsync();
     }
 
-    private Task SelectFolderAsync(FolderSelectionNode node)
+    private void ExpandFolder(FolderSelectionNode node)
     {
-        selectedItem = node.Path;
-        return Task.CompletedTask;
-    }
-
-    private Task ToggleFolderAsync(FolderSelectionNode node)
-    {
-        if (expandedItems.Contains(node.Path))
-        {
-            expandedItems.Remove(node.Path);
-            return Task.CompletedTask;
-        }
-
         EnsureChildrenLoaded(node);
-        expandedItems.Add(node.Path);
-
-        return Task.CompletedTask;
     }
 
     private List<FolderSelectionNode> EnsureChildrenLoaded(FolderSelectionNode node)
@@ -232,43 +213,6 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
         return string.Equals(fullPath, rootPath, StringComparison.Ordinal)
             ? fullPath
             : fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-    }
-
-    private static List<FolderSelectionNode> FilterNodes(
-        IReadOnlyList<FolderSelectionNode> nodes,
-        string? search
-    )
-    {
-        if (string.IsNullOrWhiteSpace(search))
-        {
-            return nodes.ToList();
-        }
-
-        var filtered = new List<FolderSelectionNode>();
-
-        foreach (var node in nodes)
-        {
-            var matchingChildren = FilterNodes(node.Children, search);
-            var isMatch = node.Name.Contains(search, StringComparison.OrdinalIgnoreCase);
-
-            if (!isMatch && matchingChildren.Count == 0)
-            {
-                continue;
-            }
-
-            filtered.Add(
-                new FolderSelectionNode
-                {
-                    Path = node.Path,
-                    Name = node.Name,
-                    HasChildren = node.HasChildren,
-                    ChildrenLoaded = true,
-                    Children = matchingChildren,
-                }
-            );
-        }
-
-        return filtered;
     }
 
     private static FolderSelectionNode CreateRootNode(string path)

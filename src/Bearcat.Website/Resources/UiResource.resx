@@ -192,7 +192,6 @@
   <data name="File" xml:space="preserve"><value>File</value></data>
   <data name="FileCount" xml:space="preserve"><value>File count</value></data>
   <data name="Filename" xml:space="preserve"><value>Filename</value></data>
-  <data name="FilterLoadedFolderTree" xml:space="preserve"><value>Filter the loaded folder tree.</value></data>
   <data name="FolderPath" xml:space="preserve"><value>Folder path</value></data>
   <data name="FolderSelectionTree" xml:space="preserve"><value>Folder selection tree</value></data>
   <data name="Home" xml:space="preserve"><value>Home</value></data>

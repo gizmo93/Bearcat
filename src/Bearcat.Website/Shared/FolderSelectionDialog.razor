@@ -1,25 +1,19 @@
 <div class="bearcat-folder-dialog">
-    <div class="shrink-0">
-        <BbFormFieldInput TValue="string"
-                          @bind-Value="searchText"
-                          Label="@L["Search"]"
-                          Placeholder="@L["SearchFolders"]"
-                          HelperText="@L["FilterLoadedFolderTree"]" />
-    </div>
-
-    <div class="bearcat-folder-tree">
-        <div class="bearcat-folder-tree-list" role="tree" aria-label="@L["FolderSelectionTree"]">
-            @foreach (var node in filteredRootNodes)
-            {
-                <FolderSelectionTreeNode Node="node"
-                                         Depth="0"
-                                         SelectedPath="@selectedItem"
-                                         ExpandedItems="expandedItems"
-                                         OnSelect="SelectFolderAsync"
-                                         OnToggle="ToggleFolderAsync" />
-            }
-        </div>
-    </div>
+    <BbTreeView TItem="FolderSelectionNode"
+                Items="rootNodes"
+                TextField="@(node => node.Name)"
+                ValueField="@(node => node.Path)"
+                ChildrenProperty="@(node => node.Children)"
+                HasChildrenField="@(node => node.HasChildren)"
+                IconField='@(_ => "folder")'
+                SelectionMode="TreeSelectionMode.Single"
+                @bind-SelectedValue="selectedItem"
+                @bind-ExpandedValues="expandedItems"
+                OnNodeExpand="ExpandFolder"
+                ShowSearch="true"
+                SearchPlaceholder="@L["SearchFolders"]"
+                AriaLabel="@L["FolderSelectionTree"]"
+                Class="bearcat-folder-tree" />
 
     @if (!string.IsNullOrWhiteSpace(selectedItem))
     {
