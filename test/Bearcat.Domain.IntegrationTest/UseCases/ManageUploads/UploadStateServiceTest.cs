@@ -1529,6 +1529,94 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         release.QualityIssues.Single().Description.ShouldBe("NFO is missing");
     }
 
+    [Test]
+    public async Task CheckUploadStatesAsync_ReleaseGroupWithoutProfile_CreatesInitialUploadAndMarksPassed()
+    {
+        // Arrange
+        await AddUploadConfigAsync(enableAutomaticReuploads: false);
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        (await dbContext.Uploads.AnyAsync()).ShouldBeTrue();
+        var release = await dbContext.Releases.SingleAsync();
+        release.QualityGateState.ShouldBe(QualityGateState.Passed);
+        release.QualityGateEvaluatedAt.ShouldBe(localNow);
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_UnmanagedReleaseWithoutNfo_DoesNotCreateInitialUploadAndMarksFailed()
+    {
+        // Arrange
+        await AddUploadConfigAsync(
+            enableAutomaticReuploads: false,
+            qualityProfile: CreateRequireNfoProfile(),
+            releaseType: ReleaseType.Unmanaged
+        );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        (await dbContext.Uploads.AnyAsync()).ShouldBeFalse();
+        var release = await dbContext.Releases.Include(r => r.QualityIssues).SingleAsync();
+        release.QualityGateState.ShouldBe(QualityGateState.Failed);
+        release.QualityIssues.Single().Description.ShouldBe("NFO is missing");
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_UnmanagedReleaseWithOnlyFolderBasedRules_CreatesInitialUploadAndMarksPassed()
+    {
+        // Arrange
+        await AddUploadConfigAsync(
+            enableAutomaticReuploads: false,
+            qualityProfile: CreateFolderBasedProfile(),
+            releaseType: ReleaseType.Unmanaged
+        );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var upload = await dbContext.Uploads.SingleAsync();
+        upload.UploadState.ShouldBe(UploadState.WaitingForArchive);
+        var release = await dbContext.Releases.Include(r => r.QualityIssues).SingleAsync();
+        release.QualityGateState.ShouldBe(QualityGateState.Passed);
+        release.QualityIssues.ShouldBeEmpty();
+    }
+
+    private static QualityProfile CreateFolderBasedProfile() =>
+        new()
+        {
+            Name = "Folder based",
+            Rules =
+            [
+                new QualityCheckRule
+                {
+                    RuleType = QualityCheckRuleType.FilePatternPresent,
+                    ParametersJson = QualityCheckParameterValues.Serialize(
+                        new Dictionary<string, object?> { ["pattern"] = "*.nfo" }
+                    ),
+                },
+                new QualityCheckRule
+                {
+                    RuleType = QualityCheckRuleType.MinimumFolderSize,
+                    ParametersJson = QualityCheckParameterValues.Serialize(
+                        new Dictionary<string, object?> { ["minimumMegabytes"] = 100 }
+                    ),
+                },
+                new QualityCheckRule
+                {
+                    RuleType = QualityCheckRuleType.MediaInfoPresent,
+                    ParametersJson = "{}",
+                },
+            ],
+        };
+
     private static QualityProfile CreateRequireNfoProfile() =>
         new()
         {
@@ -1636,7 +1724,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         ReleaseInfo? releaseInfo = null,
         bool hasNfo = false,
         int? numberOfHoursUntilReuploadOverride = null,
-        ReuploadTrigger? reuploadTriggerOverride = null
+        ReuploadTrigger? reuploadTriggerOverride = null,
+        ReleaseType releaseType = ReleaseType.Managed
     )
     {
         var releaseGroup = new ReleaseGroup
@@ -1650,8 +1739,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         {
             Name = "Bearcat.Release.001",
             CreatedAt = releaseCreatedAt ?? localNow.AddMinutes(-10),
-            ReleaseType = ReleaseType.Managed,
-            ReleaseFolderPath = "/tmp/release",
+            ReleaseType = releaseType,
+            ReleaseFolderPath = releaseType is ReleaseType.Managed ? "/tmp/release" : null,
             ReleaseGroup = releaseGroup,
             ReleaseInfo = releaseInfo,
             ReleaseNfo = hasNfo

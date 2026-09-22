@@ -375,10 +375,7 @@ public class ReleaseReadRepository(
     > GetQualityIssuesQueueAsync(CancellationToken cancellationToken = default)
     {
         return await dbRead
-            .Releases.Where(r =>
-                r.QualityGateState == QualityGateState.Failed
-                && r.ReleaseType == ReleaseType.Managed
-            )
+            .Releases.Where(r => r.QualityGateState == QualityGateState.Failed)
             .OrderBy(r => r.Name)
             .ThenBy(r => r.Id)
             .Select(r => new ReleaseQualityIssueQueueItemReadModel(
@@ -396,9 +393,7 @@ public class ReleaseReadRepository(
     )
     {
         return await dbRead.Releases.CountAsync(
-            r =>
-                r.QualityGateState == QualityGateState.Failed
-                && r.ReleaseType == ReleaseType.Managed,
+            r => r.QualityGateState == QualityGateState.Failed,
             cancellationToken
         );
     }

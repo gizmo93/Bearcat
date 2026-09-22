@@ -61,6 +61,31 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task GetQualityIssuesQueueAsync_FailedManagedAndUnmanagedReleases_ReturnsBoth()
+    {
+        // Arrange
+        var managedRelease = await AddReleaseAsync("Bearcat.Managed.2026-GRP", ReleaseType.Managed);
+        var unmanagedRelease = await AddReleaseAsync(
+            "Bearcat.Unmanaged.2026-GRP",
+            ReleaseType.Unmanaged
+        );
+        var passedRelease = await AddReleaseAsync("Bearcat.Passed.2026-GRP");
+        managedRelease.QualityGateState = QualityGateState.Failed;
+        unmanagedRelease.QualityGateState = QualityGateState.Failed;
+        passedRelease.QualityGateState = QualityGateState.Passed;
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetQualityIssuesQueueAsync(CancellationToken.None);
+        var count = await repository.CountQualityIssuesQueueAsync(CancellationToken.None);
+
+        // Assert
+        result.Select(r => r.ReleaseId).ShouldBe([managedRelease.Id, unmanagedRelease.Id]);
+        count.ShouldBe(2);
+    }
+
+    [Test]
     public async Task SearchReleasesAsync_PrimaryLanguageFilter_ReturnsMatchingRelease()
     {
         // Arrange

@@ -10,6 +10,8 @@ public sealed class MinimumFolderSizeQualityCheck : IQualityCheck
 
     public QualityCheckRuleType RuleType => QualityCheckRuleType.MinimumFolderSize;
 
+    public bool RequiresReleaseFolder => true;
+
     public IReadOnlyList<QualityCheckParameterDescriptor> Parameters =>
         [
             new(

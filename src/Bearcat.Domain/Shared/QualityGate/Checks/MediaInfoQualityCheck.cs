@@ -7,6 +7,8 @@ public sealed class MediaInfoQualityCheck : IQualityCheck
 {
     public QualityCheckRuleType RuleType => QualityCheckRuleType.MediaInfoPresent;
 
+    public bool RequiresReleaseFolder => true;
+
     public IReadOnlyList<QualityCheckParameterDescriptor> Parameters => [];
 
     public IReadOnlyList<string> Evaluate(QualityCheckRule rule, QualityCheckContext context)

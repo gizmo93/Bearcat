@@ -213,6 +213,37 @@ public class QualityChecksTest
         issues[0].ShouldBe("No media info has been extracted");
     }
 
+    [Test]
+    public void RequiresReleaseFolder_FolderBasedChecks_ReturnsTrue()
+    {
+        // Arrange
+        IReadOnlyList<IQualityCheck> checks =
+        [
+            new FilePatternQualityCheck(),
+            new MinimumFolderSizeQualityCheck(),
+            new MediaInfoQualityCheck(),
+        ];
+
+        // Act
+        var result = checks.Select(c => c.RequiresReleaseFolder).ToList();
+
+        // Assert
+        result.ShouldAllBe(requiresReleaseFolder => requiresReleaseFolder);
+    }
+
+    [Test]
+    public void RequiresReleaseFolder_RequiredReleaseInfo_ReturnsFalse()
+    {
+        // Arrange
+        var check = new RequiredReleaseInfoQualityCheck();
+
+        // Act
+        var result = check.RequiresReleaseFolder;
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
     private static QualityCheckRule CreateRule(Dictionary<string, object?> parameters) =>
         new() { ParametersJson = QualityCheckParameterValues.Serialize(parameters) };
 

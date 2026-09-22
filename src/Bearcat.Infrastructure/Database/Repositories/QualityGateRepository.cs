@@ -23,7 +23,7 @@ public class QualityGateRepository(IBearcatWriteDbContext dbWrite) : IQualityGat
         return await BuildEvaluationQuery()
             .Where(r =>
                 r.QualityGateState == QualityGateState.Failed
-                && r.ReleaseType == ReleaseType.Managed
+                || r.QualityGateState == QualityGateState.NotEvaluated
             )
             .ToListAsync(cancellationToken);
     }

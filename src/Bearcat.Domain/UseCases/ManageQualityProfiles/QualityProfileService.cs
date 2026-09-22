@@ -1,10 +1,14 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.UseCases.ManageQualityProfiles.Dto;
 using Bearcat.Domain.UseCases.ManageQualityProfiles.Repositories;
 
 namespace Bearcat.Domain.UseCases.ManageQualityProfiles;
 
-public class QualityProfileService(IQualityProfileWriteRepository writeRepository)
+public class QualityProfileService(
+    IQualityProfileWriteRepository writeRepository,
+    IQualityGateResetRepository qualityGateResetRepository
+)
 {
     public async Task<int> CreateAsync(
         string name,
@@ -45,6 +49,10 @@ public class QualityProfileService(IQualityProfileWriteRepository writeRepositor
         }
 
         await writeRepository.SaveChangesAsync(cancellationToken);
+        await qualityGateResetRepository.ResetForQualityProfileAsync(
+            qualityProfileId,
+            cancellationToken
+        );
     }
 
     public async Task DeleteAsync(
@@ -52,6 +60,11 @@ public class QualityProfileService(IQualityProfileWriteRepository writeRepositor
         CancellationToken cancellationToken = default
     )
     {
+        await qualityGateResetRepository.ResetForQualityProfileAsync(
+            qualityProfileId,
+            cancellationToken
+        );
+
         var profile = await writeRepository.GetByIdAsync(qualityProfileId, cancellationToken);
         writeRepository.Remove(profile);
 

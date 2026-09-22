@@ -11,6 +11,8 @@ public sealed class RequiredReleaseInfoQualityCheck : IQualityCheck
 
     public QualityCheckRuleType RuleType => QualityCheckRuleType.RequiredReleaseInfo;
 
+    public bool RequiresReleaseFolder => false;
+
     public IReadOnlyList<QualityCheckParameterDescriptor> Parameters =>
         [
             new(RequireCoverKey, QualityCheckParameterKind.Boolean, true, LabelKey: "RequireCover"),

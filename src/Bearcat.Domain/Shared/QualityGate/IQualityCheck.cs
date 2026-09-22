@@ -7,6 +7,8 @@ public interface IQualityCheck
 {
     QualityCheckRuleType RuleType { get; }
 
+    bool RequiresReleaseFolder { get; }
+
     IReadOnlyList<QualityCheckParameterDescriptor> Parameters { get; }
 
     IReadOnlyList<string> Evaluate(QualityCheckRule rule, QualityCheckContext context);

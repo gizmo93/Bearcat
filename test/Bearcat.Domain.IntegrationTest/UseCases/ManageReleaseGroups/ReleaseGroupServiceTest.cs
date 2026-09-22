@@ -19,7 +19,7 @@ public class ReleaseGroupServiceTest : BearcatIntegrationTest
     {
         dbContext = Database.CreateDbContext();
         var repository = new ReleaseGroupRepository(dbContext, dbContext);
-        service = new ReleaseGroupService(repository);
+        service = new ReleaseGroupService(repository, new QualityGateResetRepository(dbContext));
     }
 
     [TearDown]
@@ -113,6 +113,64 @@ public class ReleaseGroupServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task UpdateAsync_QualityProfileChanged_ResetsQualityGateOfReleases()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var release = await AddFailedReleaseAsync(releaseGroup.Id);
+        var qualityProfile = new QualityProfile { Name = "Profile", Rules = [] };
+        dbContext.QualityProfiles.Add(qualityProfile);
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await service.UpdateAsync(
+            releaseGroup.Id,
+            releaseGroup.Name,
+            releaseGroup.EnableAutomaticReuploads,
+            releaseGroup.NumberOfHoursUntilReupload,
+            qualityProfile.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Releases.Include(r => r.QualityIssues)
+            .SingleAsync(r => r.Id == release.Id);
+
+        result.QualityGateState.ShouldBe(QualityGateState.NotEvaluated);
+        result.QualityGateEvaluatedAt.ShouldBeNull();
+        result.QualityIssues.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task UpdateAsync_QualityProfileUnchanged_KeepsQualityGateOfReleases()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var release = await AddFailedReleaseAsync(releaseGroup.Id);
+
+        // Act
+        await service.UpdateAsync(
+            releaseGroup.Id,
+            "Renamed releases",
+            releaseGroup.EnableAutomaticReuploads,
+            releaseGroup.NumberOfHoursUntilReupload,
+            null,
+            CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Releases.Include(r => r.QualityIssues)
+            .SingleAsync(r => r.Id == release.Id);
+
+        result.QualityGateState.ShouldBe(QualityGateState.Failed);
+        result.QualityIssues.ShouldHaveSingleItem();
+    }
+
+    [Test]
     public async Task DeleteAsync_ReleaseGroupHasNoAssignedReleases_RemovesReleaseGroup()
     {
         // Arrange
@@ -151,6 +209,32 @@ public class ReleaseGroupServiceTest : BearcatIntegrationTest
         // Assert
         result.ShouldNotBeNull();
         result.Message.ShouldBe("Release groups with assigned releases cannot be deleted.");
+    }
+
+    private async Task<Release> AddFailedReleaseAsync(int releaseGroupId)
+    {
+        var release = new Release
+        {
+            Name = "Bearcat.Release.001",
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = "/tmp/release",
+            ReleaseGroupId = releaseGroupId,
+            QualityGateState = QualityGateState.Failed,
+            QualityGateEvaluatedAt = new DateTime(2026, 5, 1, 12, 0, 0, DateTimeKind.Utc),
+            QualityIssues =
+            [
+                new ReleaseQualityIssue
+                {
+                    RuleType = QualityCheckRuleType.MediaInfoPresent,
+                    Description = "No media info has been extracted",
+                },
+            ],
+        };
+
+        dbContext.Releases.Add(release);
+        await dbContext.SaveChangesAsync();
+
+        return release;
     }
 
     private async Task<ReleaseGroup> AddReleaseGroupAsync()

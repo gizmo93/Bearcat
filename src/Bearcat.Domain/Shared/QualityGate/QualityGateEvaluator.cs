@@ -32,7 +32,7 @@ public sealed class QualityGateEvaluator(
         {
             var check = checks.FirstOrDefault(c => c.RuleType == rule.RuleType);
 
-            if (check is null)
+            if (check is null || !IsApplicable(check, release))
             {
                 continue;
             }
@@ -50,11 +50,6 @@ public sealed class QualityGateEvaluator(
 
     public void EvaluateAndApply(Release release, DateTime evaluatedAt)
     {
-        if (release.ReleaseType is ReleaseType.Unmanaged)
-        {
-            return;
-        }
-
         if (release.QualityGateState == QualityGateState.ManuallyApproved)
         {
             return;
@@ -76,5 +71,10 @@ public sealed class QualityGateEvaluator(
                 }
             );
         }
+    }
+
+    private static bool IsApplicable(IQualityCheck check, Release release)
+    {
+        return !check.RequiresReleaseFolder || release.ReleaseType is not ReleaseType.Unmanaged;
     }
 }

@@ -10,6 +10,8 @@ public sealed class FilePatternQualityCheck : IQualityCheck
 
     public QualityCheckRuleType RuleType => QualityCheckRuleType.FilePatternPresent;
 
+    public bool RequiresReleaseFolder => true;
+
     public IReadOnlyList<QualityCheckParameterDescriptor> Parameters =>
         [
             new(

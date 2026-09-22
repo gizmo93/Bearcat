@@ -67,10 +67,38 @@ public class QualityGateRepositoryTest : BearcatIntegrationTest
         result.Select(r => r.Id).ShouldBe([release.Id]);
     }
 
-    [TestCase(QualityGateState.Passed)]
+    [Test]
+    public async Task GetPendingReleasesAsync_NotEvaluatedRelease_IncludesRelease()
+    {
+        // Arrange
+        var release = await AddReleaseAsync(QualityGateState.NotEvaluated);
+
+        // Act
+        var result = await repository.GetPendingReleasesAsync(CancellationToken.None);
+
+        // Assert
+        result.Select(r => r.Id).ShouldBe([release.Id]);
+    }
+
+    [TestCase(QualityGateState.Failed)]
     [TestCase(QualityGateState.NotEvaluated)]
+    public async Task GetPendingReleasesAsync_UnmanagedRelease_IncludesRelease(
+        QualityGateState state
+    )
+    {
+        // Arrange
+        var release = await AddReleaseAsync(state, releaseType: ReleaseType.Unmanaged);
+
+        // Act
+        var result = await repository.GetPendingReleasesAsync(CancellationToken.None);
+
+        // Assert
+        result.Select(r => r.Id).ShouldBe([release.Id]);
+    }
+
+    [TestCase(QualityGateState.Passed)]
     [TestCase(QualityGateState.ManuallyApproved)]
-    public async Task GetPendingReleasesAsync_NonFailedRelease_ExcludesRelease(
+    public async Task GetPendingReleasesAsync_PassedOrApprovedRelease_ExcludesRelease(
         QualityGateState state
     )
     {
@@ -87,7 +115,8 @@ public class QualityGateRepositoryTest : BearcatIntegrationTest
     private async Task<Release> AddReleaseAsync(
         QualityGateState state,
         bool withProfile = true,
-        IReadOnlyList<(OnlineState OnlineState, UploadState UploadState)>? uploads = null
+        IReadOnlyList<(OnlineState OnlineState, UploadState UploadState)>? uploads = null,
+        ReleaseType releaseType = ReleaseType.Managed
     )
     {
         var releaseGroup = new ReleaseGroup
@@ -114,8 +143,8 @@ public class QualityGateRepositoryTest : BearcatIntegrationTest
         {
             Name = "Bearcat.Release.001",
             CreatedAt = new DateTime(2026, 5, 1, 12, 0, 0, DateTimeKind.Utc),
-            ReleaseType = ReleaseType.Managed,
-            ReleaseFolderPath = "/tmp/release",
+            ReleaseType = releaseType,
+            ReleaseFolderPath = releaseType is ReleaseType.Managed ? "/tmp/release" : null,
             ReleaseGroup = releaseGroup,
             QualityGateState = state,
         };

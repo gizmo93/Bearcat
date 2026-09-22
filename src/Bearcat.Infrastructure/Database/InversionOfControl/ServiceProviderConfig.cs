@@ -1,5 +1,6 @@
 ﻿using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
+using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.UseCases.Dashboard.Repositories;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
@@ -156,6 +157,7 @@ public static class ServiceProviderConfig
             >();
             services.AddScoped<IReleaseReadRepository, ReleaseReadRepository>();
             services.AddScoped<IQualityGateRepository, QualityGateRepository>();
+            services.AddScoped<IQualityGateResetRepository, QualityGateResetRepository>();
             services.AddScoped<IReleaseForumPostUploadRepository>(serviceProvider =>
                 (ReleaseReadRepository)serviceProvider.GetRequiredService<IReleaseReadRepository>()
             );

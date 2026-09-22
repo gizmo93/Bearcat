@@ -1,9 +1,13 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseGroups;
 
-public class ReleaseGroupService(IReleaseGroupWriteRepository writeRepository)
+public class ReleaseGroupService(
+    IReleaseGroupWriteRepository writeRepository,
+    IQualityGateResetRepository qualityGateResetRepository
+)
 {
     public async Task<int> CreateAsync(
         string name,
@@ -41,12 +45,22 @@ public class ReleaseGroupService(IReleaseGroupWriteRepository writeRepository)
         Validate(name, numberOfHoursUntilReupload);
 
         var releaseGroup = await writeRepository.GetByIdAsync(releaseGroupId, cancellationToken);
+        var qualityProfileChanged = releaseGroup.QualityProfileId != qualityProfileId;
+
         releaseGroup.Name = name.Trim();
         releaseGroup.EnableAutomaticReuploads = enableAutomaticReuploads;
         releaseGroup.NumberOfHoursUntilReupload = numberOfHoursUntilReupload;
         releaseGroup.QualityProfileId = qualityProfileId;
 
         await writeRepository.SaveChangesAsync(cancellationToken);
+
+        if (qualityProfileChanged)
+        {
+            await qualityGateResetRepository.ResetForReleaseGroupAsync(
+                releaseGroupId,
+                cancellationToken
+            );
+        }
     }
 
     public async Task DeleteAsync(int releaseGroupId, CancellationToken cancellationToken = default)

@@ -159,21 +159,81 @@ public class QualityGateEvaluatorTest
     }
 
     [Test]
-    public void EvaluateAndApply_UnmanagedRelease_IsNotEvaluated()
+    public void EvaluateAndApply_NoProfile_SetsPassedAndEvaluatedAt()
     {
         // Arrange
         var evaluator = CreateEvaluator();
         var release = CreateRelease();
-        release.ReleaseType = ReleaseType.Unmanaged;
+
+        // Act
+        evaluator.EvaluateAndApply(release, EvaluatedAt);
+
+        // Assert
+        release.QualityGateState.ShouldBe(QualityGateState.Passed);
+        release.QualityGateEvaluatedAt.ShouldBe(EvaluatedAt);
+        release.QualityIssues.ShouldBeEmpty();
+    }
+
+    [Test]
+    public void EvaluateAndApply_UnmanagedReleaseWithOnlyFolderBasedRules_SetsPassedWithoutIssues()
+    {
+        // Arrange
+        var evaluator = CreateEvaluator(new FakeFileSystemService { TotalBytes = 0 });
+        var release = CreateUnmanagedRelease();
+        release.ReleaseGroup.QualityProfile = CreateProfile(
+            FilePatternRule("*.nfo"),
+            MinimumFolderSizeRule(100),
+            MediaInfoRule()
+        );
+
+        // Act
+        evaluator.EvaluateAndApply(release, EvaluatedAt);
+
+        // Assert
+        release.QualityGateState.ShouldBe(QualityGateState.Passed);
+        release.QualityGateEvaluatedAt.ShouldBe(EvaluatedAt);
+        release.QualityIssues.ShouldBeEmpty();
+    }
+
+    [Test]
+    public void EvaluateAndApply_UnmanagedReleaseWithoutNfoAndRequireNfoRule_SetsFailedWithNfoIssue()
+    {
+        // Arrange
+        var evaluator = CreateEvaluator();
+        var release = CreateUnmanagedRelease();
         release.ReleaseGroup.QualityProfile = CreateProfile(RequireNfoRule());
 
         // Act
         evaluator.EvaluateAndApply(release, EvaluatedAt);
 
         // Assert
-        release.QualityGateState.ShouldBe(QualityGateState.NotEvaluated);
-        release.QualityGateEvaluatedAt.ShouldBeNull();
-        release.QualityIssues.ShouldBeEmpty();
+        release.QualityGateState.ShouldBe(QualityGateState.Failed);
+        release.QualityGateEvaluatedAt.ShouldBe(EvaluatedAt);
+        release.QualityIssues.ShouldHaveSingleItem();
+        release.QualityIssues[0].RuleType.ShouldBe(QualityCheckRuleType.RequiredReleaseInfo);
+        release.QualityIssues[0].Description.ShouldBe("NFO is missing");
+    }
+
+    [Test]
+    public void Evaluate_UnmanagedReleaseWithMixedRules_ReportsOnlyReleaseInfoIssue()
+    {
+        // Arrange
+        var evaluator = CreateEvaluator(new FakeFileSystemService { TotalBytes = 0 });
+        var profile = CreateProfile(
+            FilePatternRule("*.nfo"),
+            MinimumFolderSizeRule(100),
+            MediaInfoRule(),
+            RequireNfoRule()
+        );
+
+        // Act
+        var result = evaluator.Evaluate(CreateUnmanagedRelease(), profile);
+
+        // Assert
+        result.State.ShouldBe(QualityGateState.Failed);
+        result.Issues.ShouldHaveSingleItem();
+        result.Issues[0].RuleType.ShouldBe(QualityCheckRuleType.RequiredReleaseInfo);
+        result.Issues[0].Description.ShouldBe("NFO is missing");
     }
 
     private static QualityGateEvaluator CreateEvaluator(
@@ -213,6 +273,27 @@ public class QualityGateEvaluatorTest
             ParametersJson = QualityCheckParameterValues.Serialize(
                 new Dictionary<string, object?> { ["minimumMegabytes"] = minimumMegabytes }
             ),
+        };
+
+    private static QualityCheckRule FilePatternRule(string pattern) =>
+        new()
+        {
+            RuleType = QualityCheckRuleType.FilePatternPresent,
+            ParametersJson = QualityCheckParameterValues.Serialize(
+                new Dictionary<string, object?> { ["pattern"] = pattern }
+            ),
+        };
+
+    private static QualityCheckRule MediaInfoRule() =>
+        new() { RuleType = QualityCheckRuleType.MediaInfoPresent, ParametersJson = "{}" };
+
+    private static Release CreateUnmanagedRelease() =>
+        new()
+        {
+            Name = "Bearcat.Release.001",
+            ReleaseType = ReleaseType.Unmanaged,
+            ReleaseFolderPath = null,
+            ReleaseGroup = new ReleaseGroup { Name = "Group" },
         };
 
     private static Release CreateRelease() =>
