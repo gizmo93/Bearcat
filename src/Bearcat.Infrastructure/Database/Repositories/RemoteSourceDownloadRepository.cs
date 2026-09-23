@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading.Repositories;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.RawFiles.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,8 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 
 public class RemoteSourceDownloadRepository(IBearcatWriteDbContext dbWrite)
     : IRemoteSourceDownloadRepository,
-        IRemoteDownloadReleaseRepository
+        IRemoteDownloadReleaseRepository,
+        IRemoteDownloadRawFileCleanupRepository
 {
     public async Task<IReadOnlyList<RemoteSourceDownload>> GetInterruptedDownloadsAsync(
         CancellationToken cancellationToken = default
@@ -100,6 +102,38 @@ public class RemoteSourceDownloadRepository(IBearcatWriteDbContext dbWrite)
             .Include(template => template.CollectionImageUploadConfigTemplates)
                 .ThenInclude(imageTemplate => imageTemplate.ImageHosterRegistration)
             .FirstOrDefaultAsync(template => template.Id == releaseTemplateId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<RemoteSourceDownload>> GetRawFileCleanupCandidatesAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .RemoteSourceDownloads.AsSplitQuery()
+            .Include(download => download.RemoteSourceAutomation)
+            .Include(download => download.Release!)
+                .ThenInclude(release => release.UploadConfigs)
+            .Include(download => download.Release!)
+                .ThenInclude(release => release.ArchiveConfigs)
+                    .ThenInclude(config => config.Archives)
+            .Include(download => download.Release!)
+                .ThenInclude(release => release.ArchiveConfigs)
+                    .ThenInclude(config => config.UploadConfigs)
+                        .ThenInclude(uploadConfig => uploadConfig.HosterRegistration)
+            .Include(download => download.Release!)
+                .ThenInclude(release => release.ArchiveConfigs)
+                    .ThenInclude(config => config.UploadConfigs)
+                        .ThenInclude(uploadConfig => uploadConfig.Uploads)
+                            .ThenInclude(upload => upload.UploadedFiles)
+            .Where(download =>
+                download.State == RemoteSourceDownloadState.ReleaseCreated
+                && !download.KeepRawFiles
+                && download.Release != null
+                && download.Release.ReleaseType == ReleaseType.Managed
+                && download.Release.ReleaseFolderPath == download.LocalFolderPath
+            )
+            .OrderBy(download => download.Id)
+            .ToListAsync(cancellationToken);
     }
 
     public void Add(Release release)

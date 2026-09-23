@@ -13,6 +13,7 @@ using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.RawFiles;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Scanning;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
@@ -78,6 +79,7 @@ public static class ServiceProviderConfig
             services.AddScoped<RemoteSourceDownloadStateService>();
             services.AddScoped<RemoteDownloadFolderService>();
             services.AddScoped<RemoteDownloadReleaseCreator>();
+            services.AddScoped<RemoteDownloadRawFileCleanupService>();
             services.AddScoped<ImageHosterService>();
             services.AddScoped<DistributionSiteSessionService>();
             services.AddScoped<DistributionSiteRegistrationService>();
@@ -126,6 +128,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ArchiveCreationService>();
             services.AddScoped<ArchiveCleanupService>();
             services.AddScoped<ReleaseFolderRetirementService>();
+            services.AddScoped<UnmanagedReleaseConverter>();
             services.AddScoped<MirrorCoverageEvaluator>();
             services.AddScoped<LocalArchiveDeleter>();
             services.AddScoped<ArchiveRestoreService>();

@@ -14,7 +14,7 @@ public class RemoteDownloadFolderService(
         return fileSystemService.DirectoryHasEntries(download.LocalFolderPath);
     }
 
-    public void DeleteDownloadedFiles(RemoteSourceDownload download)
+    public bool DeleteDownloadedFiles(RemoteSourceDownload download)
     {
         if (!RemoteDownloadPaths.CanDeleteDownloadFolder(download))
         {
@@ -24,12 +24,14 @@ public class RemoteDownloadFolderService(
                 download.Id
             );
 
-            return;
+            return false;
         }
 
         try
         {
             fileSystemService.DeleteDirectoryIfExists(download.LocalFolderPath);
+
+            return true;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
@@ -39,6 +41,8 @@ public class RemoteDownloadFolderService(
                 download.LocalFolderPath,
                 download.Id
             );
+
+            return false;
         }
     }
 }

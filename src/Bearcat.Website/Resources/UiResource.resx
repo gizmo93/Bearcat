@@ -1293,7 +1293,7 @@
   <data name="IgnoreExistingOnFirstScan" xml:space="preserve"><value>Ignore existing folders</value></data>
   <data name="IgnoreExistingOnFirstScanHelp" xml:space="preserve"><value>Folders that already exist during the first scan are skipped. Only releases that appear afterwards are downloaded.</value></data>
   <data name="KeepRawFiles" xml:space="preserve"><value>Keep raw files</value></data>
-  <data name="KeepRawFilesHelp" xml:space="preserve"><value>When disabled, the downloaded folder is deleted after the first successful upload and the release continues as unmanaged.</value></data>
+  <data name="KeepRawFilesHelp" xml:space="preserve"><value>When disabled, Bearcat switches the release to unmanaged and deletes the downloaded folder as soon as every upload config has its first completed upload and every archive config has a created archive or an online mirror. The folder is kept if archives are stored inside it. Only applies to managed templates.</value></data>
   <data name="RemoteSourceDownloadState.Observing" xml:space="preserve"><value>Observing</value></data>
   <data name="RemoteSourceDownloadState.Pending" xml:space="preserve"><value>Queued</value></data>
   <data name="RemoteSourceDownloadState.Downloading" xml:space="preserve"><value>Downloading</value></data>

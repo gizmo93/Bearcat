@@ -1296,7 +1296,7 @@
   <data name="IgnoreExistingOnFirstScan" xml:space="preserve"><value>Vorhandene Ordner ignorieren</value></data>
   <data name="IgnoreExistingOnFirstScanHelp" xml:space="preserve"><value>Ordner, die beim ersten Scan bereits vorhanden sind, werden übersprungen. Nur später hinzukommende Releases werden heruntergeladen.</value></data>
   <data name="KeepRawFiles" xml:space="preserve"><value>Rohdateien behalten</value></data>
-  <data name="KeepRawFilesHelp" xml:space="preserve"><value>Wenn deaktiviert, wird der heruntergeladene Ordner nach dem ersten erfolgreichen Upload gelöscht und das Release als Unmanaged weitergeführt.</value></data>
+  <data name="KeepRawFilesHelp" xml:space="preserve"><value>Wenn deaktiviert, wandelt Bearcat das Release in Unmanaged um und löscht den heruntergeladenen Ordner, sobald jede Uploadkonfiguration ihren ersten abgeschlossenen Upload hat und jede Archivkonfiguration ein erstelltes Archiv oder einen Onlinemirror besitzt. Liegen Archive in diesem Ordner, bleibt er erhalten. Gilt nur für Vorlagen vom Typ Managed.</value></data>
   <data name="RemoteSourceDownloadState.Observing" xml:space="preserve"><value>Wird beobachtet</value></data>
   <data name="RemoteSourceDownloadState.Pending" xml:space="preserve"><value>Vorgemerkt</value></data>
   <data name="RemoteSourceDownloadState.Downloading" xml:space="preserve"><value>Wird heruntergeladen</value></data>

@@ -3,6 +3,7 @@ using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading.Repositories;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.RawFiles.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Scanning.Repositories;
 using Bearcat.Domain.UseCases.Dashboard.Repositories;
@@ -244,6 +245,10 @@ public static class ServiceProviderConfig
             services.AddScoped<IRemoteSourceScanRepository, RemoteSourceAutomationRepository>();
             services.AddScoped<IRemoteSourceDownloadRepository, RemoteSourceDownloadRepository>();
             services.AddScoped<IRemoteDownloadReleaseRepository, RemoteSourceDownloadRepository>();
+            services.AddScoped<
+                IRemoteDownloadRawFileCleanupRepository,
+                RemoteSourceDownloadRepository
+            >();
             services.AddScoped<
                 IRemoteSourceDownloadReadRepository,
                 RemoteSourceDownloadReadRepository
