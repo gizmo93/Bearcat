@@ -10,6 +10,8 @@ using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.Shared.QualityGate.Checks;
 using Bearcat.Domain.Shared.Transfers;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
@@ -65,7 +67,8 @@ public static class ServiceProviderConfig
             services.AddScoped<ImageUploadService>();
             services.AddScoped<BackgroundTaskStateService>();
             services.AddScoped<ReleaseFolderAutomationService>();
-            services.AddScoped<AutomaticallyCreateReleasesService>();
+            services.AddScoped<LocalFolderScanService>();
+            services.AddScoped<ReleaseFromFolderCreator>();
             services.AddScoped<ReleaseCollectionService>();
             services.AddScoped<ReleaseCollectionAssignmentService>();
             services.AddScoped<IReleaseCollectionAssigner>(provider =>

@@ -1,8 +1,8 @@
 using Bearcat.Domain.Entities;
 
-namespace Bearcat.Domain.UseCases.ManageReleases.Repositories;
+namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.Repositories;
 
-public interface IAutomaticallyCreateReleasesRepository
+public interface ILocalFolderScanRepository
 {
     void Add(Release release);
 

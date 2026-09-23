@@ -1,26 +1,23 @@
 using System.IO.Enumeration;
 using Bearcat.Abstractions;
-using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.Shared.CollectionAssignment;
-using Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
-using Bearcat.Domain.UseCases.ManageReleases.Repositories;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.Repositories;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.Stability;
+using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
-namespace Bearcat.Domain.UseCases.ManageReleases;
+namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders;
 
-public class AutomaticallyCreateReleasesService(
-    IAutomaticallyCreateReleasesRepository repository,
+public class LocalFolderScanService(
+    ILocalFolderScanRepository repository,
     IFileSystemService fileSystemService,
-    ReleaseInfoResolutionService releaseInfoResolutionService,
-    MediaMetadataService mediaMetadataService,
+    ReleaseFromFolderCreator releaseFromFolderCreator,
     TimeProvider timeProvider,
-    IArchiverFactory archiverFactory,
-    IReleaseCollectionAssigner releaseCollectionAssigner,
     IApplicationConfigurationProvider configuration,
     INotificationService notificationService
 )
@@ -119,11 +116,18 @@ public class AutomaticallyCreateReleasesService(
                 continue;
             }
 
-            var changed =
-                observation.FileCount != fingerprint.FileCount
-                || observation.TotalBytes != fingerprint.TotalBytes;
+            var stability = FolderStabilityGate.Evaluate(
+                observed: new FolderContentFingerprint(
+                    observation.FileCount,
+                    observation.TotalBytes
+                ),
+                current: fingerprint,
+                lastChangedAt: observation.LastChangedAt,
+                now: localNow,
+                stabilityWindow: stabilityWindow
+            );
 
-            if (changed)
+            if (stability is FolderStability.Changed)
             {
                 observation.FileCount = fingerprint.FileCount;
                 observation.TotalBytes = fingerprint.TotalBytes;
@@ -132,7 +136,7 @@ public class AutomaticallyCreateReleasesService(
                 continue;
             }
 
-            if (localNow - observation.LastChangedAt < stabilityWindow)
+            if (stability is FolderStability.Settling)
             {
                 continue;
             }
@@ -174,31 +178,13 @@ public class AutomaticallyCreateReleasesService(
         CancellationToken cancellationToken
     )
     {
-        var releaseData = ReleaseService.CreateFromTemplateData(
+        var release = await releaseFromFolderCreator.CreateAsync(
             releaseTemplate: candidate.Automation.ReleaseTemplate,
-            releaseFolderPath: candidate.FolderPath,
-            name: null,
-            releaseType: candidate.Automation.ReleaseTemplate.ReleaseType,
-            archivers: candidate.Automation.ReleaseTemplate.ReleaseType is ReleaseType.Unmanaged
-                ? archiverFactory.GetArchivers()
-                : [],
-            localNow: localNow
-        );
-        var release = releaseData.Release;
-
-        release.CreatedAt = localNow;
-        release.PrimaryLanguageCode = candidate.Automation.PrimaryLanguageCode;
-
-        await releaseCollectionAssigner.AssignFromTemplateAsync(
-            release: release,
-            releaseTemplate: candidate.Automation.ReleaseTemplate,
-            uploadConfigMatches: releaseData.UploadConfigMatches,
+            folderPath: candidate.FolderPath,
+            primaryLanguageCode: candidate.Automation.PrimaryLanguageCode,
+            localNow: localNow,
             cancellationToken: cancellationToken
         );
-
-        await releaseInfoResolutionService.TryResolveAsync(release, cancellationToken);
-
-        await mediaMetadataService.TryExtractAsync(release, cancellationToken);
 
         repository.Add(release);
 

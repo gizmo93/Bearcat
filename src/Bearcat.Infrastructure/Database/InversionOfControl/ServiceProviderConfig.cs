@@ -1,6 +1,7 @@
 ﻿using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.QualityGate;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.Repositories;
 using Bearcat.Domain.UseCases.Dashboard.Repositories;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
@@ -151,10 +152,7 @@ public static class ServiceProviderConfig
                 IReleaseFolderAutomationWriteRepository,
                 ReleaseFolderAutomationRepository
             >();
-            services.AddScoped<
-                IAutomaticallyCreateReleasesRepository,
-                ReleaseFolderAutomationRepository
-            >();
+            services.AddScoped<ILocalFolderScanRepository, ReleaseFolderAutomationRepository>();
             services.AddScoped<IReleaseReadRepository, ReleaseReadRepository>();
             services.AddScoped<IQualityGateRepository, QualityGateRepository>();
             services.AddScoped<IQualityGateResetRepository, QualityGateResetRepository>();

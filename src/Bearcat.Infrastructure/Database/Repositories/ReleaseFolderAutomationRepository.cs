@@ -1,7 +1,7 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
-using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +13,7 @@ public class ReleaseFolderAutomationRepository(
 )
     : IReleaseFolderAutomationReadRepository,
         IReleaseFolderAutomationWriteRepository,
-        IAutomaticallyCreateReleasesRepository
+        ILocalFolderScanRepository
 {
     public async Task<IReadOnlyList<ReleaseFolderAutomationReadModel>> GetAllAsync(
         CancellationToken cancellationToken = default

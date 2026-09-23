@@ -7,6 +7,8 @@ using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
@@ -25,9 +27,9 @@ using Shouldly;
 using NfoReleaseInfo = Bearcat.Abstractions.NfoDatabase.ReleaseInfo;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
-namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
+namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.LocalFolders;
 
-public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
+public class LocalFolderScanServiceTest : BearcatIntegrationTest
 {
     private const string WorkingDatabaseClassName = "WorkingNfoDatabase";
     private const string SerializedConfig = "{\"apiKey\":\"secret\"}";
@@ -36,7 +38,7 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
     private Mock<INfoDatabaseFactory> nfoDatabaseFactoryMock = null!;
     private Dictionary<string, INfoDatabase> nfoDatabasesByClassName = null!;
     private string tempRootPath = null!;
-    private AutomaticallyCreateReleasesService service = null!;
+    private LocalFolderScanService service = null!;
     private int stabilityMinutes;
     private int minimumFolderSizeMegabytes;
 
@@ -69,21 +71,23 @@ public class AutomaticallyCreateReleasesServiceTest : BearcatIntegrationTest
             configurationProvider: CreateNotificationConfigurationProvider()
         );
 
-        service = new AutomaticallyCreateReleasesService(
+        service = new LocalFolderScanService(
             repository: new ReleaseFolderAutomationRepository(dbContext, dbContext),
             fileSystemService: new FileSystemService(),
-            releaseInfoResolutionService: CreateReleaseInfoResolutionService(),
-            mediaMetadataService: CreateMediaMetadataService(),
-            timeProvider: CreateTimeProvider(),
-            archiverFactory: archiverFactory.Object,
-            releaseCollectionAssigner: new ReleaseCollectionAssignmentService(
-                new ReleaseCollectionRepository(
-                    dbRead: dbContext,
-                    dbWrite: dbContext,
-                    metadataDatabaseFactory: Mock.Of<IMediaMetadataDatabaseFactory>()
-                ),
-                CreateTimeProvider()
+            releaseFromFolderCreator: new ReleaseFromFolderCreator(
+                releaseInfoResolutionService: CreateReleaseInfoResolutionService(),
+                mediaMetadataService: CreateMediaMetadataService(),
+                archiverFactory: archiverFactory.Object,
+                releaseCollectionAssigner: new ReleaseCollectionAssignmentService(
+                    new ReleaseCollectionRepository(
+                        dbRead: dbContext,
+                        dbWrite: dbContext,
+                        metadataDatabaseFactory: Mock.Of<IMediaMetadataDatabaseFactory>()
+                    ),
+                    CreateTimeProvider()
+                )
             ),
+            timeProvider: CreateTimeProvider(),
             configuration: CreateConfigurationProvider(),
             notificationService: notificationService
         );
