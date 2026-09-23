@@ -2,6 +2,7 @@
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.Repositories;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Scanning.Repositories;
 using Bearcat.Domain.UseCases.Dashboard.Repositories;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
@@ -27,6 +28,7 @@ using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.UseCases.ManageRemoteSourceAutomations.Repositories;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
@@ -228,6 +230,15 @@ public static class ServiceProviderConfig
                 IRemoteSourceRegistrationWriteRepository,
                 RemoteSourceRegistrationRepository
             >();
+            services.AddScoped<
+                IRemoteSourceAutomationReadRepository,
+                RemoteSourceAutomationRepository
+            >();
+            services.AddScoped<
+                IRemoteSourceAutomationWriteRepository,
+                RemoteSourceAutomationRepository
+            >();
+            services.AddScoped<IRemoteSourceScanRepository, RemoteSourceAutomationRepository>();
         }
     }
 }

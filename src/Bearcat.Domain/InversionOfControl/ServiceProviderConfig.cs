@@ -12,6 +12,7 @@ using Bearcat.Domain.Shared.QualityGate.Checks;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Scanning;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
@@ -43,7 +44,9 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.UseCases.ManageRemoteSourceAutomations;
 using Bearcat.Domain.UseCases.ManageRemoteSources;
+using Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploads;
@@ -61,6 +64,9 @@ public static class ServiceProviderConfig
         {
             services.AddScoped<HosterRegistrationService>();
             services.AddScoped<RemoteSourceRegistrationService>();
+            services.AddScoped<RemoteSourceSessionOpener>();
+            services.AddScoped<RemoteSourceAutomationService>();
+            services.AddScoped<RemoteSourceScanService>();
             services.AddScoped<ImageHosterService>();
             services.AddScoped<DistributionSiteSessionService>();
             services.AddScoped<DistributionSiteRegistrationService>();
@@ -151,6 +157,7 @@ public static class ServiceProviderConfig
             services.AddApplicationConfiguration<ArchiveRepackagingConfiguration>();
             services.AddApplicationConfiguration<InitialUploadConfiguration>();
             services.AddApplicationConfiguration<FolderAutomationConfiguration>();
+            services.AddApplicationConfiguration<RemoteSourceConfiguration>();
             services.AddApplicationConfiguration<UploadConcurrencyConfiguration>();
             services.AddApplicationConfiguration<DownloadConfiguration>();
             services.AddApplicationConfiguration<NotificationConfiguration>();

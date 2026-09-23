@@ -4,6 +4,7 @@ using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ConfigurationFields;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Repositories;
+using Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Domain.UseCases.ManageRemoteSources;
@@ -12,12 +13,13 @@ public class RemoteSourceRegistrationService(
     IRemoteSourceRegistrationWriteRepository writeRepository,
     IRemoteSourceFactory remoteSourceFactory,
     ISecretProtector secretProtector,
+    RemoteSourceSessionOpener sessionOpener,
     ILogger<RemoteSourceRegistrationService> logger
 )
 {
     public const int MinMaxConnections = 1;
 
-    private static readonly TimeSpan ConnectionTestTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan SessionOperationTimeout = TimeSpan.FromSeconds(30);
 
     public async Task<int> CreateAsync(
         string name,
@@ -115,56 +117,101 @@ public class RemoteSourceRegistrationService(
     )
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
-        var remoteSource = remoteSourceFactory.GetByClassName(registration.SourceClassName);
-        var config = ReadConfig(remoteSource, registration);
 
+        return await RunSessionOperationAsync(
+            registration,
+            "Connection test",
+            async (session, token) =>
+            {
+                var folders = await session.ListFoldersAsync("/", token);
+
+                return new RemoteSourceConnectionTestResult(
+                    IsSuccess: true,
+                    ErrorMessage: null,
+                    RootFolderCount: folders.Count
+                );
+            },
+            errorMessage => new RemoteSourceConnectionTestResult(
+                IsSuccess: false,
+                ErrorMessage: errorMessage,
+                RootFolderCount: 0
+            ),
+            cancellationToken
+        );
+    }
+
+    public async Task<RemoteFolderListingResult> ListFoldersAsync(
+        int id,
+        string path,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
+
+        return await RunSessionOperationAsync(
+            registration,
+            "Folder listing",
+            async (session, token) =>
+                new RemoteFolderListingResult(
+                    IsSuccess: true,
+                    ErrorMessage: null,
+                    Folders: await session.ListFoldersAsync(path, token)
+                ),
+            errorMessage => new RemoteFolderListingResult(
+                IsSuccess: false,
+                ErrorMessage: errorMessage,
+                Folders: []
+            ),
+            cancellationToken
+        );
+    }
+
+    private async Task<TResult> RunSessionOperationAsync<TResult>(
+        RemoteSourceRegistration registration,
+        string operationName,
+        Func<IRemoteSourceSession, CancellationToken, Task<TResult>> operation,
+        Func<string, TResult> createFailure,
+        CancellationToken cancellationToken
+    )
+    {
         using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(
             cancellationToken
         );
-        timeoutSource.CancelAfter(ConnectionTestTimeout);
+        timeoutSource.CancelAfter(SessionOperationTimeout);
 
         try
         {
-            await using var session = await remoteSource.OpenSessionAsync(
-                config,
+            await using var session = await sessionOpener.OpenAsync(
+                registration,
                 timeoutSource.Token
             );
-            var folders = await session.ListFoldersAsync("/", timeoutSource.Token);
 
-            return new RemoteSourceConnectionTestResult(
-                IsSuccess: true,
-                ErrorMessage: null,
-                RootFolderCount: folders.Count
-            );
+            return await operation(session, timeoutSource.Token);
         }
         catch (OperationCanceledException exception)
             when (!cancellationToken.IsCancellationRequested)
         {
             logger.LogWarning(
                 exception,
-                "Connection test for remote source {RemoteSourceName} timed out",
+                "{OperationName} for remote source {RemoteSourceName} timed out",
+                operationName,
                 registration.Name
             );
 
-            return new RemoteSourceConnectionTestResult(
-                IsSuccess: false,
-                ErrorMessage: $"The connection test timed out after {ConnectionTestTimeout.TotalSeconds:0} seconds.",
-                RootFolderCount: 0
+            return createFailure(
+                $"The operation timed out after {SessionOperationTimeout.TotalSeconds:0} seconds."
             );
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             logger.LogWarning(
                 exception,
-                "Connection test for remote source {RemoteSourceName} failed",
+                "{OperationName} for remote source {RemoteSourceName} failed",
+                operationName,
                 registration.Name
             );
 
-            return new RemoteSourceConnectionTestResult(
-                IsSuccess: false,
-                ErrorMessage: exception.Message,
-                RootFolderCount: 0
-            );
+            return createFailure(exception.Message);
         }
     }
 

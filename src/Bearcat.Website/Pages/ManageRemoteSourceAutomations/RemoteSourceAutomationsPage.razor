@@ -1,0 +1,140 @@
+@page "/remote-source-automations"
+@using Bearcat.Domain.UseCases.ManageRemoteSourceAutomations.ReadModels
+
+<PageTitle>@L["RemoteSourceAutomations"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div class="min-w-0 space-y-2">
+            <h1 class="text-3xl font-semibold tracking-tight">@L["RemoteSourceAutomations"]</h1>
+            <p class="text-sm text-muted-foreground">@L["RemoteSourceAutomationsIntro"]</p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewRemoteSourceAutomation"]
+        </BbButton>
+    </div>
+
+    @if (automations.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+            @L["NoRemoteSourceAutomationsYet"]
+        </div>
+    }
+    else
+    {
+        <div class="bearcat-config-list">
+            <div class="bearcat-config-header lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1.2fr)_minmax(0,0.45fr)_minmax(0,1fr)_minmax(0,0.7fr)_56px]">
+                <span>@L["Name"]</span>
+                <span>@L["Folders"]</span>
+                <span>@L["Rule"]</span>
+                <span>@L["Priority"]</span>
+                <span>@L["Downloads"]</span>
+                <span>@L["Status"]</span>
+                <span class="text-right">@L["Actions"]</span>
+            </div>
+            @foreach (var automation in automations)
+            {
+                <div class="bearcat-config-item">
+                    <div class="bearcat-config-row lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1.2fr)_minmax(0,0.45fr)_minmax(0,1fr)_minmax(0,0.7fr)_56px]">
+                        <div class="min-w-0 space-y-1">
+                            <p class="truncate text-sm font-semibold" title="@automation.Name">@automation.Name</p>
+                            <BbBadge Variant="BadgeVariant.Outline">@automation.RemoteSourceRegistrationName</BbBadge>
+                        </div>
+
+                        <div class="min-w-0 space-y-1">
+                            <p class="bearcat-mobile-label">@L["RemotePath"]</p>
+                            <p class="flex min-w-0 items-center gap-1.5 text-sm" title="@automation.RemotePath">
+                                <LucideIcon Name="server" class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                <span class="truncate">@automation.RemotePath</span>
+                            </p>
+                            <p class="bearcat-mobile-label">@L["TargetPath"]</p>
+                            <p class="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground" title="@automation.TargetPath">
+                                <LucideIcon Name="hard-drive-download" class="h-3.5 w-3.5 shrink-0" />
+                                <span class="truncate">@automation.TargetPath</span>
+                            </p>
+                        </div>
+
+                        <div class="min-w-0 space-y-1">
+                            <p class="bearcat-mobile-label">@L["FolderNamePattern"]</p>
+                            <p class="flex min-w-0 items-center gap-1.5 text-sm" title="@automation.FolderNamePattern">
+                                <LucideIcon Name="funnel" class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                @if (string.IsNullOrWhiteSpace(automation.FolderNamePattern))
+                                {
+                                    <span class="truncate text-muted-foreground">@L["AllFolders"]</span>
+                                }
+                                else
+                                {
+                                    <span class="truncate font-mono">@automation.FolderNamePattern</span>
+                                }
+                            </p>
+                            <p class="bearcat-mobile-label">@L["ReleaseTemplate"]</p>
+                            <p class="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground" title="@automation.ReleaseTemplateName">
+                                <LucideIcon Name="layout-template" class="h-3.5 w-3.5 shrink-0" />
+                                <span class="truncate">@automation.ReleaseTemplateName</span>
+                                <span class="shrink-0">· @L.Localize(automation.ReleaseType)</span>
+                            </p>
+                        </div>
+
+                        <div>
+                            <p class="bearcat-mobile-label">@L["Priority"]</p>
+                            <span class="text-sm tabular-nums">@automation.Priority</span>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["Downloads"]</p>
+                            @if (automation.DownloadCountsByState.Count == 0)
+                            {
+                                <span class="text-sm tabular-nums text-muted-foreground">0</span>
+                            }
+                            else
+                            {
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach (var (state, count) in automation.DownloadCountsByState.OrderBy(entry => entry.Key))
+                                    {
+                                        <BbBadge Variant="@GetStateBadgeVariant(state)">
+                                            @L.Localize(state) <span class="ml-1 tabular-nums">@count</span>
+                                        </BbBadge>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <div class="flex flex-wrap items-start gap-1">
+                            <p class="bearcat-mobile-label w-full">@L["Status"]</p>
+                            <BbBadge Variant="@(automation.IsEnabled ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                @(automation.IsEnabled ? L["Enabled"] : L["Disabled"])
+                            </BbBadge>
+                            @if (!automation.IsRemoteSourceRegistrationActive)
+                            {
+                                <BbBadge Variant="BadgeVariant.Outline">@L["RemoteSourceInactive"]</BbBadge>
+                            }
+                        </div>
+
+                        <div class="bearcat-config-actions">
+                            <BbDropdownMenu>
+                                <BbDropdownMenuTrigger>
+                                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenRemoteSourceAutomationActions"]">
+                                        <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                    </BbButton>
+                                </BbDropdownMenuTrigger>
+                                <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                                    <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(automation))">
+                                        @L["Edit"]
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuItem OnClick="@(async _ => await ToggleEnabledAsync(automation))">
+                                        @(automation.IsEnabled ? L["Disable"] : L["Enable"])
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(automation))">
+                                        @L["Delete"]
+                                    </BbDropdownMenuItem>
+                                </BbDropdownMenuContent>
+                            </BbDropdownMenu>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>

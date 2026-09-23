@@ -1256,4 +1256,54 @@
   <data name="RemoteSourceConfig_TlsProvider_Description" xml:space="preserve"><value>BouncyCastle works with most FTPS servers. Switch to System only if the connection fails.</value></data>
   <data name="RemoteSourceConfig_ValidateCertificate" xml:space="preserve"><value>Validate certificate</value></data>
   <data name="RemoteSourceConfig_ValidateCertificate_Description" xml:space="preserve"><value>Many FTP servers use self signed certificates. Enable this only if the server has a trusted certificate.</value></data>
+  <data name="RemoteSourceAutomations" xml:space="preserve"><value>Remote automations</value></data>
+  <data name="RemoteSourceAutomationsIntro" xml:space="preserve"><value>Watch folders on remote sources and queue new releases for download once they stop changing.</value></data>
+  <data name="NewRemoteSourceAutomation" xml:space="preserve"><value>New remote automation</value></data>
+  <data name="NoRemoteSourceAutomationsYet" xml:space="preserve"><value>No remote automations configured yet.</value></data>
+  <data name="OpenRemoteSourceAutomationActions" xml:space="preserve"><value>Open remote automation actions</value></data>
+  <data name="RemoteSourceAutomationDialogDescription" xml:space="preserve"><value>Scans the direct subfolders of a remote folder and downloads new releases into a local folder.</value></data>
+  <data name="DeleteRemoteSourceAutomationConfirmation" xml:space="preserve"><value>Delete remote automation {0}? Downloads that are already queued are kept.</value></data>
+  <data name="RemoteSourceAutomationEnabled" xml:space="preserve"><value>Remote automation {0} enabled</value></data>
+  <data name="RemoteSourceAutomationDisabled" xml:space="preserve"><value>Remote automation {0} disabled</value></data>
+  <data name="RemoteSource" xml:space="preserve"><value>Remote source</value></data>
+  <data name="SelectRemoteSource" xml:space="preserve"><value>Select remote source</value></data>
+  <data name="SelectRemoteSourceRequired" xml:space="preserve"><value>You must select a remote source.</value></data>
+  <data name="NoActiveRemoteSources" xml:space="preserve"><value>There is no active remote source. Add or activate one under Remote sources first.</value></data>
+  <data name="RemoteSourceInactive" xml:space="preserve"><value>Remote source inactive</value></data>
+  <data name="Folders" xml:space="preserve"><value>Folders</value></data>
+  <data name="Rule" xml:space="preserve"><value>Rule</value></data>
+  <data name="RemotePath" xml:space="preserve"><value>Remote folder</value></data>
+  <data name="RemotePathHelp" xml:space="preserve"><value>Every direct subfolder of this folder is treated as a release.</value></data>
+  <data name="RemotePathRequired" xml:space="preserve"><value>Remote folder is required</value></data>
+  <data name="BrowseRemoteFolders" xml:space="preserve"><value>Browse remote folders</value></data>
+  <data name="SelectRemoteFolder" xml:space="preserve"><value>Select remote folder</value></data>
+  <data name="SelectRemoteFolderDescription" xml:space="preserve"><value>Open folders to see their subfolders, then select the folder that contains the releases.</value></data>
+  <data name="FolderListingFailed" xml:space="preserve"><value>Could not list folders: {0}</value></data>
+  <data name="TargetPath" xml:space="preserve"><value>Download folder</value></data>
+  <data name="TargetPathHelp" xml:space="preserve"><value>Local folder the releases are downloaded into. Each release gets its own subfolder.</value></data>
+  <data name="TargetPathRequired" xml:space="preserve"><value>Download folder is required</value></data>
+  <data name="BrowseDownloadFolders" xml:space="preserve"><value>Browse download folders</value></data>
+  <data name="SelectDownloadFolder" xml:space="preserve"><value>Select download folder</value></data>
+  <data name="SelectDownloadFolderDescription" xml:space="preserve"><value>Choose the local folder new releases are downloaded into.</value></data>
+  <data name="IgnoreExistingOnFirstScan" xml:space="preserve"><value>Ignore existing folders</value></data>
+  <data name="IgnoreExistingOnFirstScanHelp" xml:space="preserve"><value>Folders that already exist during the first scan are skipped. Only releases that appear afterwards are downloaded.</value></data>
+  <data name="KeepRawFiles" xml:space="preserve"><value>Keep raw files</value></data>
+  <data name="KeepRawFilesHelp" xml:space="preserve"><value>When disabled, the downloaded folder is deleted after the first successful upload and the release continues as unmanaged.</value></data>
+  <data name="RemoteSourceDownloadState.Observing" xml:space="preserve"><value>Observing</value></data>
+  <data name="RemoteSourceDownloadState.Pending" xml:space="preserve"><value>Queued</value></data>
+  <data name="RemoteSourceDownloadState.Downloading" xml:space="preserve"><value>Downloading</value></data>
+  <data name="RemoteSourceDownloadState.Downloaded" xml:space="preserve"><value>Downloaded</value></data>
+  <data name="RemoteSourceDownloadState.ReleaseCreated" xml:space="preserve"><value>Release created</value></data>
+  <data name="RemoteSourceDownloadState.Failed" xml:space="preserve"><value>Failed</value></data>
+  <data name="RemoteSourceDownloadState.Canceled" xml:space="preserve"><value>Canceled</value></data>
+  <data name="RemoteSourceDownloadState.Ignored" xml:space="preserve"><value>Ignored</value></data>
+  <data name="RemoteSourceDownloads" xml:space="preserve"><value>Remote downloads</value></data>
+  <data name="RemoteSourceDownloadsDescription" xml:space="preserve"><value>Controls how folders on remote sources are watched and queued for download.</value></data>
+  <data name="RemoteSourceDownloadStabilityMinutes" xml:space="preserve"><value>Folder stability (minutes)</value></data>
+  <data name="RemoteSourceDownloadStabilityMinutesDescription" xml:space="preserve"><value>A remote folder is only queued for download once its file count and total size have stayed unchanged for at least this many minutes. This avoids downloading releases that are still being uploaded to the server.</value></data>
+  <data name="RemoteSourceDownloadMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimum folder size (MB)</value></data>
+  <data name="RemoteSourceDownloadMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Remote folders smaller than this size are not queued. Set to 0 to disable the size check.</value></data>
+  <data name="Priority" xml:space="preserve"><value>Priority</value></data>
+  <data name="RemoteSourceAutomationPriorityHelp" xml:space="preserve"><value>Lower values run first. Only matters when the patterns of several automations on the same remote folder overlap.</value></data>
+  <data name="RemoteSourceAutomationPatternHelp" xml:space="preserve"><value>Simple wildcards like *1080p*. Leave empty to match every folder. Create another automation for a different pattern.</value></data>
 </root>

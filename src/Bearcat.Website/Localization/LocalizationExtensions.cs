@@ -54,6 +54,11 @@ public static class LocalizationExtensions
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,
+        RemoteSourceDownloadState state
+    ) => localizer[$"RemoteSourceDownloadState.{state}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
         ArchiveState state
     ) => localizer[$"ArchiveState.{state}"];
 

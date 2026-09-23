@@ -7,6 +7,7 @@ using Bearcat.Abstractions.Transfers;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ConfigurationFields;
 using Bearcat.Domain.UseCases.ManageRemoteSources;
+using Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.Security;
@@ -56,6 +57,7 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
             repository,
             factory.Object,
             secretProtector,
+            new RemoteSourceSessionOpener(factory.Object, secretProtector),
             NullLogger<RemoteSourceRegistrationService>.Instance
         );
     }
@@ -248,6 +250,46 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
         result.IsSuccess.ShouldBeFalse();
         result.ErrorMessage.ShouldBe("Permission denied");
         remoteSource.SessionDisposed.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ListFoldersAsync_SessionListsFolders_ReturnsFoldersOfRequestedPath()
+    {
+        // Arrange
+        var id = await service.CreateAsync("Main server", SourceClassName, FormValues());
+        remoteSource.RootFolders =
+        [
+            new RemoteFolderDto("tv", "/incoming/tv", ModifiedAt: null),
+            new RemoteFolderDto("movies", "/incoming/movies", ModifiedAt: null),
+        ];
+
+        // Act
+        var result = await service.ListFoldersAsync(id, "/incoming");
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result.ErrorMessage.ShouldBeNull();
+        result
+            .Folders.Select(folder => folder.FullPath)
+            .ShouldBe(["/incoming/tv", "/incoming/movies"]);
+        remoteSource.ListedPath.ShouldBe("/incoming");
+        remoteSource.SessionDisposed.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ListFoldersAsync_ListingFails_ReturnsFailureWithoutFolders()
+    {
+        // Arrange
+        var id = await service.CreateAsync("Main server", SourceClassName, FormValues());
+        remoteSource.ListException = new InvalidOperationException("No such directory");
+
+        // Act
+        var result = await service.ListFoldersAsync(id, "/missing");
+
+        // Assert
+        result.IsSuccess.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe("No such directory");
+        result.Folders.ShouldBeEmpty();
     }
 
     [Test]
