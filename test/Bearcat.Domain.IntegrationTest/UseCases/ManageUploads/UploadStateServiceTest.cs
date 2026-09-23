@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
@@ -518,6 +519,217 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         result.Notifications.ShouldBeEmpty();
         hosterMock.VerifyAll();
         hosterFactoryMock.VerifyAll();
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_MultipleUploadsOnSameHosterRegistration_ChecksAllLinksInSingleCall()
+    {
+        // Arrange
+        var hosterRegistration = CreateHosterRegistration();
+        var firstUpload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"],
+            hosterRegistration: hosterRegistration
+        );
+        var secondUpload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/3"],
+            hosterRegistration: hosterRegistration
+        );
+
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.Is<IReadOnlyList<FileUrlToCheckDto>>(files => files.Count == 3),
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(
+                    true,
+                    [],
+                    new Dictionary<string, bool>
+                    {
+                        ["https://hoster.test/1"] = true,
+                        ["https://hoster.test/2"] = true,
+                        ["https://hoster.test/3"] = false,
+                    }
+                )
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var results = await dbContext.Uploads.ToDictionaryAsync(u => u.Id);
+
+        results[firstUpload.Id].OnlineState.ShouldBe(OnlineState.Online);
+        results[secondUpload.Id].OnlineState.ShouldBe(OnlineState.Offline);
+        hosterMock.Verify(
+            h =>
+                h.CheckFilesExistAsync(
+                    It.IsAny<IHosterConfig>(),
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_SameHosterWithDifferentRegistrations_ChecksEachRegistrationWithItsOwnConfig()
+    {
+        // Arrange
+        const string otherSerializedHosterConfig = "{\"apiKey\":\"other\"}";
+        var otherHosterConfigMock = new Mock<IHosterConfig>(MockBehavior.Strict);
+        hosterMock
+            .Setup(h => h.DeserializeHosterConfig(otherSerializedHosterConfig))
+            .Returns(otherHosterConfigMock.Object);
+
+        var firstUpload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+        var otherHosterRegistration = CreateHosterRegistration();
+        otherHosterRegistration.SerializedConfig = otherSerializedHosterConfig;
+        var secondUpload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/2"],
+            hosterRegistration: otherHosterRegistration
+        );
+
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.Is<IReadOnlyList<FileUrlToCheckDto>>(files =>
+                        files.Single().Url == "https://hoster.test/1"
+                    ),
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(
+                    true,
+                    [],
+                    new Dictionary<string, bool> { ["https://hoster.test/1"] = true }
+                )
+            );
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    otherHosterConfigMock.Object,
+                    It.Is<IReadOnlyList<FileUrlToCheckDto>>(files =>
+                        files.Single().Url == "https://hoster.test/2"
+                    ),
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(
+                    true,
+                    [],
+                    new Dictionary<string, bool> { ["https://hoster.test/2"] = false }
+                )
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var results = await dbContext.Uploads.ToDictionaryAsync(u => u.Id);
+
+        results[firstUpload.Id].OnlineState.ShouldBe(OnlineState.Online);
+        results[secondUpload.Id].OnlineState.ShouldBe(OnlineState.Offline);
+        hosterMock.VerifyAll();
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_CaptchaRequiredForMultipleUploads_DeactivatesRegistrationWithSingleNotification()
+    {
+        // Arrange
+        var hosterRegistration = CreateHosterRegistration();
+        await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/1"],
+            hosterRegistration: hosterRegistration
+        );
+        await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/2"],
+            hosterRegistration: hosterRegistration
+        );
+
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    CancellationToken.None
+                )
+            )
+            .ThrowsAsync(new CaptchaVerificationRequiredException("Captcha required", 400, 2));
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var registration = await dbContext.HosterRegistrations.SingleAsync();
+        var notifications = await dbContext
+            .Notifications.Where(n =>
+                n.NotificationKind == NotificationKind.CaptchaVerificationRequired
+            )
+            .ToListAsync();
+
+        registration.RequiresCaptchaVerification.ShouldBeTrue();
+        registration.IsActive.ShouldBeFalse();
+        notifications.Single().Message.ShouldContain("Captcha required");
+        (await dbContext.Uploads.ToListAsync()).ShouldAllBe(u =>
+            u.OnlineState == OnlineState.Online
+        );
+    }
+
+    [Test]
+    public async Task CheckUploadStateNowAsync_RegistrationAlreadyRequiresCaptcha_DoesNotCreateAnotherNotification()
+    {
+        // Arrange
+        var hosterRegistration = CreateHosterRegistration();
+        hosterRegistration.RequiresCaptchaVerification = true;
+        hosterRegistration.IsActive = false;
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/1"],
+            hosterRegistration: hosterRegistration
+        );
+
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    CancellationToken.None
+                )
+            )
+            .ThrowsAsync(new CaptchaVerificationRequiredException("Captcha required", 400, 2));
+
+        // Act
+        await service.CheckUploadStateNowAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        (await dbContext.Notifications.ToListAsync()).ShouldBeEmpty();
+        hosterMock.VerifyAll();
     }
 
     [Test]
@@ -1655,7 +1867,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         ReleaseInfo? releaseInfo = null,
         bool hasNfo = false,
         int? numberOfHoursUntilReuploadOverride = null,
-        ReuploadTrigger? reuploadTriggerOverride = null
+        ReuploadTrigger? reuploadTriggerOverride = null,
+        HosterRegistration? hosterRegistration = null
     )
     {
         var uploadConfig = await AddUploadConfigAsync(
@@ -1665,7 +1878,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             releaseInfo: releaseInfo,
             hasNfo: hasNfo,
             numberOfHoursUntilReuploadOverride: numberOfHoursUntilReuploadOverride,
-            reuploadTriggerOverride: reuploadTriggerOverride
+            reuploadTriggerOverride: reuploadTriggerOverride,
+            hosterRegistration: hosterRegistration
         );
         var archive = new Archive
         {
@@ -1725,7 +1939,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         bool hasNfo = false,
         int? numberOfHoursUntilReuploadOverride = null,
         ReuploadTrigger? reuploadTriggerOverride = null,
-        ReleaseType releaseType = ReleaseType.Managed
+        ReleaseType releaseType = ReleaseType.Managed,
+        HosterRegistration? hosterRegistration = null
     )
     {
         var releaseGroup = new ReleaseGroup
@@ -1757,7 +1972,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             ArchivePassword = "secret",
             ArchiveFileSizeMb = 512,
         };
-        var hosterRegistration = new HosterRegistration
+        hosterRegistration ??= new HosterRegistration
         {
             Name = "Hoster",
             SerializedConfig = SerializedHosterConfig,
@@ -1779,6 +1994,15 @@ public class UploadStateServiceTest : BearcatIntegrationTest
 
         return uploadConfig;
     }
+
+    private static HosterRegistration CreateHosterRegistration() =>
+        new()
+        {
+            Name = "Hoster",
+            SerializedConfig = SerializedHosterConfig,
+            HosterClassName = HosterClassName,
+            IsActive = true,
+        };
 
     private UploadStateService CreateService(int initialUploadCooldownMinutes = 5)
     {

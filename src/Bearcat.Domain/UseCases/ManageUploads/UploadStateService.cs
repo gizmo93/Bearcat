@@ -148,23 +148,17 @@ public class UploadStateService(
             return false;
         }
 
-        var hoster = hosterFactory.GetByName(
-            upload.UploadConfig.HosterRegistration.HosterClassName
-        );
-        var hosterConfig = hoster.DeserializeHosterConfig(
-            secretProtector.Unprotect(upload.UploadConfig.HosterRegistration.SerializedConfig)
-        );
+        var registration = upload.UploadConfig.HosterRegistration;
 
         logger.LogInformation(
-            "Checking online status on demand for Upload {UploadId} on hoster {Hoster}",
+            "Checking online status on demand for Upload {UploadId} on hoster registration {HosterRegistration}",
             upload.Id,
-            hoster.Name
+            registration.Name
         );
 
         await UpdateOnlineStatusAsync(
-            hoster: hoster,
-            hosterConfig: hosterConfig,
-            upload: upload,
+            registration: registration,
+            uploads: [upload],
             localNow: timeProvider.GetLocalNow(),
             cancellationToken: cancellationToken
         );
@@ -257,37 +251,22 @@ public class UploadStateService(
             cancellationToken
         );
 
-        foreach (
-            var uploadGroup in uploadsToCheck.GroupBy(u =>
-                u.UploadConfig.HosterRegistration.HosterClassName
-            )
-        )
+        foreach (var uploadGroup in uploadsToCheck.GroupBy(u => u.UploadConfig.HosterRegistration))
         {
-            var hoster = hosterFactory.GetByName(uploadGroup.Key);
-            var hosterConfig = hoster.DeserializeHosterConfig(
-                secretProtector.Unprotect(
-                    uploadGroup.First().UploadConfig.HosterRegistration.SerializedConfig
-                )
+            var registration = uploadGroup.Key;
+            var uploads = uploadGroup.ToList();
+
+            await UpdateOnlineStatusAsync(
+                registration: registration,
+                uploads: uploads,
+                localNow: localNow,
+                cancellationToken: cancellationToken
             );
 
-            foreach (var upload in uploadGroup)
+            await uploadStateRepository.SaveChangesAsync(cancellationToken);
+
+            foreach (var upload in uploads)
             {
-                logger.LogInformation(
-                    "Checking online status for Upload {UploadId} on hoster {Hoster}",
-                    upload.Id,
-                    hoster.Name
-                );
-
-                await UpdateOnlineStatusAsync(
-                    hoster: hoster,
-                    hosterConfig: hosterConfig,
-                    upload: upload,
-                    localNow: localNow,
-                    cancellationToken: cancellationToken
-                );
-
-                await uploadStateRepository.SaveChangesAsync(cancellationToken);
-
                 logger.LogInformation(
                     "Updated online status for Upload {UploadId} to {OnlineState}",
                     upload.Id,
@@ -298,43 +277,46 @@ public class UploadStateService(
     }
 
     private async Task UpdateOnlineStatusAsync(
-        IHoster hoster,
-        IHosterConfig hosterConfig,
-        Upload upload,
+        HosterRegistration registration,
+        IReadOnlyList<Upload> uploads,
         DateTime localNow,
         CancellationToken cancellationToken
     )
     {
-        var previousOnlineState = upload.OnlineState;
-        var filesWithoutUrl = upload
-            .UploadedFiles.Where(f => string.IsNullOrWhiteSpace(f.HosterFileLink))
-            .ToList();
-
-        foreach (var file in filesWithoutUrl)
+        foreach (var upload in uploads)
         {
-            file.OnlineState = OnlineState.Offline;
-            file.CheckedAt = localNow;
+            MarkFilesWithoutLinkOffline(upload, localNow);
         }
 
-        if (filesWithoutUrl.Count > 0)
-        {
-            logger.LogWarning(
-                "Skipping {FileCount} uploaded files without hoster links for Upload {UploadId}",
-                filesWithoutUrl.Count,
-                upload.Id
-            );
-        }
+        var uploadsWithLinks = uploads.Where(HasFileWithLink).ToList();
 
-        var filesByUrl = upload
-            .UploadedFiles.Where(f => !string.IsNullOrWhiteSpace(f.HosterFileLink))
-            .DistinctBy(h => h.HosterFileLink)
-            .ToDictionary(f => f.HosterFileLink);
-
-        if (filesByUrl.Count == 0)
+        foreach (var upload in uploads.Except(uploadsWithLinks))
         {
             SetOnlineState(upload, OnlineState.Offline, localNow);
+        }
+
+        if (uploadsWithLinks.Count == 0)
+        {
             return;
         }
+
+        var filesByUrl = uploadsWithLinks
+            .SelectMany(u => u.UploadedFiles)
+            .Where(HasLink)
+            .ToLookup(f => f.HosterFileLink);
+
+        var hoster = hosterFactory.GetByName(registration.HosterClassName);
+        var hosterConfig = hoster.DeserializeHosterConfig(
+            secretProtector.Unprotect(registration.SerializedConfig)
+        );
+
+        logger.LogInformation(
+            "Checking {FileCount} links of {UploadCount} uploads on hoster {Hoster} (registration {HosterRegistration})",
+            filesByUrl.Count,
+            uploadsWithLinks.Count,
+            hoster.Name,
+            registration.Name
+        );
 
         FileExistResult result;
 
@@ -343,7 +325,8 @@ public class UploadStateService(
             result = await hoster.CheckFilesExistAsync(
                 hosterConfig: hosterConfig,
                 files: filesByUrl
-                    .Values.Select(file => new FileUrlToCheckDto(
+                    .Select(files => files.First())
+                    .Select(file => new FileUrlToCheckDto(
                         Url: file.HosterFileLink,
                         ExternalId: file.ExternalId,
                         HosterFolderId: file.HosterFolderId
@@ -354,76 +337,142 @@ public class UploadStateService(
         }
         catch (CaptchaVerificationRequiredException ex)
         {
-            captchaVerificationService.MarkRequired(upload, ex.Message);
+            await captchaVerificationService.MarkRequiredAsync(
+                registration,
+                ex.Message,
+                cancellationToken
+            );
             return;
         }
 
         if (!result.IsSuccess)
         {
             logger.LogError(
-                "Failed to check file existence for Upload {UploadId}: {ErrorMessages}",
-                upload.Id,
+                "Failed to check file existence for {UploadCount} uploads on hoster registration {HosterRegistration}: {ErrorMessages}",
+                uploadsWithLinks.Count,
+                registration.Name,
                 string.Join("; ", result.ErrorMessages)
             );
 
-            var lastOnlineCheck = upload
-                .UploadedFiles.Where(f => f.OnlineState == OnlineState.Online)
-                .Min(f => f.CheckedAt);
-
-            if (
-                lastOnlineCheck is not null
-                && localNow - lastOnlineCheck.Value >= FailedCheckNotificationThreshold
-            )
+            foreach (var upload in uploadsWithLinks)
             {
-                notificationService.Create(
-                    kind: NotificationKind.HosterStatusCheckFailed,
-                    message: $"Failed to check file existence on hoster, Error messages: {string.Join(", ", result.ErrorMessages)}",
-                    entity: upload,
-                    selector: u => u.Upload
-                );
+                CreateCheckFailedNotificationIfNeeded(upload, result, localNow);
             }
 
             return;
         }
 
+        ApplyFileStates(hoster, filesByUrl, result, localNow);
+
+        foreach (var upload in uploadsWithLinks)
+        {
+            var previousOnlineState = upload.OnlineState;
+
+            SetOnlineState(upload, DetermineOnlineState(upload), localNow);
+
+            CreateOfflineNotificationIfNeeded(upload, previousOnlineState);
+        }
+    }
+
+    private void MarkFilesWithoutLinkOffline(Upload upload, DateTime localNow)
+    {
+        var filesWithoutLink = upload.UploadedFiles.Where(f => !HasLink(f)).ToList();
+
+        if (filesWithoutLink.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var file in filesWithoutLink)
+        {
+            file.OnlineState = OnlineState.Offline;
+            file.CheckedAt = localNow;
+        }
+
+        logger.LogWarning(
+            "Skipping {FileCount} uploaded files without hoster links for Upload {UploadId}",
+            filesWithoutLink.Count,
+            upload.Id
+        );
+    }
+
+    private void ApplyFileStates(
+        IHoster hoster,
+        ILookup<string, UploadedFile> filesByUrl,
+        FileExistResult result,
+        DateTime localNow
+    )
+    {
         foreach (var (url, exists) in result.StatusPerFileUrl)
         {
-            if (!filesByUrl.TryGetValue(url, out var file))
+            if (!filesByUrl.Contains(url))
             {
                 logger.LogWarning(
-                    "Hoster {Hoster} returned an unknown file URL while checking Upload {UploadId}: {Url}",
+                    "Hoster {Hoster} returned an unknown file URL: {Url}",
                     hoster.Name,
-                    upload.Id,
                     url
                 );
 
                 continue;
             }
 
-            file.OnlineState = exists ? OnlineState.Online : OnlineState.Offline;
-            file.CheckedAt = localNow;
-
-            if (result.DownloadCountPerFileUrl?.TryGetValue(url, out var downloadCount) == true)
+            foreach (var file in filesByUrl[url])
             {
-                file.DownloadCount = downloadCount;
+                file.OnlineState = exists ? OnlineState.Online : OnlineState.Offline;
+                file.CheckedAt = localNow;
+
+                if (result.DownloadCountPerFileUrl?.TryGetValue(url, out var downloadCount) == true)
+                {
+                    file.DownloadCount = downloadCount;
+                }
             }
         }
+    }
 
+    private void CreateCheckFailedNotificationIfNeeded(
+        Upload upload,
+        FileExistResult result,
+        DateTime localNow
+    )
+    {
+        var lastOnlineCheck = upload
+            .UploadedFiles.Where(f => f.OnlineState == OnlineState.Online)
+            .Min(f => f.CheckedAt);
+
+        if (
+            lastOnlineCheck is null
+            || localNow - lastOnlineCheck.Value < FailedCheckNotificationThreshold
+        )
+        {
+            return;
+        }
+
+        notificationService.Create(
+            kind: NotificationKind.HosterStatusCheckFailed,
+            message: $"Failed to check file existence on hoster, Error messages: {string.Join(", ", result.ErrorMessages)}",
+            entity: upload,
+            selector: u => u.Upload
+        );
+    }
+
+    private static OnlineState DetermineOnlineState(Upload upload)
+    {
         var offlineFilesCount = upload.UploadedFiles.Count(f =>
             f.OnlineState == OnlineState.Offline
         );
 
-        var newOnlineState = offlineFilesCount switch
+        return offlineFilesCount switch
         {
             0 => OnlineState.Online,
             _ when offlineFilesCount == upload.UploadedFiles.Count => OnlineState.Offline,
             _ => OnlineState.PartiallyOnline,
         };
-
-        SetOnlineState(upload, newOnlineState, localNow);
-
-        CreateOfflineNotificationIfNeeded(upload, previousOnlineState);
     }
+
+    private static bool HasFileWithLink(Upload upload) => upload.UploadedFiles.Any(HasLink);
+
+    private static bool HasLink(UploadedFile file) =>
+        !string.IsNullOrWhiteSpace(file.HosterFileLink);
 
     private static void SetOnlineState(Upload upload, OnlineState onlineState, DateTime localNow)
     {

@@ -11,7 +11,10 @@ public class HosterCaptchaVerificationService(INotificationService notificationS
         CancellationToken cancellationToken
     )
     {
-        MarkRequired(registration);
+        if (!TryMarkRequired(registration))
+        {
+            return;
+        }
 
         await notificationService.CreateAsync(
             kind: NotificationKind.CaptchaVerificationRequired,
@@ -23,7 +26,11 @@ public class HosterCaptchaVerificationService(INotificationService notificationS
     public void MarkRequired(Upload upload, string message)
     {
         var registration = upload.UploadConfig.HosterRegistration;
-        MarkRequired(registration);
+
+        if (!TryMarkRequired(registration))
+        {
+            return;
+        }
 
         notificationService.Create(
             kind: NotificationKind.CaptchaVerificationRequired,
@@ -39,10 +46,14 @@ public class HosterCaptchaVerificationService(INotificationService notificationS
         registration.IsActive = activate || registration.IsActive;
     }
 
-    private static void MarkRequired(HosterRegistration registration)
+    private static bool TryMarkRequired(HosterRegistration registration)
     {
+        var alreadyRequired = registration.RequiresCaptchaVerification;
+
         registration.RequiresCaptchaVerification = true;
         registration.IsActive = false;
+
+        return !alreadyRequired;
     }
 
     private static string CreateMessage(HosterRegistration registration, string message)

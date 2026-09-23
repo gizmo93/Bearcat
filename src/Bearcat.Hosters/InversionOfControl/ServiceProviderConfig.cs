@@ -11,6 +11,7 @@ using Bearcat.Hosters.FileServe.InversionOfControl;
 using Bearcat.Hosters.FileUpload.InversionOfControl;
 using Bearcat.Hosters.FreeDlink.InversionOfControl;
 using Bearcat.Hosters.GoFile.InversionOfControl;
+using Bearcat.Hosters.Hitfile.InversionOfControl;
 using Bearcat.Hosters.HxFile.InversionOfControl;
 using Bearcat.Hosters.Katfile.InversionOfControl;
 using Bearcat.Hosters.Keep2Share.InversionOfControl;
@@ -19,6 +20,8 @@ using Bearcat.Hosters.Mega4Upload.InversionOfControl;
 using Bearcat.Hosters.Nitroflare.InversionOfControl;
 using Bearcat.Hosters.Rapidgator.InversionOfControl;
 using Bearcat.Hosters.Shared;
+using Bearcat.Hosters.Shared.CostAction.InversionOfControl;
+using Bearcat.Hosters.Turbobit.InversionOfControl;
 using Bearcat.Hosters.UploadG.InversionOfControl;
 using Bearcat.Hosters.Uploady.InversionOfControl;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,14 +45,17 @@ public static class ServiceProviderConfig
         services.AddFichier();
         services.AddFreeDlink();
         services.AddGoFile();
+        services.AddHitfile();
         services.AddHxFile();
         services.AddKatfile();
         services.AddKeep2Share();
         services.AddKrakenFiles();
         services.AddMega4Upload();
         services.AddNitroflare();
+        services.AddTurbobit();
         services.AddUploadG();
         services.AddUploady();
+        services.AddCostAction();
 
         services.AddScoped<IHosterFactory, HosterFactory>();
         services.AddHttpClient(
