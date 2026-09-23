@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+staged=()
+while IFS= read -r -d '' file; do
+    staged+=("$file")
+done < <(git diff --cached --name-only --diff-filter=ACMR -z)
+
+if [ ${#staged[@]} -eq 0 ]; then
+    exit 0
+fi
+
+if ! dotnet csharpier --version >/dev/null 2>&1; then
+    dotnet tool restore >/dev/null
+fi
+
+fully_staged=()
+partially_staged=()
+for file in "${staged[@]}"; do
+    if git diff --quiet -- "$file"; then
+        fully_staged+=("$file")
+    else
+        partially_staged+=("$file")
+    fi
+done
+
+staged_content=$(mktemp)
+formatted_content=$(mktemp)
+trap 'rm -f "$staged_content" "$formatted_content"' EXIT
+
+for file in ${partially_staged[@]+"${partially_staged[@]}"}; do
+    git show ":$file" >"$staged_content"
+    dotnet csharpier format --write-stdout --stdin-path "$PWD/$file" <"$staged_content" >"$formatted_content"
+    if [ -s "$formatted_content" ] && ! cmp -s "$staged_content" "$formatted_content"; then
+        blob=$(git hash-object -w "$formatted_content")
+        mode=$(git ls-files --stage -- "$file" | cut -d' ' -f1)
+        git update-index --cacheinfo "$mode,$blob,$file"
+    fi
+done
+
+dotnet csharpier format --log-level Error "${staged[@]}"
+
+if [ ${#fully_staged[@]} -gt 0 ]; then
+    git add -- "${fully_staged[@]}"
+fi

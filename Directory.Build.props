@@ -22,6 +22,5 @@
             PrivateAssets="all"
             IncludeAssets="runtime; build; native; contentfiles; analyzers"
         />
-        <PackageReference Include="CSharpier.MSBuild" PrivateAssets="all" />
     </ItemGroup>
 </Project>

@@ -26,6 +26,21 @@ Example:
 
 If no key path or data directory is configured, Bearcat stores `bearcat.key` in the operating system's application data folder.
 
+## Formatting
+
+Code is formatted with [CSharpier](https://csharpier.com). The build does not format anything. Instead a pre-commit hook formats the staged files and the pull request workflow checks the formatting. Enable the hook once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+The hook only formats staged content, so partially staged files keep their unstaged changes. To format the whole repository manually, run:
+
+```bash
+dotnet tool restore
+dotnet csharpier format .
+```
+
 ## Tests
 
 Run all tests from the repository root:

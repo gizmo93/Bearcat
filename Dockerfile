@@ -6,9 +6,9 @@ WORKDIR /App
 ARG BEARCAT_VERSION=0.0.0-dev
 
 COPY . ./
-RUN dotnet restore src/Bearcat.Host/Bearcat.Host.csproj -a x64
-
-RUN dotnet publish src/Bearcat.Host/Bearcat.Host.csproj -a x64 --no-restore -o /App/out -p:Version=$BEARCAT_VERSION
+RUN --mount=type=cache,id=bearcat-nuget,target=/root/.nuget/packages \
+    --mount=type=cache,id=bearcat-tailwind,target=/App/src/Bearcat.Website/obj/tailwind \
+    dotnet publish src/Bearcat.Host/Bearcat.Host.csproj -a x64 -o /App/out -p:Version=$BEARCAT_VERSION -p:RunAnalyzers=false
 
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0.12-noble
