@@ -110,6 +110,8 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<ForumPostingRule> ForumPostingRules { get; set; } = null!;
 
+    public DbSet<RemoteSourceRegistration> RemoteSourceRegistrations { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BearcatDbContext).Assembly);

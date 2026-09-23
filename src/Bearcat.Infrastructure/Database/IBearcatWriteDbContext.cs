@@ -63,4 +63,5 @@ public interface IBearcatWriteDbContext
     DbSet<QualityCheckRule> QualityCheckRules { get; set; }
     DbSet<ReleaseQualityIssue> ReleaseQualityIssues { get; set; }
     DbSet<ForumPostingRule> ForumPostingRules { get; set; }
+    DbSet<RemoteSourceRegistration> RemoteSourceRegistrations { get; set; }
 }

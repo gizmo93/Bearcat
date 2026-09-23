@@ -1220,4 +1220,40 @@
   <data name="StreamingPaused" xml:space="preserve"><value>Paused</value></data>
   <data name="ClearLogs" xml:space="preserve"><value>Clear</value></data>
   <data name="NoLogEntries" xml:space="preserve"><value>No log entries yet.</value></data>
+  <data name="RemoteSources" xml:space="preserve"><value>Remote sources</value></data>
+  <data name="RemoteSourcesIntro" xml:space="preserve"><value>Servers Bearcat can download releases from.</value></data>
+  <data name="NewRemoteSource" xml:space="preserve"><value>New remote source</value></data>
+  <data name="AddRemoteSource" xml:space="preserve"><value>Add remote source</value></data>
+  <data name="NoRemoteSourcesYet" xml:space="preserve"><value>No remote sources registered yet.</value></data>
+  <data name="SourceType" xml:space="preserve"><value>Source type</value></data>
+  <data name="SelectSourceType" xml:space="preserve"><value>Select a source type</value></data>
+  <data name="MaxConnections" xml:space="preserve"><value>Max connections</value></data>
+  <data name="MaxConnectionsHelp" xml:space="preserve"><value>Maximum number of parallel logins and transfers on this server.</value></data>
+  <data name="TestConnection" xml:space="preserve"><value>Test connection</value></data>
+  <data name="OpenRemoteSourceActions" xml:space="preserve"><value>Open remote source actions</value></data>
+  <data name="RemoteSourceConnectionSuccessful" xml:space="preserve"><value>Connection to {0} successful ({1} folders in the root directory)</value></data>
+  <data name="RemoteSourceConnectionFailed" xml:space="preserve"><value>Connection to {0} failed: {1}</value></data>
+  <data name="RemoteSourceActivated" xml:space="preserve"><value>Remote source {0} activated</value></data>
+  <data name="RemoteSourceDeactivated" xml:space="preserve"><value>Remote source {0} deactivated</value></data>
+  <data name="DeleteRemoteSourceConfirmation" xml:space="preserve"><value>Are you sure you want to delete remote source {0}?</value></data>
+  <data name="SecretUnchangedPlaceholder" xml:space="preserve"><value>Unchanged</value></data>
+  <data name="SecretKeepCurrentHelp" xml:space="preserve"><value>Leave empty to keep the current value.</value></data>
+  <data name="MustBeWholeNumber" xml:space="preserve"><value>Must be a whole number</value></data>
+  <data name="ConfigurationFieldError_UnknownField" xml:space="preserve"><value>{0} is not a known setting</value></data>
+  <data name="ConfigurationFieldError_Required" xml:space="preserve"><value>{0} is required</value></data>
+  <data name="ConfigurationFieldError_InvalidValue" xml:space="preserve"><value>{0} has an invalid value</value></data>
+  <data name="ConfigurationFieldError_NotAnInteger" xml:space="preserve"><value>{0} must be a whole number</value></data>
+  <data name="ConfigurationFieldError_InvalidOption" xml:space="preserve"><value>{0} has an unknown option</value></data>
+  <data name="RemoteSourceConfig_Host" xml:space="preserve"><value>Host</value></data>
+  <data name="RemoteSourceConfig_Port" xml:space="preserve"><value>Port</value></data>
+  <data name="RemoteSourceConfig_Username" xml:space="preserve"><value>Username</value></data>
+  <data name="RemoteSourceConfig_Password" xml:space="preserve"><value>Password</value></data>
+  <data name="RemoteSourceConfig_Encryption" xml:space="preserve"><value>Encryption</value></data>
+  <data name="RemoteSourceConfig_Encryption_None" xml:space="preserve"><value>None (plain FTP)</value></data>
+  <data name="RemoteSourceConfig_Encryption_Explicit" xml:space="preserve"><value>Explicit (FTPES)</value></data>
+  <data name="RemoteSourceConfig_Encryption_Implicit" xml:space="preserve"><value>Implicit (FTPS)</value></data>
+  <data name="RemoteSourceConfig_TlsProvider" xml:space="preserve"><value>TLS provider</value></data>
+  <data name="RemoteSourceConfig_TlsProvider_Description" xml:space="preserve"><value>BouncyCastle works with most FTPS servers. Switch to System only if the connection fails.</value></data>
+  <data name="RemoteSourceConfig_ValidateCertificate" xml:space="preserve"><value>Validate certificate</value></data>
+  <data name="RemoteSourceConfig_ValidateCertificate_Description" xml:space="preserve"><value>Many FTP servers use self signed certificates. Enable this only if the server has a trusted certificate.</value></data>
 </root>

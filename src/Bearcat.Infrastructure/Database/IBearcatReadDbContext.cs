@@ -53,4 +53,5 @@ public interface IBearcatReadDbContext
     public DbSet<QualityCheckRule> QualityCheckRules { get; set; }
     public DbSet<ReleaseQualityIssue> ReleaseQualityIssues { get; set; }
     public DbSet<ForumPostingRule> ForumPostingRules { get; set; }
+    public DbSet<RemoteSourceRegistration> RemoteSourceRegistrations { get; set; }
 }

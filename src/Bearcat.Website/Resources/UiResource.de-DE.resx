@@ -1223,4 +1223,40 @@
   <data name="StreamingPaused" xml:space="preserve"><value>Pausiert</value></data>
   <data name="ClearLogs" xml:space="preserve"><value>Leeren</value></data>
   <data name="NoLogEntries" xml:space="preserve"><value>Noch keine Logeinträge.</value></data>
+  <data name="RemoteSources" xml:space="preserve"><value>Remotequellen</value></data>
+  <data name="RemoteSourcesIntro" xml:space="preserve"><value>Server, von denen Bearcat Releases herunterladen kann.</value></data>
+  <data name="NewRemoteSource" xml:space="preserve"><value>Neue Remotequelle</value></data>
+  <data name="AddRemoteSource" xml:space="preserve"><value>Remotequelle hinzufügen</value></data>
+  <data name="NoRemoteSourcesYet" xml:space="preserve"><value>Noch keine Remotequellen registriert.</value></data>
+  <data name="SourceType" xml:space="preserve"><value>Quelltyp</value></data>
+  <data name="SelectSourceType" xml:space="preserve"><value>Quelltyp auswählen</value></data>
+  <data name="MaxConnections" xml:space="preserve"><value>Maximale Verbindungen</value></data>
+  <data name="MaxConnectionsHelp" xml:space="preserve"><value>Maximale Anzahl paralleler Logins und Übertragungen auf diesem Server.</value></data>
+  <data name="TestConnection" xml:space="preserve"><value>Verbindung testen</value></data>
+  <data name="OpenRemoteSourceActions" xml:space="preserve"><value>Aktionen für Remotequelle öffnen</value></data>
+  <data name="RemoteSourceConnectionSuccessful" xml:space="preserve"><value>Verbindung zu {0} erfolgreich ({1} Ordner im Stammverzeichnis)</value></data>
+  <data name="RemoteSourceConnectionFailed" xml:space="preserve"><value>Verbindung zu {0} fehlgeschlagen: {1}</value></data>
+  <data name="RemoteSourceActivated" xml:space="preserve"><value>Remotequelle {0} aktiviert</value></data>
+  <data name="RemoteSourceDeactivated" xml:space="preserve"><value>Remotequelle {0} deaktiviert</value></data>
+  <data name="DeleteRemoteSourceConfirmation" xml:space="preserve"><value>Möchtest du die Remotequelle {0} wirklich löschen?</value></data>
+  <data name="SecretUnchangedPlaceholder" xml:space="preserve"><value>Unverändert</value></data>
+  <data name="SecretKeepCurrentHelp" xml:space="preserve"><value>Leer lassen, um den aktuellen Wert zu behalten.</value></data>
+  <data name="MustBeWholeNumber" xml:space="preserve"><value>Muss eine ganze Zahl sein</value></data>
+  <data name="ConfigurationFieldError_UnknownField" xml:space="preserve"><value>{0} ist keine bekannte Einstellung</value></data>
+  <data name="ConfigurationFieldError_Required" xml:space="preserve"><value>{0} ist erforderlich</value></data>
+  <data name="ConfigurationFieldError_InvalidValue" xml:space="preserve"><value>{0} hat einen ungültigen Wert</value></data>
+  <data name="ConfigurationFieldError_NotAnInteger" xml:space="preserve"><value>{0} muss eine ganze Zahl sein</value></data>
+  <data name="ConfigurationFieldError_InvalidOption" xml:space="preserve"><value>{0} enthält eine unbekannte Option</value></data>
+  <data name="RemoteSourceConfig_Host" xml:space="preserve"><value>Host</value></data>
+  <data name="RemoteSourceConfig_Port" xml:space="preserve"><value>Port</value></data>
+  <data name="RemoteSourceConfig_Username" xml:space="preserve"><value>Benutzername</value></data>
+  <data name="RemoteSourceConfig_Password" xml:space="preserve"><value>Passwort</value></data>
+  <data name="RemoteSourceConfig_Encryption" xml:space="preserve"><value>Verschlüsselung</value></data>
+  <data name="RemoteSourceConfig_Encryption_None" xml:space="preserve"><value>Keine (unverschlüsseltes FTP)</value></data>
+  <data name="RemoteSourceConfig_Encryption_Explicit" xml:space="preserve"><value>Explizit (FTPES)</value></data>
+  <data name="RemoteSourceConfig_Encryption_Implicit" xml:space="preserve"><value>Implizit (FTPS)</value></data>
+  <data name="RemoteSourceConfig_TlsProvider" xml:space="preserve"><value>TLS-Anbieter</value></data>
+  <data name="RemoteSourceConfig_TlsProvider_Description" xml:space="preserve"><value>BouncyCastle funktioniert mit den meisten FTPS-Servern. Wechsle nur zu System, wenn die Verbindung fehlschlägt.</value></data>
+  <data name="RemoteSourceConfig_ValidateCertificate" xml:space="preserve"><value>Zertifikat prüfen</value></data>
+  <data name="RemoteSourceConfig_ValidateCertificate_Description" xml:space="preserve"><value>Viele FTP-Server nutzen selbstsignierte Zertifikate. Aktiviere diese Option nur, wenn der Server ein vertrauenswürdiges Zertifikat hat.</value></data>
 </root>

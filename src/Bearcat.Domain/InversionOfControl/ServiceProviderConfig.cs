@@ -43,6 +43,7 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ForumPostRendering;
 using Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.UseCases.ManageRemoteSources;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploads;
@@ -59,6 +60,7 @@ public static class ServiceProviderConfig
         public void AddDomain()
         {
             services.AddScoped<HosterRegistrationService>();
+            services.AddScoped<RemoteSourceRegistrationService>();
             services.AddScoped<ImageHosterService>();
             services.AddScoped<DistributionSiteSessionService>();
             services.AddScoped<DistributionSiteRegistrationService>();

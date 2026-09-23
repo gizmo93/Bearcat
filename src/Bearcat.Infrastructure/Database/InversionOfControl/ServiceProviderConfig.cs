@@ -27,6 +27,7 @@ using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.UseCases.ManageRemoteSources.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
@@ -219,6 +220,14 @@ public static class ServiceProviderConfig
             >();
             services.AddScoped<IReleaseCollectionInfoRepository, ReleaseCollectionInfoRepository>();
             services.AddScoped<IMediaMetadataResolverRepository, MediaMetadataResolverRepository>();
+            services.AddScoped<
+                IRemoteSourceRegistrationReadRepository,
+                RemoteSourceRegistrationRepository
+            >();
+            services.AddScoped<
+                IRemoteSourceRegistrationWriteRepository,
+                RemoteSourceRegistrationRepository
+            >();
         }
     }
 }

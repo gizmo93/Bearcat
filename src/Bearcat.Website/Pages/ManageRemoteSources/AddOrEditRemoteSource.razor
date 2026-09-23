@@ -1,0 +1,44 @@
+<div class="space-y-6">
+    <BbFormFieldSelect TValue="string"
+                       Value="selectedSourceClassName"
+                       ValueChanged="OnSourceTypeChanged"
+                       Label="@L["SourceType"]"
+                       Disabled="IsEdit"
+                       Placeholder="@L["SelectSourceType"]"
+                       Options="remoteSources.Select(source => new SelectOption<string>(source.ClassName, source.Name))" />
+
+    @if (schema is null)
+    {
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Disabled="true">
+                @L["Save"]
+            </BbButton>
+        </div>
+    }
+    else
+    {
+        <BbDynamicForm @key="selectedSourceClassName"
+                       Schema="schema"
+                       @bind-Values="values"
+                       ShowSubmitButton="false"
+                       OnValidSubmit="SaveAsync"
+                       Class="space-y-6">
+            @if (errorMessage is not null)
+            {
+                <p class="text-sm text-destructive">@errorMessage</p>
+            }
+
+            <div class="flex justify-end gap-2">
+                <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                    @L["Cancel"]
+                </BbButton>
+                <BbButton Type="ButtonType.Submit" Disabled="isSaving">
+                    @L["Save"]
+                </BbButton>
+            </div>
+        </BbDynamicForm>
+    }
+</div>
