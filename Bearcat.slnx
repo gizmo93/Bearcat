@@ -23,6 +23,7 @@
         <Project Path="src/Bearcat.Media/Bearcat.Media.csproj" />
         <Project Path="src/Bearcat.NfoDatabases/Bearcat.NfoDatabases.csproj" />
         <Project Path="src/Bearcat.MediaDatabases/Bearcat.MediaDatabases.csproj" />
+        <Project Path="src/Bearcat.RemoteSources/Bearcat.RemoteSources.csproj" />
     </Folder>
     <Folder Name="/5_Tests/">
         <Project Path="test/Bearcat.Archivers.IntegrationTest/Bearcat.Archivers.IntegrationTest.csproj" />
@@ -37,6 +38,8 @@
         <Project Path="test/Bearcat.Media.UnitTest/Bearcat.Media.UnitTest.csproj" />
         <Project Path="test/Bearcat.NfoDatabases.UnitTest/Bearcat.NfoDatabases.UnitTest.csproj" />
         <Project Path="test/Bearcat.MediaDatabases.UnitTest/Bearcat.MediaDatabases.UnitTest.csproj" />
+        <Project Path="test/Bearcat.RemoteSources.IntegrationTest/Bearcat.RemoteSources.IntegrationTest.csproj" />
+        <Project Path="test/Bearcat.RemoteSources.UnitTest/Bearcat.RemoteSources.UnitTest.csproj" />
         <Project Path="test/Bearcat.Website.UnitTest/Bearcat.Website.UnitTest.csproj" />
     </Folder>
 </Solution>
