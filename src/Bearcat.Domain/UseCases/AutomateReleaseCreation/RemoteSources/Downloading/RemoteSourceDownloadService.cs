@@ -6,7 +6,6 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading.Repositories;
-using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -17,7 +16,6 @@ namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Download
 public class RemoteSourceDownloadService(
     IRemoteSourceDownloadRepository repository,
     RemoteSourceSessionProvider sessionProvider,
-    RemoteDownloadReleaseCreator releaseCreator,
     RemoteDownloadFolderService folderService,
     ITransferProgressTracker progressTracker,
     ITransferCancellationRegistry cancellationRegistry,
@@ -35,7 +33,6 @@ public class RemoteSourceDownloadService(
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
         await ResetInterruptedDownloadsAsync(cancellationToken);
-        await releaseCreator.ProcessAsync(cancellationToken);
 
         foreach (var download in await repository.GetPendingDownloadsAsync(cancellationToken))
         {
@@ -313,8 +310,6 @@ public class RemoteSourceDownloadService(
             download.SourceName,
             download.LocalFolderPath
         );
-
-        await releaseCreator.ProcessAsync(cancellationToken);
     }
 
     private async Task CancelAsync(

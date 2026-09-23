@@ -139,6 +139,24 @@
                 }
             </div>
         </div>
+
+        @if (remoteDownloadOrigin is not null)
+        {
+            <div class="bearcat-release-folder">
+                <LucideIcon Name="folder-down" class="h-4 w-4 shrink-0 text-muted-foreground" />
+                <div class="min-w-0">
+                    <p class="text-xs text-muted-foreground">@L["RemoteDownloadOrigin"]</p>
+                    <p class="bearcat-release-path">@remoteDownloadOrigin.SourceName: @remoteDownloadOrigin.RemoteFolderPath</p>
+                    <p class="mt-0.5 text-xs text-muted-foreground">
+                        @if (remoteDownloadOrigin.CompletedAt is { } completedAt)
+                        {
+                            <span>@L["DownloadCompletedAt"]: @completedAt.ToString("g") · </span>
+                        }
+                        <a class="text-primary transition hover:underline" href="/remote-source-downloads">@L["RemoteSourceDownloads"]</a>
+                    </p>
+                </div>
+            </div>
+        }
     </div>
 
     <BbTabs @key="ReleaseId" Value="@activeTab" ValueChanged="HandleTabChangedAsync" Class="space-y-4">

@@ -1317,4 +1317,28 @@
   <data name="Priority" xml:space="preserve"><value>Priority</value></data>
   <data name="RemoteSourceAutomationPriorityHelp" xml:space="preserve"><value>Lower values run first. Only matters when the patterns of several automations on the same remote folder overlap.</value></data>
   <data name="RemoteSourceAutomationPatternHelp" xml:space="preserve"><value>Simple wildcards like *1080p*. Leave empty to match every folder. Create another automation for a different pattern.</value></data>
+  <data name="Folder" xml:space="preserve"><value>Folder</value></data>
+  <data name="Automation" xml:space="preserve"><value>Automation</value></data>
+  <data name="RemoteSourceDownloadsIntro" xml:space="preserve"><value>Folders found on remote sources and the state of their downloads.</value></data>
+  <data name="AllStatesExceptIgnored" xml:space="preserve"><value>All states except ignored</value></data>
+  <data name="NoRemoteSourceDownloadsFound" xml:space="preserve"><value>No remote downloads found for this filter.</value></data>
+  <data name="Timeline" xml:space="preserve"><value>Timeline</value></data>
+  <data name="FileCountValue" xml:space="preserve"><value>{0} files</value></data>
+  <data name="DiscoveredAt" xml:space="preserve"><value>Discovered</value></data>
+  <data name="DownloadCompletedAt" xml:space="preserve"><value>Downloaded</value></data>
+  <data name="OpenRemoteSourceDownloadActions" xml:space="preserve"><value>Open remote download actions</value></data>
+  <data name="RetryReleaseCreation" xml:space="preserve"><value>Retry release creation</value></data>
+  <data name="RestartDownload" xml:space="preserve"><value>Restart download</value></data>
+  <data name="IgnoreRemoteDownload" xml:space="preserve"><value>Ignore</value></data>
+  <data name="RemoteSourceDownloadResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} remote downloads</value></data>
+  <data name="CancelRemoteDownloadTitle" xml:space="preserve"><value>Cancel remote download</value></data>
+  <data name="CancelRemoteDownloadConfirmation" xml:space="preserve"><value>Cancel the download of {0}? Files downloaded so far are deleted.</value></data>
+  <data name="RemoteDownloadCanceled" xml:space="preserve"><value>The download of {0} is canceled.</value></data>
+  <data name="RestartRemoteDownloadConfirmation" xml:space="preserve"><value>Restart the download of {0}? The local files in {1} are deleted and downloaded again.</value></data>
+  <data name="RemoteDownloadRestarted" xml:space="preserve"><value>The download of {0} was queued again.</value></data>
+  <data name="ReleaseCreationQueuedAgain" xml:space="preserve"><value>The release creation for {0} was queued again.</value></data>
+  <data name="RemoteDownloadIgnored" xml:space="preserve"><value>{0} is ignored from now on.</value></data>
+  <data name="RemoteDownloadStateChanged" xml:space="preserve"><value>The state of {0} changed in the meantime. The list was reloaded.</value></data>
+  <data name="RemoteDownloadStatusSubtitle" xml:space="preserve"><value>Download of {0} from {1}</value></data>
+  <data name="RemoteDownloadOrigin" xml:space="preserve"><value>Downloaded from remote source</value></data>
 </root>

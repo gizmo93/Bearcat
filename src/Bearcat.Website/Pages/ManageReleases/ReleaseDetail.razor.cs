@@ -2,6 +2,8 @@ using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates;
+using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.ReadModels;
+using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Pages.ManagePostedLocations;
 using Bearcat.Website.ScopedOperations;
@@ -37,6 +39,7 @@ public partial class ReleaseDetail(
 
     private ReleaseReadModel release = null!;
     private IReadOnlyList<string> unmanagedArchiveFolderPaths = [];
+    private RemoteSourceDownloadReadModel? remoteDownloadOrigin;
     private bool isInitialized;
     private int? loadedReleaseId;
     private string? activeTab = "overview";
@@ -70,6 +73,10 @@ public partial class ReleaseDetail(
 
         release = releaseReadModel;
         await LoadUnmanagedArchiveFolderPathsAsync();
+        remoteDownloadOrigin = await operationRunner.RunAsync(
+            (IRemoteSourceDownloadReadRepository repository) =>
+                repository.GetByReleaseIdAsync(ReleaseId)
+        );
         loadedReleaseId = ReleaseId;
         isInitialized = true;
     }

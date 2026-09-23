@@ -63,6 +63,23 @@ public class RemoteSourceDownloadStateService(
         await repository.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task RetryReleaseCreationAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var download = await repository.GetByIdAsync(id, cancellationToken);
+
+        if (download.State is not RemoteSourceDownloadState.Failed || download.CompletedAt is null)
+        {
+            throw InvalidTransition(download.State, RemoteSourceDownloadState.Downloaded);
+        }
+
+        download.State = RemoteSourceDownloadState.Downloaded;
+        download.ErrorMessage = null;
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task IgnoreDownloadAsync(int id, CancellationToken cancellationToken = default)
     {
         var download = await repository.GetByIdAsync(id, cancellationToken);

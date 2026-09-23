@@ -1,7 +1,6 @@
 using Bearcat.Domain.UseCases.ManageRemoteSourceAutomations;
 using Bearcat.Domain.UseCases.ManageRemoteSourceAutomations.ReadModels;
 using Bearcat.Domain.UseCases.ManageRemoteSourceAutomations.Repositories;
-using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 
@@ -117,18 +116,5 @@ public partial class RemoteSourceAutomationsPage(
             (RemoteSourceAutomationService service) => service.DeleteAsync(automation.Id)
         );
         await LoadAutomationsAsync();
-    }
-
-    private static BadgeVariant GetStateBadgeVariant(RemoteSourceDownloadState state)
-    {
-        return state switch
-        {
-            RemoteSourceDownloadState.Failed => BadgeVariant.Destructive,
-            RemoteSourceDownloadState.Pending or RemoteSourceDownloadState.Downloading =>
-                BadgeVariant.Default,
-            RemoteSourceDownloadState.Ignored or RemoteSourceDownloadState.Canceled =>
-                BadgeVariant.Outline,
-            _ => BadgeVariant.Secondary,
-        };
     }
 }

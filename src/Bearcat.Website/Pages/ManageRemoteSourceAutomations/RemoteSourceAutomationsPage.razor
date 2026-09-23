@@ -93,9 +93,9 @@
                                 <div class="flex flex-wrap gap-1">
                                     @foreach (var (state, count) in automation.DownloadCountsByState.OrderBy(entry => entry.Key))
                                     {
-                                        <BbBadge Variant="@GetStateBadgeVariant(state)">
-                                            @L.Localize(state) <span class="ml-1 tabular-nums">@count</span>
-                                        </BbBadge>
+                                        <RemoteSourceDownloadStateBadge State="state">
+                                            <span class="ml-1 tabular-nums">@count</span>
+                                        </RemoteSourceDownloadStateBadge>
                                     }
                                 </div>
                             }

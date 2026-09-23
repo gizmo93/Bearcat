@@ -2,9 +2,9 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Formatting;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
-using Humanizer;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.Home.RunningUploads;
@@ -185,19 +185,14 @@ public partial class RunningUploads(
     private string? FormatUploadSpeed(int uploadId)
     {
         return UploadProgress.TryGetValue(uploadId, out var snapshot)
-            ? FormatSpeed(snapshot.BytesPerSecond)
+            ? TransferFormatting.FormatSpeed(snapshot.BytesPerSecond)
             : null;
     }
 
     private string? FormatDownloadSpeed(int archiveId)
     {
         return DownloadProgress.TryGetValue(archiveId, out var snapshot)
-            ? FormatSpeed(snapshot.BytesPerSecond)
+            ? TransferFormatting.FormatSpeed(snapshot.BytesPerSecond)
             : null;
-    }
-
-    private static string? FormatSpeed(double bytesPerSecond)
-    {
-        return bytesPerSecond <= 0 ? null : $"{bytesPerSecond.Bytes().Humanize("0.0")}/s";
     }
 }

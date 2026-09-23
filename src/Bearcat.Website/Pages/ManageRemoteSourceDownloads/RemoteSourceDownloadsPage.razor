@@ -1,0 +1,165 @@
+@page "/remote-source-downloads"
+@using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.ReadModels
+@using Bearcat.Website.Formatting
+
+<PageTitle>@L["RemoteSourceDownloads"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div class="min-w-0 space-y-2">
+            <h1 class="text-3xl font-semibold tracking-tight">@L["RemoteSourceDownloads"]</h1>
+            <p class="text-sm text-muted-foreground">@L["RemoteSourceDownloadsIntro"]</p>
+        </div>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-x-6 gap-y-4 rounded-lg border border-border bg-card p-4 sm:px-5">
+        <div class="flex min-w-0 grow basis-full flex-col gap-2 sm:max-w-96 sm:basis-72" role="group" aria-labelledby="remote-download-state-filter-label">
+            <span id="remote-download-state-filter-label" class="text-xs font-medium text-muted-foreground">@L["State"]</span>
+            <BbSelect TValue="RemoteSourceDownloadState?"
+                      @bind-Value="selectedState"
+                      @bind-Value:after="OnStateChangedAsync"
+                      Options="StateOptions"
+                      Placeholder="@L["AllStatesExceptIgnored"]"
+                      Class="w-full" />
+        </div>
+
+        <div class="flex shrink-0 items-center gap-2 sm:ml-auto">
+            <BbButton Variant="ButtonVariant.Ghost"
+                      Disabled="isLoading"
+                      OnClick="LoadDownloadsAsync">
+                <LucideIcon Name="refresh-cw" class="@($"h-4 w-4 {(isLoading ? "animate-spin" : string.Empty)}")" />
+                @L["Refresh"]
+            </BbButton>
+        </div>
+    </div>
+
+    @if (downloads.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+            @L["NoRemoteSourceDownloadsFound"]
+        </div>
+    }
+    else
+    {
+        <div class="bearcat-config-list">
+            <div class="bearcat-config-header lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,0.7fr)_minmax(0,0.6fr)_minmax(0,1fr)_56px]">
+                <span>@L["Folder"]</span>
+                <span>@L["RemoteSource"]</span>
+                <span>@L["State"]</span>
+                <span>@L["Size"]</span>
+                <span>@L["Timeline"]</span>
+                <span class="text-right">@L["Actions"]</span>
+            </div>
+            @foreach (var download in downloads)
+            {
+                <div class="bearcat-config-item">
+                    <div class="bearcat-config-row lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,0.7fr)_minmax(0,0.6fr)_minmax(0,1fr)_56px]">
+                        <div class="min-w-0 space-y-1">
+                            <p class="text-sm font-semibold [overflow-wrap:anywhere]">@download.FolderName</p>
+                            <p class="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground" title="@download.RemoteFolderPath">
+                                <LucideIcon Name="server" class="h-3.5 w-3.5 shrink-0" />
+                                <span class="truncate">@download.RemoteFolderPath</span>
+                            </p>
+                            @if (download.ReleaseId is { } releaseId)
+                            {
+                                <a class="flex min-w-0 items-center gap-1.5 text-xs text-primary transition hover:underline" href="@($"/releases/{releaseId}")">
+                                    <LucideIcon Name="package" class="h-3.5 w-3.5 shrink-0" />
+                                    <span class="truncate">@(download.ReleaseName ?? L["Release"])</span>
+                                </a>
+                            }
+                        </div>
+
+                        <div class="min-w-0 space-y-1">
+                            <p class="bearcat-mobile-label">@L["RemoteSource"]</p>
+                            <p class="truncate text-sm" title="@download.SourceName">@download.SourceName</p>
+                            <p class="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground" title="@download.AutomationName">
+                                <LucideIcon Name="folder-down" class="h-3.5 w-3.5 shrink-0" />
+                                <span class="truncate">@(download.AutomationName ?? "-")</span>
+                            </p>
+                        </div>
+
+                        <div>
+                            <p class="bearcat-mobile-label">@L["State"]</p>
+                            <RemoteSourceDownloadStateBadge State="download.State" />
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["Size"]</p>
+                            <p class="text-sm tabular-nums">@TransferFormatting.FormatBytes(download.TotalBytes)</p>
+                            <p class="text-xs tabular-nums text-muted-foreground">@L["FileCountValue", download.FileCount]</p>
+                        </div>
+
+                        <div class="min-w-0 space-y-0.5">
+                            <p class="bearcat-mobile-label">@L["Timeline"]</p>
+                            <p class="text-xs text-muted-foreground">
+                                @L["DiscoveredAt"]: <span class="text-foreground">@download.DiscoveredAt.ToString("g")</span>
+                            </p>
+                            @if (download.CompletedAt is { } completedAt)
+                            {
+                                <p class="text-xs text-muted-foreground">
+                                    @L["DownloadCompletedAt"]: <span class="text-foreground">@completedAt.ToString("g")</span>
+                                </p>
+                            }
+                        </div>
+
+                        <div class="bearcat-config-actions">
+                            @if (HasActions(download))
+                            {
+                                <BbDropdownMenu>
+                                    <BbDropdownMenuTrigger>
+                                        <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenRemoteSourceDownloadActions"]">
+                                            <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                        </BbButton>
+                                    </BbDropdownMenuTrigger>
+                                    <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                                        @if (download.CanRetryReleaseCreation)
+                                        {
+                                            <BbDropdownMenuItem OnClick="@(async _ => await RetryReleaseCreationAsync(download))">
+                                                @L["RetryReleaseCreation"]
+                                            </BbDropdownMenuItem>
+                                        }
+                                        @if (download.CanRestart)
+                                        {
+                                            <BbDropdownMenuItem OnClick="@(async _ => await RestartAsync(download))">
+                                                @L["RestartDownload"]
+                                            </BbDropdownMenuItem>
+                                        }
+                                        @if (download.CanCancel)
+                                        {
+                                            <BbDropdownMenuItem OnClick="@(async _ => await CancelAsync(download))">
+                                                @L["CancelDownload"]
+                                            </BbDropdownMenuItem>
+                                        }
+                                        @if (download.CanIgnore)
+                                        {
+                                            <BbDropdownMenuItem OnClick="@(async _ => await IgnoreAsync(download))">
+                                                @L["IgnoreRemoteDownload"]
+                                            </BbDropdownMenuItem>
+                                        }
+                                    </BbDropdownMenuContent>
+                                </BbDropdownMenu>
+                            }
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(download.ErrorMessage))
+                    {
+                        <p class="border-t border-border/70 px-4 py-2 text-xs whitespace-pre-wrap text-destructive [overflow-wrap:anywhere]">
+                            @download.ErrorMessage
+                        </p>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    <div class="bearcat-release-pagination">
+        <p class="text-sm text-muted-foreground">
+            @L["RemoteSourceDownloadResultsSummary", FirstResult, LastResult, totalCount]
+        </p>
+
+        <PageNavigation CurrentPage="CurrentPage"
+                        TotalPages="TotalPages"
+                        OnPageSelected="GoToPageAsync" />
+    </div>
+</section>

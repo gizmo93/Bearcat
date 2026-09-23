@@ -31,6 +31,7 @@ using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Domain.UseCases.ManageRemoteSourceAutomations.Repositories;
+using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.Repositories;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
@@ -243,6 +244,10 @@ public static class ServiceProviderConfig
             services.AddScoped<IRemoteSourceScanRepository, RemoteSourceAutomationRepository>();
             services.AddScoped<IRemoteSourceDownloadRepository, RemoteSourceDownloadRepository>();
             services.AddScoped<IRemoteDownloadReleaseRepository, RemoteSourceDownloadRepository>();
+            services.AddScoped<
+                IRemoteSourceDownloadReadRepository,
+                RemoteSourceDownloadReadRepository
+            >();
         }
     }
 }

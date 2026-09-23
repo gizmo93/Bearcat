@@ -1,0 +1,35 @@
+@if (TotalPages > 1)
+{
+    <BbPagination Class="flex justify-start">
+        <BbPaginationContent>
+            <BbPaginationItem>
+                <BbPaginationPrevious Disabled="@(CurrentPage <= 1)"
+                                      Text="@L["Previous"]"
+                                      OnClick="@(() => SelectPageAsync(CurrentPage - 1))" />
+            </BbPaginationItem>
+
+            @foreach (var page in PageItems)
+            {
+                <BbPaginationItem>
+                    @if (page is null)
+                    {
+                        <BbPaginationEllipsis />
+                    }
+                    else
+                    {
+                        <BbPaginationLink IsActive="@(page == CurrentPage)"
+                                          OnClick="@(() => SelectPageAsync(page.Value))">
+                            @(page.Value)
+                        </BbPaginationLink>
+                    }
+                </BbPaginationItem>
+            }
+
+            <BbPaginationItem>
+                <BbPaginationNext Disabled="@(CurrentPage >= TotalPages)"
+                                  Text="@L["Next"]"
+                                  OnClick="@(() => SelectPageAsync(CurrentPage + 1))" />
+            </BbPaginationItem>
+        </BbPaginationContent>
+    </BbPagination>
+}

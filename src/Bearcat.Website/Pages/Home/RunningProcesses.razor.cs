@@ -1,5 +1,7 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
+using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.ReadModels;
+using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Website.ScopedOperations;
@@ -25,8 +27,16 @@ public sealed partial class RunningProcesses(
     private IReadOnlyDictionary<int, TransferProgressSnapshot> downloadProgress =
         new Dictionary<int, TransferProgressSnapshot>();
 
+    private IReadOnlyList<RemoteSourceDownloadReadModel> remoteDownloads = [];
+
+    private IReadOnlyDictionary<int, TransferProgressSnapshot> remoteDownloadProgress =
+        new Dictionary<int, TransferProgressSnapshot>();
+
     private bool SomethingIsRunning =>
-        runningUploads.Count > 0 || creatingArchives.Count > 0 || restoringArchives.Count > 0;
+        runningUploads.Count > 0
+        || creatingArchives.Count > 0
+        || restoringArchives.Count > 0
+        || remoteDownloads.Count > 0;
 
     private bool autoRefresh = true;
 
@@ -103,6 +113,19 @@ public sealed partial class RunningProcesses(
         );
     }
 
+    private async Task LoadRemoteDownloadsAsync(CancellationToken cancellationToken)
+    {
+        remoteDownloads = await operationRunner.RunAsync<
+            IRemoteSourceDownloadReadRepository,
+            IReadOnlyList<RemoteSourceDownloadReadModel>
+        >((repository, token) => repository.GetRunningAsync(token), cancellationToken);
+
+        remoteDownloadProgress = GetProgressSnapshots(
+            TransferKind.RemoteDownload,
+            remoteDownloads.Select(download => download.Id).ToList()
+        );
+    }
+
     private Dictionary<int, TransferProgressSnapshot> GetProgressSnapshots(
         TransferKind kind,
         IReadOnlyList<int> ids
@@ -170,6 +193,7 @@ public sealed partial class RunningProcesses(
                 },
                 cancellationToken
             );
+            await LoadRemoteDownloadsAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

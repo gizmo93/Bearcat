@@ -1320,4 +1320,28 @@
   <data name="Priority" xml:space="preserve"><value>Priorität</value></data>
   <data name="RemoteSourceAutomationPriorityHelp" xml:space="preserve"><value>Kleinere Werte werden zuerst geprüft. Nur relevant, wenn sich die Muster mehrerer Automatisierungen auf demselben Remoteordner überschneiden.</value></data>
   <data name="RemoteSourceAutomationPatternHelp" xml:space="preserve"><value>Einfache Wildcards wie *1080p*. Leer lassen, damit jeder Ordner passt. Für ein anderes Muster legst du eine weitere Automatisierung an.</value></data>
+  <data name="Folder" xml:space="preserve"><value>Ordner</value></data>
+  <data name="Automation" xml:space="preserve"><value>Automatisierung</value></data>
+  <data name="RemoteSourceDownloadsIntro" xml:space="preserve"><value>Auf Remotequellen gefundene Ordner und der Stand ihrer Downloads.</value></data>
+  <data name="AllStatesExceptIgnored" xml:space="preserve"><value>Alle Status außer ignorierten</value></data>
+  <data name="NoRemoteSourceDownloadsFound" xml:space="preserve"><value>Keine Remotedownloads für diesen Filter gefunden.</value></data>
+  <data name="Timeline" xml:space="preserve"><value>Zeitverlauf</value></data>
+  <data name="FileCountValue" xml:space="preserve"><value>{0} Dateien</value></data>
+  <data name="DiscoveredAt" xml:space="preserve"><value>Gefunden</value></data>
+  <data name="DownloadCompletedAt" xml:space="preserve"><value>Heruntergeladen</value></data>
+  <data name="OpenRemoteSourceDownloadActions" xml:space="preserve"><value>Aktionen für Remotedownload öffnen</value></data>
+  <data name="RetryReleaseCreation" xml:space="preserve"><value>Releaseerstellung wiederholen</value></data>
+  <data name="RestartDownload" xml:space="preserve"><value>Download neu starten</value></data>
+  <data name="IgnoreRemoteDownload" xml:space="preserve"><value>Ignorieren</value></data>
+  <data name="RemoteSourceDownloadResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Remotedownloads</value></data>
+  <data name="CancelRemoteDownloadTitle" xml:space="preserve"><value>Remotedownload abbrechen</value></data>
+  <data name="CancelRemoteDownloadConfirmation" xml:space="preserve"><value>Download von {0} abbrechen? Bereits heruntergeladene Dateien werden gelöscht.</value></data>
+  <data name="RemoteDownloadCanceled" xml:space="preserve"><value>Der Download von {0} wird abgebrochen.</value></data>
+  <data name="RestartRemoteDownloadConfirmation" xml:space="preserve"><value>Download von {0} neu starten? Die lokalen Dateien in {1} werden gelöscht und erneut heruntergeladen.</value></data>
+  <data name="RemoteDownloadRestarted" xml:space="preserve"><value>Der Download von {0} wurde erneut vorgemerkt.</value></data>
+  <data name="ReleaseCreationQueuedAgain" xml:space="preserve"><value>Die Releaseerstellung für {0} wurde erneut vorgemerkt.</value></data>
+  <data name="RemoteDownloadIgnored" xml:space="preserve"><value>{0} wird ab jetzt ignoriert.</value></data>
+  <data name="RemoteDownloadStateChanged" xml:space="preserve"><value>Der Status von {0} hat sich inzwischen geändert. Die Liste wurde neu geladen.</value></data>
+  <data name="RemoteDownloadStatusSubtitle" xml:space="preserve"><value>Download von {0} aus {1}</value></data>
+  <data name="RemoteDownloadOrigin" xml:space="preserve"><value>Von Remotequelle heruntergeladen</value></data>
 </root>

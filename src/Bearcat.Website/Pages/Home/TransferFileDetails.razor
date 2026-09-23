@@ -6,12 +6,12 @@
             <div>
                 <p class="text-sm font-medium">@L["DownloadStatus"]</p>
                 <p class="text-xs text-muted-foreground">
-                    @L["DownloadStatusSubtitle", Archive.Id, Archive.ArchiveConfig.Name, Snapshot.SourceName]
+                    @Subtitle
                 </p>
             </div>
 
             <BbBadge Variant="BadgeVariant.Default">
-                @L.Localize(Archive.ArchiveState)
+                @StateLabel
             </BbBadge>
         </div>
     </div>
@@ -30,7 +30,7 @@
                                Sortable="true"
                                Filterable="true" />
             <BbDataTableColumn TData="TransferFileProgressSnapshot" TValue="string"
-                               Header="@L["Hoster"]"
+                               Header="@L["Source"]"
                                Property="@(file => file.SourceName)"
                                Sortable="true"
                                Filterable="true" />
