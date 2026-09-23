@@ -1,6 +1,5 @@
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
-using Bearcat.Domain.UseCases.ManageUploads.Progress;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Website.ScopedOperations;
@@ -9,23 +8,22 @@ using Microsoft.EntityFrameworkCore;
 namespace Bearcat.Website.Pages.Home;
 
 public sealed partial class RunningProcesses(
-    IUploadProgressTracker uploadProgressTracker,
-    IDownloadProgressTracker downloadProgressTracker,
+    ITransferProgressTracker transferProgressTracker,
     IScopedOperationRunner operationRunner
 ) : IDisposable
 {
     private readonly CancellationTokenSource lifetimeCancellation = new();
     private IReadOnlyList<Upload> runningUploads = [];
 
-    private IReadOnlyDictionary<int, UploadProgressSnapshot> uploadProgress =
-        new Dictionary<int, UploadProgressSnapshot>();
+    private IReadOnlyDictionary<int, TransferProgressSnapshot> uploadProgress =
+        new Dictionary<int, TransferProgressSnapshot>();
 
     private IReadOnlyList<Archive> creatingArchives = [];
 
     private IReadOnlyList<Archive> restoringArchives = [];
 
-    private IReadOnlyDictionary<int, DownloadProgressSnapshot> downloadProgress =
-        new Dictionary<int, DownloadProgressSnapshot>();
+    private IReadOnlyDictionary<int, TransferProgressSnapshot> downloadProgress =
+        new Dictionary<int, TransferProgressSnapshot>();
 
     private bool SomethingIsRunning =>
         runningUploads.Count > 0 || creatingArchives.Count > 0 || restoringArchives.Count > 0;
@@ -72,10 +70,10 @@ public sealed partial class RunningProcesses(
             )
             .ToListAsync(cancellationToken);
 
-        uploadProgress = runningUploads
-            .Select(upload => uploadProgressTracker.Get(upload.Id))
-            .Where(snapshot => snapshot is not null)
-            .ToDictionary(snapshot => snapshot!.UploadId, snapshot => snapshot!);
+        uploadProgress = GetProgressSnapshots(
+            TransferKind.Upload,
+            runningUploads.Select(upload => upload.Id).ToList()
+        );
     }
 
     private async Task LoadRunningArchivesAsync(
@@ -99,10 +97,20 @@ public sealed partial class RunningProcesses(
             .Where(archive => archive.ArchiveState == ArchiveState.Restoring)
             .ToList();
 
-        downloadProgress = restoringArchives
-            .Select(archive => downloadProgressTracker.Get(archive.Id))
-            .Where(snapshot => snapshot is not null)
-            .ToDictionary(snapshot => snapshot!.ArchiveId, snapshot => snapshot!);
+        downloadProgress = GetProgressSnapshots(
+            TransferKind.MirrorDownload,
+            restoringArchives.Select(archive => archive.Id).ToList()
+        );
+    }
+
+    private Dictionary<int, TransferProgressSnapshot> GetProgressSnapshots(
+        TransferKind kind,
+        IReadOnlyList<int> ids
+    )
+    {
+        return ids.Select(id => transferProgressTracker.Get(new TransferKey(kind, id)))
+            .OfType<TransferProgressSnapshot>()
+            .ToDictionary(snapshot => snapshot.Key.Id);
     }
 
     private void ToggleAutoRefresh()

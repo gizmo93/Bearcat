@@ -1,5 +1,6 @@
 using System.Net;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Alfafile;
 using Bearcat.Hosters.Alfafile.Api;
 using Bearcat.Hosters.Alfafile.Api.File;
@@ -123,7 +124,7 @@ public class ApiClientTest
             config: config,
             fileUrl: "https://alfafile.net/file/ACsST",
             targetFilePath: targetFilePath,
-            progress: NullDownloadProgress.Instance,
+            progress: NullTransferProgress.Instance,
             expectedSizeBytes: 15,
             cancellationToken: CancellationToken.None
         );
@@ -160,7 +161,7 @@ public class ApiClientTest
                 config: config,
                 fileUrl: "https://alfafile.net/file/ACsST",
                 targetFilePath: targetFilePath,
-                progress: NullDownloadProgress.Instance,
+                progress: NullTransferProgress.Instance,
                 expectedSizeBytes: null,
                 cancellationToken: CancellationToken.None
             )

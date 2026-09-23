@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Alfafile;
 using Bearcat.Hosters.Alfafile.Api;
 using Bearcat.Hosters.Alfafile.Api.File;
@@ -86,7 +87,7 @@ public class AlfafileTest
         var result = await service.UploadFileAsync(
             fileDto,
             config,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -132,7 +133,7 @@ public class AlfafileTest
         var result = await service.UploadFileAsync(
             fileDto,
             config,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -182,7 +183,7 @@ public class AlfafileTest
         var result = await service.UploadFileAsync(
             fileDto,
             config,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -369,7 +370,7 @@ public class AlfafileTest
                     config,
                     "https://alfafile.net/file/ACsST",
                     targetFilePath,
-                    NullDownloadProgress.Instance,
+                    NullTransferProgress.Instance,
                     2048L,
                     It.IsAny<CancellationToken>()
                 )
@@ -385,7 +386,7 @@ public class AlfafileTest
             ),
             targetFilePath,
             config,
-            NullDownloadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -408,7 +409,7 @@ public class AlfafileTest
                     config,
                     "https://alfafile.net/file/ACsST",
                     targetFilePath,
-                    NullDownloadProgress.Instance,
+                    NullTransferProgress.Instance,
                     null,
                     It.IsAny<CancellationToken>()
                 )
@@ -428,7 +429,7 @@ public class AlfafileTest
             ),
             targetFilePath,
             config,
-            NullDownloadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 

@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.ClicknUpload;
 using Bearcat.Hosters.ClicknUpload.Api;
 using Bearcat.Hosters.Shared.XFilesharing.Api;
@@ -69,7 +70,7 @@ public class ClicknUploadTest
         var result = await service.UploadFileAsync(
             fileDto,
             config,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 

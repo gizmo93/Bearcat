@@ -3,6 +3,7 @@ using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.CloudFam.Api;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Shared;
@@ -31,7 +32,7 @@ public class CloudFam(ICloudFamApiClient apiClient, ILogger<CloudFam> logger) : 
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
-        IUploadProgress progress,
+        ITransferProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -52,7 +53,7 @@ public class CloudFam(ICloudFamApiClient apiClient, ILogger<CloudFam> logger) : 
                 await using var stream = SequentialFileReader.OpenRead(fileDto.FullFileName);
                 var uploadResult = await apiClient.UploadFileAsync(
                     config: config,
-                    stream: new CountingStream(stream, progress),
+                    stream: new ProgressReportingStream(stream, progress, stream.Length),
                     fileName: fileInfo.Name,
                     fileSize: fileInfo.Length,
                     folderId: fileDto.FolderId,

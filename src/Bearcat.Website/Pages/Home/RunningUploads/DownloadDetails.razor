@@ -1,4 +1,4 @@
-@using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress
+@using Bearcat.Domain.Shared.Transfers
 
 <section class="rounded-lg border border-border/70 bg-background">
     <div class="border-b border-border/70 px-4 py-3">
@@ -6,7 +6,7 @@
             <div>
                 <p class="text-sm font-medium">@L["DownloadStatus"]</p>
                 <p class="text-xs text-muted-foreground">
-                    @L["DownloadStatusSubtitle", Archive.Id, Archive.ArchiveConfig.Name, Snapshot.HosterName]
+                    @L["DownloadStatusSubtitle", Archive.Id, Archive.ArchiveConfig.Name, Snapshot.SourceName]
                 </p>
             </div>
 
@@ -16,7 +16,7 @@
         </div>
     </div>
 
-    <BbDataTable TData="DownloadFileProgressSnapshot"
+    <BbDataTable TData="TransferFileProgressSnapshot"
                  Data="Snapshot.Files"
                  ShowToolbar="false"
                  ShowPagination="@(Snapshot.Files.Count > 10)"
@@ -24,17 +24,17 @@
                  AriaLabel="@L["DownloadFileStatus"]"
                  Class="border-0">
         <Columns>
-            <BbDataTableColumn TData="DownloadFileProgressSnapshot" TValue="string"
+            <BbDataTableColumn TData="TransferFileProgressSnapshot" TValue="string"
                                Header="@L["File"]"
                                Property="@(file => file.FileName)"
                                Sortable="true"
                                Filterable="true" />
-            <BbDataTableColumn TData="DownloadFileProgressSnapshot" TValue="string"
+            <BbDataTableColumn TData="TransferFileProgressSnapshot" TValue="string"
                                Header="@L["Hoster"]"
-                               Property="@(file => file.HosterName)"
+                               Property="@(file => file.SourceName)"
                                Sortable="true"
                                Filterable="true" />
-            <BbDataTableColumn TData="DownloadFileProgressSnapshot" TValue="double"
+            <BbDataTableColumn TData="TransferFileProgressSnapshot" TValue="double"
                                Header="@L["Progress"]"
                                Property="@(file => file.Percentage)"
                                Sortable="true"

@@ -1,6 +1,7 @@
 using System.Net;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Transfers;
 
 namespace Bearcat.Hosters.Shared;
 
@@ -15,7 +16,7 @@ public class HosterFileDownloader(HttpClientProvider httpClientProvider)
     public async Task DownloadToFileAsync(
         string downloadUrl,
         string targetFilePath,
-        IDownloadProgress progress,
+        ITransferProgress progress,
         long? expectedSizeBytes,
         CancellationToken cancellationToken
     )
@@ -44,7 +45,7 @@ public class HosterFileDownloader(HttpClientProvider httpClientProvider)
             await using var responseStream = await response.Content.ReadAsStreamAsync(
                 cancellationToken
             );
-            await using var countingStream = new CountingDownloadStream(
+            await using var progressStream = new ProgressReportingStream(
                 inner: responseStream,
                 progress: progress,
                 totalBytes: response.Content.Headers.ContentLength ?? expectedSizeBytes
@@ -58,7 +59,7 @@ public class HosterFileDownloader(HttpClientProvider httpClientProvider)
                 useAsync: true
             );
 
-            await countingStream.CopyToAsync(fileStream, CopyBufferSizeBytes, cancellationToken);
+            await progressStream.CopyToAsync(fileStream, CopyBufferSizeBytes, cancellationToken);
             await fileStream.FlushAsync(cancellationToken);
         }
         catch

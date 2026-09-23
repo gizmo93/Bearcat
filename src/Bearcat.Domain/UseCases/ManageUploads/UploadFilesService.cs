@@ -3,8 +3,8 @@ using System.Threading.Channels;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
-using Bearcat.Domain.UseCases.ManageUploads.Progress;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -22,7 +22,7 @@ public class UploadFilesService(
     UploadFinalizationService finalizationService,
     FileUploadExecutionService fileUploadExecutionService,
     UploadConcurrencyService concurrencyService,
-    IUploadProgressTracker progressTracker
+    ITransferProgressTracker progressTracker
 )
 {
     public TimeSpan UploadQueuePollDelay { get; set; } = TimeSpan.FromSeconds(10);
@@ -249,9 +249,8 @@ public class UploadFilesService(
             upload.UploadState = UploadState.Uploading;
             uploadContexts[upload.Id] = context;
             progressTracker.StartTracking(
-                upload.Id,
-                context.TotalBytes,
-                context.AlreadyUploadedBytes
+                new TransferKey(TransferKind.Upload, upload.Id),
+                context.PlannedFiles
             );
         }
 
@@ -282,19 +281,15 @@ public class UploadFilesService(
             .Archive!.ArchiveFiles.Where(af => !processedArchiveFileIds.Contains(af.Id))
             .ToList();
 
-        var totalBytes = 0L;
-        var alreadyUploadedBytes = 0L;
-
-        foreach (var archiveFile in upload.Archive.ArchiveFiles)
-        {
-            var fileSizeInBytes = GetFileSizeInBytes(archiveFile.FullFileName);
-            totalBytes += fileSizeInBytes;
-
-            if (successfullyUploadedArchiveFileIds.Contains(archiveFile.Id))
-            {
-                alreadyUploadedBytes += fileSizeInBytes;
-            }
-        }
+        var plannedFiles = upload
+            .Archive.ArchiveFiles.Select(archiveFile => new PlannedTransferFile(
+                FileId: archiveFile.Id,
+                FileName: Path.GetFileName(archiveFile.FullFileName),
+                SourceName: upload.UploadConfig.HosterRegistration.Name,
+                SizeBytes: GetFileSizeInBytes(archiveFile.FullFileName),
+                IsAlreadyTransferred: successfullyUploadedArchiveFileIds.Contains(archiveFile.Id)
+            ))
+            .ToList();
 
         var folderId = await CreateUploadFolderIdAsync(
             upload: upload,
@@ -322,8 +317,7 @@ public class UploadFilesService(
             totalFileCount: upload.Archive.ArchiveFiles.Count,
             successfulFileCount: successfulFileCount,
             failedFileCount: failedFileCount,
-            totalBytes: totalBytes,
-            alreadyUploadedBytes: alreadyUploadedBytes,
+            plannedFiles: plannedFiles,
             cancellationTokenSource: CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken
             )
@@ -604,7 +598,7 @@ public class UploadFilesService(
         if (finalizationService.TryFinalizeUpload(context))
         {
             uploadContexts.Remove(context.UploadId);
-            progressTracker.StopTracking(context.UploadId);
+            progressTracker.StopTracking(new TransferKey(TransferKind.Upload, context.UploadId));
         }
 
         await repository.SaveChangesAsync(cancellationToken);
@@ -733,7 +727,7 @@ public class UploadFilesService(
                 if (finalizationService.TryFinalizeUpload(context))
                 {
                     uploadContexts.Remove(uploadId);
-                    progressTracker.StopTracking(uploadId);
+                    progressTracker.StopTracking(new TransferKey(TransferKind.Upload, uploadId));
                     hasChanges = true;
                 }
 

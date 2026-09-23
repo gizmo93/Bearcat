@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Shared.XFilesharing.Api;
 using Bearcat.Hosters.Uploady;
 using Bearcat.Hosters.Uploady.Api;
@@ -69,7 +70,7 @@ public class UploadyTest
         var result = await service.UploadFileAsync(
             fileDto,
             config,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 

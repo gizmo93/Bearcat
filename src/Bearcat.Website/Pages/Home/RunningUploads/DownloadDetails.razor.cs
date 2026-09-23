@@ -1,5 +1,5 @@
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
+using Bearcat.Domain.Shared.Transfers;
 using Humanizer;
 using Microsoft.AspNetCore.Components;
 
@@ -13,13 +13,15 @@ public partial class DownloadDetails : ComponentBase
 
     [Parameter]
     [EditorRequired]
-    public DownloadProgressSnapshot Snapshot { get; set; } = null!;
+    public TransferProgressSnapshot Snapshot { get; set; } = null!;
 
-    private static string FormatTransferred(DownloadFileProgressSnapshot file)
+    private static string FormatTransferred(TransferFileProgressSnapshot file)
     {
-        var downloaded = FormatBytes(file.DownloadedBytes);
+        var transferred = FormatBytes(file.TransferredBytes);
 
-        return file.TotalBytes <= 0 ? downloaded : $"{downloaded} / {FormatBytes(file.TotalBytes)}";
+        return file.TotalBytes <= 0
+            ? transferred
+            : $"{transferred} / {FormatBytes(file.TotalBytes)}";
     }
 
     private static string FormatBytes(long bytes)

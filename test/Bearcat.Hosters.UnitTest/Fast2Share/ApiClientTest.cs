@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Fast2Share;
 using Bearcat.Hosters.Fast2Share.Api;
 using Bearcat.Hosters.Shared;
@@ -482,7 +483,7 @@ public class ApiClientTest
             fileUrl: $"https://f2s.im/f/{Uuid}",
             externalId: null,
             targetFilePath: targetFilePath,
-            progress: NullDownloadProgress.Instance,
+            progress: NullTransferProgress.Instance,
             expectedSizeBytes: 106954766,
             cancellationToken: CancellationToken.None
         );
@@ -524,7 +525,7 @@ public class ApiClientTest
                 fileUrl: $"https://f2s.im/f/{Uuid}",
                 externalId: null,
                 targetFilePath: targetFilePath,
-                progress: NullDownloadProgress.Instance,
+                progress: NullTransferProgress.Instance,
                 expectedSizeBytes: null,
                 cancellationToken: CancellationToken.None
             )
@@ -573,7 +574,7 @@ public class ApiClientTest
             fileUrl: "https://fast2share.com/checker",
             externalId: "PNjtUDAm0Lzg",
             targetFilePath: targetFilePath,
-            progress: NullDownloadProgress.Instance,
+            progress: NullTransferProgress.Instance,
             expectedSizeBytes: null,
             cancellationToken: CancellationToken.None
         );

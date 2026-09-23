@@ -5,7 +5,7 @@ using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Cancellation;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
@@ -21,7 +21,7 @@ public class ArchiveRestoreService(
     ISecretProtector secretProtector,
     INotificationService notificationService,
     IApplicationConfigurationProvider configurationProvider,
-    IDownloadCancellationRegistry cancellationRegistry,
+    ITransferCancellationRegistry cancellationRegistry,
     MirrorSourceResolver mirrorSourceResolver,
     MirrorDownloadCoordinator mirrorDownloadCoordinator,
     ILogger<ArchiveRestoreService> logger
@@ -238,7 +238,8 @@ public class ArchiveRestoreService(
             restoreFolderPath
         );
 
-        var userCancellationToken = cancellationRegistry.Register(archive.Id);
+        var transferKey = new TransferKey(TransferKind.MirrorDownload, archive.Id);
+        var userCancellationToken = cancellationRegistry.Register(transferKey);
 
         try
         {
@@ -354,7 +355,7 @@ public class ArchiveRestoreService(
         }
         finally
         {
-            cancellationRegistry.Unregister(archive.Id);
+            cancellationRegistry.Unregister(transferKey);
         }
     }
 

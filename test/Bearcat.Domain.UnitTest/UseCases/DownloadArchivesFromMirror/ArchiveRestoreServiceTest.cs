@@ -6,10 +6,9 @@ using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
-using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Cancellation;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
-using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -26,8 +25,8 @@ public class ArchiveRestoreServiceTest
     private Mock<IFileSystemService> fileSystemServiceMock = null!;
     private Mock<INotificationService> notificationServiceMock = null!;
     private Mock<IHosterFactory> hosterFactoryMock = null!;
-    private RecordingDownloadProgressTracker downloadProgressTracker = null!;
-    private DownloadCancellationRegistry cancellationRegistry = null!;
+    private RecordingTransferProgressTracker transferProgressTracker = null!;
+    private TransferCancellationRegistry cancellationRegistry = null!;
     private List<string> restoreFailedMessages = null!;
     private string restoreFolderPath = null!;
 
@@ -37,8 +36,8 @@ public class ArchiveRestoreServiceTest
         repository = new FakeArchiveRestoreRepository();
         downloadHoster = new FakeDownloadHoster();
         secondaryDownloadHoster = new FakeDownloadHoster();
-        downloadProgressTracker = new RecordingDownloadProgressTracker();
-        cancellationRegistry = new DownloadCancellationRegistry();
+        transferProgressTracker = new RecordingTransferProgressTracker();
+        cancellationRegistry = new TransferCancellationRegistry();
         restoreFolderPath = Path.Join(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(restoreFolderPath);
 
@@ -120,8 +119,8 @@ public class ArchiveRestoreServiceTest
         // Assert
         downloadHoster.ExpectedSizeBytesPerLink["https://mirror.test/file-2"].ShouldBe(4711);
         downloadHoster.ExpectedSizeBytesPerLink["https://mirror.test/file-3"].ShouldBeNull();
-        var plannedFiles = downloadProgressTracker.PlannedFilesPerArchiveId[3];
-        plannedFiles.Select(file => file.ArchiveFileId).ShouldBe([2, 3]);
+        var plannedFiles = transferProgressTracker.PlannedFilesPerKey[MirrorDownloadKey(3)];
+        plannedFiles.Select(file => file.FileId).ShouldBe([2, 3]);
         plannedFiles[0].SizeBytes.ShouldBe(4711);
         plannedFiles[1].SizeBytes.ShouldBeNull();
     }
@@ -140,8 +139,8 @@ public class ArchiveRestoreServiceTest
 
         // Assert
         scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Created);
-        downloadProgressTracker
-            .PlannedFilesPerArchiveId[3]
+        transferProgressTracker
+            .PlannedFilesPerKey[MirrorDownloadKey(3)]
             .ShouldAllBe(file => file.SizeBytes == null);
         downloadHoster.ExpectedSizeBytesPerLink.Values.ShouldAllBe(size => size == null);
     }
@@ -286,7 +285,9 @@ public class ArchiveRestoreServiceTest
         // Act
         var processTask = service.ProcessAsync(CancellationToken.None);
         await downloadHoster.DownloadStarted.Task;
-        var cancellationRequested = cancellationRegistry.RequestCancellation(scenario.Archive.Id);
+        var cancellationRequested = cancellationRegistry.RequestCancellation(
+            MirrorDownloadKey(scenario.Archive.Id)
+        );
         await processTask;
 
         // Assert
@@ -297,7 +298,9 @@ public class ArchiveRestoreServiceTest
         scenario.WaitingUpload.ErrorMessages.ShouldBeEmpty();
         VerifyUploadCanceledNotification(Times.Once());
         VerifyRestoreFailedNotification(Times.Never());
-        cancellationRegistry.RequestCancellation(scenario.Archive.Id).ShouldBeFalse();
+        cancellationRegistry
+            .RequestCancellation(MirrorDownloadKey(scenario.Archive.Id))
+            .ShouldBeFalse();
     }
 
     [Test]
@@ -312,7 +315,7 @@ public class ArchiveRestoreServiceTest
         // Act
         var processTask = service.ProcessAsync(CancellationToken.None);
         await downloadHoster.DownloadStarted.Task;
-        cancellationRegistry.RequestCancellation(scenario.Archive.Id);
+        cancellationRegistry.RequestCancellation(MirrorDownloadKey(scenario.Archive.Id));
         await processTask;
 
         // Assert
@@ -335,7 +338,7 @@ public class ArchiveRestoreServiceTest
         // Act
         var processTask = service.ProcessAsync(CancellationToken.None);
         await downloadHoster.DownloadStarted.Task;
-        cancellationRegistry.RequestCancellation(scenario.Archive.Id);
+        cancellationRegistry.RequestCancellation(MirrorDownloadKey(scenario.Archive.Id));
         await processTask;
 
         // Assert
@@ -475,44 +478,13 @@ public class ArchiveRestoreServiceTest
 
         // Assert
         scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Created);
-        downloadProgressTracker.BegunFiles.ShouldBe(
+        transferProgressTracker.BegunFiles.ShouldBe(
             [new BegunFile(2, "Mirror2"), new BegunFile(3, "Mirror")],
             ignoreOrder: true
         );
-        downloadProgressTracker
-            .PlannedFilesPerArchiveId[3]
-            .ShouldAllBe(file => file.HosterName == "Mirror");
-    }
-
-    [Test]
-    public void RequestCancellation_NoRestoreIsRunning_ReturnsFalse()
-    {
-        // Arrange
-        var registry = new DownloadCancellationRegistry();
-
-        // Act
-        var result = registry.RequestCancellation(4711);
-
-        // Assert
-        result.ShouldBeFalse();
-    }
-
-    [Test]
-    public void RequestCancellation_ArchiveIsRegistered_CancelsTheTokenOnce()
-    {
-        // Arrange
-        var registry = new DownloadCancellationRegistry();
-        var token = registry.Register(3);
-
-        // Act
-        var firstResult = registry.RequestCancellation(3);
-        registry.Unregister(3);
-        var secondResult = registry.RequestCancellation(3);
-
-        // Assert
-        firstResult.ShouldBeTrue();
-        token.IsCancellationRequested.ShouldBeTrue();
-        secondResult.ShouldBeFalse();
+        transferProgressTracker
+            .PlannedFilesPerKey[MirrorDownloadKey(3)]
+            .ShouldAllBe(file => file.SourceName == "Mirror");
     }
 
     [Test]
@@ -569,9 +541,9 @@ public class ArchiveRestoreServiceTest
             cancellationRegistry,
             new MirrorSourceResolver(hosterFactoryMock.Object),
             new MirrorDownloadCoordinator(
-                downloadProgressTracker,
+                transferProgressTracker,
                 new ArchiveFileDownloader(
-                    downloadProgressTracker,
+                    transferProgressTracker,
                     NullLogger<ArchiveFileDownloader>.Instance
                 )
             ),
@@ -762,52 +734,57 @@ public class ArchiveRestoreServiceTest
         repository.SerializedConfigs[registration.Id] = "protected";
     }
 
-    private sealed class RecordingDownloadProgressTracker : IDownloadProgressTracker
+    private static TransferKey MirrorDownloadKey(int archiveId)
     {
-        private readonly DownloadProgressTracker inner = new();
+        return new TransferKey(TransferKind.MirrorDownload, archiveId);
+    }
+
+    private sealed class RecordingTransferProgressTracker : ITransferProgressTracker
+    {
+        private readonly TransferProgressTracker inner = new();
 
         public Dictionary<
-            int,
-            IReadOnlyList<PlannedDownloadFile>
-        > PlannedFilesPerArchiveId { get; } = new();
+            TransferKey,
+            IReadOnlyList<PlannedTransferFile>
+        > PlannedFilesPerKey { get; } = new();
 
         public List<BegunFile> BegunFiles { get; } = [];
 
-        public void StartTracking(int archiveId, IReadOnlyList<PlannedDownloadFile> plannedFiles)
+        public void StartTracking(TransferKey key, IReadOnlyList<PlannedTransferFile> plannedFiles)
         {
-            PlannedFilesPerArchiveId[archiveId] = plannedFiles;
-            inner.StartTracking(archiveId, plannedFiles);
+            PlannedFilesPerKey[key] = plannedFiles;
+            inner.StartTracking(key, plannedFiles);
         }
 
         public void BeginFile(
-            int archiveId,
-            int archiveFileId,
+            TransferKey key,
+            int fileId,
             string fileName,
-            string hosterName,
+            string sourceName,
             long? totalBytes
         )
         {
             lock (BegunFiles)
             {
-                BegunFiles.Add(new BegunFile(archiveFileId, hosterName));
+                BegunFiles.Add(new BegunFile(fileId, sourceName));
             }
 
-            inner.BeginFile(archiveId, archiveFileId, fileName, hosterName, totalBytes);
+            inner.BeginFile(key, fileId, fileName, sourceName, totalBytes);
         }
 
-        public void AddBytes(int archiveId, int archiveFileId, long bytes)
+        public void AddBytes(TransferKey key, int fileId, long bytes)
         {
-            inner.AddBytes(archiveId, archiveFileId, bytes);
+            inner.AddBytes(key, fileId, bytes);
         }
 
-        public void StopTracking(int archiveId)
+        public void StopTracking(TransferKey key)
         {
-            inner.StopTracking(archiveId);
+            inner.StopTracking(key);
         }
 
-        public DownloadProgressSnapshot? Get(int archiveId)
+        public TransferProgressSnapshot? Get(TransferKey key)
         {
-            return inner.Get(archiveId);
+            return inner.Get(key);
         }
     }
 
@@ -824,7 +801,7 @@ public class ArchiveRestoreServiceTest
         };
     }
 
-    private sealed record BegunFile(int ArchiveFileId, string HosterName);
+    private sealed record BegunFile(int FileId, string SourceName);
 
     private sealed record Scenario(Archive Archive, Upload DonorUpload, Upload WaitingUpload);
 }

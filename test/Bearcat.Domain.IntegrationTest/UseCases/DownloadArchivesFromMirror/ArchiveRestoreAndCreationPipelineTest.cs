@@ -4,11 +4,11 @@ using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
-using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Cancellation;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
-using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageNotifications;
@@ -78,7 +78,7 @@ public class ArchiveRestoreAndCreationPipelineTest : BearcatIntegrationTest
             configurationProvider: CreateNotificationConfigurationProvider()
         );
 
-        var downloadProgressTracker = new DownloadProgressTracker();
+        var transferProgressTracker = new TransferProgressTracker();
 
         restoreService = new ArchiveRestoreService(
             new ArchiveRestoreRepository(dbContext),
@@ -87,12 +87,12 @@ public class ArchiveRestoreAndCreationPipelineTest : BearcatIntegrationTest
             NoOpSecretProtector.Instance,
             notificationService,
             new DefaultConfigurationProvider(),
-            new DownloadCancellationRegistry(),
+            new TransferCancellationRegistry(),
             new MirrorSourceResolver(hosterFactoryMock.Object),
             new MirrorDownloadCoordinator(
-                downloadProgressTracker,
+                transferProgressTracker,
                 new ArchiveFileDownloader(
-                    downloadProgressTracker,
+                    transferProgressTracker,
                     NullLogger<ArchiveFileDownloader>.Instance
                 )
             ),
@@ -409,7 +409,7 @@ public class ArchiveRestoreAndCreationPipelineTest : BearcatIntegrationTest
             DownloadFileDto file,
             string targetFilePath,
             IHosterConfig hosterConfig,
-            IDownloadProgress progress,
+            ITransferProgress progress,
             CancellationToken cancellationToken
         )
         {
@@ -436,7 +436,7 @@ public class ArchiveRestoreAndCreationPipelineTest : BearcatIntegrationTest
         public Task<UploadFileResult> UploadFileAsync(
             FileDto fileDto,
             IHosterConfig hosterConfig,
-            IUploadProgress progress,
+            ITransferProgress progress,
             CancellationToken cancellationToken
         ) => throw new NotSupportedException();
 

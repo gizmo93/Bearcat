@@ -3,6 +3,7 @@ using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Shared;
 using Bearcat.Hosters.UploadG.Api;
@@ -25,7 +26,7 @@ public class UploadG(IUploadGApiClient apiClient, ILogger<UploadG> logger) : IHo
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
-        IUploadProgress progress,
+        ITransferProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -46,7 +47,7 @@ public class UploadG(IUploadGApiClient apiClient, ILogger<UploadG> logger) : IHo
                 await using var stream = SequentialFileReader.OpenRead(fileDto.FullFileName);
                 var uploadResponse = await apiClient.UploadFileAsync(
                     config: config,
-                    stream: new CountingStream(stream, progress),
+                    stream: new ProgressReportingStream(stream, progress, stream.Length),
                     fileName: fileInfo.Name,
                     folderId: fileDto.FolderId,
                     fileSize: fileInfo.Length,

@@ -1,14 +1,12 @@
-using Bearcat.Abstractions.Hoster;
+namespace Bearcat.Abstractions.Transfers;
 
-namespace Bearcat.Hosters.Shared;
-
-public sealed class CountingDownloadStream : Stream
+public sealed class ProgressReportingStream : Stream
 {
     private readonly Stream inner;
 
-    private readonly IDownloadProgress progress;
+    private readonly ITransferProgress progress;
 
-    public CountingDownloadStream(Stream inner, IDownloadProgress progress, long? totalBytes)
+    public ProgressReportingStream(Stream inner, ITransferProgress progress, long? totalBytes)
     {
         this.inner = inner;
         this.progress = progress;
@@ -17,7 +15,7 @@ public sealed class CountingDownloadStream : Stream
 
     public override bool CanRead => inner.CanRead;
 
-    public override bool CanSeek => false;
+    public override bool CanSeek => inner.CanSeek;
 
     public override bool CanWrite => false;
 
@@ -26,7 +24,7 @@ public sealed class CountingDownloadStream : Stream
     public override long Position
     {
         get => inner.Position;
-        set => throw new NotSupportedException();
+        set => inner.Position = value;
     }
 
     public override int Read(byte[] buffer, int offset, int count)
@@ -58,7 +56,7 @@ public sealed class CountingDownloadStream : Stream
         return bytesRead;
     }
 
-    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+    public override long Seek(long offset, SeekOrigin origin) => inner.Seek(offset, origin);
 
     public override void Flush() => inner.Flush();
 

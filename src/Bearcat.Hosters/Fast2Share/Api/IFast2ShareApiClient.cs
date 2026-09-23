@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Shared;
 
 namespace Bearcat.Hosters.Fast2Share.Api;
@@ -43,7 +44,7 @@ public interface IFast2ShareApiClient
         string fileUrl,
         string? externalId,
         string targetFilePath,
-        IDownloadProgress progress,
+        ITransferProgress progress,
         long? expectedSizeBytes,
         CancellationToken cancellationToken
     );

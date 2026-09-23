@@ -1,6 +1,6 @@
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.ValueObjects;
 using Humanizer;
@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 
 public class ArchiveFileDownloader(
-    IDownloadProgressTracker downloadProgressTracker,
+    ITransferProgressTracker transferProgressTracker,
     ILogger<ArchiveFileDownloader> logger
 )
 {
@@ -225,12 +225,12 @@ public class ArchiveFileDownloader(
                 ),
                 targetFilePath: download.TargetFilePath,
                 hosterConfig: resolved.Config,
-                progress: new DownloadProgressReporter(
-                    tracker: downloadProgressTracker,
-                    archiveId: archiveId,
-                    archiveFileId: download.ArchiveFileId,
+                progress: new TransferProgressReporter(
+                    tracker: transferProgressTracker,
+                    key: new TransferKey(TransferKind.MirrorDownload, archiveId),
+                    fileId: download.ArchiveFileId,
                     fileName: Path.GetFileName(download.TargetFilePath),
-                    hosterName: source.Registration.Name
+                    sourceName: source.Registration.Name
                 ),
                 cancellationToken: cancellationToken
             );

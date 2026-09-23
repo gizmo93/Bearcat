@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Transfers;
 
 namespace Bearcat.Hosters.Keep2Share.Api;
 
@@ -57,7 +58,7 @@ public interface IKeep2ShareApiClient
         Keep2ShareConfig config,
         string fileUrl,
         string targetFilePath,
-        IDownloadProgress progress,
+        ITransferProgress progress,
         long? expectedSizeBytes,
         CancellationToken cancellationToken
     );

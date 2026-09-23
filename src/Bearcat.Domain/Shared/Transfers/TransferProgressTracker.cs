@@ -1,79 +1,70 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 
-namespace Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
+namespace Bearcat.Domain.Shared.Transfers;
 
-public sealed class DownloadProgressTracker : IDownloadProgressTracker
+public sealed class TransferProgressTracker : ITransferProgressTracker
 {
     private static readonly TimeSpan SampleInterval = TimeSpan.FromMilliseconds(250);
 
     private static readonly TimeSpan SpeedWindow = TimeSpan.FromSeconds(5);
 
-    private readonly ConcurrentDictionary<int, DownloadSpeedState> states = new();
+    private readonly ConcurrentDictionary<TransferKey, TransferState> states = new();
 
-    public void StartTracking(int archiveId, IReadOnlyList<PlannedDownloadFile> plannedFiles)
+    public void StartTracking(TransferKey key, IReadOnlyList<PlannedTransferFile> plannedFiles)
     {
-        states[archiveId] = new DownloadSpeedState(Stopwatch.GetTimestamp(), plannedFiles);
+        states[key] = new TransferState(Stopwatch.GetTimestamp(), plannedFiles);
     }
 
     public void BeginFile(
-        int archiveId,
-        int archiveFileId,
+        TransferKey key,
+        int fileId,
         string fileName,
-        string hosterName,
+        string sourceName,
         long? totalBytes
     )
     {
-        if (states.TryGetValue(archiveId, out var state))
+        if (states.TryGetValue(key, out var state))
         {
-            state.BeginFile(archiveFileId, fileName, hosterName, totalBytes);
+            state.BeginFile(fileId, fileName, sourceName, totalBytes);
         }
     }
 
-    public void AddBytes(int archiveId, int archiveFileId, long bytes)
+    public void AddBytes(TransferKey key, int fileId, long bytes)
     {
-        if (states.TryGetValue(archiveId, out var state))
+        if (states.TryGetValue(key, out var state))
         {
-            state.AddBytes(
-                archiveFileId,
-                bytes,
-                Stopwatch.GetTimestamp(),
-                SampleInterval,
-                SpeedWindow
-            );
+            state.AddBytes(fileId, bytes, Stopwatch.GetTimestamp(), SampleInterval, SpeedWindow);
         }
     }
 
-    public void StopTracking(int archiveId)
+    public void StopTracking(TransferKey key)
     {
-        states.TryRemove(archiveId, out _);
+        states.TryRemove(key, out _);
     }
 
-    public DownloadProgressSnapshot? Get(int archiveId)
+    public TransferProgressSnapshot? Get(TransferKey key)
     {
-        if (!states.TryGetValue(archiveId, out var state))
+        if (!states.TryGetValue(key, out var state))
         {
             return null;
         }
 
-        var now = Stopwatch.GetTimestamp();
-        var bytesPerSecond = state.GetBytesPerSecond(now, SpeedWindow);
-        var files = state.GetFiles();
-        var downloadedBytes = files.Sum(file => file.DownloadedBytes);
-        var totalBytes = files.Any(file => file.TotalBytes <= 0)
-            ? 0
-            : files.Sum(file => file.TotalBytes);
+        var bytesPerSecond = state.GetBytesPerSecond(Stopwatch.GetTimestamp(), SpeedWindow);
+        var (files, isTotalKnown) = state.GetFiles();
+        var transferredBytes = files.Sum(file => file.TransferredBytes);
+        var totalBytes = isTotalKnown ? files.Sum(file => file.TotalBytes) : 0;
 
-        return new DownloadProgressSnapshot(
-            ArchiveId: archiveId,
+        return new TransferProgressSnapshot(
+            Key: key,
             BytesPerSecond: bytesPerSecond,
-            DownloadedBytes: downloadedBytes,
+            TransferredBytes: transferredBytes,
             TotalBytes: totalBytes,
             Files: files
         );
     }
 
-    private sealed class DownloadSpeedState
+    private sealed class TransferState
     {
         private readonly Lock gate = new();
 
@@ -85,48 +76,40 @@ public sealed class DownloadProgressTracker : IDownloadProgressTracker
 
         private long lastSampleTimestamp;
 
-        public DownloadSpeedState(
-            long startTimestamp,
-            IReadOnlyList<PlannedDownloadFile> plannedFiles
-        )
+        public TransferState(long startTimestamp, IReadOnlyList<PlannedTransferFile> plannedFiles)
         {
             samples = new Queue<Sample>([new Sample(startTimestamp, CumulativeBytes: 0)]);
             lastSampleTimestamp = startTimestamp;
             progressPerFile = plannedFiles.ToDictionary(
-                file => file.ArchiveFileId,
+                file => file.FileId,
                 file => new FileProgress(
                     FileName: file.FileName,
-                    HosterName: file.HosterName,
-                    DownloadedBytes: 0,
-                    TotalBytes: file.SizeBytes ?? 0
+                    SourceName: file.SourceName,
+                    TransferredBytes: file.IsAlreadyTransferred ? file.SizeBytes ?? 0 : 0,
+                    TotalBytes: file.SizeBytes
                 )
             );
         }
 
-        public void BeginFile(
-            int archiveFileId,
-            string fileName,
-            string hosterName,
-            long? totalBytes
-        )
+        public void BeginFile(int fileId, string fileName, string sourceName, long? totalBytes)
         {
             lock (gate)
             {
-                var knownTotalBytes = progressPerFile.TryGetValue(archiveFileId, out var current)
+                var knownTotalBytes = progressPerFile.TryGetValue(fileId, out var current)
                     ? current.TotalBytes
-                    : 0;
+                    : null;
 
-                progressPerFile[archiveFileId] = new FileProgress(
+                progressPerFile[fileId] = new FileProgress(
                     FileName: fileName,
-                    HosterName: hosterName,
-                    DownloadedBytes: 0,
+                    SourceName: sourceName,
+                    TransferredBytes: 0,
                     TotalBytes: totalBytes ?? knownTotalBytes
                 );
             }
         }
 
         public void AddBytes(
-            int archiveFileId,
+            int fileId,
             long bytes,
             long nowTimestamp,
             TimeSpan sampleInterval,
@@ -137,11 +120,11 @@ public sealed class DownloadProgressTracker : IDownloadProgressTracker
             {
                 cumulativeBytes += bytes;
 
-                if (progressPerFile.TryGetValue(archiveFileId, out var fileProgress))
+                if (progressPerFile.TryGetValue(fileId, out var fileProgress))
                 {
-                    progressPerFile[archiveFileId] = fileProgress with
+                    progressPerFile[fileId] = fileProgress with
                     {
-                        DownloadedBytes = fileProgress.DownloadedBytes + bytes,
+                        TransferredBytes = fileProgress.TransferredBytes + bytes,
                     };
                 }
 
@@ -176,22 +159,26 @@ public sealed class DownloadProgressTracker : IDownloadProgressTracker
             }
         }
 
-        public IReadOnlyList<DownloadFileProgressSnapshot> GetFiles()
+        public (IReadOnlyList<TransferFileProgressSnapshot> Files, bool IsTotalKnown) GetFiles()
         {
             lock (gate)
             {
-                return progressPerFile
-                    .Select(entry => new DownloadFileProgressSnapshot(
-                        ArchiveFileId: entry.Key,
+                var files = progressPerFile
+                    .Select(entry => new TransferFileProgressSnapshot(
+                        FileId: entry.Key,
                         FileName: entry.Value.FileName,
-                        HosterName: entry.Value.HosterName,
-                        DownloadedBytes: entry.Value.TotalBytes > 0
-                            ? Math.Min(entry.Value.DownloadedBytes, entry.Value.TotalBytes)
-                            : entry.Value.DownloadedBytes,
-                        TotalBytes: entry.Value.TotalBytes
+                        SourceName: entry.Value.SourceName,
+                        TransferredBytes: entry.Value.TotalBytes is { } totalBytes
+                            ? Math.Min(entry.Value.TransferredBytes, totalBytes)
+                            : entry.Value.TransferredBytes,
+                        TotalBytes: entry.Value.TotalBytes ?? 0
                     ))
                     .OrderBy(file => file.FileName, StringComparer.OrdinalIgnoreCase)
                     .ToList();
+
+                var isTotalKnown = progressPerFile.Values.All(file => file.TotalBytes is not null);
+
+                return (files, isTotalKnown);
             }
         }
 
@@ -210,9 +197,9 @@ public sealed class DownloadProgressTracker : IDownloadProgressTracker
 
         private readonly record struct FileProgress(
             string FileName,
-            string HosterName,
-            long DownloadedBytes,
-            long TotalBytes
+            string SourceName,
+            long TransferredBytes,
+            long? TotalBytes
         );
     }
 }
