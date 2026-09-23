@@ -14,6 +14,8 @@ public sealed class FakeFileSystemService : IFileSystemService
 
     public bool DirectoryExists(string path) => DirectoryExistsResult;
 
+    public bool DirectoryHasEntries(string path) => throw new NotSupportedException();
+
     public FolderContentFingerprint GetFolderContentFingerprint(string path) =>
         new(Files.Count, TotalBytes);
 

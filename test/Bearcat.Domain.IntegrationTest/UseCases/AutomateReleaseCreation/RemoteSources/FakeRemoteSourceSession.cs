@@ -2,7 +2,7 @@ using Bearcat.Abstractions.RemoteSource;
 using Bearcat.Abstractions.RemoteSource.Dto;
 using Bearcat.Abstractions.Transfers;
 
-namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.RemoteSources.Scanning;
+namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.RemoteSources;
 
 public sealed class FakeRemoteSourceSession(FakeRemoteServer server) : IRemoteSourceSession
 {
@@ -29,7 +29,7 @@ public sealed class FakeRemoteSourceSession(FakeRemoteServer server) : IRemoteSo
         CancellationToken cancellationToken
     )
     {
-        throw new NotSupportedException();
+        return server.DownloadAsync(file, localFilePath, progress, cancellationToken);
     }
 
     public ValueTask DisposeAsync()

@@ -136,6 +136,19 @@ public class ReleaseFolderAutomationRepository(
             .ToHashSetAsync(cancellationToken);
     }
 
+    public async Task<HashSet<string>> GetRemoteDownloadFolderPathsAsync(
+        IReadOnlyList<string> localFolderPaths,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .RemoteSourceDownloads.Where(download =>
+                localFolderPaths.Contains(download.LocalFolderPath)
+            )
+            .Select(download => download.LocalFolderPath)
+            .ToHashSetAsync(cancellationToken);
+    }
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await dbWrite.SaveChangesAsync(cancellationToken);

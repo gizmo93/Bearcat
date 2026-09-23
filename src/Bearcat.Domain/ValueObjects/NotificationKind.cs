@@ -26,4 +26,6 @@ public enum NotificationKind
     AutomaticForumPostUpdateFailed = 22,
     ArchiveRestoreFailed = 23,
     ReleaseAutoConvertedToUnmanaged = 24,
+    RemoteDownloadFailed = 25,
+    ReleaseCreatedFromRemoteDownload = 26,
 }

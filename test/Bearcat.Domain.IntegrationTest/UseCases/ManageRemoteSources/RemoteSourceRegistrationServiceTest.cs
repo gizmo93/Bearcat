@@ -28,6 +28,7 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
     private FakeRemoteSource remoteSource = null!;
     private RemoteSourceRegistrationService service = null!;
     private RemoteSourceRegistrationRepository repository = null!;
+    private RemoteSourceSessionPool sessionPool = null!;
 
     [SetUp]
     public void Setup()
@@ -53,11 +54,15 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
             ]);
 
         repository = new RemoteSourceRegistrationRepository(dbContext, dbContext, factory.Object);
+        sessionPool = new RemoteSourceSessionPool(
+            TimeProvider.System,
+            NullLogger<RemoteSourceSessionPool>.Instance
+        );
         service = new RemoteSourceRegistrationService(
             repository,
             factory.Object,
             secretProtector,
-            new RemoteSourceSessionOpener(factory.Object, secretProtector),
+            new RemoteSourceSessionProvider(sessionPool, factory.Object, secretProtector),
             NullLogger<RemoteSourceRegistrationService>.Instance
         );
     }
@@ -65,6 +70,7 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
     [TearDown]
     public async Task DisposeDbContextAsync()
     {
+        await sessionPool.DisposeAsync();
         await dbContext.DisposeAsync();
     }
 
@@ -217,7 +223,42 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
         result.RootFolderCount.ShouldBe(2);
         remoteSource.OpenedConfig!.ToDictionary()["Password"].ShouldBe("secret");
         remoteSource.ListedPath.ShouldBe("/");
+        remoteSource.SessionDisposed.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task TestConnectionAsync_CalledTwice_ReusesPooledSession()
+    {
+        // Arrange
+        var id = await service.CreateAsync("Main server", SourceClassName, FormValues());
+
+        // Act
+        await service.TestConnectionAsync(id);
+        var result = await service.TestConnectionAsync(id);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        remoteSource.OpenCount.ShouldBe(1);
+        remoteSource.SessionDisposed.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task UpdateAsync_PooledSessionExists_ClosesSessionAndOpensNewOneWithNewConfig()
+    {
+        // Arrange
+        var id = await service.CreateAsync("Main server", SourceClassName, FormValues());
+        await service.TestConnectionAsync(id);
+        var values = FormValues();
+        values["Password"] = "changed";
+
+        // Act
+        await service.UpdateAsync(id, "Main server", values, 2);
+        await service.TestConnectionAsync(id);
+
+        // Assert
         remoteSource.SessionDisposed.ShouldBeTrue();
+        remoteSource.OpenCount.ShouldBe(2);
+        remoteSource.OpenedConfig!.ToDictionary()["Password"].ShouldBe("changed");
     }
 
     [Test]
@@ -273,7 +314,7 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
             .Folders.Select(folder => folder.FullPath)
             .ShouldBe(["/incoming/tv", "/incoming/movies"]);
         remoteSource.ListedPath.ShouldBe("/incoming");
-        remoteSource.SessionDisposed.ShouldBeTrue();
+        remoteSource.SessionDisposed.ShouldBeFalse();
     }
 
     [Test]
@@ -376,6 +417,8 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
 
         public bool SessionDisposed { get; set; }
 
+        public int OpenCount { get; private set; }
+
         public string Name => "Fake source";
 
         public IReadOnlyList<ConfigurationField> ConfigurationFields { get; } =
@@ -409,6 +452,7 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
         )
         {
             OpenedConfig = config;
+            OpenCount++;
 
             if (OpenException is not null)
             {

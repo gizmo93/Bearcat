@@ -1043,6 +1043,7 @@
   <data name="NotificationGroup.Hosters" xml:space="preserve"><value>Hosters</value></data>
   <data name="NotificationGroup.LinkCrypters" xml:space="preserve"><value>Link crypters</value></data>
   <data name="NotificationGroup.DistributionSites" xml:space="preserve"><value>Distribution sites</value></data>
+  <data name="NotificationGroup.RemoteDownloads" xml:space="preserve"><value>Remote downloads</value></data>
   <data name="NotificationKind.Legacy" xml:space="preserve"><value>Legacy notification</value></data>
   <data name="NotificationKind.ReleaseAutomaticallyCreated" xml:space="preserve"><value>Release created automatically</value></data><data name="NotificationKind.ReleaseAutomaticallyCreated.Description" xml:space="preserve"><value>A release was created by folder automation.</value></data>
   <data name="NotificationKind.ReleaseAutoConvertedToUnmanaged" xml:space="preserve"><value>Release converted to unmanaged</value></data><data name="NotificationKind.ReleaseAutoConvertedToUnmanaged.Description" xml:space="preserve"><value>A release was converted to unmanaged because its release folder retention expired and the release folder can be deleted.</value></data>
@@ -1182,6 +1183,10 @@
   <data name="ArchiveState.Restoring" xml:space="preserve"><value>Restoring</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed" xml:space="preserve"><value>Archive restore failed</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed.Description" xml:space="preserve"><value>An archive could not be restored from an online mirror.</value></data>
+  <data name="NotificationKind.ReleaseCreatedFromRemoteDownload" xml:space="preserve"><value>Release created from remote download</value></data>
+  <data name="NotificationKind.ReleaseCreatedFromRemoteDownload.Description" xml:space="preserve"><value>A release was created automatically from a folder that was downloaded from a remote source.</value></data>
+  <data name="NotificationKind.RemoteDownloadFailed" xml:space="preserve"><value>Remote download failed</value></data>
+  <data name="NotificationKind.RemoteDownloadFailed.Description" xml:space="preserve"><value>A folder could not be downloaded from a remote source or no release could be created from the downloaded folder.</value></data>
   <data name="MirrorDownloads" xml:space="preserve"><value>Mirror downloads</value></data>
   <data name="MirrorDownloadsDescription" xml:space="preserve"><value>Controls how archives are downloaded from online mirrors when they are no longer stored locally.</value></data>
   <data name="MirrorDownloadsRequirePremium" xml:space="preserve"><value>Mirror downloads from this hoster require a premium account.</value></data>
@@ -1298,11 +1303,17 @@
   <data name="RemoteSourceDownloadState.Canceled" xml:space="preserve"><value>Canceled</value></data>
   <data name="RemoteSourceDownloadState.Ignored" xml:space="preserve"><value>Ignored</value></data>
   <data name="RemoteSourceDownloads" xml:space="preserve"><value>Remote downloads</value></data>
-  <data name="RemoteSourceDownloadsDescription" xml:space="preserve"><value>Controls how folders on remote sources are watched and queued for download.</value></data>
+  <data name="RemoteSourceDownloadsDescription" xml:space="preserve"><value>Controls how folders on remote sources are watched, queued and downloaded.</value></data>
   <data name="RemoteSourceDownloadStabilityMinutes" xml:space="preserve"><value>Folder stability (minutes)</value></data>
   <data name="RemoteSourceDownloadStabilityMinutesDescription" xml:space="preserve"><value>A remote folder is only queued for download once its file count and total size have stayed unchanged for at least this many minutes. This avoids downloading releases that are still being uploaded to the server.</value></data>
   <data name="RemoteSourceDownloadMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimum folder size (MB)</value></data>
   <data name="RemoteSourceDownloadMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Remote folders smaller than this size are not queued. Set to 0 to disable the size check.</value></data>
+  <data name="RemoteSourceDownloadMaxParallelFileDownloads" xml:space="preserve"><value>Maximum parallel file downloads</value></data>
+  <data name="RemoteSourceDownloadMaxParallelFileDownloadsDescription" xml:space="preserve"><value>The upper limit of files downloaded at the same time across all remote sources. Each remote source is additionally limited by its maximum number of connections.</value></data>
+  <data name="RemoteSourceDownloadMaxDownloadAttempts" xml:space="preserve"><value>Maximum download attempts</value></data>
+  <data name="RemoteSourceDownloadMaxDownloadAttemptsDescription" xml:space="preserve"><value>How often a single file is downloaded again before the download of the whole folder fails.</value></data>
+  <data name="RemoteSourceDownloadRetryDelaySeconds" xml:space="preserve"><value>Download retry delay (seconds)</value></data>
+  <data name="RemoteSourceDownloadRetryDelaySecondsDescription" xml:space="preserve"><value>How long Bearcat waits before it downloads a file from a remote source again after a failed attempt.</value></data>
   <data name="Priority" xml:space="preserve"><value>Priority</value></data>
   <data name="RemoteSourceAutomationPriorityHelp" xml:space="preserve"><value>Lower values run first. Only matters when the patterns of several automations on the same remote folder overlap.</value></data>
   <data name="RemoteSourceAutomationPatternHelp" xml:space="preserve"><value>Simple wildcards like *1080p*. Leave empty to match every folder. Create another automation for a different pattern.</value></data>

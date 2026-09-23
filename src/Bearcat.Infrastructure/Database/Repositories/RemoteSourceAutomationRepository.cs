@@ -187,20 +187,7 @@ public class RemoteSourceAutomationRepository(
 
     public void DiscardPendingChanges()
     {
-        foreach (var entry in dbWrite.ChangeTracker.Entries().ToList())
-        {
-            switch (entry.State)
-            {
-                case EntityState.Added:
-                    entry.State = EntityState.Detached;
-                    break;
-                case EntityState.Modified:
-                case EntityState.Deleted:
-                    entry.CurrentValues.SetValues(entry.OriginalValues);
-                    entry.State = EntityState.Unchanged;
-                    break;
-            }
-        }
+        dbWrite.ChangeTracker.DiscardPendingChanges();
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)

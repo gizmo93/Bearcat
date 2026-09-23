@@ -13,7 +13,7 @@ public class RemoteSourceRegistrationService(
     IRemoteSourceRegistrationWriteRepository writeRepository,
     IRemoteSourceFactory remoteSourceFactory,
     ISecretProtector secretProtector,
-    RemoteSourceSessionOpener sessionOpener,
+    RemoteSourceSessionProvider sessionProvider,
     ILogger<RemoteSourceRegistrationService> logger
 )
 {
@@ -77,6 +77,7 @@ public class RemoteSourceRegistrationService(
         registration.SerializedConfig = Protect(normalizedValues);
 
         await writeRepository.SaveChangesAsync(cancellationToken);
+        await sessionProvider.CloseSessionsAsync(id);
     }
 
     public async Task<IReadOnlyDictionary<string, object?>> GetEditValuesAsync(
@@ -102,6 +103,7 @@ public class RemoteSourceRegistrationService(
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         registration.IsActive = !registration.IsActive;
         await writeRepository.SaveChangesAsync(cancellationToken);
+        await sessionProvider.CloseSessionsAsync(id);
     }
 
     public async Task RemoveAsync(int id, CancellationToken cancellationToken = default)
@@ -109,6 +111,7 @@ public class RemoteSourceRegistrationService(
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         writeRepository.Remove(registration);
         await writeRepository.SaveChangesAsync(cancellationToken);
+        await sessionProvider.CloseSessionsAsync(id);
     }
 
     public async Task<RemoteSourceConnectionTestResult> TestConnectionAsync(
@@ -181,12 +184,11 @@ public class RemoteSourceRegistrationService(
 
         try
         {
-            await using var session = await sessionOpener.OpenAsync(
+            return await sessionProvider.UseSessionAsync(
                 registration,
+                session => operation(session, timeoutSource.Token),
                 timeoutSource.Token
             );
-
-            return await operation(session, timeoutSource.Token);
         }
         catch (OperationCanceledException exception)
             when (!cancellationToken.IsCancellationRequested)

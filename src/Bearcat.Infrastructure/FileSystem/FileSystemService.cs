@@ -80,6 +80,11 @@ public class FileSystemService : IFileSystemService
         return Directory.Exists(path);
     }
 
+    public bool DirectoryHasEntries(string path)
+    {
+        return Directory.Exists(path) && Directory.EnumerateFileSystemEntries(path).Any();
+    }
+
     public void DeleteFileIfExists(string filePath)
     {
         if (!File.Exists(filePath))

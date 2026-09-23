@@ -9,4 +9,5 @@ public enum NotificationGroup
     Hosters = 5,
     LinkCrypters = 6,
     DistributionSites = 7,
+    RemoteDownloads = 8,
 }

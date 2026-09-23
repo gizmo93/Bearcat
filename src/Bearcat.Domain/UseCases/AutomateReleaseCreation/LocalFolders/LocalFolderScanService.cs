@@ -55,6 +55,12 @@ public class LocalFolderScanService(
                     cancellationToken
                 )
             );
+            existingFolderPaths.UnionWith(
+                await repository.GetRemoteDownloadFolderPathsAsync(
+                    candidatePaths,
+                    cancellationToken
+                )
+            );
         }
 
         var observations = await repository.GetFolderObservationsAsync(cancellationToken);

@@ -20,4 +20,22 @@ public class RemoteSourceConfiguration : IApplicationConfiguration
         "RemoteSourceDownloadMinimumFolderSizeMegabytesDescription"
     )]
     public int MinimumFolderSizeMegabytes { get; set; } = 1;
+
+    [ApplicationConfigurationProperty(
+        "RemoteSourceDownloadMaxParallelFileDownloads",
+        "RemoteSourceDownloadMaxParallelFileDownloadsDescription"
+    )]
+    public int MaxParallelFileDownloads { get; set; } = 4;
+
+    [ApplicationConfigurationProperty(
+        "RemoteSourceDownloadMaxDownloadAttempts",
+        "RemoteSourceDownloadMaxDownloadAttemptsDescription"
+    )]
+    public int MaxDownloadAttempts { get; set; } = 3;
+
+    [ApplicationConfigurationProperty(
+        "RemoteSourceDownloadRetryDelaySeconds",
+        "RemoteSourceDownloadRetryDelaySecondsDescription"
+    )]
+    public int DownloadRetryDelaySeconds { get; set; } = 30;
 }

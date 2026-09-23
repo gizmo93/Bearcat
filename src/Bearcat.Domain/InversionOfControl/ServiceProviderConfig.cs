@@ -12,6 +12,8 @@ using Bearcat.Domain.Shared.QualityGate.Checks;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Scanning;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
@@ -52,6 +54,7 @@ using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.PostToForums;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.InversionOfControl;
@@ -64,9 +67,17 @@ public static class ServiceProviderConfig
         {
             services.AddScoped<HosterRegistrationService>();
             services.AddScoped<RemoteSourceRegistrationService>();
-            services.AddScoped<RemoteSourceSessionOpener>();
+            services.AddSingleton(provider => new RemoteSourceSessionPool(
+                System.TimeProvider.System,
+                provider.GetRequiredService<ILogger<RemoteSourceSessionPool>>()
+            ));
+            services.AddScoped<RemoteSourceSessionProvider>();
             services.AddScoped<RemoteSourceAutomationService>();
             services.AddScoped<RemoteSourceScanService>();
+            services.AddScoped<RemoteSourceDownloadService>();
+            services.AddScoped<RemoteSourceDownloadStateService>();
+            services.AddScoped<RemoteDownloadFolderService>();
+            services.AddScoped<RemoteDownloadReleaseCreator>();
             services.AddScoped<ImageHosterService>();
             services.AddScoped<DistributionSiteSessionService>();
             services.AddScoped<DistributionSiteRegistrationService>();

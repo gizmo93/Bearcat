@@ -18,6 +18,11 @@ public interface ILocalFolderScanRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<HashSet<string>> GetRemoteDownloadFolderPathsAsync(
+        IReadOnlyList<string> localFolderPaths,
+        CancellationToken cancellationToken = default
+    );
+
     Task<IReadOnlyList<ReleaseFolderAutomation>> GetEnabledWithTemplatesAsync(
         CancellationToken cancellationToken = default
     );

@@ -1046,6 +1046,7 @@
   <data name="NotificationGroup.Hosters" xml:space="preserve"><value>Hoster</value></data>
   <data name="NotificationGroup.LinkCrypters" xml:space="preserve"><value>Linkcrypter</value></data>
   <data name="NotificationGroup.DistributionSites" xml:space="preserve"><value>Verteilungsseiten</value></data>
+  <data name="NotificationGroup.RemoteDownloads" xml:space="preserve"><value>Remotedownloads</value></data>
   <data name="NotificationKind.Legacy" xml:space="preserve"><value>Bestehende Benachrichtigung</value></data>
   <data name="NotificationKind.ReleaseAutomaticallyCreated" xml:space="preserve"><value>Release automatisch erstellt</value></data><data name="NotificationKind.ReleaseAutomaticallyCreated.Description" xml:space="preserve"><value>Ein Release wurde durch die Ordnerautomatisierung erstellt.</value></data>
   <data name="NotificationKind.ReleaseAutoConvertedToUnmanaged" xml:space="preserve"><value>Release in Unmanaged umgewandelt</value></data><data name="NotificationKind.ReleaseAutoConvertedToUnmanaged.Description" xml:space="preserve"><value>Ein Release wurde in Unmanaged umgewandelt, weil die Aufbewahrung seines Releaseordners abgelaufen ist und der Releaseordner gelöscht werden kann.</value></data>
@@ -1185,6 +1186,10 @@
   <data name="ArchiveState.Restoring" xml:space="preserve"><value>Wird wiederhergestellt</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed" xml:space="preserve"><value>Archivwiederherstellung fehlgeschlagen</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed.Description" xml:space="preserve"><value>Ein Archiv konnte nicht von einem Onlinemirror wiederhergestellt werden.</value></data>
+  <data name="NotificationKind.ReleaseCreatedFromRemoteDownload" xml:space="preserve"><value>Release aus Remotedownload erstellt</value></data>
+  <data name="NotificationKind.ReleaseCreatedFromRemoteDownload.Description" xml:space="preserve"><value>Ein Release wurde automatisch aus einem Ordner erstellt, der von einer Remotequelle heruntergeladen wurde.</value></data>
+  <data name="NotificationKind.RemoteDownloadFailed" xml:space="preserve"><value>Remotedownload fehlgeschlagen</value></data>
+  <data name="NotificationKind.RemoteDownloadFailed.Description" xml:space="preserve"><value>Ein Ordner konnte nicht von einer Remotequelle heruntergeladen werden oder aus dem heruntergeladenen Ordner konnte kein Release erstellt werden.</value></data>
   <data name="MirrorDownloads" xml:space="preserve"><value>Mirrordownloads</value></data>
   <data name="MirrorDownloadsDescription" xml:space="preserve"><value>Steuert, wie Archive von Onlinemirrors geladen werden, wenn sie nicht mehr lokal liegen.</value></data>
   <data name="MirrorDownloadsRequirePremium" xml:space="preserve"><value>Mirrordownloads von diesem Hoster benötigen einen Premiumaccount.</value></data>
@@ -1301,11 +1306,17 @@
   <data name="RemoteSourceDownloadState.Canceled" xml:space="preserve"><value>Abgebrochen</value></data>
   <data name="RemoteSourceDownloadState.Ignored" xml:space="preserve"><value>Ignoriert</value></data>
   <data name="RemoteSourceDownloads" xml:space="preserve"><value>Remotedownloads</value></data>
-  <data name="RemoteSourceDownloadsDescription" xml:space="preserve"><value>Steuert, wie Ordner auf Remotequellen überwacht und zum Herunterladen vorgemerkt werden.</value></data>
+  <data name="RemoteSourceDownloadsDescription" xml:space="preserve"><value>Steuert, wie Ordner auf Remotequellen überwacht, zum Herunterladen vorgemerkt und heruntergeladen werden.</value></data>
   <data name="RemoteSourceDownloadStabilityMinutes" xml:space="preserve"><value>Ordnerstabilität (Minuten)</value></data>
   <data name="RemoteSourceDownloadStabilityMinutesDescription" xml:space="preserve"><value>Ein Remoteordner wird erst zum Herunterladen vorgemerkt, wenn sich Dateianzahl und Gesamtgröße mindestens so viele Minuten lang nicht verändert haben. So werden keine Releases heruntergeladen, die noch auf den Server hochgeladen werden.</value></data>
   <data name="RemoteSourceDownloadMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimale Ordnergröße (MB)</value></data>
   <data name="RemoteSourceDownloadMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Remoteordner unter dieser Größe werden nicht vorgemerkt. Mit 0 deaktivierst du die Größenprüfung.</value></data>
+  <data name="RemoteSourceDownloadMaxParallelFileDownloads" xml:space="preserve"><value>Maximale parallele Dateidownloads</value></data>
+  <data name="RemoteSourceDownloadMaxParallelFileDownloadsDescription" xml:space="preserve"><value>Die Obergrenze gleichzeitig geladener Dateien über alle Remotequellen hinweg. Jede Remotequelle ist zusätzlich durch ihre maximale Anzahl an Verbindungen begrenzt.</value></data>
+  <data name="RemoteSourceDownloadMaxDownloadAttempts" xml:space="preserve"><value>Maximale Downloadversuche</value></data>
+  <data name="RemoteSourceDownloadMaxDownloadAttemptsDescription" xml:space="preserve"><value>Wie oft eine einzelne Datei erneut geladen wird, bevor der Download des ganzen Ordners fehlschlägt.</value></data>
+  <data name="RemoteSourceDownloadRetryDelaySeconds" xml:space="preserve"><value>Wiederholungsverzögerung (Sekunden)</value></data>
+  <data name="RemoteSourceDownloadRetryDelaySecondsDescription" xml:space="preserve"><value>Wie lange Bearcat nach einem fehlgeschlagenen Versuch wartet, bevor eine Datei erneut von einer Remotequelle geladen wird.</value></data>
   <data name="Priority" xml:space="preserve"><value>Priorität</value></data>
   <data name="RemoteSourceAutomationPriorityHelp" xml:space="preserve"><value>Kleinere Werte werden zuerst geprüft. Nur relevant, wenn sich die Muster mehrerer Automatisierungen auf demselben Remoteordner überschneiden.</value></data>
   <data name="RemoteSourceAutomationPatternHelp" xml:space="preserve"><value>Einfache Wildcards wie *1080p*. Leer lassen, damit jeder Ordner passt. Für ein anderes Muster legst du eine weitere Automatisierung an.</value></data>

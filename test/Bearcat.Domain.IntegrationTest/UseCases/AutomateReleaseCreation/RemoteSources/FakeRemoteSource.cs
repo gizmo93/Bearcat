@@ -1,7 +1,7 @@
 using Bearcat.Abstractions.ConfigurationFields;
 using Bearcat.Abstractions.RemoteSource;
 
-namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.RemoteSources.Scanning;
+namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.RemoteSources;
 
 public sealed class FakeRemoteSource(IReadOnlyDictionary<string, FakeRemoteServer> serversByKey)
     : IRemoteSource
@@ -21,12 +21,12 @@ public sealed class FakeRemoteSource(IReadOnlyDictionary<string, FakeRemoteServe
     )
     {
         var server = serversByKey[((FakeRemoteSourceConfig)config).ServerKey];
-        server.MarkOpened();
-
         if (server.OpenException is not null)
         {
             throw server.OpenException;
         }
+
+        server.MarkOpened();
 
         return Task.FromResult<IRemoteSourceSession>(new FakeRemoteSourceSession(server));
     }

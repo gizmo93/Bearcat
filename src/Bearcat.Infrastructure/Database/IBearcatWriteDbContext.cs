@@ -42,6 +42,8 @@ public interface IBearcatWriteDbContext
 
     EntityEntry Remove(object entity);
 
+    EntityEntry Entry(object entity);
+
     ChangeTracker ChangeTracker { get; }
     DbSet<LinkCrypterRegistration> LinkCrypterRegistrations { get; set; }
     DbSet<UploadConfigLinkCrypter> UploadConfigLinkCrypters { get; set; }

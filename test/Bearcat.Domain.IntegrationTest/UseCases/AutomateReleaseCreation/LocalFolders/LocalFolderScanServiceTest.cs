@@ -655,6 +655,55 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
         release.ReleaseFolderPath.ShouldBe(folder.FullName);
     }
 
+    [TestCase(RemoteSourceDownloadState.Downloading)]
+    [TestCase(RemoteSourceDownloadState.Downloaded)]
+    [TestCase(RemoteSourceDownloadState.Failed)]
+    public async Task ProcessAsync_FolderIsTargetOfRemoteDownload_IsSkipped(
+        RemoteSourceDownloadState downloadState
+    )
+    {
+        // Arrange
+        var releaseTemplate = await AddReleaseTemplateAsync();
+        var remoteDownloadFolder = Directory.CreateDirectory(
+            Path.Combine(tempRootPath, "Remote.Release.1080p")
+        );
+        await File.WriteAllTextAsync(
+            Path.Combine(remoteDownloadFolder.FullName, "video.mkv"),
+            "partial"
+        );
+        var localFolder = Directory.CreateDirectory(
+            Path.Combine(tempRootPath, "Local.Release.1080p")
+        );
+        await AddAutomationAsync(releaseTemplate.ReleaseTemplateId, tempRootPath, "*1080p*");
+        await AddRemoteSourceDownloadAsync(remoteDownloadFolder.FullName, downloadState);
+
+        // Act
+        var result = await ProcessUntilStableAsync();
+
+        // Assert
+        result.ShouldBe(1);
+        (await dbContext.Releases.SingleAsync()).ReleaseFolderPath.ShouldBe(localFolder.FullName);
+        (await dbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
+    }
+
+    private async Task AddRemoteSourceDownloadAsync(
+        string localFolderPath,
+        RemoteSourceDownloadState state
+    )
+    {
+        dbContext.RemoteSourceDownloads.Add(
+            new RemoteSourceDownload
+            {
+                SourceName = "Main FTP",
+                RemoteFolderPath = $"/incoming/{Path.GetFileName(localFolderPath)}",
+                FolderName = Path.GetFileName(localFolderPath),
+                LocalFolderPath = localFolderPath,
+                State = state,
+            }
+        );
+        await dbContext.SaveChangesAsync();
+    }
+
     private async Task<ReleaseTemplateSeed> AddReleaseTemplateAsync(
         ReleaseType releaseType = ReleaseType.Managed
     )

@@ -1,6 +1,6 @@
 using Bearcat.Abstractions.RemoteSource;
 
-namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.RemoteSources.Scanning;
+namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.RemoteSources;
 
 public sealed class FakeRemoteSourceConfig(string serverKey) : IRemoteSourceConfig
 {

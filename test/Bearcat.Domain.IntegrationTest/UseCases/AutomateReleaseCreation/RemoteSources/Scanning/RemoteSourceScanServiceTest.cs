@@ -37,10 +37,15 @@ public class RemoteSourceScanServiceTest : BearcatIntegrationTest
     private FakeRemoteSource remoteSource = null!;
     private ControllableTimeProvider timeProvider = null!;
     private RemoteSourceConfiguration remoteSourceConfiguration = null!;
+    private RemoteSourceSessionPool sessionPool = null!;
 
     [SetUp]
     public void Setup()
     {
+        sessionPool = new RemoteSourceSessionPool(
+            TimeProvider.System,
+            NullLogger<RemoteSourceSessionPool>.Instance
+        );
         servers = new Dictionary<string, FakeRemoteServer>(StringComparer.Ordinal);
         remoteSource = new FakeRemoteSource(servers);
         timeProvider = new ControllableTimeProvider(StartTime);
@@ -49,6 +54,12 @@ public class RemoteSourceScanServiceTest : BearcatIntegrationTest
             StabilityMinutes = 5,
             MinimumFolderSizeMegabytes = 0,
         };
+    }
+
+    [TearDown]
+    public async Task DisposeSessionPoolAsync()
+    {
+        await sessionPool.DisposeAsync();
     }
 
     [Test]
@@ -551,7 +562,7 @@ public class RemoteSourceScanServiceTest : BearcatIntegrationTest
             .Single()
             .RemoteFolderPath.ShouldBe("/tv/Show.S01E01-GRP");
         (await ReloadAutomationAsync(missing.Id)).HasCompletedInitialScan.ShouldBeFalse();
-        server.OpenCount.ShouldBe(1);
+        server.OpenCount.ShouldBe(2);
         server.DisposeCount.ShouldBe(1);
     }
 
@@ -608,10 +619,74 @@ public class RemoteSourceScanServiceTest : BearcatIntegrationTest
         inactiveServer.OpenCount.ShouldBe(0);
     }
 
+    [Test]
+    public async Task ProcessAsync_ConsecutiveScans_ReuseIdlePooledSession()
+    {
+        // Arrange
+        var template = await AddReleaseTemplateAsync("HD", ReleaseType.Managed);
+        var server = AddServer("main");
+        server.SetFolder(IncomingPath, "Release.1080p-GRP", 100);
+        var registration = await AddRegistrationAsync("Main FTP", "main");
+        await AddAutomationAsync(registration, template);
+
+        // Act
+        await ProcessAsync();
+        timeProvider.Now = StartTime.AddMinutes(1);
+        await ProcessAsync();
+
+        // Assert
+        server.OpenCount.ShouldBe(1);
+        server.DisposeCount.ShouldBe(0);
+        server.RecursivelyListedPaths.Count.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task ProcessAsync_AllConnectionsLeased_WaitsForFreeConnectionOfPool()
+    {
+        // Arrange
+        var template = await AddReleaseTemplateAsync("HD", ReleaseType.Managed);
+        var server = AddServer("main");
+        server.SetFolder(IncomingPath, "Release.1080p-GRP", 100);
+        var registration = await AddRegistrationAsync("Main FTP", "main", maxConnections: 1);
+        await AddAutomationAsync(registration, template);
+        var releaseHeldSession = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
+        var heldSession = CreateSessionProvider()
+            .UseSessionAsync(registration, _ => releaseHeldSession.Task, CancellationToken.None);
+
+        // Act
+        var scan = ProcessAsync();
+        await Task.Delay(TimeSpan.FromMilliseconds(200));
+        var completedWhileSessionWasHeld = scan.IsCompleted;
+        releaseHeldSession.SetResult(true);
+        await heldSession;
+        await scan;
+
+        // Assert
+        completedWhileSessionWasHeld.ShouldBeFalse();
+        server.OpenCount.ShouldBe(1);
+        server.MaxConcurrentSessions.ShouldBe(1);
+        (await GetDownloadsAsync()).Single().FolderName.ShouldBe("Release.1080p-GRP");
+    }
+
     private async Task<int> ProcessAsync()
     {
         var dbContext = CreateDbContext();
         var repository = new RemoteSourceAutomationRepository(dbContext, dbContext);
+        var service = new RemoteSourceScanService(
+            repository,
+            CreateSessionProvider(),
+            timeProvider,
+            CreateConfigurationProvider(),
+            NullLogger<RemoteSourceScanService>.Instance
+        );
+
+        return await service.ProcessAsync(CancellationToken.None);
+    }
+
+    private RemoteSourceSessionProvider CreateSessionProvider()
+    {
         var factory = new Mock<IRemoteSourceFactory>(MockBehavior.Strict);
         factory.Setup(f => f.GetByClassName(SourceClassName)).Returns(remoteSource);
         var secretProtector = new Mock<ISecretProtector>(MockBehavior.Strict);
@@ -619,15 +694,7 @@ public class RemoteSourceScanServiceTest : BearcatIntegrationTest
             .Setup(p => p.Unprotect(It.IsAny<string>()))
             .Returns((string value) => value);
 
-        var service = new RemoteSourceScanService(
-            repository,
-            new RemoteSourceSessionOpener(factory.Object, secretProtector.Object),
-            timeProvider,
-            CreateConfigurationProvider(),
-            NullLogger<RemoteSourceScanService>.Instance
-        );
-
-        return await service.ProcessAsync(CancellationToken.None);
+        return new RemoteSourceSessionProvider(sessionPool, factory.Object, secretProtector.Object);
     }
 
     private IApplicationConfigurationProvider CreateConfigurationProvider()
@@ -692,7 +759,8 @@ public class RemoteSourceScanServiceTest : BearcatIntegrationTest
     private async Task<RemoteSourceRegistration> AddRegistrationAsync(
         string name,
         string serverKey,
-        bool isActive = true
+        bool isActive = true,
+        int maxConnections = RemoteSourceRegistration.DefaultMaxConnections
     )
     {
         var registration = new RemoteSourceRegistration
@@ -701,6 +769,7 @@ public class RemoteSourceScanServiceTest : BearcatIntegrationTest
             SerializedConfig = serverKey,
             SourceClassName = SourceClassName,
             IsActive = isActive,
+            MaxConnections = maxConnections,
         };
 
         var dbContext = CreateDbContext();
