@@ -57,22 +57,27 @@ public class RemoteSourceScanService(
     )
     {
         var registration = automations[0].RemoteSourceRegistration;
+
         var foldersByRemotePath = RemoveFoldersWithUnsafeNames(
             registration,
             await ListFoldersPerRemotePathAsync(registration, automations, cancellationToken)
         );
+
         var listedFolderPaths = foldersByRemotePath
             .Values.SelectMany(folders => folders)
             .Select(folder => folder.FullPath)
             .ToList();
+
         var existingDownloads = await repository.GetDownloadsAsync(
             registration.Id,
             listedFolderPaths,
             cancellationToken
         );
+
         var existingDownloadsByPath = existingDownloads.ToDictionary(download =>
             download.RemoteFolderPath
         );
+
         var foldersByAutomationId = RemoteSourceAutomationMatcher.AssignFoldersToAutomations(
             automations,
             foldersByRemotePath,
@@ -88,11 +93,11 @@ public class RemoteSourceScanService(
             try
             {
                 pendingCount += await ScanAutomationAsync(
-                    automation,
-                    foldersByAutomationId[automation.Id],
-                    existingDownloadsByPath,
-                    settings,
-                    cancellationToken
+                    automation: automation,
+                    assignedFolders: foldersByAutomationId[automation.Id],
+                    existingDownloadsByPath: existingDownloadsByPath,
+                    settings: settings,
+                    cancellationToken: cancellationToken
                 );
             }
             catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
@@ -129,9 +134,10 @@ public class RemoteSourceScanService(
             try
             {
                 foldersByRemotePath[pathAutomations.Key] = await sessionProvider.UseSessionAsync(
-                    registration,
-                    session => session.ListFoldersAsync(pathAutomations.Key, cancellationToken),
-                    cancellationToken
+                    registration: registration,
+                    action: session =>
+                        session.ListFoldersAsync(pathAutomations.Key, cancellationToken),
+                    cancellationToken: cancellationToken
                 );
             }
             catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
@@ -196,27 +202,28 @@ public class RemoteSourceScanService(
             automation.Id,
             cancellationToken
         );
+
         var localNow = timeProvider.GetLocalNow();
         var pendingCount = 0;
 
         if (!automation.HasCompletedInitialScan && automation.IgnoreExistingOnFirstScan)
         {
             RecordExistingFoldersAsIgnored(
-                automation,
-                assignedFolders,
-                existingDownloadsByPath,
-                localNow
+                automation: automation,
+                assignedFolders: assignedFolders,
+                existingDownloadsByPath: existingDownloadsByPath,
+                localNow: localNow
             );
         }
         else
         {
             pendingCount = await RecordNewFoldersAndQueueStableOnesAsync(
-                automation,
-                assignedFolders,
-                existingDownloadsByPath,
-                settings,
-                localNow,
-                cancellationToken
+                automation: automation,
+                assignedFolders: assignedFolders,
+                existingDownloadsByPath: existingDownloadsByPath,
+                settings: settings,
+                localNow: localNow,
+                cancellationToken: cancellationToken
             );
         }
 
@@ -253,11 +260,11 @@ public class RemoteSourceScanService(
         {
             repository.Add(
                 CreateDownloadRecord(
-                    automation,
-                    folder,
-                    RemoteSourceDownloadState.Ignored,
-                    new FolderContentFingerprint(0, 0),
-                    localNow
+                    automation: automation,
+                    folder: folder,
+                    state: RemoteSourceDownloadState.Ignored,
+                    fileCountAndSize: new FolderFileCountAndSize(0, 0),
+                    localNow: localNow
                 )
             );
         }
@@ -282,11 +289,11 @@ public class RemoteSourceScanService(
             {
                 if (
                     await QueueDownloadIfFolderIsStableAsync(
-                        automation,
-                        download,
-                        settings,
-                        localNow,
-                        cancellationToken
+                        automation: automation,
+                        download: download,
+                        settings: settings,
+                        localNow: localNow,
+                        cancellationToken: cancellationToken
                     )
                 )
                 {
@@ -296,18 +303,18 @@ public class RemoteSourceScanService(
                 continue;
             }
 
-            var fingerprint = await GetFolderContentFingerprintAsync(
+            var fileCountAndSize = await GetFolderFileCountAndSizeAsync(
                 automation.RemoteSourceRegistration,
                 folder.FullPath,
                 cancellationToken
             );
             repository.Add(
                 CreateDownloadRecord(
-                    automation,
-                    folder,
-                    RemoteSourceDownloadState.Observing,
-                    fingerprint,
-                    localNow
+                    automation: automation,
+                    folder: folder,
+                    state: RemoteSourceDownloadState.Observing,
+                    fileCountAndSize: fileCountAndSize,
+                    localNow: localNow
                 )
             );
         }
@@ -325,15 +332,15 @@ public class RemoteSourceScanService(
     {
         CopyAutomationSettingsToDownload(download, automation);
 
-        var fingerprint = await GetFolderContentFingerprintAsync(
+        var fileCountAndSize = await GetFolderFileCountAndSizeAsync(
             automation.RemoteSourceRegistration,
             download.RemoteFolderPath,
             cancellationToken
         );
 
-        var stability = FolderStabilityGate.Evaluate(
-            observed: new FolderContentFingerprint(download.FileCount, download.TotalBytes),
-            current: fingerprint,
+        var stability = FolderStabilityCheck.GetStability(
+            observed: new FolderFileCountAndSize(download.FileCount, download.TotalBytes),
+            current: fileCountAndSize,
             lastChangedAt: download.LastChangedAt,
             now: localNow,
             stabilityWindow: settings.StabilityWindow
@@ -341,17 +348,17 @@ public class RemoteSourceScanService(
 
         if (stability is FolderStability.Changed)
         {
-            download.FileCount = fingerprint.FileCount;
-            download.TotalBytes = fingerprint.TotalBytes;
+            download.FileCount = fileCountAndSize.FileCount;
+            download.TotalBytes = fileCountAndSize.TotalBytes;
             download.LastChangedAt = localNow;
 
             return false;
         }
 
         if (
-            stability is FolderStability.Settling
-            || fingerprint.FileCount == 0
-            || fingerprint.TotalBytes < settings.MinimumBytes
+            stability is FolderStability.NotYetStable
+            || fileCountAndSize.FileCount == 0
+            || fileCountAndSize.TotalBytes < settings.MinimumBytes
         )
         {
             return false;
@@ -362,26 +369,26 @@ public class RemoteSourceScanService(
         return true;
     }
 
-    private async Task<FolderContentFingerprint> GetFolderContentFingerprintAsync(
+    private async Task<FolderFileCountAndSize> GetFolderFileCountAndSizeAsync(
         RemoteSourceRegistration registration,
         string remoteFolderPath,
         CancellationToken cancellationToken
     )
     {
         var files = await sessionProvider.UseSessionAsync(
-            registration,
-            session => session.ListFilesRecursiveAsync(remoteFolderPath, cancellationToken),
-            cancellationToken
+            registration: registration,
+            action: session => session.ListFilesRecursiveAsync(remoteFolderPath, cancellationToken),
+            cancellationToken: cancellationToken
         );
 
-        return new FolderContentFingerprint(files.Count, files.Sum(file => file.SizeBytes));
+        return new FolderFileCountAndSize(files.Count, files.Sum(file => file.SizeBytes));
     }
 
     private static RemoteSourceDownload CreateDownloadRecord(
         RemoteSourceAutomation automation,
         RemoteFolderDto folder,
         RemoteSourceDownloadState state,
-        FolderContentFingerprint fingerprint,
+        FolderFileCountAndSize fileCountAndSize,
         DateTime localNow
     )
     {
@@ -394,8 +401,8 @@ public class RemoteSourceScanService(
             FolderName = folder.Name,
             LocalFolderPath = Path.Combine(automation.TargetPath, folder.Name),
             State = state,
-            FileCount = fingerprint.FileCount,
-            TotalBytes = fingerprint.TotalBytes,
+            FileCount = fileCountAndSize.FileCount,
+            TotalBytes = fileCountAndSize.TotalBytes,
             LastChangedAt = localNow,
             DiscoveredAt = localNow,
         };
@@ -422,6 +429,7 @@ public class RemoteSourceScanService(
         var stabilityMinutes = configuration.GetValue<RemoteSourceConfiguration>(c =>
             c.StabilityMinutes
         );
+
         var minimumFolderSizeMegabytes = configuration.GetValue<RemoteSourceConfiguration>(c =>
             c.MinimumFolderSizeMegabytes
         );

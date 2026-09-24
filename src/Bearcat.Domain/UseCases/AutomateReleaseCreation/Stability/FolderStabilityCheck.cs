@@ -2,11 +2,11 @@ using Bearcat.Abstractions;
 
 namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.Stability;
 
-public static class FolderStabilityGate
+public static class FolderStabilityCheck
 {
-    public static FolderStability Evaluate(
-        FolderContentFingerprint observed,
-        FolderContentFingerprint current,
+    public static FolderStability GetStability(
+        FolderFileCountAndSize observed,
+        FolderFileCountAndSize current,
         DateTime lastChangedAt,
         DateTime now,
         TimeSpan stabilityWindow
@@ -18,7 +18,7 @@ public static class FolderStabilityGate
         }
 
         return now - lastChangedAt < stabilityWindow
-            ? FolderStability.Settling
+            ? FolderStability.NotYetStable
             : FolderStability.Stable;
     }
 }

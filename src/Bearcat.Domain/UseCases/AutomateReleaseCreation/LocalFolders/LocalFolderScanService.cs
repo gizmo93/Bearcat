@@ -105,7 +105,9 @@ public class LocalFolderScanService(
                 continue;
             }
 
-            var fingerprint = fileSystemService.GetFolderContentFingerprint(candidate.FolderPath);
+            var fileCountAndSize = fileSystemService.GetFolderFileCountAndSize(
+                candidate.FolderPath
+            );
 
             if (!observationsByPath.TryGetValue(candidate.FolderPath, out var observation))
             {
@@ -113,8 +115,8 @@ public class LocalFolderScanService(
                     new ReleaseFolderObservation
                     {
                         FolderPath = candidate.FolderPath,
-                        FileCount = fingerprint.FileCount,
-                        TotalBytes = fingerprint.TotalBytes,
+                        FileCount = fileCountAndSize.FileCount,
+                        TotalBytes = fileCountAndSize.TotalBytes,
                         LastChangedAt = localNow,
                     }
                 );
@@ -122,12 +124,9 @@ public class LocalFolderScanService(
                 continue;
             }
 
-            var stability = FolderStabilityGate.Evaluate(
-                observed: new FolderContentFingerprint(
-                    observation.FileCount,
-                    observation.TotalBytes
-                ),
-                current: fingerprint,
+            var stability = FolderStabilityCheck.GetStability(
+                observed: new FolderFileCountAndSize(observation.FileCount, observation.TotalBytes),
+                current: fileCountAndSize,
                 lastChangedAt: observation.LastChangedAt,
                 now: localNow,
                 stabilityWindow: stabilityWindow
@@ -135,19 +134,19 @@ public class LocalFolderScanService(
 
             if (stability is FolderStability.Changed)
             {
-                observation.FileCount = fingerprint.FileCount;
-                observation.TotalBytes = fingerprint.TotalBytes;
+                observation.FileCount = fileCountAndSize.FileCount;
+                observation.TotalBytes = fileCountAndSize.TotalBytes;
                 observation.LastChangedAt = localNow;
                 hasChanges = true;
                 continue;
             }
 
-            if (stability is FolderStability.Settling)
+            if (stability is FolderStability.NotYetStable)
             {
                 continue;
             }
 
-            if (fingerprint.TotalBytes < minimumBytes)
+            if (fileCountAndSize.TotalBytes < minimumBytes)
             {
                 continue;
             }

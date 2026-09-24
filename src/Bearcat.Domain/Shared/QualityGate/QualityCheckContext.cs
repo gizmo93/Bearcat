@@ -15,7 +15,7 @@ public sealed class QualityCheckContext(Release release, IFileSystemService file
     public long TotalBytes =>
         totalBytes ??= release.ReleaseFolderPath is null
             ? 0
-            : fileSystemService.GetFolderContentFingerprint(release.ReleaseFolderPath).TotalBytes;
+            : fileSystemService.GetFolderFileCountAndSize(release.ReleaseFolderPath).TotalBytes;
 
     private List<string> ReadFiles()
     {
