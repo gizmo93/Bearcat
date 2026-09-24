@@ -19,9 +19,10 @@ public class RemoteDownloadFolderService(
         if (!RemoteDownloadPaths.CanDeleteDownloadFolder(download))
         {
             logger.LogWarning(
-                "Not deleting {LocalFolderPath} of remote download {DownloadId} because it is not a download folder inside the target path of its automation",
+                "Not deleting {LocalFolderPath} of remote download {DownloadId} because its folder name {FolderName} is unsafe or differs from the last path segment",
                 download.LocalFolderPath,
-                download.Id
+                download.Id,
+                download.FolderName
             );
 
             return false;

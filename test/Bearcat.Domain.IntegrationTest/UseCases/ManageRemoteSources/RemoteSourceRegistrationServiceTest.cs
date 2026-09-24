@@ -54,10 +54,7 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
             ]);
 
         repository = new RemoteSourceRegistrationRepository(dbContext, dbContext, factory.Object);
-        sessionPool = new RemoteSourceSessionPool(
-            TimeProvider.System,
-            NullLogger<RemoteSourceSessionPool>.Instance
-        );
+        sessionPool = new RemoteSourceSessionPool(NullLogger<RemoteSourceSessionPool>.Instance);
         service = new RemoteSourceRegistrationService(
             repository,
             factory.Object,
@@ -134,7 +131,8 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
             service.CreateAsync("Main server", SourceClassName, values, maxConnections);
 
         // Assert
-        await Should.ThrowAsync<ArgumentOutOfRangeException>(action);
+        var exception = await Should.ThrowAsync<ArgumentException>(action);
+        exception.Message.ShouldBe("Max connections must be at least 1.");
     }
 
     [Test]

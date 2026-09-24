@@ -57,7 +57,10 @@ public class RemoteSourceScanService(
     )
     {
         var registration = automations[0].RemoteSourceRegistration;
-        var listings = await ListRemotePathsAsync(registration, automations, cancellationToken);
+        var listings = RemoveUnsafeFolders(
+            registration,
+            await ListRemotePathsAsync(registration, automations, cancellationToken)
+        );
         var listedFolderPaths = listings
             .Values.SelectMany(folders => folders)
             .Select(folder => folder.FullPath)
@@ -70,7 +73,11 @@ public class RemoteSourceScanService(
         var existingDownloadsByPath = existingDownloads.ToDictionary(download =>
             download.RemoteFolderPath
         );
-        var claims = ResolveClaims(automations, listings, existingDownloadsByPath);
+        var claims = RemoteSourceAutomationMatcher.ResolveClaims(
+            automations,
+            listings,
+            existingDownloadsByPath
+        );
 
         var pendingCount = 0;
 
@@ -138,75 +145,39 @@ public class RemoteSourceScanService(
         return listings;
     }
 
-    private Dictionary<int, List<RemoteFolderDto>> ResolveClaims(
-        IReadOnlyList<RemoteSourceAutomation> automations,
-        IReadOnlyDictionary<string, IReadOnlyList<RemoteFolderDto>> listings,
-        IReadOnlyDictionary<string, RemoteSourceDownload> existingDownloadsByPath
+    private Dictionary<string, IReadOnlyList<RemoteFolderDto>> RemoveUnsafeFolders(
+        RemoteSourceRegistration registration,
+        Dictionary<string, IReadOnlyList<RemoteFolderDto>> listings
     )
     {
-        var claims = automations.ToDictionary(
-            automation => automation.Id,
-            _ => new List<RemoteFolderDto>()
+        var safeListings = new Dictionary<string, IReadOnlyList<RemoteFolderDto>>(
+            StringComparer.Ordinal
         );
 
         foreach (var (remotePath, folders) in listings)
         {
-            var pathAutomations = automations
-                .Where(automation => automation.RemotePath == remotePath)
-                .ToList();
+            var safeFolders = new List<RemoteFolderDto>();
 
             foreach (var folder in folders)
             {
-                var owner = existingDownloadsByPath.TryGetValue(folder.FullPath, out var download)
-                    ? FindExistingOwner(pathAutomations, download, folder)
-                    : FindNewOwner(pathAutomations, folder);
-
-                if (owner is not null)
+                if (RemoteFolderNameValidator.IsSafe(folder.Name))
                 {
-                    claims[owner.Id].Add(folder);
+                    safeFolders.Add(folder);
+                    continue;
                 }
+
+                logger.LogWarning(
+                    "Skipped remote folder {RemoteFolderName} in {RemotePath} on {RemoteSourceName} because its name is not a safe local folder name",
+                    folder.Name,
+                    remotePath,
+                    registration.Name
+                );
             }
+
+            safeListings[remotePath] = safeFolders;
         }
 
-        return claims;
-    }
-
-    private static RemoteSourceAutomation? FindExistingOwner(
-        IReadOnlyList<RemoteSourceAutomation> pathAutomations,
-        RemoteSourceDownload download,
-        RemoteFolderDto folder
-    )
-    {
-        if (download.State is not RemoteSourceDownloadState.Observing)
-        {
-            return null;
-        }
-
-        return pathAutomations.FirstOrDefault(automation =>
-            automation.Id == download.RemoteSourceAutomationId
-            && RemoteSourceAutomationMatcher.Matches(automation, folder.Name)
-        );
-    }
-
-    private RemoteSourceAutomation? FindNewOwner(
-        IReadOnlyList<RemoteSourceAutomation> pathAutomations,
-        RemoteFolderDto folder
-    )
-    {
-        var owner = RemoteSourceAutomationMatcher.FindFirstMatch(pathAutomations, folder.Name);
-
-        if (owner is null || RemoteFolderNameValidator.IsSafe(folder.Name))
-        {
-            return owner;
-        }
-
-        logger.LogWarning(
-            "Remote source automation {AutomationName} skipped remote folder {RemoteFolderPath} because its name is not a safe local folder name",
-            owner.Name,
-            folder.FullPath
-        );
-
-        return null;
+        return safeListings;
     }
 
     private async Task<int> ProcessAutomationAsync(

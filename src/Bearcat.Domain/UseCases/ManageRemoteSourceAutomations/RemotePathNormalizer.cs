@@ -8,7 +8,7 @@ public static class RemotePathNormalizer
     {
         if (string.IsNullOrWhiteSpace(remotePath))
         {
-            throw new ArgumentException("Remote path is required.", nameof(remotePath));
+            throw new ArgumentException("Remote path is required.");
         }
 
         return Separator + remotePath.Trim().Trim(Separator);

@@ -55,7 +55,6 @@ using Bearcat.Domain.UseCases.ManageUploadConfigs;
 using Bearcat.Domain.UseCases.ManageUploads;
 using Bearcat.Domain.UseCases.PostToForums;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.InversionOfControl;
@@ -68,10 +67,7 @@ public static class ServiceProviderConfig
         {
             services.AddScoped<HosterRegistrationService>();
             services.AddScoped<RemoteSourceRegistrationService>();
-            services.AddSingleton(provider => new RemoteSourceSessionPool(
-                System.TimeProvider.System,
-                provider.GetRequiredService<ILogger<RemoteSourceSessionPool>>()
-            ));
+            services.AddSingleton<RemoteSourceSessionPool>();
             services.AddScoped<RemoteSourceSessionProvider>();
             services.AddScoped<RemoteSourceAutomationService>();
             services.AddScoped<RemoteSourceScanService>();

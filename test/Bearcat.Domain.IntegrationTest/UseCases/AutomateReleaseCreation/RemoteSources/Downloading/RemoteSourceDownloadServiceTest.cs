@@ -71,10 +71,7 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
             MaxDownloadAttempts = 3,
             DownloadRetryDelaySeconds = 0,
         };
-        sessionPool = new RemoteSourceSessionPool(
-            TimeProvider.System,
-            NullLogger<RemoteSourceSessionPool>.Instance
-        );
+        sessionPool = new RemoteSourceSessionPool(NullLogger<RemoteSourceSessionPool>.Instance);
         cancellationRegistry = new TransferCancellationRegistry();
         progressTracker = new TransferProgressTracker();
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
@@ -474,14 +471,14 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task ProcessAsync_InterruptedDownloadOutsideTargetPath_IsQueuedAgainWithoutDeletingFolder()
+    public async Task ProcessAsync_InterruptedDownloadWhoseFolderNameDiffersFromLastSegment_IsQueuedAgainWithoutDeletingFolder()
     {
         // Arrange
         AddServer("main");
         var template = await AddReleaseTemplateAsync(ReleaseType.Managed);
         var registration = await AddRegistrationAsync("main", isActive: false);
         var automation = await AddAutomationAsync(registration, template);
-        var foreignFolderPath = Path.Combine(tempRootPath, "foreign", ReleaseName);
+        var foreignFolderPath = Path.Combine(targetPath, "Foreign.Folder-GRP");
         var foreignFilePath = Path.Combine(foreignFolderPath, "important.mkv");
         Directory.CreateDirectory(foreignFolderPath);
         await File.WriteAllTextAsync(foreignFilePath, "keep me");

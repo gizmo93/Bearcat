@@ -15,7 +15,8 @@ public class RemoteSourceSessionPoolTest
 
     private static readonly TimeSpan CompletionTimeout = TimeSpan.FromSeconds(5);
 
-    private ManualClock clock = null!;
+    private static readonly TimeSpan ShortIdleTimeout = TimeSpan.FromMilliseconds(50);
+
     private RemoteSourceSessionPool pool = null!;
     private List<TestSession> openedSessions = null!;
     private Exception? openException;
@@ -24,8 +25,7 @@ public class RemoteSourceSessionPoolTest
     [SetUp]
     public void Setup()
     {
-        clock = new ManualClock();
-        pool = new RemoteSourceSessionPool(clock, NullLogger<RemoteSourceSessionPool>.Instance);
+        pool = new RemoteSourceSessionPool(NullLogger<RemoteSourceSessionPool>.Instance);
         openedSessions = [];
         openException = null;
     }
@@ -41,7 +41,7 @@ public class RemoteSourceSessionPoolTest
     {
         // Arrange
         var first = await UseSessionAsync(maxConnections: 1);
-        clock.Advance(RemoteSourceSessionPool.IdleTimeout - TimeSpan.FromSeconds(1));
+        await Task.Delay(ShortIdleTimeout);
 
         // Act
         var second = await UseSessionAsync(maxConnections: 1);
@@ -56,8 +56,13 @@ public class RemoteSourceSessionPoolTest
     public async Task UseSessionAsync_SessionIdleForIdleTimeout_ClosesItAndOpensNewSession()
     {
         // Arrange
+        await pool.DisposeAsync();
+        pool = new RemoteSourceSessionPool(
+            NullLogger<RemoteSourceSessionPool>.Instance,
+            ShortIdleTimeout
+        );
         var first = await UseSessionAsync(maxConnections: 1);
-        clock.Advance(RemoteSourceSessionPool.IdleTimeout);
+        await Task.Delay(ShortIdleTimeout * 2);
 
         // Act
         var second = await UseSessionAsync(maxConnections: 1);
@@ -262,23 +267,6 @@ public class RemoteSourceSessionPoolTest
         }
 
         return Task.FromResult<IRemoteSourceSession>(session);
-    }
-
-    private sealed class ManualClock : TimeProvider
-    {
-        private long timestamp;
-
-        public override long TimestampFrequency => TimeSpan.TicksPerSecond;
-
-        public override long GetTimestamp()
-        {
-            return timestamp;
-        }
-
-        public void Advance(TimeSpan duration)
-        {
-            timestamp += duration.Ticks;
-        }
     }
 
     private sealed class TestSession : IRemoteSourceSession

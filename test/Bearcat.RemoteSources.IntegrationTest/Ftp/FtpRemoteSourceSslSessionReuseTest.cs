@@ -60,7 +60,11 @@ public class FtpRemoteSourceSslSessionReuseTest(FtpTlsProvider tlsProvider)
         // Assert
         files
             .Select(file => file.RelativePath)
-            .ShouldBe(["release.two-group.nfo", "release.two-group.rar"]);
+            .ShouldBe([
+                "Linked.Subs/Nested/empty.srt",
+                "release.two-group.nfo",
+                "release.two-group.rar",
+            ]);
     }
 
     [Test]

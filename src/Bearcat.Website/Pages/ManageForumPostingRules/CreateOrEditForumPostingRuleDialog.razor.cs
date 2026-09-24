@@ -262,7 +262,7 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
         }
         catch (ArgumentException exception)
         {
-            errorMessage = DescribeValidationError(exception);
+            errorMessage = exception.Message;
 
             return;
         }
@@ -300,13 +300,6 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
     private async Task CancelAsync()
     {
         await DialogRef.CancelAsync();
-    }
-
-    private static string DescribeValidationError(ArgumentException exception)
-    {
-        var index = exception.Message.IndexOf(" (Parameter", StringComparison.Ordinal);
-
-        return index < 0 ? exception.Message : exception.Message[..index];
     }
 
     private static void Flatten(

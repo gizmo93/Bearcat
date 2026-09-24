@@ -236,7 +236,7 @@ public class RemoteSourceRegistrationService(
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new ArgumentException("Name is required.", nameof(name));
+            throw new ArgumentException("Name is required.");
         }
 
         return name.Trim();
@@ -246,11 +246,7 @@ public class RemoteSourceRegistrationService(
     {
         if (maxConnections < MinMaxConnections)
         {
-            throw new ArgumentOutOfRangeException(
-                nameof(maxConnections),
-                maxConnections,
-                $"Max connections must be at least {MinMaxConnections}."
-            );
+            throw new ArgumentException($"Max connections must be at least {MinMaxConnections}.");
         }
     }
 }

@@ -1,20 +1,24 @@
+using System.Diagnostics;
 using Bearcat.Abstractions.RemoteSource;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
 
 public sealed class RemoteSourceSessionPool(
-    TimeProvider clock,
-    ILogger<RemoteSourceSessionPool> logger
+    ILogger<RemoteSourceSessionPool> logger,
+    TimeSpan idleTimeout
 ) : IAsyncDisposable
 {
-    public static readonly TimeSpan IdleTimeout = TimeSpan.FromSeconds(30);
+    public static readonly TimeSpan DefaultIdleTimeout = TimeSpan.FromSeconds(30);
 
     private readonly Lock gate = new();
 
     private readonly Dictionary<int, RegistrationSessions> sessionsByRegistrationId = new();
 
     private bool disposed;
+
+    public RemoteSourceSessionPool(ILogger<RemoteSourceSessionPool> logger)
+        : this(logger, DefaultIdleTimeout) { }
 
     public async Task<T> UseSessionAsync<T>(
         int registrationId,
@@ -119,7 +123,7 @@ public sealed class RemoteSourceSessionPool(
         {
             expiredSessions = TakeIdleSessions(
                 sessions,
-                idleSession => clock.GetElapsedTime(idleSession.ReturnedAt) >= IdleTimeout
+                idleSession => Stopwatch.GetElapsedTime(idleSession.ReturnedAt) >= idleTimeout
             );
 
             if (sessions.IdleSessions.Count > 0)
@@ -144,7 +148,7 @@ public sealed class RemoteSourceSessionPool(
         {
             if (!disposed && sessionsByRegistrationId.GetValueOrDefault(registrationId) == sessions)
             {
-                sessions.IdleSessions.Add(new IdleSession(session, clock.GetTimestamp()));
+                sessions.IdleSessions.Add(new IdleSession(session, Stopwatch.GetTimestamp()));
 
                 return;
             }

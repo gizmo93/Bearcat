@@ -50,10 +50,10 @@ public class RemoteDownloadPathsTest
     }
 
     [Test]
-    public void CanDeleteDownloadFolder_FolderInsideTargetPath_ReturnsTrue()
+    public void CanDeleteDownloadFolder_LastSegmentIsFolderName_ReturnsTrue()
     {
         // Arrange
-        var download = CreateDownload("Release-GRP", LocalFolderPath, TargetPath);
+        var download = CreateDownload("Release-GRP", LocalFolderPath);
 
         // Act
         var canDelete = RemoteDownloadPaths.CanDeleteDownloadFolder(download);
@@ -63,54 +63,26 @@ public class RemoteDownloadPathsTest
     }
 
     [Test]
-    public void CanDeleteDownloadFolder_AutomationWasDeleted_ReturnsTrueForRecordedDownloadFolder()
+    public void CanDeleteDownloadFolder_LocalFolderPathWithTrailingSeparator_ReturnsTrue()
     {
         // Arrange
-        var download = CreateDownload("Release-GRP", LocalFolderPath, targetPath: null);
+        var download = CreateDownload("Release-GRP", LocalFolderPath + Path.DirectorySeparatorChar);
 
         // Act
         var canDelete = RemoteDownloadPaths.CanDeleteDownloadFolder(download);
 
         // Assert
         canDelete.ShouldBeTrue();
-    }
-
-    [Test]
-    public void CanDeleteDownloadFolder_FolderOutsideTargetPath_ReturnsFalse()
-    {
-        // Arrange
-        var download = CreateDownload(
-            "Release-GRP",
-            Path.Combine(Path.GetTempPath(), "elsewhere", "Release-GRP"),
-            TargetPath
-        );
-
-        // Act
-        var canDelete = RemoteDownloadPaths.CanDeleteDownloadFolder(download);
-
-        // Assert
-        canDelete.ShouldBeFalse();
-    }
-
-    [Test]
-    public void CanDeleteDownloadFolder_FolderIsTargetPathItself_ReturnsFalse()
-    {
-        // Arrange
-        var download = CreateDownload("bearcat-downloads", TargetPath, TargetPath);
-
-        // Act
-        var canDelete = RemoteDownloadPaths.CanDeleteDownloadFolder(download);
-
-        // Assert
-        canDelete.ShouldBeFalse();
     }
 
     [TestCase("..")]
     [TestCase("Other-GRP")]
-    public void CanDeleteDownloadFolder_FolderNameDoesNotMatchPath_ReturnsFalse(string folderName)
+    public void CanDeleteDownloadFolder_FolderNameDoesNotMatchLastSegment_ReturnsFalse(
+        string folderName
+    )
     {
         // Arrange
-        var download = CreateDownload(folderName, LocalFolderPath, targetPath: null);
+        var download = CreateDownload(folderName, LocalFolderPath);
 
         // Act
         var canDelete = RemoteDownloadPaths.CanDeleteDownloadFolder(download);
@@ -119,11 +91,20 @@ public class RemoteDownloadPathsTest
         canDelete.ShouldBeFalse();
     }
 
-    private static RemoteSourceDownload CreateDownload(
-        string folderName,
-        string localFolderPath,
-        string? targetPath
-    )
+    [Test]
+    public void CanDeleteDownloadFolder_UnsafeFolderNameMatchingLastSegment_ReturnsFalse()
+    {
+        // Arrange
+        var download = CreateDownload("...", Path.Combine(TargetPath, "..."));
+
+        // Act
+        var canDelete = RemoteDownloadPaths.CanDeleteDownloadFolder(download);
+
+        // Assert
+        canDelete.ShouldBeFalse();
+    }
+
+    private static RemoteSourceDownload CreateDownload(string folderName, string localFolderPath)
     {
         return new RemoteSourceDownload
         {
@@ -131,14 +112,6 @@ public class RemoteDownloadPathsTest
             RemoteFolderPath = $"/incoming/{folderName}",
             FolderName = folderName,
             LocalFolderPath = localFolderPath,
-            RemoteSourceAutomation = targetPath is null
-                ? null
-                : new RemoteSourceAutomation
-                {
-                    Name = "Automation",
-                    RemotePath = "/incoming",
-                    TargetPath = targetPath,
-                },
         };
     }
 }

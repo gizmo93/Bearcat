@@ -231,7 +231,7 @@ public class ConfigurationValueNormalizerTest
     }
 
     [Test]
-    public void ValidationException_IsArgumentException()
+    public void ValidationException_IsArgumentExceptionWithCleanMessage()
     {
         // Arrange
         var exception = new ConfigurationFieldValidationException(
@@ -244,7 +244,8 @@ public class ConfigurationValueNormalizerTest
 
         // Assert
         argumentException.ShouldNotBeNull();
-        argumentException.ParamName.ShouldBe("Host");
+        argumentException.ParamName.ShouldBeNull();
+        argumentException.Message.ShouldBe("The configuration field 'Host' is invalid: Required.");
     }
 
     private static Dictionary<string, object?> ValidSubmission()

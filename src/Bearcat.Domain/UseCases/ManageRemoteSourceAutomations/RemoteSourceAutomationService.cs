@@ -130,20 +130,14 @@ public class RemoteSourceAutomationService(IRemoteSourceAutomationWriteRepositor
             )
         )
         {
-            throw new ArgumentException(
-                "The selected remote source does not exist.",
-                nameof(input)
-            );
+            throw new ArgumentException("The selected remote source does not exist.");
         }
 
         if (
             !await repository.ReleaseTemplateExistsAsync(input.ReleaseTemplateId, cancellationToken)
         )
         {
-            throw new ArgumentException(
-                "The selected release template does not exist.",
-                nameof(input)
-            );
+            throw new ArgumentException("The selected release template does not exist.");
         }
     }
 
@@ -151,11 +145,7 @@ public class RemoteSourceAutomationService(IRemoteSourceAutomationWriteRepositor
     {
         if (priority < MinPriority)
         {
-            throw new ArgumentOutOfRangeException(
-                nameof(priority),
-                priority,
-                $"Priority must be at least {MinPriority}."
-            );
+            throw new ArgumentException($"Priority must be at least {MinPriority}.");
         }
     }
 
@@ -163,7 +153,7 @@ public class RemoteSourceAutomationService(IRemoteSourceAutomationWriteRepositor
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new ArgumentException("Name is required.", nameof(name));
+            throw new ArgumentException("Name is required.");
         }
 
         return name.Trim();
@@ -173,17 +163,14 @@ public class RemoteSourceAutomationService(IRemoteSourceAutomationWriteRepositor
     {
         if (string.IsNullOrWhiteSpace(targetPath))
         {
-            throw new ArgumentException("Target path is required.", nameof(targetPath));
+            throw new ArgumentException("Target path is required.");
         }
 
         var trimmedTargetPath = targetPath.Trim();
 
         if (!Path.IsPathFullyQualified(trimmedTargetPath))
         {
-            throw new ArgumentException(
-                "Target path must be an absolute path.",
-                nameof(targetPath)
-            );
+            throw new ArgumentException("Target path must be an absolute path.");
         }
 
         return trimmedTargetPath;

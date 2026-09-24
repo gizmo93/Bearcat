@@ -96,8 +96,7 @@ public class ForumPostingRuleService(IForumPostingRuleWriteRepository writeRepos
             if (rule is null)
             {
                 throw new ArgumentException(
-                    $"The posting rule {orderedForumPostingRuleIds[index]} does not belong to the distribution site registration {distributionSiteRegistrationId}.",
-                    nameof(orderedForumPostingRuleIds)
+                    $"The posting rule {orderedForumPostingRuleIds[index]} does not belong to the distribution site registration {distributionSiteRegistrationId}."
                 );
             }
 
@@ -128,12 +127,12 @@ public class ForumPostingRuleService(IForumPostingRuleWriteRepository writeRepos
     {
         if (string.IsNullOrWhiteSpace(input.Name))
         {
-            throw new ArgumentException("Name is required.", nameof(input));
+            throw new ArgumentException("Name is required.");
         }
 
         if (string.IsNullOrWhiteSpace(input.TargetNodeId))
         {
-            throw new ArgumentException("Target node id is required.", nameof(input));
+            throw new ArgumentException("Target node id is required.");
         }
 
         var templateType = await writeRepository.GetForumPostTemplateTypeAsync(
@@ -144,17 +143,13 @@ public class ForumPostingRuleService(IForumPostingRuleWriteRepository writeRepos
         if (templateType is null)
         {
             throw new ArgumentException(
-                $"The forum post template {input.ForumPostTemplateId} does not exist.",
-                nameof(input)
+                $"The forum post template {input.ForumPostTemplateId} does not exist."
             );
         }
 
         if (templateType != ForumPostTemplateType.Release)
         {
-            throw new ArgumentException(
-                "The forum post template must be a release template.",
-                nameof(input)
-            );
+            throw new ArgumentException("The forum post template must be a release template.");
         }
 
         var errors = RuleConditionSerializer.ValidateJson(
@@ -164,7 +159,7 @@ public class ForumPostingRuleService(IForumPostingRuleWriteRepository writeRepos
 
         if (errors.Count > 0)
         {
-            throw new ArgumentException(string.Join(" ", errors), nameof(input));
+            throw new ArgumentException(string.Join(" ", errors));
         }
     }
 

@@ -14,17 +14,25 @@ public sealed class FtpRemoteSourceSession(AsyncFtpClient client) : IRemoteSourc
         CancellationToken cancellationToken
     )
     {
-        var items = await client.GetListing(path, cancellationToken);
+        var folders = new List<RemoteFolderDto>();
 
-        return items
-            .Where(item => item.Type == FtpObjectType.Directory)
-            .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
-            .Select(item => new RemoteFolderDto(
-                Name: item.Name,
-                FullPath: item.FullName,
-                ModifiedAt: item.Modified == DateTime.MinValue ? null : item.Modified
-            ))
-            .ToList();
+        foreach (var item in await client.GetListing(path, cancellationToken))
+        {
+            var entry = await ResolveEntryAsync(item, cancellationToken);
+
+            if (entry is { Type: FtpObjectType.Directory })
+            {
+                folders.Add(
+                    new RemoteFolderDto(
+                        Name: item.Name,
+                        FullPath: item.FullName,
+                        ModifiedAt: item.Modified == DateTime.MinValue ? null : item.Modified
+                    )
+                );
+            }
+        }
+
+        return folders.OrderBy(folder => folder.Name, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
     public async Task<IReadOnlyList<RemoteFileDto>> ListFilesRecursiveAsync(
@@ -47,12 +55,12 @@ public sealed class FtpRemoteSourceSession(AsyncFtpClient client) : IRemoteSourc
                         ? item.Name
                         : $"{folder.RelativePath}/{item.Name}";
 
-                switch (item.Type)
+                switch (await ResolveEntryAsync(item, cancellationToken))
                 {
-                    case FtpObjectType.File:
-                        files.Add(new RemoteFileDto(relativePath, item.FullName, item.Size));
+                    case { Type: FtpObjectType.File, Size: var size }:
+                        files.Add(new RemoteFileDto(relativePath, item.FullName, size));
                         break;
-                    case FtpObjectType.Directory:
+                    case { Type: FtpObjectType.Directory }:
                         pendingFolders.Push((item.FullName, relativePath));
                         break;
                 }
@@ -102,6 +110,36 @@ public sealed class FtpRemoteSourceSession(AsyncFtpClient client) : IRemoteSourc
     {
         return client.DisposeAsync();
     }
+
+    private async Task<ListingEntry?> ResolveEntryAsync(
+        FtpListItem item,
+        CancellationToken cancellationToken
+    )
+    {
+        return item.Type switch
+        {
+            FtpObjectType.Directory => new ListingEntry(FtpObjectType.Directory, 0),
+            FtpObjectType.File => new ListingEntry(FtpObjectType.File, item.Size),
+            _ => await ResolveLinkAsync(item.FullName, cancellationToken),
+        };
+    }
+
+    private async Task<ListingEntry?> ResolveLinkAsync(
+        string linkPath,
+        CancellationToken cancellationToken
+    )
+    {
+        if (await client.DirectoryExists(linkPath, cancellationToken))
+        {
+            return new ListingEntry(FtpObjectType.Directory, 0);
+        }
+
+        var size = await client.GetFileSize(linkPath, -1, cancellationToken);
+
+        return size < 0 ? null : new ListingEntry(FtpObjectType.File, size);
+    }
+
+    private sealed record ListingEntry(FtpObjectType Type, long Size);
 
     private sealed class DeltaProgress(ITransferProgress progress) : IProgress<FtpProgress>
     {

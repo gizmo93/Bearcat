@@ -62,5 +62,7 @@ esac
 mkdir -p "/srv/ftp/Release.One-GROUP/[TEST] - ( 5M 3F - COMPLETE ) - [TEST]"
 ln -sfn Release.Two-GROUP "/srv/ftp/(incomplete)-Release.Two-GROUP"
 ln -sfn release.one-group.nfo /srv/ftp/Release.One-GROUP/release.one-group.link.nfo
+ln -sfn ../Release.One-GROUP/Subs /srv/ftp/Release.Two-GROUP/Linked.Subs
+ln -sfn missing-target /srv/ftp/Broken.Link
 
 exec vsftpd "$config"

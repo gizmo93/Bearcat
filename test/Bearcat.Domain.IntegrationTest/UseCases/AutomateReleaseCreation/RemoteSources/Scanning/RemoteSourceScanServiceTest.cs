@@ -42,10 +42,7 @@ public class RemoteSourceScanServiceTest : BearcatIntegrationTest
     [SetUp]
     public void Setup()
     {
-        sessionPool = new RemoteSourceSessionPool(
-            TimeProvider.System,
-            NullLogger<RemoteSourceSessionPool>.Instance
-        );
+        sessionPool = new RemoteSourceSessionPool(NullLogger<RemoteSourceSessionPool>.Instance);
         servers = new Dictionary<string, FakeRemoteServer>(StringComparer.Ordinal);
         remoteSource = new FakeRemoteSource(servers);
         timeProvider = new ControllableTimeProvider(StartTime);

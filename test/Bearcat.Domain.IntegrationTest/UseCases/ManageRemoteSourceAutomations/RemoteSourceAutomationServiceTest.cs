@@ -214,7 +214,8 @@ public class RemoteSourceAutomationServiceTest : BearcatIntegrationTest
             service.CreateAsync(CreateInput(registration, template) with { Priority = -1 });
 
         // Assert
-        await Should.ThrowAsync<ArgumentOutOfRangeException>(action);
+        var exception = await Should.ThrowAsync<ArgumentException>(action);
+        exception.Message.ShouldBe("Priority must be at least 0.");
     }
 
     [Test]
@@ -235,7 +236,7 @@ public class RemoteSourceAutomationServiceTest : BearcatIntegrationTest
 
         // Assert
         var exception = await Should.ThrowAsync<ArgumentException>(action);
-        exception.Message.ShouldStartWith("The selected release template does not exist.");
+        exception.Message.ShouldBe("The selected release template does not exist.");
     }
 
     [Test]
@@ -256,7 +257,7 @@ public class RemoteSourceAutomationServiceTest : BearcatIntegrationTest
 
         // Assert
         var exception = await Should.ThrowAsync<ArgumentException>(action);
-        exception.Message.ShouldStartWith("The selected remote source does not exist.");
+        exception.Message.ShouldBe("The selected remote source does not exist.");
     }
 
     [Test]

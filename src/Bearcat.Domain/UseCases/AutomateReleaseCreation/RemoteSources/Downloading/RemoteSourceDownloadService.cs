@@ -33,10 +33,11 @@ public class RemoteSourceDownloadService(
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
         await ResetInterruptedDownloadsAsync(cancellationToken);
+        var settings = ReadSettings();
 
         foreach (var download in await repository.GetPendingDownloadsAsync(cancellationToken))
         {
-            await ProcessDownloadAsync(download, cancellationToken);
+            await ProcessDownloadAsync(download, settings, cancellationToken);
         }
     }
 
@@ -60,6 +61,7 @@ public class RemoteSourceDownloadService(
 
     private async Task ProcessDownloadAsync(
         RemoteSourceDownload download,
+        DownloadSettings settings,
         CancellationToken stoppingToken
     )
     {
@@ -67,7 +69,7 @@ public class RemoteSourceDownloadService(
             !await repository.TryRefreshAsync(download, stoppingToken)
             || download.State is not RemoteSourceDownloadState.Pending
             || download.RemoteSourceRegistrationId is null
-            || download.RemoteSourceRegistration is not { IsActive: true }
+            || download.RemoteSourceRegistration is not { IsActive: true } registration
         )
         {
             return;
@@ -95,7 +97,13 @@ public class RemoteSourceDownloadService(
                 userCancellationToken,
                 stoppingToken
             );
-            files = await DownloadFilesAsync(download, transferKey, cancellationSource.Token);
+            files = await DownloadFilesAsync(
+                download,
+                registration,
+                settings,
+                transferKey,
+                cancellationSource.Token
+            );
         }
         catch (Exception)
             when (userCancellationToken.IsCancellationRequested
@@ -141,12 +149,16 @@ public class RemoteSourceDownloadService(
 
     private async Task<IReadOnlyList<RemoteFileDto>> DownloadFilesAsync(
         RemoteSourceDownload download,
+        RemoteSourceRegistration registration,
+        DownloadSettings settings,
         TransferKey transferKey,
         CancellationToken cancellationToken
     )
     {
         var files = await RunWithRetriesAsync(
             download: download,
+            registration: registration,
+            settings: settings,
             operationName: $"Listing of remote folder '{download.RemoteFolderPath}'",
             operation: session =>
                 session.ListFilesRecursiveAsync(download.RemoteFolderPath, cancellationToken),
@@ -188,12 +200,11 @@ public class RemoteSourceDownloadService(
             download.LocalFolderPath
         );
 
-        var remoteSourceConfiguration = configuration.GetConfiguration<RemoteSourceConfiguration>();
         var parallelOptions = new ParallelOptions
         {
             MaxDegreeOfParallelism = Math.Min(
-                Math.Max(1, remoteSourceConfiguration.MaxParallelFileDownloads),
-                download.RemoteSourceRegistration!.MaxConnections
+                settings.MaxParallelFileDownloads,
+                registration.MaxConnections
             ),
             CancellationToken = cancellationToken,
         };
@@ -202,7 +213,7 @@ public class RemoteSourceDownloadService(
             plannedFiles,
             parallelOptions,
             async (file, token) =>
-                await DownloadFileAsync(download: download, transferKey, file, token)
+                await DownloadFileAsync(download, registration, settings, transferKey, file, token)
         );
 
         return files;
@@ -210,6 +221,8 @@ public class RemoteSourceDownloadService(
 
     private async Task DownloadFileAsync(
         RemoteSourceDownload download,
+        RemoteSourceRegistration registration,
+        DownloadSettings settings,
         TransferKey transferKey,
         PlannedFile file,
         CancellationToken cancellationToken
@@ -225,6 +238,8 @@ public class RemoteSourceDownloadService(
 
         await RunWithRetriesAsync(
             download,
+            registration,
+            settings,
             $"Download of '{file.File.RelativePath}'",
             async session =>
             {
@@ -243,29 +258,26 @@ public class RemoteSourceDownloadService(
 
     private async Task<T> RunWithRetriesAsync<T>(
         RemoteSourceDownload download,
+        RemoteSourceRegistration registration,
+        DownloadSettings settings,
         string operationName,
         Func<IRemoteSourceSession, Task<T>> operation,
         CancellationToken cancellationToken
     )
     {
-        var remoteSourceConfiguration = configuration.GetConfiguration<RemoteSourceConfiguration>();
-        var maxAttempts = Math.Max(1, remoteSourceConfiguration.MaxDownloadAttempts);
-        var retryDelay = TimeSpan.FromSeconds(
-            Math.Max(0, remoteSourceConfiguration.DownloadRetryDelaySeconds)
-        );
         var errorMessages = new List<string>();
 
-        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        for (var attempt = 1; attempt <= settings.MaxAttempts; attempt++)
         {
             if (attempt > 1)
             {
-                await Task.Delay(retryDelay, cancellationToken);
+                await Task.Delay(settings.RetryDelay, cancellationToken);
             }
 
             try
             {
                 return await sessionProvider.UseSessionAsync(
-                    download.RemoteSourceRegistration!,
+                    registration,
                     operation,
                     cancellationToken
                 );
@@ -281,13 +293,13 @@ public class RemoteSourceDownloadService(
                     download.Id,
                     download.SourceName,
                     attempt,
-                    maxAttempts
+                    settings.MaxAttempts
                 );
             }
         }
 
         throw new IOException(
-            $"{operationName} failed after {maxAttempts} attempts: {string.Join(" | ", errorMessages.Distinct())}"
+            $"{operationName} failed after {settings.MaxAttempts} attempts: {string.Join(" | ", errorMessages.Distinct())}"
         );
     }
 
@@ -374,6 +386,28 @@ public class RemoteSourceDownloadService(
 
         return actualSizeBytes;
     }
+
+    private DownloadSettings ReadSettings()
+    {
+        var remoteSourceConfiguration = configuration.GetConfiguration<RemoteSourceConfiguration>();
+
+        return new DownloadSettings(
+            MaxParallelFileDownloads: Math.Max(
+                1,
+                remoteSourceConfiguration.MaxParallelFileDownloads
+            ),
+            MaxAttempts: Math.Max(1, remoteSourceConfiguration.MaxDownloadAttempts),
+            RetryDelay: TimeSpan.FromSeconds(
+                Math.Max(0, remoteSourceConfiguration.DownloadRetryDelaySeconds)
+            )
+        );
+    }
+
+    private sealed record DownloadSettings(
+        int MaxParallelFileDownloads,
+        int MaxAttempts,
+        TimeSpan RetryDelay
+    );
 
     private sealed record PlannedFile(int FileId, RemoteFileDto File, string LocalFilePath);
 }

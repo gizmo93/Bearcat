@@ -31,14 +31,7 @@ public static class RemoteDownloadPaths
             Path.GetFullPath(download.LocalFolderPath)
         );
 
-        if (Path.GetFileName(folderPath) != download.FolderName)
-        {
-            return false;
-        }
-
-        var targetPath = download.RemoteSourceAutomation?.TargetPath;
-
-        return targetPath is null || IsInside(folderPath, Path.GetFullPath(targetPath));
+        return Path.GetFileName(folderPath) == download.FolderName;
     }
 
     private static bool IsInside(string path, string parentPath)

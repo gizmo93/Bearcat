@@ -14,6 +14,14 @@ public static class FtpTestData
 
     public const string NfoFileRelativePath = "release.one-group.nfo";
 
+    public const string SymlinkedReleaseFolder = "(incomplete)-Release.Two-GROUP";
+
+    public const string SymlinkedNfoRelativePath = "release.one-group.link.nfo";
+
+    public const string SymlinkedSubfolder = "Linked.Subs";
+
+    public const string SymlinkedSubfolderTarget = "Subs";
+
     public static IReadOnlyDictionary<string, byte[]> Files { get; } = CreateFiles();
 
     public static IReadOnlyDictionary<string, byte[]> GetReleaseFiles(string releaseFolder)

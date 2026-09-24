@@ -20,7 +20,6 @@ public class RemoteSourceDownloadRepository(IBearcatWriteDbContext dbWrite)
             .RemoteSourceDownloads.Where(download =>
                 download.State == RemoteSourceDownloadState.Downloading
             )
-            .Include(download => download.RemoteSourceAutomation)
             .ToListAsync(cancellationToken);
     }
 
@@ -35,7 +34,6 @@ public class RemoteSourceDownloadRepository(IBearcatWriteDbContext dbWrite)
                 && download.RemoteSourceRegistration.IsActive
             )
             .Include(download => download.RemoteSourceRegistration)
-            .Include(download => download.RemoteSourceAutomation)
             .OrderBy(download => download.DiscoveredAt)
             .ThenBy(download => download.Id)
             .ToListAsync(cancellationToken);
@@ -46,9 +44,10 @@ public class RemoteSourceDownloadRepository(IBearcatWriteDbContext dbWrite)
         CancellationToken cancellationToken = default
     )
     {
-        return await dbWrite
-            .RemoteSourceDownloads.Include(download => download.RemoteSourceAutomation)
-            .FirstAsync(download => download.Id == id, cancellationToken);
+        return await dbWrite.RemoteSourceDownloads.FirstAsync(
+            download => download.Id == id,
+            cancellationToken
+        );
     }
 
     public async Task<bool> TryRefreshAsync(
@@ -110,7 +109,6 @@ public class RemoteSourceDownloadRepository(IBearcatWriteDbContext dbWrite)
     {
         return await dbWrite
             .RemoteSourceDownloads.AsSplitQuery()
-            .Include(download => download.RemoteSourceAutomation)
             .Include(download => download.Release!)
                 .ThenInclude(release => release.UploadConfigs)
             .Include(download => download.Release!)

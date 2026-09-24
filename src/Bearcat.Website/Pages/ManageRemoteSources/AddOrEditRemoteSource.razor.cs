@@ -184,7 +184,7 @@ public partial class AddOrEditRemoteSource(IScopedOperationRunner operationRunne
         }
         catch (ArgumentException exception)
         {
-            errorMessage = DescribeValidationError(exception);
+            errorMessage = exception.Message;
 
             return;
         }
@@ -202,13 +202,6 @@ public partial class AddOrEditRemoteSource(IScopedOperationRunner operationRunne
         var fieldName = label.ResourceNotFound ? exception.FieldKey : label.Value;
 
         return L[$"ConfigurationFieldError_{exception.Error}", fieldName];
-    }
-
-    private static string DescribeValidationError(ArgumentException exception)
-    {
-        var index = exception.Message.IndexOf(" (Parameter", StringComparison.Ordinal);
-
-        return index < 0 ? exception.Message : exception.Message[..index];
     }
 
     private async Task CancelAsync()

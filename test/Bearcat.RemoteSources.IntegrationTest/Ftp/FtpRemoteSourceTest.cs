@@ -49,7 +49,7 @@ public class FtpRemoteSourceTest(FtpTestServer testServer, FtpTlsProvider tlsPro
     }
 
     [Test]
-    public async Task ListFoldersAsync_Root_ReturnsReleaseFoldersSortedWithoutFilesAndSymlinks()
+    public async Task ListFoldersAsync_Root_ReturnsFoldersAndSymlinkedFoldersSortedWithoutFilesAndBrokenLinks()
     {
         // Arrange
         await using var session = await OpenSessionAsync();
@@ -58,9 +58,34 @@ public class FtpRemoteSourceTest(FtpTestServer testServer, FtpTlsProvider tlsPro
         var folders = await session.ListFoldersAsync("/", CancellationToken.None);
 
         // Assert
-        folders.Select(folder => folder.Name).ShouldBe(["Release.One-GROUP", "Release.Two-GROUP"]);
-        folders[0].FullPath.ShouldBe("/Release.One-GROUP");
-        folders[0].ModifiedAt.ShouldNotBeNull();
+        folders
+            .Select(folder => folder.Name)
+            .ShouldBe([
+                FtpTestData.SymlinkedReleaseFolder,
+                FtpTestData.ReleaseOneFolder,
+                FtpTestData.ReleaseTwoFolder,
+            ]);
+        folders[0].FullPath.ShouldBe($"/{FtpTestData.SymlinkedReleaseFolder}");
+        folders[1].FullPath.ShouldBe($"/{FtpTestData.ReleaseOneFolder}");
+        folders[1].ModifiedAt.ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task ListFoldersAsync_FolderWithSymlinkedSubfolder_ReturnsSymlinkedSubfolder()
+    {
+        // Arrange
+        await using var session = await OpenSessionAsync();
+
+        // Act
+        var folders = await session.ListFoldersAsync(
+            $"/{FtpTestData.ReleaseTwoFolder}",
+            CancellationToken.None
+        );
+
+        // Assert
+        folders.Select(folder => folder.Name).ShouldBe([FtpTestData.SymlinkedSubfolder]);
+        folders[0]
+            .FullPath.ShouldBe($"/{FtpTestData.ReleaseTwoFolder}/{FtpTestData.SymlinkedSubfolder}");
     }
 
     [Test]
@@ -89,23 +114,63 @@ public class FtpRemoteSourceTest(FtpTestServer testServer, FtpTlsProvider tlsPro
     }
 
     [Test]
-    public async Task ListFilesRecursiveAsync_ReleaseFolder_ReturnsFilesWithoutSymlinksOrMarkerFolders()
+    public async Task ListFilesRecursiveAsync_ReleaseFolder_ReturnsFilesAndSymlinkedFilesWithoutMarkerFolders()
     {
         // Arrange
         await using var session = await OpenSessionAsync();
-        var expectedFiles = FtpTestData
-            .GetReleaseFiles(FtpTestData.ReleaseOneFolder)
-            .OrderBy(file => file.Key, StringComparer.Ordinal)
-            .Select(file => new RemoteFileDto(
-                RelativePath: file.Key,
-                FullPath: $"/{FtpTestData.ReleaseOneFolder}/{file.Key}",
-                SizeBytes: file.Value.Length
-            ))
-            .ToList();
+        var releaseFiles = new Dictionary<string, byte[]>(
+            FtpTestData.GetReleaseFiles(FtpTestData.ReleaseOneFolder)
+        )
+        {
+            [FtpTestData.SymlinkedNfoRelativePath] = GetReleaseOneContent(
+                FtpTestData.NfoFileRelativePath
+            ),
+        };
+        var expectedFiles = CreateExpectedFiles($"/{FtpTestData.ReleaseOneFolder}", releaseFiles);
 
         // Act
         var files = await session.ListFilesRecursiveAsync(
             $"/{FtpTestData.ReleaseOneFolder}",
+            CancellationToken.None
+        );
+
+        // Assert
+        files.ShouldBe(expectedFiles);
+    }
+
+    [Test]
+    public async Task ListFilesRecursiveAsync_FolderWithSymlinkedSubfolder_ListsFilesBehindSymlink()
+    {
+        // Arrange
+        await using var session = await OpenSessionAsync();
+        var expectedFiles = CreateExpectedFiles(
+            $"/{FtpTestData.ReleaseTwoFolder}",
+            GetReleaseTwoFilesWithSymlinkedSubfolder()
+        );
+
+        // Act
+        var files = await session.ListFilesRecursiveAsync(
+            $"/{FtpTestData.ReleaseTwoFolder}",
+            CancellationToken.None
+        );
+
+        // Assert
+        files.ShouldBe(expectedFiles);
+    }
+
+    [Test]
+    public async Task ListFilesRecursiveAsync_SymlinkedFolder_ListsFilesBehindSymlinkWithLinkPaths()
+    {
+        // Arrange
+        await using var session = await OpenSessionAsync();
+        var expectedFiles = CreateExpectedFiles(
+            $"/{FtpTestData.SymlinkedReleaseFolder}",
+            GetReleaseTwoFilesWithSymlinkedSubfolder()
+        );
+
+        // Act
+        var files = await session.ListFilesRecursiveAsync(
+            $"/{FtpTestData.SymlinkedReleaseFolder}",
             CancellationToken.None
         );
 
@@ -142,6 +207,12 @@ public class FtpRemoteSourceTest(FtpTestServer testServer, FtpTlsProvider tlsPro
             var localFilePath = Path.Combine(downloadDirectory, relativePath);
             (await File.ReadAllBytesAsync(localFilePath)).ShouldBe(content, relativePath);
         }
+
+        (
+            await File.ReadAllBytesAsync(
+                Path.Combine(downloadDirectory, FtpTestData.SymlinkedNfoRelativePath)
+            )
+        ).ShouldBe(GetReleaseOneContent(FtpTestData.NfoFileRelativePath));
 
         Directory
             .GetFiles(downloadDirectory, "*.part", SearchOption.AllDirectories)
@@ -310,6 +381,38 @@ public class FtpRemoteSourceTest(FtpTestServer testServer, FtpTlsProvider tlsPro
     private string GetLocalFilePath(RemoteFileDto file)
     {
         return Path.Combine(downloadDirectory, file.RelativePath);
+    }
+
+    private static List<RemoteFileDto> CreateExpectedFiles(
+        string folderPath,
+        IReadOnlyDictionary<string, byte[]> files
+    )
+    {
+        return files
+            .OrderBy(file => file.Key, StringComparer.Ordinal)
+            .Select(file => new RemoteFileDto(
+                RelativePath: file.Key,
+                FullPath: $"{folderPath}/{file.Key}",
+                SizeBytes: file.Value.Length
+            ))
+            .ToList();
+    }
+
+    private static Dictionary<string, byte[]> GetReleaseTwoFilesWithSymlinkedSubfolder()
+    {
+        var files = new Dictionary<string, byte[]>(
+            FtpTestData.GetReleaseFiles(FtpTestData.ReleaseTwoFolder)
+        );
+        var linkedFiles = FtpTestData.GetReleaseFiles(
+            $"{FtpTestData.ReleaseOneFolder}/{FtpTestData.SymlinkedSubfolderTarget}"
+        );
+
+        foreach (var (relativePath, content) in linkedFiles)
+        {
+            files[$"{FtpTestData.SymlinkedSubfolder}/{relativePath}"] = content;
+        }
+
+        return files;
     }
 
     private static RemoteFileDto CreateReleaseOneFileDto(string relativePath)
