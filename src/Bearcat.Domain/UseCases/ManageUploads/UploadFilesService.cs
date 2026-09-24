@@ -249,7 +249,7 @@ public class UploadFilesService(
             upload.UploadState = UploadState.Uploading;
             uploadContexts[upload.Id] = context;
             progressTracker.StartTracking(
-                new TransferKey(TransferKind.Upload, upload.Id),
+                new TransferIdentifier(TransferKind.Upload, upload.Id),
                 context.PlannedFiles
             );
         }
@@ -598,7 +598,9 @@ public class UploadFilesService(
         if (finalizationService.TryFinalizeUpload(context))
         {
             uploadContexts.Remove(context.UploadId);
-            progressTracker.StopTracking(new TransferKey(TransferKind.Upload, context.UploadId));
+            progressTracker.StopTracking(
+                new TransferIdentifier(TransferKind.Upload, context.UploadId)
+            );
         }
 
         await repository.SaveChangesAsync(cancellationToken);
@@ -727,7 +729,9 @@ public class UploadFilesService(
                 if (finalizationService.TryFinalizeUpload(context))
                 {
                     uploadContexts.Remove(uploadId);
-                    progressTracker.StopTracking(new TransferKey(TransferKind.Upload, uploadId));
+                    progressTracker.StopTracking(
+                        new TransferIdentifier(TransferKind.Upload, uploadId)
+                    );
                     hasChanges = true;
                 }
 

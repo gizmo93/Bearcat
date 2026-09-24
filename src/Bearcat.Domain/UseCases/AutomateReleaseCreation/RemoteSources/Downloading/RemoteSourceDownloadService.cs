@@ -25,9 +25,9 @@ public class RemoteSourceDownloadService(
     ILogger<RemoteSourceDownloadService> logger
 )
 {
-    public static TransferKey CreateTransferKey(int downloadId)
+    public static TransferIdentifier CreateTransferIdentifier(int downloadId)
     {
-        return new TransferKey(TransferKind.RemoteDownload, downloadId);
+        return new TransferIdentifier(TransferKind.RemoteDownload, downloadId);
     }
 
     public async Task ProcessAsync(CancellationToken cancellationToken)
@@ -85,8 +85,9 @@ public class RemoteSourceDownloadService(
             return;
         }
 
-        var transferKey = CreateTransferKey(download.Id);
-        var userCancellationToken = cancellationRegistry.Register(transferKey);
+        var transferIdentifier = CreateTransferIdentifier(download.Id);
+        var userCancellationToken = cancellationRegistry.Register(transferIdentifier);
+
         IReadOnlyList<RemoteFileDto> files;
 
         try
@@ -101,7 +102,7 @@ public class RemoteSourceDownloadService(
                 download,
                 registration,
                 settings,
-                transferKey,
+                transferIdentifier,
                 cancellationSource.Token
             );
         }
@@ -121,8 +122,8 @@ public class RemoteSourceDownloadService(
         }
         finally
         {
-            cancellationRegistry.Unregister(transferKey);
-            progressTracker.StopTracking(transferKey);
+            cancellationRegistry.Unregister(transferIdentifier);
+            progressTracker.StopTracking(transferIdentifier);
         }
 
         await MarkAsDownloadedAsync(download, files, stoppingToken);
@@ -151,7 +152,7 @@ public class RemoteSourceDownloadService(
         RemoteSourceDownload download,
         RemoteSourceRegistration registration,
         DownloadSettings settings,
-        TransferKey transferKey,
+        TransferIdentifier transferIdentifier,
         CancellationToken cancellationToken
     )
     {
@@ -180,7 +181,7 @@ public class RemoteSourceDownloadService(
             .ToList();
 
         progressTracker.StartTracking(
-            transferKey,
+            transferIdentifier,
             plannedFiles
                 .Select(file => new PlannedTransferFile(
                     FileId: file.FileId,
@@ -213,7 +214,14 @@ public class RemoteSourceDownloadService(
             plannedFiles,
             parallelOptions,
             async (file, token) =>
-                await DownloadFileAsync(download, registration, settings, transferKey, file, token)
+                await DownloadFileAsync(
+                    download,
+                    registration,
+                    settings,
+                    transferIdentifier,
+                    file,
+                    token
+                )
         );
 
         return files;
@@ -223,14 +231,14 @@ public class RemoteSourceDownloadService(
         RemoteSourceDownload download,
         RemoteSourceRegistration registration,
         DownloadSettings settings,
-        TransferKey transferKey,
+        TransferIdentifier transferIdentifier,
         PlannedFile file,
         CancellationToken cancellationToken
     )
     {
         var progress = new TransferProgressReporter(
             tracker: progressTracker,
-            key: transferKey,
+            identifier: transferIdentifier,
             fileId: file.FileId,
             fileName: file.File.RelativePath,
             sourceName: download.SourceName

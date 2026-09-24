@@ -2,9 +2,9 @@ namespace Bearcat.Domain.Shared.Transfers;
 
 public interface ITransferCancellationRegistry
 {
-    CancellationToken Register(TransferKey key);
+    CancellationToken Register(TransferIdentifier identifier);
 
-    void Unregister(TransferKey key);
+    void Unregister(TransferIdentifier identifier);
 
-    bool RequestCancellation(TransferKey key);
+    bool RequestCancellation(TransferIdentifier identifier);
 }

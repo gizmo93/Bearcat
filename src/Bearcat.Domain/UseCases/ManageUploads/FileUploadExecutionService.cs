@@ -49,7 +49,7 @@ public class FileUploadExecutionService(
                 hosterConfig: fileToUpload.HosterConfig,
                 progress: new TransferProgressReporter(
                     tracker: progressTracker,
-                    key: new TransferKey(TransferKind.Upload, fileToUpload.UploadId),
+                    identifier: new TransferIdentifier(TransferKind.Upload, fileToUpload.UploadId),
                     fileId: fileToUpload.ArchiveFileId,
                     fileName: Path.GetFileName(fileToUpload.FullFileName),
                     sourceName: context.Upload.UploadConfig.HosterRegistration.Name

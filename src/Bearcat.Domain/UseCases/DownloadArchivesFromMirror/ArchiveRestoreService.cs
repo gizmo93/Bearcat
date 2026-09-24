@@ -238,8 +238,8 @@ public class ArchiveRestoreService(
             restoreFolderPath
         );
 
-        var transferKey = new TransferKey(TransferKind.MirrorDownload, archive.Id);
-        var userCancellationToken = cancellationRegistry.Register(transferKey);
+        var transferIdentifier = new TransferIdentifier(TransferKind.MirrorDownload, archive.Id);
+        var userCancellationToken = cancellationRegistry.Register(transferIdentifier);
 
         try
         {
@@ -355,7 +355,7 @@ public class ArchiveRestoreService(
         }
         finally
         {
-            cancellationRegistry.Unregister(transferKey);
+            cancellationRegistry.Unregister(transferIdentifier);
         }
     }
 

@@ -4,7 +4,7 @@ namespace Bearcat.Domain.Shared.Transfers;
 
 public sealed class TransferProgressReporter(
     ITransferProgressTracker tracker,
-    TransferKey key,
+    TransferIdentifier identifier,
     int fileId,
     string fileName,
     string sourceName
@@ -12,11 +12,11 @@ public sealed class TransferProgressReporter(
 {
     public void BeginFile(long? totalBytes)
     {
-        tracker.BeginFile(key, fileId, fileName, sourceName, totalBytes);
+        tracker.BeginFile(identifier, fileId, fileName, sourceName, totalBytes);
     }
 
     public void ReportBytesTransferred(long bytes)
     {
-        tracker.AddBytes(key, fileId, bytes);
+        tracker.AddBytes(identifier, fileId, bytes);
     }
 }

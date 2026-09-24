@@ -5,7 +5,7 @@ namespace Bearcat.Domain.UnitTest.Shared.Transfers;
 
 public class TransferProgressTrackerTest
 {
-    private static readonly TransferKey Key = new(TransferKind.MirrorDownload, 1);
+    private static readonly TransferIdentifier Identifier = new(TransferKind.MirrorDownload, 1);
 
     [Test]
     public void Get_NotTracking_ReturnsNull()
@@ -14,7 +14,7 @@ public class TransferProgressTrackerTest
         var tracker = new TransferProgressTracker();
 
         // Act
-        var snapshot = tracker.Get(Key);
+        var snapshot = tracker.Get(Identifier);
 
         // Assert
         snapshot.ShouldBeNull();
@@ -25,14 +25,14 @@ public class TransferProgressTrackerTest
     {
         // Arrange
         var tracker = new TransferProgressTracker();
-        tracker.StartTracking(Key, [Planned(1, "archive.part01.rar", 1000)]);
-        tracker.BeginFile(Key, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
+        tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
+        tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
 
         // Act
-        tracker.StopTracking(Key);
+        tracker.StopTracking(Identifier);
 
         // Assert
-        tracker.Get(Key).ShouldBeNull();
+        tracker.Get(Identifier).ShouldBeNull();
     }
 
     [Test]
@@ -40,8 +40,8 @@ public class TransferProgressTrackerTest
     {
         // Arrange
         var tracker = new TransferProgressTracker();
-        var uploadKey = new TransferKey(TransferKind.Upload, Key.Id);
-        tracker.StartTracking(Key, [Planned(1, "archive.part01.rar", 1000)]);
+        var uploadKey = new TransferIdentifier(TransferKind.Upload, Identifier.Id);
+        tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
 
         // Act
         var snapshot = tracker.Get(uploadKey);
@@ -57,8 +57,8 @@ public class TransferProgressTrackerTest
         var tracker = new TransferProgressTracker();
 
         // Act
-        tracker.StartTracking(Key, []);
-        var snapshot = tracker.Get(Key);
+        tracker.StartTracking(Identifier, []);
+        var snapshot = tracker.Get(Identifier);
 
         // Assert
         snapshot.ShouldNotBeNull();
@@ -76,14 +76,14 @@ public class TransferProgressTrackerTest
 
         // Act
         tracker.StartTracking(
-            Key,
+            Identifier,
             [Planned(1, "archive.part01.rar", 600), Planned(2, "archive.part02.rar", 400)]
         );
-        var snapshot = tracker.Get(Key);
+        var snapshot = tracker.Get(Identifier);
 
         // Assert
         snapshot.ShouldNotBeNull();
-        snapshot.Key.ShouldBe(Key);
+        snapshot.Identifier.ShouldBe(Identifier);
         snapshot.SourceName.ShouldBe("Rapidgator");
         snapshot.Files.Count.ShouldBe(2);
         snapshot.TransferredBytes.ShouldBe(0);
@@ -102,13 +102,13 @@ public class TransferProgressTrackerTest
 
         // Act
         tracker.StartTracking(
-            Key,
+            Identifier,
             [
                 Planned(1, "archive.part01.rar", 250, isAlreadyTransferred: true),
                 Planned(2, "archive.part02.rar", 750),
             ]
         );
-        var snapshot = tracker.Get(Key);
+        var snapshot = tracker.Get(Identifier);
 
         // Assert
         snapshot.ShouldNotBeNull();
@@ -124,7 +124,7 @@ public class TransferProgressTrackerTest
         // Arrange
         var tracker = new TransferProgressTracker();
         tracker.StartTracking(
-            Key,
+            Identifier,
             [
                 Planned(1, "archive.part01.rar", 250, isAlreadyTransferred: true),
                 Planned(2, "archive.part02.rar", 750),
@@ -132,8 +132,8 @@ public class TransferProgressTrackerTest
         );
 
         // Act
-        tracker.AddBytes(Key, fileId: 2, bytes: 250);
-        var snapshot = tracker.Get(Key);
+        tracker.AddBytes(Identifier, fileId: 2, bytes: 250);
+        var snapshot = tracker.Get(Identifier);
 
         // Assert
         snapshot.ShouldNotBeNull();
@@ -147,7 +147,7 @@ public class TransferProgressTrackerTest
         // Arrange
         var tracker = new TransferProgressTracker();
         tracker.StartTracking(
-            Key,
+            Identifier,
             [
                 Planned(1, "archive.part01.rar", 1000),
                 Planned(2, "archive.part02.rar", 1000),
@@ -156,11 +156,11 @@ public class TransferProgressTrackerTest
         );
 
         // Act
-        tracker.BeginFile(Key, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
-        tracker.AddBytes(Key, fileId: 1, bytes: 1000);
-        tracker.BeginFile(Key, 2, "archive.part02.rar", "Rapidgator", totalBytes: 1000);
-        tracker.AddBytes(Key, fileId: 2, bytes: 1000);
-        var snapshot = tracker.Get(Key);
+        tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
+        tracker.AddBytes(Identifier, fileId: 1, bytes: 1000);
+        tracker.BeginFile(Identifier, 2, "archive.part02.rar", "Rapidgator", totalBytes: 1000);
+        tracker.AddBytes(Identifier, fileId: 2, bytes: 1000);
+        var snapshot = tracker.Get(Identifier);
 
         // Assert
         snapshot.ShouldNotBeNull();
@@ -178,14 +178,14 @@ public class TransferProgressTrackerTest
         // Arrange
         var tracker = new TransferProgressTracker();
         tracker.StartTracking(
-            Key,
+            Identifier,
             [Planned(1, "archive.part01.rar", 1000), Planned(2, "archive.part02.rar", null)]
         );
 
         // Act
-        tracker.BeginFile(Key, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
-        tracker.AddBytes(Key, fileId: 1, bytes: 1000);
-        var snapshot = tracker.Get(Key);
+        tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
+        tracker.AddBytes(Identifier, fileId: 1, bytes: 1000);
+        var snapshot = tracker.Get(Identifier);
 
         // Assert
         snapshot.ShouldNotBeNull();
@@ -201,13 +201,13 @@ public class TransferProgressTrackerTest
         // Arrange
         var tracker = new TransferProgressTracker();
         tracker.StartTracking(
-            Key,
+            Identifier,
             [Planned(1, "archive.part01.rar", 1000), Planned(2, "archive.sfv", 0)]
         );
 
         // Act
-        tracker.AddBytes(Key, fileId: 1, bytes: 500);
-        var snapshot = tracker.Get(Key);
+        tracker.AddBytes(Identifier, fileId: 1, bytes: 500);
+        var snapshot = tracker.Get(Identifier);
 
         // Assert
         snapshot.ShouldNotBeNull();
@@ -220,12 +220,12 @@ public class TransferProgressTrackerTest
     {
         // Arrange
         var tracker = new TransferProgressTracker();
-        tracker.StartTracking(Key, [Planned(1, "archive.part01.rar", 1000)]);
+        tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
 
         // Act
-        tracker.BeginFile(Key, 1, "archive.part01.rar", "Rapidgator", totalBytes: null);
-        tracker.AddBytes(Key, fileId: 1, bytes: 250);
-        var snapshot = tracker.Get(Key);
+        tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: null);
+        tracker.AddBytes(Identifier, fileId: 1, bytes: 250);
+        var snapshot = tracker.Get(Identifier);
 
         // Assert
         snapshot.ShouldNotBeNull();
@@ -238,12 +238,12 @@ public class TransferProgressTrackerTest
     {
         // Arrange
         var tracker = new TransferProgressTracker();
-        tracker.StartTracking(Key, [Planned(1, "archive.part01.rar", 1000)]);
+        tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
 
         // Act
-        tracker.BeginFile(Key, 1, "archive.part01.rar", "Rapidgator", totalBytes: 2000);
-        tracker.AddBytes(Key, fileId: 1, bytes: 500);
-        var snapshot = tracker.Get(Key);
+        tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 2000);
+        tracker.AddBytes(Identifier, fileId: 1, bytes: 500);
+        var snapshot = tracker.Get(Identifier);
 
         // Assert
         snapshot.ShouldNotBeNull();
@@ -256,11 +256,11 @@ public class TransferProgressTrackerTest
     {
         // Arrange
         var tracker = new TransferProgressTracker();
-        tracker.StartTracking(Key, [Planned(1, "archive.part01.rar", 1000)]);
+        tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
 
         // Act
-        tracker.BeginFile(Key, 1, "archive.part01.rar", "Keep2Share", totalBytes: 1000);
-        var snapshot = tracker.Get(Key);
+        tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Keep2Share", totalBytes: 1000);
+        var snapshot = tracker.Get(Identifier);
 
         // Assert
         snapshot.ShouldNotBeNull();
@@ -273,12 +273,12 @@ public class TransferProgressTrackerTest
     {
         // Arrange
         var tracker = new TransferProgressTracker();
-        tracker.StartTracking(Key, [Planned(7, "archive.part01.rar", 1000)]);
-        tracker.BeginFile(Key, 7, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
+        tracker.StartTracking(Identifier, [Planned(7, "archive.part01.rar", 1000)]);
+        tracker.BeginFile(Identifier, 7, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
 
         // Act
-        tracker.AddBytes(Key, fileId: 7, bytes: 250);
-        var snapshot = tracker.Get(Key);
+        tracker.AddBytes(Identifier, fileId: 7, bytes: 250);
+        var snapshot = tracker.Get(Identifier);
 
         // Assert
         snapshot.ShouldNotBeNull();
@@ -298,16 +298,16 @@ public class TransferProgressTrackerTest
         // Arrange
         var tracker = new TransferProgressTracker();
         tracker.StartTracking(
-            Key,
+            Identifier,
             [Planned(1, "archive.part01.rar", 600), Planned(2, "archive.part02.rar", 400)]
         );
-        tracker.BeginFile(Key, 1, "archive.part01.rar", "Rapidgator", totalBytes: 600);
-        tracker.BeginFile(Key, 2, "archive.part02.rar", "Rapidgator", totalBytes: 400);
+        tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 600);
+        tracker.BeginFile(Identifier, 2, "archive.part02.rar", "Rapidgator", totalBytes: 400);
 
         // Act
-        tracker.AddBytes(Key, fileId: 1, bytes: 300);
-        tracker.AddBytes(Key, fileId: 2, bytes: 200);
-        var snapshot = tracker.Get(Key);
+        tracker.AddBytes(Identifier, fileId: 1, bytes: 300);
+        tracker.AddBytes(Identifier, fileId: 2, bytes: 200);
+        var snapshot = tracker.Get(Identifier);
 
         // Assert
         snapshot.ShouldNotBeNull();
@@ -325,16 +325,16 @@ public class TransferProgressTrackerTest
         // Arrange
         var tracker = new TransferProgressTracker();
         tracker.StartTracking(
-            Key,
+            Identifier,
             [Planned(1, "archive.part01.rar", 600), Planned(2, "archive.part02.rar", null)]
         );
-        tracker.BeginFile(Key, 1, "archive.part01.rar", "Rapidgator", totalBytes: 600);
-        tracker.BeginFile(Key, 2, "archive.part02.rar", "Rapidgator", totalBytes: null);
+        tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 600);
+        tracker.BeginFile(Identifier, 2, "archive.part02.rar", "Rapidgator", totalBytes: null);
 
         // Act
-        tracker.AddBytes(Key, fileId: 1, bytes: 300);
-        tracker.AddBytes(Key, fileId: 2, bytes: 100);
-        var snapshot = tracker.Get(Key);
+        tracker.AddBytes(Identifier, fileId: 1, bytes: 300);
+        tracker.AddBytes(Identifier, fileId: 2, bytes: 100);
+        var snapshot = tracker.Get(Identifier);
 
         // Assert
         snapshot.ShouldNotBeNull();
@@ -351,12 +351,12 @@ public class TransferProgressTrackerTest
     {
         // Arrange
         var tracker = new TransferProgressTracker();
-        tracker.StartTracking(Key, [Planned(1, "archive.part01.rar", 1000)]);
-        tracker.BeginFile(Key, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
+        tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
+        tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
 
         // Act
-        tracker.AddBytes(Key, fileId: 1, bytes: 1500);
-        var snapshot = tracker.Get(Key);
+        tracker.AddBytes(Identifier, fileId: 1, bytes: 1500);
+        var snapshot = tracker.Get(Identifier);
 
         // Assert
         snapshot.ShouldNotBeNull();
@@ -370,18 +370,18 @@ public class TransferProgressTrackerTest
         // Arrange
         var tracker = new TransferProgressTracker();
         tracker.StartTracking(
-            Key,
+            Identifier,
             [Planned(1, "archive.part01.rar", 600), Planned(2, "archive.part02.rar", 400)]
         );
-        tracker.BeginFile(Key, 1, "archive.part01.rar", "Rapidgator", totalBytes: 600);
-        tracker.BeginFile(Key, 2, "archive.part02.rar", "Rapidgator", totalBytes: 400);
-        tracker.AddBytes(Key, fileId: 1, bytes: 400);
-        tracker.AddBytes(Key, fileId: 2, bytes: 200);
+        tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 600);
+        tracker.BeginFile(Identifier, 2, "archive.part02.rar", "Rapidgator", totalBytes: 400);
+        tracker.AddBytes(Identifier, fileId: 1, bytes: 400);
+        tracker.AddBytes(Identifier, fileId: 2, bytes: 200);
 
         // Act
-        tracker.BeginFile(Key, 1, "archive.part01.rar", "Rapidgator", totalBytes: 600);
-        tracker.AddBytes(Key, fileId: 1, bytes: 100);
-        var snapshot = tracker.Get(Key);
+        tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 600);
+        tracker.AddBytes(Identifier, fileId: 1, bytes: 100);
+        var snapshot = tracker.Get(Identifier);
 
         // Assert
         snapshot.ShouldNotBeNull();
@@ -395,7 +395,7 @@ public class TransferProgressTrackerTest
     {
         // Arrange
         var tracker = new TransferProgressTracker();
-        var untrackedKey = new TransferKey(TransferKind.Upload, 42);
+        var untrackedKey = new TransferIdentifier(TransferKind.Upload, 42);
 
         // Act
         tracker.AddBytes(untrackedKey, fileId: 1, bytes: 100);

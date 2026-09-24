@@ -9,43 +9,46 @@ public sealed class TransferProgressTracker : ITransferProgressTracker
 
     private static readonly TimeSpan SpeedWindow = TimeSpan.FromSeconds(5);
 
-    private readonly ConcurrentDictionary<TransferKey, TransferState> states = new();
+    private readonly ConcurrentDictionary<TransferIdentifier, TransferState> states = new();
 
-    public void StartTracking(TransferKey key, IReadOnlyList<PlannedTransferFile> plannedFiles)
+    public void StartTracking(
+        TransferIdentifier identifier,
+        IReadOnlyList<PlannedTransferFile> plannedFiles
+    )
     {
-        states[key] = new TransferState(Stopwatch.GetTimestamp(), plannedFiles);
+        states[identifier] = new TransferState(Stopwatch.GetTimestamp(), plannedFiles);
     }
 
     public void BeginFile(
-        TransferKey key,
+        TransferIdentifier identifier,
         int fileId,
         string fileName,
         string sourceName,
         long? totalBytes
     )
     {
-        if (states.TryGetValue(key, out var state))
+        if (states.TryGetValue(identifier, out var state))
         {
             state.BeginFile(fileId, fileName, sourceName, totalBytes);
         }
     }
 
-    public void AddBytes(TransferKey key, int fileId, long bytes)
+    public void AddBytes(TransferIdentifier identifier, int fileId, long bytes)
     {
-        if (states.TryGetValue(key, out var state))
+        if (states.TryGetValue(identifier, out var state))
         {
             state.AddBytes(fileId, bytes, Stopwatch.GetTimestamp(), SampleInterval, SpeedWindow);
         }
     }
 
-    public void StopTracking(TransferKey key)
+    public void StopTracking(TransferIdentifier identifier)
     {
-        states.TryRemove(key, out _);
+        states.TryRemove(identifier, out _);
     }
 
-    public TransferProgressSnapshot? Get(TransferKey key)
+    public TransferProgressSnapshot? Get(TransferIdentifier identifier)
     {
-        if (!states.TryGetValue(key, out var state))
+        if (!states.TryGetValue(identifier, out var state))
         {
             return null;
         }
@@ -56,7 +59,7 @@ public sealed class TransferProgressTracker : ITransferProgressTracker
         var totalBytes = isTotalKnown ? files.Sum(file => file.TotalBytes) : 0;
 
         return new TransferProgressSnapshot(
-            Key: key,
+            Identifier: identifier,
             BytesPerSecond: bytesPerSecond,
             TransferredBytes: transferredBytes,
             TotalBytes: totalBytes,

@@ -1,7 +1,7 @@
 namespace Bearcat.Domain.Shared.Transfers;
 
 public sealed record TransferProgressSnapshot(
-    TransferKey Key,
+    TransferIdentifier Identifier,
     double BytesPerSecond,
     long TransferredBytes,
     long TotalBytes,

@@ -734,9 +734,9 @@ public class ArchiveRestoreServiceTest
         repository.SerializedConfigs[registration.Id] = "protected";
     }
 
-    private static TransferKey MirrorDownloadKey(int archiveId)
+    private static TransferIdentifier MirrorDownloadKey(int archiveId)
     {
-        return new TransferKey(TransferKind.MirrorDownload, archiveId);
+        return new TransferIdentifier(TransferKind.MirrorDownload, archiveId);
     }
 
     private sealed class RecordingTransferProgressTracker : ITransferProgressTracker
@@ -744,20 +744,23 @@ public class ArchiveRestoreServiceTest
         private readonly TransferProgressTracker inner = new();
 
         public Dictionary<
-            TransferKey,
+            TransferIdentifier,
             IReadOnlyList<PlannedTransferFile>
         > PlannedFilesPerKey { get; } = new();
 
         public List<BegunFile> BegunFiles { get; } = [];
 
-        public void StartTracking(TransferKey key, IReadOnlyList<PlannedTransferFile> plannedFiles)
+        public void StartTracking(
+            TransferIdentifier identifier,
+            IReadOnlyList<PlannedTransferFile> plannedFiles
+        )
         {
-            PlannedFilesPerKey[key] = plannedFiles;
-            inner.StartTracking(key, plannedFiles);
+            PlannedFilesPerKey[identifier] = plannedFiles;
+            inner.StartTracking(identifier, plannedFiles);
         }
 
         public void BeginFile(
-            TransferKey key,
+            TransferIdentifier identifier,
             int fileId,
             string fileName,
             string sourceName,
@@ -769,22 +772,22 @@ public class ArchiveRestoreServiceTest
                 BegunFiles.Add(new BegunFile(fileId, sourceName));
             }
 
-            inner.BeginFile(key, fileId, fileName, sourceName, totalBytes);
+            inner.BeginFile(identifier, fileId, fileName, sourceName, totalBytes);
         }
 
-        public void AddBytes(TransferKey key, int fileId, long bytes)
+        public void AddBytes(TransferIdentifier identifier, int fileId, long bytes)
         {
-            inner.AddBytes(key, fileId, bytes);
+            inner.AddBytes(identifier, fileId, bytes);
         }
 
-        public void StopTracking(TransferKey key)
+        public void StopTracking(TransferIdentifier identifier)
         {
-            inner.StopTracking(key);
+            inner.StopTracking(identifier);
         }
 
-        public TransferProgressSnapshot? Get(TransferKey key)
+        public TransferProgressSnapshot? Get(TransferIdentifier identifier)
         {
-            return inner.Get(key);
+            return inner.Get(identifier);
         }
     }
 

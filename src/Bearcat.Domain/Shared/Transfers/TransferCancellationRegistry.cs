@@ -2,38 +2,38 @@ namespace Bearcat.Domain.Shared.Transfers;
 
 public sealed class TransferCancellationRegistry : ITransferCancellationRegistry
 {
-    private readonly Dictionary<TransferKey, CancellationTokenSource> tokenSources = new();
+    private readonly Dictionary<TransferIdentifier, CancellationTokenSource> tokenSources = new();
 
     private readonly Lock gate = new();
 
-    public CancellationToken Register(TransferKey key)
+    public CancellationToken Register(TransferIdentifier identifier)
     {
         var tokenSource = new CancellationTokenSource();
 
         lock (gate)
         {
-            tokenSources[key] = tokenSource;
+            tokenSources[identifier] = tokenSource;
         }
 
         return tokenSource.Token;
     }
 
-    public void Unregister(TransferKey key)
+    public void Unregister(TransferIdentifier identifier)
     {
         lock (gate)
         {
-            if (tokenSources.Remove(key, out var tokenSource))
+            if (tokenSources.Remove(identifier, out var tokenSource))
             {
                 tokenSource.Dispose();
             }
         }
     }
 
-    public bool RequestCancellation(TransferKey key)
+    public bool RequestCancellation(TransferIdentifier identifier)
     {
         lock (gate)
         {
-            if (!tokenSources.TryGetValue(key, out var tokenSource))
+            if (!tokenSources.TryGetValue(identifier, out var tokenSource))
             {
                 return false;
             }

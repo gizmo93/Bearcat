@@ -16,7 +16,7 @@ public class RemoteSourceDownloadStateService(
 
         if (
             cancellationRegistry.RequestCancellation(
-                RemoteSourceDownloadService.CreateTransferKey(download.Id)
+                RemoteSourceDownloadService.CreateTransferIdentifier(download.Id)
             )
         )
         {

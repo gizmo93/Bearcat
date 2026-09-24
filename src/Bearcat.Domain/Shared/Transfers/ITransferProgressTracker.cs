@@ -2,19 +2,22 @@ namespace Bearcat.Domain.Shared.Transfers;
 
 public interface ITransferProgressTracker
 {
-    void StartTracking(TransferKey key, IReadOnlyList<PlannedTransferFile> plannedFiles);
+    void StartTracking(
+        TransferIdentifier identifier,
+        IReadOnlyList<PlannedTransferFile> plannedFiles
+    );
 
     void BeginFile(
-        TransferKey key,
+        TransferIdentifier identifier,
         int fileId,
         string fileName,
         string sourceName,
         long? totalBytes
     );
 
-    void AddBytes(TransferKey key, int fileId, long bytes);
+    void AddBytes(TransferIdentifier identifier, int fileId, long bytes);
 
-    void StopTracking(TransferKey key);
+    void StopTracking(TransferIdentifier identifier);
 
-    TransferProgressSnapshot? Get(TransferKey key);
+    TransferProgressSnapshot? Get(TransferIdentifier identifier);
 }

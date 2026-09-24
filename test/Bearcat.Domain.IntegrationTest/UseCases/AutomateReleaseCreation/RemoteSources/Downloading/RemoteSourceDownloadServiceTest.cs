@@ -137,9 +137,9 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
         notification.Message.ShouldContain($"{IncomingPath}/{ReleaseName}");
         notification.Message.ShouldContain("Main FTP");
 
-        var transferKey = new TransferKey(TransferKind.RemoteDownload, download.Id);
-        progressTracker.Get(transferKey).ShouldBeNull();
-        cancellationRegistry.RequestCancellation(transferKey).ShouldBeFalse();
+        var transferIdentifier = new TransferIdentifier(TransferKind.RemoteDownload, download.Id);
+        progressTracker.Get(transferIdentifier).ShouldBeNull();
+        cancellationRegistry.RequestCancellation(transferIdentifier).ShouldBeFalse();
     }
 
     [Test]

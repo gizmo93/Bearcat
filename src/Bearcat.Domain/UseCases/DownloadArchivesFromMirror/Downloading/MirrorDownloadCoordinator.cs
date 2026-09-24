@@ -17,10 +17,10 @@ public class MirrorDownloadCoordinator(
     {
         using var semaphore = new SemaphoreSlim(downloadSettings.MaxParallelDownloads);
 
-        var transferKey = new TransferKey(TransferKind.MirrorDownload, archiveId);
+        var transferIdentifier = new TransferIdentifier(TransferKind.MirrorDownload, archiveId);
 
         transferProgressTracker.StartTracking(
-            key: transferKey,
+            identifier: transferIdentifier,
             plannedFiles: downloads
                 .Select(download => new PlannedTransferFile(
                     FileId: download.ArchiveFileId,
@@ -49,7 +49,7 @@ public class MirrorDownloadCoordinator(
         }
         finally
         {
-            transferProgressTracker.StopTracking(transferKey);
+            transferProgressTracker.StopTracking(transferIdentifier);
         }
     }
 }

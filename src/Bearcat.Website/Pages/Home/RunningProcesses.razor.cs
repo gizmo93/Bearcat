@@ -131,9 +131,9 @@ public sealed partial class RunningProcesses(
         IReadOnlyList<int> ids
     )
     {
-        return ids.Select(id => transferProgressTracker.Get(new TransferKey(kind, id)))
+        return ids.Select(id => transferProgressTracker.Get(new TransferIdentifier(kind, id)))
             .OfType<TransferProgressSnapshot>()
-            .ToDictionary(snapshot => snapshot.Key.Id);
+            .ToDictionary(snapshot => snapshot.Identifier.Id);
     }
 
     private void ToggleAutoRefresh()

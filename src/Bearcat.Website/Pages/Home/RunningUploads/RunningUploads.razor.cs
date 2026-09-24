@@ -137,7 +137,7 @@ public partial class RunningUploads(
 
         if (
             transferCancellationRegistry.RequestCancellation(
-                new TransferKey(TransferKind.MirrorDownload, archive.Id)
+                new TransferIdentifier(TransferKind.MirrorDownload, archive.Id)
             )
         )
         {
