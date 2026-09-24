@@ -13,7 +13,7 @@ public sealed class TransferProgressTracker : ITransferProgressTracker
 
     public void StartTracking(
         TransferIdentifier identifier,
-        IReadOnlyList<PlannedTransferFile> plannedFiles
+        IReadOnlyList<TransferFile> plannedFiles
     )
     {
         states[identifier] = new TransferState(Stopwatch.GetTimestamp(), plannedFiles);
@@ -79,7 +79,7 @@ public sealed class TransferProgressTracker : ITransferProgressTracker
 
         private long lastSampleTimestamp;
 
-        public TransferState(long startTimestamp, IReadOnlyList<PlannedTransferFile> plannedFiles)
+        public TransferState(long startTimestamp, IReadOnlyList<TransferFile> plannedFiles)
         {
             samples = new Queue<Sample>([new Sample(startTimestamp, CumulativeBytes: 0)]);
             lastSampleTimestamp = startTimestamp;

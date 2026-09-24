@@ -10,7 +10,7 @@ public sealed class UploadExecutionContext(
     int totalFileCount,
     int successfulFileCount,
     int failedFileCount,
-    IReadOnlyList<PlannedTransferFile> plannedFiles,
+    IReadOnlyList<TransferFile> plannedFiles,
     CancellationTokenSource cancellationTokenSource
 ) : IDisposable
 {
@@ -20,7 +20,7 @@ public sealed class UploadExecutionContext(
 
     public int TotalFileCount { get; } = totalFileCount;
 
-    public IReadOnlyList<PlannedTransferFile> PlannedFiles { get; } = plannedFiles;
+    public IReadOnlyList<TransferFile> PlannedFiles { get; } = plannedFiles;
 
     public int SuccessfulFileCount { get; set; } = successfulFileCount;
 

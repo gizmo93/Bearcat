@@ -22,7 +22,7 @@ public class MirrorDownloadCoordinator(
         transferProgressTracker.StartTracking(
             identifier: transferIdentifier,
             plannedFiles: downloads
-                .Select(download => new PlannedTransferFile(
+                .Select(download => new TransferFile(
                     FileId: download.ArchiveFileId,
                     FileName: Path.GetFileName(download.TargetFilePath),
                     SourceName: download.Sources[0].Registration.Name,

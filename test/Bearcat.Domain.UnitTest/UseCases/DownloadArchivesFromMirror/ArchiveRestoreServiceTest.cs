@@ -745,14 +745,14 @@ public class ArchiveRestoreServiceTest
 
         public Dictionary<
             TransferIdentifier,
-            IReadOnlyList<PlannedTransferFile>
+            IReadOnlyList<TransferFile>
         > PlannedFilesPerKey { get; } = new();
 
         public List<BegunFile> BegunFiles { get; } = [];
 
         public void StartTracking(
             TransferIdentifier identifier,
-            IReadOnlyList<PlannedTransferFile> plannedFiles
+            IReadOnlyList<TransferFile> plannedFiles
         )
         {
             PlannedFilesPerKey[identifier] = plannedFiles;

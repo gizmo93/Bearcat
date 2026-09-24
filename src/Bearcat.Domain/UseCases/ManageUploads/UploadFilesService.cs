@@ -282,7 +282,7 @@ public class UploadFilesService(
             .ToList();
 
         var plannedFiles = upload
-            .Archive.ArchiveFiles.Select(archiveFile => new PlannedTransferFile(
+            .Archive.ArchiveFiles.Select(archiveFile => new TransferFile(
                 FileId: archiveFile.Id,
                 FileName: Path.GetFileName(archiveFile.FullFileName),
                 SourceName: upload.UploadConfig.HosterRegistration.Name,

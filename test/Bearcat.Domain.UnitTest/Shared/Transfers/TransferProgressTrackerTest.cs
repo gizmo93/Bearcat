@@ -404,14 +404,14 @@ public class TransferProgressTrackerTest
         tracker.Get(untrackedKey).ShouldBeNull();
     }
 
-    private static PlannedTransferFile Planned(
+    private static TransferFile Planned(
         int fileId,
         string fileName,
         long? sizeBytes,
         bool isAlreadyTransferred = false
     )
     {
-        return new PlannedTransferFile(
+        return new TransferFile(
             FileId: fileId,
             FileName: fileName,
             SourceName: "Rapidgator",

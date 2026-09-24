@@ -98,12 +98,13 @@ public class RemoteSourceDownloadService(
                 userCancellationToken,
                 stoppingToken
             );
+
             files = await ListAndDownloadFilesAsync(
-                download,
-                registration,
-                settings,
-                transferIdentifier,
-                cancellationSource.Token
+                download: download,
+                registration: registration,
+                settings: settings,
+                transferIdentifier: transferIdentifier,
+                cancellationToken: cancellationSource.Token
             );
         }
         catch (Exception)
@@ -138,6 +139,7 @@ public class RemoteSourceDownloadService(
         download.StartedAt = timeProvider.GetLocalNow();
         download.CompletedAt = null;
         download.ErrorMessage = null;
+
         await repository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
@@ -173,17 +175,17 @@ public class RemoteSourceDownloadService(
             );
         }
 
-        var plannedFiles = files
+        var filesToDownload = files
             .Select(
                 (file, index) =>
-                    new PlannedFile(index + 1, file, RequireSafeLocalFilePath(download, file))
+                    new FileToDownload(index + 1, file, GetSafeLocalFilePathOrThrow(download, file))
             )
             .ToList();
 
         progressTracker.StartTracking(
             transferIdentifier,
-            plannedFiles
-                .Select(file => new PlannedTransferFile(
+            filesToDownload
+                .Select(file => new TransferFile(
                     FileId: file.FileId,
                     FileName: file.File.RelativePath,
                     SourceName: download.SourceName,
@@ -211,16 +213,16 @@ public class RemoteSourceDownloadService(
         };
 
         await Parallel.ForEachAsync(
-            plannedFiles,
-            parallelOptions,
-            async (file, token) =>
+            source: filesToDownload,
+            parallelOptions: parallelOptions,
+            body: async (file, token) =>
                 await DownloadFileAsync(
-                    download,
-                    registration,
-                    settings,
-                    transferIdentifier,
-                    file,
-                    token
+                    download: download,
+                    registration: registration,
+                    settings: settings,
+                    transferIdentifier: transferIdentifier,
+                    fileToDownload: file,
+                    cancellationToken: token
                 )
         );
 
@@ -232,35 +234,35 @@ public class RemoteSourceDownloadService(
         RemoteSourceRegistration registration,
         DownloadSettings settings,
         TransferIdentifier transferIdentifier,
-        PlannedFile file,
+        FileToDownload fileToDownload,
         CancellationToken cancellationToken
     )
     {
         var progress = new TransferProgressReporter(
             tracker: progressTracker,
             identifier: transferIdentifier,
-            fileId: file.FileId,
-            fileName: file.File.RelativePath,
+            fileId: fileToDownload.FileId,
+            fileName: fileToDownload.File.RelativePath,
             sourceName: download.SourceName
         );
 
         await RunOnSessionWithRetriesAsync(
-            download,
-            registration,
-            settings,
-            $"Download of '{file.File.RelativePath}'",
-            async session =>
+            download: download,
+            registration: registration,
+            settings: settings,
+            operationName: $"Download of '{fileToDownload.File.RelativePath}'",
+            operation: async session =>
             {
                 await session.DownloadFileAsync(
-                    file.File,
-                    file.LocalFilePath,
-                    progress,
-                    cancellationToken
+                    file: fileToDownload.File,
+                    localFilePath: fileToDownload.LocalFilePath,
+                    progress: progress,
+                    cancellationToken: cancellationToken
                 );
 
-                return VerifyDownloadedFileSize(file);
+                return VerifyDownloadedFileSize(fileToDownload);
             },
-            cancellationToken
+            cancellationToken: cancellationToken
         );
     }
 
@@ -275,7 +277,7 @@ public class RemoteSourceDownloadService(
     {
         var errorMessages = new List<string>();
 
-        for (var attempt = 1; attempt <= settings.MaxAttempts; attempt++)
+        foreach (var attempt in Enumerable.Range(1, settings.MaxParallelFileDownloads))
         {
             if (attempt > 1)
             {
@@ -285,9 +287,9 @@ public class RemoteSourceDownloadService(
             try
             {
                 return await sessionProvider.UseSessionAsync(
-                    registration,
-                    operation,
-                    cancellationToken
+                    registration: registration,
+                    action: operation,
+                    cancellationToken: cancellationToken
                 );
             }
             catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
@@ -321,6 +323,7 @@ public class RemoteSourceDownloadService(
         download.CompletedAt = timeProvider.GetLocalNow();
         download.FileCount = files.Count;
         download.TotalBytes = files.Sum(file => file.SizeBytes);
+
         await repository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
@@ -339,6 +342,7 @@ public class RemoteSourceDownloadService(
     {
         folderService.DeleteLocalFolder(download);
         download.State = RemoteSourceDownloadState.Canceled;
+
         await repository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
@@ -358,10 +362,11 @@ public class RemoteSourceDownloadService(
         download.ErrorMessage = errorMessage;
 
         await notificationService.CreateAsync(
-            NotificationKind.RemoteDownloadFailed,
-            $"Remote download '{download.FolderName}' from {download.SourceName} failed: {errorMessage}",
-            cancellationToken
+            kind: NotificationKind.RemoteDownloadFailed,
+            message: $"Remote download '{download.FolderName}' from {download.SourceName} failed: {errorMessage}",
+            cancellationToken: cancellationToken
         );
+
         await repository.SaveChangesAsync(cancellationToken);
 
         logger.LogError(
@@ -373,7 +378,7 @@ public class RemoteSourceDownloadService(
         );
     }
 
-    private static string RequireSafeLocalFilePath(
+    private static string GetSafeLocalFilePathOrThrow(
         RemoteSourceDownload download,
         RemoteFileDto file
     )
@@ -384,14 +389,14 @@ public class RemoteSourceDownloadService(
             );
     }
 
-    private static long VerifyDownloadedFileSize(PlannedFile file)
+    private static long VerifyDownloadedFileSize(FileToDownload fileToDownload)
     {
-        var actualSizeBytes = new FileInfo(file.LocalFilePath).Length;
+        var actualSizeBytes = new FileInfo(fileToDownload.LocalFilePath).Length;
 
-        if (actualSizeBytes != file.File.SizeBytes)
+        if (actualSizeBytes != fileToDownload.File.SizeBytes)
         {
             throw new IOException(
-                $"The downloaded file has {actualSizeBytes} bytes but the remote source listed {file.File.SizeBytes} bytes"
+                $"The downloaded file has {actualSizeBytes} bytes but the remote source listed {fileToDownload.File.SizeBytes} bytes"
             );
         }
 
@@ -420,5 +425,5 @@ public class RemoteSourceDownloadService(
         TimeSpan RetryDelay
     );
 
-    private sealed record PlannedFile(int FileId, RemoteFileDto File, string LocalFilePath);
+    private sealed record FileToDownload(int FileId, RemoteFileDto File, string LocalFilePath);
 }
