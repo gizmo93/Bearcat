@@ -27,7 +27,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY glftpd.conf.template /etc/glftpd.conf.template
-COPY glftpd.user /glftpd/ftp-data/users/glftpd
+COPY glftpd-user-file /glftpd/ftp-data/users/glftpd
 COPY xinetd.conf /etc/xinetd.d/glftpd
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
