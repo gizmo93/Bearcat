@@ -4,9 +4,20 @@
 
 <section class="mx-auto flex w-full max-w-5xl flex-col gap-4">
     <div class="bearcat-page-header">
-        <div class="min-w-0">
+        <div>
             <h1 class="text-3xl font-semibold tracking-tight">@L["Configurations"]</h1>
         </div>
+
+        <BbInputGroup Class="w-full sm:w-80 sm:shrink-0 sm:self-center">
+            <BbInputGroupAddon Align="InputGroupAlign.InlineStart">
+                <LucideIcon Name="search" class="h-4 w-4 text-muted-foreground" />
+            </BbInputGroupAddon>
+            <BbInputGroupInput @bind-Value="searchTerm"
+                               Type="InputType.Search"
+                               Placeholder="@L["SearchConfigurations"]"
+                               AriaLabel="@L["SearchConfigurations"]"
+                               UpdateTiming="UpdateTiming.Immediate" />
+        </BbInputGroup>
     </div>
 
     @if (isLoading)
@@ -20,9 +31,16 @@
             </BbCardContent>
         </BbCard>
     }
+    else if (FilteredConfigurations.Count == 0)
+    {
+        <div class="bearcat-release-empty">
+            <LucideIcon Name="search-x" class="h-5 w-5" />
+            <span>@L["NoConfigurationsFound"]</span>
+        </div>
+    }
     else
     {
-        @foreach (var configuration in configurations)
+        @foreach (var configuration in FilteredConfigurations)
         {
             <div id="@(configuration.DisplayName == "NotificationSettings" ? "notification-settings" : null)">
                 <BbCard Class="border-border/70 shadow-sm">

@@ -8,27 +8,97 @@ namespace Bearcat.Website.Pages.ManageApplicationConfigurations;
 
 public partial class ApplicationConfigurationsPage(IScopedOperationRunner operationRunner)
 {
-    private readonly Dictionary<string, string?> editorValues = [];
-    private IReadOnlyList<ApplicationConfigurationDto> configurations = [];
-    private bool isLoading = true;
-
-    private static IReadOnlyList<
-        IGrouping<NotificationGroup?, ApplicationConfigurationPropertyDto>
-    > GetPropertyGroups(ApplicationConfigurationDto configuration)
-    {
-        if (configuration.DisplayName != "NotificationSettings")
-        {
-            return [configuration.Properties.GroupBy(_ => (NotificationGroup?)null).Single()];
-        }
-
-        var groupsByPropertyName = NotificationDefinitions.All.ToDictionary(
+    private static readonly Dictionary<string, NotificationGroup> notificationGroupsByPropertyName =
+        NotificationDefinitions.All.ToDictionary(
             definition => definition.Kind.ToString(),
             definition => definition.Group
         );
 
-        return configuration
-            .Properties.GroupBy(property => (NotificationGroup?)groupsByPropertyName[property.Name])
+    private readonly Dictionary<string, string?> editorValues = [];
+    private IReadOnlyList<ApplicationConfigurationDto> configurations = [];
+    private bool isLoading = true;
+    private string? searchTerm;
+
+    private IReadOnlyList<ApplicationConfigurationDto> FilteredConfigurations =>
+        configurations
+            .Where(configuration =>
+                configuration.Properties.Any(property => MatchesSearchTerm(configuration, property))
+            )
             .ToList();
+
+    private IReadOnlyList<
+        IGrouping<NotificationGroup?, ApplicationConfigurationPropertyDto>
+    > GetPropertyGroups(ApplicationConfigurationDto configuration)
+    {
+        return configuration
+            .Properties.Where(property => MatchesSearchTerm(configuration, property))
+            .GroupBy(property => GetNotificationGroup(configuration, property))
+            .ToList();
+    }
+
+    private static NotificationGroup? GetNotificationGroup(
+        ApplicationConfigurationDto configuration,
+        ApplicationConfigurationPropertyDto property
+    )
+    {
+        return configuration.DisplayName == "NotificationSettings"
+            ? notificationGroupsByPropertyName[property.Name]
+            : null;
+    }
+
+    private bool MatchesSearchTerm(
+        ApplicationConfigurationDto configuration,
+        ApplicationConfigurationPropertyDto property
+    )
+    {
+        var searchWords = (searchTerm ?? string.Empty).Split(
+            ' ',
+            StringSplitOptions.RemoveEmptyEntries
+        );
+
+        if (searchWords.Length == 0)
+        {
+            return true;
+        }
+
+        var searchableText = string.Join(' ', GetSearchableTexts(configuration, property));
+
+        return searchWords.All(word =>
+            searchableText.Contains(word, StringComparison.OrdinalIgnoreCase)
+        );
+    }
+
+    private List<string> GetSearchableTexts(
+        ApplicationConfigurationDto configuration,
+        ApplicationConfigurationPropertyDto property
+    )
+    {
+        List<string> searchableTexts =
+        [
+            configuration.DisplayName,
+            L[configuration.DisplayName],
+            property.Name,
+            L[property.DisplayName],
+        ];
+
+        if (!string.IsNullOrWhiteSpace(configuration.Description))
+        {
+            searchableTexts.Add(L[configuration.Description]);
+        }
+
+        if (!string.IsNullOrWhiteSpace(property.Description))
+        {
+            searchableTexts.Add(L[property.Description]);
+        }
+
+        var notificationGroup = GetNotificationGroup(configuration, property);
+
+        if (notificationGroup is not null)
+        {
+            searchableTexts.Add(L[$"NotificationGroup.{notificationGroup}"]);
+        }
+
+        return searchableTexts;
     }
 
     protected override async Task OnInitializedAsync()
