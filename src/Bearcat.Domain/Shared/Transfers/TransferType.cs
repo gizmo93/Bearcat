@@ -1,6 +1,6 @@
 namespace Bearcat.Domain.Shared.Transfers;
 
-public enum TransferKind
+public enum TransferType
 {
     Upload = 1,
     MirrorDownload = 2,

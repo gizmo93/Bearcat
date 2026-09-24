@@ -7,7 +7,7 @@ using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 
-public class ReleaseFromFolderCreator(
+public class ReleaseFromFolderCreationService(
     ReleaseInfoResolutionService releaseInfoResolutionService,
     MediaMetadataService mediaMetadataService,
     IArchiverFactory archiverFactory,

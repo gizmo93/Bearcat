@@ -249,7 +249,7 @@ public class UploadFilesService(
             upload.UploadState = UploadState.Uploading;
             uploadContexts[upload.Id] = context;
             progressTracker.StartTracking(
-                new TransferIdentifier(TransferKind.Upload, upload.Id),
+                new TransferIdentifier(TransferType.Upload, upload.Id),
                 context.PlannedFiles
             );
         }
@@ -599,7 +599,7 @@ public class UploadFilesService(
         {
             uploadContexts.Remove(context.UploadId);
             progressTracker.StopTracking(
-                new TransferIdentifier(TransferKind.Upload, context.UploadId)
+                new TransferIdentifier(TransferType.Upload, context.UploadId)
             );
         }
 
@@ -730,7 +730,7 @@ public class UploadFilesService(
                 {
                     uploadContexts.Remove(uploadId);
                     progressTracker.StopTracking(
-                        new TransferIdentifier(TransferKind.Upload, uploadId)
+                        new TransferIdentifier(TransferType.Upload, uploadId)
                     );
                     hasChanges = true;
                 }

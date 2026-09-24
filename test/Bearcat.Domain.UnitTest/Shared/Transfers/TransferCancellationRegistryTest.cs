@@ -13,7 +13,7 @@ public class TransferCancellationRegistryTest
 
         // Act
         var result = registry.RequestCancellation(
-            new TransferIdentifier(TransferKind.MirrorDownload, 4711)
+            new TransferIdentifier(TransferType.MirrorDownload, 4711)
         );
 
         // Assert
@@ -25,7 +25,7 @@ public class TransferCancellationRegistryTest
     {
         // Arrange
         var registry = new TransferCancellationRegistry();
-        var key = new TransferIdentifier(TransferKind.MirrorDownload, 3);
+        var key = new TransferIdentifier(TransferType.MirrorDownload, 3);
         var token = registry.Register(key);
 
         // Act
@@ -44,10 +44,10 @@ public class TransferCancellationRegistryTest
     {
         // Arrange
         var registry = new TransferCancellationRegistry();
-        var token = registry.Register(new TransferIdentifier(TransferKind.MirrorDownload, 3));
+        var token = registry.Register(new TransferIdentifier(TransferType.MirrorDownload, 3));
 
         // Act
-        var result = registry.RequestCancellation(new TransferIdentifier(TransferKind.Upload, 3));
+        var result = registry.RequestCancellation(new TransferIdentifier(TransferType.Upload, 3));
 
         // Assert
         result.ShouldBeFalse();

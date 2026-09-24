@@ -137,7 +137,7 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
         notification.Message.ShouldContain($"{IncomingPath}/{ReleaseName}");
         notification.Message.ShouldContain("Main FTP");
 
-        var transferIdentifier = new TransferIdentifier(TransferKind.RemoteDownload, download.Id);
+        var transferIdentifier = new TransferIdentifier(TransferType.RemoteDownload, download.Id);
         progressTracker.Get(transferIdentifier).ShouldBeNull();
         cancellationRegistry.RequestCancellation(transferIdentifier).ShouldBeFalse();
     }
@@ -819,12 +819,12 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
     {
         var dbContext = CreateDbContext();
 
-        var releaseCreator = new RemoteDownloadReleaseCreator(
+        var releaseCreator = new RemoteDownloadReleaseCreationService(
             new RemoteSourceDownloadRepository(dbContext),
             CreateReleaseFromFolderCreator(dbContext),
             CreateNotificationService(dbContext),
             timeProvider,
-            NullLogger<RemoteDownloadReleaseCreator>.Instance
+            NullLogger<RemoteDownloadReleaseCreationService>.Instance
         );
 
         await releaseCreator.ProcessAsync(CancellationToken.None);
@@ -880,7 +880,9 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
         return configurationProvider.Object;
     }
 
-    private ReleaseFromFolderCreator CreateReleaseFromFolderCreator(BearcatDbContext dbContext)
+    private ReleaseFromFolderCreationService CreateReleaseFromFolderCreator(
+        BearcatDbContext dbContext
+    )
     {
         var nfoDatabaseFactory = new Mock<INfoDatabaseFactory>(MockBehavior.Strict);
         nfoDatabaseFactory
@@ -907,7 +909,7 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
             .Setup(factory => factory.GetArchivers())
             .Returns([new ArchiverDto("RAR", "RarArchiver", ".rar")]);
 
-        return new ReleaseFromFolderCreator(
+        return new ReleaseFromFolderCreationService(
             releaseInfoResolutionService: new ReleaseInfoResolutionService(
                 releaseInfoRepository,
                 nfoDatabaseFactory.Object,

@@ -29,7 +29,12 @@ public sealed class TransferProgressTracker : ITransferProgressTracker
     {
         if (states.TryGetValue(identifier, out var state))
         {
-            state.BeginFile(fileId, fileName, sourceName, totalBytes);
+            state.BeginFile(
+                fileId: fileId,
+                fileName: fileName,
+                sourceName: sourceName,
+                totalBytes: totalBytes
+            );
         }
     }
 
@@ -37,7 +42,13 @@ public sealed class TransferProgressTracker : ITransferProgressTracker
     {
         if (states.TryGetValue(identifier, out var state))
         {
-            state.AddBytes(fileId, bytes, Stopwatch.GetTimestamp(), SampleInterval, SpeedWindow);
+            state.AddBytes(
+                fileId: fileId,
+                bytes: bytes,
+                nowTimestamp: Stopwatch.GetTimestamp(),
+                sampleInterval: SampleInterval,
+                window: SpeedWindow
+            );
         }
     }
 
@@ -138,7 +149,7 @@ public sealed class TransferProgressTracker : ITransferProgressTracker
 
                 lastSampleTimestamp = nowTimestamp;
                 samples.Enqueue(new Sample(nowTimestamp, cumulativeBytes));
-                TrimOldSamples(nowTimestamp, window);
+                RemoveOldSamples(nowTimestamp, window);
             }
         }
 
@@ -146,7 +157,7 @@ public sealed class TransferProgressTracker : ITransferProgressTracker
         {
             lock (gate)
             {
-                TrimOldSamples(nowTimestamp, window);
+                RemoveOldSamples(nowTimestamp, window);
 
                 var oldest = samples.Peek();
                 var elapsedSeconds = Stopwatch
@@ -185,7 +196,7 @@ public sealed class TransferProgressTracker : ITransferProgressTracker
             }
         }
 
-        private void TrimOldSamples(long nowTimestamp, TimeSpan window)
+        private void RemoveOldSamples(long nowTimestamp, TimeSpan window)
         {
             while (
                 samples.Count > 1

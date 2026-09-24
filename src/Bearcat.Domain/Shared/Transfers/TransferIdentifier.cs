@@ -1,3 +1,3 @@
 namespace Bearcat.Domain.Shared.Transfers;
 
-public readonly record struct TransferIdentifier(TransferKind Kind, int Id);
+public readonly record struct TransferIdentifier(TransferType Type, int Id);

@@ -5,7 +5,7 @@ namespace Bearcat.Domain.UnitTest.Shared.Transfers;
 
 public class TransferProgressTrackerTest
 {
-    private static readonly TransferIdentifier Identifier = new(TransferKind.MirrorDownload, 1);
+    private static readonly TransferIdentifier Identifier = new(TransferType.MirrorDownload, 1);
 
     [Test]
     public void Get_NotTracking_ReturnsNull()
@@ -40,7 +40,7 @@ public class TransferProgressTrackerTest
     {
         // Arrange
         var tracker = new TransferProgressTracker();
-        var uploadKey = new TransferIdentifier(TransferKind.Upload, Identifier.Id);
+        var uploadKey = new TransferIdentifier(TransferType.Upload, Identifier.Id);
         tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
 
         // Act
@@ -395,7 +395,7 @@ public class TransferProgressTrackerTest
     {
         // Arrange
         var tracker = new TransferProgressTracker();
-        var untrackedKey = new TransferIdentifier(TransferKind.Upload, 42);
+        var untrackedKey = new TransferIdentifier(TransferType.Upload, 42);
 
         // Act
         tracker.AddBytes(untrackedKey, fileId: 1, bytes: 100);

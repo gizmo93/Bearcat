@@ -74,7 +74,7 @@ public static class ServiceProviderConfig
             services.AddScoped<RemoteSourceDownloadService>();
             services.AddScoped<RemoteSourceDownloadStateService>();
             services.AddScoped<RemoteDownloadFolderService>();
-            services.AddScoped<RemoteDownloadReleaseCreator>();
+            services.AddScoped<RemoteDownloadReleaseCreationService>();
             services.AddScoped<RemoteDownloadRawFileCleanupService>();
             services.AddScoped<ImageHosterService>();
             services.AddScoped<DistributionSiteSessionService>();
@@ -85,7 +85,7 @@ public static class ServiceProviderConfig
             services.AddScoped<BackgroundTaskStateService>();
             services.AddScoped<ReleaseFolderAutomationService>();
             services.AddScoped<LocalFolderScanService>();
-            services.AddScoped<ReleaseFromFolderCreator>();
+            services.AddScoped<ReleaseFromFolderCreationService>();
             services.AddScoped<ReleaseCollectionService>();
             services.AddScoped<ReleaseCollectionAssignmentService>();
             services.AddScoped<IReleaseCollectionAssigner>(provider =>

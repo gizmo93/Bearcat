@@ -17,7 +17,7 @@ public class MirrorDownloadCoordinator(
     {
         using var semaphore = new SemaphoreSlim(downloadSettings.MaxParallelDownloads);
 
-        var transferIdentifier = new TransferIdentifier(TransferKind.MirrorDownload, archiveId);
+        var transferIdentifier = new TransferIdentifier(TransferType.MirrorDownload, archiveId);
 
         transferProgressTracker.StartTracking(
             identifier: transferIdentifier,

@@ -736,7 +736,7 @@ public class ArchiveRestoreServiceTest
 
     private static TransferIdentifier MirrorDownloadKey(int archiveId)
     {
-        return new TransferIdentifier(TransferKind.MirrorDownload, archiveId);
+        return new TransferIdentifier(TransferType.MirrorDownload, archiveId);
     }
 
     private sealed class RecordingTransferProgressTracker : ITransferProgressTracker

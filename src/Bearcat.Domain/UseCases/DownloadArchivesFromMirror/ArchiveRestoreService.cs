@@ -238,7 +238,7 @@ public class ArchiveRestoreService(
             restoreFolderPath
         );
 
-        var transferIdentifier = new TransferIdentifier(TransferKind.MirrorDownload, archive.Id);
+        var transferIdentifier = new TransferIdentifier(TransferType.MirrorDownload, archive.Id);
         var userCancellationToken = cancellationRegistry.Register(transferIdentifier);
 
         try

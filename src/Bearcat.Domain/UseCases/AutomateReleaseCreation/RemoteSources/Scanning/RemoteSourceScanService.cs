@@ -41,9 +41,11 @@ public class RemoteSourceScanService(
         )
         {
             pendingCount += await ScanRegistrationAsync(
-                RemoteSourceAutomationMatcher.OrderByPriority(registrationAutomations.ToList()),
-                settings,
-                cancellationToken
+                automations: RemoteSourceAutomationMatcher.OrderByPriority(
+                    registrationAutomations.ToList()
+                ),
+                settings: settings,
+                cancellationToken: cancellationToken
             );
         }
 
@@ -59,8 +61,12 @@ public class RemoteSourceScanService(
         var registration = automations[0].RemoteSourceRegistration;
 
         var foldersByRemotePath = RemoveFoldersWithUnsafeNames(
-            registration,
-            await ListFoldersPerRemotePathAsync(registration, automations, cancellationToken)
+            registration: registration,
+            foldersByRemotePath: await ListFoldersPerRemotePathAsync(
+                registration,
+                automations,
+                cancellationToken
+            )
         );
 
         var listedFolderPaths = foldersByRemotePath
@@ -69,9 +75,9 @@ public class RemoteSourceScanService(
             .ToList();
 
         var existingDownloads = await repository.GetDownloadsAsync(
-            registration.Id,
-            listedFolderPaths,
-            cancellationToken
+            remoteSourceRegistrationId: registration.Id,
+            remoteFolderPaths: listedFolderPaths,
+            cancellationToken: cancellationToken
         );
 
         var existingDownloadsByPath = existingDownloads.ToDictionary(download =>
@@ -79,9 +85,9 @@ public class RemoteSourceScanService(
         );
 
         var foldersByAutomationId = RemoteSourceAutomationMatcher.AssignFoldersToAutomations(
-            automations,
-            foldersByRemotePath,
-            existingDownloadsByPath
+            automations: automations,
+            foldersByRemotePath: foldersByRemotePath,
+            existingDownloadsByPath: existingDownloadsByPath
         );
 
         var pendingCount = 0;
@@ -208,7 +214,7 @@ public class RemoteSourceScanService(
 
         if (!automation.HasCompletedInitialScan && automation.IgnoreExistingOnFirstScan)
         {
-            RecordExistingFoldersAsIgnored(
+            MarkExistingFoldersAsIgnored(
                 automation: automation,
                 assignedFolders: assignedFolders,
                 existingDownloadsByPath: existingDownloadsByPath,
@@ -217,7 +223,7 @@ public class RemoteSourceScanService(
         }
         else
         {
-            pendingCount = await RecordNewFoldersAndQueueStableOnesAsync(
+            pendingCount = await MarkNewFoldersAndQueueStableOnesAsync(
                 automation: automation,
                 assignedFolders: assignedFolders,
                 existingDownloadsByPath: existingDownloadsByPath,
@@ -245,7 +251,7 @@ public class RemoteSourceScanService(
         return pendingCount;
     }
 
-    private void RecordExistingFoldersAsIgnored(
+    private void MarkExistingFoldersAsIgnored(
         RemoteSourceAutomation automation,
         IReadOnlyList<RemoteFolderDto> assignedFolders,
         IReadOnlyDictionary<string, RemoteSourceDownload> existingDownloadsByPath,
@@ -270,7 +276,7 @@ public class RemoteSourceScanService(
         }
     }
 
-    private async Task<int> RecordNewFoldersAndQueueStableOnesAsync(
+    private async Task<int> MarkNewFoldersAndQueueStableOnesAsync(
         RemoteSourceAutomation automation,
         IReadOnlyList<RemoteFolderDto> assignedFolders,
         IReadOnlyDictionary<string, RemoteSourceDownload> existingDownloadsByPath,

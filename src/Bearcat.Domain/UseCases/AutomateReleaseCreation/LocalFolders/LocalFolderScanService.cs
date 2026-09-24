@@ -16,7 +16,7 @@ namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders;
 public class LocalFolderScanService(
     ILocalFolderScanRepository repository,
     IFileSystemService fileSystemService,
-    ReleaseFromFolderCreator releaseFromFolderCreator,
+    ReleaseFromFolderCreationService releaseFromFolderCreationService,
     TimeProvider timeProvider,
     IApplicationConfigurationProvider configuration,
     INotificationService notificationService
@@ -183,7 +183,7 @@ public class LocalFolderScanService(
         CancellationToken cancellationToken
     )
     {
-        var release = await releaseFromFolderCreator.CreateAsync(
+        var release = await releaseFromFolderCreationService.CreateAsync(
             releaseTemplate: candidate.Automation.ReleaseTemplate,
             folderPath: candidate.FolderPath,
             primaryLanguageCode: candidate.Automation.PrimaryLanguageCode,

@@ -81,7 +81,7 @@ public sealed partial class RunningProcesses(
             .ToListAsync(cancellationToken);
 
         uploadProgress = GetProgressSnapshots(
-            TransferKind.Upload,
+            TransferType.Upload,
             runningUploads.Select(upload => upload.Id).ToList()
         );
     }
@@ -108,7 +108,7 @@ public sealed partial class RunningProcesses(
             .ToList();
 
         downloadProgress = GetProgressSnapshots(
-            TransferKind.MirrorDownload,
+            TransferType.MirrorDownload,
             restoringArchives.Select(archive => archive.Id).ToList()
         );
     }
@@ -121,17 +121,17 @@ public sealed partial class RunningProcesses(
         >((repository, token) => repository.GetRunningAsync(token), cancellationToken);
 
         remoteDownloadProgress = GetProgressSnapshots(
-            TransferKind.RemoteDownload,
+            TransferType.RemoteDownload,
             remoteDownloads.Select(download => download.Id).ToList()
         );
     }
 
     private Dictionary<int, TransferProgressSnapshot> GetProgressSnapshots(
-        TransferKind kind,
+        TransferType type,
         IReadOnlyList<int> ids
     )
     {
-        return ids.Select(id => transferProgressTracker.Get(new TransferIdentifier(kind, id)))
+        return ids.Select(id => transferProgressTracker.Get(new TransferIdentifier(type, id)))
             .OfType<TransferProgressSnapshot>()
             .ToDictionary(snapshot => snapshot.Identifier.Id);
     }

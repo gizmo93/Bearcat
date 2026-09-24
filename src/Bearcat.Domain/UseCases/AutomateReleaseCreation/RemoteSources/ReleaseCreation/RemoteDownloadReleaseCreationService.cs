@@ -8,12 +8,12 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation;
 
-public class RemoteDownloadReleaseCreator(
+public class RemoteDownloadReleaseCreationService(
     IRemoteDownloadReleaseRepository repository,
-    ReleaseFromFolderCreator releaseFromFolderCreator,
+    ReleaseFromFolderCreationService releaseFromFolderCreationService,
     INotificationService notificationService,
     TimeProvider timeProvider,
-    ILogger<RemoteDownloadReleaseCreator> logger
+    ILogger<RemoteDownloadReleaseCreationService> logger
 )
 {
     public async Task<int> ProcessAsync(CancellationToken cancellationToken)
@@ -56,7 +56,7 @@ public class RemoteDownloadReleaseCreator(
 
         try
         {
-            release = await releaseFromFolderCreator.CreateAsync(
+            release = await releaseFromFolderCreationService.CreateAsync(
                 releaseTemplate: releaseTemplate,
                 folderPath: download.LocalFolderPath,
                 primaryLanguageCode: download.PrimaryLanguageCode,

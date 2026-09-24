@@ -59,7 +59,11 @@ public static class RemoteSourceAutomationMatcher
                     folder.FullPath,
                     out var download
                 )
-                    ? FindAutomationOfObservingDownload(pathAutomations, download, folder)
+                    ? FindAutomationOfObservingDownload(
+                        pathAutomations: pathAutomations,
+                        download: download,
+                        folder: folder
+                    )
                     : FindFirstMatchingAutomation(pathAutomations, folder.Name);
 
                 if (automation is not null)

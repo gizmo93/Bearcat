@@ -18,7 +18,7 @@ public class RemoteDownloadReleaseCreationBackgroundTask(
         CancellationToken stoppingToken
     )
     {
-        var creator = serviceProvider.GetRequiredService<RemoteDownloadReleaseCreator>();
+        var creator = serviceProvider.GetRequiredService<RemoteDownloadReleaseCreationService>();
         await creator.ProcessAsync(stoppingToken);
     }
 }

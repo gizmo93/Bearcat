@@ -27,7 +27,7 @@ public class RemoteSourceDownloadService(
 {
     public static TransferIdentifier CreateTransferIdentifier(int downloadId)
     {
-        return new TransferIdentifier(TransferKind.RemoteDownload, downloadId);
+        return new TransferIdentifier(TransferType.RemoteDownload, downloadId);
     }
 
     public async Task ProcessAsync(CancellationToken cancellationToken)

@@ -227,7 +227,7 @@ public class ArchiveFileDownloader(
                 hosterConfig: resolved.Config,
                 progress: new TransferProgressReporter(
                     tracker: transferProgressTracker,
-                    identifier: new TransferIdentifier(TransferKind.MirrorDownload, archiveId),
+                    identifier: new TransferIdentifier(TransferType.MirrorDownload, archiveId),
                     fileId: download.ArchiveFileId,
                     fileName: Path.GetFileName(download.TargetFilePath),
                     sourceName: source.Registration.Name

@@ -74,7 +74,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
         service = new LocalFolderScanService(
             repository: new ReleaseFolderAutomationRepository(dbContext, dbContext),
             fileSystemService: new FileSystemService(),
-            releaseFromFolderCreator: new ReleaseFromFolderCreator(
+            releaseFromFolderCreationService: new ReleaseFromFolderCreationService(
                 releaseInfoResolutionService: CreateReleaseInfoResolutionService(),
                 mediaMetadataService: CreateMediaMetadataService(),
                 archiverFactory: archiverFactory.Object,
