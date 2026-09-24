@@ -93,7 +93,7 @@ public sealed class FtpRemoteSource : IRemoteSource
         return new FtpRemoteSourceSession(client);
     }
 
-    private static FtpConfig CreateClientConfig(FtpRemoteSourceConfig config)
+    public static FtpConfig CreateClientConfig(FtpRemoteSourceConfig config)
     {
         var clientConfig = new FtpConfig
         {

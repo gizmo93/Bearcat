@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Bearcat.Abstractions.ConfigurationFields;
 using Bearcat.RemoteSources.Ftp;
+using FluentFTP;
+using FluentFTP.BouncyCastle;
 using Shouldly;
 
 namespace Bearcat.RemoteSources.UnitTest.Ftp;
@@ -207,6 +209,42 @@ public class FtpRemoteSourceTest
                 Password = "secret",
             }
         );
+    }
+
+    [Test]
+    public void CreateClientConfig_BouncyCastleProvider_DoesNotRequireSessionResumption()
+    {
+        // Arrange
+        var config = CreateConfig() with
+        {
+            TlsProvider = FtpTlsProvider.BouncyCastle,
+        };
+
+        // Act
+        var clientConfig = FtpRemoteSource.CreateClientConfig(config);
+
+        // Assert
+        clientConfig.CustomStream.ShouldBe(typeof(BouncyCastleFtpStream));
+        clientConfig
+            .CustomStreamConfig.ShouldBeOfType<BouncyCastleFtpConfig>()
+            .RequireSessionResumption.ShouldBeFalse();
+    }
+
+    [Test]
+    public void CreateClientConfig_SystemProvider_UsesDefaultStream()
+    {
+        // Arrange
+        var config = CreateConfig() with
+        {
+            TlsProvider = FtpTlsProvider.System,
+        };
+
+        // Act
+        var clientConfig = FtpRemoteSource.CreateClientConfig(config);
+
+        // Assert
+        clientConfig.CustomStream.ShouldBeNull();
+        clientConfig.CustomStreamConfig.ShouldBeNull();
     }
 
     private static FtpRemoteSourceConfig CreateConfig()

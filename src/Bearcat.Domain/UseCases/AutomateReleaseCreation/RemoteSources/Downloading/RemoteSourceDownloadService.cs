@@ -277,7 +277,7 @@ public class RemoteSourceDownloadService(
     {
         var errorMessages = new List<string>();
 
-        foreach (var attempt in Enumerable.Range(1, settings.MaxParallelFileDownloads))
+        foreach (var attempt in Enumerable.Range(1, settings.MaxAttempts))
         {
             if (attempt > 1)
             {

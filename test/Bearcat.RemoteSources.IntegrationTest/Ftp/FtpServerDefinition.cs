@@ -31,11 +31,6 @@ public sealed record FtpServerDefinition(
                 21,
                 FtpEncryption.Explicit
             ),
-            FtpTestServer.VsftpdExplicitTlsWithoutSessionResumption => CreateVsftpd(
-                "explicit_no_resumption",
-                21,
-                FtpEncryption.Explicit
-            ),
             FtpTestServer.VsftpdImplicitTls => CreateVsftpd(
                 "implicit",
                 990,

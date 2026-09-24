@@ -5,7 +5,7 @@ config=/etc/vsftpd/vsftpd.conf
 listen_port=21
 
 case "$FTP_MODE" in
-    plain | explicit | explicit_reuse | explicit_no_resumption) ;;
+    plain | explicit | explicit_reuse) ;;
     implicit) listen_port=990 ;;
     *)
         echo "Unknown FTP_MODE: $FTP_MODE" >&2
@@ -49,10 +49,6 @@ fi
 case "$FTP_MODE" in
     explicit) echo "require_ssl_reuse=NO" >> "$config" ;;
     explicit_reuse) echo "require_ssl_reuse=YES" >> "$config" ;;
-    explicit_no_resumption)
-        echo "require_ssl_reuse=NO" >> "$config"
-        export LD_PRELOAD=/usr/lib/disable-session-resumption.so
-        ;;
     implicit)
         echo "require_ssl_reuse=NO" >> "$config"
         echo "implicit_ssl=YES" >> "$config"

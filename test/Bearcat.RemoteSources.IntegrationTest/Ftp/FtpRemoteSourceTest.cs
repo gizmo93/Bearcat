@@ -11,8 +11,6 @@ namespace Bearcat.RemoteSources.IntegrationTest.Ftp;
 [TestFixture(FtpTestServer.VsftpdPlain, FtpTlsProvider.BouncyCastle)]
 [TestFixture(FtpTestServer.VsftpdExplicitTls, FtpTlsProvider.System)]
 [TestFixture(FtpTestServer.VsftpdExplicitTls, FtpTlsProvider.BouncyCastle)]
-[TestFixture(FtpTestServer.VsftpdExplicitTlsWithoutSessionResumption, FtpTlsProvider.System)]
-[TestFixture(FtpTestServer.VsftpdExplicitTlsWithoutSessionResumption, FtpTlsProvider.BouncyCastle)]
 [TestFixture(FtpTestServer.VsftpdImplicitTls, FtpTlsProvider.System)]
 [TestFixture(FtpTestServer.VsftpdImplicitTls, FtpTlsProvider.BouncyCastle)]
 [TestFixture(FtpTestServer.Glftpd, FtpTlsProvider.System)]
