@@ -70,6 +70,7 @@ export default defineConfig({
                         { label: 'Release Information and Metadata', slug: 'release-information-and-metadata' },
                         { label: 'Release Collections', slug: 'release-collections' },
                         { label: 'The upload lifecycle', slug: 'upload-lifecycle' },
+                        { label: 'FTP / FTPS Downloads', slug: 'remote-downloads' },
                         { label: 'Mirror Downloads', slug: 'mirror-downloads' },
                         { label: 'Quality Gates', slug: 'quality-gates' },
                         { label: 'Post Queue', slug: 'post-queue' },

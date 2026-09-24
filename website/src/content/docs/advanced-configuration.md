@@ -34,6 +34,10 @@ Use "Refresh" to reload the latest state.
 | --- | ---: | --- |
 | Configuration cache refresh | Every 5 minutes | Refreshes cached settings from the database. Settings saved in the UI take effect immediately. |
 | Release folder automation | Every 2 minutes | Creates releases from matching direct subfolders using the selected template, once the [folder checks](#folder-automation) pass. |
+| Remote source scan | Every 2 minutes | Finds matching folders on FTP or FTPS servers and queues them once the [remote folder checks](#remote-downloads) pass. |
+| Remote source download | Every 20 seconds | Downloads queued remote folders. |
+| Remote download release creation | Every 20 seconds | Creates releases from completed downloads using their selected templates. |
+| Remote download raw file cleanup | Every 2 minutes | Converts downloaded releases to unmanaged and removes their raw files when [Keep raw files](/Bearcat/remote-downloads/#delete-raw-files-after-uploading) is off and the cleanup conditions are met. |
 | Release info resolution | Every 10 minutes | Resolves missing scene release information, NFO files, external IDs, and movie or TV metadata through the active NFO databases and metadata sources. |
 | Archive creation & restore | Every 20 seconds | Provides archives for waiting uploads: reuses existing archives, restores missing files from a mirror, or creates new archives. |
 | Auto cleanup | Every 30 minutes | Applies enabled [cleanup rules](#auto-cleanup) after their retention periods. |
@@ -67,7 +71,9 @@ The "Auto cleanup" background task runs the release folder rule first and the ar
 
 ![auto-cleanup-config.png](images/auto-cleanup-config.png)
 
-Bearcat never deletes your release folder. Delete it yourself once you no longer need it.
+These rules do not delete your release folder. Delete it yourself once you no longer need it.
+[Remote downloads](/Bearcat/remote-downloads/#delete-raw-files-after-uploading) have a separate option
+to delete downloaded raw files after uploading.
 
 #### Convert releases to unmanaged automatically
 
@@ -108,7 +114,8 @@ You find it in the release dialog, when creating a release and when editing one.
 
 ![exclude-from-auto-cleanup.png](images/exclude-from-auto-cleanup.png)
 
-Use it for releases whose raw files or archives you want to keep on disk, no matter which retention periods are configured.
+Use it to keep a release out of these retention rules. For remote downloads, also leave
+**Keep raw files** enabled in the automation to keep the downloaded folder.
 
 ### Archive repackaging
 
@@ -141,6 +148,22 @@ Bearcat compares file count and size between scans because copied folders may re
 
 Increase the stability period for slow or interrupted copies. Set the minimum size to `0` to allow empty folders.
 These settings only affect automatic release creation. You can still create releases manually and extract metadata from the "Release info" panel.
+
+### Remote downloads
+
+For [FTP / FTPS downloads](/Bearcat/remote-downloads/), open **Configurations** and find
+**Remote downloads**. These settings are separate from local folder automation.
+
+| Setting | Default | Effect |
+| --- | --- | --- |
+| Folder stability (minutes) | `5` | Wait until the remote folder's file count and total size stay unchanged for this long. |
+| Minimum folder size (MB) | `1` | Keep smaller folders in **Observing**. Set to `0` to disable the size check. |
+| Maximum parallel file downloads | `4` | Limit how many files are downloaded at the same time. The source's **Max connections** also applies. |
+| Download retry delay (seconds) | `30` | Wait this long before retrying a failed download attempt. |
+
+Increase the stability period if files arrive slowly or uploads to the FTP server often pause.
+Bearcat downloads one release folder at a time, with several files in parallel. Lower the connection
+limit if the server rejects simultaneous transfers.
 
 ### Initial upload cooldown
 

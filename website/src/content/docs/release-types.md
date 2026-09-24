@@ -52,3 +52,7 @@ You can convert a release in either direction from the actions menu on the relea
 - **Convert to managed** is available for an unmanaged release.
   You assign a release folder that holds the raw files, and Bearcat switches the release to managed while keeping the existing archive configurations and uploads.
   From then on Bearcat again can repack the release for reuploads.
+
+For releases downloaded from FTP or FTPS, you can also turn off **Keep raw files** in the remote
+automation. Bearcat then converts them to unmanaged and removes the downloaded folder after the
+first uploads, once the [cleanup conditions](/Bearcat/remote-downloads/#delete-raw-files-after-uploading) are met.
