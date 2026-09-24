@@ -9,12 +9,12 @@ public class RemoteDownloadFolderService(
     ILogger<RemoteDownloadFolderService> logger
 )
 {
-    public bool ContainsData(RemoteSourceDownload download)
+    public bool LocalFolderHasEntries(RemoteSourceDownload download)
     {
         return fileSystemService.DirectoryHasEntries(download.LocalFolderPath);
     }
 
-    public bool DeleteDownloadedFiles(RemoteSourceDownload download)
+    public bool DeleteLocalFolder(RemoteSourceDownload download)
     {
         if (!RemoteDownloadPaths.CanDeleteDownloadFolder(download))
         {

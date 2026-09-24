@@ -27,7 +27,7 @@ public class RemoteDownloadRawFileCleanupService(
         {
             var release = download.Release!;
 
-            if (!IsReadyForCleanup(release))
+            if (!CanDeleteRawFiles(release))
             {
                 logger.LogDebug(
                     "Keeping raw files of remote download {DownloadId} because release {ReleaseId} is not fully uploaded yet or not recoverable without its release folder",
@@ -38,11 +38,11 @@ public class RemoteDownloadRawFileCleanupService(
                 continue;
             }
 
-            await CleanUpAsync(download, release, cancellationToken);
+            await ConvertToUnmanagedAndDeleteRawFilesAsync(download, release, cancellationToken);
         }
     }
 
-    private bool IsReadyForCleanup(Release release)
+    private bool CanDeleteRawFiles(Release release)
     {
         var uploads = release.UploadConfigs.SelectMany(config => config.Uploads).ToList();
         var archives = release.ArchiveConfigs.SelectMany(config => config.Archives).ToList();
@@ -62,7 +62,7 @@ public class RemoteDownloadRawFileCleanupService(
             && unmanagedReleaseConverter.IsRecoverableWithoutReleaseFolder(release);
     }
 
-    private async Task CleanUpAsync(
+    private async Task ConvertToUnmanagedAndDeleteRawFilesAsync(
         RemoteSourceDownload download,
         Release release,
         CancellationToken cancellationToken
@@ -78,7 +78,7 @@ public class RemoteDownloadRawFileCleanupService(
         await repository.SaveChangesAsync(cancellationToken);
 
         var rawFilesDeleted =
-            !hasArchivesInsideRawFolder && folderService.DeleteDownloadedFiles(download);
+            !hasArchivesInsideRawFolder && folderService.DeleteLocalFolder(download);
 
         notificationService.Create(
             kind: NotificationKind.ReleaseAutoConvertedToUnmanaged,

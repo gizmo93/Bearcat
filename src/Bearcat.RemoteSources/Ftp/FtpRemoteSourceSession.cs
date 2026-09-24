@@ -18,7 +18,7 @@ public sealed class FtpRemoteSourceSession(AsyncFtpClient client) : IRemoteSourc
 
         foreach (var item in await client.GetListing(path, cancellationToken))
         {
-            var entry = await ResolveEntryAsync(item, cancellationToken);
+            var entry = await ClassifyListItemAsync(item, cancellationToken);
 
             if (entry is { Type: FtpObjectType.Directory })
             {
@@ -55,7 +55,7 @@ public sealed class FtpRemoteSourceSession(AsyncFtpClient client) : IRemoteSourc
                         ? item.Name
                         : $"{folder.RelativePath}/{item.Name}";
 
-                switch (await ResolveEntryAsync(item, cancellationToken))
+                switch (await ClassifyListItemAsync(item, cancellationToken))
                 {
                     case { Type: FtpObjectType.File, Size: var size }:
                         files.Add(new RemoteFileDto(relativePath, item.FullName, size));
@@ -88,7 +88,7 @@ public sealed class FtpRemoteSourceSession(AsyncFtpClient client) : IRemoteSourc
                 remotePath: file.FullPath,
                 existsMode: FtpLocalExists.Overwrite,
                 verifyOptions: FtpVerify.None,
-                progress: new DeltaProgress(progress),
+                progress: new CumulativeToDeltaProgress(progress),
                 token: cancellationToken
             );
 
@@ -111,37 +111,38 @@ public sealed class FtpRemoteSourceSession(AsyncFtpClient client) : IRemoteSourc
         return client.DisposeAsync();
     }
 
-    private async Task<ListingEntry?> ResolveEntryAsync(
+    private async Task<ClassifiedListItem?> ClassifyListItemAsync(
         FtpListItem item,
         CancellationToken cancellationToken
     )
     {
         return item.Type switch
         {
-            FtpObjectType.Directory => new ListingEntry(FtpObjectType.Directory, 0),
-            FtpObjectType.File => new ListingEntry(FtpObjectType.File, item.Size),
-            _ => await ResolveLinkAsync(item.FullName, cancellationToken),
+            FtpObjectType.Directory => new ClassifiedListItem(FtpObjectType.Directory, 0),
+            FtpObjectType.File => new ClassifiedListItem(FtpObjectType.File, item.Size),
+            _ => await ClassifyLinkTargetAsync(item.FullName, cancellationToken),
         };
     }
 
-    private async Task<ListingEntry?> ResolveLinkAsync(
+    private async Task<ClassifiedListItem?> ClassifyLinkTargetAsync(
         string linkPath,
         CancellationToken cancellationToken
     )
     {
         if (await client.DirectoryExists(linkPath, cancellationToken))
         {
-            return new ListingEntry(FtpObjectType.Directory, 0);
+            return new ClassifiedListItem(FtpObjectType.Directory, 0);
         }
 
         var size = await client.GetFileSize(linkPath, -1, cancellationToken);
 
-        return size < 0 ? null : new ListingEntry(FtpObjectType.File, size);
+        return size < 0 ? null : new ClassifiedListItem(FtpObjectType.File, size);
     }
 
-    private sealed record ListingEntry(FtpObjectType Type, long Size);
+    private sealed record ClassifiedListItem(FtpObjectType Type, long Size);
 
-    private sealed class DeltaProgress(ITransferProgress progress) : IProgress<FtpProgress>
+    private sealed class CumulativeToDeltaProgress(ITransferProgress progress)
+        : IProgress<FtpProgress>
     {
         private long reportedBytes;
 

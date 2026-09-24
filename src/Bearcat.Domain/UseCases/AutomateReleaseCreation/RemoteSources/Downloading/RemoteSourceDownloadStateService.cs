@@ -29,10 +29,13 @@ public class RemoteSourceDownloadStateService(
             case RemoteSourceDownloadState.Pending:
                 break;
             case RemoteSourceDownloadState.Downloading:
-                folderService.DeleteDownloadedFiles(download);
+                folderService.DeleteLocalFolder(download);
                 break;
             default:
-                throw InvalidTransition(download.State, RemoteSourceDownloadState.Canceled);
+                throw CreateInvalidTransitionException(
+                    download.State,
+                    RemoteSourceDownloadState.Canceled
+                );
         }
 
         download.State = RemoteSourceDownloadState.Canceled;
@@ -48,12 +51,15 @@ public class RemoteSourceDownloadStateService(
             is not (RemoteSourceDownloadState.Failed or RemoteSourceDownloadState.Canceled)
         )
         {
-            throw InvalidTransition(download.State, RemoteSourceDownloadState.Pending);
+            throw CreateInvalidTransitionException(
+                download.State,
+                RemoteSourceDownloadState.Pending
+            );
         }
 
         if (download.StartedAt is not null)
         {
-            folderService.DeleteDownloadedFiles(download);
+            folderService.DeleteLocalFolder(download);
         }
 
         download.State = RemoteSourceDownloadState.Pending;
@@ -72,7 +78,10 @@ public class RemoteSourceDownloadStateService(
 
         if (download.State is not RemoteSourceDownloadState.Failed || download.CompletedAt is null)
         {
-            throw InvalidTransition(download.State, RemoteSourceDownloadState.Downloaded);
+            throw CreateInvalidTransitionException(
+                download.State,
+                RemoteSourceDownloadState.Downloaded
+            );
         }
 
         download.State = RemoteSourceDownloadState.Downloaded;
@@ -94,14 +103,17 @@ public class RemoteSourceDownloadStateService(
             )
         )
         {
-            throw InvalidTransition(download.State, RemoteSourceDownloadState.Ignored);
+            throw CreateInvalidTransitionException(
+                download.State,
+                RemoteSourceDownloadState.Ignored
+            );
         }
 
         download.State = RemoteSourceDownloadState.Ignored;
         await repository.SaveChangesAsync(cancellationToken);
     }
 
-    private static InvalidOperationException InvalidTransition(
+    private static InvalidOperationException CreateInvalidTransitionException(
         RemoteSourceDownloadState currentState,
         RemoteSourceDownloadState targetState
     )

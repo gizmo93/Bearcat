@@ -31,7 +31,7 @@ public class RemoteSourceScanService(
             return 0;
         }
 
-        var settings = ReadSettings();
+        var settings = ReadScanSettings();
         var pendingCount = 0;
 
         foreach (
@@ -40,7 +40,7 @@ public class RemoteSourceScanService(
             )
         )
         {
-            pendingCount += await ProcessRegistrationAsync(
+            pendingCount += await ScanRegistrationAsync(
                 RemoteSourceAutomationMatcher.OrderByPriority(registrationAutomations.ToList()),
                 settings,
                 cancellationToken
@@ -50,18 +50,18 @@ public class RemoteSourceScanService(
         return pendingCount;
     }
 
-    private async Task<int> ProcessRegistrationAsync(
+    private async Task<int> ScanRegistrationAsync(
         IReadOnlyList<RemoteSourceAutomation> automations,
         ScanSettings settings,
         CancellationToken cancellationToken
     )
     {
         var registration = automations[0].RemoteSourceRegistration;
-        var listings = RemoveUnsafeFolders(
+        var foldersByRemotePath = RemoveFoldersWithUnsafeNames(
             registration,
-            await ListRemotePathsAsync(registration, automations, cancellationToken)
+            await ListFoldersPerRemotePathAsync(registration, automations, cancellationToken)
         );
-        var listedFolderPaths = listings
+        var listedFolderPaths = foldersByRemotePath
             .Values.SelectMany(folders => folders)
             .Select(folder => folder.FullPath)
             .ToList();
@@ -73,21 +73,23 @@ public class RemoteSourceScanService(
         var existingDownloadsByPath = existingDownloads.ToDictionary(download =>
             download.RemoteFolderPath
         );
-        var claims = RemoteSourceAutomationMatcher.ResolveClaims(
+        var foldersByAutomationId = RemoteSourceAutomationMatcher.AssignFoldersToAutomations(
             automations,
-            listings,
+            foldersByRemotePath,
             existingDownloadsByPath
         );
 
         var pendingCount = 0;
 
-        foreach (var automation in automations.Where(a => listings.ContainsKey(a.RemotePath)))
+        foreach (
+            var automation in automations.Where(a => foldersByRemotePath.ContainsKey(a.RemotePath))
+        )
         {
             try
             {
-                pendingCount += await ProcessAutomationAsync(
+                pendingCount += await ScanAutomationAsync(
                     automation,
-                    claims[automation.Id],
+                    foldersByAutomationId[automation.Id],
                     existingDownloadsByPath,
                     settings,
                     cancellationToken
@@ -110,13 +112,15 @@ public class RemoteSourceScanService(
         return pendingCount;
     }
 
-    private async Task<Dictionary<string, IReadOnlyList<RemoteFolderDto>>> ListRemotePathsAsync(
+    private async Task<
+        Dictionary<string, IReadOnlyList<RemoteFolderDto>>
+    > ListFoldersPerRemotePathAsync(
         RemoteSourceRegistration registration,
         IReadOnlyList<RemoteSourceAutomation> automations,
         CancellationToken cancellationToken
     )
     {
-        var listings = new Dictionary<string, IReadOnlyList<RemoteFolderDto>>(
+        var foldersByRemotePath = new Dictionary<string, IReadOnlyList<RemoteFolderDto>>(
             StringComparer.Ordinal
         );
 
@@ -124,7 +128,7 @@ public class RemoteSourceScanService(
         {
             try
             {
-                listings[pathAutomations.Key] = await sessionProvider.UseSessionAsync(
+                foldersByRemotePath[pathAutomations.Key] = await sessionProvider.UseSessionAsync(
                     registration,
                     session => session.ListFoldersAsync(pathAutomations.Key, cancellationToken),
                     cancellationToken
@@ -142,19 +146,19 @@ public class RemoteSourceScanService(
             }
         }
 
-        return listings;
+        return foldersByRemotePath;
     }
 
-    private Dictionary<string, IReadOnlyList<RemoteFolderDto>> RemoveUnsafeFolders(
+    private Dictionary<string, IReadOnlyList<RemoteFolderDto>> RemoveFoldersWithUnsafeNames(
         RemoteSourceRegistration registration,
-        Dictionary<string, IReadOnlyList<RemoteFolderDto>> listings
+        Dictionary<string, IReadOnlyList<RemoteFolderDto>> foldersByRemotePath
     )
     {
-        var safeListings = new Dictionary<string, IReadOnlyList<RemoteFolderDto>>(
+        var safeFoldersByRemotePath = new Dictionary<string, IReadOnlyList<RemoteFolderDto>>(
             StringComparer.Ordinal
         );
 
-        foreach (var (remotePath, folders) in listings)
+        foreach (var (remotePath, folders) in foldersByRemotePath)
         {
             var safeFolders = new List<RemoteFolderDto>();
 
@@ -174,15 +178,15 @@ public class RemoteSourceScanService(
                 );
             }
 
-            safeListings[remotePath] = safeFolders;
+            safeFoldersByRemotePath[remotePath] = safeFolders;
         }
 
-        return safeListings;
+        return safeFoldersByRemotePath;
     }
 
-    private async Task<int> ProcessAutomationAsync(
+    private async Task<int> ScanAutomationAsync(
         RemoteSourceAutomation automation,
-        IReadOnlyList<RemoteFolderDto> claimedFolders,
+        IReadOnlyList<RemoteFolderDto> assignedFolders,
         IReadOnlyDictionary<string, RemoteSourceDownload> existingDownloadsByPath,
         ScanSettings settings,
         CancellationToken cancellationToken
@@ -197,13 +201,18 @@ public class RemoteSourceScanService(
 
         if (!automation.HasCompletedInitialScan && automation.IgnoreExistingOnFirstScan)
         {
-            AddIgnoredDownloads(automation, claimedFolders, existingDownloadsByPath, localNow);
+            RecordExistingFoldersAsIgnored(
+                automation,
+                assignedFolders,
+                existingDownloadsByPath,
+                localNow
+            );
         }
         else
         {
-            pendingCount = await ObserveFoldersAsync(
+            pendingCount = await RecordNewFoldersAndQueueStableOnesAsync(
                 automation,
-                claimedFolders,
+                assignedFolders,
                 existingDownloadsByPath,
                 settings,
                 localNow,
@@ -213,11 +222,11 @@ public class RemoteSourceScanService(
 
         automation.HasCompletedInitialScan = true;
 
-        var claimedPaths = claimedFolders.Select(folder => folder.FullPath).ToHashSet();
+        var assignedFolderPaths = assignedFolders.Select(folder => folder.FullPath).ToHashSet();
 
         foreach (
             var orphanedDownload in observingDownloads.Where(download =>
-                !claimedPaths.Contains(download.RemoteFolderPath)
+                !assignedFolderPaths.Contains(download.RemoteFolderPath)
             )
         )
         {
@@ -229,21 +238,21 @@ public class RemoteSourceScanService(
         return pendingCount;
     }
 
-    private void AddIgnoredDownloads(
+    private void RecordExistingFoldersAsIgnored(
         RemoteSourceAutomation automation,
-        IReadOnlyList<RemoteFolderDto> claimedFolders,
+        IReadOnlyList<RemoteFolderDto> assignedFolders,
         IReadOnlyDictionary<string, RemoteSourceDownload> existingDownloadsByPath,
         DateTime localNow
     )
     {
         foreach (
-            var folder in claimedFolders.Where(folder =>
+            var folder in assignedFolders.Where(folder =>
                 !existingDownloadsByPath.ContainsKey(folder.FullPath)
             )
         )
         {
             repository.Add(
-                CreateDownload(
+                CreateDownloadRecord(
                     automation,
                     folder,
                     RemoteSourceDownloadState.Ignored,
@@ -254,9 +263,9 @@ public class RemoteSourceScanService(
         }
     }
 
-    private async Task<int> ObserveFoldersAsync(
+    private async Task<int> RecordNewFoldersAndQueueStableOnesAsync(
         RemoteSourceAutomation automation,
-        IReadOnlyList<RemoteFolderDto> claimedFolders,
+        IReadOnlyList<RemoteFolderDto> assignedFolders,
         IReadOnlyDictionary<string, RemoteSourceDownload> existingDownloadsByPath,
         ScanSettings settings,
         DateTime localNow,
@@ -265,14 +274,14 @@ public class RemoteSourceScanService(
     {
         var pendingCount = 0;
 
-        foreach (var folder in claimedFolders)
+        foreach (var folder in assignedFolders)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             if (existingDownloadsByPath.TryGetValue(folder.FullPath, out var download))
             {
                 if (
-                    await EvaluateObservingDownloadAsync(
+                    await QueueDownloadIfFolderIsStableAsync(
                         automation,
                         download,
                         settings,
@@ -287,13 +296,13 @@ public class RemoteSourceScanService(
                 continue;
             }
 
-            var fingerprint = await GetFingerprintAsync(
+            var fingerprint = await GetFolderContentFingerprintAsync(
                 automation.RemoteSourceRegistration,
                 folder.FullPath,
                 cancellationToken
             );
             repository.Add(
-                CreateDownload(
+                CreateDownloadRecord(
                     automation,
                     folder,
                     RemoteSourceDownloadState.Observing,
@@ -306,7 +315,7 @@ public class RemoteSourceScanService(
         return pendingCount;
     }
 
-    private async Task<bool> EvaluateObservingDownloadAsync(
+    private async Task<bool> QueueDownloadIfFolderIsStableAsync(
         RemoteSourceAutomation automation,
         RemoteSourceDownload download,
         ScanSettings settings,
@@ -314,9 +323,9 @@ public class RemoteSourceScanService(
         CancellationToken cancellationToken
     )
     {
-        ApplySnapshot(download, automation);
+        CopyAutomationSettingsToDownload(download, automation);
 
-        var fingerprint = await GetFingerprintAsync(
+        var fingerprint = await GetFolderContentFingerprintAsync(
             automation.RemoteSourceRegistration,
             download.RemoteFolderPath,
             cancellationToken
@@ -353,7 +362,7 @@ public class RemoteSourceScanService(
         return true;
     }
 
-    private async Task<FolderContentFingerprint> GetFingerprintAsync(
+    private async Task<FolderContentFingerprint> GetFolderContentFingerprintAsync(
         RemoteSourceRegistration registration,
         string remoteFolderPath,
         CancellationToken cancellationToken
@@ -368,7 +377,7 @@ public class RemoteSourceScanService(
         return new FolderContentFingerprint(files.Count, files.Sum(file => file.SizeBytes));
     }
 
-    private static RemoteSourceDownload CreateDownload(
+    private static RemoteSourceDownload CreateDownloadRecord(
         RemoteSourceAutomation automation,
         RemoteFolderDto folder,
         RemoteSourceDownloadState state,
@@ -391,12 +400,12 @@ public class RemoteSourceScanService(
             DiscoveredAt = localNow,
         };
 
-        ApplySnapshot(download, automation);
+        CopyAutomationSettingsToDownload(download, automation);
 
         return download;
     }
 
-    private static void ApplySnapshot(
+    private static void CopyAutomationSettingsToDownload(
         RemoteSourceDownload download,
         RemoteSourceAutomation automation
     )
@@ -408,7 +417,7 @@ public class RemoteSourceScanService(
         download.KeepRawFiles = automation.KeepRawFiles;
     }
 
-    private ScanSettings ReadSettings()
+    private ScanSettings ReadScanSettings()
     {
         var stabilityMinutes = configuration.GetValue<RemoteSourceConfiguration>(c =>
             c.StabilityMinutes

@@ -32,16 +32,16 @@ public class RemoteSourceDownloadService(
 
     public async Task ProcessAsync(CancellationToken cancellationToken)
     {
-        await ResetInterruptedDownloadsAsync(cancellationToken);
-        var settings = ReadSettings();
+        await RequeueDownloadsInterruptedByCrashAsync(cancellationToken);
+        var settings = ReadDownloadSettings();
 
         foreach (var download in await repository.GetPendingDownloadsAsync(cancellationToken))
         {
-            await ProcessDownloadAsync(download, settings, cancellationToken);
+            await ProcessPendingDownloadAsync(download, settings, cancellationToken);
         }
     }
 
-    private async Task ResetInterruptedDownloadsAsync(CancellationToken cancellationToken)
+    private async Task RequeueDownloadsInterruptedByCrashAsync(CancellationToken cancellationToken)
     {
         foreach (var download in await repository.GetInterruptedDownloadsAsync(cancellationToken))
         {
@@ -51,7 +51,7 @@ public class RemoteSourceDownloadService(
                 download.LocalFolderPath
             );
 
-            folderService.DeleteDownloadedFiles(download);
+            folderService.DeleteLocalFolder(download);
             download.State = RemoteSourceDownloadState.Pending;
             download.StartedAt = null;
         }
@@ -59,7 +59,7 @@ public class RemoteSourceDownloadService(
         await repository.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task ProcessDownloadAsync(
+    private async Task ProcessPendingDownloadAsync(
         RemoteSourceDownload download,
         DownloadSettings settings,
         CancellationToken stoppingToken
@@ -75,9 +75,9 @@ public class RemoteSourceDownloadService(
             return;
         }
 
-        if (folderService.ContainsData(download))
+        if (folderService.LocalFolderHasEntries(download))
         {
-            await FailAsync(
+            await MarkAsFailedAndNotifyAsync(
                 download,
                 $"The local folder {download.LocalFolderPath} already exists and is not empty. Remove or rename it and restart the download",
                 stoppingToken
@@ -97,7 +97,7 @@ public class RemoteSourceDownloadService(
                 userCancellationToken,
                 stoppingToken
             );
-            files = await DownloadFilesAsync(
+            files = await ListAndDownloadFilesAsync(
                 download,
                 registration,
                 settings,
@@ -110,13 +110,13 @@ public class RemoteSourceDownloadService(
                 && !stoppingToken.IsCancellationRequested
             )
         {
-            await CancelAsync(download, stoppingToken);
+            await DeleteFilesAndMarkAsCanceledAsync(download, stoppingToken);
             return;
         }
         catch (Exception exception) when (!stoppingToken.IsCancellationRequested)
         {
-            folderService.DeleteDownloadedFiles(download);
-            await FailAsync(download, exception.Message, stoppingToken);
+            folderService.DeleteLocalFolder(download);
+            await MarkAsFailedAndNotifyAsync(download, exception.Message, stoppingToken);
             return;
         }
         finally
@@ -125,7 +125,7 @@ public class RemoteSourceDownloadService(
             progressTracker.StopTracking(transferKey);
         }
 
-        await CompleteAsync(download, files, stoppingToken);
+        await MarkAsDownloadedAsync(download, files, stoppingToken);
     }
 
     private async Task MarkAsDownloadingAsync(
@@ -147,7 +147,7 @@ public class RemoteSourceDownloadService(
         );
     }
 
-    private async Task<IReadOnlyList<RemoteFileDto>> DownloadFilesAsync(
+    private async Task<IReadOnlyList<RemoteFileDto>> ListAndDownloadFilesAsync(
         RemoteSourceDownload download,
         RemoteSourceRegistration registration,
         DownloadSettings settings,
@@ -155,7 +155,7 @@ public class RemoteSourceDownloadService(
         CancellationToken cancellationToken
     )
     {
-        var files = await RunWithRetriesAsync(
+        var files = await RunOnSessionWithRetriesAsync(
             download: download,
             registration: registration,
             settings: settings,
@@ -175,7 +175,7 @@ public class RemoteSourceDownloadService(
         var plannedFiles = files
             .Select(
                 (file, index) =>
-                    new PlannedFile(index + 1, file, ResolveLocalFilePath(download, file))
+                    new PlannedFile(index + 1, file, RequireSafeLocalFilePath(download, file))
             )
             .ToList();
 
@@ -236,7 +236,7 @@ public class RemoteSourceDownloadService(
             sourceName: download.SourceName
         );
 
-        await RunWithRetriesAsync(
+        await RunOnSessionWithRetriesAsync(
             download,
             registration,
             settings,
@@ -250,13 +250,13 @@ public class RemoteSourceDownloadService(
                     cancellationToken
                 );
 
-                return VerifySize(file);
+                return VerifyDownloadedFileSize(file);
             },
             cancellationToken
         );
     }
 
-    private async Task<T> RunWithRetriesAsync<T>(
+    private async Task<T> RunOnSessionWithRetriesAsync<T>(
         RemoteSourceDownload download,
         RemoteSourceRegistration registration,
         DownloadSettings settings,
@@ -303,7 +303,7 @@ public class RemoteSourceDownloadService(
         );
     }
 
-    private async Task CompleteAsync(
+    private async Task MarkAsDownloadedAsync(
         RemoteSourceDownload download,
         IReadOnlyList<RemoteFileDto> files,
         CancellationToken cancellationToken
@@ -324,12 +324,12 @@ public class RemoteSourceDownloadService(
         );
     }
 
-    private async Task CancelAsync(
+    private async Task DeleteFilesAndMarkAsCanceledAsync(
         RemoteSourceDownload download,
         CancellationToken cancellationToken
     )
     {
-        folderService.DeleteDownloadedFiles(download);
+        folderService.DeleteLocalFolder(download);
         download.State = RemoteSourceDownloadState.Canceled;
         await repository.SaveChangesAsync(cancellationToken);
 
@@ -340,7 +340,7 @@ public class RemoteSourceDownloadService(
         );
     }
 
-    private async Task FailAsync(
+    private async Task MarkAsFailedAndNotifyAsync(
         RemoteSourceDownload download,
         string errorMessage,
         CancellationToken cancellationToken
@@ -365,15 +365,18 @@ public class RemoteSourceDownloadService(
         );
     }
 
-    private static string ResolveLocalFilePath(RemoteSourceDownload download, RemoteFileDto file)
+    private static string RequireSafeLocalFilePath(
+        RemoteSourceDownload download,
+        RemoteFileDto file
+    )
     {
-        return RemoteDownloadPaths.ResolveLocalFilePath(download.LocalFolderPath, file.RelativePath)
+        return RemoteDownloadPaths.GetSafeLocalFilePath(download.LocalFolderPath, file.RelativePath)
             ?? throw new InvalidOperationException(
                 $"The remote source listed the unsafe file path '{file.RelativePath}', so nothing was downloaded"
             );
     }
 
-    private static long VerifySize(PlannedFile file)
+    private static long VerifyDownloadedFileSize(PlannedFile file)
     {
         var actualSizeBytes = new FileInfo(file.LocalFilePath).Length;
 
@@ -387,7 +390,7 @@ public class RemoteSourceDownloadService(
         return actualSizeBytes;
     }
 
-    private DownloadSettings ReadSettings()
+    private DownloadSettings ReadDownloadSettings()
     {
         var remoteSourceConfiguration = configuration.GetConfiguration<RemoteSourceConfiguration>();
 

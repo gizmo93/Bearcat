@@ -11,7 +11,7 @@ public class RemoteSourceAutomationMatcherTest
     private const string RemotePath = "/incoming";
 
     [Test]
-    public void FindFirstMatch_SeveralAutomationsMatch_ReturnsLowestPriority()
+    public void FindFirstMatchingAutomation_SeveralAutomationsMatch_ReturnsLowestPriority()
     {
         // Arrange
         var catchAll = CreateAutomation(id: 1, priority: 200, pattern: null);
@@ -19,7 +19,7 @@ public class RemoteSourceAutomationMatcherTest
         var hd = CreateAutomation(id: 3, priority: 150, pattern: "*1080p*");
 
         // Act
-        var automation = RemoteSourceAutomationMatcher.FindFirstMatch(
+        var automation = RemoteSourceAutomationMatcher.FindFirstMatchingAutomation(
             [catchAll, hd, german],
             "Show.S01E01.German.1080p.WEB.x264-GRP"
         );
@@ -29,27 +29,33 @@ public class RemoteSourceAutomationMatcherTest
     }
 
     [Test]
-    public void FindFirstMatch_SamePriority_ReturnsLowestId()
+    public void FindFirstMatchingAutomation_SamePriority_ReturnsLowestId()
     {
         // Arrange
         var later = CreateAutomation(id: 7, priority: 100, pattern: null);
         var earlier = CreateAutomation(id: 3, priority: 100, pattern: null);
 
         // Act
-        var automation = RemoteSourceAutomationMatcher.FindFirstMatch([later, earlier], "Any");
+        var automation = RemoteSourceAutomationMatcher.FindFirstMatchingAutomation(
+            [later, earlier],
+            "Any"
+        );
 
         // Assert
         automation.ShouldBeSameAs(earlier);
     }
 
     [Test]
-    public void FindFirstMatch_PatternDiffersInCase_MatchesIgnoringCase()
+    public void FindFirstMatchingAutomation_PatternDiffersInCase_MatchesIgnoringCase()
     {
         // Arrange
         var hd = CreateAutomation(id: 1, priority: 100, pattern: "*1080P*");
 
         // Act
-        var automation = RemoteSourceAutomationMatcher.FindFirstMatch([hd], "show.1080p.web");
+        var automation = RemoteSourceAutomationMatcher.FindFirstMatchingAutomation(
+            [hd],
+            "show.1080p.web"
+        );
 
         // Assert
         automation.ShouldBeSameAs(hd);
@@ -58,79 +64,85 @@ public class RemoteSourceAutomationMatcherTest
     [TestCase(null)]
     [TestCase("")]
     [TestCase("  ")]
-    public void FindFirstMatch_EmptyPattern_MatchesEveryFolder(string? pattern)
+    public void FindFirstMatchingAutomation_EmptyPattern_MatchesEveryFolder(string? pattern)
     {
         // Arrange
         var catchAll = CreateAutomation(id: 1, priority: 100, pattern: pattern);
 
         // Act
-        var automation = RemoteSourceAutomationMatcher.FindFirstMatch([catchAll], "Anything");
+        var automation = RemoteSourceAutomationMatcher.FindFirstMatchingAutomation(
+            [catchAll],
+            "Anything"
+        );
 
         // Assert
         automation.ShouldBeSameAs(catchAll);
     }
 
     [Test]
-    public void FindFirstMatch_NoAutomationMatches_ReturnsNull()
+    public void FindFirstMatchingAutomation_NoAutomationMatches_ReturnsNull()
     {
         // Arrange
         var hd = CreateAutomation(id: 1, priority: 100, pattern: "*1080p*");
 
         // Act
-        var automation = RemoteSourceAutomationMatcher.FindFirstMatch([hd], "Show.720p.WEB");
+        var automation = RemoteSourceAutomationMatcher.FindFirstMatchingAutomation(
+            [hd],
+            "Show.720p.WEB"
+        );
 
         // Assert
         automation.ShouldBeNull();
     }
 
     [Test]
-    public void ResolveClaims_ObservingDownloadOfLowerPriorityAutomation_KeepsFolderWithExistingOwner()
+    public void AssignFoldersToAutomations_ObservingDownloadOfLowerPriorityAutomation_KeepsFolderWithAutomationOfObservingDownload()
     {
         // Arrange
         var preferred = CreateAutomation(id: 1, priority: 100, pattern: null);
-        var owner = CreateAutomation(id: 2, priority: 200, pattern: null);
+        var automation = CreateAutomation(id: 2, priority: 200, pattern: null);
         var folder = CreateFolder("Show.S01E01.German.1080p.WEB.x264-GRP");
-        var download = CreateDownload(folder, owner.Id, RemoteSourceDownloadState.Observing);
+        var download = CreateDownload(folder, automation.Id, RemoteSourceDownloadState.Observing);
 
         // Act
-        var claims = RemoteSourceAutomationMatcher.ResolveClaims(
-            [preferred, owner],
-            CreateListings(folder),
+        var foldersByAutomationId = RemoteSourceAutomationMatcher.AssignFoldersToAutomations(
+            [preferred, automation],
+            CreateFoldersByRemotePath(folder),
             new Dictionary<string, RemoteSourceDownload> { [folder.FullPath] = download }
         );
 
         // Assert
-        claims[owner.Id].ShouldBe([folder]);
-        claims[preferred.Id].ShouldBeEmpty();
+        foldersByAutomationId[automation.Id].ShouldBe([folder]);
+        foldersByAutomationId[preferred.Id].ShouldBeEmpty();
     }
 
     [TestCase(RemoteSourceDownloadState.Pending)]
     [TestCase(RemoteSourceDownloadState.Downloading)]
     [TestCase(RemoteSourceDownloadState.Ignored)]
-    public void ResolveClaims_ExistingDownloadNotObserving_IsClaimedByNobody(
+    public void AssignFoldersToAutomations_ExistingDownloadNotObserving_IsAssignedToNobody(
         RemoteSourceDownloadState state
     )
     {
         // Arrange
-        var owner = CreateAutomation(id: 1, priority: 100, pattern: null);
+        var automation = CreateAutomation(id: 1, priority: 100, pattern: null);
         var other = CreateAutomation(id: 2, priority: 200, pattern: null);
         var folder = CreateFolder("Show.S01E01.German.1080p.WEB.x264-GRP");
-        var download = CreateDownload(folder, owner.Id, state);
+        var download = CreateDownload(folder, automation.Id, state);
 
         // Act
-        var claims = RemoteSourceAutomationMatcher.ResolveClaims(
-            [owner, other],
-            CreateListings(folder),
+        var foldersByAutomationId = RemoteSourceAutomationMatcher.AssignFoldersToAutomations(
+            [automation, other],
+            CreateFoldersByRemotePath(folder),
             new Dictionary<string, RemoteSourceDownload> { [folder.FullPath] = download }
         );
 
         // Assert
-        claims[owner.Id].ShouldBeEmpty();
-        claims[other.Id].ShouldBeEmpty();
+        foldersByAutomationId[automation.Id].ShouldBeEmpty();
+        foldersByAutomationId[other.Id].ShouldBeEmpty();
     }
 
     [Test]
-    public void ResolveClaims_NewFolder_IsClaimedByFirstMatchByPriorityThenId()
+    public void AssignFoldersToAutomations_NewFolder_IsAssignedToFirstMatchByPriorityThenId()
     {
         // Arrange
         var hd = CreateAutomation(id: 1, priority: 50, pattern: "*1080p*");
@@ -139,34 +151,34 @@ public class RemoteSourceAutomationMatcherTest
         var folder = CreateFolder("Show.S01E01.German.720p.WEB.x264-GRP");
 
         // Act
-        var claims = RemoteSourceAutomationMatcher.ResolveClaims(
+        var foldersByAutomationId = RemoteSourceAutomationMatcher.AssignFoldersToAutomations(
             [hd, later, earlier],
-            CreateListings(folder),
+            CreateFoldersByRemotePath(folder),
             new Dictionary<string, RemoteSourceDownload>()
         );
 
         // Assert
-        claims[earlier.Id].ShouldBe([folder]);
-        claims[later.Id].ShouldBeEmpty();
-        claims[hd.Id].ShouldBeEmpty();
+        foldersByAutomationId[earlier.Id].ShouldBe([folder]);
+        foldersByAutomationId[later.Id].ShouldBeEmpty();
+        foldersByAutomationId[hd.Id].ShouldBeEmpty();
     }
 
     [Test]
-    public void ResolveClaims_FolderListedForOtherRemotePath_IsNotClaimed()
+    public void AssignFoldersToAutomations_FolderListedForOtherRemotePath_IsNotAssigned()
     {
         // Arrange
         var automation = CreateAutomation(id: 1, priority: 100, pattern: null, "/archive");
         var folder = CreateFolder("Show.S01E01.German.720p.WEB.x264-GRP");
 
         // Act
-        var claims = RemoteSourceAutomationMatcher.ResolveClaims(
+        var foldersByAutomationId = RemoteSourceAutomationMatcher.AssignFoldersToAutomations(
             [automation],
-            CreateListings(folder),
+            CreateFoldersByRemotePath(folder),
             new Dictionary<string, RemoteSourceDownload>()
         );
 
         // Assert
-        claims[automation.Id].ShouldBeEmpty();
+        foldersByAutomationId[automation.Id].ShouldBeEmpty();
     }
 
     private static RemoteFolderDto CreateFolder(string name)
@@ -174,7 +186,7 @@ public class RemoteSourceAutomationMatcherTest
         return new RemoteFolderDto(name, $"{RemotePath}/{name}", ModifiedAt: null);
     }
 
-    private static Dictionary<string, IReadOnlyList<RemoteFolderDto>> CreateListings(
+    private static Dictionary<string, IReadOnlyList<RemoteFolderDto>> CreateFoldersByRemotePath(
         RemoteFolderDto folder
     )
     {

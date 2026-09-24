@@ -185,13 +185,13 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task GetEditValuesAsync_RegistrationExists_ReturnsValuesWithoutPassword()
+    public async Task GetConfigValuesWithoutSecretsAsync_RegistrationExists_ReturnsValuesWithoutPassword()
     {
         // Arrange
         var id = await service.CreateAsync("Main server", SourceClassName, FormValues());
 
         // Act
-        var values = await service.GetEditValuesAsync(id);
+        var values = await service.GetConfigValuesWithoutSecretsAsync(id);
 
         // Assert
         values.ShouldNotContainKey("Password");

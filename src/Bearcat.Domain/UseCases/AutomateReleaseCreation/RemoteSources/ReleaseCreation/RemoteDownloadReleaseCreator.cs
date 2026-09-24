@@ -43,7 +43,7 @@ public class RemoteDownloadReleaseCreator(
 
         if (releaseTemplate is null)
         {
-            await FailAsync(
+            await MarkAsFailedAndNotifyAsync(
                 download,
                 "The release template of the automation was deleted, so no release could be created",
                 cancellationToken
@@ -74,7 +74,7 @@ public class RemoteDownloadReleaseCreator(
             );
 
             repository.DiscardPendingChanges();
-            await FailAsync(
+            await MarkAsFailedAndNotifyAsync(
                 download,
                 $"No release could be created from template '{releaseTemplate.Name}': {exception.Message}",
                 cancellationToken
@@ -106,7 +106,7 @@ public class RemoteDownloadReleaseCreator(
         return true;
     }
 
-    private async Task FailAsync(
+    private async Task MarkAsFailedAndNotifyAsync(
         RemoteSourceDownload download,
         string errorMessage,
         CancellationToken cancellationToken

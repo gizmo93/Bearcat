@@ -44,12 +44,13 @@ public partial class AddOrEditRemoteSource(IScopedOperationRunner operationRunne
             return;
         }
 
-        var editValues = await operationRunner.RunAsync(
-            (RemoteSourceRegistrationService service) => service.GetEditValuesAsync(Registration.Id)
+        var configValuesWithoutSecrets = await operationRunner.RunAsync(
+            (RemoteSourceRegistrationService service) =>
+                service.GetConfigValuesWithoutSecretsAsync(Registration.Id)
         );
 
         selectedSourceClassName = Registration.SourceClassName;
-        values = new Dictionary<string, object?>(editValues)
+        values = new Dictionary<string, object?>(configValuesWithoutSecrets)
         {
             [NameKey] = Registration.Name,
             [MaxConnectionsKey] = Registration.MaxConnections,

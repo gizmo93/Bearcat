@@ -19,7 +19,7 @@ public class RemoteSourceSessionProvider(
         return sessionPool.UseSessionAsync(
             registration.Id,
             registration.MaxConnections,
-            token => OpenAsync(registration, token),
+            token => OpenSessionAsync(registration, token),
             action,
             cancellationToken
         );
@@ -30,7 +30,7 @@ public class RemoteSourceSessionProvider(
         return sessionPool.CloseSessionsAsync(registrationId);
     }
 
-    private async Task<IRemoteSourceSession> OpenAsync(
+    private async Task<IRemoteSourceSession> OpenSessionAsync(
         RemoteSourceRegistration registration,
         CancellationToken cancellationToken
     )

@@ -122,14 +122,14 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
             return false;
         }
 
-        var rootNode = FindOwningRoot(SelectedFolderPath);
+        var rootNode = FindRootContainingPath(SelectedFolderPath);
 
         if (rootNode is null)
         {
             return false;
         }
 
-        var selectedNode = await EnsureSelectedPathAsync(rootNode, SelectedFolderPath);
+        var selectedNode = await LoadNodesDownToSelectedPathAsync(rootNode, SelectedFolderPath);
 
         if (selectedNode is null)
         {
@@ -149,7 +149,7 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
         return true;
     }
 
-    private FolderSelectionNode? FindOwningRoot(string path)
+    private FolderSelectionNode? FindRootContainingPath(string path)
     {
         var normalizedPath = source.NormalizePath(path);
 
@@ -163,7 +163,7 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
         );
     }
 
-    private async Task<FolderSelectionNode?> EnsureSelectedPathAsync(
+    private async Task<FolderSelectionNode?> LoadNodesDownToSelectedPathAsync(
         FolderSelectionNode rootNode,
         string selectedPath
     )

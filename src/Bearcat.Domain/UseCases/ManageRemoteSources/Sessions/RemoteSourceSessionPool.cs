@@ -28,24 +28,24 @@ public sealed class RemoteSourceSessionPool(
         CancellationToken cancellationToken
     )
     {
-        var sessions = await GetSessionsAsync(registrationId, maxConnections);
+        var sessions = await GetOrCreateRegistrationSessionsAsync(registrationId, maxConnections);
         await sessions.FreeSlots.WaitAsync(cancellationToken);
 
         try
         {
             var session =
-                await TakeIdleSessionAsync(sessions) ?? await openSession(cancellationToken);
+                await TryReuseIdleSessionAsync(sessions) ?? await openSession(cancellationToken);
 
             try
             {
                 var result = await action(session);
-                await ReturnAsync(registrationId, sessions, session);
+                await ReturnToIdleOrCloseAsync(registrationId, sessions, session);
 
                 return result;
             }
             catch
             {
-                await CloseAsync([session]);
+                await DisposeSessionsAsync([session]);
                 throw;
             }
         }
@@ -63,11 +63,11 @@ public sealed class RemoteSourceSessionPool(
         {
             if (sessionsByRegistrationId.Remove(registrationId, out var sessions))
             {
-                idleSessions = TakeIdleSessions(sessions, _ => true);
+                idleSessions = RemoveAllIdleSessions(sessions);
             }
         }
 
-        await CloseAsync(idleSessions);
+        await DisposeSessionsAsync(idleSessions);
     }
 
     public async ValueTask DisposeAsync()
@@ -78,14 +78,14 @@ public sealed class RemoteSourceSessionPool(
         {
             disposed = true;
             idleSessions = sessionsByRegistrationId
-                .Values.SelectMany(sessions => TakeIdleSessions(sessions, _ => true))
+                .Values.SelectMany(sessions => RemoveAllIdleSessions(sessions))
                 .ToList();
         }
 
-        await CloseAsync(idleSessions);
+        await DisposeSessionsAsync(idleSessions);
     }
 
-    private async Task<RegistrationSessions> GetSessionsAsync(
+    private async Task<RegistrationSessions> GetOrCreateRegistrationSessionsAsync(
         int registrationId,
         int maxConnections
     )
@@ -102,26 +102,28 @@ public sealed class RemoteSourceSessionPool(
                     return current;
                 }
 
-                replacedIdleSessions = TakeIdleSessions(current, _ => true);
+                replacedIdleSessions = RemoveAllIdleSessions(current);
             }
 
             sessions = new RegistrationSessions(maxConnections);
             sessionsByRegistrationId[registrationId] = sessions;
         }
 
-        await CloseAsync(replacedIdleSessions);
+        await DisposeSessionsAsync(replacedIdleSessions);
 
         return sessions;
     }
 
-    private async Task<IRemoteSourceSession?> TakeIdleSessionAsync(RegistrationSessions sessions)
+    private async Task<IRemoteSourceSession?> TryReuseIdleSessionAsync(
+        RegistrationSessions sessions
+    )
     {
         List<IRemoteSourceSession> expiredSessions;
         IRemoteSourceSession? newestSession = null;
 
         lock (gate)
         {
-            expiredSessions = TakeIdleSessions(
+            expiredSessions = RemoveIdleSessionsWhere(
                 sessions,
                 idleSession => Stopwatch.GetElapsedTime(idleSession.ReturnedAt) >= idleTimeout
             );
@@ -133,12 +135,12 @@ public sealed class RemoteSourceSessionPool(
             }
         }
 
-        await CloseAsync(expiredSessions);
+        await DisposeSessionsAsync(expiredSessions);
 
         return newestSession;
     }
 
-    private async Task ReturnAsync(
+    private async Task ReturnToIdleOrCloseAsync(
         int registrationId,
         RegistrationSessions sessions,
         IRemoteSourceSession session
@@ -154,21 +156,26 @@ public sealed class RemoteSourceSessionPool(
             }
         }
 
-        await CloseAsync([session]);
+        await DisposeSessionsAsync([session]);
     }
 
-    private static List<IRemoteSourceSession> TakeIdleSessions(
+    private static List<IRemoteSourceSession> RemoveAllIdleSessions(RegistrationSessions sessions)
+    {
+        return RemoveIdleSessionsWhere(sessions, _ => true);
+    }
+
+    private static List<IRemoteSourceSession> RemoveIdleSessionsWhere(
         RegistrationSessions sessions,
         Predicate<IdleSession> match
     )
     {
-        var taken = sessions.IdleSessions.FindAll(match);
-        sessions.IdleSessions.RemoveAll(taken.Contains);
+        var removed = sessions.IdleSessions.FindAll(match);
+        sessions.IdleSessions.RemoveAll(removed.Contains);
 
-        return taken.ConvertAll(idleSession => idleSession.Session);
+        return removed.ConvertAll(idleSession => idleSession.Session);
     }
 
-    private async Task CloseAsync(List<IRemoteSourceSession> sessions)
+    private async Task DisposeSessionsAsync(List<IRemoteSourceSession> sessions)
     {
         foreach (var session in sessions)
         {

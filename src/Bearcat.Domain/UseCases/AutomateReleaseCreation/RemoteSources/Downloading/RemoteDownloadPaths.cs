@@ -5,7 +5,7 @@ namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Download
 
 public static class RemoteDownloadPaths
 {
-    public static string? ResolveLocalFilePath(string localFolderPath, string relativePath)
+    public static string? GetSafeLocalFilePath(string localFolderPath, string relativePath)
     {
         var segments = relativePath.Split('/');
 
@@ -17,7 +17,7 @@ public static class RemoteDownloadPaths
         var folderPath = Path.GetFullPath(localFolderPath);
         var filePath = Path.GetFullPath(Path.Combine([folderPath, .. segments]));
 
-        return IsInside(filePath, folderPath) ? filePath : null;
+        return IsPathInside(filePath, folderPath) ? filePath : null;
     }
 
     public static bool CanDeleteDownloadFolder(RemoteSourceDownload download)
@@ -34,7 +34,7 @@ public static class RemoteDownloadPaths
         return Path.GetFileName(folderPath) == download.FolderName;
     }
 
-    private static bool IsInside(string path, string parentPath)
+    private static bool IsPathInside(string path, string parentPath)
     {
         var relativePath = Path.GetRelativePath(parentPath, path);
 

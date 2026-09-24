@@ -17,13 +17,13 @@ public class RemoteDownloadPathsTest
     [TestCase("Subs/english.srt", new[] { "Subs", "english.srt" })]
     [TestCase("Sample/nested/sample.mkv", new[] { "Sample", "nested", "sample.mkv" })]
     [TestCase("..release.nfo", new[] { "..release.nfo" })]
-    public void ResolveLocalFilePath_SafeRelativePath_MapsSegmentsBelowLocalFolder(
+    public void GetSafeLocalFilePath_SafeRelativePath_MapsSegmentsBelowLocalFolder(
         string relativePath,
         string[] expectedSegments
     )
     {
         // Act
-        var localFilePath = RemoteDownloadPaths.ResolveLocalFilePath(LocalFolderPath, relativePath);
+        var localFilePath = RemoteDownloadPaths.GetSafeLocalFilePath(LocalFolderPath, relativePath);
 
         // Assert
         localFilePath.ShouldBe(Path.Combine([LocalFolderPath, .. expectedSegments]));
@@ -40,10 +40,10 @@ public class RemoteDownloadPathsTest
     [TestCase("Subs\\english.srt")]
     [TestCase("null\0byte.rar")]
     [TestCase("...")]
-    public void ResolveLocalFilePath_UnsafeRelativePath_ReturnsNull(string relativePath)
+    public void GetSafeLocalFilePath_UnsafeRelativePath_ReturnsNull(string relativePath)
     {
         // Act
-        var localFilePath = RemoteDownloadPaths.ResolveLocalFilePath(LocalFolderPath, relativePath);
+        var localFilePath = RemoteDownloadPaths.GetSafeLocalFilePath(LocalFolderPath, relativePath);
 
         // Assert
         localFilePath.ShouldBeNull();

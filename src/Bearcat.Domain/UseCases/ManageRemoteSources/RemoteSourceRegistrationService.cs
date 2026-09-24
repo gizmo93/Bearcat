@@ -42,7 +42,7 @@ public class RemoteSourceRegistrationService(
         {
             Name = normalizedName,
             SourceClassName = sourceClassName,
-            SerializedConfig = Protect(normalizedValues),
+            SerializedConfig = EncryptConfig(normalizedValues),
             IsActive = true,
             MaxConnections = maxConnections,
         };
@@ -69,18 +69,18 @@ public class RemoteSourceRegistrationService(
         var normalizedValues = ConfigurationValueNormalizer.Normalize(
             remoteSource.ConfigurationFields,
             values,
-            ReadConfig(remoteSource, registration).ToDictionary()
+            DecryptConfig(remoteSource, registration).ToDictionary()
         );
 
         registration.Name = normalizedName;
         registration.MaxConnections = maxConnections;
-        registration.SerializedConfig = Protect(normalizedValues);
+        registration.SerializedConfig = EncryptConfig(normalizedValues);
 
         await writeRepository.SaveChangesAsync(cancellationToken);
         await sessionProvider.CloseSessionsAsync(id);
     }
 
-    public async Task<IReadOnlyDictionary<string, object?>> GetEditValuesAsync(
+    public async Task<IReadOnlyDictionary<string, object?>> GetConfigValuesWithoutSecretsAsync(
         int id,
         CancellationToken cancellationToken = default
     )
@@ -92,7 +92,7 @@ public class RemoteSourceRegistrationService(
             .Select(field => field.Key)
             .ToHashSet(StringComparer.Ordinal);
 
-        return ReadConfig(remoteSource, registration)
+        return DecryptConfig(remoteSource, registration)
             .ToDictionary()
             .Where(entry => !passwordKeys.Contains(entry.Key))
             .ToDictionary(entry => entry.Key, entry => entry.Value, StringComparer.Ordinal);
@@ -121,7 +121,7 @@ public class RemoteSourceRegistrationService(
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
 
-        return await RunSessionOperationAsync(
+        return await RunOnSessionWithTimeoutAsync(
             registration,
             "Connection test",
             async (session, token) =>
@@ -151,7 +151,7 @@ public class RemoteSourceRegistrationService(
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
 
-        return await RunSessionOperationAsync(
+        return await RunOnSessionWithTimeoutAsync(
             registration,
             "Folder listing",
             async (session, token) =>
@@ -169,7 +169,7 @@ public class RemoteSourceRegistrationService(
         );
     }
 
-    private async Task<TResult> RunSessionOperationAsync<TResult>(
+    private async Task<TResult> RunOnSessionWithTimeoutAsync<TResult>(
         RemoteSourceRegistration registration,
         string operationName,
         Func<IRemoteSourceSession, CancellationToken, Task<TResult>> operation,
@@ -217,7 +217,7 @@ public class RemoteSourceRegistrationService(
         }
     }
 
-    private IRemoteSourceConfig ReadConfig(
+    private IRemoteSourceConfig DecryptConfig(
         IRemoteSource remoteSource,
         RemoteSourceRegistration registration
     )
@@ -227,7 +227,7 @@ public class RemoteSourceRegistrationService(
         );
     }
 
-    private string Protect(IReadOnlyDictionary<string, object?> values)
+    private string EncryptConfig(IReadOnlyDictionary<string, object?> values)
     {
         return secretProtector.Protect(ConfigurationValueSerializer.Serialize(values));
     }

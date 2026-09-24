@@ -60,7 +60,7 @@ public class RemoteSourceScanServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task ProcessAsync_NewFolder_CreatesObservingRecordWithSnapshots()
+    public async Task ProcessAsync_NewFolder_CreatesObservingRecordWithAutomationSettings()
     {
         // Arrange
         var template = await AddReleaseTemplateAsync("German", ReleaseType.Managed);
@@ -103,7 +103,7 @@ public class RemoteSourceScanServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task ProcessAsync_OverlappingPatternsOnSamePath_LowerPriorityValueClaimsFolder()
+    public async Task ProcessAsync_OverlappingPatternsOnSamePath_AutomationWithLowerPriorityValueGetsFolder()
     {
         // Arrange
         var germanTemplate = await AddReleaseTemplateAsync("German", ReleaseType.Managed);
@@ -170,7 +170,7 @@ public class RemoteSourceScanServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task ProcessAsync_ExistingObservingRecord_KeepsOwnerWhenHigherPriorityAutomationIsAdded()
+    public async Task ProcessAsync_ExistingObservingRecord_KeepsItsAutomationWhenHigherPriorityAutomationIsAdded()
     {
         // Arrange
         var fallbackTemplate = await AddReleaseTemplateAsync("Fallback", ReleaseType.Unmanaged);
@@ -210,7 +210,7 @@ public class RemoteSourceScanServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task ProcessAsync_OwnerNoLongerMatches_RemovesRecordAndOtherAutomationClaimsLater()
+    public async Task ProcessAsync_AutomationNoLongerMatches_RemovesRecordAndOtherAutomationGetsFolderLater()
     {
         // Arrange
         var fallbackTemplate = await AddReleaseTemplateAsync("Fallback", ReleaseType.Unmanaged);
@@ -310,7 +310,7 @@ public class RemoteSourceScanServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task ProcessAsync_IgnoreExistingOnlyOnOneAutomation_AppliesToFoldersItClaims()
+    public async Task ProcessAsync_IgnoreExistingOnlyOnOneAutomation_AppliesToFoldersAssignedToIt()
     {
         // Arrange
         var template = await AddReleaseTemplateAsync("HD", ReleaseType.Managed);

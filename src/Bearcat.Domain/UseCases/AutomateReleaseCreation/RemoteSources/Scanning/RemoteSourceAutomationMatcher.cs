@@ -17,16 +17,16 @@ public static class RemoteSourceAutomationMatcher
             .ToList();
     }
 
-    public static RemoteSourceAutomation? FindFirstMatch(
+    public static RemoteSourceAutomation? FindFirstMatchingAutomation(
         IReadOnlyList<RemoteSourceAutomation> automations,
         string folderName
     )
     {
         return OrderByPriority(automations)
-            .FirstOrDefault(automation => Matches(automation, folderName));
+            .FirstOrDefault(automation => MatchesFolderName(automation, folderName));
     }
 
-    public static bool Matches(RemoteSourceAutomation automation, string folderName)
+    public static bool MatchesFolderName(RemoteSourceAutomation automation, string folderName)
     {
         return string.IsNullOrWhiteSpace(automation.FolderNamePattern)
             || FileSystemName.MatchesSimpleExpression(
@@ -36,18 +36,18 @@ public static class RemoteSourceAutomationMatcher
             );
     }
 
-    public static Dictionary<int, List<RemoteFolderDto>> ResolveClaims(
+    public static Dictionary<int, List<RemoteFolderDto>> AssignFoldersToAutomations(
         IReadOnlyList<RemoteSourceAutomation> automations,
-        IReadOnlyDictionary<string, IReadOnlyList<RemoteFolderDto>> listings,
+        IReadOnlyDictionary<string, IReadOnlyList<RemoteFolderDto>> foldersByRemotePath,
         IReadOnlyDictionary<string, RemoteSourceDownload> existingDownloadsByPath
     )
     {
-        var claims = automations.ToDictionary(
+        var foldersByAutomationId = automations.ToDictionary(
             automation => automation.Id,
             _ => new List<RemoteFolderDto>()
         );
 
-        foreach (var (remotePath, folders) in listings)
+        foreach (var (remotePath, folders) in foldersByRemotePath)
         {
             var pathAutomations = automations
                 .Where(automation => automation.RemotePath == remotePath)
@@ -55,21 +55,24 @@ public static class RemoteSourceAutomationMatcher
 
             foreach (var folder in folders)
             {
-                var owner = existingDownloadsByPath.TryGetValue(folder.FullPath, out var download)
-                    ? FindExistingOwner(pathAutomations, download, folder)
-                    : FindFirstMatch(pathAutomations, folder.Name);
+                var automation = existingDownloadsByPath.TryGetValue(
+                    folder.FullPath,
+                    out var download
+                )
+                    ? FindAutomationOfObservingDownload(pathAutomations, download, folder)
+                    : FindFirstMatchingAutomation(pathAutomations, folder.Name);
 
-                if (owner is not null)
+                if (automation is not null)
                 {
-                    claims[owner.Id].Add(folder);
+                    foldersByAutomationId[automation.Id].Add(folder);
                 }
             }
         }
 
-        return claims;
+        return foldersByAutomationId;
     }
 
-    public static RemoteSourceAutomation? FindExistingOwner(
+    public static RemoteSourceAutomation? FindAutomationOfObservingDownload(
         IReadOnlyList<RemoteSourceAutomation> pathAutomations,
         RemoteSourceDownload download,
         RemoteFolderDto folder
@@ -81,7 +84,8 @@ public static class RemoteSourceAutomationMatcher
         }
 
         return pathAutomations.FirstOrDefault(automation =>
-            automation.Id == download.RemoteSourceAutomationId && Matches(automation, folder.Name)
+            automation.Id == download.RemoteSourceAutomationId
+            && MatchesFolderName(automation, folder.Name)
         );
     }
 }
