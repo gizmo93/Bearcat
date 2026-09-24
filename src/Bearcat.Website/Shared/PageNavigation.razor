@@ -5,22 +5,24 @@
             <BbPaginationItem>
                 <BbPaginationPrevious Disabled="@(CurrentPage <= 1)"
                                       Text="@L["Previous"]"
+                                      Href="@(CurrentPage > 1 ? GetPageUrlOrNull(CurrentPage - 1) : null)"
                                       OnClick="@(() => SelectPageAsync(CurrentPage - 1))" />
             </BbPaginationItem>
 
-            @foreach (var page in PageItems)
+            @foreach (var pageLink in PageLinksWithGaps)
             {
                 <BbPaginationItem>
-                    @if (page is null)
+                    @if (pageLink.PageNumber is { } pageNumber)
                     {
-                        <BbPaginationEllipsis />
+                        <BbPaginationLink IsActive="@(pageNumber == CurrentPage)"
+                                          Href="@GetPageUrlOrNull(pageNumber)"
+                                          OnClick="@(() => SelectPageAsync(pageNumber))">
+                            @pageNumber
+                        </BbPaginationLink>
                     }
                     else
                     {
-                        <BbPaginationLink IsActive="@(page == CurrentPage)"
-                                          OnClick="@(() => SelectPageAsync(page.Value))">
-                            @(page.Value)
-                        </BbPaginationLink>
+                        <BbPaginationEllipsis />
                     }
                 </BbPaginationItem>
             }
@@ -28,6 +30,7 @@
             <BbPaginationItem>
                 <BbPaginationNext Disabled="@(CurrentPage >= TotalPages)"
                                   Text="@L["Next"]"
+                                  Href="@(CurrentPage < TotalPages ? GetPageUrlOrNull(CurrentPage + 1) : null)"
                                   OnClick="@(() => SelectPageAsync(CurrentPage + 1))" />
             </BbPaginationItem>
         </BbPaginationContent>

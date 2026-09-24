@@ -213,41 +213,9 @@
                           Class="w-24" />
             </label>
 
-            @if (TotalPages > 1)
-            {
-                <BbPagination Class="flex justify-start">
-                    <BbPaginationContent>
-                        <BbPaginationItem>
-                            <BbPaginationPrevious Disabled="@(CurrentPage <= 1)"
-                                                  Text="@L["Previous"]"
-                                                  Href="@(CurrentPage > 1 ? GetPageUri(CurrentPage - 1) : null)" />
-                        </BbPaginationItem>
-
-                        @foreach (var page in PaginationItems)
-                        {
-                            <BbPaginationItem>
-                                @if (page is null)
-                                {
-                                    <BbPaginationEllipsis />
-                                }
-                                else
-                                {
-                                    <BbPaginationLink IsActive="@(page == CurrentPage)"
-                                                      Href="@GetPageUri(page.Value)">
-                                        @(page.Value)
-                                    </BbPaginationLink>
-                                }
-                            </BbPaginationItem>
-                        }
-
-                        <BbPaginationItem>
-                            <BbPaginationNext Disabled="@(CurrentPage >= TotalPages)"
-                                              Text="@L["Next"]"
-                                              Href="@(CurrentPage < TotalPages ? GetPageUri(CurrentPage + 1) : null)" />
-                        </BbPaginationItem>
-                    </BbPaginationContent>
-                </BbPagination>
-            }
+            <PageNavigation CurrentPage="CurrentPage"
+                            TotalPages="TotalPages"
+                            GetPageUrl="GetPageUri" />
         </div>
     </div>
 </section>

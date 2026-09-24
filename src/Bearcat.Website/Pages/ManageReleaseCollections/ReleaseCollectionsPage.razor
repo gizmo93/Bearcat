@@ -140,41 +140,9 @@
                           Class="w-24" />
             </label>
 
-            @if (TotalPages > 1)
-            {
-                <BbPagination Class="flex justify-start">
-                    <BbPaginationContent>
-                        <BbPaginationItem>
-                            <BbPaginationPrevious Disabled="@(CurrentPage <= 1)"
-                                                  Text="@L["Previous"]"
-                                                  OnClick="GoToPreviousPageAsync" />
-                        </BbPaginationItem>
-
-                        @foreach (var page in PaginationItems)
-                        {
-                            <BbPaginationItem>
-                                @if (page is null)
-                                {
-                                    <BbPaginationEllipsis />
-                                }
-                                else
-                                {
-                                    <BbPaginationLink IsActive="@(page == CurrentPage)"
-                                                      OnClick="@(() => GoToPageAsync(page.Value))">
-                                        @(page.Value)
-                                    </BbPaginationLink>
-                                }
-                            </BbPaginationItem>
-                        }
-
-                        <BbPaginationItem>
-                            <BbPaginationNext Disabled="@(CurrentPage >= TotalPages)"
-                                              Text="@L["Next"]"
-                                              OnClick="GoToNextPageAsync" />
-                        </BbPaginationItem>
-                    </BbPaginationContent>
-                </BbPagination>
-            }
+            <PageNavigation CurrentPage="CurrentPage"
+                            TotalPages="TotalPages"
+                            OnPageSelected="GoToPageAsync" />
         </div>
     </div>
 </section>

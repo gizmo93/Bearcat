@@ -51,36 +51,6 @@ public partial class ReleaseCollectionsPage(IScopedOperationRunner operationRunn
     private IReadOnlyList<SelectOption<int>> PageSizeOptions =>
         pageSizes.Select(size => new SelectOption<int>(size, size.ToString())).ToList();
 
-    private IReadOnlyList<int?> PaginationItems
-    {
-        get
-        {
-            if (TotalPages <= 7)
-            {
-                return Enumerable.Range(1, TotalPages).Select(page => (int?)page).ToList();
-            }
-
-            var pages = new List<int?> { 1 };
-            var start = Math.Max(2, CurrentPage - 1);
-            var end = Math.Min(TotalPages - 1, CurrentPage + 1);
-
-            if (start > 2)
-            {
-                pages.Add(null);
-            }
-
-            pages.AddRange(Enumerable.Range(start, end - start + 1).Select(page => (int?)page));
-
-            if (end < TotalPages - 1)
-            {
-                pages.Add(null);
-            }
-
-            pages.Add(TotalPages);
-            return pages;
-        }
-    }
-
     protected override async Task OnInitializedAsync()
     {
         releaseGroups = await operationRunner.RunAsync(
@@ -107,28 +77,6 @@ public partial class ReleaseCollectionsPage(IScopedOperationRunner operationRunn
     private async Task OnPageSizeChangedAsync()
     {
         pageIndex = 0;
-        await RefreshAsync();
-    }
-
-    private async Task GoToPreviousPageAsync()
-    {
-        if (pageIndex == 0)
-        {
-            return;
-        }
-
-        pageIndex--;
-        await RefreshAsync();
-    }
-
-    private async Task GoToNextPageAsync()
-    {
-        if (CurrentPage >= TotalPages)
-        {
-            return;
-        }
-
-        pageIndex++;
         await RefreshAsync();
     }
 

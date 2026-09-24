@@ -59,36 +59,6 @@ public partial class UploadLinksDialog(IScopedOperationRunner operationRunner)
             new((int)OnlineState.Unknown, L.Localize(OnlineState.Unknown)),
         };
 
-    private IEnumerable<int?> PaginationItems
-    {
-        get
-        {
-            if (TotalPages <= 7)
-            {
-                return Enumerable.Range(1, TotalPages).Select(page => (int?)page);
-            }
-
-            var pages = new List<int?> { 1 };
-            var start = Math.Max(2, CurrentPage - 1);
-            var end = Math.Min(TotalPages - 1, CurrentPage + 1);
-
-            if (start > 2)
-            {
-                pages.Add(null);
-            }
-
-            pages.AddRange(Enumerable.Range(start, end - start + 1).Select(page => (int?)page));
-
-            if (end < TotalPages - 1)
-            {
-                pages.Add(null);
-            }
-
-            pages.Add(TotalPages);
-            return pages;
-        }
-    }
-
     protected override async Task OnInitializedAsync()
     {
         await RefreshAllUploadLinksAsync();
@@ -134,24 +104,8 @@ public partial class UploadLinksDialog(IScopedOperationRunner operationRunner)
 
     private async Task GoToPageAsync(int page)
     {
-        var nextPageIndex = Math.Clamp(page - 1, 0, TotalPages - 1);
-        if (nextPageIndex == pageIndex)
-        {
-            return;
-        }
-
-        pageIndex = nextPageIndex;
+        pageIndex = page - 1;
         await RefreshLinksAsync();
-    }
-
-    private async Task GoToPreviousPageAsync()
-    {
-        await GoToPageAsync(CurrentPage - 1);
-    }
-
-    private async Task GoToNextPageAsync()
-    {
-        await GoToPageAsync(CurrentPage + 1);
     }
 
     private async Task OnPageSizeChangedAsync()

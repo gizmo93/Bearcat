@@ -4,6 +4,8 @@ namespace Bearcat.Website.Shared;
 
 public partial class PageNavigation : ComponentBase
 {
+    private const int MaximumPageCountWithoutGaps = 7;
+
     [Parameter]
     [EditorRequired]
     public int CurrentPage { get; set; }
@@ -15,34 +17,46 @@ public partial class PageNavigation : ComponentBase
     [Parameter]
     public EventCallback<int> OnPageSelected { get; set; }
 
-    private IReadOnlyList<int?> PageItems
+    [Parameter]
+    public Func<int, string>? GetPageUrl { get; set; }
+
+    private IReadOnlyList<PageLink> PageLinksWithGaps
     {
         get
         {
-            if (TotalPages <= 7)
+            if (TotalPages <= MaximumPageCountWithoutGaps)
             {
-                return Enumerable.Range(1, TotalPages).Select(page => (int?)page).ToList();
+                return Enumerable.Range(1, TotalPages).Select(PageLink.ForPage).ToList();
             }
 
-            var pages = new List<int?> { 1 };
-            var start = Math.Max(2, CurrentPage - 1);
-            var end = Math.Min(TotalPages - 1, CurrentPage + 1);
+            var pageLinks = new List<PageLink> { PageLink.ForPage(1) };
+            var firstNeighbourPage = Math.Max(2, CurrentPage - 1);
+            var lastNeighbourPage = Math.Min(TotalPages - 1, CurrentPage + 1);
 
-            if (start > 2)
+            if (firstNeighbourPage > 2)
             {
-                pages.Add(null);
+                pageLinks.Add(PageLink.Gap);
             }
 
-            pages.AddRange(Enumerable.Range(start, end - start + 1).Select(page => (int?)page));
+            pageLinks.AddRange(
+                Enumerable
+                    .Range(firstNeighbourPage, lastNeighbourPage - firstNeighbourPage + 1)
+                    .Select(PageLink.ForPage)
+            );
 
-            if (end < TotalPages - 1)
+            if (lastNeighbourPage < TotalPages - 1)
             {
-                pages.Add(null);
+                pageLinks.Add(PageLink.Gap);
             }
 
-            pages.Add(TotalPages);
-            return pages;
+            pageLinks.Add(PageLink.ForPage(TotalPages));
+            return pageLinks;
         }
+    }
+
+    private string? GetPageUrlOrNull(int page)
+    {
+        return GetPageUrl?.Invoke(page);
     }
 
     private async Task SelectPageAsync(int page)
@@ -53,5 +67,12 @@ public partial class PageNavigation : ComponentBase
         {
             await OnPageSelected.InvokeAsync(clampedPage);
         }
+    }
+
+    private sealed record PageLink(int? PageNumber)
+    {
+        public static readonly PageLink Gap = new((int?)null);
+
+        public static PageLink ForPage(int pageNumber) => new(pageNumber);
     }
 }
