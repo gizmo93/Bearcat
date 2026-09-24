@@ -1,5 +1,6 @@
 ﻿using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Transfers;
 
 namespace Bearcat.Abstractions.Hoster;
 
@@ -25,7 +26,7 @@ public interface IHoster
     Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
-        IUploadProgress progress,
+        ITransferProgress progress,
         CancellationToken cancellationToken
     );
 

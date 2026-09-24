@@ -35,11 +35,11 @@ public class FileSystemService : IFileSystemService
             .ToList();
     }
 
-    public FolderContentFingerprint GetFolderContentFingerprint(string path)
+    public FolderFileCountAndSize GetFolderFileCountAndSize(string path)
     {
         if (!Directory.Exists(path))
         {
-            return new FolderContentFingerprint(0, 0);
+            return new FolderFileCountAndSize(0, 0);
         }
 
         var fileCount = 0;
@@ -61,7 +61,7 @@ public class FileSystemService : IFileSystemService
             totalBytes += fileInfo.Length;
         }
 
-        return new FolderContentFingerprint(fileCount, totalBytes);
+        return new FolderFileCountAndSize(fileCount, totalBytes);
     }
 
     public string CreateTempDirectory(string basePath)
@@ -78,6 +78,11 @@ public class FileSystemService : IFileSystemService
     public bool DirectoryExists(string path)
     {
         return Directory.Exists(path);
+    }
+
+    public bool DirectoryHasEntries(string path)
+    {
+        return Directory.Exists(path) && Directory.EnumerateFileSystemEntries(path).Any();
     }
 
     public void DeleteFileIfExists(string filePath)

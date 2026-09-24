@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Bearcat.Domain.ValueObjects;
 
@@ -9,8 +10,7 @@ public sealed class UploadExecutionContext(
     int totalFileCount,
     int successfulFileCount,
     int failedFileCount,
-    long totalBytes,
-    long alreadyUploadedBytes,
+    IReadOnlyList<TransferFile> plannedFiles,
     CancellationTokenSource cancellationTokenSource
 ) : IDisposable
 {
@@ -20,9 +20,7 @@ public sealed class UploadExecutionContext(
 
     public int TotalFileCount { get; } = totalFileCount;
 
-    public long TotalBytes { get; } = totalBytes;
-
-    public long AlreadyUploadedBytes { get; } = alreadyUploadedBytes;
+    public IReadOnlyList<TransferFile> PlannedFiles { get; } = plannedFiles;
 
     public int SuccessfulFileCount { get; set; } = successfulFileCount;
 

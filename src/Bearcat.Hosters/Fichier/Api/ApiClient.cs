@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Fichier.Api.Download;
 using Bearcat.Hosters.Fichier.Api.File;
 using Bearcat.Hosters.Fichier.Api.Folder;
@@ -213,7 +214,7 @@ public class ApiClient(
         FichierConfig config,
         string fileUrl,
         string targetFilePath,
-        IDownloadProgress progress,
+        ITransferProgress progress,
         long? expectedSizeBytes,
         CancellationToken cancellationToken
     )

@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Uploady;
 using Bearcat.Hosters.Uploady.Api;
 using Microsoft.Extensions.Logging;
@@ -45,7 +46,7 @@ public class UploadyDownloadTest
                     "api-key",
                     "abc123",
                     targetFilePath,
-                    NullDownloadProgress.Instance,
+                    NullTransferProgress.Instance,
                     2048L,
                     It.IsAny<CancellationToken>()
                 )
@@ -61,7 +62,7 @@ public class UploadyDownloadTest
             ),
             targetFilePath,
             config,
-            NullDownloadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -84,7 +85,7 @@ public class UploadyDownloadTest
                     "api-key",
                     "abc123",
                     targetFilePath,
-                    NullDownloadProgress.Instance,
+                    NullTransferProgress.Instance,
                     null,
                     It.IsAny<CancellationToken>()
                 )
@@ -100,7 +101,7 @@ public class UploadyDownloadTest
             ),
             targetFilePath,
             config,
-            NullDownloadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 

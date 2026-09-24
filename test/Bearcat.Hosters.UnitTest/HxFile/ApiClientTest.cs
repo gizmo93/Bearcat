@@ -1,5 +1,6 @@
 using System.Net;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.HxFile.Api;
 using Bearcat.Hosters.Shared;
 using Bearcat.Hosters.Shared.XFilesharing.Api;
@@ -56,7 +57,7 @@ public class ApiClientTest
             apiKey: "api-key",
             fileCode: "abc123",
             targetFilePath: targetFilePath,
-            progress: NullDownloadProgress.Instance,
+            progress: NullTransferProgress.Instance,
             expectedSizeBytes: null,
             cancellationToken: CancellationToken.None
         );
@@ -93,7 +94,7 @@ public class ApiClientTest
                 apiKey: "api-key",
                 fileCode: "abc123",
                 targetFilePath: targetFilePath,
-                progress: NullDownloadProgress.Instance,
+                progress: NullTransferProgress.Instance,
                 expectedSizeBytes: null,
                 cancellationToken: CancellationToken.None
             )

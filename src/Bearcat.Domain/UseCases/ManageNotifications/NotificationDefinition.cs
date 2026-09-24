@@ -175,6 +175,20 @@ public static class NotificationDefinitions
             DisplayName: "NotificationKind.AutomaticForumPostUpdateFailed",
             Description: "NotificationKind.AutomaticForumPostUpdateFailed.Description"
         ),
+        new(
+            Kind: NotificationKind.ReleaseCreatedFromRemoteDownload,
+            Severity: NotificationSeverity.Info,
+            Group: NotificationGroup.RemoteDownloads,
+            DisplayName: "NotificationKind.ReleaseCreatedFromRemoteDownload",
+            Description: "NotificationKind.ReleaseCreatedFromRemoteDownload.Description"
+        ),
+        new(
+            Kind: NotificationKind.RemoteDownloadFailed,
+            Severity: NotificationSeverity.Error,
+            Group: NotificationGroup.RemoteDownloads,
+            DisplayName: "NotificationKind.RemoteDownloadFailed",
+            Description: "NotificationKind.RemoteDownloadFailed.Description"
+        ),
     ];
 
     public static NotificationDefinition Get(NotificationKind kind)

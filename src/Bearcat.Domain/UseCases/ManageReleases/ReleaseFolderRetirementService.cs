@@ -2,7 +2,6 @@ using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
-using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -13,7 +12,7 @@ namespace Bearcat.Domain.UseCases.ManageReleases;
 public class ReleaseFolderRetirementService(
     IReleaseFolderRetirementRepository repository,
     IApplicationConfigurationProvider configuration,
-    MirrorCoverageEvaluator mirrorCoverageEvaluator,
+    UnmanagedReleaseConverter unmanagedReleaseConverter,
     INotificationService notificationService,
     TimeProvider timeProvider,
     ILogger<ReleaseFolderRetirementService> logger
@@ -40,7 +39,7 @@ public class ReleaseFolderRetirementService(
 
         foreach (var release in candidates)
         {
-            if (!IsRecoverableWithoutReleaseFolder(release))
+            if (!unmanagedReleaseConverter.IsRecoverableWithoutReleaseFolder(release))
             {
                 logger.LogDebug(
                     "Release {ReleaseId} stays managed because not every archive config has a local archive or an online mirror",
@@ -67,21 +66,6 @@ public class ReleaseFolderRetirementService(
         );
     }
 
-    private bool IsRecoverableWithoutReleaseFolder(Release release)
-    {
-        if (release.ArchiveConfigs.Count == 0)
-        {
-            return false;
-        }
-
-        var mirrorUploads = mirrorCoverageEvaluator.GetMirrorUploadsPerArchiveConfig(release);
-
-        return release.ArchiveConfigs.All(config =>
-            config.Archives.Any(archive => archive.ArchiveState is ArchiveState.Created)
-            || mirrorUploads.ContainsKey(config.Id)
-        );
-    }
-
     private void ConvertToUnmanaged(Release release)
     {
         var releaseFolderPath = release.ReleaseFolderPath!;
@@ -99,21 +83,15 @@ public class ReleaseFolderRetirementService(
             selector: n => n.Release
         );
 
-        release.ReleaseType = ReleaseType.Unmanaged;
-        release.ReleaseFolderPath = null;
+        UnmanagedReleaseConverter.ConvertToUnmanaged(release);
     }
 
     private static string GetNotificationMessage(Release release, string releaseFolderPath)
     {
-        var hasArchivesInsideReleaseFolder = release
-            .ArchiveConfigs.SelectMany(config => config.Archives)
-            .Where(archive => archive.ArchiveState is ArchiveState.Created)
-            .Any(archive =>
-                FolderPathHelper.IsSameOrSubPath(
-                    childPath: archive.ArchiveFolderPath,
-                    parentPath: releaseFolderPath
-                )
-            );
+        var hasArchivesInsideReleaseFolder = UnmanagedReleaseConverter.HasCreatedArchiveInside(
+            release,
+            releaseFolderPath
+        );
 
         if (hasArchivesInsideReleaseFolder)
         {

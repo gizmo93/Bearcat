@@ -1046,6 +1046,7 @@
   <data name="NotificationGroup.Hosters" xml:space="preserve"><value>Hoster</value></data>
   <data name="NotificationGroup.LinkCrypters" xml:space="preserve"><value>Linkcrypter</value></data>
   <data name="NotificationGroup.DistributionSites" xml:space="preserve"><value>Verteilungsseiten</value></data>
+  <data name="NotificationGroup.RemoteDownloads" xml:space="preserve"><value>Remotedownloads</value></data>
   <data name="NotificationKind.Legacy" xml:space="preserve"><value>Bestehende Benachrichtigung</value></data>
   <data name="NotificationKind.ReleaseAutomaticallyCreated" xml:space="preserve"><value>Release automatisch erstellt</value></data><data name="NotificationKind.ReleaseAutomaticallyCreated.Description" xml:space="preserve"><value>Ein Release wurde durch die Ordnerautomatisierung erstellt.</value></data>
   <data name="NotificationKind.ReleaseAutoConvertedToUnmanaged" xml:space="preserve"><value>Release in Unmanaged umgewandelt</value></data><data name="NotificationKind.ReleaseAutoConvertedToUnmanaged.Description" xml:space="preserve"><value>Ein Release wurde in Unmanaged umgewandelt, weil die Aufbewahrung seines Releaseordners abgelaufen ist und der Releaseordner gelöscht werden kann.</value></data>
@@ -1185,6 +1186,10 @@
   <data name="ArchiveState.Restoring" xml:space="preserve"><value>Wird wiederhergestellt</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed" xml:space="preserve"><value>Archivwiederherstellung fehlgeschlagen</value></data>
   <data name="NotificationKind.ArchiveRestoreFailed.Description" xml:space="preserve"><value>Ein Archiv konnte nicht von einem Onlinemirror wiederhergestellt werden.</value></data>
+  <data name="NotificationKind.ReleaseCreatedFromRemoteDownload" xml:space="preserve"><value>Release aus Remotedownload erstellt</value></data>
+  <data name="NotificationKind.ReleaseCreatedFromRemoteDownload.Description" xml:space="preserve"><value>Ein Release wurde automatisch aus einem Ordner erstellt, der von einer Remotequelle heruntergeladen wurde.</value></data>
+  <data name="NotificationKind.RemoteDownloadFailed" xml:space="preserve"><value>Remotedownload fehlgeschlagen</value></data>
+  <data name="NotificationKind.RemoteDownloadFailed.Description" xml:space="preserve"><value>Ein Ordner konnte nicht von einer Remotequelle heruntergeladen werden oder aus dem heruntergeladenen Ordner konnte kein Release erstellt werden.</value></data>
   <data name="MirrorDownloads" xml:space="preserve"><value>Mirrordownloads</value></data>
   <data name="MirrorDownloadsDescription" xml:space="preserve"><value>Steuert, wie Archive von Onlinemirrors geladen werden, wenn sie nicht mehr lokal liegen.</value></data>
   <data name="MirrorDownloadsRequirePremium" xml:space="preserve"><value>Mirrordownloads von diesem Hoster benötigen einen Premiumaccount.</value></data>
@@ -1223,4 +1228,120 @@
   <data name="StreamingPaused" xml:space="preserve"><value>Pausiert</value></data>
   <data name="ClearLogs" xml:space="preserve"><value>Leeren</value></data>
   <data name="NoLogEntries" xml:space="preserve"><value>Noch keine Logeinträge.</value></data>
+  <data name="RemoteSources" xml:space="preserve"><value>Remotequellen</value></data>
+  <data name="RemoteSourcesIntro" xml:space="preserve"><value>Server, von denen Bearcat Releases herunterladen kann.</value></data>
+  <data name="NewRemoteSource" xml:space="preserve"><value>Neue Remotequelle</value></data>
+  <data name="AddRemoteSource" xml:space="preserve"><value>Remotequelle hinzufügen</value></data>
+  <data name="NoRemoteSourcesYet" xml:space="preserve"><value>Noch keine Remotequellen registriert.</value></data>
+  <data name="SourceType" xml:space="preserve"><value>Quelltyp</value></data>
+  <data name="SelectSourceType" xml:space="preserve"><value>Quelltyp auswählen</value></data>
+  <data name="MaxConnections" xml:space="preserve"><value>Maximale Verbindungen</value></data>
+  <data name="MaxConnectionsHelp" xml:space="preserve"><value>Maximale Anzahl paralleler Logins und Übertragungen auf diesem Server.</value></data>
+  <data name="TestConnection" xml:space="preserve"><value>Verbindung testen</value></data>
+  <data name="OpenRemoteSourceActions" xml:space="preserve"><value>Aktionen für Remotequelle öffnen</value></data>
+  <data name="RemoteSourceConnectionSuccessful" xml:space="preserve"><value>Verbindung zu {0} erfolgreich ({1} Ordner im Stammverzeichnis)</value></data>
+  <data name="RemoteSourceConnectionFailed" xml:space="preserve"><value>Verbindung zu {0} fehlgeschlagen: {1}</value></data>
+  <data name="RemoteSourceActivated" xml:space="preserve"><value>Remotequelle {0} aktiviert</value></data>
+  <data name="RemoteSourceDeactivated" xml:space="preserve"><value>Remotequelle {0} deaktiviert</value></data>
+  <data name="DeleteRemoteSourceConfirmation" xml:space="preserve"><value>Möchtest du die Remotequelle {0} wirklich löschen?</value></data>
+  <data name="SecretUnchangedPlaceholder" xml:space="preserve"><value>Unverändert</value></data>
+  <data name="SecretKeepCurrentHelp" xml:space="preserve"><value>Leer lassen, um den aktuellen Wert zu behalten.</value></data>
+  <data name="MustBeWholeNumber" xml:space="preserve"><value>Muss eine ganze Zahl sein</value></data>
+  <data name="ConfigurationFieldError_UnknownField" xml:space="preserve"><value>{0} ist keine bekannte Einstellung</value></data>
+  <data name="ConfigurationFieldError_Required" xml:space="preserve"><value>{0} ist erforderlich</value></data>
+  <data name="ConfigurationFieldError_InvalidValue" xml:space="preserve"><value>{0} hat einen ungültigen Wert</value></data>
+  <data name="ConfigurationFieldError_NotAnInteger" xml:space="preserve"><value>{0} muss eine ganze Zahl sein</value></data>
+  <data name="ConfigurationFieldError_InvalidOption" xml:space="preserve"><value>{0} enthält eine unbekannte Option</value></data>
+  <data name="RemoteSourceConfig_Host" xml:space="preserve"><value>Host</value></data>
+  <data name="RemoteSourceConfig_Port" xml:space="preserve"><value>Port</value></data>
+  <data name="RemoteSourceConfig_Username" xml:space="preserve"><value>Benutzername</value></data>
+  <data name="RemoteSourceConfig_Password" xml:space="preserve"><value>Passwort</value></data>
+  <data name="RemoteSourceConfig_Encryption" xml:space="preserve"><value>Verschlüsselung</value></data>
+  <data name="RemoteSourceConfig_Encryption_None" xml:space="preserve"><value>Keine (unverschlüsseltes FTP)</value></data>
+  <data name="RemoteSourceConfig_Encryption_Explicit" xml:space="preserve"><value>Explizit (FTPES)</value></data>
+  <data name="RemoteSourceConfig_Encryption_Implicit" xml:space="preserve"><value>Implizit (FTPS)</value></data>
+  <data name="RemoteSourceConfig_TlsProvider" xml:space="preserve"><value>TLS-Anbieter</value></data>
+  <data name="RemoteSourceConfig_TlsProvider_Description" xml:space="preserve"><value>BouncyCastle funktioniert mit den meisten FTPS-Servern. Wechsle nur zu System, wenn die Verbindung fehlschlägt.</value></data>
+  <data name="RemoteSourceConfig_ValidateCertificate" xml:space="preserve"><value>Zertifikat prüfen</value></data>
+  <data name="RemoteSourceConfig_ValidateCertificate_Description" xml:space="preserve"><value>Viele FTP-Server nutzen selbstsignierte Zertifikate. Aktiviere diese Option nur, wenn der Server ein vertrauenswürdiges Zertifikat hat.</value></data>
+  <data name="RemoteSourceAutomations" xml:space="preserve"><value>Remoteautomatisierungen</value></data>
+  <data name="RemoteSourceAutomationsIntro" xml:space="preserve"><value>Überwacht Ordner auf Remotequellen und merkt neue Releases zum Herunterladen vor</value></data>
+  <data name="NewRemoteSourceAutomation" xml:space="preserve"><value>Neue Remoteautomatisierung</value></data>
+  <data name="NoRemoteSourceAutomationsYet" xml:space="preserve"><value>Noch keine Remoteautomatisierungen eingerichtet.</value></data>
+  <data name="OpenRemoteSourceAutomationActions" xml:space="preserve"><value>Aktionen für Remoteautomatisierung öffnen</value></data>
+  <data name="RemoteSourceAutomationDialogDescription" xml:space="preserve"><value>Scannt die direkten Unterordner eines Remoteordners und lädt neue Releases in einen lokalen Ordner herunter.</value></data>
+  <data name="DeleteRemoteSourceAutomationConfirmation" xml:space="preserve"><value>Remoteautomatisierung {0} löschen? Bereits vorgemerkte Downloads bleiben erhalten.</value></data>
+  <data name="RemoteSourceAutomationEnabled" xml:space="preserve"><value>Remoteautomatisierung {0} aktiviert</value></data>
+  <data name="RemoteSourceAutomationDisabled" xml:space="preserve"><value>Remoteautomatisierung {0} deaktiviert</value></data>
+  <data name="RemoteSource" xml:space="preserve"><value>Remotequelle</value></data>
+  <data name="SelectRemoteSource" xml:space="preserve"><value>Remotequelle auswählen</value></data>
+  <data name="SelectRemoteSourceRequired" xml:space="preserve"><value>Du musst eine Remotequelle auswählen.</value></data>
+  <data name="NoActiveRemoteSources" xml:space="preserve"><value>Es gibt keine aktive Remotequelle. Füge zuerst unter Remotequellen eine hinzu oder aktiviere eine.</value></data>
+  <data name="RemoteSourceInactive" xml:space="preserve"><value>Remotequelle inaktiv</value></data>
+  <data name="Folders" xml:space="preserve"><value>Ordner</value></data>
+  <data name="Rule" xml:space="preserve"><value>Regel</value></data>
+  <data name="RemotePath" xml:space="preserve"><value>Remoteordner</value></data>
+  <data name="RemotePathHelp" xml:space="preserve"><value>Jeder direkte Unterordner dieses Ordners wird als Release behandelt.</value></data>
+  <data name="RemotePathRequired" xml:space="preserve"><value>Remoteordner ist erforderlich</value></data>
+  <data name="BrowseRemoteFolders" xml:space="preserve"><value>Remoteordner durchsuchen</value></data>
+  <data name="SelectRemoteFolder" xml:space="preserve"><value>Remoteordner auswählen</value></data>
+  <data name="SelectRemoteFolderDescription" xml:space="preserve"><value>Öffne Ordner, um ihre Unterordner zu sehen, und wähle dann den Ordner aus, der die Releases enthält.</value></data>
+  <data name="FolderListingFailed" xml:space="preserve"><value>Ordner konnten nicht aufgelistet werden: {0}</value></data>
+  <data name="TargetPath" xml:space="preserve"><value>Downloadordner</value></data>
+  <data name="TargetPathHelp" xml:space="preserve"><value>Lokaler Ordner, in den die Releases heruntergeladen werden. Jedes Release erhält einen eigenen Unterordner.</value></data>
+  <data name="TargetPathRequired" xml:space="preserve"><value>Downloadordner ist erforderlich</value></data>
+  <data name="BrowseDownloadFolders" xml:space="preserve"><value>Downloadordner durchsuchen</value></data>
+  <data name="SelectDownloadFolder" xml:space="preserve"><value>Downloadordner auswählen</value></data>
+  <data name="SelectDownloadFolderDescription" xml:space="preserve"><value>Wähle den lokalen Ordner, in den neue Releases heruntergeladen werden.</value></data>
+  <data name="IgnoreExistingOnFirstScan" xml:space="preserve"><value>Vorhandene Ordner ignorieren</value></data>
+  <data name="IgnoreExistingOnFirstScanHelp" xml:space="preserve"><value>Ordner, die beim ersten Scan bereits vorhanden sind, werden übersprungen. Nur später hinzukommende Releases werden heruntergeladen.</value></data>
+  <data name="KeepRawFiles" xml:space="preserve"><value>Rohdateien behalten</value></data>
+  <data name="KeepRawFilesHelp" xml:space="preserve"><value>Wenn deaktiviert, wandelt Bearcat das Release in Unmanaged um und löscht den heruntergeladenen Ordner, sobald jede Uploadkonfiguration ihren ersten abgeschlossenen Upload hat und jede Archivkonfiguration ein erstelltes Archiv oder einen Onlinemirror besitzt. Liegen Archive in diesem Ordner, bleibt er erhalten. Gilt nur für Vorlagen vom Typ Managed.</value></data>
+  <data name="RemoteSourceDownloadState.Observing" xml:space="preserve"><value>Wird beobachtet</value></data>
+  <data name="RemoteSourceDownloadState.Pending" xml:space="preserve"><value>Vorgemerkt</value></data>
+  <data name="RemoteSourceDownloadState.Downloading" xml:space="preserve"><value>Wird heruntergeladen</value></data>
+  <data name="RemoteSourceDownloadState.Downloaded" xml:space="preserve"><value>Heruntergeladen</value></data>
+  <data name="RemoteSourceDownloadState.ReleaseCreated" xml:space="preserve"><value>Release erstellt</value></data>
+  <data name="RemoteSourceDownloadState.Failed" xml:space="preserve"><value>Fehlgeschlagen</value></data>
+  <data name="RemoteSourceDownloadState.Canceled" xml:space="preserve"><value>Abgebrochen</value></data>
+  <data name="RemoteSourceDownloadState.Ignored" xml:space="preserve"><value>Ignoriert</value></data>
+  <data name="RemoteSourceDownloads" xml:space="preserve"><value>Remotedownloads</value></data>
+  <data name="RemoteSourceDownloadsDescription" xml:space="preserve"><value>Steuert, wie Ordner auf Remotequellen überwacht, zum Herunterladen vorgemerkt und heruntergeladen werden.</value></data>
+  <data name="RemoteSourceDownloadStabilityMinutes" xml:space="preserve"><value>Ordnerstabilität (Minuten)</value></data>
+  <data name="RemoteSourceDownloadStabilityMinutesDescription" xml:space="preserve"><value>Ein Remoteordner wird erst zum Herunterladen vorgemerkt, wenn sich Dateianzahl und Gesamtgröße mindestens so viele Minuten lang nicht verändert haben. So werden keine Releases heruntergeladen, die noch auf den Server hochgeladen werden.</value></data>
+  <data name="RemoteSourceDownloadMinimumFolderSizeMegabytes" xml:space="preserve"><value>Minimale Ordnergröße (MB)</value></data>
+  <data name="RemoteSourceDownloadMinimumFolderSizeMegabytesDescription" xml:space="preserve"><value>Remoteordner unter dieser Größe werden nicht vorgemerkt. Mit 0 deaktivierst du die Größenprüfung.</value></data>
+  <data name="RemoteSourceDownloadMaxParallelFileDownloads" xml:space="preserve"><value>Maximale parallele Dateidownloads</value></data>
+  <data name="RemoteSourceDownloadMaxParallelFileDownloadsDescription" xml:space="preserve"><value>Die Obergrenze gleichzeitig geladener Dateien über alle Remotequellen hinweg. Jede Remotequelle ist zusätzlich durch ihre maximale Anzahl an Verbindungen begrenzt.</value></data>
+  <data name="RemoteSourceDownloadMaxDownloadAttempts" xml:space="preserve"><value>Maximale Downloadversuche</value></data>
+  <data name="RemoteSourceDownloadMaxDownloadAttemptsDescription" xml:space="preserve"><value>Wie oft eine einzelne Datei erneut geladen wird, bevor der Download des ganzen Ordners fehlschlägt.</value></data>
+  <data name="RemoteSourceDownloadRetryDelaySeconds" xml:space="preserve"><value>Wiederholungsverzögerung (Sekunden)</value></data>
+  <data name="RemoteSourceDownloadRetryDelaySecondsDescription" xml:space="preserve"><value>Wie lange Bearcat nach einem fehlgeschlagenen Versuch wartet, bevor eine Datei erneut von einer Remotequelle geladen wird.</value></data>
+  <data name="Priority" xml:space="preserve"><value>Priorität</value></data>
+  <data name="RemoteSourceAutomationPriorityHelp" xml:space="preserve"><value>Kleinere Werte werden zuerst geprüft. Nur relevant, wenn sich die Muster mehrerer Automatisierungen auf demselben Remoteordner überschneiden.</value></data>
+  <data name="RemoteSourceAutomationPatternHelp" xml:space="preserve"><value>Einfache Wildcards wie *1080p*. Leer lassen, damit jeder Ordner passt. Für ein anderes Muster legst du eine weitere Automatisierung an.</value></data>
+  <data name="Folder" xml:space="preserve"><value>Ordner</value></data>
+  <data name="Automation" xml:space="preserve"><value>Automatisierung</value></data>
+  <data name="RemoteSourceDownloadsIntro" xml:space="preserve"><value>Auf Remotequellen gefundene Ordner und der Stand ihrer Downloads.</value></data>
+  <data name="AllStatesExceptIgnored" xml:space="preserve"><value>Alle Status außer ignorierten</value></data>
+  <data name="NoRemoteSourceDownloadsFound" xml:space="preserve"><value>Keine Remotedownloads für diesen Filter gefunden.</value></data>
+  <data name="Timeline" xml:space="preserve"><value>Zeitverlauf</value></data>
+  <data name="FileCountValue" xml:space="preserve"><value>{0} Dateien</value></data>
+  <data name="DiscoveredAt" xml:space="preserve"><value>Gefunden</value></data>
+  <data name="DownloadCompletedAt" xml:space="preserve"><value>Heruntergeladen</value></data>
+  <data name="OpenRemoteSourceDownloadActions" xml:space="preserve"><value>Aktionen für Remotedownload öffnen</value></data>
+  <data name="RetryReleaseCreation" xml:space="preserve"><value>Releaseerstellung wiederholen</value></data>
+  <data name="RestartDownload" xml:space="preserve"><value>Download neu starten</value></data>
+  <data name="IgnoreRemoteDownload" xml:space="preserve"><value>Ignorieren</value></data>
+  <data name="RemoteSourceDownloadResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Remotedownloads</value></data>
+  <data name="CancelRemoteDownloadTitle" xml:space="preserve"><value>Remotedownload abbrechen</value></data>
+  <data name="CancelRemoteDownloadConfirmation" xml:space="preserve"><value>Download von {0} abbrechen? Bereits heruntergeladene Dateien werden gelöscht.</value></data>
+  <data name="RemoteDownloadCanceled" xml:space="preserve"><value>Der Download von {0} wird abgebrochen.</value></data>
+  <data name="RestartRemoteDownloadConfirmation" xml:space="preserve"><value>Download von {0} neu starten? Die lokalen Dateien in {1} werden gelöscht und erneut heruntergeladen.</value></data>
+  <data name="RemoteDownloadRestarted" xml:space="preserve"><value>Der Download von {0} wurde erneut vorgemerkt.</value></data>
+  <data name="ReleaseCreationQueuedAgain" xml:space="preserve"><value>Die Releaseerstellung für {0} wurde erneut vorgemerkt.</value></data>
+  <data name="RemoteDownloadIgnored" xml:space="preserve"><value>{0} wird ab jetzt ignoriert.</value></data>
+  <data name="RemoteDownloadStateChanged" xml:space="preserve"><value>Der Status von {0} hat sich inzwischen geändert. Die Liste wurde neu geladen.</value></data>
+  <data name="RemoteDownloadStatusSubtitle" xml:space="preserve"><value>Download von {0} aus {1}</value></data>
+  <data name="RemoteDownloadOrigin" xml:space="preserve"><value>Von Remotequelle heruntergeladen</value></data>
 </root>

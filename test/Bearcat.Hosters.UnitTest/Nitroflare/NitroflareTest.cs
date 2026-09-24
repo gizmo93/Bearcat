@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Nitroflare;
 using Bearcat.Hosters.Nitroflare.Api;
 using Bearcat.Hosters.Nitroflare.Api.File;
@@ -61,7 +62,7 @@ public class NitroflareTest
         var result = await service.UploadFileAsync(
             fileDto,
             config,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 

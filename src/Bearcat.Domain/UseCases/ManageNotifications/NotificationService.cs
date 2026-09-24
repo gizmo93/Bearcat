@@ -119,6 +119,9 @@ public class NotificationService(
             NotificationKind.AutomaticForumPostUpdated => configuration.AutomaticForumPostUpdated,
             NotificationKind.AutomaticForumPostUpdateFailed =>
                 configuration.AutomaticForumPostUpdateFailed,
+            NotificationKind.ReleaseCreatedFromRemoteDownload =>
+                configuration.ReleaseCreatedFromRemoteDownload,
+            NotificationKind.RemoteDownloadFailed => configuration.RemoteDownloadFailed,
             _ => throw new ArgumentOutOfRangeException(
                 paramName: nameof(kind),
                 actualValue: kind,

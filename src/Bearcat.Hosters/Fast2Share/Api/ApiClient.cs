@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 using Refit;
@@ -249,7 +250,7 @@ public class ApiClient(
         string fileUrl,
         string? externalId,
         string targetFilePath,
-        IDownloadProgress progress,
+        ITransferProgress progress,
         long? expectedSizeBytes,
         CancellationToken cancellationToken
     )

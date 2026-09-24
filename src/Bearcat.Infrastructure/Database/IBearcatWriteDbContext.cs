@@ -42,6 +42,8 @@ public interface IBearcatWriteDbContext
 
     EntityEntry Remove(object entity);
 
+    EntityEntry Entry(object entity);
+
     ChangeTracker ChangeTracker { get; }
     DbSet<LinkCrypterRegistration> LinkCrypterRegistrations { get; set; }
     DbSet<UploadConfigLinkCrypter> UploadConfigLinkCrypters { get; set; }
@@ -63,4 +65,7 @@ public interface IBearcatWriteDbContext
     DbSet<QualityCheckRule> QualityCheckRules { get; set; }
     DbSet<ReleaseQualityIssue> ReleaseQualityIssues { get; set; }
     DbSet<ForumPostingRule> ForumPostingRules { get; set; }
+    DbSet<RemoteSourceRegistration> RemoteSourceRegistrations { get; set; }
+    DbSet<RemoteSourceAutomation> RemoteSourceAutomations { get; set; }
+    DbSet<RemoteSourceDownload> RemoteSourceDownloads { get; set; }
 }

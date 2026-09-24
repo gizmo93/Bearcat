@@ -1,6 +1,7 @@
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
-using Bearcat.Domain.UseCases.ManageUploads.Progress;
+using Bearcat.Domain.Shared.Transfers;
+using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.ReadModels;
+using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Website.ScopedOperations;
@@ -9,26 +10,33 @@ using Microsoft.EntityFrameworkCore;
 namespace Bearcat.Website.Pages.Home;
 
 public sealed partial class RunningProcesses(
-    IUploadProgressTracker uploadProgressTracker,
-    IDownloadProgressTracker downloadProgressTracker,
+    ITransferProgressTracker transferProgressTracker,
     IScopedOperationRunner operationRunner
 ) : IDisposable
 {
     private readonly CancellationTokenSource lifetimeCancellation = new();
     private IReadOnlyList<Upload> runningUploads = [];
 
-    private IReadOnlyDictionary<int, UploadProgressSnapshot> uploadProgress =
-        new Dictionary<int, UploadProgressSnapshot>();
+    private IReadOnlyDictionary<int, TransferProgressSnapshot> uploadProgress =
+        new Dictionary<int, TransferProgressSnapshot>();
 
     private IReadOnlyList<Archive> creatingArchives = [];
 
     private IReadOnlyList<Archive> restoringArchives = [];
 
-    private IReadOnlyDictionary<int, DownloadProgressSnapshot> downloadProgress =
-        new Dictionary<int, DownloadProgressSnapshot>();
+    private IReadOnlyDictionary<int, TransferProgressSnapshot> downloadProgress =
+        new Dictionary<int, TransferProgressSnapshot>();
+
+    private IReadOnlyList<RemoteSourceDownloadReadModel> remoteDownloads = [];
+
+    private IReadOnlyDictionary<int, TransferProgressSnapshot> remoteDownloadProgress =
+        new Dictionary<int, TransferProgressSnapshot>();
 
     private bool SomethingIsRunning =>
-        runningUploads.Count > 0 || creatingArchives.Count > 0 || restoringArchives.Count > 0;
+        runningUploads.Count > 0
+        || creatingArchives.Count > 0
+        || restoringArchives.Count > 0
+        || remoteDownloads.Count > 0;
 
     private bool autoRefresh = true;
 
@@ -72,10 +80,10 @@ public sealed partial class RunningProcesses(
             )
             .ToListAsync(cancellationToken);
 
-        uploadProgress = runningUploads
-            .Select(upload => uploadProgressTracker.Get(upload.Id))
-            .Where(snapshot => snapshot is not null)
-            .ToDictionary(snapshot => snapshot!.UploadId, snapshot => snapshot!);
+        uploadProgress = GetProgressSnapshots(
+            TransferType.Upload,
+            runningUploads.Select(upload => upload.Id).ToList()
+        );
     }
 
     private async Task LoadRunningArchivesAsync(
@@ -99,10 +107,33 @@ public sealed partial class RunningProcesses(
             .Where(archive => archive.ArchiveState == ArchiveState.Restoring)
             .ToList();
 
-        downloadProgress = restoringArchives
-            .Select(archive => downloadProgressTracker.Get(archive.Id))
-            .Where(snapshot => snapshot is not null)
-            .ToDictionary(snapshot => snapshot!.ArchiveId, snapshot => snapshot!);
+        downloadProgress = GetProgressSnapshots(
+            TransferType.MirrorDownload,
+            restoringArchives.Select(archive => archive.Id).ToList()
+        );
+    }
+
+    private async Task LoadRemoteDownloadsAsync(CancellationToken cancellationToken)
+    {
+        remoteDownloads = await operationRunner.RunAsync<
+            IRemoteSourceDownloadReadRepository,
+            IReadOnlyList<RemoteSourceDownloadReadModel>
+        >((repository, token) => repository.GetRunningAsync(token), cancellationToken);
+
+        remoteDownloadProgress = GetProgressSnapshots(
+            TransferType.RemoteDownload,
+            remoteDownloads.Select(download => download.Id).ToList()
+        );
+    }
+
+    private Dictionary<int, TransferProgressSnapshot> GetProgressSnapshots(
+        TransferType type,
+        IReadOnlyList<int> ids
+    )
+    {
+        return ids.Select(id => transferProgressTracker.Get(new TransferIdentifier(type, id)))
+            .OfType<TransferProgressSnapshot>()
+            .ToDictionary(snapshot => snapshot.Identifier.Id);
     }
 
     private void ToggleAutoRefresh()
@@ -162,6 +193,7 @@ public sealed partial class RunningProcesses(
                 },
                 cancellationToken
             );
+            await LoadRemoteDownloadsAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

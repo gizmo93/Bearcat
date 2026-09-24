@@ -1,12 +1,10 @@
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Cancellation;
-using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageUploads;
-using Bearcat.Domain.UseCases.ManageUploads.Progress;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Formatting;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
-using Humanizer;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.Home.RunningUploads;
@@ -15,7 +13,7 @@ public partial class RunningUploads(
     DialogService dialogService,
     ToastService toastService,
     IScopedOperationRunner operationRunner,
-    IDownloadCancellationRegistry downloadCancellationRegistry
+    ITransferCancellationRegistry transferCancellationRegistry
 ) : ComponentBase
 {
     [Parameter]
@@ -23,15 +21,15 @@ public partial class RunningUploads(
     public IReadOnlyList<Upload> Uploads { get; set; } = null!;
 
     [Parameter]
-    public IReadOnlyDictionary<int, UploadProgressSnapshot> UploadProgress { get; set; } =
-        new Dictionary<int, UploadProgressSnapshot>();
+    public IReadOnlyDictionary<int, TransferProgressSnapshot> UploadProgress { get; set; } =
+        new Dictionary<int, TransferProgressSnapshot>();
 
     [Parameter]
     public IReadOnlyList<Archive> RestoringArchives { get; set; } = [];
 
     [Parameter]
-    public IReadOnlyDictionary<int, DownloadProgressSnapshot> DownloadProgress { get; set; } =
-        new Dictionary<int, DownloadProgressSnapshot>();
+    public IReadOnlyDictionary<int, TransferProgressSnapshot> DownloadProgress { get; set; } =
+        new Dictionary<int, TransferProgressSnapshot>();
 
     [Parameter]
     public EventCallback OnUploadCanceled { get; set; }
@@ -137,7 +135,11 @@ public partial class RunningUploads(
             return;
         }
 
-        if (downloadCancellationRegistry.RequestCancellation(archive.Id))
+        if (
+            transferCancellationRegistry.RequestCancellation(
+                new TransferIdentifier(TransferType.MirrorDownload, archive.Id)
+            )
+        )
         {
             toastService.Success(L["DownloadCancellationRequested", archive.Id]);
             return;
@@ -156,7 +158,7 @@ public partial class RunningUploads(
         return DownloadProgress.TryGetValue(archive.Id, out var snapshot) ? snapshot.Percentage : 0;
     }
 
-    private DownloadProgressSnapshot? GetDownloadSnapshot(int archiveId)
+    private TransferProgressSnapshot? GetDownloadSnapshot(int archiveId)
     {
         return DownloadProgress.GetValueOrDefault(archiveId);
     }
@@ -164,7 +166,7 @@ public partial class RunningUploads(
     private string GetDownloadHosterName(Archive archive)
     {
         return DownloadProgress.TryGetValue(archive.Id, out var snapshot)
-            ? snapshot.HosterName
+            ? snapshot.SourceName
             : "-";
     }
 
@@ -183,19 +185,14 @@ public partial class RunningUploads(
     private string? FormatUploadSpeed(int uploadId)
     {
         return UploadProgress.TryGetValue(uploadId, out var snapshot)
-            ? FormatSpeed(snapshot.BytesPerSecond)
+            ? TransferFormatting.FormatSpeed(snapshot.BytesPerSecond)
             : null;
     }
 
     private string? FormatDownloadSpeed(int archiveId)
     {
         return DownloadProgress.TryGetValue(archiveId, out var snapshot)
-            ? FormatSpeed(snapshot.BytesPerSecond)
+            ? TransferFormatting.FormatSpeed(snapshot.BytesPerSecond)
             : null;
-    }
-
-    private static string? FormatSpeed(double bytesPerSecond)
-    {
-        return bytesPerSecond <= 0 ? null : $"{bytesPerSecond.Bytes().Humanize("0.0")}/s";
     }
 }

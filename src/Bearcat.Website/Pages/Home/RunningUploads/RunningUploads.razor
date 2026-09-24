@@ -1,4 +1,5 @@
-@using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress
+@using Bearcat.Domain.Shared.Transfers
+@using Bearcat.Website.Formatting
 
 <section class="space-y-3">
     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -7,8 +8,8 @@
         </div>
 
         @{
-            var totalUploadSpeed = FormatSpeed(TotalUploadBytesPerSecond);
-            var totalDownloadSpeed = FormatSpeed(TotalDownloadBytesPerSecond);
+            var totalUploadSpeed = TransferFormatting.FormatSpeed(TotalUploadBytesPerSecond);
+            var totalDownloadSpeed = TransferFormatting.FormatSpeed(TotalDownloadBytesPerSecond);
         }
         @if (totalUploadSpeed is not null || totalDownloadSpeed is not null)
         {
@@ -283,7 +284,9 @@
             <div class="space-y-4">
                 @foreach (var archive in ExpandedRestores)
                 {
-                    <DownloadDetails Archive="archive" Snapshot="GetDownloadSnapshot(archive.Id)!" />
+                    <TransferFileDetails Snapshot="GetDownloadSnapshot(archive.Id)!"
+                                         Subtitle="@L["DownloadStatusSubtitle", archive.Id, archive.ArchiveConfig.Name, GetDownloadHosterName(archive)]"
+                                         StateLabel="@L.Localize(archive.ArchiveState)" />
                 }
             </div>
         }

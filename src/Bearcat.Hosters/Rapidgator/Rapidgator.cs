@@ -4,6 +4,7 @@ using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Rapidgator.Api;
 using Bearcat.Hosters.Rapidgator.Api.File;
@@ -36,7 +37,7 @@ public class Rapidgator(
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
-        IUploadProgress progress,
+        ITransferProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -262,7 +263,7 @@ public class Rapidgator(
         DownloadFileDto file,
         string targetFilePath,
         IHosterConfig hosterConfig,
-        IDownloadProgress progress,
+        ITransferProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -297,7 +298,7 @@ public class Rapidgator(
     private async Task<UploadFileResult> UploadFileInternalAsync(
         FileDto fileDto,
         RapidgatorConfig config,
-        IUploadProgress progress,
+        ITransferProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -342,7 +343,7 @@ public class Rapidgator(
 
         var uploadResult = await apiClient.UploadFileAsync(
             uploadUrl: requestedUpload.Url,
-            stream: new CountingStream(stream, progress),
+            stream: new ProgressReportingStream(stream, progress, stream.Length),
             fileName: Path.GetFileName(fileDto.FullFileName),
             cancellationToken: cancellationToken
         );

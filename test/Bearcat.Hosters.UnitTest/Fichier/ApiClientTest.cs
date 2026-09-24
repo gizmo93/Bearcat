@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Fichier;
 using Bearcat.Hosters.Fichier.Api;
 using Bearcat.Hosters.Fichier.Api.Download;
@@ -460,7 +461,7 @@ public class ApiClientTest
             config: config,
             fileUrl: "https://1fichier.com/?abc123",
             targetFilePath: targetFilePath,
-            progress: NullDownloadProgress.Instance,
+            progress: NullTransferProgress.Instance,
             expectedSizeBytes: null,
             cancellationToken: CancellationToken.None
         );
@@ -522,7 +523,7 @@ public class ApiClientTest
             config: config,
             fileUrl: "https://1fichier.com/?abc123",
             targetFilePath: targetFilePath,
-            progress: NullDownloadProgress.Instance,
+            progress: NullTransferProgress.Instance,
             expectedSizeBytes: null,
             cancellationToken: CancellationToken.None
         );
@@ -563,7 +564,7 @@ public class ApiClientTest
                 config: config,
                 fileUrl: "https://1fichier.com/?abc123",
                 targetFilePath: targetFilePath,
-                progress: NullDownloadProgress.Instance,
+                progress: NullTransferProgress.Instance,
                 expectedSizeBytes: null,
                 cancellationToken: CancellationToken.None
             )

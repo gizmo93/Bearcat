@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Transfers;
 
 namespace Bearcat.Abstractions.Hoster;
 
@@ -11,7 +12,7 @@ public interface IHosterWithDownload : IHoster
         DownloadFileDto file,
         string targetFilePath,
         IHosterConfig hosterConfig,
-        IDownloadProgress progress,
+        ITransferProgress progress,
         CancellationToken cancellationToken
     );
 

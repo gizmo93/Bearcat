@@ -3,6 +3,7 @@ using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Fast2Share.Api;
 using Bearcat.Hosters.Shared;
@@ -31,7 +32,7 @@ public class Fast2Share(IFast2ShareApiClient apiClient, ILogger<Fast2Share> logg
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
-        IUploadProgress progress,
+        ITransferProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -53,7 +54,7 @@ public class Fast2Share(IFast2ShareApiClient apiClient, ILogger<Fast2Share> logg
                 var uploadResult = await apiClient.UploadFileAsync(
                     config: config,
                     fullFileName: fileDto.FullFileName,
-                    stream: new CountingStream(stream, progress),
+                    stream: new ProgressReportingStream(stream, progress, stream.Length),
                     fileName: fileInfo.Name,
                     fileSize: fileInfo.Length,
                     folderId: fileDto.FolderId,
@@ -205,7 +206,7 @@ public class Fast2Share(IFast2ShareApiClient apiClient, ILogger<Fast2Share> logg
         DownloadFileDto file,
         string targetFilePath,
         IHosterConfig hosterConfig,
-        IDownloadProgress progress,
+        ITransferProgress progress,
         CancellationToken cancellationToken
     )
     {

@@ -1,9 +1,9 @@
-using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Progress;
+using Bearcat.Domain.Shared.Transfers;
 
 namespace Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 
 public class MirrorDownloadCoordinator(
-    IDownloadProgressTracker downloadProgressTracker,
+    ITransferProgressTracker transferProgressTracker,
     ArchiveFileDownloader archiveFileDownloader
 )
 {
@@ -17,14 +17,17 @@ public class MirrorDownloadCoordinator(
     {
         using var semaphore = new SemaphoreSlim(downloadSettings.MaxParallelDownloads);
 
-        downloadProgressTracker.StartTracking(
-            archiveId: archiveId,
+        var transferIdentifier = new TransferIdentifier(TransferType.MirrorDownload, archiveId);
+
+        transferProgressTracker.StartTracking(
+            identifier: transferIdentifier,
             plannedFiles: downloads
-                .Select(download => new PlannedDownloadFile(
-                    ArchiveFileId: download.ArchiveFileId,
+                .Select(download => new TransferFile(
+                    FileId: download.ArchiveFileId,
                     FileName: Path.GetFileName(download.TargetFilePath),
-                    HosterName: download.Sources[0].Registration.Name,
-                    SizeBytes: download.ExpectedSizeBytes
+                    SourceName: download.Sources[0].Registration.Name,
+                    SizeBytes: download.ExpectedSizeBytes,
+                    IsAlreadyTransferred: false
                 ))
                 .ToList()
         );
@@ -46,7 +49,7 @@ public class MirrorDownloadCoordinator(
         }
         finally
         {
-            downloadProgressTracker.StopTracking(archiveId);
+            transferProgressTracker.StopTracking(transferIdentifier);
         }
     }
 }

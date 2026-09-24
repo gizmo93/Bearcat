@@ -204,6 +204,11 @@ and waits for the configured [folder stability and minimum size](/Bearcat/advanc
 For each eligible folder, it creates a release from the template and looks up its metadata.
 The archive and upload tasks then take over.
 
+### Download releases from FTP or FTPS
+
+Use **Remote sources** and **Remote automations** to download new folders from a server and create
+releases from a template. See [FTP / FTPS Downloads](/Bearcat/remote-downloads/) for setup and examples.
+
 ## The release detail page
 
 <details>

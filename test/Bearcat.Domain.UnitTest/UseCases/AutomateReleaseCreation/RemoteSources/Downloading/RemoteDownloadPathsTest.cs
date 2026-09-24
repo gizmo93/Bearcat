@@ -1,0 +1,117 @@
+using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
+using Shouldly;
+
+namespace Bearcat.Domain.UnitTest.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
+
+public class RemoteDownloadPathsTest
+{
+    private static readonly string TargetPath = Path.Combine(
+        Path.GetTempPath(),
+        "bearcat-downloads"
+    );
+
+    private static readonly string LocalFolderPath = Path.Combine(TargetPath, "Release-GRP");
+
+    [TestCase("release.rar", new[] { "release.rar" })]
+    [TestCase("Subs/english.srt", new[] { "Subs", "english.srt" })]
+    [TestCase("Sample/nested/sample.mkv", new[] { "Sample", "nested", "sample.mkv" })]
+    [TestCase("..release.nfo", new[] { "..release.nfo" })]
+    public void GetSafeLocalFilePath_SafeRelativePath_MapsSegmentsBelowLocalFolder(
+        string relativePath,
+        string[] expectedSegments
+    )
+    {
+        // Act
+        var localFilePath = RemoteDownloadPaths.GetSafeLocalFilePath(LocalFolderPath, relativePath);
+
+        // Assert
+        localFilePath.ShouldBe(Path.Combine([LocalFolderPath, .. expectedSegments]));
+    }
+
+    [TestCase("")]
+    [TestCase("/etc/passwd")]
+    [TestCase("../escape.rar")]
+    [TestCase("Subs/../../escape.rar")]
+    [TestCase("./release.rar")]
+    [TestCase("Subs//english.srt")]
+    [TestCase("Subs/")]
+    [TestCase("..\\escape.rar")]
+    [TestCase("Subs\\english.srt")]
+    [TestCase("null\0byte.rar")]
+    [TestCase("...")]
+    public void GetSafeLocalFilePath_UnsafeRelativePath_ReturnsNull(string relativePath)
+    {
+        // Act
+        var localFilePath = RemoteDownloadPaths.GetSafeLocalFilePath(LocalFolderPath, relativePath);
+
+        // Assert
+        localFilePath.ShouldBeNull();
+    }
+
+    [Test]
+    public void CanDeleteDownloadFolder_LastSegmentIsFolderName_ReturnsTrue()
+    {
+        // Arrange
+        var download = CreateDownload("Release-GRP", LocalFolderPath);
+
+        // Act
+        var canDelete = RemoteDownloadPaths.CanDeleteDownloadFolder(download);
+
+        // Assert
+        canDelete.ShouldBeTrue();
+    }
+
+    [Test]
+    public void CanDeleteDownloadFolder_LocalFolderPathWithTrailingSeparator_ReturnsTrue()
+    {
+        // Arrange
+        var download = CreateDownload("Release-GRP", LocalFolderPath + Path.DirectorySeparatorChar);
+
+        // Act
+        var canDelete = RemoteDownloadPaths.CanDeleteDownloadFolder(download);
+
+        // Assert
+        canDelete.ShouldBeTrue();
+    }
+
+    [TestCase("..")]
+    [TestCase("Other-GRP")]
+    public void CanDeleteDownloadFolder_FolderNameDoesNotMatchLastSegment_ReturnsFalse(
+        string folderName
+    )
+    {
+        // Arrange
+        var download = CreateDownload(folderName, LocalFolderPath);
+
+        // Act
+        var canDelete = RemoteDownloadPaths.CanDeleteDownloadFolder(download);
+
+        // Assert
+        canDelete.ShouldBeFalse();
+    }
+
+    [Test]
+    public void CanDeleteDownloadFolder_UnsafeFolderNameMatchingLastSegment_ReturnsFalse()
+    {
+        // Arrange
+        var download = CreateDownload("...", Path.Combine(TargetPath, "..."));
+
+        // Act
+        var canDelete = RemoteDownloadPaths.CanDeleteDownloadFolder(download);
+
+        // Assert
+        canDelete.ShouldBeFalse();
+    }
+
+    private static RemoteSourceDownload CreateDownload(string folderName, string localFolderPath)
+    {
+        return new RemoteSourceDownload
+        {
+            SourceName = "Main FTP",
+            RemoteFolderPath = $"/incoming/{folderName}",
+            FolderName = folderName,
+            LocalFolderPath = localFolderPath,
+        };
+    }
+}

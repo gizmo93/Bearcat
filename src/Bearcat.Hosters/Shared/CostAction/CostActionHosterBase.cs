@@ -3,6 +3,7 @@ using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.Shared.CostAction.Api;
 using Microsoft.Extensions.Logging;
@@ -34,7 +35,7 @@ public abstract class CostActionHosterBase<TConfig>(ICostActionApiClient apiClie
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
-        IUploadProgress progress,
+        ITransferProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -57,7 +58,7 @@ public abstract class CostActionHosterBase<TConfig>(ICostActionApiClient apiClie
                 var uploadResult = await apiClient.UploadFileAsync(
                     apiKey: config.ApiKey,
                     appType: AppType,
-                    stream: new CountingStream(stream, progress),
+                    stream: new ProgressReportingStream(stream, progress, stream.Length),
                     fileName: fileInfo.Name,
                     fileSize: fileInfo.Length,
                     folderId: fileDto.FolderId,

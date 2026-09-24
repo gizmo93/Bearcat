@@ -4,6 +4,7 @@ using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Extensions;
 using Bearcat.Hosters.KrakenFiles.Api;
 using Bearcat.Hosters.Shared;
@@ -27,7 +28,7 @@ public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> l
     public async Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
-        IUploadProgress progress,
+        ITransferProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -47,7 +48,7 @@ public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> l
                 await using var stream = SequentialFileReader.OpenRead(fileDto.FullFileName);
                 var response = await apiClient.UploadFileAsync(
                     config: config,
-                    stream: new CountingStream(stream, progress),
+                    stream: new ProgressReportingStream(stream, progress, stream.Length),
                     fileName: Path.GetFileName(fileDto.FullFileName),
                     folderId: fileDto.FolderId,
                     cancellationToken: cancellationToken

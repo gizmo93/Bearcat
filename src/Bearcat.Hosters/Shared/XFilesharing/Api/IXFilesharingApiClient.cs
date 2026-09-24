@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Transfers;
 
 namespace Bearcat.Hosters.Shared.XFilesharing.Api;
 
@@ -20,7 +21,7 @@ public interface IXFilesharingApiClient
         string apiKey,
         string fileCode,
         string targetFilePath,
-        IDownloadProgress progress,
+        ITransferProgress progress,
         long? expectedSizeBytes,
         CancellationToken cancellationToken
     );

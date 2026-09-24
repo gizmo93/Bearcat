@@ -3,6 +3,7 @@ using System.Security.Authentication;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Alfafile.Api.File;
 using Bearcat.Hosters.Alfafile.Api.User;
 using Bearcat.Hosters.Extensions;
@@ -231,7 +232,7 @@ public class ApiClient(
         AlfafileConfig config,
         string fileUrl,
         string targetFilePath,
-        IDownloadProgress progress,
+        ITransferProgress progress,
         long? expectedSizeBytes,
         CancellationToken cancellationToken
     )

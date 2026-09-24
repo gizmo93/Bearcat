@@ -1,0 +1,99 @@
+@page "/remote-sources"
+@using Bearcat.Domain.UseCases.ManageRemoteSources.ReadModels
+
+<PageTitle>@L["RemoteSources"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div class="min-w-0 space-y-2">
+            <h1 class="text-3xl font-semibold tracking-tight">@L["RemoteSources"]</h1>
+            <p class="text-sm text-muted-foreground">@L["RemoteSourcesIntro"]</p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewRemoteSource"]
+        </BbButton>
+    </div>
+
+    @if (registrations.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+            @L["NoRemoteSourcesYet"]
+        </div>
+    }
+    else
+    {
+        <div class="bearcat-config-list">
+            <div class="bearcat-config-header lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.75fr)_minmax(0,0.75fr)_minmax(0,1fr)]">
+                <span>@L["Name"]</span>
+                <span>@L["SourceType"]</span>
+                <span>@L["MaxConnections"]</span>
+                <span>@L["Status"]</span>
+                <span class="text-right">@L["Actions"]</span>
+            </div>
+            @foreach (var registration in registrations)
+            {
+                <div class="bearcat-config-item">
+                    <div class="bearcat-config-row lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.75fr)_minmax(0,0.75fr)_minmax(0,1fr)]">
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-semibold" title="@registration.Name">@registration.Name</p>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["SourceType"]</p>
+                            <BbBadge Variant="BadgeVariant.Outline">@registration.SourceName</BbBadge>
+                        </div>
+
+                        <div>
+                            <p class="bearcat-mobile-label">@L["MaxConnections"]</p>
+                            <span class="text-sm tabular-nums">@registration.MaxConnections</span>
+                        </div>
+
+                        <div>
+                            <p class="bearcat-mobile-label">@L["Status"]</p>
+                            <BbBadge Variant="@(registration.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                @(registration.IsActive ? L["Active"] : L["Inactive"])
+                            </BbBadge>
+                        </div>
+
+                        <div class="bearcat-config-actions">
+                            <BbButton Variant="ButtonVariant.Outline"
+                                      Size="ButtonSize.Small"
+                                      Disabled="@testingRegistrationIds.Contains(registration.Id)"
+                                      OnClick="@(() => TestConnectionAsync(registration))">
+                                @if (testingRegistrationIds.Contains(registration.Id))
+                                {
+                                    <LucideIcon Name="loader-circle" class="h-4 w-4 animate-spin" />
+                                }
+                                else
+                                {
+                                    <LucideIcon Name="plug-zap" class="h-4 w-4" />
+                                }
+                                @L["TestConnection"]
+                            </BbButton>
+                            <BbDropdownMenu>
+                                <BbDropdownMenuTrigger>
+                                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["OpenRemoteSourceActions"]">
+                                        <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                    </BbButton>
+                                </BbDropdownMenuTrigger>
+                                <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                                    <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(registration))">
+                                        @L["Edit"]
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuItem OnClick="@(async _ => await ToggleIsActiveAsync(registration))">
+                                        @(registration.IsActive ? L["Disable"] : L["Enable"])
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(registration))">
+                                        @L["Delete"]
+                                    </BbDropdownMenuItem>
+                                </BbDropdownMenuContent>
+                            </BbDropdownMenu>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>

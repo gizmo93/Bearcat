@@ -167,15 +167,10 @@ public class ReleaseService(
             && release.ArchiveConfigs.Count > 0
             && AllArchiveConfigsHaveCreatedArchive(release);
 
-        var archivesInsideReleaseFolder = release
-            .ArchiveConfigs.SelectMany(config => config.Archives)
-            .Where(archive => archive.ArchiveState is ArchiveState.Created)
-            .Any(archive =>
-                FolderPathHelper.IsSameOrSubPath(
-                    childPath: archive.ArchiveFolderPath,
-                    parentPath: release.ReleaseFolderPath
-                )
-            );
+        var archivesInsideReleaseFolder = UnmanagedReleaseConverter.HasCreatedArchiveInside(
+            release,
+            release.ReleaseFolderPath
+        );
 
         return new UnmanagedConversionPreview(
             ReleaseFolderPath: release.ReleaseFolderPath,
@@ -205,8 +200,7 @@ public class ReleaseService(
             );
         }
 
-        release.ReleaseType = ReleaseType.Unmanaged;
-        release.ReleaseFolderPath = null;
+        UnmanagedReleaseConverter.ConvertToUnmanaged(release);
 
         await writeRepository.SaveChangesAsync(cancellationToken);
     }

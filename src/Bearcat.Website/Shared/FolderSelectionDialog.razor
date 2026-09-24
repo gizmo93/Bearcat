@@ -1,19 +1,34 @@
 <div class="bearcat-folder-dialog">
-    <BbTreeView TItem="FolderSelectionNode"
-                Items="rootNodes"
-                TextField="@(node => node.Name)"
-                ValueField="@(node => node.Path)"
-                ChildrenProperty="@(node => node.Children)"
-                HasChildrenField="@(node => node.HasChildren)"
-                IconField='@(_ => "folder")'
-                SelectionMode="TreeSelectionMode.Single"
-                @bind-SelectedValue="selectedItem"
-                @bind-ExpandedValues="expandedItems"
-                OnNodeExpand="ExpandFolder"
-                ShowSearch="true"
-                SearchPlaceholder="@L["SearchFolders"]"
-                AriaLabel="@L["FolderSelectionTree"]"
-                Class="bearcat-folder-tree" />
+    @if (isInitializing)
+    {
+        <div class="bearcat-folder-tree flex items-center gap-2 text-sm text-muted-foreground">
+            <LucideIcon Name="loader-circle" class="h-4 w-4 animate-spin" />
+            @L["Loading"]
+        </div>
+    }
+    else
+    {
+        <BbTreeView TItem="FolderSelectionNode"
+                    Items="rootNodes"
+                    TextField="@(node => node.Name)"
+                    ValueField="@(node => node.Path)"
+                    ChildrenProperty="@(node => node.Children)"
+                    HasChildrenField="@(node => node.HasChildren)"
+                    IconField='@(_ => "folder")'
+                    SelectionMode="TreeSelectionMode.Single"
+                    @bind-SelectedValue="selectedItem"
+                    @bind-ExpandedValues="expandedItems"
+                    OnLoadChildren="LoadChildrenForTreeAsync"
+                    ShowSearch="true"
+                    SearchPlaceholder="@L["SearchFolders"]"
+                    AriaLabel="@L["FolderSelectionTree"]"
+                    Class="bearcat-folder-tree" />
+    }
+
+    @if (loadErrorMessage is not null)
+    {
+        <p class="text-sm text-destructive">@L["FolderListingFailed", loadErrorMessage]</p>
+    }
 
     @if (!string.IsNullOrWhiteSpace(selectedItem))
     {

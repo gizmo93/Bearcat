@@ -1,4 +1,4 @@
-using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -18,7 +18,7 @@ public class ReleaseFolderAutomationBackgroundTask(
         CancellationToken stoppingToken
     )
     {
-        var service = serviceProvider.GetRequiredService<AutomaticallyCreateReleasesService>();
+        var service = serviceProvider.GetRequiredService<LocalFolderScanService>();
         await service.ProcessAsync(stoppingToken);
     }
 }

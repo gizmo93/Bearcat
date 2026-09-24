@@ -2,8 +2,8 @@ using System.Threading.Channels;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
-using Bearcat.Domain.UseCases.ManageUploads.Progress;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Domain.UseCases.ManageUploads;
@@ -11,7 +11,7 @@ namespace Bearcat.Domain.UseCases.ManageUploads;
 public class FileUploadExecutionService(
     ILogger<FileUploadExecutionService> logger,
     HosterCaptchaVerificationService captchaVerificationService,
-    IUploadProgressTracker progressTracker
+    ITransferProgressTracker progressTracker
 )
 {
     public TimeSpan FileUploadTimeout { get; set; } = Timeout.InfiniteTimeSpan;
@@ -47,10 +47,12 @@ public class FileUploadExecutionService(
             var result = await fileToUpload.Hoster.UploadFileAsync(
                 fileDto: fileDto,
                 hosterConfig: fileToUpload.HosterConfig,
-                progress: new UploadProgressReporter(
+                progress: new TransferProgressReporter(
                     tracker: progressTracker,
-                    uploadId: fileToUpload.UploadId,
-                    fileId: fileToUpload.ArchiveFileId
+                    identifier: new TransferIdentifier(TransferType.Upload, fileToUpload.UploadId),
+                    fileId: fileToUpload.ArchiveFileId,
+                    fileName: Path.GetFileName(fileToUpload.FullFileName),
+                    sourceName: context.Upload.UploadConfig.HosterRegistration.Name
                 ),
                 cancellationToken: fileUploadCancellationTokenSource.Token
             );

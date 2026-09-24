@@ -3,6 +3,7 @@ using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Keep2Share;
 using Bearcat.Hosters.Keep2Share.Api;
 using Microsoft.Extensions.Logging;
@@ -85,7 +86,7 @@ public class Keep2ShareTest
         var result = await service.UploadFileAsync(
             fileDto,
             config,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -151,7 +152,7 @@ public class Keep2ShareTest
         var result = await service.UploadFileAsync(
             fileDto,
             config,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -183,7 +184,7 @@ public class Keep2ShareTest
         var result = await service.UploadFileAsync(
             fileDto,
             config,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -233,7 +234,7 @@ public class Keep2ShareTest
             service.UploadFileAsync(
                 fileDto,
                 config,
-                NullUploadProgress.Instance,
+                NullTransferProgress.Instance,
                 CancellationToken.None
             )
         );
@@ -489,7 +490,7 @@ public class Keep2ShareTest
                     config,
                     "https://keep2share.cc/file/abc123def456",
                     targetFilePath,
-                    NullDownloadProgress.Instance,
+                    NullTransferProgress.Instance,
                     2048L,
                     It.IsAny<CancellationToken>()
                 )
@@ -505,7 +506,7 @@ public class Keep2ShareTest
             ),
             targetFilePath,
             config,
-            NullDownloadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -533,7 +534,7 @@ public class Keep2ShareTest
                     config,
                     "https://keep2share.cc/file/abc123def456",
                     targetFilePath,
-                    NullDownloadProgress.Instance,
+                    NullTransferProgress.Instance,
                     null,
                     It.IsAny<CancellationToken>()
                 )
@@ -549,7 +550,7 @@ public class Keep2ShareTest
             ),
             targetFilePath,
             config,
-            NullDownloadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -575,7 +576,7 @@ public class Keep2ShareTest
                     config,
                     "https://keep2share.cc/file/abc123def456",
                     targetFilePath,
-                    NullDownloadProgress.Instance,
+                    NullTransferProgress.Instance,
                     null,
                     It.IsAny<CancellationToken>()
                 )
@@ -591,7 +592,7 @@ public class Keep2ShareTest
             ),
             targetFilePath,
             config,
-            NullDownloadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 

@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Shared;
 using Moq;
 using Shouldly;
@@ -173,7 +174,7 @@ public class HosterFileDownloaderTest
         return new HosterFileDownloader(new HttpClientProvider(httpClientFactoryMock.Object));
     }
 
-    private sealed class RecordingDownloadProgress : IDownloadProgress
+    private sealed class RecordingDownloadProgress : ITransferProgress
     {
         public long? TotalBytes { get; private set; }
 

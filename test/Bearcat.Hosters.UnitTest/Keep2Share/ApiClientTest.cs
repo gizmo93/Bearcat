@@ -1,6 +1,7 @@
 using System.Net;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Keep2Share;
 using Bearcat.Hosters.Keep2Share.Api;
 using Bearcat.Hosters.Shared;
@@ -405,7 +406,7 @@ public class ApiClientTest
             config: config,
             fileUrl: "https://keep2share.cc/file/abc123def456",
             targetFilePath: targetFilePath,
-            progress: NullDownloadProgress.Instance,
+            progress: NullTransferProgress.Instance,
             expectedSizeBytes: 15,
             cancellationToken: CancellationToken.None
         );
@@ -449,7 +450,7 @@ public class ApiClientTest
                 config: config,
                 fileUrl: "https://keep2share.cc/file/abc123def456",
                 targetFilePath: targetFilePath,
-                progress: NullDownloadProgress.Instance,
+                progress: NullTransferProgress.Instance,
                 expectedSizeBytes: null,
                 cancellationToken: CancellationToken.None
             )
@@ -489,7 +490,7 @@ public class ApiClientTest
                 config: config,
                 fileUrl: "https://keep2share.cc/file/abc123def456",
                 targetFilePath: targetFilePath,
-                progress: NullDownloadProgress.Instance,
+                progress: NullTransferProgress.Instance,
                 expectedSizeBytes: null,
                 cancellationToken: CancellationToken.None
             )
@@ -529,7 +530,7 @@ public class ApiClientTest
                 config: config,
                 fileUrl: "https://keep2share.cc/file/abc123def456",
                 targetFilePath: targetFilePath,
-                progress: NullDownloadProgress.Instance,
+                progress: NullTransferProgress.Instance,
                 expectedSizeBytes: null,
                 cancellationToken: CancellationToken.None
             )
@@ -569,7 +570,7 @@ public class ApiClientTest
                 config: config,
                 fileUrl: "https://keep2share.cc/file/abc123def456",
                 targetFilePath: targetFilePath,
-                progress: NullDownloadProgress.Instance,
+                progress: NullTransferProgress.Instance,
                 expectedSizeBytes: null,
                 cancellationToken: CancellationToken.None
             )

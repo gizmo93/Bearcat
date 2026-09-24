@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Fichier.Api.Upload;
 using Bearcat.Hosters.Fichier.Api.User;
 
@@ -48,7 +49,7 @@ public interface IFichierApiClient
         FichierConfig config,
         string fileUrl,
         string targetFilePath,
-        IDownloadProgress progress,
+        ITransferProgress progress,
         long? expectedSizeBytes,
         CancellationToken cancellationToken
     );

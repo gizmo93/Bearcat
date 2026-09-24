@@ -721,12 +721,14 @@ a {
 
 .bearcat-running-uploads-table :where(table),
 .bearcat-running-downloads-table :where(table),
+.bearcat-running-remote-downloads-table :where(table),
 .bearcat-running-archives-table :where(table) {
     table-layout: auto;
 }
 
 .bearcat-running-uploads-table :where(td),
 .bearcat-running-downloads-table :where(td),
+.bearcat-running-remote-downloads-table :where(td),
 .bearcat-running-archives-table :where(td) {
     overflow-wrap: anywhere;
 }
@@ -951,6 +953,7 @@ a {
     .bearcat-background-tasks-table,
     .bearcat-running-uploads-table,
     .bearcat-running-downloads-table,
+    .bearcat-running-remote-downloads-table,
     .bearcat-running-archives-table,
     .bearcat-folder-automations-table,
     .bearcat-release-groups-table,
@@ -965,6 +968,7 @@ a {
     .bearcat-background-tasks-table :where(.rounded-md.border),
     .bearcat-running-uploads-table :where(.rounded-md.border),
     .bearcat-running-downloads-table :where(.rounded-md.border),
+    .bearcat-running-remote-downloads-table :where(.rounded-md.border),
     .bearcat-running-archives-table :where(.rounded-md.border),
     .bearcat-folder-automations-table :where(.rounded-md.border),
     .bearcat-release-groups-table :where(.rounded-md.border),
@@ -980,6 +984,7 @@ a {
     .bearcat-background-tasks-table :where(table),
     .bearcat-running-uploads-table :where(table),
     .bearcat-running-downloads-table :where(table),
+    .bearcat-running-remote-downloads-table :where(table),
     .bearcat-running-archives-table :where(table),
     .bearcat-folder-automations-table :where(table),
     .bearcat-release-groups-table :where(table),
@@ -996,6 +1001,7 @@ a {
     .bearcat-background-tasks-table :where(thead),
     .bearcat-running-uploads-table :where(thead),
     .bearcat-running-downloads-table :where(thead),
+    .bearcat-running-remote-downloads-table :where(thead),
     .bearcat-running-archives-table :where(thead),
     .bearcat-folder-automations-table :where(thead),
     .bearcat-release-groups-table :where(thead),
@@ -1010,6 +1016,7 @@ a {
     .bearcat-background-tasks-table :where(tbody),
     .bearcat-running-uploads-table :where(tbody),
     .bearcat-running-downloads-table :where(tbody),
+    .bearcat-running-remote-downloads-table :where(tbody),
     .bearcat-running-archives-table :where(tbody),
     .bearcat-folder-automations-table :where(tbody),
     .bearcat-release-groups-table :where(tbody),
@@ -1025,6 +1032,7 @@ a {
     .bearcat-background-tasks-table :where(tbody tr),
     .bearcat-running-uploads-table :where(tbody tr),
     .bearcat-running-downloads-table :where(tbody tr),
+    .bearcat-running-remote-downloads-table :where(tbody tr),
     .bearcat-running-archives-table :where(tbody tr),
     .bearcat-folder-automations-table :where(tbody tr),
     .bearcat-release-groups-table :where(tbody tr),
@@ -1045,6 +1053,7 @@ a {
     .bearcat-background-tasks-table :where(tbody tr:hover),
     .bearcat-running-uploads-table :where(tbody tr:hover),
     .bearcat-running-downloads-table :where(tbody tr:hover),
+    .bearcat-running-remote-downloads-table :where(tbody tr:hover),
     .bearcat-running-archives-table :where(tbody tr:hover),
     .bearcat-folder-automations-table :where(tbody tr:hover),
     .bearcat-release-groups-table :where(tbody tr:hover),
@@ -1059,6 +1068,7 @@ a {
     .bearcat-background-tasks-table :where(tbody td),
     .bearcat-running-uploads-table :where(tbody td),
     .bearcat-running-downloads-table :where(tbody td),
+    .bearcat-running-remote-downloads-table :where(tbody td),
     .bearcat-running-archives-table :where(tbody td),
     .bearcat-folder-automations-table :where(tbody td),
     .bearcat-release-groups-table :where(tbody td),
@@ -1218,6 +1228,33 @@ a {
     .bearcat-running-downloads-table :where(tbody td:nth-child(1)),
     .bearcat-running-downloads-table :where(tbody td:nth-child(3)),
     .bearcat-running-downloads-table :where(tbody td:nth-child(5)) {
+        grid-column: 1 / -1;
+    }
+
+    .bearcat-running-remote-downloads-table :where(tbody tr) {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+    }
+
+    .bearcat-running-remote-downloads-table :where(tbody td:nth-child(1)) {
+        grid-column: 1;
+        grid-row: 1;
+        color: var(--foreground);
+        font-size: 0.9375rem;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+
+    .bearcat-running-remote-downloads-table :where(tbody td:nth-child(4)) {
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: end;
+    }
+
+    .bearcat-running-remote-downloads-table :where(tbody td:nth-child(2)),
+    .bearcat-running-remote-downloads-table :where(tbody td:nth-child(3)),
+    .bearcat-running-remote-downloads-table :where(tbody td:nth-child(5)),
+    .bearcat-running-remote-downloads-table :where(tbody td:nth-child(6)) {
         grid-column: 1 / -1;
     }
 

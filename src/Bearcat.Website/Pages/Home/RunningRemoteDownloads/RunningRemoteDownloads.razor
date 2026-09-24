@@ -1,0 +1,125 @@
+@using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.ReadModels
+@using Bearcat.Website.Formatting
+@using Bearcat.Website.Pages.Home
+
+<section class="space-y-3">
+    <div class="bearcat-transfer-direction">
+        <LucideIcon Name="download" class="h-4 w-4" />
+        <span>@L["RemoteSourceDownloads"]</span>
+    </div>
+
+    <BbDataTable TData="RemoteSourceDownloadReadModel"
+                 Data="Downloads"
+                 ShowToolbar="false"
+                 ShowPagination="@(Downloads.Count > 10)"
+                 InitialPageSize="10"
+                 AriaLabel="@L["RemoteSourceDownloads"]"
+                 Class="bearcat-data-table bearcat-running-remote-downloads-table rounded-lg border border-border/70">
+        <Columns>
+            <BbDataTableColumn TData="RemoteSourceDownloadReadModel" TValue="string"
+                               Header="@L["Folder"]"
+                               Property="@(download => download.FolderName)"
+                               Sortable="true"
+                               Filterable="true">
+                <CellTemplate Context="download">
+                    <div class="min-w-0">
+                        <p class="font-medium">@download.FolderName</p>
+                        <p class="text-xs font-normal text-muted-foreground">@download.RemoteFolderPath</p>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="RemoteSourceDownloadReadModel" TValue="string"
+                               Header="@L["RemoteSource"]"
+                               Property="@(download => download.SourceName)"
+                               Sortable="true"
+                               Filterable="true">
+                <CellTemplate Context="download">
+                    <span class="bearcat-mobile-cell-label">@L["RemoteSource"]</span>
+                    @download.SourceName
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="RemoteSourceDownloadReadModel" TValue="string"
+                               Header="@L["Automation"]"
+                               Property="@(download => download.AutomationName ?? "-")"
+                               Sortable="true"
+                               Filterable="true">
+                <CellTemplate Context="download">
+                    <span class="bearcat-mobile-cell-label">@L["Automation"]</span>
+                    @(download.AutomationName ?? "-")
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="RemoteSourceDownloadReadModel" TValue="string"
+                               Header="@L["State"]"
+                               Property="@(download => download.State.ToString())"
+                               Sortable="true">
+                <CellTemplate Context="download">
+                    <RemoteSourceDownloadStateBadge State="download.State" />
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="RemoteSourceDownloadReadModel" TValue="double"
+                               Header="@L["Progress"]"
+                               Property="@(GetProgress)"
+                               Sortable="true"
+                               MinWidth="200px">
+                <CellTemplate Context="download">
+                    <span class="bearcat-mobile-cell-label">@L["Progress"]</span>
+                    @if (DownloadProgress.TryGetValue(download.Id, out var snapshot))
+                    {
+                        var speed = TransferFormatting.FormatSpeed(snapshot.BytesPerSecond);
+                        var isExpanded = showDetailIds.Contains(download.Id);
+                        <div class="flex items-center gap-3 sm:justify-end">
+                            <div class="flex min-w-[9rem] flex-1 items-center gap-3 sm:flex-none">
+                                <BbProgress Value="snapshot.Percentage" Class="w-full" />
+                                <span class="w-12 text-right text-xs text-muted-foreground">@snapshot.Percentage%</span>
+                            </div>
+                            @if (speed is not null)
+                            {
+                                <span class="w-20 text-right text-xs font-medium tabular-nums text-muted-foreground">@speed</span>
+                            }
+                            <BbButton Variant="ButtonVariant.Ghost"
+                                      Size="ButtonSize.IconSmall"
+                                      AriaLabel="@L["ToggleDownloadDetails"]"
+                                      OnClick="@(_ => ToggleShowDetails(download.Id))">
+                                <LucideIcon Name="@(isExpanded ? "chevron-up" : "chevron-down")" class="h-4 w-4" />
+                            </BbButton>
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="text-xs text-muted-foreground">-</span>
+                    }
+                </CellTemplate>
+            </BbDataTableColumn>
+            <BbDataTableColumn TData="RemoteSourceDownloadReadModel" TValue="int"
+                               Header=""
+                               Property="@(download => download.Id)"
+                               Width="56px">
+                <CellTemplate Context="download">
+                    <div class="flex justify-end">
+                        @if (download.CanCancel)
+                        {
+                            <BbButton Variant="ButtonVariant.Ghost"
+                                      Size="ButtonSize.IconSmall"
+                                      AriaLabel="@L["CancelDownload"]"
+                                      OnClick="@(() => CancelDownloadAsync(download))">
+                                <LucideIcon Name="ban" class="h-4 w-4" />
+                            </BbButton>
+                        }
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
+        </Columns>
+    </BbDataTable>
+
+    @if (ExpandedDownloads.Count > 0)
+    {
+        <div class="space-y-4">
+            @foreach (var download in ExpandedDownloads)
+            {
+                <TransferFileDetails Snapshot="DownloadProgress[download.Id]"
+                                     Subtitle="@L["RemoteDownloadStatusSubtitle", download.FolderName, download.SourceName]"
+                                     StateLabel="@L.Localize(download.State)" />
+            }
+        </div>
+    }
+</section>

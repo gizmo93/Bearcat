@@ -1,0 +1,19 @@
+rootpath /glftpd
+datapath /ftp-data
+cert_file /glftpd/ftpd-ecdsa.pem
+sitename_long BEARCAT[:space:]TEST
+sitename_short BCT
+email root@127.0.0.1
+min_homedir /site
+color_mode 0
+max_users 50 10
+total_users 100
+userrejectsecure !*
+userrejectinsecure *
+denydiruncrypted *
+denydatauncrypted *
+pasv_addr PASV_ADDRESS 1
+pasv_ports PASV_MIN_PORT-PASV_MAX_PORT
+stat_section DEFAULT * yes
+download * *
+dl_incomplete 1

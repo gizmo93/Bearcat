@@ -1,6 +1,11 @@
 ﻿using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.QualityGate;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.Repositories;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading.Repositories;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.RawFiles.Repositories;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation.Repositories;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Scanning.Repositories;
 using Bearcat.Domain.UseCases.Dashboard.Repositories;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
@@ -26,6 +31,9 @@ using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseGroups.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.UseCases.ManageRemoteSourceAutomations.Repositories;
+using Bearcat.Domain.UseCases.ManageRemoteSourceDownloads.Repositories;
+using Bearcat.Domain.UseCases.ManageRemoteSources.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigLinkCrypters.Repositories;
 using Bearcat.Domain.UseCases.ManageUploadConfigs.Repositories;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
@@ -151,10 +159,7 @@ public static class ServiceProviderConfig
                 IReleaseFolderAutomationWriteRepository,
                 ReleaseFolderAutomationRepository
             >();
-            services.AddScoped<
-                IAutomaticallyCreateReleasesRepository,
-                ReleaseFolderAutomationRepository
-            >();
+            services.AddScoped<ILocalFolderScanRepository, ReleaseFolderAutomationRepository>();
             services.AddScoped<IReleaseReadRepository, ReleaseReadRepository>();
             services.AddScoped<IQualityGateRepository, QualityGateRepository>();
             services.AddScoped<IQualityGateResetRepository, QualityGateResetRepository>();
@@ -221,6 +226,33 @@ public static class ServiceProviderConfig
             >();
             services.AddScoped<IReleaseCollectionInfoRepository, ReleaseCollectionInfoRepository>();
             services.AddScoped<IMediaMetadataResolverRepository, MediaMetadataResolverRepository>();
+            services.AddScoped<
+                IRemoteSourceRegistrationReadRepository,
+                RemoteSourceRegistrationRepository
+            >();
+            services.AddScoped<
+                IRemoteSourceRegistrationWriteRepository,
+                RemoteSourceRegistrationRepository
+            >();
+            services.AddScoped<
+                IRemoteSourceAutomationReadRepository,
+                RemoteSourceAutomationRepository
+            >();
+            services.AddScoped<
+                IRemoteSourceAutomationWriteRepository,
+                RemoteSourceAutomationRepository
+            >();
+            services.AddScoped<IRemoteSourceScanRepository, RemoteSourceAutomationRepository>();
+            services.AddScoped<IRemoteSourceDownloadRepository, RemoteSourceDownloadRepository>();
+            services.AddScoped<IRemoteDownloadReleaseRepository, RemoteSourceDownloadRepository>();
+            services.AddScoped<
+                IRemoteDownloadRawFileCleanupRepository,
+                RemoteSourceDownloadRepository
+            >();
+            services.AddScoped<
+                IRemoteSourceDownloadReadRepository,
+                RemoteSourceDownloadReadRepository
+            >();
         }
     }
 }

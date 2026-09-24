@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.GoFile;
 using Bearcat.Hosters.GoFile.Api;
 using Microsoft.Extensions.Logging;
@@ -75,7 +76,7 @@ public class GoFileTest
         var result = await service.UploadFileAsync(
             fileDto,
             config,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -125,7 +126,7 @@ public class GoFileTest
         var result = await service.UploadFileAsync(
             fileDto,
             config,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -164,7 +165,7 @@ public class GoFileTest
         var result = await service.UploadFileAsync(
             fileDto,
             config,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 

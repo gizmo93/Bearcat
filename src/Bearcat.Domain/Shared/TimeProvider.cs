@@ -8,7 +8,7 @@ public class TimeProvider(IConfiguration configuration)
         configuration.GetSection("LocalTimezone").Value ?? "UTC"
     );
 
-    public DateTime GetLocalNow()
+    public virtual DateTime GetLocalNow()
     {
         return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, localTimeZone);
     }

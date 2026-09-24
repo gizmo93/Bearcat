@@ -1,4 +1,3 @@
-using Bearcat.Abstractions;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
@@ -11,34 +10,60 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
     public IReadOnlyList<string> BaseFolderPaths { get; set; } = [];
 
     [Parameter]
+    public IFolderSelectionSource? Source { get; set; }
+
+    [Parameter]
     public string? SelectedFolderPath { get; set; }
 
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
+    private IFolderSelectionSource source = null!;
     private string? selectedItem;
     private HashSet<string> expandedItems = [];
     private List<FolderSelectionNode> rootNodes = [];
+    private bool isInitializing = true;
+    private string? loadErrorMessage;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        rootNodes = BaseFolderPaths
-            .Where(path => !string.IsNullOrWhiteSpace(path))
+        source = Source ?? new LocalFolderSelectionSource(operationRunner, BaseFolderPaths);
+        rootNodes = source
+            .RootPaths.Where(path => !string.IsNullOrWhiteSpace(path))
             .Select(CreateRootNode)
             .ToList();
 
+        try
+        {
+            await InitializeTreeAsync();
+        }
+        finally
+        {
+            isInitializing = false;
+        }
+    }
+
+    private async Task InitializeTreeAsync()
+    {
         if (rootNodes.Count == 0)
         {
             return;
         }
 
-        if (InitializeSelection())
+        if (await InitializeSelectionAsync())
         {
             return;
         }
 
-        expandedItems = [rootNodes[0].Path];
-        EnsureChildrenLoaded(rootNodes[0]);
+        var firstRootNode = rootNodes[0];
+
+        if (
+            firstRootNode.ChildrenLoaded
+            || (loadErrorMessage is null && await EnsureChildrenLoadedAsync(firstRootNode))
+        )
+        {
+            expandedItems = [firstRootNode.Path];
+        }
     }
 
     private async Task SaveAsync()
@@ -51,80 +76,103 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
         await DialogRef.CancelAsync();
     }
 
-    private void ExpandFolder(FolderSelectionNode node)
+    private async Task<IEnumerable<FolderSelectionNode>> LoadChildrenForTreeAsync(
+        FolderSelectionNode node
+    )
     {
-        EnsureChildrenLoaded(node);
-    }
+        var isLoaded = await EnsureChildrenLoadedAsync(node);
+        StateHasChanged();
 
-    private List<FolderSelectionNode> EnsureChildrenLoaded(FolderSelectionNode node)
-    {
-        if (node.ChildrenLoaded)
+        if (!isLoaded)
         {
-            return node.Children;
+            throw new InvalidOperationException(loadErrorMessage);
         }
-
-        node.Children = operationRunner.Run(
-            (IFileSystemService service) =>
-                service.GetFoldersInPath(node.Path).Select(CreateNode).ToList()
-        );
-        node.ChildrenLoaded = true;
-        node.HasChildren = node.Children.Count > 0;
 
         return node.Children;
     }
 
-    private bool InitializeSelection()
+    private async Task<bool> EnsureChildrenLoadedAsync(FolderSelectionNode node)
+    {
+        if (node.ChildrenLoaded)
+        {
+            return true;
+        }
+
+        var listing = await source.GetChildFoldersAsync(node.Path);
+
+        if (!listing.IsSuccess)
+        {
+            loadErrorMessage = listing.ErrorMessage ?? string.Empty;
+
+            return false;
+        }
+
+        loadErrorMessage = null;
+        node.Children = listing.FolderPaths.Select(CreateNode).ToList();
+        node.ChildrenLoaded = true;
+        node.HasChildren = node.Children.Count > 0;
+
+        return true;
+    }
+
+    private async Task<bool> InitializeSelectionAsync()
     {
         if (string.IsNullOrWhiteSpace(SelectedFolderPath))
         {
             return false;
         }
 
-        var rootNode = FindOwningRoot(SelectedFolderPath);
+        var rootNode = FindRootContainingPath(SelectedFolderPath);
 
         if (rootNode is null)
         {
             return false;
         }
 
-        var selectedNode = EnsureSelectedPath(rootNode, SelectedFolderPath);
+        var selectedNode = await LoadNodesDownToSelectedPathAsync(rootNode, SelectedFolderPath);
 
         if (selectedNode is null)
         {
             return false;
         }
 
-        EnsureChildrenLoaded(selectedNode);
         selectedItem = selectedNode.Path;
         expandedItems = GetAncestorPaths(selectedNode.Path, rootNode.Path)
             .Append(rootNode.Path)
             .ToHashSet();
 
+        if (!await EnsureChildrenLoadedAsync(selectedNode))
+        {
+            expandedItems.Remove(selectedNode.Path);
+        }
+
         return true;
     }
 
-    private FolderSelectionNode? FindOwningRoot(string path)
+    private FolderSelectionNode? FindRootContainingPath(string path)
     {
-        var normalizedPath = NormalizePath(path);
+        var normalizedPath = source.NormalizePath(path);
 
-        if (string.IsNullOrWhiteSpace(normalizedPath))
+        if (normalizedPath is null)
         {
             return null;
         }
 
-        return rootNodes.FirstOrDefault(root => IsSameOrDescendantPath(normalizedPath, root.Path));
+        return rootNodes.FirstOrDefault(root =>
+            source.IsSameOrDescendantPath(normalizedPath, root.Path)
+        );
     }
 
-    private FolderSelectionNode? EnsureSelectedPath(
+    private async Task<FolderSelectionNode?> LoadNodesDownToSelectedPathAsync(
         FolderSelectionNode rootNode,
         string selectedPath
     )
     {
-        var normalizedSelectedPath = NormalizePath(selectedPath);
+        var normalizedSelectedPath = source.NormalizePath(selectedPath);
 
         if (
-            string.IsNullOrWhiteSpace(normalizedSelectedPath)
-            || !IsSameOrDescendantPath(normalizedSelectedPath, rootNode.Path)
+            normalizedSelectedPath is null
+            || !source.IsSameOrDescendantPath(normalizedSelectedPath, rootNode.Path)
         )
         {
             return null;
@@ -134,10 +182,14 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
 
         while (!PathsEqual(currentNode.Path, normalizedSelectedPath))
         {
-            var nextNode = EnsureChildrenLoaded(currentNode)
-                .FirstOrDefault(child =>
-                    IsSameOrDescendantPath(normalizedSelectedPath, child.Path)
-                );
+            if (!await EnsureChildrenLoadedAsync(currentNode))
+            {
+                return null;
+            }
+
+            var nextNode = currentNode.Children.FirstOrDefault(child =>
+                source.IsSameOrDescendantPath(normalizedSelectedPath, child.Path)
+            );
 
             if (nextNode is null)
             {
@@ -150,69 +202,31 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
         return currentNode;
     }
 
-    private static IEnumerable<string> GetAncestorPaths(string path, string basePath)
+    private List<string> GetAncestorPaths(string path, string basePath)
     {
-        var normalizedBasePath = NormalizePath(basePath);
-        var currentPath = NormalizePath(path);
+        var ancestorPaths = new List<string>();
+        var currentPath = source.NormalizePath(path);
 
-        while (
-            !string.IsNullOrWhiteSpace(currentPath) && !PathsEqual(currentPath, normalizedBasePath)
-        )
+        while (currentPath is not null && !PathsEqual(currentPath, basePath))
         {
-            currentPath = Path.GetDirectoryName(currentPath);
+            currentPath = source.GetParentPath(currentPath);
 
-            if (string.IsNullOrWhiteSpace(currentPath))
+            if (currentPath is not null)
             {
-                yield break;
+                ancestorPaths.Add(currentPath);
             }
-
-            yield return currentPath;
         }
+
+        return ancestorPaths;
     }
 
-    private static bool PathsEqual(string? first, string? second)
+    private bool PathsEqual(string first, string second)
     {
-        return string.Equals(NormalizePath(first), NormalizePath(second), StringComparison.Ordinal);
-    }
-
-    private static bool IsSameOrDescendantPath(string path, string ancestorPath)
-    {
-        var normalizedPath = NormalizePath(path);
-        var normalizedAncestorPath = NormalizePath(ancestorPath);
-
-        if (
-            string.IsNullOrWhiteSpace(normalizedPath)
-            || string.IsNullOrWhiteSpace(normalizedAncestorPath)
-        )
-        {
-            return false;
-        }
-
-        if (string.Equals(normalizedPath, normalizedAncestorPath, StringComparison.Ordinal))
-        {
-            return true;
-        }
-
-        var ancestorPrefix = normalizedAncestorPath.EndsWith(Path.DirectorySeparatorChar)
-            ? normalizedAncestorPath
-            : $"{normalizedAncestorPath}{Path.DirectorySeparatorChar}";
-
-        return normalizedPath.StartsWith(ancestorPrefix, StringComparison.Ordinal);
-    }
-
-    private static string? NormalizePath(string? path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return null;
-        }
-
-        var fullPath = Path.GetFullPath(path);
-        var rootPath = Path.GetPathRoot(fullPath);
-
-        return string.Equals(fullPath, rootPath, StringComparison.Ordinal)
-            ? fullPath
-            : fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return string.Equals(
+            source.NormalizePath(first),
+            source.NormalizePath(second),
+            StringComparison.Ordinal
+        );
     }
 
     private static FolderSelectionNode CreateRootNode(string path)
@@ -222,12 +236,6 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
 
     private FolderSelectionNode CreateNode(string path)
     {
-        return new FolderSelectionNode
-        {
-            Path = path,
-            Name = string.IsNullOrWhiteSpace(Path.GetFileName(path))
-                ? path
-                : Path.GetFileName(path),
-        };
+        return new FolderSelectionNode { Path = path, Name = source.GetDisplayName(path) };
     }
 }

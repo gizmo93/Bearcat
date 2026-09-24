@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.UploadG;
 using Bearcat.Hosters.UploadG.Api;
 using Microsoft.Extensions.Logging;
@@ -65,7 +66,7 @@ public class UploadGTest
             var result = await service.UploadFileAsync(
                 fileDto,
                 config,
-                NullUploadProgress.Instance,
+                NullTransferProgress.Instance,
                 CancellationToken.None
             );
 
@@ -124,7 +125,7 @@ public class UploadGTest
             var result = await service.UploadFileAsync(
                 fileDto,
                 config,
-                NullUploadProgress.Instance,
+                NullTransferProgress.Instance,
                 CancellationToken.None
             );
 

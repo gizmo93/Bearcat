@@ -51,7 +51,7 @@ public class ReleaseFolderRetirementServiceTest : BearcatIntegrationTest
         service = new ReleaseFolderRetirementService(
             new ReleaseFolderRetirementRepository(dbContext),
             configurationMock.Object,
-            new MirrorCoverageEvaluator(hosterFactoryMock.Object),
+            new UnmanagedReleaseConverter(new MirrorCoverageEvaluator(hosterFactoryMock.Object)),
             new NotificationService(
                 repository: new NotificationRepository(dbContext),
                 timeProvider: CreateTimeProvider(),

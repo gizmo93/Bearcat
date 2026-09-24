@@ -1614,6 +1614,185 @@ namespace BearCat.Infrastructure.Migrations
                     b.ToTable("ReleaseTemplates");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.RemoteSourceAutomation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FolderNamePattern")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("HasCompletedInitialScan")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IgnoreExistingOnFirstScan")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("KeepRawFiles")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("PrimaryLanguageCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ReleaseTemplateId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RemotePath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("RemoteSourceRegistrationId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TargetPath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReleaseTemplateId");
+
+                    b.HasIndex("RemoteSourceRegistrationId", "Priority");
+
+                    b.ToTable("RemoteSourceAutomations");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.RemoteSourceDownload", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<DateTime>("DiscoveredAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<int>("FileCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FolderName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("KeepRawFiles")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("LastChangedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<string>("LocalFolderPath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PrimaryLanguageCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
+
+                    b.Property<int?>("ReleaseId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ReleaseTemplateId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RemoteFolderPath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("RemoteSourceAutomationId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("RemoteSourceRegistrationId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("TotalBytes")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReleaseId");
+
+                    b.HasIndex("ReleaseTemplateId");
+
+                    b.HasIndex("RemoteSourceAutomationId", "State");
+
+                    b.HasIndex("RemoteSourceRegistrationId", "RemoteFolderPath")
+                        .IsUnique();
+
+                    b.ToTable("RemoteSourceDownloads");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.RemoteSourceRegistration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MaxConnections")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("SerializedConfig")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SourceClassName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RemoteSourceRegistrations");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.TelegramConfiguration", b =>
                 {
                     b.Property<int>("Id")
@@ -2466,6 +2645,56 @@ namespace BearCat.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("ReleaseGroup");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.RemoteSourceAutomation", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseTemplate", "ReleaseTemplate")
+                        .WithMany()
+                        .HasForeignKey("ReleaseTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bearcat.Domain.Entities.RemoteSourceRegistration", "RemoteSourceRegistration")
+                        .WithMany()
+                        .HasForeignKey("RemoteSourceRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ReleaseTemplate");
+
+                    b.Navigation("RemoteSourceRegistration");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.RemoteSourceDownload", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.Release", "Release")
+                        .WithMany()
+                        .HasForeignKey("ReleaseId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Bearcat.Domain.Entities.ReleaseTemplate", "ReleaseTemplate")
+                        .WithMany()
+                        .HasForeignKey("ReleaseTemplateId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Bearcat.Domain.Entities.RemoteSourceAutomation", "RemoteSourceAutomation")
+                        .WithMany()
+                        .HasForeignKey("RemoteSourceAutomationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Bearcat.Domain.Entities.RemoteSourceRegistration", "RemoteSourceRegistration")
+                        .WithMany()
+                        .HasForeignKey("RemoteSourceRegistrationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Release");
+
+                    b.Navigation("ReleaseTemplate");
+
+                    b.Navigation("RemoteSourceAutomation");
+
+                    b.Navigation("RemoteSourceRegistration");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.TelegramDelivery", b =>

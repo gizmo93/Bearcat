@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Alfafile.Api.File;
 using Bearcat.Hosters.Alfafile.Api.User;
 using Bearcat.Hosters.Shared;
@@ -54,7 +55,7 @@ public interface IAlfafileApiClient
         AlfafileConfig config,
         string fileUrl,
         string targetFilePath,
-        IDownloadProgress progress,
+        ITransferProgress progress,
         long? expectedSizeBytes,
         CancellationToken cancellationToken
     );

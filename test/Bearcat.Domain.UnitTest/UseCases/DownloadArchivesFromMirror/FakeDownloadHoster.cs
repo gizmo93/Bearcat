@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Transfers;
 
 namespace Bearcat.Domain.UnitTest.UseCases.DownloadArchivesFromMirror;
 
@@ -70,7 +71,7 @@ public sealed class FakeDownloadHoster : IHosterWithDownload
         DownloadFileDto file,
         string targetFilePath,
         IHosterConfig hosterConfig,
-        IDownloadProgress progress,
+        ITransferProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -144,7 +145,7 @@ public sealed class FakeDownloadHoster : IHosterWithDownload
     public Task<UploadFileResult> UploadFileAsync(
         FileDto fileDto,
         IHosterConfig hosterConfig,
-        IUploadProgress progress,
+        ITransferProgress progress,
         CancellationToken cancellationToken
     ) => throw new NotSupportedException();
 

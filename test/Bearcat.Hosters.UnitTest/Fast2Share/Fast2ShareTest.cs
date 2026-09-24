@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Fast2Share;
 using Bearcat.Hosters.Fast2Share.Api;
 using Bearcat.Hosters.Shared;
@@ -66,7 +67,7 @@ public class Fast2ShareTest
         var result = await service.UploadFileAsync(
             fileDto,
             config,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -80,7 +81,7 @@ public class Fast2ShareTest
     public async Task UploadFileAsync_FileWasDeduped_ReportsFullFileSizeAsTransferred()
     {
         // Arrange
-        var progressMock = new Mock<IUploadProgress>();
+        var progressMock = new Mock<ITransferProgress>();
         var fileDto = new FileDto(Id: 17, FullFileName: filePath, UploadId: 117);
 
         apiClientMock
@@ -139,7 +140,7 @@ public class Fast2ShareTest
         var result = await service.UploadFileAsync(
             fileDto,
             config,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -264,7 +265,7 @@ public class Fast2ShareTest
                     $"https://f2s.im/f/{Uuid}",
                     Uuid,
                     targetFilePath,
-                    NullDownloadProgress.Instance,
+                    NullTransferProgress.Instance,
                     2048L,
                     It.IsAny<CancellationToken>()
                 )
@@ -280,7 +281,7 @@ public class Fast2ShareTest
             ),
             targetFilePath,
             config,
-            NullDownloadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -303,7 +304,7 @@ public class Fast2ShareTest
                     $"https://f2s.im/f/{Uuid}",
                     null,
                     targetFilePath,
-                    NullDownloadProgress.Instance,
+                    NullTransferProgress.Instance,
                     null,
                     It.IsAny<CancellationToken>()
                 )
@@ -319,7 +320,7 @@ public class Fast2ShareTest
             ),
             targetFilePath,
             config,
-            NullDownloadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 

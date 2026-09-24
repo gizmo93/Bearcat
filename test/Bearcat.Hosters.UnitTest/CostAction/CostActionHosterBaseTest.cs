@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Hitfile;
 using Bearcat.Hosters.Shared;
 using Bearcat.Hosters.Shared.CostAction.Api;
@@ -70,7 +71,7 @@ public class CostActionHosterBaseTest
         var result = await turbobit.UploadFileAsync(
             fileDto,
             turbobitConfig,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -91,7 +92,7 @@ public class CostActionHosterBaseTest
         var result = await hitfile.UploadFileAsync(
             fileDto,
             hitfileConfig,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 
@@ -123,7 +124,7 @@ public class CostActionHosterBaseTest
         var result = await turbobit.UploadFileAsync(
             fileDto,
             turbobitConfig,
-            NullUploadProgress.Instance,
+            NullTransferProgress.Instance,
             CancellationToken.None
         );
 

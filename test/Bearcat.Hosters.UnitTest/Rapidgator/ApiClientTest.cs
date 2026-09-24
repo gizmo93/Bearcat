@@ -3,6 +3,7 @@ using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Rapidgator;
 using Bearcat.Hosters.Rapidgator.Api;
 using Bearcat.Hosters.Rapidgator.Api.File;
@@ -642,7 +643,7 @@ public class ApiClientTest
             config: config,
             fileUrl: "https://rapidgator.net/file/file-id/archive.part01.rar.html",
             targetFilePath: targetFilePath,
-            progress: NullDownloadProgress.Instance,
+            progress: NullTransferProgress.Instance,
             expectedSizeBytes: null,
             cancellationToken: CancellationToken.None
         );
@@ -681,7 +682,7 @@ public class ApiClientTest
                 config: config,
                 fileUrl: "https://rapidgator.net/file/file-id/archive.part01.rar.html",
                 targetFilePath: targetFilePath,
-                progress: NullDownloadProgress.Instance,
+                progress: NullTransferProgress.Instance,
                 expectedSizeBytes: null,
                 cancellationToken: CancellationToken.None
             )

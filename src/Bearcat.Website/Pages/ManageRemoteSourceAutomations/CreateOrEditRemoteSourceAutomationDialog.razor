@@ -1,0 +1,130 @@
+@using Bearcat.Domain.UseCases.ManageRemoteSourceAutomations
+@if (!isInitialized)
+{
+    return;
+}
+
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="FormModel.Name"
+                              Label="@L["Name"]"
+                              Placeholder="@L["ConfigurationNamePlaceholder"]" />
+
+            <BbFormFieldSelect TValue="int?"
+                               @bind-Value="FormModel.RemoteSourceRegistrationId"
+                               Label="@L["RemoteSource"]"
+                               Placeholder="@L["SelectRemoteSource"]"
+                               Options="RegistrationOptions" />
+
+            @if (registrations.Count == 0)
+            {
+                <p class="text-xs text-muted-foreground">@L["NoActiveRemoteSources"]</p>
+            }
+
+            <div class="space-y-2">
+                <label class="text-sm font-medium">@L["RemotePath"]</label>
+                <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                    <BbInput @bind-Value="FormModel.RemotePath" class="sm:flex-1" />
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Class="justify-center whitespace-nowrap"
+                              AriaLabel="@L["BrowseRemoteFolders"]"
+                              Disabled="@(FormModel.RemoteSourceRegistrationId is null)"
+                              OnClick="OpenRemoteFolderDialogAsync">
+                        <LucideIcon Name="server" class="h-4 w-4" />
+                        @L["Browse"]
+                    </BbButton>
+                </div>
+                <p class="text-xs text-muted-foreground">@L["RemotePathHelp"]</p>
+                <ValidationMessage For="() => FormModel.RemotePath" class="text-sm text-destructive" />
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-sm font-medium">@L["TargetPath"]</label>
+                <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                    <BbInput @bind-Value="FormModel.TargetPath" class="sm:flex-1" />
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Class="justify-center whitespace-nowrap"
+                              AriaLabel="@L["BrowseDownloadFolders"]"
+                              OnClick="OpenTargetFolderDialogAsync">
+                        <LucideIcon Name="folder-open" class="h-4 w-4" />
+                        @L["Browse"]
+                    </BbButton>
+                </div>
+                <p class="text-xs text-muted-foreground">@L["TargetPathHelp"]</p>
+                <ValidationMessage For="() => FormModel.TargetPath" class="text-sm text-destructive" />
+            </div>
+
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="FormModel.FolderNamePattern"
+                              Label="@L["FolderNamePattern"]"
+                              Placeholder="@L["FolderNamePatternPlaceholder"]"
+                              HelperText="@L["RemoteSourceAutomationPatternHelp"]" />
+
+            <div class="flex min-w-0 items-start gap-2">
+                <div class="min-w-0 flex-1">
+                    <BbFormFieldSelect TValue="int?"
+                                       @bind-Value="FormModel.ReleaseTemplateId"
+                                       Label="@L["ReleaseTemplate"]"
+                                       Placeholder="@L["SelectReleaseTemplate"]"
+                                       Options="ReleaseTemplateOptions" />
+                </div>
+                @if (SelectedReleaseType is { } releaseType)
+                {
+                    <BbBadge Variant="@(releaseType == ReleaseType.Managed ? BadgeVariant.Default : BadgeVariant.Outline)"
+                             Class="mt-8 shrink-0">
+                        @L.Localize(releaseType)
+                    </BbBadge>
+                }
+            </div>
+
+            <BbFormFieldCombobox TValue="string"
+                                 @bind-Value="FormModel.PrimaryLanguageCode"
+                                 Label="@L["PrimaryLanguage"]"
+                                 SearchPlaceholder="@L["SearchLanguage"]"
+                                 EmptyMessage="@L["NoLanguagesFound"]"
+                                 InputClass="w-full"
+                                 MatchTriggerWidth="true"
+                                 Options="LanguageOptions" />
+
+            @if (SelectedReleaseType == ReleaseType.Managed)
+            {
+                <BbFormFieldSwitch @bind-Checked="FormModel.KeepRawFiles"
+                                   Label="@L["KeepRawFiles"]"
+                                   HelperText="@L["KeepRawFilesHelp"]" />
+            }
+
+            <BbFormFieldNumericInput TValue="int"
+                                     @bind-Value="FormModel.Priority"
+                                     Label="@L["Priority"]"
+                                     HelperText="@L["RemoteSourceAutomationPriorityHelp"]"
+                                     Min="RemoteSourceAutomationService.MinPriority"
+                                     Step="1"
+                                     AllowNegative="false"
+                                     ShowButtons="true" />
+
+            <BbFormFieldSwitch @bind-Checked="FormModel.IgnoreExistingOnFirstScan"
+                               Label="@L["IgnoreExistingOnFirstScan"]"
+                               HelperText="@L["IgnoreExistingOnFirstScanHelp"]" />
+        </div>
+
+        @if (errorMessage is not null)
+        {
+            <p class="text-sm text-destructive">@errorMessage</p>
+        }
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit" Disabled="isSaving">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

@@ -30,6 +30,7 @@
         <ProjectReference Include="..\Bearcat.Media\Bearcat.Media.csproj" />
         <ProjectReference Include="..\Bearcat.NfoDatabases\Bearcat.NfoDatabases.csproj" />
         <ProjectReference Include="..\Bearcat.MediaDatabases\Bearcat.MediaDatabases.csproj" />
+        <ProjectReference Include="..\Bearcat.RemoteSources\Bearcat.RemoteSources.csproj" />
         <ProjectReference Include="..\Bearcat.Website\Bearcat.Website.csproj" />
     </ItemGroup>
 </Project>

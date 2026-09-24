@@ -146,4 +146,16 @@ public class NotificationConfiguration : IApplicationConfiguration
         "NotificationKind.AutomaticForumPostUpdateFailed.Description"
     )]
     public bool AutomaticForumPostUpdateFailed { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
+        "NotificationKind.ReleaseCreatedFromRemoteDownload",
+        "NotificationKind.ReleaseCreatedFromRemoteDownload.Description"
+    )]
+    public bool ReleaseCreatedFromRemoteDownload { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
+        "NotificationKind.RemoteDownloadFailed",
+        "NotificationKind.RemoteDownloadFailed.Description"
+    )]
+    public bool RemoteDownloadFailed { get; set; } = true;
 }
