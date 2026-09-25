@@ -41,6 +41,11 @@ public static class NavigationRegistry
                         Entry("ReleaseGroups", "/release-groups", "layers"),
                         Entry("QualityProfiles", "/quality-profiles", "shield-check"),
                         Entry("ForumPostTemplates", "/forum-post-templates", "message-square-text"),
+                        Entry(
+                            "AdditionalArchiveContents",
+                            "/additional-archive-contents",
+                            "package-plus"
+                        ),
                     ]
                 ),
                 new NavigationSubmenu(

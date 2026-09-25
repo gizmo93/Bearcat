@@ -1350,4 +1350,41 @@
   <data name="NavigationSearchButton" xml:space="preserve"><value>Search...</value></data>
   <data name="NavigationSearchPlaceholder" xml:space="preserve"><value>Search pages...</value></data>
   <data name="NavigationSearchNoResults" xml:space="preserve"><value>No results found.</value></data>
+  <data name="AdditionalArchiveContents" xml:space="preserve"><value>Additional archive contents</value></data>
+  <data name="AdditionalArchiveContentsIntro" xml:space="preserve"><value>Define files, folders and text files that are packed into archives in addition to the release content.</value></data>
+  <data name="NewAdditionalArchiveContent" xml:space="preserve"><value>New additional archive content</value></data>
+  <data name="NoAdditionalArchiveContentsYet" xml:space="preserve"><value>No additional archive contents defined yet.</value></data>
+  <data name="AdditionalArchiveContentDialogDescription" xml:space="preserve"><value>Choose a file or folder from the host, or write a text file that is added to the archive.</value></data>
+  <data name="AdditionalArchiveContentNamePlaceholder" xml:space="preserve"><value>e.g. Premium ad</value></data>
+  <data name="AdditionalArchiveContentType.Path" xml:space="preserve"><value>File or folder</value></data>
+  <data name="AdditionalArchiveContentType.TextFile" xml:space="preserve"><value>Text file</value></data>
+  <data name="SourcePath" xml:space="preserve"><value>Source path</value></data>
+  <data name="AdditionalArchiveContentSourcePathHelp" xml:space="preserve"><value>Full path to a file or folder on the host. Paths outside the working directories (e.g. Docker bind mounts) can be entered manually.</value></data>
+  <data name="BrowseFilesAndFolders" xml:space="preserve"><value>Browse files and folders</value></data>
+  <data name="SelectFileOrFolder" xml:space="preserve"><value>Select file or folder</value></data>
+  <data name="SelectAdditionalArchiveContentSourceDescription" xml:space="preserve"><value>Choose a file or folder inside the working directories.</value></data>
+  <data name="SearchFoldersAndFiles" xml:space="preserve"><value>Search folders and files</value></data>
+  <data name="AdditionalArchiveContentFileNamePlaceholder" xml:space="preserve"><value>e.g. Premium.txt</value></data>
+  <data name="AdditionalArchiveContentFileNameHelp" xml:space="preserve"><value>Name of the text file inside the archive, without folders.</value></data>
+  <data name="TextContent" xml:space="preserve"><value>Text content</value></data>
+  <data name="UsedBy" xml:space="preserve"><value>Used by</value></data>
+  <data name="AdditionalArchiveContentTemplateCount" xml:space="preserve"><value>{0} templates</value></data>
+  <data name="AdditionalArchiveContentArchiveConfigCount" xml:space="preserve"><value>{0} archive configs</value></data>
+  <data name="DeleteAdditionalArchiveContentConfirmation" xml:space="preserve"><value>Do you really want to delete the additional archive content "{0}"?</value></data>
+  <data name="AdditionalArchiveContentDeleted" xml:space="preserve"><value>Additional archive content "{0}" deleted.</value></data>
+  <data name="AdditionalArchiveContentStillAssigned" xml:space="preserve"><value>"{0}" cannot be deleted because it is still assigned.</value></data>
+  <data name="AdditionalArchiveContentUsedByReleaseTemplates" xml:space="preserve"><value>Release templates: {0}.</value></data>
+  <data name="AdditionalArchiveContentUsedByReleases" xml:space="preserve"><value>Releases: {0}.</value></data>
+  <data name="AndCountMore" xml:space="preserve"><value>and {0} more</value></data>
+  <data name="AdditionalArchiveContentValidationError.NameRequired" xml:space="preserve"><value>Name is required.</value></data>
+  <data name="AdditionalArchiveContentValidationError.NameTooLong" xml:space="preserve"><value>Name must not be longer than 200 characters.</value></data>
+  <data name="AdditionalArchiveContentValidationError.NameAlreadyExists" xml:space="preserve"><value>An additional archive content with this name already exists.</value></data>
+  <data name="AdditionalArchiveContentValidationError.SourcePathRequired" xml:space="preserve"><value>Source path is required.</value></data>
+  <data name="AdditionalArchiveContentValidationError.SourcePathTooLong" xml:space="preserve"><value>Source path must not be longer than 1000 characters.</value></data>
+  <data name="AdditionalArchiveContentValidationError.SourcePathNotFound" xml:space="preserve"><value>No file or folder exists at this path.</value></data>
+  <data name="AdditionalArchiveContentValidationError.FileNameRequired" xml:space="preserve"><value>File name is required.</value></data>
+  <data name="AdditionalArchiveContentValidationError.FileNameTooLong" xml:space="preserve"><value>File name must not be longer than 255 characters.</value></data>
+  <data name="AdditionalArchiveContentValidationError.FileNameInvalid" xml:space="preserve"><value>File name must be a plain file name without folders or invalid characters.</value></data>
+  <data name="AdditionalArchiveContentValidationError.FileNameReserved" xml:space="preserve"><value>This file name is reserved by Bearcat.</value></data>
+  <data name="AdditionalArchiveContentValidationError.TextContentRequired" xml:space="preserve"><value>Text content is required.</value></data>
 </root>

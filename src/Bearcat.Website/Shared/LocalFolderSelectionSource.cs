@@ -5,20 +5,25 @@ namespace Bearcat.Website.Shared;
 
 public sealed class LocalFolderSelectionSource(
     IScopedOperationRunner operationRunner,
-    IReadOnlyList<string> rootPaths
+    IReadOnlyList<string> rootPaths,
+    bool includeFiles = false
 ) : IFolderSelectionSource
 {
     public IReadOnlyList<string> RootPaths { get; } = rootPaths;
 
-    public Task<FolderSelectionListing> GetChildFoldersAsync(string path)
+    public Task<FolderSelectionListing> GetChildEntriesAsync(string path)
     {
         try
         {
-            var folderPaths = operationRunner.Run(
-                (IFileSystemService service) => service.GetFoldersInPath(path)
+            var (folderPaths, filePaths) = operationRunner.Run(
+                (IFileSystemService service) =>
+                    (
+                        service.GetFoldersInPath(path),
+                        includeFiles ? service.GetFilesInPath(path, recursive: false) : []
+                    )
             );
 
-            return Task.FromResult(FolderSelectionListing.Success(folderPaths));
+            return Task.FromResult(FolderSelectionListing.Success(folderPaths, filePaths));
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {

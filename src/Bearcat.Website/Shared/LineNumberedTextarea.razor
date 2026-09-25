@@ -1,6 +1,6 @@
 @inject IJSRuntime JS
 
-<div class="bearcat-code-editor @Class">
+<div class="bearcat-code-editor @Class" style="@HeightStyle">
     <pre @ref="gutterRef" class="bearcat-code-editor-gutter" aria-hidden="true">1</pre>
     <textarea @ref="textareaRef"
               class="bearcat-code-editor-input"
@@ -24,6 +24,14 @@
 
     [Parameter]
     public string? Class { get; set; }
+
+    [Parameter]
+    public int? VisibleLineCount { get; set; }
+
+    private string? HeightStyle =>
+        VisibleLineCount is { } lineCount
+            ? $"height: calc({lineCount} * 1.25rem + 1rem + 2px);"
+            : null;
 
     private ElementReference textareaRef;
     private ElementReference gutterRef;

@@ -1,0 +1,88 @@
+@page "/additional-archive-contents"
+@using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.ReadModels
+
+<PageTitle>@L["AdditionalArchiveContents"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div class="min-w-0 space-y-2">
+            <h1 class="text-3xl font-semibold tracking-tight">@L["AdditionalArchiveContents"]</h1>
+            <p class="text-sm text-muted-foreground">@L["AdditionalArchiveContentsIntro"]</p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewAdditionalArchiveContent"]
+        </BbButton>
+    </div>
+
+    @if (contents.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+            @L["NoAdditionalArchiveContentsYet"]
+        </div>
+    }
+    else
+    {
+        <div class="bearcat-config-list">
+            <div class="bearcat-config-header lg:grid-cols-[minmax(0,1.25fr)_10rem_minmax(0,1.75fr)_10rem_84px]">
+                <span>@L["Name"]</span>
+                <span>@L["Type"]</span>
+                <span>@L["Source"]</span>
+                <span>@L["UsedBy"]</span>
+                <span class="text-right">@L["Actions"]</span>
+            </div>
+            @foreach (var content in contents)
+            {
+                var source = content.Type == AdditionalArchiveContentType.Path ? content.SourcePath : content.FileName;
+
+                <div class="bearcat-config-item">
+                    <div class="bearcat-config-row lg:grid-cols-[minmax(0,1.25fr)_10rem_minmax(0,1.75fr)_10rem_84px]">
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-semibold" title="@content.Name">@content.Name</p>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["Type"]</p>
+                            <BbBadge Variant="BadgeVariant.Outline" Class="whitespace-nowrap">
+                                <LucideIcon Name="@(content.Type == AdditionalArchiveContentType.Path ? "folder" : "file-text")" class="h-3 w-3" />
+                                @L.Localize(content.Type)
+                            </BbBadge>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["Source"]</p>
+                            <p class="truncate font-mono text-xs" title="@source">@source</p>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["UsedBy"]</p>
+                            <div class="flex flex-col text-xs tabular-nums">
+                                <span class="whitespace-nowrap">@L["AdditionalArchiveContentTemplateCount", content.ArchiveConfigTemplateCount]</span>
+                                <span class="whitespace-nowrap">@L["AdditionalArchiveContentArchiveConfigCount", content.ArchiveConfigCount]</span>
+                            </div>
+                        </div>
+
+                        <div class="bearcat-config-actions">
+                            <BbDropdownMenu>
+                                <BbDropdownMenuTrigger>
+                                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["Actions"]">
+                                        <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                    </BbButton>
+                                </BbDropdownMenuTrigger>
+                                <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                                    <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(content))">
+                                        @L["Edit"]
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(content))">
+                                        @L["Delete"]
+                                    </BbDropdownMenuItem>
+                                </BbDropdownMenuContent>
+                            </BbDropdownMenu>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>

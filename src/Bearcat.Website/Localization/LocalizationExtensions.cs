@@ -102,6 +102,11 @@ public static class LocalizationExtensions
         RuleConditionOperator conditionOperator
     ) => localizer[$"RuleConditionOperator.{conditionOperator}"];
 
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        AdditionalArchiveContentType type
+    ) => localizer[$"AdditionalArchiveContentType.{type}"];
+
     public static string LocalizeRuleField(
         this IStringLocalizer<UiResource> localizer,
         string fieldName

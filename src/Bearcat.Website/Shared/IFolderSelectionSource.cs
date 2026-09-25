@@ -4,7 +4,7 @@ public interface IFolderSelectionSource
 {
     IReadOnlyList<string> RootPaths { get; }
 
-    Task<FolderSelectionListing> GetChildFoldersAsync(string path);
+    Task<FolderSelectionListing> GetChildEntriesAsync(string path);
 
     string? NormalizePath(string? path);
 

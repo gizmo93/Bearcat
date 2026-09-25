@@ -1,0 +1,60 @@
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="FormModel.Name"
+                              Label="@L["Name"]"
+                              Placeholder="@L["AdditionalArchiveContentNamePlaceholder"]" />
+
+            <BbFormFieldSelect TValue="AdditionalArchiveContentType"
+                               @bind-Value="FormModel.Type"
+                               Label="@L["Type"]"
+                               Options="TypeOptions" />
+
+            @if (FormModel.Type == AdditionalArchiveContentType.Path)
+            {
+                <div class="space-y-2">
+                    <label class="text-sm font-medium">@L["SourcePath"]</label>
+                    <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                        <BbInput @bind-Value="FormModel.SourcePath" class="sm:flex-1" />
+                        <BbButton Variant="ButtonVariant.Outline"
+                                  Size="ButtonSize.Small"
+                                  Class="justify-center whitespace-nowrap"
+                                  AriaLabel="@L["BrowseFilesAndFolders"]"
+                                  OnClick="OpenSourcePathDialogAsync">
+                            <LucideIcon Name="folder-open" class="h-4 w-4" />
+                            @L["Browse"]
+                        </BbButton>
+                    </div>
+                    <p class="text-xs text-muted-foreground">@L["AdditionalArchiveContentSourcePathHelp"]</p>
+                    <ValidationMessage For="() => FormModel.SourcePath" class="text-sm text-destructive" />
+                </div>
+            }
+            else
+            {
+                <BbFormFieldInput TValue="string"
+                                  @bind-Value="FormModel.FileName"
+                                  Label="@L["Filename"]"
+                                  Placeholder="@L["AdditionalArchiveContentFileNamePlaceholder"]"
+                                  HelperText="@L["AdditionalArchiveContentFileNameHelp"]" />
+
+                <div class="space-y-1.5">
+                    <label class="text-sm font-medium leading-none">@L["TextContent"]</label>
+                    <LineNumberedTextarea @bind-Value="FormModel.TextContent"
+                                          @bind-Value:after="NotifyTextContentChanged"
+                                          VisibleLineCount="14" />
+                    <ValidationMessage For="() => FormModel.TextContent" class="text-sm text-destructive" />
+                </div>
+            }
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit" Disabled="isSaving">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>
