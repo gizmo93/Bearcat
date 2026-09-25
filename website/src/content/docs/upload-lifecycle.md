@@ -113,6 +113,9 @@ Only [managed releases](/Bearcat/release-types/) can be repacked. Unmanaged rele
 archive files or a mirror from which to restore them.
 
 The archive configuration sets the archiver, output folder, filename prefix, password, and part size.
+You can also assign [additional archive contents](/Bearcat/additional-archive-contents/), such as
+a text file with a referral link, to include whenever Bearcat creates a new archive.
+
 After packing succeeds, the archive becomes `Created` and the upload moves to `Pending`. If packing
 fails, their states become `CreationFailed` and `Failed`.
 
@@ -251,6 +254,8 @@ If so, it waits until a later run.
 
 Before packing, Bearcat writes a new random value to `__nonce.txt` in the release folder.
 The changed content helps produce different archive hashes.
+Bearcat removes the nonce file from the release folder after packing, including when packing fails.
+After a crash, leftover temporary additions are cleaned up on the next start.
 
 For RAR, the nonce and appended zero bytes ensure each part gets a new hash. Parts remain close to
 the configured size, with only a few extra bytes. This matters when a hoster limits file sizes.
