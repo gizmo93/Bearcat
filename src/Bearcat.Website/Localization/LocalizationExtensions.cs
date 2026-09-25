@@ -1,4 +1,5 @@
 using Bearcat.Domain.Shared.ForumPostingRules;
+using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Localization;
 
@@ -8,6 +9,19 @@ public static class LocalizationExtensions
 {
     public static string Localize(this IStringLocalizer<UiResource> localizer, OnlineState state) =>
         localizer[$"OnlineState.{state}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        DuplicatedEntryName entryName
+    ) =>
+        localizer[
+            "DuplicatedEntryName",
+            string.Join(
+                ", ",
+                entryName.AdditionalArchiveContentNames.Select(name => $"\"{name}\"")
+            ),
+            entryName.EntryName
+        ];
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,

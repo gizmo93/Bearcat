@@ -154,7 +154,7 @@ public class ReleaseFolderEntriesForPackingService(IFileSystemService fileSystem
         {
             AdditionalArchiveContentType.Path => CreatePathEntry(content),
             AdditionalArchiveContentType.TextFile => new ReleaseFolderEntryForPacking(
-                Name: content.FileName!,
+                Name: ReleaseFolderEntryNames.GetEntryName(content),
                 SourceDescription: DescribeContent(content),
                 Type: ReleaseFolderEntryForPackingType.TextFile,
                 SourcePath: null,
@@ -169,10 +169,10 @@ public class ReleaseFolderEntriesForPackingService(IFileSystemService fileSystem
 
     private ReleaseFolderEntryForPacking CreatePathEntry(AdditionalArchiveContent content)
     {
-        var sourcePath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(content.SourcePath!));
+        var sourcePath = ReleaseFolderEntryNames.GetFullSourcePath(content.SourcePath!);
 
         return new ReleaseFolderEntryForPacking(
-            Name: Path.GetFileName(sourcePath),
+            Name: ReleaseFolderEntryNames.GetEntryName(content),
             SourceDescription: DescribeContent(content),
             Type: fileSystemService.FileExists(sourcePath)
                 ? ReleaseFolderEntryForPackingType.FileCopy
@@ -186,11 +186,10 @@ public class ReleaseFolderEntriesForPackingService(IFileSystemService fileSystem
         List<ReleaseFolderEntryForPacking> entries
     )
     {
-        return entries
-            .GroupBy(entry => entry.Name, StringComparer.OrdinalIgnoreCase)
-            .Where(group => group.Count() > 1)
-            .Select(group =>
-                $"Cannot place {string.Join(" and ", group.Select(entry => entry.SourceDescription))} into the release folder because they would all be named \"{group.Key}\"."
+        return ReleaseFolderEntryNames
+            .FindDuplicatedEntryNames(entries, entry => entry.Name)
+            .Select(duplicatedEntryName =>
+                $"Cannot place {string.Join(" and ", duplicatedEntryName.Entries.Select(entry => entry.SourceDescription))} into the release folder because they would all be named \"{duplicatedEntryName.EntryName}\"."
             )
             .ToList();
     }
@@ -205,7 +204,7 @@ public class ReleaseFolderEntriesForPackingService(IFileSystemService fileSystem
             .Concat(fileSystemService.GetFoldersInPath(releaseFolderPath))
             .Select(path => Path.GetFileName(path))
             .Where(name => !string.Equals(name, NonceFileName, StringComparison.Ordinal))
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            .ToHashSet(ReleaseFolderEntryNames.EntryNameComparer);
 
         return entries
             .Where(entry => existingEntryNames.Contains(entry.Name))

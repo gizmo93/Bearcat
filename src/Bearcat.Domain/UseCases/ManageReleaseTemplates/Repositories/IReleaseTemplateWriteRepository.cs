@@ -58,5 +58,10 @@ public interface IReleaseTemplateWriteRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyList<AdditionalArchiveContent>> GetAdditionalArchiveContentsAsync(
+        IReadOnlyList<int> additionalArchiveContentIds,
+        CancellationToken cancellationToken = default
+    );
+
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

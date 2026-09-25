@@ -13,4 +13,11 @@ public class ArchiveConfigFormModel
     public int ArchiveFileSizeMb { get; set; }
 
     public string? Name { get; set; }
+
+    public IEnumerable<int>? AdditionalArchiveContentIds { get; set; }
+
+    public IReadOnlyList<int> GetAdditionalArchiveContentIds()
+    {
+        return AdditionalArchiveContentIds?.ToList() ?? [];
+    }
 }

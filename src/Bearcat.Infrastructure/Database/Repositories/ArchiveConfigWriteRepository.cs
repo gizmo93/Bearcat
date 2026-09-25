@@ -30,8 +30,22 @@ public class ArchiveConfigWriteRepository(IBearcatWriteDbContext dbWrite)
         return await dbWrite
             .ArchiveConfigs.AsSplitQuery()
             .Include(a => a.Release)
+            .Include(a => a.AdditionalArchiveContents)
             .Include(a => a.Archives)
                 .ThenInclude(a => a.ArchiveFiles)
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken: cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AdditionalArchiveContent>> GetAdditionalArchiveContentsAsync(
+        IReadOnlyList<int> additionalArchiveContentIds,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .AdditionalArchiveContents.Where(content =>
+                additionalArchiveContentIds.Contains(content.Id)
+            )
+            .OrderBy(content => content.Name)
+            .ToListAsync(cancellationToken);
     }
 }

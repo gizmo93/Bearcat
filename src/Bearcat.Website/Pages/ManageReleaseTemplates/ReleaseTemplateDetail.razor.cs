@@ -26,6 +26,11 @@ public partial class ReleaseTemplateDetail(
         await LoadReleaseTemplateAsync();
     }
 
+    private string ArchiveConfigTemplateGridClass =>
+        releaseTemplate.ReleaseType is ReleaseType.Managed
+            ? "lg:grid-cols-[minmax(0,1fr)_150px_minmax(0,1.3fr)_minmax(0,0.8fr)_minmax(0,1fr)_84px]"
+            : "lg:grid-cols-[minmax(0,1fr)_150px_minmax(0,1.45fr)_minmax(0,0.8fr)_84px]";
+
     private async Task LoadReleaseTemplateAsync()
     {
         var detail = await operationRunner.RunAsync(
@@ -158,6 +163,11 @@ public partial class ReleaseTemplateDetail(
                     ArchivePassword = archiveConfig.ArchivePassword,
                     ArchiveFileSizeMb = archiveConfig.ArchiveFileSizeMb,
                     UseReleaseNameAsArchiveName = archiveConfig.UseReleaseNameAsArchiveName,
+                    AdditionalArchiveContentIds = archiveConfig
+                        .AdditionalArchiveContents.Select(content =>
+                            content.AdditionalArchiveContentId
+                        )
+                        .ToList(),
                     IsEdit = true,
                 },
         };

@@ -1,5 +1,6 @@
 @page "/additional-archive-contents"
 @using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.ReadModels
+@using Bearcat.Website.Pages.ManageAdditionalArchiveContents.Assignment
 
 <PageTitle>@L["AdditionalArchiveContents"] - Bearcat</PageTitle>
 
@@ -45,7 +46,7 @@
                         <div class="min-w-0">
                             <p class="bearcat-mobile-label">@L["Type"]</p>
                             <BbBadge Variant="BadgeVariant.Outline" Class="whitespace-nowrap">
-                                <LucideIcon Name="@(content.Type == AdditionalArchiveContentType.Path ? "folder" : "file-text")" class="h-3 w-3" />
+                                <LucideIcon Name="@AdditionalArchiveContentTypeIconNames.GetIconName(content.Type)" class="h-3 w-3" />
                                 @L.Localize(content.Type)
                             </BbBadge>
                         </div>

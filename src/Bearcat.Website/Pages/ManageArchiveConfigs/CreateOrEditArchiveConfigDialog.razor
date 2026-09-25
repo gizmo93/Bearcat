@@ -1,3 +1,5 @@
+@using Bearcat.Website.Pages.ManageAdditionalArchiveContents.Assignment
+
 
 <EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
     <DataAnnotationsValidator />
@@ -48,6 +50,9 @@
                     <BbFormFieldNumericInput TValue="int"
                                              @bind-Value="FormModel.ArchiveFileSizeMb"
                                              Label="@L["ArchiveFileSizeMb"]" />
+
+                    <AdditionalArchiveContentMultiSelect @bind-Values="FormModel.AdditionalArchiveContentIds"
+                                                         @bind-Values:after="ClearAdditionalArchiveContentValidationMessages" />
                 </div>
             }
         </div>

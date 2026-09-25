@@ -1,6 +1,8 @@
 ﻿using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.UnmanagedReleases;
+using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
+using Bearcat.Domain.UseCases.ManageArchiveConfigs.Validation;
 using Bearcat.Domain.ValueObjects;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -12,16 +14,31 @@ public class ArchiveConfigService(
     TimeProvider timeProvider
 )
 {
-    public async Task<int> CreateAsync(
+    public async Task<ArchiveConfigSaveResult> CreateAsync(
         int releaseId,
         string archiveFilesBasePath,
         string archiverName,
         string archiveNamePrefix,
         string? archivePassword,
         string name,
-        int? archiveFileSizeMb
+        int? archiveFileSizeMb,
+        IReadOnlyList<int> additionalArchiveContentIds
     )
     {
+        var additionalArchiveContents = await writeRepository.GetAdditionalArchiveContentsAsync(
+            additionalArchiveContentIds
+        );
+
+        var duplicatedEntryNames =
+            AdditionalArchiveContentAssignmentValidation.FindDuplicatedEntryNames(
+                additionalArchiveContents
+            );
+
+        if (duplicatedEntryNames.Count > 0)
+        {
+            return ArchiveConfigSaveResult.Invalid(duplicatedEntryNames);
+        }
+
         var archiveConfig = new ArchiveConfig
         {
             ReleaseId = releaseId,
@@ -31,12 +48,13 @@ public class ArchiveConfigService(
             ArchiveNamePrefix = archiveNamePrefix,
             ArchivePassword = archivePassword,
             ArchiveFileSizeMb = archiveFileSizeMb ?? 0,
+            AdditionalArchiveContents = additionalArchiveContents.ToList(),
         };
 
         writeRepository.Add(archiveConfig);
         await writeRepository.SaveChangesAsync();
 
-        return archiveConfig.Id;
+        return ArchiveConfigSaveResult.Saved(archiveConfig.Id);
     }
 
     public async Task DeleteAsync(int archiveConfigId)
@@ -55,13 +73,14 @@ public class ArchiveConfigService(
         await writeRepository.SaveChangesAsync();
     }
 
-    public async Task UpdateAsync(
+    public async Task<ArchiveConfigSaveResult> UpdateAsync(
         int archiveConfigId,
         string archiveFilesBasePath,
         string archiveNamePrefix,
         string? archivePassword,
         string name,
-        int? archiveFileSizeMb
+        int? archiveFileSizeMb,
+        IReadOnlyList<int> additionalArchiveContentIds
     )
     {
         var archiveConfig = await writeRepository.GetByIdAsync(archiveConfigId);
@@ -74,13 +93,31 @@ public class ArchiveConfigService(
 
         EnsureManagedRelease(archiveConfig);
 
+        var additionalArchiveContents = await writeRepository.GetAdditionalArchiveContentsAsync(
+            additionalArchiveContentIds
+        );
+
+        var entryNameCollisions =
+            AdditionalArchiveContentAssignmentValidation.FindDuplicatedEntryNames(
+                additionalArchiveContents
+            );
+
+        if (entryNameCollisions.Count > 0)
+        {
+            return ArchiveConfigSaveResult.Invalid(entryNameCollisions);
+        }
+
         archiveConfig.ArchiveFilesBasePath = archiveFilesBasePath;
         archiveConfig.ArchiveNamePrefix = archiveNamePrefix;
         archiveConfig.ArchivePassword = archivePassword;
         archiveConfig.ArchiveFileSizeMb = archiveFileSizeMb ?? 0;
         archiveConfig.Name = name;
+        archiveConfig.AdditionalArchiveContents.Clear();
+        archiveConfig.AdditionalArchiveContents.AddRange(additionalArchiveContents);
 
         await writeRepository.SaveChangesAsync();
+
+        return ArchiveConfigSaveResult.Saved(archiveConfig.Id);
     }
 
     public async Task<ArchiveFolderChangeResult> SetArchiveFolderAsync(
@@ -94,6 +131,7 @@ public class ArchiveConfigService(
             id: archiveConfigId,
             cancellationToken: cancellationToken
         );
+
         if (archiveConfig == null)
         {
             throw new InvalidOperationException(

@@ -1390,4 +1390,9 @@
   <data name="AdditionalArchiveContentValidationError.FileNameInvalid" xml:space="preserve"><value>Der Dateiname muss ein einfacher Dateiname ohne Ordner oder ungültige Zeichen sein.</value></data>
   <data name="AdditionalArchiveContentValidationError.FileNameReserved" xml:space="preserve"><value>Dieser Dateiname ist für Bearcat reserviert.</value></data>
   <data name="AdditionalArchiveContentValidationError.TextContentRequired" xml:space="preserve"><value>Der Textinhalt ist erforderlich.</value></data>
+  <data name="SelectAdditionalArchiveContents" xml:space="preserve"><value>Zusätzliche Archivinhalte auswählen</value></data>
+  <data name="AdditionalArchiveContentsAssignmentHelp" xml:space="preserve"><value>Änderungen wirken sich nur auf danach erstellte Archive aus. Bereits erstellte Archive werden unverändert wiederverwendet.</value></data>
+  <data name="NoAdditionalArchiveContentsToAssign" xml:space="preserve"><value>Es gibt noch keine zusätzlichen Archivinhalte.</value></data>
+  <data name="ManageAdditionalArchiveContents" xml:space="preserve"><value>Zusätzliche Archivinhalte verwalten</value></data>
+  <data name="DuplicatedEntryName" xml:space="preserve"><value>{0} würden alle als "{1}" im Releaseordner abgelegt. Wähle nur einen davon aus.</value></data>
 </root>

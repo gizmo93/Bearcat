@@ -1387,4 +1387,9 @@
   <data name="AdditionalArchiveContentValidationError.FileNameInvalid" xml:space="preserve"><value>File name must be a plain file name without folders or invalid characters.</value></data>
   <data name="AdditionalArchiveContentValidationError.FileNameReserved" xml:space="preserve"><value>This file name is reserved by Bearcat.</value></data>
   <data name="AdditionalArchiveContentValidationError.TextContentRequired" xml:space="preserve"><value>Text content is required.</value></data>
+  <data name="SelectAdditionalArchiveContents" xml:space="preserve"><value>Select additional archive contents</value></data>
+  <data name="AdditionalArchiveContentsAssignmentHelp" xml:space="preserve"><value>Changes only affect archives created afterwards. Archives that already exist are reused as they are.</value></data>
+  <data name="NoAdditionalArchiveContentsToAssign" xml:space="preserve"><value>No additional archive contents exist yet.</value></data>
+  <data name="ManageAdditionalArchiveContents" xml:space="preserve"><value>Manage additional archive contents</value></data>
+  <data name="DuplicatedEntryName" xml:space="preserve"><value>{0} would all be placed into the release folder as "{1}". Select only one of them.</value></data>
 </root>

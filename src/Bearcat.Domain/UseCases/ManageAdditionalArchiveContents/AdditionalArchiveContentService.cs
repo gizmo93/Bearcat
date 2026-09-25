@@ -252,10 +252,9 @@ public class AdditionalArchiveContentService(
         }
 
         if (
-            string.Equals(
+            ReleaseFolderEntryNames.EntryNameComparer.Equals(
                 fileName,
-                ReleaseFolderEntriesForPackingService.NonceFileName,
-                StringComparison.OrdinalIgnoreCase
+                ReleaseFolderEntriesForPackingService.NonceFileName
             )
         )
         {

@@ -1,3 +1,5 @@
+using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.ReadModels;
+
 namespace Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 
 public record ArchiveConfigTemplateReadModel(
@@ -9,5 +11,6 @@ public record ArchiveConfigTemplateReadModel(
     string? ArchivePassword,
     int ArchiveFileSizeMb,
     bool UseReleaseNameAsArchiveName,
-    int UploadConfigTemplateCount
+    int UploadConfigTemplateCount,
+    IReadOnlyList<AssignedAdditionalArchiveContentReadModel> AdditionalArchiveContents
 );

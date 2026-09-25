@@ -96,16 +96,21 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         var linkCrypterRegistration = await AddLinkCrypterRegistrationAsync();
 
         // Act
-        var archiveConfigTemplateId = await service.CreateArchiveConfigTemplateAsync(
-            releaseTemplate.Id,
-            "RAR Forum A",
-            "/tmp/archives",
-            "rar",
-            "archive-secret",
-            1024,
-            true,
-            CancellationToken.None
-        );
+        var archiveConfigTemplateId = (
+            await service.CreateArchiveConfigTemplateAsync(
+                releaseTemplate.Id,
+                "RAR Forum A",
+                "/tmp/archives",
+                "rar",
+                "archive-secret",
+                1024,
+                true,
+                [],
+                CancellationToken.None
+            )
+        )
+            .ArchiveConfigTemplateId!
+            .Value;
         var uploadConfigTemplateId = await service.CreateUploadConfigTemplateAsync(
             releaseTemplate.Id,
             " ",
@@ -234,6 +239,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
             " ",
             2048,
             false,
+            [],
             CancellationToken.None
         );
 
@@ -254,16 +260,21 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         // Arrange
         var releaseGroup = await AddReleaseGroupAsync();
         var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
-        var archiveConfigTemplateId = await service.CreateArchiveConfigTemplateAsync(
-            releaseTemplate.Id,
-            "RAR Forum A",
-            "/tmp/archives",
-            "rar",
-            "archive-secret",
-            1024,
-            true,
-            CancellationToken.None
-        );
+        var archiveConfigTemplateId = (
+            await service.CreateArchiveConfigTemplateAsync(
+                releaseTemplate.Id,
+                "RAR Forum A",
+                "/tmp/archives",
+                "rar",
+                "archive-secret",
+                1024,
+                true,
+                [],
+                CancellationToken.None
+            )
+        )
+            .ArchiveConfigTemplateId!
+            .Value;
 
         // Act
         await service.DeleteArchiveConfigTemplateAsync(
@@ -299,6 +310,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
                 "archive-secret",
                 1024,
                 true,
+                [],
                 CancellationToken.None
             )
         );
@@ -333,6 +345,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
                 "archive-secret",
                 1024,
                 true,
+                [],
                 CancellationToken.None
             )
         );
@@ -410,16 +423,21 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         // Arrange
         var seed = await AddReleaseTemplateWithChildrenAsync();
         var secondHosterRegistration = await AddHosterRegistrationAsync("Second hoster");
-        var secondArchiveConfigTemplateId = await service.CreateArchiveConfigTemplateAsync(
-            seed.ReleaseTemplateId,
-            "ZIP Forum B",
-            "/tmp/second-archives",
-            "zip",
-            null,
-            2048,
-            false,
-            CancellationToken.None
-        );
+        var secondArchiveConfigTemplateId = (
+            await service.CreateArchiveConfigTemplateAsync(
+                seed.ReleaseTemplateId,
+                "ZIP Forum B",
+                "/tmp/second-archives",
+                "zip",
+                null,
+                2048,
+                false,
+                [],
+                CancellationToken.None
+            )
+        )
+            .ArchiveConfigTemplateId!
+            .Value;
 
         // Act
         await service.UpdateUploadConfigTemplateAsync(
@@ -584,7 +602,73 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task UpdateArchiveConfigTemplateAsync_TemplateHasAdditionalArchiveContents_KeepsAssignedContents()
+    public async Task CreateArchiveConfigTemplateAsync_WithAdditionalArchiveContentIds_PersistsAssignments()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
+        var additionalArchiveContents = await AddAdditionalArchiveContentsAsync();
+
+        // Act
+        var result = await service.CreateArchiveConfigTemplateAsync(
+            releaseTemplate.Id,
+            "RAR Forum A",
+            "/tmp/archives",
+            "rar",
+            null,
+            1024,
+            true,
+            additionalArchiveContents.Select(content => content.Id).ToList(),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        var archiveConfigTemplate = await CreateDbContext()
+            .ArchiveConfigTemplates.Include(template => template.AdditionalArchiveContents)
+            .SingleAsync(template => template.Id == result.ArchiveConfigTemplateId);
+
+        archiveConfigTemplate
+            .AdditionalArchiveContents.Select(content => content.Id)
+            .Order()
+            .ShouldBe(additionalArchiveContents.Select(content => content.Id).Order());
+    }
+
+    [Test]
+    public async Task CreateArchiveConfigTemplateAsync_ContentsWithSameEntryName_ReturnsEntryNameCollisionAndDoesNotPersist()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
+        var collidingAdditionalArchiveContents =
+            await AddAdditionalArchiveContentsWithSameEntryNameAsync();
+
+        // Act
+        var result = await service.CreateArchiveConfigTemplateAsync(
+            releaseTemplate.Id,
+            "RAR Forum A",
+            "/tmp/archives",
+            "rar",
+            null,
+            1024,
+            true,
+            collidingAdditionalArchiveContents.Select(content => content.Id).ToList(),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeFalse();
+        result.ArchiveConfigTemplateId.ShouldBeNull();
+        result.AdditionalArchiveContentEntryNameCollisions.ShouldHaveSingleItem();
+        result
+            .AdditionalArchiveContentEntryNameCollisions[0]
+            .AdditionalArchiveContentNames.ShouldBe(["Premium ad file", "Premium ad text"]);
+        (await CreateDbContext().ArchiveConfigTemplates.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task UpdateArchiveConfigTemplateAsync_SameAdditionalArchiveContentIds_KeepsAssignedContents()
     {
         // Arrange
         var seed = await AddReleaseTemplateWithChildrenAsync();
@@ -603,6 +687,7 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
             null,
             2048,
             false,
+            additionalArchiveContents.Select(content => content.Id).ToList(),
             CancellationToken.None
         );
 
@@ -616,6 +701,120 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
             .AdditionalArchiveContents.Select(content => content.Id)
             .Order()
             .ShouldBe(additionalArchiveContents.Select(content => content.Id).Order());
+    }
+
+    [Test]
+    public async Task UpdateArchiveConfigTemplateAsync_DifferentAdditionalArchiveContentIds_ReplacesAssignmentsAndKeepsContents()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateWithChildrenAsync();
+        var additionalArchiveContents = await AddAdditionalArchiveContentsAsync();
+        await AssignAdditionalArchiveContentsAsync(
+            seed.ArchiveConfigTemplateId,
+            [additionalArchiveContents[0]]
+        );
+
+        // Act
+        var result = await service.UpdateArchiveConfigTemplateAsync(
+            seed.ArchiveConfigTemplateId,
+            "RAR Forum A",
+            "/tmp/archives",
+            "rar",
+            null,
+            1024,
+            true,
+            [additionalArchiveContents[1].Id],
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        var verificationDbContext = CreateDbContext();
+        var archiveConfigTemplate = await verificationDbContext
+            .ArchiveConfigTemplates.Include(template => template.AdditionalArchiveContents)
+            .SingleAsync(template => template.Id == seed.ArchiveConfigTemplateId);
+
+        archiveConfigTemplate
+            .AdditionalArchiveContents.Select(content => content.Id)
+            .ShouldBe([additionalArchiveContents[1].Id]);
+        (await verificationDbContext.AdditionalArchiveContents.CountAsync()).ShouldBe(
+            additionalArchiveContents.Count
+        );
+    }
+
+    [Test]
+    public async Task UpdateArchiveConfigTemplateAsync_EmptyAdditionalArchiveContentIds_RemovesAssignmentsAndKeepsContents()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateWithChildrenAsync();
+        var additionalArchiveContents = await AddAdditionalArchiveContentsAsync();
+        await AssignAdditionalArchiveContentsAsync(
+            seed.ArchiveConfigTemplateId,
+            additionalArchiveContents
+        );
+
+        // Act
+        var result = await service.UpdateArchiveConfigTemplateAsync(
+            seed.ArchiveConfigTemplateId,
+            "RAR Forum A",
+            "/tmp/archives",
+            "rar",
+            null,
+            1024,
+            true,
+            [],
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        var verificationDbContext = CreateDbContext();
+        var archiveConfigTemplate = await verificationDbContext
+            .ArchiveConfigTemplates.Include(template => template.AdditionalArchiveContents)
+            .SingleAsync(template => template.Id == seed.ArchiveConfigTemplateId);
+
+        archiveConfigTemplate.AdditionalArchiveContents.ShouldBeEmpty();
+        (await verificationDbContext.AdditionalArchiveContents.CountAsync()).ShouldBe(
+            additionalArchiveContents.Count
+        );
+    }
+
+    [Test]
+    public async Task UpdateArchiveConfigTemplateAsync_ContentsWithSameEntryName_ReturnsEntryNameCollisionAndKeepsTemplateUnchanged()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateWithChildrenAsync();
+        var collidingAdditionalArchiveContents =
+            await AddAdditionalArchiveContentsWithSameEntryNameAsync();
+
+        // Act
+        var result = await service.UpdateArchiveConfigTemplateAsync(
+            seed.ArchiveConfigTemplateId,
+            "ZIP Forum B",
+            "/tmp/updated-archives",
+            "zip",
+            null,
+            2048,
+            false,
+            collidingAdditionalArchiveContents.Select(content => content.Id).ToList(),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeFalse();
+        result.AdditionalArchiveContentEntryNameCollisions.ShouldHaveSingleItem();
+        result
+            .AdditionalArchiveContentEntryNameCollisions[0]
+            .EntryName.ShouldBe("premium.txt", StringCompareShould.IgnoreCase);
+
+        var archiveConfigTemplate = await CreateDbContext()
+            .ArchiveConfigTemplates.Include(template => template.AdditionalArchiveContents)
+            .SingleAsync(template => template.Id == seed.ArchiveConfigTemplateId);
+
+        archiveConfigTemplate.Name.ShouldBe("RAR Forum A");
+        archiveConfigTemplate.AdditionalArchiveContents.ShouldBeEmpty();
     }
 
     [Test]
@@ -701,6 +900,33 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         return additionalArchiveContents;
     }
 
+    private async Task<
+        List<AdditionalArchiveContent>
+    > AddAdditionalArchiveContentsWithSameEntryNameAsync()
+    {
+        List<AdditionalArchiveContent> additionalArchiveContents =
+        [
+            new AdditionalArchiveContent
+            {
+                Name = "Premium ad file",
+                Type = AdditionalArchiveContentType.Path,
+                SourcePath = "/data/ads/Premium.txt",
+            },
+            new AdditionalArchiveContent
+            {
+                Name = "Premium ad text",
+                Type = AdditionalArchiveContentType.TextFile,
+                FileName = "premium.TXT",
+                TextContent = "Buy premium via my link.",
+            },
+        ];
+
+        dbContext.AdditionalArchiveContents.AddRange(additionalArchiveContents);
+        await dbContext.SaveChangesAsync();
+
+        return additionalArchiveContents;
+    }
+
     private async Task AssignAdditionalArchiveContentsAsync(
         int archiveConfigTemplateId,
         List<AdditionalArchiveContent> additionalArchiveContents
@@ -738,16 +964,21 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
         var hosterRegistration = await AddHosterRegistrationAsync();
         var linkCrypterRegistration = await AddLinkCrypterRegistrationAsync();
-        var archiveConfigTemplateId = await service.CreateArchiveConfigTemplateAsync(
-            releaseTemplate.Id,
-            "RAR Forum A",
-            "/tmp/archives",
-            "rar",
-            "archive-secret",
-            1024,
-            true,
-            CancellationToken.None
-        );
+        var archiveConfigTemplateId = (
+            await service.CreateArchiveConfigTemplateAsync(
+                releaseTemplate.Id,
+                "RAR Forum A",
+                "/tmp/archives",
+                "rar",
+                "archive-secret",
+                1024,
+                true,
+                [],
+                CancellationToken.None
+            )
+        )
+            .ArchiveConfigTemplateId!
+            .Value;
         var uploadConfigTemplateId = await service.CreateUploadConfigTemplateAsync(
             releaseTemplate.Id,
             null,
