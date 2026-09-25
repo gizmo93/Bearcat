@@ -77,6 +77,7 @@ public class ReleaseFolderAutomationRepository(
             .Where(automation => automation.IsEnabled)
             .Include(automation => automation.ReleaseTemplate)
                 .ThenInclude(template => template.ArchiveConfigTemplates)
+                    .ThenInclude(archiveTemplate => archiveTemplate.AdditionalArchiveContents)
             .Include(automation => automation.ReleaseTemplate)
                 .ThenInclude(template => template.UploadConfigTemplates)
                     .ThenInclude(uploadTemplate => uploadTemplate.HosterRegistration)

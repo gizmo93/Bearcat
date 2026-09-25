@@ -117,6 +117,7 @@ public class ReleaseTemplateRepository(
             .ReleaseTemplates.AsSplitQuery()
             .Include(t => t.ReleaseGroup)
             .Include(t => t.ArchiveConfigTemplates)
+                .ThenInclude(a => a.AdditionalArchiveContents)
             .Include(t => t.UploadConfigTemplates)
                 .ThenInclude(u => u.LinkCrypterTemplates)
             .Include(t => t.ImageUploadConfigTemplates)
@@ -132,6 +133,7 @@ public class ReleaseTemplateRepository(
         return await dbWrite
             .Releases.AsSplitQuery()
             .Include(r => r.ArchiveConfigs)
+                .ThenInclude(a => a.AdditionalArchiveContents)
             .Include(r => r.UploadConfigs)
                 .ThenInclude(u => u.CollectionUploadSlot)
             .Include(r => r.UploadConfigs)
@@ -150,6 +152,7 @@ public class ReleaseTemplateRepository(
     {
         return await dbWrite
             .ArchiveConfigTemplates.Include(a => a.UploadConfigTemplates)
+            .Include(a => a.AdditionalArchiveContents)
             .Include(a => a.ReleaseTemplate)
             .FirstAsync(a => a.Id == archiveConfigTemplateId, cancellationToken);
     }

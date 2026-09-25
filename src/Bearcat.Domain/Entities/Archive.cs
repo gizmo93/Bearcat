@@ -20,6 +20,8 @@ public class Archive
 
     public List<string> ErrorMessages { get; set; } = new();
 
+    public List<string> ReleaseFolderEntriesCopiedForPacking { get; set; } = [];
+
     public List<ArchiveFile> ArchiveFiles { get; set; } = null!;
 
     public List<Upload> Uploads { get; set; } = null!;

@@ -555,6 +555,165 @@ public class ReleaseTemplateServiceTest : BearcatIntegrationTest
         uploadConfigTemplate.LinkCrypterTemplates.Single().Password.ShouldBe("container-secret");
     }
 
+    [Test]
+    public async Task CreateTemplateFromReleaseAsync_ArchiveConfigWithAdditionalArchiveContents_CopiesContentsToArchiveConfigTemplate()
+    {
+        // Arrange
+        var release = await AddReleaseWithConfigsAsync();
+        var additionalArchiveContents = await AddAdditionalArchiveContentsAsync();
+        release.ArchiveConfigs.Single().AdditionalArchiveContents = additionalArchiveContents;
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.CreateTemplateFromReleaseAsync(
+            release.Id,
+            "Template from release",
+            CancellationToken.None
+        );
+
+        // Assert
+        var archiveConfigTemplate = await CreateDbContext()
+            .ArchiveConfigTemplates.Include(template => template.AdditionalArchiveContents)
+            .SingleAsync(template => template.ReleaseTemplateId == result);
+
+        archiveConfigTemplate
+            .AdditionalArchiveContents.Select(content => content.Id)
+            .Order()
+            .ShouldBe(additionalArchiveContents.Select(content => content.Id).Order());
+    }
+
+    [Test]
+    public async Task UpdateArchiveConfigTemplateAsync_TemplateHasAdditionalArchiveContents_KeepsAssignedContents()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateWithChildrenAsync();
+        var additionalArchiveContents = await AddAdditionalArchiveContentsAsync();
+        await AssignAdditionalArchiveContentsAsync(
+            seed.ArchiveConfigTemplateId,
+            additionalArchiveContents
+        );
+
+        // Act
+        await service.UpdateArchiveConfigTemplateAsync(
+            seed.ArchiveConfigTemplateId,
+            "ZIP Forum B",
+            "/tmp/updated-archives",
+            "zip",
+            null,
+            2048,
+            false,
+            CancellationToken.None
+        );
+
+        // Assert
+        var archiveConfigTemplate = await CreateDbContext()
+            .ArchiveConfigTemplates.Include(template => template.AdditionalArchiveContents)
+            .SingleAsync(template => template.Id == seed.ArchiveConfigTemplateId);
+
+        archiveConfigTemplate.Name.ShouldBe("ZIP Forum B");
+        archiveConfigTemplate
+            .AdditionalArchiveContents.Select(content => content.Id)
+            .Order()
+            .ShouldBe(additionalArchiveContents.Select(content => content.Id).Order());
+    }
+
+    [Test]
+    public async Task UpdateAsync_ArchiveConfigTemplateHasAdditionalArchiveContents_KeepsAssignedContents()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateWithChildrenAsync();
+        var releaseGroup = await AddReleaseGroupAsync("Updated releases");
+        var additionalArchiveContents = await AddAdditionalArchiveContentsAsync();
+        await AssignAdditionalArchiveContentsAsync(
+            seed.ArchiveConfigTemplateId,
+            additionalArchiveContents
+        );
+
+        // Act
+        await service.UpdateAsync(
+            seed.ReleaseTemplateId,
+            "Updated template",
+            ReleaseType.Managed,
+            ReleaseContentType.Movie,
+            releaseGroup.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        var archiveConfigTemplate = await CreateDbContext()
+            .ArchiveConfigTemplates.Include(template => template.AdditionalArchiveContents)
+            .SingleAsync(template => template.Id == seed.ArchiveConfigTemplateId);
+
+        archiveConfigTemplate
+            .AdditionalArchiveContents.Select(content => content.Id)
+            .Order()
+            .ShouldBe(additionalArchiveContents.Select(content => content.Id).Order());
+    }
+
+    [Test]
+    public async Task DeleteArchiveConfigTemplateAsync_TemplateHasAdditionalArchiveContents_RemovesAssignmentsAndKeepsContents()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateWithChildrenAsync();
+        var additionalArchiveContents = await AddAdditionalArchiveContentsAsync();
+        await AssignAdditionalArchiveContentsAsync(
+            seed.ArchiveConfigTemplateId,
+            additionalArchiveContents
+        );
+
+        // Act
+        await service.DeleteArchiveConfigTemplateAsync(
+            seed.ArchiveConfigTemplateId,
+            CancellationToken.None
+        );
+
+        // Assert
+        var verificationDbContext = CreateDbContext();
+        (await verificationDbContext.ArchiveConfigTemplates.AnyAsync()).ShouldBeFalse();
+        (await verificationDbContext.AdditionalArchiveContents.CountAsync()).ShouldBe(
+            additionalArchiveContents.Count
+        );
+    }
+
+    private async Task<List<AdditionalArchiveContent>> AddAdditionalArchiveContentsAsync()
+    {
+        List<AdditionalArchiveContent> additionalArchiveContents =
+        [
+            new AdditionalArchiveContent
+            {
+                Name = "Premium ad folder",
+                Type = AdditionalArchiveContentType.Path,
+                SourcePath = "/data/ads/premium",
+            },
+            new AdditionalArchiveContent
+            {
+                Name = "Premium ad text",
+                Type = AdditionalArchiveContentType.TextFile,
+                FileName = "buy premium via me.txt",
+                TextContent = "Buy premium via my link.",
+            },
+        ];
+
+        dbContext.AdditionalArchiveContents.AddRange(additionalArchiveContents);
+        await dbContext.SaveChangesAsync();
+
+        return additionalArchiveContents;
+    }
+
+    private async Task AssignAdditionalArchiveContentsAsync(
+        int archiveConfigTemplateId,
+        List<AdditionalArchiveContent> additionalArchiveContents
+    )
+    {
+        var archiveConfigTemplate = await dbContext.ArchiveConfigTemplates.SingleAsync(template =>
+            template.Id == archiveConfigTemplateId
+        );
+        archiveConfigTemplate.AdditionalArchiveContents = additionalArchiveContents;
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+    }
+
     private ReleaseTemplateRepository CreateRepository()
     {
         var archiverFactory = new Mock<IArchiverFactory>();

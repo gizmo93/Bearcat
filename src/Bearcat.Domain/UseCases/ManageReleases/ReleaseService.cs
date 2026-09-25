@@ -451,6 +451,7 @@ public class ReleaseService(
                             : null,
                         Archives = [],
                         UploadConfigs = [],
+                        AdditionalArchiveContents = template.AdditionalArchiveContents.ToList(),
                     },
                 })
                 .ToDictionary(item => item.Id, item => item.Config);

@@ -23,4 +23,6 @@ public class ArchiveConfig
     public List<Archive> Archives { get; set; } = null!;
 
     public List<UploadConfig> UploadConfigs { get; set; } = null!;
+
+    public List<AdditionalArchiveContent> AdditionalArchiveContents { get; set; } = [];
 }

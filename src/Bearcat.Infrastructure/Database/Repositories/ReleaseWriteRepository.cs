@@ -54,6 +54,7 @@ public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite) : IReleaseWr
         return await dbWrite
             .ReleaseTemplates.AsSplitQuery()
             .Include(t => t.ArchiveConfigTemplates)
+                .ThenInclude(a => a.AdditionalArchiveContents)
             .Include(t => t.UploadConfigTemplates)
                 .ThenInclude(u => u.HosterRegistration)
             .Include(t => t.UploadConfigTemplates)

@@ -182,6 +182,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
                         ArchivePassword = config.ArchivePassword,
                         ArchiveFileSizeMb = config.ArchiveFileSizeMb,
                         UseReleaseNameAsArchiveName = config.ArchiveNamePrefix == release.Name,
+                        AdditionalArchiveContents = config.AdditionalArchiveContents.ToList(),
                     },
                 })
                 .ToDictionary(item => item.Id, item => item.Template);
