@@ -1,0 +1,35 @@
+<BbButton Variant="ButtonVariant.Outline"
+          Size="ButtonSize.IconSmall"
+          AriaLabel="@L["NavigationSearchButton"]"
+          Class="bearcat-notification-trigger text-muted-foreground md:w-72 lg:w-96 md:justify-start md:px-3"
+          OnClick="OpenPalette">
+    <LucideIcon Name="search" class="h-4 w-4" />
+    <span class="hidden font-normal md:inline">@L["NavigationSearchButton"]</span>
+    <BbKbd Keys="@ShortcutHint" Size="KbdSize.Small" Class="ml-auto hidden md:inline-flex" />
+</BbButton>
+
+<BbCommandDialog @bind-Open="isOpen" OnValueChange="NavigateToPage">
+    <BbCommandInput Placeholder="@L["NavigationSearchPlaceholder"]"
+                    AutoFocus="true"
+                    DisableDebounce="true"
+                    data-bearcat-select-first-command-item-on-enter="true" />
+    <BbCommandList>
+        <BbCommandEmpty>@L["NavigationSearchNoResults"]</BbCommandEmpty>
+        @foreach (var group in commandGroups)
+        {
+            <BbCommandGroup Heading="@L[group.HeadingLabelKey]">
+                @foreach (var entry in group.Entries)
+                {
+                    <BbCommandItem Value="@entry.Href" SearchText="@BuildSearchText(entry, group)">
+                        <Icon>
+                            <LucideIcon Name="@entry.IconName" class="h-4 w-4" />
+                        </Icon>
+                        <ChildContent>
+                            @L[entry.LabelKey]
+                        </ChildContent>
+                    </BbCommandItem>
+                }
+            </BbCommandGroup>
+        }
+    </BbCommandList>
+</BbCommandDialog>

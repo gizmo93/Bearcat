@@ -1343,4 +1343,11 @@
   <data name="RemoteDownloadStateChanged" xml:space="preserve"><value>The state of {0} changed in the meantime. The list was reloaded.</value></data>
   <data name="RemoteDownloadStatusSubtitle" xml:space="preserve"><value>Download of {0} from {1}</value></data>
   <data name="RemoteDownloadOrigin" xml:space="preserve"><value>Downloaded from remote source</value></data>
+  <data name="Activity" xml:space="preserve"><value>Activity</value></data>
+  <data name="ReleaseSettings" xml:space="preserve"><value>Release settings</value></data>
+  <data name="System" xml:space="preserve"><value>System</value></data>
+  <data name="Navigation" xml:space="preserve"><value>Navigation</value></data>
+  <data name="NavigationSearchButton" xml:space="preserve"><value>Search...</value></data>
+  <data name="NavigationSearchPlaceholder" xml:space="preserve"><value>Search pages...</value></data>
+  <data name="NavigationSearchNoResults" xml:space="preserve"><value>No results found.</value></data>
 </root>

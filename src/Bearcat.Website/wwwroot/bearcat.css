@@ -45,6 +45,9 @@
     --sidebar-accent: oklch(0.93 0.015 270);
     --sidebar-accent-foreground: oklch(0.2 0.02 264);
     --sidebar-border: oklch(0.88 0.01 264);
+    --sidebar-width: 19rem;
+    --sidebar-sub-mx: 0.625rem;
+    --sidebar-sub-px: 0.5rem;
 }
 
 .dark {
@@ -362,10 +365,13 @@ a {
     font-weight: 500;
     color: var(--sidebar-foreground);
     opacity: 0.75;
+}
+
+button .bearcat-nav-group-label {
     cursor: pointer;
 }
 
-.bearcat-nav-group-label:hover {
+button .bearcat-nav-group-label:hover {
     background: var(--sidebar-accent);
     opacity: 1;
 }

@@ -1,5 +1,6 @@
 @inherits LayoutComponentBase
 @using Bearcat.Abstractions.Updates
+@using Bearcat.Website.Layout.Navigation
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject IUpdateChecker UpdateChecker
@@ -30,15 +31,20 @@
     </BbSidebar>
 
     <BbSidebarInset Class="min-w-0 min-h-screen bg-background">
-        <header class="bearcat-app-header sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border/70 px-4">
-            <BbSidebarTrigger />
-            <div class="min-w-0 flex-1">
+        <header class="bearcat-app-header sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border/70 px-4 md:grid md:grid-cols-[1fr_auto_1fr]">
+            <div class="flex min-w-0 flex-1 items-center gap-3">
+                <BbSidebarTrigger />
                 <p class="truncate text-sm font-medium">@CurrentPageTitle</p>
             </div>
-            <UpdateBanner />
-            <QualityIssuesIndicator />
-            <PostQueueIndicator />
-            <NotificationBell />
+            <div class="flex shrink-0 justify-center">
+                <NavigationCommandPalette />
+            </div>
+            <div class="flex shrink-0 items-center justify-end gap-3">
+                <UpdateBanner />
+                <QualityIssuesIndicator />
+                <PostQueueIndicator />
+                <NotificationBell />
+            </div>
         </header>
 
         <main class="bearcat-main p-4 md:p-6" data-bearcat-route-focus>

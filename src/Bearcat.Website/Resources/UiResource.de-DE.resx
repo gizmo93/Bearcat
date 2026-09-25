@@ -1346,4 +1346,11 @@
   <data name="RemoteDownloadStateChanged" xml:space="preserve"><value>Der Status von {0} hat sich inzwischen geändert. Die Liste wurde neu geladen.</value></data>
   <data name="RemoteDownloadStatusSubtitle" xml:space="preserve"><value>Download von {0} aus {1}</value></data>
   <data name="RemoteDownloadOrigin" xml:space="preserve"><value>Von Remotequelle heruntergeladen</value></data>
+  <data name="Activity" xml:space="preserve"><value>Aktivität</value></data>
+  <data name="ReleaseSettings" xml:space="preserve"><value>Releaseeinstellungen</value></data>
+  <data name="System" xml:space="preserve"><value>System</value></data>
+  <data name="Navigation" xml:space="preserve"><value>Navigation</value></data>
+  <data name="NavigationSearchButton" xml:space="preserve"><value>Suchen...</value></data>
+  <data name="NavigationSearchPlaceholder" xml:space="preserve"><value>Seiten durchsuchen...</value></data>
+  <data name="NavigationSearchNoResults" xml:space="preserve"><value>Keine Ergebnisse gefunden.</value></data>
 </root>
