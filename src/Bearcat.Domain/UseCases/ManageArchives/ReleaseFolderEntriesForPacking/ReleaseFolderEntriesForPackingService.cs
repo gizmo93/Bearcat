@@ -45,7 +45,7 @@ public class ReleaseFolderEntriesForPackingService(IFileSystemService fileSystem
             : new ReleaseFolderEntriesForPackingResult([], errorMessages);
     }
 
-    public async Task CopyIntoReleaseFolderAsync(
+    public async Task<string?> CopyIntoReleaseFolderAsync(
         string releaseFolderPath,
         IReadOnlyList<ReleaseFolderEntryForPacking> entries,
         CancellationToken cancellationToken
@@ -53,31 +53,18 @@ public class ReleaseFolderEntriesForPackingService(IFileSystemService fileSystem
     {
         foreach (var entry in entries)
         {
-            var targetPath = Path.Join(releaseFolderPath, entry.Name);
-
-            switch (entry.Type)
+            try
             {
-                case ReleaseFolderEntryForPackingType.FileCopy:
-                    fileSystemService.CopyFile(entry.SourcePath!, targetPath);
-                    break;
-                case ReleaseFolderEntryForPackingType.DirectoryCopy:
-                    fileSystemService.CopyDirectoryRecursively(entry.SourcePath!, targetPath);
-                    break;
-                case ReleaseFolderEntryForPackingType.TextFile:
-                    await File.WriteAllTextAsync(
-                        path: targetPath,
-                        contents: entry.TextContent,
-                        encoding: Utf8EncodingWithByteOrderMark,
-                        cancellationToken: cancellationToken
-                    );
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(
-                        nameof(entries),
-                        $"Unknown release folder entry type, {entry.Type}"
-                    );
+                await CopyEntryIntoReleaseFolderAsync(releaseFolderPath, entry, cancellationToken);
+            }
+            catch (Exception exception)
+                when (exception is IOException or UnauthorizedAccessException)
+            {
+                return $"Cannot place {entry.SourceDescription} into the release folder as \"{entry.Name}\": {exception.Message}";
             }
         }
+
+        return null;
     }
 
     public void DeleteFromReleaseFolder(string releaseFolderPath, IReadOnlyList<string> entryNames)
@@ -88,6 +75,38 @@ public class ReleaseFolderEntriesForPackingService(IFileSystemService fileSystem
 
             fileSystemService.DeleteFileIfExists(entryPath);
             fileSystemService.DeleteDirectoryIfExists(entryPath);
+        }
+    }
+
+    private async Task CopyEntryIntoReleaseFolderAsync(
+        string releaseFolderPath,
+        ReleaseFolderEntryForPacking entry,
+        CancellationToken cancellationToken
+    )
+    {
+        var targetPath = Path.Join(releaseFolderPath, entry.Name);
+
+        switch (entry.Type)
+        {
+            case ReleaseFolderEntryForPackingType.FileCopy:
+                fileSystemService.CopyFile(entry.SourcePath!, targetPath);
+                break;
+            case ReleaseFolderEntryForPackingType.DirectoryCopy:
+                fileSystemService.CopyDirectoryRecursively(entry.SourcePath!, targetPath);
+                break;
+            case ReleaseFolderEntryForPackingType.TextFile:
+                await File.WriteAllTextAsync(
+                    path: targetPath,
+                    contents: entry.TextContent,
+                    encoding: Utf8EncodingWithByteOrderMark,
+                    cancellationToken: cancellationToken
+                );
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(
+                    nameof(entry),
+                    $"Unknown release folder entry type, {entry.Type}"
+                );
         }
     }
 

@@ -1434,6 +1434,59 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task ProcessAsync_CopyingAdditionalContentFails_MarksArchiveAsCreationFailedAndRestoresReleaseFolder()
+    {
+        // Arrange
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie");
+        var sourceFilePath = Path.Combine(additionalContentSourcePath, "Buy-Premium.url");
+        await File.WriteAllTextAsync(sourceFilePath, "premium");
+        var upload = await AddUploadWaitingForArchiveAsync([
+            CreateTextFileContent("Mirror text", "Mirror.txt", "mirror"),
+            CreatePathContent("Premium link", sourceFilePath),
+        ]);
+        var fileSystemServiceMock = CreateFileSystemServiceMockDelegatingToRealFileSystem();
+        fileSystemServiceMock
+            .Setup(f => f.CopyFile(It.IsAny<string>(), It.IsAny<string>()))
+            .Throws(new UnauthorizedAccessException("Access denied"));
+        var failingCopyService = CreateService(fileSystemServiceMock.Object);
+
+        // Act
+        await failingCopyService.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Archives.Include(a => a.Uploads)
+            .Include(a => a.Notifications)
+            .SingleAsync();
+
+        result.ArchiveState.ShouldBe(ArchiveState.CreationFailed);
+        result.ErrorMessages.ShouldBe([
+            "Cannot place additional archive content \"Premium link\" into the release folder as \"Buy-Premium.url\": Access denied",
+        ]);
+        result.ReleaseFolderEntriesCopiedForPacking.ShouldBeEmpty();
+        result.Uploads.Single().Id.ShouldBe(upload.Id);
+        result.Uploads.Single().UploadState.ShouldBe(UploadState.WaitingForArchive);
+        result
+            .Notifications.Single()
+            .Message.ShouldBe($"Failed to create archive: {result.ErrorMessages.Single()}");
+        GetRelativePathsInReleaseFolder().ShouldBe(["movie.mkv"]);
+        archiverMock.Verify(
+            a =>
+                a.ArchiveAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<ArchiveOptions>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
     public async Task ProcessAsync_ArchiverThrows_DeletesCopiedEntriesAndClearsPersistedEntryNames()
     {
         // Arrange
@@ -1547,6 +1600,38 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             .CreateDirectory(Path.Combine(releaseFolderPath, "Extras", "Nested"))
             .FullName;
         await File.WriteAllTextAsync(Path.Combine(extrasFolderPath, "info.txt"), "info");
+    }
+
+    private static Mock<IFileSystemService> CreateFileSystemServiceMockDelegatingToRealFileSystem()
+    {
+        var realFileSystemService = new FileSystemService();
+        var fileSystemServiceMock = new Mock<IFileSystemService>(MockBehavior.Strict);
+        fileSystemServiceMock
+            .Setup(f => f.CreateTempDirectory(It.IsAny<string>()))
+            .Returns((string basePath) => realFileSystemService.CreateTempDirectory(basePath));
+        fileSystemServiceMock
+            .Setup(f => f.FileExists(It.IsAny<string>()))
+            .Returns((string filePath) => realFileSystemService.FileExists(filePath));
+        fileSystemServiceMock
+            .Setup(f => f.DirectoryExists(It.IsAny<string>()))
+            .Returns((string path) => realFileSystemService.DirectoryExists(path));
+        fileSystemServiceMock
+            .Setup(f => f.GetFilesInPath(It.IsAny<string>(), It.IsAny<bool>()))
+            .Returns(
+                (string path, bool recursive) =>
+                    realFileSystemService.GetFilesInPath(path, recursive)
+            );
+        fileSystemServiceMock
+            .Setup(f => f.GetFoldersInPath(It.IsAny<string>()))
+            .Returns((string path) => realFileSystemService.GetFoldersInPath(path));
+        fileSystemServiceMock
+            .Setup(f => f.DeleteFileIfExists(It.IsAny<string>()))
+            .Callback((string filePath) => realFileSystemService.DeleteFileIfExists(filePath));
+        fileSystemServiceMock
+            .Setup(f => f.DeleteDirectoryIfExists(It.IsAny<string>()))
+            .Callback((string path) => realFileSystemService.DeleteDirectoryIfExists(path));
+
+        return fileSystemServiceMock;
     }
 
     private void SetupArchiver(Func<Task> onArchive, ArchiveResult archiveResult)

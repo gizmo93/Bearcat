@@ -645,11 +645,21 @@ public class ArchiveCreationService(
 
         try
         {
-            await releaseFolderEntriesForPackingService.CopyIntoReleaseFolderAsync(
-                releaseFolderPath: releaseFolderPath,
-                entries: entriesForPacking,
-                cancellationToken: cancellationToken
-            );
+            var copyErrorMessage =
+                await releaseFolderEntriesForPackingService.CopyIntoReleaseFolderAsync(
+                    releaseFolderPath: releaseFolderPath,
+                    entries: entriesForPacking,
+                    cancellationToken: cancellationToken
+                );
+
+            if (copyErrorMessage is not null)
+            {
+                return new ArchiveResult(
+                    IsSuccess: false,
+                    CreatedFileNames: [],
+                    ErrorMessages: [copyErrorMessage]
+                );
+            }
 
             // For people that host Bearcat on a Synology NAS: DSM adds that nasty hidden @eaDir folder everywhere where media is.
             // So we should remove it before archiving.
