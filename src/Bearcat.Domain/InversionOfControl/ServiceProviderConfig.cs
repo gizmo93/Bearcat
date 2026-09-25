@@ -22,6 +22,7 @@ using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives;
+using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Domain.UseCases.ManageForumPostingRules;
@@ -122,6 +123,7 @@ public static class ServiceProviderConfig
                 provider.GetRequiredService<DistributionSiteSessionService>()
             );
             services.AddScoped<ArchiveCreationService>();
+            services.AddScoped<ReleaseFolderEntriesForPackingService>();
             services.AddScoped<ArchiveCleanupService>();
             services.AddScoped<ReleaseFolderRetirementService>();
             services.AddScoped<UnmanagedReleaseConverter>();

@@ -9,6 +9,8 @@ public interface IFileSystemService
     bool FileExists(string filePath);
     bool DirectoryExists(string path);
     bool DirectoryHasEntries(string path);
+    void CopyFile(string sourceFilePath, string destinationFilePath);
+    void CopyDirectoryRecursively(string sourceDirectoryPath, string destinationDirectoryPath);
     void DeleteFileIfExists(string filePath);
     void DeleteDirectoryIfExists(string path);
     void DeleteDirectoryIfEmpty(string path);

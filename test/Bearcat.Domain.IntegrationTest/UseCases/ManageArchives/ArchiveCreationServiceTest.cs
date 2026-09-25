@@ -1,10 +1,13 @@
 using System.Linq.Expressions;
 using System.Security.Cryptography;
+using System.Text;
+using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageArchives;
+using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -29,6 +32,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
     private Mock<IArchiver> archiverMock = null!;
     private Mock<IArchiverFactory> archiverFactoryMock = null!;
     private Mock<IApplicationConfigurationProvider> configurationProviderMock = null!;
+    private string additionalContentSourcePath = null!;
     private ArchiveCreationService service = null!;
 
     [SetUp]
@@ -41,6 +45,9 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             .FullName;
         archiveFilesBasePath = Directory
             .CreateDirectory(Path.Combine(tempRootPath, "archives"))
+            .FullName;
+        additionalContentSourcePath = Directory
+            .CreateDirectory(Path.Combine(tempRootPath, "additional-content"))
             .FullName;
 
         archiverMock = new Mock<IArchiver>(MockBehavior.Strict);
@@ -68,18 +75,24 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             )
             .Returns(2);
 
-        service = new ArchiveCreationService(
+        service = CreateService(new FileSystemService());
+    }
+
+    private ArchiveCreationService CreateService(IFileSystemService fileSystemService)
+    {
+        return new ArchiveCreationService(
             new ArchiveCreationRepository(dbContext),
             Mock.Of<ILogger<ArchiveCreationService>>(),
             archiverFactoryMock.Object,
-            new FileSystemService(),
+            fileSystemService,
             CreateTimeProvider(),
             new NotificationService(
                 repository: new NotificationRepository(dbContext),
                 timeProvider: CreateTimeProvider(),
                 configurationProvider: CreateNotificationConfigurationProvider()
             ),
-            configurationProviderMock.Object
+            configurationProviderMock.Object,
+            new ReleaseFolderEntriesForPackingService(fileSystemService)
         );
     }
 
@@ -524,7 +537,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             .ShouldBe(["archive.part1.rar", "archive.part2.rar"]);
         result.Uploads.Single().Id.ShouldBe(upload.Id);
         result.Uploads.Single().UploadState.ShouldBe(UploadState.Pending);
-        File.Exists(Path.Combine(releaseFolderPath, "__nonce.txt")).ShouldBeTrue();
+        File.Exists(Path.Combine(releaseFolderPath, "__nonce.txt")).ShouldBeFalse();
         archiverFactoryMock.Verify(f => f.GetByName("zip"), Times.Once);
         archiverMock.Verify(
             a =>
@@ -841,6 +854,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         result
             .Notifications.Single()
             .Message.ShouldBe("Failed to create archive: Could not create archive");
+        File.Exists(Path.Combine(releaseFolderPath, "__nonce.txt")).ShouldBeFalse();
         archiverFactoryMock.Verify(f => f.GetByName("zip"), Times.Once);
         archiverMock.Verify(
             a =>
@@ -1173,9 +1187,437 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         result.UploadedFiles.ShouldBeEmpty();
     }
 
-    private async Task<Upload> AddUploadWaitingForArchiveAsync()
+    [Test]
+    public async Task ProcessAsync_ArchiveConfigHasAdditionalArchiveContents_PlacesContentsInsideReleaseFolderOnlyWhileArchiving()
     {
-        var uploadConfig = await AddUploadConfigAsync();
+        // Arrange
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie");
+        var sourceFilePath = Path.Combine(additionalContentSourcePath, "Buy-Premium.url");
+        await File.WriteAllTextAsync(sourceFilePath, "premium");
+        var sourceFolderPath = Directory
+            .CreateDirectory(Path.Combine(additionalContentSourcePath, "Extras"))
+            .FullName;
+        await File.WriteAllTextAsync(Path.Combine(sourceFolderPath, "readme.txt"), "readme");
+        var nestedSourceFolderPath = Directory
+            .CreateDirectory(Path.Combine(sourceFolderPath, "Nested"))
+            .FullName;
+        await File.WriteAllTextAsync(Path.Combine(nestedSourceFolderPath, "info.txt"), "info");
+        await AddUploadWaitingForArchiveAsync([
+            CreatePathContent("Premium link", sourceFilePath),
+            CreatePathContent("Extras folder", sourceFolderPath + Path.DirectorySeparatorChar),
+            CreateTextFileContent("Mirror text", "Mirror.txt", "mirror"),
+        ]);
+        List<string> releaseFolderEntriesDuringArchiving = [];
+        List<string> persistedEntryNamesDuringArchiving = [];
+        var nestedFileContentDuringArchiving = string.Empty;
+        SetupArchiver(
+            async () =>
+            {
+                releaseFolderEntriesDuringArchiving = GetRelativePathsInReleaseFolder();
+                persistedEntryNamesDuringArchiving =
+                    await LoadPersistedReleaseFolderEntriesCopiedForPackingAsync();
+                nestedFileContentDuringArchiving = await File.ReadAllTextAsync(
+                    Path.Combine(releaseFolderPath, "Extras", "Nested", "info.txt")
+                );
+            },
+            new ArchiveResult(true, ["archive.part1.rar"], null)
+        );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Archives.SingleAsync();
+
+        releaseFolderEntriesDuringArchiving.ShouldBe(
+            [
+                "movie.mkv",
+                "__nonce.txt",
+                "Buy-Premium.url",
+                "Extras",
+                Path.Combine("Extras", "readme.txt"),
+                Path.Combine("Extras", "Nested"),
+                Path.Combine("Extras", "Nested", "info.txt"),
+                "Mirror.txt",
+            ],
+            ignoreOrder: true
+        );
+        persistedEntryNamesDuringArchiving.ShouldBe(
+            ["__nonce.txt", "Buy-Premium.url", "Extras", "Mirror.txt"],
+            ignoreOrder: true
+        );
+        nestedFileContentDuringArchiving.ShouldBe("info");
+        GetRelativePathsInReleaseFolder().ShouldBe(["movie.mkv"]);
+        File.Exists(sourceFilePath).ShouldBeTrue();
+        File.Exists(Path.Combine(nestedSourceFolderPath, "info.txt")).ShouldBeTrue();
+        result.ArchiveState.ShouldBe(ArchiveState.Created);
+        result.ReleaseFolderEntriesCopiedForPacking.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task ProcessAsync_AdditionalTextFile_WritesUtf8WithByteOrderMarkAndCrlfLineEndings()
+    {
+        // Arrange
+        await AddUploadWaitingForArchiveAsync([
+            CreateTextFileContent("Mirror text", "Mirror.txt", "first\nsecond\r\nthird\rfourth ü"),
+        ]);
+        byte[] textFileBytesDuringArchiving = [];
+        SetupArchiver(
+            async () =>
+                textFileBytesDuringArchiving = await File.ReadAllBytesAsync(
+                    Path.Combine(releaseFolderPath, "Mirror.txt")
+                ),
+            new ArchiveResult(true, ["archive.part1.rar"], null)
+        );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        textFileBytesDuringArchiving.ShouldBe([
+            .. Encoding.UTF8.GetPreamble(),
+            .. Encoding.UTF8.GetBytes("first\r\nsecond\r\nthird\r\nfourth ü"),
+        ]);
+        File.Exists(Path.Combine(releaseFolderPath, "Mirror.txt")).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_ReleaseFolderContainsNonceFromOlderVersion_OverwritesAndDeletesNonce()
+    {
+        // Arrange
+        var noncePath = Path.Combine(releaseFolderPath, "__nonce.txt");
+        await File.WriteAllTextAsync(noncePath, "old-nonce");
+        await AddUploadWaitingForArchiveAsync();
+        var nonceDuringArchiving = string.Empty;
+        SetupArchiver(
+            async () => nonceDuringArchiving = await File.ReadAllTextAsync(noncePath),
+            new ArchiveResult(true, ["archive.part1.rar"], null)
+        );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Archives.SingleAsync();
+
+        Guid.TryParse(nonceDuringArchiving, out _).ShouldBeTrue();
+        File.Exists(noncePath).ShouldBeFalse();
+        result.ArchiveState.ShouldBe(ArchiveState.Created);
+    }
+
+    [Test]
+    public async Task ProcessAsync_AdditionalContentCollidesWithExistingReleaseFile_FailsWithoutTouchingReleaseFolder()
+    {
+        // Arrange
+        var userFilePath = Path.Combine(releaseFolderPath, "Buy-Premium.txt");
+        await File.WriteAllTextAsync(userFilePath, "user content");
+        var sourceFilePath = Path.Combine(additionalContentSourcePath, "Extras.txt");
+        await File.WriteAllTextAsync(sourceFilePath, "extras");
+        var upload = await AddUploadWaitingForArchiveAsync([
+            CreateTextFileContent("Premium text", "buy-premium.TXT", "ad"),
+            CreatePathContent("Extras file", sourceFilePath),
+        ]);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Archives.Include(a => a.Uploads)
+            .Include(a => a.Notifications)
+            .SingleAsync();
+
+        result.ArchiveState.ShouldBe(ArchiveState.CreationFailed);
+        result.ErrorMessages.ShouldBe([
+            $"Cannot place additional archive content \"Premium text\" into the release folder because \"buy-premium.TXT\" already exists in \"{releaseFolderPath}\".",
+        ]);
+        result.ReleaseFolderEntriesCopiedForPacking.ShouldBeEmpty();
+        result.Uploads.Single().Id.ShouldBe(upload.Id);
+        result.Uploads.Single().UploadState.ShouldBe(UploadState.WaitingForArchive);
+        result
+            .Notifications.Single()
+            .Message.ShouldBe($"Failed to create archive: {result.ErrorMessages.Single()}");
+        GetRelativePathsInReleaseFolder().ShouldBe(["Buy-Premium.txt"]);
+        (await File.ReadAllTextAsync(userFilePath)).ShouldBe("user content");
+        archiverMock.Verify(
+            a =>
+                a.ArchiveAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<ArchiveOptions>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task ProcessAsync_AdditionalContentsShareEntryName_FailsWithoutTouchingReleaseFolder()
+    {
+        // Arrange
+        var sourceFilePath = Path.Combine(additionalContentSourcePath, "INFO.txt");
+        await File.WriteAllTextAsync(sourceFilePath, "info");
+        await AddUploadWaitingForArchiveAsync([
+            CreateTextFileContent("Info text", "Info.txt", "info"),
+            CreatePathContent("Info file", sourceFilePath),
+        ]);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Archives.SingleAsync();
+
+        result.ArchiveState.ShouldBe(ArchiveState.CreationFailed);
+        var errorMessage = result.ErrorMessages.ShouldHaveSingleItem();
+        errorMessage.ShouldStartWith("Cannot place additional archive content ");
+        errorMessage.ShouldContain("additional archive content \"Info text\"");
+        errorMessage.ShouldContain("additional archive content \"Info file\"");
+        errorMessage.ShouldContain("into the release folder because they would all be named");
+        result.ReleaseFolderEntriesCopiedForPacking.ShouldBeEmpty();
+        GetRelativePathsInReleaseFolder().ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task ProcessAsync_AdditionalPathDoesNotExist_FailsWithoutTouchingReleaseFolder()
+    {
+        // Arrange
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie");
+        var missingSourcePath = Path.Combine(additionalContentSourcePath, "missing.txt");
+        await AddUploadWaitingForArchiveAsync([
+            CreatePathContent("Missing file", missingSourcePath),
+            CreateTextFileContent("Mirror text", "Mirror.txt", "mirror"),
+        ]);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Archives.SingleAsync();
+
+        result.ArchiveState.ShouldBe(ArchiveState.CreationFailed);
+        result.ErrorMessages.ShouldBe([
+            $"Cannot place additional archive content \"Missing file\" into the release folder because its source path \"{missingSourcePath}\" does not exist.",
+        ]);
+        result.ReleaseFolderEntriesCopiedForPacking.ShouldBeEmpty();
+        GetRelativePathsInReleaseFolder().ShouldBe(["movie.mkv"]);
+    }
+
+    [Test]
+    public async Task ProcessAsync_AdditionalFolderContainsReleaseFolder_FailsWithoutTouchingReleaseFolder()
+    {
+        // Arrange
+        await AddUploadWaitingForArchiveAsync([
+            CreatePathContent("Temp root folder", tempRootPath),
+        ]);
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Archives.SingleAsync();
+
+        result.ArchiveState.ShouldBe(ArchiveState.CreationFailed);
+        result.ErrorMessages.ShouldBe([
+            $"Cannot place additional archive content \"Temp root folder\" into the release folder because its source path \"{tempRootPath}\" contains the release folder \"{releaseFolderPath}\".",
+        ]);
+        GetRelativePathsInReleaseFolder().ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task ProcessAsync_ArchiverThrows_DeletesCopiedEntriesAndClearsPersistedEntryNames()
+    {
+        // Arrange
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie");
+        await AddUploadWaitingForArchiveAsync([
+            CreateTextFileContent("Mirror text", "Mirror.txt", "mirror"),
+        ]);
+        archiverMock
+            .Setup(a =>
+                a.ArchiveAsync(
+                    releaseFolderPath,
+                    It.IsAny<string>(),
+                    "bearcat-release",
+                    It.IsAny<int>(),
+                    "secret",
+                    It.IsAny<ArchiveOptions>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(new IOException("Disk full"));
+
+        // Act
+        await Should.ThrowAsync<IOException>(() => service.ProcessAsync(CancellationToken.None));
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Archives.SingleAsync();
+
+        result.ArchiveState.ShouldBe(ArchiveState.Creating);
+        result.ReleaseFolderEntriesCopiedForPacking.ShouldBeEmpty();
+        GetRelativePathsInReleaseFolder().ShouldBe(["movie.mkv"]);
+    }
+
+    [Test]
+    public async Task ProcessAsync_InterruptedArchiveWithCopiedEntries_DeletesEntriesAndRecoversArchive()
+    {
+        // Arrange
+        var archiveConfig = await AddArchiveConfigAsync();
+        await CreateReleaseFolderEntriesLeftBehindByCrashAsync();
+        var archiveFolderPath = Directory
+            .CreateDirectory(Path.Combine(archiveFilesBasePath, "interrupted"))
+            .FullName;
+        var archiveFilePath = Path.Combine(archiveFolderPath, "interrupted.part1.rar");
+        await File.WriteAllTextAsync(archiveFilePath, "archive-data");
+        dbContext.Archives.Add(
+            new Archive
+            {
+                ArchiveConfigId = archiveConfig.Id,
+                ArchiveFolderPath = archiveFolderPath,
+                ArchiveState = ArchiveState.Creating,
+                ArchiveFileSizeMb = archiveConfig.ArchiveFileSizeMb,
+                CreatedAt = DateTime.UtcNow,
+                ArchiveFiles = [new ArchiveFile { FullFileName = archiveFilePath }],
+                Uploads = [],
+                ErrorMessages = [],
+                ReleaseFolderEntriesCopiedForPacking = ["__nonce.txt", "Extras", "Mirror.txt"],
+            }
+        );
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.Archives.SingleAsync();
+
+        result.ArchiveState.ShouldBe(ArchiveState.Created);
+        result.ReleaseFolderEntriesCopiedForPacking.ShouldBeEmpty();
+        GetRelativePathsInReleaseFolder().ShouldBe(["movie.mkv"]);
+    }
+
+    [Test]
+    public async Task ProcessAsync_InterruptedArchiveWithIncompleteFilesAndCopiedEntries_DeletesEntriesAndArchive()
+    {
+        // Arrange
+        var archiveConfig = await AddArchiveConfigAsync();
+        await CreateReleaseFolderEntriesLeftBehindByCrashAsync();
+        dbContext.Archives.Add(
+            new Archive
+            {
+                ArchiveConfigId = archiveConfig.Id,
+                ArchiveFolderPath = Path.Combine(archiveFilesBasePath, "interrupted"),
+                ArchiveState = ArchiveState.Creating,
+                ArchiveFileSizeMb = archiveConfig.ArchiveFileSizeMb,
+                CreatedAt = DateTime.UtcNow,
+                ArchiveFiles = [],
+                Uploads = [],
+                ErrorMessages = [],
+                ReleaseFolderEntriesCopiedForPacking = ["__nonce.txt", "Extras", "Mirror.txt"],
+            }
+        );
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var result = await dbContext.Archives.AnyAsync();
+
+        result.ShouldBeFalse();
+        GetRelativePathsInReleaseFolder().ShouldBe(["movie.mkv"]);
+    }
+
+    private async Task CreateReleaseFolderEntriesLeftBehindByCrashAsync()
+    {
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie");
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "__nonce.txt"), "nonce");
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "Mirror.txt"), "mirror");
+        var extrasFolderPath = Directory
+            .CreateDirectory(Path.Combine(releaseFolderPath, "Extras", "Nested"))
+            .FullName;
+        await File.WriteAllTextAsync(Path.Combine(extrasFolderPath, "info.txt"), "info");
+    }
+
+    private void SetupArchiver(Func<Task> onArchive, ArchiveResult archiveResult)
+    {
+        archiverMock
+            .Setup(a =>
+                a.ArchiveAsync(
+                    releaseFolderPath,
+                    It.IsAny<string>(),
+                    "bearcat-release",
+                    It.IsAny<int>(),
+                    "secret",
+                    It.IsAny<ArchiveOptions>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(async () =>
+            {
+                await onArchive();
+                return archiveResult;
+            });
+    }
+
+    private List<string> GetRelativePathsInReleaseFolder()
+    {
+        return Directory
+            .GetFileSystemEntries(releaseFolderPath, "*", SearchOption.AllDirectories)
+            .Select(path => Path.GetRelativePath(releaseFolderPath, path))
+            .ToList();
+    }
+
+    private async Task<List<string>> LoadPersistedReleaseFolderEntriesCopiedForPackingAsync()
+    {
+        await using var readDbContext = Database.CreateDbContext();
+        var archive = await readDbContext.Archives.SingleAsync();
+
+        return archive.ReleaseFolderEntriesCopiedForPacking;
+    }
+
+    private static AdditionalArchiveContent CreatePathContent(string name, string sourcePath)
+    {
+        return new AdditionalArchiveContent
+        {
+            Name = name,
+            Type = AdditionalArchiveContentType.Path,
+            SourcePath = sourcePath,
+        };
+    }
+
+    private static AdditionalArchiveContent CreateTextFileContent(
+        string name,
+        string fileName,
+        string textContent
+    )
+    {
+        return new AdditionalArchiveContent
+        {
+            Name = name,
+            Type = AdditionalArchiveContentType.TextFile,
+            FileName = fileName,
+            TextContent = textContent,
+        };
+    }
+
+    private async Task<Upload> AddUploadWaitingForArchiveAsync(
+        List<AdditionalArchiveContent>? additionalArchiveContents = null
+    )
+    {
+        var uploadConfig = await AddUploadConfigAsync(
+            await AddArchiveConfigAsync(additionalArchiveContents)
+        );
         var upload = new Upload
         {
             UploadConfigId = uploadConfig.Id,
@@ -1219,7 +1661,9 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         return uploadConfig;
     }
 
-    private async Task<ArchiveConfig> AddArchiveConfigAsync()
+    private async Task<ArchiveConfig> AddArchiveConfigAsync(
+        List<AdditionalArchiveContent>? additionalArchiveContents = null
+    )
     {
         var releaseGroup = new ReleaseGroup
         {
@@ -1243,6 +1687,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             ArchiveNamePrefix = "bearcat-release",
             ArchivePassword = "secret",
             ArchiveFileSizeMb = 512,
+            AdditionalArchiveContents = additionalArchiveContents ?? [],
         };
 
         dbContext.ArchiveConfigs.Add(archiveConfig);
