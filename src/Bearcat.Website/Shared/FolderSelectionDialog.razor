@@ -14,13 +14,13 @@
                     ValueField="@(node => node.Path)"
                     ChildrenProperty="@(node => node.Children)"
                     HasChildrenField="@(node => node.HasChildren)"
-                    IconField='@(_ => "folder")'
+                    IconField='@(node => node.IsFile ? "file" : "folder")'
                     SelectionMode="TreeSelectionMode.Single"
                     @bind-SelectedValue="selectedItem"
                     @bind-ExpandedValues="expandedItems"
                     OnLoadChildren="LoadChildrenForTreeAsync"
                     ShowSearch="true"
-                    SearchPlaceholder="@L["SearchFolders"]"
+                    SearchPlaceholder="@(IncludeFiles ? L["SearchFoldersAndFiles"] : L["SearchFolders"])"
                     AriaLabel="@L["FolderSelectionTree"]"
                     Class="bearcat-folder-tree" />
     }

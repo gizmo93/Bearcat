@@ -16,6 +16,9 @@ public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite) : IArchiv
                 .ThenInclude(u => u.ArchiveConfig)
                     .ThenInclude(a => a.Release)
             .Include(u => u.UploadConfig)
+                .ThenInclude(u => u.ArchiveConfig)
+                    .ThenInclude(a => a.AdditionalArchiveContents)
+            .Include(u => u.UploadConfig)
                 .ThenInclude(u => u.HosterRegistration)
             .Where(u => u.ArchiveId == null && u.UploadState == UploadState.WaitingForArchive)
             .OrderBy(u => u.Id)
@@ -113,6 +116,7 @@ public class ArchiveCreationRepository(IBearcatWriteDbContext dbWrite) : IArchiv
             .Archives.Include(a => a.ArchiveFiles)
             .Include(a => a.Uploads)
             .Include(a => a.ArchiveConfig)
+                .ThenInclude(c => c.Release)
             .Where(a => a.ArchiveState == ArchiveState.Creating)
             .OrderBy(a => a.Id)
             .ToListAsync(cancellationToken: cancellationToken);

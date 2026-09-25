@@ -61,15 +61,16 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
             "bearcat-release",
             "secret",
             "Main archive",
-            512
+            512,
+            []
         );
 
         // Assert
-        result.ShouldBeGreaterThan(0);
+        result.IsSuccess.ShouldBeTrue();
 
         var archiveConfig = await dbContext.ArchiveConfigs.SingleAsync();
         archiveConfig.ShouldNotBeNull();
-        archiveConfig.Id.ShouldBe(result);
+        archiveConfig.Id.ShouldBe(result.ArchiveConfigId!.Value);
         archiveConfig.ReleaseId.ShouldBe(releaseId);
         archiveConfig.ArchiveFilesBasePath.ShouldBe("/data/releases");
         archiveConfig.ArchiverName.ShouldBe("zip");
@@ -93,11 +94,12 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
             "bearcat-release",
             null,
             "Main archive",
-            null
+            null,
+            []
         );
 
         // Assert
-        result.ShouldBeGreaterThan(0);
+        result.IsSuccess.ShouldBeTrue();
 
         var archiveConfig = await dbContext.ArchiveConfigs.SingleAsync();
         archiveConfig.ShouldNotBeNull();
@@ -164,7 +166,8 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
             "updated-prefix",
             "new-secret",
             "Updated archive",
-            256
+            256,
+            []
         );
 
         // Assert
@@ -194,7 +197,8 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
             "updated-prefix",
             null,
             "Updated archive",
-            null
+            null,
+            []
         );
 
         // Assert
@@ -219,7 +223,8 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
                 "updated-prefix",
                 "new-secret",
                 "Updated archive",
-                256
+                256,
+                []
             )
         );
 
@@ -242,12 +247,182 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
                 "updated-prefix",
                 "new-secret",
                 "Updated archive",
-                256
+                256,
+                []
             )
         );
 
         // Assert
         result.Message.ShouldBe("Archive configs for unmanaged releases cannot be changed.");
+    }
+
+    [Test]
+    public async Task CreateAsync_WithAdditionalArchiveContentIds_PersistsAssignments()
+    {
+        // Arrange
+        var releaseId = await AddReleaseAsync();
+        var additionalArchiveContents = await AddAdditionalArchiveContentsAsync();
+
+        // Act
+        var result = await service.CreateAsync(
+            releaseId,
+            "/data/releases",
+            "zip",
+            "bearcat-release",
+            null,
+            "Main archive",
+            512,
+            additionalArchiveContents.Select(content => content.Id).ToList()
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        var archiveConfig = await CreateDbContext()
+            .ArchiveConfigs.Include(config => config.AdditionalArchiveContents)
+            .SingleAsync(config => config.Id == result.ArchiveConfigId);
+
+        archiveConfig
+            .AdditionalArchiveContents.Select(content => content.Id)
+            .Order()
+            .ShouldBe(additionalArchiveContents.Select(content => content.Id).Order());
+    }
+
+    [Test]
+    public async Task CreateAsync_ContentsWithSameEntryName_ReturnsEntryNameCollisionAndDoesNotPersist()
+    {
+        // Arrange
+        var releaseId = await AddReleaseAsync();
+        var collidingAdditionalArchiveContents =
+            await AddAdditionalArchiveContentsWithSameEntryNameAsync();
+
+        // Act
+        var result = await service.CreateAsync(
+            releaseId,
+            "/data/releases",
+            "zip",
+            "bearcat-release",
+            null,
+            "Main archive",
+            512,
+            collidingAdditionalArchiveContents.Select(content => content.Id).ToList()
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeFalse();
+        result.ArchiveConfigId.ShouldBeNull();
+        result.AdditionalArchiveContentEntryNameCollisions.ShouldHaveSingleItem();
+        result
+            .AdditionalArchiveContentEntryNameCollisions[0]
+            .AdditionalArchiveContentNames.ShouldBe(["Premium ad folder", "Premium ad text"]);
+        (await CreateDbContext().ArchiveConfigs.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task UpdateAsync_DifferentAdditionalArchiveContentIds_ReplacesAssignmentsAndKeepsContents()
+    {
+        // Arrange
+        var additionalArchiveContents = await AddAdditionalArchiveContentsAsync();
+        var archiveConfig = await AddArchiveConfigAsync();
+        archiveConfig.AdditionalArchiveContents = [additionalArchiveContents[0]];
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.UpdateAsync(
+            archiveConfig.Id,
+            "/data/releases",
+            "bearcat-release",
+            null,
+            "Main archive",
+            512,
+            [additionalArchiveContents[1].Id]
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        var verificationDbContext = CreateDbContext();
+        var updatedArchiveConfig = await verificationDbContext
+            .ArchiveConfigs.Include(config => config.AdditionalArchiveContents)
+            .SingleAsync(config => config.Id == archiveConfig.Id);
+
+        updatedArchiveConfig
+            .AdditionalArchiveContents.Select(content => content.Id)
+            .ShouldBe([additionalArchiveContents[1].Id]);
+        (await verificationDbContext.AdditionalArchiveContents.CountAsync()).ShouldBe(
+            additionalArchiveContents.Count
+        );
+    }
+
+    [Test]
+    public async Task UpdateAsync_EmptyAdditionalArchiveContentIds_RemovesAssignmentsAndKeepsContents()
+    {
+        // Arrange
+        var additionalArchiveContents = await AddAdditionalArchiveContentsAsync();
+        var archiveConfig = await AddArchiveConfigAsync();
+        archiveConfig.AdditionalArchiveContents = additionalArchiveContents;
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.UpdateAsync(
+            archiveConfig.Id,
+            "/data/releases",
+            "bearcat-release",
+            null,
+            "Main archive",
+            512,
+            []
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+
+        var verificationDbContext = CreateDbContext();
+        var updatedArchiveConfig = await verificationDbContext
+            .ArchiveConfigs.Include(config => config.AdditionalArchiveContents)
+            .SingleAsync(config => config.Id == archiveConfig.Id);
+
+        updatedArchiveConfig.AdditionalArchiveContents.ShouldBeEmpty();
+        (await verificationDbContext.AdditionalArchiveContents.CountAsync()).ShouldBe(
+            additionalArchiveContents.Count
+        );
+    }
+
+    [Test]
+    public async Task UpdateAsync_ContentsWithSameEntryName_ReturnsEntryNameCollisionAndKeepsArchiveConfigUnchanged()
+    {
+        // Arrange
+        var archiveConfig = await AddArchiveConfigAsync();
+        var collidingAdditionalArchiveContents =
+            await AddAdditionalArchiveContentsWithSameEntryNameAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.UpdateAsync(
+            archiveConfig.Id,
+            "/new/releases",
+            "updated-prefix",
+            null,
+            "Updated archive",
+            256,
+            collidingAdditionalArchiveContents.Select(content => content.Id).ToList()
+        );
+
+        // Assert
+        result.IsSuccess.ShouldBeFalse();
+        result.AdditionalArchiveContentEntryNameCollisions.ShouldHaveSingleItem();
+        result
+            .AdditionalArchiveContentEntryNameCollisions[0]
+            .EntryName.ShouldBe("premium", StringCompareShould.IgnoreCase);
+
+        var unchangedArchiveConfig = await CreateDbContext()
+            .ArchiveConfigs.Include(config => config.AdditionalArchiveContents)
+            .SingleAsync(config => config.Id == archiveConfig.Id);
+
+        unchangedArchiveConfig.Name.ShouldBe("Main archive");
+        unchangedArchiveConfig.AdditionalArchiveContents.ShouldBeEmpty();
     }
 
     [Test]
@@ -441,6 +616,58 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
 
         // Assert
         result.Message.ShouldBe("Archives can only be refreshed for unmanaged releases.");
+    }
+
+    private async Task<List<AdditionalArchiveContent>> AddAdditionalArchiveContentsAsync()
+    {
+        List<AdditionalArchiveContent> additionalArchiveContents =
+        [
+            new AdditionalArchiveContent
+            {
+                Name = "Premium ad folder",
+                Type = AdditionalArchiveContentType.Path,
+                SourcePath = "/data/ads/premium",
+            },
+            new AdditionalArchiveContent
+            {
+                Name = "Premium ad text",
+                Type = AdditionalArchiveContentType.TextFile,
+                FileName = "buy premium via me.txt",
+                TextContent = "Buy premium via my link.",
+            },
+        ];
+
+        dbContext.AdditionalArchiveContents.AddRange(additionalArchiveContents);
+        await dbContext.SaveChangesAsync();
+
+        return additionalArchiveContents;
+    }
+
+    private async Task<
+        List<AdditionalArchiveContent>
+    > AddAdditionalArchiveContentsWithSameEntryNameAsync()
+    {
+        List<AdditionalArchiveContent> additionalArchiveContents =
+        [
+            new AdditionalArchiveContent
+            {
+                Name = "Premium ad folder",
+                Type = AdditionalArchiveContentType.Path,
+                SourcePath = "/data/ads/premium/",
+            },
+            new AdditionalArchiveContent
+            {
+                Name = "Premium ad text",
+                Type = AdditionalArchiveContentType.TextFile,
+                FileName = "PREMIUM",
+                TextContent = "Buy premium via my link.",
+            },
+        ];
+
+        dbContext.AdditionalArchiveContents.AddRange(additionalArchiveContents);
+        await dbContext.SaveChangesAsync();
+
+        return additionalArchiveContents;
     }
 
     private async Task<ArchiveConfig> AddArchiveConfigAsync(

@@ -1,0 +1,42 @@
+@if (additionalArchiveContents is null)
+{
+    return;
+}
+
+@if (additionalArchiveContents.Count == 0)
+{
+    <div class="space-y-2">
+        <p class="text-sm font-medium">@L["AdditionalArchiveContents"]</p>
+        <p class="text-sm text-muted-foreground">
+            @L["NoAdditionalArchiveContentsToAssign"]
+            <a class="text-primary transition hover:underline" href="/additional-archive-contents">@L["ManageAdditionalArchiveContents"]</a>
+        </p>
+    </div>
+}
+else
+{
+    <div class="space-y-2">
+        <BbFormFieldMultiSelect TValue="int"
+                                Values="Values"
+                                ValuesChanged="ValuesChanged"
+                                ValuesExpression="ValuesExpression"
+                                Label="@L["AdditionalArchiveContents"]"
+                                Placeholder="@L["SelectAdditionalArchiveContents"]"
+                                SearchPlaceholder="@L["Search"]"
+                                ShowSelectAll="false"
+                                MaxDisplayTags="5"
+                                PopoverWidth="w-full"
+                                MatchTriggerWidth="true">
+            @foreach (var content in additionalArchiveContents)
+            {
+                <BbMultiSelectItem TValue="int" Value="content.Id" Text="@content.Name">
+                    <div class="flex min-w-0 items-center gap-2">
+                        <LucideIcon Name="@AdditionalArchiveContentTypeIconNames.GetIconName(content.Type)" class="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <span class="truncate">@content.Name</span>
+                    </div>
+                </BbMultiSelectItem>
+            }
+        </BbFormFieldMultiSelect>
+        <p class="text-xs text-muted-foreground">@L["AdditionalArchiveContentsAssignmentHelp"]</p>
+    </div>
+}

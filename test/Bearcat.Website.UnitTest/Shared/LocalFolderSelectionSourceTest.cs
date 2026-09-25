@@ -1,4 +1,8 @@
+using Bearcat.Abstractions;
+using Bearcat.Infrastructure.FileSystem;
+using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace Bearcat.Website.UnitTest.Shared;
@@ -164,5 +168,78 @@ public class LocalFolderSelectionSourceTest
 
         // Assert
         result.ShouldBe(Root);
+    }
+
+    [Test]
+    public async Task GetChildEntriesAsync_FilesNotIncluded_ReturnsOnlyFolders()
+    {
+        // Arrange
+        var tempRootPath = CreateTempFolderWithSubfolderAndFile();
+        await using var serviceProvider = CreateServiceProvider();
+        var folderSource = new LocalFolderSelectionSource(
+            serviceProvider.GetRequiredService<IScopedOperationRunner>(),
+            [tempRootPath]
+        );
+
+        try
+        {
+            // Act
+            var result = await folderSource.GetChildEntriesAsync(tempRootPath);
+
+            // Assert
+            result.IsSuccess.ShouldBeTrue();
+            result.FolderPaths.ShouldBe([Path.Combine(tempRootPath, "ads")]);
+            result.FilePaths.ShouldBeEmpty();
+        }
+        finally
+        {
+            Directory.Delete(tempRootPath, recursive: true);
+        }
+    }
+
+    [Test]
+    public async Task GetChildEntriesAsync_FilesIncluded_ReturnsFoldersAndFiles()
+    {
+        // Arrange
+        var tempRootPath = CreateTempFolderWithSubfolderAndFile();
+        await using var serviceProvider = CreateServiceProvider();
+        var folderAndFileSource = new LocalFolderSelectionSource(
+            serviceProvider.GetRequiredService<IScopedOperationRunner>(),
+            [tempRootPath],
+            includeFiles: true
+        );
+
+        try
+        {
+            // Act
+            var result = await folderAndFileSource.GetChildEntriesAsync(tempRootPath);
+
+            // Assert
+            result.IsSuccess.ShouldBeTrue();
+            result.FolderPaths.ShouldBe([Path.Combine(tempRootPath, "ads")]);
+            result.FilePaths.ShouldBe([Path.Combine(tempRootPath, "premium.txt")]);
+        }
+        finally
+        {
+            Directory.Delete(tempRootPath, recursive: true);
+        }
+    }
+
+    private static string CreateTempFolderWithSubfolderAndFile()
+    {
+        var tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(Path.Combine(tempRootPath, "ads"));
+        File.WriteAllText(Path.Combine(tempRootPath, "premium.txt"), "premium");
+
+        return tempRootPath;
+    }
+
+    private static ServiceProvider CreateServiceProvider()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IFileSystemService, FileSystemService>();
+        services.AddSingleton<IScopedOperationRunner, ScopedOperationRunner>();
+
+        return services.BuildServiceProvider();
     }
 }

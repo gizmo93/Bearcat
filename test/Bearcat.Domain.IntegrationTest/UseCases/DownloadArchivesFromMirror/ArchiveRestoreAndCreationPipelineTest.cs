@@ -11,6 +11,7 @@ using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.UseCases.ManageArchives;
+using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -106,7 +107,8 @@ public class ArchiveRestoreAndCreationPipelineTest : BearcatIntegrationTest
             new FileSystemService(),
             CreateTimeProvider(),
             notificationService,
-            new DefaultConfigurationProvider()
+            new DefaultConfigurationProvider(),
+            new ReleaseFolderEntriesForPackingService(new FileSystemService())
         );
     }
 

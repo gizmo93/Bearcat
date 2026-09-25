@@ -85,6 +85,36 @@ public class FileSystemService : IFileSystemService
         return Directory.Exists(path) && Directory.EnumerateFileSystemEntries(path).Any();
     }
 
+    public void CopyFile(string sourceFilePath, string destinationFilePath)
+    {
+        File.Copy(sourceFilePath, destinationFilePath, overwrite: false);
+    }
+
+    public void CopyDirectoryRecursively(
+        string sourceDirectoryPath,
+        string destinationDirectoryPath
+    )
+    {
+        Directory.CreateDirectory(destinationDirectoryPath);
+
+        foreach (var sourceFilePath in Directory.GetFiles(sourceDirectoryPath))
+        {
+            File.Copy(
+                sourceFilePath,
+                Path.Join(destinationDirectoryPath, Path.GetFileName(sourceFilePath)),
+                overwrite: false
+            );
+        }
+
+        foreach (var sourceSubdirectoryPath in Directory.GetDirectories(sourceDirectoryPath))
+        {
+            CopyDirectoryRecursively(
+                sourceSubdirectoryPath,
+                Path.Join(destinationDirectoryPath, Path.GetFileName(sourceSubdirectoryPath))
+            );
+        }
+    }
+
     public void DeleteFileIfExists(string filePath)
     {
         if (!File.Exists(filePath))

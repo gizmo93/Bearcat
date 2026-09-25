@@ -1,0 +1,16 @@
+@if (AdditionalArchiveContents.Count == 0)
+{
+    <p class="text-sm text-muted-foreground">-</p>
+}
+else
+{
+    <div class="flex min-w-0 flex-wrap gap-1">
+        @foreach (var content in AdditionalArchiveContents)
+        {
+            <BbBadge Variant="BadgeVariant.Outline" Class="max-w-full">
+                <LucideIcon Name="@AdditionalArchiveContentTypeIconNames.GetIconName(content.Type)" class="h-3 w-3 shrink-0" />
+                <span class="truncate" title="@content.Name">@content.Name</span>
+            </BbBadge>
+        }
+    </div>
+}

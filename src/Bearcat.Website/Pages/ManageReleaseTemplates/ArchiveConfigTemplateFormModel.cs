@@ -15,4 +15,11 @@ public class ArchiveConfigTemplateFormModel
     public bool UseReleaseNameAsArchiveName { get; set; }
 
     public bool IsEdit { get; set; }
+
+    public IEnumerable<int>? AdditionalArchiveContentIds { get; set; }
+
+    public IReadOnlyList<int> GetAdditionalArchiveContentIds()
+    {
+        return AdditionalArchiveContentIds?.ToList() ?? [];
+    }
 }

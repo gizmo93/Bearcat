@@ -1,4 +1,5 @@
 @page "/release-templates/{ReleaseTemplateId:int}"
+@using Bearcat.Website.Pages.ManageAdditionalArchiveContents.Assignment
 
 @if (!isInitialized)
 {
@@ -66,17 +67,21 @@
                 else
                 {
                     <div class="bearcat-config-list">
-                        <div class="bearcat-config-header lg:grid-cols-[minmax(0,1fr)_150px_minmax(0,1.45fr)_minmax(0,0.8fr)_84px]">
+                        <div class="@($"bearcat-config-header {ArchiveConfigTemplateGridClass}")">
                             <span>@L["Name"]</span>
                             <span>@L["Archiver"]</span>
                             <span>@L["ArchiveFilesBasePath"]</span>
                             <span>@L["ArchiveName"]</span>
+                            @if (releaseTemplate.ReleaseType is ReleaseType.Managed)
+                            {
+                                <span>@L["AdditionalArchiveContents"]</span>
+                            }
                             <span class="text-right">@L["Actions"]</span>
                         </div>
                         @foreach (var config in releaseTemplate.ArchiveConfigTemplates)
                         {
                             <div class="bearcat-config-item">
-                                <div class="bearcat-config-row lg:grid-cols-[minmax(0,1fr)_150px_minmax(0,1.45fr)_minmax(0,0.8fr)_84px]">
+                                <div class="@($"bearcat-config-row {ArchiveConfigTemplateGridClass}")">
                                     <div class="min-w-0">
                                         <p class="text-sm font-semibold">@config.Name</p>
                                         @if (!string.IsNullOrWhiteSpace(config.ArchivePassword))
@@ -98,6 +103,13 @@
                                             @(config.UseReleaseNameAsArchiveName ? L["ReleaseName"] : L["RandomArchiveName"])
                                         </p>
                                     </div>
+                                    @if (releaseTemplate.ReleaseType is ReleaseType.Managed)
+                                    {
+                                        <div class="min-w-0">
+                                            <p class="bearcat-mobile-label">@L["AdditionalArchiveContents"]</p>
+                                            <AssignedAdditionalArchiveContentBadges AdditionalArchiveContents="config.AdditionalArchiveContents" />
+                                        </div>
+                                    }
                                     <div class="bearcat-config-actions">
                                         @if (releaseTemplate.ReleaseType is ReleaseType.Managed)
                                         {

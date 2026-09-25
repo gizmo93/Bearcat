@@ -1,4 +1,5 @@
-﻿using Bearcat.Domain.ValueObjects;
+﻿using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.ReadModels;
+using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 
@@ -12,7 +13,8 @@ public record ArchiveConfigReadModel(
     int ArchiveFileSizeMb,
     string ArchiveFileExtension,
     string Name,
-    IReadOnlyList<ArchiveConfigReadModel.ArchiveSummary> ArchiveSummaries
+    IReadOnlyList<ArchiveConfigReadModel.ArchiveSummary> ArchiveSummaries,
+    IReadOnlyList<AssignedAdditionalArchiveContentReadModel> AdditionalArchiveContents
 )
 {
     public record ArchiveSummary(

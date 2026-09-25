@@ -1,5 +1,7 @@
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
+using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
@@ -45,37 +47,60 @@ public partial class CreateOrEditArchiveConfigDialog(
 
     private async Task SaveAsync()
     {
-        if (!isEdit)
-        {
-            await operationRunner.RunAsync(
-                (ArchiveConfigService service) =>
-                    service.CreateAsync(
+        var result = await operationRunner.RunAsync(
+            (ArchiveConfigService service) =>
+                isEdit
+                    ? service.UpdateAsync(
+                        archiveConfigId: ArchiveConfigId!.Value,
+                        name: FormModel.Name!,
+                        archiveFilesBasePath: FormModel.ArchiveFilesBasePath!,
+                        archiveNamePrefix: FormModel.ArchiveNamePrefix!,
+                        archivePassword: FormModel.ArchivePassword,
+                        archiveFileSizeMb: FormModel.ArchiveFileSizeMb,
+                        additionalArchiveContentIds: FormModel.GetAdditionalArchiveContentIds()
+                    )
+                    : service.CreateAsync(
                         releaseId: ReleaseId,
                         name: FormModel.Name!,
                         archiveFilesBasePath: FormModel.ArchiveFilesBasePath!,
                         archiverName: FormModel.ArchiverName!,
                         archiveNamePrefix: FormModel.ArchiveNamePrefix!,
                         archivePassword: FormModel.ArchivePassword,
-                        archiveFileSizeMb: FormModel.ArchiveFileSizeMb
+                        archiveFileSizeMb: FormModel.ArchiveFileSizeMb,
+                        additionalArchiveContentIds: FormModel.GetAdditionalArchiveContentIds()
                     )
-            );
-        }
-        else
+        );
+
+        if (!result.IsSuccess)
         {
-            await operationRunner.RunAsync(
-                (ArchiveConfigService service) =>
-                    service.UpdateAsync(
-                        archiveConfigId: ArchiveConfigId!.Value,
-                        name: FormModel.Name!,
-                        archiveFilesBasePath: FormModel.ArchiveFilesBasePath!,
-                        archiveNamePrefix: FormModel.ArchiveNamePrefix!,
-                        archivePassword: FormModel.ArchivePassword,
-                        archiveFileSizeMb: FormModel.ArchiveFileSizeMb
-                    )
+            ShowDuplicatedAdditionalArchiveContentEntryNames(
+                result.AdditionalArchiveContentEntryNameCollisions
             );
+            return;
         }
 
         await DialogRef.CloseAsync(DialogResult.Ok());
+    }
+
+    private void ShowDuplicatedAdditionalArchiveContentEntryNames(
+        IReadOnlyList<DuplicatedEntryName> duplicatedEntryNames
+    )
+    {
+        var field = editContext.Field(nameof(FormModel.AdditionalArchiveContentIds));
+        messageStore.Clear(field);
+
+        foreach (var duplicatedEntryName in duplicatedEntryNames)
+        {
+            messageStore.Add(field, L.Localize(duplicatedEntryName));
+        }
+
+        editContext.NotifyValidationStateChanged();
+    }
+
+    private void ClearAdditionalArchiveContentValidationMessages()
+    {
+        messageStore.Clear(editContext.Field(nameof(FormModel.AdditionalArchiveContentIds)));
+        editContext.NotifyValidationStateChanged();
     }
 
     private async Task OpenFolderDialogAsync()

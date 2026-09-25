@@ -6,6 +6,8 @@ public sealed class FolderSelectionNode
 
     public required string Name { get; init; }
 
+    public bool IsFile { get; init; }
+
     public bool HasChildren { get; set; } = true;
 
     public bool ChildrenLoaded { get; set; }

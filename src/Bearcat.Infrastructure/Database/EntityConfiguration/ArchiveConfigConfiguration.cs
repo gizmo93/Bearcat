@@ -32,5 +32,32 @@ public class ArchiveConfigConfiguration : IEntityTypeConfiguration<ArchiveConfig
             .HasPrincipalKey(a => a.Id)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .HasMany(a => a.AdditionalArchiveContents)
+            .WithMany()
+            .UsingEntity(
+                "ArchiveConfigAdditionalArchiveContents",
+                join =>
+                    join.HasOne(typeof(AdditionalArchiveContent))
+                        .WithMany()
+                        .HasForeignKey("AdditionalArchiveContentId")
+                        .HasPrincipalKey(nameof(AdditionalArchiveContent.Id))
+                        .IsRequired()
+                        .OnDelete(DeleteBehavior.Restrict),
+                join =>
+                    join.HasOne(typeof(ArchiveConfig))
+                        .WithMany()
+                        .HasForeignKey("ArchiveConfigId")
+                        .HasPrincipalKey(nameof(ArchiveConfig.Id))
+                        .IsRequired()
+                        .OnDelete(DeleteBehavior.Cascade),
+                join =>
+                {
+                    join.Property<int>("ArchiveConfigId").IsRequired();
+                    join.Property<int>("AdditionalArchiveContentId").IsRequired();
+                    join.HasKey("ArchiveConfigId", "AdditionalArchiveContentId");
+                }
+            );
     }
 }

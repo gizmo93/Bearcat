@@ -4,6 +4,7 @@ using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -18,10 +19,10 @@ public class ArchiveCreationService(
     IFileSystemService fileSystemService,
     TimeProvider timeProvider,
     INotificationService notificationService,
-    IApplicationConfigurationProvider configurationProvider
+    IApplicationConfigurationProvider configurationProvider,
+    ReleaseFolderEntriesForPackingService releaseFolderEntriesForPackingService
 )
 {
-    private const string UniqueFileName = "__nonce.txt";
     private const string SynologyMetadataFolderName = "@eaDir";
 
     private readonly Lock knownHashesLock = new();
@@ -38,6 +39,8 @@ public class ArchiveCreationService(
 
         foreach (var archive in interruptedArchives)
         {
+            DeleteReleaseFolderEntriesCopiedForPacking(archive);
+
             if (AllArchiveFilesExistOnDisk(archive))
             {
                 await RecoverInterruptedArchiveAsync(archive, cancellationToken);
@@ -49,6 +52,41 @@ public class ArchiveCreationService(
 
             await repository.SaveChangesAsync(cancellationToken: cancellationToken);
         }
+    }
+
+    private void DeleteReleaseFolderEntriesCopiedForPacking(Archive archive)
+    {
+        if (archive.ReleaseFolderEntriesCopiedForPacking.Count == 0)
+        {
+            return;
+        }
+
+        var releaseFolderPath = archive.ArchiveConfig.Release.ReleaseFolderPath;
+
+        if (releaseFolderPath is null)
+        {
+            logger.LogWarning(
+                "Cannot delete entries {EntryNames} copied for packing interrupted archive {ArchiveId} because its release no longer has a release folder",
+                archive.ReleaseFolderEntriesCopiedForPacking,
+                archive.Id
+            );
+        }
+        else
+        {
+            logger.LogInformation(
+                "Deleting entries {EntryNames} copied into release folder {ReleaseFolderPath} for packing interrupted archive {ArchiveId}",
+                archive.ReleaseFolderEntriesCopiedForPacking,
+                releaseFolderPath,
+                archive.Id
+            );
+
+            releaseFolderEntriesForPackingService.DeleteFromReleaseFolder(
+                releaseFolderPath,
+                archive.ReleaseFolderEntriesCopiedForPacking
+            );
+        }
+
+        archive.ReleaseFolderEntriesCopiedForPacking = [];
     }
 
     private static bool AllArchiveFilesExistOnDisk(Archive archive)
@@ -535,41 +573,39 @@ public class ArchiveCreationService(
         repository.Add(archive);
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
-        // For people that host Bearcat on a Synology NAS: DSM adds that nasty hidden @eaDir folder everywhere where media is.
-        // So we should remove it before archiving.
-        RemoveSynologyMetadataFolders(releaseFolderPath);
+        var entriesForPacking =
+            releaseFolderEntriesForPackingService.GetReleaseFolderEntriesForPacking(
+                releaseFolderPath: releaseFolderPath,
+                additionalArchiveContents: config.AdditionalArchiveContents
+            );
 
-        await CreateOrUpdateUniqueFileAsync(releaseFolderPath, cancellationToken);
+        if (entriesForPacking.ErrorMessages.Count > 0)
+        {
+            await MarkArchiveCreationFailedAsync(
+                archive,
+                entriesForPacking.ErrorMessages,
+                cancellationToken
+            );
 
-        var archiveResult = await archiver.ArchiveAsync(
-            sourceFolderPath: releaseFolderPath,
-            destinationPath: archiveDirectoryPath,
-            archiveNamePrefix: config.ArchiveNamePrefix ?? Guid.NewGuid().ToString(),
-            targetFileSizeMb: archiveSettings.ArchiveFileSizeMb,
-            password: config.ArchivePassword,
-            options: archiveSettings.Options,
+            return;
+        }
+
+        var archiveResult = await CreateArchiveAsync(
+            archive: archive,
+            archiver: archiver,
+            releaseFolderPath: releaseFolderPath,
+            entriesForPacking: entriesForPacking.Entries,
+            archiveSettings: archiveSettings,
             cancellationToken: cancellationToken
         );
 
         if (!archiveResult.IsSuccess)
         {
-            logger.LogError(
-                "Failed to create archive for ArchiveConfig {ArchiveConfigId}: {ErrorMessages}",
-                config.Id,
-                string.Join(",  ", archiveResult.ErrorMessages ?? [])
+            await MarkArchiveCreationFailedAsync(
+                archive,
+                archiveResult.ErrorMessages ?? [],
+                cancellationToken
             );
-
-            archive.ArchiveState = ArchiveState.CreationFailed;
-            archive.ErrorMessages.AddRange(archiveResult.ErrorMessages ?? []);
-
-            notificationService.Create(
-                kind: NotificationKind.ArchiveCreationFailed,
-                message: $"Failed to create archive: {string.Join(", ", archiveResult.ErrorMessages ?? [])}",
-                entity: archive,
-                selector: n => n.Archive
-            );
-
-            await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
             return;
         }
@@ -593,6 +629,89 @@ public class ArchiveCreationService(
         );
     }
 
+    private async Task<ArchiveResult> CreateArchiveAsync(
+        Archive archive,
+        IArchiver archiver,
+        string releaseFolderPath,
+        IReadOnlyList<ReleaseFolderEntryForPacking> entriesForPacking,
+        ArchiveSettings archiveSettings,
+        CancellationToken cancellationToken
+    )
+    {
+        archive.ReleaseFolderEntriesCopiedForPacking = entriesForPacking
+            .Select(entry => entry.Name)
+            .ToList();
+        await repository.SaveChangesAsync(cancellationToken: cancellationToken);
+
+        try
+        {
+            var copyErrorMessage =
+                await releaseFolderEntriesForPackingService.CopyIntoReleaseFolderAsync(
+                    releaseFolderPath: releaseFolderPath,
+                    entries: entriesForPacking,
+                    cancellationToken: cancellationToken
+                );
+
+            if (copyErrorMessage is not null)
+            {
+                return new ArchiveResult(
+                    IsSuccess: false,
+                    CreatedFileNames: [],
+                    ErrorMessages: [copyErrorMessage]
+                );
+            }
+
+            // For people that host Bearcat on a Synology NAS: DSM adds that nasty hidden @eaDir folder everywhere where media is.
+            // So we should remove it before archiving.
+            RemoveSynologyMetadataFolders(releaseFolderPath);
+
+            return await archiver.ArchiveAsync(
+                sourceFolderPath: releaseFolderPath,
+                destinationPath: archive.ArchiveFolderPath,
+                archiveNamePrefix: archive.ArchiveConfig.ArchiveNamePrefix
+                    ?? Guid.NewGuid().ToString(),
+                targetFileSizeMb: archiveSettings.ArchiveFileSizeMb,
+                password: archive.ArchiveConfig.ArchivePassword,
+                options: archiveSettings.Options,
+                cancellationToken: cancellationToken
+            );
+        }
+        finally
+        {
+            releaseFolderEntriesForPackingService.DeleteFromReleaseFolder(
+                releaseFolderPath,
+                archive.ReleaseFolderEntriesCopiedForPacking
+            );
+            archive.ReleaseFolderEntriesCopiedForPacking = [];
+            await repository.SaveChangesAsync(cancellationToken: CancellationToken.None);
+        }
+    }
+
+    private async Task MarkArchiveCreationFailedAsync(
+        Archive archive,
+        IReadOnlyList<string> errorMessages,
+        CancellationToken cancellationToken
+    )
+    {
+        logger.LogError(
+            "Failed to create archive for ArchiveConfig {ArchiveConfigId}: {ErrorMessages}",
+            archive.ArchiveConfig.Id,
+            string.Join(",  ", errorMessages)
+        );
+
+        archive.ArchiveState = ArchiveState.CreationFailed;
+        archive.ErrorMessages.AddRange(errorMessages);
+
+        notificationService.Create(
+            kind: NotificationKind.ArchiveCreationFailed,
+            message: $"Failed to create archive: {string.Join(", ", errorMessages)}",
+            entity: archive,
+            selector: n => n.Archive
+        );
+
+        await repository.SaveChangesAsync(cancellationToken: cancellationToken);
+    }
+
     private void RemoveSynologyMetadataFolders(string releasePath)
     {
         var deletedFolders = fileSystemService.DeleteDirectoriesByNameRecursively(
@@ -610,19 +729,6 @@ public class ArchiveCreationService(
             deletedFolders.Count,
             SynologyMetadataFolderName,
             releasePath
-        );
-    }
-
-    private static async Task CreateOrUpdateUniqueFileAsync(
-        string releasePath,
-        CancellationToken cancellationToken
-    )
-    {
-        var uniqueFilePath = Path.Join(releasePath, UniqueFileName);
-        await File.WriteAllTextAsync(
-            path: uniqueFilePath,
-            contents: Guid.NewGuid().ToString(),
-            cancellationToken: cancellationToken
         );
     }
 

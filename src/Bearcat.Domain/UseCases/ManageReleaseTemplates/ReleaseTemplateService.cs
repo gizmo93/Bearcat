@@ -1,5 +1,7 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
+using Bearcat.Domain.UseCases.ManageReleaseTemplates.Validation;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseTemplates;
@@ -182,6 +184,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
                         ArchivePassword = config.ArchivePassword,
                         ArchiveFileSizeMb = config.ArchiveFileSizeMb,
                         UseReleaseNameAsArchiveName = config.ArchiveNamePrefix == release.Name,
+                        AdditionalArchiveContents = config.AdditionalArchiveContents.ToList(),
                     },
                 })
                 .ToDictionary(item => item.Id, item => item.Template);
@@ -254,7 +257,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         return releaseTemplate.Id;
     }
 
-    public async Task<int> CreateArchiveConfigTemplateAsync(
+    public async Task<ArchiveConfigTemplateSaveResult> CreateArchiveConfigTemplateAsync(
         int releaseTemplateId,
         string name,
         string archiveFilesBasePath,
@@ -262,6 +265,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         string? archivePassword,
         int archiveFileSizeMb,
         bool useReleaseNameAsArchiveName,
+        IReadOnlyList<int> additionalArchiveContentIds,
         CancellationToken cancellationToken = default
     )
     {
@@ -272,6 +276,21 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
 
         EnsureManagedReleaseTemplate(releaseTemplate);
 
+        var additionalArchiveContents = await writeRepository.GetAdditionalArchiveContentsAsync(
+            additionalArchiveContentIds,
+            cancellationToken
+        );
+
+        var entryNameCollisions =
+            AdditionalArchiveContentAssignmentValidation.FindDuplicatedEntryNames(
+                additionalArchiveContents
+            );
+
+        if (entryNameCollisions.Count > 0)
+        {
+            return ArchiveConfigTemplateSaveResult.Invalid(entryNameCollisions);
+        }
+
         var archiveConfigTemplate = new ArchiveConfigTemplate
         {
             Name = name,
@@ -280,15 +299,16 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
             ArchivePassword = CleanOptional(archivePassword),
             ArchiveFileSizeMb = archiveFileSizeMb,
             UseReleaseNameAsArchiveName = useReleaseNameAsArchiveName,
+            AdditionalArchiveContents = additionalArchiveContents.ToList(),
         };
 
         releaseTemplate.ArchiveConfigTemplates.Add(archiveConfigTemplate);
         await writeRepository.SaveChangesAsync(cancellationToken);
 
-        return archiveConfigTemplate.Id;
+        return ArchiveConfigTemplateSaveResult.Saved(archiveConfigTemplate.Id);
     }
 
-    public async Task UpdateArchiveConfigTemplateAsync(
+    public async Task<ArchiveConfigTemplateSaveResult> UpdateArchiveConfigTemplateAsync(
         int archiveConfigTemplateId,
         string name,
         string archiveFilesBasePath,
@@ -296,6 +316,7 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
         string? archivePassword,
         int archiveFileSizeMb,
         bool useReleaseNameAsArchiveName,
+        IReadOnlyList<int> additionalArchiveContentIds,
         CancellationToken cancellationToken = default
     )
     {
@@ -306,14 +327,32 @@ public class ReleaseTemplateService(IReleaseTemplateWriteRepository writeReposit
 
         EnsureManagedReleaseTemplate(archiveConfigTemplate.ReleaseTemplate);
 
+        var additionalArchiveContents = await writeRepository.GetAdditionalArchiveContentsAsync(
+            additionalArchiveContentIds,
+            cancellationToken
+        );
+        var entryNameCollisions =
+            AdditionalArchiveContentAssignmentValidation.FindDuplicatedEntryNames(
+                additionalArchiveContents
+            );
+
+        if (entryNameCollisions.Count > 0)
+        {
+            return ArchiveConfigTemplateSaveResult.Invalid(entryNameCollisions);
+        }
+
         archiveConfigTemplate.Name = name;
         archiveConfigTemplate.ArchiveFilesBasePath = archiveFilesBasePath;
         archiveConfigTemplate.ArchiverName = archiverName;
         archiveConfigTemplate.ArchivePassword = CleanOptional(archivePassword);
         archiveConfigTemplate.ArchiveFileSizeMb = archiveFileSizeMb;
         archiveConfigTemplate.UseReleaseNameAsArchiveName = useReleaseNameAsArchiveName;
+        archiveConfigTemplate.AdditionalArchiveContents.Clear();
+        archiveConfigTemplate.AdditionalArchiveContents.AddRange(additionalArchiveContents);
 
         await writeRepository.SaveChangesAsync(cancellationToken);
+
+        return ArchiveConfigTemplateSaveResult.Saved(archiveConfigTemplate.Id);
     }
 
     public async Task DeleteArchiveConfigTemplateAsync(

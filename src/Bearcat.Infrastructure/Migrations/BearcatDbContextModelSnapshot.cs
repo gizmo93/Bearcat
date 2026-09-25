@@ -23,6 +23,74 @@ namespace BearCat.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("ArchiveConfigAdditionalArchiveContents", b =>
+                {
+                    b.Property<int>("ArchiveConfigId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AdditionalArchiveContentId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ArchiveConfigId", "AdditionalArchiveContentId");
+
+                    b.HasIndex("AdditionalArchiveContentId");
+
+                    b.ToTable("ArchiveConfigAdditionalArchiveContents");
+                });
+
+            modelBuilder.Entity("ArchiveConfigTemplateAdditionalArchiveContents", b =>
+                {
+                    b.Property<int>("ArchiveConfigTemplateId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AdditionalArchiveContentId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ArchiveConfigTemplateId", "AdditionalArchiveContentId");
+
+                    b.HasIndex("AdditionalArchiveContentId");
+
+                    b.ToTable("ArchiveConfigTemplateAdditionalArchiveContents");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.AdditionalArchiveContent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SourcePath")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("TextContent")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("AdditionalArchiveContents", t =>
+                        {
+                            t.HasCheckConstraint("CK_AdditionalArchiveContent_FieldsMatchType", "(\"Type\" = 1 AND \"SourcePath\" IS NOT NULL AND \"FileName\" IS NULL AND \"TextContent\" IS NULL) OR (\"Type\" = 2 AND \"SourcePath\" IS NULL AND \"FileName\" IS NOT NULL AND \"TextContent\" IS NOT NULL)");
+                        });
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.ApplicationConfigurationOverride", b =>
                 {
                     b.Property<int>("Id")
@@ -84,6 +152,10 @@ namespace BearCat.Infrastructure.Migrations
                         .HasColumnType("timestamp(4) without time zone");
 
                     b.PrimitiveCollection<List<string>>("ErrorMessages")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<List<string>>("ReleaseFolderEntriesCopiedForPacking")
                         .IsRequired()
                         .HasColumnType("text[]");
 
@@ -2174,6 +2246,36 @@ namespace BearCat.Infrastructure.Migrations
                     b.HasIndex("UploadId");
 
                     b.ToTable("UploadedFiles");
+                });
+
+            modelBuilder.Entity("ArchiveConfigAdditionalArchiveContents", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.AdditionalArchiveContent", null)
+                        .WithMany()
+                        .HasForeignKey("AdditionalArchiveContentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Bearcat.Domain.Entities.ArchiveConfig", null)
+                        .WithMany()
+                        .HasForeignKey("ArchiveConfigId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArchiveConfigTemplateAdditionalArchiveContents", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.AdditionalArchiveContent", null)
+                        .WithMany()
+                        .HasForeignKey("AdditionalArchiveContentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Bearcat.Domain.Entities.ArchiveConfigTemplate", null)
+                        .WithMany()
+                        .HasForeignKey("ArchiveConfigTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.Archive", b =>

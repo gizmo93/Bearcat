@@ -277,6 +277,54 @@ public class ReleaseServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task CreateFromTemplateAsync_TemplateWithAdditionalArchiveContents_AssignsSameContentsToArchiveConfig()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync();
+        var additionalArchivePath = new AdditionalArchiveContent
+        {
+            Name = "Premium ad folder",
+            Type = AdditionalArchiveContentType.Path,
+            SourcePath = "/data/ads/premium",
+        };
+        var additionalArchiveTextFile = new AdditionalArchiveContent
+        {
+            Name = "Premium ad text",
+            Type = AdditionalArchiveContentType.TextFile,
+            FileName = "buy premium via me.txt",
+            TextContent = "Buy premium via my link.",
+        };
+        var archiveConfigTemplate = await dbContext.ArchiveConfigTemplates.SingleAsync();
+        archiveConfigTemplate.AdditionalArchiveContents =
+        [
+            additionalArchivePath,
+            additionalArchiveTextFile,
+        ];
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.CreateFromTemplateAsync(
+            seed.ReleaseTemplateId,
+            "/tmp/releases/Bearcat.Release.Template",
+            null,
+            CancellationToken.None
+        );
+
+        // Assert
+        var verificationDbContext = CreateDbContext();
+        var archiveConfig = await verificationDbContext
+            .ArchiveConfigs.Include(config => config.AdditionalArchiveContents)
+            .SingleAsync(config => config.ReleaseId == result);
+
+        archiveConfig
+            .AdditionalArchiveContents.Select(content => content.Id)
+            .Order()
+            .ShouldBe(new[] { additionalArchivePath.Id, additionalArchiveTextFile.Id }.Order());
+        (await verificationDbContext.AdditionalArchiveContents.CountAsync()).ShouldBe(2);
+    }
+
+    [Test]
     public async Task CreateFromTemplateAsync_TemplateUsesCollectionSlots_AssignsReleaseAndUploadSlot()
     {
         // Arrange

@@ -15,6 +15,9 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
     [Parameter]
     public string? SelectedFolderPath { get; set; }
 
+    [Parameter]
+    public bool IncludeFiles { get; set; }
+
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
@@ -27,7 +30,9 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
 
     protected override async Task OnInitializedAsync()
     {
-        source = Source ?? new LocalFolderSelectionSource(operationRunner, BaseFolderPaths);
+        source =
+            Source
+            ?? new LocalFolderSelectionSource(operationRunner, BaseFolderPaths, IncludeFiles);
         rootNodes = source
             .RootPaths.Where(path => !string.IsNullOrWhiteSpace(path))
             .Select(CreateRootNode)
@@ -98,7 +103,7 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
             return true;
         }
 
-        var listing = await source.GetChildFoldersAsync(node.Path);
+        var listing = await source.GetChildEntriesAsync(node.Path);
 
         if (!listing.IsSuccess)
         {
@@ -108,7 +113,11 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
         }
 
         loadErrorMessage = null;
-        node.Children = listing.FolderPaths.Select(CreateNode).ToList();
+        node.Children =
+        [
+            .. listing.FolderPaths.Select(CreateFolderNode),
+            .. listing.FilePaths.Select(CreateFileNode),
+        ];
         node.ChildrenLoaded = true;
         node.HasChildren = node.Children.Count > 0;
 
@@ -234,8 +243,20 @@ public partial class FolderSelectionDialog(IScopedOperationRunner operationRunne
         return new FolderSelectionNode { Path = path, Name = path };
     }
 
-    private FolderSelectionNode CreateNode(string path)
+    private FolderSelectionNode CreateFolderNode(string path)
     {
         return new FolderSelectionNode { Path = path, Name = source.GetDisplayName(path) };
+    }
+
+    private FolderSelectionNode CreateFileNode(string path)
+    {
+        return new FolderSelectionNode
+        {
+            Path = path,
+            Name = source.GetDisplayName(path),
+            IsFile = true,
+            HasChildren = false,
+            ChildrenLoaded = true,
+        };
     }
 }

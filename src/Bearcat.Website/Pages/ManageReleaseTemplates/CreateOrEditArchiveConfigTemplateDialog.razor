@@ -1,3 +1,5 @@
+@using Bearcat.Website.Pages.ManageAdditionalArchiveContents.Assignment
+
 
 <EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
     <DataAnnotationsValidator />
@@ -55,6 +57,9 @@
                     @L["ArchiveNamePreview"] @((FormModel.UseReleaseNameAsArchiveName ? L["ReleaseName"] : L["RandomArchiveName"]))@SelectedArchiver.FileExtension
                 </div>
             }
+
+            <AdditionalArchiveContentMultiSelect @bind-Values="FormModel.AdditionalArchiveContentIds"
+                                                 @bind-Values:after="ClearAdditionalArchiveContentValidationMessages" />
         </div>
 
         <div class="flex justify-end gap-2">

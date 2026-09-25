@@ -14,7 +14,7 @@ public sealed class RemoteFolderSelectionSource(
 
     public IReadOnlyList<string> RootPaths { get; } = [RootPath];
 
-    public async Task<FolderSelectionListing> GetChildFoldersAsync(string path)
+    public async Task<FolderSelectionListing> GetChildEntriesAsync(string path)
     {
         var result = await operationRunner.RunAsync(
             (RemoteSourceRegistrationService service) =>

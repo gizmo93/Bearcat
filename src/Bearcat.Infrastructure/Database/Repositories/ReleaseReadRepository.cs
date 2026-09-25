@@ -6,6 +6,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.ForumPostRendering;
 using Bearcat.Domain.Shared.PostQueue;
+using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
@@ -941,6 +942,13 @@ public class ReleaseReadRepository(
                         ar.ArchiveState,
                         ar.ArchiveFiles.Count,
                         ar.ErrorMessages.ToList()
+                    ))
+                    .ToList(),
+                a.AdditionalArchiveContents.OrderBy(content => content.Name)
+                    .Select(content => new AssignedAdditionalArchiveContentReadModel(
+                        content.Id,
+                        content.Name,
+                        content.Type
                     ))
                     .ToList()
             ))

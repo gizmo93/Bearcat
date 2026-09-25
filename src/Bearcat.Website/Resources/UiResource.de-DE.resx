@@ -1346,4 +1346,53 @@
   <data name="RemoteDownloadStateChanged" xml:space="preserve"><value>Der Status von {0} hat sich inzwischen geändert. Die Liste wurde neu geladen.</value></data>
   <data name="RemoteDownloadStatusSubtitle" xml:space="preserve"><value>Download von {0} aus {1}</value></data>
   <data name="RemoteDownloadOrigin" xml:space="preserve"><value>Von Remotequelle heruntergeladen</value></data>
+  <data name="Activity" xml:space="preserve"><value>Aktivität</value></data>
+  <data name="ReleaseSettings" xml:space="preserve"><value>Releaseeinstellungen</value></data>
+  <data name="System" xml:space="preserve"><value>System</value></data>
+  <data name="Navigation" xml:space="preserve"><value>Navigation</value></data>
+  <data name="NavigationSearchButton" xml:space="preserve"><value>Suchen...</value></data>
+  <data name="NavigationSearchPlaceholder" xml:space="preserve"><value>Seiten durchsuchen...</value></data>
+  <data name="NavigationSearchNoResults" xml:space="preserve"><value>Keine Ergebnisse gefunden.</value></data>
+  <data name="AdditionalArchiveContents" xml:space="preserve"><value>Zusätzliche Archivinhalte</value></data>
+  <data name="AdditionalArchiveContentsIntro" xml:space="preserve"><value>Lege Dateien, Ordner und Textdateien fest, die zusätzlich zum Releaseinhalt in Archive gepackt werden.</value></data>
+  <data name="NewAdditionalArchiveContent" xml:space="preserve"><value>Neuer zusätzlicher Archivinhalt</value></data>
+  <data name="NoAdditionalArchiveContentsYet" xml:space="preserve"><value>Noch keine zusätzlichen Archivinhalte angelegt.</value></data>
+  <data name="AdditionalArchiveContentDialogDescription" xml:space="preserve"><value>Wähle eine Datei oder einen Ordner vom Host oder schreibe eine Textdatei, die dem Archiv hinzugefügt wird.</value></data>
+  <data name="AdditionalArchiveContentNamePlaceholder" xml:space="preserve"><value>z. B. Premiumwerbung</value></data>
+  <data name="AdditionalArchiveContentType.Path" xml:space="preserve"><value>Datei oder Ordner</value></data>
+  <data name="AdditionalArchiveContentType.TextFile" xml:space="preserve"><value>Textdatei</value></data>
+  <data name="SourcePath" xml:space="preserve"><value>Quellpfad</value></data>
+  <data name="AdditionalArchiveContentSourcePathHelp" xml:space="preserve"><value>Vollständiger Pfad zu einer Datei oder einem Ordner auf dem Host. Pfade außerhalb der Arbeitsverzeichnisse (z. B. Docker Bind Mounts) können manuell eingegeben werden.</value></data>
+  <data name="BrowseFilesAndFolders" xml:space="preserve"><value>Dateien und Ordner durchsuchen</value></data>
+  <data name="SelectFileOrFolder" xml:space="preserve"><value>Datei oder Ordner auswählen</value></data>
+  <data name="SelectAdditionalArchiveContentSourceDescription" xml:space="preserve"><value>Wähle eine Datei oder einen Ordner innerhalb der Arbeitsverzeichnisse.</value></data>
+  <data name="SearchFoldersAndFiles" xml:space="preserve"><value>Ordner und Dateien durchsuchen</value></data>
+  <data name="AdditionalArchiveContentFileNamePlaceholder" xml:space="preserve"><value>z. B. Premium.txt</value></data>
+  <data name="AdditionalArchiveContentFileNameHelp" xml:space="preserve"><value>Name der Textdatei im Archiv, ohne Ordner.</value></data>
+  <data name="TextContent" xml:space="preserve"><value>Textinhalt</value></data>
+  <data name="UsedBy" xml:space="preserve"><value>Verwendet von</value></data>
+  <data name="AdditionalArchiveContentTemplateCount" xml:space="preserve"><value>{0} Templates</value></data>
+  <data name="AdditionalArchiveContentArchiveConfigCount" xml:space="preserve"><value>{0} Archivkonfigurationen</value></data>
+  <data name="DeleteAdditionalArchiveContentConfirmation" xml:space="preserve"><value>Möchtest du den zusätzlichen Archivinhalt "{0}" wirklich löschen?</value></data>
+  <data name="AdditionalArchiveContentDeleted" xml:space="preserve"><value>Zusätzlicher Archivinhalt "{0}" gelöscht.</value></data>
+  <data name="AdditionalArchiveContentStillAssigned" xml:space="preserve"><value>"{0}" kann nicht gelöscht werden, weil er noch zugewiesen ist.</value></data>
+  <data name="AdditionalArchiveContentUsedByReleaseTemplates" xml:space="preserve"><value>Releasetemplates: {0}.</value></data>
+  <data name="AdditionalArchiveContentUsedByReleases" xml:space="preserve"><value>Releases: {0}.</value></data>
+  <data name="AndCountMore" xml:space="preserve"><value>und {0} weitere</value></data>
+  <data name="AdditionalArchiveContentValidationError.NameRequired" xml:space="preserve"><value>Der Name ist erforderlich.</value></data>
+  <data name="AdditionalArchiveContentValidationError.NameTooLong" xml:space="preserve"><value>Der Name darf höchstens 200 Zeichen lang sein.</value></data>
+  <data name="AdditionalArchiveContentValidationError.NameAlreadyExists" xml:space="preserve"><value>Es gibt bereits einen zusätzlichen Archivinhalt mit diesem Namen.</value></data>
+  <data name="AdditionalArchiveContentValidationError.SourcePathRequired" xml:space="preserve"><value>Der Quellpfad ist erforderlich.</value></data>
+  <data name="AdditionalArchiveContentValidationError.SourcePathTooLong" xml:space="preserve"><value>Der Quellpfad darf höchstens 1000 Zeichen lang sein.</value></data>
+  <data name="AdditionalArchiveContentValidationError.SourcePathNotFound" xml:space="preserve"><value>Unter diesem Pfad gibt es keine Datei und keinen Ordner.</value></data>
+  <data name="AdditionalArchiveContentValidationError.FileNameRequired" xml:space="preserve"><value>Der Dateiname ist erforderlich.</value></data>
+  <data name="AdditionalArchiveContentValidationError.FileNameTooLong" xml:space="preserve"><value>Der Dateiname darf höchstens 255 Zeichen lang sein.</value></data>
+  <data name="AdditionalArchiveContentValidationError.FileNameInvalid" xml:space="preserve"><value>Der Dateiname muss ein einfacher Dateiname ohne Ordner oder ungültige Zeichen sein.</value></data>
+  <data name="AdditionalArchiveContentValidationError.FileNameReserved" xml:space="preserve"><value>Dieser Dateiname ist für Bearcat reserviert.</value></data>
+  <data name="AdditionalArchiveContentValidationError.TextContentRequired" xml:space="preserve"><value>Der Textinhalt ist erforderlich.</value></data>
+  <data name="SelectAdditionalArchiveContents" xml:space="preserve"><value>Zusätzliche Archivinhalte auswählen</value></data>
+  <data name="AdditionalArchiveContentsAssignmentHelp" xml:space="preserve"><value>Änderungen wirken sich nur auf danach erstellte Archive aus. Bereits erstellte Archive werden unverändert wiederverwendet.</value></data>
+  <data name="NoAdditionalArchiveContentsToAssign" xml:space="preserve"><value>Es gibt noch keine zusätzlichen Archivinhalte.</value></data>
+  <data name="ManageAdditionalArchiveContents" xml:space="preserve"><value>Zusätzliche Archivinhalte verwalten</value></data>
+  <data name="DuplicatedEntryName" xml:space="preserve"><value>{0} würden alle als "{1}" im Releaseordner abgelegt. Wähle nur einen davon aus.</value></data>
 </root>

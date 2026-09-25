@@ -70,6 +70,31 @@ document.addEventListener(
     true
 );
 
+function isSelectableCommandItem(option) {
+    return option.getClientRects().length > 0
+        && option.getAttribute("aria-disabled") !== "true"
+        && option.getAttribute("data-disabled") !== "true";
+}
+
+document.addEventListener("keydown", event => {
+    if (event.key !== "Enter" || event.isComposing) {
+        return;
+    }
+
+    const inputRow = event.target.closest?.("[data-bearcat-select-first-command-item-on-enter]");
+    const dialog = inputRow?.closest("[role='dialog']");
+    if (!dialog) {
+        return;
+    }
+
+    const options = [...dialog.querySelectorAll("[role='option']")];
+    if (options.some(option => option.getAttribute("aria-selected") === "true")) {
+        return;
+    }
+
+    options.find(isSelectableCommandItem)?.click();
+}, true);
+
 export async function takeCopyResult() {
     const pending = pendingCopies.shift();
     return pending === undefined ? null : await pending;

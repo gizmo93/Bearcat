@@ -21,4 +21,6 @@ public class ArchiveConfigTemplate
     public bool UseReleaseNameAsArchiveName { get; set; }
 
     public List<UploadConfigTemplate> UploadConfigTemplates { get; set; } = [];
+
+    public List<AdditionalArchiveContent> AdditionalArchiveContents { get; set; } = [];
 }

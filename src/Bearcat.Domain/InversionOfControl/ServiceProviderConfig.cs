@@ -19,9 +19,11 @@ using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Scanning;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
+using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.UseCases.ManageArchives;
+using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageBackgroundTasks;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Domain.UseCases.ManageForumPostingRules;
@@ -94,6 +96,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ReleaseCollectionInfoResolutionService>();
             services.AddScoped<ReleaseGroupService>();
             services.AddScoped<QualityProfileService>();
+            services.AddScoped<AdditionalArchiveContentService>();
             services.AddScoped<ReleaseService>();
             services.AddScoped<ForumPostRenderService>();
             services.AddScoped<ReleaseForumPostUploadBuilder>();
@@ -122,6 +125,7 @@ public static class ServiceProviderConfig
                 provider.GetRequiredService<DistributionSiteSessionService>()
             );
             services.AddScoped<ArchiveCreationService>();
+            services.AddScoped<ReleaseFolderEntriesForPackingService>();
             services.AddScoped<ArchiveCleanupService>();
             services.AddScoped<ReleaseFolderRetirementService>();
             services.AddScoped<UnmanagedReleaseConverter>();

@@ -92,6 +92,7 @@ public class RemoteSourceDownloadRepository(IBearcatWriteDbContext dbWrite)
         return await dbWrite
             .ReleaseTemplates.AsSplitQuery()
             .Include(template => template.ArchiveConfigTemplates)
+                .ThenInclude(archiveTemplate => archiveTemplate.AdditionalArchiveContents)
             .Include(template => template.UploadConfigTemplates)
                 .ThenInclude(uploadTemplate => uploadTemplate.HosterRegistration)
             .Include(template => template.UploadConfigTemplates)

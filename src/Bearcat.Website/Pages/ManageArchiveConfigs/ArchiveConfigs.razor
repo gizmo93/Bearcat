@@ -1,3 +1,5 @@
+@using Bearcat.Website.Pages.ManageAdditionalArchiveContents.Assignment
+
 
 <BbCard Class="border-border/70 shadow-sm">
     <BbCardHeader>
@@ -35,6 +37,7 @@
                     {
                         <span>@L["Size"]</span>
                         <span>@L["ArchiveName"]</span>
+                        <span>@L["AdditionalArchiveContents"]</span>
                     }
                     <span class="text-right">@L["Actions"]</span>
                 </div>
@@ -73,6 +76,11 @@
                                     <p class="truncate text-sm font-medium" title="@(config.ArchiveNameWithExtension ?? "-")">
                                         @(config.ArchiveNameWithExtension ?? "-")
                                     </p>
+                                </div>
+
+                                <div class="min-w-0">
+                                    <p class="bearcat-mobile-label">@L["AdditionalArchiveContents"]</p>
+                                    <AssignedAdditionalArchiveContentBadges AdditionalArchiveContents="config.AdditionalArchiveContents" />
                                 </div>
                             }
 

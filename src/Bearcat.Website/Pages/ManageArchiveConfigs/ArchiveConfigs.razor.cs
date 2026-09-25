@@ -34,7 +34,7 @@ public partial class ArchiveConfigs(
     private string ArchiveGridClass =>
         ReleaseType is not ReleaseType.Managed
             ? "lg:grid-cols-[minmax(0,1.35fr)_120px_110px_84px]"
-            : "lg:grid-cols-[minmax(0,1.35fr)_120px_110px_120px_minmax(0,1fr)_84px]";
+            : "lg:grid-cols-[minmax(0,1.35fr)_120px_110px_120px_minmax(0,1fr)_minmax(0,1fr)_84px]";
 
     protected override async Task OnInitializedAsync()
     {
@@ -216,6 +216,9 @@ public partial class ArchiveConfigs(
                 ArchivePassword = config.ArchivePassword,
                 ArchiveFileSizeMb = config.ArchiveFileSizeMb,
                 Name = config.Name,
+                AdditionalArchiveContentIds = config
+                    .AdditionalArchiveContents.Select(content => content.AdditionalArchiveContentId)
+                    .ToList(),
             },
             [nameof(CreateOrEditArchiveConfigDialog.ArchiveConfigId)] = config.ArchiveConfigId,
         };
