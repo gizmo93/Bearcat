@@ -1049,6 +1049,7 @@
   <data name="NotificationGroup.LinkCrypters" xml:space="preserve"><value>Linkcrypter</value></data>
   <data name="NotificationGroup.DistributionSites" xml:space="preserve"><value>Verteilungsseiten</value></data>
   <data name="NotificationGroup.RemoteDownloads" xml:space="preserve"><value>Remotedownloads</value></data>
+  <data name="NotificationGroup.Security" xml:space="preserve"><value>Sicherheit</value></data>
   <data name="NotificationKind.Legacy" xml:space="preserve"><value>Bestehende Benachrichtigung</value></data>
   <data name="NotificationKind.ReleaseAutomaticallyCreated" xml:space="preserve"><value>Release automatisch erstellt</value></data><data name="NotificationKind.ReleaseAutomaticallyCreated.Description" xml:space="preserve"><value>Ein Release wurde durch die Ordnerautomatisierung erstellt.</value></data>
   <data name="NotificationKind.ReleaseAutoConvertedToUnmanaged" xml:space="preserve"><value>Release in Unmanaged umgewandelt</value></data><data name="NotificationKind.ReleaseAutoConvertedToUnmanaged.Description" xml:space="preserve"><value>Ein Release wurde in Unmanaged umgewandelt, weil die Aufbewahrung seines Releaseordners abgelaufen ist und der Releaseordner gelöscht werden kann.</value></data>
@@ -1192,6 +1193,8 @@
   <data name="NotificationKind.ReleaseCreatedFromRemoteDownload.Description" xml:space="preserve"><value>Ein Release wurde automatisch aus einem Ordner erstellt, der von einer Remotequelle heruntergeladen wurde.</value></data>
   <data name="NotificationKind.RemoteDownloadFailed" xml:space="preserve"><value>Remotedownload fehlgeschlagen</value></data>
   <data name="NotificationKind.RemoteDownloadFailed.Description" xml:space="preserve"><value>Ein Ordner konnte nicht von einer Remotequelle heruntergeladen werden oder aus dem heruntergeladenen Ordner konnte kein Release erstellt werden.</value></data>
+  <data name="NotificationKind.UnreadableSecretsDetected" xml:space="preserve"><value>Unlesbare Zugangsdaten erkannt</value></data>
+  <data name="NotificationKind.UnreadableSecretsDetected.Description" xml:space="preserve"><value>Gespeicherte Zugangsdaten einer oder mehrerer Registrierungen konnten beim Start nicht entschlüsselt werden, meist weil die Schlüsseldatei verloren gegangen ist oder ersetzt wurde.</value></data>
   <data name="MirrorDownloads" xml:space="preserve"><value>Mirrordownloads</value></data>
   <data name="MirrorDownloadsDescription" xml:space="preserve"><value>Steuert, wie Archive von Onlinemirrors geladen werden, wenn sie nicht mehr lokal liegen.</value></data>
   <data name="MirrorDownloadsRequirePremium" xml:space="preserve"><value>Mirrordownloads von diesem Hoster benötigen einen Premiumaccount.</value></data>

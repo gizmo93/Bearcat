@@ -2,7 +2,7 @@
 
 namespace Bearcat.Domain.Entities;
 
-public class HosterRegistration
+public class HosterRegistration : IEntityWithEncryptedSecrets
 {
     public int Id { get; set; }
 
@@ -11,6 +11,8 @@ public class HosterRegistration
     public required string SerializedConfig { get; set; }
 
     public bool IsActive { get; set; }
+
+    public bool HasUnreadableSecrets { get; set; }
 
     public bool RequiresCaptchaVerification { get; set; }
 
@@ -29,4 +31,10 @@ public class HosterRegistration
     public int MirrorPriority { get; set; } = 100;
 
     public List<UploadConfig> UploadConfigs { get; set; } = null!;
+
+    public string GetEncryptedSecrets() => SerializedConfig;
+
+    public string GetRegistrationTypeName() => "Hoster";
+
+    public string? GetRegistrationName() => Name;
 }

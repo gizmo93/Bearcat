@@ -1,6 +1,6 @@
 namespace Bearcat.Domain.Entities;
 
-public class NfoDatabaseRegistration
+public class NfoDatabaseRegistration : IEntityWithEncryptedSecrets
 {
     public int Id { get; set; }
 
@@ -9,4 +9,12 @@ public class NfoDatabaseRegistration
     public string SerializedConfig { get; set; } = null!;
 
     public bool IsActive { get; set; }
+
+    public bool HasUnreadableSecrets { get; set; }
+
+    public string GetEncryptedSecrets() => SerializedConfig;
+
+    public string GetRegistrationTypeName() => "NFO database";
+
+    public string? GetRegistrationName() => NfoDatabaseClassName;
 }

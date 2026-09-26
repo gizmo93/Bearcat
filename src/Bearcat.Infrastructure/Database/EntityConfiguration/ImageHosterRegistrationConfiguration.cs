@@ -12,5 +12,6 @@ public class ImageHosterRegistrationConfiguration
         builder.Property(h => h.Name).HasMaxLength(100).IsRequired();
         builder.Property(h => h.ImageHosterClassName).HasMaxLength(100).IsRequired();
         builder.Property(h => h.SerializedConfig).HasMaxLength(2000).IsRequired();
+        builder.Property(h => h.HasUnreadableSecrets).IsRequired();
     }
 }

@@ -23,6 +23,8 @@ public class NfoDatabaseRegistrationConfiguration
 
         builder.Property(registration => registration.IsActive).IsRequired();
 
+        builder.Property(registration => registration.HasUnreadableSecrets).IsRequired();
+
         builder.HasIndex(registration => registration.NfoDatabaseClassName).IsUnique();
     }
 }

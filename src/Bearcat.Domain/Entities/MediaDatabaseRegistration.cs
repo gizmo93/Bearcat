@@ -1,6 +1,6 @@
 namespace Bearcat.Domain.Entities;
 
-public class MediaDatabaseRegistration
+public class MediaDatabaseRegistration : IEntityWithEncryptedSecrets
 {
     public int Id { get; set; }
 
@@ -9,4 +9,12 @@ public class MediaDatabaseRegistration
     public string SerializedConfig { get; set; } = null!;
 
     public bool IsActive { get; set; }
+
+    public bool HasUnreadableSecrets { get; set; }
+
+    public string GetEncryptedSecrets() => SerializedConfig;
+
+    public string GetRegistrationTypeName() => "Media database";
+
+    public string? GetRegistrationName() => MediaDatabaseClassName;
 }

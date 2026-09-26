@@ -1046,6 +1046,7 @@
   <data name="NotificationGroup.LinkCrypters" xml:space="preserve"><value>Link crypters</value></data>
   <data name="NotificationGroup.DistributionSites" xml:space="preserve"><value>Distribution sites</value></data>
   <data name="NotificationGroup.RemoteDownloads" xml:space="preserve"><value>Remote downloads</value></data>
+  <data name="NotificationGroup.Security" xml:space="preserve"><value>Security</value></data>
   <data name="NotificationKind.Legacy" xml:space="preserve"><value>Legacy notification</value></data>
   <data name="NotificationKind.ReleaseAutomaticallyCreated" xml:space="preserve"><value>Release created automatically</value></data><data name="NotificationKind.ReleaseAutomaticallyCreated.Description" xml:space="preserve"><value>A release was created by folder automation.</value></data>
   <data name="NotificationKind.ReleaseAutoConvertedToUnmanaged" xml:space="preserve"><value>Release converted to unmanaged</value></data><data name="NotificationKind.ReleaseAutoConvertedToUnmanaged.Description" xml:space="preserve"><value>A release was converted to unmanaged because its release folder retention expired and the release folder can be deleted.</value></data>
@@ -1189,6 +1190,8 @@
   <data name="NotificationKind.ReleaseCreatedFromRemoteDownload.Description" xml:space="preserve"><value>A release was created automatically from a folder that was downloaded from a remote source.</value></data>
   <data name="NotificationKind.RemoteDownloadFailed" xml:space="preserve"><value>Remote download failed</value></data>
   <data name="NotificationKind.RemoteDownloadFailed.Description" xml:space="preserve"><value>A folder could not be downloaded from a remote source or no release could be created from the downloaded folder.</value></data>
+  <data name="NotificationKind.UnreadableSecretsDetected" xml:space="preserve"><value>Unreadable credentials detected</value></data>
+  <data name="NotificationKind.UnreadableSecretsDetected.Description" xml:space="preserve"><value>Stored credentials of one or more registrations could not be decrypted at startup, usually because the encryption key file was lost or replaced.</value></data>
   <data name="MirrorDownloads" xml:space="preserve"><value>Mirror downloads</value></data>
   <data name="MirrorDownloadsDescription" xml:space="preserve"><value>Controls how archives are downloaded from online mirrors when they are no longer stored locally.</value></data>
   <data name="MirrorDownloadsRequirePremium" xml:space="preserve"><value>Mirror downloads from this hoster require a premium account.</value></data>

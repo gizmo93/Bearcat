@@ -115,6 +115,82 @@ public class AesGcmSecretProtectorTest
         Should.Throw<CryptographicException>(() => otherProtector.Unprotect(protectedValue));
     }
 
+    [Test]
+    public void CanUnprotect_ValueProtectedWithSameKey_ReturnsTrue()
+    {
+        // Arrange
+        var protectedValue = protector.Protect("value");
+
+        // Act
+        var result = protector.CanUnprotect(protectedValue);
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Test]
+    public void CanUnprotect_ValueProtectedWithDifferentKey_ReturnsFalse()
+    {
+        // Arrange
+        var protectedValue = protector.Protect("value");
+        var otherProtector = new AesGcmSecretProtector(new FixedKeyProvider(fillValue: 7));
+
+        // Act
+        var result = otherProtector.CanUnprotect(protectedValue);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Test]
+    public void CanUnprotect_UnprotectedValue_ReturnsTrue()
+    {
+        // Act
+        var result = protector.CanUnprotect("plain-value");
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Test]
+    public void CanUnprotect_InvalidBase64Payload_ReturnsFalse()
+    {
+        // Arrange
+        var invalidBase64 = Prefix + "not base64!";
+
+        // Act
+        var result = protector.CanUnprotect(invalidBase64);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Test]
+    public void CanUnprotect_PayloadShorterThanNonceAndTag_ReturnsFalse()
+    {
+        // Arrange
+        var tooShort = Prefix + Convert.ToBase64String(new byte[10]);
+
+        // Act
+        var result = protector.CanUnprotect(tooShort);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Test]
+    public void CanUnprotect_TamperedPayload_ReturnsFalse()
+    {
+        // Arrange
+        var tampered = Prefix + Convert.ToBase64String(new byte[30]);
+
+        // Act
+        var result = protector.CanUnprotect(tampered);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
     private sealed class FixedKeyProvider(byte fillValue = 1) : IEncryptionKeyProvider
     {
         private readonly byte[] key = Enumerable.Repeat(fillValue, 32).ToArray();

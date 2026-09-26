@@ -122,6 +122,7 @@ public class NotificationService(
             NotificationKind.ReleaseCreatedFromRemoteDownload =>
                 configuration.ReleaseCreatedFromRemoteDownload,
             NotificationKind.RemoteDownloadFailed => configuration.RemoteDownloadFailed,
+            NotificationKind.UnreadableSecretsDetected => configuration.UnreadableSecretsDetected,
             _ => throw new ArgumentOutOfRangeException(
                 paramName: nameof(kind),
                 actualValue: kind,

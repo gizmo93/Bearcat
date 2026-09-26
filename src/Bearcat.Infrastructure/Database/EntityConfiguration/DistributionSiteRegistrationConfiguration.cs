@@ -24,6 +24,7 @@ public class DistributionSiteRegistrationConfiguration
         builder.Property(registration => registration.EnableAutomaticPosting).IsRequired();
         builder.Property(registration => registration.StripDotsForThreadSearch).IsRequired();
         builder.Property(registration => registration.EncryptedSession).HasMaxLength(8000);
+        builder.Property(registration => registration.HasUnreadableSecrets).IsRequired();
 
         builder
             .HasMany(registration => registration.PostingRules)

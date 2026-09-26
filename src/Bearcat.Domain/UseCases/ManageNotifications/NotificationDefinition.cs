@@ -189,6 +189,13 @@ public static class NotificationDefinitions
             DisplayName: "NotificationKind.RemoteDownloadFailed",
             Description: "NotificationKind.RemoteDownloadFailed.Description"
         ),
+        new(
+            Kind: NotificationKind.UnreadableSecretsDetected,
+            Severity: NotificationSeverity.Error,
+            Group: NotificationGroup.Security,
+            DisplayName: "NotificationKind.UnreadableSecretsDetected",
+            Description: "NotificationKind.UnreadableSecretsDetected.Description"
+        ),
     ];
 
     public static NotificationDefinition Get(NotificationKind kind)

@@ -47,6 +47,41 @@ public sealed class AesGcmSecretProtector(IEncryptionKeyProvider keyProvider) : 
             throw new InvalidOperationException("Encrypted Bearcat secret payload is invalid.");
         }
 
+        return Decrypt(payload);
+    }
+
+    public bool CanUnprotect(string protectedValue)
+    {
+        if (!IsProtected(protectedValue))
+        {
+            return true;
+        }
+
+        try
+        {
+            var payload = Convert.FromBase64String(protectedValue[Prefix.Length..]);
+            if (payload.Length < NonceSizeInBytes + TagSizeInBytes)
+            {
+                return false;
+            }
+
+            Decrypt(payload);
+
+            return true;
+        }
+        catch (Exception exception) when (exception is CryptographicException or FormatException)
+        {
+            return false;
+        }
+    }
+
+    public bool IsProtected(string value)
+    {
+        return value.StartsWith(Prefix, StringComparison.Ordinal);
+    }
+
+    private string Decrypt(byte[] payload)
+    {
         var nonce = payload[..NonceSizeInBytes];
         var tag = payload[NonceSizeInBytes..(NonceSizeInBytes + TagSizeInBytes)];
         var ciphertext = payload[(NonceSizeInBytes + TagSizeInBytes)..];
@@ -56,10 +91,5 @@ public sealed class AesGcmSecretProtector(IEncryptionKeyProvider keyProvider) : 
         aes.Decrypt(nonce, ciphertext, tag, plaintext);
 
         return Encoding.UTF8.GetString(plaintext);
-    }
-
-    public bool IsProtected(string value)
-    {
-        return value.StartsWith(Prefix, StringComparison.Ordinal);
     }
 }

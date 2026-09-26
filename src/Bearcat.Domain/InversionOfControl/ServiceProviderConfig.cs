@@ -16,6 +16,7 @@ using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.RawFiles;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Scanning;
+using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
@@ -151,6 +152,7 @@ public static class ServiceProviderConfig
             services.AddScoped<IQualityCheck, MediaInfoQualityCheck>();
             services.AddScoped<QualityCheckCatalog>();
             services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<UnreadableSecretsDetectionService>();
             services.AddSingleton<TelegramConfigurationCache>();
             services.AddScoped<TelegramNotificationService>();
             services.AddScoped<HosterCaptchaVerificationService>();
