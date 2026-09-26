@@ -17,6 +17,7 @@ public class ReleaseFromFolderCreationService(
     public async Task<Release> CreateAsync(
         ReleaseTemplate releaseTemplate,
         string folderPath,
+        string? name,
         string? primaryLanguageCode,
         DateTime localNow,
         CancellationToken cancellationToken
@@ -25,7 +26,7 @@ public class ReleaseFromFolderCreationService(
         var releaseData = ReleaseService.CreateFromTemplateData(
             releaseTemplate: releaseTemplate,
             releaseFolderPath: folderPath,
-            name: null,
+            name: name,
             releaseType: releaseTemplate.ReleaseType,
             archivers: releaseTemplate.ReleaseType is ReleaseType.Unmanaged
                 ? archiverFactory.GetArchivers()

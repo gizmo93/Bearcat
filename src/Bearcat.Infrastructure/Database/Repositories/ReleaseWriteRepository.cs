@@ -1,10 +1,13 @@
 ﻿using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation.Repositories;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
 
-public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite) : IReleaseWriteRepository
+public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite)
+    : IReleaseWriteRepository,
+        IReleaseFromFolderPathCreationRepository
 {
     public async Task<Release> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
@@ -51,19 +54,17 @@ public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite) : IReleaseWr
         CancellationToken cancellationToken
     )
     {
-        return await dbWrite
-            .ReleaseTemplates.AsSplitQuery()
-            .Include(t => t.ArchiveConfigTemplates)
-                .ThenInclude(a => a.AdditionalArchiveContents)
-            .Include(t => t.UploadConfigTemplates)
-                .ThenInclude(u => u.HosterRegistration)
-            .Include(t => t.UploadConfigTemplates)
-                .ThenInclude(u => u.LinkCrypterTemplates)
-            .Include(t => t.ImageUploadConfigTemplates)
-                .ThenInclude(i => i.ImageHosterRegistration)
-            .Include(t => t.CollectionImageUploadConfigTemplates)
-                .ThenInclude(i => i.ImageHosterRegistration)
+        return await QueryReleaseTemplatesForReleaseCreation()
             .FirstAsync(t => t.Id == releaseTemplateId, cancellationToken);
+    }
+
+    public async Task<ReleaseTemplate?> GetTemplateForReleaseCreationOrDefaultAsync(
+        int releaseTemplateId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await QueryReleaseTemplatesForReleaseCreation()
+            .FirstOrDefaultAsync(t => t.Id == releaseTemplateId, cancellationToken);
     }
 
     public void Add(Release release)
@@ -79,5 +80,21 @@ public class ReleaseWriteRepository(IBearcatWriteDbContext dbWrite) : IReleaseWr
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         await dbWrite.SaveChangesAsync(cancellationToken);
+    }
+
+    private IQueryable<ReleaseTemplate> QueryReleaseTemplatesForReleaseCreation()
+    {
+        return dbWrite
+            .ReleaseTemplates.AsSplitQuery()
+            .Include(t => t.ArchiveConfigTemplates)
+                .ThenInclude(a => a.AdditionalArchiveContents)
+            .Include(t => t.UploadConfigTemplates)
+                .ThenInclude(u => u.HosterRegistration)
+            .Include(t => t.UploadConfigTemplates)
+                .ThenInclude(u => u.LinkCrypterTemplates)
+            .Include(t => t.ImageUploadConfigTemplates)
+                .ThenInclude(i => i.ImageHosterRegistration)
+            .Include(t => t.CollectionImageUploadConfigTemplates)
+                .ThenInclude(i => i.ImageHosterRegistration);
     }
 }

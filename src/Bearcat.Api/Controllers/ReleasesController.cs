@@ -2,6 +2,8 @@ using Bearcat.Api.Contracts;
 using Bearcat.Api.Contracts.Archives;
 using Bearcat.Api.Contracts.Releases;
 using Bearcat.Api.Security;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.Exceptions;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
@@ -14,9 +16,13 @@ namespace Bearcat.Api.Controllers;
 [Route("api/v1/releases")]
 public class ReleasesController(
     IReleaseReadRepository releaseReadRepository,
-    ReleaseService releaseService
+    ReleaseService releaseService,
+    ReleaseFromFolderPathCreationService releaseFromFolderPathCreationService
 ) : ControllerBase
 {
+    private const string GetReleaseRouteName = "GetRelease";
+    private const int MaximumNameLength = 500;
+
     /// <summary>
     /// Search releases.
     /// </summary>
@@ -64,7 +70,7 @@ public class ReleasesController(
     /// <summary>
     /// Get a release.
     /// </summary>
-    [HttpGet("{releaseId:int}")]
+    [HttpGet("{releaseId:int}", Name = GetReleaseRouteName)]
     [ProducesResponseType(typeof(ReleaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ReleaseResponse>> GetAsync(
@@ -80,6 +86,68 @@ public class ReleasesController(
         }
 
         return Ok(ReleaseResponse.FromReadModel(release));
+    }
+
+    /// <summary>
+    /// Create a release from a finished folder using a release template.
+    /// </summary>
+    /// <remarks>
+    /// Works like the folder automation, but without waiting for the folder to become stable, so only use it, if you are sure the folder was completely copied.
+    /// The folder path must be the path as seen by the Bearcat process, which is the container path when Bearcat runs in Docker.
+    /// Release info resolution and media metadata extraction run synchronously, so the call can take several seconds.
+    /// Fails with 409 if the folder is already the release folder of a release, the archive folder of an unmanaged release or the target folder of a remote download.
+    /// </remarks>
+    [HttpPost]
+    [RequiresApiKey]
+    [ProducesResponseType(typeof(ReleaseResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<ReleaseResponse>> CreateAsync(
+        CreateReleaseRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        Validate(request);
+
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem();
+        }
+
+        int releaseId;
+
+        try
+        {
+            releaseId = await releaseFromFolderPathCreationService.CreateAsync(
+                folderPath: request.FolderPath,
+                releaseTemplateId: request.ReleaseTemplateId,
+                name: request.Name,
+                primaryLanguageCode: request.PrimaryLanguageCode,
+                cancellationToken: cancellationToken
+            );
+        }
+        catch (ReleaseFolderNotFoundException exception)
+        {
+            ModelState.AddModelError(nameof(request.FolderPath), exception.Message);
+            return ValidationProblem();
+        }
+        catch (ReleaseTemplateNotFoundException exception)
+        {
+            ModelState.AddModelError(nameof(request.ReleaseTemplateId), exception.Message);
+            return ValidationProblem();
+        }
+        catch (ReleaseFolderAlreadyInUseException exception)
+        {
+            return Problem(detail: exception.Message, statusCode: StatusCodes.Status409Conflict);
+        }
+
+        var release = await releaseReadRepository.GetReleaseAsync(releaseId, cancellationToken);
+
+        return CreatedAtRoute(
+            GetReleaseRouteName,
+            new { releaseId },
+            ReleaseResponse.FromReadModel(release!)
+        );
     }
 
     /// <summary>
@@ -157,5 +225,44 @@ public class ReleasesController(
         await releaseService.MarkUploadsPostedAsync(releaseId, cancellationToken);
 
         return NoContent();
+    }
+
+    private void Validate(CreateReleaseRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.FolderPath))
+        {
+            ModelState.AddModelError(nameof(request.FolderPath), "The folder path is required.");
+        }
+        else if (!Path.IsPathFullyQualified(request.FolderPath.Trim()))
+        {
+            ModelState.AddModelError(
+                nameof(request.FolderPath),
+                "The folder path must be an absolute path."
+            );
+        }
+
+        if (request.Name is not null && request.Name.Trim().Length > MaximumNameLength)
+        {
+            ModelState.AddModelError(
+                nameof(request.Name),
+                $"The name must be at most {MaximumNameLength} characters long."
+            );
+        }
+
+        if (
+            !string.IsNullOrWhiteSpace(request.PrimaryLanguageCode)
+            && !IsTwoLetterCode(request.PrimaryLanguageCode.Trim())
+        )
+        {
+            ModelState.AddModelError(
+                nameof(request.PrimaryLanguageCode),
+                "The primary language code must be a two-letter ISO 639-1 code."
+            );
+        }
+    }
+
+    private static bool IsTwoLetterCode(string value)
+    {
+        return value.Length == 2 && value.All(char.IsAsciiLetter);
     }
 }

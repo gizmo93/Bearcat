@@ -8,21 +8,6 @@ public interface ILocalFolderScanRepository
 
     void Add(Notification notification);
 
-    Task<HashSet<string>> GetExistingReleaseFolderPathsAsync(
-        IReadOnlyList<string> releaseFolderPaths,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<HashSet<string>> GetExistingArchiveFolderPathsAsync(
-        IReadOnlyList<string> archiveFolderPaths,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<HashSet<string>> GetRemoteDownloadFolderPathsAsync(
-        IReadOnlyList<string> localFolderPaths,
-        CancellationToken cancellationToken = default
-    );
-
     Task<IReadOnlyList<ReleaseFolderAutomation>> GetEnabledWithTemplatesAsync(
         CancellationToken cancellationToken = default
     );
