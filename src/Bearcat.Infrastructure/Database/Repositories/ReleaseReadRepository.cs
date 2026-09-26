@@ -48,6 +48,12 @@ public class ReleaseReadRepository(
         && r.ImageUploadConfigs.Where(ic => ic.ImageHosterRegistration.IsActive)
             .All(ic => ic.ImageUploads.Any());
 
+    private static readonly Expression<Func<Release, bool>> IsNotReadyForPostQueue =
+        Expression.Lambda<Func<Release, bool>>(
+            Expression.Not(IsReadyForPostQueue.Body),
+            IsReadyForPostQueue.Parameters
+        );
+
     public async Task<PagedResult<ReleaseReadModel>> SearchReleasesAsync(
         ReleaseSearchQuery query,
         CancellationToken cancellationToken = default
@@ -1204,7 +1210,8 @@ public class ReleaseReadRepository(
                 .UploadConfigs.Where(uc => uc.Uploads.Any(u => u.OnlineState == OnlineState.Online))
                 .Distinct()
                 .Count(),
-            entity.ExcludeFromAutoCleanup
+            entity.ExcludeFromAutoCleanup,
+            entity.UploadsPostedAt
         );
     }
 
@@ -1279,6 +1286,13 @@ public class ReleaseReadRepository(
         if (query.ReleaseGroupId is not null)
         {
             releases = releases.Where(r => r.ReleaseGroupId == query.ReleaseGroupId.Value);
+        }
+
+        if (query.InPostQueue is not null)
+        {
+            releases = releases.Where(
+                query.InPostQueue.Value ? IsReadyForPostQueue : IsNotReadyForPostQueue
+            );
         }
 
         var postedLocationUrl = Normalize(query.PostedLocationUrl);

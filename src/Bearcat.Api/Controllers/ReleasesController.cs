@@ -1,6 +1,8 @@
 using Bearcat.Api.Contracts;
 using Bearcat.Api.Contracts.Archives;
 using Bearcat.Api.Contracts.Releases;
+using Bearcat.Api.Security;
+using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Microsoft.AspNetCore.Http;
@@ -10,7 +12,10 @@ namespace Bearcat.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/releases")]
-public class ReleasesController(IReleaseReadRepository releaseReadRepository) : ControllerBase
+public class ReleasesController(
+    IReleaseReadRepository releaseReadRepository,
+    ReleaseService releaseService
+) : ControllerBase
 {
     /// <summary>
     /// Search releases.
@@ -36,6 +41,7 @@ public class ReleasesController(IReleaseReadRepository releaseReadRepository) : 
             DownloadLink: request.DownloadLink,
             ArchiveFileName: request.ArchiveFileName,
             UploadId: request.UploadId,
+            InPostQueue: request.InPostQueue,
             PageIndex: request.PageIndex,
             PageSize: request.PageSize
         );
@@ -126,5 +132,30 @@ public class ReleasesController(IReleaseReadRepository releaseReadRepository) : 
         var items = archiveConfigs.Select(ArchiveConfigResponse.FromReadModel).ToList();
 
         return Ok(items);
+    }
+
+    /// <summary>
+    /// Mark the uploads of a release as posted.
+    /// </summary>
+    /// <remarks>
+    /// Sets UploadsPostedAt to now, which removes the release from the post queue until a newer upload completes. Repeating the call is safe.
+    /// </remarks>
+    [HttpPost("{releaseId:int}/mark-posted")]
+    [RequiresApiKey]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> MarkPostedAsync(
+        int releaseId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (await releaseReadRepository.GetReleaseAsync(releaseId, cancellationToken) is null)
+        {
+            return NotFound();
+        }
+
+        await releaseService.MarkUploadsPostedAsync(releaseId, cancellationToken);
+
+        return NoContent();
     }
 }

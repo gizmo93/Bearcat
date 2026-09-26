@@ -705,6 +705,27 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         preview.ArchivesInsideReleaseFolder.ShouldBeFalse();
     }
 
+    [Test]
+    public async Task MarkUploadsPostedAsync_UploadsAlreadyPosted_UpdatesUploadsPostedAt()
+    {
+        // Arrange
+        var uploadsPostedAt = new DateTime(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc);
+        var releaseGroup = await AddReleaseGroupAsync("Managed releases");
+        var release = await AddReleaseAsync(releaseGroup.Id);
+        release.UploadsPostedAt = uploadsPostedAt;
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.MarkUploadsPostedAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var updatedRelease = await dbContext.Releases.SingleAsync();
+        updatedRelease.UploadsPostedAt.ShouldNotBeNull();
+        updatedRelease.UploadsPostedAt.Value.ShouldBeGreaterThan(uploadsPostedAt);
+    }
+
     private async Task<Release> AddManagedReleaseWithArchiveAsync(
         int releaseGroupId,
         string releaseFolderPath,

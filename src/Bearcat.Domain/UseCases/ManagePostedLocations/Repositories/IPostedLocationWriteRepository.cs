@@ -9,6 +9,12 @@ public interface IPostedLocationWriteRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<int?> FindReleasePostedLocationIdByUrlAsync(
+        int releaseId,
+        string url,
+        CancellationToken cancellationToken = default
+    );
+
     void Add(PostedLocation postedLocation);
 
     void Remove(PostedLocation postedLocation);

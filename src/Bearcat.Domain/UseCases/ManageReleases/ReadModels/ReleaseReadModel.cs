@@ -13,7 +13,8 @@ public record ReleaseReadModel(
     string? ReleaseFolderPath,
     int ActiveUploadConfigsCount,
     int OnlineUploadConfigsCount,
-    bool ExcludeFromAutoCleanup
+    bool ExcludeFromAutoCleanup,
+    DateTime? UploadsPostedAt
 )
 {
     public OnlineState? OnlineState
