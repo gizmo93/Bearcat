@@ -39,6 +39,8 @@ public sealed class DesktopSettings
 
     public int WebPort { get; set; } = 17208;
 
+    public string ApiKey { get; set; } = string.Empty;
+
     public string WebUrl => $"http://127.0.0.1:{WebPort}";
 
     public string CreateConnectionString()

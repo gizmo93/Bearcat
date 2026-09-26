@@ -143,6 +143,7 @@ public partial class MainWindow : Window
         PostgresUsernameTextBox.Text = settings.PostgresUsername;
         PostgresPasswordTextBox.Text = settings.PostgresPassword;
         WebPortTextBox.Text = settings.WebPort.ToString();
+        ApiKeyTextBox.Text = settings.ApiKey;
     }
 
     private bool TryReadSettings(out DesktopSettings settings)
@@ -157,6 +158,7 @@ public partial class MainWindow : Window
             PostgresDatabase = PostgresDatabaseTextBox.Text?.Trim() ?? string.Empty,
             PostgresUsername = PostgresUsernameTextBox.Text?.Trim() ?? string.Empty,
             PostgresPassword = PostgresPasswordTextBox.Text ?? string.Empty,
+            ApiKey = ApiKeyTextBox.Text?.Trim() ?? string.Empty,
         };
 
         if (!int.TryParse(PostgresPortTextBox.Text, out var postgresPort))

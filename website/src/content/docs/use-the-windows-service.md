@@ -13,7 +13,7 @@ Install PostgreSQL separately. See [Set Up PostgreSQL for Bearcat](/Bearcat/inst
 - PostgreSQL 18 running locally or on a reachable machine
 - RAR command line executable (on Windows this comes with WinRAR)
 - 7z command line executable
-- A release data directory the service can read and write
+- At least one working directory the service can read and write
 - An Administrator terminal to run the setup
 
 ## Downloading
@@ -36,7 +36,7 @@ The setup asks you for:
 
 - **7z executable**: full path, or empty to use `PATH`
 - **rar executable**: full path, or empty to use `PATH`
-- **Release data directory**: where Bearcat looks for your release files
+- **Working directories**: one or more folders where Bearcat looks for your release files. Leave the prompt empty to finish.
 - **Database host / port / name / user / password**: your PostgreSQL connection
 - **Web port**: the local HTTP port for the web UI (default `17208`)
 
@@ -58,7 +58,7 @@ The setup writes a single machine-wide configuration file:
 %ProgramData%\Bearcat\config.json
 ```
 
-It holds the database connection string, the 7z/RAR paths, the release data directory, and the web port. The folder's access is restricted to the service account and Administrators, because the file contains the database password in plain text.
+It holds the database connection string, the 7z/RAR paths, the working directories, and the web port. The folder's access is restricted to the service account and Administrators, because the file contains the database password in plain text.
 
 The encryption key for stored hoster, link crypter, and NFO database account configurations is created next to it on first start:
 
@@ -67,6 +67,10 @@ The encryption key for stored hoster, link crypter, and NFO database account con
 ```
 
 Back up `bearcat.key` together with your PostgreSQL database. Without it, Bearcat cannot decrypt your stored account configurations anymore.
+
+`setup` and `set-db-password` only update these values. Sections you add by hand, like `Logging` or `Bearcat`, are kept.
+
+To enable the REST API command endpoints, add `Bearcat.ApiKey`. See [Orchestrate Bearcat from External Tools](/Bearcat/external-orchestration/#windows-service).
 
 ## Managing The Service
 
@@ -99,7 +103,7 @@ Bearcat logs warnings and errors by default. For more detail, add the following 
 {
   "Database": { "ConnectionString": "..." },
   "Archivers": { "RarPath": "...", "SevenZipPath": "..." },
-  "ReleaseDataDirectory": "...",
+  "WorkingDirectories": ["..."],
   "Urls": "http://127.0.0.1:17208",
   "Logging": {
     "LogLevel": {
@@ -116,8 +120,6 @@ Then restart the service so it picks up the change:
 sc stop Bearcat
 sc start Bearcat
 ```
-
-Note: re-running `Bearcat.Cli.exe setup` rewrites `config.json` and would drop a manually added `Logging` section, so re-add it after a setup run if you need it.
 
 ## Using A Network Share For Releases
 

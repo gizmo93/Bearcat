@@ -179,7 +179,7 @@
                 CornerRadius="8"
             >
                 <Grid
-                    RowDefinitions="Auto,Auto"
+                    RowDefinitions="Auto,Auto,Auto"
                     ColumnDefinitions="160,*"
                     RowSpacing="10"
                     ColumnSpacing="10"
@@ -195,12 +195,26 @@
                     <TextBlock
                         Grid.Row="1"
                         Grid.Column="0"
+                        Text="API key"
+                        VerticalAlignment="Center"
+                    />
+                    <TextBox
+                        x:Name="ApiKeyTextBox"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        PasswordChar="*"
+                        PlaceholderText="Optional, enables REST API commands"
+                    />
+
+                    <TextBlock
+                        Grid.Row="2"
+                        Grid.Column="0"
                         Text="Status"
                         VerticalAlignment="Center"
                     />
                     <TextBlock
                         x:Name="StatusTextBlock"
-                        Grid.Row="1"
+                        Grid.Row="2"
                         Grid.Column="1"
                         Text="Stopped"
                     />

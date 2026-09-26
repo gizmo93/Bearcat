@@ -99,6 +99,11 @@ public sealed class BearcatHostProcess : IDisposable
         startInfo.Environment["Archivers__RarPath"] = settings.RarPath;
         startInfo.Environment["Archivers__SevenZipPath"] = settings.SevenZipPath;
 
+        if (!string.IsNullOrWhiteSpace(settings.ApiKey))
+        {
+            startInfo.Environment["Bearcat__ApiKey"] = settings.ApiKey;
+        }
+
         return startInfo;
     }
 

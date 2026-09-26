@@ -12,6 +12,7 @@ services:
       - WorkingDirectories__0=/mnt/data
       - Bearcat__DataDirectory=/data
       - Database__ConnectionString=Host=postgres;Database=${POSTGRES_DB:-bearcat};Username=${POSTGRES_USER:-bearcat};Password=${POSTGRES_PASSWORD:-bearcat123}
+      - Bearcat__ApiKey=${BEARCAT_API_KEY:-}
     volumes:
       - ${BEARCAT_DATA_DIR:-./bearcat-data}:/data
       - ${RELEASES_DIR}:/mnt/data/releases

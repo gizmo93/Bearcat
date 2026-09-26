@@ -1,9 +1,9 @@
 ---
 title: "Use the REST API"
-description: "Query releases, archives and uploads through the Bearcat REST API."
+description: "Query releases, archives and uploads and run commands through the Bearcat REST API."
 ---
 
-Use Bearcat's read-only REST API to query releases, archives, and uploads.
+Use Bearcat's REST API to query releases, archives, and uploads, and to run a few commands.
 It uses the same address and port as the web interface.
 
 ## Endpoints and documentation
@@ -19,9 +19,12 @@ The [API reference](/Bearcat/api/) also lists the endpoints, parameters, and sch
 
 ## Authentication
 
-The API has no authentication. Anyone who can reach the Bearcat host can access it.
+Read endpoints (`GET`) have no authentication. Anyone who can reach the Bearcat host can access them.
 Keep Bearcat on a private network, or add your own
 authentication in front of it (for example a reverse proxy with basic auth or a VPN).
+
+Commands (`POST`) are disabled until you configure an API key and must send it in the `X-Api-Key` header.
+See [Orchestrate Bearcat from External Tools](/Bearcat/external-orchestration/) for the setup and an example workflow.
 
 ## Generating a client
 
