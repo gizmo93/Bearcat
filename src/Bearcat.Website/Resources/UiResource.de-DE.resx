@@ -1395,4 +1395,9 @@
   <data name="NoAdditionalArchiveContentsToAssign" xml:space="preserve"><value>Es gibt noch keine zusätzlichen Archivinhalte.</value></data>
   <data name="ManageAdditionalArchiveContents" xml:space="preserve"><value>Zusätzliche Archivinhalte verwalten</value></data>
   <data name="DuplicatedEntryName" xml:space="preserve"><value>{0} würden alle als "{1}" im Releaseordner abgelegt. Wähle nur einen davon aus.</value></data>
+  <data name="SelectedReleaseFolderNotFound" xml:space="preserve"><value>Der ausgewählte Ordner existiert nicht.</value></data>
+  <data name="SelectedReleaseTemplateNotFound" xml:space="preserve"><value>Das ausgewählte Releasetemplate existiert nicht mehr.</value></data>
+  <data name="ReleaseFolderAlreadyUsedByRelease" xml:space="preserve"><value>Dieser Ordner ist bereits der Releaseordner eines Releases.</value></data>
+  <data name="ReleaseFolderAlreadyUsedByUnmanagedRelease" xml:space="preserve"><value>Dieser Ordner ist bereits der Archivordner eines unmanaged Releases.</value></data>
+  <data name="ReleaseFolderAlreadyUsedByRemoteDownload" xml:space="preserve"><value>Dieser Ordner ist bereits der Zielordner eines Remotedownloads.</value></data>
 </root>

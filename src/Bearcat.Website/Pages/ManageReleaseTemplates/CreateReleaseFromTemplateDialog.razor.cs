@@ -1,4 +1,6 @@
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleases.Exceptions;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleaseTemplates.Repositories;
 using Bearcat.Website.ScopedOperations;
@@ -27,6 +29,7 @@ public partial class CreateReleaseFromTemplateDialog(
     private EditContext editContext = null!;
     private ValidationMessageStore messageStore = null!;
     private string? folderValidationMessage;
+    private bool isCreating;
 
     private IReadOnlyList<SelectOption<int?>> ReleaseTemplateOptions =>
         releaseTemplates
@@ -55,17 +58,77 @@ public partial class CreateReleaseFromTemplateDialog(
 
     private async Task SaveAsync()
     {
-        var releaseId = await operationRunner.RunAsync(
-            (ReleaseService service) =>
-                service.CreateFromTemplateAsync(
-                    formModel.ReleaseTemplateId!.Value,
-                    formModel.FolderPath,
-                    formModel.Name
-                )
-        );
+        if (isCreating)
+        {
+            return;
+        }
+
+        isCreating = true;
+        int releaseId;
+
+        try
+        {
+            releaseId = await operationRunner.RunAsync(
+                (ReleaseService service) =>
+                    service.CreateFromTemplateAsync(
+                        releaseTemplateId: formModel.ReleaseTemplateId!.Value,
+                        releaseFolderPath: formModel.FolderPath,
+                        name: formModel.Name,
+                        primaryLanguageCode: null
+                    )
+            );
+        }
+        catch (ReleaseFolderNotFoundException)
+        {
+            ShowFolderValidationMessage(L["SelectedReleaseFolderNotFound"]);
+            return;
+        }
+        catch (ReleaseFolderAlreadyInUseException exception)
+        {
+            ShowFolderValidationMessage(GetFolderAlreadyInUseMessage(exception.UsageKind));
+            return;
+        }
+        catch (ReleaseTemplateNotFoundException)
+        {
+            messageStore.Add(
+                () => formModel.ReleaseTemplateId!,
+                L["SelectedReleaseTemplateNotFound"]
+            );
+            editContext.NotifyValidationStateChanged();
+            return;
+        }
+        finally
+        {
+            isCreating = false;
+        }
 
         await DialogRef.CloseAsync(DialogResult.Ok(releaseId));
         navigationManager.NavigateTo($"/releases/{releaseId}");
+    }
+
+    private void ShowFolderValidationMessage(string message)
+    {
+        folderValidationMessage = message;
+        messageStore.Add(() => formModel.FolderPath, message);
+        editContext.NotifyValidationStateChanged();
+    }
+
+    private string GetFolderAlreadyInUseMessage(ReleaseFolderUsageKind usageKind)
+    {
+        return usageKind switch
+        {
+            ReleaseFolderUsageKind.ReleaseFolder => L["ReleaseFolderAlreadyUsedByRelease"],
+            ReleaseFolderUsageKind.UnmanagedArchiveFolder => L[
+                "ReleaseFolderAlreadyUsedByUnmanagedRelease"
+            ],
+            ReleaseFolderUsageKind.RemoteDownloadFolder => L[
+                "ReleaseFolderAlreadyUsedByRemoteDownload"
+            ],
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(usageKind),
+                $"Unknown release folder usage kind, {usageKind}"
+            ),
+        };
     }
 
     private async Task OpenFolderDialogAsync()

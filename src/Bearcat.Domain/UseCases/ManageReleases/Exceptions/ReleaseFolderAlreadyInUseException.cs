@@ -1,6 +1,6 @@
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage;
 
-namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.Exceptions;
+namespace Bearcat.Domain.UseCases.ManageReleases.Exceptions;
 
 public sealed class ReleaseFolderAlreadyInUseException(
     string folderPath,

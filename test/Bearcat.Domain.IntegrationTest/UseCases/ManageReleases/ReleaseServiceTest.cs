@@ -1,17 +1,27 @@
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Media;
 using Bearcat.Abstractions.MediaMetadataDatabase;
+using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ArchiveRetention;
+using Bearcat.Domain.Shared.MediaMetadataResolution;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleases.Exceptions;
+using Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.Infrastructure.FileSystem;
+using Bearcat.Infrastructure.Security;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
@@ -22,27 +32,26 @@ public class ReleaseServiceTest : BearcatIntegrationTest
 {
     private BearcatDbContext dbContext = null!;
     private ReleaseService service = null!;
+    private string tempRootPath = null!;
 
     [SetUp]
     public void Setup()
     {
         dbContext = Database.CreateDbContext();
+        tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempRootPath);
+        var timeProvider = CreateTimeProvider();
         var archiverFactory = new Mock<IArchiverFactory>();
         archiverFactory
             .Setup(f => f.GetArchivers())
             .Returns([new ArchiverDto("RAR", "RarArchiver", ".rar")]);
         service = new ReleaseService(
             new ReleaseWriteRepository(dbContext),
-            CreateTimeProvider(),
+            timeProvider,
             archiverFactory.Object,
-            new ReleaseCollectionAssignmentService(
-                new ReleaseCollectionRepository(
-                    dbContext,
-                    dbContext,
-                    Mock.Of<IMediaMetadataDatabaseFactory>()
-                ),
-                CreateTimeProvider()
-            ),
+            new FileSystemService(),
+            new ReleaseFolderUsageRepository(dbContext),
+            CreateReleaseFromFolderCreationService(dbContext, archiverFactory.Object, timeProvider),
             new MirrorCoverageEvaluator(Mock.Of<IHosterFactory>()),
             new LocalArchiveDeleter(Mock.Of<IFileSystemService>())
         );
@@ -52,6 +61,11 @@ public class ReleaseServiceTest : BearcatIntegrationTest
     public async Task DisposeDbContextAsync()
     {
         await dbContext.DisposeAsync();
+
+        if (Directory.Exists(tempRootPath))
+        {
+            Directory.Delete(tempRootPath, recursive: true);
+        }
     }
 
     [Test]
@@ -233,11 +247,13 @@ public class ReleaseServiceTest : BearcatIntegrationTest
     {
         // Arrange
         var seed = await AddReleaseTemplateAsync();
+        var releaseFolderPath = CreateTemplateReleaseFolder("Bearcat.Release.Template");
 
         // Act
         var result = await service.CreateFromTemplateAsync(
             seed.ReleaseTemplateId,
-            "/tmp/releases/Bearcat.Release.Template",
+            releaseFolderPath,
+            null,
             null,
             CancellationToken.None
         );
@@ -252,7 +268,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
 
         release.Name.ShouldBe("Bearcat.Release.Template");
         release.CreatedAt.ShouldBeGreaterThan(default);
-        release.ReleaseFolderPath.ShouldBe("/tmp/releases/Bearcat.Release.Template");
+        release.ReleaseFolderPath.ShouldBe(releaseFolderPath);
         release.ReleaseType.ShouldBe(ReleaseType.Managed);
         release.ReleaseContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
         release.ReleaseGroupId.ShouldBe(seed.ReleaseGroupId);
@@ -302,11 +318,13 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         ];
         await dbContext.SaveChangesAsync();
         dbContext.ChangeTracker.Clear();
+        var releaseFolderPath = CreateTemplateReleaseFolder("Bearcat.Release.Template");
 
         // Act
         var result = await service.CreateFromTemplateAsync(
             seed.ReleaseTemplateId,
-            "/tmp/releases/Bearcat.Release.Template",
+            releaseFolderPath,
+            null,
             null,
             CancellationToken.None
         );
@@ -343,11 +361,15 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         releaseTemplate.UploadConfigTemplates.Single().CollectionUploadSlotPasswordPolicy =
             CollectionUploadSlotPasswordPolicy.MustMatchAcrossReleases;
         await dbContext.SaveChangesAsync();
+        var releaseFolderPath = CreateTemplateReleaseFolder(
+            "Hostage.S01E01.German.AC3.DL.1080p.Web.x265-FuN.mkv"
+        );
 
         // Act
         var result = await service.CreateFromTemplateAsync(
             seed.ReleaseTemplateId,
-            "/tmp/releases/Hostage.S01E01.German.AC3.DL.1080p.Web.x265-FuN.mkv",
+            releaseFolderPath,
+            null,
             null,
             CancellationToken.None
         );
@@ -407,17 +429,25 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             },
         ];
         await dbContext.SaveChangesAsync();
+        var firstEpisodeFolderPath = CreateTemplateReleaseFolder(
+            "Hostage.S01E01.German.AC3.DL.1080p.Web.x265-FuN.mkv"
+        );
+        var secondEpisodeFolderPath = CreateTemplateReleaseFolder(
+            "Hostage.S01E02.German.AC3.DL.1080p.Web.x265-FuN.mkv"
+        );
 
-        // Act - two episodes of the same series share a single collection
+        // Act
         await service.CreateFromTemplateAsync(
             seed.ReleaseTemplateId,
-            "/tmp/releases/Hostage.S01E01.German.AC3.DL.1080p.Web.x265-FuN.mkv",
+            firstEpisodeFolderPath,
+            null,
             null,
             CancellationToken.None
         );
         await service.CreateFromTemplateAsync(
             seed.ReleaseTemplateId,
-            "/tmp/releases/Hostage.S01E02.German.AC3.DL.1080p.Web.x265-FuN.mkv",
+            secondEpisodeFolderPath,
+            null,
             null,
             CancellationToken.None
         );
@@ -434,6 +464,220 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         config.ImageHosterRegistrationId.ShouldBe(imageHosterRegistration.Id);
         config.ReleaseId.ShouldBeNull();
         config.ReleaseCollectionId.ShouldBe(collection.Id);
+    }
+
+    [Test]
+    public async Task CreateFromTemplateAsync_NameAndLanguageGiven_UsesNameAndNormalizedLanguageWithoutNotification()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync();
+        var releaseFolderPath = CreateTemplateReleaseFolder("Bearcat.Release.1080p");
+
+        // Act
+        var result = await service.CreateFromTemplateAsync(
+            releaseTemplateId: seed.ReleaseTemplateId,
+            releaseFolderPath: $"  {releaseFolderPath}{Path.DirectorySeparatorChar}  ",
+            name: "Custom.Release.Name",
+            primaryLanguageCode: " DE ",
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var release = await dbContext
+            .Releases.Include(release => release.ArchiveConfigs)
+            .SingleAsync(release => release.Id == result);
+
+        release.Name.ShouldBe("Custom.Release.Name");
+        release.ReleaseFolderPath.ShouldBe(releaseFolderPath);
+        release.PrimaryLanguageCode.ShouldBe("de");
+        release.MediaMetadataExtractedAt.ShouldNotBeNull();
+        release.ArchiveConfigs.Single().ArchiveNamePrefix.ShouldBe("Custom.Release.Name");
+        (await dbContext.Notifications.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task CreateFromTemplateAsync_UnmanagedTemplate_CreatesReleaseNamedAfterFolderWithFixedArchive()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(ReleaseType.Unmanaged);
+        var releaseFolderPath = CreateTemplateReleaseFolder("Bearcat.Release.Unmanaged");
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "archive.part1.rar"), "1");
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "archive.part2.rar"), "2");
+
+        // Act
+        var result = await service.CreateFromTemplateAsync(
+            seed.ReleaseTemplateId,
+            releaseFolderPath,
+            null,
+            null,
+            CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var release = await dbContext
+            .Releases.AsSplitQuery()
+            .Include(release => release.ArchiveConfigs)
+                .ThenInclude(config => config.Archives)
+                    .ThenInclude(archive => archive.ArchiveFiles)
+            .SingleAsync(release => release.Id == result);
+        var archiveConfig = release.ArchiveConfigs.Single();
+        var archive = archiveConfig.Archives.Single();
+
+        release.Name.ShouldBe("Bearcat.Release.Unmanaged");
+        release.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
+        release.ReleaseFolderPath.ShouldBeNull();
+        release.PrimaryLanguageCode.ShouldBeNull();
+        archiveConfig.ArchiveFilesBasePath.ShouldBe(releaseFolderPath);
+        archive.ArchiveFolderPath.ShouldBe(releaseFolderPath);
+        archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        archive.ArchiveFiles.Count.ShouldBe(2);
+        (await dbContext.Notifications.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task CreateFromTemplateAsync_FolderDoesNotExist_ThrowsReleaseFolderNotFoundException()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync();
+        var missingFolderPath = Path.Combine(tempRootPath, "Missing.Release.1080p");
+
+        // Act
+        var exception = await Should.ThrowAsync<ReleaseFolderNotFoundException>(() =>
+            service.CreateFromTemplateAsync(
+                seed.ReleaseTemplateId,
+                missingFolderPath,
+                null,
+                null,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.FolderPath.ShouldBe(missingFolderPath);
+        (await dbContext.Releases.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task CreateFromTemplateAsync_TemplateDoesNotExist_ThrowsReleaseTemplateNotFoundException()
+    {
+        // Arrange
+        var releaseFolderPath = CreateTemplateReleaseFolder("Bearcat.Release.1080p");
+
+        // Act
+        var exception = await Should.ThrowAsync<ReleaseTemplateNotFoundException>(() =>
+            service.CreateFromTemplateAsync(
+                4711,
+                releaseFolderPath,
+                null,
+                null,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.ReleaseTemplateId.ShouldBe(4711);
+        (await dbContext.Releases.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task CreateFromTemplateAsync_FolderIsReleaseFolderOfRelease_ThrowsReleaseFolderAlreadyInUseException()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync();
+        var releaseFolderPath = CreateTemplateReleaseFolder("Existing.Release.1080p");
+        dbContext.Releases.Add(
+            new Release
+            {
+                Name = "Existing.Release.1080p",
+                ReleaseType = ReleaseType.Managed,
+                ReleaseGroupId = seed.ReleaseGroupId,
+                ReleaseFolderPath = releaseFolderPath,
+            }
+        );
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var exception = await Should.ThrowAsync<ReleaseFolderAlreadyInUseException>(() =>
+            service.CreateFromTemplateAsync(
+                seed.ReleaseTemplateId,
+                $"{releaseFolderPath}{Path.DirectorySeparatorChar}",
+                null,
+                null,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.UsageKind.ShouldBe(ReleaseFolderUsageKind.ReleaseFolder);
+        exception.FolderPath.ShouldBe(releaseFolderPath);
+        (await dbContext.Releases.CountAsync()).ShouldBe(1);
+    }
+
+    [Test]
+    public async Task CreateFromTemplateAsync_FolderIsArchiveFolderOfUnmanagedRelease_ThrowsReleaseFolderAlreadyInUseException()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync(ReleaseType.Unmanaged);
+        var releaseFolderPath = CreateTemplateReleaseFolder("Bearcat.Release.Unmanaged");
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "archive.rar"), "1");
+        await service.CreateFromTemplateAsync(
+            seed.ReleaseTemplateId,
+            releaseFolderPath,
+            null,
+            null,
+            CancellationToken.None
+        );
+
+        // Act
+        var exception = await Should.ThrowAsync<ReleaseFolderAlreadyInUseException>(() =>
+            service.CreateFromTemplateAsync(
+                seed.ReleaseTemplateId,
+                releaseFolderPath,
+                null,
+                null,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.UsageKind.ShouldBe(ReleaseFolderUsageKind.UnmanagedArchiveFolder);
+        (await dbContext.Releases.CountAsync()).ShouldBe(1);
+    }
+
+    [Test]
+    public async Task CreateFromTemplateAsync_FolderIsTargetOfRemoteDownload_ThrowsReleaseFolderAlreadyInUseException()
+    {
+        // Arrange
+        var seed = await AddReleaseTemplateAsync();
+        var releaseFolderPath = CreateTemplateReleaseFolder("Remote.Release.1080p");
+        dbContext.RemoteSourceDownloads.Add(
+            new RemoteSourceDownload
+            {
+                SourceName = "Main FTP",
+                RemoteFolderPath = "/incoming/Remote.Release.1080p",
+                FolderName = "Remote.Release.1080p",
+                LocalFolderPath = releaseFolderPath,
+                State = RemoteSourceDownloadState.Downloading,
+            }
+        );
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var exception = await Should.ThrowAsync<ReleaseFolderAlreadyInUseException>(() =>
+            service.CreateFromTemplateAsync(
+                seed.ReleaseTemplateId,
+                releaseFolderPath,
+                null,
+                null,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.UsageKind.ShouldBe(ReleaseFolderUsageKind.RemoteDownloadFolder);
+        (await dbContext.Releases.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -820,7 +1064,9 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         return release;
     }
 
-    private async Task<ReleaseTemplateSeed> AddReleaseTemplateAsync()
+    private async Task<ReleaseTemplateSeed> AddReleaseTemplateAsync(
+        ReleaseType releaseType = ReleaseType.Managed
+    )
     {
         var releaseGroup = await AddReleaseGroupAsync("Template group");
         var hosterRegistration = new HosterRegistration
@@ -840,7 +1086,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         var releaseTemplate = new ReleaseTemplate
         {
             Name = "Managed template",
-            ReleaseType = ReleaseType.Managed,
+            ReleaseType = releaseType,
             ReleaseContentType = ReleaseContentType.TvShowEpisode,
             ReleaseGroup = releaseGroup,
             ArchiveConfigTemplates =
@@ -884,6 +1130,87 @@ public class ReleaseServiceTest : BearcatIntegrationTest
             releaseGroup.Id,
             hosterRegistration.Id,
             linkCrypterRegistration.Id
+        );
+    }
+
+    private string CreateTemplateReleaseFolder(string folderName)
+    {
+        return Directory.CreateDirectory(Path.Combine(tempRootPath, folderName)).FullName;
+    }
+
+    private static ReleaseFromFolderCreationService CreateReleaseFromFolderCreationService(
+        BearcatDbContext dbContext,
+        IArchiverFactory archiverFactory,
+        TimeProvider timeProvider
+    )
+    {
+        var nfoDatabaseFactory = new Mock<INfoDatabaseFactory>(MockBehavior.Strict);
+        nfoDatabaseFactory
+            .Setup(factory => factory.GetByClassName())
+            .Returns(new Dictionary<string, INfoDatabase>());
+        var releaseInfoRepository = new ReleaseInfoRepository(
+            dbContext,
+            dbContext,
+            NoOpSecretProtector.Instance
+        );
+        var classificationService = new ReleaseClassificationService(
+            new ReleaseClassificationRepository(dbContext),
+            timeProvider,
+            NullLogger<ReleaseClassificationService>.Instance
+        );
+        var mediaMetadataExtractor = new Mock<IMediaMetadataExtractor>();
+        mediaMetadataExtractor
+            .Setup(extractor =>
+                extractor.ExtractAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync((MediaProbeResult?)null);
+
+        return new ReleaseFromFolderCreationService(
+            releaseInfoResolutionService: new ReleaseInfoResolutionService(
+                releaseInfoRepository,
+                nfoDatabaseFactory.Object,
+                new ReleaseNfoResolver(
+                    nfoDatabaseFactory.Object,
+                    NullLogger<ReleaseNfoResolver>.Instance
+                ),
+                new ReleaseInfoResolver(
+                    releaseInfoRepository,
+                    nfoDatabaseFactory.Object,
+                    NullLogger<ReleaseInfoResolver>.Instance
+                ),
+                new ReleaseMetadataResolver(
+                    new MediaMetadataResolver(
+                        new MediaMetadataResolverRepository(
+                            dbContext,
+                            NoOpSecretProtector.Instance
+                        ),
+                        new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict).Object,
+                        NullLogger<MediaMetadataResolver>.Instance
+                    ),
+                    nfoDatabaseFactory.Object,
+                    NullLogger<ReleaseMetadataResolver>.Instance
+                ),
+                classificationService,
+                NullLogger<ReleaseInfoResolutionService>.Instance,
+                timeProvider
+            ),
+            mediaMetadataService: new MediaMetadataService(
+                new MediaMetadataRepository(dbContext),
+                mediaMetadataExtractor.Object,
+                new FileSystemService(),
+                classificationService,
+                timeProvider,
+                NullLogger<MediaMetadataService>.Instance
+            ),
+            archiverFactory: archiverFactory,
+            releaseCollectionAssigner: new ReleaseCollectionAssignmentService(
+                new ReleaseCollectionRepository(
+                    dbRead: dbContext,
+                    dbWrite: dbContext,
+                    metadataDatabaseFactory: Mock.Of<IMediaMetadataDatabaseFactory>()
+                ),
+                timeProvider
+            )
         );
     }
 

@@ -1392,4 +1392,9 @@
   <data name="NoAdditionalArchiveContentsToAssign" xml:space="preserve"><value>No additional archive contents exist yet.</value></data>
   <data name="ManageAdditionalArchiveContents" xml:space="preserve"><value>Manage additional archive contents</value></data>
   <data name="DuplicatedEntryName" xml:space="preserve"><value>{0} would all be placed into the release folder as "{1}". Select only one of them.</value></data>
+  <data name="SelectedReleaseFolderNotFound" xml:space="preserve"><value>The selected folder does not exist.</value></data>
+  <data name="SelectedReleaseTemplateNotFound" xml:space="preserve"><value>The selected release template does not exist anymore.</value></data>
+  <data name="ReleaseFolderAlreadyUsedByRelease" xml:space="preserve"><value>This folder is already the release folder of a release.</value></data>
+  <data name="ReleaseFolderAlreadyUsedByUnmanagedRelease" xml:space="preserve"><value>This folder is already the archive folder of an unmanaged release.</value></data>
+  <data name="ReleaseFolderAlreadyUsedByRemoteDownload" xml:space="preserve"><value>This folder is already the target folder of a remote download.</value></data>
 </root>

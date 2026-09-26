@@ -2,10 +2,9 @@ using Bearcat.Api.Contracts;
 using Bearcat.Api.Contracts.Archives;
 using Bearcat.Api.Contracts.Releases;
 using Bearcat.Api.Security;
-using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
-using Bearcat.Domain.UseCases.AutomateReleaseCreation.Exceptions;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.UseCases.ManageReleases.Dto;
+using Bearcat.Domain.UseCases.ManageReleases.Exceptions;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,8 +15,7 @@ namespace Bearcat.Api.Controllers;
 [Route("api/v1/releases")]
 public class ReleasesController(
     IReleaseReadRepository releaseReadRepository,
-    ReleaseService releaseService,
-    ReleaseFromFolderPathCreationService releaseFromFolderPathCreationService
+    ReleaseService releaseService
 ) : ControllerBase
 {
     private const string GetReleaseRouteName = "GetRelease";
@@ -92,10 +90,7 @@ public class ReleasesController(
     /// Create a release from a finished folder using a release template.
     /// </summary>
     /// <remarks>
-    /// Works like the folder automation, but without waiting for the folder to become stable, so only use it, if you are sure the folder was completely copied.
-    /// The folder path must be the path as seen by the Bearcat process, which is the container path when Bearcat runs in Docker.
-    /// Release info resolution and media metadata extraction run synchronously, so the call can take several seconds.
-    /// Fails with 409 if the folder is already the release folder of a release, the archive folder of an unmanaged release or the target folder of a remote download.
+    /// The caller asserts that the folder is complete: there is no wait for the folder to become stable. The folder path must be the path as seen by the Bearcat process, which is the container path when Bearcat runs in Docker. Release info resolution and media metadata extraction run synchronously, so the call can take several seconds. Fails with 409 if the folder is already the release folder of a release, the archive folder of an unmanaged release or the target folder of a remote download.
     /// </remarks>
     [HttpPost]
     [RequiresApiKey]
@@ -118,9 +113,9 @@ public class ReleasesController(
 
         try
         {
-            releaseId = await releaseFromFolderPathCreationService.CreateAsync(
-                folderPath: request.FolderPath,
+            releaseId = await releaseService.CreateFromTemplateAsync(
                 releaseTemplateId: request.ReleaseTemplateId,
+                releaseFolderPath: request.FolderPath,
                 name: request.Name,
                 primaryLanguageCode: request.PrimaryLanguageCode,
                 cancellationToken: cancellationToken

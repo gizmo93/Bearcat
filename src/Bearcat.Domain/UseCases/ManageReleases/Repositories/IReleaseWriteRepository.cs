@@ -13,7 +13,7 @@ public interface IReleaseWriteRepository
         CancellationToken cancellationToken
     );
 
-    Task<ReleaseTemplate> GetTemplateForReleaseCreationAsync(
+    Task<ReleaseTemplate?> GetTemplateForReleaseCreationOrDefaultAsync(
         int releaseTemplateId,
         CancellationToken cancellationToken
     );

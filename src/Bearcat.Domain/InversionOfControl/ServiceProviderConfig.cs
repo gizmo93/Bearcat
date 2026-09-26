@@ -88,7 +88,6 @@ public static class ServiceProviderConfig
             services.AddScoped<ReleaseFolderAutomationService>();
             services.AddScoped<LocalFolderScanService>();
             services.AddScoped<ReleaseFromFolderCreationService>();
-            services.AddScoped<ReleaseFromFolderPathCreationService>();
             services.AddScoped<ReleaseCollectionService>();
             services.AddScoped<ReleaseCollectionAssignmentService>();
             services.AddScoped<IReleaseCollectionAssigner>(provider =>

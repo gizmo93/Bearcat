@@ -19,6 +19,7 @@
                               Size="ButtonSize.Small"
                               Class="justify-center whitespace-nowrap"
                               AriaLabel="@L["BrowseReleaseFolders"]"
+                              Disabled="isCreating"
                               OnClick="OpenFolderDialogAsync">
                         <LucideIcon Name="folder-open" class="h-4 w-4" />
                         @L["Browse"]
@@ -88,10 +89,12 @@
         </div>
 
         <div class="flex justify-end gap-2">
-            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+            <BbButton Variant="ButtonVariant.Outline" Disabled="isCreating" OnClick="CancelAsync">
                 @L["Cancel"]
             </BbButton>
-            <BbButton Type="ButtonType.Submit" Disabled="@(releaseTemplates.Count == 0)">
+            <BbButton Type="ButtonType.Submit"
+                      Disabled="@(releaseTemplates.Count == 0 || isCreating)"
+                      Loading="isCreating">
                 @L["CreateRelease"]
             </BbButton>
         </div>
