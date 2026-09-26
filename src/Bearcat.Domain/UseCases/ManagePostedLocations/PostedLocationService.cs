@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManagePostedLocations.Dto;
 using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
@@ -27,6 +28,36 @@ public class PostedLocationService(
             url: url,
             cancellationToken: cancellationToken
         );
+    }
+
+    public async Task<PostedLocationAddResult> AddForReleaseIfUrlIsNewAsync(
+        int releaseId,
+        string url,
+        int? distributionSiteRegistrationId = null,
+        int? forumPostTemplateId = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var existingPostedLocationId = await writeRepository.FindReleasePostedLocationIdByUrlAsync(
+            releaseId: releaseId,
+            url: url.Trim(),
+            cancellationToken: cancellationToken
+        );
+
+        if (existingPostedLocationId is not null)
+        {
+            return new PostedLocationAddResult(existingPostedLocationId.Value, WasCreated: false);
+        }
+
+        var postedLocationId = await AddForReleaseAsync(
+            releaseId: releaseId,
+            url: url,
+            distributionSiteRegistrationId: distributionSiteRegistrationId,
+            forumPostTemplateId: forumPostTemplateId,
+            cancellationToken: cancellationToken
+        );
+
+        return new PostedLocationAddResult(postedLocationId, WasCreated: true);
     }
 
     public Task<int> AddForCollectionAsync(

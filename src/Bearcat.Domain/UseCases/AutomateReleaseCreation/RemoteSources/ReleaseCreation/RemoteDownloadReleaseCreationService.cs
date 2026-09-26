@@ -59,6 +59,7 @@ public class RemoteDownloadReleaseCreationService(
             release = await releaseFromFolderCreationService.CreateAsync(
                 releaseTemplate: releaseTemplate,
                 folderPath: download.LocalFolderPath,
+                name: null,
                 primaryLanguageCode: download.PrimaryLanguageCode,
                 localNow: timeProvider.GetLocalNow(),
                 cancellationToken: cancellationToken

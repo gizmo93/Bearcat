@@ -16,6 +16,7 @@ public record ReleaseSearchQuery(
     string? DownloadLink = null,
     string? ArchiveFileName = null,
     string? UploadId = null,
+    bool? InPostQueue = null,
     int PageIndex = 0,
     int PageSize = 10
 );

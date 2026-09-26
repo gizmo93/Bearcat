@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Bearcat.Api.OpenApi;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bearcat.Api.InversionOfControl;
@@ -35,6 +36,8 @@ public static class ServiceProviderConfig
                             return Task.CompletedTask;
                         }
                     );
+                    options.AddDocumentTransformer<ApiKeySecuritySchemeDocumentTransformer>();
+                    options.AddOperationTransformer<ApiKeySecurityOperationTransformer>();
                 }
             );
         }

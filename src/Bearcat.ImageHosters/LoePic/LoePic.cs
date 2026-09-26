@@ -80,8 +80,6 @@ public class LoePic(ILoePicApiClient apiClient, ILogger<LoePic> logger)
 
         try
         {
-            // Every LoePic endpoint requires the API key, so reading the account behind it
-            // validates the key without leaving a leftover image on the account.
             await apiClient.GetAccountAsync(config.ApiKey, cancellationToken);
 
             return new TryLoginResult(IsSuccess: true);

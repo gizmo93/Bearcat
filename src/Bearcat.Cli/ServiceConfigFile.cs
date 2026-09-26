@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace Bearcat.Cli;
@@ -45,7 +46,31 @@ public sealed class ServiceConfigFile
             Directory.CreateDirectory(directory);
         }
 
-        File.WriteAllText(path, JsonSerializer.Serialize(this, SerializerOptions));
+        var configuration = File.Exists(path)
+            ? JsonNode.Parse(File.ReadAllText(path))!.AsObject()
+            : new JsonObject();
+        configuration.Remove(nameof(ReleaseDataDirectory));
+        MergeInto(
+            configuration,
+            JsonSerializer.SerializeToNode(this, SerializerOptions)!.AsObject()
+        );
+
+        File.WriteAllText(path, configuration.ToJsonString(SerializerOptions));
+    }
+
+    private static void MergeInto(JsonObject target, JsonObject ownedFields)
+    {
+        foreach (var (name, value) in ownedFields)
+        {
+            if (value is JsonObject ownedSection && target[name] is JsonObject existingSection)
+            {
+                MergeInto(existingSection, ownedSection);
+            }
+            else
+            {
+                target[name] = value?.DeepClone();
+            }
+        }
     }
 
     public sealed class DatabaseSection

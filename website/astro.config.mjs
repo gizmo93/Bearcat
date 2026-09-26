@@ -87,6 +87,7 @@ export default defineConfig({
 						{ label: 'Posting to Forums', slug: 'posting-to-forums' },
 						{ label: 'Automatic Forum Posting', slug: 'automatic-forum-posting' },
 						{ label: 'REST API', slug: 'rest-api' },
+						{ label: 'External Orchestration', slug: 'external-orchestration' },
 					],
 				},
                 {

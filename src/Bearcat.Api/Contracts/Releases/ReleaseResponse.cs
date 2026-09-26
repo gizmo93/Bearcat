@@ -15,7 +15,8 @@ public record ReleaseResponse(
     OnlineState? OnlineState,
     int ActiveUploadConfigsCount,
     int OnlineUploadConfigsCount,
-    bool ExcludeFromAutoCleanup
+    bool ExcludeFromAutoCleanup,
+    DateTime? UploadsPostedAt
 )
 {
     public static ReleaseResponse FromReadModel(ReleaseReadModel readModel)
@@ -32,7 +33,8 @@ public record ReleaseResponse(
             OnlineState: readModel.OnlineState,
             ActiveUploadConfigsCount: readModel.ActiveUploadConfigsCount,
             OnlineUploadConfigsCount: readModel.OnlineUploadConfigsCount,
-            ExcludeFromAutoCleanup: readModel.ExcludeFromAutoCleanup
+            ExcludeFromAutoCleanup: readModel.ExcludeFromAutoCleanup,
+            UploadsPostedAt: readModel.UploadsPostedAt
         );
     }
 }

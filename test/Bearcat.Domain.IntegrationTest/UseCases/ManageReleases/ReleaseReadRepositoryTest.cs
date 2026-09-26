@@ -61,6 +61,56 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task SearchReleasesAsync_InPostQueueFilterTrue_ReturnsReleasesOfPostQueue()
+    {
+        // Arrange
+        var releases = await AddInPostQueueFilterReleasesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.SearchReleasesAsync(
+            new ReleaseSearchQuery(InPostQueue: true),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(2);
+        result
+            .Items.Select(item => item.ReleaseId)
+            .ShouldBe(
+                [releases.NotPostedRelease.Id, releases.PostedBeforeNewerUploadRelease.Id],
+                ignoreOrder: true
+            );
+    }
+
+    [Test]
+    public async Task SearchReleasesAsync_InPostQueueFilterFalse_ReturnsReleasesNotInPostQueue()
+    {
+        // Arrange
+        var releases = await AddInPostQueueFilterReleasesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.SearchReleasesAsync(
+            new ReleaseSearchQuery(InPostQueue: false),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(3);
+        result
+            .Items.Select(item => item.ReleaseId)
+            .ShouldBe(
+                [
+                    releases.PostedAfterUploadRelease.Id,
+                    releases.ReleaseWithoutUploads.Id,
+                    releases.ReleaseWithUploadConfigWithoutUpload.Id,
+                ],
+                ignoreOrder: true
+            );
+    }
+
+    [Test]
     public async Task GetQualityIssuesQueueAsync_FailedManagedAndUnmanagedReleases_ReturnsBoth()
     {
         // Arrange
@@ -816,6 +866,45 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
     }
 
+    private async Task<InPostQueueFilterReleases> AddInPostQueueFilterReleasesAsync()
+    {
+        var notPostedRelease = await AddPostQueueReleaseAsync(
+            "Bearcat.NotPosted.2026-GRP",
+            [new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)])]
+        );
+        var postedBeforeNewerUploadRelease = await AddPostQueueReleaseAsync(
+            "Bearcat.PostedBeforeReupload.2026-GRP",
+            [
+                new PostQueueConfigSpec([
+                    new PostQueueUploadSpec(UploadState.Completed, 60),
+                    new PostQueueUploadSpec(UploadState.Completed, 10),
+                ]),
+            ],
+            uploadsPostedAt: DateTime.UtcNow.AddMinutes(-30)
+        );
+        var postedAfterUploadRelease = await AddPostQueueReleaseAsync(
+            "Bearcat.PostedAfterUpload.2026-GRP",
+            [new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 30)])],
+            uploadsPostedAt: DateTime.UtcNow.AddMinutes(-5)
+        );
+        var releaseWithoutUploads = await AddReleaseAsync("Bearcat.WithoutUploads.2026-GRP");
+        var releaseWithUploadConfigWithoutUpload = await AddPostQueueReleaseAsync(
+            "Bearcat.UploadConfigWithoutUpload.2026-GRP",
+            [
+                new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)]),
+                new PostQueueConfigSpec([]),
+            ]
+        );
+
+        return new InPostQueueFilterReleases(
+            notPostedRelease,
+            postedBeforeNewerUploadRelease,
+            postedAfterUploadRelease,
+            releaseWithoutUploads,
+            releaseWithUploadConfigWithoutUpload
+        );
+    }
+
     private async Task<Release> AddPostQueueReleaseAsync(
         string name,
         IReadOnlyList<PostQueueConfigSpec> configs,
@@ -1037,6 +1126,14 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
     );
 
     private sealed record PostQueueImageConfigSpec(bool HasUpload, bool HosterActive = true);
+
+    private sealed record InPostQueueFilterReleases(
+        Release NotPostedRelease,
+        Release PostedBeforeNewerUploadRelease,
+        Release PostedAfterUploadRelease,
+        Release ReleaseWithoutUploads,
+        Release ReleaseWithUploadConfigWithoutUpload
+    );
 
     [Test]
     public async Task GetUnmanagedArchiveFolderPathsAsync_ReturnsDistinctCreatedArchiveFolders()

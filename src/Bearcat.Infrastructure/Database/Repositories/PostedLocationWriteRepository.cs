@@ -18,6 +18,21 @@ public class PostedLocationWriteRepository(IBearcatWriteDbContext dbWrite)
         );
     }
 
+    public async Task<int?> FindReleasePostedLocationIdByUrlAsync(
+        int releaseId,
+        string url,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .PostedLocations.Where(location =>
+                location.ReleaseId == releaseId && location.Url == url
+            )
+            .OrderBy(location => location.Id)
+            .Select(location => (int?)location.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public void Add(PostedLocation postedLocation)
     {
         dbWrite.Add(postedLocation);

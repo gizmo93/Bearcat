@@ -1,8 +1,13 @@
-﻿using Bearcat.Abstractions.Archiver;
+﻿using Bearcat.Abstractions;
+using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.Shared.UnmanagedReleases;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage.Repositories;
+using Bearcat.Domain.UseCases.ManageReleases.Exceptions;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -14,7 +19,9 @@ public class ReleaseService(
     IReleaseWriteRepository writeRepository,
     TimeProvider timeProvider,
     IArchiverFactory archiverFactory,
-    IReleaseCollectionAssigner releaseCollectionAssigner,
+    IFileSystemService fileSystemService,
+    IReleaseFolderUsageRepository releaseFolderUsageRepository,
+    ReleaseFromFolderCreationService releaseFromFolderCreationService,
     MirrorCoverageEvaluator mirrorCoverageEvaluator,
     LocalArchiveDeleter localArchiveDeleter
 )
@@ -349,35 +356,37 @@ public class ReleaseService(
     public async Task<int> CreateFromTemplateAsync(
         int releaseTemplateId,
         string releaseFolderPath,
-        string? name = null,
+        string? name,
+        string? primaryLanguageCode,
         CancellationToken cancellationToken = default
     )
     {
-        var releaseTemplate = await writeRepository.GetTemplateForReleaseCreationAsync(
-            releaseTemplateId: releaseTemplateId,
-            cancellationToken: cancellationToken
-        );
+        var normalizedFolderPath = Path.TrimEndingDirectorySeparator(releaseFolderPath.Trim());
 
-        var localNow = timeProvider.GetLocalNow();
+        if (!fileSystemService.DirectoryExists(normalizedFolderPath))
+        {
+            throw new ReleaseFolderNotFoundException(normalizedFolderPath);
+        }
 
-        var releaseData = CreateFromTemplateData(
+        var releaseTemplate =
+            await writeRepository.GetTemplateForReleaseCreationOrDefaultAsync(
+                releaseTemplateId,
+                cancellationToken
+            ) ?? throw new ReleaseTemplateNotFoundException(releaseTemplateId);
+
+        var usageKind = await GetFolderUsageKindAsync(normalizedFolderPath, cancellationToken);
+
+        if (usageKind is not null)
+        {
+            throw new ReleaseFolderAlreadyInUseException(normalizedFolderPath, usageKind.Value);
+        }
+
+        var release = await releaseFromFolderCreationService.CreateAsync(
             releaseTemplate: releaseTemplate,
-            releaseFolderPath: releaseFolderPath,
+            folderPath: normalizedFolderPath,
             name: name,
-            releaseType: releaseTemplate.ReleaseType,
-            archivers: releaseTemplate.ReleaseType is ReleaseType.Unmanaged
-                ? archiverFactory.GetArchivers()
-                : [],
-            localNow: localNow
-        );
-        var release = releaseData.Release;
-
-        release.CreatedAt = localNow;
-
-        await releaseCollectionAssigner.AssignFromTemplateAsync(
-            release: release,
-            releaseTemplate: releaseTemplate,
-            uploadConfigMatches: releaseData.UploadConfigMatches,
+            primaryLanguageCode: CleanOptional(primaryLanguageCode)?.ToLowerInvariant(),
+            localNow: timeProvider.GetLocalNow(),
             cancellationToken: cancellationToken
         );
 
@@ -387,23 +396,47 @@ public class ReleaseService(
         return release.Id;
     }
 
-    public static Release CreateFromTemplate(
-        ReleaseTemplate releaseTemplate,
-        string releaseFolderPath,
-        string? name,
-        ReleaseType releaseType,
-        IReadOnlyList<ArchiverDto> archivers,
-        DateTime localNow
+    private async Task<ReleaseFolderUsageKind?> GetFolderUsageKindAsync(
+        string folderPath,
+        CancellationToken cancellationToken
     )
     {
-        return CreateFromTemplateData(
-            releaseTemplate,
-            releaseFolderPath,
-            name,
-            releaseType,
-            archivers,
-            localNow
-        ).Release;
+        List<string> folderPaths = [folderPath];
+
+        var releaseFolderPaths =
+            await releaseFolderUsageRepository.GetExistingReleaseFolderPathsAsync(
+                folderPaths,
+                cancellationToken
+            );
+
+        if (releaseFolderPaths.Count > 0)
+        {
+            return ReleaseFolderUsageKind.ReleaseFolder;
+        }
+
+        var archiveFolderPaths =
+            await releaseFolderUsageRepository.GetExistingArchiveFolderPathsAsync(
+                folderPaths,
+                cancellationToken
+            );
+
+        if (archiveFolderPaths.Count > 0)
+        {
+            return ReleaseFolderUsageKind.UnmanagedArchiveFolder;
+        }
+
+        var remoteDownloadFolderPaths =
+            await releaseFolderUsageRepository.GetRemoteDownloadFolderPathsAsync(
+                folderPaths,
+                cancellationToken
+            );
+
+        if (remoteDownloadFolderPaths.Count > 0)
+        {
+            return ReleaseFolderUsageKind.RemoteDownloadFolder;
+        }
+
+        return null;
     }
 
     public static ReleaseFromTemplateData CreateFromTemplateData(

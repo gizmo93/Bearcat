@@ -5,6 +5,7 @@ using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Stability;
 using Bearcat.Domain.UseCases.ManageReleases;
@@ -15,6 +16,7 @@ namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders;
 
 public class LocalFolderScanService(
     ILocalFolderScanRepository repository,
+    IReleaseFolderUsageRepository releaseFolderUsageRepository,
     IFileSystemService fileSystemService,
     ReleaseFromFolderCreationService releaseFromFolderCreationService,
     TimeProvider timeProvider,
@@ -44,19 +46,19 @@ public class LocalFolderScanService(
         if (candidatePaths.Count > 0)
         {
             existingFolderPaths.UnionWith(
-                await repository.GetExistingReleaseFolderPathsAsync(
+                await releaseFolderUsageRepository.GetExistingReleaseFolderPathsAsync(
                     candidatePaths,
                     cancellationToken
                 )
             );
             existingFolderPaths.UnionWith(
-                await repository.GetExistingArchiveFolderPathsAsync(
+                await releaseFolderUsageRepository.GetExistingArchiveFolderPathsAsync(
                     candidatePaths,
                     cancellationToken
                 )
             );
             existingFolderPaths.UnionWith(
-                await repository.GetRemoteDownloadFolderPathsAsync(
+                await releaseFolderUsageRepository.GetRemoteDownloadFolderPathsAsync(
                     candidatePaths,
                     cancellationToken
                 )
@@ -186,6 +188,7 @@ public class LocalFolderScanService(
         var release = await releaseFromFolderCreationService.CreateAsync(
             releaseTemplate: candidate.Automation.ReleaseTemplate,
             folderPath: candidate.FolderPath,
+            name: null,
             primaryLanguageCode: candidate.Automation.PrimaryLanguageCode,
             localNow: localNow,
             cancellationToken: cancellationToken

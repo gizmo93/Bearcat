@@ -14,12 +14,12 @@ public record ReleaseMetadataResponse(
     public static ReleaseMetadataResponse FromReadModel(ReleaseMetadataReadModel readModel)
     {
         return new ReleaseMetadataResponse(
-            readModel.MetadataDatabaseClassName,
-            readModel.Title,
-            readModel.Genre,
-            readModel.Description,
-            readModel.CoverUrl,
-            readModel.MetadataDatabaseUrl
+            Source: readModel.MetadataDatabaseClassName,
+            Title: readModel.Title,
+            Genre: readModel.Genre,
+            Description: readModel.Description,
+            CoverUrl: readModel.CoverUrl,
+            MetadataDatabaseUrl: readModel.MetadataDatabaseUrl
         );
     }
 }

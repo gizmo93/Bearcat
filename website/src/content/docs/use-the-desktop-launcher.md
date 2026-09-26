@@ -99,6 +99,10 @@ http://127.0.0.1:17208
 
 Change this only if the port is already used by another application.
 
+### API key
+
+Optional. Enables the command endpoints of the REST API. Leave it empty to keep them disabled. See [Orchestrate Bearcat from External Tools](/Bearcat/external-orchestration/#api-key).
+
 ## Where Settings Are Stored
 
 Settings are stored as JSON in the user's application data directory:
@@ -108,7 +112,7 @@ Windows: %APPDATA%\Bearcat\Desktop\settings.json
 macOS: ~/Library/Application Support/Bearcat/Desktop/settings.json
 ```
 
-The file contains the Desktop app settings, including the PostgreSQL password. Protect your operating system user account accordingly.
+The file contains the Desktop app settings, including the PostgreSQL password and the API key. Protect your operating system user account accordingly.
 
 ## Where The Encryption Key Is Stored
 

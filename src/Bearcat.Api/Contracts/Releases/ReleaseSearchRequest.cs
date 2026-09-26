@@ -46,6 +46,11 @@ public record ReleaseSearchRequest
     /// </summary>
     public string? UploadId { get; init; }
 
+    /// <summary>
+    /// true returns releases the post queue would show (all active uploads completed, release link crypter containers and image uploads present, and not posted since the latest completed upload). false returns all other releases.
+    /// </summary>
+    public bool? InPostQueue { get; init; }
+
     public int PageIndex { get; init; } = 0;
 
     public int PageSize { get; init; } = 10;

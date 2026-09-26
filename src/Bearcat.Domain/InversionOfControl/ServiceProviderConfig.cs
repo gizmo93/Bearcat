@@ -143,7 +143,6 @@ public static class ServiceProviderConfig
             services.AddScoped<MissingFileValidationService>();
             services.AddScoped<UploadConcurrencyService>();
             services.AddScoped<UploadStateService>();
-            services.AddScoped<UploadStateService>();
             services.AddScoped<QualityGateEvaluator>();
             services.AddScoped<QualityGateService>();
             services.AddScoped<IQualityCheck, FilePatternQualityCheck>();
