@@ -10,4 +10,9 @@ public interface IUploadReadRepository
         UploadSearchQuery query,
         CancellationToken cancellationToken = default
     );
+
+    Task<UploadReadModel?> GetUploadAsync(
+        int uploadId,
+        CancellationToken cancellationToken = default
+    );
 }

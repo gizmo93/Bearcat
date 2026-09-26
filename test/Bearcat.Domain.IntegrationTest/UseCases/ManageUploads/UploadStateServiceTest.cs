@@ -11,6 +11,7 @@ using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.Shared.QualityGate.Checks;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageUploads;
+using Bearcat.Domain.UseCases.ManageUploads.Exceptions;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -1021,7 +1022,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task CreateManualReuploadAsync_OnlineUpload_ThrowsInvalidOperationException()
+    public async Task CreateManualReuploadAsync_OnlineUpload_ThrowsInvalidUploadStateException()
     {
         // Arrange
         var upload = await AddCompletedUploadAsync(
@@ -1031,7 +1032,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         );
 
         // Act
-        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+        var result = await Should.ThrowAsync<InvalidUploadStateException>(async () =>
             await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None)
         );
 
@@ -1093,7 +1094,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task CreateManualReuploadAsync_BlockingUploadExists_ThrowsInvalidOperationException()
+    public async Task CreateManualReuploadAsync_BlockingUploadExists_ThrowsInvalidUploadStateException()
     {
         // Arrange
         var upload = await AddCompletedUploadAsync(
@@ -1114,7 +1115,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await dbContext.SaveChangesAsync();
 
         // Act
-        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+        var result = await Should.ThrowAsync<InvalidUploadStateException>(async () =>
             await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None)
         );
 
@@ -1126,7 +1127,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task CreateManualReuploadAsync_OnlineBlockingUploadExists_ThrowsInvalidOperationException()
+    public async Task CreateManualReuploadAsync_OnlineBlockingUploadExists_ThrowsInvalidUploadStateException()
     {
         // Arrange
         var upload = await AddCompletedUploadAsync(
@@ -1147,7 +1148,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await dbContext.SaveChangesAsync();
 
         // Act
-        var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
+        var result = await Should.ThrowAsync<InvalidUploadStateException>(async () =>
             await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None)
         );
 

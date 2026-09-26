@@ -3,7 +3,7 @@ using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Api.Contracts.Uploads;
 
-public record UploadSearchResultResponse(
+public record UploadWithReleaseResponse(
     int Id,
     int ReleaseId,
     string ReleaseName,
@@ -21,9 +21,9 @@ public record UploadSearchResultResponse(
     IReadOnlyList<string> ErrorMessages
 )
 {
-    public static UploadSearchResultResponse FromReadModel(UploadReadModel readModel)
+    public static UploadWithReleaseResponse FromReadModel(UploadReadModel readModel)
     {
-        return new UploadSearchResultResponse(
+        return new UploadWithReleaseResponse(
             Id: readModel.UploadId,
             ReleaseId: readModel.ReleaseId,
             ReleaseName: readModel.ReleaseName,

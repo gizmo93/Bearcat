@@ -66,6 +66,17 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
         return new PagedResult<UploadReadModel>(uploads, totalCount, pageIndex, pageSize);
     }
 
+    public async Task<UploadReadModel?> GetUploadAsync(
+        int uploadId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead
+            .Uploads.Where(u => u.Id == uploadId)
+            .Select(ToReadModel)
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
     private static readonly Expression<Func<Upload, UploadReadModel>> ToReadModel =
         u => new UploadReadModel(
             u.Id,

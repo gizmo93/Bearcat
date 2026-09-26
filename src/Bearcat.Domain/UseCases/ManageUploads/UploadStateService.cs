@@ -8,6 +8,7 @@ using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.QualityGate;
+using Bearcat.Domain.UseCases.ManageUploads.Exceptions;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -52,14 +53,14 @@ public class UploadStateService(
             && upload.OnlineState is not OnlineState.Offline and not OnlineState.PartiallyOnline
         )
         {
-            throw new InvalidOperationException(
+            throw new InvalidUploadStateException(
                 "Manual reuploads can only be created for offline, partially online, canceled, or failed uploads."
             );
         }
 
         if (HasBlockingReupload(upload))
         {
-            throw new InvalidOperationException(
+            throw new InvalidUploadStateException(
                 "A replacement upload already exists or is pending for this upload config."
             );
         }
