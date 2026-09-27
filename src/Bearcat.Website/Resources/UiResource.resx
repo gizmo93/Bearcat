@@ -1219,6 +1219,12 @@
   <data name="VerificationFileStatus" xml:space="preserve"><value>Verification progress per file</value></data>
   <data name="ExtractionStatus" xml:space="preserve"><value>Extraction status</value></data>
   <data name="ExtractionArchiveStatus" xml:space="preserve"><value>Extraction progress per archive</value></data>
+  <data name="PackingStatus" xml:space="preserve"><value>Packing status</value></data>
+  <data name="PackingProgress" xml:space="preserve"><value>Packing progress</value></data>
+  <data name="HashingStatus" xml:space="preserve"><value>Hashing status</value></data>
+  <data name="HashingFileStatus" xml:space="preserve"><value>Hashing progress per file</value></data>
+  <data name="ToggleArchiveDetails" xml:space="preserve"><value>Toggle archive details</value></data>
+  <data name="ArchiveCreationStatusSubtitle" xml:space="preserve"><value>Archive #{0} for {1}</value></data>
   <data name="Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="LogsDescription" xml:space="preserve"><value>Live output of the application log</value></data>
   <data name="PauseStreaming" xml:space="preserve"><value>Pause</value></data>

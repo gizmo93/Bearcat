@@ -582,6 +582,7 @@ public class RemoteDownloadVerificationAndExtractionServiceTest
                 archiverFactory.Object,
                 fileSystemService.Object,
                 progressTracker,
+                new FolderSizeProgressReporter(),
                 NullLogger<DownloadFolderArchiveExtractionService>.Instance
             ),
             notificationService,

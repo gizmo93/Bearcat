@@ -144,6 +144,7 @@ public static class ServiceProviderConfig
             services.AddScoped<MirrorDownloadCoordinator>();
             services.AddScoped<ArchiveFileDownloader>();
             services.AddSingleton<ITransferProgressTracker, TransferProgressTracker>();
+            services.AddSingleton<FolderSizeProgressReporter>();
             services.AddSingleton<ITransferCancellationRegistry, TransferCancellationRegistry>();
             services.AddScoped<UploadFilesService>();
             services.AddScoped<UploadFinalizationService>();

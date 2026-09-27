@@ -872,6 +872,7 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
                 Mock.Of<IArchiverFactory>(),
                 new FileSystemService(),
                 progressTracker,
+                new FolderSizeProgressReporter(),
                 NullLogger<DownloadFolderArchiveExtractionService>.Instance
             ),
             CreateNotificationService(dbContext),

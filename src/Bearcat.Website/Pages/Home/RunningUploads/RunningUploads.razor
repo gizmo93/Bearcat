@@ -111,22 +111,11 @@
                         {
                             var uploadSpeed = FormatUploadSpeed(upload.Id);
                             <span class="bearcat-mobile-cell-label">@L["Progress"]</span>
-                            <div class="flex items-center gap-3 sm:justify-end">
-                                <div class="flex min-w-[9rem] flex-1 items-center gap-3 sm:flex-none">
-                                    <BbProgress Value="percentage" Class="w-full" />
-                                    <span class="w-12 text-right text-xs text-muted-foreground">@percentage%</span>
-                                </div>
-                                @if (uploadSpeed is not null)
-                                {
-                                    <span class="w-20 text-right text-xs font-medium tabular-nums text-muted-foreground">@uploadSpeed</span>
-                                }
-                                <BbButton Variant="ButtonVariant.Ghost"
-                                          Size="ButtonSize.IconSmall"
-                                          AriaLabel="@L["ToggleUploadDetails"]"
-                                          OnClick="@(_ => ToggleShowUploadDetails(upload.Id))">
-                                    <LucideIcon Name="@(isExpanded ? "chevron-up" : "chevron-down")" class="h-4 w-4" />
-                                </BbButton>
-                            </div>
+                            <TransferProgressCell Percentage="percentage"
+                                                  Speed="@uploadSpeed"
+                                                  IsExpanded="isExpanded"
+                                                  ToggleAriaLabel="@L["ToggleUploadDetails"]"
+                                                  OnToggleDetails="@(() => ToggleShowUploadDetails(upload.Id))" />
                         }
                         else
                         {
@@ -242,23 +231,12 @@
                             var isExpanded = showDownloadDetailIds.Contains(archive.Id);
                         }
                         <span class="bearcat-mobile-cell-label">@L["Progress"]</span>
-                        <div class="flex items-center gap-3 sm:justify-end">
-                            <div class="flex min-w-[9rem] flex-1 items-center gap-3 sm:flex-none">
-                                <BbProgress Value="percentage" Class="w-full" />
-                                <span class="w-12 text-right text-xs text-muted-foreground">@percentage%</span>
-                            </div>
-                            @if (downloadSpeed is not null)
-                            {
-                                <span class="w-20 text-right text-xs font-medium tabular-nums text-muted-foreground">@downloadSpeed</span>
-                            }
-                            <BbButton Variant="ButtonVariant.Ghost"
-                                      Size="ButtonSize.IconSmall"
-                                      Disabled="@(GetDownloadSnapshot(archive.Id) is null)"
-                                      AriaLabel="@L["ToggleDownloadDetails"]"
-                                      OnClick="@(_ => ToggleShowDownloadDetails(archive.Id))">
-                                <LucideIcon Name="@(isExpanded ? "chevron-up" : "chevron-down")" class="h-4 w-4" />
-                            </BbButton>
-                        </div>
+                        <TransferProgressCell Percentage="percentage"
+                                              Speed="@downloadSpeed"
+                                              IsExpanded="isExpanded"
+                                              ToggleAriaLabel="@L["ToggleDownloadDetails"]"
+                                              ToggleDisabled="@(GetDownloadSnapshot(archive.Id) is null)"
+                                              OnToggleDetails="@(() => ToggleShowDownloadDetails(archive.Id))" />
                     </CellTemplate>
                 </BbDataTableColumn>
                 <BbDataTableColumn TData="Archive" TValue="int"

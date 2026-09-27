@@ -22,6 +22,9 @@ public sealed partial class RunningProcesses(
 
     private IReadOnlyList<Archive> creatingArchives = [];
 
+    private IReadOnlyDictionary<int, TransferProgressSnapshot> creatingArchiveProgress =
+        new Dictionary<int, TransferProgressSnapshot>();
+
     private IReadOnlyList<Archive> restoringArchives = [];
 
     private IReadOnlyDictionary<int, TransferProgressSnapshot> downloadProgress =
@@ -106,6 +109,11 @@ public sealed partial class RunningProcesses(
         restoringArchives = archives
             .Where(archive => archive.ArchiveState == ArchiveState.Restoring)
             .ToList();
+
+        creatingArchiveProgress = GetProgressSnapshotsOfFirstTrackedType(
+            [TransferType.ArchiveCreation, TransferType.ArchiveHashing],
+            creatingArchives.Select(archive => archive.Id).ToList()
+        );
 
         downloadProgress = GetProgressSnapshots(
             TransferType.MirrorDownload,

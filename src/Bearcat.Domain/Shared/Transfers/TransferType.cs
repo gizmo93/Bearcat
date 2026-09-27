@@ -7,4 +7,6 @@ public enum TransferType
     RemoteDownload = 3,
     RemoteDownloadVerification = 4,
     RemoteDownloadExtraction = 5,
+    ArchiveCreation = 6,
+    ArchiveHashing = 7,
 }

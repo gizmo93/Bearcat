@@ -167,6 +167,7 @@ public class RemoteDownloadVerificationAndExtractionServiceTest : BearcatIntegra
                 archiverFactory.Object,
                 new FileSystemService(),
                 new TransferProgressTracker(),
+                new FolderSizeProgressReporter(),
                 NullLogger<DownloadFolderArchiveExtractionService>.Instance
             ),
             new NotificationService(

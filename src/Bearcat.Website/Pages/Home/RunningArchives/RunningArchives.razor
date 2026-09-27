@@ -1,3 +1,5 @@
+@using Bearcat.Website.Formatting
+
 <section class="space-y-3">
     <div>
         <h2 class="text-lg font-semibold">@L["RunningArchives"]</h2>
@@ -49,6 +51,39 @@
                     @archive.ArchiveConfig.ArchiverName
                 </CellTemplate>
             </BbDataTableColumn>
+            <BbDataTableColumn TData="Archive" TValue="double"
+                               Header="@L["Progress"]"
+                               Property="@(GetProgress)"
+                               Sortable="true"
+                               MinWidth="200px">
+                <CellTemplate Context="archive">
+                    <span class="bearcat-mobile-cell-label">@L["Progress"]</span>
+                    @if (ArchiveProgress.TryGetValue(archive.Id, out var snapshot))
+                    {
+                        <TransferProgressCell Percentage="snapshot.Percentage"
+                                              Speed="@TransferFormatting.FormatSpeed(snapshot.BytesPerSecond)"
+                                              IsExpanded="showDetailIds.Contains(archive.Id)"
+                                              ToggleAriaLabel="@L["ToggleArchiveDetails"]"
+                                              OnToggleDetails="@(() => ToggleShowDetails(archive.Id))" />
+                    }
+                    else
+                    {
+                        <span class="text-xs text-muted-foreground">-</span>
+                    }
+                </CellTemplate>
+            </BbDataTableColumn>
         </Columns>
     </BbDataTable>
+
+    @if (ExpandedArchives.Count > 0)
+    {
+        <div class="space-y-4">
+            @foreach (var archive in ExpandedArchives)
+            {
+                <TransferFileDetails Snapshot="ArchiveProgress[archive.Id]"
+                                     Subtitle="@L["ArchiveCreationStatusSubtitle", archive.Id, archive.ArchiveConfig.Release.Name]"
+                                     StateLabel="@L.Localize(archive.ArchiveState)" />
+            }
+        </div>
+    }
 </section>

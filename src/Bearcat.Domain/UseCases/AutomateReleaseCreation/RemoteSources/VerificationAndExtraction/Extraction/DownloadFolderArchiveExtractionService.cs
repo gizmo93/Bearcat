@@ -14,12 +14,11 @@ public class DownloadFolderArchiveExtractionService(
     IArchiverFactory archiverFactory,
     IFileSystemService fileSystemService,
     ITransferProgressTracker progressTracker,
+    FolderSizeProgressReporter folderSizeProgressReporter,
     ILogger<DownloadFolderArchiveExtractionService> logger
 )
 {
     public const string TemporaryExtractionFolderName = ".bearcat-extraction";
-
-    private static readonly TimeSpan ExtractionProgressPollingInterval = TimeSpan.FromSeconds(1);
 
     public async Task<IReadOnlyList<ArchiveToExtract>> ExtractAllArchivesAsync(
         RemoteSourceDownload download,
@@ -218,10 +217,15 @@ public class DownloadFolderArchiveExtractionService(
             temporaryFolderPath
         );
 
-        var result = await ExtractWhileReportingExtractedBytesAsync(
-            archive: archive,
-            temporaryFolderPath: temporaryFolderPath,
+        var result = await folderSizeProgressReporter.RunWhileReportingFolderSizeAsync(
+            folderPath: temporaryFolderPath,
             progress: progress,
+            operation: () =>
+                archive.Extractor.ExtractAsync(
+                    archiveToExtract: archive.ArchiveToExtract,
+                    destinationFolderPath: temporaryFolderPath,
+                    cancellationToken: cancellationToken
+                ),
             cancellationToken: cancellationToken
         );
 
@@ -262,86 +266,6 @@ public class DownloadFolderArchiveExtractionService(
         );
 
         return entryPaths[0];
-    }
-
-    private static async Task<ArchiveExtractionResult> ExtractWhileReportingExtractedBytesAsync(
-        ArchiveWithExtractor archive,
-        string temporaryFolderPath,
-        ITransferProgress progress,
-        CancellationToken cancellationToken
-    )
-    {
-        using var pollingCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(
-            cancellationToken
-        );
-
-        var pollingTask = ReportExtractedBytesPeriodicallyAsync(
-            temporaryFolderPath: temporaryFolderPath,
-            progress: progress,
-            cancellationToken: pollingCancellationSource.Token
-        );
-
-        try
-        {
-            return await archive.Extractor.ExtractAsync(
-                archiveToExtract: archive.ArchiveToExtract,
-                destinationFolderPath: temporaryFolderPath,
-                cancellationToken: cancellationToken
-            );
-        }
-        finally
-        {
-            await pollingCancellationSource.CancelAsync();
-            await pollingTask;
-        }
-    }
-
-    private static async Task ReportExtractedBytesPeriodicallyAsync(
-        string temporaryFolderPath,
-        ITransferProgress progress,
-        CancellationToken cancellationToken
-    )
-    {
-        using var timer = new PeriodicTimer(ExtractionProgressPollingInterval);
-        var reportedBytes = 0L;
-
-        try
-        {
-            while (await timer.WaitForNextTickAsync(cancellationToken))
-            {
-                reportedBytes = ReportNewlyExtractedBytes(
-                    temporaryFolderPath,
-                    reportedBytes,
-                    progress
-                );
-            }
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            ReportNewlyExtractedBytes(temporaryFolderPath, reportedBytes, progress);
-        }
-    }
-
-    private static long ReportNewlyExtractedBytes(
-        string temporaryFolderPath,
-        long reportedBytes,
-        ITransferProgress progress
-    )
-    {
-        var extractedBytes = new DirectoryInfo(temporaryFolderPath)
-            .EnumerateFiles(
-                "*",
-                new EnumerationOptions
-                {
-                    AttributesToSkip = FileAttributes.None,
-                    RecurseSubdirectories = true,
-                }
-            )
-            .Sum(file => file.Length);
-
-        progress.ReportBytesTransferred(extractedBytes - reportedBytes);
-
-        return extractedBytes;
     }
 
     private static List<EntryToMove> GetEntriesToMove(List<ExtractedArchive> extractedArchives)

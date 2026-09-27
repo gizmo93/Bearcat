@@ -65,24 +65,11 @@
                     <span class="bearcat-mobile-cell-label">@L["Progress"]</span>
                     @if (DownloadProgress.TryGetValue(download.Id, out var snapshot))
                     {
-                        var speed = TransferFormatting.FormatSpeed(snapshot.BytesPerSecond);
-                        var isExpanded = showDetailIds.Contains(download.Id);
-                        <div class="flex items-center gap-3 sm:justify-end">
-                            <div class="flex min-w-[9rem] flex-1 items-center gap-3 sm:flex-none">
-                                <BbProgress Value="snapshot.Percentage" Class="w-full" />
-                                <span class="w-12 text-right text-xs text-muted-foreground">@snapshot.Percentage%</span>
-                            </div>
-                            @if (speed is not null)
-                            {
-                                <span class="w-20 text-right text-xs font-medium tabular-nums text-muted-foreground">@speed</span>
-                            }
-                            <BbButton Variant="ButtonVariant.Ghost"
-                                      Size="ButtonSize.IconSmall"
-                                      AriaLabel="@L["ToggleDownloadDetails"]"
-                                      OnClick="@(_ => ToggleShowDetails(download.Id))">
-                                <LucideIcon Name="@(isExpanded ? "chevron-up" : "chevron-down")" class="h-4 w-4" />
-                            </BbButton>
-                        </div>
+                        <TransferProgressCell Percentage="snapshot.Percentage"
+                                              Speed="@TransferFormatting.FormatSpeed(snapshot.BytesPerSecond)"
+                                              IsExpanded="showDetailIds.Contains(download.Id)"
+                                              ToggleAriaLabel="@L["ToggleDownloadDetails"]"
+                                              OnToggleDetails="@(() => ToggleShowDetails(download.Id))" />
                     }
                     else
                     {
