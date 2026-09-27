@@ -7,4 +7,6 @@ public interface IHosterConfigurationReadRepository
     Task<IReadOnlyList<HosterRegistrationReadModel>> GetAllRegistrationsAsync(
         CancellationToken cancellationToken = default
     );
+
+    Task<int> GetUploadCountAsync(int id, CancellationToken cancellationToken = default);
 }

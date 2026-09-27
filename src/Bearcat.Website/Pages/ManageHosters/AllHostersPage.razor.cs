@@ -2,6 +2,7 @@ using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 
 namespace Bearcat.Website.Pages.ManageHosters;
@@ -105,18 +106,23 @@ public partial class AllHostersPage(
 
     private async Task DeleteAsync(HosterRegistrationReadModel hoster)
     {
-        var result = await dialogService.ConfirmAsync(
-            L["DeleteNamedItem", hoster.Name],
-            L["DeleteHosterRegistrationConfirmation", hoster.Name],
-            new ConfirmDialogOptions
-            {
-                ConfirmText = L["Delete"],
-                CancelText = L["Cancel"],
-                Destructive = true,
-            }
+        var uploadCount = await operationRunner.RunAsync(
+            (HosterRegistrationService service) => service.GetUploadCountAsync(hoster.Id)
         );
 
-        if (!result.Confirmed)
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(ConfirmDeletionByTypingNameDialog.NameToConfirm)] = hoster.Name,
+            [nameof(ConfirmDeletionByTypingNameDialog.AffectedItemsLabel)] = L["Uploads"].Value,
+            [nameof(ConfirmDeletionByTypingNameDialog.AffectedItemsCount)] = uploadCount,
+        };
+
+        var dialog = await dialogService.OpenAsync<ConfirmDeletionByTypingNameDialog>(
+            parameters,
+            new DialogOpenOptions { Title = L["DeleteNamedItem", hoster.Name], ShowClose = true }
+        );
+
+        if (dialog.Cancelled)
         {
             return;
         }

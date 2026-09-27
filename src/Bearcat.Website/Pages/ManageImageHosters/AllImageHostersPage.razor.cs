@@ -3,6 +3,7 @@ using Bearcat.Domain.UseCases.ManageImageHosters;
 using Bearcat.Domain.UseCases.ManageImageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageImageHosters.Repositories;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 
 namespace Bearcat.Website.Pages.ManageImageHosters;
@@ -103,18 +104,30 @@ public partial class AllImageHostersPage(
 
     private async Task DeleteAsync(ImageHosterRegistrationReadModel imageHoster)
     {
-        var result = await dialogService.ConfirmAsync(
-            L["DeleteNamedItem", imageHoster.Name],
-            L["DeleteImageHosterRegistrationConfirmation", imageHoster.Name],
-            new ConfirmDialogOptions
+        var imageUploadCount = await operationRunner.RunAsync(
+            (ImageHosterService service) =>
+                service.GetImageUploadCountAsync(imageHoster.ImageHosterRegistrationId)
+        );
+
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(ConfirmDeletionByTypingNameDialog.NameToConfirm)] = imageHoster.Name,
+            [nameof(ConfirmDeletionByTypingNameDialog.AffectedItemsLabel)] = L[
+                "ImageUploads"
+            ].Value,
+            [nameof(ConfirmDeletionByTypingNameDialog.AffectedItemsCount)] = imageUploadCount,
+        };
+
+        var dialog = await dialogService.OpenAsync<ConfirmDeletionByTypingNameDialog>(
+            parameters,
+            new DialogOpenOptions
             {
-                ConfirmText = L["Delete"],
-                CancelText = L["Cancel"],
-                Destructive = true,
+                Title = L["DeleteNamedItem", imageHoster.Name],
+                ShowClose = true,
             }
         );
 
-        if (!result.Confirmed)
+        if (dialog.Cancelled)
         {
             return;
         }

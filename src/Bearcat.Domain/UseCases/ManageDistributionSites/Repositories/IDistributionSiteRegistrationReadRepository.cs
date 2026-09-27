@@ -12,4 +12,6 @@ public interface IDistributionSiteRegistrationReadRepository
         int id,
         CancellationToken cancellationToken = default
     );
+
+    Task<int> GetForumPostingRuleCountAsync(int id, CancellationToken cancellationToken = default);
 }

@@ -1,0 +1,31 @@
+<form class="space-y-4" @onsubmit="ConfirmAsync">
+    <div class="space-y-1 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p>@L["DeleteRegistrationWarning"]</p>
+        <p class="font-semibold">@AffectedItemsLabel: @AffectedItemsCount</p>
+    </div>
+
+    <div class="space-y-2">
+        <label for="@NameInputId" class="block text-sm">
+            @ConfirmationLabel
+        </label>
+        <BbInput Id="@NameInputId"
+                 @bind-Value="typedName"
+                 UpdateTiming="UpdateTiming.Immediate"
+                 autocomplete="off"
+                 autocapitalize="off"
+                 autocorrect="off"
+                 spellcheck="false"
+                 data-autofocus />
+    </div>
+
+    <div class="flex justify-end gap-2">
+        <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+            @L["Cancel"]
+        </BbButton>
+        <BbButton Type="ButtonType.Submit"
+                  Variant="ButtonVariant.Destructive"
+                  Disabled="@(!IsTypedNameMatching)">
+            @L["Delete"]
+        </BbButton>
+    </div>
+</form>

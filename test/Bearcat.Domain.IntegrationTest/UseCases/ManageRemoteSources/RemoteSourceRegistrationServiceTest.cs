@@ -8,6 +8,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ConfigurationFields;
 using Bearcat.Domain.UseCases.ManageRemoteSources;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.Security;
@@ -56,6 +57,7 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
         repository = new RemoteSourceRegistrationRepository(dbContext, dbContext, factory.Object);
         sessionPool = new RemoteSourceSessionPool(NullLogger<RemoteSourceSessionPool>.Instance);
         service = new RemoteSourceRegistrationService(
+            repository,
             repository,
             factory.Object,
             secretProtector,
@@ -374,6 +376,76 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
         registrations[0].MaxConnections.ShouldBe(RemoteSourceRegistration.DefaultMaxConnections);
         registrations[1].MaxConnections.ShouldBe(4);
         registrations[1].IsActive.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task GetRemoteSourceAutomationCountAsync_AutomationsOfSeveralRegistrations_CountsOnlyAutomationsOfRegistration()
+    {
+        // Arrange
+        var registrationId = await service.CreateAsync("A server", SourceClassName, FormValues());
+        var otherRegistrationId = await service.CreateAsync(
+            "B server",
+            SourceClassName,
+            FormValues()
+        );
+        var releaseTemplate = new ReleaseTemplate
+        {
+            Name = "Template",
+            ReleaseType = ReleaseType.Managed,
+            ReleaseGroup = new ReleaseGroup
+            {
+                Name = "Group",
+                EnableAutomaticReuploads = false,
+                NumberOfHoursUntilReupload = 24,
+            },
+        };
+        dbContext.RemoteSourceAutomations.AddRange(
+            CreateAutomation("First", registrationId, releaseTemplate),
+            CreateAutomation("Second", registrationId, releaseTemplate),
+            CreateAutomation("Other", otherRegistrationId, releaseTemplate)
+        );
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.GetRemoteSourceAutomationCountAsync(
+            registrationId,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task GetRemoteSourceAutomationCountAsync_RegistrationWithoutAutomations_ReturnsZero()
+    {
+        // Arrange
+        var registrationId = await service.CreateAsync("A server", SourceClassName, FormValues());
+
+        // Act
+        var result = await service.GetRemoteSourceAutomationCountAsync(
+            registrationId,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(0);
+    }
+
+    private static RemoteSourceAutomation CreateAutomation(
+        string name,
+        int registrationId,
+        ReleaseTemplate releaseTemplate
+    )
+    {
+        return new RemoteSourceAutomation
+        {
+            Name = name,
+            RemoteSourceRegistrationId = registrationId,
+            RemotePath = "/incoming",
+            TargetPath = "/downloads",
+            ReleaseTemplate = releaseTemplate,
+        };
     }
 
     private async Task<RemoteSourceRegistration> ReloadAsync(int id)

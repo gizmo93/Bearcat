@@ -7,6 +7,7 @@ namespace Bearcat.Domain.UseCases.ManageDistributionSites;
 
 public class DistributionSiteRegistrationService(
     IDistributionSiteRegistrationWriteRepository repository,
+    IDistributionSiteRegistrationReadRepository readRepository,
     IDistributionSiteFactory distributionSiteFactory,
     ISecretProtector secretProtector
 )
@@ -63,6 +64,14 @@ public class DistributionSiteRegistrationService(
         registration.EncryptedSession = null;
 
         await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<int> GetForumPostingRuleCountAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await readRepository.GetForumPostingRuleCountAsync(id, cancellationToken);
     }
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
