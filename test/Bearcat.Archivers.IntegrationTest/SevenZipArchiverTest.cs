@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Archivers._7Zip;
+using Bearcat.Archivers.Shared;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 
@@ -16,8 +17,8 @@ public class SevenZipArchiverTest
     public void Setup()
     {
         service = new SevenZipArchiver(
-            NullLogger<SevenZipArchiver>.Instance,
-            ArchiverTestConfiguration.Create()
+            ArchiverTestConfiguration.Create(),
+            new ArchiverProcessRunner(NullLogger<ArchiverProcessRunner>.Instance)
         );
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-7zip-tests-{Guid.NewGuid():N}");
         sourceFolderPath = Directory.CreateDirectory(Path.Combine(tempRootPath, "source")).FullName;
@@ -85,12 +86,14 @@ public class SevenZipArchiverTest
         result.IsSuccess.ShouldBeTrue();
 
         // Act
-        await ArchiveExtractionTestHelper.ExtractWithSevenZipAsync(
-            result.CreatedFileNames.Order(StringComparer.Ordinal).First(),
-            extractPath
+        var extractionResult = await service.ExtractAsync(
+            service.FindArchivesToExtract(destinationPath).Single(),
+            extractPath,
+            CancellationToken.None
         );
 
         // Assert
+        extractionResult.IsSuccess.ShouldBeTrue();
         ArchiveExtractionTestHelper.ExtractedFolderShouldMatchSourceFolder(
             sourceFolderPath,
             extractPath,
@@ -122,12 +125,14 @@ public class SevenZipArchiverTest
 
         // Act
         await ArchiveExtractionTestHelper.AppendNullByteToEachArchiveFileAsync(result);
-        await ArchiveExtractionTestHelper.ExtractWithSevenZipAsync(
-            result.CreatedFileNames.Order(StringComparer.Ordinal).First(),
-            extractPath
+        var extractionResult = await service.ExtractAsync(
+            service.FindArchivesToExtract(destinationPath).Single(),
+            extractPath,
+            CancellationToken.None
         );
 
         // Assert
+        extractionResult.IsSuccess.ShouldBeTrue();
         ArchiveExtractionTestHelper.ExtractedPayloadShouldMatchSource(sourceFilePath, extractPath);
     }
 
@@ -153,5 +158,236 @@ public class SevenZipArchiverTest
         result.IsSuccess.ShouldBeFalse();
         result.CreatedFileNames.ShouldBeEmpty();
         result.ErrorMessages.ShouldNotBeNull();
+    }
+
+    [Test]
+    public void FindArchivesToExtract_SingleVolumeArchiveWithUnrelatedFiles_ReturnsArchiveWithOneVolume()
+    {
+        // Arrange
+        ArchiveExtractionTestHelper.CreateEmptyFiles(
+            sourceFolderPath,
+            ["release.7z", "release.nfo", "release.sfv", "sample.mkv"]
+        );
+
+        // Act
+        var archives = service.FindArchivesToExtract(sourceFolderPath);
+
+        // Assert
+        var archive = archives.ShouldHaveSingleItem();
+        archive.FirstVolumeFilePath.ShouldBe(Path.Combine(sourceFolderPath, "release.7z"));
+        archive.VolumeFilePaths.ShouldBe([Path.Combine(sourceFolderPath, "release.7z")]);
+    }
+
+    [Test]
+    public void FindArchivesToExtract_MultiVolumeArchiveWithUnrelatedFiles_ReturnsAllVolumesInOrder()
+    {
+        // Arrange
+        ArchiveExtractionTestHelper.CreateEmptyFiles(
+            sourceFolderPath,
+            ["release.7z.003", "release.7z.001", "release.7z.002", "release.nfo", "sample.mkv"]
+        );
+
+        // Act
+        var archives = service.FindArchivesToExtract(sourceFolderPath);
+
+        // Assert
+        var archive = archives.ShouldHaveSingleItem();
+        archive.FirstVolumeFilePath.ShouldBe(Path.Combine(sourceFolderPath, "release.7z.001"));
+        archive.VolumeFilePaths.ShouldBe([
+            Path.Combine(sourceFolderPath, "release.7z.001"),
+            Path.Combine(sourceFolderPath, "release.7z.002"),
+            Path.Combine(sourceFolderPath, "release.7z.003"),
+        ]);
+    }
+
+    [Test]
+    public void FindArchivesToExtract_TwoIndependentArchives_ReturnsBothArchivesWithTheirOwnVolumes()
+    {
+        // Arrange
+        ArchiveExtractionTestHelper.CreateEmptyFiles(
+            sourceFolderPath,
+            ["first.7z.001", "first.7z.002", "second.7z"]
+        );
+
+        // Act
+        var archives = service.FindArchivesToExtract(sourceFolderPath);
+
+        // Assert
+        archives.Count.ShouldBe(2);
+        archives[0]
+            .VolumeFilePaths.ShouldBe([
+                Path.Combine(sourceFolderPath, "first.7z.001"),
+                Path.Combine(sourceFolderPath, "first.7z.002"),
+            ]);
+        archives[1].VolumeFilePaths.ShouldBe([Path.Combine(sourceFolderPath, "second.7z")]);
+    }
+
+    [Test]
+    public void FindArchivesToExtract_FileNamesDifferInCase_GroupsVolumesCaseInsensitively()
+    {
+        // Arrange
+        ArchiveExtractionTestHelper.CreateEmptyFiles(
+            sourceFolderPath,
+            ["Release.7Z.001", "release.7z.002", "Single.7Z"]
+        );
+
+        // Act
+        var archives = service.FindArchivesToExtract(sourceFolderPath);
+
+        // Assert
+        archives.Count.ShouldBe(2);
+        archives[0]
+            .VolumeFilePaths.ShouldBe([
+                Path.Combine(sourceFolderPath, "Release.7Z.001"),
+                Path.Combine(sourceFolderPath, "release.7z.002"),
+            ]);
+        archives[1].VolumeFilePaths.ShouldBe([Path.Combine(sourceFolderPath, "Single.7Z")]);
+    }
+
+    [Test]
+    public void FindArchivesToExtract_FolderContainsNoArchives_ReturnsEmptyList()
+    {
+        // Arrange
+        ArchiveExtractionTestHelper.CreateEmptyFiles(
+            sourceFolderPath,
+            ["release.nfo", "release.part1.rar", "sample.mkv"]
+        );
+
+        // Act
+        var archives = service.FindArchivesToExtract(sourceFolderPath);
+
+        // Assert
+        archives.ShouldBeEmpty();
+    }
+
+    [Test]
+    public void FindArchivesToExtract_FirstVolumeMissing_Throws()
+    {
+        // Arrange
+        ArchiveExtractionTestHelper.CreateEmptyFiles(
+            sourceFolderPath,
+            ["release.7z.002", "release.7z.003"]
+        );
+
+        // Act
+        var exception = Should.Throw<InvalidOperationException>(() =>
+            service.FindArchivesToExtract(sourceFolderPath)
+        );
+
+        // Assert
+        exception.Message.ShouldContain(sourceFolderPath);
+        exception.Message.ShouldContain("'release'");
+    }
+
+    [Test]
+    public async Task ExtractAsync_MultiVolumeArchive_ExtractsContentEqualToSource()
+    {
+        // Arrange
+        var sourceFilePath = await ArchiveExtractionTestHelper.WriteRandomSourceFileAsync(
+            sourceFolderPath
+        );
+        var extractPath = Path.Combine(tempRootPath, "extract");
+
+        var archiveResult = await service.ArchiveAsync(
+            sourceFolderPath: sourceFolderPath,
+            destinationPath: destinationPath,
+            archiveNamePrefix: "archive",
+            targetFileSizeMb: 1,
+            password: null,
+            options: new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
+            cancellationToken: CancellationToken.None
+        );
+        archiveResult.IsSuccess.ShouldBeTrue();
+        archiveResult.CreatedFileNames.Count.ShouldBeGreaterThan(1);
+
+        var archiveToExtract = service
+            .FindArchivesToExtract(destinationPath)
+            .ShouldHaveSingleItem();
+
+        // Act
+        var extractionResult = await service.ExtractAsync(
+            archiveToExtract,
+            extractPath,
+            CancellationToken.None
+        );
+
+        // Assert
+        extractionResult.IsSuccess.ShouldBeTrue();
+        extractionResult.ErrorMessages.ShouldBeEmpty();
+        archiveToExtract.FirstVolumeFilePath.ShouldBe(
+            Path.Combine(destinationPath, "archive.7z.001")
+        );
+        archiveToExtract.VolumeFilePaths.ShouldBe(
+            archiveResult.CreatedFileNames.Order(StringComparer.Ordinal).ToList()
+        );
+        ArchiveExtractionTestHelper.ExtractedPayloadShouldMatchSource(sourceFilePath, extractPath);
+    }
+
+    [Test]
+    public async Task ExtractAsync_DestinationFileAlreadyExists_DoesNotOverwriteExistingFile()
+    {
+        // Arrange
+        const string fileName = "release.nfo";
+        await File.WriteAllTextAsync(Path.Combine(sourceFolderPath, fileName), "release");
+        var extractPath = Path.Combine(tempRootPath, "extract");
+        var existingFolderPath = Directory
+            .CreateDirectory(Path.Combine(extractPath, "source"))
+            .FullName;
+        await File.WriteAllTextAsync(Path.Combine(existingFolderPath, fileName), "existing");
+
+        var archiveResult = await service.ArchiveAsync(
+            sourceFolderPath: sourceFolderPath,
+            destinationPath: destinationPath,
+            archiveNamePrefix: "archive",
+            targetFileSizeMb: 1,
+            password: null,
+            options: new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
+            cancellationToken: CancellationToken.None
+        );
+        archiveResult.IsSuccess.ShouldBeTrue();
+
+        // Act
+        var extractionResult = await service.ExtractAsync(
+            service.FindArchivesToExtract(destinationPath).Single(),
+            extractPath,
+            CancellationToken.None
+        );
+
+        // Assert
+        extractionResult.IsSuccess.ShouldBeTrue();
+        (await File.ReadAllTextAsync(Path.Combine(existingFolderPath, fileName))).ShouldBe(
+            "existing"
+        );
+    }
+
+    [Test]
+    public async Task ExtractAsync_PasswordProtectedArchive_ReturnsFailedResultWithoutWaitingForPassword()
+    {
+        // Arrange
+        await ArchiveExtractionTestHelper.WriteRandomSourceFileAsync(sourceFolderPath);
+        var extractPath = Path.Combine(tempRootPath, "extract");
+
+        var archiveResult = await service.ArchiveAsync(
+            sourceFolderPath: sourceFolderPath,
+            destinationPath: destinationPath,
+            archiveNamePrefix: "archive",
+            targetFileSizeMb: 1,
+            password: "secret",
+            options: new ArchiveOptions(UseCompression: false, UseSolidArchive: false),
+            cancellationToken: CancellationToken.None
+        );
+        archiveResult.IsSuccess.ShouldBeTrue();
+        using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+
+        // Act
+        var extractionResult = await service.ExtractAsync(
+            service.FindArchivesToExtract(destinationPath).Single(),
+            extractPath,
+            cancellationTokenSource.Token
+        );
+
+        // Assert
+        extractionResult.IsSuccess.ShouldBeFalse();
+        extractionResult.ErrorMessages.ShouldNotBeEmpty();
     }
 }
