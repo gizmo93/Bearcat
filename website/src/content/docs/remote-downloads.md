@@ -88,10 +88,19 @@ Open **Remote downloads** to see folders, status, and errors. The usual sequence
 | Observing | Waiting for the folder to stop changing and reach the minimum size. |
 | Queued | Ready to download. |
 | Downloading | Files are being saved locally. |
-| Downloaded | Files are ready. Release creation is next. |
+| Downloaded | All files are saved locally. Verification and extraction are next. |
+| Verifying | Files are checked against the `.sfv` files in the folder. Skipped if there are none. |
+| Extracting | Archives are being extracted. Only with **Extract archives before release creation**. |
+| Ready for release creation | Release creation is next. |
 | Release created | Open the linked release to follow its archives and uploads. |
 
 ![remote-downloads-page.png](images/remote-downloads-page.png)
+
+### SFV verification
+
+After every download, Bearcat looks for `.sfv` files in the release folder and its subfolders and
+compares the CRC32 checksum of each listed file. If a listed file is missing or its checksum does not
+match, the download fails and the files stay on disk.
 
 Running downloads also appear on the start page under **Running transfers**, with progress, speed,
 and file details. The release detail page records which remote source it came from.
@@ -105,8 +114,9 @@ Use the action menu in **Remote downloads**:
 - **Cancel** stops an observed, queued, or running download. Files from a running download are deleted.
 - **Restart download** queues a failed or canceled download again. It starts from scratch and removes
   files left by the previous attempt.
-- **Retry release creation** is available when the download finished but creating the release failed.
-  Fix the reported cause, then use this action to keep the downloaded files and try creating the release again.
+- **Retry without downloading again** is available when the download finished but a later step failed.
+  Fix the reported cause, then use this action to keep the downloaded files. Bearcat runs SFV verification,
+  extraction, and release creation again. If the archives were already extracted, it only creates the release.
 - **Ignore** skips a folder that has not started downloading, or a failed or canceled download.
   Ignored folders are hidden by the default status filter and are not queued again.
 
@@ -115,6 +125,24 @@ download and leaves those files untouched. Move them elsewhere before restarting
 
 Disabling an automation stops it from scanning. Already queued downloads stay queued.
 To stop one of those, cancel it on **Remote downloads**.
+
+## Extract archives before release creation
+
+For managed templates, turn on **Extract archives before release creation** in the automation if the
+server provides RAR or 7z archives and you want Bearcat to pack the release itself.
+
+After SFV verification, Bearcat extracts every RAR and 7z archive in the release folder and its subfolders.
+The extracted files are placed in the folder that contained the archive. After a successful extraction,
+Bearcat deletes the archive volumes and `.sfv` files that only list those volumes. The release is then
+created from the extracted files.
+
+Extraction fails, and nothing is deleted, if:
+
+- There is not enough free disk space for the extracted files.
+- An extracted file or folder has the same path as an existing one.
+- An archive is damaged or password protected.
+
+This option is off by default and does not apply to unmanaged templates.
 
 ## Delete raw files after uploading
 

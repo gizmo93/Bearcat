@@ -1296,6 +1296,8 @@
   <data name="IgnoreExistingOnFirstScanHelp" xml:space="preserve"><value>Folders that already exist during the first scan are skipped. Only releases that appear afterwards are downloaded.</value></data>
   <data name="KeepRawFiles" xml:space="preserve"><value>Keep raw files</value></data>
   <data name="KeepRawFilesHelp" xml:space="preserve"><value>When disabled, Bearcat switches the release to unmanaged and deletes the downloaded folder as soon as every upload config has its first completed upload and every archive config has a created archive or an online mirror. The folder is kept if archives are stored inside it. Only applies to managed templates.</value></data>
+  <data name="ExtractArchivesBeforeReleaseCreation" xml:space="preserve"><value>Extract archives before release creation</value></data>
+  <data name="ExtractArchivesBeforeReleaseCreationHelp" xml:space="preserve"><value>Archives (RAR, 7z) in the downloaded folder are extracted before the release is created. The archive files are deleted after a successful extraction. Only applies to managed templates.</value></data>
   <data name="RemoteSourceDownloadState.Observing" xml:space="preserve"><value>Observing</value></data>
   <data name="RemoteSourceDownloadState.Pending" xml:space="preserve"><value>Queued</value></data>
   <data name="RemoteSourceDownloadState.Downloading" xml:space="preserve"><value>Downloading</value></data>
@@ -1304,6 +1306,9 @@
   <data name="RemoteSourceDownloadState.Failed" xml:space="preserve"><value>Failed</value></data>
   <data name="RemoteSourceDownloadState.Canceled" xml:space="preserve"><value>Canceled</value></data>
   <data name="RemoteSourceDownloadState.Ignored" xml:space="preserve"><value>Ignored</value></data>
+  <data name="RemoteSourceDownloadState.Verifying" xml:space="preserve"><value>Verifying</value></data>
+  <data name="RemoteSourceDownloadState.Extracting" xml:space="preserve"><value>Extracting</value></data>
+  <data name="RemoteSourceDownloadState.ReadyForReleaseCreation" xml:space="preserve"><value>Ready for release creation</value></data>
   <data name="RemoteSourceDownloads" xml:space="preserve"><value>Remote downloads</value></data>
   <data name="RemoteSourceDownloadsDescription" xml:space="preserve"><value>Controls how folders on remote sources are watched, queued and downloaded.</value></data>
   <data name="RemoteSourceDownloadStabilityMinutes" xml:space="preserve"><value>Folder stability (minutes)</value></data>
@@ -1329,7 +1334,7 @@
   <data name="DiscoveredAt" xml:space="preserve"><value>Discovered</value></data>
   <data name="DownloadCompletedAt" xml:space="preserve"><value>Downloaded</value></data>
   <data name="OpenRemoteSourceDownloadActions" xml:space="preserve"><value>Open remote download actions</value></data>
-  <data name="RetryReleaseCreation" xml:space="preserve"><value>Retry release creation</value></data>
+  <data name="RetryWithoutDownloadingAgain" xml:space="preserve"><value>Retry without downloading again</value></data>
   <data name="RestartDownload" xml:space="preserve"><value>Restart download</value></data>
   <data name="IgnoreRemoteDownload" xml:space="preserve"><value>Ignore</value></data>
   <data name="RemoteSourceDownloadResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} remote downloads</value></data>
@@ -1338,7 +1343,7 @@
   <data name="RemoteDownloadCanceled" xml:space="preserve"><value>The download of {0} is canceled.</value></data>
   <data name="RestartRemoteDownloadConfirmation" xml:space="preserve"><value>Restart the download of {0}? The local files in {1} are deleted and downloaded again.</value></data>
   <data name="RemoteDownloadRestarted" xml:space="preserve"><value>The download of {0} was queued again.</value></data>
-  <data name="ReleaseCreationQueuedAgain" xml:space="preserve"><value>The release creation for {0} was queued again.</value></data>
+  <data name="RetryWithoutDownloadingAgainQueued" xml:space="preserve"><value>{0} was queued again with the files already downloaded.</value></data>
   <data name="RemoteDownloadIgnored" xml:space="preserve"><value>{0} is ignored from now on.</value></data>
   <data name="RemoteDownloadStateChanged" xml:space="preserve"><value>The state of {0} changed in the meantime. The list was reloaded.</value></data>
   <data name="RemoteDownloadStatusSubtitle" xml:space="preserve"><value>Download of {0} from {1}</value></data>

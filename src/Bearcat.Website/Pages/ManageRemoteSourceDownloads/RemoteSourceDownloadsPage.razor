@@ -115,7 +115,7 @@
                                         @if (download.CanRetryWithoutDownloadingAgain)
                                         {
                                             <BbDropdownMenuItem OnClick="@(async _ => await RetryWithoutDownloadingAgainAsync(download))">
-                                                @L["RetryReleaseCreation"]
+                                                @L["RetryWithoutDownloadingAgain"]
                                             </BbDropdownMenuItem>
                                         }
                                         @if (download.CanRestart)
