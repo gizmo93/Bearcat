@@ -5,5 +5,6 @@ public record ImageHosterRegistrationReadModel(
     string Name,
     string ImageHosterClassName,
     string ImageHosterName,
-    bool IsActive
+    bool IsActive,
+    bool HasUnreadableSecrets
 );

@@ -1,6 +1,8 @@
+using Bearcat.Domain.Shared.Entities;
+
 namespace Bearcat.Domain.Entities;
 
-public class DistributionSiteRegistration
+public class DistributionSiteRegistration : IEntityWithEncryptedSecrets, IActivatableEntity
 {
     public int Id { get; set; }
 
@@ -18,5 +20,13 @@ public class DistributionSiteRegistration
 
     public string? EncryptedSession { get; set; }
 
+    public bool HasUnreadableSecrets { get; set; }
+
     public List<ForumPostingRule> PostingRules { get; set; } = [];
+
+    public string GetEncryptedSecrets() => SerializedConfig;
+
+    public string GetRegistrationTypeName() => "Distribution site";
+
+    public string? GetRegistrationName() => Name;
 }

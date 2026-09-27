@@ -2,6 +2,7 @@ namespace Bearcat.Domain.UseCases.ManageNotifications.Telegram;
 
 public sealed record TelegramSettings(
     bool IsConfigured,
+    bool HasUnreadableSecrets,
     string? BotUsername,
     string NotificationBaseUrl,
     bool IsConnected,

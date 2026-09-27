@@ -158,4 +158,10 @@ public class NotificationConfiguration : IApplicationConfiguration
         "NotificationKind.RemoteDownloadFailed.Description"
     )]
     public bool RemoteDownloadFailed { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
+        "NotificationKind.UnreadableSecretsDetected",
+        "NotificationKind.UnreadableSecretsDetected.Description"
+    )]
+    public bool UnreadableSecretsDetected { get; set; } = true;
 }

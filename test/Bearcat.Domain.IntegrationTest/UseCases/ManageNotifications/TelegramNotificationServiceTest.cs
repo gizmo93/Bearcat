@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageNotifications.Telegram;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -37,7 +38,11 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
             NoOpSecretProtector.Instance,
             new TelegramClient(new TestHttpClientFactory(telegram)),
             CreateTimeProvider(),
-            new TelegramConfigurationCache()
+            new TelegramConfigurationCache(),
+            UnreadableSecretsNotificationServiceFactory.Create(
+                writeDbContext,
+                CreateNotificationConfigurationProvider()
+            )
         );
     }
 
@@ -178,6 +183,105 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
         telegram.LastSentMessage.ShouldContain("All files are offline on the hoster");
         telegram.LastSentMessage.ShouldContain("Release: Awesome.Movie.2026.WEB.H265-ZeroTwo");
     }
+
+    [Test]
+    public async Task ProcessDeliveries_BotTokenUnreadable_LeavesDeliveriesPendingWithoutSending()
+    {
+        // Arrange
+        writeDbContext.TelegramConfigurations.Add(
+            CreateConnectedConfiguration(hasUnreadableSecrets: true)
+        );
+        var notification = new Notification
+        {
+            CreatedAt = DateTime.UtcNow,
+            NotificationSeverity = NotificationSeverity.Error,
+            NotificationKind = NotificationKind.UploadFailed,
+            Message = "Upload failed",
+        };
+        writeDbContext.TelegramDeliveries.Add(
+            new TelegramDelivery { Notification = notification, CreatedAt = DateTime.UtcNow }
+        );
+        await writeDbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessDeliveriesAsync(CancellationToken.None);
+
+        // Assert
+        writeDbContext.ChangeTracker.Clear();
+        var delivery = await writeDbContext.TelegramDeliveries.SingleAsync();
+        delivery.DeliveredAt.ShouldBeNull();
+        delivery.AttemptCount.ShouldBe(0);
+        telegram.LastSentMessage.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task SaveConfigurationAsync_NewBotTokenForUnreadableConfiguration_ClearsFlagAndResolvesNotification()
+    {
+        // Arrange
+        writeDbContext.TelegramConfigurations.Add(
+            CreateConnectedConfiguration(hasUnreadableSecrets: true)
+        );
+        var notification = new Notification
+        {
+            CreatedAt = DateTime.UtcNow,
+            NotificationSeverity = NotificationSeverity.Error,
+            NotificationKind = NotificationKind.UnreadableSecretsDetected,
+            Message = "Stored credentials could not be decrypted",
+        };
+        writeDbContext.Notifications.Add(notification);
+        await writeDbContext.SaveChangesAsync();
+
+        // Act
+        await service.SaveConfigurationAsync(
+            "1234567:4TT8bAc8GHUspu3ERYn-KGcvsvGB9u_n4ddy",
+            "http://bearcat.internal",
+            CancellationToken.None
+        );
+
+        // Assert
+        writeDbContext.ChangeTracker.Clear();
+        var configuration = await writeDbContext.TelegramConfigurations.SingleAsync();
+        configuration.HasUnreadableSecrets.ShouldBeFalse();
+        configuration.EncryptedBotToken.ShouldBe("1234567:4TT8bAc8GHUspu3ERYn-KGcvsvGB9u_n4ddy");
+        (
+            await writeDbContext.Notifications.SingleAsync(n => n.Id == notification.Id)
+        ).ResolvedAt.ShouldNotBeNull();
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task GetSettingsAsync_ConfigurationExists_ReturnsUnreadableSecretsFlag(
+        bool hasUnreadableSecrets
+    )
+    {
+        // Arrange
+        writeDbContext.TelegramConfigurations.Add(
+            CreateConnectedConfiguration(hasUnreadableSecrets)
+        );
+        await writeDbContext.SaveChangesAsync();
+
+        // Act
+        var settings = await service.GetSettingsAsync(
+            "http://bearcat.internal",
+            CancellationToken.None
+        );
+
+        // Assert
+        settings.IsConfigured.ShouldBeTrue();
+        settings.HasUnreadableSecrets.ShouldBe(hasUnreadableSecrets);
+    }
+
+    private static TelegramConfiguration CreateConnectedConfiguration(bool hasUnreadableSecrets) =>
+        new()
+        {
+            EncryptedBotToken = "encrypted-with-lost-key",
+            HasUnreadableSecrets = hasUnreadableSecrets,
+            BotUsername = "bearcat_bot",
+            NotificationBaseUrl = "http://bearcat.internal",
+            ChatId = 987654321,
+            ChatName = "Gizmo",
+            ForwardNotificationsAfterId = 0,
+        };
 
     private static TimeProvider CreateTimeProvider()
     {

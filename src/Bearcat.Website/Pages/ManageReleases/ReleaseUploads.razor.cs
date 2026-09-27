@@ -341,7 +341,12 @@ public partial class ReleaseUploads(
         };
 
     private static bool CanCheckOnlineStateNow(ReleaseUploadReadModel upload) =>
-        upload is { UploadState: UploadState.Completed, LinkCount: > 0 };
+        upload
+            is {
+                UploadState: UploadState.Completed,
+                LinkCount: > 0,
+                HosterHasUnreadableSecrets: false,
+            };
 
     private static bool CanSetUploadOffline(ReleaseUploadReadModel upload) =>
         upload.OnlineState is OnlineState.Online or OnlineState.PartiallyOnline;

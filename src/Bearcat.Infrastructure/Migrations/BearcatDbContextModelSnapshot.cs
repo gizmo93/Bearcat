@@ -419,6 +419,9 @@ namespace BearCat.Infrastructure.Migrations
                         .HasMaxLength(8000)
                         .HasColumnType("character varying(8000)");
 
+                    b.Property<bool>("HasUnreadableSecrets")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -551,6 +554,9 @@ namespace BearCat.Infrastructure.Migrations
                     b.Property<bool>("AlwaysReuploadAllFiles")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("HasUnreadableSecrets")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("HosterClassName")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -601,6 +607,9 @@ namespace BearCat.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("HasUnreadableSecrets")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("ImageHosterClassName")
                         .IsRequired()
@@ -837,6 +846,9 @@ namespace BearCat.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("HasUnreadableSecrets")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -868,6 +880,9 @@ namespace BearCat.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("HasUnreadableSecrets")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -896,6 +911,9 @@ namespace BearCat.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("HasUnreadableSecrets")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -1850,6 +1868,9 @@ namespace BearCat.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("HasUnreadableSecrets")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -1909,6 +1930,9 @@ namespace BearCat.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<bool>("ForwardWarning")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("HasUnreadableSecrets")
                         .HasColumnType("boolean");
 
                     b.Property<string>("NotificationBaseUrl")

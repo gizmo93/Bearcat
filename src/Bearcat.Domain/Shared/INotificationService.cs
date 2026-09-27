@@ -9,6 +9,7 @@ public interface INotificationService
     Task CreateAsync(NotificationKind kind, string message, CancellationToken cancellationToken);
     Task ResolveAsync(int notificationId, CancellationToken cancellationToken = default);
     Task ResolveAllAsync(CancellationToken cancellationToken = default);
+    Task ResolveAllOfKindAsync(NotificationKind kind, CancellationToken cancellationToken);
 
     void Create<TEntity>(
         NotificationKind kind,

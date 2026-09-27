@@ -25,4 +25,11 @@ public class NoOpSecretProtectorTest
         // Act / Assert
         NoOpSecretProtector.Instance.IsProtected("bearcat:enc:v1:anything").ShouldBeFalse();
     }
+
+    [Test]
+    public void CanUnprotect_AlwaysReturnsTrue()
+    {
+        // Act / Assert
+        NoOpSecretProtector.Instance.CanUnprotect("bearcat:enc:v1:anything").ShouldBeTrue();
+    }
 }

@@ -3,6 +3,7 @@ using Bearcat.Abstractions.RemoteSource;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ConfigurationFields;
+using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Repositories;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,7 @@ public class RemoteSourceRegistrationService(
     IRemoteSourceFactory remoteSourceFactory,
     ISecretProtector secretProtector,
     RemoteSourceSessionProvider sessionProvider,
+    UnreadableSecretsNotificationService unreadableSecretsNotificationService,
     ILogger<RemoteSourceRegistrationService> logger
 )
 {
@@ -68,17 +70,24 @@ public class RemoteSourceRegistrationService(
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         var remoteSource = remoteSourceFactory.GetByClassName(registration.SourceClassName);
         var normalizedValues = ConfigurationValueNormalizer.Normalize(
-            remoteSource.ConfigurationFields,
-            values,
-            DecryptConfig(remoteSource, registration).ToDictionary()
+            fields: remoteSource.ConfigurationFields,
+            submittedValues: values,
+            existingValues: registration.HasUnreadableSecrets
+                ? null
+                : DecryptConfig(remoteSource, registration).ToDictionary()
         );
 
         registration.Name = normalizedName;
         registration.MaxConnections = maxConnections;
         registration.SerializedConfig = EncryptConfig(normalizedValues);
+        registration.HasUnreadableSecrets = false;
 
         await writeRepository.SaveChangesAsync(cancellationToken);
         await sessionProvider.CloseSessionsAsync(id);
+
+        await unreadableSecretsNotificationService.ResolveNotificationWhenNoUnreadableSecretsRemainAsync(
+            cancellationToken
+        );
     }
 
     public async Task<IReadOnlyDictionary<string, object?>> GetConfigValuesWithoutSecretsAsync(

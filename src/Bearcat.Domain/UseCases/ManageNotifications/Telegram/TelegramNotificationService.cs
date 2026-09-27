@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageNotifications.ReadModels;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -17,7 +18,8 @@ public sealed class TelegramNotificationService(
     ISecretProtector secretProtector,
     ITelegramClient telegramClient,
     TimeProvider timeProvider,
-    TelegramConfigurationCache configurationCache
+    TelegramConfigurationCache configurationCache,
+    UnreadableSecretsNotificationService unreadableSecretsNotificationService
 )
 {
     private static readonly TimeSpan PairingDuration = TimeSpan.FromMinutes(10);
@@ -38,6 +40,7 @@ public sealed class TelegramNotificationService(
         {
             return new TelegramSettings(
                 IsConfigured: false,
+                HasUnreadableSecrets: false,
                 BotUsername: null,
                 NotificationBaseUrl: defaultBaseUrl.TrimEnd('/'),
                 IsConnected: false,
@@ -51,6 +54,7 @@ public sealed class TelegramNotificationService(
 
         return new TelegramSettings(
             IsConfigured: true,
+            HasUnreadableSecrets: configuration.HasUnreadableSecrets,
             BotUsername: configuration.BotUsername,
             NotificationBaseUrl: configuration.NotificationBaseUrl,
             IsConnected: configuration.ChatId.HasValue,
@@ -84,6 +88,9 @@ public sealed class TelegramNotificationService(
 
         await configurationRepository.SaveChangesAsync(cancellationToken);
         configurationCache.Invalidate();
+        await unreadableSecretsNotificationService.ResolveNotificationWhenNoUnreadableSecretsRemainAsync(
+            cancellationToken
+        );
     }
 
     public async Task SaveLevelsAsync(
@@ -172,9 +179,7 @@ public sealed class TelegramNotificationService(
 
     public async Task PollPairingAsync(CancellationToken cancellationToken)
     {
-        await EnsureCacheInitializedAsync(cancellationToken);
-
-        var pairing = configurationCache.Current;
+        var pairing = await GetConfigurationWithReadableBotTokenAsync(cancellationToken);
         if (pairing?.PairingTokenHash is null || pairing.PairingExpiresAt is null)
         {
             return;
@@ -195,9 +200,7 @@ public sealed class TelegramNotificationService(
 
     public async Task ProcessDeliveriesAsync(CancellationToken cancellationToken)
     {
-        await EnsureCacheInitializedAsync(cancellationToken);
-
-        var configuration = configurationCache.Current;
+        var configuration = await GetConfigurationWithReadableBotTokenAsync(cancellationToken);
 
         if (configuration?.ChatId is null)
         {
@@ -254,6 +257,7 @@ public sealed class TelegramNotificationService(
         var bot = await telegramClient.GetBotAsync(botToken, cancellationToken);
 
         configuration.EncryptedBotToken = secretProtector.Protect(botToken);
+        configuration.HasUnreadableSecrets = false;
         configuration.BotUsername = bot.Username;
         configuration.ChatId = null;
         configuration.ChatName = null;
@@ -456,6 +460,17 @@ public sealed class TelegramNotificationService(
 
         var state = await readRepository.GetConfigurationStateAsync(cancellationToken);
         configurationCache.Set(state);
+    }
+
+    private async Task<TelegramConfigurationState?> GetConfigurationWithReadableBotTokenAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        await EnsureCacheInitializedAsync(cancellationToken);
+
+        return configurationCache.Current is { HasUnreadableSecrets: false } configuration
+            ? configuration
+            : null;
     }
 
     private async Task<TelegramConfiguration> GetConfigurationAsync(

@@ -28,4 +28,5 @@ public enum NotificationKind
     ReleaseAutoConvertedToUnmanaged = 24,
     RemoteDownloadFailed = 25,
     ReleaseCreatedFromRemoteDownload = 26,
+    UnreadableSecretsDetected = 27,
 }

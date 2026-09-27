@@ -1,6 +1,8 @@
 using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 
 namespace Bearcat.Domain.UseCases.ManageDistributionSites;
@@ -9,7 +11,8 @@ public class DistributionSiteRegistrationService(
     IDistributionSiteRegistrationWriteRepository repository,
     IDistributionSiteRegistrationReadRepository readRepository,
     IDistributionSiteFactory distributionSiteFactory,
-    ISecretProtector secretProtector
+    ISecretProtector secretProtector,
+    UnreadableSecretsNotificationService unreadableSecretsNotificationService
 )
 {
     public async Task CreateAsync(
@@ -45,25 +48,25 @@ public class DistributionSiteRegistrationService(
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
         var distributionSite = distributionSiteFactory.Get(registration.DistributionSiteClassName);
-
-        var mergedConfiguration = new Dictionary<string, string>(
-            distributionSite
-                .DeserializeConfig(secretProtector.Unprotect(registration.SerializedConfig))
-                .ToDictionary()
+        var mergedConfiguration = StoredConfigurationMerger.MergeSubmittedIntoStoredConfiguration(
+            registration: registration,
+            submittedConfiguration: configuration,
+            deserializeStoredConfiguration: serializedConfig =>
+                distributionSite.DeserializeConfig(serializedConfig).ToDictionary(),
+            secretProtector: secretProtector
         );
-
-        foreach (var (key, value) in configuration)
-        {
-            mergedConfiguration[key] = value;
-        }
 
         registration.Name = name;
         registration.SerializedConfig = secretProtector.Protect(
             distributionSite.SerializeConfig(mergedConfiguration)
         );
+        registration.HasUnreadableSecrets = false;
         registration.EncryptedSession = null;
 
         await repository.SaveChangesAsync(cancellationToken);
+        await unreadableSecretsNotificationService.ResolveNotificationWhenNoUnreadableSecretsRemainAsync(
+            cancellationToken
+        );
     }
 
     public async Task<int> GetForumPostingRuleCountAsync(

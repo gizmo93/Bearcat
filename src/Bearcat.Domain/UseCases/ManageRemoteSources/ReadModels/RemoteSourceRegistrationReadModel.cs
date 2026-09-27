@@ -6,5 +6,6 @@ public record RemoteSourceRegistrationReadModel(
     string SourceClassName,
     string SourceName,
     bool IsActive,
+    bool HasUnreadableSecrets,
     int MaxConnections
 );

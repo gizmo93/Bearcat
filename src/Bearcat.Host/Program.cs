@@ -4,6 +4,7 @@ using Bearcat.Application.InversionOfControl;
 using Bearcat.Archivers.InversionOfControl;
 using Bearcat.DistributionSites.InversionOfControl;
 using Bearcat.Domain.InversionOfControl;
+using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Host;
 using Bearcat.Hosters.InversionOfControl;
 using Bearcat.ImageHosters.InversionOfControl;
@@ -183,5 +184,12 @@ if (app.Environment.IsProduction() || isDesktopMode)
 await app
     .Services.GetRequiredService<IApplicationConfigurationOverrideCache>()
     .RefreshAsync(CancellationToken.None);
+
+using (var scope = app.Services.CreateScope())
+{
+    await scope
+        .ServiceProvider.GetRequiredService<UnreadableSecretsDetectionService>()
+        .DetectAsync(CancellationToken.None);
+}
 
 await app.RunAsync();

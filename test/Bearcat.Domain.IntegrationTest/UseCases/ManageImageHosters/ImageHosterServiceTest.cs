@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.ImageHoster;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageImageHosters;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -41,7 +42,11 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
             new ImageHosterRegistrationWriteRepository(dbContext),
             new ImageHosterRegistrationReadRepository(dbContext, imageHosterFactoryMock.Object),
             imageHosterFactoryMock.Object,
-            NoOpSecretProtector.Instance
+            NoOpSecretProtector.Instance,
+            UnreadableSecretsNotificationServiceFactory.Create(
+                dbContext,
+                CreateNotificationConfigurationProvider()
+            )
         );
     }
 
@@ -113,6 +118,41 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
         result.Name.ShouldBe("Updated image hoster");
         result.SerializedConfig.ShouldBe("{\"apiKey\":\"updated\"}");
         result.ImageHosterClassName.ShouldBe(ImageHosterClassName);
+    }
+
+    [Test]
+    public async Task UpdateAsync_RegistrationHasUnreadableSecrets_ReplacesConfigAndClearsFlag()
+    {
+        // Arrange
+        var registration = await AddImageHosterRegistrationAsync(
+            isActive: true,
+            hasUnreadableSecrets: true
+        );
+        imageHosterMock
+            .Setup(hoster =>
+                hoster.SerializeConfig(
+                    It.Is<IReadOnlyDictionary<string, string>>(config =>
+                        config.Count == 1 && config["apiKey"] == "updated"
+                    )
+                )
+            )
+            .Returns("{\"apiKey\":\"updated\"}");
+
+        // Act
+        await service.UpdateAsync(
+            registration.Id,
+            "Updated image hoster",
+            new Dictionary<string, string> { ["apiKey"] = "updated" },
+            CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.ImageHosterRegistrations.SingleAsync();
+
+        result.SerializedConfig.ShouldBe("{\"apiKey\":\"updated\"}");
+        result.HasUnreadableSecrets.ShouldBeFalse();
+        imageHosterMock.Verify(hoster => hoster.DeserializeConfig(It.IsAny<string>()), Times.Never);
     }
 
     [Test]
@@ -245,12 +285,16 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
         result.ShouldBe(0);
     }
 
-    private async Task<ImageHosterRegistration> AddImageHosterRegistrationAsync(bool isActive)
+    private async Task<ImageHosterRegistration> AddImageHosterRegistrationAsync(
+        bool isActive,
+        bool hasUnreadableSecrets = false
+    )
     {
         var registration = new ImageHosterRegistration
         {
             Name = "Primary image hoster",
             IsActive = isActive,
+            HasUnreadableSecrets = hasUnreadableSecrets,
             ImageHosterClassName = ImageHosterClassName,
             SerializedConfig = SerializedConfig,
         };

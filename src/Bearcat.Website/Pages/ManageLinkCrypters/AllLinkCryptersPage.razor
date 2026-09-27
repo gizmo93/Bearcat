@@ -40,9 +40,16 @@
                                Sortable="true"
                                Width="110px">
                 <CellTemplate Context="crypter">
-                    <BbBadge Variant="@(crypter.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
-                        @(crypter.IsActive ? L["Active"] : L["Inactive"])
-                    </BbBadge>
+                    @if (crypter.HasUnreadableSecrets)
+                    {
+                        <UnreadableSecretsBadge />
+                    }
+                    else
+                    {
+                        <BbBadge Variant="@(crypter.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
+                            @(crypter.IsActive ? L["Active"] : L["Inactive"])
+                        </BbBadge>
+                    }
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="LinkCrypterRegistrationReadModel" TValue="string"
@@ -50,7 +57,10 @@
                                Property="@(crypter => crypter.Name)"
                                Width="120px">
                 <CellTemplate Context="crypter">
-                    <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => TryLoginAsync(crypter))">
+                    <BbButton Variant="ButtonVariant.Outline"
+                              Size="ButtonSize.Small"
+                              Disabled="@crypter.HasUnreadableSecrets"
+                              OnClick="@(() => TryLoginAsync(crypter))">
                         @L["TryLogin"]
                     </BbButton>
                 </CellTemplate>
@@ -71,7 +81,8 @@
                                 <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(crypter))">
                                     @L["EditRegistration"]
                                 </BbDropdownMenuItem>
-                                <BbDropdownMenuItem OnClick="@(async _ => await ToggleIsActiveAsync(crypter))">
+                                <BbDropdownMenuItem Disabled="@crypter.HasUnreadableSecrets"
+                                                    OnClick="@(async _ => await ToggleIsActiveAsync(crypter))">
                                     @(crypter.IsActive ? L["Disable"] : L["Enable"])
                                 </BbDropdownMenuItem>
                                 <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(crypter))">

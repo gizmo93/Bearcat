@@ -2,6 +2,7 @@ using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Domain.ValueObjects;
@@ -52,7 +53,11 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
             repository,
             hosterFactoryMock.Object,
             new HosterCaptchaVerificationService(notificationServiceMock.Object),
-            NoOpSecretProtector.Instance
+            NoOpSecretProtector.Instance,
+            UnreadableSecretsNotificationServiceFactory.Create(
+                dbContext,
+                CreateNotificationConfigurationProvider()
+            )
         );
     }
 
@@ -194,6 +199,109 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
                 ),
             Times.Once
         );
+    }
+
+    [Test]
+    public async Task UpdateRegistrationAsync_RegistrationHasUnreadableSecrets_ReplacesConfigAndClearsFlag()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync(
+            isActive: true,
+            hasUnreadableSecrets: true
+        );
+        var configuration = new Dictionary<string, string> { ["apiKey"] = "updated" };
+        hosterMock
+            .Setup(h =>
+                h.SerializeHosterConfig(
+                    It.Is<Dictionary<string, string>>(config =>
+                        config.Count == 1 && config["apiKey"] == "updated"
+                    )
+                )
+            )
+            .Returns("{\"apiKey\":\"updated\"}");
+
+        // Act
+        await service.UpdateRegistrationAsync(
+            registration.Id,
+            "Updated hoster",
+            configuration,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.HosterRegistrations.SingleAsync();
+
+        result.Name.ShouldBe("Updated hoster");
+        result.SerializedConfig.ShouldBe("{\"apiKey\":\"updated\"}");
+        result.HasUnreadableSecrets.ShouldBeFalse();
+        hosterMock.Verify(h => h.DeserializeHosterConfig(It.IsAny<string>()), Times.Never);
+    }
+
+    [Test]
+    public async Task UpdateRegistrationAsync_LastRegistrationWithUnreadableSecrets_ResolvesNotification()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync(
+            isActive: true,
+            hasUnreadableSecrets: true
+        );
+        var notification = await AddUnreadableSecretsNotificationAsync();
+        hosterMock
+            .Setup(h => h.SerializeHosterConfig(It.IsAny<Dictionary<string, string>>()))
+            .Returns(SerializedConfig);
+
+        // Act
+        await service.UpdateRegistrationAsync(
+            registration.Id,
+            "Primary hoster",
+            new Dictionary<string, string> { ["apiKey"] = "secret" },
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        (
+            await dbContext.Notifications.SingleAsync(n => n.Id == notification.Id)
+        ).ResolvedAt.ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task UpdateRegistrationAsync_OtherRegistrationWithUnreadableSecretsRemains_KeepsNotificationUnresolved()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync(
+            isActive: true,
+            hasUnreadableSecrets: true
+        );
+        dbContext.LinkCrypterRegistrations.Add(
+            new LinkCrypterRegistration
+            {
+                Name = "Crypter",
+                LinkCrypterClassName = "FileCrypt",
+                SerializedConfig = "unreadable",
+                HasUnreadableSecrets = true,
+            }
+        );
+        await dbContext.SaveChangesAsync();
+        var notification = await AddUnreadableSecretsNotificationAsync();
+        hosterMock
+            .Setup(h => h.SerializeHosterConfig(It.IsAny<Dictionary<string, string>>()))
+            .Returns(SerializedConfig);
+
+        // Act
+        await service.UpdateRegistrationAsync(
+            registration.Id,
+            "Primary hoster",
+            new Dictionary<string, string> { ["apiKey"] = "secret" },
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        (
+            await dbContext.Notifications.SingleAsync(n => n.Id == notification.Id)
+        ).ResolvedAt.ShouldBeNull();
     }
 
     [Test]
@@ -511,7 +619,8 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
     private async Task<HosterRegistration> AddHosterRegistrationAsync(
         bool isActive,
         string hosterClassName = HosterClassName,
-        bool requiresCaptchaVerification = false
+        bool requiresCaptchaVerification = false,
+        bool hasUnreadableSecrets = false
     )
     {
         var registration = new HosterRegistration
@@ -521,12 +630,29 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
             HosterClassName = hosterClassName,
             SerializedConfig = SerializedConfig,
             RequiresCaptchaVerification = requiresCaptchaVerification,
+            HasUnreadableSecrets = hasUnreadableSecrets,
         };
 
         dbContext.HosterRegistrations.Add(registration);
         await dbContext.SaveChangesAsync();
 
         return registration;
+    }
+
+    private async Task<Notification> AddUnreadableSecretsNotificationAsync()
+    {
+        var notification = new Notification
+        {
+            NotificationKind = NotificationKind.UnreadableSecretsDetected,
+            NotificationSeverity = NotificationSeverity.Error,
+            Message = "Stored credentials could not be decrypted",
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        dbContext.Notifications.Add(notification);
+        await dbContext.SaveChangesAsync();
+
+        return notification;
     }
 
     private static UploadConfig CreateUploadConfig(

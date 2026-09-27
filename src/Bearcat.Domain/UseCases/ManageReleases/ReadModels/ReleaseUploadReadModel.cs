@@ -14,5 +14,6 @@ public record ReleaseUploadReadModel(
     int LinkCount,
     int ContainerCount,
     bool CanCreateReupload,
+    bool HosterHasUnreadableSecrets,
     IReadOnlyList<string> ErrorMessages
 );

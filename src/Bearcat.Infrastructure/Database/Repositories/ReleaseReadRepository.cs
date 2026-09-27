@@ -1021,6 +1021,7 @@ public class ReleaseReadRepository(
                             || reuploadBlockingStates.Contains(ru.UploadState)
                         )
                     ),
+                u.UploadConfig.HosterRegistration.HasUnreadableSecrets,
                 u.ErrorMessages.ToList()
             ))
             .ToListAsync(cancellationToken: cancellationToken);

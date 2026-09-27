@@ -33,6 +33,8 @@ public partial class AddOrEditRemoteSource(IScopedOperationRunner operationRunne
 
     private bool IsEdit => Registration is not null;
 
+    private bool KeepsStoredConfigurationValues => Registration is { HasUnreadableSecrets: false };
+
     protected override async Task OnInitializedAsync()
     {
         remoteSources = operationRunner.Run(
@@ -44,13 +46,15 @@ public partial class AddOrEditRemoteSource(IScopedOperationRunner operationRunne
             return;
         }
 
-        var configValuesWithoutSecrets = await operationRunner.RunAsync(
-            (RemoteSourceRegistrationService service) =>
-                service.GetConfigValuesWithoutSecretsAsync(Registration.Id)
-        );
+        var storedConfigValues = KeepsStoredConfigurationValues
+            ? await operationRunner.RunAsync(
+                (RemoteSourceRegistrationService service) =>
+                    service.GetConfigValuesWithoutSecretsAsync(Registration.Id)
+            )
+            : new Dictionary<string, object?>();
 
         selectedSourceClassName = Registration.SourceClassName;
-        values = new Dictionary<string, object?>(configValuesWithoutSecrets)
+        values = new Dictionary<string, object?>(storedConfigValues)
         {
             [NameKey] = Registration.Name,
             [MaxConnectionsKey] = Registration.MaxConnections,
@@ -132,7 +136,7 @@ public partial class AddOrEditRemoteSource(IScopedOperationRunner operationRunne
                                 field,
                                 L,
                                 ConfigResourcePrefix,
-                                IsEdit
+                                KeepsStoredConfigurationValues
                             )
                         )
                         .ToList(),

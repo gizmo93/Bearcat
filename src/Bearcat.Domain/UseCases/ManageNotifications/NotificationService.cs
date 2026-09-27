@@ -47,6 +47,18 @@ public class NotificationService(
         await repository.ResolveAllAsync(timeProvider.GetLocalNow(), cancellationToken);
     }
 
+    public async Task ResolveAllOfKindAsync(
+        NotificationKind kind,
+        CancellationToken cancellationToken
+    )
+    {
+        await repository.ResolveAllOfKindAsync(
+            kind: kind,
+            resolvedAt: timeProvider.GetLocalNow(),
+            cancellationToken: cancellationToken
+        );
+    }
+
     public void Create<TEntity>(
         NotificationKind kind,
         string message,
@@ -122,6 +134,7 @@ public class NotificationService(
             NotificationKind.ReleaseCreatedFromRemoteDownload =>
                 configuration.ReleaseCreatedFromRemoteDownload,
             NotificationKind.RemoteDownloadFailed => configuration.RemoteDownloadFailed,
+            NotificationKind.UnreadableSecretsDetected => configuration.UnreadableSecretsDetected,
             _ => throw new ArgumentOutOfRangeException(
                 paramName: nameof(kind),
                 actualValue: kind,

@@ -1,6 +1,8 @@
+using Bearcat.Domain.Shared.Entities;
+
 namespace Bearcat.Domain.Entities;
 
-public class ImageHosterRegistration
+public class ImageHosterRegistration : IEntityWithEncryptedSecrets, IActivatableEntity
 {
     public int Id { get; set; }
 
@@ -12,10 +14,18 @@ public class ImageHosterRegistration
 
     public bool IsActive { get; set; }
 
+    public bool HasUnreadableSecrets { get; set; }
+
     public List<ImageUploadConfig> ImageUploadConfigs { get; set; } = [];
 
     public List<ImageUploadConfigTemplate> ImageUploadConfigTemplates { get; set; } = [];
 
     public List<CollectionImageUploadConfigTemplate> CollectionImageUploadConfigTemplates { get; set; } =
     [];
+
+    public string GetEncryptedSecrets() => SerializedConfig;
+
+    public string GetRegistrationTypeName() => "Image hoster";
+
+    public string? GetRegistrationName() => Name;
 }

@@ -1,10 +1,12 @@
 using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.Security;
 using Bearcat.IntegrationTest.Utils;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using Shouldly;
 
@@ -12,23 +14,35 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageDistributionSites;
 
 public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
 {
+    private const string DistributionSiteClassName = "TestForum";
+
     private BearcatDbContext dbContext = null!;
-    private DistributionSiteRegistrationService service = null!;
+    private Mock<IDistributionSite> distributionSiteMock = null!;
+    private Mock<IDistributionSiteFactory> distributionSiteFactoryMock = null!;
+    private DistributionSiteRegistrationService registrationService = null!;
 
     [SetUp]
     public void Setup()
     {
         dbContext = Database.CreateDbContext();
-        var distributionSiteFactoryMock = new Mock<IDistributionSiteFactory>(MockBehavior.Strict);
+        distributionSiteMock = new Mock<IDistributionSite>(MockBehavior.Strict);
+        distributionSiteFactoryMock = new Mock<IDistributionSiteFactory>(MockBehavior.Strict);
+        distributionSiteFactoryMock
+            .Setup(factory => factory.Get(DistributionSiteClassName))
+            .Returns(distributionSiteMock.Object);
 
-        service = new DistributionSiteRegistrationService(
+        registrationService = new DistributionSiteRegistrationService(
             new DistributionSiteRegistrationWriteRepository(dbContext),
             new DistributionSiteRegistrationReadRepository(
                 dbContext,
                 distributionSiteFactoryMock.Object
             ),
             distributionSiteFactoryMock.Object,
-            NoOpSecretProtector.Instance
+            NoOpSecretProtector.Instance,
+            UnreadableSecretsNotificationServiceFactory.Create(
+                dbContext,
+                CreateNotificationConfigurationProvider()
+            )
         );
     }
 
@@ -36,6 +50,41 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
     public async Task DisposeDbContextAsync()
     {
         await dbContext.DisposeAsync();
+    }
+
+    [Test]
+    public async Task UpdateAsync_RegistrationHasUnreadableSecrets_ReplacesConfigAndClearsFlag()
+    {
+        // Arrange
+        var registration = await AddRegistrationWithUnreadableSecretsAsync();
+        distributionSiteMock
+            .Setup(site =>
+                site.SerializeConfig(
+                    It.Is<Dictionary<string, string>>(config =>
+                        config.Count == 1 && config["Password"] == "new-password"
+                    )
+                )
+            )
+            .Returns("{\"Password\":\"new-password\"}");
+
+        // Act
+        await registrationService.UpdateAsync(
+            registration.Id,
+            "Forum",
+            new Dictionary<string, string> { ["Password"] = "new-password" },
+            CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.DistributionSiteRegistrations.SingleAsync();
+
+        result.SerializedConfig.ShouldBe("{\"Password\":\"new-password\"}");
+        result.HasUnreadableSecrets.ShouldBeFalse();
+        distributionSiteMock.Verify(
+            site => site.DeserializeConfig(It.IsAny<string>()),
+            Times.Never
+        );
     }
 
     [Test]
@@ -59,7 +108,7 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
         await dbContext.SaveChangesAsync();
 
         // Act
-        var result = await service.GetForumPostingRuleCountAsync(
+        var result = await registrationService.GetForumPostingRuleCountAsync(
             registration.Id,
             CancellationToken.None
         );
@@ -77,13 +126,31 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
         await dbContext.SaveChangesAsync();
 
         // Act
-        var result = await service.GetForumPostingRuleCountAsync(
+        var result = await registrationService.GetForumPostingRuleCountAsync(
             registration.Id,
             CancellationToken.None
         );
 
         // Assert
         result.ShouldBe(0);
+    }
+
+    private async Task<DistributionSiteRegistration> AddRegistrationWithUnreadableSecretsAsync()
+    {
+        var registration = new DistributionSiteRegistration
+        {
+            Name = "Forum",
+            DistributionSiteClassName = DistributionSiteClassName,
+            SerializedConfig = "unreadable",
+            IsActive = true,
+            HasUnreadableSecrets = true,
+        };
+
+        dbContext.DistributionSiteRegistrations.Add(registration);
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        return registration;
     }
 
     private static DistributionSiteRegistration CreateRegistration(string name)

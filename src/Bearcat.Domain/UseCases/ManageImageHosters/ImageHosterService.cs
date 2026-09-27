@@ -2,6 +2,8 @@ using Bearcat.Abstractions.ImageHoster;
 using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageImageHosters.Repositories;
 
 namespace Bearcat.Domain.UseCases.ManageImageHosters;
@@ -10,7 +12,8 @@ public class ImageHosterService(
     IImageHosterRegistrationWriteRepository repository,
     IImageHosterRegistrationReadRepository readRepository,
     IImageHosterFactory imageHosterFactory,
-    ISecretProtector secretProtector
+    ISecretProtector secretProtector,
+    UnreadableSecretsNotificationService unreadableSecretsNotificationService
 )
 {
     public async Task CreateAsync(
@@ -60,22 +63,24 @@ public class ImageHosterService(
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
         var imageHoster = imageHosterFactory.Get(registration.ImageHosterClassName);
-        var serializedConfig = secretProtector.Unprotect(registration.SerializedConfig);
-        var mergedConfiguration = new Dictionary<string, string>(
-            imageHoster.DeserializeConfig(serializedConfig).ToDictionary()
+        var mergedConfiguration = StoredConfigurationMerger.MergeSubmittedIntoStoredConfiguration(
+            registration: registration,
+            submittedConfiguration: configuration,
+            deserializeStoredConfiguration: serializedConfig =>
+                imageHoster.DeserializeConfig(serializedConfig).ToDictionary(),
+            secretProtector: secretProtector
         );
-
-        foreach (var (key, value) in configuration)
-        {
-            mergedConfiguration[key] = value;
-        }
 
         registration.Name = name;
         registration.SerializedConfig = secretProtector.Protect(
             imageHoster.SerializeConfig(mergedConfiguration)
         );
+        registration.HasUnreadableSecrets = false;
 
         await repository.SaveChangesAsync(cancellationToken);
+        await unreadableSecretsNotificationService.ResolveNotificationWhenNoUnreadableSecretsRemainAsync(
+            cancellationToken
+        );
     }
 
     public async Task ToggleIsActiveAsync(int id, CancellationToken cancellationToken = default)

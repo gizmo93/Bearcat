@@ -36,9 +36,16 @@
                                Sortable="true"
                                Width="110px">
                 <CellTemplate Context="registration">
-                    <BbBadge Variant="@(registration.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
-                        @(registration.IsActive ? L["Active"] : L["Inactive"])
-                    </BbBadge>
+                    @if (registration.HasUnreadableSecrets)
+                    {
+                        <UnreadableSecretsBadge />
+                    }
+                    else
+                    {
+                        <BbBadge Variant="@(registration.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
+                            @(registration.IsActive ? L["Active"] : L["Inactive"])
+                        </BbBadge>
+                    }
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="NfoDatabaseRegistrationReadModel" TValue="string"
@@ -57,7 +64,8 @@
                                 <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(registration))">
                                     @L["EditRegistration"]
                                 </BbDropdownMenuItem>
-                                <BbDropdownMenuItem OnClick="@(async _ => await ToggleIsActiveAsync(registration))">
+                                <BbDropdownMenuItem Disabled="@registration.HasUnreadableSecrets"
+                                                    OnClick="@(async _ => await ToggleIsActiveAsync(registration))">
                                     @(registration.IsActive ? L["Disable"] : L["Enable"])
                                 </BbDropdownMenuItem>
                                 <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(registration))">

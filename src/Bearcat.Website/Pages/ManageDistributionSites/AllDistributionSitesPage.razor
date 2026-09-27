@@ -52,9 +52,16 @@
                                Sortable="true"
                                Width="110px">
                 <CellTemplate Context="distributionSite">
-                    <BbBadge Variant="@(distributionSite.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
-                        @(distributionSite.IsActive ? L["Active"] : L["Inactive"])
-                    </BbBadge>
+                    @if (distributionSite.HasUnreadableSecrets)
+                    {
+                        <UnreadableSecretsBadge />
+                    }
+                    else
+                    {
+                        <BbBadge Variant="@(distributionSite.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
+                            @(distributionSite.IsActive ? L["Active"] : L["Inactive"])
+                        </BbBadge>
+                    }
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="DistributionSiteRegistrationReadModel" TValue="int"
@@ -86,7 +93,7 @@
                 <CellTemplate Context="distributionSite">
                     <BbButton Variant="ButtonVariant.Outline"
                               Size="ButtonSize.Small"
-                              Disabled="@IsLoggingIn(distributionSite)"
+                              Disabled="@(distributionSite.HasUnreadableSecrets || IsLoggingIn(distributionSite))"
                               OnClick="@(() => TestLoginAsync(distributionSite))">
                         @if (IsLoggingIn(distributionSite))
                         {
@@ -118,7 +125,8 @@
                                         @L["ForumPostingRules"]
                                     </BbDropdownMenuItem>
                                 }
-                                <BbDropdownMenuItem OnClick="@(async _ => await ToggleIsActiveAsync(distributionSite))">
+                                <BbDropdownMenuItem Disabled="@distributionSite.HasUnreadableSecrets"
+                                                    OnClick="@(async _ => await ToggleIsActiveAsync(distributionSite))">
                                     @(distributionSite.IsActive ? L["Disable"] : L["Enable"])
                                 </BbDropdownMenuItem>
                                 <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(distributionSite))">

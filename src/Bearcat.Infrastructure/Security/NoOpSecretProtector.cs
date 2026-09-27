@@ -10,5 +10,7 @@ public sealed class NoOpSecretProtector : ISecretProtector
 
     public string Unprotect(string protectedValue) => protectedValue;
 
+    public bool CanUnprotect(string protectedValue) => true;
+
     public bool IsProtected(string value) => false;
 }

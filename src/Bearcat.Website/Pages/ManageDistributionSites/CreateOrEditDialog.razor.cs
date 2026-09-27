@@ -18,6 +18,8 @@ public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
     public IDialogReference DialogRef { get; set; } = null!;
 
     private bool IsEditMode => DistributionSiteRegistrationId.HasValue;
+    private bool hasUnreadableSecrets;
+    private bool RequiresAllConfigurationValues => !IsEditMode || hasUnreadableSecrets;
     private RegistrationFormModel formModel = new();
     private EditContext editContext = null!;
     private ValidationMessageStore validationMessageStore = null!;
@@ -83,7 +85,7 @@ public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
             );
         }
 
-        if (SelectedDistributionSite is null || IsEditMode)
+        if (SelectedDistributionSite is null || !RequiresAllConfigurationValues)
         {
             return;
         }
@@ -122,6 +124,7 @@ public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
             return;
         }
 
+        hasUnreadableSecrets = registration.HasUnreadableSecrets;
         formModel = new RegistrationFormModel
         {
             Name = registration.Name,

@@ -10,6 +10,7 @@ public class TelegramConfigurationConfiguration : IEntityTypeConfiguration<Teleg
     {
         builder.HasKey(configuration => configuration.Id);
         builder.Property(configuration => configuration.EncryptedBotToken).IsRequired();
+        builder.Property(configuration => configuration.HasUnreadableSecrets).IsRequired();
         builder.Property(configuration => configuration.BotUsername).HasMaxLength(64).IsRequired();
         builder
             .Property(configuration => configuration.NotificationBaseUrl)

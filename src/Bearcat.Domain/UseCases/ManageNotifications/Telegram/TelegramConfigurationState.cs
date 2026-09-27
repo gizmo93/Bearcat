@@ -4,6 +4,7 @@ namespace Bearcat.Domain.UseCases.ManageNotifications.Telegram;
 
 public sealed record TelegramConfigurationState(
     string EncryptedBotToken,
+    bool HasUnreadableSecrets,
     string BotUsername,
     string NotificationBaseUrl,
     long? ChatId,
@@ -20,6 +21,7 @@ public sealed record TelegramConfigurationState(
     public static TelegramConfigurationState From(TelegramConfiguration configuration) =>
         new(
             configuration.EncryptedBotToken,
+            configuration.HasUnreadableSecrets,
             configuration.BotUsername,
             configuration.NotificationBaseUrl,
             configuration.ChatId,

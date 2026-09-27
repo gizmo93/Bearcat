@@ -1,6 +1,8 @@
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageMediaDatabases.Repositories;
 
 namespace Bearcat.Domain.UseCases.ManageMediaDatabases;
@@ -8,7 +10,8 @@ namespace Bearcat.Domain.UseCases.ManageMediaDatabases;
 public class MediaDatabaseRegistrationService(
     IMediaDatabaseRegistrationWriteRepository repository,
     IMediaMetadataDatabaseFactory metadataDatabaseFactory,
-    ISecretProtector secretProtector
+    ISecretProtector secretProtector,
+    UnreadableSecretsNotificationService unreadableSecretsNotificationService
 )
 {
     public async Task CreateAsync(
@@ -51,21 +54,23 @@ public class MediaDatabaseRegistrationService(
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
         var metadataDatabase = metadataDatabaseFactory.Get(registration.MediaDatabaseClassName);
-        var serializedConfig = secretProtector.Unprotect(registration.SerializedConfig);
-        var mergedConfiguration = new Dictionary<string, string>(
-            metadataDatabase.DeserializeConfig(serializedConfig).ToDictionary()
+        var mergedConfiguration = StoredConfigurationMerger.MergeSubmittedIntoStoredConfiguration(
+            registration: registration,
+            submittedConfiguration: configuration,
+            deserializeStoredConfiguration: serializedConfig =>
+                metadataDatabase.DeserializeConfig(serializedConfig).ToDictionary(),
+            secretProtector: secretProtector
         );
-
-        foreach (var (key, value) in configuration)
-        {
-            mergedConfiguration[key] = value;
-        }
 
         registration.SerializedConfig = secretProtector.Protect(
             metadataDatabase.SerializeConfig(mergedConfiguration)
         );
+        registration.HasUnreadableSecrets = false;
 
         await repository.SaveChangesAsync(cancellationToken);
+        await unreadableSecretsNotificationService.ResolveNotificationWhenNoUnreadableSecretsRemainAsync(
+            cancellationToken
+        );
     }
 
     public async Task<TryLoginResult> TryLoginAsync(
@@ -74,6 +79,7 @@ public class MediaDatabaseRegistrationService(
     )
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
+
         var metadataDatabase = metadataDatabaseFactory.Get(registration.MediaDatabaseClassName);
         var config = metadataDatabase.DeserializeConfig(
             secretProtector.Unprotect(registration.SerializedConfig)

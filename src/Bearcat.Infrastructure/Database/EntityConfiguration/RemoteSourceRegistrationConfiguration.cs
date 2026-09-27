@@ -15,6 +15,7 @@ public class RemoteSourceRegistrationConfiguration
         builder.Property(r => r.SerializedConfig).IsRequired().HasColumnType("text");
         builder.Property(r => r.SourceClassName).IsRequired().HasMaxLength(500);
         builder.Property(r => r.IsActive).IsRequired();
+        builder.Property(r => r.HasUnreadableSecrets).IsRequired();
         builder.Property(r => r.MaxConnections).IsRequired();
     }
 }

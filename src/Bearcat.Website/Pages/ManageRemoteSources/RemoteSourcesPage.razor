@@ -52,15 +52,22 @@
 
                         <div>
                             <p class="bearcat-mobile-label">@L["Status"]</p>
-                            <BbBadge Variant="@(registration.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
-                                @(registration.IsActive ? L["Active"] : L["Inactive"])
-                            </BbBadge>
+                            @if (registration.HasUnreadableSecrets)
+                            {
+                                <UnreadableSecretsBadge />
+                            }
+                            else
+                            {
+                                <BbBadge Variant="@(registration.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
+                                    @(registration.IsActive ? L["Active"] : L["Inactive"])
+                                </BbBadge>
+                            }
                         </div>
 
                         <div class="bearcat-config-actions">
                             <BbButton Variant="ButtonVariant.Outline"
                                       Size="ButtonSize.Small"
-                                      Disabled="@testingRegistrationIds.Contains(registration.Id)"
+                                      Disabled="@(registration.HasUnreadableSecrets || testingRegistrationIds.Contains(registration.Id))"
                                       OnClick="@(() => TestConnectionAsync(registration))">
                                 @if (testingRegistrationIds.Contains(registration.Id))
                                 {
@@ -82,7 +89,8 @@
                                     <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(registration))">
                                         @L["Edit"]
                                     </BbDropdownMenuItem>
-                                    <BbDropdownMenuItem OnClick="@(async _ => await ToggleIsActiveAsync(registration))">
+                                    <BbDropdownMenuItem Disabled="@registration.HasUnreadableSecrets"
+                                                        OnClick="@(async _ => await ToggleIsActiveAsync(registration))">
                                         @(registration.IsActive ? L["Disable"] : L["Enable"])
                                     </BbDropdownMenuItem>
                                     <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(registration))">

@@ -36,6 +36,9 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
     private ValidationMessageStore? messageStore;
     private readonly HashSet<string> displayedPasswords = [];
 
+    private bool RequiresAllConfigurationValues =>
+        !FormModel.IsEdit || FormModel.HasUnreadableSecrets;
+
     protected override void OnInitialized()
     {
         hosterReadModels = operationRunner.Run(
@@ -118,7 +121,7 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
             return;
         }
 
-        if (FormModel.IsEdit)
+        if (!RequiresAllConfigurationValues)
         {
             return;
         }

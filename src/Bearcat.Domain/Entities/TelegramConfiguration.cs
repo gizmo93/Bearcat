@@ -1,10 +1,14 @@
+using Bearcat.Domain.Shared.Entities;
+
 namespace Bearcat.Domain.Entities;
 
-public class TelegramConfiguration
+public class TelegramConfiguration : IEntityWithEncryptedSecrets
 {
     public int Id { get; set; }
 
     public string EncryptedBotToken { get; set; } = null!;
+
+    public bool HasUnreadableSecrets { get; set; }
 
     public string BotUsername { get; set; } = null!;
 
@@ -27,4 +31,10 @@ public class TelegramConfiguration
     public long UpdateOffset { get; set; }
 
     public int ForwardNotificationsAfterId { get; set; }
+
+    public string GetEncryptedSecrets() => EncryptedBotToken;
+
+    public string GetRegistrationTypeName() => "Telegram bot token";
+
+    public string? GetRegistrationName() => null;
 }

@@ -6,5 +6,7 @@ public interface ISecretProtector
 
     string Unprotect(string protectedValue);
 
+    bool CanUnprotect(string protectedValue);
+
     bool IsProtected(string value);
 }

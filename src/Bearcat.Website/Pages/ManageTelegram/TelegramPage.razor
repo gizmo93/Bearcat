@@ -31,9 +31,16 @@
                 <div class="space-y-4">
                     @if (settings.IsConfigured)
                     {
-                        <div class="flex items-center gap-2 text-sm">
+                        <div class="flex flex-wrap items-center gap-2 text-sm">
                             <BbBadge Variant="BadgeVariant.Secondary">@($"@{settings.BotUsername}")</BbBadge>
-                            <span class="text-muted-foreground">@L["TelegramTokenLeaveEmpty"]</span>
+                            @if (settings.HasUnreadableSecrets)
+                            {
+                                <UnreadableSecretsBadge />
+                            }
+                            else
+                            {
+                                <span class="text-muted-foreground">@L["TelegramTokenLeaveEmpty"]</span>
+                            }
                         </div>
                     }
 
@@ -41,7 +48,7 @@
                         <BbLabel>@L["TelegramBotToken"]</BbLabel>
                         <BbInput @bind-Value="botToken"
                                  Type="InputType.Password"
-                                 Placeholder="@(settings.IsConfigured ? L["TelegramTokenUnchanged"] : L["TelegramBotTokenPlaceholder"])" />
+                                 Placeholder="@(KeepsStoredBotToken ? L["TelegramTokenUnchanged"] : L["TelegramBotTokenPlaceholder"])" />
                         @if (settings.IsConnected)
                         {
                             <p class="text-xs text-destructive">@L["TelegramTokenChangeWarning"]</p>
@@ -111,7 +118,10 @@
                             }
 
                             <div class="flex flex-wrap gap-2">
-                                <BbButton Variant="ButtonVariant.Outline" OnClick="SendTestMessageAsync" Loading="isSendingTest">
+                                <BbButton Variant="ButtonVariant.Outline"
+                                          Disabled="settings.HasUnreadableSecrets"
+                                          OnClick="SendTestMessageAsync"
+                                          Loading="isSendingTest">
                                     @L["SendTestNotification"]
                                 </BbButton>
                                 <BbButton Variant="ButtonVariant.Ghost" OnClick="DisconnectAsync" Loading="isDisconnecting">
@@ -145,14 +155,19 @@
                                     <BbButton Variant="ButtonVariant.Outline" OnClick="RefreshConnectionAsync" Loading="isRefreshing">
                                         @L["CheckConnection"]
                                     </BbButton>
-                                    <BbButton Variant="ButtonVariant.Ghost" OnClick="BeginPairingAsync" Loading="isStartingPairing">
+                                    <BbButton Variant="ButtonVariant.Ghost"
+                                              Disabled="settings.HasUnreadableSecrets"
+                                              OnClick="BeginPairingAsync"
+                                              Loading="isStartingPairing">
                                         @L["TelegramResendLink"]
                                     </BbButton>
                                 </div>
                             }
                             else
                             {
-                                <BbButton OnClick="BeginPairingAsync" Loading="isStartingPairing">
+                                <BbButton Disabled="settings.HasUnreadableSecrets"
+                                          OnClick="BeginPairingAsync"
+                                          Loading="isStartingPairing">
                                     <LucideIcon Name="send" class="h-4 w-4" />
                                     @L["ConnectTelegram"]
                                 </BbButton>

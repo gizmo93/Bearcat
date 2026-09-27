@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageLinkCrypters;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -40,7 +41,11 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
             new LinkCrypterRegistrationWriteRepository(dbContext),
             new LinkCrypterRegistrationReadRepository(dbContext, linkCrypterFactoryMock.Object),
             linkCrypterFactoryMock.Object,
-            NoOpSecretProtector.Instance
+            NoOpSecretProtector.Instance,
+            UnreadableSecretsNotificationServiceFactory.Create(
+                dbContext,
+                CreateNotificationConfigurationProvider()
+            )
         );
     }
 
@@ -142,6 +147,41 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
                 ),
             Times.Once
         );
+    }
+
+    [Test]
+    public async Task UpdateAsync_RegistrationHasUnreadableSecrets_ReplacesConfigAndClearsFlag()
+    {
+        // Arrange
+        var registration = await AddLinkCrypterRegistrationAsync(
+            isActive: true,
+            hasUnreadableSecrets: true
+        );
+        linkCrypterMock
+            .Setup(c =>
+                c.SerializeConfig(
+                    It.Is<IReadOnlyDictionary<string, string>>(config =>
+                        config.Count == 1 && config["apiKey"] == "updated"
+                    )
+                )
+            )
+            .Returns("{\"apiKey\":\"updated\"}");
+
+        // Act
+        await service.UpdateAsync(
+            registration.Id,
+            "Updated crypter",
+            new Dictionary<string, string> { ["apiKey"] = "updated" },
+            CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.LinkCrypterRegistrations.SingleAsync();
+
+        result.SerializedConfig.ShouldBe("{\"apiKey\":\"updated\"}");
+        result.HasUnreadableSecrets.ShouldBeFalse();
+        linkCrypterMock.Verify(c => c.DeserializeConfig(It.IsAny<string>()), Times.Never);
     }
 
     [Test]
@@ -304,12 +344,16 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
         result.ShouldBe(0);
     }
 
-    private async Task<LinkCrypterRegistration> AddLinkCrypterRegistrationAsync(bool isActive)
+    private async Task<LinkCrypterRegistration> AddLinkCrypterRegistrationAsync(
+        bool isActive,
+        bool hasUnreadableSecrets = false
+    )
     {
         var registration = new LinkCrypterRegistration
         {
             Name = "Primary crypter",
             IsActive = isActive,
+            HasUnreadableSecrets = hasUnreadableSecrets,
             LinkCrypterClassName = LinkCrypterClassName,
             SerializedConfig = SerializedConfig,
         };

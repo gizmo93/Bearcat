@@ -24,6 +24,7 @@ public class ImageHosterRegistrationReadRepository(
                 registration.Name,
                 registration.ImageHosterClassName,
                 registration.IsActive,
+                registration.HasUnreadableSecrets,
             })
             .ToListAsync(cancellationToken);
 
@@ -37,7 +38,8 @@ public class ImageHosterRegistrationReadRepository(
                     registration.Name,
                     registration.ImageHosterClassName,
                     imageHoster.Name,
-                    registration.IsActive
+                    registration.IsActive,
+                    registration.HasUnreadableSecrets
                 );
             })
             .ToList();
@@ -58,6 +60,7 @@ public class ImageHosterRegistrationReadRepository(
                 registration.Name,
                 registration.ImageHosterClassName,
                 registration.IsActive,
+                registration.HasUnreadableSecrets,
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -73,7 +76,8 @@ public class ImageHosterRegistrationReadRepository(
             registration.Name,
             registration.ImageHosterClassName,
             imageHoster.Name,
-            registration.IsActive
+            registration.IsActive,
+            registration.HasUnreadableSecrets
         );
     }
 

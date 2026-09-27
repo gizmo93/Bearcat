@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageNotifications.Telegram;
@@ -164,7 +165,11 @@ public class NotificationPreferencesTest : BearcatIntegrationTest
             secretProtector: NoOpSecretProtector.Instance,
             telegramClient: client.Object,
             timeProvider: timeProvider,
-            configurationCache: new TelegramConfigurationCache()
+            configurationCache: new TelegramConfigurationCache(),
+            unreadableSecretsNotificationService: UnreadableSecretsNotificationServiceFactory.Create(
+                writeDbContext,
+                CreateNotificationConfigurationProvider()
+            )
         );
 
         await telegram.ProcessDeliveriesAsync(CancellationToken.None);

@@ -99,6 +99,7 @@ public class MediaDatabaseRegistrationRepository(
         return new MediaDatabaseRegistrationReadModel(
             registration.Id,
             registration.IsActive,
+            registration.HasUnreadableSecrets,
             database.Name,
             registration.MediaDatabaseClassName
         );

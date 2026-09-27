@@ -99,6 +99,7 @@ public class NfoDatabaseRegistrationRepository(
         return new NfoDatabaseRegistrationReadModel(
             registration.Id,
             registration.IsActive,
+            registration.HasUnreadableSecrets,
             database.Name,
             registration.NfoDatabaseClassName
         );
