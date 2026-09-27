@@ -10,6 +10,7 @@ namespace Bearcat.Domain.UseCases.ManageLinkCrypters;
 
 public class LinkCrypterService(
     ILinkCrypterRegistrationWriteRepository repository,
+    ILinkCrypterRegistrationReadRepository readRepository,
     ILinkCrypterFactory linkCrypterFactory,
     ISecretProtector secretProtector,
     UnreadableSecretsNotificationService unreadableSecretsNotificationService
@@ -36,6 +37,14 @@ public class LinkCrypterService(
 
         repository.Add(registration);
         await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<int> GetLinkCrypterContainerCountAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await readRepository.GetLinkCrypterContainerCountAsync(id, cancellationToken);
     }
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)

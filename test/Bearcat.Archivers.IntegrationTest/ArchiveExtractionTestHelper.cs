@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Text;
 using Bearcat.Abstractions.Archiver;
 using Shouldly;
 
@@ -16,6 +14,14 @@ public static class ArchiveExtractionTestHelper
         await File.WriteAllBytesAsync(sourceFilePath, data);
 
         return sourceFilePath;
+    }
+
+    public static void CreateEmptyFiles(string folderPath, List<string> fileNames)
+    {
+        foreach (var fileName in fileNames)
+        {
+            File.WriteAllBytes(Path.Combine(folderPath, fileName), []);
+        }
     }
 
     public static async Task AppendNullByteToEachArchiveFileAsync(ArchiveResult archiveResult)
@@ -36,34 +42,6 @@ public static class ArchiveExtractionTestHelper
         );
         stream.WriteByte(0);
         await stream.FlushAsync();
-    }
-
-    public static async Task ExtractWithSevenZipAsync(
-        string archiveFileName,
-        string extractPath,
-        CancellationToken cancellationToken = default
-    )
-    {
-        await RunProcessAsync(
-            fileName: "7z",
-            arguments: ["x", "-y", $"-o{extractPath}", archiveFileName],
-            cancellationToken: cancellationToken,
-            successfulExitCodes: [0, 1]
-        );
-    }
-
-    public static async Task ExtractWithRarAsync(
-        string archiveFileName,
-        string extractPath,
-        CancellationToken cancellationToken = default
-    )
-    {
-        await RunProcessAsync(
-            fileName: "rar",
-            arguments: ["x", "-y", archiveFileName, extractPath + Path.DirectorySeparatorChar],
-            cancellationToken: cancellationToken,
-            successfulExitCodes: [0]
-        );
     }
 
     public static void ExtractedPayloadShouldMatchSource(string sourceFilePath, string extractPath)
@@ -95,61 +73,5 @@ public static class ArchiveExtractionTestHelper
         File.Exists(extractedFilePath).ShouldBeTrue();
         File.ReadAllText(extractedFilePath)
             .ShouldBe(File.ReadAllText(Path.Combine(sourceFolderPath, fileName)));
-    }
-
-    private static async Task RunProcessAsync(
-        string fileName,
-        IReadOnlyList<string> arguments,
-        IReadOnlyList<int> successfulExitCodes,
-        CancellationToken cancellationToken
-    )
-    {
-        var processStartInfo = new ProcessStartInfo
-        {
-            FileName = fileName,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-        };
-
-        foreach (var argument in arguments)
-        {
-            processStartInfo.ArgumentList.Add(argument);
-        }
-
-        using var process = new Process();
-        process.StartInfo = processStartInfo;
-
-        var output = new StringBuilder();
-        var error = new StringBuilder();
-
-        process.OutputDataReceived += (_, e) =>
-        {
-            if (e.Data is not null)
-            {
-                output.AppendLine(e.Data);
-            }
-        };
-
-        process.ErrorDataReceived += (_, e) =>
-        {
-            if (e.Data is not null)
-            {
-                error.AppendLine(e.Data);
-            }
-        };
-
-        process.Start();
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-
-        await process.WaitForExitAsync(cancellationToken);
-
-        successfulExitCodes.ShouldContain(
-            process.ExitCode,
-            $"Process {fileName} {string.Join(" ", arguments)} failed."
-                + $"{Environment.NewLine}Output: {output}"
-                + $"{Environment.NewLine}Error: {error}"
-        );
     }
 }

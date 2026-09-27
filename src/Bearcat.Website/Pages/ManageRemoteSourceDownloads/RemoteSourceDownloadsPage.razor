@@ -112,10 +112,10 @@
                                         </BbButton>
                                     </BbDropdownMenuTrigger>
                                     <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
-                                        @if (download.CanRetryReleaseCreation)
+                                        @if (download.CanRetryWithoutDownloadingAgain)
                                         {
-                                            <BbDropdownMenuItem OnClick="@(async _ => await RetryReleaseCreationAsync(download))">
-                                                @L["RetryReleaseCreation"]
+                                            <BbDropdownMenuItem OnClick="@(async _ => await RetryWithoutDownloadingAgainAsync(download))">
+                                                @L["RetryWithoutDownloadingAgain"]
                                             </BbDropdownMenuItem>
                                         }
                                         @if (download.CanRestart)

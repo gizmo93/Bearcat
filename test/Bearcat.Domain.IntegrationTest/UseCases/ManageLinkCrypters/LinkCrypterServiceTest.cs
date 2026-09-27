@@ -3,6 +3,7 @@ using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageLinkCrypters;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.Security;
@@ -38,6 +39,7 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
 
         service = new LinkCrypterService(
             new LinkCrypterRegistrationWriteRepository(dbContext),
+            new LinkCrypterRegistrationReadRepository(dbContext, linkCrypterFactoryMock.Object),
             linkCrypterFactoryMock.Object,
             NoOpSecretProtector.Instance,
             UnreadableSecretsNotificationServiceFactory.Create(
@@ -224,6 +226,124 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
         result.ShouldBeFalse();
     }
 
+    [Test]
+    public async Task GetLinkCrypterContainerCountAsync_ContainersOfSeveralRegistrations_CountsOnlyContainersOfRegistration()
+    {
+        // Arrange
+        var registration = await AddLinkCrypterRegistrationAsync(isActive: true);
+        var otherRegistration = await AddLinkCrypterRegistrationAsync(isActive: true);
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Managed releases",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        var release = new Release
+        {
+            Name = "Bearcat.Release.001",
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = "/tmp/release",
+            ReleaseGroup = releaseGroup,
+        };
+        var uploadConfig = new UploadConfig
+        {
+            Release = release,
+            ArchiveConfig = new ArchiveConfig
+            {
+                Release = release,
+                Name = "Main archive",
+                ArchiveFilesBasePath = "/tmp/archive",
+                ArchiverName = "zip",
+                ArchiveFileSizeMb = 512,
+            },
+            HosterRegistration = new HosterRegistration
+            {
+                Name = "Hoster",
+                SerializedConfig = "{}",
+                HosterClassName = "TestHoster",
+                IsActive = true,
+            },
+            Name = "Default upload",
+        };
+        var upload = new Upload
+        {
+            UploadConfig = uploadConfig,
+            CreatedAt = DateTime.UtcNow,
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Online,
+            UploadedFiles = [],
+            ErrorMessages = [],
+        };
+        var collectionUploadSlot = new CollectionUploadSlot
+        {
+            ReleaseCollection = new ReleaseCollection
+            {
+                ReleaseGroup = releaseGroup,
+                Key = "collection",
+                Name = "Collection",
+                CreatedAt = DateTime.UtcNow,
+            },
+            Key = "slot",
+            Name = "Slot",
+        };
+        var releaseContainer = CreateLinkCrypterContainer(
+            registration,
+            LinkCrypterContainerScope.Release
+        );
+        releaseContainer.UploadConfigLinkCrypter = new UploadConfigLinkCrypter
+        {
+            UploadConfig = uploadConfig,
+            LinkCrypterRegistration = registration,
+        };
+        releaseContainer.Upload = upload;
+        var collectionContainer = CreateLinkCrypterContainer(
+            registration,
+            LinkCrypterContainerScope.ReleaseCollection
+        );
+        collectionContainer.CollectionUploadSlot = collectionUploadSlot;
+        var otherReleaseContainer = CreateLinkCrypterContainer(
+            otherRegistration,
+            LinkCrypterContainerScope.Release
+        );
+        otherReleaseContainer.UploadConfigLinkCrypter = new UploadConfigLinkCrypter
+        {
+            UploadConfig = uploadConfig,
+            LinkCrypterRegistration = otherRegistration,
+        };
+        otherReleaseContainer.Upload = upload;
+        dbContext.LinkCrypterContainers.AddRange(
+            releaseContainer,
+            collectionContainer,
+            otherReleaseContainer
+        );
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.GetLinkCrypterContainerCountAsync(
+            registration.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task GetLinkCrypterContainerCountAsync_RegistrationWithoutContainers_ReturnsZero()
+    {
+        // Arrange
+        var registration = await AddLinkCrypterRegistrationAsync(isActive: true);
+
+        // Act
+        var result = await service.GetLinkCrypterContainerCountAsync(
+            registration.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(0);
+    }
+
     private async Task<LinkCrypterRegistration> AddLinkCrypterRegistrationAsync(
         bool isActive,
         bool hasUnreadableSecrets = false
@@ -242,5 +362,21 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
         await dbContext.SaveChangesAsync();
 
         return registration;
+    }
+
+    private static LinkCrypterContainer CreateLinkCrypterContainer(
+        LinkCrypterRegistration registration,
+        LinkCrypterContainerScope scope
+    )
+    {
+        return new LinkCrypterContainer
+        {
+            Scope = scope,
+            LinkCrypterRegistration = registration,
+            ContainerUrl = "https://crypter.test/container",
+            State = LinkCrypterContainerState.Created,
+            Errors = [],
+            CreatedAt = DateTime.UtcNow,
+        };
     }
 }

@@ -6,6 +6,8 @@ using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageNotifications;
@@ -33,6 +35,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
     private Mock<IArchiverFactory> archiverFactoryMock = null!;
     private Mock<IApplicationConfigurationProvider> configurationProviderMock = null!;
     private string additionalContentSourcePath = null!;
+    private RecordingTransferProgressTracker progressTracker = null!;
+    private long releaseFolderBytesWhilePacking;
     private ArchiveCreationService service = null!;
 
     [SetUp]
@@ -75,6 +79,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             )
             .Returns(2);
 
+        progressTracker = new RecordingTransferProgressTracker();
         service = CreateService(new FileSystemService());
     }
 
@@ -92,7 +97,9 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                 configurationProvider: CreateNotificationConfigurationProvider()
             ),
             configurationProviderMock.Object,
-            new ReleaseFolderEntriesForPackingService(fileSystemService)
+            new ReleaseFolderEntriesForPackingService(fileSystemService),
+            progressTracker,
+            new FolderSizeProgressReporter()
         );
     }
 
@@ -552,6 +559,118 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                 ),
             Times.Once
         );
+    }
+
+    [Test]
+    public async Task ProcessAsync_NoAssignableArchiveExists_TracksPackingProgressOfReleaseFolder()
+    {
+        // Arrange
+        await AddUploadWaitingForArchiveAsync();
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie-content");
+        Directory.CreateDirectory(Path.Combine(releaseFolderPath, "Sample"));
+        await File.WriteAllTextAsync(
+            Path.Combine(releaseFolderPath, "Sample", "sample.mkv"),
+            "sample"
+        );
+        SetupArchiverWritingVolumes(
+            ("bearcat-release.part1.rar", "first"),
+            ("bearcat-release.part2.rar", "second")
+        );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var archiveId = (await dbContext.Archives.SingleAsync()).Id;
+        var identifier = new TransferIdentifier(TransferType.ArchiveCreation, archiveId);
+        progressTracker
+            .PlannedFilesPerIdentifier[identifier]
+            .ShouldBe([
+                new TransferFile(
+                    1,
+                    "Bearcat.Release.001",
+                    "Main archive",
+                    releaseFolderBytesWhilePacking,
+                    IsAlreadyTransferred: false
+                ),
+            ]);
+        progressTracker.LastSnapshotPerIdentifier[identifier].TransferredBytes.ShouldBe(11);
+        progressTracker.StoppedIdentifiers.ShouldContain(identifier);
+        progressTracker.Get(identifier).ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ProcessAsync_NoAssignableArchiveExists_TracksHashingProgressPerArchiveFileWithUnchangedHashes()
+    {
+        // Arrange
+        await AddUploadWaitingForArchiveAsync();
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie-content");
+        SetupArchiverWritingVolumes(
+            ("bearcat-release.part1.rar", "first"),
+            ("bearcat-release.part2.rar", "second")
+        );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var archive = await dbContext.Archives.Include(a => a.ArchiveFiles).SingleAsync();
+        var identifier = new TransferIdentifier(TransferType.ArchiveHashing, archive.Id);
+        progressTracker
+            .PlannedFilesPerIdentifier[identifier]
+            .ShouldBe(
+                [
+                    new TransferFile(
+                        1,
+                        "bearcat-release.part1.rar",
+                        "Main archive",
+                        5,
+                        IsAlreadyTransferred: false
+                    ),
+                    new TransferFile(
+                        2,
+                        "bearcat-release.part2.rar",
+                        "Main archive",
+                        6,
+                        IsAlreadyTransferred: false
+                    ),
+                ],
+                ignoreOrder: true
+            );
+        var snapshot = progressTracker.LastSnapshotPerIdentifier[identifier];
+        snapshot.TransferredBytes.ShouldBe(13);
+        snapshot.TotalBytes.ShouldBe(13);
+        progressTracker.StoppedIdentifiers.ShouldContain(identifier);
+        foreach (var archiveFile in archive.ArchiveFiles)
+        {
+            var fileBytes = await File.ReadAllBytesAsync(archiveFile.FullFileName);
+            fileBytes[^1].ShouldBe((byte)0);
+            archiveFile.Md5Hash.ShouldBe(Convert.ToHexString(MD5.HashData(fileBytes)));
+        }
+    }
+
+    [Test]
+    public async Task ProcessAsync_ArchiverCannotChangeHashInPlace_TracksHashingProgressWithoutChangingFiles()
+    {
+        // Arrange
+        archiverMock.SetupGet(a => a.CanChangeHashInPlace).Returns(false);
+        await AddUploadWaitingForArchiveAsync();
+        await File.WriteAllTextAsync(Path.Combine(releaseFolderPath, "movie.mkv"), "movie-content");
+        SetupArchiverWritingVolumes(("bearcat-release.part1.rar", "first"));
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var archive = await dbContext.Archives.Include(a => a.ArchiveFiles).SingleAsync();
+        var identifier = new TransferIdentifier(TransferType.ArchiveHashing, archive.Id);
+        var archiveFile = archive.ArchiveFiles.ShouldHaveSingleItem();
+        (await File.ReadAllTextAsync(archiveFile.FullFileName)).ShouldBe("first");
+        archiveFile.Md5Hash.ShouldBe(Convert.ToHexString(MD5.HashData("first"u8.ToArray())));
+        progressTracker.LastSnapshotPerIdentifier[identifier].TransferredBytes.ShouldBe(5);
+        progressTracker.StoppedIdentifiers.ShouldContain(identifier);
     }
 
     [Test]
@@ -1653,6 +1772,48 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                 await onArchive();
                 return archiveResult;
             });
+    }
+
+    private void SetupArchiverWritingVolumes(params (string FileName, string Content)[] volumes)
+    {
+        archiverMock
+            .Setup(a =>
+                a.ArchiveAsync(
+                    releaseFolderPath,
+                    It.IsAny<string>(),
+                    "bearcat-release",
+                    It.IsAny<int>(),
+                    "secret",
+                    It.IsAny<ArchiveOptions>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(
+                async (
+                    string _,
+                    string destinationPath,
+                    string _,
+                    int _,
+                    string? _,
+                    ArchiveOptions _,
+                    CancellationToken _
+                ) =>
+                {
+                    releaseFolderBytesWhilePacking = Directory
+                        .GetFiles(releaseFolderPath, "*", SearchOption.AllDirectories)
+                        .Sum(filePath => new FileInfo(filePath).Length);
+                    var createdFileNames = new List<string>();
+
+                    foreach (var (fileName, content) in volumes)
+                    {
+                        var filePath = Path.Combine(destinationPath, fileName);
+                        await File.WriteAllTextAsync(filePath, content);
+                        createdFileNames.Add(filePath);
+                    }
+
+                    return new ArchiveResult(true, createdFileNames, null);
+                }
+            );
     }
 
     private List<string> GetRelativePathsInReleaseFolder()

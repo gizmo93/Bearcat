@@ -108,7 +108,9 @@ public class ArchiveRestoreAndCreationPipelineTest : BearcatIntegrationTest
             CreateTimeProvider(),
             notificationService,
             new DefaultConfigurationProvider(),
-            new ReleaseFolderEntriesForPackingService(new FileSystemService())
+            new ReleaseFolderEntriesForPackingService(new FileSystemService()),
+            transferProgressTracker,
+            new FolderSizeProgressReporter()
         );
     }
 

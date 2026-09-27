@@ -10,4 +10,7 @@ public enum RemoteSourceDownloadState
     Failed = 6,
     Canceled = 7,
     Ignored = 8,
+    Verifying = 9,
+    Extracting = 10,
+    ReadyForReleaseCreation = 11,
 }

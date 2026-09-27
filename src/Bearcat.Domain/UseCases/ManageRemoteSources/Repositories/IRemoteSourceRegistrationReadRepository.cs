@@ -7,4 +7,9 @@ public interface IRemoteSourceRegistrationReadRepository
     Task<IReadOnlyList<RemoteSourceRegistrationReadModel>> GetAllAsync(
         CancellationToken cancellationToken = default
     );
+
+    Task<int> GetRemoteSourceAutomationCountAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    );
 }

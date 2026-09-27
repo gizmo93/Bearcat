@@ -3,6 +3,7 @@ using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageImageHosters;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.Security;
@@ -39,6 +40,7 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
 
         service = new ImageHosterService(
             new ImageHosterRegistrationWriteRepository(dbContext),
+            new ImageHosterRegistrationReadRepository(dbContext, imageHosterFactoryMock.Object),
             imageHosterFactoryMock.Object,
             NoOpSecretProtector.Instance,
             UnreadableSecretsNotificationServiceFactory.Create(
@@ -206,6 +208,83 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
         result.ShouldBeFalse();
     }
 
+    [Test]
+    public async Task GetImageUploadCountAsync_ImageUploadsOfSeveralRegistrations_CountsOnlyImageUploadsOfRegistration()
+    {
+        // Arrange
+        var registration = await AddImageHosterRegistrationAsync(isActive: true);
+        var otherRegistration = await AddImageHosterRegistrationAsync(isActive: true);
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Managed releases",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        var release = new Release
+        {
+            Name = "Bearcat.Release.001",
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = "/tmp/release",
+            ReleaseGroup = releaseGroup,
+        };
+        var releaseCollection = new ReleaseCollection
+        {
+            ReleaseGroup = releaseGroup,
+            Key = "collection",
+            Name = "Collection",
+            CreatedAt = DateTime.UtcNow,
+        };
+        dbContext.ImageUploadConfigs.AddRange(
+            new ImageUploadConfig
+            {
+                Release = release,
+                ImageHosterRegistration = registration,
+                Name = "Cover",
+                ImageUploads = [CreateImageUpload(), CreateImageUpload()],
+            },
+            new ImageUploadConfig
+            {
+                ReleaseCollection = releaseCollection,
+                ImageHosterRegistration = registration,
+                Name = "Collection cover",
+                ImageUploads = [CreateImageUpload()],
+            },
+            new ImageUploadConfig
+            {
+                Release = release,
+                ImageHosterRegistration = otherRegistration,
+                Name = "Other cover",
+                ImageUploads = [CreateImageUpload()],
+            }
+        );
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.GetImageUploadCountAsync(
+            registration.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(3);
+    }
+
+    [Test]
+    public async Task GetImageUploadCountAsync_RegistrationWithoutImageUploads_ReturnsZero()
+    {
+        // Arrange
+        var registration = await AddImageHosterRegistrationAsync(isActive: true);
+
+        // Act
+        var result = await service.GetImageUploadCountAsync(
+            registration.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(0);
+    }
+
     private async Task<ImageHosterRegistration> AddImageHosterRegistrationAsync(
         bool isActive,
         bool hasUnreadableSecrets = false
@@ -224,5 +303,16 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
         await dbContext.SaveChangesAsync();
 
         return registration;
+    }
+
+    private static ImageUpload CreateImageUpload()
+    {
+        return new ImageUpload
+        {
+            CreatedAt = DateTime.UtcNow,
+            UploadState = UploadState.Completed,
+            ImageUrls = [],
+            ErrorMessages = [],
+        };
     }
 }

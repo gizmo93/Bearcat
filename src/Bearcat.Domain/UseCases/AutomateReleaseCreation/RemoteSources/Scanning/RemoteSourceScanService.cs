@@ -428,6 +428,9 @@ public class RemoteSourceScanService(
         download.ReleaseTemplateId = automation.ReleaseTemplateId;
         download.PrimaryLanguageCode = automation.PrimaryLanguageCode;
         download.KeepRawFiles = automation.KeepRawFiles;
+        download.ExtractArchivesBeforeReleaseCreation =
+            automation.ExtractArchivesBeforeReleaseCreation
+            && automation.ReleaseTemplate.ReleaseType is ReleaseType.Managed;
     }
 
     private ScanSettings ReadScanSettings()

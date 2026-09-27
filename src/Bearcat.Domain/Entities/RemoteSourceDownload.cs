@@ -30,6 +30,8 @@ public class RemoteSourceDownload
 
     public bool KeepRawFiles { get; set; }
 
+    public bool ExtractArchivesBeforeReleaseCreation { get; set; }
+
     public RemoteSourceDownloadState State { get; set; }
 
     public int FileCount { get; set; }
@@ -43,6 +45,8 @@ public class RemoteSourceDownload
     public DateTime? StartedAt { get; set; }
 
     public DateTime? CompletedAt { get; set; }
+
+    public DateTime? ArchivesExtractedAt { get; set; }
 
     public string? ErrorMessage { get; set; }
 

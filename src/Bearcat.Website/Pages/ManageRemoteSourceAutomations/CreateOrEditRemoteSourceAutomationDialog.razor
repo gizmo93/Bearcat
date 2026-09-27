@@ -97,6 +97,10 @@
                 <BbFormFieldSwitch @bind-Checked="FormModel.KeepRawFiles"
                                    Label="@L["KeepRawFiles"]"
                                    HelperText="@L["KeepRawFilesHelp"]" />
+
+                <BbFormFieldSwitch @bind-Checked="FormModel.ExtractArchivesBeforeReleaseCreation"
+                                   Label="@L["ExtractArchivesBeforeReleaseCreation"]"
+                                   HelperText="@L["ExtractArchivesBeforeReleaseCreationHelp"]" />
             }
 
             <BbFormFieldNumericInput TValue="int"

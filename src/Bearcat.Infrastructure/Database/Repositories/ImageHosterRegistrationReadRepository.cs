@@ -80,4 +80,15 @@ public class ImageHosterRegistrationReadRepository(
             registration.HasUnreadableSecrets
         );
     }
+
+    public async Task<int> GetImageUploadCountAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead.ImageUploads.CountAsync(
+            imageUpload => imageUpload.ImageUploadConfig.ImageHosterRegistrationId == id,
+            cancellationToken
+        );
+    }
 }

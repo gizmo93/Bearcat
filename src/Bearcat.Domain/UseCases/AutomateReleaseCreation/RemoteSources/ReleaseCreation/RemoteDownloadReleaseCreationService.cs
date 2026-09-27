@@ -18,7 +18,9 @@ public class RemoteDownloadReleaseCreationService(
 {
     public async Task<int> ProcessAsync(CancellationToken cancellationToken)
     {
-        var downloads = await repository.GetDownloadedWithoutReleaseAsync(cancellationToken);
+        var downloads = await repository.GetReadyForReleaseCreationWithoutReleaseAsync(
+            cancellationToken
+        );
         var createdCount = 0;
 
         foreach (var download in downloads)

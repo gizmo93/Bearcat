@@ -13,6 +13,7 @@ public static class ServiceProviderConfig
             services.AddHostedService<ReleaseFolderAutomationBackgroundTask>();
             services.AddHostedService<RemoteSourceScanBackgroundTask>();
             services.AddHostedService<RemoteSourceDownloadBackgroundTask>();
+            services.AddHostedService<RemoteDownloadVerificationAndExtractionBackgroundTask>();
             services.AddHostedService<RemoteDownloadReleaseCreationBackgroundTask>();
             services.AddHostedService<RemoteDownloadRawFileCleanupBackgroundTask>();
             services.AddHostedService<ReleaseInfoResolutionBackgroundTask>();

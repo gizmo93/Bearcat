@@ -22,6 +22,9 @@ public sealed partial class RunningProcesses(
 
     private IReadOnlyList<Archive> creatingArchives = [];
 
+    private IReadOnlyDictionary<int, TransferProgressSnapshot> creatingArchiveProgress =
+        new Dictionary<int, TransferProgressSnapshot>();
+
     private IReadOnlyList<Archive> restoringArchives = [];
 
     private IReadOnlyDictionary<int, TransferProgressSnapshot> downloadProgress =
@@ -107,6 +110,11 @@ public sealed partial class RunningProcesses(
             .Where(archive => archive.ArchiveState == ArchiveState.Restoring)
             .ToList();
 
+        creatingArchiveProgress = GetProgressSnapshotsOfFirstTrackedType(
+            [TransferType.ArchiveCreation, TransferType.ArchiveHashing],
+            creatingArchives.Select(archive => archive.Id).ToList()
+        );
+
         downloadProgress = GetProgressSnapshots(
             TransferType.MirrorDownload,
             restoringArchives.Select(archive => archive.Id).ToList()
@@ -120,10 +128,28 @@ public sealed partial class RunningProcesses(
             IReadOnlyList<RemoteSourceDownloadReadModel>
         >((repository, token) => repository.GetRunningAsync(token), cancellationToken);
 
-        remoteDownloadProgress = GetProgressSnapshots(
-            TransferType.RemoteDownload,
+        remoteDownloadProgress = GetProgressSnapshotsOfFirstTrackedType(
+            [
+                TransferType.RemoteDownload,
+                TransferType.RemoteDownloadVerification,
+                TransferType.RemoteDownloadExtraction,
+            ],
             remoteDownloads.Select(download => download.Id).ToList()
         );
+    }
+
+    private Dictionary<int, TransferProgressSnapshot> GetProgressSnapshotsOfFirstTrackedType(
+        IReadOnlyList<TransferType> types,
+        IReadOnlyList<int> ids
+    )
+    {
+        return ids.Select(id =>
+                types
+                    .Select(type => transferProgressTracker.Get(new TransferIdentifier(type, id)))
+                    .FirstOrDefault(snapshot => snapshot is not null)
+            )
+            .OfType<TransferProgressSnapshot>()
+            .ToDictionary(snapshot => snapshot.Identifier.Id);
     }
 
     private Dictionary<int, TransferProgressSnapshot> GetProgressSnapshots(

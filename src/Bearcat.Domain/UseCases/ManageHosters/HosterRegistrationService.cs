@@ -12,6 +12,7 @@ namespace Bearcat.Domain.UseCases.ManageHosters;
 
 public class HosterRegistrationService(
     IHosterConfigurationWriteRepository writeRepository,
+    IHosterConfigurationReadRepository readRepository,
     IHosterFactory hosterFactory,
     HosterCaptchaVerificationService captchaVerificationService,
     ISecretProtector secretProtector,
@@ -54,6 +55,14 @@ public class HosterRegistrationService(
         writeRepository.Add(registration);
         await writeRepository.SaveChangesAsync(cancellationToken);
         return registration.Id;
+    }
+
+    public async Task<int> GetUploadCountAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await readRepository.GetUploadCountAsync(id, cancellationToken);
     }
 
     public async Task RemoveAsync(int id, CancellationToken cancellationToken = default)

@@ -1,5 +1,5 @@
-using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.UnmanagedReleases;
 using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs;
 using Bearcat.Domain.ValueObjects;
@@ -23,20 +23,10 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
     public void Setup()
     {
         dbContext = Database.CreateDbContext();
-        var archiverFactory = new Mock<IArchiverFactory>();
-        archiverFactory
-            .Setup(f => f.GetArchivers())
-            .Returns([new ArchiverDto("RAR", "RarArchiver", ".rar")]);
-
-        var rarArchiver = new Mock<IArchiver>();
-        rarArchiver.SetupGet(a => a.Name).Returns("RAR");
-        rarArchiver.SetupGet(a => a.FileExtension).Returns(".rar");
-        archiverFactory.Setup(f => f.GetByName("RarArchiver")).Returns(rarArchiver.Object);
-
         var repository = new ArchiveConfigWriteRepository(dbContext);
         service = new ArchiveConfigService(
             repository,
-            archiverFactory.Object,
+            new UnmanagedReleaseArchiveInitializationService(new RealArchiverFactory()),
             CreateTimeProvider()
         );
     }
@@ -464,6 +454,54 @@ public class ArchiveConfigServiceTest : BearcatIntegrationTest
             .ShouldBe([
                 Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part1.rar"),
                 Path.Combine(releaseFolderPath, "Bearcat.Release.Unmanaged.part2.rar"),
+            ]);
+    }
+
+    [Test]
+    public async Task SetArchiveFolderAsync_OldRarVolumesInOtherFolder_RelocatesArchive()
+    {
+        // Arrange
+        var currentFolderPath = CreateReleaseFolderWithFiles();
+        var archiveConfig = await AddUnmanagedArchiveConfigAsync(
+            currentFolderPath,
+            "bearcat-release.rar",
+            "bearcat-release.r00",
+            "bearcat-release.r01"
+        );
+        var targetFolderPath = CreateReleaseFolderWithFiles(
+            "bearcat-release.rar",
+            "bearcat-release.r00",
+            "bearcat-release.r01",
+            "bearcat-release.nfo"
+        );
+
+        // Act
+        var changeResult = await service.SetArchiveFolderAsync(
+            archiveConfig.Id,
+            targetFolderPath,
+            confirmContentChange: false
+        );
+
+        // Assert
+        changeResult.ShouldBe(ArchiveFolderChangeResult.Relocated);
+
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .ArchiveConfigs.AsSplitQuery()
+            .Include(c => c.Archives)
+                .ThenInclude(a => a.ArchiveFiles)
+            .SingleAsync(c => c.Id == archiveConfig.Id);
+        var archive = result.Archives.Single();
+
+        result.ArchiveFilesBasePath.ShouldBe(targetFolderPath);
+        archive.ArchiveFolderPath.ShouldBe(targetFolderPath);
+        archive
+            .ArchiveFiles.Select(file => file.FullFileName)
+            .Order(StringComparer.Ordinal)
+            .ShouldBe([
+                Path.Combine(targetFolderPath, "bearcat-release.r00"),
+                Path.Combine(targetFolderPath, "bearcat-release.r01"),
+                Path.Combine(targetFolderPath, "bearcat-release.rar"),
             ]);
     }
 

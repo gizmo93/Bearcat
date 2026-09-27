@@ -1,9 +1,11 @@
 ﻿using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
+using Bearcat.Abstractions.Transfers;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives.ReleaseFolderEntriesForPacking;
 using Bearcat.Domain.UseCases.ManageArchives.Repositories;
 using Bearcat.Domain.ValueObjects;
@@ -20,7 +22,9 @@ public class ArchiveCreationService(
     TimeProvider timeProvider,
     INotificationService notificationService,
     IApplicationConfigurationProvider configurationProvider,
-    ReleaseFolderEntriesForPackingService releaseFolderEntriesForPackingService
+    ReleaseFolderEntriesForPackingService releaseFolderEntriesForPackingService,
+    ITransferProgressTracker progressTracker,
+    FolderSizeProgressReporter folderSizeProgressReporter
 )
 {
     private const string SynologyMetadataFolderName = "@eaDir";
@@ -146,13 +150,14 @@ public class ArchiveCreationService(
         {
             await ChangeArchiveFileHashesAsync(
                 archive: archive,
+                archiveConfig: archiveConfig,
                 knownHashes: await LoadKnownHashesAsync(archiveConfig.Id, cancellationToken),
                 cancellationToken: cancellationToken
             );
         }
         else
         {
-            await StoreArchiveFileHashesAsync(archive, cancellationToken);
+            await StoreArchiveFileHashesAsync(archive, archiveConfig, cancellationToken);
         }
     }
 
@@ -282,6 +287,7 @@ public class ArchiveCreationService(
 
             await ChangeArchiveFileHashesAsync(
                 archive: assignableArchive,
+                archiveConfig: archiveConfig,
                 knownHashes: await LoadKnownHashesAsync(archiveConfig.Id, cancellationToken),
                 cancellationToken: cancellationToken
             );
@@ -398,14 +404,15 @@ public class ArchiveCreationService(
 
     private async Task ChangeArchiveFileHashesAsync(
         Archive archive,
+        ArchiveConfig archiveConfig,
         HashSet<string> knownHashes,
         CancellationToken cancellationToken
     )
     {
-        await Parallel.ForEachAsync(
-            archive.ArchiveFiles,
-            CreateHashingParallelOptions(cancellationToken),
-            async (archiveFile, fileCancellationToken) =>
+        await HashArchiveFilesInParallelWithProgressAsync(
+            archive: archive,
+            archiveConfig: archiveConfig,
+            hashArchiveFileAsync: async (archiveFile, progress, fileCancellationToken) =>
             {
                 if (!File.Exists(archiveFile.FullFileName))
                 {
@@ -423,8 +430,9 @@ public class ArchiveCreationService(
                 do
                 {
                     await AppendNullByteAsync(archiveFile.FullFileName, fileCancellationToken);
-                    hash = await Md5FileHash.ComputeAsync(
+                    hash = await ComputeMd5HashAsync(
                         archiveFile.FullFileName,
+                        progress,
                         fileCancellationToken
                     );
 
@@ -435,7 +443,8 @@ public class ArchiveCreationService(
                 } while (!hashIsNew);
 
                 archiveFile.Md5Hash = hash;
-            }
+            },
+            cancellationToken: cancellationToken
         );
 
         logger.LogInformation(
@@ -447,13 +456,14 @@ public class ArchiveCreationService(
 
     private async Task StoreArchiveFileHashesAsync(
         Archive archive,
+        ArchiveConfig archiveConfig,
         CancellationToken cancellationToken
     )
     {
-        await Parallel.ForEachAsync(
-            archive.ArchiveFiles,
-            CreateHashingParallelOptions(cancellationToken),
-            async (archiveFile, fileCancellationToken) =>
+        await HashArchiveFilesInParallelWithProgressAsync(
+            archive: archive,
+            archiveConfig: archiveConfig,
+            hashArchiveFileAsync: async (archiveFile, progress, fileCancellationToken) =>
             {
                 if (!File.Exists(archiveFile.FullFileName))
                 {
@@ -466,12 +476,87 @@ public class ArchiveCreationService(
                     return;
                 }
 
-                archiveFile.Md5Hash = await Md5FileHash.ComputeAsync(
+                archiveFile.Md5Hash = await ComputeMd5HashAsync(
                     archiveFile.FullFileName,
+                    progress,
                     fileCancellationToken
                 );
-            }
+            },
+            cancellationToken: cancellationToken
         );
+    }
+
+    private async Task HashArchiveFilesInParallelWithProgressAsync(
+        Archive archive,
+        ArchiveConfig archiveConfig,
+        Func<ArchiveFile, ITransferProgress, CancellationToken, Task> hashArchiveFileAsync,
+        CancellationToken cancellationToken
+    )
+    {
+        var transferIdentifier = new TransferIdentifier(TransferType.ArchiveHashing, archive.Id);
+
+        var plannedFilesPerArchiveFile = archive
+            .ArchiveFiles.Select(
+                (archiveFile, index) =>
+                    (
+                        ArchiveFile: archiveFile,
+                        PlannedFile: new TransferFile(
+                            FileId: index + 1,
+                            FileName: Path.GetFileName(archiveFile.FullFileName),
+                            SourceName: archiveConfig.Name,
+                            SizeBytes: GetFileSizeBytesOrZeroWhenMissing(archiveFile.FullFileName),
+                            IsAlreadyTransferred: false
+                        )
+                    )
+            )
+            .ToList();
+
+        progressTracker.StartTracking(
+            transferIdentifier,
+            plannedFilesPerArchiveFile.Select(entry => entry.PlannedFile).ToList()
+        );
+
+        try
+        {
+            await Parallel.ForEachAsync(
+                plannedFilesPerArchiveFile,
+                CreateHashingParallelOptions(cancellationToken),
+                async (entry, fileCancellationToken) =>
+                    await hashArchiveFileAsync(
+                        entry.ArchiveFile,
+                        new TransferProgressReporter(
+                            tracker: progressTracker,
+                            identifier: transferIdentifier,
+                            fileId: entry.PlannedFile.FileId,
+                            fileName: entry.PlannedFile.FileName,
+                            sourceName: entry.PlannedFile.SourceName
+                        ),
+                        fileCancellationToken
+                    )
+            );
+        }
+        finally
+        {
+            progressTracker.StopTracking(transferIdentifier);
+        }
+    }
+
+    private static long GetFileSizeBytesOrZeroWhenMissing(string filePath)
+    {
+        var fileInfo = new FileInfo(filePath);
+
+        return fileInfo.Exists ? fileInfo.Length : 0;
+    }
+
+    private static async Task<string> ComputeMd5HashAsync(
+        string fullFileName,
+        ITransferProgress progress,
+        CancellationToken cancellationToken
+    )
+    {
+        progress.BeginFile(new FileInfo(fullFileName).Length);
+
+        return await Md5FileHash.ComputeAsync(fullFileName, progress, cancellationToken);
     }
 
     private ParallelOptions CreateHashingParallelOptions(CancellationToken cancellationToken)
@@ -665,14 +750,11 @@ public class ArchiveCreationService(
             // So we should remove it before archiving.
             RemoveSynologyMetadataFolders(releaseFolderPath);
 
-            return await archiver.ArchiveAsync(
-                sourceFolderPath: releaseFolderPath,
-                destinationPath: archive.ArchiveFolderPath,
-                archiveNamePrefix: archive.ArchiveConfig.ArchiveNamePrefix
-                    ?? Guid.NewGuid().ToString(),
-                targetFileSizeMb: archiveSettings.ArchiveFileSizeMb,
-                password: archive.ArchiveConfig.ArchivePassword,
-                options: archiveSettings.Options,
+            return await PackReleaseFolderWithProgressAsync(
+                archive: archive,
+                archiver: archiver,
+                releaseFolderPath: releaseFolderPath,
+                archiveSettings: archiveSettings,
                 cancellationToken: cancellationToken
             );
         }
@@ -684,6 +766,57 @@ public class ArchiveCreationService(
             );
             archive.ReleaseFolderEntriesCopiedForPacking = [];
             await repository.SaveChangesAsync(cancellationToken: CancellationToken.None);
+        }
+    }
+
+    private async Task<ArchiveResult> PackReleaseFolderWithProgressAsync(
+        Archive archive,
+        IArchiver archiver,
+        string releaseFolderPath,
+        ArchiveSettings archiveSettings,
+        CancellationToken cancellationToken
+    )
+    {
+        var transferIdentifier = new TransferIdentifier(TransferType.ArchiveCreation, archive.Id);
+
+        var packedReleaseFolder = new TransferFile(
+            FileId: 1,
+            FileName: archive.ArchiveConfig.Release.Name,
+            SourceName: archive.ArchiveConfig.Name,
+            SizeBytes: fileSystemService.GetFolderFileCountAndSize(releaseFolderPath).TotalBytes,
+            IsAlreadyTransferred: false
+        );
+
+        progressTracker.StartTracking(transferIdentifier, [packedReleaseFolder]);
+
+        try
+        {
+            return await folderSizeProgressReporter.RunWhileReportingFolderSizeAsync(
+                folderPath: archive.ArchiveFolderPath,
+                progress: new TransferProgressReporter(
+                    tracker: progressTracker,
+                    identifier: transferIdentifier,
+                    fileId: packedReleaseFolder.FileId,
+                    fileName: packedReleaseFolder.FileName,
+                    sourceName: packedReleaseFolder.SourceName
+                ),
+                operation: () =>
+                    archiver.ArchiveAsync(
+                        sourceFolderPath: releaseFolderPath,
+                        destinationPath: archive.ArchiveFolderPath,
+                        archiveNamePrefix: archive.ArchiveConfig.ArchiveNamePrefix
+                            ?? Guid.NewGuid().ToString(),
+                        targetFileSizeMb: archiveSettings.ArchiveFileSizeMb,
+                        password: archive.ArchiveConfig.ArchivePassword,
+                        options: archiveSettings.Options,
+                        cancellationToken: cancellationToken
+                    ),
+                cancellationToken: cancellationToken
+            );
+        }
+        finally
+        {
+            progressTracker.StopTracking(transferIdentifier);
         }
     }
 

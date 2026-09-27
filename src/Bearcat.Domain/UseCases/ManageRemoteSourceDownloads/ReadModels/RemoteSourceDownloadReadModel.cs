@@ -29,7 +29,7 @@ public record RemoteSourceDownloadReadModel(
     public bool CanRestart =>
         State is RemoteSourceDownloadState.Failed or RemoteSourceDownloadState.Canceled;
 
-    public bool CanRetryReleaseCreation =>
+    public bool CanRetryWithoutDownloadingAgain =>
         State is RemoteSourceDownloadState.Failed && CompletedAt is not null;
 
     public bool CanIgnore =>

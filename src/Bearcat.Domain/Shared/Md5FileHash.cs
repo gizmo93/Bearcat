@@ -1,6 +1,7 @@
 using System.Buffers;
 using System.Security.Cryptography;
 using Bearcat.Abstractions;
+using Bearcat.Abstractions.Transfers;
 
 namespace Bearcat.Domain.Shared;
 
@@ -8,8 +9,17 @@ public static class Md5FileHash
 {
     private const int BufferSize = 4 * 1024 * 1024;
 
+    public static Task<string> ComputeAsync(
+        string fullFileName,
+        CancellationToken cancellationToken
+    )
+    {
+        return ComputeAsync(fullFileName, NullTransferProgress.Instance, cancellationToken);
+    }
+
     public static async Task<string> ComputeAsync(
         string fullFileName,
+        ITransferProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -23,6 +33,7 @@ public static class Md5FileHash
             while ((bytesRead = await stream.ReadAsync(buffer, cancellationToken)) > 0)
             {
                 incrementalHash.AppendData(buffer, 0, bytesRead);
+                progress.ReportBytesTransferred(bytesRead);
             }
 
             return Convert.ToHexString(incrementalHash.GetHashAndReset());

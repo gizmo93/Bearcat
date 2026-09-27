@@ -66,6 +66,15 @@ public class RemoteSourceDownloadReadRepositoryTest : BearcatIntegrationTest
         AddDownload(dbContext, automation, "Finished", RemoteSourceDownloadState.Downloaded, 2);
         AddDownload(dbContext, automation, "Running", RemoteSourceDownloadState.Downloading, 3);
         AddDownload(dbContext, automation, "Broken", RemoteSourceDownloadState.Failed, 4);
+        AddDownload(
+            dbContext,
+            automation,
+            "Ready",
+            RemoteSourceDownloadState.ReadyForReleaseCreation,
+            5
+        );
+        AddDownload(dbContext, automation, "Extracting", RemoteSourceDownloadState.Extracting, 6);
+        AddDownload(dbContext, automation, "Verifying", RemoteSourceDownloadState.Verifying, 7);
         await dbContext.SaveChangesAsync();
         var repository = new RemoteSourceDownloadReadRepository(CreateDbContext());
 
@@ -75,7 +84,7 @@ public class RemoteSourceDownloadReadRepositoryTest : BearcatIntegrationTest
         // Assert
         downloads
             .Select(download => download.FolderName)
-            .ShouldBe(["Running", "Finished", "Queued"]);
+            .ShouldBe(["Running", "Extracting", "Verifying", "Finished", "Ready", "Queued"]);
     }
 
     [Test]

@@ -87,6 +87,17 @@ public class DistributionSiteRegistrationReadRepository(
         );
     }
 
+    public async Task<int> GetForumPostingRuleCountAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead.ForumPostingRules.CountAsync(
+            rule => rule.DistributionSiteRegistrationId == id,
+            cancellationToken
+        );
+    }
+
     private IReadOnlyDictionary<string, DistributionSiteDto> DistributionSitesByClassName()
     {
         return distributionSiteFactory

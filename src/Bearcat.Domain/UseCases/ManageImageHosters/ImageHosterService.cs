@@ -10,6 +10,7 @@ namespace Bearcat.Domain.UseCases.ManageImageHosters;
 
 public class ImageHosterService(
     IImageHosterRegistrationWriteRepository repository,
+    IImageHosterRegistrationReadRepository readRepository,
     IImageHosterFactory imageHosterFactory,
     ISecretProtector secretProtector,
     UnreadableSecretsNotificationService unreadableSecretsNotificationService
@@ -35,6 +36,14 @@ public class ImageHosterService(
 
         repository.Add(registration);
         await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<int> GetImageUploadCountAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await readRepository.GetImageUploadCountAsync(id, cancellationToken);
     }
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)

@@ -19,6 +19,21 @@ public partial class RemoteSourceDownloadsPage(
 {
     private const int PageSize = 25;
 
+    private static readonly RemoteSourceDownloadState[] StatesInProcessingOrder =
+    [
+        RemoteSourceDownloadState.Observing,
+        RemoteSourceDownloadState.Pending,
+        RemoteSourceDownloadState.Downloading,
+        RemoteSourceDownloadState.Downloaded,
+        RemoteSourceDownloadState.Verifying,
+        RemoteSourceDownloadState.Extracting,
+        RemoteSourceDownloadState.ReadyForReleaseCreation,
+        RemoteSourceDownloadState.ReleaseCreated,
+        RemoteSourceDownloadState.Failed,
+        RemoteSourceDownloadState.Canceled,
+        RemoteSourceDownloadState.Ignored,
+    ];
+
     private IReadOnlyList<RemoteSourceDownloadReadModel> downloads = [];
     private int totalCount;
     private int pageIndex;
@@ -28,11 +43,10 @@ public partial class RemoteSourceDownloadsPage(
     private IReadOnlyList<SelectOption<RemoteSourceDownloadState?>> StateOptions =>
         [
             new(null, L["AllStatesExceptIgnored"]),
-            .. Enum.GetValues<RemoteSourceDownloadState>()
-                .Select(state => new SelectOption<RemoteSourceDownloadState?>(
-                    state,
-                    L.Localize(state)
-                )),
+            .. StatesInProcessingOrder.Select(state => new SelectOption<RemoteSourceDownloadState?>(
+                state,
+                L.Localize(state)
+            )),
         ];
 
     private int CurrentPage => pageIndex + 1;
@@ -102,7 +116,7 @@ public partial class RemoteSourceDownloadsPage(
     {
         return download.CanCancel
             || download.CanRestart
-            || download.CanRetryReleaseCreation
+            || download.CanRetryWithoutDownloadingAgain
             || download.CanIgnore;
     }
 
@@ -150,12 +164,12 @@ public partial class RemoteSourceDownloadsPage(
         );
     }
 
-    private async Task RetryReleaseCreationAsync(RemoteSourceDownloadReadModel download)
+    private async Task RetryWithoutDownloadingAgainAsync(RemoteSourceDownloadReadModel download)
     {
         await ChangeStateAsync(
             download,
-            (service, id) => service.RetryReleaseCreationAsync(id),
-            L["ReleaseCreationQueuedAgain", download.FolderName]
+            (service, id) => service.RetryWithoutDownloadingAgainAsync(id),
+            L["RetryWithoutDownloadingAgainQueued", download.FolderName]
         );
     }
 

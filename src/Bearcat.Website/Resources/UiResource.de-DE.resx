@@ -110,8 +110,6 @@
   <data name="DeleteArchiveConfig" xml:space="preserve"><value>Archivkonfiguration löschen</value></data>
   <data name="DeleteArchiveConfigConfirmation" xml:space="preserve"><value>Möchtest du die Archivkonfiguration {0} wirklich löschen (Archiver: {1})?</value></data>
   <data name="DeleteConfig" xml:space="preserve"><value>Konfiguration löschen</value></data>
-  <data name="DeleteHosterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Hosterregistrierung {0} wirklich löschen? Dadurch werden auch Uploads entfernt, die zu dieser Registrierung gehören.</value></data>
-  <data name="DeleteImageHosterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Bildhosterregistrierung {0} wirklich löschen?</value></data>
     <data name="DeleteImageUploadConfig" xml:space="preserve"><value>Bilduploadkonfiguration löschen</value></data>
     <data name="DeleteImageUploadConfigConfirmation" xml:space="preserve"><value>Möchtest du die Bilduploadkonfiguration {0} wirklich löschen?</value></data>
     <data name="DeleteImageUploadConfigTemplateConfirmation" xml:space="preserve"><value>Möchtest du die Bilduploadkonfigurationsvorlage {0} wirklich löschen?</value></data>
@@ -120,7 +118,6 @@
   <data name="DeleteLinkCrypterContainerConfirmation" xml:space="preserve"><value>Möchtest du diesen fehlgeschlagenen Linkcryptercontainer wirklich löschen? Beim nächsten Durchlauf wird automatisch ein neuer erstellt.</value></data>
   <data name="DeleteLinkCrypterContainerConfig" xml:space="preserve"><value>Linkcryptercontainerkonfiguration löschen</value></data>
   <data name="DeleteLinkCrypterContainerConfigConfirmation" xml:space="preserve"><value>Möchtest du diese Linkcryptercontainerkonfiguration wirklich löschen?</value></data>
-  <data name="DeleteLinkCrypterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Linkcrypterregistrierung {0} wirklich löschen?</value></data>
   <data name="DeleteNamedItem" xml:space="preserve"><value>{0} löschen</value></data>
   <data name="DeleteNfoDatabaseRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die NFO-Datenbankregistrierung {0} wirklich löschen?</value></data>
   <data name="DeleteRegistration" xml:space="preserve"><value>Registrierung löschen</value></data>
@@ -931,7 +928,6 @@
   <data name="OpenDistributionSiteActions" xml:space="preserve"><value>Aktionen öffnen</value></data>
   <data name="DistributionSiteRegistrationActivated" xml:space="preserve"><value>Verteilungsseiten Registrierung {0} aktiviert</value></data>
   <data name="DistributionSiteRegistrationDeactivated" xml:space="preserve"><value>Verteilungsseiten Registrierung {0} deaktiviert</value></data>
-  <data name="DeleteDistributionSiteRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Verteilungsseite Registrierung {0} wirklich löschen?</value></data>
   <data name="Forum" xml:space="preserve"><value>Forum</value></data>
   <data name="Blog" xml:space="preserve"><value>Blog</value></data>
   <data name="PostToForum" xml:space="preserve"><value>Im Forum posten</value></data>
@@ -1225,6 +1221,16 @@
   <data name="DownloadStatus" xml:space="preserve"><value>Downloadstatus</value></data>
   <data name="DownloadStatusSubtitle" xml:space="preserve"><value>Wiederherstellung von Archiv #{0} für {1} von {2}</value></data>
   <data name="DownloadFileStatus" xml:space="preserve"><value>Downloadfortschritt pro Datei</value></data>
+  <data name="VerificationStatus" xml:space="preserve"><value>Prüfstatus</value></data>
+  <data name="VerificationFileStatus" xml:space="preserve"><value>Prüffortschritt pro Datei</value></data>
+  <data name="ExtractionStatus" xml:space="preserve"><value>Entpackstatus</value></data>
+  <data name="ExtractionArchiveStatus" xml:space="preserve"><value>Entpackfortschritt pro Archiv</value></data>
+  <data name="PackingStatus" xml:space="preserve"><value>Packstatus</value></data>
+  <data name="PackingProgress" xml:space="preserve"><value>Packfortschritt</value></data>
+  <data name="HashingStatus" xml:space="preserve"><value>Hashstatus</value></data>
+  <data name="HashingFileStatus" xml:space="preserve"><value>Hashfortschritt pro Datei</value></data>
+  <data name="ToggleArchiveDetails" xml:space="preserve"><value>Archivdetails umschalten</value></data>
+  <data name="ArchiveCreationStatusSubtitle" xml:space="preserve"><value>Archiv #{0} für {1}</value></data>
   <data name="Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="LogsDescription" xml:space="preserve"><value>Liveausgabe des Anwendungslogs</value></data>
   <data name="PauseStreaming" xml:space="preserve"><value>Pausieren</value></data>
@@ -1248,7 +1254,6 @@
   <data name="RemoteSourceConnectionFailed" xml:space="preserve"><value>Verbindung zu {0} fehlgeschlagen: {1}</value></data>
   <data name="RemoteSourceActivated" xml:space="preserve"><value>Remotequelle {0} aktiviert</value></data>
   <data name="RemoteSourceDeactivated" xml:space="preserve"><value>Remotequelle {0} deaktiviert</value></data>
-  <data name="DeleteRemoteSourceConfirmation" xml:space="preserve"><value>Möchtest du die Remotequelle {0} wirklich löschen?</value></data>
   <data name="SecretUnchangedPlaceholder" xml:space="preserve"><value>Unverändert</value></data>
   <data name="SecretKeepCurrentHelp" xml:space="preserve"><value>Leer lassen, um den aktuellen Wert zu behalten.</value></data>
   <data name="MustBeWholeNumber" xml:space="preserve"><value>Muss eine ganze Zahl sein</value></data>
@@ -1302,6 +1307,8 @@
   <data name="IgnoreExistingOnFirstScanHelp" xml:space="preserve"><value>Ordner, die beim ersten Scan bereits vorhanden sind, werden übersprungen. Nur später hinzukommende Releases werden heruntergeladen.</value></data>
   <data name="KeepRawFiles" xml:space="preserve"><value>Rohdateien behalten</value></data>
   <data name="KeepRawFilesHelp" xml:space="preserve"><value>Wenn deaktiviert, wandelt Bearcat das Release in Unmanaged um und löscht den heruntergeladenen Ordner, sobald jede Uploadkonfiguration ihren ersten abgeschlossenen Upload hat und jede Archivkonfiguration ein erstelltes Archiv oder einen Onlinemirror besitzt. Liegen Archive in diesem Ordner, bleibt er erhalten. Gilt nur für Vorlagen vom Typ Managed.</value></data>
+  <data name="ExtractArchivesBeforeReleaseCreation" xml:space="preserve"><value>Archive vor der Releaseerstellung entpacken</value></data>
+  <data name="ExtractArchivesBeforeReleaseCreationHelp" xml:space="preserve"><value>Archive (RAR, 7z) im heruntergeladenen Ordner werden vor der Releaseerstellung entpackt. Nach erfolgreichem Entpacken werden die Archivdateien gelöscht. Gilt nur für Vorlagen vom Typ Managed.</value></data>
   <data name="RemoteSourceDownloadState.Observing" xml:space="preserve"><value>Wird beobachtet</value></data>
   <data name="RemoteSourceDownloadState.Pending" xml:space="preserve"><value>Vorgemerkt</value></data>
   <data name="RemoteSourceDownloadState.Downloading" xml:space="preserve"><value>Wird heruntergeladen</value></data>
@@ -1310,6 +1317,9 @@
   <data name="RemoteSourceDownloadState.Failed" xml:space="preserve"><value>Fehlgeschlagen</value></data>
   <data name="RemoteSourceDownloadState.Canceled" xml:space="preserve"><value>Abgebrochen</value></data>
   <data name="RemoteSourceDownloadState.Ignored" xml:space="preserve"><value>Ignoriert</value></data>
+  <data name="RemoteSourceDownloadState.Verifying" xml:space="preserve"><value>Wird geprüft</value></data>
+  <data name="RemoteSourceDownloadState.Extracting" xml:space="preserve"><value>Wird entpackt</value></data>
+  <data name="RemoteSourceDownloadState.ReadyForReleaseCreation" xml:space="preserve"><value>Bereit zur Releaseerstellung</value></data>
   <data name="RemoteSourceDownloads" xml:space="preserve"><value>Remotedownloads</value></data>
   <data name="RemoteSourceDownloadsDescription" xml:space="preserve"><value>Steuert, wie Ordner auf Remotequellen überwacht, zum Herunterladen vorgemerkt und heruntergeladen werden.</value></data>
   <data name="RemoteSourceDownloadStabilityMinutes" xml:space="preserve"><value>Ordnerstabilität (Minuten)</value></data>
@@ -1335,7 +1345,7 @@
   <data name="DiscoveredAt" xml:space="preserve"><value>Gefunden</value></data>
   <data name="DownloadCompletedAt" xml:space="preserve"><value>Heruntergeladen</value></data>
   <data name="OpenRemoteSourceDownloadActions" xml:space="preserve"><value>Aktionen für Remotedownload öffnen</value></data>
-  <data name="RetryReleaseCreation" xml:space="preserve"><value>Releaseerstellung wiederholen</value></data>
+  <data name="RetryWithoutDownloadingAgain" xml:space="preserve"><value>Ohne erneuten Download wiederholen</value></data>
   <data name="RestartDownload" xml:space="preserve"><value>Download neu starten</value></data>
   <data name="IgnoreRemoteDownload" xml:space="preserve"><value>Ignorieren</value></data>
   <data name="RemoteSourceDownloadResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Remotedownloads</value></data>
@@ -1344,7 +1354,7 @@
   <data name="RemoteDownloadCanceled" xml:space="preserve"><value>Der Download von {0} wird abgebrochen.</value></data>
   <data name="RestartRemoteDownloadConfirmation" xml:space="preserve"><value>Download von {0} neu starten? Die lokalen Dateien in {1} werden gelöscht und erneut heruntergeladen.</value></data>
   <data name="RemoteDownloadRestarted" xml:space="preserve"><value>Der Download von {0} wurde erneut vorgemerkt.</value></data>
-  <data name="ReleaseCreationQueuedAgain" xml:space="preserve"><value>Die Releaseerstellung für {0} wurde erneut vorgemerkt.</value></data>
+  <data name="RetryWithoutDownloadingAgainQueued" xml:space="preserve"><value>{0} wurde mit den bereits heruntergeladenen Dateien erneut vorgemerkt.</value></data>
   <data name="RemoteDownloadIgnored" xml:space="preserve"><value>{0} wird ab jetzt ignoriert.</value></data>
   <data name="RemoteDownloadStateChanged" xml:space="preserve"><value>Der Status von {0} hat sich inzwischen geändert. Die Liste wurde neu geladen.</value></data>
   <data name="RemoteDownloadStatusSubtitle" xml:space="preserve"><value>Download von {0} aus {1}</value></data>
@@ -1406,4 +1416,6 @@
   <data name="CredentialsMustBeEnteredAgain" xml:space="preserve"><value>Zugangsdaten neu eingeben</value></data>
   <data name="UnreadableSecretsBadgeHint" xml:space="preserve"><value>Die gespeicherten Zugangsdaten konnten mit dem aktuellen Verschlüsselungsschlüssel nicht entschlüsselt werden und müssen neu eingegeben werden.</value></data>
   <data name="TelegramBotTokenRequired" xml:space="preserve"><value>Gib das Bottoken ein.</value></data>
+  <data name="DeleteRegistrationWarning" xml:space="preserve"><value>Beim Löschen dieser Registrierung werden auch alle zugehörigen Daten dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.</value></data>
+  <data name="TypeNameToConfirmDeletion" xml:space="preserve"><value>Gib {0} ein, um das Löschen zu bestätigen</value></data>
 </root>

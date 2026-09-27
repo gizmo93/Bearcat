@@ -12,6 +12,7 @@ namespace Bearcat.Domain.UseCases.ManageRemoteSources;
 
 public class RemoteSourceRegistrationService(
     IRemoteSourceRegistrationWriteRepository writeRepository,
+    IRemoteSourceRegistrationReadRepository readRepository,
     IRemoteSourceFactory remoteSourceFactory,
     ISecretProtector secretProtector,
     RemoteSourceSessionProvider sessionProvider,
@@ -113,6 +114,14 @@ public class RemoteSourceRegistrationService(
         registration.IsActive = !registration.IsActive;
         await writeRepository.SaveChangesAsync(cancellationToken);
         await sessionProvider.CloseSessionsAsync(id);
+    }
+
+    public async Task<int> GetRemoteSourceAutomationCountAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await readRepository.GetRemoteSourceAutomationCountAsync(id, cancellationToken);
     }
 
     public async Task RemoveAsync(int id, CancellationToken cancellationToken = default)

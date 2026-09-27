@@ -1712,6 +1712,9 @@ namespace BearCat.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("ExtractArchivesBeforeReleaseCreation")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("FolderNamePattern")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
@@ -1771,6 +1774,10 @@ namespace BearCat.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("ArchivesExtractedAt")
+                        .HasPrecision(4)
+                        .HasColumnType("timestamp(4) without time zone");
+
                     b.Property<DateTime?>("CompletedAt")
                         .HasPrecision(4)
                         .HasColumnType("timestamp(4) without time zone");
@@ -1781,6 +1788,9 @@ namespace BearCat.Infrastructure.Migrations
 
                     b.Property<string>("ErrorMessage")
                         .HasColumnType("text");
+
+                    b.Property<bool>("ExtractArchivesBeforeReleaseCreation")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("FileCount")
                         .HasColumnType("integer");

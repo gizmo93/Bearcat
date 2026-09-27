@@ -18,6 +18,26 @@ public partial class TransferFileDetails : ComponentBase
     [EditorRequired]
     public string StateLabel { get; set; } = null!;
 
+    private string Title =>
+        Snapshot.Identifier.Type switch
+        {
+            TransferType.RemoteDownloadVerification => L["VerificationStatus"],
+            TransferType.RemoteDownloadExtraction => L["ExtractionStatus"],
+            TransferType.ArchiveCreation => L["PackingStatus"],
+            TransferType.ArchiveHashing => L["HashingStatus"],
+            _ => L["DownloadStatus"],
+        };
+
+    private string FileProgressLabel =>
+        Snapshot.Identifier.Type switch
+        {
+            TransferType.RemoteDownloadVerification => L["VerificationFileStatus"],
+            TransferType.RemoteDownloadExtraction => L["ExtractionArchiveStatus"],
+            TransferType.ArchiveCreation => L["PackingProgress"],
+            TransferType.ArchiveHashing => L["HashingFileStatus"],
+            _ => L["DownloadFileStatus"],
+        };
+
     private static string FormatTransferred(TransferFileProgressSnapshot file)
     {
         var transferred = TransferFormatting.FormatBytes(file.TransferredBytes);

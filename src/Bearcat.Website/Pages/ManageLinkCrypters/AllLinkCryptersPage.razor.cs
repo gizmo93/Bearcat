@@ -2,6 +2,7 @@ using Bearcat.Domain.UseCases.ManageLinkCrypters;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 
 namespace Bearcat.Website.Pages.ManageLinkCrypters;
@@ -88,18 +89,25 @@ public partial class AllLinkCryptersPage(
 
     private async Task DeleteAsync(LinkCrypterRegistrationReadModel crypter)
     {
-        var result = await dialogService.ConfirmAsync(
-            L["DeleteNamedItem", crypter.Name],
-            L["DeleteLinkCrypterRegistrationConfirmation", crypter.Name],
-            new ConfirmDialogOptions
-            {
-                ConfirmText = L["Delete"],
-                CancelText = L["Cancel"],
-                Destructive = true,
-            }
+        var linkCrypterContainerCount = await operationRunner.RunAsync(
+            (LinkCrypterService service) =>
+                service.GetLinkCrypterContainerCountAsync(crypter.LinkCrypterRegistrationId)
         );
 
-        if (!result.Confirmed)
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(ConfirmDeletionByTypingNameDialog.NameToConfirm)] = crypter.Name,
+            [nameof(ConfirmDeletionByTypingNameDialog.AffectedItemsLabel)] = L["Containers"].Value,
+            [nameof(ConfirmDeletionByTypingNameDialog.AffectedItemsCount)] =
+                linkCrypterContainerCount,
+        };
+
+        var dialog = await dialogService.OpenAsync<ConfirmDeletionByTypingNameDialog>(
+            parameters,
+            new DialogOpenOptions { Title = L["DeleteNamedItem", crypter.Name], ShowClose = true }
+        );
+
+        if (dialog.Cancelled)
         {
             return;
         }

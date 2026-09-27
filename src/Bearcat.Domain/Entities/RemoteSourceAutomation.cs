@@ -26,6 +26,8 @@ public class RemoteSourceAutomation
 
     public bool KeepRawFiles { get; set; } = true;
 
+    public bool ExtractArchivesBeforeReleaseCreation { get; set; }
+
     public int Priority { get; set; } = DefaultPriority;
 
     public bool IsEnabled { get; set; }
