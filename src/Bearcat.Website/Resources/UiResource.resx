@@ -1219,6 +1219,10 @@
   <data name="DownloadStatus" xml:space="preserve"><value>Download status</value></data>
   <data name="DownloadStatusSubtitle" xml:space="preserve"><value>Restore of archive #{0} for {1} from {2}</value></data>
   <data name="DownloadFileStatus" xml:space="preserve"><value>Download progress per file</value></data>
+  <data name="VerificationStatus" xml:space="preserve"><value>Verification status</value></data>
+  <data name="VerificationFileStatus" xml:space="preserve"><value>Verification progress per file</value></data>
+  <data name="ExtractionStatus" xml:space="preserve"><value>Extraction status</value></data>
+  <data name="ExtractionArchiveStatus" xml:space="preserve"><value>Extraction progress per archive</value></data>
   <data name="Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="LogsDescription" xml:space="preserve"><value>Live output of the application log</value></data>
   <data name="PauseStreaming" xml:space="preserve"><value>Pause</value></data>

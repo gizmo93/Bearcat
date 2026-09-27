@@ -8,8 +8,10 @@ using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared;
+using Bearcat.Domain.IntegrationTest.Shared.UnmanagedReleases;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.Transfers;
+using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation;
@@ -988,10 +990,6 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
                 extractor.ExtractAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())
             )
             .ReturnsAsync((MediaProbeResult?)null);
-        var archiverFactory = new Mock<IArchiverFactory>();
-        archiverFactory
-            .Setup(factory => factory.GetArchivers())
-            .Returns([new ArchiverDto("RAR", "RarArchiver", ".rar")]);
 
         return new ReleaseFromFolderCreationService(
             releaseInfoResolutionService: new ReleaseInfoResolutionService(
@@ -1030,7 +1028,9 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
                 timeProvider,
                 NullLogger<MediaMetadataService>.Instance
             ),
-            archiverFactory: archiverFactory.Object,
+            unmanagedReleaseArchiveInitializationService: new UnmanagedReleaseArchiveInitializationService(
+                new RealArchiverFactory()
+            ),
             releaseCollectionAssigner: new ReleaseCollectionAssignmentService(
                 new ReleaseCollectionRepository(
                     dbRead: dbContext,

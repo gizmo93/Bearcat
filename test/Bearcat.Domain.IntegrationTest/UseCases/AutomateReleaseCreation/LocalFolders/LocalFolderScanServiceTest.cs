@@ -1,12 +1,13 @@
 using System.Linq.Expressions;
-using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Media;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.UnmanagedReleases;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
+using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders;
 using Bearcat.Domain.UseCases.ManageNotifications;
@@ -57,12 +58,6 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
 
         Directory.CreateDirectory(tempRootPath);
 
-        var archiverFactory = new Mock<IArchiverFactory>();
-
-        archiverFactory
-            .Setup(f => f.GetArchivers())
-            .Returns([new ArchiverDto("RAR", "RarArchiver", ".rar")]);
-
         var notificationRepository = new NotificationRepository(dbContext);
 
         var notificationService = new NotificationService(
@@ -78,7 +73,9 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
             releaseFromFolderCreationService: new ReleaseFromFolderCreationService(
                 releaseInfoResolutionService: CreateReleaseInfoResolutionService(),
                 mediaMetadataService: CreateMediaMetadataService(),
-                archiverFactory: archiverFactory.Object,
+                unmanagedReleaseArchiveInitializationService: new UnmanagedReleaseArchiveInitializationService(
+                    new RealArchiverFactory()
+                ),
                 releaseCollectionAssigner: new ReleaseCollectionAssignmentService(
                     new ReleaseCollectionRepository(
                         dbRead: dbContext,

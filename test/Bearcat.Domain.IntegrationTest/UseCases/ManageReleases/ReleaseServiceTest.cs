@@ -1,12 +1,13 @@
 using Bearcat.Abstractions;
-using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Media;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.UnmanagedReleases;
 using Bearcat.Domain.Shared.ArchiveRetention;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
+using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
@@ -41,17 +42,20 @@ public class ReleaseServiceTest : BearcatIntegrationTest
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempRootPath);
         var timeProvider = CreateTimeProvider();
-        var archiverFactory = new Mock<IArchiverFactory>();
-        archiverFactory
-            .Setup(f => f.GetArchivers())
-            .Returns([new ArchiverDto("RAR", "RarArchiver", ".rar")]);
+        var unmanagedReleaseArchiveInitializer = new UnmanagedReleaseArchiveInitializationService(
+            new RealArchiverFactory()
+        );
         service = new ReleaseService(
             new ReleaseWriteRepository(dbContext),
             timeProvider,
-            archiverFactory.Object,
+            unmanagedReleaseArchiveInitializer,
             new FileSystemService(),
             new ReleaseFolderUsageRepository(dbContext),
-            CreateReleaseFromFolderCreationService(dbContext, archiverFactory.Object, timeProvider),
+            CreateReleaseFromFolderCreationService(
+                dbContext,
+                unmanagedReleaseArchiveInitializer,
+                timeProvider
+            ),
             new MirrorCoverageEvaluator(Mock.Of<IHosterFactory>()),
             new LocalArchiveDeleter(Mock.Of<IFileSystemService>())
         );
@@ -725,6 +729,47 @@ public class ReleaseServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task CreateAsync_UnmanagedReleaseWithOldRarVolumeNaming_ImportsAllVolumes()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Unmanaged releases");
+        var releaseFolderPath = CreateReleaseFolderWithFiles(
+            "bearcat-release.rar",
+            "bearcat-release.r00",
+            "bearcat-release.r01",
+            "bearcat-release.nfo",
+            "bearcat-release.sfv"
+        );
+
+        // Act
+        var result = await service.CreateAsync(
+            "Bearcat.Release.Unmanaged",
+            releaseFolderPath,
+            ReleaseType.Unmanaged,
+            ReleaseContentType.Movie,
+            releaseGroup.Id,
+            null,
+            false,
+            CancellationToken.None
+        );
+
+        // Assert
+        var release = await dbContext
+            .Releases.AsSplitQuery()
+            .Include(r => r.ArchiveConfigs)
+                .ThenInclude(c => c.Archives)
+                    .ThenInclude(a => a.ArchiveFiles)
+            .SingleAsync(r => r.Id == result);
+
+        release
+            .ArchiveConfigs.Single()
+            .Archives.Single()
+            .ArchiveFiles.Select(f => Path.GetFileName(f.FullFileName))
+            .Order(StringComparer.Ordinal)
+            .ShouldBe(["bearcat-release.r00", "bearcat-release.r01", "bearcat-release.rar"]);
+    }
+
+    [Test]
     public async Task ConvertToUnmanagedAsync_AllArchivesCreated_SetsUnmanagedAndNullsFolderPath()
     {
         // Arrange
@@ -1140,7 +1185,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
 
     private static ReleaseFromFolderCreationService CreateReleaseFromFolderCreationService(
         BearcatDbContext dbContext,
-        IArchiverFactory archiverFactory,
+        UnmanagedReleaseArchiveInitializationService unmanagedReleaseArchiveInitializationService,
         TimeProvider timeProvider
     )
     {
@@ -1202,7 +1247,7 @@ public class ReleaseServiceTest : BearcatIntegrationTest
                 timeProvider,
                 NullLogger<MediaMetadataService>.Instance
             ),
-            archiverFactory: archiverFactory,
+            unmanagedReleaseArchiveInitializationService: unmanagedReleaseArchiveInitializationService,
             releaseCollectionAssigner: new ReleaseCollectionAssignmentService(
                 new ReleaseCollectionRepository(
                     dbRead: dbContext,

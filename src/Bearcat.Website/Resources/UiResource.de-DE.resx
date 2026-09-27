@@ -1222,6 +1222,10 @@
   <data name="DownloadStatus" xml:space="preserve"><value>Downloadstatus</value></data>
   <data name="DownloadStatusSubtitle" xml:space="preserve"><value>Wiederherstellung von Archiv #{0} für {1} von {2}</value></data>
   <data name="DownloadFileStatus" xml:space="preserve"><value>Downloadfortschritt pro Datei</value></data>
+  <data name="VerificationStatus" xml:space="preserve"><value>Prüfstatus</value></data>
+  <data name="VerificationFileStatus" xml:space="preserve"><value>Prüffortschritt pro Datei</value></data>
+  <data name="ExtractionStatus" xml:space="preserve"><value>Entpackstatus</value></data>
+  <data name="ExtractionArchiveStatus" xml:space="preserve"><value>Entpackfortschritt pro Archiv</value></data>
   <data name="Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="LogsDescription" xml:space="preserve"><value>Liveausgabe des Anwendungslogs</value></data>
   <data name="PauseStreaming" xml:space="preserve"><value>Pausieren</value></data>
