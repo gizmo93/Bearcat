@@ -23,6 +23,7 @@ public class LinkCrypterRegistrationReadRepository(
                 registration.Name,
                 registration.LinkCrypterClassName,
                 registration.IsActive,
+                registration.HasUnreadableSecrets,
             })
             .ToListAsync(cancellationToken);
 
@@ -37,6 +38,7 @@ public class LinkCrypterRegistrationReadRepository(
                     registration.LinkCrypterClassName,
                     crypter.GetType().Name,
                     registration.IsActive,
+                    registration.HasUnreadableSecrets,
                     crypter.SupportsCaptcha,
                     crypter.SupportsContainerDownload,
                     crypter.SupportsClickAndLoad
@@ -60,6 +62,7 @@ public class LinkCrypterRegistrationReadRepository(
                 registration.Name,
                 registration.LinkCrypterClassName,
                 registration.IsActive,
+                registration.HasUnreadableSecrets,
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -76,6 +79,7 @@ public class LinkCrypterRegistrationReadRepository(
             registration.LinkCrypterClassName,
             crypter.GetType().Name,
             registration.IsActive,
+            registration.HasUnreadableSecrets,
             crypter.SupportsCaptcha,
             crypter.SupportsContainerDownload,
             crypter.SupportsClickAndLoad

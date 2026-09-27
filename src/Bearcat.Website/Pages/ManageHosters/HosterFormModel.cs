@@ -12,6 +12,8 @@ public class HosterFormModel
 
     public bool IsEdit { get; set; }
 
+    public bool HasUnreadableSecrets { get; set; }
+
     public int? HosterRegistrationId { get; set; }
 
     public int? MaxParallelUploadsOverride { get; set; }

@@ -1403,4 +1403,7 @@
   <data name="ReleaseFolderAlreadyUsedByRelease" xml:space="preserve"><value>Dieser Ordner ist bereits der Releaseordner eines Releases.</value></data>
   <data name="ReleaseFolderAlreadyUsedByUnmanagedRelease" xml:space="preserve"><value>Dieser Ordner ist bereits der Archivordner eines unmanaged Releases.</value></data>
   <data name="ReleaseFolderAlreadyUsedByRemoteDownload" xml:space="preserve"><value>Dieser Ordner ist bereits der Zielordner eines Remotedownloads.</value></data>
+  <data name="CredentialsMustBeEnteredAgain" xml:space="preserve"><value>Zugangsdaten neu eingeben</value></data>
+  <data name="UnreadableSecretsBadgeHint" xml:space="preserve"><value>Die gespeicherten Zugangsdaten konnten mit dem aktuellen Verschlüsselungsschlüssel nicht entschlüsselt werden und müssen neu eingegeben werden.</value></data>
+  <data name="TelegramBotTokenRequired" xml:space="preserve"><value>Gib das Bottoken ein.</value></data>
 </root>

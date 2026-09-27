@@ -60,6 +60,7 @@ public partial class AllHostersPage(
                 Name = hosterRegistration.Name,
                 FullClassName = hosterRegistration.FullClassName,
                 IsEdit = true,
+                HasUnreadableSecrets = hosterRegistration.HasUnreadableSecrets,
                 HosterRegistrationId = hosterRegistration.Id,
                 MaxParallelUploadsOverride = hosterRegistration.MaxParallelUploadsOverride,
                 NumberOfHoursUntilReuploadOverride =

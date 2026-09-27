@@ -6,6 +6,7 @@ public record LinkCrypterRegistrationReadModel(
     string LinkCrypterClassName,
     string CrypterName,
     bool IsActive,
+    bool HasUnreadableSecrets,
     bool SupportsCaptcha,
     bool SupportsContainerDownload,
     bool SupportsClickAndLoad

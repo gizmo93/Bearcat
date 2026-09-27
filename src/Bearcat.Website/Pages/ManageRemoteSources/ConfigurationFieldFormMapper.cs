@@ -11,10 +11,11 @@ public static class ConfigurationFieldFormMapper
         ConfigurationField field,
         IStringLocalizer localizer,
         string resourcePrefix,
-        bool isEdit
+        bool keepsStoredValues
     )
     {
-        var keepsExistingSecret = isEdit && field.Type == ConfigurationFieldType.Password;
+        var keepsExistingSecret =
+            keepsStoredValues && field.Type == ConfigurationFieldType.Password;
         var resourceKey = $"{resourcePrefix}{field.Key}";
 
         return new FormFieldDefinition
@@ -29,7 +30,7 @@ public static class ConfigurationFieldFormMapper
                 : null,
             Type = ToFieldType(field.Type),
             Required = field.IsRequired && !keepsExistingSecret,
-            DefaultValue = isEdit ? null : field.DefaultValue,
+            DefaultValue = keepsStoredValues ? null : field.DefaultValue,
             Options = field
                 .Options?.Select(option => new SelectOption<string>(
                     option,

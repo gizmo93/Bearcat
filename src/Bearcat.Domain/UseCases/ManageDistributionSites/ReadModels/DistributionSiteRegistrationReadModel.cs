@@ -9,6 +9,7 @@ public record DistributionSiteRegistrationReadModel(
     string DistributionSiteName,
     DistributionSiteKind Kind,
     bool IsActive,
+    bool HasUnreadableSecrets,
     bool EnableAutomaticPosting,
     bool StripDotsForThreadSearch,
     int PostingRuleCount

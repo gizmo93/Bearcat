@@ -248,6 +248,29 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
         ).ResolvedAt.ShouldNotBeNull();
     }
 
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task GetSettingsAsync_ConfigurationExists_ReturnsUnreadableSecretsFlag(
+        bool hasUnreadableSecrets
+    )
+    {
+        // Arrange
+        writeDbContext.TelegramConfigurations.Add(
+            CreateConnectedConfiguration(hasUnreadableSecrets)
+        );
+        await writeDbContext.SaveChangesAsync();
+
+        // Act
+        var settings = await service.GetSettingsAsync(
+            "http://bearcat.internal",
+            CancellationToken.None
+        );
+
+        // Assert
+        settings.IsConfigured.ShouldBeTrue();
+        settings.HasUnreadableSecrets.ShouldBe(hasUnreadableSecrets);
+    }
+
     private static TelegramConfiguration CreateConnectedConfiguration(bool hasUnreadableSecrets) =>
         new()
         {

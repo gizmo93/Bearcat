@@ -6,6 +6,7 @@ public record HosterRegistrationReadModel(
     int Id,
     string Name,
     bool IsActive,
+    bool HasUnreadableSecrets,
     bool RequiresCaptchaVerification,
     bool SupportsCaptchaVerification,
     bool SupportsPremiumOnlyDownloads,

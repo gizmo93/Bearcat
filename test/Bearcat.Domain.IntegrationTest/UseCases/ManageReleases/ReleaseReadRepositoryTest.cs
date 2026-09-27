@@ -866,6 +866,40 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
         result.ShouldHaveSingleItem().ReleaseId.ShouldBe(release.Id);
     }
 
+    [Test]
+    public async Task SearchUploadsAsync_HosterWithUnreadableSecrets_ProjectsFlagPerUpload()
+    {
+        // Arrange
+        var release = await AddPostQueueReleaseAsync(
+            "Bearcat.UnreadableHoster.2026-GRP",
+            [
+                new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)]),
+                new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 20)]),
+            ]
+        );
+        var unreadableHoster = await dbContext.HosterRegistrations.SingleAsync(registration =>
+            registration.Name == "Bearcat.UnreadableHoster.2026-GRP hoster 2"
+        );
+        unreadableHoster.HasUnreadableSecrets = true;
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.SearchUploadsAsync(
+            new ReleaseUploadSearchQuery(release.Id),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Items.Count.ShouldBe(2);
+        result
+            .Items.Single(upload => upload.HosterRegistrationName == unreadableHoster.Name)
+            .HosterHasUnreadableSecrets.ShouldBeTrue();
+        result
+            .Items.Single(upload => upload.HosterRegistrationName != unreadableHoster.Name)
+            .HosterHasUnreadableSecrets.ShouldBeFalse();
+    }
+
     private async Task<InPostQueueFilterReleases> AddInPostQueueFilterReleasesAsync()
     {
         var notPostedRelease = await AddPostQueueReleaseAsync(

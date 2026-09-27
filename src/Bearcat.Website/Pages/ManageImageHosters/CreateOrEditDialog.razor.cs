@@ -18,6 +18,8 @@ public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
     public IDialogReference DialogRef { get; set; } = null!;
 
     private bool IsEditMode => ImageHosterRegistrationId.HasValue;
+    private bool hasUnreadableSecrets;
+    private bool RequiresAllConfigurationValues => !IsEditMode || hasUnreadableSecrets;
     private RegistrationFormModel formModel = new();
     private EditContext editContext = null!;
     private ValidationMessageStore validationMessageStore = null!;
@@ -78,7 +80,7 @@ public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
             validationMessageStore.Add(() => formModel.ClassName!, L["SelectImageHosterRequired"]);
         }
 
-        if (SelectedImageHoster is null || IsEditMode)
+        if (SelectedImageHoster is null || !RequiresAllConfigurationValues)
         {
             return;
         }
@@ -117,6 +119,7 @@ public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
             return;
         }
 
+        hasUnreadableSecrets = registration.HasUnreadableSecrets;
         formModel = new RegistrationFormModel
         {
             Name = registration.Name,

@@ -114,7 +114,11 @@
                                Sortable="true"
                                Width="120px">
                 <CellTemplate Context="hoster">
-                    @if (hoster.RequiresCaptchaVerification)
+                    @if (hoster.HasUnreadableSecrets)
+                    {
+                        <UnreadableSecretsBadge />
+                    }
+                    else if (hoster.RequiresCaptchaVerification)
                     {
                         <BbBadge Variant="BadgeVariant.Destructive">
                             @L["CaptchaRequired"]
@@ -134,7 +138,10 @@
                                Width="190px">
                 <CellTemplate Context="hoster">
                     <div class="flex items-center gap-2 whitespace-nowrap">
-                        <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => TryLoginAsync(hoster))">
+                        <BbButton Variant="ButtonVariant.Outline"
+                                  Size="ButtonSize.Small"
+                                  Disabled="@hoster.HasUnreadableSecrets"
+                                  OnClick="@(() => TryLoginAsync(hoster))">
                             @L["TryLogin"]
                         </BbButton>
                         @if (hoster is { SupportsCaptchaVerification: true, RequiresCaptchaVerification: true })
@@ -142,6 +149,7 @@
                             <BbButton Class="bearcat-captcha-action-button"
                                       Variant="ButtonVariant.Destructive"
                                       Size="ButtonSize.IconSmall"
+                                      Disabled="@hoster.HasUnreadableSecrets"
                                       AriaLabel="@L["SolveCaptcha"]"
                                       title="@L["SolveCaptcha"]"
                                       OnClick="@(() => ShowCaptchaDialogAsync(hoster))">
@@ -168,7 +176,8 @@
                                 <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(hoster))">
                                     @L["EditRegistration"]
                                 </BbDropdownMenuItem>
-                                <BbDropdownMenuItem OnClick="@(async _ => await ToggleIsActiveAsync(hoster))">
+                                <BbDropdownMenuItem Disabled="@hoster.HasUnreadableSecrets"
+                                                    OnClick="@(async _ => await ToggleIsActiveAsync(hoster))">
                                     @(hoster.IsActive ? L["Disable"] : L["Enable"])
                                 </BbDropdownMenuItem>
                                 <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(hoster))">

@@ -31,6 +31,9 @@ public partial class TelegramPage(
     private bool isRefreshing;
     private bool isDisconnecting;
 
+    private bool KeepsStoredBotToken =>
+        settings is { IsConfigured: true, HasUnreadableSecrets: false };
+
     protected override async Task OnInitializedAsync()
     {
         await LoadAsync();
@@ -57,6 +60,12 @@ public partial class TelegramPage(
 
     private async Task SaveConfigurationAsync()
     {
+        if (settings.HasUnreadableSecrets && string.IsNullOrWhiteSpace(botToken))
+        {
+            toastService.Error(L["TelegramBotTokenRequired"]);
+            return;
+        }
+
         isSavingConfiguration = true;
         try
         {

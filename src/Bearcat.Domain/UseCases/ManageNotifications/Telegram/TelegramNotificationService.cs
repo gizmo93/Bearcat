@@ -40,6 +40,7 @@ public sealed class TelegramNotificationService(
         {
             return new TelegramSettings(
                 IsConfigured: false,
+                HasUnreadableSecrets: false,
                 BotUsername: null,
                 NotificationBaseUrl: defaultBaseUrl.TrimEnd('/'),
                 IsConnected: false,
@@ -53,6 +54,7 @@ public sealed class TelegramNotificationService(
 
         return new TelegramSettings(
             IsConfigured: true,
+            HasUnreadableSecrets: configuration.HasUnreadableSecrets,
             BotUsername: configuration.BotUsername,
             NotificationBaseUrl: configuration.NotificationBaseUrl,
             IsConnected: configuration.ChatId.HasValue,

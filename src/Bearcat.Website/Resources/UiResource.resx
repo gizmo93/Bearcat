@@ -1400,4 +1400,7 @@
   <data name="ReleaseFolderAlreadyUsedByRelease" xml:space="preserve"><value>This folder is already the release folder of a release.</value></data>
   <data name="ReleaseFolderAlreadyUsedByUnmanagedRelease" xml:space="preserve"><value>This folder is already the archive folder of an unmanaged release.</value></data>
   <data name="ReleaseFolderAlreadyUsedByRemoteDownload" xml:space="preserve"><value>This folder is already the target folder of a remote download.</value></data>
+  <data name="CredentialsMustBeEnteredAgain" xml:space="preserve"><value>Re-enter credentials</value></data>
+  <data name="UnreadableSecretsBadgeHint" xml:space="preserve"><value>The stored credentials could not be decrypted with the current encryption key and must be entered again.</value></data>
+  <data name="TelegramBotTokenRequired" xml:space="preserve"><value>Enter the bot token.</value></data>
 </root>

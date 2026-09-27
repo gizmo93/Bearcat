@@ -28,6 +28,7 @@ public class RemoteSourceRegistrationRepository(
                 r.Name,
                 r.SourceClassName,
                 r.IsActive,
+                r.HasUnreadableSecrets,
                 r.MaxConnections,
             })
             .ToListAsync(cancellationToken);
@@ -39,6 +40,7 @@ public class RemoteSourceRegistrationRepository(
                 r.SourceClassName,
                 sourceNamesByClassName[r.SourceClassName],
                 r.IsActive,
+                r.HasUnreadableSecrets,
                 r.MaxConnections
             ))
             .ToList();

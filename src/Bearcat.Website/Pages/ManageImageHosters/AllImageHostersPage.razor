@@ -40,9 +40,16 @@
                                Sortable="true"
                                Width="110px">
                 <CellTemplate Context="imageHoster">
-                    <BbBadge Variant="@(imageHoster.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
-                        @(imageHoster.IsActive ? L["Active"] : L["Inactive"])
-                    </BbBadge>
+                    @if (imageHoster.HasUnreadableSecrets)
+                    {
+                        <UnreadableSecretsBadge />
+                    }
+                    else
+                    {
+                        <BbBadge Variant="@(imageHoster.IsActive ? BadgeVariant.Default : BadgeVariant.Outline)">
+                            @(imageHoster.IsActive ? L["Active"] : L["Inactive"])
+                        </BbBadge>
+                    }
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="ImageHosterRegistrationReadModel" TValue="string"
@@ -52,7 +59,10 @@
                 <CellTemplate Context="imageHoster">
                     @if (SupportsLogin(imageHoster))
                     {
-                        <BbButton Variant="ButtonVariant.Outline" Size="ButtonSize.Small" OnClick="@(() => TryLoginAsync(imageHoster))">
+                        <BbButton Variant="ButtonVariant.Outline"
+                                  Size="ButtonSize.Small"
+                                  Disabled="@imageHoster.HasUnreadableSecrets"
+                                  OnClick="@(() => TryLoginAsync(imageHoster))">
                             @L["TryLogin"]
                         </BbButton>
                     }
@@ -74,7 +84,8 @@
                                 <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(imageHoster))">
                                     @L["EditRegistration"]
                                 </BbDropdownMenuItem>
-                                <BbDropdownMenuItem OnClick="@(async _ => await ToggleIsActiveAsync(imageHoster))">
+                                <BbDropdownMenuItem Disabled="@imageHoster.HasUnreadableSecrets"
+                                                    OnClick="@(async _ => await ToggleIsActiveAsync(imageHoster))">
                                     @(imageHoster.IsActive ? L["Disable"] : L["Enable"]) 
                                 </BbDropdownMenuItem>
                                 <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(imageHoster))">
