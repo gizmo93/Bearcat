@@ -1,8 +1,6 @@
 ﻿using Bearcat.Abstractions;
-using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.ArchiveRetention;
-using Bearcat.Domain.Shared.CollectionAssignment;
 using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.FolderUsage;
@@ -18,7 +16,7 @@ namespace Bearcat.Domain.UseCases.ManageReleases;
 public class ReleaseService(
     IReleaseWriteRepository writeRepository,
     TimeProvider timeProvider,
-    IArchiverFactory archiverFactory,
+    UnmanagedReleaseArchiveInitializationService unmanagedReleaseArchiveInitializationService,
     IFileSystemService fileSystemService,
     IReleaseFolderUsageRepository releaseFolderUsageRepository,
     ReleaseFromFolderCreationService releaseFromFolderCreationService,
@@ -58,10 +56,9 @@ public class ReleaseService(
         if (isUnmanaged)
         {
             release.ArchiveConfigs.Add(
-                UnmanagedReleaseArchiveInitializer.CreateArchiveConfig(
+                unmanagedReleaseArchiveInitializationService.CreateArchiveConfig(
                     release: release,
                     archiveFolderPath: releaseFolderPath,
-                    archivers: archiverFactory.GetArchivers(),
                     createdAt: localNow
                 )
             );
@@ -437,117 +434,6 @@ public class ReleaseService(
         }
 
         return null;
-    }
-
-    public static ReleaseFromTemplateData CreateFromTemplateData(
-        ReleaseTemplate releaseTemplate,
-        string releaseFolderPath,
-        string? name,
-        ReleaseType releaseType,
-        IReadOnlyList<ArchiverDto> archivers,
-        DateTime localNow
-    )
-    {
-        var releaseName = CleanOptional(name) ?? FolderPathHelper.GetFolderName(releaseFolderPath);
-        var isUnmanaged = releaseType is ReleaseType.Unmanaged;
-
-        var release = new Release
-        {
-            Name = releaseName,
-            ReleaseFolderPath = isUnmanaged ? null : releaseFolderPath,
-            ReleaseType = releaseType,
-            ReleaseContentType = releaseTemplate.ReleaseContentType,
-            ReleaseGroupId = releaseTemplate.ReleaseGroupId,
-            ArchiveConfigs = [],
-            UploadConfigs = [],
-            ImageUploadConfigs = [],
-        };
-
-        var archiveConfigsByTemplateId = new Dictionary<int, ArchiveConfig>();
-        ArchiveConfig? unmanagedArchiveConfig = null;
-
-        if (releaseType is ReleaseType.Managed)
-        {
-            archiveConfigsByTemplateId = releaseTemplate
-                .ArchiveConfigTemplates.Select(template => new
-                {
-                    template.Id,
-                    Config = new ArchiveConfig
-                    {
-                        Name = template.Name,
-                        ArchiveFilesBasePath = template.ArchiveFilesBasePath,
-                        ArchiverName = template.ArchiverName,
-                        ArchivePassword = template.ArchivePassword,
-                        ArchiveFileSizeMb = template.ArchiveFileSizeMb,
-                        ArchiveNamePrefix = template.UseReleaseNameAsArchiveName
-                            ? releaseName
-                            : null,
-                        Archives = [],
-                        UploadConfigs = [],
-                        AdditionalArchiveContents = template.AdditionalArchiveContents.ToList(),
-                    },
-                })
-                .ToDictionary(item => item.Id, item => item.Config);
-            release.ArchiveConfigs = archiveConfigsByTemplateId.Values.ToList();
-        }
-        else
-        {
-            unmanagedArchiveConfig = UnmanagedReleaseArchiveInitializer.CreateArchiveConfig(
-                release: release,
-                archiveFolderPath: releaseFolderPath,
-                archivers: archivers,
-                createdAt: localNow
-            );
-            release.ArchiveConfigs.Add(unmanagedArchiveConfig);
-        }
-
-        var uploadConfigTemplates = releaseTemplate
-            .UploadConfigTemplates.OrderBy(template => template.Id)
-            .ToList();
-
-        var uploadConfigMatches = new List<ReleaseUploadConfigMatch>(uploadConfigTemplates.Count);
-        release.UploadConfigs = [];
-
-        foreach (var template in uploadConfigTemplates)
-        {
-            var uploadConfig = new UploadConfig
-            {
-                Name = CleanOptional(template.Name) ?? template.HosterRegistration.Name,
-                HosterRegistrationId = template.HosterRegistrationId,
-                PremiumOnlyDownload = template.PremiumOnlyDownload,
-                ArchiveConfig =
-                    releaseType is ReleaseType.Managed
-                        ? archiveConfigsByTemplateId[template.ArchiveConfigTemplateId]
-                        : unmanagedArchiveConfig!,
-                Uploads = [],
-                LinkCrypters = template
-                    .LinkCrypterTemplates.Select(linkCrypter => new UploadConfigLinkCrypter
-                    {
-                        LinkCrypterRegistrationId = linkCrypter.LinkCrypterRegistrationId,
-                        ContainerScope = linkCrypter.ContainerScope,
-                        Password = CleanOptional(linkCrypter.Password),
-                        EnableCaptcha = linkCrypter.EnableCaptcha,
-                        EnableContainerDownload = linkCrypter.EnableContainerDownload,
-                        EnableClickAndLoad = linkCrypter.EnableClickAndLoad,
-                        LinkCrypterContainers = [],
-                    })
-                    .ToList(),
-            };
-
-            release.UploadConfigs.Add(uploadConfig);
-            uploadConfigMatches.Add(new ReleaseUploadConfigMatch(template, uploadConfig));
-        }
-
-        release.ImageUploadConfigs = releaseTemplate
-            .ImageUploadConfigTemplates.Select(template => new ImageUploadConfig
-            {
-                Name = CleanOptional(template.Name) ?? template.ImageHosterRegistration.Name,
-                ImageHosterRegistrationId = template.ImageHosterRegistrationId,
-                ImageUploads = [],
-            })
-            .ToList();
-
-        return new ReleaseFromTemplateData(release, uploadConfigMatches);
     }
 
     private static string? CleanOptional(string? value)

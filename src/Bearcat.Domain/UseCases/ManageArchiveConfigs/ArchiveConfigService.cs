@@ -1,5 +1,4 @@
-﻿using Bearcat.Abstractions.Archiver;
-using Bearcat.Domain.Entities;
+﻿using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
 using Bearcat.Domain.UseCases.ManageArchiveConfigs.Validation;
@@ -10,7 +9,7 @@ namespace Bearcat.Domain.UseCases.ManageArchiveConfigs;
 
 public class ArchiveConfigService(
     IArchiveConfigWriteRepository writeRepository,
-    IArchiverFactory archiverFactory,
+    UnmanagedReleaseArchiveInitializationService unmanagedReleaseArchiveInitializationService,
     TimeProvider timeProvider
 )
 {
@@ -141,10 +140,9 @@ public class ArchiveConfigService(
 
         EnsureUnmanagedRelease(archiveConfig);
 
-        var result = UnmanagedReleaseArchiveInitializer.ApplyArchiveFolder(
+        var result = unmanagedReleaseArchiveInitializationService.ApplyArchiveFolder(
             archiveConfig: archiveConfig,
             archiveFolderPath: archiveFolderPath,
-            archiver: archiverFactory.GetByName(archiveConfig.ArchiverName),
             createdAt: timeProvider.GetLocalNow(),
             confirmContentChange: confirmContentChange
         );

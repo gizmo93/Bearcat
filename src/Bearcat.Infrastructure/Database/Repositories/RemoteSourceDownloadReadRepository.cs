@@ -12,6 +12,28 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 public class RemoteSourceDownloadReadRepository(IBearcatReadDbContext dbRead)
     : IRemoteSourceDownloadReadRepository
 {
+    private static readonly RemoteSourceDownloadState[] RunningStates =
+    [
+        RemoteSourceDownloadState.Pending,
+        RemoteSourceDownloadState.Downloading,
+        RemoteSourceDownloadState.Downloaded,
+        RemoteSourceDownloadState.Verifying,
+        RemoteSourceDownloadState.Extracting,
+        RemoteSourceDownloadState.ReadyForReleaseCreation,
+    ];
+
+    private static readonly RemoteSourceDownloadState[] VerifyingOrExtractingStates =
+    [
+        RemoteSourceDownloadState.Verifying,
+        RemoteSourceDownloadState.Extracting,
+    ];
+
+    private static readonly RemoteSourceDownloadState[] DownloadedAndWaitingForNextStepStates =
+    [
+        RemoteSourceDownloadState.Downloaded,
+        RemoteSourceDownloadState.ReadyForReleaseCreation,
+    ];
+
     public async Task<PagedResult<RemoteSourceDownloadReadModel>> SearchAsync(
         RemoteSourceDownloadSearchQuery query,
         CancellationToken cancellationToken = default
@@ -46,15 +68,12 @@ public class RemoteSourceDownloadReadRepository(IBearcatReadDbContext dbRead)
     )
     {
         return await dbRead
-            .RemoteSourceDownloads.Where(download =>
-                download.State == RemoteSourceDownloadState.Pending
-                || download.State == RemoteSourceDownloadState.Downloading
-                || download.State == RemoteSourceDownloadState.Downloaded
-            )
+            .RemoteSourceDownloads.Where(download => RunningStates.Contains(download.State))
             .OrderBy(download =>
                 download.State == RemoteSourceDownloadState.Downloading ? 0
-                : download.State == RemoteSourceDownloadState.Downloaded ? 1
-                : 2
+                : VerifyingOrExtractingStates.Contains(download.State) ? 1
+                : DownloadedAndWaitingForNextStepStates.Contains(download.State) ? 2
+                : 3
             )
             .ThenBy(download => download.DiscoveredAt)
             .ThenBy(download => download.Id)

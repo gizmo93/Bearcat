@@ -120,10 +120,28 @@ public sealed partial class RunningProcesses(
             IReadOnlyList<RemoteSourceDownloadReadModel>
         >((repository, token) => repository.GetRunningAsync(token), cancellationToken);
 
-        remoteDownloadProgress = GetProgressSnapshots(
-            TransferType.RemoteDownload,
+        remoteDownloadProgress = GetProgressSnapshotsOfFirstTrackedType(
+            [
+                TransferType.RemoteDownload,
+                TransferType.RemoteDownloadVerification,
+                TransferType.RemoteDownloadExtraction,
+            ],
             remoteDownloads.Select(download => download.Id).ToList()
         );
+    }
+
+    private Dictionary<int, TransferProgressSnapshot> GetProgressSnapshotsOfFirstTrackedType(
+        IReadOnlyList<TransferType> types,
+        IReadOnlyList<int> ids
+    )
+    {
+        return ids.Select(id =>
+                types
+                    .Select(type => transferProgressTracker.Get(new TransferIdentifier(type, id)))
+                    .FirstOrDefault(snapshot => snapshot is not null)
+            )
+            .OfType<TransferProgressSnapshot>()
+            .ToDictionary(snapshot => snapshot.Identifier.Id);
     }
 
     private Dictionary<int, TransferProgressSnapshot> GetProgressSnapshots(

@@ -4,7 +4,7 @@ namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseC
 
 public interface IRemoteDownloadReleaseRepository
 {
-    Task<IReadOnlyList<RemoteSourceDownload>> GetDownloadedWithoutReleaseAsync(
+    Task<IReadOnlyList<RemoteSourceDownload>> GetReadyForReleaseCreationWithoutReleaseAsync(
         CancellationToken cancellationToken = default
     );
 

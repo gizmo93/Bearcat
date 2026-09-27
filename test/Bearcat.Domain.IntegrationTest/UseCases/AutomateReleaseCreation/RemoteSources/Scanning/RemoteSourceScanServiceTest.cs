@@ -74,6 +74,7 @@ public class RemoteSourceScanServiceTest : BearcatIntegrationTest
             {
                 a.PrimaryLanguageCode = "de";
                 a.KeepRawFiles = false;
+                a.ExtractArchivesBeforeReleaseCreation = true;
             }
         );
 
@@ -93,6 +94,7 @@ public class RemoteSourceScanServiceTest : BearcatIntegrationTest
         download.ReleaseTemplateId.ShouldBe(template.Id);
         download.PrimaryLanguageCode.ShouldBe("de");
         download.KeepRawFiles.ShouldBeFalse();
+        download.ExtractArchivesBeforeReleaseCreation.ShouldBeTrue();
         download.FileCount.ShouldBe(2);
         download.TotalBytes.ShouldBe(350);
         download.DiscoveredAt.ShouldBe(StartTime);
@@ -100,6 +102,28 @@ public class RemoteSourceScanServiceTest : BearcatIntegrationTest
         download.StartedAt.ShouldBeNull();
         download.CompletedAt.ShouldBeNull();
         download.ReleaseId.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ProcessAsync_ExtractionEnabledWithUnmanagedTemplate_DoesNotExtractArchivesOfDownload()
+    {
+        // Arrange
+        var template = await AddReleaseTemplateAsync("Unmanaged", ReleaseType.Unmanaged);
+        var server = AddServer("main");
+        server.SetFolder(IncomingPath, "Show.S01E01.German.1080p-GRP", 100, 250);
+        var registration = await AddRegistrationAsync("Main FTP", "main");
+        await AddAutomationAsync(
+            registration,
+            template,
+            a => a.ExtractArchivesBeforeReleaseCreation = true
+        );
+
+        // Act
+        await ProcessAsync();
+
+        // Assert
+        var download = (await GetDownloadsAsync()).Single();
+        download.ExtractArchivesBeforeReleaseCreation.ShouldBeFalse();
     }
 
     [Test]

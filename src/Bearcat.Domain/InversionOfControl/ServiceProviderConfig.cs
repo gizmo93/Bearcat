@@ -10,12 +10,16 @@ using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.Shared.QualityGate.Checks;
 using Bearcat.Domain.Shared.Transfers;
+using Bearcat.Domain.Shared.UnmanagedReleases;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.LocalFolders;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.RawFiles;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Scanning;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.Extraction;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.SfvVerification;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
@@ -76,6 +80,9 @@ public static class ServiceProviderConfig
             services.AddScoped<RemoteSourceDownloadService>();
             services.AddScoped<RemoteSourceDownloadStateService>();
             services.AddScoped<RemoteDownloadFolderService>();
+            services.AddScoped<RemoteDownloadVerificationAndExtractionService>();
+            services.AddScoped<SfvChecksumVerifier>();
+            services.AddScoped<DownloadFolderArchiveExtractionService>();
             services.AddScoped<RemoteDownloadReleaseCreationService>();
             services.AddScoped<RemoteDownloadRawFileCleanupService>();
             services.AddScoped<ImageHosterService>();
@@ -88,6 +95,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ReleaseFolderAutomationService>();
             services.AddScoped<LocalFolderScanService>();
             services.AddScoped<ReleaseFromFolderCreationService>();
+            services.AddScoped<UnmanagedReleaseArchiveInitializationService>();
             services.AddScoped<ReleaseCollectionService>();
             services.AddScoped<ReleaseCollectionAssignmentService>();
             services.AddScoped<IReleaseCollectionAssigner>(provider =>

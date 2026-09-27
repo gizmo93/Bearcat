@@ -165,6 +165,7 @@ public class FileSystemService : IFileSystemService
             searchPattern: directoryName,
             enumerationOptions: new EnumerationOptions
             {
+                AttributesToSkip = FileAttributes.None,
                 IgnoreInaccessible = true,
                 ReturnSpecialDirectories = false,
                 RecurseSubdirectories = true,

@@ -22,6 +22,7 @@ public class RemoteSourceDownloadConfiguration : IEntityTypeConfiguration<Remote
             .IsRequired(false)
             .HasMaxLength(2);
         builder.Property(download => download.KeepRawFiles).IsRequired();
+        builder.Property(download => download.ExtractArchivesBeforeReleaseCreation).IsRequired();
         builder.Property(download => download.State).IsRequired();
         builder.Property(download => download.FileCount).IsRequired();
         builder.Property(download => download.TotalBytes).IsRequired();
@@ -29,6 +30,10 @@ public class RemoteSourceDownloadConfiguration : IEntityTypeConfiguration<Remote
         builder.Property(download => download.DiscoveredAt).IsRequired().HasPrecision(4);
         builder.Property(download => download.StartedAt).IsRequired(false).HasPrecision(4);
         builder.Property(download => download.CompletedAt).IsRequired(false).HasPrecision(4);
+        builder
+            .Property(download => download.ArchivesExtractedAt)
+            .IsRequired(false)
+            .HasPrecision(4);
         builder.Property(download => download.ErrorMessage).IsRequired(false).HasColumnType("text");
         builder.Property(download => download.ReleaseId).IsRequired(false);
 

@@ -21,4 +21,15 @@ public class ArchiverFactory(IServiceProvider serviceProvider) : IArchiverFactor
             ))
             .ToList();
     }
+
+    public IReadOnlyList<IArchiveExtractor> GetArchiveExtractors()
+    {
+        var archivers = serviceProvider.GetKeyedServices<IArchiver>(KeyedService.AnyKey);
+        return archivers.OfType<IArchiveExtractor>().ToList();
+    }
+
+    public IArchiveExtractor GetArchiveExtractorByName(string name)
+    {
+        return (IArchiveExtractor)serviceProvider.GetRequiredKeyedService<IArchiver>(name);
+    }
 }

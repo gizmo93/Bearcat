@@ -7,6 +7,7 @@ using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading.
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.RawFiles.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Scanning.Repositories;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.Repositories;
 using Bearcat.Domain.UseCases.Dashboard.Repositories;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Repositories;
@@ -258,6 +259,10 @@ public static class ServiceProviderConfig
             services.AddScoped<IRemoteDownloadReleaseRepository, RemoteSourceDownloadRepository>();
             services.AddScoped<
                 IRemoteDownloadRawFileCleanupRepository,
+                RemoteSourceDownloadRepository
+            >();
+            services.AddScoped<
+                IRemoteDownloadVerificationAndExtractionRepository,
                 RemoteSourceDownloadRepository
             >();
             services.AddScoped<

@@ -20,6 +20,8 @@ public sealed record RemoteSourceAutomationInput
 
     public bool KeepRawFiles { get; init; } = true;
 
+    public bool ExtractArchivesBeforeReleaseCreation { get; init; }
+
     public int Priority { get; init; } = RemoteSourceAutomation.DefaultPriority;
 
     public bool IgnoreExistingOnFirstScan { get; init; }

@@ -1218,6 +1218,10 @@
   <data name="DownloadStatus" xml:space="preserve"><value>Downloadstatus</value></data>
   <data name="DownloadStatusSubtitle" xml:space="preserve"><value>Wiederherstellung von Archiv #{0} für {1} von {2}</value></data>
   <data name="DownloadFileStatus" xml:space="preserve"><value>Downloadfortschritt pro Datei</value></data>
+  <data name="VerificationStatus" xml:space="preserve"><value>Prüfstatus</value></data>
+  <data name="VerificationFileStatus" xml:space="preserve"><value>Prüffortschritt pro Datei</value></data>
+  <data name="ExtractionStatus" xml:space="preserve"><value>Entpackstatus</value></data>
+  <data name="ExtractionArchiveStatus" xml:space="preserve"><value>Entpackfortschritt pro Archiv</value></data>
   <data name="Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="LogsDescription" xml:space="preserve"><value>Liveausgabe des Anwendungslogs</value></data>
   <data name="PauseStreaming" xml:space="preserve"><value>Pausieren</value></data>
@@ -1294,6 +1298,8 @@
   <data name="IgnoreExistingOnFirstScanHelp" xml:space="preserve"><value>Ordner, die beim ersten Scan bereits vorhanden sind, werden übersprungen. Nur später hinzukommende Releases werden heruntergeladen.</value></data>
   <data name="KeepRawFiles" xml:space="preserve"><value>Rohdateien behalten</value></data>
   <data name="KeepRawFilesHelp" xml:space="preserve"><value>Wenn deaktiviert, wandelt Bearcat das Release in Unmanaged um und löscht den heruntergeladenen Ordner, sobald jede Uploadkonfiguration ihren ersten abgeschlossenen Upload hat und jede Archivkonfiguration ein erstelltes Archiv oder einen Onlinemirror besitzt. Liegen Archive in diesem Ordner, bleibt er erhalten. Gilt nur für Vorlagen vom Typ Managed.</value></data>
+  <data name="ExtractArchivesBeforeReleaseCreation" xml:space="preserve"><value>Archive vor der Releaseerstellung entpacken</value></data>
+  <data name="ExtractArchivesBeforeReleaseCreationHelp" xml:space="preserve"><value>Archive (RAR, 7z) im heruntergeladenen Ordner werden vor der Releaseerstellung entpackt. Nach erfolgreichem Entpacken werden die Archivdateien gelöscht. Gilt nur für Vorlagen vom Typ Managed.</value></data>
   <data name="RemoteSourceDownloadState.Observing" xml:space="preserve"><value>Wird beobachtet</value></data>
   <data name="RemoteSourceDownloadState.Pending" xml:space="preserve"><value>Vorgemerkt</value></data>
   <data name="RemoteSourceDownloadState.Downloading" xml:space="preserve"><value>Wird heruntergeladen</value></data>
@@ -1302,6 +1308,9 @@
   <data name="RemoteSourceDownloadState.Failed" xml:space="preserve"><value>Fehlgeschlagen</value></data>
   <data name="RemoteSourceDownloadState.Canceled" xml:space="preserve"><value>Abgebrochen</value></data>
   <data name="RemoteSourceDownloadState.Ignored" xml:space="preserve"><value>Ignoriert</value></data>
+  <data name="RemoteSourceDownloadState.Verifying" xml:space="preserve"><value>Wird geprüft</value></data>
+  <data name="RemoteSourceDownloadState.Extracting" xml:space="preserve"><value>Wird entpackt</value></data>
+  <data name="RemoteSourceDownloadState.ReadyForReleaseCreation" xml:space="preserve"><value>Bereit zur Releaseerstellung</value></data>
   <data name="RemoteSourceDownloads" xml:space="preserve"><value>Remotedownloads</value></data>
   <data name="RemoteSourceDownloadsDescription" xml:space="preserve"><value>Steuert, wie Ordner auf Remotequellen überwacht, zum Herunterladen vorgemerkt und heruntergeladen werden.</value></data>
   <data name="RemoteSourceDownloadStabilityMinutes" xml:space="preserve"><value>Ordnerstabilität (Minuten)</value></data>
@@ -1327,7 +1336,7 @@
   <data name="DiscoveredAt" xml:space="preserve"><value>Gefunden</value></data>
   <data name="DownloadCompletedAt" xml:space="preserve"><value>Heruntergeladen</value></data>
   <data name="OpenRemoteSourceDownloadActions" xml:space="preserve"><value>Aktionen für Remotedownload öffnen</value></data>
-  <data name="RetryReleaseCreation" xml:space="preserve"><value>Releaseerstellung wiederholen</value></data>
+  <data name="RetryWithoutDownloadingAgain" xml:space="preserve"><value>Ohne erneuten Download wiederholen</value></data>
   <data name="RestartDownload" xml:space="preserve"><value>Download neu starten</value></data>
   <data name="IgnoreRemoteDownload" xml:space="preserve"><value>Ignorieren</value></data>
   <data name="RemoteSourceDownloadResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Remotedownloads</value></data>
@@ -1336,7 +1345,7 @@
   <data name="RemoteDownloadCanceled" xml:space="preserve"><value>Der Download von {0} wird abgebrochen.</value></data>
   <data name="RestartRemoteDownloadConfirmation" xml:space="preserve"><value>Download von {0} neu starten? Die lokalen Dateien in {1} werden gelöscht und erneut heruntergeladen.</value></data>
   <data name="RemoteDownloadRestarted" xml:space="preserve"><value>Der Download von {0} wurde erneut vorgemerkt.</value></data>
-  <data name="ReleaseCreationQueuedAgain" xml:space="preserve"><value>Die Releaseerstellung für {0} wurde erneut vorgemerkt.</value></data>
+  <data name="RetryWithoutDownloadingAgainQueued" xml:space="preserve"><value>{0} wurde mit den bereits heruntergeladenen Dateien erneut vorgemerkt.</value></data>
   <data name="RemoteDownloadIgnored" xml:space="preserve"><value>{0} wird ab jetzt ignoriert.</value></data>
   <data name="RemoteDownloadStateChanged" xml:space="preserve"><value>Der Status von {0} hat sich inzwischen geändert. Die Liste wurde neu geladen.</value></data>
   <data name="RemoteDownloadStatusSubtitle" xml:space="preserve"><value>Download von {0} aus {1}</value></data>

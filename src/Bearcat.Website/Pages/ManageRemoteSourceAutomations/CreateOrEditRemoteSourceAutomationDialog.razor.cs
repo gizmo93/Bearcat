@@ -156,19 +156,7 @@ public partial class CreateOrEditRemoteSourceAutomationDialog(
         errorMessage = null;
         isSaving = true;
 
-        var input = new RemoteSourceAutomationInput
-        {
-            Name = FormModel.Name,
-            RemoteSourceRegistrationId = FormModel.RemoteSourceRegistrationId!.Value,
-            RemotePath = FormModel.RemotePath,
-            TargetPath = FormModel.TargetPath,
-            FolderNamePattern = FormModel.FolderNamePattern,
-            ReleaseTemplateId = FormModel.ReleaseTemplateId!.Value,
-            PrimaryLanguageCode = FormModel.PrimaryLanguageCode,
-            KeepRawFiles = SelectedReleaseType is not ReleaseType.Managed || FormModel.KeepRawFiles,
-            Priority = FormModel.Priority,
-            IgnoreExistingOnFirstScan = FormModel.IgnoreExistingOnFirstScan,
-        };
+        var input = FormModel.CreateInput(SelectedReleaseType);
 
         try
         {
