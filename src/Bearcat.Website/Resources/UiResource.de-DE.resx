@@ -110,8 +110,6 @@
   <data name="DeleteArchiveConfig" xml:space="preserve"><value>Archivkonfiguration löschen</value></data>
   <data name="DeleteArchiveConfigConfirmation" xml:space="preserve"><value>Möchtest du die Archivkonfiguration {0} wirklich löschen (Archiver: {1})?</value></data>
   <data name="DeleteConfig" xml:space="preserve"><value>Konfiguration löschen</value></data>
-  <data name="DeleteHosterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Hosterregistrierung {0} wirklich löschen? Dadurch werden auch Uploads entfernt, die zu dieser Registrierung gehören.</value></data>
-  <data name="DeleteImageHosterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Bildhosterregistrierung {0} wirklich löschen?</value></data>
     <data name="DeleteImageUploadConfig" xml:space="preserve"><value>Bilduploadkonfiguration löschen</value></data>
     <data name="DeleteImageUploadConfigConfirmation" xml:space="preserve"><value>Möchtest du die Bilduploadkonfiguration {0} wirklich löschen?</value></data>
     <data name="DeleteImageUploadConfigTemplateConfirmation" xml:space="preserve"><value>Möchtest du die Bilduploadkonfigurationsvorlage {0} wirklich löschen?</value></data>
@@ -120,7 +118,6 @@
   <data name="DeleteLinkCrypterContainerConfirmation" xml:space="preserve"><value>Möchtest du diesen fehlgeschlagenen Linkcryptercontainer wirklich löschen? Beim nächsten Durchlauf wird automatisch ein neuer erstellt.</value></data>
   <data name="DeleteLinkCrypterContainerConfig" xml:space="preserve"><value>Linkcryptercontainerkonfiguration löschen</value></data>
   <data name="DeleteLinkCrypterContainerConfigConfirmation" xml:space="preserve"><value>Möchtest du diese Linkcryptercontainerkonfiguration wirklich löschen?</value></data>
-  <data name="DeleteLinkCrypterRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Linkcrypterregistrierung {0} wirklich löschen?</value></data>
   <data name="DeleteNamedItem" xml:space="preserve"><value>{0} löschen</value></data>
   <data name="DeleteNfoDatabaseRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die NFO-Datenbankregistrierung {0} wirklich löschen?</value></data>
   <data name="DeleteRegistration" xml:space="preserve"><value>Registrierung löschen</value></data>
@@ -931,7 +928,6 @@
   <data name="OpenDistributionSiteActions" xml:space="preserve"><value>Aktionen öffnen</value></data>
   <data name="DistributionSiteRegistrationActivated" xml:space="preserve"><value>Verteilungsseiten Registrierung {0} aktiviert</value></data>
   <data name="DistributionSiteRegistrationDeactivated" xml:space="preserve"><value>Verteilungsseiten Registrierung {0} deaktiviert</value></data>
-  <data name="DeleteDistributionSiteRegistrationConfirmation" xml:space="preserve"><value>Möchtest du die Verteilungsseite Registrierung {0} wirklich löschen?</value></data>
   <data name="Forum" xml:space="preserve"><value>Forum</value></data>
   <data name="Blog" xml:space="preserve"><value>Blog</value></data>
   <data name="PostToForum" xml:space="preserve"><value>Im Forum posten</value></data>
@@ -1245,7 +1241,6 @@
   <data name="RemoteSourceConnectionFailed" xml:space="preserve"><value>Verbindung zu {0} fehlgeschlagen: {1}</value></data>
   <data name="RemoteSourceActivated" xml:space="preserve"><value>Remotequelle {0} aktiviert</value></data>
   <data name="RemoteSourceDeactivated" xml:space="preserve"><value>Remotequelle {0} deaktiviert</value></data>
-  <data name="DeleteRemoteSourceConfirmation" xml:space="preserve"><value>Möchtest du die Remotequelle {0} wirklich löschen?</value></data>
   <data name="SecretUnchangedPlaceholder" xml:space="preserve"><value>Unverändert</value></data>
   <data name="SecretKeepCurrentHelp" xml:space="preserve"><value>Leer lassen, um den aktuellen Wert zu behalten.</value></data>
   <data name="MustBeWholeNumber" xml:space="preserve"><value>Muss eine ganze Zahl sein</value></data>
@@ -1400,4 +1395,6 @@
   <data name="ReleaseFolderAlreadyUsedByRelease" xml:space="preserve"><value>Dieser Ordner ist bereits der Releaseordner eines Releases.</value></data>
   <data name="ReleaseFolderAlreadyUsedByUnmanagedRelease" xml:space="preserve"><value>Dieser Ordner ist bereits der Archivordner eines unmanaged Releases.</value></data>
   <data name="ReleaseFolderAlreadyUsedByRemoteDownload" xml:space="preserve"><value>Dieser Ordner ist bereits der Zielordner eines Remotedownloads.</value></data>
+  <data name="DeleteRegistrationWarning" xml:space="preserve"><value>Beim Löschen dieser Registrierung werden auch alle zugehörigen Daten dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.</value></data>
+  <data name="TypeNameToConfirmDeletion" xml:space="preserve"><value>Gib {0} ein, um das Löschen zu bestätigen</value></data>
 </root>

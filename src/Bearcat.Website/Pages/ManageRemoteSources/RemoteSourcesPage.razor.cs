@@ -2,6 +2,7 @@ using Bearcat.Domain.UseCases.ManageRemoteSources;
 using Bearcat.Domain.UseCases.ManageRemoteSources.ReadModels;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Repositories;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 
 namespace Bearcat.Website.Pages.ManageRemoteSources;
@@ -114,18 +115,31 @@ public partial class RemoteSourcesPage(
 
     private async Task DeleteAsync(RemoteSourceRegistrationReadModel registration)
     {
-        var result = await dialogService.ConfirmAsync(
-            L["DeleteNamedItem", registration.Name],
-            L["DeleteRemoteSourceConfirmation", registration.Name],
-            new ConfirmDialogOptions
+        var remoteSourceAutomationCount = await operationRunner.RunAsync(
+            (RemoteSourceRegistrationService service) =>
+                service.GetRemoteSourceAutomationCountAsync(registration.Id)
+        );
+
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(ConfirmDeletionByTypingNameDialog.NameToConfirm)] = registration.Name,
+            [nameof(ConfirmDeletionByTypingNameDialog.AffectedItemsLabel)] = L[
+                "RemoteSourceAutomations"
+            ].Value,
+            [nameof(ConfirmDeletionByTypingNameDialog.AffectedItemsCount)] =
+                remoteSourceAutomationCount,
+        };
+
+        var dialog = await dialogService.OpenAsync<ConfirmDeletionByTypingNameDialog>(
+            parameters,
+            new DialogOpenOptions
             {
-                ConfirmText = L["Delete"],
-                CancelText = L["Cancel"],
-                Destructive = true,
+                Title = L["DeleteNamedItem", registration.Name],
+                ShowClose = true,
             }
         );
 
-        if (!result.Confirmed)
+        if (dialog.Cancelled)
         {
             return;
         }

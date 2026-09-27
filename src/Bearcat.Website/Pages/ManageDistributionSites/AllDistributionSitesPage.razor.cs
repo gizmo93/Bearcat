@@ -2,6 +2,7 @@ using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Domain.UseCases.ManageDistributionSites.ReadModels;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
@@ -103,18 +104,32 @@ public partial class AllDistributionSitesPage(
 
     private async Task DeleteAsync(DistributionSiteRegistrationReadModel distributionSite)
     {
-        var result = await dialogService.ConfirmAsync(
-            L["DeleteNamedItem", distributionSite.Name],
-            L["DeleteDistributionSiteRegistrationConfirmation", distributionSite.Name],
-            new ConfirmDialogOptions
+        var forumPostingRuleCount = await operationRunner.RunAsync(
+            (DistributionSiteRegistrationService service) =>
+                service.GetForumPostingRuleCountAsync(
+                    distributionSite.DistributionSiteRegistrationId
+                )
+        );
+
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(ConfirmDeletionByTypingNameDialog.NameToConfirm)] = distributionSite.Name,
+            [nameof(ConfirmDeletionByTypingNameDialog.AffectedItemsLabel)] = L[
+                "ForumPostingRules"
+            ].Value,
+            [nameof(ConfirmDeletionByTypingNameDialog.AffectedItemsCount)] = forumPostingRuleCount,
+        };
+
+        var dialog = await dialogService.OpenAsync<ConfirmDeletionByTypingNameDialog>(
+            parameters,
+            new DialogOpenOptions
             {
-                ConfirmText = L["Delete"],
-                CancelText = L["Cancel"],
-                Destructive = true,
+                Title = L["DeleteNamedItem", distributionSite.Name],
+                ShowClose = true,
             }
         );
 
-        if (!result.Confirmed)
+        if (dialog.Cancelled)
         {
             return;
         }
