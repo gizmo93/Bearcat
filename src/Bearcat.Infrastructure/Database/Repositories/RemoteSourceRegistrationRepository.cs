@@ -44,6 +44,17 @@ public class RemoteSourceRegistrationRepository(
             .ToList();
     }
 
+    public async Task<int> GetRemoteSourceAutomationCountAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead.RemoteSourceAutomations.CountAsync(
+            automation => automation.RemoteSourceRegistrationId == id,
+            cancellationToken
+        );
+    }
+
     public async Task<RemoteSourceRegistration> GetByIdAsync(
         int id,
         CancellationToken cancellationToken

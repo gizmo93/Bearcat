@@ -42,8 +42,14 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
 
         hosterFactoryMock.Setup(f => f.GetByName(HosterClassName)).Returns(hosterMock.Object);
 
+        var repository = new HosterConfigurationRepository(
+            dbContext,
+            dbContext,
+            hosterFactoryMock.Object
+        );
         service = new HosterRegistrationService(
-            new HosterConfigurationRepository(dbContext, dbContext, hosterFactoryMock.Object),
+            repository,
+            repository,
             hosterFactoryMock.Object,
             new HosterCaptchaVerificationService(notificationServiceMock.Object),
             NoOpSecretProtector.Instance
@@ -463,6 +469,45 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
             .Returns(hosterConfigMock.Object);
     }
 
+    [Test]
+    public async Task GetUploadCountAsync_UploadsOfSeveralHosters_CountsOnlyUploadsOfRegistration()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync(isActive: true);
+        var otherRegistration = await AddHosterRegistrationAsync(isActive: true);
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Managed releases",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        dbContext.UploadConfigs.AddRange(
+            CreateUploadConfig(releaseGroup, "First.Release", registration, uploadCount: 2),
+            CreateUploadConfig(releaseGroup, "Second.Release", registration, uploadCount: 1),
+            CreateUploadConfig(releaseGroup, "Third.Release", otherRegistration, uploadCount: 1)
+        );
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.GetUploadCountAsync(registration.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(3);
+    }
+
+    [Test]
+    public async Task GetUploadCountAsync_RegistrationWithoutUploads_ReturnsZero()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync(isActive: true);
+
+        // Act
+        var result = await service.GetUploadCountAsync(registration.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(0);
+    }
+
     private async Task<HosterRegistration> AddHosterRegistrationAsync(
         bool isActive,
         string hosterClassName = HosterClassName,
@@ -482,5 +527,47 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         await dbContext.SaveChangesAsync();
 
         return registration;
+    }
+
+    private static UploadConfig CreateUploadConfig(
+        ReleaseGroup releaseGroup,
+        string releaseName,
+        HosterRegistration hosterRegistration,
+        int uploadCount
+    )
+    {
+        var release = new Release
+        {
+            Name = releaseName,
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = $"/tmp/{releaseName}",
+            ReleaseGroup = releaseGroup,
+        };
+
+        return new UploadConfig
+        {
+            Release = release,
+            ArchiveConfig = new ArchiveConfig
+            {
+                Release = release,
+                Name = "Main archive",
+                ArchiveFilesBasePath = "/tmp/archive",
+                ArchiverName = "zip",
+                ArchiveFileSizeMb = 512,
+            },
+            HosterRegistration = hosterRegistration,
+            Name = "Upload",
+            Uploads = Enumerable
+                .Range(0, uploadCount)
+                .Select(_ => new Upload
+                {
+                    CreatedAt = DateTime.UtcNow,
+                    UploadState = UploadState.Completed,
+                    OnlineState = OnlineState.Online,
+                    UploadedFiles = [],
+                    ErrorMessages = [],
+                })
+                .ToList(),
+        };
     }
 }

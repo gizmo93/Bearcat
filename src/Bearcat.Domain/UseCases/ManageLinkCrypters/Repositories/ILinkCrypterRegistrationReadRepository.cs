@@ -12,4 +12,9 @@ public interface ILinkCrypterRegistrationReadRepository
         int id,
         CancellationToken cancellationToken = default
     );
+
+    Task<int> GetLinkCrypterContainerCountAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    );
 }

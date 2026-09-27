@@ -68,6 +68,17 @@ public class HosterConfigurationRepository(
             .ToList();
     }
 
+    public async Task<int> GetUploadCountAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead.Uploads.CountAsync(
+            upload => upload.UploadConfig.HosterRegistrationId == id,
+            cancellationToken
+        );
+    }
+
     public async Task<HosterRegistration> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
         return await dbWrite.HosterRegistrations.FirstAsync(h => h.Id == id, cancellationToken);

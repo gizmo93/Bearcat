@@ -12,4 +12,6 @@ public interface IImageHosterRegistrationReadRepository
         int id,
         CancellationToken cancellationToken = default
     );
+
+    Task<int> GetImageUploadCountAsync(int id, CancellationToken cancellationToken = default);
 }

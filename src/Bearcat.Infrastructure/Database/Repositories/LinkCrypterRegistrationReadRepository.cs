@@ -81,4 +81,15 @@ public class LinkCrypterRegistrationReadRepository(
             crypter.SupportsClickAndLoad
         );
     }
+
+    public async Task<int> GetLinkCrypterContainerCountAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbRead.LinkCrypterContainers.CountAsync(
+            container => container.LinkCrypterRegistrationId == id,
+            cancellationToken
+        );
+    }
 }
