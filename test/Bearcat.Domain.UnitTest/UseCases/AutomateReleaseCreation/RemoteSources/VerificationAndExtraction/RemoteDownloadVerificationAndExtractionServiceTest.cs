@@ -255,6 +255,90 @@ public class RemoteDownloadVerificationAndExtractionServiceTest
     }
 
     [Test]
+    public async Task ProcessAsync_ArchiveContainsOnlyWrapperFolder_MovesContentOfWrapperFolder()
+    {
+        // Arrange
+        var firstVolumeFilePath = WriteFile("release.rar", "volume");
+        archiveExtractor.AddArchive(
+            new ArchiveToExtract(firstVolumeFilePath, [firstVolumeFilePath]),
+            new Dictionary<string, string>
+            {
+                [Path.Combine("Some.Release.Name", "movie.mkv")] = "movie",
+                [Path.Combine("Some.Release.Name", "Sample", "sample.mkv")] = "sample",
+            }
+        );
+        var download = AddDownload(extractArchives: true);
+
+        // Act
+        await CreateService().ProcessAsync(CancellationToken.None);
+
+        // Assert
+        download.State.ShouldBe(RemoteSourceDownloadState.ReadyForReleaseCreation);
+        GetRelativeFilePaths()
+            .ShouldBe(["movie.mkv", Path.Combine("Sample", "sample.mkv")], ignoreOrder: true);
+        Directory.Exists(Path.Join(localFolderPath, "Some.Release.Name")).ShouldBeFalse();
+        Directory.Exists(Path.Join(localFolderPath, TemporaryExtractionFolderName)).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ProcessAsync_ArchiveContainsFolderAndFile_KeepsFolder()
+    {
+        // Arrange
+        var firstVolumeFilePath = WriteFile("release.rar", "volume");
+        archiveExtractor.AddArchive(
+            new ArchiveToExtract(firstVolumeFilePath, [firstVolumeFilePath]),
+            new Dictionary<string, string>
+            {
+                [Path.Combine("Some.Release.Name", "movie.mkv")] = "movie",
+                ["release.nfo"] = "nfo",
+            }
+        );
+        var download = AddDownload(extractArchives: true);
+
+        // Act
+        await CreateService().ProcessAsync(CancellationToken.None);
+
+        // Assert
+        download.State.ShouldBe(RemoteSourceDownloadState.ReadyForReleaseCreation);
+        GetRelativeFilePaths()
+            .ShouldBe(
+                [Path.Combine("Some.Release.Name", "movie.mkv"), "release.nfo"],
+                ignoreOrder: true
+            );
+    }
+
+    [Test]
+    public async Task ProcessAsync_WrapperFolderContentConflictsWithExistingFile_FailsWithoutMovingAnything()
+    {
+        // Arrange
+        var firstVolumeFilePath = WriteFile("release.rar", "volume");
+        WriteFile("movie.mkv", "existing movie");
+        archiveExtractor.AddArchive(
+            new ArchiveToExtract(firstVolumeFilePath, [firstVolumeFilePath]),
+            new Dictionary<string, string>
+            {
+                [Path.Combine("Some.Release.Name", "movie.mkv")] = "extracted movie",
+                [Path.Combine("Some.Release.Name", "release.nfo")] = "nfo",
+            }
+        );
+        var download = AddDownload(extractArchives: true);
+
+        // Act
+        await CreateService().ProcessAsync(CancellationToken.None);
+
+        // Assert
+        download.State.ShouldBe(RemoteSourceDownloadState.Failed);
+        download.ErrorMessage!.ShouldContain("movie.mkv");
+        download.ErrorMessage!.ShouldContain("already exist");
+        download.ErrorMessage!.ShouldNotContain("release.nfo");
+        GetRelativeFilePaths().ShouldBe(["movie.mkv", "release.rar"], ignoreOrder: true);
+        (await File.ReadAllTextAsync(Path.Combine(localFolderPath, "movie.mkv"))).ShouldBe(
+            "existing movie"
+        );
+        Directory.Exists(Path.Join(localFolderPath, TemporaryExtractionFolderName)).ShouldBeFalse();
+    }
+
+    [Test]
     public async Task ProcessAsync_ExtractionEnabledWithoutArchives_MarksReadyWithoutExtractionTime()
     {
         // Arrange

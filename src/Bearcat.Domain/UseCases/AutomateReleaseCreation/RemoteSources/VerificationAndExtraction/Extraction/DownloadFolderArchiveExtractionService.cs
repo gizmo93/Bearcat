@@ -232,7 +232,36 @@ public class DownloadFolderArchiveExtractionService(
             );
         }
 
-        return new ExtractedArchive(archiveFolderPath, temporaryFolderPath);
+        return new ExtractedArchive(
+            ArchiveFolderPath: archiveFolderPath,
+            ExtractedEntriesFolderPath: GetFolderContainingExtractedEntries(
+                localFolderPath,
+                firstVolumeFilePath,
+                temporaryFolderPath
+            )
+        );
+    }
+
+    private string GetFolderContainingExtractedEntries(
+        string localFolderPath,
+        string firstVolumeFilePath,
+        string temporaryFolderPath
+    )
+    {
+        var entryPaths = Directory.GetFileSystemEntries(temporaryFolderPath);
+
+        if (entryPaths.Length != 1 || !Directory.Exists(entryPaths[0]))
+        {
+            return temporaryFolderPath;
+        }
+
+        logger.LogInformation(
+            "Skipping the wrapper folder {WrapperFolderName} of {ArchiveFilePath} and moving its content instead",
+            Path.GetFileName(entryPaths[0]),
+            Path.GetRelativePath(localFolderPath, firstVolumeFilePath)
+        );
+
+        return entryPaths[0];
     }
 
     private static async Task<ArchiveExtractionResult> ExtractWhileReportingExtractedBytesAsync(
@@ -320,7 +349,7 @@ public class DownloadFolderArchiveExtractionService(
         return extractedArchives
             .SelectMany(extractedArchive =>
                 Directory
-                    .GetFileSystemEntries(extractedArchive.TemporaryFolderPath)
+                    .GetFileSystemEntries(extractedArchive.ExtractedEntriesFolderPath)
                     .Order(StringComparer.Ordinal)
                     .Select(entryPath => new EntryToMove(
                         SourcePath: entryPath,
@@ -427,7 +456,10 @@ public class DownloadFolderArchiveExtractionService(
         }
     }
 
-    private sealed record ExtractedArchive(string ArchiveFolderPath, string TemporaryFolderPath);
+    private sealed record ExtractedArchive(
+        string ArchiveFolderPath,
+        string ExtractedEntriesFolderPath
+    );
 
     private sealed record EntryToMove(string SourcePath, string TargetPath);
 
