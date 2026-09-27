@@ -3,6 +3,7 @@ using System.Text;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UnitTest.UseCases.PostToForums;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.Extraction;
@@ -25,6 +26,7 @@ public class RemoteDownloadVerificationAndExtractionServiceTest
     private FakeRemoteDownloadVerificationAndExtractionRepository repository = null!;
     private FakeArchiveExtractor archiveExtractor = null!;
     private FakeNotificationService notificationService = null!;
+    private RecordingTransferProgressTracker progressTracker = null!;
     private string localFolderPath = null!;
 
     [SetUp]
@@ -33,6 +35,7 @@ public class RemoteDownloadVerificationAndExtractionServiceTest
         repository = new FakeRemoteDownloadVerificationAndExtractionRepository();
         archiveExtractor = new FakeArchiveExtractor();
         notificationService = new FakeNotificationService();
+        progressTracker = new RecordingTransferProgressTracker();
         localFolderPath = Directory
             .CreateDirectory(
                 Path.Combine(
@@ -188,6 +191,67 @@ public class RemoteDownloadVerificationAndExtractionServiceTest
                 SearchOption.AllDirectories
             )
             .ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task ProcessAsync_ExtractionEnabled_TracksOneFilePerArchiveAndStopsTracking()
+    {
+        // Arrange
+        var firstVolumeFilePath = WriteFile("release.rar", "first volume");
+        var secondVolumeFilePath = WriteFile("release.r00", "second volume");
+        var subsVolumeFilePath = WriteFile(Path.Combine("Subs", "subs.rar"), "subtitles");
+        archiveExtractor.AddArchive(
+            new ArchiveToExtract(firstVolumeFilePath, [firstVolumeFilePath, secondVolumeFilePath]),
+            new Dictionary<string, string> { ["movie.mkv"] = "movie" }
+        );
+        archiveExtractor.AddArchive(
+            new ArchiveToExtract(subsVolumeFilePath, [subsVolumeFilePath]),
+            new Dictionary<string, string> { ["english.sub"] = "subtitles" }
+        );
+        var download = AddDownload(extractArchives: true);
+        var identifier = new TransferIdentifier(TransferType.RemoteDownloadExtraction, download.Id);
+
+        // Act
+        await CreateService().ProcessAsync(CancellationToken.None);
+
+        // Assert
+        download.State.ShouldBe(RemoteSourceDownloadState.ReadyForReleaseCreation);
+        progressTracker
+            .PlannedFilesPerIdentifier[identifier]
+            .ShouldBe([
+                new TransferFile(1, "release.rar", "Main FTP", 25, IsAlreadyTransferred: false),
+                new TransferFile(
+                    2,
+                    Path.Combine("Subs", "subs.rar"),
+                    "Main FTP",
+                    9,
+                    IsAlreadyTransferred: false
+                ),
+            ]);
+        progressTracker.StoppedIdentifiers.ShouldBe([identifier]);
+        progressTracker.Get(identifier).ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ProcessAsync_ExtractorReportsFailure_StopsTrackingExtractionProgress()
+    {
+        // Arrange
+        var firstVolumeFilePath = WriteFile("release.rar", "volume");
+        archiveExtractor.AddArchive(
+            new ArchiveToExtract(firstVolumeFilePath, [firstVolumeFilePath]),
+            new Dictionary<string, string>()
+        );
+        archiveExtractor.FailureResult = new ArchiveExtractionResult(false, ["CRC failed"]);
+        var download = AddDownload(extractArchives: true);
+
+        // Act
+        await CreateService().ProcessAsync(CancellationToken.None);
+
+        // Assert
+        download.State.ShouldBe(RemoteSourceDownloadState.Failed);
+        progressTracker.StoppedIdentifiers.ShouldBe([
+            new TransferIdentifier(TransferType.RemoteDownloadExtraction, download.Id),
+        ]);
     }
 
     [Test]
@@ -429,10 +493,11 @@ public class RemoteDownloadVerificationAndExtractionServiceTest
 
         return new RemoteDownloadVerificationAndExtractionService(
             repository,
-            new SfvChecksumVerifier(NullLogger<SfvChecksumVerifier>.Instance),
+            new SfvChecksumVerifier(progressTracker, NullLogger<SfvChecksumVerifier>.Instance),
             new DownloadFolderArchiveExtractionService(
                 archiverFactory.Object,
                 fileSystemService.Object,
+                progressTracker,
                 NullLogger<DownloadFolderArchiveExtractionService>.Instance
             ),
             notificationService,

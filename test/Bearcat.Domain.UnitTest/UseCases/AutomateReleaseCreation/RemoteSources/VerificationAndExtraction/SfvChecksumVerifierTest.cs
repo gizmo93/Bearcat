@@ -1,5 +1,7 @@
 using System.IO.Hashing;
 using System.Text;
+using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.SfvVerification;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
@@ -9,6 +11,8 @@ namespace Bearcat.Domain.UnitTest.UseCases.AutomateReleaseCreation.RemoteSources
 public class SfvChecksumVerifierTest
 {
     private string localFolderPath = null!;
+    private RemoteSourceDownload download = null!;
+    private RecordingTransferProgressTracker progressTracker = null!;
     private SfvChecksumVerifier verifier = null!;
 
     [SetUp]
@@ -17,7 +21,19 @@ public class SfvChecksumVerifierTest
         localFolderPath = Directory
             .CreateDirectory(Path.Combine(Path.GetTempPath(), $"bearcat-sfv-{Guid.NewGuid():N}"))
             .FullName;
-        verifier = new SfvChecksumVerifier(NullLogger<SfvChecksumVerifier>.Instance);
+        download = new RemoteSourceDownload
+        {
+            Id = 7,
+            SourceName = "Main FTP",
+            RemoteFolderPath = "/incoming/release",
+            FolderName = "release",
+            LocalFolderPath = localFolderPath,
+        };
+        progressTracker = new RecordingTransferProgressTracker();
+        verifier = new SfvChecksumVerifier(
+            progressTracker,
+            NullLogger<SfvChecksumVerifier>.Instance
+        );
     }
 
     [TearDown]
@@ -63,11 +79,7 @@ public class SfvChecksumVerifierTest
         );
 
         // Act
-        var sfvFiles = await verifier.VerifyAsync(
-            localFolderPath,
-            [sfvFilePath],
-            CancellationToken.None
-        );
+        var sfvFiles = await verifier.VerifyAsync(download, [sfvFilePath], CancellationToken.None);
 
         // Assert
         var sfvFile = sfvFiles.ShouldHaveSingleItem();
@@ -75,6 +87,63 @@ public class SfvChecksumVerifierTest
         sfvFile
             .Entries.Select(entry => entry.RelativeFilePath)
             .ShouldBe(["release.rar", "release.r00"]);
+    }
+
+    [Test]
+    public async Task VerifyAsync_AllChecksumsMatch_ReportsAllBytesOfAllEntriesAndStopsTracking()
+    {
+        // Arrange
+        WriteFile("release.rar", "first volume");
+        WriteFile(Path.Combine("Subs", "subs.rar"), "subtitles");
+        var sfvFilePath = WriteFile(
+            "release.sfv",
+            CreateSfvLine("release.rar", "first volume"),
+            CreateSfvLine("Subs/subs.rar", "subtitles")
+        );
+        var identifier = new TransferIdentifier(TransferType.RemoteDownloadVerification, 7);
+
+        // Act
+        await verifier.VerifyAsync(download, [sfvFilePath], CancellationToken.None);
+
+        // Assert
+        progressTracker
+            .PlannedFilesPerIdentifier[identifier]
+            .ShouldBe([
+                new TransferFile(1, "release.rar", "Main FTP", 12, IsAlreadyTransferred: false),
+                new TransferFile(2, "Subs/subs.rar", "Main FTP", 9, IsAlreadyTransferred: false),
+            ]);
+        var snapshot = progressTracker.LastSnapshotPerIdentifier[identifier];
+        snapshot.TransferredBytes.ShouldBe(21);
+        snapshot.TotalBytes.ShouldBe(21);
+        snapshot
+            .Files.Select(file => (file.FileName, file.TransferredBytes))
+            .ShouldBe([("release.rar", 12L), ("Subs/subs.rar", 9L)], ignoreOrder: true);
+        progressTracker.StoppedIdentifiers.ShouldBe([identifier]);
+        progressTracker.Get(identifier).ShouldBeNull();
+    }
+
+    [Test]
+    public async Task VerifyAsync_FileMissing_PlansMissingFileWithoutSizeAndStopsTracking()
+    {
+        // Arrange
+        WriteFile("release.rar", "first volume");
+        var sfvFilePath = WriteFile(
+            "release.sfv",
+            CreateSfvLine("release.rar", "first volume"),
+            CreateSfvLine("release.r00", "second volume")
+        );
+        var identifier = new TransferIdentifier(TransferType.RemoteDownloadVerification, 7);
+
+        // Act
+        var verify = () => verifier.VerifyAsync(download, [sfvFilePath], CancellationToken.None);
+
+        // Assert
+        await Should.ThrowAsync<InvalidDataException>(verify);
+        progressTracker
+            .PlannedFilesPerIdentifier[identifier]
+            .Select(file => (file.FileName, file.SizeBytes))
+            .ShouldBe([("release.rar", (long?)12), ("release.r00", null)]);
+        progressTracker.StoppedIdentifiers.ShouldBe([identifier]);
     }
 
     [Test]
@@ -90,8 +159,7 @@ public class SfvChecksumVerifierTest
         );
 
         // Act
-        var verify = () =>
-            verifier.VerifyAsync(localFolderPath, [sfvFilePath], CancellationToken.None);
+        var verify = () => verifier.VerifyAsync(download, [sfvFilePath], CancellationToken.None);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidDataException>(verify);
@@ -112,8 +180,7 @@ public class SfvChecksumVerifierTest
         );
 
         // Act
-        var verify = () =>
-            verifier.VerifyAsync(localFolderPath, [sfvFilePath], CancellationToken.None);
+        var verify = () => verifier.VerifyAsync(download, [sfvFilePath], CancellationToken.None);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidDataException>(verify);
@@ -132,8 +199,7 @@ public class SfvChecksumVerifierTest
         var sfvFilePath = WriteFile("release.sfv", lines);
 
         // Act
-        var verify = () =>
-            verifier.VerifyAsync(localFolderPath, [sfvFilePath], CancellationToken.None);
+        var verify = () => verifier.VerifyAsync(download, [sfvFilePath], CancellationToken.None);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidDataException>(verify);
@@ -149,11 +215,7 @@ public class SfvChecksumVerifierTest
         var sfvFilePath = WriteFile("release.sfv", CreateSfvLine("My Release Name.r00", "volume"));
 
         // Act
-        var sfvFiles = await verifier.VerifyAsync(
-            localFolderPath,
-            [sfvFilePath],
-            CancellationToken.None
-        );
+        var sfvFiles = await verifier.VerifyAsync(download, [sfvFilePath], CancellationToken.None);
 
         // Assert
         var entry = sfvFiles.ShouldHaveSingleItem().Entries.ShouldHaveSingleItem();
@@ -179,11 +241,7 @@ public class SfvChecksumVerifierTest
         );
 
         // Act
-        var sfvFiles = await verifier.VerifyAsync(
-            localFolderPath,
-            [sfvFilePath],
-            CancellationToken.None
-        );
+        var sfvFiles = await verifier.VerifyAsync(download, [sfvFilePath], CancellationToken.None);
 
         // Assert
         sfvFiles
@@ -203,11 +261,7 @@ public class SfvChecksumVerifierTest
         var sfvFilePath = WriteFile("release.sfv", $@"CD1\release.rar {ComputeCrc32("volume"):X8}");
 
         // Act
-        var sfvFiles = await verifier.VerifyAsync(
-            localFolderPath,
-            [sfvFilePath],
-            CancellationToken.None
-        );
+        var sfvFiles = await verifier.VerifyAsync(download, [sfvFilePath], CancellationToken.None);
 
         // Assert
         var entry = sfvFiles.ShouldHaveSingleItem().Entries.ShouldHaveSingleItem();
@@ -226,11 +280,7 @@ public class SfvChecksumVerifierTest
         );
 
         // Act
-        var sfvFiles = await verifier.VerifyAsync(
-            localFolderPath,
-            [sfvFilePath],
-            CancellationToken.None
-        );
+        var sfvFiles = await verifier.VerifyAsync(download, [sfvFilePath], CancellationToken.None);
 
         // Assert
         var entry = sfvFiles.ShouldHaveSingleItem().Entries.ShouldHaveSingleItem();
@@ -250,8 +300,7 @@ public class SfvChecksumVerifierTest
         var sfvFilePath = WriteFile("release.sfv", "release.r00 1A2B3C4D", line);
 
         // Act
-        var verify = () =>
-            verifier.VerifyAsync(localFolderPath, [sfvFilePath], CancellationToken.None);
+        var verify = () => verifier.VerifyAsync(download, [sfvFilePath], CancellationToken.None);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidDataException>(verify);
@@ -269,8 +318,7 @@ public class SfvChecksumVerifierTest
         var sfvFilePath = WriteFile("release.sfv", line);
 
         // Act
-        var verify = () =>
-            verifier.VerifyAsync(localFolderPath, [sfvFilePath], CancellationToken.None);
+        var verify = () => verifier.VerifyAsync(download, [sfvFilePath], CancellationToken.None);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidDataException>(verify);

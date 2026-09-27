@@ -1,6 +1,9 @@
 using System.Globalization;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Transfers;
+using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.SfvVerification;
 using Humanizer;
 using Microsoft.Extensions.Logging;
@@ -10,17 +13,21 @@ namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Verifica
 public class DownloadFolderArchiveExtractionService(
     IArchiverFactory archiverFactory,
     IFileSystemService fileSystemService,
+    ITransferProgressTracker progressTracker,
     ILogger<DownloadFolderArchiveExtractionService> logger
 )
 {
     public const string TemporaryExtractionFolderName = ".bearcat-extraction";
 
+    private static readonly TimeSpan ExtractionProgressPollingInterval = TimeSpan.FromSeconds(1);
+
     public async Task<IReadOnlyList<ArchiveToExtract>> ExtractAllArchivesAsync(
-        string localFolderPath,
+        RemoteSourceDownload download,
         IReadOnlyList<SfvFile> sfvFiles,
         CancellationToken cancellationToken
     )
     {
+        var localFolderPath = download.LocalFolderPath;
         var archives = FindArchivesInFolderAndSubfolders(localFolderPath);
 
         if (archives.Count == 0)
@@ -30,18 +37,43 @@ public class DownloadFolderArchiveExtractionService(
 
         VerifyEnoughFreeDiskSpace(localFolderPath, archives);
 
-        var extractedArchives = new List<ExtractedArchive>();
+        var transferIdentifier = new TransferIdentifier(
+            TransferType.RemoteDownloadExtraction,
+            download.Id
+        );
 
-        foreach (var (archive, index) in archives.Select((archive, index) => (archive, index)))
+        var plannedFiles = archives
+            .Select(
+                (archive, index) =>
+                    new TransferFile(
+                        FileId: index + 1,
+                        FileName: Path.GetRelativePath(
+                            localFolderPath,
+                            archive.ArchiveToExtract.FirstVolumeFilePath
+                        ),
+                        SourceName: download.SourceName,
+                        SizeBytes: GetTotalVolumeSizeBytes(archive),
+                        IsAlreadyTransferred: false
+                    )
+            )
+            .ToList();
+
+        progressTracker.StartTracking(transferIdentifier, plannedFiles);
+
+        List<ExtractedArchive> extractedArchives;
+
+        try
         {
-            extractedArchives.Add(
-                await ExtractIntoTemporaryFolderAsync(
-                    localFolderPath: localFolderPath,
-                    archive: archive,
-                    runningNumber: index + 1,
-                    cancellationToken: cancellationToken
-                )
+            extractedArchives = await ExtractIntoTemporaryFoldersAsync(
+                localFolderPath: localFolderPath,
+                archivesWithPlannedFiles: archives.Zip(plannedFiles).ToList(),
+                transferIdentifier: transferIdentifier,
+                cancellationToken: cancellationToken
             );
+        }
+        finally
+        {
+            progressTracker.StopTracking(transferIdentifier);
         }
 
         var entriesToMove = GetEntriesToMove(extractedArchives);
@@ -103,9 +135,7 @@ public class DownloadFolderArchiveExtractionService(
         List<ArchiveWithExtractor> archives
     )
     {
-        var requiredBytes = archives
-            .SelectMany(archive => archive.ArchiveToExtract.VolumeFilePaths)
-            .Sum(volumeFilePath => new FileInfo(volumeFilePath).Length);
+        var requiredBytes = archives.Sum(GetTotalVolumeSizeBytes);
 
         var availableBytes = new DriveInfo(localFolderPath).AvailableFreeSpace;
 
@@ -117,10 +147,51 @@ public class DownloadFolderArchiveExtractionService(
         }
     }
 
+    private static long GetTotalVolumeSizeBytes(ArchiveWithExtractor archive)
+    {
+        return archive.ArchiveToExtract.VolumeFilePaths.Sum(volumeFilePath =>
+            new FileInfo(volumeFilePath).Length
+        );
+    }
+
+    private async Task<List<ExtractedArchive>> ExtractIntoTemporaryFoldersAsync(
+        string localFolderPath,
+        List<(ArchiveWithExtractor Archive, TransferFile PlannedFile)> archivesWithPlannedFiles,
+        TransferIdentifier transferIdentifier,
+        CancellationToken cancellationToken
+    )
+    {
+        var extractedArchives = new List<ExtractedArchive>();
+
+        foreach (var (archive, plannedFile) in archivesWithPlannedFiles)
+        {
+            var progress = new TransferProgressReporter(
+                tracker: progressTracker,
+                identifier: transferIdentifier,
+                fileId: plannedFile.FileId,
+                fileName: plannedFile.FileName,
+                sourceName: plannedFile.SourceName
+            );
+
+            extractedArchives.Add(
+                await ExtractIntoTemporaryFolderAsync(
+                    localFolderPath: localFolderPath,
+                    archive: archive,
+                    runningNumber: plannedFile.FileId,
+                    progress: progress,
+                    cancellationToken: cancellationToken
+                )
+            );
+        }
+
+        return extractedArchives;
+    }
+
     private async Task<ExtractedArchive> ExtractIntoTemporaryFolderAsync(
         string localFolderPath,
         ArchiveWithExtractor archive,
         int runningNumber,
+        ITransferProgress progress,
         CancellationToken cancellationToken
     )
     {
@@ -147,9 +218,10 @@ public class DownloadFolderArchiveExtractionService(
             temporaryFolderPath
         );
 
-        var result = await archive.Extractor.ExtractAsync(
-            archiveToExtract: archive.ArchiveToExtract,
-            destinationFolderPath: temporaryFolderPath,
+        var result = await ExtractWhileReportingExtractedBytesAsync(
+            archive: archive,
+            temporaryFolderPath: temporaryFolderPath,
+            progress: progress,
             cancellationToken: cancellationToken
         );
 
@@ -161,6 +233,86 @@ public class DownloadFolderArchiveExtractionService(
         }
 
         return new ExtractedArchive(archiveFolderPath, temporaryFolderPath);
+    }
+
+    private static async Task<ArchiveExtractionResult> ExtractWhileReportingExtractedBytesAsync(
+        ArchiveWithExtractor archive,
+        string temporaryFolderPath,
+        ITransferProgress progress,
+        CancellationToken cancellationToken
+    )
+    {
+        using var pollingCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(
+            cancellationToken
+        );
+
+        var pollingTask = ReportExtractedBytesPeriodicallyAsync(
+            temporaryFolderPath: temporaryFolderPath,
+            progress: progress,
+            cancellationToken: pollingCancellationSource.Token
+        );
+
+        try
+        {
+            return await archive.Extractor.ExtractAsync(
+                archiveToExtract: archive.ArchiveToExtract,
+                destinationFolderPath: temporaryFolderPath,
+                cancellationToken: cancellationToken
+            );
+        }
+        finally
+        {
+            await pollingCancellationSource.CancelAsync();
+            await pollingTask;
+        }
+    }
+
+    private static async Task ReportExtractedBytesPeriodicallyAsync(
+        string temporaryFolderPath,
+        ITransferProgress progress,
+        CancellationToken cancellationToken
+    )
+    {
+        using var timer = new PeriodicTimer(ExtractionProgressPollingInterval);
+        var reportedBytes = 0L;
+
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                reportedBytes = ReportNewlyExtractedBytes(
+                    temporaryFolderPath,
+                    reportedBytes,
+                    progress
+                );
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            ReportNewlyExtractedBytes(temporaryFolderPath, reportedBytes, progress);
+        }
+    }
+
+    private static long ReportNewlyExtractedBytes(
+        string temporaryFolderPath,
+        long reportedBytes,
+        ITransferProgress progress
+    )
+    {
+        var extractedBytes = new DirectoryInfo(temporaryFolderPath)
+            .EnumerateFiles(
+                "*",
+                new EnumerationOptions
+                {
+                    AttributesToSkip = FileAttributes.None,
+                    RecurseSubdirectories = true,
+                }
+            )
+            .Sum(file => file.Length);
+
+        progress.ReportBytesTransferred(extractedBytes - reportedBytes);
+
+        return extractedBytes;
     }
 
     private static List<EntryToMove> GetEntriesToMove(List<ExtractedArchive> extractedArchives)

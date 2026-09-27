@@ -107,11 +107,7 @@ public class RemoteDownloadVerificationAndExtractionService(
             download.LocalFolderPath
         );
 
-        return await sfvChecksumVerifier.VerifyAsync(
-            download.LocalFolderPath,
-            sfvFilePaths,
-            cancellationToken
-        );
+        return await sfvChecksumVerifier.VerifyAsync(download, sfvFilePaths, cancellationToken);
     }
 
     private async Task ExtractArchivesAsync(
@@ -124,7 +120,7 @@ public class RemoteDownloadVerificationAndExtractionService(
         await repository.SaveChangesAsync(cancellationToken);
 
         var extractedArchives = await archiveExtractionService.ExtractAllArchivesAsync(
-            localFolderPath: download.LocalFolderPath,
+            download: download,
             sfvFiles: sfvFiles,
             cancellationToken: cancellationToken
         );

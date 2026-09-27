@@ -3,6 +3,7 @@ using System.Text;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.Extraction;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.SfvVerification;
@@ -158,10 +159,14 @@ public class RemoteDownloadVerificationAndExtractionServiceTest : BearcatIntegra
 
         var service = new RemoteDownloadVerificationAndExtractionService(
             new RemoteSourceDownloadRepository(dbContext),
-            new SfvChecksumVerifier(NullLogger<SfvChecksumVerifier>.Instance),
+            new SfvChecksumVerifier(
+                new TransferProgressTracker(),
+                NullLogger<SfvChecksumVerifier>.Instance
+            ),
             new DownloadFolderArchiveExtractionService(
                 archiverFactory.Object,
                 new FileSystemService(),
+                new TransferProgressTracker(),
                 NullLogger<DownloadFolderArchiveExtractionService>.Instance
             ),
             new NotificationService(

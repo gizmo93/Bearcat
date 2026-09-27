@@ -865,10 +865,11 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
 
         var service = new RemoteDownloadVerificationAndExtractionService(
             new RemoteSourceDownloadRepository(dbContext),
-            new SfvChecksumVerifier(NullLogger<SfvChecksumVerifier>.Instance),
+            new SfvChecksumVerifier(progressTracker, NullLogger<SfvChecksumVerifier>.Instance),
             new DownloadFolderArchiveExtractionService(
                 Mock.Of<IArchiverFactory>(),
                 new FileSystemService(),
+                progressTracker,
                 NullLogger<DownloadFolderArchiveExtractionService>.Instance
             ),
             CreateNotificationService(dbContext),

@@ -1,11 +1,17 @@
 using System.Globalization;
 using System.IO.Hashing;
+using Bearcat.Abstractions.Transfers;
+using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
 using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.SfvVerification;
 
-public class SfvChecksumVerifier(ILogger<SfvChecksumVerifier> logger)
+public class SfvChecksumVerifier(
+    ITransferProgressTracker progressTracker,
+    ILogger<SfvChecksumVerifier> logger
+)
 {
     private const int Crc32HexLength = 8;
     private const int MaxListedFilePaths = 10;
@@ -29,33 +35,99 @@ public class SfvChecksumVerifier(ILogger<SfvChecksumVerifier> logger)
     }
 
     public async Task<IReadOnlyList<SfvFile>> VerifyAsync(
-        string localFolderPath,
+        RemoteSourceDownload download,
         IReadOnlyList<string> sfvFilePaths,
         CancellationToken cancellationToken
     )
     {
         var sfvFiles = new List<SfvFile>();
-        var missingRelativeFilePaths = new List<string>();
-        var mismatchingRelativeFilePaths = new List<string>();
 
         foreach (var sfvFilePath in sfvFilePaths)
         {
-            var sfvFile = await ParseSfvFileAsync(sfvFilePath, localFolderPath, cancellationToken);
-            sfvFiles.Add(sfvFile);
+            sfvFiles.Add(
+                await ParseSfvFileAsync(sfvFilePath, download.LocalFolderPath, cancellationToken)
+            );
+        }
 
-            foreach (var entry in sfvFile.Entries)
+        var entriesToVerify = sfvFiles
+            .SelectMany(sfvFile => sfvFile.Entries)
+            .Select((entry, index) => new EntryToVerify(index + 1, entry))
+            .ToList();
+
+        var transferIdentifier = new TransferIdentifier(
+            TransferType.RemoteDownloadVerification,
+            download.Id
+        );
+
+        progressTracker.StartTracking(
+            transferIdentifier,
+            entriesToVerify
+                .Select(entryToVerify => new TransferFile(
+                    FileId: entryToVerify.FileId,
+                    FileName: entryToVerify.Entry.RelativeFilePath,
+                    SourceName: download.SourceName,
+                    SizeBytes: GetFileSizeBytesOrNullWhenMissing(entryToVerify.Entry.FilePath),
+                    IsAlreadyTransferred: false
+                ))
+                .ToList()
+        );
+
+        try
+        {
+            await VerifyEntriesAsync(
+                download: download,
+                entriesToVerify: entriesToVerify,
+                transferIdentifier: transferIdentifier,
+                cancellationToken: cancellationToken
+            );
+        }
+        finally
+        {
+            progressTracker.StopTracking(transferIdentifier);
+        }
+
+        logger.LogInformation(
+            "Verified the CRC32 checksums of {FileCount} files listed in {SfvFileCount} SFV files in {LocalFolderPath}",
+            entriesToVerify.Count,
+            sfvFiles.Count,
+            download.LocalFolderPath
+        );
+
+        return sfvFiles;
+    }
+
+    private async Task VerifyEntriesAsync(
+        RemoteSourceDownload download,
+        List<EntryToVerify> entriesToVerify,
+        TransferIdentifier transferIdentifier,
+        CancellationToken cancellationToken
+    )
+    {
+        var missingRelativeFilePaths = new List<string>();
+        var mismatchingRelativeFilePaths = new List<string>();
+
+        foreach (var (fileId, entry) in entriesToVerify)
+        {
+            if (!File.Exists(entry.FilePath))
             {
-                if (!File.Exists(entry.FilePath))
-                {
-                    missingRelativeFilePaths.Add(entry.RelativeFilePath);
-                }
-                else if (
-                    await ComputeCrc32Async(entry.FilePath, cancellationToken)
-                    != entry.ExpectedCrc32
-                )
-                {
-                    mismatchingRelativeFilePaths.Add(entry.RelativeFilePath);
-                }
+                missingRelativeFilePaths.Add(entry.RelativeFilePath);
+                continue;
+            }
+
+            var progress = new TransferProgressReporter(
+                tracker: progressTracker,
+                identifier: transferIdentifier,
+                fileId: fileId,
+                fileName: entry.RelativeFilePath,
+                sourceName: download.SourceName
+            );
+
+            if (
+                await ComputeCrc32Async(entry.FilePath, progress, cancellationToken)
+                != entry.ExpectedCrc32
+            )
+            {
+                mismatchingRelativeFilePaths.Add(entry.RelativeFilePath);
             }
         }
 
@@ -68,15 +140,13 @@ public class SfvChecksumVerifier(ILogger<SfvChecksumVerifier> logger)
                 )
             );
         }
+    }
 
-        logger.LogInformation(
-            "Verified the CRC32 checksums of {FileCount} files listed in {SfvFileCount} SFV files in {LocalFolderPath}",
-            sfvFiles.Sum(sfvFile => sfvFile.Entries.Count),
-            sfvFiles.Count,
-            localFolderPath
-        );
+    private static long? GetFileSizeBytesOrNullWhenMissing(string filePath)
+    {
+        var fileInfo = new FileInfo(filePath);
 
-        return sfvFiles;
+        return fileInfo.Exists ? fileInfo.Length : null;
     }
 
     private static async Task<SfvFile> ParseSfvFileAsync(
@@ -162,20 +232,29 @@ public class SfvChecksumVerifier(ILogger<SfvChecksumVerifier> logger)
 
     private static async Task<uint> ComputeCrc32Async(
         string filePath,
+        ITransferProgress progress,
         CancellationToken cancellationToken
     )
     {
         var crc32 = new Crc32();
+        var buffer = new byte[ReadBufferSizeBytes];
 
         await using var stream = new FileStream(
             path: filePath,
             mode: FileMode.Open,
             access: FileAccess.Read,
             share: FileShare.Read,
-            bufferSize: ReadBufferSizeBytes,
+            bufferSize: 0,
             useAsync: true
         );
-        await crc32.AppendAsync(stream, cancellationToken);
+
+        int bytesRead;
+
+        while ((bytesRead = await stream.ReadAsync(buffer, cancellationToken)) > 0)
+        {
+            crc32.Append(buffer.AsSpan(0, bytesRead));
+            progress.ReportBytesTransferred(bytesRead);
+        }
 
         return crc32.GetCurrentHashAsUInt32();
     }
@@ -210,4 +289,6 @@ public class SfvChecksumVerifier(ILogger<SfvChecksumVerifier> logger)
             ? $"{listedFilePaths} and {relativeFilePaths.Count - MaxListedFilePaths} more"
             : listedFilePaths;
     }
+
+    private sealed record EntryToVerify(int FileId, SfvEntry Entry);
 }
