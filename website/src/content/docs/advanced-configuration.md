@@ -36,6 +36,7 @@ Use "Refresh" to reload the latest state.
 | Release folder automation | Every 2 minutes | Creates releases from matching direct subfolders using the selected template, once the [folder checks](#folder-automation) pass. |
 | Remote source scan | Every 2 minutes | Finds matching folders on FTP or FTPS servers and queues them once the [remote folder checks](#remote-downloads) pass. |
 | Remote source download | Every 20 seconds | Downloads queued remote folders. |
+| Remote download verification and extraction | Every 20 seconds | Checks completed downloads against their SFV files and extracts archives when the automation is set to do so. |
 | Remote download release creation | Every 20 seconds | Creates releases from completed downloads using their selected templates. |
 | Remote download raw file cleanup | Every 2 minutes | Converts downloaded releases to unmanaged and removes their raw files when [Keep raw files](/Bearcat/remote-downloads/#delete-raw-files-after-uploading) is off and the cleanup conditions are met. |
 | Release info resolution | Every 10 minutes | Resolves missing scene release information, NFO files, external IDs, and movie or TV metadata through the active NFO databases and metadata sources. |

@@ -24,6 +24,9 @@ public class RemoteSourceAutomationConfiguration : IEntityTypeConfiguration<Remo
             .IsRequired(false)
             .HasMaxLength(2);
         builder.Property(automation => automation.KeepRawFiles).IsRequired();
+        builder
+            .Property(automation => automation.ExtractArchivesBeforeReleaseCreation)
+            .IsRequired();
         builder.Property(automation => automation.Priority).IsRequired();
         builder.Property(automation => automation.IsEnabled).IsRequired();
         builder.Property(automation => automation.IgnoreExistingOnFirstScan).IsRequired();

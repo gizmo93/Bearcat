@@ -48,6 +48,7 @@ public partial class RemoteSourceAutomationsPage(
             ReleaseTemplateId = automation.ReleaseTemplateId,
             PrimaryLanguageCode = automation.PrimaryLanguageCode ?? string.Empty,
             KeepRawFiles = automation.KeepRawFiles,
+            ExtractArchivesBeforeReleaseCreation = automation.ExtractArchivesBeforeReleaseCreation,
             Priority = automation.Priority,
         };
 

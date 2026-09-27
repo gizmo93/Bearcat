@@ -24,6 +24,7 @@ public class RemoteSourceAutomationService(IRemoteSourceAutomationWriteRepositor
             ReleaseTemplateId = normalized.ReleaseTemplateId,
             PrimaryLanguageCode = normalized.PrimaryLanguageCode,
             KeepRawFiles = normalized.KeepRawFiles,
+            ExtractArchivesBeforeReleaseCreation = normalized.ExtractArchivesBeforeReleaseCreation,
             Priority = normalized.Priority,
             IsEnabled = true,
             IgnoreExistingOnFirstScan = normalized.IgnoreExistingOnFirstScan,
@@ -61,6 +62,8 @@ public class RemoteSourceAutomationService(IRemoteSourceAutomationWriteRepositor
         automation.ReleaseTemplateId = normalized.ReleaseTemplateId;
         automation.PrimaryLanguageCode = normalized.PrimaryLanguageCode;
         automation.KeepRawFiles = normalized.KeepRawFiles;
+        automation.ExtractArchivesBeforeReleaseCreation =
+            normalized.ExtractArchivesBeforeReleaseCreation;
         automation.Priority = normalized.Priority;
         automation.IgnoreExistingOnFirstScan = normalized.IgnoreExistingOnFirstScan;
 

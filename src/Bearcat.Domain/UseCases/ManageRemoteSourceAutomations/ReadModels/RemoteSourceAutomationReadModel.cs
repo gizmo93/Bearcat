@@ -16,6 +16,7 @@ public record RemoteSourceAutomationReadModel(
     ReleaseType ReleaseType,
     string? PrimaryLanguageCode,
     bool KeepRawFiles,
+    bool ExtractArchivesBeforeReleaseCreation,
     int Priority,
     bool IsEnabled,
     bool IgnoreExistingOnFirstScan,

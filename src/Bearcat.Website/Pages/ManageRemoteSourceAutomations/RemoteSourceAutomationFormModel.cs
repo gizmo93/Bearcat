@@ -22,6 +22,8 @@ public class RemoteSourceAutomationFormModel
 
     public bool KeepRawFiles { get; set; } = true;
 
+    public bool ExtractArchivesBeforeReleaseCreation { get; set; }
+
     public int Priority { get; set; } = RemoteSourceAutomation.DefaultPriority;
 
     public bool IgnoreExistingOnFirstScan { get; set; } = true;

@@ -166,6 +166,7 @@ public partial class CreateOrEditRemoteSourceAutomationDialog(
             ReleaseTemplateId = FormModel.ReleaseTemplateId!.Value,
             PrimaryLanguageCode = FormModel.PrimaryLanguageCode,
             KeepRawFiles = SelectedReleaseType is not ReleaseType.Managed || FormModel.KeepRawFiles,
+            ExtractArchivesBeforeReleaseCreation = FormModel.ExtractArchivesBeforeReleaseCreation,
             Priority = FormModel.Priority,
             IgnoreExistingOnFirstScan = FormModel.IgnoreExistingOnFirstScan,
         };

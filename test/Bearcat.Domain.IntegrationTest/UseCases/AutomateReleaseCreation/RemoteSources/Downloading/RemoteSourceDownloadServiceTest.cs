@@ -13,6 +13,9 @@ using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.Creation;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.Extraction;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.SfvVerification;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleases;
@@ -674,7 +677,7 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task RetryReleaseCreationAsync_FailedAfterCompleteDownload_CreatesReleaseFromKeptFiles()
+    public async Task RetryWithoutDownloadingAgainAsync_FailedAfterCompleteDownload_VerifiesAgainAndCreatesReleaseFromKeptFiles()
     {
         // Arrange
         AddServer("main");
@@ -694,8 +697,9 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
         await File.WriteAllTextAsync(keptFilePath, "content");
 
         // Act
-        await CreateStateService().RetryReleaseCreationAsync(download.Id);
+        await CreateStateService().RetryWithoutDownloadingAgainAsync(download.Id);
         var retried = await ReloadDownloadAsync(download.Id);
+        await VerifyAndExtractAsync();
         await CreateReleasesAsync();
 
         // Assert
@@ -711,7 +715,61 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task RetryReleaseCreationAsync_FailedBeforeDownloadCompleted_IsRejected()
+    public async Task RetryWithoutDownloadingAgainAsync_ArchivesWereExtracted_QueuesReleaseCreationDirectly()
+    {
+        // Arrange
+        AddServer("main");
+        var template = await AddReleaseTemplateAsync(ReleaseType.Managed);
+        var registration = await AddRegistrationAsync("main");
+        var automation = await AddAutomationAsync(registration, template);
+        var download = await AddDownloadAsync(
+            automation,
+            ReleaseName,
+            RemoteSourceDownloadState.Failed,
+            startedAt: StartTime,
+            completedAt: StartTime,
+            errorMessage: "No release could be created",
+            archivesExtractedAt: StartTime
+        );
+
+        // Act
+        await CreateStateService().RetryWithoutDownloadingAgainAsync(download.Id);
+
+        // Assert
+        var reloaded = await ReloadDownloadAsync(download.Id);
+        reloaded.State.ShouldBe(RemoteSourceDownloadState.ReadyForReleaseCreation);
+        reloaded.ErrorMessage.ShouldBeNull();
+        reloaded.ArchivesExtractedAt.ShouldBe(StartTime);
+    }
+
+    [Test]
+    public async Task RestartDownloadAsync_ArchivesWereExtracted_ResetsExtractionTime()
+    {
+        // Arrange
+        AddServer("main");
+        var template = await AddReleaseTemplateAsync(ReleaseType.Managed);
+        var registration = await AddRegistrationAsync("main");
+        var automation = await AddAutomationAsync(registration, template);
+        var download = await AddDownloadAsync(
+            automation,
+            ReleaseName,
+            RemoteSourceDownloadState.Failed,
+            startedAt: StartTime,
+            completedAt: StartTime,
+            archivesExtractedAt: StartTime
+        );
+
+        // Act
+        await CreateStateService().RestartDownloadAsync(download.Id);
+
+        // Assert
+        var reloaded = await ReloadDownloadAsync(download.Id);
+        reloaded.State.ShouldBe(RemoteSourceDownloadState.Pending);
+        reloaded.ArchivesExtractedAt.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task RetryWithoutDownloadingAgainAsync_FailedBeforeDownloadCompleted_IsRejected()
     {
         // Arrange
         AddServer("main");
@@ -727,7 +785,7 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
         );
 
         // Act
-        var retry = () => CreateStateService().RetryReleaseCreationAsync(download.Id);
+        var retry = () => CreateStateService().RetryWithoutDownloadingAgainAsync(download.Id);
 
         // Assert
         await Should.ThrowAsync<InvalidOperationException>(retry);
@@ -739,7 +797,7 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
     [TestCase(RemoteSourceDownloadState.Observing)]
     [TestCase(RemoteSourceDownloadState.Pending)]
     [TestCase(RemoteSourceDownloadState.Canceled)]
-    public async Task RetryReleaseCreationAsync_NotFailedDownload_IsRejected(
+    public async Task RetryWithoutDownloadingAgainAsync_NotFailedDownload_IsRejected(
         RemoteSourceDownloadState state
     )
     {
@@ -757,7 +815,7 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
         );
 
         // Act
-        var retry = () => CreateStateService().RetryReleaseCreationAsync(download.Id);
+        var retry = () => CreateStateService().RetryWithoutDownloadingAgainAsync(download.Id);
 
         // Assert
         await Should.ThrowAsync<InvalidOperationException>(retry);
@@ -765,6 +823,9 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
     }
 
     [TestCase(RemoteSourceDownloadState.Downloaded)]
+    [TestCase(RemoteSourceDownloadState.Verifying)]
+    [TestCase(RemoteSourceDownloadState.Extracting)]
+    [TestCase(RemoteSourceDownloadState.ReadyForReleaseCreation)]
     [TestCase(RemoteSourceDownloadState.ReleaseCreated)]
     public async Task StateChanges_CompletedDownload_AreRejected(RemoteSourceDownloadState state)
     {
@@ -780,20 +841,42 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
         var cancel = () => stateService.CancelDownloadAsync(download.Id);
         var restart = () => stateService.RestartDownloadAsync(download.Id);
         var ignore = () => stateService.IgnoreDownloadAsync(download.Id);
-        var retryReleaseCreation = () => stateService.RetryReleaseCreationAsync(download.Id);
+        var retryWithoutDownloadingAgain = () =>
+            stateService.RetryWithoutDownloadingAgainAsync(download.Id);
 
         // Assert
         await Should.ThrowAsync<InvalidOperationException>(cancel);
         await Should.ThrowAsync<InvalidOperationException>(restart);
         await Should.ThrowAsync<InvalidOperationException>(ignore);
-        await Should.ThrowAsync<InvalidOperationException>(retryReleaseCreation);
+        await Should.ThrowAsync<InvalidOperationException>(retryWithoutDownloadingAgain);
         (await ReloadDownloadAsync(download.Id)).State.ShouldBe(state);
     }
 
     private async Task ProcessAsync()
     {
         await DownloadAsync();
+        await VerifyAndExtractAsync();
         await CreateReleasesAsync();
+    }
+
+    private async Task VerifyAndExtractAsync()
+    {
+        var dbContext = CreateDbContext();
+
+        var service = new RemoteDownloadVerificationAndExtractionService(
+            new RemoteSourceDownloadRepository(dbContext),
+            new SfvChecksumVerifier(NullLogger<SfvChecksumVerifier>.Instance),
+            new DownloadFolderArchiveExtractionService(
+                Mock.Of<IArchiverFactory>(),
+                new FileSystemService(),
+                NullLogger<DownloadFolderArchiveExtractionService>.Instance
+            ),
+            CreateNotificationService(dbContext),
+            timeProvider,
+            NullLogger<RemoteDownloadVerificationAndExtractionService>.Instance
+        );
+
+        await service.ProcessAsync(CancellationToken.None);
     }
 
     private async Task DownloadAsync()
@@ -1050,7 +1133,8 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
         DateTime? completedAt = null,
         string? errorMessage = null,
         string? localFolderPath = null,
-        bool hasReleaseTemplate = true
+        bool hasReleaseTemplate = true,
+        DateTime? archivesExtractedAt = null
     )
     {
         var download = new RemoteSourceDownload
@@ -1071,6 +1155,7 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
             DiscoveredAt = StartTime,
             StartedAt = startedAt,
             CompletedAt = completedAt,
+            ArchivesExtractedAt = archivesExtractedAt,
             ErrorMessage = errorMessage,
         };
 

@@ -102,7 +102,7 @@ public partial class RemoteSourceDownloadsPage(
     {
         return download.CanCancel
             || download.CanRestart
-            || download.CanRetryReleaseCreation
+            || download.CanRetryWithoutDownloadingAgain
             || download.CanIgnore;
     }
 
@@ -150,11 +150,11 @@ public partial class RemoteSourceDownloadsPage(
         );
     }
 
-    private async Task RetryReleaseCreationAsync(RemoteSourceDownloadReadModel download)
+    private async Task RetryWithoutDownloadingAgainAsync(RemoteSourceDownloadReadModel download)
     {
         await ChangeStateAsync(
             download,
-            (service, id) => service.RetryReleaseCreationAsync(id),
+            (service, id) => service.RetryWithoutDownloadingAgainAsync(id),
             L["ReleaseCreationQueuedAgain", download.FolderName]
         );
     }

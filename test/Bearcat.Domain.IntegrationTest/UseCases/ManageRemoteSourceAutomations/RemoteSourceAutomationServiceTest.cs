@@ -48,6 +48,7 @@ public class RemoteSourceAutomationServiceTest : BearcatIntegrationTest
                 FolderNamePattern = " *.German.* ",
                 PrimaryLanguageCode = " DE ",
                 KeepRawFiles = false,
+                ExtractArchivesBeforeReleaseCreation = true,
                 Priority = 50,
                 IgnoreExistingOnFirstScan = true,
             }
@@ -63,6 +64,7 @@ public class RemoteSourceAutomationServiceTest : BearcatIntegrationTest
         automation.ReleaseTemplateId.ShouldBe(template.Id);
         automation.PrimaryLanguageCode.ShouldBe("de");
         automation.KeepRawFiles.ShouldBeFalse();
+        automation.ExtractArchivesBeforeReleaseCreation.ShouldBeTrue();
         automation.Priority.ShouldBe(50);
         automation.IsEnabled.ShouldBeTrue();
         automation.IgnoreExistingOnFirstScan.ShouldBeTrue();
@@ -90,6 +92,7 @@ public class RemoteSourceAutomationServiceTest : BearcatIntegrationTest
         automation.FolderNamePattern.ShouldBeNull();
         automation.PrimaryLanguageCode.ShouldBeNull();
         automation.KeepRawFiles.ShouldBeTrue();
+        automation.ExtractArchivesBeforeReleaseCreation.ShouldBeFalse();
         automation.Priority.ShouldBe(RemoteSourceAutomation.DefaultPriority);
     }
 
@@ -111,6 +114,7 @@ public class RemoteSourceAutomationServiceTest : BearcatIntegrationTest
                 TargetPath = "/data/movies",
                 FolderNamePattern = "*2160p*",
                 PrimaryLanguageCode = "en",
+                ExtractArchivesBeforeReleaseCreation = true,
                 Priority = 10,
                 IgnoreExistingOnFirstScan = true,
             }
@@ -123,6 +127,7 @@ public class RemoteSourceAutomationServiceTest : BearcatIntegrationTest
         automation.FolderNamePattern.ShouldBe("*2160p*");
         automation.ReleaseTemplateId.ShouldBe(secondTemplate.Id);
         automation.PrimaryLanguageCode.ShouldBe("en");
+        automation.ExtractArchivesBeforeReleaseCreation.ShouldBeTrue();
         automation.Priority.ShouldBe(10);
         automation.IgnoreExistingOnFirstScan.ShouldBeTrue();
     }
@@ -331,6 +336,7 @@ public class RemoteSourceAutomationServiceTest : BearcatIntegrationTest
                 FolderNamePattern = "*.German.*",
                 PrimaryLanguageCode = "de",
                 KeepRawFiles = false,
+                ExtractArchivesBeforeReleaseCreation = true,
                 Priority = 100,
             }
         );
@@ -357,6 +363,7 @@ public class RemoteSourceAutomationServiceTest : BearcatIntegrationTest
         readModel.ReleaseType.ShouldBe(ReleaseType.Managed);
         readModel.PrimaryLanguageCode.ShouldBe("de");
         readModel.KeepRawFiles.ShouldBeFalse();
+        readModel.ExtractArchivesBeforeReleaseCreation.ShouldBeTrue();
         readModel.Priority.ShouldBe(100);
         readModel.IsEnabled.ShouldBeTrue();
         readModel.DownloadCountsByState[RemoteSourceDownloadState.Observing].ShouldBe(2);

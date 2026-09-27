@@ -2,6 +2,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Downloading.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.RawFiles.Repositories;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation.Repositories;
+using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,7 +11,8 @@ namespace Bearcat.Infrastructure.Database.Repositories;
 public class RemoteSourceDownloadRepository(IBearcatWriteDbContext dbWrite)
     : IRemoteSourceDownloadRepository,
         IRemoteDownloadReleaseRepository,
-        IRemoteDownloadRawFileCleanupRepository
+        IRemoteDownloadRawFileCleanupRepository,
+        IRemoteDownloadVerificationAndExtractionRepository
 {
     public async Task<IReadOnlyList<RemoteSourceDownload>> GetInterruptedDownloadsAsync(
         CancellationToken cancellationToken = default
@@ -71,13 +73,41 @@ public class RemoteSourceDownloadRepository(IBearcatWriteDbContext dbWrite)
         return true;
     }
 
-    public async Task<IReadOnlyList<RemoteSourceDownload>> GetDownloadedWithoutReleaseAsync(
+    public async Task<
+        IReadOnlyList<RemoteSourceDownload>
+    > GetDownloadsInterruptedDuringVerificationOrExtractionAsync(
         CancellationToken cancellationToken = default
     )
     {
         return await dbWrite
             .RemoteSourceDownloads.Where(download =>
-                download.State == RemoteSourceDownloadState.Downloaded && download.ReleaseId == null
+                download.State == RemoteSourceDownloadState.Verifying
+                || download.State == RemoteSourceDownloadState.Extracting
+            )
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<RemoteSourceDownload>> GetDownloadsInDownloadedStateAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbWrite
+            .RemoteSourceDownloads.Where(download =>
+                download.State == RemoteSourceDownloadState.Downloaded
+            )
+            .OrderBy(download => download.CompletedAt)
+            .ThenBy(download => download.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<
+        IReadOnlyList<RemoteSourceDownload>
+    > GetReadyForReleaseCreationWithoutReleaseAsync(CancellationToken cancellationToken = default)
+    {
+        return await dbWrite
+            .RemoteSourceDownloads.Where(download =>
+                download.State == RemoteSourceDownloadState.ReadyForReleaseCreation
+                && download.ReleaseId == null
             )
             .OrderBy(download => download.CompletedAt)
             .ThenBy(download => download.Id)

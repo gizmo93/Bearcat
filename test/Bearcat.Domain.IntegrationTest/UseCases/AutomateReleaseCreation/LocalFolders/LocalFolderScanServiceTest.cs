@@ -658,6 +658,8 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
 
     [TestCase(RemoteSourceDownloadState.Downloading)]
     [TestCase(RemoteSourceDownloadState.Downloaded)]
+    [TestCase(RemoteSourceDownloadState.Extracting)]
+    [TestCase(RemoteSourceDownloadState.ReadyForReleaseCreation)]
     [TestCase(RemoteSourceDownloadState.Failed)]
     public async Task ProcessAsync_FolderIsTargetOfRemoteDownload_IsSkipped(
         RemoteSourceDownloadState downloadState
