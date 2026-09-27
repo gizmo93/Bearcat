@@ -5,6 +5,8 @@
 
 Bearcat manages uploads to Rapidgator, DDownload, Keep2Share, and other one-click hosters. It watches release folders, creates RAR or 7z archives, uploads them, and checks whether the links are still online. When links go offline, it can repackage and reupload the files automatically.
 
+Bearcat also watches FTP and FTPS servers for new releases, downloads matching folders, and can automatically extract RAR and 7z archives before repackaging and uploading them using a release template.
+
 Run it on your own desktop, NAS, or server and manage it through a web interface.
 
 [Installation](#installation) · [User documentation](https://gizmo93.github.io/Bearcat/) · [Downloads](https://github.com/gizmo93/Bearcat/releases)
@@ -13,6 +15,7 @@ Run it on your own desktop, NAS, or server and manage it through a web interface
 
 ## Features
 
+- [Automatically download releases from FTP/FTPS servers](https://gizmo93.github.io/Bearcat/remote-downloads/), verify SFV checksums, and optionally extract RAR or 7z archives before uploading.
 - Create RAR or 7z archives, or upload archives you already have.
 - Upload releases to multiple hosters and check link availability automatically.
 - Repackage and reupload managed releases when links go offline.
@@ -34,6 +37,7 @@ After installation, follow the [initial setup guide](https://gizmo93.github.io/B
 ## Documentation
 
 - [User guide](https://gizmo93.github.io/Bearcat/)
+- [Automatic FTP/FTPS downloads and archive extraction](https://gizmo93.github.io/Bearcat/remote-downloads/)
 - [Archives, link checks, and automatic reuploads](https://gizmo93.github.io/Bearcat/upload-lifecycle/)
 - [Managed releases and existing archives](https://gizmo93.github.io/Bearcat/release-types/)
 - [Development notes](docs/development.md)

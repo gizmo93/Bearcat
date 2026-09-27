@@ -1,6 +1,6 @@
 ---
 title: "Send Upload Notifications to Telegram"
-description: "Forward Bearcat notifications to a Telegram chat so you get pinged on your phone without keeping the UI open."
+description: "Send upload completions, errors, and other Bearcat notifications to a Telegram chat."
 ---
 
 Send Bearcat notifications to a Telegram chat, including upload completions and errors.
@@ -64,8 +64,7 @@ Only notifications created after you connect the chat are forwarded. Older notif
 
 ## Delivery status
 
-The **Recipient** section shows a small status box so you can tell whether forwarding actually
-works:
+The **Recipient** section shows the delivery status:
 
 - how many notifications are still waiting to be delivered,
 - how many were given up on after repeated failures,

@@ -1,6 +1,6 @@
 ---
 title: "Prepare and Submit Forum Posts"
-description: "Prepare a forum draft from a release and open it with a ready to submit preview link. You still send the post yourself."
+description: "Create a forum draft with release details and download links, then review and submit it in your browser."
 ---
 
 Bearcat can save a draft in the forum with the title and body filled in from a release.
@@ -31,7 +31,7 @@ post**.
 
 ![Post to forum button](images/post-to-forum-button.png)
 
-Bearcat walks you through a few steps:
+In the dialog:
 
 1. Pick the distribution site you want to post to.
    ![distribution-site-selection.png](images/distribution-site-selection.png)

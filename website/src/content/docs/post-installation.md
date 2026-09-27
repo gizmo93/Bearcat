@@ -202,7 +202,7 @@ The pattern `*1080p*` selects only `Movie.One.2026.1080p`. An empty pattern incl
 The background task checks about every two minutes. It skips folders that already have a release
 and waits for the configured [folder stability and minimum size](/Bearcat/advanced-configuration/#folder-automation).
 For each eligible folder, it creates a release from the template and looks up its metadata.
-The archive and upload tasks then take over.
+Bearcat then creates archives and uploads them using the template's settings.
 
 ### Download releases from FTP or FTPS
 

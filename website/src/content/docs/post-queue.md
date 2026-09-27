@@ -53,8 +53,7 @@ When you have posted a release somewhere, click **Mark as posted** on its entry.
 
 ## The guided workflow
 
-If you have several releases to post, the workflow walks you through them one by one instead of
-making you pick from the list each time.
+The workflow opens one release after each other for posting.
 
 Click **Start workflow** under single releases or collections to open the first release.
 The workflow bar shows your progress.

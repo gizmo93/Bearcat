@@ -144,7 +144,7 @@ It prompts for the new password, tests the connection, updates the configuration
 
 ## Updating
 
-Bearcat updates are a simple file swap, because your configuration and encryption key live outside the install folder:
+To update Bearcat, replace the application files. Your configuration and encryption key are stored outside the install folder:
 
 1. Stop the service: `sc stop Bearcat` (the running `.exe` and its DLLs are locked while it runs).
 2. Replace the contents of the install folder with the new release. Replace the whole folder, not just `Bearcat.Host.exe`, so all files match the new version.

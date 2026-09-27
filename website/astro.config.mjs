@@ -17,7 +17,7 @@ export default defineConfig({
 		}),
 		starlight({
 			title: 'Bearcat Docs',
-			description: 'Install and configure Bearcat to create archives, upload to one-click hosters, check links, and reupload offline files.',
+			description: 'Configure Bearcat for automatic FTP/FTPS downloads, RAR/7z extraction and archiving, uploads to one-click hosters, link checks, and reuploads.',
 			plugins: [
 				starlightThemeNova({
 					nav: [

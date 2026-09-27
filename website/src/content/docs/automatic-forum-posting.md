@@ -148,7 +148,7 @@ Instead of the forum list, the entry shows a short reason:
 
 - **Automatic posting is blocked: the quality gate has not passed.** The release has to be
   [passed or manually approved](/Bearcat/quality-gates/). If it was not evaluated yet, the quality
-  gate background task takes care of that on its next run.
+  gate background task evaluates it on its next run.
 - **Automatic posting is blocked: the release has no classification.** Classification runs in the
   background every 30 minutes and after media metadata are extracted. Wait for the next run, or
   extract the media metadata on the release to trigger it.

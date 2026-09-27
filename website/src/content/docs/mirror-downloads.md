@@ -24,9 +24,9 @@ Bearcat looks for archive files in this order:
 2. Download them from a mirror hoster.
 3. For managed releases only, repack them from the release folder.
 
-An unmanaged release without a mirror has nothing to fall back on, so Bearcat keeps the upload
+If an unmanaged release has no local archive files or available mirror, Bearcat keeps the upload
 waiting and asks you to provide the archive files. See
-[Unmanaged Releases](/Bearcat/release-types/#unmanaged-releases) for that path.
+[Unmanaged Releases](/Bearcat/release-types/#unmanaged-releases) for instructions.
 
 Bearcat only downloads the files it actually needs. If a previous upload to the same hoster still
 has some files online, those are carried over and only the missing ones are downloaded.
@@ -129,6 +129,6 @@ hold other files.
 
 ## Automatic cleanup
 
-Auto cleanup can delete local archives on a retention period and
-leave the restore to the mirrors. See
+Auto cleanup can delete local archives after a configured retention period. Bearcat downloads them
+from a mirror when a later upload needs them. See
 [Auto cleanup](/Bearcat/advanced-configuration/#auto-cleanup) for the two rules and their settings.

@@ -73,13 +73,12 @@ You do not have to trigger the checks yourself. Bearcat evaluates a release:
   page), and
 - on demand when you press **Recheck** on a release in the quality issues list.
 
-The background task looks at every release that failed or was never evaluated, so older releases
-get their state too.
+The background task checks every release that failed or was never evaluated, including older releases.
 
 If you change the checks of a profile or give a release group a different profile, the affected
 releases go back to **Not evaluated** and are checked again on the next run.
 
-Manually approved releases are never touched by any of this. An approval sticks until you change it.
+Bearcat does not re-evaluate manually approved releases. They remain approved until you change their approval.
 
 ## The quality issues list
 
@@ -94,7 +93,7 @@ evaluated. For every entry you have three actions:
 
 - **Open** takes you to the release so you can fix what is missing (add the NFO, fill in the cover,
   and so on). The next evaluation picks up the change, or you can recheck right away.
-- **Recheck** evaluates the release again immediately, which is handy after you fixed something.
+- **Recheck** evaluates the release again immediately.
 - **Approve manually** marks the release as **manually approved**. Bearcat then creates its uploads
   even though a check failed, and stops re-evaluating it.
 

@@ -145,7 +145,7 @@ The **"Link crypter container creation"** background task processes uploads that
 - linked to uploaded hoster files
 - connected to at least one active link crypter configuration
 
-For the first successful upload of an upload configuration, Bearcat creates a fresh container for each configured link crypter, filled with that upload's hoster links. If a container can't be created, Bearcat records the error on the container and raises a notification so you know.
+For the first successful upload of an upload configuration, Bearcat creates a container for each configured link crypter with that upload's hoster links. If container creation fails, Bearcat records the error on the container and creates an error notification.
 
 This runs per release. If you manage related releases together (a TV show season, for example), a release collection can bundle their links into one shared container instead of one per release. See [Release Collections](/Bearcat/release-collections/) for the details.
 
@@ -159,7 +159,9 @@ Bearcat will then classify the upload using the following states:
 - **`PartiallyOnline`**: at least one file is offline, but not all of them.
 - **`Offline`**: all uploaded files are offline.
 
-If the check itself fails (the hoster errors out), Bearcat raises an error notification and keeps the previous online state. And if a hoster asks for a captcha verification first, Bearcat marks the upload accordingly and sends you a notification that asks you to resolve the captcha.
+If the hoster check fails, Bearcat creates an error notification and keeps the previous online state.
+If the hoster requires captcha verification, Bearcat marks the upload as requiring a captcha and
+notifies you to solve it.
 
 ## 7. Automatic reuploads
 

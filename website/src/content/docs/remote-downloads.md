@@ -1,10 +1,15 @@
 ---
-title: "Download Releases from FTP and FTPS"
-description: "Connect an FTP server, watch for new release folders, and create releases from a template."
+title: "Automatic FTP/FTPS Downloads and Archive Extraction"
+description: "Automatically download releases from FTP/FTPS servers, verify SFV checksums, and optionally extract RAR/7z archives before repackaging and uploading to hosters."
 ---
 
-Bearcat can watch an FTP or FTPS server for new release folders, download them, and create releases
-from a template. The template supplies the archive and upload settings, so uploads can follow automatically.
+Bearcat watches FTP and FTPS servers, including scene FTP servers, for new release folders and downloads
+matching folders automatically. It verifies SFV checksums when available and can extract RAR and 7z
+archives before creating releases from a template. For managed releases, Bearcat creates new archives
+and uploads them to the hosters configured in the selected template.
+
+Archive extraction is optional and off by default. Enable it for a managed template to repackage
+the extracted files, or use an unmanaged template to upload the downloaded archives as they are.
 
 ## Add a server
 

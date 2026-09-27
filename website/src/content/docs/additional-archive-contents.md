@@ -17,7 +17,7 @@ You can also find the page with **Ctrl+K** or **Cmd+K**.
 ![additional-archive-content-page.png](images/additional-archive-content-page.png)
 
 Select **New additional archive content**, give it a unique name, and choose a type.
-The name is just for you, so you are later able to know which file is what when assigning it to an archive. 
+Use a name that identifies the contents when you select the entry in an archive configuration.
 
 ### File or folder
 
