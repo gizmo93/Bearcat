@@ -1,6 +1,8 @@
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
 
 namespace Bearcat.Domain.UseCases.ManageNfoDatabases;
@@ -8,7 +10,8 @@ namespace Bearcat.Domain.UseCases.ManageNfoDatabases;
 public class NfoDatabaseRegistrationService(
     INfoDatabaseRegistrationWriteRepository repository,
     INfoDatabaseFactory nfoDatabaseFactory,
-    ISecretProtector secretProtector
+    ISecretProtector secretProtector,
+    UnreadableSecretsNotificationService unreadableSecretsNotificationService
 )
 {
     public async Task CreateAsync(
@@ -47,21 +50,23 @@ public class NfoDatabaseRegistrationService(
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
         var nfoDatabase = nfoDatabaseFactory.Get(registration.NfoDatabaseClassName);
-        var serializedConfig = secretProtector.Unprotect(registration.SerializedConfig);
-        var mergedConfiguration = new Dictionary<string, string>(
-            nfoDatabase.DeserializeConfig(serializedConfig).ToDictionary()
+        var mergedConfiguration = StoredConfigurationMerger.MergeSubmittedIntoStoredConfiguration(
+            registration: registration,
+            submittedConfiguration: configuration,
+            deserializeStoredConfiguration: serializedConfig =>
+                nfoDatabase.DeserializeConfig(serializedConfig).ToDictionary(),
+            secretProtector: secretProtector
         );
-
-        foreach (var (key, value) in configuration)
-        {
-            mergedConfiguration[key] = value;
-        }
 
         registration.SerializedConfig = secretProtector.Protect(
             nfoDatabase.SerializeConfig(mergedConfiguration)
         );
+        registration.HasUnreadableSecrets = false;
 
         await repository.SaveChangesAsync(cancellationToken);
+        await unreadableSecretsNotificationService.ResolveNotificationWhenNoUnreadableSecretsRemainAsync(
+            cancellationToken
+        );
     }
 
     public async Task ToggleIsActiveAsync(int id, CancellationToken cancellationToken = default)

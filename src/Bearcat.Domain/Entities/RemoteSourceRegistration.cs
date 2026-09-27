@@ -1,6 +1,8 @@
+using Bearcat.Domain.Shared.Entities;
+
 namespace Bearcat.Domain.Entities;
 
-public class RemoteSourceRegistration : IEntityWithEncryptedSecrets
+public class RemoteSourceRegistration : IEntityWithEncryptedSecrets, IActivatableEntity
 {
     public const int DefaultMaxConnections = 2;
 

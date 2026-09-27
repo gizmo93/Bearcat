@@ -1,8 +1,9 @@
-﻿using Bearcat.Domain.ValueObjects;
+﻿using Bearcat.Domain.Shared.Entities;
+using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.Entities;
 
-public class HosterRegistration : IEntityWithEncryptedSecrets
+public class HosterRegistration : IEntityWithEncryptedSecrets, IActivatableEntity
 {
     public int Id { get; set; }
 

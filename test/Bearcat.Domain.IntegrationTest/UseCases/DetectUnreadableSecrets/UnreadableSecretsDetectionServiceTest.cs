@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.ValueObjects;
@@ -124,6 +125,122 @@ public class UnreadableSecretsDetectionServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task DetectAsync_ActiveRegistrationsWithUnreadableSecrets_DeactivatesThem()
+    {
+        // Arrange
+        var unreadableValue = otherKeyProtector.Protect("secret");
+        await using (var arrangeContext = Database.CreateDbContext())
+        {
+            var hosterRegistration = CreateHosterRegistration("Hoster", unreadableValue);
+            hosterRegistration.IsActive = true;
+            arrangeContext.HosterRegistrations.Add(hosterRegistration);
+            arrangeContext.LinkCrypterRegistrations.Add(
+                new LinkCrypterRegistration
+                {
+                    Name = "Crypter",
+                    LinkCrypterClassName = "FileCrypt",
+                    SerializedConfig = unreadableValue,
+                    IsActive = true,
+                }
+            );
+            arrangeContext.ImageHosterRegistrations.Add(
+                new ImageHosterRegistration
+                {
+                    Name = "Images",
+                    ImageHosterClassName = "ImgBb",
+                    SerializedConfig = unreadableValue,
+                    IsActive = true,
+                }
+            );
+            var distributionSiteRegistration = CreateDistributionSiteRegistration(
+                "Forum",
+                unreadableValue,
+                session: null
+            );
+            distributionSiteRegistration.IsActive = true;
+            arrangeContext.DistributionSiteRegistrations.Add(distributionSiteRegistration);
+            arrangeContext.RemoteSourceRegistrations.Add(
+                new RemoteSourceRegistration
+                {
+                    Name = "Seedbox",
+                    SourceClassName = "Ftp",
+                    SerializedConfig = unreadableValue,
+                    IsActive = true,
+                }
+            );
+            arrangeContext.NfoDatabaseRegistrations.Add(
+                new NfoDatabaseRegistration
+                {
+                    NfoDatabaseClassName = "srrDB",
+                    SerializedConfig = unreadableValue,
+                    IsActive = true,
+                }
+            );
+            arrangeContext.MediaDatabaseRegistrations.Add(
+                new MediaDatabaseRegistration
+                {
+                    MediaDatabaseClassName = "Tmdb",
+                    SerializedConfig = unreadableValue,
+                    IsActive = true,
+                }
+            );
+            await arrangeContext.SaveChangesAsync();
+        }
+
+        // Act
+        await DetectAsync();
+
+        // Assert
+        var assertContext = CreateDbContext();
+        (await assertContext.HosterRegistrations.SingleAsync()).IsActive.ShouldBeFalse();
+        (await assertContext.LinkCrypterRegistrations.SingleAsync()).IsActive.ShouldBeFalse();
+        (await assertContext.ImageHosterRegistrations.SingleAsync()).IsActive.ShouldBeFalse();
+        (await assertContext.DistributionSiteRegistrations.SingleAsync()).IsActive.ShouldBeFalse();
+        (await assertContext.RemoteSourceRegistrations.SingleAsync()).IsActive.ShouldBeFalse();
+        (await assertContext.NfoDatabaseRegistrations.SingleAsync()).IsActive.ShouldBeFalse();
+        (await assertContext.MediaDatabaseRegistrations.SingleAsync()).IsActive.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task DetectAsync_ActiveRegistrationWithReadableSecrets_KeepsItActive()
+    {
+        // Arrange
+        await AddHosterRegistrationAsync(
+            "Hoster",
+            currentKeyProtector.Protect("secret"),
+            isActive: true
+        );
+
+        // Act
+        await DetectAsync();
+
+        // Assert
+        var assertContext = CreateDbContext();
+        (await assertContext.HosterRegistrations.SingleAsync()).IsActive.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task DetectAsync_DeactivatedRegistrationReadableAgain_ClearsFlagWithoutReactivating()
+    {
+        // Arrange
+        await AddHosterRegistrationAsync(
+            "Hoster",
+            currentKeyProtector.Protect("secret"),
+            hasUnreadableSecrets: true,
+            isActive: false
+        );
+
+        // Act
+        await DetectAsync();
+
+        // Assert
+        var assertContext = CreateDbContext();
+        var registration = await assertContext.HosterRegistrations.SingleAsync();
+        registration.HasUnreadableSecrets.ShouldBeFalse();
+        registration.IsActive.ShouldBeFalse();
+    }
+
+    [Test]
     public async Task DetectAsync_RunTwiceWithUnreadableSecret_CreatesNotificationOnlyOnce()
     {
         // Arrange
@@ -158,6 +275,44 @@ public class UnreadableSecretsDetectionServiceTest : BearcatIntegrationTest
             await assertContext.HosterRegistrations.SingleAsync()
         ).HasUnreadableSecrets.ShouldBeFalse();
         (await assertContext.Notifications.CountAsync()).ShouldBe(0);
+    }
+
+    [Test]
+    public async Task DetectAsync_AllSecretsReadableAgain_ResolvesUnreadableSecretsNotification()
+    {
+        // Arrange
+        await AddHosterRegistrationAsync(
+            "Hoster",
+            currentKeyProtector.Protect("secret"),
+            hasUnreadableSecrets: true
+        );
+        await AddUnreadableSecretsNotificationAsync();
+
+        // Act
+        await DetectAsync();
+
+        // Assert
+        var assertContext = CreateDbContext();
+        (await assertContext.Notifications.SingleAsync()).ResolvedAt.ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task DetectAsync_SecretStillUnreadable_KeepsUnreadableSecretsNotificationUnresolved()
+    {
+        // Arrange
+        await AddHosterRegistrationAsync(
+            "Hoster",
+            otherKeyProtector.Protect("secret"),
+            hasUnreadableSecrets: true
+        );
+        await AddUnreadableSecretsNotificationAsync();
+
+        // Act
+        await DetectAsync();
+
+        // Assert
+        var assertContext = CreateDbContext();
+        (await assertContext.Notifications.SingleAsync()).ResolvedAt.ShouldBeNull();
     }
 
     [Test]
@@ -282,6 +437,10 @@ public class UnreadableSecretsDetectionServiceTest : BearcatIntegrationTest
                 timeProvider: CreateTimeProvider(),
                 configurationProvider: CreateNotificationConfigurationProvider()
             ),
+            unreadableSecretsNotificationService: UnreadableSecretsNotificationServiceFactory.Create(
+                dbContext,
+                CreateNotificationConfigurationProvider()
+            ),
             logger: NullLogger<UnreadableSecretsDetectionService>.Instance
         );
 
@@ -291,13 +450,30 @@ public class UnreadableSecretsDetectionServiceTest : BearcatIntegrationTest
     private async Task AddHosterRegistrationAsync(
         string name,
         string serializedConfig,
-        bool hasUnreadableSecrets = false
+        bool hasUnreadableSecrets = false,
+        bool isActive = false
     )
     {
         await using var arrangeContext = Database.CreateDbContext();
         var registration = CreateHosterRegistration(name, serializedConfig);
         registration.HasUnreadableSecrets = hasUnreadableSecrets;
+        registration.IsActive = isActive;
         arrangeContext.HosterRegistrations.Add(registration);
+        await arrangeContext.SaveChangesAsync();
+    }
+
+    private async Task AddUnreadableSecretsNotificationAsync()
+    {
+        await using var arrangeContext = Database.CreateDbContext();
+        arrangeContext.Notifications.Add(
+            new Notification
+            {
+                NotificationKind = NotificationKind.UnreadableSecretsDetected,
+                NotificationSeverity = NotificationSeverity.Error,
+                Message = "Stored credentials could not be decrypted",
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
         await arrangeContext.SaveChangesAsync();
     }
 
@@ -341,16 +517,4 @@ public class UnreadableSecretsDetectionServiceTest : BearcatIntegrationTest
                 )
                 .Build()
         );
-
-    private sealed class FixedKeyProvider(byte fillValue) : IEncryptionKeyProvider
-    {
-        private readonly byte[] key = Enumerable.Repeat(fillValue, 32).ToArray();
-
-        public string KeyPath => "in-memory";
-
-        public Task InitializeAsync(CancellationToken cancellationToken = default) =>
-            Task.CompletedTask;
-
-        public byte[] GetKey() => key;
-    }
 }

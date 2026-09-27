@@ -30,6 +30,11 @@ public sealed class FakeNotificationService : INotificationService
         return Task.CompletedTask;
     }
 
+    public Task ResolveAllOfKindAsync(NotificationKind kind, CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+
     public void Create<TEntity>(
         NotificationKind kind,
         string message,

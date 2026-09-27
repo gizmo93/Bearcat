@@ -1,6 +1,8 @@
+using Bearcat.Domain.Shared.Entities;
+
 namespace Bearcat.Domain.Entities;
 
-public class ImageHosterRegistration : IEntityWithEncryptedSecrets
+public class ImageHosterRegistration : IEntityWithEncryptedSecrets, IActivatableEntity
 {
     public int Id { get; set; }
 

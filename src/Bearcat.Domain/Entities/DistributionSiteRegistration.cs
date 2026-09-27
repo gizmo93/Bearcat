@@ -1,6 +1,8 @@
+using Bearcat.Domain.Shared.Entities;
+
 namespace Bearcat.Domain.Entities;
 
-public class DistributionSiteRegistration : IEntityWithEncryptedSecrets
+public class DistributionSiteRegistration : IEntityWithEncryptedSecrets, IActivatableEntity
 {
     public int Id { get; set; }
 

@@ -1,4 +1,5 @@
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.Entities;
 
 namespace Bearcat.Domain.UseCases.DetectUnreadableSecrets.Repositories;
 
@@ -13,6 +14,10 @@ public interface IUnreadableSecretsRepository
     > GetDistributionSiteRegistrationsWithEncryptedSessionAsync(
         CancellationToken cancellationToken
     );
+
+    Task<bool> AnyUnresolvedUnreadableSecretsNotificationAsync(CancellationToken cancellationToken);
+
+    Task<bool> AnyUnreadableSecretsAsync(CancellationToken cancellationToken);
 
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

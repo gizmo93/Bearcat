@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.Entities;
 using Bearcat.Domain.UseCases.DetectUnreadableSecrets.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,7 @@ public class UnreadableSecretsDetectionService(
     IUnreadableSecretsRepository repository,
     ISecretProtector secretProtector,
     INotificationService notificationService,
+    UnreadableSecretsNotificationService unreadableSecretsNotificationService,
     ILogger<UnreadableSecretsDetectionService> logger
 )
 {
@@ -27,6 +29,11 @@ public class UnreadableSecretsDetectionService(
             if (hasUnreadableSecrets && !entity.HasUnreadableSecrets)
             {
                 newlyUnreadableEntities.Add(entity);
+            }
+
+            if (hasUnreadableSecrets && entity is IActivatableEntity activatableEntity)
+            {
+                activatableEntity.IsActive = false;
             }
 
             entity.HasUnreadableSecrets = hasUnreadableSecrets;
@@ -69,6 +76,9 @@ public class UnreadableSecretsDetectionService(
         }
 
         await repository.SaveChangesAsync(cancellationToken);
+        await unreadableSecretsNotificationService.ResolveNotificationWhenNoUnreadableSecretsRemainAsync(
+            cancellationToken
+        );
     }
 
     private static string FormatAffectedRegistrations(

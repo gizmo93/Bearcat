@@ -47,6 +47,18 @@ public class NotificationService(
         await repository.ResolveAllAsync(timeProvider.GetLocalNow(), cancellationToken);
     }
 
+    public async Task ResolveAllOfKindAsync(
+        NotificationKind kind,
+        CancellationToken cancellationToken
+    )
+    {
+        await repository.ResolveAllOfKindAsync(
+            kind: kind,
+            resolvedAt: timeProvider.GetLocalNow(),
+            cancellationToken: cancellationToken
+        );
+    }
+
     public void Create<TEntity>(
         NotificationKind kind,
         string message,

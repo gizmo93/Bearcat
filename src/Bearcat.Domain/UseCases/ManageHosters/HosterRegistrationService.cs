@@ -4,6 +4,7 @@ using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
 using Bearcat.Domain.ValueObjects;
 
@@ -13,7 +14,8 @@ public class HosterRegistrationService(
     IHosterConfigurationWriteRepository writeRepository,
     IHosterFactory hosterFactory,
     HosterCaptchaVerificationService captchaVerificationService,
-    ISecretProtector secretProtector
+    ISecretProtector secretProtector,
+    UnreadableSecretsNotificationService unreadableSecretsNotificationService
 )
 {
     public async Task<int> RegisterHosterAsync(
@@ -83,9 +85,12 @@ public class HosterRegistrationService(
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         var hoster = hosterFactory.GetByName(registration.HosterClassName);
-        var serializedConfig = secretProtector.Unprotect(registration.SerializedConfig);
-        var mergedConfiguration = new Dictionary<string, string>(
-            hoster.DeserializeHosterConfig(serializedConfig).ToDictionary()
+        var mergedConfiguration = StoredConfigurationMerger.MergeSubmittedIntoStoredConfiguration(
+            registration: registration,
+            submittedConfiguration: configuration,
+            deserializeStoredConfiguration: serializedConfig =>
+                hoster.DeserializeHosterConfig(serializedConfig).ToDictionary(),
+            secretProtector: secretProtector
         );
 
         registration.Name = name;
@@ -97,16 +102,15 @@ public class HosterRegistrationService(
         registration.AlwaysReuploadAllFiles = alwaysReuploadAllFiles;
         registration.UseForMirrorDownloads = useForMirrorDownloads && hoster is IHosterWithDownload;
         registration.MirrorPriority = mirrorPriority;
-        foreach (var (key, value) in configuration)
-        {
-            mergedConfiguration[key] = value;
-        }
-
         registration.SerializedConfig = secretProtector.Protect(
             hoster.SerializeHosterConfig(mergedConfiguration)
         );
+        registration.HasUnreadableSecrets = false;
 
         await writeRepository.SaveChangesAsync(cancellationToken);
+        await unreadableSecretsNotificationService.ResolveNotificationWhenNoUnreadableSecretsRemainAsync(
+            cancellationToken
+        );
     }
 
     public async Task<TryLoginResult> TryLoginAsync(
@@ -115,6 +119,7 @@ public class HosterRegistrationService(
     )
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
+
         var hoster = hosterFactory.GetByName(registration.HosterClassName);
         var config = hoster.DeserializeHosterConfig(
             secretProtector.Unprotect(registration.SerializedConfig)
@@ -146,6 +151,7 @@ public class HosterRegistrationService(
     )
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
+
         var (hoster, captchaHoster) = GetCaptchaHoster(registration);
         var config = hoster.DeserializeHosterConfig(
             secretProtector.Unprotect(registration.SerializedConfig)
@@ -162,6 +168,7 @@ public class HosterRegistrationService(
     )
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
+
         var (hoster, captchaHoster) = GetCaptchaHoster(registration);
         var config = hoster.DeserializeHosterConfig(
             secretProtector.Unprotect(registration.SerializedConfig)

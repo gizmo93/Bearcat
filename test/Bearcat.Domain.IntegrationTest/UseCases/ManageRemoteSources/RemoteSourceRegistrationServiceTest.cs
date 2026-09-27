@@ -5,6 +5,7 @@ using Bearcat.Abstractions.RemoteSource;
 using Bearcat.Abstractions.RemoteSource.Dto;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.Shared.ConfigurationFields;
 using Bearcat.Domain.UseCases.ManageRemoteSources;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
@@ -60,6 +61,10 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
             factory.Object,
             secretProtector,
             new RemoteSourceSessionProvider(sessionPool, factory.Object, secretProtector),
+            UnreadableSecretsNotificationServiceFactory.Create(
+                dbContext,
+                CreateNotificationConfigurationProvider()
+            ),
             NullLogger<RemoteSourceRegistrationService>.Instance
         );
     }
@@ -199,6 +204,26 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
         values["Port"].ShouldBe(2121);
         values["Mode"].ShouldBe("Secure");
         values["Verify"].ShouldBe(true);
+    }
+
+    [Test]
+    public async Task UpdateAsync_RegistrationHasUnreadableSecrets_ReplacesConfigAndClearsFlag()
+    {
+        // Arrange
+        var id = await service.CreateAsync("Main server", SourceClassName, FormValues());
+        await MarkConfigUnreadableAsync(id);
+        var values = FormValues();
+        values["Password"] = "new-secret";
+
+        // Act
+        await service.UpdateAsync(id, "Main server", values, 2);
+
+        // Assert
+        var registration = await ReloadAsync(id);
+        registration.HasUnreadableSecrets.ShouldBeFalse();
+        var config = ReadConfig(registration);
+        config["Host"].ShouldBe("ftp.example.org");
+        config["Password"].ShouldBe("new-secret");
     }
 
     [Test]
@@ -374,6 +399,21 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
         registrations[0].MaxConnections.ShouldBe(RemoteSourceRegistration.DefaultMaxConnections);
         registrations[1].MaxConnections.ShouldBe(4);
         registrations[1].IsActive.ShouldBeTrue();
+    }
+
+    private async Task MarkConfigUnreadableAsync(int id)
+    {
+        var otherKeyProtector = new AesGcmSecretProtector(new FixedKeyProvider(fillValue: 7));
+        var unreadableConfig = otherKeyProtector.Protect("{}");
+
+        await CreateDbContext()
+            .RemoteSourceRegistrations.Where(registration => registration.Id == id)
+            .ExecuteUpdateAsync(updates =>
+                updates
+                    .SetProperty(registration => registration.SerializedConfig, unreadableConfig)
+                    .SetProperty(registration => registration.HasUnreadableSecrets, true)
+            );
+        dbContext.ChangeTracker.Clear();
     }
 
     private async Task<RemoteSourceRegistration> ReloadAsync(int id)

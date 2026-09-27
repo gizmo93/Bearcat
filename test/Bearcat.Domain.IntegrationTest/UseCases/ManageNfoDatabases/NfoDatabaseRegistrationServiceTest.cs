@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageNfoDatabases;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -34,7 +35,11 @@ public class NfoDatabaseRegistrationServiceTest : BearcatIntegrationTest
         service = new NfoDatabaseRegistrationService(
             new NfoDatabaseRegistrationRepository(dbContext, dbContext, factoryMock.Object),
             factoryMock.Object,
-            NoOpSecretProtector.Instance
+            NoOpSecretProtector.Instance,
+            UnreadableSecretsNotificationServiceFactory.Create(
+                dbContext,
+                CreateNotificationConfigurationProvider()
+            )
         );
     }
 
@@ -116,6 +121,39 @@ public class NfoDatabaseRegistrationServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task UpdateAsync_RegistrationHasUnreadableSecrets_ReplacesConfigAndClearsFlag()
+    {
+        // Arrange
+        var registration = await AddRegistrationAsync(hasUnreadableSecrets: true);
+        databaseMock
+            .Setup(database =>
+                database.SerializeConfig(
+                    It.Is<IReadOnlyDictionary<string, string>>(config =>
+                        config.Count == 1 && config["ApiKey"] == "updated"
+                    )
+                )
+            )
+            .Returns("{\"ApiKey\":\"updated\"}");
+
+        // Act
+        await service.UpdateAsync(
+            registration.Id,
+            new Dictionary<string, string> { ["ApiKey"] = "updated" },
+            CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var updated = await dbContext.NfoDatabaseRegistrations.SingleAsync();
+        updated.SerializedConfig.ShouldBe("{\"ApiKey\":\"updated\"}");
+        updated.HasUnreadableSecrets.ShouldBeFalse();
+        databaseMock.Verify(
+            database => database.DeserializeConfig(It.IsAny<string>()),
+            Times.Never
+        );
+    }
+
+    [Test]
     public async Task ToggleIsActiveAsync_RegistrationExists_TogglesIsActive()
     {
         // Arrange
@@ -142,13 +180,17 @@ public class NfoDatabaseRegistrationServiceTest : BearcatIntegrationTest
         (await dbContext.NfoDatabaseRegistrations.AnyAsync()).ShouldBeFalse();
     }
 
-    private async Task<NfoDatabaseRegistration> AddRegistrationAsync(bool isActive = true)
+    private async Task<NfoDatabaseRegistration> AddRegistrationAsync(
+        bool isActive = true,
+        bool hasUnreadableSecrets = false
+    )
     {
         var registration = new NfoDatabaseRegistration
         {
             NfoDatabaseClassName = ClassName,
             SerializedConfig = SerializedConfig,
             IsActive = isActive,
+            HasUnreadableSecrets = hasUnreadableSecrets,
         };
 
         dbContext.NfoDatabaseRegistrations.Add(registration);

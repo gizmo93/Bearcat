@@ -1,4 +1,4 @@
-namespace Bearcat.Domain.Entities;
+namespace Bearcat.Domain.Shared.Entities;
 
 public interface IEntityWithEncryptedSecrets
 {

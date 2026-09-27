@@ -2,6 +2,8 @@ using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared;
+using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
 
 namespace Bearcat.Domain.UseCases.ManageLinkCrypters;
@@ -9,7 +11,8 @@ namespace Bearcat.Domain.UseCases.ManageLinkCrypters;
 public class LinkCrypterService(
     ILinkCrypterRegistrationWriteRepository repository,
     ILinkCrypterFactory linkCrypterFactory,
-    ISecretProtector secretProtector
+    ISecretProtector secretProtector,
+    UnreadableSecretsNotificationService unreadableSecretsNotificationService
 )
 {
     public async Task CreateAsync(
@@ -53,22 +56,24 @@ public class LinkCrypterService(
         var registration = await repository.GetByIdAsync(id, cancellationToken);
 
         var crypter = linkCrypterFactory.Get(registration.LinkCrypterClassName);
-        var serializedConfig = secretProtector.Unprotect(registration.SerializedConfig);
-        var mergedConfiguration = new Dictionary<string, string>(
-            crypter.DeserializeConfig(serializedConfig).ToDictionary()
+        var mergedConfiguration = StoredConfigurationMerger.MergeSubmittedIntoStoredConfiguration(
+            registration: registration,
+            submittedConfiguration: configuration,
+            deserializeStoredConfiguration: serializedConfig =>
+                crypter.DeserializeConfig(serializedConfig).ToDictionary(),
+            secretProtector: secretProtector
         );
-
-        foreach (var (key, value) in configuration)
-        {
-            mergedConfiguration[key] = value;
-        }
 
         registration.Name = name;
         registration.SerializedConfig = secretProtector.Protect(
             crypter.SerializeConfig(mergedConfiguration)
         );
+        registration.HasUnreadableSecrets = false;
 
         await repository.SaveChangesAsync(cancellationToken);
+        await unreadableSecretsNotificationService.ResolveNotificationWhenNoUnreadableSecretsRemainAsync(
+            cancellationToken
+        );
     }
 
     public async Task ToggleIsActiveAsync(int id, CancellationToken cancellationToken = default)

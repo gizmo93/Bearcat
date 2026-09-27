@@ -1,5 +1,6 @@
 ﻿using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
+using Bearcat.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.Database.Repositories;
@@ -29,6 +30,20 @@ public class NotificationRepository(IBearcatWriteDbContext dbWrite) : INotificat
     {
         await dbWrite
             .Notifications.Where(n => n.ResolvedAt == null)
+            .ExecuteUpdateAsync(
+                updates => updates.SetProperty(n => n.ResolvedAt, resolvedAt),
+                cancellationToken
+            );
+    }
+
+    public async Task ResolveAllOfKindAsync(
+        NotificationKind kind,
+        DateTime resolvedAt,
+        CancellationToken cancellationToken
+    )
+    {
+        await dbWrite
+            .Notifications.Where(n => n.NotificationKind == kind && n.ResolvedAt == null)
             .ExecuteUpdateAsync(
                 updates => updates.SetProperty(n => n.ResolvedAt, resolvedAt),
                 cancellationToken

@@ -1,6 +1,8 @@
+using Bearcat.Domain.Shared.Entities;
+
 namespace Bearcat.Domain.Entities;
 
-public class NfoDatabaseRegistration : IEntityWithEncryptedSecrets
+public class NfoDatabaseRegistration : IEntityWithEncryptedSecrets, IActivatableEntity
 {
     public int Id { get; set; }
 

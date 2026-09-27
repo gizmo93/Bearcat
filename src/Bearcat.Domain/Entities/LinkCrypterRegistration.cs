@@ -1,6 +1,8 @@
+using Bearcat.Domain.Shared.Entities;
+
 namespace Bearcat.Domain.Entities;
 
-public class LinkCrypterRegistration : IEntityWithEncryptedSecrets
+public class LinkCrypterRegistration : IEntityWithEncryptedSecrets, IActivatableEntity
 {
     public int Id { get; set; }
 

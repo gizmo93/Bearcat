@@ -153,6 +153,7 @@ public static class ServiceProviderConfig
             services.AddScoped<QualityCheckCatalog>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<UnreadableSecretsDetectionService>();
+            services.AddScoped<UnreadableSecretsNotificationService>();
             services.AddSingleton<TelegramConfigurationCache>();
             services.AddScoped<TelegramNotificationService>();
             services.AddScoped<HosterCaptchaVerificationService>();

@@ -1,3 +1,5 @@
+using Bearcat.Domain.Shared.Entities;
+
 namespace Bearcat.Domain.Entities;
 
 public class TelegramConfiguration : IEntityWithEncryptedSecrets
