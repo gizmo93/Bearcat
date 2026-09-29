@@ -248,11 +248,28 @@ public partial class ProxyServersPage(
 
     private string DescribeUsage(string proxyServerName, ProxyServerDeleteResult result)
     {
-        var categoryNames = string.Join(
-            ", ",
-            result.UsingCategoryDefaults.Select(category => L.Localize(category))
-        );
+        List<string> usageParts = [L["ProxyServerStillInUse", proxyServerName]];
 
-        return $"{L["ProxyServerStillInUse", proxyServerName]} {L["ProxyServerUsedAsCategoryDefault", categoryNames]}";
+        if (result.UsingCategoryDefaults.Count > 0)
+        {
+            var categoryNames = string.Join(
+                ", ",
+                result.UsingCategoryDefaults.Select(category => L.Localize(category))
+            );
+            usageParts.Add(L["ProxyServerUsedAsCategoryDefault", categoryNames]);
+        }
+
+        if (result.UsingRegistrations.Count > 0)
+        {
+            var registrationNames = string.Join(
+                ", ",
+                result.UsingRegistrations.Select(registration =>
+                    $"{L.Localize(registration.RegistrationType)} \"{registration.RegistrationName}\""
+                )
+            );
+            usageParts.Add(L["ProxyServerUsedByRegistrations", registrationNames]);
+        }
+
+        return string.Join(" ", usageParts);
     }
 }

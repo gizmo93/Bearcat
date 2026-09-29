@@ -187,6 +187,247 @@ public class CategoryProxySelectingWebProxyTest
     }
 
     [Test]
+    public void Enter_OnlyCategory_UsesCategoryDefaultSelection()
+    {
+        // Act
+        ProxyCategoryScopeState? scopeState;
+        using (ProxyCategoryScope.Enter(ProxyCategory.HosterMirrorDownloads))
+        {
+            scopeState = ProxyCategoryScope.Current;
+        }
+
+        // Assert
+        scopeState.ShouldBe(
+            new ProxyCategoryScopeState(
+                ProxyCategory.HosterMirrorDownloads,
+                ProxySelection.UseCategoryDefault,
+                ProxyServerId: null
+            )
+        );
+    }
+
+    [Test]
+    public void GetProxy_ScopeOfSameCategoryWithUseCategoryDefault_ReturnsProxyOfCategory()
+    {
+        // Arrange
+        proxyRoutingCache.RouteCategory(
+            ProxyCategory.HosterUploads,
+            "http://upload-proxy.test:8080"
+        );
+        proxyRoutingCache.AddProxyServer(7, "http://specific-proxy.test:3128");
+
+        // Act
+        Uri? proxyUri;
+        using (
+            ProxyCategoryScope.Enter(
+                ProxyCategory.HosterUploads,
+                ProxySelection.UseCategoryDefault,
+                proxyServerId: null
+            )
+        )
+        {
+            proxyUri = webProxy.GetProxy(Destination);
+        }
+
+        // Assert
+        proxyUri.ShouldBe(new Uri("http://upload-proxy.test:8080"));
+    }
+
+    [Test]
+    public void IsBypassed_ScopeOfSameGroupWithNoProxy_ReturnsTrueAlthoughCategoriesHaveProxies()
+    {
+        // Arrange
+        proxyRoutingCache.RouteCategory(
+            ProxyCategory.HosterUploads,
+            "http://upload-proxy.test:8080"
+        );
+        proxyRoutingCache.RouteCategory(
+            ProxyCategory.HosterMirrorDownloads,
+            "socks5://download-proxy.test:1080"
+        );
+
+        // Act
+        bool isBypassed;
+        Uri? proxyUri;
+        using (
+            ProxyCategoryScope.Enter(
+                ProxyCategory.HosterMirrorDownloads,
+                ProxySelection.NoProxy,
+                proxyServerId: null
+            )
+        )
+        {
+            isBypassed = webProxy.IsBypassed(Destination);
+            proxyUri = webProxy.GetProxy(Destination);
+        }
+
+        // Assert
+        isBypassed.ShouldBeTrue();
+        proxyUri.ShouldBeNull();
+    }
+
+    [Test]
+    public void GetProxy_ScopeOfSameCategoryWithSpecificProxyServer_ReturnsThatProxyServer()
+    {
+        // Arrange
+        proxyRoutingCache.RouteCategory(
+            ProxyCategory.HosterUploads,
+            "http://upload-proxy.test:8080"
+        );
+        proxyRoutingCache.AddProxyServer(7, "http://specific-proxy.test:3128");
+
+        // Act
+        Uri? proxyUri;
+        using (
+            ProxyCategoryScope.Enter(
+                ProxyCategory.HosterUploads,
+                ProxySelection.SpecificProxyServer,
+                proxyServerId: 7
+            )
+        )
+        {
+            proxyUri = webProxy.GetProxy(Destination);
+        }
+
+        // Assert
+        proxyUri.ShouldBe(new Uri("http://specific-proxy.test:3128"));
+    }
+
+    [Test]
+    public void GetProxy_ScopeOfSameGroupWithSpecificProxyServer_ReturnsThatProxyServer()
+    {
+        // Arrange
+        proxyRoutingCache.RouteCategory(
+            ProxyCategory.HosterMirrorDownloads,
+            "socks5://download-proxy.test:1080"
+        );
+        proxyRoutingCache.AddProxyServer(9, "socks5://specific-proxy.test:1081");
+
+        // Act
+        Uri? proxyUri;
+        using (
+            ProxyCategoryScope.Enter(
+                ProxyCategory.HosterMirrorDownloads,
+                ProxySelection.SpecificProxyServer,
+                proxyServerId: 9
+            )
+        )
+        {
+            proxyUri = webProxy.GetProxy(Destination);
+        }
+
+        // Assert
+        proxyUri.ShouldBe(new Uri("socks5://specific-proxy.test:1081"));
+    }
+
+    [Test]
+    public void GetProxy_ScopeOfOtherGroupWithSpecificProxyServer_ReturnsProxyOfClientCategory()
+    {
+        // Arrange
+        proxyRoutingCache.RouteCategory(
+            ProxyCategory.HosterUploads,
+            "http://upload-proxy.test:8080"
+        );
+        proxyRoutingCache.AddProxyServer(7, "http://specific-proxy.test:3128");
+
+        // Act
+        Uri? proxyUri;
+        using (
+            ProxyCategoryScope.Enter(
+                ProxyCategory.LinkCrypters,
+                ProxySelection.SpecificProxyServer,
+                proxyServerId: 7
+            )
+        )
+        {
+            proxyUri = webProxy.GetProxy(Destination);
+        }
+
+        // Assert
+        proxyUri.ShouldBe(new Uri("http://upload-proxy.test:8080"));
+    }
+
+    [Test]
+    public void GetProxy_ScopeOfOtherGroupWithNoProxy_ReturnsProxyOfClientCategory()
+    {
+        // Arrange
+        proxyRoutingCache.RouteCategory(
+            ProxyCategory.HosterUploads,
+            "http://upload-proxy.test:8080"
+        );
+
+        // Act
+        Uri? proxyUri;
+        using (
+            ProxyCategoryScope.Enter(
+                ProxyCategory.ImageHosters,
+                ProxySelection.NoProxy,
+                proxyServerId: null
+            )
+        )
+        {
+            proxyUri = webProxy.GetProxy(Destination);
+        }
+
+        // Assert
+        proxyUri.ShouldBe(new Uri("http://upload-proxy.test:8080"));
+    }
+
+    [Test]
+    public void IsBypassed_ScopeOfOtherGroupWithUseCategoryDefault_UsesClientCategoryInsteadOfScopeCategory()
+    {
+        // Arrange
+        proxyRoutingCache.RouteCategory(ProxyCategory.NfoDatabases, "http://nfo-proxy.test:8080");
+
+        // Act
+        bool isBypassed;
+        using (ProxyCategoryScope.Enter(ProxyCategory.NfoDatabases))
+        {
+            isBypassed = webProxy.IsBypassed(Destination);
+        }
+
+        // Assert
+        isBypassed.ShouldBeTrue();
+    }
+
+    [Test]
+    public void GetProxy_NestedScopeWithNoProxyIsDisposed_RestoresOuterSpecificProxyServer()
+    {
+        // Arrange
+        proxyRoutingCache.AddProxyServer(7, "http://specific-proxy.test:3128");
+
+        // Act
+        Uri? proxyUriInsideInnerScope;
+        Uri? proxyUriAfterInnerScope;
+        using (
+            ProxyCategoryScope.Enter(
+                ProxyCategory.HosterUploads,
+                ProxySelection.SpecificProxyServer,
+                proxyServerId: 7
+            )
+        )
+        {
+            using (
+                ProxyCategoryScope.Enter(
+                    ProxyCategory.HosterUploads,
+                    ProxySelection.NoProxy,
+                    proxyServerId: null
+                )
+            )
+            {
+                proxyUriInsideInnerScope = webProxy.GetProxy(Destination);
+            }
+
+            proxyUriAfterInnerScope = webProxy.GetProxy(Destination);
+        }
+
+        // Assert
+        proxyUriInsideInnerScope.ShouldBeNull();
+        proxyUriAfterInnerScope.ShouldBe(new Uri("http://specific-proxy.test:3128"));
+        ProxyCategoryScope.Current.ShouldBeNull();
+    }
+
+    [Test]
     public void Credentials_GetCredential_LooksUpCredentialByProxyAddress()
     {
         // Arrange

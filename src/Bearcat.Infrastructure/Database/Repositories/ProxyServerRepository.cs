@@ -108,6 +108,14 @@ public class ProxyServerRepository(IBearcatReadDbContext dbRead, IBearcatWriteDb
         );
     }
 
+    public async Task<bool> ExistsAsync(int proxyServerId, CancellationToken cancellationToken)
+    {
+        return await dbRead.ProxyServers.AnyAsync(
+            proxyServer => proxyServer.Id == proxyServerId,
+            cancellationToken
+        );
+    }
+
     public async Task<ProxyServerUsageReadModel> GetUsageAsync(
         int proxyServerId,
         CancellationToken cancellationToken
@@ -121,7 +129,51 @@ public class ProxyServerRepository(IBearcatReadDbContext dbRead, IBearcatWriteDb
             .OrderBy(proxyCategory => proxyCategory)
             .ToListAsync(cancellationToken);
 
-        return new ProxyServerUsageReadModel(categoryDefaults);
+        var registrations = await dbRead
+            .HosterRegistrations.Where(registration =>
+                registration.UploadProxyServerId == proxyServerId
+                || registration.MirrorDownloadProxyServerId == proxyServerId
+            )
+            .Select(registration => new
+            {
+                RegistrationType = ProxyUsingRegistrationType.Hoster,
+                RegistrationName = registration.Name,
+            })
+            .Concat(
+                dbRead
+                    .ImageHosterRegistrations.Where(registration =>
+                        registration.ProxyServerId == proxyServerId
+                    )
+                    .Select(registration => new
+                    {
+                        RegistrationType = ProxyUsingRegistrationType.ImageHoster,
+                        RegistrationName = registration.Name,
+                    })
+            )
+            .Concat(
+                dbRead
+                    .LinkCrypterRegistrations.Where(registration =>
+                        registration.ProxyServerId == proxyServerId
+                    )
+                    .Select(registration => new
+                    {
+                        RegistrationType = ProxyUsingRegistrationType.LinkCrypter,
+                        RegistrationName = registration.Name,
+                    })
+            )
+            .ToListAsync(cancellationToken);
+
+        return new ProxyServerUsageReadModel(
+            categoryDefaults,
+            registrations
+                .OrderBy(registration => registration.RegistrationType)
+                .ThenBy(registration => registration.RegistrationName)
+                .Select(registration => new ProxyServerRegistrationUsageReadModel(
+                    registration.RegistrationType,
+                    registration.RegistrationName
+                ))
+                .ToList()
+        );
     }
 
     public void Add(ProxyServer proxyServer)

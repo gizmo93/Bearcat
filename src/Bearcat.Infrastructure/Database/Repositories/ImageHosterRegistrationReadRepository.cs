@@ -25,6 +25,8 @@ public class ImageHosterRegistrationReadRepository(
                 registration.ImageHosterClassName,
                 registration.IsActive,
                 registration.HasUnreadableSecrets,
+                registration.ProxySelection,
+                registration.ProxyServerId,
             })
             .ToListAsync(cancellationToken);
 
@@ -39,7 +41,9 @@ public class ImageHosterRegistrationReadRepository(
                     registration.ImageHosterClassName,
                     imageHoster.Name,
                     registration.IsActive,
-                    registration.HasUnreadableSecrets
+                    registration.HasUnreadableSecrets,
+                    registration.ProxySelection,
+                    registration.ProxyServerId
                 );
             })
             .ToList();
@@ -61,6 +65,8 @@ public class ImageHosterRegistrationReadRepository(
                 registration.ImageHosterClassName,
                 registration.IsActive,
                 registration.HasUnreadableSecrets,
+                registration.ProxySelection,
+                registration.ProxyServerId,
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -77,7 +83,9 @@ public class ImageHosterRegistrationReadRepository(
             registration.ImageHosterClassName,
             imageHoster.Name,
             registration.IsActive,
-            registration.HasUnreadableSecrets
+            registration.HasUnreadableSecrets,
+            registration.ProxySelection,
+            registration.ProxyServerId
         );
     }
 

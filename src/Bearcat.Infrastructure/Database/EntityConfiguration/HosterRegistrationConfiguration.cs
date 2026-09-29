@@ -21,5 +21,25 @@ public class HosterRegistrationConfiguration : IEntityTypeConfiguration<HosterRe
         builder.Property(h => h.AlwaysReuploadAllFiles).IsRequired();
         builder.Property(h => h.UseForMirrorDownloads).IsRequired();
         builder.Property(h => h.MirrorPriority).IsRequired().HasDefaultValue(100);
+        builder.Property(h => h.UploadProxySelection).IsRequired();
+        builder.Property(h => h.UploadProxyServerId).IsRequired(false);
+        builder.Property(h => h.MirrorDownloadProxySelection).IsRequired();
+        builder.Property(h => h.MirrorDownloadProxyServerId).IsRequired(false);
+
+        builder
+            .HasOne<ProxyServer>()
+            .WithMany()
+            .HasForeignKey(h => h.UploadProxyServerId)
+            .HasPrincipalKey(proxyServer => proxyServer.Id)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder
+            .HasOne<ProxyServer>()
+            .WithMany()
+            .HasForeignKey(h => h.MirrorDownloadProxyServerId)
+            .HasPrincipalKey(proxyServer => proxyServer.Id)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

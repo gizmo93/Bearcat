@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Website.Pages.ManageHosters;
@@ -27,4 +28,13 @@ public class HosterFormModel
     public bool UseForMirrorDownloads { get; set; }
 
     public int MirrorPriority { get; set; } = 100;
+
+    public ProxySelection UploadProxySelection { get; set; } = ProxySelection.UseCategoryDefault;
+
+    public int? UploadProxyServerId { get; set; }
+
+    public ProxySelection MirrorDownloadProxySelection { get; set; } =
+        ProxySelection.UseCategoryDefault;
+
+    public int? MirrorDownloadProxyServerId { get; set; }
 }

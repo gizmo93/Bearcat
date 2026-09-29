@@ -11,6 +11,11 @@ public class FakeProxyServerWriteRepository : IProxyServerWriteRepository
 
     public Dictionary<int, List<ProxyCategory>> CategoryDefaultsByProxyServerId { get; } = [];
 
+    public Dictionary<
+        int,
+        List<ProxyServerRegistrationUsageReadModel>
+    > RegistrationUsagesByProxyServerId { get; } = [];
+
     public int SaveChangesCallCount { get; private set; }
 
     public Task<ProxyServer> GetByIdAsync(int proxyServerId, CancellationToken cancellationToken)
@@ -54,7 +59,8 @@ public class FakeProxyServerWriteRepository : IProxyServerWriteRepository
     {
         return Task.FromResult(
             new ProxyServerUsageReadModel(
-                CategoryDefaultsByProxyServerId.GetValueOrDefault(proxyServerId) ?? []
+                CategoryDefaultsByProxyServerId.GetValueOrDefault(proxyServerId) ?? [],
+                RegistrationUsagesByProxyServerId.GetValueOrDefault(proxyServerId) ?? []
             )
         );
     }

@@ -121,7 +121,11 @@ public class ProxyServerService(
 
         if (usage.IsUsed)
         {
-            return new ProxyServerDeleteResult(IsDeleted: false, usage.CategoryDefaults);
+            return new ProxyServerDeleteResult(
+                IsDeleted: false,
+                usage.CategoryDefaults,
+                usage.Registrations
+            );
         }
 
         var proxyServer = await writeRepository.GetByIdAsync(proxyServerId, cancellationToken);
@@ -132,7 +136,7 @@ public class ProxyServerService(
             cancellationToken
         );
 
-        return new ProxyServerDeleteResult(IsDeleted: true, []);
+        return new ProxyServerDeleteResult(IsDeleted: true, [], []);
     }
 
     public async Task<ProxyServerConnectionTestResult> TestConnectionAsync(

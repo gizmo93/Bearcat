@@ -3,6 +3,7 @@ using System.Threading.Channels;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
@@ -265,6 +266,10 @@ public class UploadFilesService(
         CancellationToken cancellationToken
     )
     {
+        using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(
+            upload.UploadConfig.HosterRegistration
+        );
+
         var processedArchiveFileIds = upload
             .UploadedFiles.Select(uf => uf.ArchiveFileId)
             .ToHashSet();

@@ -20,7 +20,7 @@ public sealed class FakeDownloadHoster : IHosterWithDownload
 
     public Dictionary<string, int> DownloadAttemptsPerLink { get; } = new();
 
-    public List<ProxyCategory?> ProxyCategoriesDuringCalls { get; } = [];
+    public List<ProxyCategoryScopeState?> ProxyScopeStatesDuringCalls { get; } = [];
 
     public int FailedAttemptsBeforeSuccess { get; set; }
 
@@ -46,9 +46,9 @@ public sealed class FakeDownloadHoster : IHosterWithDownload
         CancellationToken cancellationToken
     )
     {
-        lock (ProxyCategoriesDuringCalls)
+        lock (ProxyScopeStatesDuringCalls)
         {
-            ProxyCategoriesDuringCalls.Add(ProxyCategoryScope.Current?.Category);
+            ProxyScopeStatesDuringCalls.Add(ProxyCategoryScope.Current);
         }
 
         if (FileSizeLookupException is not null)
@@ -85,9 +85,9 @@ public sealed class FakeDownloadHoster : IHosterWithDownload
     {
         int attempt;
 
-        lock (ProxyCategoriesDuringCalls)
+        lock (ProxyScopeStatesDuringCalls)
         {
-            ProxyCategoriesDuringCalls.Add(ProxyCategoryScope.Current?.Category);
+            ProxyScopeStatesDuringCalls.Add(ProxyCategoryScope.Current);
         }
 
         lock (DownloadedLinks)

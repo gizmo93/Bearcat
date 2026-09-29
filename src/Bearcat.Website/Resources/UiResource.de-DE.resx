@@ -1459,8 +1459,12 @@
   <data name="ProxyServerConnectionTestFailedWithDetail" xml:space="preserve"><value>{0} Details: {1}</value></data>
   <data name="ProxyServerStillInUse" xml:space="preserve"><value>{0} kann nicht gelöscht werden, weil er noch verwendet wird.</value></data>
   <data name="ProxyServerUsedAsCategoryDefault" xml:space="preserve"><value>Standardproxy für: {0}.</value></data>
+  <data name="ProxyServerUsedByRegistrations" xml:space="preserve"><value>Verwendet von: {0}.</value></data>
+  <data name="ProxyUsingRegistrationType.Hoster" xml:space="preserve"><value>Hoster</value></data>
+  <data name="ProxyUsingRegistrationType.ImageHoster" xml:space="preserve"><value>Bildhoster</value></data>
+  <data name="ProxyUsingRegistrationType.LinkCrypter" xml:space="preserve"><value>Linkcrypter</value></data>
   <data name="DefaultProxyPerCategory" xml:space="preserve"><value>Standardproxy pro Kategorie</value></data>
-  <data name="DefaultProxyPerCategoryIntro" xml:space="preserve"><value>Ausgehende Verbindungen jeder Kategorie laufen über den gewählten Proxyserver. Änderungen gelten sofort.</value></data>
+  <data name="DefaultProxyPerCategoryIntro" xml:space="preserve"><value>Ausgehende Verbindungen jeder Kategorie laufen über den gewählten Proxyserver. Hoster, Bildhoster und Linkcrypter können den Kategoriestandard in ihren eigenen Einstellungen überschreiben. Änderungen gelten sofort.</value></data>
   <data name="ProxyRoutingNotYetSupported" xml:space="preserve"><value>Foren, Distributionsseiten und Remotequellen werden (noch) nicht über Proxyserver geleitet.</value></data>
   <data name="DirectConnection" xml:space="preserve"><value>Direkte Verbindung</value></data>
   <data name="ApplyToAllCategories" xml:space="preserve"><value>Für alle Kategorien übernehmen</value></data>
@@ -1468,6 +1472,11 @@
   <data name="ProxyServer" xml:space="preserve"><value>Proxyserver</value></data>
   <data name="ProxyCategoryDefaultSaved" xml:space="preserve"><value>{0} verwendet jetzt: {1}.</value></data>
   <data name="ProxyCategoryDefaultsAppliedToAll" xml:space="preserve"><value>Alle Kategorien verwenden jetzt: {0}.</value></data>
+  <data name="Proxy" xml:space="preserve"><value>Proxy</value></data>
+  <data name="ProxyForUploadsAndAccountRequests" xml:space="preserve"><value>Proxy für Uploads und Kontoabfragen</value></data>
+  <data name="ProxyForMirrorDownloads" xml:space="preserve"><value>Proxy für Mirrordownloads</value></data>
+  <data name="ProxyCategoryDefaultOption" xml:space="preserve"><value>Kategoriestandard (aktuell: {0})</value></data>
+  <data name="NoProxyDirectConnection" xml:space="preserve"><value>Kein Proxy (direkte Verbindung)</value></data>
   <data name="ProxyCategory.HosterUploads" xml:space="preserve"><value>Uploads zu Hostern</value></data>
   <data name="ProxyCategory.HosterUploads.Description" xml:space="preserve"><value>Uploads, Linkprüfungen und Kontoabfragen bei Filehostern.</value></data>
   <data name="ProxyCategory.HosterMirrorDownloads" xml:space="preserve"><value>Mirrordownloads von Hostern</value></data>

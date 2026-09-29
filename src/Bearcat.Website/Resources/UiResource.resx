@@ -1456,15 +1456,24 @@
   <data name="ProxyServerConnectionTestFailedWithDetail" xml:space="preserve"><value>{0} Details: {1}</value></data>
   <data name="ProxyServerStillInUse" xml:space="preserve"><value>{0} cannot be deleted because it is still in use.</value></data>
   <data name="ProxyServerUsedAsCategoryDefault" xml:space="preserve"><value>Default proxy for: {0}.</value></data>
+  <data name="ProxyServerUsedByRegistrations" xml:space="preserve"><value>Used by: {0}.</value></data>
+  <data name="ProxyUsingRegistrationType.Hoster" xml:space="preserve"><value>Hoster</value></data>
+  <data name="ProxyUsingRegistrationType.ImageHoster" xml:space="preserve"><value>Image hoster</value></data>
+  <data name="ProxyUsingRegistrationType.LinkCrypter" xml:space="preserve"><value>Link crypter</value></data>
   <data name="DefaultProxyPerCategory" xml:space="preserve"><value>Default proxy per category</value></data>
-  <data name="DefaultProxyPerCategoryIntro" xml:space="preserve"><value>Outbound connections of each category are routed through the selected proxy server. Changes are applied immediately.</value></data>
-  <data name="ProxyRoutingNotYetSupported" xml:space="preserve"><value>Forums, distribution sites and remote sources are not (yet) routed through proxy servers yet.</value></data>
+  <data name="DefaultProxyPerCategoryIntro" xml:space="preserve"><value>Outbound connections of each category are routed through the selected proxy server. Hosters, image hosters and link crypters can override the category default in their own settings. Changes are applied immediately.</value></data>
+  <data name="ProxyRoutingNotYetSupported" xml:space="preserve"><value>Forums, distribution sites and remote sources are not routed through proxy servers yet.</value></data>
   <data name="DirectConnection" xml:space="preserve"><value>Direct connection</value></data>
   <data name="ApplyToAllCategories" xml:space="preserve"><value>Apply to all categories</value></data>
   <data name="Category" xml:space="preserve"><value>Category</value></data>
   <data name="ProxyServer" xml:space="preserve"><value>Proxy server</value></data>
   <data name="ProxyCategoryDefaultSaved" xml:space="preserve"><value>{0} now uses: {1}.</value></data>
   <data name="ProxyCategoryDefaultsAppliedToAll" xml:space="preserve"><value>All categories now use: {0}.</value></data>
+  <data name="Proxy" xml:space="preserve"><value>Proxy</value></data>
+  <data name="ProxyForUploadsAndAccountRequests" xml:space="preserve"><value>Proxy for uploads and account requests</value></data>
+  <data name="ProxyForMirrorDownloads" xml:space="preserve"><value>Proxy for mirror downloads</value></data>
+  <data name="ProxyCategoryDefaultOption" xml:space="preserve"><value>Category default (currently: {0})</value></data>
+  <data name="NoProxyDirectConnection" xml:space="preserve"><value>No proxy (direct connection)</value></data>
   <data name="ProxyCategory.HosterUploads" xml:space="preserve"><value>Hoster uploads</value></data>
   <data name="ProxyCategory.HosterUploads.Description" xml:space="preserve"><value>Uploads, link checks and account requests to file hosters.</value></data>
   <data name="ProxyCategory.HosterMirrorDownloads" xml:space="preserve"><value>Hoster mirror downloads</value></data>

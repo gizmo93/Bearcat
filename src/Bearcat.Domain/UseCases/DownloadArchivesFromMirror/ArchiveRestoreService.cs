@@ -1,11 +1,11 @@
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
-using Bearcat.Abstractions.Proxies;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Repositories;
@@ -218,10 +218,6 @@ public class ArchiveRestoreService(
         CancellationToken cancellationToken
     )
     {
-        using var proxyCategoryScope = ProxyCategoryScope.Enter(
-            ProxyCategory.HosterMirrorDownloads
-        );
-
         var previousArchiveState = archive.ArchiveState;
         var downloadSettings = ReadDownloadSettings();
         var hosters = await ResolveHostersAsync(plan, cancellationToken);
@@ -520,6 +516,10 @@ public class ArchiveRestoreService(
         foreach (var group in firstSourcesPerRegistrationId)
         {
             var resolved = hosters[group.Key];
+
+            using var proxyScope = HosterRegistrationProxyScope.EnterForMirrorDownload(
+                resolved.Registration
+            );
 
             var sizes = await GetFileSizesAsync(
                 hoster: resolved.Hoster,

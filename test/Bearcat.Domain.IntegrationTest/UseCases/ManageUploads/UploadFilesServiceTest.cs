@@ -4,6 +4,7 @@ using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
@@ -477,6 +478,175 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
                 ),
             Times.Once
         );
+    }
+
+    [Test]
+    public async Task ProcessAsync_HosterRegistrationUsesSpecificUploadProxyServer_UploadsFileInsideUploadProxyScope()
+    {
+        // Arrange
+        var archiveFilePath = CreateArchiveFile("archive.part1.rar");
+        var upload = await AddUploadAsync(UploadState.Pending, [archiveFilePath]);
+        var proxyServerId = await UseSpecificUploadProxyServerAsync(upload);
+        ProxyCategoryScopeState? stateDuringUpload = null;
+        hosterMock
+            .Setup(h =>
+                h.UploadFileAsync(
+                    It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
+                    hosterConfigMock.Object,
+                    It.IsAny<ITransferProgress>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback(() => stateDuringUpload = ProxyCategoryScope.Current)
+            .ReturnsAsync(
+                (FileDto fileDto, IHosterConfig _, ITransferProgress _, CancellationToken _) =>
+                    new UploadFileResult(true, fileDto, [], "https://hoster.test/archive.part1.rar")
+            );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        VerifyUploadPipelineCalled(archiveFilePath);
+        stateDuringUpload.ShouldBe(
+            new ProxyCategoryScopeState(
+                ProxyCategory.HosterUploads,
+                ProxySelection.SpecificProxyServer,
+                proxyServerId
+            )
+        );
+        ProxyCategoryScope.Current.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ProcessAsync_HosterRegistrationUsesNoUploadProxy_RequestsParallelLimitInsideUploadProxyScope()
+    {
+        // Arrange
+        var archiveFilePath = CreateArchiveFile("archive.part1.rar");
+        var upload = await AddUploadAsync(UploadState.Pending, [archiveFilePath]);
+        upload.UploadConfig.HosterRegistration.UploadProxySelection = ProxySelection.NoProxy;
+        upload.UploadConfig.HosterRegistration.MirrorDownloadProxySelection =
+            ProxySelection.SpecificProxyServer;
+        upload.UploadConfig.HosterRegistration.MirrorDownloadProxyServerId =
+            await AddProxyServerAsync();
+        await dbContext.SaveChangesAsync();
+        ProxyCategoryScopeState? stateDuringParallelLimitRequest = null;
+        hosterMock
+            .Setup(h =>
+                h.GetMaximumParallelUploadsAsync(hosterConfigMock.Object, CancellationToken.None)
+            )
+            .Callback(() => stateDuringParallelLimitRequest = ProxyCategoryScope.Current)
+            .ReturnsAsync(1);
+        hosterMock
+            .Setup(h =>
+                h.UploadFileAsync(
+                    It.Is<FileDto>(f => f.FullFileName == archiveFilePath),
+                    hosterConfigMock.Object,
+                    It.IsAny<ITransferProgress>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                (FileDto fileDto, IHosterConfig _, ITransferProgress _, CancellationToken _) =>
+                    new UploadFileResult(true, fileDto, [], "https://hoster.test/archive.part1.rar")
+            );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        VerifyUploadPipelineCalled(archiveFilePath);
+        stateDuringParallelLimitRequest.ShouldBe(
+            new ProxyCategoryScopeState(ProxyCategory.HosterUploads, ProxySelection.NoProxy, null)
+        );
+        ProxyCategoryScope.Current.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ProcessAsync_FolderHosterRegistrationUsesSpecificUploadProxyServer_CreatesFolderAndMovesFileInsideUploadProxyScope()
+    {
+        // Arrange
+        var carriedOverFilePath = CreateArchiveFile("archive.part1.rar");
+        var newFilePath = CreateArchiveFile("archive.part2.rar");
+        var upload = await AddUploadAsync(
+            UploadState.Pending,
+            [carriedOverFilePath, newFilePath],
+            alreadyUploadedFileNames: [carriedOverFilePath]
+        );
+        var proxyServerId = await UseSpecificUploadProxyServerAsync(upload);
+        var carriedOverLink = "https://hoster.test/archive.part1.rar";
+        ProxyCategoryScopeState? stateDuringFolderCreation = null;
+        ProxyCategoryScopeState? stateDuringFileMove = null;
+        var folderHosterMock = new Mock<IFolderHoster>(MockBehavior.Strict);
+
+        folderHosterMock.Setup(h => h.HasFixedParallelUploadLimit).Returns(false);
+        folderHosterMock
+            .Setup(h => h.DeserializeHosterConfig(SerializedHosterConfig))
+            .Returns(hosterConfigMock.Object);
+        folderHosterMock
+            .Setup(h =>
+                h.GetMaximumParallelUploadsAsync(hosterConfigMock.Object, CancellationToken.None)
+            )
+            .ReturnsAsync(2);
+        folderHosterMock
+            .Setup(h =>
+                h.CreateFolderAsync(
+                    $"Bearcat.Release.001_UploadId_{upload.Id}",
+                    hosterConfigMock.Object,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback(() => stateDuringFolderCreation = ProxyCategoryScope.Current)
+            .ReturnsAsync("folder-id");
+        folderHosterMock
+            .Setup(h =>
+                h.MoveFileToFolderAsync(
+                    carriedOverLink,
+                    null,
+                    "folder-id",
+                    hosterConfigMock.Object,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback(() => stateDuringFileMove = ProxyCategoryScope.Current)
+            .Returns(Task.CompletedTask);
+        folderHosterMock
+            .Setup(h =>
+                h.UploadFileAsync(
+                    It.Is<FileDto>(f => f.FullFileName == newFilePath && f.FolderId == "folder-id"),
+                    hosterConfigMock.Object,
+                    It.IsAny<ITransferProgress>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                (FileDto fileDto, IHosterConfig _, ITransferProgress _, CancellationToken _) =>
+                    new UploadFileResult(
+                        true,
+                        fileDto,
+                        [],
+                        $"https://hoster.test/{Path.GetFileName(fileDto.FullFileName)}"
+                    )
+            );
+
+        hosterFactoryMock
+            .Setup(f => f.GetHostersByName())
+            .Returns(
+                new Dictionary<string, IHoster> { [HosterClassName] = folderHosterMock.Object }
+            );
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        var expectedState = new ProxyCategoryScopeState(
+            ProxyCategory.HosterUploads,
+            ProxySelection.SpecificProxyServer,
+            proxyServerId
+        );
+        stateDuringFolderCreation.ShouldBe(expectedState);
+        stateDuringFileMove.ShouldBe(expectedState);
+        ProxyCategoryScope.Current.ShouldBeNull();
     }
 
     [Test]
@@ -1531,6 +1701,35 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         await dbContext.SaveChangesAsync();
 
         return upload;
+    }
+
+    private async Task<int> UseSpecificUploadProxyServerAsync(Upload upload)
+    {
+        var proxyServerId = await AddProxyServerAsync();
+        upload.UploadConfig.HosterRegistration.UploadProxySelection =
+            ProxySelection.SpecificProxyServer;
+        upload.UploadConfig.HosterRegistration.UploadProxyServerId = proxyServerId;
+        upload.UploadConfig.HosterRegistration.MirrorDownloadProxySelection =
+            ProxySelection.NoProxy;
+        await dbContext.SaveChangesAsync();
+
+        return proxyServerId;
+    }
+
+    private async Task<int> AddProxyServerAsync()
+    {
+        var proxyServer = new ProxyServer
+        {
+            Name = "Upload proxy",
+            ProxyType = ProxyType.Http,
+            Host = "proxy.example.com",
+            Port = 8080,
+        };
+
+        dbContext.ProxyServers.Add(proxyServer);
+        await dbContext.SaveChangesAsync();
+
+        return proxyServer.Id;
     }
 
     private void VerifyUploadPipelineCalled(string archiveFilePath)

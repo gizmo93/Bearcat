@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Domain.Configurations;
+using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 
 namespace Bearcat.Domain.UseCases.ManageUploads;
@@ -86,6 +87,11 @@ public class UploadConcurrencyService : IDisposable
 
             var hoster = hostersByName[hosterName];
             var hosterConfig = hoster.DeserializeHosterConfig(concurrencyInfo.SerializedConfig);
+
+            using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(
+                concurrencyInfo.UploadProxySelection,
+                concurrencyInfo.UploadProxyServerId
+            );
 
             var maxParallelUploads = await ResolveMaximumParallelUploadsAsync(
                 hoster: hoster,

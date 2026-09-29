@@ -311,6 +311,146 @@ public class ProxyServerRepositoryTest : BearcatIntegrationTest
         result.ShouldNotBeNull();
     }
 
+    [Test]
+    public async Task GetUsageAsync_ProxyServerUsedByRegistrations_ReturnsRegistrationsOrderedByTypeAndName()
+    {
+        // Arrange
+        var used = CreateProxyServer("Upload proxy");
+        var other = CreateProxyServer("Download proxy", port: 1080);
+        await AddProxyServersAsync(used, other);
+        var dbContext = CreateDbContext();
+        dbContext.AddRange(
+            CreateHosterRegistration("Rapidgator", uploadProxyServerId: used.Id),
+            CreateHosterRegistration("Alfafile", mirrorDownloadProxyServerId: used.Id),
+            CreateHosterRegistration("Katfile", uploadProxyServerId: other.Id),
+            CreateImageHosterRegistration("ImgBb", used.Id),
+            CreateImageHosterRegistration("PixHost", other.Id),
+            CreateLinkCrypterRegistration("FileCrypt", used.Id),
+            CreateLinkCrypterRegistration("KeepLinks", null)
+        );
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await CreateRepository().GetUsageAsync(used.Id, CancellationToken.None);
+
+        // Assert
+        result.CategoryDefaults.ShouldBeEmpty();
+        result.Registrations.ShouldBe([
+            new ProxyServerRegistrationUsageReadModel(
+                ProxyUsingRegistrationType.Hoster,
+                "Alfafile"
+            ),
+            new ProxyServerRegistrationUsageReadModel(
+                ProxyUsingRegistrationType.Hoster,
+                "Rapidgator"
+            ),
+            new ProxyServerRegistrationUsageReadModel(
+                ProxyUsingRegistrationType.ImageHoster,
+                "ImgBb"
+            ),
+            new ProxyServerRegistrationUsageReadModel(
+                ProxyUsingRegistrationType.LinkCrypter,
+                "FileCrypt"
+            ),
+        ]);
+        result.IsUsed.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task SaveChangesAsync_RemovedProxyServerIsUsedByRegistration_ThrowsDbUpdateException()
+    {
+        // Arrange
+        var proxyServer = CreateProxyServer("Upload proxy");
+        await AddProxyServersAsync(proxyServer);
+        var dbContext = CreateDbContext();
+        dbContext.Add(CreateLinkCrypterRegistration("FileCrypt", proxyServer.Id));
+        await dbContext.SaveChangesAsync();
+        var repository = CreateRepository();
+        repository.Remove(await repository.GetByIdAsync(proxyServer.Id, CancellationToken.None));
+
+        // Act
+        var result = await Should.ThrowAsync<DbUpdateException>(() =>
+            repository.SaveChangesAsync(CancellationToken.None)
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task ExistsAsync_ExistingProxyServer_ReturnsTrue()
+    {
+        // Arrange
+        var proxyServer = CreateProxyServer("Upload proxy");
+        await AddProxyServersAsync(proxyServer);
+
+        // Act
+        var result = await CreateRepository().ExistsAsync(proxyServer.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ExistsAsync_UnknownId_ReturnsFalse()
+    {
+        // Act
+        var result = await CreateRepository().ExistsAsync(4711, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    private static HosterRegistration CreateHosterRegistration(
+        string name,
+        int? uploadProxyServerId = null,
+        int? mirrorDownloadProxyServerId = null
+    ) =>
+        new()
+        {
+            Name = name,
+            HosterClassName = "TestHoster",
+            SerializedConfig = "{}",
+            UploadProxySelection = uploadProxyServerId is null
+                ? ProxySelection.UseCategoryDefault
+                : ProxySelection.SpecificProxyServer,
+            UploadProxyServerId = uploadProxyServerId,
+            MirrorDownloadProxySelection = mirrorDownloadProxyServerId is null
+                ? ProxySelection.UseCategoryDefault
+                : ProxySelection.SpecificProxyServer,
+            MirrorDownloadProxyServerId = mirrorDownloadProxyServerId,
+        };
+
+    private static ImageHosterRegistration CreateImageHosterRegistration(
+        string name,
+        int? proxyServerId
+    ) =>
+        new()
+        {
+            Name = name,
+            ImageHosterClassName = "TestImageHoster",
+            SerializedConfig = "{}",
+            ProxySelection = proxyServerId is null
+                ? ProxySelection.UseCategoryDefault
+                : ProxySelection.SpecificProxyServer,
+            ProxyServerId = proxyServerId,
+        };
+
+    private static LinkCrypterRegistration CreateLinkCrypterRegistration(
+        string name,
+        int? proxyServerId
+    ) =>
+        new()
+        {
+            Name = name,
+            LinkCrypterClassName = "TestCrypter",
+            SerializedConfig = "{}",
+            ProxySelection = proxyServerId is null
+                ? ProxySelection.UseCategoryDefault
+                : ProxySelection.SpecificProxyServer,
+            ProxyServerId = proxyServerId,
+        };
+
     private async Task AddCategoryDefaultsAsync(
         params (ProxyCategory ProxyCategory, int? ProxyServerId)[] categoryDefaults
     )

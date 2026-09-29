@@ -4,6 +4,7 @@ using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
@@ -115,6 +116,61 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         result.UploadedFiles.ShouldAllBe(f => f.CheckedAt > localNow.AddMinutes(-1));
         hosterMock.VerifyAll();
         hosterFactoryMock.VerifyAll();
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_HosterRegistrationUsesSpecificUploadProxyServer_ChecksLinksInsideUploadProxyScope()
+    {
+        // Arrange
+        var proxyServer = new ProxyServer
+        {
+            Name = "Upload proxy",
+            ProxyType = ProxyType.Http,
+            Host = "proxy.example.com",
+            Port = 8080,
+        };
+        dbContext.ProxyServers.Add(proxyServer);
+        await dbContext.SaveChangesAsync();
+        var hosterRegistration = CreateHosterRegistration();
+        hosterRegistration.UploadProxySelection = ProxySelection.SpecificProxyServer;
+        hosterRegistration.UploadProxyServerId = proxyServer.Id;
+        hosterRegistration.MirrorDownloadProxySelection = ProxySelection.NoProxy;
+        await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/1"],
+            hosterRegistration: hosterRegistration
+        );
+        ProxyCategoryScopeState? stateDuringLinkCheck = null;
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    CancellationToken.None
+                )
+            )
+            .Callback(() => stateDuringLinkCheck = ProxyCategoryScope.Current)
+            .ReturnsAsync(
+                new FileExistResult(
+                    true,
+                    [],
+                    new Dictionary<string, bool> { ["https://hoster.test/1"] = true }
+                )
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        stateDuringLinkCheck.ShouldBe(
+            new ProxyCategoryScopeState(
+                ProxyCategory.HosterUploads,
+                ProxySelection.SpecificProxyServer,
+                proxyServer.Id
+            )
+        );
+        ProxyCategoryScope.Current.ShouldBeNull();
     }
 
     [Test]

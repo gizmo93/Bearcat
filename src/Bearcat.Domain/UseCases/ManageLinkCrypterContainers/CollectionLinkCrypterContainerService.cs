@@ -1,8 +1,10 @@
 using Bearcat.Abstractions.LinkCrypter;
+using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.LinkCrypterContainers;
+using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -153,16 +155,21 @@ public class CollectionLinkCrypterContainerService(
         var crypter = GetCrypter(linkCrypterConfig);
         var config = GetCrypterConfig(crypter, linkCrypterConfig);
 
-        var result = await crypter.CreateContainerAsync(
-            linkCrypterConfig: config,
-            containerName: slot.ReleaseCollection.Name,
-            password: linkCrypterConfig.Password,
-            enableCaptcha: linkCrypterConfig.EnableCaptcha,
-            enableContainerDownload: linkCrypterConfig.EnableContainerDownload,
-            enableClickAndLoad: linkCrypterConfig.EnableClickAndLoad,
-            links: GetUploadLinks(uploads),
-            cancellationToken: cancellationToken
-        );
+        CreateContainerResult result;
+
+        using (LinkCrypterRegistrationProxyScope.Enter(linkCrypterConfig.LinkCrypterRegistration))
+        {
+            result = await crypter.CreateContainerAsync(
+                linkCrypterConfig: config,
+                containerName: slot.ReleaseCollection.Name,
+                password: linkCrypterConfig.Password,
+                enableCaptcha: linkCrypterConfig.EnableCaptcha,
+                enableContainerDownload: linkCrypterConfig.EnableContainerDownload,
+                enableClickAndLoad: linkCrypterConfig.EnableClickAndLoad,
+                links: GetUploadLinks(uploads),
+                cancellationToken: cancellationToken
+            );
+        }
 
         var container = new LinkCrypterContainer
         {
@@ -209,17 +216,22 @@ public class CollectionLinkCrypterContainerService(
         var crypter = GetCrypter(linkCrypterConfig);
         var config = GetCrypterConfig(crypter, linkCrypterConfig);
 
-        var result = await crypter.UpdateContainerAsync(
-            linkCrypterConfig: config,
-            containerLink: container.ContainerUrl,
-            externalReference: container.ExternalReference,
-            password: linkCrypterConfig.Password,
-            enableCaptcha: linkCrypterConfig.EnableCaptcha,
-            enableContainerDownload: linkCrypterConfig.EnableContainerDownload,
-            enableClickAndLoad: linkCrypterConfig.EnableClickAndLoad,
-            links: GetUploadLinks(uploads),
-            cancellationToken: cancellationToken
-        );
+        UpdateContainerResult result;
+
+        using (LinkCrypterRegistrationProxyScope.Enter(linkCrypterConfig.LinkCrypterRegistration))
+        {
+            result = await crypter.UpdateContainerAsync(
+                linkCrypterConfig: config,
+                containerLink: container.ContainerUrl,
+                externalReference: container.ExternalReference,
+                password: linkCrypterConfig.Password,
+                enableCaptcha: linkCrypterConfig.EnableCaptcha,
+                enableContainerDownload: linkCrypterConfig.EnableContainerDownload,
+                enableClickAndLoad: linkCrypterConfig.EnableClickAndLoad,
+                links: GetUploadLinks(uploads),
+                cancellationToken: cancellationToken
+            );
+        }
 
         container.Password = linkCrypterConfig.Password;
         container.EnableCaptcha = linkCrypterConfig.EnableCaptcha;

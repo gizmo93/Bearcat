@@ -1,3 +1,5 @@
+using Bearcat.Abstractions.Proxies;
+
 namespace Bearcat.Domain.UseCases.ManageLinkCrypters.ReadModels;
 
 public record LinkCrypterRegistrationReadModel(
@@ -9,5 +11,7 @@ public record LinkCrypterRegistrationReadModel(
     bool HasUnreadableSecrets,
     bool SupportsCaptcha,
     bool SupportsContainerDownload,
-    bool SupportsClickAndLoad
+    bool SupportsClickAndLoad,
+    ProxySelection ProxySelection,
+    int? ProxyServerId
 );

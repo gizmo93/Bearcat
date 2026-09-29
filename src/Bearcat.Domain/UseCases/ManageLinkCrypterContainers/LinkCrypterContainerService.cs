@@ -1,7 +1,9 @@
 using Bearcat.Abstractions.LinkCrypter;
+using Bearcat.Abstractions.LinkCrypter.Results;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -181,20 +183,25 @@ public class LinkCrypterContainerService(
             )
         );
 
-        var result = await crypter.UpdateContainerAsync(
-            linkCrypterConfig: config,
-            containerLink: previousContainer.ContainerUrl,
-            externalReference: previousContainer.ExternalReference,
-            password: linkCrypterConfig.Password,
-            enableCaptcha: linkCrypterConfig.EnableCaptcha,
-            enableContainerDownload: linkCrypterConfig.EnableContainerDownload,
-            enableClickAndLoad: linkCrypterConfig.EnableClickAndLoad,
-            links: upload
-                .UploadedFiles.Select(selector: uf => uf.HosterFileLink)
-                .OrderBy(keySelector: l => l)
-                .ToList(),
-            cancellationToken: cancellationToken
-        );
+        UpdateContainerResult result;
+
+        using (LinkCrypterRegistrationProxyScope.Enter(linkCrypterConfig.LinkCrypterRegistration))
+        {
+            result = await crypter.UpdateContainerAsync(
+                linkCrypterConfig: config,
+                containerLink: previousContainer.ContainerUrl,
+                externalReference: previousContainer.ExternalReference,
+                password: linkCrypterConfig.Password,
+                enableCaptcha: linkCrypterConfig.EnableCaptcha,
+                enableContainerDownload: linkCrypterConfig.EnableContainerDownload,
+                enableClickAndLoad: linkCrypterConfig.EnableClickAndLoad,
+                links: upload
+                    .UploadedFiles.Select(selector: uf => uf.HosterFileLink)
+                    .OrderBy(keySelector: l => l)
+                    .ToList(),
+                cancellationToken: cancellationToken
+            );
+        }
 
         if (!result.IsSuccess)
         {
@@ -244,16 +251,21 @@ public class LinkCrypterContainerService(
 
         var fileUrls = upload.UploadedFiles.Select(f => f.HosterFileLink).OrderBy(l => l).ToList();
 
-        var result = await crypter.CreateContainerAsync(
-            linkCrypterConfig: config,
-            containerName: upload.UploadConfig.Release.Name,
-            password: linkCrypterConfig.Password,
-            enableCaptcha: linkCrypterConfig.EnableCaptcha,
-            enableContainerDownload: linkCrypterConfig.EnableContainerDownload,
-            enableClickAndLoad: linkCrypterConfig.EnableClickAndLoad,
-            links: fileUrls,
-            cancellationToken: cancellationToken
-        );
+        CreateContainerResult result;
+
+        using (LinkCrypterRegistrationProxyScope.Enter(linkCrypterConfig.LinkCrypterRegistration))
+        {
+            result = await crypter.CreateContainerAsync(
+                linkCrypterConfig: config,
+                containerName: upload.UploadConfig.Release.Name,
+                password: linkCrypterConfig.Password,
+                enableCaptcha: linkCrypterConfig.EnableCaptcha,
+                enableContainerDownload: linkCrypterConfig.EnableContainerDownload,
+                enableClickAndLoad: linkCrypterConfig.EnableClickAndLoad,
+                links: fileUrls,
+                cancellationToken: cancellationToken
+            );
+        }
 
         var container = new LinkCrypterContainer
         {

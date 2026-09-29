@@ -7,11 +7,18 @@ public class FakeProxyRoutingCache : IProxyRoutingCache
 {
     public Dictionary<ProxyCategory, ResolvedProxyServer> ProxyServerByCategory { get; } = [];
 
+    public Dictionary<int, ResolvedProxyServer> ProxyServersById { get; } = [];
+
     public Dictionary<Uri, NetworkCredential> CredentialByProxyAddress { get; } = [];
 
     public ResolvedProxyServer? GetProxyServerForCategory(ProxyCategory category)
     {
         return ProxyServerByCategory.GetValueOrDefault(category);
+    }
+
+    public ResolvedProxyServer GetProxyServerById(int proxyServerId)
+    {
+        return ProxyServersById[proxyServerId];
     }
 
     public NetworkCredential? GetCredentialForProxyAddress(Uri proxyUri)
@@ -38,6 +45,24 @@ public class FakeProxyRoutingCache : IProxyRoutingCache
             hasUnreadableSecrets
         );
         ProxyServerByCategory[category] = proxyServer;
+
+        return proxyServer;
+    }
+
+    public ResolvedProxyServer AddProxyServer(
+        int proxyServerId,
+        string proxyUri,
+        bool hasUnreadableSecrets = false
+    )
+    {
+        var proxyServer = new ResolvedProxyServer(
+            proxyServerId,
+            $"Proxy server {proxyServerId}",
+            new Uri(proxyUri),
+            Credential: null,
+            hasUnreadableSecrets
+        );
+        ProxyServersById[proxyServerId] = proxyServer;
 
         return proxyServer;
     }

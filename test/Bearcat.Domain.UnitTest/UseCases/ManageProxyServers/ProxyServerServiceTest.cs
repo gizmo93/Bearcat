@@ -7,6 +7,7 @@ using Bearcat.Domain.UseCases.DetectUnreadableSecrets.Repositories;
 using Bearcat.Domain.UseCases.ManageProxyServers;
 using Bearcat.Domain.UseCases.ManageProxyServers.ConnectionTest;
 using Bearcat.Domain.UseCases.ManageProxyServers.Dto;
+using Bearcat.Domain.UseCases.ManageProxyServers.ReadModels;
 using Bearcat.Domain.UseCases.ManageProxyServers.Validation;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -534,6 +535,7 @@ public class ProxyServerServiceTest
         // Assert
         result.IsDeleted.ShouldBeTrue();
         result.UsingCategoryDefaults.ShouldBeEmpty();
+        result.UsingRegistrations.ShouldBeEmpty();
         repository.ProxyServers.ShouldBeEmpty();
         repository.SaveChangesCallCount.ShouldBe(1);
         proxyRoutingCacheMock.Verify(
@@ -568,6 +570,43 @@ public class ProxyServerServiceTest
             cache => cache.RefreshAsync(It.IsAny<CancellationToken>()),
             Times.Never
         );
+    }
+
+    [Test]
+    public async Task DeleteAsync_ProxyServerUsedByRegistrations_ReturnsUsingRegistrationsAndKeepsProxyServer()
+    {
+        // Arrange
+        var proxyServer = AddStoredProxyServer();
+        repository.RegistrationUsagesByProxyServerId[proxyServer.Id] =
+        [
+            new ProxyServerRegistrationUsageReadModel(
+                ProxyUsingRegistrationType.Hoster,
+                "Rapidgator"
+            ),
+            new ProxyServerRegistrationUsageReadModel(
+                ProxyUsingRegistrationType.LinkCrypter,
+                "FileCrypt"
+            ),
+        ];
+
+        // Act
+        var result = await service.DeleteAsync(proxyServer.Id);
+
+        // Assert
+        result.IsDeleted.ShouldBeFalse();
+        result.UsingCategoryDefaults.ShouldBeEmpty();
+        result.UsingRegistrations.ShouldBe([
+            new ProxyServerRegistrationUsageReadModel(
+                ProxyUsingRegistrationType.Hoster,
+                "Rapidgator"
+            ),
+            new ProxyServerRegistrationUsageReadModel(
+                ProxyUsingRegistrationType.LinkCrypter,
+                "FileCrypt"
+            ),
+        ]);
+        repository.ProxyServers.ShouldHaveSingleItem();
+        repository.SaveChangesCallCount.ShouldBe(0);
     }
 
     [Test]

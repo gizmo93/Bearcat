@@ -15,12 +15,21 @@ public class ProxyRoutingCache(
 {
     private volatile ProxyRoutingTable routingTable = new(
         [],
+        new Dictionary<int, ResolvedProxyServer>(),
         new Dictionary<ProxyCategory, ResolvedProxyServer>()
     );
 
     public ResolvedProxyServer? GetProxyServerForCategory(ProxyCategory category)
     {
         return routingTable.ProxyServerByCategory.GetValueOrDefault(category);
+    }
+
+    public ResolvedProxyServer GetProxyServerById(int proxyServerId)
+    {
+        return routingTable.ProxyServersById.GetValueOrDefault(proxyServerId)
+            ?? throw new InvalidOperationException(
+                $"The proxy server with id {proxyServerId} is not known to the proxy routing cache."
+            );
     }
 
     public NetworkCredential? GetCredentialForProxyAddress(Uri proxyUri)
@@ -65,7 +74,7 @@ public class ProxyRoutingCache(
                 categoryDefault => proxyServersById[categoryDefault.ProxyServerId!.Value]
             );
 
-        routingTable = new ProxyRoutingTable(proxyServers, proxyServerByCategory);
+        routingTable = new ProxyRoutingTable(proxyServers, proxyServersById, proxyServerByCategory);
     }
 
     private ResolvedProxyServer Resolve(ProxyServerRoutingReadModel proxyServer)
@@ -123,6 +132,7 @@ public class ProxyRoutingCache(
 
     private sealed record ProxyRoutingTable(
         IReadOnlyList<ResolvedProxyServer> ProxyServers,
+        IReadOnlyDictionary<int, ResolvedProxyServer> ProxyServersById,
         IReadOnlyDictionary<ProxyCategory, ResolvedProxyServer> ProxyServerByCategory
     );
 }

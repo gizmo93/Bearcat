@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Website.Localization;
@@ -72,7 +73,11 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
                         reuploadTriggerOverride: FormModel.ReuploadTriggerOverride,
                         alwaysReuploadAllFiles: FormModel.AlwaysReuploadAllFiles,
                         useForMirrorDownloads: FormModel.UseForMirrorDownloads,
-                        mirrorPriority: FormModel.MirrorPriority
+                        mirrorPriority: FormModel.MirrorPriority,
+                        uploadProxySelection: FormModel.UploadProxySelection,
+                        uploadProxyServerId: FormModel.UploadProxyServerId,
+                        mirrorDownloadProxySelection: FormModel.MirrorDownloadProxySelection,
+                        mirrorDownloadProxyServerId: FormModel.MirrorDownloadProxyServerId
                     )
             );
         }
@@ -89,7 +94,11 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
                         FormModel.ReuploadTriggerOverride,
                         FormModel.AlwaysReuploadAllFiles,
                         FormModel.UseForMirrorDownloads,
-                        FormModel.MirrorPriority
+                        FormModel.MirrorPriority,
+                        uploadProxySelection: FormModel.UploadProxySelection,
+                        uploadProxyServerId: FormModel.UploadProxyServerId,
+                        mirrorDownloadProxySelection: FormModel.MirrorDownloadProxySelection,
+                        mirrorDownloadProxyServerId: FormModel.MirrorDownloadProxyServerId
                     )
             );
         }
@@ -152,6 +161,8 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
         if (selectedHoster is null or { SupportsDownload: false })
         {
             FormModel.UseForMirrorDownloads = false;
+            FormModel.MirrorDownloadProxySelection = ProxySelection.UseCategoryDefault;
+            FormModel.MirrorDownloadProxyServerId = null;
         }
 
         if (!FormModel.IsEdit)

@@ -21,8 +21,38 @@ public class CategoryProxySelectingWebProxy(
 
     public ResolvedProxyServer? SelectProxyServer()
     {
-        var category = ProxyCategoryScope.Current?.Category ?? clientCategory;
+        var scopeState = ProxyCategoryScope.Current;
 
-        return proxyRoutingCache.GetProxyServerForCategory(category);
+        if (scopeState is null || !BelongsToSameGroupAsClient(scopeState.Category))
+        {
+            return proxyRoutingCache.GetProxyServerForCategory(clientCategory);
+        }
+
+        return SelectProxyServerOfScope(scopeState);
+    }
+
+    private ResolvedProxyServer? SelectProxyServerOfScope(ProxyCategoryScopeState scopeState)
+    {
+        return scopeState.ProxySelection switch
+        {
+            ProxySelection.UseCategoryDefault => proxyRoutingCache.GetProxyServerForCategory(
+                scopeState.Category
+            ),
+            ProxySelection.NoProxy => null,
+            ProxySelection.SpecificProxyServer => proxyRoutingCache.GetProxyServerById(
+                scopeState.ProxyServerId!.Value
+            ),
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(scopeState),
+                scopeState.ProxySelection,
+                null
+            ),
+        };
+    }
+
+    private bool BelongsToSameGroupAsClient(ProxyCategory scopeCategory)
+    {
+        return ProxyCategoryGroupMapping.GetGroup(scopeCategory)
+            == ProxyCategoryGroupMapping.GetGroup(clientCategory);
     }
 }

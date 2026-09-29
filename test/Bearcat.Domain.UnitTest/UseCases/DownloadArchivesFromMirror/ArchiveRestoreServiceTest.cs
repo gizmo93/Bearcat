@@ -110,16 +110,67 @@ public class ArchiveRestoreServiceTest
     public async Task ProcessAsync_RestoreFromMirrors_CallsHosterInsideMirrorDownloadProxyScope()
     {
         // Arrange
-        CreateScenario();
+        var scenario = CreateScenario();
+        var mirrorRegistration = scenario.DonorUpload.UploadConfig.HosterRegistration;
+        mirrorRegistration.MirrorDownloadProxySelection = ProxySelection.NoProxy;
+        mirrorRegistration.UploadProxySelection = ProxySelection.SpecificProxyServer;
+        mirrorRegistration.UploadProxyServerId = 9;
         var service = CreateService();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        downloadHoster.ProxyCategoriesDuringCalls.ShouldNotBeEmpty();
-        downloadHoster.ProxyCategoriesDuringCalls.ShouldAllBe(category =>
-            category == ProxyCategory.HosterMirrorDownloads
+        downloadHoster.ProxyScopeStatesDuringCalls.Count.ShouldBe(3);
+        downloadHoster.ProxyScopeStatesDuringCalls.ShouldAllBe(state =>
+            state
+            == new ProxyCategoryScopeState(
+                ProxyCategory.HosterMirrorDownloads,
+                ProxySelection.NoProxy,
+                null
+            )
+        );
+        ProxyCategoryScope.Current.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ProcessAsync_TwoMirrorRegistrationsWithDifferentProxySelections_EachHosterUsesItsOwnRegistrationSelection()
+    {
+        // Arrange
+        var scenario = CreateScenario();
+        scenario.DonorUpload.UploadedFiles.RemoveAll(file => file.ArchiveFileId == 3);
+        var primaryRegistration = scenario.DonorUpload.UploadConfig.HosterRegistration;
+        primaryRegistration.MirrorDownloadProxySelection = ProxySelection.SpecificProxyServer;
+        primaryRegistration.MirrorDownloadProxyServerId = 7;
+        primaryRegistration.UploadProxySelection = ProxySelection.NoProxy;
+        var secondaryRegistration = AddSecondaryMirrorUpload(scenario, [3]);
+        secondaryRegistration.MirrorDownloadProxySelection = ProxySelection.NoProxy;
+        secondaryRegistration.UploadProxySelection = ProxySelection.SpecificProxyServer;
+        secondaryRegistration.UploadProxyServerId = 8;
+        var service = CreateService();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        scenario.Archive.ArchiveState.ShouldBe(ArchiveState.Created);
+        downloadHoster.ProxyScopeStatesDuringCalls.Count.ShouldBe(2);
+        downloadHoster.ProxyScopeStatesDuringCalls.ShouldAllBe(state =>
+            state
+            == new ProxyCategoryScopeState(
+                ProxyCategory.HosterMirrorDownloads,
+                ProxySelection.SpecificProxyServer,
+                7
+            )
+        );
+        secondaryDownloadHoster.ProxyScopeStatesDuringCalls.Count.ShouldBe(2);
+        secondaryDownloadHoster.ProxyScopeStatesDuringCalls.ShouldAllBe(state =>
+            state
+            == new ProxyCategoryScopeState(
+                ProxyCategory.HosterMirrorDownloads,
+                ProxySelection.NoProxy,
+                null
+            )
         );
         ProxyCategoryScope.Current.ShouldBeNull();
     }
@@ -706,7 +757,10 @@ public class ArchiveRestoreServiceTest
         return new Scenario(archive, donorUpload, waitingUpload);
     }
 
-    private void AddSecondaryMirrorUpload(Scenario scenario, IReadOnlyList<int> archiveFileIds)
+    private HosterRegistration AddSecondaryMirrorUpload(
+        Scenario scenario,
+        IReadOnlyList<int> archiveFileIds
+    )
     {
         var archiveConfig = scenario.Archive.ArchiveConfig;
 
@@ -751,6 +805,8 @@ public class ArchiveRestoreServiceTest
 
         repository.Uploads.Add(upload);
         repository.SerializedConfigs[registration.Id] = "protected";
+
+        return registration;
     }
 
     private static TransferIdentifier MirrorDownloadKey(int archiveId)

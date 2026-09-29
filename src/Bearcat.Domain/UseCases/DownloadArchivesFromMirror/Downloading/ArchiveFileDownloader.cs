@@ -1,5 +1,7 @@
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.ValueObjects;
@@ -183,6 +185,10 @@ public class ArchiveFileDownloader(
     {
         try
         {
+            using var proxyScope = HosterRegistrationProxyScope.EnterForMirrorDownload(
+                resolved.Registration
+            );
+
             var sizePerFileUrl = await resolved.Hoster.GetFileSizesAsync(
                 [source.UploadedFile.HosterFileLink],
                 resolved.Config,
@@ -217,23 +223,28 @@ public class ArchiveFileDownloader(
     {
         try
         {
-            var result = await resolved.Hoster.DownloadFileAsync(
-                file: new DownloadFileDto(
-                    HosterFileLink: source.UploadedFile.HosterFileLink,
-                    ExternalId: source.UploadedFile.ExternalId,
-                    ExpectedSizeBytes: expectedSizeBytes
-                ),
-                targetFilePath: download.TargetFilePath,
-                hosterConfig: resolved.Config,
-                progress: new TransferProgressReporter(
-                    tracker: transferProgressTracker,
-                    identifier: new TransferIdentifier(TransferType.MirrorDownload, archiveId),
-                    fileId: download.ArchiveFileId,
-                    fileName: Path.GetFileName(download.TargetFilePath),
-                    sourceName: source.Registration.Name
-                ),
-                cancellationToken: cancellationToken
-            );
+            DownloadFileResult result;
+
+            using (HosterRegistrationProxyScope.EnterForMirrorDownload(resolved.Registration))
+            {
+                result = await resolved.Hoster.DownloadFileAsync(
+                    file: new DownloadFileDto(
+                        HosterFileLink: source.UploadedFile.HosterFileLink,
+                        ExternalId: source.UploadedFile.ExternalId,
+                        ExpectedSizeBytes: expectedSizeBytes
+                    ),
+                    targetFilePath: download.TargetFilePath,
+                    hosterConfig: resolved.Config,
+                    progress: new TransferProgressReporter(
+                        tracker: transferProgressTracker,
+                        identifier: new TransferIdentifier(TransferType.MirrorDownload, archiveId),
+                        fileId: download.ArchiveFileId,
+                        fileName: Path.GetFileName(download.TargetFilePath),
+                        sourceName: source.Registration.Name
+                    ),
+                    cancellationToken: cancellationToken
+                );
+            }
 
             if (!result.IsSuccess)
             {

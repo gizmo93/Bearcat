@@ -1,4 +1,5 @@
-﻿using Bearcat.Domain.ValueObjects;
+﻿using Bearcat.Abstractions.Proxies;
+using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 
@@ -22,5 +23,9 @@ public record HosterRegistrationReadModel(
     bool UseForMirrorDownloads,
     int MirrorPriority,
     string HosterName,
-    string FullClassName
+    string FullClassName,
+    ProxySelection UploadProxySelection,
+    int? UploadProxyServerId,
+    ProxySelection MirrorDownloadProxySelection,
+    int? MirrorDownloadProxyServerId
 );

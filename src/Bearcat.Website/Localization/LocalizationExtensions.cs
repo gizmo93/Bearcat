@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Shared.ForumPostingRules;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
+using Bearcat.Domain.UseCases.ManageProxyServers.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Localization;
 
@@ -38,6 +39,11 @@ public static class LocalizationExtensions
         this IStringLocalizer<UiResource> localizer,
         ProxyCategory proxyCategory
     ) => localizer[$"ProxyCategory.{proxyCategory}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        ProxyUsingRegistrationType registrationType
+    ) => localizer[$"ProxyUsingRegistrationType.{registrationType}"];
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,

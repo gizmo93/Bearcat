@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Shared.Entities;
 
 namespace Bearcat.Domain.Entities;
@@ -15,6 +16,10 @@ public class LinkCrypterRegistration : IEntityWithEncryptedSecrets, IActivatable
     public bool IsActive { get; set; }
 
     public bool HasUnreadableSecrets { get; set; }
+
+    public ProxySelection ProxySelection { get; set; } = ProxySelection.UseCategoryDefault;
+
+    public int? ProxyServerId { get; set; }
 
     public string GetEncryptedSecrets() => SerializedConfig;
 

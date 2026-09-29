@@ -8,8 +8,17 @@ public static class ProxyCategoryScope
 
     public static IDisposable Enter(ProxyCategory category)
     {
+        return Enter(category, ProxySelection.UseCategoryDefault, proxyServerId: null);
+    }
+
+    public static IDisposable Enter(
+        ProxyCategory category,
+        ProxySelection proxySelection,
+        int? proxyServerId
+    )
+    {
         var previousState = CurrentState.Value;
-        CurrentState.Value = new ProxyCategoryScopeState(category);
+        CurrentState.Value = new ProxyCategoryScopeState(category, proxySelection, proxyServerId);
 
         return new ProxyCategoryScopeExit(previousState);
     }

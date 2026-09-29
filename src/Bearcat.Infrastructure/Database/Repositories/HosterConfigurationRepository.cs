@@ -34,6 +34,10 @@ public class HosterConfigurationRepository(
                 h.AlwaysReuploadAllFiles,
                 h.UseForMirrorDownloads,
                 h.MirrorPriority,
+                h.UploadProxySelection,
+                h.UploadProxyServerId,
+                h.MirrorDownloadProxySelection,
+                h.MirrorDownloadProxyServerId,
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -64,7 +68,11 @@ public class HosterConfigurationRepository(
                     h.UseForMirrorDownloads,
                     h.MirrorPriority,
                     hoster.Name,
-                    h.HosterClassName
+                    h.HosterClassName,
+                    h.UploadProxySelection,
+                    h.UploadProxyServerId,
+                    h.MirrorDownloadProxySelection,
+                    h.MirrorDownloadProxyServerId
                 );
             })
             .ToList();

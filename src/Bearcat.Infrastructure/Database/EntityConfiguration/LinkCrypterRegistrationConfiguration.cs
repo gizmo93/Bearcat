@@ -20,5 +20,15 @@ public class LinkCrypterRegistrationConfiguration
         builder.Property(l => l.IsActive).IsRequired();
 
         builder.Property(l => l.HasUnreadableSecrets).IsRequired();
+        builder.Property(l => l.ProxySelection).IsRequired();
+        builder.Property(l => l.ProxyServerId).IsRequired(false);
+
+        builder
+            .HasOne<ProxyServer>()
+            .WithMany()
+            .HasForeignKey(l => l.ProxyServerId)
+            .HasPrincipalKey(proxyServer => proxyServer.Id)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

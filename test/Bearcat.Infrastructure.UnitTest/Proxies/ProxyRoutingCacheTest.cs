@@ -276,6 +276,65 @@ public class ProxyRoutingCacheTest
         credential.ShouldBeNull();
     }
 
+    [Test]
+    public async Task GetProxyServerById_ProxyServerWithoutCategoryDefault_ReturnsResolvedProxyServer()
+    {
+        // Arrange
+        AddProxyServer(
+            3,
+            ProxyType.Socks5,
+            "socks.example.com",
+            1080,
+            "alice",
+            ReadableEncryptedPassword
+        );
+        await cache.RefreshAsync(CancellationToken.None);
+
+        // Act
+        var proxyServer = cache.GetProxyServerById(3);
+
+        // Assert
+        proxyServer.ProxyUri.ShouldBe(new Uri("socks5://socks.example.com:1080"));
+        proxyServer.HasUnreadableSecrets.ShouldBeFalse();
+        proxyServer.Credential.ShouldNotBeNull();
+        proxyServer.Credential.Password.ShouldBe("secret");
+    }
+
+    [Test]
+    public async Task GetProxyServerById_PasswordCannotBeDecrypted_ReturnsProxyServerMarkedAsUnreadable()
+    {
+        // Arrange
+        AddProxyServer(
+            3,
+            ProxyType.Http,
+            "proxy.example.com",
+            8080,
+            "alice",
+            UnreadableEncryptedPassword
+        );
+        await cache.RefreshAsync(CancellationToken.None);
+
+        // Act
+        var proxyServer = cache.GetProxyServerById(3);
+
+        // Assert
+        proxyServer.HasUnreadableSecrets.ShouldBeTrue();
+        proxyServer.Credential.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task GetProxyServerById_UnknownProxyServer_Throws()
+    {
+        // Arrange
+        await cache.RefreshAsync(CancellationToken.None);
+
+        // Act
+        var act = () => cache.GetProxyServerById(4711);
+
+        // Assert
+        act.ShouldThrow<InvalidOperationException>();
+    }
+
     private void AddProxyServer(
         int id,
         ProxyType proxyType,

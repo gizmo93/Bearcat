@@ -568,6 +568,12 @@ namespace BearCat.Infrastructure.Migrations
                     b.Property<int?>("MaxParallelUploadsOverride")
                         .HasColumnType("integer");
 
+                    b.Property<int>("MirrorDownloadProxySelection")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("MirrorDownloadProxyServerId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("MirrorPriority")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
@@ -592,10 +598,20 @@ namespace BearCat.Infrastructure.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<int>("UploadProxySelection")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UploadProxyServerId")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("UseForMirrorDownloads")
                         .HasColumnType("boolean");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MirrorDownloadProxyServerId");
+
+                    b.HasIndex("UploadProxyServerId");
 
                     b.ToTable("HosterRegistrations");
                 });
@@ -624,12 +640,20 @@ namespace BearCat.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int>("ProxySelection")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ProxyServerId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("SerializedConfig")
                         .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProxyServerId");
 
                     b.ToTable("ImageHosterRegistrations");
                 });
@@ -862,12 +886,20 @@ namespace BearCat.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<int>("ProxySelection")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ProxyServerId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("SerializedConfig")
                         .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProxyServerId");
 
                     b.ToTable("LinkCrypterRegistrations");
                 });
@@ -2465,6 +2497,27 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("ForumPostTemplate");
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.HosterRegistration", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.ProxyServer", null)
+                        .WithMany()
+                        .HasForeignKey("MirrorDownloadProxyServerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Bearcat.Domain.Entities.ProxyServer", null)
+                        .WithMany()
+                        .HasForeignKey("UploadProxyServerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ImageHosterRegistration", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.ProxyServer", null)
+                        .WithMany()
+                        .HasForeignKey("ProxyServerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.ImageUpload", b =>
                 {
                     b.HasOne("Bearcat.Domain.Entities.ImageUploadConfig", "ImageUploadConfig")
@@ -2580,6 +2633,14 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("LinkCrypterContainer");
 
                     b.Navigation("Upload");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.LinkCrypterRegistration", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.ProxyServer", null)
+                        .WithMany()
+                        .HasForeignKey("ProxyServerId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.Notification", b =>

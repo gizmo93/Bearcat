@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.ImageHoster;
 using Bearcat.Abstractions.ImageHoster.Dto;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.UseCases.ManageImageUploads.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -90,6 +91,8 @@ public class ImageUploadService(
             var imageHoster = imageHostersByClassName[registration.ImageHosterClassName];
 
             var config = imageHoster.DeserializeConfig(configsByRegistrationId[registration.Id]);
+
+            using var proxyScope = ImageHosterRegistrationProxyScope.Enter(registration);
 
             var result = await imageHoster.UploadImageAsync(
                 image: new ImageToUploadDto(
