@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.ImageHoster;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.ImageHosters.PixHost.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -17,12 +18,15 @@ public static class ServiceProviderConfig
                 {
                     client.BaseAddress = new Uri(PixHostApiClient.ApiBaseUrl);
                     client.Timeout = Timeout.InfiniteTimeSpan;
-                });
+                })
+                .UseProxyForCategory(ProxyCategory.ImageHosters);
 
-            services.AddHttpClient<IPixHostApiClient, PixHostApiClient>(client =>
-            {
-                client.Timeout = Timeout.InfiniteTimeSpan;
-            });
+            services
+                .AddHttpClient<IPixHostApiClient, PixHostApiClient>(client =>
+                {
+                    client.Timeout = Timeout.InfiniteTimeSpan;
+                })
+                .UseProxyForCategory(ProxyCategory.ImageHosters);
 
             services.AddKeyedScoped<IImageHoster, PixHost>(nameof(PixHost));
         }

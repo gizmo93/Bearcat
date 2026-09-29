@@ -2,6 +2,7 @@ using System.Net.Security;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Hosters.Keep2Share.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -31,7 +32,8 @@ public static class ServiceProviderConfig
                 {
                     c.BaseAddress = new Uri("https://keep2share.cc/api/v2");
                     c.Timeout = Timeout.InfiniteTimeSpan;
-                });
+                })
+                .UseProxyForCategory(ProxyCategory.HosterUploads);
 
             services
                 .AddHttpClient(
@@ -55,7 +57,8 @@ public static class ServiceProviderConfig
                                 || (sslPolicyErrors & ~toleratedErrors) == SslPolicyErrors.None;
                         },
                     }
-                );
+                )
+                .UseProxyForCategory(ProxyCategory.HosterUploads);
 
             services.AddScoped<IKeep2ShareApiClient, ApiClient>();
             services.AddKeyedScoped<IHoster, Keep2Share>(nameof(Keep2Share));

@@ -12,4 +12,8 @@ public interface IProxyServerReadRepository
         int proxyServerId,
         CancellationToken cancellationToken = default
     );
+
+    Task<IReadOnlyList<ProxyServerRoutingReadModel>> GetAllForRoutingAsync(
+        CancellationToken cancellationToken
+    );
 }

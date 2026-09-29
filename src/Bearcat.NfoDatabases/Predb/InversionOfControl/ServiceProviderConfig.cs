@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.NfoDatabase;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.NfoDatabases.Predb.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -30,18 +31,21 @@ public static class ServiceProviderConfig
             {
                 client.BaseAddress = new Uri("https://api.predb.net/");
                 client.Timeout = RequestTimeout;
-            });
+            })
+            .UseProxyForCategory(ProxyCategory.NfoDatabases);
 
         services.AddSingleton<PredbRateLimiter>();
         services.AddSingleton<PredbDownloadQuota>();
-        services.AddHttpClient(
-            PredbClient.DownloadHttpClientName,
-            client =>
-            {
-                client.DefaultRequestHeaders.UserAgent.ParseAdd("Bearcat/1.0");
-                client.Timeout = RequestTimeout;
-            }
-        );
+        services
+            .AddHttpClient(
+                PredbClient.DownloadHttpClientName,
+                client =>
+                {
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd("Bearcat/1.0");
+                    client.Timeout = RequestTimeout;
+                }
+            )
+            .UseProxyForCategory(ProxyCategory.NfoDatabases);
         services.AddScoped<PredbClient>();
         services.AddKeyedScoped<INfoDatabase, PredbNfoDatabase>(nameof(PredbNfoDatabase));
     }

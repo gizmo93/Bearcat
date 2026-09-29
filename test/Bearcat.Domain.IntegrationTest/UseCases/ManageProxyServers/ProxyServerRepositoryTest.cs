@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageProxyServers.ReadModels;
 using Bearcat.Domain.ValueObjects;
@@ -16,7 +17,7 @@ public class ProxyServerRepositoryTest : BearcatIntegrationTest
         // Arrange
         var withPassword = CreateProxyServer("Upload proxy", encryptedPassword: "encrypted");
         withPassword.HasUnreadableSecrets = true;
-        var withoutCredentials = CreateProxyServer("Download proxy", username: null);
+        var withoutCredentials = CreateProxyServer("Download proxy", username: null, port: 1080);
         withoutCredentials.ProxyType = ProxyType.Socks5;
         await AddProxyServersAsync(withPassword, withoutCredentials);
 
@@ -30,7 +31,7 @@ public class ProxyServerRepositoryTest : BearcatIntegrationTest
                 "Download proxy",
                 ProxyType.Socks5,
                 "proxy.example.com",
-                8080,
+                1080,
                 Username: null,
                 HasStoredPassword: false,
                 HasUnreadableSecrets: false
@@ -148,7 +149,7 @@ public class ProxyServerRepositoryTest : BearcatIntegrationTest
         // Arrange
         await AddProxyServersAsync(CreateProxyServer("Upload proxy"));
         var repository = CreateRepository();
-        repository.Add(CreateProxyServer("Upload proxy"));
+        repository.Add(CreateProxyServer("Upload proxy", port: 1080));
 
         // Act
         var result = await Should.ThrowAsync<DbUpdateException>(() =>
@@ -157,6 +158,177 @@ public class ProxyServerRepositoryTest : BearcatIntegrationTest
 
         // Assert
         result.ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task SaveChangesAsync_DuplicateHostAndPort_ThrowsDbUpdateException()
+    {
+        // Arrange
+        await AddProxyServersAsync(CreateProxyServer("Upload proxy"));
+        var repository = CreateRepository();
+        repository.Add(CreateProxyServer("Download proxy"));
+
+        // Act
+        var result = await Should.ThrowAsync<DbUpdateException>(() =>
+            repository.SaveChangesAsync(CancellationToken.None)
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+    }
+
+    [TestCase("proxy.example.com", 8080, true)]
+    [TestCase("PROXY.EXAMPLE.COM", 8080, true)]
+    [TestCase("proxy.example.com", 3128, false)]
+    [TestCase("other.example.com", 8080, false)]
+    public async Task HostAndPortExistAsync_OtherProxyServer_ReturnsWhetherHostAndPortAreUsed(
+        string host,
+        int port,
+        bool expectedResult
+    )
+    {
+        // Arrange
+        await AddProxyServersAsync(CreateProxyServer("Upload proxy"));
+
+        // Act
+        var result = await CreateRepository()
+            .HostAndPortExistAsync(host, port, excludedProxyServerId: null, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(expectedResult);
+    }
+
+    [Test]
+    public async Task HostAndPortExistAsync_OnlyUsedByExcludedProxyServer_ReturnsFalse()
+    {
+        // Arrange
+        var proxyServer = CreateProxyServer("Upload proxy");
+        await AddProxyServersAsync(proxyServer);
+
+        // Act
+        var result = await CreateRepository()
+            .HostAndPortExistAsync(
+                "proxy.example.com",
+                8080,
+                proxyServer.Id,
+                CancellationToken.None
+            );
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task GetAllForRoutingAsync_SeveralProxyServers_ReturnsEncryptedPasswordsOrderedById()
+    {
+        // Arrange
+        var first = CreateProxyServer("Upload proxy", encryptedPassword: "encrypted");
+        var second = CreateProxyServer("Download proxy", username: null, port: 1080);
+        second.ProxyType = ProxyType.Socks5;
+        second.HasUnreadableSecrets = true;
+        await AddProxyServersAsync(first, second);
+
+        // Act
+        var result = await CreateRepository().GetAllForRoutingAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe([
+            new ProxyServerRoutingReadModel(
+                first.Id,
+                "Upload proxy",
+                ProxyType.Http,
+                "proxy.example.com",
+                8080,
+                "alice",
+                "encrypted",
+                HasUnreadableSecrets: false
+            ),
+            new ProxyServerRoutingReadModel(
+                second.Id,
+                "Download proxy",
+                ProxyType.Socks5,
+                "proxy.example.com",
+                1080,
+                Username: null,
+                EncryptedPassword: null,
+                HasUnreadableSecrets: true
+            ),
+        ]);
+    }
+
+    [Test]
+    public async Task GetUsageAsync_ProxyServerUsedAsCategoryDefault_ReturnsCategoriesInOrder()
+    {
+        // Arrange
+        var used = CreateProxyServer("Upload proxy");
+        var other = CreateProxyServer("Download proxy", port: 1080);
+        await AddProxyServersAsync(used, other);
+        await AddCategoryDefaultsAsync(
+            (ProxyCategory.ImageHosters, used.Id),
+            (ProxyCategory.HosterUploads, used.Id),
+            (ProxyCategory.HosterMirrorDownloads, other.Id),
+            (ProxyCategory.LinkCrypters, null)
+        );
+
+        // Act
+        var result = await CreateRepository().GetUsageAsync(used.Id, CancellationToken.None);
+
+        // Assert
+        result.CategoryDefaults.ShouldBe([ProxyCategory.HosterUploads, ProxyCategory.ImageHosters]);
+        result.IsUsed.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task GetUsageAsync_UnusedProxyServer_ReturnsNoCategories()
+    {
+        // Arrange
+        var proxyServer = CreateProxyServer("Upload proxy");
+        await AddProxyServersAsync(proxyServer);
+
+        // Act
+        var result = await CreateRepository().GetUsageAsync(proxyServer.Id, CancellationToken.None);
+
+        // Assert
+        result.IsUsed.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task SaveChangesAsync_RemovedProxyServerIsCategoryDefault_ThrowsDbUpdateException()
+    {
+        // Arrange
+        var proxyServer = CreateProxyServer("Upload proxy");
+        await AddProxyServersAsync(proxyServer);
+        await AddCategoryDefaultsAsync((ProxyCategory.HosterUploads, proxyServer.Id));
+        var repository = CreateRepository();
+        repository.Remove(await repository.GetByIdAsync(proxyServer.Id, CancellationToken.None));
+
+        // Act
+        var result = await Should.ThrowAsync<DbUpdateException>(() =>
+            repository.SaveChangesAsync(CancellationToken.None)
+        );
+
+        // Assert
+        result.ShouldNotBeNull();
+    }
+
+    private async Task AddCategoryDefaultsAsync(
+        params (ProxyCategory ProxyCategory, int? ProxyServerId)[] categoryDefaults
+    )
+    {
+        var dbContext = CreateDbContext();
+
+        foreach (var (proxyCategory, proxyServerId) in categoryDefaults)
+        {
+            dbContext.Add(
+                new ProxyCategoryDefault
+                {
+                    ProxyCategory = proxyCategory,
+                    ProxyServerId = proxyServerId,
+                }
+            );
+        }
+
+        await dbContext.SaveChangesAsync();
     }
 
     private async Task AddProxyServersAsync(params ProxyServer[] proxyServers)
@@ -181,14 +353,15 @@ public class ProxyServerRepositoryTest : BearcatIntegrationTest
     private static ProxyServer CreateProxyServer(
         string name,
         string? username = "alice",
-        string? encryptedPassword = null
+        string? encryptedPassword = null,
+        int port = 8080
     ) =>
         new()
         {
             Name = name,
             ProxyType = ProxyType.Http,
             Host = "proxy.example.com",
-            Port = 8080,
+            Port = port,
             Username = username,
             EncryptedPassword = encryptedPassword,
         };

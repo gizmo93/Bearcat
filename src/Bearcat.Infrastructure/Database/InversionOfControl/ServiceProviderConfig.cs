@@ -142,6 +142,14 @@ public static class ServiceProviderConfig
             services.AddScoped<IProxyServerReadRepository, ProxyServerRepository>();
             services.AddScoped<IProxyServerWriteRepository, ProxyServerRepository>();
             services.AddScoped<
+                IProxyCategoryDefaultReadRepository,
+                ProxyCategoryDefaultRepository
+            >();
+            services.AddScoped<
+                IProxyCategoryDefaultWriteRepository,
+                ProxyCategoryDefaultRepository
+            >();
+            services.AddScoped<
                 IAdditionalArchiveContentReadRepository,
                 AdditionalArchiveContentRepository
             >();

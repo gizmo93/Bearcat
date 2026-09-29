@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Hosters.Shared.CostAction.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -28,7 +29,8 @@ public static class ServiceProviderConfig
                 .ConfigureHttpClient(c =>
                 {
                     c.BaseAddress = new Uri(CostActionApiClient.ApiBaseUrl);
-                });
+                })
+                .UseProxyForCategory(ProxyCategory.HosterUploads);
 
             services.AddScoped<ICostActionApiClient, CostActionApiClient>();
         }

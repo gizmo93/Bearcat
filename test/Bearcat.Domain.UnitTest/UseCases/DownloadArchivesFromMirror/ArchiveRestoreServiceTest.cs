@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
@@ -103,6 +104,24 @@ public class ArchiveRestoreServiceTest
             .Archive.ArchiveFiles[1]
             .FullFileName.ShouldBe(Path.Join(restoreFolderPath, "archive.part02.rar"));
         scenario.Archive.ArchiveFiles[1].Md5Hash.ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task ProcessAsync_RestoreFromMirrors_CallsHosterInsideMirrorDownloadProxyScope()
+    {
+        // Arrange
+        CreateScenario();
+        var service = CreateService();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        downloadHoster.ProxyCategoriesDuringCalls.ShouldNotBeEmpty();
+        downloadHoster.ProxyCategoriesDuringCalls.ShouldAllBe(category =>
+            category == ProxyCategory.HosterMirrorDownloads
+        );
+        ProxyCategoryScope.Current.ShouldBeNull();
     }
 
     [Test]

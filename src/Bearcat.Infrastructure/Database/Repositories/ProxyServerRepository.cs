@@ -48,6 +48,25 @@ public class ProxyServerRepository(IBearcatReadDbContext dbRead, IBearcatWriteDb
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ProxyServerRoutingReadModel>> GetAllForRoutingAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbRead
+            .ProxyServers.OrderBy(proxyServer => proxyServer.Id)
+            .Select(proxyServer => new ProxyServerRoutingReadModel(
+                proxyServer.Id,
+                proxyServer.Name,
+                proxyServer.ProxyType,
+                proxyServer.Host,
+                proxyServer.Port,
+                proxyServer.Username,
+                proxyServer.EncryptedPassword,
+                proxyServer.HasUnreadableSecrets
+            ))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<ProxyServer> GetByIdAsync(
         int proxyServerId,
         CancellationToken cancellationToken
@@ -69,6 +88,40 @@ public class ProxyServerRepository(IBearcatReadDbContext dbRead, IBearcatWriteDb
             proxyServer => proxyServer.Name == name && proxyServer.Id != excludedProxyServerId,
             cancellationToken
         );
+    }
+
+    public async Task<bool> HostAndPortExistAsync(
+        string host,
+        int port,
+        int? excludedProxyServerId,
+        CancellationToken cancellationToken
+    )
+    {
+        var lowerCaseHost = host.ToLowerInvariant();
+
+        return await dbRead.ProxyServers.AnyAsync(
+            proxyServer =>
+                proxyServer.Host.ToLower() == lowerCaseHost
+                && proxyServer.Port == port
+                && proxyServer.Id != excludedProxyServerId,
+            cancellationToken
+        );
+    }
+
+    public async Task<ProxyServerUsageReadModel> GetUsageAsync(
+        int proxyServerId,
+        CancellationToken cancellationToken
+    )
+    {
+        var categoryDefaults = await dbRead
+            .ProxyCategoryDefaults.Where(proxyCategoryDefault =>
+                proxyCategoryDefault.ProxyServerId == proxyServerId
+            )
+            .Select(proxyCategoryDefault => proxyCategoryDefault.ProxyCategory)
+            .OrderBy(proxyCategory => proxyCategory)
+            .ToListAsync(cancellationToken);
+
+        return new ProxyServerUsageReadModel(categoryDefaults);
     }
 
     public void Add(ProxyServer proxyServer)

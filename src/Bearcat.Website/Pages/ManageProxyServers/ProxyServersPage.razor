@@ -1,4 +1,5 @@
 @page "/proxy-servers"
+@using Bearcat.Abstractions.Proxies
 @using Bearcat.Domain.UseCases.ManageProxyServers.ReadModels
 
 <PageTitle>@L["ProxyServers"] - Bearcat</PageTitle>
@@ -106,4 +107,57 @@
             }
         </div>
     }
+    <div class="space-y-3 pt-4">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div class="min-w-0 space-y-1">
+                <h2 class="text-lg font-semibold tracking-tight">@L["DefaultProxyPerCategory"]</h2>
+                <p class="text-sm text-muted-foreground">@L["DefaultProxyPerCategoryIntro"]</p>
+                <p class="text-sm text-muted-foreground">@L["ProxyRoutingNotYetSupported"]</p>
+            </div>
+
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <BbSelect TValue="int"
+                          @bind-Value="allCategoriesOptionValue"
+                          Options="ProxyServerOptions"
+                          Disabled="isSavingCategoryDefaults"
+                          AriaLabel="@L["ApplyToAllCategories"]"
+                          Class="w-full sm:w-56" />
+                <BbButton Variant="ButtonVariant.Outline"
+                          Disabled="isSavingCategoryDefaults"
+                          OnClick="ApplyToAllCategoriesAsync">
+                    <LucideIcon Name="list-checks" class="h-4 w-4" />
+                    @L["ApplyToAllCategories"]
+                </BbButton>
+            </div>
+        </div>
+
+        <div class="bearcat-config-list">
+            <div class="bearcat-config-header lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+                <span>@L["Category"]</span>
+                <span>@L["ProxyServer"]</span>
+            </div>
+            @foreach (var category in ProxyCategories)
+            {
+                <div class="bearcat-config-item">
+                    <div class="bearcat-config-row lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+                        <div class="min-w-0 space-y-1">
+                            <p class="text-sm font-semibold">@L.Localize(category)</p>
+                            <p class="text-sm text-muted-foreground">@L.LocalizeDescription(category)</p>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["ProxyServer"]</p>
+                            <BbSelect TValue="int"
+                                      Value="@GetSelectedOptionValue(category)"
+                                      ValueChanged="@(value => SetCategoryDefaultAsync(category, value))"
+                                      Options="ProxyServerOptions"
+                                      Disabled="isSavingCategoryDefaults"
+                                      AriaLabel="@L.Localize(category)"
+                                      Class="w-full" />
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
 </section>

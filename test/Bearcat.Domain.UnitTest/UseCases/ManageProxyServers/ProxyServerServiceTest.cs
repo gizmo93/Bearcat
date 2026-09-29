@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
@@ -19,7 +20,8 @@ public class ProxyServerServiceTest
     private const string StoredEncryptedPassword = "protected:stored";
 
     private FakeProxyServerWriteRepository repository = null!;
-    private Mock<ITcpConnectionOpener> tcpConnectionOpenerMock = null!;
+    private Mock<IProxyServerConnectionTester> connectionTesterMock = null!;
+    private Mock<IProxyRoutingCache> proxyRoutingCacheMock = null!;
     private Mock<IUnreadableSecretsRepository> unreadableSecretsRepositoryMock = null!;
     private Mock<INotificationService> notificationServiceMock = null!;
     private ProxyServerService service = null!;
@@ -28,7 +30,8 @@ public class ProxyServerServiceTest
     public void SetUp()
     {
         repository = new FakeProxyServerWriteRepository();
-        tcpConnectionOpenerMock = new Mock<ITcpConnectionOpener>();
+        connectionTesterMock = new Mock<IProxyServerConnectionTester>();
+        proxyRoutingCacheMock = new Mock<IProxyRoutingCache>();
         unreadableSecretsRepositoryMock = new Mock<IUnreadableSecretsRepository>();
         notificationServiceMock = new Mock<INotificationService>();
 
@@ -36,11 +39,15 @@ public class ProxyServerServiceTest
         secretProtectorMock
             .Setup(protector => protector.Protect(It.IsAny<string>()))
             .Returns((string plaintext) => $"protected:{plaintext}");
+        secretProtectorMock
+            .Setup(protector => protector.Unprotect(It.IsAny<string>()))
+            .Returns((string protectedValue) => protectedValue["protected:".Length..]);
 
         service = new ProxyServerService(
             repository,
             secretProtectorMock.Object,
-            tcpConnectionOpenerMock.Object,
+            connectionTesterMock.Object,
+            proxyRoutingCacheMock.Object,
             new UnreadableSecretsNotificationService(
                 unreadableSecretsRepositoryMock.Object,
                 notificationServiceMock.Object
@@ -134,7 +141,7 @@ public class ProxyServerServiceTest
     public async Task CreateAsync_NameAlreadyExists_ReturnsNameAlreadyExistsAndDoesNotSave()
     {
         // Arrange
-        AddStoredProxyServer(name: "Upload proxy");
+        AddStoredProxyServer(name: "Upload proxy", port: 3128);
 
         // Act
         var result = await service.CreateAsync(CreateInput(name: " Upload proxy "));
@@ -263,7 +270,7 @@ public class ProxyServerServiceTest
     public async Task UpdateAsync_NameOfOtherProxyServer_ReturnsNameAlreadyExistsAndKeepsValues()
     {
         // Arrange
-        AddStoredProxyServer(name: "Other proxy");
+        AddStoredProxyServer(name: "Other proxy", port: 3128);
         var proxyServer = AddStoredProxyServer(name: "Upload proxy");
 
         // Act
@@ -426,37 +433,202 @@ public class ProxyServerServiceTest
         );
     }
 
+    [TestCase("proxy.example.com", 8080)]
+    [TestCase("PROXY.example.com", 8080)]
+    [TestCase(" proxy.example.com ", 8080)]
+    public async Task CreateAsync_HostAndPortOfOtherProxyServer_ReturnsHostAndPortAlreadyExist(
+        string host,
+        int port
+    )
+    {
+        // Arrange
+        AddStoredProxyServer(name: "Other proxy");
+
+        // Act
+        var result = await service.CreateAsync(CreateInput(host: host, port: port));
+
+        // Assert
+        result.ValidationErrors.ShouldBe([ProxyServerValidationError.HostAndPortAlreadyExist]);
+        repository.SaveChangesCallCount.ShouldBe(0);
+    }
+
     [Test]
-    public async Task DeleteAsync_ExistingProxyServer_RemovesProxyServer()
+    public async Task CreateAsync_SameHostWithOtherPort_Succeeds()
+    {
+        // Arrange
+        AddStoredProxyServer(name: "Other proxy");
+
+        // Act
+        var result = await service.CreateAsync(CreateInput(port: 3128));
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task UpdateAsync_UnchangedOwnHostAndPort_DoesNotReportHostAndPortAlreadyExist()
     {
         // Arrange
         var proxyServer = AddStoredProxyServer();
 
         // Act
-        await service.DeleteAsync(proxyServer.Id);
+        var result = await service.UpdateAsync(proxyServer.Id, CreateInput());
 
         // Assert
-        repository.ProxyServers.ShouldBeEmpty();
-        repository.SaveChangesCallCount.ShouldBe(1);
+        result.IsSuccess.ShouldBeTrue();
     }
 
     [Test]
-    public async Task TestConnectionAsync_ConnectionOpens_ReturnsSuccess()
+    public async Task UpdateAsync_HostAndPortOfOtherProxyServer_ReturnsHostAndPortAlreadyExist()
+    {
+        // Arrange
+        AddStoredProxyServer(name: "Other proxy", port: 3128);
+        var proxyServer = AddStoredProxyServer();
+
+        // Act
+        var result = await service.UpdateAsync(proxyServer.Id, CreateInput(port: 3128));
+
+        // Assert
+        result.ValidationErrors.ShouldBe([ProxyServerValidationError.HostAndPortAlreadyExist]);
+        proxyServer.Port.ShouldBe(8080);
+    }
+
+    [Test]
+    public async Task CreateAsync_ValidInput_RefreshesProxyRoutingCache()
+    {
+        // Act
+        await service.CreateAsync(CreateInput());
+
+        // Assert
+        proxyRoutingCacheMock.Verify(
+            cache => cache.RefreshAsync(It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task UpdateAsync_ValidInput_RefreshesProxyRoutingCache()
     {
         // Arrange
         var proxyServer = AddStoredProxyServer();
+
+        // Act
+        await service.UpdateAsync(proxyServer.Id, CreateInput(name: "Renamed proxy"));
+
+        // Assert
+        proxyRoutingCacheMock.Verify(
+            cache => cache.RefreshAsync(It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task DeleteAsync_UnusedProxyServer_RemovesProxyServerAndRefreshesProxyRoutingCache()
+    {
+        // Arrange
+        var proxyServer = AddStoredProxyServer();
+
+        // Act
+        var result = await service.DeleteAsync(proxyServer.Id);
+
+        // Assert
+        result.IsDeleted.ShouldBeTrue();
+        result.UsingCategoryDefaults.ShouldBeEmpty();
+        repository.ProxyServers.ShouldBeEmpty();
+        repository.SaveChangesCallCount.ShouldBe(1);
+        proxyRoutingCacheMock.Verify(
+            cache => cache.RefreshAsync(It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task DeleteAsync_ProxyServerUsedAsCategoryDefault_ReturnsUsingCategoriesAndKeepsProxyServer()
+    {
+        // Arrange
+        var proxyServer = AddStoredProxyServer();
+        repository.CategoryDefaultsByProxyServerId[proxyServer.Id] =
+        [
+            ProxyCategory.HosterUploads,
+            ProxyCategory.ImageHosters,
+        ];
+
+        // Act
+        var result = await service.DeleteAsync(proxyServer.Id);
+
+        // Assert
+        result.IsDeleted.ShouldBeFalse();
+        result.UsingCategoryDefaults.ShouldBe([
+            ProxyCategory.HosterUploads,
+            ProxyCategory.ImageHosters,
+        ]);
+        repository.ProxyServers.ShouldHaveSingleItem();
+        repository.SaveChangesCallCount.ShouldBe(0);
+        proxyRoutingCacheMock.Verify(
+            cache => cache.RefreshAsync(It.IsAny<CancellationToken>()),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task TestConnectionAsync_StoredCredentials_PassesDecryptedPasswordToTester()
+    {
+        // Arrange
+        var proxyServer = AddStoredProxyServer(encryptedPassword: StoredEncryptedPassword);
+        var expectedResult = new ProxyServerConnectionTestResult(
+            ProxyServerConnectionTestOutcome.Success,
+            TechnicalDetail: null
+        );
+        connectionTesterMock
+            .Setup(tester =>
+                tester.TestAsync(
+                    new ProxyServerConnectionTestRequest(
+                        ProxyType.Http,
+                        "proxy.example.com",
+                        8080,
+                        "alice",
+                        "stored"
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(expectedResult);
 
         // Act
         var result = await service.TestConnectionAsync(proxyServer.Id);
 
         // Assert
-        result.IsSuccess.ShouldBeTrue();
-        result.ErrorMessage.ShouldBeNull();
-        tcpConnectionOpenerMock.Verify(
-            opener =>
-                opener.OpenConnectionAsync(
-                    "proxy.example.com",
-                    8080,
+        result.ShouldBe(expectedResult);
+    }
+
+    [Test]
+    public async Task TestConnectionAsync_NoStoredPassword_PassesNullPasswordToTester()
+    {
+        // Arrange
+        var proxyServer = AddStoredProxyServer();
+        connectionTesterMock
+            .Setup(tester =>
+                tester.TestAsync(
+                    It.IsAny<ProxyServerConnectionTestRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new ProxyServerConnectionTestResult(
+                    ProxyServerConnectionTestOutcome.AuthenticationRequired,
+                    "HTTP/1.1 407 Proxy Authentication Required"
+                )
+            );
+
+        // Act
+        var result = await service.TestConnectionAsync(proxyServer.Id);
+
+        // Assert
+        result.Outcome.ShouldBe(ProxyServerConnectionTestOutcome.AuthenticationRequired);
+        connectionTesterMock.Verify(
+            tester =>
+                tester.TestAsync(
+                    It.Is<ProxyServerConnectionTestRequest>(request => request.Password == null),
                     It.IsAny<CancellationToken>()
                 ),
             Times.Once
@@ -464,26 +636,57 @@ public class ProxyServerServiceTest
     }
 
     [Test]
-    public async Task TestConnectionAsync_ConnectionFails_ReturnsErrorMessage()
+    public async Task TestConnectionAsync_UnreadableSecrets_ReturnsUnreadablePasswordWithoutTesting()
     {
         // Arrange
-        var proxyServer = AddStoredProxyServer();
-        tcpConnectionOpenerMock
-            .Setup(opener =>
-                opener.OpenConnectionAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<int>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ThrowsAsync(new IOException("Connection refused"));
+        var proxyServer = AddStoredProxyServer(
+            encryptedPassword: StoredEncryptedPassword,
+            hasUnreadableSecrets: true
+        );
 
         // Act
         var result = await service.TestConnectionAsync(proxyServer.Id);
 
         // Assert
-        result.IsSuccess.ShouldBeFalse();
-        result.ErrorMessage.ShouldBe("Connection refused");
+        result.Outcome.ShouldBe(ProxyServerConnectionTestOutcome.UnreadablePassword);
+        connectionTesterMock.Verify(
+            tester =>
+                tester.TestAsync(
+                    It.IsAny<ProxyServerConnectionTestRequest>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task TestConnectionAsync_TesterTimesOut_ReturnsTimedOut()
+    {
+        // Arrange
+        var proxyServer = AddStoredProxyServer();
+        connectionTesterMock
+            .Setup(tester =>
+                tester.TestAsync(
+                    It.IsAny<ProxyServerConnectionTestRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(
+                async (ProxyServerConnectionTestRequest _, CancellationToken cancellationToken) =>
+                {
+                    await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                    return new ProxyServerConnectionTestResult(
+                        ProxyServerConnectionTestOutcome.Success,
+                        TechnicalDetail: null
+                    );
+                }
+            );
+
+        // Act
+        var result = await service.TestConnectionAsync(proxyServer.Id);
+
+        // Assert
+        result.Outcome.ShouldBe(ProxyServerConnectionTestOutcome.TimedOut);
     }
 
     [Test]
@@ -492,11 +695,10 @@ public class ProxyServerServiceTest
         // Arrange
         var proxyServer = AddStoredProxyServer();
         using var cancellationTokenSource = new CancellationTokenSource();
-        tcpConnectionOpenerMock
-            .Setup(opener =>
-                opener.OpenConnectionAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<int>(),
+        connectionTesterMock
+            .Setup(tester =>
+                tester.TestAsync(
+                    It.IsAny<ProxyServerConnectionTestRequest>(),
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -504,6 +706,10 @@ public class ProxyServerServiceTest
             {
                 await cancellationTokenSource.CancelAsync();
                 cancellationTokenSource.Token.ThrowIfCancellationRequested();
+                return new ProxyServerConnectionTestResult(
+                    ProxyServerConnectionTestOutcome.Success,
+                    TechnicalDetail: null
+                );
             });
 
         // Act
@@ -515,6 +721,7 @@ public class ProxyServerServiceTest
 
     private ProxyServer AddStoredProxyServer(
         string name = "Upload proxy",
+        int port = 8080,
         string? encryptedPassword = null,
         bool hasUnreadableSecrets = false
     )
@@ -524,7 +731,7 @@ public class ProxyServerServiceTest
             Name = name,
             ProxyType = ProxyType.Http,
             Host = "proxy.example.com",
-            Port = 8080,
+            Port = port,
             Username = "alice",
             EncryptedPassword = encryptedPassword,
             HasUnreadableSecrets = hasUnreadableSecrets,

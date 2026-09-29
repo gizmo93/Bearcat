@@ -1,6 +1,7 @@
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
@@ -217,6 +218,10 @@ public class ArchiveRestoreService(
         CancellationToken cancellationToken
     )
     {
+        using var proxyCategoryScope = ProxyCategoryScope.Enter(
+            ProxyCategory.HosterMirrorDownloads
+        );
+
         var previousArchiveState = archive.ArchiveState;
         var downloadSettings = ReadDownloadSettings();
         var hosters = await ResolveHostersAsync(plan, cancellationToken);

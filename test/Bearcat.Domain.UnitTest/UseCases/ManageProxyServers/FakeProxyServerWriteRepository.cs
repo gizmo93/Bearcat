@@ -1,4 +1,6 @@
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Entities;
+using Bearcat.Domain.UseCases.ManageProxyServers.ReadModels;
 using Bearcat.Domain.UseCases.ManageProxyServers.Repositories;
 
 namespace Bearcat.Domain.UnitTest.UseCases.ManageProxyServers;
@@ -6,6 +8,8 @@ namespace Bearcat.Domain.UnitTest.UseCases.ManageProxyServers;
 public class FakeProxyServerWriteRepository : IProxyServerWriteRepository
 {
     public List<ProxyServer> ProxyServers { get; } = [];
+
+    public Dictionary<int, List<ProxyCategory>> CategoryDefaultsByProxyServerId { get; } = [];
 
     public int SaveChangesCallCount { get; private set; }
 
@@ -23,6 +27,34 @@ public class FakeProxyServerWriteRepository : IProxyServerWriteRepository
         return Task.FromResult(
             ProxyServers.Any(proxyServer =>
                 proxyServer.Name == name && proxyServer.Id != excludedProxyServerId
+            )
+        );
+    }
+
+    public Task<bool> HostAndPortExistAsync(
+        string host,
+        int port,
+        int? excludedProxyServerId,
+        CancellationToken cancellationToken
+    )
+    {
+        return Task.FromResult(
+            ProxyServers.Any(proxyServer =>
+                string.Equals(proxyServer.Host, host, StringComparison.OrdinalIgnoreCase)
+                && proxyServer.Port == port
+                && proxyServer.Id != excludedProxyServerId
+            )
+        );
+    }
+
+    public Task<ProxyServerUsageReadModel> GetUsageAsync(
+        int proxyServerId,
+        CancellationToken cancellationToken
+    )
+    {
+        return Task.FromResult(
+            new ProxyServerUsageReadModel(
+                CategoryDefaultsByProxyServerId.GetValueOrDefault(proxyServerId) ?? []
             )
         );
     }

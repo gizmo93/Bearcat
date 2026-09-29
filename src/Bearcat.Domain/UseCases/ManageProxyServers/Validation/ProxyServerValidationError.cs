@@ -11,4 +11,5 @@ public enum ProxyServerValidationError
     PortOutOfRange = 7,
     UsernameTooLong = 8,
     UsernameRequiredForPassword = 9,
+    HostAndPortAlreadyExist = 10,
 }

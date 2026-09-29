@@ -22,5 +22,6 @@ public class ProxyServerConfiguration : IEntityTypeConfiguration<ProxyServer>
         builder.Property(proxyServer => proxyServer.HasUnreadableSecrets).IsRequired();
 
         builder.HasIndex(proxyServer => proxyServer.Name).IsUnique();
+        builder.HasIndex(proxyServer => new { proxyServer.Host, proxyServer.Port }).IsUnique();
     }
 }

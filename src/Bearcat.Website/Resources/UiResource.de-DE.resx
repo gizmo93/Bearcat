@@ -1439,8 +1439,6 @@
   <data name="RemoveStoredPasswordHelp" xml:space="preserve"><value>Der Proxyserver wird danach ohne Passwort verwendet.</value></data>
   <data name="DeleteProxyServerConfirmation" xml:space="preserve"><value>Möchtest du den Proxyserver "{0}" wirklich löschen?</value></data>
   <data name="ProxyServerDeleted" xml:space="preserve"><value>Proxyserver "{0}" gelöscht.</value></data>
-  <data name="ProxyServerReachable" xml:space="preserve"><value>{0} ist erreichbar.</value></data>
-  <data name="ProxyServerNotReachable" xml:space="preserve"><value>{0} ist nicht erreichbar: {1}</value></data>
   <data name="ProxyServerValidationError.NameRequired" xml:space="preserve"><value>Name ist erforderlich.</value></data>
   <data name="ProxyServerValidationError.NameTooLong" xml:space="preserve"><value>Der Name darf nicht länger als 100 Zeichen sein.</value></data>
   <data name="ProxyServerValidationError.NameAlreadyExists" xml:space="preserve"><value>Ein Proxyserver mit diesem Namen existiert bereits.</value></data>
@@ -1450,4 +1448,36 @@
   <data name="ProxyServerValidationError.PortOutOfRange" xml:space="preserve"><value>Der Port muss zwischen 1 und 65535 liegen.</value></data>
   <data name="ProxyServerValidationError.UsernameTooLong" xml:space="preserve"><value>Der Benutzername darf nicht länger als 255 Zeichen sein.</value></data>
   <data name="ProxyServerValidationError.UsernameRequiredForPassword" xml:space="preserve"><value>Ein Benutzername ist erforderlich, wenn ein Passwort gesetzt ist.</value></data>
+  <data name="ProxyServerValidationError.HostAndPortAlreadyExist" xml:space="preserve"><value>Ein anderer Proxyserver verwendet bereits diesen Host und Port.</value></data>
+  <data name="ProxyServerConnectionTestOutcome.Success" xml:space="preserve"><value>{0} ist erreichbar, benutzt das gewählte Proxyprotokoll und hat die Zugangsdaten akzeptiert.</value></data>
+  <data name="ProxyServerConnectionTestOutcome.NotReachable" xml:space="preserve"><value>{0} ist nicht erreichbar. Prüfe Host und Port.</value></data>
+  <data name="ProxyServerConnectionTestOutcome.WrongProtocol" xml:space="preserve"><value>{0} unterstüzt das gewählte Proxyprotokoll nicht. Prüfe den Proxytyp.</value></data>
+  <data name="ProxyServerConnectionTestOutcome.AuthenticationFailed" xml:space="preserve"><value>{0} hat die Authentifizierung abgelehnt. Prüfe Benutzername und Passwort.</value></data>
+  <data name="ProxyServerConnectionTestOutcome.AuthenticationRequired" xml:space="preserve"><value>{0} verlangt eine Authentifizierung. Gib Benutzername und Passwort an.</value></data>
+  <data name="ProxyServerConnectionTestOutcome.TimedOut" xml:space="preserve"><value>{0} hat nicht innerhalb von 5 Sekunden geantwortet. Prüfe die Adresse und den Proxytyp.</value></data>
+  <data name="ProxyServerConnectionTestOutcome.UnreadablePassword" xml:space="preserve"><value>Das Passwort von {0} kann nicht mehr entschlüsselt werden. Gib das Passwort erneut ein.</value></data>
+  <data name="ProxyServerConnectionTestFailedWithDetail" xml:space="preserve"><value>{0} Details: {1}</value></data>
+  <data name="ProxyServerStillInUse" xml:space="preserve"><value>{0} kann nicht gelöscht werden, weil er noch verwendet wird.</value></data>
+  <data name="ProxyServerUsedAsCategoryDefault" xml:space="preserve"><value>Standardproxy für: {0}.</value></data>
+  <data name="DefaultProxyPerCategory" xml:space="preserve"><value>Standardproxy pro Kategorie</value></data>
+  <data name="DefaultProxyPerCategoryIntro" xml:space="preserve"><value>Ausgehende Verbindungen jeder Kategorie laufen über den gewählten Proxyserver. Änderungen gelten sofort.</value></data>
+  <data name="ProxyRoutingNotYetSupported" xml:space="preserve"><value>Foren, Distributionsseiten und Remotequellen werden (noch) nicht über Proxyserver geleitet.</value></data>
+  <data name="DirectConnection" xml:space="preserve"><value>Direkte Verbindung</value></data>
+  <data name="ApplyToAllCategories" xml:space="preserve"><value>Für alle Kategorien übernehmen</value></data>
+  <data name="Category" xml:space="preserve"><value>Kategorie</value></data>
+  <data name="ProxyServer" xml:space="preserve"><value>Proxyserver</value></data>
+  <data name="ProxyCategoryDefaultSaved" xml:space="preserve"><value>{0} verwendet jetzt: {1}.</value></data>
+  <data name="ProxyCategoryDefaultsAppliedToAll" xml:space="preserve"><value>Alle Kategorien verwenden jetzt: {0}.</value></data>
+  <data name="ProxyCategory.HosterUploads" xml:space="preserve"><value>Uploads zu Hostern</value></data>
+  <data name="ProxyCategory.HosterUploads.Description" xml:space="preserve"><value>Uploads, Linkprüfungen und Kontoabfragen bei Filehostern.</value></data>
+  <data name="ProxyCategory.HosterMirrorDownloads" xml:space="preserve"><value>Mirrordownloads von Hostern</value></data>
+  <data name="ProxyCategory.HosterMirrorDownloads.Description" xml:space="preserve"><value>Downloads von Archivdateien aus Hostermirrors, wenn ein Archiv wiederhergestellt wird.</value></data>
+  <data name="ProxyCategory.ImageHosters" xml:space="preserve"><value>Bildhoster</value></data>
+  <data name="ProxyCategory.ImageHosters.Description" xml:space="preserve"><value>Uploads von Covern und Screenshots zu Bildhostern.</value></data>
+  <data name="ProxyCategory.LinkCrypters" xml:space="preserve"><value>Linkcrypter</value></data>
+  <data name="ProxyCategory.LinkCrypters.Description" xml:space="preserve"><value>Erstellen und Aktualisieren von Linkcontainern.</value></data>
+  <data name="ProxyCategory.NfoDatabases" xml:space="preserve"><value>NFO-Datenbanken</value></data>
+  <data name="ProxyCategory.NfoDatabases.Description" xml:space="preserve"><value>Releaseinformationen, NFO-Dateien und Cover aus NFO-Datenbanken.</value></data>
+  <data name="ProxyCategory.MediaDatabases" xml:space="preserve"><value>Mediendatenbanken</value></data>
+  <data name="ProxyCategory.MediaDatabases.Description" xml:space="preserve"><value>Metadatenabfragen für Filme, Serien und Spiele.</value></data>
 </root>

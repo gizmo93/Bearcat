@@ -1041,6 +1041,21 @@ namespace BearCat.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Bearcat.Domain.Entities.ProxyCategoryDefault", b =>
+                {
+                    b.Property<int>("ProxyCategory")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ProxyServerId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ProxyCategory");
+
+                    b.HasIndex("ProxyServerId");
+
+                    b.ToTable("ProxyCategoryDefaults");
+                });
+
             modelBuilder.Entity("Bearcat.Domain.Entities.ProxyServer", b =>
                 {
                     b.Property<int>("Id")
@@ -1078,6 +1093,9 @@ namespace BearCat.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("Host", "Port")
                         .IsUnique();
 
                     b.ToTable("ProxyServers");
@@ -2624,6 +2642,16 @@ namespace BearCat.Infrastructure.Migrations
                     b.Navigation("Release");
 
                     b.Navigation("ReleaseCollection");
+                });
+
+            modelBuilder.Entity("Bearcat.Domain.Entities.ProxyCategoryDefault", b =>
+                {
+                    b.HasOne("Bearcat.Domain.Entities.ProxyServer", "ProxyServer")
+                        .WithMany()
+                        .HasForeignKey("ProxyServerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ProxyServer");
                 });
 
             modelBuilder.Entity("Bearcat.Domain.Entities.QualityCheckRule", b =>

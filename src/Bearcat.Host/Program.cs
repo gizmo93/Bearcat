@@ -1,4 +1,5 @@
 ﻿using Bearcat.Abstractions.Configurations;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Api.InversionOfControl;
 using Bearcat.Application.InversionOfControl;
 using Bearcat.Archivers.InversionOfControl;
@@ -191,5 +192,7 @@ using (var scope = app.Services.CreateScope())
         .ServiceProvider.GetRequiredService<UnreadableSecretsDetectionService>()
         .DetectAsync(CancellationToken.None);
 }
+
+await app.Services.GetRequiredService<IProxyRoutingCache>().RefreshAsync(CancellationToken.None);
 
 await app.RunAsync();

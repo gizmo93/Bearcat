@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Abstractions.Transfers;
 
 namespace Bearcat.Domain.UnitTest.UseCases.DownloadArchivesFromMirror;
@@ -18,6 +19,8 @@ public sealed class FakeDownloadHoster : IHosterWithDownload
     public Exception? FileSizeLookupException { get; set; }
 
     public Dictionary<string, int> DownloadAttemptsPerLink { get; } = new();
+
+    public List<ProxyCategory?> ProxyCategoriesDuringCalls { get; } = [];
 
     public int FailedAttemptsBeforeSuccess { get; set; }
 
@@ -43,6 +46,11 @@ public sealed class FakeDownloadHoster : IHosterWithDownload
         CancellationToken cancellationToken
     )
     {
+        lock (ProxyCategoriesDuringCalls)
+        {
+            ProxyCategoriesDuringCalls.Add(ProxyCategoryScope.Current?.Category);
+        }
+
         if (FileSizeLookupException is not null)
         {
             throw FileSizeLookupException;
@@ -76,6 +84,11 @@ public sealed class FakeDownloadHoster : IHosterWithDownload
     )
     {
         int attempt;
+
+        lock (ProxyCategoriesDuringCalls)
+        {
+            ProxyCategoriesDuringCalls.Add(ProxyCategoryScope.Current?.Category);
+        }
 
         lock (DownloadedLinks)
         {

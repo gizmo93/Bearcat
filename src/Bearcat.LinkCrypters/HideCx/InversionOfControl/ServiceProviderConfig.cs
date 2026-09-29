@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.LinkCrypter;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.LinkCrypters.HideCx.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -29,7 +30,8 @@ public static class InversionOfControl
                 .ConfigureHttpClient(c =>
                 {
                     c.BaseAddress = new Uri("https://api.hide.cx");
-                });
+                })
+                .UseProxyForCategory(ProxyCategory.LinkCrypters);
 
             services.AddKeyedScoped<ILinkCrypter, HideCx>(nameof(HideCx));
         }

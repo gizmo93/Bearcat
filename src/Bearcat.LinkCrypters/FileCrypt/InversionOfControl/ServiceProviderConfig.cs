@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.LinkCrypter;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.LinkCrypters.FileCrypt.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -29,7 +30,8 @@ public static class ServiceProviderConfig
                 .ConfigureHttpClient(c =>
                 {
                     c.BaseAddress = new Uri("https://www.filecrypt.cc");
-                });
+                })
+                .UseProxyForCategory(ProxyCategory.LinkCrypters);
 
             services.AddKeyedScoped<ILinkCrypter, FileCrypt>(nameof(FileCrypt));
         }

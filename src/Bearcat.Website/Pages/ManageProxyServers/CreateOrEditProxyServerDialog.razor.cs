@@ -117,7 +117,10 @@ public partial class CreateOrEditProxyServerDialog(IScopedOperationRunner operat
             or ProxyServerValidationError.NameAlreadyExists => nameof(ProxyServerFormModel.Name),
             ProxyServerValidationError.HostRequired
             or ProxyServerValidationError.HostTooLong
-            or ProxyServerValidationError.HostInvalid => nameof(ProxyServerFormModel.Host),
+            or ProxyServerValidationError.HostInvalid
+            or ProxyServerValidationError.HostAndPortAlreadyExist => nameof(
+                ProxyServerFormModel.Host
+            ),
             ProxyServerValidationError.PortOutOfRange => nameof(ProxyServerFormModel.Port),
             _ => nameof(ProxyServerFormModel.Username),
         };

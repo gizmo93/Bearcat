@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Shared.ForumPostingRules;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.Assignment;
 using Bearcat.Domain.ValueObjects;
@@ -32,6 +33,11 @@ public static class LocalizationExtensions
         this IStringLocalizer<UiResource> localizer,
         ProxyType proxyType
     ) => localizer[$"ProxyType.{proxyType}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
+        ProxyCategory proxyCategory
+    ) => localizer[$"ProxyCategory.{proxyCategory}"];
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,
@@ -135,4 +141,9 @@ public static class LocalizationExtensions
         this IStringLocalizer<UiResource> localizer,
         ReleaseType releaseType
     ) => localizer[$"ReleaseType.{releaseType}.Description"];
+
+    public static string LocalizeDescription(
+        this IStringLocalizer<UiResource> localizer,
+        ProxyCategory proxyCategory
+    ) => localizer[$"ProxyCategory.{proxyCategory}.Description"];
 }

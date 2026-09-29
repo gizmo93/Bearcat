@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Hosters.KrakenFiles.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -30,7 +31,8 @@ public static class ServiceProviderConfig
                 {
                     c.BaseAddress = new Uri("https://krakenfiles.com");
                     c.Timeout = Timeout.InfiniteTimeSpan;
-                });
+                })
+                .UseProxyForCategory(ProxyCategory.HosterUploads);
 
             services.AddScoped<IKrakenFilesApiClient, ApiClient>();
             services.AddKeyedScoped<IHoster, KrakenFiles>(nameof(KrakenFiles));
