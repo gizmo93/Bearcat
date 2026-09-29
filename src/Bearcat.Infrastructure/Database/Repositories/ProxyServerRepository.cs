@@ -28,26 +28,6 @@ public class ProxyServerRepository(IBearcatReadDbContext dbRead, IBearcatWriteDb
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<ProxyServerReadModel?> GetReadModelAsync(
-        int proxyServerId,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return await dbRead
-            .ProxyServers.Where(proxyServer => proxyServer.Id == proxyServerId)
-            .Select(proxyServer => new ProxyServerReadModel(
-                proxyServer.Id,
-                proxyServer.Name,
-                proxyServer.ProxyType,
-                proxyServer.Host,
-                proxyServer.Port,
-                proxyServer.Username,
-                proxyServer.EncryptedPassword != null,
-                proxyServer.HasUnreadableSecrets
-            ))
-            .FirstOrDefaultAsync(cancellationToken);
-    }
-
     public async Task<IReadOnlyList<ProxyServerRoutingReadModel>> GetAllForRoutingAsync(
         CancellationToken cancellationToken
     )

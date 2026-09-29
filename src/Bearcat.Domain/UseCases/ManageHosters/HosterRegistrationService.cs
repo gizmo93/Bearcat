@@ -183,12 +183,9 @@ public class HosterRegistrationService(
 
         try
         {
-            TryLoginResult result;
+            using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(registration);
 
-            using (HosterRegistrationProxyScope.EnterForUpload(registration))
-            {
-                result = await hoster.TryLoginAsync(config, cancellationToken);
-            }
+            var result = await hoster.TryLoginAsync(config, cancellationToken);
 
             if (result.IsSuccess)
             {
@@ -236,17 +233,15 @@ public class HosterRegistrationService(
         var config = hoster.DeserializeHosterConfig(
             secretProtector.Unprotect(registration.SerializedConfig)
         );
-        TryLoginResult result;
 
-        using (HosterRegistrationProxyScope.EnterForUpload(registration))
-        {
-            result = await captchaHoster.VerifyCaptchaAsync(
-                config,
-                challenge,
-                response,
-                cancellationToken
-            );
-        }
+        using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(registration);
+
+        var result = await captchaHoster.VerifyCaptchaAsync(
+            config,
+            challenge,
+            response,
+            cancellationToken
+        );
 
         if (result.IsSuccess)
         {

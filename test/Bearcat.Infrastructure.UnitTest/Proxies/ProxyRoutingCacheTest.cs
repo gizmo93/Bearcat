@@ -137,31 +137,6 @@ public class ProxyRoutingCacheTest
     }
 
     [Test]
-    public async Task RefreshAsync_PasswordCannotBeDecrypted_MarksProxyServerAsUnreadableInsteadOfDirectConnection()
-    {
-        // Arrange
-        AddProxyServer(
-            1,
-            ProxyType.Socks5,
-            "proxy.example.com",
-            1080,
-            "alice",
-            UnreadableEncryptedPassword
-        );
-        categoryDefaults.Add(new ProxyCategoryDefaultReadModel(ProxyCategory.HosterUploads, 1));
-
-        // Act
-        await cache.RefreshAsync(CancellationToken.None);
-
-        // Assert
-        var proxyServer = cache
-            .GetProxyServerForCategory(ProxyCategory.HosterUploads)
-            .ShouldNotBeNull();
-        proxyServer.HasUnreadableSecrets.ShouldBeTrue();
-        proxyServer.Credential.ShouldBeNull();
-    }
-
-    [Test]
     public async Task RefreshAsync_ProxyServerFlaggedWithUnreadableSecrets_MarksProxyServerAsUnreadable()
     {
         // Arrange
@@ -254,29 +229,6 @@ public class ProxyRoutingCacheTest
     }
 
     [Test]
-    public async Task GetCredentialForProxyAddress_ProxyServerWithUnreadablePassword_ReturnsNull()
-    {
-        // Arrange
-        AddProxyServer(
-            1,
-            ProxyType.Http,
-            "proxy.example.com",
-            8080,
-            "alice",
-            UnreadableEncryptedPassword
-        );
-        await cache.RefreshAsync(CancellationToken.None);
-
-        // Act
-        var credential = cache.GetCredentialForProxyAddress(
-            new Uri("http://proxy.example.com:8080")
-        );
-
-        // Assert
-        credential.ShouldBeNull();
-    }
-
-    [Test]
     public async Task GetProxyServerById_ProxyServerWithoutCategoryDefault_ReturnsResolvedProxyServer()
     {
         // Arrange
@@ -298,28 +250,6 @@ public class ProxyRoutingCacheTest
         proxyServer.HasUnreadableSecrets.ShouldBeFalse();
         proxyServer.Credential.ShouldNotBeNull();
         proxyServer.Credential.Password.ShouldBe("secret");
-    }
-
-    [Test]
-    public async Task GetProxyServerById_PasswordCannotBeDecrypted_ReturnsProxyServerMarkedAsUnreadable()
-    {
-        // Arrange
-        AddProxyServer(
-            3,
-            ProxyType.Http,
-            "proxy.example.com",
-            8080,
-            "alice",
-            UnreadableEncryptedPassword
-        );
-        await cache.RefreshAsync(CancellationToken.None);
-
-        // Act
-        var proxyServer = cache.GetProxyServerById(3);
-
-        // Assert
-        proxyServer.HasUnreadableSecrets.ShouldBeTrue();
-        proxyServer.Credential.ShouldBeNull();
     }
 
     [Test]

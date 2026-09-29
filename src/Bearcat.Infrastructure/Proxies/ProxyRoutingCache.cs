@@ -14,7 +14,7 @@ public class ProxyRoutingCache(
 ) : IProxyRoutingCache
 {
     private volatile ProxyRoutingTable routingTable = new(
-        [],
+        new Dictionary<Uri, ResolvedProxyServer>(),
         new Dictionary<int, ResolvedProxyServer>(),
         new Dictionary<ProxyCategory, ResolvedProxyServer>()
     );
@@ -34,21 +34,7 @@ public class ProxyRoutingCache(
 
     public NetworkCredential? GetCredentialForProxyAddress(Uri proxyUri)
     {
-        return routingTable
-            .ProxyServers.FirstOrDefault(proxyServer =>
-                string.Equals(
-                    proxyServer.ProxyUri.Scheme,
-                    proxyUri.Scheme,
-                    StringComparison.OrdinalIgnoreCase
-                )
-                && string.Equals(
-                    proxyServer.ProxyUri.Host,
-                    proxyUri.Host,
-                    StringComparison.OrdinalIgnoreCase
-                )
-                && proxyServer.ProxyUri.Port == proxyUri.Port
-            )
-            ?.Credential;
+        return routingTable.ProxyServersByUri.GetValueOrDefault(proxyUri)?.Credential;
     }
 
     public async Task RefreshAsync(CancellationToken cancellationToken)
@@ -65,6 +51,7 @@ public class ProxyRoutingCache(
             .Select(Resolve)
             .ToList();
 
+        var proxyServersByUri = proxyServers.ToDictionary(proxyServer => proxyServer.ProxyUri);
         var proxyServersById = proxyServers.ToDictionary(proxyServer => proxyServer.Id);
 
         var proxyServerByCategory = (await categoryDefaultRepository.GetAllAsync(cancellationToken))
@@ -74,7 +61,11 @@ public class ProxyRoutingCache(
                 categoryDefault => proxyServersById[categoryDefault.ProxyServerId!.Value]
             );
 
-        routingTable = new ProxyRoutingTable(proxyServers, proxyServersById, proxyServerByCategory);
+        routingTable = new ProxyRoutingTable(
+            proxyServersByUri,
+            proxyServersById,
+            proxyServerByCategory
+        );
     }
 
     private ResolvedProxyServer Resolve(ProxyServerRoutingReadModel proxyServer)
@@ -85,14 +76,7 @@ public class ProxyRoutingCache(
             proxyServer.Port
         ).Uri;
 
-        var hasUnreadablePassword =
-            proxyServer.HasUnreadableSecrets
-            || (
-                proxyServer.EncryptedPassword is not null
-                && !secretProtector.CanUnprotect(proxyServer.EncryptedPassword)
-            );
-
-        if (hasUnreadablePassword)
+        if (proxyServer.HasUnreadableSecrets)
         {
             return new ResolvedProxyServer(
                 proxyServer.Id,
@@ -131,7 +115,7 @@ public class ProxyRoutingCache(
     }
 
     private sealed record ProxyRoutingTable(
-        IReadOnlyList<ResolvedProxyServer> ProxyServers,
+        IReadOnlyDictionary<Uri, ResolvedProxyServer> ProxyServersByUri,
         IReadOnlyDictionary<int, ResolvedProxyServer> ProxyServersById,
         IReadOnlyDictionary<ProxyCategory, ResolvedProxyServer> ProxyServerByCategory
     );

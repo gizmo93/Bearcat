@@ -131,25 +131,16 @@ public partial class ProxyServersPage(
 
     private async Task ShowEditDialogAsync(ProxyServerReadModel proxyServer)
     {
-        var readModel = await operationRunner.RunAsync(
-            (IProxyServerReadRepository repository) => repository.GetReadModelAsync(proxyServer.Id)
-        );
-
-        if (readModel is null)
-        {
-            return;
-        }
-
         var formModel = new ProxyServerFormModel
         {
-            ProxyServerId = readModel.Id,
-            Name = readModel.Name,
-            ProxyType = readModel.ProxyType,
-            Host = readModel.Host,
-            Port = readModel.Port,
-            Username = readModel.Username,
-            HasStoredPassword = readModel.HasStoredPassword,
-            HasUnreadableSecrets = readModel.HasUnreadableSecrets,
+            ProxyServerId = proxyServer.Id,
+            Name = proxyServer.Name,
+            ProxyType = proxyServer.ProxyType,
+            Host = proxyServer.Host,
+            Port = proxyServer.Port,
+            Username = proxyServer.Username,
+            HasStoredPassword = proxyServer.HasStoredPassword,
+            HasUnreadableSecrets = proxyServer.HasUnreadableSecrets,
         };
 
         await ShowDialogAsync(formModel, L["EditNamedItem", proxyServer.Name]);

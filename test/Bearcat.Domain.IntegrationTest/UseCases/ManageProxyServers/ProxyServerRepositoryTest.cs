@@ -50,41 +50,6 @@ public class ProxyServerRepositoryTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task GetReadModelAsync_ExistingProxyServer_ReturnsReadModel()
-    {
-        // Arrange
-        var proxyServer = CreateProxyServer("Upload proxy", encryptedPassword: "encrypted");
-        await AddProxyServersAsync(proxyServer);
-
-        // Act
-        var result = await CreateRepository().GetReadModelAsync(proxyServer.Id);
-
-        // Assert
-        result.ShouldBe(
-            new ProxyServerReadModel(
-                proxyServer.Id,
-                "Upload proxy",
-                ProxyType.Http,
-                "proxy.example.com",
-                8080,
-                "alice",
-                HasStoredPassword: true,
-                HasUnreadableSecrets: false
-            )
-        );
-    }
-
-    [Test]
-    public async Task GetReadModelAsync_UnknownId_ReturnsNull()
-    {
-        // Act
-        var result = await CreateRepository().GetReadModelAsync(4711);
-
-        // Assert
-        result.ShouldBeNull();
-    }
-
-    [Test]
     public async Task NameExistsAsync_NameOfExistingProxyServer_ReturnsTrue()
     {
         // Arrange

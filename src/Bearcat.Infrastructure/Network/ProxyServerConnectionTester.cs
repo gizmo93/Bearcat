@@ -34,7 +34,7 @@ public sealed class ProxyServerConnectionTester : IProxyServerConnectionTester
         }
         catch (SocketException exception)
         {
-            return CreateResult(ProxyServerConnectionTestOutcome.NotReachable, exception.Message);
+            return new(ProxyServerConnectionTestOutcome.NotReachable, exception.Message);
         }
 
         await using var stream = tcpClient.GetStream();
@@ -54,7 +54,7 @@ public sealed class ProxyServerConnectionTester : IProxyServerConnectionTester
         }
         catch (IOException exception)
         {
-            return CreateResult(
+            return new(
                 ProxyServerConnectionTestOutcome.WrongProtocol,
                 $"The server closed the connection before completing the proxy handshake: {exception.Message}"
             );
@@ -95,7 +95,7 @@ public sealed class ProxyServerConnectionTester : IProxyServerConnectionTester
             || !int.TryParse(statusLineParts[1], out var statusCode)
         )
         {
-            return CreateResult(
+            return new(
                 ProxyServerConnectionTestOutcome.WrongProtocol,
                 "The server did not answer the CONNECT request with an HTTP response."
             );
@@ -103,12 +103,12 @@ public sealed class ProxyServerConnectionTester : IProxyServerConnectionTester
 
         if (statusCode != HttpProxyAuthenticationRequiredStatusCode)
         {
-            return CreateResult(ProxyServerConnectionTestOutcome.Success, statusLine);
+            return new(ProxyServerConnectionTestOutcome.Success, statusLine);
         }
 
         return hasCredentials
-            ? CreateResult(ProxyServerConnectionTestOutcome.AuthenticationFailed, statusLine)
-            : CreateResult(ProxyServerConnectionTestOutcome.AuthenticationRequired, statusLine);
+            ? new(ProxyServerConnectionTestOutcome.AuthenticationFailed, statusLine)
+            : new(ProxyServerConnectionTestOutcome.AuthenticationRequired, statusLine);
     }
 
     private static async Task<string?> ReadHttpStatusLineAsync(
@@ -168,7 +168,7 @@ public sealed class ProxyServerConnectionTester : IProxyServerConnectionTester
 
         if (reply[0] != Socks5Version)
         {
-            return CreateResult(
+            return new(
                 ProxyServerConnectionTestOutcome.WrongProtocol,
                 $"The server answered with version byte 0x{reply[0]:X2} instead of the SOCKS5 version 0x05."
             );
@@ -176,7 +176,7 @@ public sealed class ProxyServerConnectionTester : IProxyServerConnectionTester
 
         return reply[1] switch
         {
-            Socks5NoAuthenticationMethod => CreateResult(
+            Socks5NoAuthenticationMethod => new(
                 ProxyServerConnectionTestOutcome.Success,
                 "The SOCKS5 proxy server accepts connections without authentication."
             ),
@@ -186,15 +186,15 @@ public sealed class ProxyServerConnectionTester : IProxyServerConnectionTester
                 request.Password ?? string.Empty,
                 cancellationToken
             ),
-            Socks5NoAcceptableMethods when hasCredentials => CreateResult(
+            Socks5NoAcceptableMethods when hasCredentials => new(
                 ProxyServerConnectionTestOutcome.AuthenticationFailed,
                 "The SOCKS5 proxy server accepts neither username and password nor anonymous connections."
             ),
-            Socks5NoAcceptableMethods => CreateResult(
+            Socks5NoAcceptableMethods => new(
                 ProxyServerConnectionTestOutcome.AuthenticationRequired,
                 "The SOCKS5 proxy server does not accept anonymous connections."
             ),
-            _ => CreateResult(
+            _ => new(
                 ProxyServerConnectionTestOutcome.WrongProtocol,
                 $"The server selected the authentication method 0x{reply[1]:X2}, which was not offered."
             ),
@@ -216,7 +216,7 @@ public sealed class ProxyServerConnectionTester : IProxyServerConnectionTester
             || passwordBytes.Length > Socks5MaximumCredentialLength
         )
         {
-            return CreateResult(
+            return new(
                 ProxyServerConnectionTestOutcome.AuthenticationFailed,
                 $"SOCKS5 only supports usernames and passwords up to {Socks5MaximumCredentialLength} bytes."
             );
@@ -237,21 +237,13 @@ public sealed class ProxyServerConnectionTester : IProxyServerConnectionTester
         await stream.ReadExactlyAsync(reply, cancellationToken);
 
         return reply[1] == Socks5UsernamePasswordSuccess
-            ? CreateResult(
+            ? new(
                 ProxyServerConnectionTestOutcome.Success,
                 "The SOCKS5 proxy server accepted the username and password."
             )
-            : CreateResult(
+            : new(
                 ProxyServerConnectionTestOutcome.AuthenticationFailed,
                 $"The SOCKS5 proxy server rejected the username and password with status 0x{reply[1]:X2}."
             );
-    }
-
-    private static ProxyServerConnectionTestResult CreateResult(
-        ProxyServerConnectionTestOutcome outcome,
-        string? technicalDetail
-    )
-    {
-        return new ProxyServerConnectionTestResult(outcome, technicalDetail);
     }
 }

@@ -200,15 +200,13 @@ public class ProxyServerService(
     {
         var username = input.Username?.Trim();
 
-        return new ProxyServerInput(
-            input.Name.Trim(),
-            input.ProxyType,
-            input.Host.Trim(),
-            input.Port,
-            string.IsNullOrEmpty(username) ? null : username,
-            string.IsNullOrEmpty(input.Password) ? null : input.Password,
-            input.RemoveStoredPassword
-        );
+        return input with
+        {
+            Name = input.Name.Trim(),
+            Host = input.Host.Trim(),
+            Username = string.IsNullOrEmpty(username) ? null : username,
+            Password = string.IsNullOrEmpty(input.Password) ? null : input.Password,
+        };
     }
 
     private async Task<List<ProxyServerValidationError>> ValidateAsync(

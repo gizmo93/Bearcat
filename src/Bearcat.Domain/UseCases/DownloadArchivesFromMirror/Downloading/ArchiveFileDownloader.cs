@@ -1,5 +1,4 @@
 using Bearcat.Abstractions.Hoster.Dto;
-using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.Shared.Transfers;
@@ -223,28 +222,27 @@ public class ArchiveFileDownloader(
     {
         try
         {
-            DownloadFileResult result;
+            using var proxyScope = HosterRegistrationProxyScope.EnterForMirrorDownload(
+                resolved.Registration
+            );
 
-            using (HosterRegistrationProxyScope.EnterForMirrorDownload(resolved.Registration))
-            {
-                result = await resolved.Hoster.DownloadFileAsync(
-                    file: new DownloadFileDto(
-                        HosterFileLink: source.UploadedFile.HosterFileLink,
-                        ExternalId: source.UploadedFile.ExternalId,
-                        ExpectedSizeBytes: expectedSizeBytes
-                    ),
-                    targetFilePath: download.TargetFilePath,
-                    hosterConfig: resolved.Config,
-                    progress: new TransferProgressReporter(
-                        tracker: transferProgressTracker,
-                        identifier: new TransferIdentifier(TransferType.MirrorDownload, archiveId),
-                        fileId: download.ArchiveFileId,
-                        fileName: Path.GetFileName(download.TargetFilePath),
-                        sourceName: source.Registration.Name
-                    ),
-                    cancellationToken: cancellationToken
-                );
-            }
+            var result = await resolved.Hoster.DownloadFileAsync(
+                file: new DownloadFileDto(
+                    HosterFileLink: source.UploadedFile.HosterFileLink,
+                    ExternalId: source.UploadedFile.ExternalId,
+                    ExpectedSizeBytes: expectedSizeBytes
+                ),
+                targetFilePath: download.TargetFilePath,
+                hosterConfig: resolved.Config,
+                progress: new TransferProgressReporter(
+                    tracker: transferProgressTracker,
+                    identifier: new TransferIdentifier(TransferType.MirrorDownload, archiveId),
+                    fileId: download.ArchiveFileId,
+                    fileName: Path.GetFileName(download.TargetFilePath),
+                    sourceName: source.Registration.Name
+                ),
+                cancellationToken: cancellationToken
+            );
 
             if (!result.IsSuccess)
             {
