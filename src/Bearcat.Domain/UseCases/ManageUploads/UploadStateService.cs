@@ -31,6 +31,8 @@ public class UploadStateService(
 {
     private static readonly TimeSpan FailedCheckNotificationThreshold = TimeSpan.FromHours(3);
 
+    public TimeSpan LinkCheckTimeout { get; set; } = TimeSpan.FromMinutes(2);
+
     public async Task CheckUploadStatesAsync(DateTime localNow, CancellationToken cancellationToken)
     {
         await ProcessUploadStateChecksAsync(localNow, cancellationToken);
@@ -322,6 +324,10 @@ public class UploadStateService(
 
         FileExistResult result;
 
+        using var linkCheckCancellationTokenSource =
+            CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        linkCheckCancellationTokenSource.CancelAfter(LinkCheckTimeout);
+
         try
         {
             using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(registration);
@@ -336,7 +342,15 @@ public class UploadStateService(
                         HosterFolderId: file.HosterFolderId
                     ))
                     .ToList(),
-                cancellationToken: cancellationToken
+                cancellationToken: linkCheckCancellationTokenSource.Token
+            );
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            result = new FileExistResult(
+                IsSuccess: false,
+                ErrorMessages: [$"The link check did not finish within {LinkCheckTimeout}."],
+                StatusPerFileUrl: new Dictionary<string, bool>()
             );
         }
         catch (CaptchaVerificationRequiredException ex)

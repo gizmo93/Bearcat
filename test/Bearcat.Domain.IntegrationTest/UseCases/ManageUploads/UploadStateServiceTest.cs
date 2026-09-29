@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
@@ -87,7 +87,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                             file.Url == "https://hoster.test/1" && file.ExternalId == "external-1"
                         )
                     ),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -147,7 +147,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
                     It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .Callback(() => stateDuringLinkCheck = ProxyCategoryScope.Current)
@@ -189,7 +189,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
                     It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -295,7 +295,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                             || file.Url == "https://hoster.test/new2"
                         )
                     ),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -367,7 +367,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
                     It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -416,7 +416,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
                     It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -462,7 +462,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
                     It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -509,7 +509,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
                     It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -541,6 +541,57 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task CheckUploadStatesAsync_HosterCheckDoesNotFinishWithinTimeout_CreatesErrorNotificationAndKeepsState()
+    {
+        // Arrange
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-4),
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+        service.LinkCheckTimeout = TimeSpan.FromMilliseconds(20);
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(
+                async (
+                    IHosterConfig _,
+                    IReadOnlyList<FileUrlToCheckDto> _,
+                    CancellationToken cancellationToken
+                ) =>
+                {
+                    await Task.Delay(Timeout.Infinite, cancellationToken);
+                    return new FileExistResult(true, [], new Dictionary<string, bool>());
+                }
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext
+            .Uploads.Include(u => u.UploadedFiles)
+            .Include(u => u.Notifications)
+            .SingleAsync();
+
+        result.Id.ShouldBe(upload.Id);
+        result.OnlineState.ShouldBe(OnlineState.Online);
+        result.UploadedFiles.Single().OnlineState.ShouldBe(OnlineState.Online);
+        result.Notifications.Single().NotificationSeverity.ShouldBe(NotificationSeverity.Error);
+        result
+            .Notifications.Single()
+            .Message.ShouldBe(
+                "Failed to check file existence on hoster, Error messages: The link check did not finish within 00:00:00.0200000."
+            );
+    }
+
+    [Test]
     public async Task CheckUploadStatesAsync_HosterCheckFailsButSuccessfulCheckWithinThreshold_DoesNotCreateNotification()
     {
         // Arrange
@@ -554,7 +605,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
                     It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -601,7 +652,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
                     It.Is<IReadOnlyList<FileUrlToCheckDto>>(files => files.Count == 3),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -668,7 +719,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                     It.Is<IReadOnlyList<FileUrlToCheckDto>>(files =>
                         files.Single().Url == "https://hoster.test/1"
                     ),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -685,7 +736,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                     It.Is<IReadOnlyList<FileUrlToCheckDto>>(files =>
                         files.Single().Url == "https://hoster.test/2"
                     ),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -731,7 +782,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
                     It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ThrowsAsync(new CaptchaVerificationRequiredException("Captcha required", 400, 2));
@@ -775,7 +826,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
                     It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ThrowsAsync(new CaptchaVerificationRequiredException("Captcha required", 400, 2));
@@ -927,7 +978,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
                     It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -1534,7 +1585,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
                     It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
@@ -1624,7 +1675,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                 h.CheckFilesExistAsync(
                     hosterConfigMock.Object,
                     It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(

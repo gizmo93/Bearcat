@@ -1,4 +1,4 @@
-using Bearcat.Abstractions.Hoster;
+﻿using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Proxies;
