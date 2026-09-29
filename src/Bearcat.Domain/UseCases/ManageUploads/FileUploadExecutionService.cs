@@ -2,6 +2,7 @@ using System.Threading.Channels;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageUploads.Dto;
 using Microsoft.Extensions.Logging;
@@ -42,6 +43,10 @@ public class FileUploadExecutionService(
                 FolderId: fileToUpload.FolderId,
                 PremiumOnlyDownload: context.Upload.PremiumOnlyDownload,
                 Md5Hash: fileToUpload.Md5Hash
+            );
+
+            using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(
+                context.Upload.UploadConfig.HosterRegistration
             );
 
             var result = await fileToUpload.Hoster.UploadFileAsync(

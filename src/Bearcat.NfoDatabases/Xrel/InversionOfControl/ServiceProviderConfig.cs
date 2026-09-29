@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.NfoDatabase;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.NfoDatabases.Xrel.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -27,13 +28,16 @@ public static class ServiceProviderConfig
             .ConfigureHttpClient(client =>
             {
                 client.BaseAddress = new Uri("https://xrel-api.nfos.to/");
-            });
+            })
+            .UseProxyForCategory(ProxyCategory.NfoDatabases);
 
         services.AddSingleton<XrelRateLimitState>();
-        services.AddHttpClient(
-            XrelNfoDatabase.CoverHttpClientName,
-            client => client.Timeout = TimeSpan.FromSeconds(10)
-        );
+        services
+            .AddHttpClient(
+                XrelNfoDatabase.CoverHttpClientName,
+                client => client.Timeout = TimeSpan.FromSeconds(10)
+            )
+            .UseProxyForCategory(ProxyCategory.NfoDatabases);
         services.AddScoped<XrelClient>();
         services.AddKeyedScoped<INfoDatabase, XrelNfoDatabase>(nameof(XrelNfoDatabase));
         services.AddScoped<INfoDatabaseFactory, NfoDatabaseFactory>();

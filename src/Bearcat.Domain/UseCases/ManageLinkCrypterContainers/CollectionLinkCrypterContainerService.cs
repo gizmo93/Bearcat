@@ -3,6 +3,7 @@ using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.LinkCrypterContainers;
+using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -153,6 +154,10 @@ public class CollectionLinkCrypterContainerService(
         var crypter = GetCrypter(linkCrypterConfig);
         var config = GetCrypterConfig(crypter, linkCrypterConfig);
 
+        using var proxyScope = LinkCrypterRegistrationProxyScope.Enter(
+            linkCrypterConfig.LinkCrypterRegistration
+        );
+
         var result = await crypter.CreateContainerAsync(
             linkCrypterConfig: config,
             containerName: slot.ReleaseCollection.Name,
@@ -208,6 +213,10 @@ public class CollectionLinkCrypterContainerService(
     {
         var crypter = GetCrypter(linkCrypterConfig);
         var config = GetCrypterConfig(crypter, linkCrypterConfig);
+
+        using var proxyScope = LinkCrypterRegistrationProxyScope.Enter(
+            linkCrypterConfig.LinkCrypterRegistration
+        );
 
         var result = await crypter.UpdateContainerAsync(
             linkCrypterConfig: config,

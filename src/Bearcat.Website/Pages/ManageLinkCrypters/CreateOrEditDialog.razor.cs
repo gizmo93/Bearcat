@@ -48,7 +48,9 @@ public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
                 await service.CreateAsync(
                     name: formModel.Name!,
                     className: formModel.ClassName!,
-                    configuration: formModel.Configuration
+                    configuration: formModel.Configuration,
+                    proxySelection: formModel.ProxySelection,
+                    proxyServerId: formModel.ProxyServerId
                 );
                 return;
             }
@@ -56,7 +58,9 @@ public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
             await service.UpdateAsync(
                 id: LinkCrypterRegistrationId!.Value,
                 name: formModel.Name!,
-                configuration: formModel.Configuration
+                configuration: formModel.Configuration,
+                proxySelection: formModel.ProxySelection,
+                proxyServerId: formModel.ProxyServerId
             );
         });
 
@@ -126,6 +130,8 @@ public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
         {
             Name = registration.Name,
             ClassName = registration.LinkCrypterClassName,
+            ProxySelection = registration.ProxySelection,
+            ProxyServerId = registration.ProxyServerId,
         };
     }
 

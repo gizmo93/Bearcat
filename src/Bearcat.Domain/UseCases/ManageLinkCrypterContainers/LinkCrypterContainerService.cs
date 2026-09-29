@@ -2,6 +2,7 @@ using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -181,6 +182,10 @@ public class LinkCrypterContainerService(
             )
         );
 
+        using var proxyScope = LinkCrypterRegistrationProxyScope.Enter(
+            linkCrypterConfig.LinkCrypterRegistration
+        );
+
         var result = await crypter.UpdateContainerAsync(
             linkCrypterConfig: config,
             containerLink: previousContainer.ContainerUrl,
@@ -243,6 +248,10 @@ public class LinkCrypterContainerService(
         );
 
         var fileUrls = upload.UploadedFiles.Select(f => f.HosterFileLink).OrderBy(l => l).ToList();
+
+        using var proxyScope = LinkCrypterRegistrationProxyScope.Enter(
+            linkCrypterConfig.LinkCrypterRegistration
+        );
 
         var result = await crypter.CreateContainerAsync(
             linkCrypterConfig: config,

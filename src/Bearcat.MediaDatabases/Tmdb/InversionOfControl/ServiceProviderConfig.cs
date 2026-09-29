@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.MediaMetadataDatabase;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.MediaDatabases.Tmdb.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -14,7 +15,8 @@ public static class ServiceProviderConfig
             .ConfigureHttpClient(client =>
             {
                 client.BaseAddress = new Uri("https://api.themoviedb.org/");
-            });
+            })
+            .UseProxyForCategory(ProxyCategory.MediaDatabases);
 
         services.AddKeyedScoped<IMediaMetadataDatabase, TmdbMetadataDatabase>(
             nameof(TmdbMetadataDatabase)

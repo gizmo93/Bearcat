@@ -38,6 +38,11 @@ public partial class TransferFileDetails : ComponentBase
             _ => L["DownloadFileStatus"],
         };
 
+    private static IReadOnlyList<string> GetProxyServerNames(TransferFileProgressSnapshot file)
+    {
+        return file.ProxyServerName is null ? [] : [file.ProxyServerName];
+    }
+
     private static string FormatTransferred(TransferFileProgressSnapshot file)
     {
         var transferred = TransferFormatting.FormatBytes(file.TransferredBytes);

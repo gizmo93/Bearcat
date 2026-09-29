@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Hosters.CloudFam.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -31,7 +32,8 @@ public static class ServiceProviderConfig
                 {
                     c.BaseAddress = new Uri(ApiClient.ApiBaseUrl);
                     c.Timeout = Timeout.InfiniteTimeSpan;
-                });
+                })
+                .UseProxyForCategory(ProxyCategory.HosterUploads);
 
             services.AddScoped<ICloudFamApiClient, ApiClient>();
             services.AddKeyedScoped<IHoster, CloudFam>(nameof(CloudFam));

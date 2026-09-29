@@ -1,0 +1,159 @@
+@page "/proxy-servers"
+@using Bearcat.Abstractions.Proxies
+@using Bearcat.Domain.UseCases.ManageProxyServers.ReadModels
+
+<PageTitle>@L["ProxyServers"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div class="min-w-0 space-y-2">
+            <h1 class="text-3xl font-semibold tracking-tight">@L["ProxyServers"]</h1>
+            <p class="text-sm text-muted-foreground">@L["ProxyServersIntro"]</p>
+        </div>
+
+        <BbButton Class="bearcat-page-action bearcat-add-button" OnClick="ShowAddDialogAsync">
+            <LucideIcon Name="plus" class="h-4 w-4" />
+            @L["NewProxyServer"]
+        </BbButton>
+    </div>
+
+    @if (proxyServers.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+            @L["NoProxyServersYet"]
+        </div>
+    }
+    else
+    {
+        <div class="bearcat-config-list">
+            <div class="bearcat-config-header lg:grid-cols-[minmax(0,1.25fr)_8rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                <span>@L["Name"]</span>
+                <span>@L["ProxyType"]</span>
+                <span>@L["Address"]</span>
+                <span>@L["Authentication"]</span>
+                <span class="text-right">@L["Actions"]</span>
+            </div>
+            @foreach (var proxyServer in proxyServers)
+            {
+                var address = $"{proxyServer.Host}:{proxyServer.Port}";
+
+                <div class="bearcat-config-item">
+                    <div class="bearcat-config-row lg:grid-cols-[minmax(0,1.25fr)_8rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-semibold" title="@proxyServer.Name">@proxyServer.Name</p>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["ProxyType"]</p>
+                            <BbBadge Variant="BadgeVariant.Outline">@L.Localize(proxyServer.ProxyType)</BbBadge>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["Address"]</p>
+                            <p class="truncate font-mono text-xs" title="@address">@address</p>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["Authentication"]</p>
+                            <div class="flex items-center gap-2">
+                                @if (proxyServer.Username is null)
+                                {
+                                    <span class="text-sm text-muted-foreground">@L["NoAuthentication"]</span>
+                                }
+                                else
+                                {
+                                    <span class="truncate text-sm" title="@proxyServer.Username">@proxyServer.Username</span>
+                                }
+                                @if (proxyServer.HasUnreadableSecrets)
+                                {
+                                    <UnreadableSecretsBadge />
+                                }
+                            </div>
+                        </div>
+
+                        <div class="bearcat-config-actions">
+                            <BbButton Variant="ButtonVariant.Outline"
+                                      Size="ButtonSize.Small"
+                                      Disabled="@testingProxyServerIds.Contains(proxyServer.Id)"
+                                      OnClick="@(() => TestConnectionAsync(proxyServer))">
+                                @if (testingProxyServerIds.Contains(proxyServer.Id))
+                                {
+                                    <LucideIcon Name="loader-circle" class="h-4 w-4 animate-spin" />
+                                }
+                                else
+                                {
+                                    <LucideIcon Name="plug-zap" class="h-4 w-4" />
+                                }
+                                @L["TestConnection"]
+                            </BbButton>
+                            <BbDropdownMenu>
+                                <BbDropdownMenuTrigger>
+                                    <BbButton Variant="ButtonVariant.Ghost" Size="ButtonSize.IconSmall" AriaLabel="@L["Actions"]">
+                                        <LucideIcon Name="ellipsis" class="h-4 w-4" />
+                                    </BbButton>
+                                </BbDropdownMenuTrigger>
+                                <BbDropdownMenuContent Align="PopoverAlign.End" Strategy="PositioningStrategy.Fixed">
+                                    <BbDropdownMenuItem OnClick="@(async _ => await ShowEditDialogAsync(proxyServer))">
+                                        @L["Edit"]
+                                    </BbDropdownMenuItem>
+                                    <BbDropdownMenuItem OnClick="@(async _ => await DeleteAsync(proxyServer))">
+                                        @L["Delete"]
+                                    </BbDropdownMenuItem>
+                                </BbDropdownMenuContent>
+                            </BbDropdownMenu>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    <div class="space-y-3 pt-4">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <h2 class="min-w-0 text-lg font-semibold tracking-tight">@L["DefaultProxyPerCategory"]</h2>
+
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <BbSelect TValue="int"
+                          @bind-Value="allCategoriesOptionValue"
+                          Options="ProxyServerOptions"
+                          Disabled="isSavingCategoryDefaults"
+                          AriaLabel="@L["ApplyToAllCategories"]"
+                          Class="w-full sm:w-56" />
+                <BbButton Variant="ButtonVariant.Outline"
+                          Disabled="isSavingCategoryDefaults"
+                          OnClick="ApplyToAllCategoriesAsync">
+                    <LucideIcon Name="list-checks" class="h-4 w-4" />
+                    @L["ApplyToAllCategories"]
+                </BbButton>
+            </div>
+        </div>
+
+        <div class="bearcat-config-list">
+            <div class="bearcat-config-header lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+                <span>@L["Category"]</span>
+                <span>@L["ProxyServer"]</span>
+            </div>
+            @foreach (var category in ProxyCategories)
+            {
+                <div class="bearcat-config-item">
+                    <div class="bearcat-config-row lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+                        <div class="min-w-0 space-y-1">
+                            <p class="text-sm font-semibold">@L.Localize(category)</p>
+                            <p class="text-sm text-muted-foreground">@L.LocalizeDescription(category)</p>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["ProxyServer"]</p>
+                            <BbSelect TValue="int"
+                                      Value="@GetSelectedOptionValue(category)"
+                                      ValueChanged="@(value => SetCategoryDefaultAsync(category, value))"
+                                      Options="ProxyServerOptions"
+                                      Disabled="isSavingCategoryDefaults"
+                                      AriaLabel="@L.Localize(category)"
+                                      Class="w-full" />
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>

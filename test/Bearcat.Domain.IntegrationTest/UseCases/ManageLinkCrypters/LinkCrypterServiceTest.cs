@@ -1,8 +1,10 @@
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.LinkCrypter.Results;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageLinkCrypters;
+using Bearcat.Domain.UseCases.ManageProxyServers.Selection;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -45,7 +47,8 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
             UnreadableSecretsNotificationServiceFactory.Create(
                 dbContext,
                 CreateNotificationConfigurationProvider()
-            )
+            ),
+            new ProxySelectionValidator(new ProxyServerRepository(dbContext, dbContext))
         );
     }
 
@@ -67,7 +70,7 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
             "Primary crypter",
             LinkCrypterClassName,
             configuration,
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -126,7 +129,7 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
             registration.Id,
             "Updated crypter",
             configuration,
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -172,7 +175,7 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
             registration.Id,
             "Updated crypter",
             new Dictionary<string, string> { ["apiKey"] = "updated" },
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -344,13 +347,175 @@ public class LinkCrypterServiceTest : BearcatIntegrationTest
         result.ShouldBe(0);
     }
 
+    [Test]
+    public async Task CreateAsync_SpecificProxyServer_StoresSelectionAndProxyServerId()
+    {
+        // Arrange
+        var proxyServer = await AddProxyServerAsync();
+        linkCrypterMock
+            .Setup(x => x.SerializeConfig(It.IsAny<IReadOnlyDictionary<string, string>>()))
+            .Returns(SerializedConfig);
+
+        // Act
+        await service.CreateAsync(
+            "Primary crypter",
+            LinkCrypterClassName,
+            new Dictionary<string, string> { ["apiKey"] = "secret" },
+            proxySelection: ProxySelection.SpecificProxyServer,
+            proxyServerId: proxyServer.Id,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        var registration = await dbContext.LinkCrypterRegistrations.SingleAsync();
+        registration.ProxySelection.ShouldBe(ProxySelection.SpecificProxyServer);
+        registration.ProxyServerId.ShouldBe(proxyServer.Id);
+    }
+
+    [Test]
+    public async Task CreateAsync_SpecificProxyServerDoesNotExist_ThrowsAndStoresNothing()
+    {
+        // Arrange
+        linkCrypterMock
+            .Setup(x => x.SerializeConfig(It.IsAny<IReadOnlyDictionary<string, string>>()))
+            .Returns(SerializedConfig);
+
+        // Act
+        var act = () =>
+            service.CreateAsync(
+                "Primary crypter",
+                LinkCrypterClassName,
+                new Dictionary<string, string> { ["apiKey"] = "secret" },
+                proxySelection: ProxySelection.SpecificProxyServer,
+                proxyServerId: 4711,
+                cancellationToken: CancellationToken.None
+            );
+
+        // Assert
+        await act.ShouldThrowAsync<InvalidProxySelectionException>();
+        (await dbContext.LinkCrypterRegistrations.CountAsync()).ShouldBe(0);
+    }
+
+    [Test]
+    public async Task CreateAsync_SpecificProxyServerWithoutProxyServerId_Throws()
+    {
+        // Arrange
+        linkCrypterMock
+            .Setup(x => x.SerializeConfig(It.IsAny<IReadOnlyDictionary<string, string>>()))
+            .Returns(SerializedConfig);
+
+        // Act
+        var act = () =>
+            service.CreateAsync(
+                "Primary crypter",
+                LinkCrypterClassName,
+                new Dictionary<string, string> { ["apiKey"] = "secret" },
+                proxySelection: ProxySelection.SpecificProxyServer,
+                proxyServerId: null,
+                cancellationToken: CancellationToken.None
+            );
+
+        // Assert
+        await act.ShouldThrowAsync<InvalidProxySelectionException>();
+    }
+
+    [Test]
+    public async Task UpdateAsync_UseCategoryDefaultWithProxyServerId_StoresCategoryDefaultWithoutProxyServerId()
+    {
+        // Arrange
+        var proxyServer = await AddProxyServerAsync();
+        var registration = await AddLinkCrypterRegistrationAsync(
+            isActive: true,
+            proxySelection: ProxySelection.SpecificProxyServer,
+            proxyServerId: proxyServer.Id
+        );
+        linkCrypterMock
+            .Setup(x => x.DeserializeConfig(SerializedConfig))
+            .Returns(linkCrypterConfigMock.Object);
+        linkCrypterConfigMock
+            .Setup(c => c.ToDictionary())
+            .Returns(new Dictionary<string, string> { ["apiKey"] = "secret" });
+        linkCrypterMock
+            .Setup(x => x.SerializeConfig(It.IsAny<IReadOnlyDictionary<string, string>>()))
+            .Returns(SerializedConfig);
+
+        // Act
+        await service.UpdateAsync(
+            registration.Id,
+            "Primary crypter",
+            new Dictionary<string, string>(),
+            proxySelection: ProxySelection.UseCategoryDefault,
+            proxyServerId: proxyServer.Id,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.LinkCrypterRegistrations.SingleAsync();
+        result.ProxySelection.ShouldBe(ProxySelection.UseCategoryDefault);
+        result.ProxyServerId.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task TryLoginAsync_RegistrationWithProxySelection_CallsLinkCrypterInsideProxyScope()
+    {
+        // Arrange
+        var proxyServer = await AddProxyServerAsync();
+        var registration = await AddLinkCrypterRegistrationAsync(
+            isActive: true,
+            proxySelection: ProxySelection.SpecificProxyServer,
+            proxyServerId: proxyServer.Id
+        );
+        ProxyCategoryScopeState? scopeStateDuringLogin = null;
+        linkCrypterMock
+            .Setup(x => x.DeserializeConfig(SerializedConfig))
+            .Returns(linkCrypterConfigMock.Object);
+        linkCrypterMock
+            .Setup(c => c.TryLoginAsync(linkCrypterConfigMock.Object, CancellationToken.None))
+            .Callback(() => scopeStateDuringLogin = ProxyCategoryScope.Current)
+            .ReturnsAsync(new TryLoginResult(true));
+
+        // Act
+        await service.TryLoginAsync(registration.Id, CancellationToken.None);
+
+        // Assert
+        scopeStateDuringLogin.ShouldBe(
+            new ProxyCategoryScopeState(
+                ProxyCategory.LinkCrypters,
+                ProxySelection.SpecificProxyServer,
+                proxyServer.Id
+            )
+        );
+        ProxyCategoryScope.Current.ShouldBeNull();
+    }
+
+    private async Task<ProxyServer> AddProxyServerAsync()
+    {
+        var proxyServer = new ProxyServer
+        {
+            Name = "Proxy",
+            ProxyType = ProxyType.Http,
+            Host = "proxy.example.com",
+            Port = 8080,
+        };
+
+        dbContext.ProxyServers.Add(proxyServer);
+        await dbContext.SaveChangesAsync();
+
+        return proxyServer;
+    }
+
     private async Task<LinkCrypterRegistration> AddLinkCrypterRegistrationAsync(
         bool isActive,
-        bool hasUnreadableSecrets = false
+        bool hasUnreadableSecrets = false,
+        ProxySelection proxySelection = ProxySelection.UseCategoryDefault,
+        int? proxyServerId = null
     )
     {
         var registration = new LinkCrypterRegistration
         {
+            ProxySelection = proxySelection,
+            ProxyServerId = proxyServerId,
             Name = "Primary crypter",
             IsActive = isActive,
             HasUnreadableSecrets = hasUnreadableSecrets,

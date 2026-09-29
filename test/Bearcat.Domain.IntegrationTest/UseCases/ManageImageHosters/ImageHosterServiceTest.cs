@@ -1,8 +1,10 @@
 using Bearcat.Abstractions.ImageHoster;
 using Bearcat.Abstractions.ImageHoster.Results;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageImageHosters;
+using Bearcat.Domain.UseCases.ManageProxyServers.Selection;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -46,7 +48,8 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
             UnreadableSecretsNotificationServiceFactory.Create(
                 dbContext,
                 CreateNotificationConfigurationProvider()
-            )
+            ),
+            new ProxySelectionValidator(new ProxyServerRepository(dbContext, dbContext))
         );
     }
 
@@ -70,7 +73,7 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
             "Primary image hoster",
             ImageHosterClassName,
             configuration,
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -109,7 +112,7 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
             registration.Id,
             "Updated image hoster",
             configuration,
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -143,7 +146,7 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
             registration.Id,
             "Updated image hoster",
             new Dictionary<string, string> { ["apiKey"] = "updated" },
-            CancellationToken.None
+            cancellationToken: CancellationToken.None
         );
 
         // Assert
@@ -285,13 +288,178 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
         result.ShouldBe(0);
     }
 
+    [Test]
+    public async Task CreateAsync_SpecificProxyServer_StoresSelectionAndProxyServerId()
+    {
+        // Arrange
+        var proxyServer = await AddProxyServerAsync();
+        imageHosterMock
+            .Setup(x => x.SerializeConfig(It.IsAny<IReadOnlyDictionary<string, string>>()))
+            .Returns(SerializedConfig);
+
+        // Act
+        await service.CreateAsync(
+            "Primary image hoster",
+            ImageHosterClassName,
+            new Dictionary<string, string> { ["apiKey"] = "secret" },
+            proxySelection: ProxySelection.SpecificProxyServer,
+            proxyServerId: proxyServer.Id,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        var registration = await dbContext.ImageHosterRegistrations.SingleAsync();
+        registration.ProxySelection.ShouldBe(ProxySelection.SpecificProxyServer);
+        registration.ProxyServerId.ShouldBe(proxyServer.Id);
+    }
+
+    [Test]
+    public async Task CreateAsync_SpecificProxyServerDoesNotExist_ThrowsAndStoresNothing()
+    {
+        // Arrange
+        imageHosterMock
+            .Setup(x => x.SerializeConfig(It.IsAny<IReadOnlyDictionary<string, string>>()))
+            .Returns(SerializedConfig);
+
+        // Act
+        var act = () =>
+            service.CreateAsync(
+                "Primary image hoster",
+                ImageHosterClassName,
+                new Dictionary<string, string> { ["apiKey"] = "secret" },
+                proxySelection: ProxySelection.SpecificProxyServer,
+                proxyServerId: 4711,
+                cancellationToken: CancellationToken.None
+            );
+
+        // Assert
+        await act.ShouldThrowAsync<InvalidProxySelectionException>();
+        (await dbContext.ImageHosterRegistrations.CountAsync()).ShouldBe(0);
+    }
+
+    [Test]
+    public async Task CreateAsync_SpecificProxyServerWithoutProxyServerId_Throws()
+    {
+        // Arrange
+        imageHosterMock
+            .Setup(x => x.SerializeConfig(It.IsAny<IReadOnlyDictionary<string, string>>()))
+            .Returns(SerializedConfig);
+
+        // Act
+        var act = () =>
+            service.CreateAsync(
+                "Primary image hoster",
+                ImageHosterClassName,
+                new Dictionary<string, string> { ["apiKey"] = "secret" },
+                proxySelection: ProxySelection.SpecificProxyServer,
+                proxyServerId: null,
+                cancellationToken: CancellationToken.None
+            );
+
+        // Assert
+        await act.ShouldThrowAsync<InvalidProxySelectionException>();
+    }
+
+    [Test]
+    public async Task UpdateAsync_UseCategoryDefaultWithProxyServerId_StoresCategoryDefaultWithoutProxyServerId()
+    {
+        // Arrange
+        var proxyServer = await AddProxyServerAsync();
+        var registration = await AddImageHosterRegistrationAsync(
+            isActive: true,
+            proxySelection: ProxySelection.SpecificProxyServer,
+            proxyServerId: proxyServer.Id
+        );
+        imageHosterMock
+            .Setup(x => x.DeserializeConfig(SerializedConfig))
+            .Returns(imageHosterConfigMock.Object);
+        imageHosterConfigMock
+            .Setup(c => c.ToDictionary())
+            .Returns(new Dictionary<string, string> { ["apiKey"] = "secret" });
+        imageHosterMock
+            .Setup(x => x.SerializeConfig(It.IsAny<IReadOnlyDictionary<string, string>>()))
+            .Returns(SerializedConfig);
+
+        // Act
+        await service.UpdateAsync(
+            registration.Id,
+            "Primary image hoster",
+            new Dictionary<string, string>(),
+            proxySelection: ProxySelection.UseCategoryDefault,
+            proxyServerId: proxyServer.Id,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.ImageHosterRegistrations.SingleAsync();
+        result.ProxySelection.ShouldBe(ProxySelection.UseCategoryDefault);
+        result.ProxyServerId.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task TryLoginAsync_RegistrationWithProxySelection_CallsImageHosterInsideProxyScope()
+    {
+        // Arrange
+        var proxyServer = await AddProxyServerAsync();
+        var registration = await AddImageHosterRegistrationAsync(
+            isActive: true,
+            proxySelection: ProxySelection.SpecificProxyServer,
+            proxyServerId: proxyServer.Id
+        );
+        ProxyCategoryScopeState? scopeStateDuringLogin = null;
+        imageHosterMock
+            .Setup(x => x.DeserializeConfig(SerializedConfig))
+            .Returns(imageHosterConfigMock.Object);
+        imageHosterMock
+            .As<ISupportsLogin>()
+            .Setup(supportsLogin =>
+                supportsLogin.TryLoginAsync(imageHosterConfigMock.Object, CancellationToken.None)
+            )
+            .Callback(() => scopeStateDuringLogin = ProxyCategoryScope.Current)
+            .ReturnsAsync(new TryLoginResult(true));
+
+        // Act
+        await service.TryLoginAsync(registration.Id, CancellationToken.None);
+
+        // Assert
+        scopeStateDuringLogin.ShouldBe(
+            new ProxyCategoryScopeState(
+                ProxyCategory.ImageHosters,
+                ProxySelection.SpecificProxyServer,
+                proxyServer.Id
+            )
+        );
+        ProxyCategoryScope.Current.ShouldBeNull();
+    }
+
+    private async Task<ProxyServer> AddProxyServerAsync()
+    {
+        var proxyServer = new ProxyServer
+        {
+            Name = "Proxy",
+            ProxyType = ProxyType.Http,
+            Host = "proxy.example.com",
+            Port = 8080,
+        };
+
+        dbContext.ProxyServers.Add(proxyServer);
+        await dbContext.SaveChangesAsync();
+
+        return proxyServer;
+    }
+
     private async Task<ImageHosterRegistration> AddImageHosterRegistrationAsync(
         bool isActive,
-        bool hasUnreadableSecrets = false
+        bool hasUnreadableSecrets = false,
+        ProxySelection proxySelection = ProxySelection.UseCategoryDefault,
+        int? proxyServerId = null
     )
     {
         var registration = new ImageHosterRegistration
         {
+            ProxySelection = proxySelection,
+            ProxyServerId = proxyServerId,
             Name = "Primary image hoster",
             IsActive = isActive,
             HasUnreadableSecrets = hasUnreadableSecrets,

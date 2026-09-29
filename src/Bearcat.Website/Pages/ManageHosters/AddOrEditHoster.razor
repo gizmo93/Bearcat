@@ -1,3 +1,5 @@
+@using Bearcat.Abstractions.Proxies
+
 <EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
     <DataAnnotationsValidator />
 
@@ -91,6 +93,11 @@
                                    Label="@L["AlwaysReuploadAllFiles"]"
                                    HelperText="@L["AlwaysReuploadAllFilesHelp"]" />
 
+                <ProxySelectionSelect Label="@L["ProxyForUploadsAndAccountRequests"]"
+                                      ProxyCategory="ProxyCategory.HosterUploads"
+                                      @bind-ProxySelection="FormModel.UploadProxySelection"
+                                      @bind-ProxyServerId="FormModel.UploadProxyServerId" />
+
                 @if (selectedHoster.SupportsDownload)
                 {
                     <BbFormFieldSwitch @bind-Checked="FormModel.UseForMirrorDownloads"
@@ -108,6 +115,11 @@
                             </p>
                         </div>
                     }
+
+                    <ProxySelectionSelect Label="@L["ProxyForMirrorDownloads"]"
+                                          ProxyCategory="ProxyCategory.HosterMirrorDownloads"
+                                          @bind-ProxySelection="FormModel.MirrorDownloadProxySelection"
+                                          @bind-ProxyServerId="FormModel.MirrorDownloadProxyServerId" />
 
                     @if (selectedHoster.DownloadRequiresPremium)
                     {

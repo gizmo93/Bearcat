@@ -1,6 +1,7 @@
 using Bearcat.Abstractions.ImageHoster;
 using Bearcat.Abstractions.ImageHoster.Dto;
 using Bearcat.Abstractions.ImageHoster.Results;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageImageUploads;
 using Bearcat.Domain.ValueObjects;
@@ -91,6 +92,58 @@ public class ImageUploadServiceTest : BearcatIntegrationTest
                 ),
             Times.Once
         );
+    }
+
+    [Test]
+    public async Task ProcessAsync_ImageHosterRegistrationUsesSpecificProxyServer_UploadsImageInsideImageHosterProxyScope()
+    {
+        // Arrange
+        ProxyCategoryScopeState? stateDuringUpload = null;
+        imageHosterMock
+            .Setup(hoster =>
+                hoster.UploadImageAsync(
+                    It.IsAny<ImageToUploadDto>(),
+                    It.IsAny<IImageHosterConfig>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback(() => stateDuringUpload = ProxyCategoryScope.Current)
+            .ReturnsAsync(
+                (ImageToUploadDto image, IImageHosterConfig _, CancellationToken _) =>
+                    new UploadImageResult(
+                        IsSuccess: true,
+                        Image: image,
+                        ImageUrls: [new ImageUrl(ImageSize.Full, "https://img.example/full.jpg")],
+                        ErrorMessages: []
+                    )
+            );
+        await AddCollectionWithImageConfigAsync("https://artworks.example/cover.jpg");
+        var proxyServer = new ProxyServer
+        {
+            Name = "Image proxy",
+            ProxyType = ProxyType.Http,
+            Host = "proxy.example.com",
+            Port = 8080,
+        };
+        dbContext.ProxyServers.Add(proxyServer);
+        await dbContext.SaveChangesAsync();
+        var registration = await dbContext.ImageHosterRegistrations.SingleAsync();
+        registration.ProxySelection = ProxySelection.SpecificProxyServer;
+        registration.ProxyServerId = proxyServer.Id;
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        await service.ProcessAsync(CancellationToken.None);
+
+        // Assert
+        stateDuringUpload.ShouldBe(
+            new ProxyCategoryScopeState(
+                ProxyCategory.ImageHosters,
+                ProxySelection.SpecificProxyServer,
+                proxyServer.Id
+            )
+        );
+        ProxyCategoryScope.Current.ShouldBeNull();
     }
 
     [Test]

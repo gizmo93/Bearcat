@@ -7,6 +7,7 @@ using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.Shared.QualityGate;
 using Bearcat.Domain.UseCases.ManageUploads.Exceptions;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
@@ -323,6 +324,8 @@ public class UploadStateService(
 
         try
         {
+            using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(registration);
+
             result = await hoster.CheckFilesExistAsync(
                 hosterConfig: hosterConfig,
                 files: filesByUrl

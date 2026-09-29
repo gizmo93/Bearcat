@@ -1,10 +1,13 @@
 using Bearcat.Abstractions.ImageHoster;
 using Bearcat.Abstractions.ImageHoster.Results;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageImageHosters.Repositories;
+using Bearcat.Domain.UseCases.ManageProxyServers.Selection;
 
 namespace Bearcat.Domain.UseCases.ManageImageHosters;
 
@@ -13,13 +16,16 @@ public class ImageHosterService(
     IImageHosterRegistrationReadRepository readRepository,
     IImageHosterFactory imageHosterFactory,
     ISecretProtector secretProtector,
-    UnreadableSecretsNotificationService unreadableSecretsNotificationService
+    UnreadableSecretsNotificationService unreadableSecretsNotificationService,
+    ProxySelectionValidator proxySelectionValidator
 )
 {
     public async Task CreateAsync(
         string name,
         string className,
         IReadOnlyDictionary<string, string> configuration,
+        ProxySelection proxySelection = ProxySelection.UseCategoryDefault,
+        int? proxyServerId = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -32,6 +38,12 @@ public class ImageHosterService(
             ImageHosterClassName = className,
             SerializedConfig = secretProtector.Protect(serializedConfig),
             IsActive = true,
+            ProxySelection = proxySelection,
+            ProxyServerId = await proxySelectionValidator.GetProxyServerIdToStoreAsync(
+                proxySelection,
+                proxyServerId,
+                cancellationToken
+            ),
         };
 
         repository.Add(registration);
@@ -58,6 +70,8 @@ public class ImageHosterService(
         int id,
         string name,
         IReadOnlyDictionary<string, string> configuration,
+        ProxySelection proxySelection = ProxySelection.UseCategoryDefault,
+        int? proxyServerId = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -72,6 +86,12 @@ public class ImageHosterService(
         );
 
         registration.Name = name;
+        registration.ProxySelection = proxySelection;
+        registration.ProxyServerId = await proxySelectionValidator.GetProxyServerIdToStoreAsync(
+            proxySelection,
+            proxyServerId,
+            cancellationToken
+        );
         registration.SerializedConfig = secretProtector.Protect(
             imageHoster.SerializeConfig(mergedConfiguration)
         );
@@ -110,6 +130,8 @@ public class ImageHosterService(
         var config = imageHoster.DeserializeConfig(
             secretProtector.Unprotect(registration.SerializedConfig)
         );
+
+        using var proxyScope = ImageHosterRegistrationProxyScope.Enter(registration);
 
         return await loginCapableImageHoster.TryLoginAsync(config, cancellationToken);
     }

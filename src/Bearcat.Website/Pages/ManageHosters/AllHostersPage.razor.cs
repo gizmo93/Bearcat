@@ -70,6 +70,10 @@ public partial class AllHostersPage(
                 AlwaysReuploadAllFiles = hosterRegistration.AlwaysReuploadAllFiles,
                 UseForMirrorDownloads = hosterRegistration.UseForMirrorDownloads,
                 MirrorPriority = hosterRegistration.MirrorPriority,
+                UploadProxySelection = hosterRegistration.UploadProxySelection,
+                UploadProxyServerId = hosterRegistration.UploadProxyServerId,
+                MirrorDownloadProxySelection = hosterRegistration.MirrorDownloadProxySelection,
+                MirrorDownloadProxyServerId = hosterRegistration.MirrorDownloadProxyServerId,
             },
         };
 

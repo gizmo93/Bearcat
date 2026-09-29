@@ -13,5 +13,15 @@ public class ImageHosterRegistrationConfiguration
         builder.Property(h => h.ImageHosterClassName).HasMaxLength(100).IsRequired();
         builder.Property(h => h.SerializedConfig).HasMaxLength(2000).IsRequired();
         builder.Property(h => h.HasUnreadableSecrets).IsRequired();
+        builder.Property(h => h.ProxySelection).IsRequired();
+        builder.Property(h => h.ProxyServerId).IsRequired(false);
+
+        builder
+            .HasOne<ProxyServer>()
+            .WithMany()
+            .HasForeignKey(h => h.ProxyServerId)
+            .HasPrincipalKey(proxyServer => proxyServer.Id)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

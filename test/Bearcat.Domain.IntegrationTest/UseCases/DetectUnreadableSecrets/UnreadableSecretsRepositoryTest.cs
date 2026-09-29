@@ -91,6 +91,19 @@ public class UnreadableSecretsRepositoryTest : BearcatIntegrationTest
                     HasUnreadableSecrets = true,
                 }
             ),
+        dbContext =>
+            dbContext.ProxyServers.Add(
+                new ProxyServer
+                {
+                    Name = "Proxy",
+                    ProxyType = ProxyType.Http,
+                    Host = "proxy.example.com",
+                    Port = 8080,
+                    Username = "alice",
+                    EncryptedPassword = Config,
+                    HasUnreadableSecrets = true,
+                }
+            ),
     ];
 
     [Test]
@@ -127,6 +140,7 @@ public class UnreadableSecretsRepositoryTest : BearcatIntegrationTest
     [TestCase(5)]
     [TestCase(6)]
     [TestCase(7)]
+    [TestCase(8)]
     public async Task AnyUnreadableSecretsAsync_OneEntityFlagged_ReturnsTrue(int entityIndex)
     {
         // Arrange

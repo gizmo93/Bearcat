@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.MediaMetadataDatabase;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.MediaDatabases.Tvdb.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -27,7 +28,8 @@ public static class ServiceProviderConfig
             .ConfigureHttpClient(client =>
             {
                 client.BaseAddress = new Uri("https://api4.thetvdb.com/");
-            });
+            })
+            .UseProxyForCategory(ProxyCategory.MediaDatabases);
 
         services.AddSingleton<TvdbTokenProvider>();
         services.AddScoped<TvdbClient>();

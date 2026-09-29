@@ -53,6 +53,12 @@ public class UnreadableSecretsRepository(IBearcatWriteDbContext dbWrite)
                 .ToListAsync(cancellationToken)
         );
         entities.AddRange(await dbWrite.TelegramConfigurations.ToListAsync(cancellationToken));
+        entities.AddRange(
+            await dbWrite
+                .ProxyServers.Where(proxyServer => proxyServer.EncryptedPassword != null)
+                .OrderBy(proxyServer => proxyServer.Name)
+                .ToListAsync(cancellationToken)
+        );
 
         return entities;
     }
@@ -134,6 +140,11 @@ public class UnreadableSecretsRepository(IBearcatWriteDbContext dbWrite)
                         configuration.HasUnreadableSecrets
                     )
                     .Select(configuration => 1)
+            )
+            .Concat(
+                dbWrite
+                    .ProxyServers.Where(proxyServer => proxyServer.HasUnreadableSecrets)
+                    .Select(proxyServer => 1)
             )
             .AnyAsync(cancellationToken);
     }

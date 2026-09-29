@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.NfoDatabase;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.NfoDatabases.Srrdb.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -27,15 +28,18 @@ public static class ServiceProviderConfig
             .ConfigureHttpClient(client =>
             {
                 client.BaseAddress = new Uri("https://api.srrdb.com/");
-            });
+            })
+            .UseProxyForCategory(ProxyCategory.NfoDatabases);
 
-        services.AddHttpClient(
-            "SrrdbNfoDownload",
-            client =>
-            {
-                client.DefaultRequestHeaders.UserAgent.ParseAdd("Bearcat/1.0");
-            }
-        );
+        services
+            .AddHttpClient(
+                "SrrdbNfoDownload",
+                client =>
+                {
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd("Bearcat/1.0");
+                }
+            )
+            .UseProxyForCategory(ProxyCategory.NfoDatabases);
         services.AddScoped<SrrdbClient>();
         services.AddKeyedScoped<INfoDatabase, SrrdbNfoDatabase>(nameof(SrrdbNfoDatabase));
     }

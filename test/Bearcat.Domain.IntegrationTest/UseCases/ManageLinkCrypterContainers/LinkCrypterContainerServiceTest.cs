@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.LinkCrypter.Results;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageLinkCrypterContainers;
 using Bearcat.Domain.UseCases.ManageNotifications;
@@ -778,6 +779,171 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         );
 
         (await dbContext.LinkCrypterContainers.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task CreateMissingLinkCrypterContainersAsync_LinkCrypterRegistrationUsesSpecificProxyServer_CreatesContainerInsideLinkCrypterProxyScope()
+    {
+        // Arrange
+        await AddUploadWithMissingContainerAsync();
+        var proxyServerId = await UseProxySelectionForLinkCrypterRegistrationAsync(
+            ProxySelection.SpecificProxyServer
+        );
+        ProxyCategoryScopeState? stateDuringCreation = null;
+        SetupCreateContainerCapturingProxyScope(state => stateDuringCreation = state);
+
+        // Act
+        await service.CreateMissingLinkCrypterContainersAsync(CancellationToken.None);
+
+        // Assert
+        stateDuringCreation.ShouldBe(
+            new ProxyCategoryScopeState(
+                ProxyCategory.LinkCrypters,
+                ProxySelection.SpecificProxyServer,
+                proxyServerId
+            )
+        );
+        ProxyCategoryScope.Current.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task CreateMissingLinkCrypterContainersAsync_PreviousContainerAndLinkCrypterRegistrationUsesNoProxy_UpdatesContainerInsideLinkCrypterProxyScope()
+    {
+        // Arrange
+        await AddUploadWithPreviousContainerAsync();
+        await UseProxySelectionForLinkCrypterRegistrationAsync(ProxySelection.NoProxy);
+        ProxyCategoryScopeState? stateDuringUpdate = null;
+        SetupUpdateContainerCapturingProxyScope(state => stateDuringUpdate = state);
+
+        // Act
+        await service.CreateMissingLinkCrypterContainersAsync(CancellationToken.None);
+
+        // Assert
+        stateDuringUpdate.ShouldBe(
+            new ProxyCategoryScopeState(ProxyCategory.LinkCrypters, ProxySelection.NoProxy, null)
+        );
+        ProxyCategoryScope.Current.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task CreateMissingLinkCrypterContainersAsync_CollectionScopedLinkCrypterRegistrationUsesSpecificProxyServer_CreatesSharedContainerInsideLinkCrypterProxyScope()
+    {
+        // Arrange
+        await AddCollectionUploadsWithMissingContainerAsync();
+        var proxyServerId = await UseProxySelectionForLinkCrypterRegistrationAsync(
+            ProxySelection.SpecificProxyServer
+        );
+        ProxyCategoryScopeState? stateDuringCreation = null;
+        SetupCreateContainerCapturingProxyScope(state => stateDuringCreation = state);
+
+        // Act
+        await service.CreateMissingLinkCrypterContainersAsync(CancellationToken.None);
+
+        // Assert
+        stateDuringCreation.ShouldBe(
+            new ProxyCategoryScopeState(
+                ProxyCategory.LinkCrypters,
+                ProxySelection.SpecificProxyServer,
+                proxyServerId
+            )
+        );
+        ProxyCategoryScope.Current.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task UpdateCollectionContainersAsync_LinkCrypterRegistrationUsesNoProxy_UpdatesExistingContainerInsideLinkCrypterProxyScope()
+    {
+        // Arrange
+        var seed = await AddCollectionUploadsWithMissingContainerAsync();
+        await AddExistingCollectionContainerAsync(seed, seed.UploadIds);
+        await UseProxySelectionForLinkCrypterRegistrationAsync(ProxySelection.NoProxy);
+        ProxyCategoryScopeState? stateDuringUpdate = null;
+        SetupUpdateContainerCapturingProxyScope(state => stateDuringUpdate = state);
+
+        // Act
+        await collectionContainerService.UpdateContainersAsync(
+            seed.CollectionUploadSlotId,
+            CancellationToken.None
+        );
+
+        // Assert
+        stateDuringUpdate.ShouldBe(
+            new ProxyCategoryScopeState(ProxyCategory.LinkCrypters, ProxySelection.NoProxy, null)
+        );
+        ProxyCategoryScope.Current.ShouldBeNull();
+    }
+
+    private async Task<int?> UseProxySelectionForLinkCrypterRegistrationAsync(
+        ProxySelection proxySelection
+    )
+    {
+        int? proxyServerId = null;
+
+        if (proxySelection == ProxySelection.SpecificProxyServer)
+        {
+            var proxyServer = new ProxyServer
+            {
+                Name = "Link crypter proxy",
+                ProxyType = ProxyType.Http,
+                Host = "proxy.example.com",
+                Port = 8080,
+            };
+            dbContext.ProxyServers.Add(proxyServer);
+            await dbContext.SaveChangesAsync();
+            proxyServerId = proxyServer.Id;
+        }
+
+        var registration = await dbContext.LinkCrypterRegistrations.SingleAsync();
+        registration.ProxySelection = proxySelection;
+        registration.ProxyServerId = proxyServerId;
+        await dbContext.SaveChangesAsync();
+
+        return proxyServerId;
+    }
+
+    private void SetupCreateContainerCapturingProxyScope(
+        Action<ProxyCategoryScopeState?> captureState
+    )
+    {
+        linkCrypterMock
+            .Setup(c =>
+                c.CreateContainerAsync(
+                    linkCrypterConfigMock.Object,
+                    It.IsAny<string>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback(() => captureState(ProxyCategoryScope.Current))
+            .ReturnsAsync(
+                new CreateContainerResult(true, "https://crypter.test/container", "abc", [])
+            );
+    }
+
+    private void SetupUpdateContainerCapturingProxyScope(
+        Action<ProxyCategoryScopeState?> captureState
+    )
+    {
+        linkCrypterMock
+            .Setup(c =>
+                c.UpdateContainerAsync(
+                    linkCrypterConfigMock.Object,
+                    It.IsAny<string>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback(() => captureState(ProxyCategoryScope.Current))
+            .ReturnsAsync(new UpdateContainerResult(true, null));
     }
 
     private async Task<CollectionContainerSeed> AddCollectionUploadsWithPasswordPolicyAsync(

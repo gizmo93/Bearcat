@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Sources;
 using Bearcat.Domain.ValueObjects;
@@ -183,6 +184,10 @@ public class ArchiveFileDownloader(
     {
         try
         {
+            using var proxyScope = HosterRegistrationProxyScope.EnterForMirrorDownload(
+                resolved.Registration
+            );
+
             var sizePerFileUrl = await resolved.Hoster.GetFileSizesAsync(
                 [source.UploadedFile.HosterFileLink],
                 resolved.Config,
@@ -217,6 +222,10 @@ public class ArchiveFileDownloader(
     {
         try
         {
+            using var proxyScope = HosterRegistrationProxyScope.EnterForMirrorDownload(
+                resolved.Registration
+            );
+
             var result = await resolved.Hoster.DownloadFileAsync(
                 file: new DownloadFileDto(
                     HosterFileLink: source.UploadedFile.HosterFileLink,

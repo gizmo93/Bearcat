@@ -72,7 +72,11 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
                         reuploadTriggerOverride: FormModel.ReuploadTriggerOverride,
                         alwaysReuploadAllFiles: FormModel.AlwaysReuploadAllFiles,
                         useForMirrorDownloads: FormModel.UseForMirrorDownloads,
-                        mirrorPriority: FormModel.MirrorPriority
+                        mirrorPriority: FormModel.MirrorPriority,
+                        uploadProxySelection: FormModel.UploadProxySelection,
+                        uploadProxyServerId: FormModel.UploadProxyServerId,
+                        mirrorDownloadProxySelection: FormModel.MirrorDownloadProxySelection,
+                        mirrorDownloadProxyServerId: FormModel.MirrorDownloadProxyServerId
                     )
             );
         }
@@ -89,7 +93,11 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
                         FormModel.ReuploadTriggerOverride,
                         FormModel.AlwaysReuploadAllFiles,
                         FormModel.UseForMirrorDownloads,
-                        FormModel.MirrorPriority
+                        FormModel.MirrorPriority,
+                        uploadProxySelection: FormModel.UploadProxySelection,
+                        uploadProxyServerId: FormModel.UploadProxyServerId,
+                        mirrorDownloadProxySelection: FormModel.MirrorDownloadProxySelection,
+                        mirrorDownloadProxyServerId: FormModel.MirrorDownloadProxyServerId
                     )
             );
         }

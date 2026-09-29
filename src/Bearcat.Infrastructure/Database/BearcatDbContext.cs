@@ -118,6 +118,10 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
 
     public DbSet<RemoteSourceDownload> RemoteSourceDownloads { get; set; } = null!;
 
+    public DbSet<ProxyServer> ProxyServers { get; set; } = null!;
+
+    public DbSet<ProxyCategoryDefault> ProxyCategoryDefaults { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BearcatDbContext).Assembly);

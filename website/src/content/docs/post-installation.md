@@ -90,6 +90,12 @@ details and mark it as resolved once you have dealt with it. You can also
 
 The following settings add link containers, metadata, cover images, and automation to your releases.
 
+### Use a proxy
+
+To route hoster uploads, mirror downloads, or image uploads through an HTTP or SOCKS5 proxy,
+see [Proxy Servers](/Bearcat/proxy-servers/). You can set defaults per category and override them
+for individual accounts.
+
 ### Setting up link crypters and metadata sources
 
 - Open **Crypter registrations** to add accounts for link containers. On a release, expand a saved

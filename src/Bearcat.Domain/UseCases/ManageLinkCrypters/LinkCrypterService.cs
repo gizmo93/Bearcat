@@ -1,10 +1,13 @@
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.LinkCrypter.Results;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageLinkCrypters.Repositories;
+using Bearcat.Domain.UseCases.ManageProxyServers.Selection;
 
 namespace Bearcat.Domain.UseCases.ManageLinkCrypters;
 
@@ -13,13 +16,16 @@ public class LinkCrypterService(
     ILinkCrypterRegistrationReadRepository readRepository,
     ILinkCrypterFactory linkCrypterFactory,
     ISecretProtector secretProtector,
-    UnreadableSecretsNotificationService unreadableSecretsNotificationService
+    UnreadableSecretsNotificationService unreadableSecretsNotificationService,
+    ProxySelectionValidator proxySelectionValidator
 )
 {
     public async Task CreateAsync(
         string name,
         string className,
         IReadOnlyDictionary<string, string> configuration,
+        ProxySelection proxySelection = ProxySelection.UseCategoryDefault,
+        int? proxyServerId = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -33,6 +39,12 @@ public class LinkCrypterService(
             LinkCrypterClassName = className,
             SerializedConfig = secretProtector.Protect(serializedConfig),
             IsActive = true,
+            ProxySelection = proxySelection,
+            ProxyServerId = await proxySelectionValidator.GetProxyServerIdToStoreAsync(
+                proxySelection,
+                proxyServerId,
+                cancellationToken
+            ),
         };
 
         repository.Add(registration);
@@ -59,6 +71,8 @@ public class LinkCrypterService(
         int id,
         string name,
         IReadOnlyDictionary<string, string> configuration,
+        ProxySelection proxySelection = ProxySelection.UseCategoryDefault,
+        int? proxyServerId = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -74,6 +88,12 @@ public class LinkCrypterService(
         );
 
         registration.Name = name;
+        registration.ProxySelection = proxySelection;
+        registration.ProxyServerId = await proxySelectionValidator.GetProxyServerIdToStoreAsync(
+            proxySelection,
+            proxyServerId,
+            cancellationToken
+        );
         registration.SerializedConfig = secretProtector.Protect(
             crypter.SerializeConfig(mergedConfiguration)
         );
@@ -105,6 +125,8 @@ public class LinkCrypterService(
         var config = crypter.DeserializeConfig(
             secretProtector.Unprotect(registration.SerializedConfig)
         );
+
+        using var proxyScope = LinkCrypterRegistrationProxyScope.Enter(registration);
 
         return await crypter.TryLoginAsync(config, cancellationToken);
     }

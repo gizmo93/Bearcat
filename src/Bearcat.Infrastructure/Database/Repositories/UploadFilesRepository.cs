@@ -104,6 +104,8 @@ public class UploadFilesRepository(
                 h.HosterClassName,
                 h.SerializedConfig,
                 h.MaxParallelUploadsOverride,
+                h.UploadProxySelection,
+                h.UploadProxyServerId,
             })
             .ToListAsync(cancellationToken);
 
@@ -113,7 +115,9 @@ public class UploadFilesRepository(
                 r => r.HosterClassName,
                 r => new HosterUploadConcurrencyInfo(
                     secretProtector.Unprotect(r.SerializedConfig),
-                    r.MaxParallelUploadsOverride
+                    r.MaxParallelUploadsOverride,
+                    r.UploadProxySelection,
+                    r.UploadProxyServerId
                 )
             );
     }

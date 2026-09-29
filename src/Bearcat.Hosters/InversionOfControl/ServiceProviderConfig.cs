@@ -1,4 +1,5 @@
 ﻿using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Hosters.Alfafile.InversionOfControl;
 using Bearcat.Hosters.ClicknUpload.InversionOfControl;
 using Bearcat.Hosters.CloudFam.InversionOfControl;
@@ -58,21 +59,25 @@ public static class ServiceProviderConfig
         services.AddCostAction();
 
         services.AddScoped<IHosterFactory, HosterFactory>();
-        services.AddHttpClient(
-            name: HttpClientProvider.UploadHttpClientName,
-            configureClient: c =>
-            {
-                c.Timeout = Timeout.InfiniteTimeSpan;
-            }
-        );
+        services
+            .AddHttpClient(
+                name: HttpClientProvider.UploadHttpClientName,
+                configureClient: c =>
+                {
+                    c.Timeout = Timeout.InfiniteTimeSpan;
+                }
+            )
+            .UseProxyForCategory(ProxyCategory.HosterUploads);
 
-        services.AddHttpClient(
-            name: HttpClientProvider.DownloadHttpClientName,
-            configureClient: c =>
-            {
-                c.Timeout = Timeout.InfiniteTimeSpan;
-            }
-        );
+        services
+            .AddHttpClient(
+                name: HttpClientProvider.DownloadHttpClientName,
+                configureClient: c =>
+                {
+                    c.Timeout = Timeout.InfiniteTimeSpan;
+                }
+            )
+            .UseProxyForCategory(ProxyCategory.HosterMirrorDownloads);
 
         services.AddScoped<HttpClientProvider>();
         services.AddScoped<HosterFileDownloader>();

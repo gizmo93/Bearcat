@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Hosters.Fichier.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -28,7 +29,8 @@ public static class ServiceProviderConfig
             {
                 c.BaseAddress = new Uri(ApiClient.ApiBaseUrl);
                 c.Timeout = Timeout.InfiniteTimeSpan;
-            });
+            })
+            .UseProxyForCategory(ProxyCategory.HosterUploads);
 
         services
             .AddHttpClient(
@@ -40,7 +42,8 @@ public static class ServiceProviderConfig
             )
             .ConfigurePrimaryHttpMessageHandler(() =>
                 new HttpClientHandler { AllowAutoRedirect = false }
-            );
+            )
+            .UseProxyForCategory(ProxyCategory.HosterUploads);
 
         services.AddScoped<IFichierApiClient, ApiClient>();
         services.AddKeyedScoped<IHoster, Fichier>(nameof(Fichier));

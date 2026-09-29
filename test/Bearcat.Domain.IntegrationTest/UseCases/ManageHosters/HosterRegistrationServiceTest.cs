@@ -1,10 +1,12 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.UseCases.ManageHosters;
+using Bearcat.Domain.UseCases.ManageProxyServers.Selection;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -20,6 +22,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
 {
     private const string HosterClassName = "TestHoster";
     private const string CaptchaHosterClassName = "CaptchaHoster";
+    private const string DownloadHosterClassName = "DownloadHoster";
     private const string SerializedConfig = "{\"apiKey\":\"secret\"}";
 
     private BearcatDbContext dbContext = null!;
@@ -57,7 +60,8 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
             UnreadableSecretsNotificationServiceFactory.Create(
                 dbContext,
                 CreateNotificationConfigurationProvider()
-            )
+            ),
+            new ProxySelectionValidator(new ProxyServerRepository(dbContext, dbContext))
         );
     }
 
@@ -616,15 +620,313 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         result.ShouldBe(0);
     }
 
+    [Test]
+    public async Task RegisterHosterAsync_SpecificUploadProxyServer_StoresSelectionAndProxyServerId()
+    {
+        // Arrange
+        var proxyServer = await AddProxyServerAsync();
+        var configuration = new Dictionary<string, string> { ["apiKey"] = "secret" };
+        hosterMock.Setup(h => h.SerializeHosterConfig(configuration)).Returns(SerializedConfig);
+
+        // Act
+        await service.RegisterHosterAsync(
+            "Primary hoster",
+            true,
+            configuration,
+            HosterClassName,
+            uploadProxySelection: ProxySelection.SpecificProxyServer,
+            uploadProxyServerId: proxyServer.Id,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        var registration = await dbContext.HosterRegistrations.SingleAsync();
+        registration.UploadProxySelection.ShouldBe(ProxySelection.SpecificProxyServer);
+        registration.UploadProxyServerId.ShouldBe(proxyServer.Id);
+        registration.MirrorDownloadProxySelection.ShouldBe(ProxySelection.UseCategoryDefault);
+        registration.MirrorDownloadProxyServerId.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task RegisterHosterAsync_DownloadHosterWithSpecificMirrorDownloadProxyServer_StoresMirrorDownloadSelection()
+    {
+        // Arrange
+        var proxyServer = await AddProxyServerAsync();
+        var configuration = new Dictionary<string, string> { ["apiKey"] = "secret" };
+        var downloadHosterMock = new Mock<IHosterWithDownload>(MockBehavior.Strict);
+        downloadHosterMock.Setup(h => h.HasFixedParallelUploadLimit).Returns(false);
+        downloadHosterMock
+            .Setup(h => h.SerializeHosterConfig(configuration))
+            .Returns(SerializedConfig);
+        hosterFactoryMock
+            .Setup(f => f.GetByName(DownloadHosterClassName))
+            .Returns(downloadHosterMock.Object);
+
+        // Act
+        await service.RegisterHosterAsync(
+            "Download hoster",
+            true,
+            configuration,
+            DownloadHosterClassName,
+            uploadProxySelection: ProxySelection.NoProxy,
+            mirrorDownloadProxySelection: ProxySelection.SpecificProxyServer,
+            mirrorDownloadProxyServerId: proxyServer.Id,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        var registration = await dbContext.HosterRegistrations.SingleAsync();
+        registration.UploadProxySelection.ShouldBe(ProxySelection.NoProxy);
+        registration.UploadProxyServerId.ShouldBeNull();
+        registration.MirrorDownloadProxySelection.ShouldBe(ProxySelection.SpecificProxyServer);
+        registration.MirrorDownloadProxyServerId.ShouldBe(proxyServer.Id);
+    }
+
+    [Test]
+    public async Task RegisterHosterAsync_HosterWithoutDownloadSupport_StoresMirrorDownloadSelectionAsCategoryDefault()
+    {
+        // Arrange
+        var proxyServer = await AddProxyServerAsync();
+        var configuration = new Dictionary<string, string> { ["apiKey"] = "secret" };
+        hosterMock.Setup(h => h.SerializeHosterConfig(configuration)).Returns(SerializedConfig);
+
+        // Act
+        await service.RegisterHosterAsync(
+            "Primary hoster",
+            true,
+            configuration,
+            HosterClassName,
+            mirrorDownloadProxySelection: ProxySelection.SpecificProxyServer,
+            mirrorDownloadProxyServerId: proxyServer.Id,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        var registration = await dbContext.HosterRegistrations.SingleAsync();
+        registration.MirrorDownloadProxySelection.ShouldBe(ProxySelection.UseCategoryDefault);
+        registration.MirrorDownloadProxyServerId.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task RegisterHosterAsync_SpecificProxyServerWithoutProxyServerId_ThrowsAndStoresNothing()
+    {
+        // Arrange
+        var configuration = new Dictionary<string, string> { ["apiKey"] = "secret" };
+        hosterMock.Setup(h => h.SerializeHosterConfig(configuration)).Returns(SerializedConfig);
+
+        // Act
+        var act = () =>
+            service.RegisterHosterAsync(
+                "Primary hoster",
+                true,
+                configuration,
+                HosterClassName,
+                uploadProxySelection: ProxySelection.SpecificProxyServer,
+                uploadProxyServerId: null,
+                cancellationToken: CancellationToken.None
+            );
+
+        // Assert
+        await act.ShouldThrowAsync<InvalidProxySelectionException>();
+        (await dbContext.HosterRegistrations.CountAsync()).ShouldBe(0);
+    }
+
+    [Test]
+    public async Task RegisterHosterAsync_SpecificProxyServerDoesNotExist_Throws()
+    {
+        // Arrange
+        var configuration = new Dictionary<string, string> { ["apiKey"] = "secret" };
+        hosterMock.Setup(h => h.SerializeHosterConfig(configuration)).Returns(SerializedConfig);
+
+        // Act
+        var act = () =>
+            service.RegisterHosterAsync(
+                "Primary hoster",
+                true,
+                configuration,
+                HosterClassName,
+                uploadProxySelection: ProxySelection.SpecificProxyServer,
+                uploadProxyServerId: 4711,
+                cancellationToken: CancellationToken.None
+            );
+
+        // Assert
+        await act.ShouldThrowAsync<InvalidProxySelectionException>();
+    }
+
+    [Test]
+    public async Task UpdateRegistrationAsync_NoProxyWithProxyServerId_StoresNoProxyWithoutProxyServerId()
+    {
+        // Arrange
+        var proxyServer = await AddProxyServerAsync();
+        var registration = await AddHosterRegistrationAsync(isActive: true);
+        registration.UploadProxySelection = ProxySelection.SpecificProxyServer;
+        registration.UploadProxyServerId = proxyServer.Id;
+        await dbContext.SaveChangesAsync();
+        hosterMock
+            .Setup(h => h.DeserializeHosterConfig(SerializedConfig))
+            .Returns(hosterConfigMock.Object);
+        hosterConfigMock
+            .Setup(c => c.ToDictionary())
+            .Returns(new Dictionary<string, string> { ["apiKey"] = "secret" });
+        hosterMock
+            .Setup(h => h.SerializeHosterConfig(It.IsAny<Dictionary<string, string>>()))
+            .Returns(SerializedConfig);
+
+        // Act
+        await service.UpdateRegistrationAsync(
+            registration.Id,
+            "Primary hoster",
+            new Dictionary<string, string>(),
+            uploadProxySelection: ProxySelection.NoProxy,
+            uploadProxyServerId: proxyServer.Id,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.HosterRegistrations.SingleAsync();
+        result.UploadProxySelection.ShouldBe(ProxySelection.NoProxy);
+        result.UploadProxyServerId.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task TryLoginAsync_RegistrationWithUploadProxySelection_CallsHosterInsideUploadProxyScope()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync(
+            isActive: true,
+            uploadProxySelection: ProxySelection.NoProxy
+        );
+        ProxyCategoryScopeState? scopeStateDuringLogin = null;
+        hosterMock
+            .Setup(h => h.DeserializeHosterConfig(SerializedConfig))
+            .Returns(hosterConfigMock.Object);
+        hosterMock
+            .Setup(h => h.TryLoginAsync(hosterConfigMock.Object, CancellationToken.None))
+            .Callback(() => scopeStateDuringLogin = ProxyCategoryScope.Current)
+            .ReturnsAsync(new TryLoginResult(true, null));
+
+        // Act
+        await service.TryLoginAsync(registration.Id, CancellationToken.None);
+
+        // Assert
+        scopeStateDuringLogin.ShouldBe(
+            new ProxyCategoryScopeState(
+                ProxyCategory.HosterUploads,
+                ProxySelection.NoProxy,
+                ProxyServerId: null
+            )
+        );
+        ProxyCategoryScope.Current.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task RequestCaptchaChallengeAsync_RegistrationWithUploadProxySelection_CallsHosterInsideUploadProxyScope()
+    {
+        // Arrange
+        var proxyServer = await AddProxyServerAsync();
+        var registration = await AddHosterRegistrationAsync(
+            isActive: false,
+            hosterClassName: CaptchaHosterClassName,
+            uploadProxySelection: ProxySelection.SpecificProxyServer,
+            uploadProxyServerId: proxyServer.Id
+        );
+        ProxyCategoryScopeState? scopeStateDuringRequest = null;
+        SetupCaptchaHoster();
+        captchaHosterMock
+            .Setup(h =>
+                h.RequestCaptchaChallengeAsync(hosterConfigMock.Object, CancellationToken.None)
+            )
+            .Callback(() => scopeStateDuringRequest = ProxyCategoryScope.Current)
+            .ReturnsAsync(new CaptchaChallengeResult(true, "challenge", null));
+
+        // Act
+        await service.RequestCaptchaChallengeAsync(registration.Id, CancellationToken.None);
+
+        // Assert
+        scopeStateDuringRequest.ShouldBe(
+            new ProxyCategoryScopeState(
+                ProxyCategory.HosterUploads,
+                ProxySelection.SpecificProxyServer,
+                proxyServer.Id
+            )
+        );
+        ProxyCategoryScope.Current.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task VerifyCaptchaAsync_RegistrationWithUploadProxySelection_CallsHosterInsideUploadProxyScope()
+    {
+        // Arrange
+        var registration = await AddHosterRegistrationAsync(
+            isActive: false,
+            hosterClassName: CaptchaHosterClassName,
+            requiresCaptchaVerification: true,
+            uploadProxySelection: ProxySelection.NoProxy
+        );
+        ProxyCategoryScopeState? scopeStateDuringVerification = null;
+        SetupCaptchaHoster();
+        captchaHosterMock
+            .Setup(h =>
+                h.VerifyCaptchaAsync(
+                    hosterConfigMock.Object,
+                    "challenge",
+                    "response",
+                    CancellationToken.None
+                )
+            )
+            .Callback(() => scopeStateDuringVerification = ProxyCategoryScope.Current)
+            .ReturnsAsync(new TryLoginResult(true, null));
+
+        // Act
+        await service.VerifyCaptchaAsync(
+            registration.Id,
+            "challenge",
+            "response",
+            CancellationToken.None
+        );
+
+        // Assert
+        scopeStateDuringVerification.ShouldBe(
+            new ProxyCategoryScopeState(
+                ProxyCategory.HosterUploads,
+                ProxySelection.NoProxy,
+                ProxyServerId: null
+            )
+        );
+        ProxyCategoryScope.Current.ShouldBeNull();
+    }
+
+    private async Task<ProxyServer> AddProxyServerAsync()
+    {
+        var proxyServer = new ProxyServer
+        {
+            Name = "Upload proxy",
+            ProxyType = ProxyType.Http,
+            Host = "proxy.example.com",
+            Port = 8080,
+        };
+
+        dbContext.ProxyServers.Add(proxyServer);
+        await dbContext.SaveChangesAsync();
+
+        return proxyServer;
+    }
+
     private async Task<HosterRegistration> AddHosterRegistrationAsync(
         bool isActive,
         string hosterClassName = HosterClassName,
         bool requiresCaptchaVerification = false,
-        bool hasUnreadableSecrets = false
+        bool hasUnreadableSecrets = false,
+        ProxySelection uploadProxySelection = ProxySelection.UseCategoryDefault,
+        int? uploadProxyServerId = null
     )
     {
         var registration = new HosterRegistration
         {
+            UploadProxySelection = uploadProxySelection,
+            UploadProxyServerId = uploadProxyServerId,
             Name = "Primary hoster",
             IsActive = isActive,
             HosterClassName = hosterClassName,

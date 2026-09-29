@@ -1415,4 +1415,76 @@
   <data name="TelegramBotTokenRequired" xml:space="preserve"><value>Enter the bot token.</value></data>
   <data name="DeleteRegistrationWarning" xml:space="preserve"><value>Deleting this registration also permanently deletes all data that belongs to it. This cannot be undone.</value></data>
   <data name="TypeNameToConfirmDeletion" xml:space="preserve"><value>Type {0} to confirm</value></data>
+  <data name="ProxyServers" xml:space="preserve"><value>Proxy servers</value></data>
+  <data name="ProxyServersIntro" xml:space="preserve"><value>Servers Bearcat can route outbound connections through.</value></data>
+  <data name="NewProxyServer" xml:space="preserve"><value>New proxy server</value></data>
+  <data name="NoProxyServersYet" xml:space="preserve"><value>No proxy servers registered yet.</value></data>
+  <data name="ProxyServerDialogDescription" xml:space="preserve"><value>Enter the address of the proxy server and optional credentials.</value></data>
+  <data name="ProxyServerNamePlaceholder" xml:space="preserve"><value>e.g. Upload proxy</value></data>
+  <data name="ProxyType" xml:space="preserve"><value>Proxy type</value></data>
+  <data name="ProxyType.Http" xml:space="preserve"><value>HTTP</value></data>
+  <data name="ProxyType.Socks5" xml:space="preserve"><value>SOCKS5</value></data>
+  <data name="Host" xml:space="preserve"><value>Host</value></data>
+  <data name="Port" xml:space="preserve"><value>Port</value></data>
+  <data name="Address" xml:space="preserve"><value>Address</value></data>
+  <data name="Username" xml:space="preserve"><value>Username</value></data>
+  <data name="Authentication" xml:space="preserve"><value>Authentication</value></data>
+  <data name="NoAuthentication" xml:space="preserve"><value>None</value></data>
+  <data name="ProxyServerHostPlaceholder" xml:space="preserve"><value>e.g. proxy.example.com</value></data>
+  <data name="ProxyServerUsernameHelp" xml:space="preserve"><value>Only required if the proxy server needs authentication.</value></data>
+  <data name="RemoveStoredPassword" xml:space="preserve"><value>Remove stored password</value></data>
+  <data name="RemoveStoredPasswordHelp" xml:space="preserve"><value>The proxy server is then used without a password.</value></data>
+  <data name="DeleteProxyServerConfirmation" xml:space="preserve"><value>Do you really want to delete the proxy server "{0}"?</value></data>
+  <data name="ProxyServerDeleted" xml:space="preserve"><value>Proxy server "{0}" deleted.</value></data>
+  <data name="ProxyServerValidationError.NameRequired" xml:space="preserve"><value>Name is required.</value></data>
+  <data name="ProxyServerValidationError.NameTooLong" xml:space="preserve"><value>Name must not be longer than 100 characters.</value></data>
+  <data name="ProxyServerValidationError.NameAlreadyExists" xml:space="preserve"><value>A proxy server with this name already exists.</value></data>
+  <data name="ProxyServerValidationError.HostRequired" xml:space="preserve"><value>Host is required.</value></data>
+  <data name="ProxyServerValidationError.HostTooLong" xml:space="preserve"><value>Host must not be longer than 255 characters.</value></data>
+  <data name="ProxyServerValidationError.HostInvalid" xml:space="preserve"><value>Enter a host name or IP address without protocol or port.</value></data>
+  <data name="ProxyServerValidationError.PortOutOfRange" xml:space="preserve"><value>Port must be between 1 and 65535.</value></data>
+  <data name="ProxyServerValidationError.UsernameTooLong" xml:space="preserve"><value>Username must not be longer than 255 characters.</value></data>
+  <data name="ProxyServerValidationError.UsernameRequiredForPassword" xml:space="preserve"><value>A username is required when a password is set.</value></data>
+  <data name="ProxyServerValidationError.HostAndPortAlreadyExist" xml:space="preserve"><value>Another proxy server already uses this host and port.</value></data>
+  <data name="ProxyServerConnectionTestOutcome.Success" xml:space="preserve"><value>{0} is reachable, uses the selected proxy protocol and accepted the credentials.</value></data>
+  <data name="ProxyServerConnectionTestOutcome.NotReachable" xml:space="preserve"><value>{0} is not reachable. Check host and port.</value></data>
+  <data name="ProxyServerConnectionTestOutcome.WrongProtocol" xml:space="preserve"><value>{0} does not use the selected proxy protocol. Check the proxy type.</value></data>
+  <data name="ProxyServerConnectionTestOutcome.AuthenticationFailed" xml:space="preserve"><value>{0} rejected the authentication. Check username and password.</value></data>
+  <data name="ProxyServerConnectionTestOutcome.AuthenticationRequired" xml:space="preserve"><value>{0} requires authentication. Enter username and password.</value></data>
+  <data name="ProxyServerConnectionTestOutcome.TimedOut" xml:space="preserve"><value>{0} did not answer within 5 seconds. Check the address and the proxy type.</value></data>
+  <data name="ProxyServerConnectionTestOutcome.UnreadablePassword" xml:space="preserve"><value>The password of {0} can no longer be decrypted. Enter the password again.</value></data>
+  <data name="ProxyServerConnectionTestFailedWithDetail" xml:space="preserve"><value>{0} Details: {1}</value></data>
+  <data name="ProxyServerStillInUse" xml:space="preserve"><value>{0} cannot be deleted because it is still in use.</value></data>
+  <data name="ProxyServerUsedAsCategoryDefault" xml:space="preserve"><value>Default proxy for: {0}.</value></data>
+  <data name="ProxyServerUsedByRegistrations" xml:space="preserve"><value>Used by: {0}.</value></data>
+  <data name="ProxyUsingRegistrationType.Hoster" xml:space="preserve"><value>Hoster</value></data>
+  <data name="ProxyUsingRegistrationType.ImageHoster" xml:space="preserve"><value>Image hoster</value></data>
+  <data name="ProxyUsingRegistrationType.LinkCrypter" xml:space="preserve"><value>Link crypter</value></data>
+  <data name="DefaultProxyPerCategory" xml:space="preserve"><value>Default proxy per category</value></data>
+  <data name="ViaProxyServer" xml:space="preserve"><value>via {0}</value></data>
+  <data name="TransferRunsViaProxyServer" xml:space="preserve"><value>This transfer runs through the proxy server {0}.</value></data>
+  <data name="DirectConnection" xml:space="preserve"><value>Direct connection</value></data>
+  <data name="ApplyToAllCategories" xml:space="preserve"><value>Apply to all categories</value></data>
+  <data name="Category" xml:space="preserve"><value>Category</value></data>
+  <data name="ProxyServer" xml:space="preserve"><value>Proxy server</value></data>
+  <data name="ProxyCategoryDefaultSaved" xml:space="preserve"><value>{0} now uses: {1}.</value></data>
+  <data name="ProxyCategoryDefaultsAppliedToAll" xml:space="preserve"><value>All categories now use: {0}.</value></data>
+  <data name="Proxy" xml:space="preserve"><value>Proxy</value></data>
+  <data name="ProxyForUploadsAndAccountRequests" xml:space="preserve"><value>Proxy for uploads and account requests</value></data>
+  <data name="ProxyForMirrorDownloads" xml:space="preserve"><value>Proxy for mirror downloads</value></data>
+  <data name="ProxyCategoryDefaultOption" xml:space="preserve"><value>Category default (currently: {0})</value></data>
+  <data name="NoProxy" xml:space="preserve"><value>No proxy</value></data>
+  <data name="NoProxyDirectConnection" xml:space="preserve"><value>No proxy (direct connection)</value></data>
+  <data name="ProxyCategory.HosterUploads" xml:space="preserve"><value>Hoster uploads</value></data>
+  <data name="ProxyCategory.HosterUploads.Description" xml:space="preserve"><value>Uploads, link checks and account requests to file hosters.</value></data>
+  <data name="ProxyCategory.HosterMirrorDownloads" xml:space="preserve"><value>Hoster mirror downloads</value></data>
+  <data name="ProxyCategory.HosterMirrorDownloads.Description" xml:space="preserve"><value>Downloads of archive files from hoster mirrors when an archive is restored.</value></data>
+  <data name="ProxyCategory.ImageHosters" xml:space="preserve"><value>Image hosters</value></data>
+  <data name="ProxyCategory.ImageHosters.Description" xml:space="preserve"><value>Uploads of covers and screenshots to image hosters.</value></data>
+  <data name="ProxyCategory.LinkCrypters" xml:space="preserve"><value>Link crypters</value></data>
+  <data name="ProxyCategory.LinkCrypters.Description" xml:space="preserve"><value>Creating and updating link containers.</value></data>
+  <data name="ProxyCategory.NfoDatabases" xml:space="preserve"><value>NFO databases</value></data>
+  <data name="ProxyCategory.NfoDatabases.Description" xml:space="preserve"><value>Release information, NFO files and covers from NFO databases.</value></data>
+  <data name="ProxyCategory.MediaDatabases" xml:space="preserve"><value>Media databases</value></data>
+  <data name="ProxyCategory.MediaDatabases.Description" xml:space="preserve"><value>Metadata lookups for movies, series and games.</value></data>
 </root>

@@ -69,4 +69,6 @@ public interface IBearcatWriteDbContext
     DbSet<RemoteSourceRegistration> RemoteSourceRegistrations { get; set; }
     DbSet<RemoteSourceAutomation> RemoteSourceAutomations { get; set; }
     DbSet<RemoteSourceDownload> RemoteSourceDownloads { get; set; }
+    DbSet<ProxyServer> ProxyServers { get; set; }
+    DbSet<ProxyCategoryDefault> ProxyCategoryDefaults { get; set; }
 }

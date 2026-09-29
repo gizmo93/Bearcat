@@ -24,6 +24,8 @@ public class LinkCrypterRegistrationReadRepository(
                 registration.LinkCrypterClassName,
                 registration.IsActive,
                 registration.HasUnreadableSecrets,
+                registration.ProxySelection,
+                registration.ProxyServerId,
             })
             .ToListAsync(cancellationToken);
 
@@ -41,7 +43,9 @@ public class LinkCrypterRegistrationReadRepository(
                     registration.HasUnreadableSecrets,
                     crypter.SupportsCaptcha,
                     crypter.SupportsContainerDownload,
-                    crypter.SupportsClickAndLoad
+                    crypter.SupportsClickAndLoad,
+                    registration.ProxySelection,
+                    registration.ProxyServerId
                 );
             })
             .ToList();
@@ -63,6 +67,8 @@ public class LinkCrypterRegistrationReadRepository(
                 registration.LinkCrypterClassName,
                 registration.IsActive,
                 registration.HasUnreadableSecrets,
+                registration.ProxySelection,
+                registration.ProxyServerId,
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -82,7 +88,9 @@ public class LinkCrypterRegistrationReadRepository(
             registration.HasUnreadableSecrets,
             crypter.SupportsCaptcha,
             crypter.SupportsContainerDownload,
-            crypter.SupportsClickAndLoad
+            crypter.SupportsClickAndLoad,
+            registration.ProxySelection,
+            registration.ProxyServerId
         );
     }
 

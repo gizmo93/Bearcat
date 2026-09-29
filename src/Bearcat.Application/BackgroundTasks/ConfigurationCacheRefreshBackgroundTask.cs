@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.Configurations;
+using Bearcat.Abstractions.Proxies;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -21,5 +22,8 @@ public class ConfigurationCacheRefreshBackgroundTask(
         var overrideCache =
             serviceProvider.GetRequiredService<IApplicationConfigurationOverrideCache>();
         await overrideCache.RefreshAsync(stoppingToken);
+
+        var proxyRoutingCache = serviceProvider.GetRequiredService<IProxyRoutingCache>();
+        await proxyRoutingCache.RefreshAsync(stoppingToken);
     }
 }

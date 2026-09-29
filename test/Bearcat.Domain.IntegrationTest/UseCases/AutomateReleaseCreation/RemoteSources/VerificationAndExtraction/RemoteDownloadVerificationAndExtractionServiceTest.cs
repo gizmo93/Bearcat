@@ -1,6 +1,7 @@
 using System.IO.Hashing;
 using System.Text;
 using Bearcat.Abstractions.Archiver;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared;
 using Bearcat.Domain.Shared.Transfers;
@@ -160,13 +161,13 @@ public class RemoteDownloadVerificationAndExtractionServiceTest : BearcatIntegra
         var service = new RemoteDownloadVerificationAndExtractionService(
             new RemoteSourceDownloadRepository(dbContext),
             new SfvChecksumVerifier(
-                new TransferProgressTracker(),
+                new TransferProgressTracker(Mock.Of<IProxyRoutingCache>()),
                 NullLogger<SfvChecksumVerifier>.Instance
             ),
             new DownloadFolderArchiveExtractionService(
                 archiverFactory.Object,
                 new FileSystemService(),
-                new TransferProgressTracker(),
+                new TransferProgressTracker(Mock.Of<IProxyRoutingCache>()),
                 new FolderSizeProgressReporter(),
                 NullLogger<DownloadFolderArchiveExtractionService>.Instance
             ),

@@ -83,6 +83,7 @@ export default defineConfig({
 					label: 'Advanced',
 					items: [
 						{ label: 'Advanced Configuration', slug: 'advanced-configuration' },
+						{ label: 'Proxy Servers', slug: 'proxy-servers' },
 						{ label: 'Forum Post Templates', slug: 'forum-post-templates' },
 						{ label: 'Posting to Forums', slug: 'posting-to-forums' },
 						{ label: 'Automatic Forum Posting', slug: 'automatic-forum-posting' },

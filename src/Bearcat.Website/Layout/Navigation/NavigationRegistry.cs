@@ -72,6 +72,7 @@ public static class NavigationRegistry
                     [
                         Entry("Configurations", "/configurations", "settings"),
                         Entry("TelegramNotifications", "/telegram", "send"),
+                        Entry("ProxyServers", "/proxy-servers", "network"),
                     ]
                 ),
             ]

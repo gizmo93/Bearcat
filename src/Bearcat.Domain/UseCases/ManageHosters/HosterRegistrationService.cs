@@ -1,11 +1,14 @@
 ﻿using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
+using Bearcat.Domain.UseCases.ManageProxyServers.Selection;
 using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageHosters;
@@ -16,7 +19,8 @@ public class HosterRegistrationService(
     IHosterFactory hosterFactory,
     HosterCaptchaVerificationService captchaVerificationService,
     ISecretProtector secretProtector,
-    UnreadableSecretsNotificationService unreadableSecretsNotificationService
+    UnreadableSecretsNotificationService unreadableSecretsNotificationService,
+    ProxySelectionValidator proxySelectionValidator
 )
 {
     public async Task<int> RegisterHosterAsync(
@@ -30,11 +34,19 @@ public class HosterRegistrationService(
         bool alwaysReuploadAllFiles = false,
         bool useForMirrorDownloads = false,
         int mirrorPriority = 100,
+        ProxySelection uploadProxySelection = ProxySelection.UseCategoryDefault,
+        int? uploadProxyServerId = null,
+        ProxySelection mirrorDownloadProxySelection = ProxySelection.UseCategoryDefault,
+        int? mirrorDownloadProxyServerId = null,
         CancellationToken cancellationToken = default
     )
     {
         var hoster = hosterFactory.GetByName(hosterClassName);
         var serializedConfig = hoster.SerializeHosterConfig(configuration);
+        var effectiveMirrorDownloadProxySelection = GetEffectiveMirrorDownloadProxySelection(
+            hoster,
+            mirrorDownloadProxySelection
+        );
 
         var registration = new HosterRegistration
         {
@@ -50,6 +62,19 @@ public class HosterRegistrationService(
             AlwaysReuploadAllFiles = alwaysReuploadAllFiles,
             UseForMirrorDownloads = useForMirrorDownloads && hoster is IHosterWithDownload,
             MirrorPriority = mirrorPriority,
+            UploadProxySelection = uploadProxySelection,
+            UploadProxyServerId = await proxySelectionValidator.GetProxyServerIdToStoreAsync(
+                uploadProxySelection,
+                uploadProxyServerId,
+                cancellationToken
+            ),
+            MirrorDownloadProxySelection = effectiveMirrorDownloadProxySelection,
+            MirrorDownloadProxyServerId =
+                await proxySelectionValidator.GetProxyServerIdToStoreAsync(
+                    effectiveMirrorDownloadProxySelection,
+                    mirrorDownloadProxyServerId,
+                    cancellationToken
+                ),
         };
 
         writeRepository.Add(registration);
@@ -89,11 +114,19 @@ public class HosterRegistrationService(
         bool alwaysReuploadAllFiles = false,
         bool useForMirrorDownloads = false,
         int mirrorPriority = 100,
+        ProxySelection uploadProxySelection = ProxySelection.UseCategoryDefault,
+        int? uploadProxyServerId = null,
+        ProxySelection mirrorDownloadProxySelection = ProxySelection.UseCategoryDefault,
+        int? mirrorDownloadProxyServerId = null,
         CancellationToken cancellationToken = default
     )
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         var hoster = hosterFactory.GetByName(registration.HosterClassName);
+        var effectiveMirrorDownloadProxySelection = GetEffectiveMirrorDownloadProxySelection(
+            hoster,
+            mirrorDownloadProxySelection
+        );
         var mergedConfiguration = StoredConfigurationMerger.MergeSubmittedIntoStoredConfiguration(
             registration: registration,
             submittedConfiguration: configuration,
@@ -111,6 +144,20 @@ public class HosterRegistrationService(
         registration.AlwaysReuploadAllFiles = alwaysReuploadAllFiles;
         registration.UseForMirrorDownloads = useForMirrorDownloads && hoster is IHosterWithDownload;
         registration.MirrorPriority = mirrorPriority;
+        registration.UploadProxySelection = uploadProxySelection;
+        registration.UploadProxyServerId =
+            await proxySelectionValidator.GetProxyServerIdToStoreAsync(
+                uploadProxySelection,
+                uploadProxyServerId,
+                cancellationToken
+            );
+        registration.MirrorDownloadProxySelection = effectiveMirrorDownloadProxySelection;
+        registration.MirrorDownloadProxyServerId =
+            await proxySelectionValidator.GetProxyServerIdToStoreAsync(
+                effectiveMirrorDownloadProxySelection,
+                mirrorDownloadProxyServerId,
+                cancellationToken
+            );
         registration.SerializedConfig = secretProtector.Protect(
             hoster.SerializeHosterConfig(mergedConfiguration)
         );
@@ -136,6 +183,8 @@ public class HosterRegistrationService(
 
         try
         {
+            using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(registration);
+
             var result = await hoster.TryLoginAsync(config, cancellationToken);
 
             if (result.IsSuccess)
@@ -166,6 +215,8 @@ public class HosterRegistrationService(
             secretProtector.Unprotect(registration.SerializedConfig)
         );
 
+        using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(registration);
+
         return await captchaHoster.RequestCaptchaChallengeAsync(config, cancellationToken);
     }
 
@@ -182,6 +233,9 @@ public class HosterRegistrationService(
         var config = hoster.DeserializeHosterConfig(
             secretProtector.Unprotect(registration.SerializedConfig)
         );
+
+        using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(registration);
+
         var result = await captchaHoster.VerifyCaptchaAsync(
             config,
             challenge,
@@ -206,6 +260,16 @@ public class HosterRegistrationService(
     {
         var registration = await writeRepository.GetByIdAsync(id, cancellationToken);
         await MarkCaptchaVerificationRequiredAsync(registration, message, cancellationToken);
+    }
+
+    private static ProxySelection GetEffectiveMirrorDownloadProxySelection(
+        IHoster hoster,
+        ProxySelection mirrorDownloadProxySelection
+    )
+    {
+        return hoster is IHosterWithDownload
+            ? mirrorDownloadProxySelection
+            : ProxySelection.UseCategoryDefault;
     }
 
     private (IHoster Hoster, IHosterWithCaptchaVerification CaptchaHoster) GetCaptchaHoster(

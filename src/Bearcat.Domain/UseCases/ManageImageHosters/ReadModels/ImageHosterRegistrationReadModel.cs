@@ -1,3 +1,5 @@
+using Bearcat.Abstractions.Proxies;
+
 namespace Bearcat.Domain.UseCases.ManageImageHosters.ReadModels;
 
 public record ImageHosterRegistrationReadModel(
@@ -6,5 +8,7 @@ public record ImageHosterRegistrationReadModel(
     string ImageHosterClassName,
     string ImageHosterName,
     bool IsActive,
-    bool HasUnreadableSecrets
+    bool HasUnreadableSecrets,
+    ProxySelection ProxySelection,
+    int? ProxyServerId
 );

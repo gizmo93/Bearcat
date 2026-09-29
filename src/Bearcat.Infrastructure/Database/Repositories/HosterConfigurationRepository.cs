@@ -34,6 +34,18 @@ public class HosterConfigurationRepository(
                 h.AlwaysReuploadAllFiles,
                 h.UseForMirrorDownloads,
                 h.MirrorPriority,
+                h.UploadProxySelection,
+                h.UploadProxyServerId,
+                UploadProxyServerName = dbRead
+                    .ProxyServers.Where(p => p.Id == h.UploadProxyServerId)
+                    .Select(p => p.Name)
+                    .FirstOrDefault(),
+                h.MirrorDownloadProxySelection,
+                h.MirrorDownloadProxyServerId,
+                MirrorDownloadProxyServerName = dbRead
+                    .ProxyServers.Where(p => p.Id == h.MirrorDownloadProxyServerId)
+                    .Select(p => p.Name)
+                    .FirstOrDefault(),
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -64,7 +76,13 @@ public class HosterConfigurationRepository(
                     h.UseForMirrorDownloads,
                     h.MirrorPriority,
                     hoster.Name,
-                    h.HosterClassName
+                    h.HosterClassName,
+                    h.UploadProxySelection,
+                    h.UploadProxyServerId,
+                    h.UploadProxyServerName,
+                    h.MirrorDownloadProxySelection,
+                    h.MirrorDownloadProxyServerId,
+                    h.MirrorDownloadProxyServerName
                 );
             })
             .ToList();

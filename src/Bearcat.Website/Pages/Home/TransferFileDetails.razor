@@ -33,7 +33,14 @@
                                Header="@L["Source"]"
                                Property="@(file => file.SourceName)"
                                Sortable="true"
-                               Filterable="true" />
+                               Filterable="true">
+                <CellTemplate Context="file">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span>@file.SourceName</span>
+                        <ProxyServerBadge ProxyServerNames="GetProxyServerNames(file)" />
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
             <BbDataTableColumn TData="TransferFileProgressSnapshot" TValue="double"
                                Header="@L["Progress"]"
                                Property="@(file => file.Percentage)"

@@ -1,4 +1,5 @@
 using Bearcat.Abstractions.ImageHoster;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.ImageHosters.ImgBb.Api;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,11 +11,13 @@ public static class ServiceProviderConfig
     {
         public void AddImgBb()
         {
-            services.AddHttpClient<IImgBbApiClient, ImgBbApiClient>(client =>
-            {
-                client.BaseAddress = new Uri("https://api.imgbb.com");
-                client.Timeout = Timeout.InfiniteTimeSpan;
-            });
+            services
+                .AddHttpClient<IImgBbApiClient, ImgBbApiClient>(client =>
+                {
+                    client.BaseAddress = new Uri("https://api.imgbb.com");
+                    client.Timeout = Timeout.InfiniteTimeSpan;
+                })
+                .UseProxyForCategory(ProxyCategory.ImageHosters);
 
             services.AddKeyedScoped<IImageHoster, ImgBb>(nameof(ImgBb));
         }
