@@ -1461,8 +1461,8 @@
   <data name="ProxyUsingRegistrationType.ImageHoster" xml:space="preserve"><value>Image hoster</value></data>
   <data name="ProxyUsingRegistrationType.LinkCrypter" xml:space="preserve"><value>Link crypter</value></data>
   <data name="DefaultProxyPerCategory" xml:space="preserve"><value>Default proxy per category</value></data>
-  <data name="DefaultProxyPerCategoryIntro" xml:space="preserve"><value>Outbound connections of each category are routed through the selected proxy server. Hosters, image hosters and link crypters can override the category default in their own settings. Changes are applied immediately.</value></data>
-  <data name="ProxyRoutingNotYetSupported" xml:space="preserve"><value>Forums, distribution sites and remote sources are not routed through proxy servers yet.</value></data>
+  <data name="ViaProxyServer" xml:space="preserve"><value>via {0}</value></data>
+  <data name="TransferRunsViaProxyServer" xml:space="preserve"><value>This transfer runs through the proxy server {0}.</value></data>
   <data name="DirectConnection" xml:space="preserve"><value>Direct connection</value></data>
   <data name="ApplyToAllCategories" xml:space="preserve"><value>Apply to all categories</value></data>
   <data name="Category" xml:space="preserve"><value>Category</value></data>
@@ -1473,6 +1473,7 @@
   <data name="ProxyForUploadsAndAccountRequests" xml:space="preserve"><value>Proxy for uploads and account requests</value></data>
   <data name="ProxyForMirrorDownloads" xml:space="preserve"><value>Proxy for mirror downloads</value></data>
   <data name="ProxyCategoryDefaultOption" xml:space="preserve"><value>Category default (currently: {0})</value></data>
+  <data name="NoProxy" xml:space="preserve"><value>No proxy</value></data>
   <data name="NoProxyDirectConnection" xml:space="preserve"><value>No proxy (direct connection)</value></data>
   <data name="ProxyCategory.HosterUploads" xml:space="preserve"><value>Hoster uploads</value></data>
   <data name="ProxyCategory.HosterUploads.Description" xml:space="preserve"><value>Uploads, link checks and account requests to file hosters.</value></data>

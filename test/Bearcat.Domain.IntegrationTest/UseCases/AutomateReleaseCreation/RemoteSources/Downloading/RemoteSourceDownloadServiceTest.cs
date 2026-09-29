@@ -3,6 +3,7 @@ using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Media;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.NfoDatabase;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Abstractions.RemoteSource;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
@@ -78,7 +79,7 @@ public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
         };
         sessionPool = new RemoteSourceSessionPool(NullLogger<RemoteSourceSessionPool>.Instance);
         cancellationRegistry = new TransferCancellationRegistry();
-        progressTracker = new TransferProgressTracker();
+        progressTracker = new TransferProgressTracker(Mock.Of<IProxyRoutingCache>());
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
         targetPath = Path.Combine(tempRootPath, "downloads");
         Directory.CreateDirectory(targetPath);

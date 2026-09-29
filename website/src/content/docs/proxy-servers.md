@@ -7,7 +7,11 @@ Bearcat can send HTTP and HTTPS requests through an **HTTP** or **SOCKS5** proxy
 Choose a default per category, or select a different proxy for an individual account.
 Without a proxy configured, these requests use a direct connection.
 
+![example-upload-with-proxy.png](images/example-upload-with-proxy.png)
+
 ## Add a proxy
+
+![proxy-servers-page.png](images/proxy-servers-page.png)
 
 1. Open **Proxy servers** in the sidebar and click **New proxy server**.
 2. Enter a name and choose **HTTP** or **SOCKS5** as the **Proxy type**.
@@ -17,7 +21,6 @@ Without a proxy configured, these requests use a direct connection.
 5. Click **Save**, then **Test connection**.
 
 The test checks whether Bearcat can reach the proxy and perform the proxy handshake.
-It does not check access to a particular hoster or test an upload.
 
 Adding a proxy does not enable it for any requests. Assign it below or in an account's settings.
 
@@ -39,6 +42,8 @@ Choose **Direct connection** to use no proxy for a category. To set the same def
 use the selector beside **Apply to all categories**, then click the button.
 Account overrides still apply.
 
+![default-proxies-by-category.png](images/default-proxies-by-category.png)
+
 Forums, distribution sites, and FTP / FTPS remote sources do not use these proxy settings.
 
 ## Override the proxy for an account
@@ -56,6 +61,8 @@ In **Hoster registrations**, there are two separate fields:
 - **Proxy for uploads and account requests** also applies to **Try login** and link checks.
 - **Proxy for mirror downloads** applies when restoring archives. This field is available for
   hosters that support [mirror downloads](/Bearcat/mirror-downloads/).
+
+![hoster-proxy-override.png](images/hoster-proxy-override.png)
 
 In **Image hoster registrations** and **Crypter registrations**, use the **Proxy** field.
 Save the registration after changing it.

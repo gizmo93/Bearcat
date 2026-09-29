@@ -1,4 +1,6 @@
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Shared.Transfers;
+using Moq;
 using Shouldly;
 
 namespace Bearcat.Domain.UnitTest.Shared.Transfers;
@@ -7,11 +9,19 @@ public class TransferProgressTrackerTest
 {
     private static readonly TransferIdentifier Identifier = new(TransferType.MirrorDownload, 1);
 
+    private Mock<IProxyRoutingCache> proxyRoutingCacheMock = null!;
+
+    [SetUp]
+    public void SetUp()
+    {
+        proxyRoutingCacheMock = new Mock<IProxyRoutingCache>();
+    }
+
     [Test]
     public void Get_NotTracking_ReturnsNull()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
 
         // Act
         var snapshot = tracker.Get(Identifier);
@@ -24,7 +34,7 @@ public class TransferProgressTrackerTest
     public void Get_AfterStopTracking_ReturnsNull()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
         tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
         tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
 
@@ -39,7 +49,7 @@ public class TransferProgressTrackerTest
     public void Get_SameIdWithDifferentKind_IsTrackedSeparately()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
         var uploadKey = new TransferIdentifier(TransferType.Upload, Identifier.Id);
         tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
 
@@ -54,7 +64,7 @@ public class TransferProgressTrackerTest
     public void Get_FreshlyTrackedWithoutPlannedFiles_HasNoFiles()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
 
         // Act
         tracker.StartTracking(Identifier, []);
@@ -72,7 +82,7 @@ public class TransferProgressTrackerTest
     public void Get_FreshlyTracked_ListsPlannedFilesWithoutProgress()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
 
         // Act
         tracker.StartTracking(
@@ -98,7 +108,7 @@ public class TransferProgressTrackerTest
     public void Get_PlannedFilesAlreadyTransferred_CountTowardsTransferredBytes()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
 
         // Act
         tracker.StartTracking(
@@ -122,7 +132,7 @@ public class TransferProgressTrackerTest
     public void Get_AfterAddingBytes_AddsToAlreadyTransferredFiles()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
         tracker.StartTracking(
             Identifier,
             [
@@ -145,7 +155,7 @@ public class TransferProgressTrackerTest
     public void Get_QueuedFileHasNotStarted_PercentageCoversAllPlannedFiles()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
         tracker.StartTracking(
             Identifier,
             [
@@ -176,7 +186,7 @@ public class TransferProgressTrackerTest
     public void Get_PlannedFileWithUnknownSize_ReportsIndeterminateTotal()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
         tracker.StartTracking(
             Identifier,
             [Planned(1, "archive.part01.rar", 1000), Planned(2, "archive.part02.rar", null)]
@@ -199,7 +209,7 @@ public class TransferProgressTrackerTest
     public void Get_PlannedEmptyFile_KeepsTotalKnown()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
         tracker.StartTracking(
             Identifier,
             [Planned(1, "archive.part01.rar", 1000), Planned(2, "archive.sfv", 0)]
@@ -219,7 +229,7 @@ public class TransferProgressTrackerTest
     public void BeginFile_WithoutTotalBytes_KeepsPlannedSize()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
         tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
 
         // Act
@@ -237,7 +247,7 @@ public class TransferProgressTrackerTest
     public void BeginFile_WithTotalBytes_OverridesPlannedSize()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
         tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
 
         // Act
@@ -255,7 +265,7 @@ public class TransferProgressTrackerTest
     public void BeginFile_WithOtherSource_ReportsNewSourceName()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
         tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
 
         // Act
@@ -272,7 +282,7 @@ public class TransferProgressTrackerTest
     public void Get_AfterAddingBytes_ReportsFileProgress()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
         tracker.StartTracking(Identifier, [Planned(7, "archive.part01.rar", 1000)]);
         tracker.BeginFile(Identifier, 7, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
 
@@ -296,7 +306,7 @@ public class TransferProgressTrackerTest
     public void Get_MultipleFiles_SumsBytesAndTotals()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
         tracker.StartTracking(
             Identifier,
             [Planned(1, "archive.part01.rar", 600), Planned(2, "archive.part02.rar", 400)]
@@ -323,7 +333,7 @@ public class TransferProgressTrackerTest
     public void Get_TotalBytesUnknownForOneFile_ReportsZeroTotalAndPercentage()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
         tracker.StartTracking(
             Identifier,
             [Planned(1, "archive.part01.rar", 600), Planned(2, "archive.part02.rar", null)]
@@ -350,7 +360,7 @@ public class TransferProgressTrackerTest
     public void Get_TransferredBytesExceedTotal_ClampsToTotal()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
         tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
         tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
 
@@ -368,7 +378,7 @@ public class TransferProgressTrackerTest
     public void Get_AfterBeginFileOfSameFile_DiscardsThatFilesBytesOnly()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
         tracker.StartTracking(
             Identifier,
             [Planned(1, "archive.part01.rar", 600), Planned(2, "archive.part02.rar", 400)]
@@ -394,7 +404,7 @@ public class TransferProgressTrackerTest
     public void AddBytes_NotTracking_DoesNotThrow()
     {
         // Arrange
-        var tracker = new TransferProgressTracker();
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
         var untrackedKey = new TransferIdentifier(TransferType.Upload, 42);
 
         // Act
@@ -402,6 +412,187 @@ public class TransferProgressTrackerTest
 
         // Assert
         tracker.Get(untrackedKey).ShouldBeNull();
+    }
+
+    [Test]
+    public void BeginFile_NoProxyScope_StoresNoProxyServerName()
+    {
+        // Arrange
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
+        proxyRoutingCacheMock
+            .Setup(cache => cache.GetProxyServerForCategory(ProxyCategory.HosterMirrorDownloads))
+            .Returns(CreateProxyServer(1, "NordVPN Stockholm"));
+        tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
+
+        // Act
+        tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
+        var snapshot = tracker.Get(Identifier);
+
+        // Assert
+        snapshot.ShouldNotBeNull();
+        snapshot.Files[0].ProxyServerName.ShouldBeNull();
+        snapshot.ProxyServerNames.ShouldBeEmpty();
+    }
+
+    [Test]
+    public void BeginFile_ScopeWithCategoryDefault_StoresNameOfCategoryDefaultProxyServer()
+    {
+        // Arrange
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
+        proxyRoutingCacheMock
+            .Setup(cache => cache.GetProxyServerForCategory(ProxyCategory.HosterMirrorDownloads))
+            .Returns(CreateProxyServer(1, "NordVPN Stockholm"));
+        tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
+
+        // Act
+        using (ProxyCategoryScope.Enter(ProxyCategory.HosterMirrorDownloads))
+        {
+            tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
+        }
+        var snapshot = tracker.Get(Identifier);
+
+        // Assert
+        snapshot.ShouldNotBeNull();
+        snapshot.Files[0].ProxyServerName.ShouldBe("NordVPN Stockholm");
+        snapshot.ProxyServerNames.ShouldBe(["NordVPN Stockholm"]);
+    }
+
+    [Test]
+    public void BeginFile_ScopeWithCategoryDefaultWithoutProxyServer_StoresNoProxyServerName()
+    {
+        // Arrange
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
+        proxyRoutingCacheMock
+            .Setup(cache => cache.GetProxyServerForCategory(ProxyCategory.HosterUploads))
+            .Returns(CreateProxyServer(1, "NordVPN Stockholm"));
+        tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
+
+        // Act
+        using (ProxyCategoryScope.Enter(ProxyCategory.HosterMirrorDownloads))
+        {
+            tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
+        }
+        var snapshot = tracker.Get(Identifier);
+
+        // Assert
+        snapshot.ShouldNotBeNull();
+        snapshot.Files[0].ProxyServerName.ShouldBeNull();
+    }
+
+    [Test]
+    public void BeginFile_ScopeWithSpecificProxyServer_StoresNameOfThatProxyServer()
+    {
+        // Arrange
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
+        proxyRoutingCacheMock
+            .Setup(cache => cache.GetProxyServerForCategory(ProxyCategory.HosterUploads))
+            .Returns(CreateProxyServer(1, "NordVPN Stockholm"));
+        proxyRoutingCacheMock
+            .Setup(cache => cache.GetProxyServerById(7))
+            .Returns(CreateProxyServer(7, "Mullvad Zurich"));
+        tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
+
+        // Act
+        using (
+            ProxyCategoryScope.Enter(
+                ProxyCategory.HosterUploads,
+                ProxySelection.SpecificProxyServer,
+                proxyServerId: 7
+            )
+        )
+        {
+            tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
+        }
+        var snapshot = tracker.Get(Identifier);
+
+        // Assert
+        snapshot.ShouldNotBeNull();
+        snapshot.Files[0].ProxyServerName.ShouldBe("Mullvad Zurich");
+    }
+
+    [Test]
+    public void BeginFile_ScopeWithNoProxy_StoresNoProxyServerName()
+    {
+        // Arrange
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
+        proxyRoutingCacheMock
+            .Setup(cache => cache.GetProxyServerForCategory(ProxyCategory.HosterUploads))
+            .Returns(CreateProxyServer(1, "NordVPN Stockholm"));
+        tracker.StartTracking(Identifier, [Planned(1, "archive.part01.rar", 1000)]);
+
+        // Act
+        using (
+            ProxyCategoryScope.Enter(
+                ProxyCategory.HosterUploads,
+                ProxySelection.NoProxy,
+                proxyServerId: null
+            )
+        )
+        {
+            tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", totalBytes: 1000);
+        }
+        var snapshot = tracker.Get(Identifier);
+
+        // Assert
+        snapshot.ShouldNotBeNull();
+        snapshot.Files[0].ProxyServerName.ShouldBeNull();
+        snapshot.ProxyServerNames.ShouldBeEmpty();
+    }
+
+    [Test]
+    public void Get_FilesTransferredViaDifferentProxyServers_ListsEachProxyServerNameOnce()
+    {
+        // Arrange
+        var tracker = new TransferProgressTracker(proxyRoutingCacheMock.Object);
+        proxyRoutingCacheMock
+            .Setup(cache => cache.GetProxyServerForCategory(ProxyCategory.HosterMirrorDownloads))
+            .Returns(CreateProxyServer(1, "NordVPN Stockholm"));
+        proxyRoutingCacheMock
+            .Setup(cache => cache.GetProxyServerById(7))
+            .Returns(CreateProxyServer(7, "Mullvad Zurich"));
+        tracker.StartTracking(
+            Identifier,
+            [
+                Planned(1, "archive.part01.rar", 1000),
+                Planned(2, "archive.part02.rar", 1000),
+                Planned(3, "archive.part03.rar", 1000),
+                Planned(4, "archive.part04.rar", 1000),
+            ]
+        );
+
+        // Act
+        using (ProxyCategoryScope.Enter(ProxyCategory.HosterMirrorDownloads))
+        {
+            tracker.BeginFile(Identifier, 1, "archive.part01.rar", "Rapidgator", 1000);
+            tracker.BeginFile(Identifier, 2, "archive.part02.rar", "Rapidgator", 1000);
+        }
+        using (
+            ProxyCategoryScope.Enter(
+                ProxyCategory.HosterMirrorDownloads,
+                ProxySelection.SpecificProxyServer,
+                proxyServerId: 7
+            )
+        )
+        {
+            tracker.BeginFile(Identifier, 3, "archive.part03.rar", "DDownload", 1000);
+        }
+        var snapshot = tracker.Get(Identifier);
+
+        // Assert
+        snapshot.ShouldNotBeNull();
+        snapshot.ProxyServerNames.ShouldBe(["Mullvad Zurich", "NordVPN Stockholm"]);
+        snapshot.Files[3].ProxyServerName.ShouldBeNull();
+    }
+
+    private static ResolvedProxyServer CreateProxyServer(int id, string name)
+    {
+        return new ResolvedProxyServer(
+            id,
+            name,
+            new Uri($"http://proxy-{id}.test:8080"),
+            Credential: null,
+            HasUnreadableSecrets: false
+        );
     }
 
     private static TransferFile Planned(

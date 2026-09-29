@@ -26,6 +26,8 @@ public record HosterRegistrationReadModel(
     string FullClassName,
     ProxySelection UploadProxySelection,
     int? UploadProxyServerId,
+    string? UploadProxyServerName,
     ProxySelection MirrorDownloadProxySelection,
-    int? MirrorDownloadProxyServerId
+    int? MirrorDownloadProxyServerId,
+    string? MirrorDownloadProxyServerName
 );

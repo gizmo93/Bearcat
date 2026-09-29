@@ -14,6 +14,14 @@ public sealed record TransferProgressSnapshot(
             Files.Select(file => file.SourceName).Where(name => name.Length > 0).Distinct()
         );
 
+    public IReadOnlyList<string> ProxyServerNames =>
+        Files
+            .Select(file => file.ProxyServerName)
+            .OfType<string>()
+            .Distinct()
+            .Order(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
     public double Percentage =>
         TotalBytes <= 0 ? 0 : Math.Round((double)TransferredBytes / TotalBytes * 100, 0);
 }

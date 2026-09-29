@@ -1,10 +1,12 @@
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Shared.Transfers;
+using Moq;
 
 namespace Bearcat.Domain.UnitTest.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction;
 
 public sealed class RecordingTransferProgressTracker : ITransferProgressTracker
 {
-    private readonly TransferProgressTracker inner = new();
+    private readonly TransferProgressTracker inner = new(Mock.Of<IProxyRoutingCache>());
 
     public Dictionary<
         TransferIdentifier,

@@ -1,9 +1,11 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using Bearcat.Abstractions.Proxies;
 
 namespace Bearcat.Domain.Shared.Transfers;
 
-public sealed class TransferProgressTracker : ITransferProgressTracker
+public sealed class TransferProgressTracker(IProxyRoutingCache proxyRoutingCache)
+    : ITransferProgressTracker
 {
     private static readonly TimeSpan SampleInterval = TimeSpan.FromMilliseconds(250);
 
@@ -33,6 +35,7 @@ public sealed class TransferProgressTracker : ITransferProgressTracker
                 fileId: fileId,
                 fileName: fileName,
                 sourceName: sourceName,
+                proxyServerName: GetProxyServerNameOfCurrentScope(),
                 totalBytes: totalBytes
             );
         }
@@ -78,6 +81,20 @@ public sealed class TransferProgressTracker : ITransferProgressTracker
         );
     }
 
+    private string? GetProxyServerNameOfCurrentScope()
+    {
+        var scopeState = ProxyCategoryScope.Current;
+
+        if (scopeState is null)
+        {
+            return null;
+        }
+
+        return ProxyServerSelection
+            .Select(scopeState.Category, scopeState, proxyRoutingCache)
+            ?.Name;
+    }
+
     private sealed class TransferState
     {
         private readonly Lock gate = new();
@@ -99,13 +116,20 @@ public sealed class TransferProgressTracker : ITransferProgressTracker
                 file => new FileProgress(
                     FileName: file.FileName,
                     SourceName: file.SourceName,
+                    ProxyServerName: null,
                     TransferredBytes: file.IsAlreadyTransferred ? file.SizeBytes ?? 0 : 0,
                     TotalBytes: file.SizeBytes
                 )
             );
         }
 
-        public void BeginFile(int fileId, string fileName, string sourceName, long? totalBytes)
+        public void BeginFile(
+            int fileId,
+            string fileName,
+            string sourceName,
+            string? proxyServerName,
+            long? totalBytes
+        )
         {
             lock (gate)
             {
@@ -116,6 +140,7 @@ public sealed class TransferProgressTracker : ITransferProgressTracker
                 progressPerFile[fileId] = new FileProgress(
                     FileName: fileName,
                     SourceName: sourceName,
+                    ProxyServerName: proxyServerName,
                     TransferredBytes: 0,
                     TotalBytes: totalBytes ?? knownTotalBytes
                 );
@@ -182,6 +207,7 @@ public sealed class TransferProgressTracker : ITransferProgressTracker
                         FileId: entry.Key,
                         FileName: entry.Value.FileName,
                         SourceName: entry.Value.SourceName,
+                        ProxyServerName: entry.Value.ProxyServerName,
                         TransferredBytes: entry.Value.TotalBytes is { } totalBytes
                             ? Math.Min(entry.Value.TransferredBytes, totalBytes)
                             : entry.Value.TransferredBytes,
@@ -212,6 +238,7 @@ public sealed class TransferProgressTracker : ITransferProgressTracker
         private readonly record struct FileProgress(
             string FileName,
             string SourceName,
+            string? ProxyServerName,
             long TransferredBytes,
             long? TotalBytes
         );

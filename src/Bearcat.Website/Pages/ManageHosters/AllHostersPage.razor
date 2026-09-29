@@ -1,4 +1,5 @@
 @page "/hoster-registrations"
+@using Bearcat.Abstractions.Proxies
 
 <PageTitle>@L["HosterRegistrations"] - Bearcat</PageTitle>
 
@@ -27,7 +28,27 @@
                                Property="@(hoster => hoster.Name)"
                                Sortable="true"
                                Filterable="true"
-                               Width="165px" />
+                               Width="165px">
+                <CellTemplate Context="hoster">
+                    <div class="flex flex-col gap-1">
+                        <span>@hoster.Name</span>
+                        @if (hoster.UploadProxySelection is not ProxySelection.UseCategoryDefault)
+                        {
+                            <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <LucideIcon Name="network" class="h-3.5 w-3.5 shrink-0" />
+                                @(hoster.UploadProxyServerName ?? L["NoProxy"].Value)
+                            </span>
+                        }
+                        @if (hoster.UseForMirrorDownloads && hoster.MirrorDownloadProxySelection is not ProxySelection.UseCategoryDefault)
+                        {
+                            <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <LucideIcon Name="cloud-download" class="h-3.5 w-3.5 shrink-0" />
+                                @(hoster.MirrorDownloadProxyServerName ?? L["NoProxy"].Value)
+                            </span>
+                        }
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
             <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"
                                Header="@L["Hoster"]"
                                Property="@(hoster => hoster.HosterName)"

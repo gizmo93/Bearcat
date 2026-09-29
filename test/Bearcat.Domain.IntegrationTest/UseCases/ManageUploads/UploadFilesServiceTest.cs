@@ -90,7 +90,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             Mock.Of<ILogger<UploadFinalizationService>>(),
             notificationService
         );
-        var progressTracker = new TransferProgressTracker();
+        var progressTracker = new TransferProgressTracker(Mock.Of<IProxyRoutingCache>());
         var fileUploadExecutionService = new FileUploadExecutionService(
             Mock.Of<ILogger<FileUploadExecutionService>>(),
             captchaVerificationService,
@@ -1560,7 +1560,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             Mock.Of<ILogger<UploadFinalizationService>>(),
             notificationService
         );
-        var progressTracker = new TransferProgressTracker();
+        var progressTracker = new TransferProgressTracker(Mock.Of<IProxyRoutingCache>());
         var fileUploadExecution = new FileUploadExecutionService(
             Mock.Of<ILogger<FileUploadExecutionService>>(),
             captchaService,

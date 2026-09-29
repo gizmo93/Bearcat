@@ -170,6 +170,20 @@ public partial class RunningUploads(
             : "-";
     }
 
+    private IReadOnlyList<string> GetUploadProxyServerNames(int uploadId)
+    {
+        return UploadProgress.TryGetValue(uploadId, out var snapshot)
+            ? snapshot.ProxyServerNames
+            : [];
+    }
+
+    private IReadOnlyList<string> GetDownloadProxyServerNames(int archiveId)
+    {
+        return DownloadProgress.TryGetValue(archiveId, out var snapshot)
+            ? snapshot.ProxyServerNames
+            : [];
+    }
+
     private double TotalUploadBytesPerSecond =>
         UploadProgress
             .Values.Select(snapshot => snapshot.BytesPerSecond)

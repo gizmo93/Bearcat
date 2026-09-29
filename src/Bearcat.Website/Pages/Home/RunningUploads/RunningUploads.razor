@@ -84,7 +84,10 @@
                                    Filterable="true">
                     <CellTemplate Context="upload">
                         <span class="bearcat-mobile-cell-label">@L["Hoster"]</span>
-                        @upload.UploadConfig.HosterRegistration.Name
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span>@upload.UploadConfig.HosterRegistration.Name</span>
+                            <ProxyServerBadge ProxyServerNames="GetUploadProxyServerNames(upload.Id)" />
+                        </div>
                     </CellTemplate>
                 </BbDataTableColumn>
                 <BbDataTableColumn TData="Upload" TValue="string"
@@ -206,7 +209,10 @@
                                    Filterable="true">
                     <CellTemplate Context="archive">
                         <span class="bearcat-mobile-cell-label">@L["Hoster"]</span>
-                        @GetDownloadHosterName(archive)
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span>@GetDownloadHosterName(archive)</span>
+                            <ProxyServerBadge ProxyServerNames="GetDownloadProxyServerNames(archive.Id)" />
+                        </div>
                     </CellTemplate>
                 </BbDataTableColumn>
                 <BbDataTableColumn TData="Archive" TValue="string"

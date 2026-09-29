@@ -4,6 +4,7 @@ public sealed record TransferFileProgressSnapshot(
     int FileId,
     string FileName,
     string SourceName,
+    string? ProxyServerName,
     long TransferredBytes,
     long TotalBytes
 )

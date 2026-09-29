@@ -1464,8 +1464,8 @@
   <data name="ProxyUsingRegistrationType.ImageHoster" xml:space="preserve"><value>Bildhoster</value></data>
   <data name="ProxyUsingRegistrationType.LinkCrypter" xml:space="preserve"><value>Linkcrypter</value></data>
   <data name="DefaultProxyPerCategory" xml:space="preserve"><value>Standardproxy pro Kategorie</value></data>
-  <data name="DefaultProxyPerCategoryIntro" xml:space="preserve"><value>Ausgehende Verbindungen jeder Kategorie laufen über den gewählten Proxyserver. Hoster, Bildhoster und Linkcrypter können den Kategoriestandard in ihren eigenen Einstellungen überschreiben. Änderungen gelten sofort.</value></data>
-  <data name="ProxyRoutingNotYetSupported" xml:space="preserve"><value>Foren, Distributionsseiten und Remotequellen werden (noch) nicht über Proxyserver geleitet.</value></data>
+  <data name="ViaProxyServer" xml:space="preserve"><value>über {0}</value></data>
+  <data name="TransferRunsViaProxyServer" xml:space="preserve"><value>Diese Übertragung läuft über den Proxyserver {0}.</value></data>
   <data name="DirectConnection" xml:space="preserve"><value>Direkte Verbindung</value></data>
   <data name="ApplyToAllCategories" xml:space="preserve"><value>Für alle Kategorien übernehmen</value></data>
   <data name="Category" xml:space="preserve"><value>Kategorie</value></data>
@@ -1476,6 +1476,7 @@
   <data name="ProxyForUploadsAndAccountRequests" xml:space="preserve"><value>Proxy für Uploads und Kontoabfragen</value></data>
   <data name="ProxyForMirrorDownloads" xml:space="preserve"><value>Proxy für Mirrordownloads</value></data>
   <data name="ProxyCategoryDefaultOption" xml:space="preserve"><value>Kategoriestandard (aktuell: {0})</value></data>
+  <data name="NoProxy" xml:space="preserve"><value>Kein Proxy</value></data>
   <data name="NoProxyDirectConnection" xml:space="preserve"><value>Kein Proxy (direkte Verbindung)</value></data>
   <data name="ProxyCategory.HosterUploads" xml:space="preserve"><value>Uploads zu Hostern</value></data>
   <data name="ProxyCategory.HosterUploads.Description" xml:space="preserve"><value>Uploads, Linkprüfungen und Kontoabfragen bei Filehostern.</value></data>

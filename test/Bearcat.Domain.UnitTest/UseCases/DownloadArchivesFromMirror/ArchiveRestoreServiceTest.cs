@@ -816,7 +816,7 @@ public class ArchiveRestoreServiceTest
 
     private sealed class RecordingTransferProgressTracker : ITransferProgressTracker
     {
-        private readonly TransferProgressTracker inner = new();
+        private readonly TransferProgressTracker inner = new(Mock.Of<IProxyRoutingCache>());
 
         public Dictionary<
             TransferIdentifier,

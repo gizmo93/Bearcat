@@ -4,6 +4,7 @@ using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Results;
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.Transfers;
@@ -79,7 +80,7 @@ public class ArchiveRestoreAndCreationPipelineTest : BearcatIntegrationTest
             configurationProvider: CreateNotificationConfigurationProvider()
         );
 
-        var transferProgressTracker = new TransferProgressTracker();
+        var transferProgressTracker = new TransferProgressTracker(Mock.Of<IProxyRoutingCache>());
 
         restoreService = new ArchiveRestoreService(
             new ArchiveRestoreRepository(dbContext),

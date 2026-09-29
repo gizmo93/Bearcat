@@ -1,10 +1,12 @@
+using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Shared.Transfers;
+using Moq;
 
 namespace Bearcat.Domain.IntegrationTest.Shared;
 
 public sealed class RecordingTransferProgressTracker : ITransferProgressTracker
 {
-    private readonly TransferProgressTracker inner = new();
+    private readonly TransferProgressTracker inner = new(Mock.Of<IProxyRoutingCache>());
 
     private readonly Lock recordingLock = new();
 
