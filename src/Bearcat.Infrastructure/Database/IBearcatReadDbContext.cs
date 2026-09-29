@@ -57,4 +57,5 @@ public interface IBearcatReadDbContext
     public DbSet<RemoteSourceRegistration> RemoteSourceRegistrations { get; set; }
     public DbSet<RemoteSourceAutomation> RemoteSourceAutomations { get; set; }
     public DbSet<RemoteSourceDownload> RemoteSourceDownloads { get; set; }
+    public DbSet<ProxyServer> ProxyServers { get; set; }
 }

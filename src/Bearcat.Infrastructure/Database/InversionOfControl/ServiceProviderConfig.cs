@@ -29,6 +29,7 @@ using Bearcat.Domain.UseCases.ManageMediaDatabases.Repositories;
 using Bearcat.Domain.UseCases.ManageNfoDatabases.Repositories;
 using Bearcat.Domain.UseCases.ManageNotifications.Repositories;
 using Bearcat.Domain.UseCases.ManagePostedLocations.Repositories;
+using Bearcat.Domain.UseCases.ManageProxyServers.Repositories;
 using Bearcat.Domain.UseCases.ManageQualityProfiles.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.Repositories;
@@ -138,6 +139,8 @@ public static class ServiceProviderConfig
             services.AddScoped<IReleaseGroupWriteRepository, ReleaseGroupRepository>();
             services.AddScoped<IQualityProfileReadRepository, QualityProfileRepository>();
             services.AddScoped<IQualityProfileWriteRepository, QualityProfileRepository>();
+            services.AddScoped<IProxyServerReadRepository, ProxyServerRepository>();
+            services.AddScoped<IProxyServerWriteRepository, ProxyServerRepository>();
             services.AddScoped<
                 IAdditionalArchiveContentReadRepository,
                 AdditionalArchiveContentRepository

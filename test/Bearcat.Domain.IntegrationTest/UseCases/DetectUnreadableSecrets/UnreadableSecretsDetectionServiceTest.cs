@@ -80,6 +80,7 @@ public class UnreadableSecretsDetectionServiceTest : BearcatIntegrationTest
                 }
             );
             arrangeContext.TelegramConfigurations.Add(CreateTelegramConfiguration(unreadableValue));
+            arrangeContext.ProxyServers.Add(CreateProxyServer("Proxy", unreadableValue));
             await arrangeContext.SaveChangesAsync();
         }
 
@@ -112,6 +113,7 @@ public class UnreadableSecretsDetectionServiceTest : BearcatIntegrationTest
         (
             await assertContext.TelegramConfigurations.SingleAsync()
         ).HasUnreadableSecrets.ShouldBeTrue();
+        (await assertContext.ProxyServers.SingleAsync()).HasUnreadableSecrets.ShouldBeTrue();
 
         var notification = await assertContext.Notifications.SingleAsync();
         notification.NotificationKind.ShouldBe(NotificationKind.UnreadableSecretsDetected);
@@ -120,7 +122,7 @@ public class UnreadableSecretsDetectionServiceTest : BearcatIntegrationTest
             "Stored credentials could not be decrypted with the current encryption key and must be entered again: "
                 + "Hoster: Hoster A, Hoster B; Link crypter: Crypter; Image hoster: Images; "
                 + "Distribution site: Forum; Remote source: Seedbox; NFO database: srrDB; "
-                + "Media database: Tmdb; Telegram bot token"
+                + "Media database: Tmdb; Telegram bot token; Proxy server: Proxy"
         );
     }
 
@@ -407,6 +409,46 @@ public class UnreadableSecretsDetectionServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task DetectAsync_ProxyServerWithoutPassword_DoesNotFlagProxyServer()
+    {
+        // Arrange
+        await using (var arrangeContext = Database.CreateDbContext())
+        {
+            arrangeContext.ProxyServers.Add(CreateProxyServer("Proxy", encryptedPassword: null));
+            await arrangeContext.SaveChangesAsync();
+        }
+
+        // Act
+        await DetectAsync();
+
+        // Assert
+        var assertContext = CreateDbContext();
+        (await assertContext.ProxyServers.SingleAsync()).HasUnreadableSecrets.ShouldBeFalse();
+        (await assertContext.Notifications.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task DetectAsync_ProxyServerWithReadablePassword_DoesNotFlagProxyServer()
+    {
+        // Arrange
+        await using (var arrangeContext = Database.CreateDbContext())
+        {
+            arrangeContext.ProxyServers.Add(
+                CreateProxyServer("Proxy", currentKeyProtector.Protect("secret"))
+            );
+            await arrangeContext.SaveChangesAsync();
+        }
+
+        // Act
+        await DetectAsync();
+
+        // Assert
+        var assertContext = CreateDbContext();
+        (await assertContext.ProxyServers.SingleAsync()).HasUnreadableSecrets.ShouldBeFalse();
+        (await assertContext.Notifications.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
     public async Task DetectAsync_OneRegistrationAlreadyFlagged_NotificationListsOnlyNewlyFlaggedRegistration()
     {
         // Arrange
@@ -507,6 +549,17 @@ public class UnreadableSecretsDetectionServiceTest : BearcatIntegrationTest
             EncryptedBotToken = encryptedBotToken,
             BotUsername = "bearcat_bot",
             NotificationBaseUrl = "http://localhost",
+        };
+
+    private static ProxyServer CreateProxyServer(string name, string? encryptedPassword) =>
+        new()
+        {
+            Name = name,
+            ProxyType = ProxyType.Http,
+            Host = "proxy.example.com",
+            Port = 8080,
+            Username = "alice",
+            EncryptedPassword = encryptedPassword,
         };
 
     private static TimeProvider CreateTimeProvider() =>

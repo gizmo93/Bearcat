@@ -45,6 +45,7 @@ using Bearcat.Domain.UseCases.ManageNfoDatabases;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.UseCases.ManageNotifications.Telegram;
 using Bearcat.Domain.UseCases.ManagePostedLocations;
+using Bearcat.Domain.UseCases.ManageProxyServers;
 using Bearcat.Domain.UseCases.ManageQualityProfiles;
 using Bearcat.Domain.UseCases.ManageReleaseCollections;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.ForumPostRendering;
@@ -105,6 +106,7 @@ public static class ServiceProviderConfig
             services.AddScoped<ReleaseCollectionInfoResolutionService>();
             services.AddScoped<ReleaseGroupService>();
             services.AddScoped<QualityProfileService>();
+            services.AddScoped<ProxyServerService>();
             services.AddScoped<AdditionalArchiveContentService>();
             services.AddScoped<ReleaseService>();
             services.AddScoped<ForumPostRenderService>();

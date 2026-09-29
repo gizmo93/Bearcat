@@ -30,6 +30,11 @@ public static class LocalizationExtensions
 
     public static string Localize(
         this IStringLocalizer<UiResource> localizer,
+        ProxyType proxyType
+    ) => localizer[$"ProxyType.{proxyType}"];
+
+    public static string Localize(
+        this IStringLocalizer<UiResource> localizer,
         ReleaseContentType contentType
     ) => localizer[$"ReleaseContentType.{contentType}"];
 

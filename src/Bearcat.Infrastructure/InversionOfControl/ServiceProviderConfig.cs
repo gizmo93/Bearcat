@@ -5,11 +5,13 @@ using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Security;
 using Bearcat.Abstractions.Updates;
 using Bearcat.Domain.UseCases.ManageNotifications.Telegram;
+using Bearcat.Domain.UseCases.ManageProxyServers.ConnectionTest;
 using Bearcat.Infrastructure.BackgroundTasks;
 using Bearcat.Infrastructure.Configuration;
 using Bearcat.Infrastructure.Database.InversionOfControl;
 using Bearcat.Infrastructure.FileSystem;
 using Bearcat.Infrastructure.Logging;
+using Bearcat.Infrastructure.Network;
 using Bearcat.Infrastructure.Security;
 using Bearcat.Infrastructure.Telegram;
 using Bearcat.Infrastructure.Updates;
@@ -55,6 +57,7 @@ public static class ServiceProviderConfig
             services.AddSingleton<IUpdateChecker, GitHubUpdateChecker>();
             services.AddHttpClient("telegram", client => client.Timeout = TimeSpan.FromSeconds(40));
             services.AddScoped<ITelegramClient, TelegramClient>();
+            services.AddSingleton<ITcpConnectionOpener, TcpConnectionOpener>();
         }
     }
 }

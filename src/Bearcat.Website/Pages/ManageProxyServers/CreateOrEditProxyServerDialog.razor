@@ -1,0 +1,83 @@
+@using Bearcat.Domain.UseCases.ManageProxyServers
+<EditForm EditContext="editContext" OnValidSubmit="SaveAsync">
+    <div class="space-y-6">
+        <div class="space-y-4">
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="FormModel.Name"
+                              Label="@L["Name"]"
+                              Placeholder="@L["ProxyServerNamePlaceholder"]" />
+
+            <BbFormFieldSelect TValue="ProxyType"
+                               @bind-Value="FormModel.ProxyType"
+                               Label="@L["ProxyType"]"
+                               Options="ProxyTypeOptions" />
+
+            <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_9rem]">
+                <BbFormFieldInput TValue="string"
+                                  @bind-Value="FormModel.Host"
+                                  Label="@L["Host"]"
+                                  Placeholder="@L["ProxyServerHostPlaceholder"]" />
+
+                <BbFormFieldNumericInput TValue="int"
+                                         @bind-Value="FormModel.Port"
+                                         Label="@L["Port"]"
+                                         Min="ProxyServerService.MinPort"
+                                         Max="ProxyServerService.MaxPort"
+                                         Step="1"
+                                         AllowNegative="false" />
+            </div>
+
+            <BbFormFieldInput TValue="string"
+                              @bind-Value="FormModel.Username"
+                              Label="@L["Username"]"
+                              HelperText="@L["ProxyServerUsernameHelp"]" />
+
+            <div class="grid gap-2">
+                <label class="text-sm font-medium">@L["Password"]</label>
+                <div class="flex items-center gap-2">
+                    <BbInput @bind-Value="FormModel.Password"
+                             Type="@(isPasswordDisplayed ? InputType.Text : InputType.Password)"
+                             Disabled="FormModel.RemoveStoredPassword"
+                             class="flex-1" />
+                    <BbButton Variant="ButtonVariant.Ghost"
+                              Size="ButtonSize.IconSmall"
+                              AriaLabel="@L["TogglePasswordVisibility"]"
+                              OnClick="TogglePasswordVisibility">
+                        <LucideIcon Name="@(isPasswordDisplayed ? "eye-off" : "eye")" class="h-4 w-4" />
+                    </BbButton>
+                </div>
+                @if (FormModel.HasStoredPassword)
+                {
+                    @if (FormModel.HasUnreadableSecrets)
+                    {
+                        <div class="flex items-center gap-2 text-xs text-destructive">
+                            <UnreadableSecretsBadge />
+                            <span>@L["CredentialsMustBeEnteredAgain"]</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-xs text-muted-foreground">@L["SecretKeepCurrentHelp"]</p>
+                    }
+                }
+            </div>
+
+            @if (FormModel.HasStoredPassword)
+            {
+                <BbFormFieldSwitch @bind-Checked="FormModel.RemoveStoredPassword"
+                                   @bind-Checked:after="ClearPasswordWhenRemovingStoredPassword"
+                                   Label="@L["RemoveStoredPassword"]"
+                                   HelperText="@L["RemoveStoredPasswordHelp"]" />
+            }
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <BbButton Variant="ButtonVariant.Outline" OnClick="CancelAsync">
+                @L["Cancel"]
+            </BbButton>
+            <BbButton Type="ButtonType.Submit" Disabled="isSaving">
+                @L["Save"]
+            </BbButton>
+        </div>
+    </div>
+</EditForm>

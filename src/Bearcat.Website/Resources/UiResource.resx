@@ -1415,4 +1415,36 @@
   <data name="TelegramBotTokenRequired" xml:space="preserve"><value>Enter the bot token.</value></data>
   <data name="DeleteRegistrationWarning" xml:space="preserve"><value>Deleting this registration also permanently deletes all data that belongs to it. This cannot be undone.</value></data>
   <data name="TypeNameToConfirmDeletion" xml:space="preserve"><value>Type {0} to confirm</value></data>
+  <data name="ProxyServers" xml:space="preserve"><value>Proxy servers</value></data>
+  <data name="ProxyServersIntro" xml:space="preserve"><value>Servers Bearcat can route outbound connections through.</value></data>
+  <data name="NewProxyServer" xml:space="preserve"><value>New proxy server</value></data>
+  <data name="NoProxyServersYet" xml:space="preserve"><value>No proxy servers registered yet.</value></data>
+  <data name="ProxyServerDialogDescription" xml:space="preserve"><value>Enter the address of the proxy server and optional credentials.</value></data>
+  <data name="ProxyServerNamePlaceholder" xml:space="preserve"><value>e.g. Upload proxy</value></data>
+  <data name="ProxyType" xml:space="preserve"><value>Proxy type</value></data>
+  <data name="ProxyType.Http" xml:space="preserve"><value>HTTP</value></data>
+  <data name="ProxyType.Socks5" xml:space="preserve"><value>SOCKS5</value></data>
+  <data name="Host" xml:space="preserve"><value>Host</value></data>
+  <data name="Port" xml:space="preserve"><value>Port</value></data>
+  <data name="Address" xml:space="preserve"><value>Address</value></data>
+  <data name="Username" xml:space="preserve"><value>Username</value></data>
+  <data name="Authentication" xml:space="preserve"><value>Authentication</value></data>
+  <data name="NoAuthentication" xml:space="preserve"><value>None</value></data>
+  <data name="ProxyServerHostPlaceholder" xml:space="preserve"><value>e.g. proxy.example.com</value></data>
+  <data name="ProxyServerUsernameHelp" xml:space="preserve"><value>Only required if the proxy server needs authentication.</value></data>
+  <data name="RemoveStoredPassword" xml:space="preserve"><value>Remove stored password</value></data>
+  <data name="RemoveStoredPasswordHelp" xml:space="preserve"><value>The proxy server is then used without a password.</value></data>
+  <data name="DeleteProxyServerConfirmation" xml:space="preserve"><value>Do you really want to delete the proxy server "{0}"?</value></data>
+  <data name="ProxyServerDeleted" xml:space="preserve"><value>Proxy server "{0}" deleted.</value></data>
+  <data name="ProxyServerReachable" xml:space="preserve"><value>{0} is reachable.</value></data>
+  <data name="ProxyServerNotReachable" xml:space="preserve"><value>{0} is not reachable: {1}</value></data>
+  <data name="ProxyServerValidationError.NameRequired" xml:space="preserve"><value>Name is required.</value></data>
+  <data name="ProxyServerValidationError.NameTooLong" xml:space="preserve"><value>Name must not be longer than 100 characters.</value></data>
+  <data name="ProxyServerValidationError.NameAlreadyExists" xml:space="preserve"><value>A proxy server with this name already exists.</value></data>
+  <data name="ProxyServerValidationError.HostRequired" xml:space="preserve"><value>Host is required.</value></data>
+  <data name="ProxyServerValidationError.HostTooLong" xml:space="preserve"><value>Host must not be longer than 255 characters.</value></data>
+  <data name="ProxyServerValidationError.HostInvalid" xml:space="preserve"><value>Enter a host name or IP address without protocol or port.</value></data>
+  <data name="ProxyServerValidationError.PortOutOfRange" xml:space="preserve"><value>Port must be between 1 and 65535.</value></data>
+  <data name="ProxyServerValidationError.UsernameTooLong" xml:space="preserve"><value>Username must not be longer than 255 characters.</value></data>
+  <data name="ProxyServerValidationError.UsernameRequiredForPassword" xml:space="preserve"><value>A username is required when a password is set.</value></data>
 </root>
