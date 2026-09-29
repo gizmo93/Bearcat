@@ -37,6 +37,12 @@ Open the hoster registration and turn on **Use for mirror downloads**.
 
 ![enable-hoster-mirror-download.png](images/enable-hoster-mirror-download.png)
 
+### Use a proxy for downloads
+
+Set **Proxy for mirror downloads** in the hoster registration to use a proxy for archive restores.
+It is separate from the proxy used for uploads and account requests. Leave it on **Category default**
+to follow the global **Hoster mirror downloads** setting. See [Proxy Servers](/Bearcat/proxy-servers/).
+
 ### Mirror priority
 
 Enabling **Use for mirror downloads** shows the **Mirror priority** field. It defaults to `100`.
