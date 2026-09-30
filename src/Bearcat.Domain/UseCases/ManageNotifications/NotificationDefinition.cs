@@ -127,6 +127,13 @@ public static class NotificationDefinitions
             Description: "NotificationKind.CaptchaVerificationRequired.Description"
         ),
         new(
+            Kind: NotificationKind.HosterCredentialsRejected,
+            Severity: NotificationSeverity.Error,
+            Group: NotificationGroup.Hosters,
+            DisplayName: "NotificationKind.HosterCredentialsRejected",
+            Description: "NotificationKind.HosterCredentialsRejected.Description"
+        ),
+        new(
             Kind: NotificationKind.LinkCrypterContainerCreationFailed,
             Severity: NotificationSeverity.Error,
             Group: NotificationGroup.LinkCrypters,

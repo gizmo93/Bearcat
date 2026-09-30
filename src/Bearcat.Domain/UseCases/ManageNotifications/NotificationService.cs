@@ -120,6 +120,7 @@ public class NotificationService(
             NotificationKind.AutomaticReuploadCreated => configuration.AutomaticReuploadCreated,
             NotificationKind.CaptchaVerificationRequired =>
                 configuration.CaptchaVerificationRequired,
+            NotificationKind.HosterCredentialsRejected => configuration.HosterCredentialsRejected,
             NotificationKind.LinkCrypterContainerCreationFailed =>
                 configuration.LinkCrypterContainerCreationFailed,
             NotificationKind.LinkCrypterContainerUpdateFailed =>

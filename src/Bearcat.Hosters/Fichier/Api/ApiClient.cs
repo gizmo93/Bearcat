@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Fichier.Api.Download;
 using Bearcat.Hosters.Fichier.Api.File;
@@ -88,10 +89,12 @@ public class ApiClient(
     )
     {
         var authorization = GetAuthorizationHeader(config.ApiKey);
-        var rootFolder = await api.GetFolderListAsync(
-            authorization,
-            new FolderListRequest { FolderId = RootFolderId },
-            cancellationToken
+        var rootFolder = await SendApiRequestAsync(() =>
+            api.GetFolderListAsync(
+                authorization,
+                new FolderListRequest { FolderId = RootFolderId },
+                cancellationToken
+            )
         );
 
         EnsureOk(rootFolder.Status, rootFolder.Message, "1fichier folder list failed");
@@ -106,10 +109,12 @@ public class ApiClient(
             return existingFolder.Id!.Value.ToString();
         }
 
-        var createdFolder = await api.CreateFolderAsync(
-            authorization,
-            new CreateFolderRequest { Name = folderName, FolderId = RootFolderId },
-            cancellationToken
+        var createdFolder = await SendApiRequestAsync(() =>
+            api.CreateFolderAsync(
+                authorization,
+                new CreateFolderRequest { Name = folderName, FolderId = RootFolderId },
+                cancellationToken
+            )
         );
 
         EnsureOk(createdFolder.Status, createdFolder.Message, "1fichier folder creation failed");
@@ -125,10 +130,16 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        var response = await api.MoveFilesAsync(
-            GetAuthorizationHeader(config.ApiKey),
-            new MoveFileRequest { Urls = [fileUrl], DestinationFolderId = ParseFolderId(folderId) },
-            cancellationToken
+        var response = await SendApiRequestAsync(() =>
+            api.MoveFilesAsync(
+                GetAuthorizationHeader(config.ApiKey),
+                new MoveFileRequest
+                {
+                    Urls = [fileUrl],
+                    DestinationFolderId = ParseFolderId(folderId),
+                },
+                cancellationToken
+            )
         );
 
         EnsureOk(response.Status, response.Message, "1fichier file move failed");
@@ -201,9 +212,16 @@ public class ApiClient(
 
         if (!response.IsSuccessStatusCode || response.Content is null)
         {
+            var errorContent = (response.Error as ApiException)?.Content;
+
+            ThrowIfApiKeyRejected(response.StatusCode, errorContent);
+
             throw new HttpRequestException(
                 response.Content?.Message
-                    ?? $"1fichier user info request failed with status code {response.StatusCode}"
+                    ?? TryDeserializeErrorResponse(errorContent)?.Message
+                    ?? $"1fichier user info request failed with status code {response.StatusCode}",
+                inner: null,
+                statusCode: response.StatusCode
             );
         }
 
@@ -256,6 +274,8 @@ public class ApiClient(
                     var errorContent = response.Error is ApiException apiException
                         ? apiException.Content
                         : response.Error?.Message;
+
+                    ThrowIfApiKeyRejected(response.StatusCode, errorContent);
 
                     throw new HttpRequestException(
                         $"1fichier download token request for {fileUrl} failed with status code {response.StatusCode}: {errorContent}"
@@ -353,6 +373,8 @@ public class ApiClient(
 
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
+        ThrowIfApiKeyRejected(response.StatusCode, content);
+
         throw new HttpRequestException(
             $"1fichier upload failed with status code {(int)response.StatusCode} ({response.StatusCode}): {content}"
         );
@@ -377,6 +399,8 @@ public class ApiClient(
 
         if (!response.IsSuccessStatusCode)
         {
+            ThrowIfApiKeyRejected(response.StatusCode, content);
+
             throw new HttpRequestException(
                 $"1fichier upload server request failed with status code {response.StatusCode}: {content}"
             );
@@ -448,6 +472,11 @@ public class ApiClient(
                 }
                 else
                 {
+                    ThrowIfApiKeyRejected(
+                        response.StatusCode,
+                        (response.Error as ApiException)?.Content
+                    );
+
                     var isOnline =
                         response.IsSuccessStatusCode
                         && response.Content is { Url: not null }
@@ -486,6 +515,73 @@ public class ApiClient(
         }
 
         return (fileUrl, null, null);
+    }
+
+    private static async Task<TResponse> SendApiRequestAsync<TResponse>(
+        Func<Task<TResponse>> sendRequest
+    )
+    {
+        try
+        {
+            return await sendRequest();
+        }
+        catch (ApiException exception)
+        {
+            ThrowIfApiKeyRejected(exception.StatusCode, exception.Content);
+
+            throw;
+        }
+    }
+
+    private static void ThrowIfApiKeyRejected(HttpStatusCode? statusCode, string? responseContent)
+    {
+        var response = TryDeserializeErrorResponse(responseContent);
+
+        if (
+            response?.Message is null
+            || !string.Equals(response.Status, "KO", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            return;
+        }
+
+        var isApiKeyRejected = statusCode switch
+        {
+            HttpStatusCode.Forbidden => response.Message.StartsWith(
+                "No such user",
+                StringComparison.Ordinal
+            ),
+            HttpStatusCode.Unauthorized => response.Message.StartsWith(
+                "Not authenticated",
+                StringComparison.Ordinal
+            ),
+            _ => false,
+        };
+
+        if (isApiKeyRejected)
+        {
+            throw new HosterCredentialsRejectedException(response.Message);
+        }
+    }
+
+    private static ErrorResponse? TryDeserializeErrorResponse(string? responseContent)
+    {
+        if (string.IsNullOrWhiteSpace(responseContent))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<ErrorResponse>(
+                responseContent,
+                JsonSerializerOptions
+            );
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     private static string GetAuthorizationHeader(string apiKey)

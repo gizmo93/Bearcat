@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 using Refit;
@@ -139,10 +140,7 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        if (!await IsApiKeyValidAsync(config, cancellationToken))
-        {
-            throw new HttpRequestException("Invalid credentials");
-        }
+        await EnsureApiKeyAcceptedAsync(config, cancellationToken);
 
         var urlsPerFileCode = files
             .DistinctBy(file => file.Url)
@@ -167,6 +165,8 @@ public class ApiClient(
 
             if (!response.IsSuccessStatusCode || response.Content is null)
             {
+                ThrowIfApiKeyRejected(response);
+
                 throw new HttpRequestException(
                     $"CloudFam file info request failed with status code {response.StatusCode}: {GetErrorMessage(response)}"
                 );
@@ -197,14 +197,25 @@ public class ApiClient(
         return statusPerFileUrl;
     }
 
-    public async Task<bool> IsApiKeyValidAsync(
+    public async Task EnsureApiKeyAcceptedAsync(
         CloudFamConfig config,
         CancellationToken cancellationToken
     )
     {
         var response = await api.GetProfileAsync(config.ApiKey, cancellationToken);
 
-        return response is { StatusCode: HttpStatusCode.OK, Content.Success: true };
+        if (response is { StatusCode: HttpStatusCode.OK, Content.Success: true })
+        {
+            return;
+        }
+
+        ThrowIfApiKeyRejected(response);
+
+        throw new HttpRequestException(
+            $"CloudFam profile request failed with status code {response.StatusCode}: {GetErrorMessage(response) ?? response.Content?.Message}",
+            inner: null,
+            statusCode: response.StatusCode
+        );
     }
 
     public static string? ExtractFileCode(string fileUrl)
@@ -405,6 +416,8 @@ public class ApiClient(
 
             if (!response.IsSuccessStatusCode || response.Content is null)
             {
+                ThrowIfApiKeyRejected(response);
+
                 throw new HttpRequestException(
                     $"CloudFam file list request failed with status code {response.StatusCode}: {GetErrorMessage(response)}"
                 );
@@ -451,6 +464,8 @@ public class ApiClient(
     {
         if (!response.IsSuccessStatusCode || response.Content is null)
         {
+            ThrowIfApiKeyRejected(response);
+
             throw new HttpRequestException(
                 $"{operationName} failed with status code {response.StatusCode}: {GetErrorMessage(response)}"
             );
@@ -466,7 +481,49 @@ public class ApiClient(
         return response.Content.Data;
     }
 
+    private static void ThrowIfApiKeyRejected(IApiResponse response)
+    {
+        var message = TryDeserializeErrorResponse(response)?.Error?.Message;
+
+        if (message is null)
+        {
+            return;
+        }
+
+        var isApiKeyRejected = response.StatusCode switch
+        {
+            HttpStatusCode.Forbidden => message.Contains(
+                "Invalid or revoked API key",
+                StringComparison.Ordinal
+            ),
+            HttpStatusCode.Unauthorized => message.StartsWith(
+                "API key missing",
+                StringComparison.Ordinal
+            ),
+            _ => false,
+        };
+
+        if (isApiKeyRejected)
+        {
+            throw new HosterCredentialsRejectedException(message);
+        }
+    }
+
     private static string? GetErrorMessage(IApiResponse response)
+    {
+        var content = (response.Error as ApiException)?.Content;
+
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return null;
+        }
+
+        var error = TryDeserializeErrorResponse(response);
+
+        return error?.Error?.Message ?? error?.Message ?? content;
+    }
+
+    private static ErrorResponse? TryDeserializeErrorResponse(IApiResponse response)
     {
         var content = (response.Error as ApiException)?.Content;
 
@@ -477,13 +534,11 @@ public class ApiClient(
 
         try
         {
-            var error = JsonSerializer.Deserialize<ErrorResponse>(content, JsonSerializerOptions);
-
-            return error?.Error?.Message ?? error?.Message ?? content;
+            return JsonSerializer.Deserialize<ErrorResponse>(content, JsonSerializerOptions);
         }
         catch (JsonException)
         {
-            return content;
+            return null;
         }
     }
 }

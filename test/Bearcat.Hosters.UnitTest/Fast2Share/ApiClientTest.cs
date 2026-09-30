@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Fast2Share;
 using Bearcat.Hosters.Fast2Share.Api;
@@ -338,6 +339,60 @@ public class ApiClientTest
 
         // Assert
         result.ShouldBe("42");
+    }
+
+    [Test]
+    public async Task CheckLinksAsync_ApiTokenRevoked_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        apiMock
+            .Setup(x => x.GetUserAsync("Bearer f2s_api-key", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                await CreateErrorApiResponseAsync<UserResponse>(
+                    HttpStatusCode.Unauthorized,
+                    """{"error":"Invalid or revoked API token."}"""
+                )
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            apiClient.CheckLinksAsync(
+                config,
+                [new FileUrlToCheckDto($"https://f2s.im/f/{Uuid}", ExternalId: null)],
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Invalid or revoked API token.");
+    }
+
+    [Test]
+    public async Task UploadFileAsync_BearerTokenMissing_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        apiMock
+            .Setup(x =>
+                x.CreateUploadAsync(
+                    "Bearer f2s_api-key",
+                    It.IsAny<CreateUploadRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                await CreateErrorApiResponseAsync<CreateUploadResponse>(
+                    HttpStatusCode.Unauthorized,
+                    """{"error":"Missing bearer token."}"""
+                )
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            UploadAsync(folderId: null)
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Missing bearer token.");
     }
 
     [Test]

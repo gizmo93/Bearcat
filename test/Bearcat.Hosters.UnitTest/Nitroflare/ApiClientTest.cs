@@ -1,4 +1,6 @@
 using System.Net;
+using Bearcat.Abstractions.Hoster.Exceptions;
+using Bearcat.Hosters.Nitroflare;
 using Bearcat.Hosters.Nitroflare.Api;
 using Bearcat.Hosters.Nitroflare.Api.File;
 using Bearcat.Hosters.Shared;
@@ -138,6 +140,33 @@ public class ApiClientTest
         result.ShouldNotContainKey(throwingUrl);
     }
 
+    [Test]
+    public async Task TestUserHashAsync_UploadServerAnswersWrongHash_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        var config = new NitroflareConfig { UserHash = "wrong-hash" };
+        var httpClientFactoryMock = new Mock<IHttpClientFactory>(MockBehavior.Strict);
+        httpClientFactoryMock
+            .Setup(x => x.CreateClient(HttpClientProvider.UploadHttpClientName))
+            .Returns(new HttpClient(new WrongHashUploadHandler()));
+        var uploadingApiClient = new ApiClient(
+            apiMock.Object,
+            new HttpClientProvider(httpClientFactoryMock.Object),
+            new Mock<ILogger<ApiClient>>().Object
+        );
+        apiMock
+            .Setup(x => x.GetUploadServerAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync("https://s12.nitroflare.test/");
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            uploadingApiClient.TestUserHashAsync(config, CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Invalid User - Wrong hash");
+    }
+
     private static ApiResponse<FileInfoResponse> CreateSuccessResponse(
         IReadOnlyDictionary<string, string> statusByFileId
     )
@@ -169,5 +198,21 @@ public class ApiClientTest
             new RefitSettings(),
             error: null
         );
+    }
+
+    private sealed class WrongHashUploadHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
+        {
+            return Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("Invalid User - Wrong hash"),
+                }
+            );
+        }
     }
 }

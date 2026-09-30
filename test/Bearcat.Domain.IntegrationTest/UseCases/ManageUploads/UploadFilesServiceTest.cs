@@ -85,6 +85,9 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             NoOpSecretProtector.Instance
         );
         var captchaVerificationService = new HosterCaptchaVerificationService(notificationService);
+        var credentialsRejectionService = new HosterCredentialsRejectionService(
+            notificationService
+        );
         var finalizationService = new UploadFinalizationService(
             CreateTimeProvider(),
             Mock.Of<ILogger<UploadFinalizationService>>(),
@@ -94,6 +97,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         var fileUploadExecutionService = new FileUploadExecutionService(
             Mock.Of<ILogger<FileUploadExecutionService>>(),
             captchaVerificationService,
+            credentialsRejectionService,
             progressTracker
         );
         var missingFileValidationService = new MissingFileValidationService(
@@ -104,7 +108,9 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         );
         var concurrencyService = new UploadConcurrencyService(
             uploadFilesRepository,
-            new DefaultConfigurationProvider()
+            new DefaultConfigurationProvider(),
+            credentialsRejectionService,
+            Mock.Of<ILogger<UploadConcurrencyService>>()
         );
 
         service = new UploadFilesService(
@@ -117,6 +123,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             finalizationService,
             fileUploadExecutionService,
             concurrencyService,
+            credentialsRejectionService,
             progressTracker
         )
         {
@@ -1555,6 +1562,9 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         );
 
         var captchaService = new HosterCaptchaVerificationService(notificationService);
+        var credentialsRejectionService = new HosterCredentialsRejectionService(
+            notificationService
+        );
         var finalization = new UploadFinalizationService(
             CreateTimeProvider(),
             Mock.Of<ILogger<UploadFinalizationService>>(),
@@ -1564,6 +1574,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         var fileUploadExecution = new FileUploadExecutionService(
             Mock.Of<ILogger<FileUploadExecutionService>>(),
             captchaService,
+            credentialsRejectionService,
             progressTracker
         );
         var missingFileValidation = new MissingFileValidationService(
@@ -1574,7 +1585,9 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
         );
         var concurrency = new UploadConcurrencyService(
             repository,
-            new DefaultConfigurationProvider()
+            new DefaultConfigurationProvider(),
+            credentialsRejectionService,
+            Mock.Of<ILogger<UploadConcurrencyService>>()
         );
 
         var serviceWithMissingUpload = new UploadFilesService(
@@ -1587,6 +1600,7 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             finalization,
             fileUploadExecution,
             concurrency,
+            credentialsRejectionService,
             progressTracker
         )
         {
@@ -1927,6 +1941,14 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             return Task.FromResult<IReadOnlyDictionary<string, HosterUploadConcurrencyInfo>>(
                 new Dictionary<string, HosterUploadConcurrencyInfo>()
             );
+        }
+
+        public Task<HosterRegistration> GetHosterRegistrationByIdAsync(
+            int hosterRegistrationId,
+            CancellationToken cancellationToken
+        )
+        {
+            throw new NotSupportedException();
         }
     }
 }

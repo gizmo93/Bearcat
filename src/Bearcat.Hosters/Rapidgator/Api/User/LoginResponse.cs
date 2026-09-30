@@ -4,7 +4,7 @@ namespace Bearcat.Hosters.Rapidgator.Api.User;
 
 public class LoginResponse
 {
-    public ResponseObject Response { get; set; } = null!;
+    public ResponseObject? Response { get; set; }
 
     public int Status { get; set; }
 

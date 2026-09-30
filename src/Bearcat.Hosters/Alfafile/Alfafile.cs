@@ -3,6 +3,7 @@ using System.Text.Json;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Alfafile.Api;
@@ -52,7 +53,7 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger)
                     cancellationToken: cancellationToken
                 );
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not HosterCredentialsRejectedException)
             {
                 logger.LogError(
                     ex,
@@ -105,7 +106,7 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger)
                 DownloadCountPerFileUrl: downloadCountPerFileUrl
             );
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not HosterCredentialsRejectedException)
         {
             return new FileExistResult(
                 IsSuccess: false,
@@ -221,7 +222,8 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger)
 
             return new DownloadFileResult(IsSuccess: true, ErrorMessages: []);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
         {
             logger.LogError(
                 ex,
@@ -250,7 +252,8 @@ public class Alfafile(IAlfafileApiClient apiClient, ILogger<Alfafile> logger)
                 cancellationToken: cancellationToken
             );
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
         {
             logger.LogError(
                 ex,

@@ -12,6 +12,7 @@ namespace Bearcat.Domain.UseCases.ManageUploads;
 public class FileUploadExecutionService(
     ILogger<FileUploadExecutionService> logger,
     HosterCaptchaVerificationService captchaVerificationService,
+    HosterCredentialsRejectionService credentialsRejectionService,
     ITransferProgressTracker progressTracker
 )
 {
@@ -112,6 +113,25 @@ public class FileUploadExecutionService(
         catch (CaptchaVerificationRequiredException ex)
         {
             captchaVerificationService.MarkRequired(context.Upload, ex.Message);
+            context.RequestCancellation();
+
+            await resultWriter.WriteAsync(
+                new FileUploadCompleted(
+                    UploadId: fileToUpload.UploadId,
+                    ArchiveFileId: fileToUpload.ArchiveFileId,
+                    FullFileName: fileToUpload.FullFileName,
+                    FileUrl: null,
+                    ExternalId: null,
+                    IsSuccess: false,
+                    Errors: [ex.Message],
+                    WasCanceled: true
+                ),
+                processCancellationToken
+            );
+        }
+        catch (HosterCredentialsRejectedException ex)
+        {
+            credentialsRejectionService.DeactivateAndNotify(context.Upload, ex.Message);
             context.RequestCancellation();
 
             await resultWriter.WriteAsync(

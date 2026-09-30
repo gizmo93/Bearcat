@@ -1,5 +1,6 @@
 using System.Net;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.CloudFam;
 using Bearcat.Hosters.CloudFam.Api;
 using Bearcat.Hosters.Shared;
@@ -475,7 +476,33 @@ public class ApiClientTest
     }
 
     [Test]
-    public async Task CheckLinksAsync_InvalidApiKey_Throws()
+    public async Task CheckLinksAsync_InvalidApiKey_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        apiMock
+            .Setup(x => x.GetProfileAsync(ApiKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                await CreateErrorEnvelopeAsync<UserProfileResponse>(
+                    HttpStatusCode.Forbidden,
+                    """{"success":false,"error":{"code":403,"message":"Invalid or revoked API key."}}"""
+                )
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(async () =>
+            await apiClient.CheckLinksAsync(
+                config,
+                [new FileUrlToCheckDto($"https://cloudfam.io/{FileCode}", ExternalId: null)],
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Invalid or revoked API key.");
+    }
+
+    [Test]
+    public async Task CheckLinksAsync_ProfileAnswersForbiddenWithoutKeyMessage_ThrowsHttpRequestException()
     {
         // Arrange
         apiMock
@@ -492,7 +519,37 @@ public class ApiClientTest
         );
 
         // Assert
-        exception.Message.ShouldBe("Invalid credentials");
+        exception.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    [Test]
+    public async Task UploadFileAsync_ApiKeyMissing_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        apiMock
+            .Setup(x => x.CreateUploadSessionAsync(ApiKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                await CreateErrorEnvelopeAsync<UploadSessionResponse>(
+                    HttpStatusCode.Unauthorized,
+                    """{"success":false,"error":{"code":401,"message":"API key missing. Send it in the X-API-Key header."}}"""
+                )
+            );
+        using var stream = new MemoryStream([1, 2, 3]);
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            apiClient.UploadFileAsync(
+                config,
+                stream,
+                "archive.part01.rar",
+                fileSize: 3,
+                folderId: null,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldStartWith("API key missing");
     }
 
     [Test]

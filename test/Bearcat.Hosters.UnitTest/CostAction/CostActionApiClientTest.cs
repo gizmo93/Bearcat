@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.Shared;
 using Bearcat.Hosters.Shared.CostAction.Api;
 using Bearcat.Hosters.Shared.CostAction.Api.Models;
@@ -273,7 +274,7 @@ public class CostActionApiClientTest
     }
 
     [Test]
-    public async Task CheckFilesAsync_RequestFails_Throws()
+    public async Task CheckFilesAsync_Unauthorized_ThrowsHosterCredentialsRejected()
     {
         // Arrange
         var unauthorized = await CreateErrorResponseAsync<FilesInfoResponse>(
@@ -293,12 +294,41 @@ public class CostActionApiClientTest
             .ReturnsAsync(unauthorized);
 
         // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            apiClient.CheckFilesAsync(ApiKey, AppType, [FileId], CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldBe("This action is unauthorized.");
+    }
+
+    [Test]
+    public async Task CheckFilesAsync_ServerError_ThrowsHttpRequestException()
+    {
+        // Arrange
+        var serverError = await CreateErrorResponseAsync<FilesInfoResponse>(
+            HttpStatusCode.InternalServerError,
+            """{"message":"Server Error","status":"error"}"""
+        );
+        apiMock
+            .Setup(x =>
+                x.GetFilesInfoAsync(
+                    ApiKey,
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<FilesInfoRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(serverError);
+
+        // Act
         var exception = await Should.ThrowAsync<HttpRequestException>(() =>
             apiClient.CheckFilesAsync(ApiKey, AppType, [FileId], CancellationToken.None)
         );
 
         // Assert
-        exception.Message.ShouldContain("This action is unauthorized.");
+        exception.Message.ShouldContain("Server Error");
     }
 
     [Test]

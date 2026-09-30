@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.GoFile.Api.CreateFolder;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
@@ -27,12 +28,16 @@ public class ApiClient(
 
     private const string UserAgent = "Bearcat";
 
+    private const string WrongTokenStatus = "error-wrongToken";
+
     public async Task<Response> GetAccountAsync(
         string apiKey,
         CancellationToken cancellationToken = default
     )
     {
-        return await api.GetAccountAsync(GetAuthorizationHeader(apiKey), cancellationToken);
+        return await SendApiRequestAsync(() =>
+            api.GetAccountAsync(GetAuthorizationHeader(apiKey), cancellationToken)
+        );
     }
 
     public async Task<UploadFile.Response> UploadFileAsync(
@@ -59,10 +64,12 @@ public class ApiClient(
         request.Content = multipartContent;
 
         var response = await httpClient.SendAsync(request, cancellationToken);
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        ThrowIfApiTokenRejected(response.StatusCode, responseContent);
 
         response.EnsureSuccessStatusCode();
 
-        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
         return JsonSerializer.Deserialize<UploadFile.Response>(responseContent)!;
     }
 
@@ -73,7 +80,9 @@ public class ApiClient(
     )
     {
         var apiToken = GetAuthorizationHeader(apiKey);
-        var account = await api.GetAccountAsync(apiToken, cancellationToken);
+        var account = await SendApiRequestAsync(() =>
+            api.GetAccountAsync(apiToken, cancellationToken)
+        );
 
         if (
             !string.Equals(account.Status, "ok", StringComparison.OrdinalIgnoreCase)
@@ -85,10 +94,8 @@ public class ApiClient(
             );
         }
 
-        var accountInfos = await api.GetAccountInfosAsync(
-            account.Data.Id,
-            apiToken,
-            cancellationToken
+        var accountInfos = await SendApiRequestAsync(() =>
+            api.GetAccountInfosAsync(account.Data.Id, apiToken, cancellationToken)
         );
 
         if (
@@ -113,10 +120,12 @@ public class ApiClient(
             return existingFolderId;
         }
 
-        var folder = await api.CreateFolderAsync(
-            apiToken,
-            new Request(accountInfos.Data.RootFolder, folderName),
-            cancellationToken
+        var folder = await SendApiRequestAsync(() =>
+            api.CreateFolderAsync(
+                apiToken,
+                new Request(accountInfos.Data.RootFolder, folderName),
+                cancellationToken
+            )
         );
 
         if (
@@ -146,10 +155,12 @@ public class ApiClient(
             throw new HttpRequestException($"Could not extract GoFile file id from URL {fileUrl}");
         }
 
-        var response = await api.MoveContentAsync(
-            GetAuthorizationHeader(apiKey),
-            new MoveContent.Request(ContentsId: fileId, FolderId: folderId),
-            cancellationToken
+        var response = await SendApiRequestAsync(() =>
+            api.MoveContentAsync(
+                GetAuthorizationHeader(apiKey),
+                new MoveContent.Request(ContentsId: fileId, FolderId: folderId),
+                cancellationToken
+            )
         );
 
         if (!string.Equals(response.Status, "ok", StringComparison.OrdinalIgnoreCase))
@@ -171,14 +182,16 @@ public class ApiClient(
 
         try
         {
-            rootFolder = await api.GetContentAsync(
-                folderId: rootFolderId,
-                apiToken: GetAuthorizationHeader(apiKey),
-                userAgent: UserAgent,
-                contentFilter: folderName,
-                sortField: "createTime",
-                sortDirection: 1,
-                cancellationToken: cancellationToken
+            rootFolder = await SendApiRequestAsync(() =>
+                api.GetContentAsync(
+                    folderId: rootFolderId,
+                    apiToken: GetAuthorizationHeader(apiKey),
+                    userAgent: UserAgent,
+                    contentFilter: folderName,
+                    sortField: "createTime",
+                    sortDirection: 1,
+                    cancellationToken: cancellationToken
+                )
             );
         }
         catch (ApiException exception) when (IsNotPremiumError(exception))
@@ -276,11 +289,13 @@ public class ApiClient(
 
                 try
                 {
-                    response = await api.GetFileInfoAsync(
-                        fileId: fileId,
-                        apiToken: GetAuthorizationHeader(apiKey),
-                        userAgent: UserAgent,
-                        cancellationToken: timeoutCancellationTokenSource.Token
+                    response = await SendApiRequestAsync(() =>
+                        api.GetFileInfoAsync(
+                            fileId: fileId,
+                            apiToken: GetAuthorizationHeader(apiKey),
+                            userAgent: UserAgent,
+                            cancellationToken: timeoutCancellationTokenSource.Token
+                        )
                     );
                 }
                 catch (ApiException exception) when (IsNotPremiumError(exception))
@@ -326,7 +341,7 @@ public class ApiClient(
                     attempt
                 );
             }
-            catch (Exception exception)
+            catch (Exception exception) when (exception is not HosterCredentialsRejectedException)
             {
                 return (
                     FileUrl: fileUrl,
@@ -346,6 +361,51 @@ public class ApiClient(
         }
 
         return (fileUrl, IsOnline: false, ErrorMessage: "Max retry attempts reached");
+    }
+
+    private static async Task<TResponse> SendApiRequestAsync<TResponse>(
+        Func<Task<TResponse>> sendRequest
+    )
+    {
+        try
+        {
+            return await sendRequest();
+        }
+        catch (ApiException exception)
+        {
+            ThrowIfApiTokenRejected(exception.StatusCode, exception.Content);
+
+            throw;
+        }
+    }
+
+    private static void ThrowIfApiTokenRejected(HttpStatusCode statusCode, string? responseContent)
+    {
+        if (statusCode != HttpStatusCode.Unauthorized || string.IsNullOrWhiteSpace(responseContent))
+        {
+            return;
+        }
+
+        string? status;
+
+        try
+        {
+            using var document = JsonDocument.Parse(responseContent);
+            status = document.RootElement.TryGetProperty("status", out var statusProperty)
+                ? statusProperty.GetString()
+                : null;
+        }
+        catch (JsonException)
+        {
+            return;
+        }
+
+        if (string.Equals(status, WrongTokenStatus, StringComparison.Ordinal))
+        {
+            throw new HosterCredentialsRejectedException(
+                $"GoFile rejected the API token ({WrongTokenStatus})"
+            );
+        }
     }
 
     private static string? TryExtractFileId(string fileUrl)

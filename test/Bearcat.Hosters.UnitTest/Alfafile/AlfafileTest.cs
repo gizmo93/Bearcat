@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Alfafile;
 using Bearcat.Hosters.Alfafile.Api;
@@ -217,6 +218,55 @@ public class AlfafileTest
                     It.IsAny<CancellationToken>()
                 ),
             Times.Never
+        );
+    }
+
+    [Test]
+    public async Task UploadFileAsync_CredentialsRejected_ThrowsWithoutRetrying()
+    {
+        // Arrange
+        var filePath = CreateTemporaryFile("upload-content");
+        var fileDto = new FileDto(Id: 19, FullFileName: filePath, UploadId: 119);
+        var config = new AlfafileConfig { Username = "user@example.test", Password = "password" };
+
+        apiClientMock
+            .Setup(x =>
+                x.RequestUploadFileAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<long>(),
+                    It.IsAny<string>(),
+                    null,
+                    config,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(
+                new HosterCredentialsRejectedException("Unauthorized. Wrong login or password.")
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            service.UploadFileAsync(
+                fileDto,
+                config,
+                NullTransferProgress.Instance,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Unauthorized. Wrong login or password.");
+        apiClientMock.Verify(
+            x =>
+                x.RequestUploadFileAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<long>(),
+                    It.IsAny<string>(),
+                    null,
+                    config,
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
         );
     }
 

@@ -24,6 +24,7 @@ public class UploadStateService(
     IApplicationConfigurationProvider configuration,
     INotificationService notificationService,
     HosterCaptchaVerificationService captchaVerificationService,
+    HosterCredentialsRejectionService credentialsRejectionService,
     ILogger<UploadStateService> logger,
     ISecretProtector secretProtector,
     QualityGateEvaluator qualityGateEvaluator
@@ -362,6 +363,15 @@ public class UploadStateService(
             );
             return;
         }
+        catch (HosterCredentialsRejectedException ex)
+        {
+            await credentialsRejectionService.DeactivateAndNotifyAsync(
+                registration,
+                ex.Message,
+                cancellationToken
+            );
+            return;
+        }
 
         if (!result.IsSuccess)
         {
@@ -372,10 +382,12 @@ public class UploadStateService(
                 string.Join("; ", result.ErrorMessages)
             );
 
-            foreach (var upload in uploadsWithLinks)
-            {
-                CreateCheckFailedNotificationIfNeeded(upload, result, localNow);
-            }
+            await CreateCheckFailedNotificationsIfNeededAsync(
+                uploadsWithLinks,
+                result,
+                localNow,
+                cancellationToken
+            );
 
             return;
         }
@@ -447,30 +459,52 @@ public class UploadStateService(
         }
     }
 
-    private void CreateCheckFailedNotificationIfNeeded(
-        Upload upload,
+    private async Task CreateCheckFailedNotificationsIfNeededAsync(
+        IReadOnlyList<Upload> uploads,
         FileExistResult result,
-        DateTime localNow
+        DateTime localNow,
+        CancellationToken cancellationToken
     )
+    {
+        var uploadsWithOldOnlineCheck = uploads
+            .Where(upload => IsLastOnlineCheckOlderThanThreshold(upload, localNow))
+            .ToList();
+
+        if (uploadsWithOldOnlineCheck.Count == 0)
+        {
+            return;
+        }
+
+        var uploadIdsWithUnresolvedNotification =
+            await uploadStateRepository.GetUploadIdsWithUnresolvedNotificationAsync(
+                uploadIds: uploadsWithOldOnlineCheck.Select(upload => upload.Id).ToList(),
+                kind: NotificationKind.HosterStatusCheckFailed,
+                cancellationToken: cancellationToken
+            );
+
+        var uploadsWithoutUnresolvedNotification = uploadsWithOldOnlineCheck
+            .Where(upload => !uploadIdsWithUnresolvedNotification.Contains(upload.Id))
+            .ToList();
+
+        foreach (var upload in uploadsWithoutUnresolvedNotification)
+        {
+            notificationService.Create(
+                kind: NotificationKind.HosterStatusCheckFailed,
+                message: $"Failed to check file existence on hoster, Error messages: {string.Join(", ", result.ErrorMessages)}",
+                entity: upload,
+                selector: u => u.Upload
+            );
+        }
+    }
+
+    private static bool IsLastOnlineCheckOlderThanThreshold(Upload upload, DateTime localNow)
     {
         var lastOnlineCheck = upload
             .UploadedFiles.Where(f => f.OnlineState == OnlineState.Online)
             .Min(f => f.CheckedAt);
 
-        if (
-            lastOnlineCheck is null
-            || localNow - lastOnlineCheck.Value < FailedCheckNotificationThreshold
-        )
-        {
-            return;
-        }
-
-        notificationService.Create(
-            kind: NotificationKind.HosterStatusCheckFailed,
-            message: $"Failed to check file existence on hoster, Error messages: {string.Join(", ", result.ErrorMessages)}",
-            entity: upload,
-            selector: u => u.Upload
-        );
+        return lastOnlineCheck is not null
+            && localNow - lastOnlineCheck.Value >= FailedCheckNotificationThreshold;
     }
 
     private static OnlineState DetermineOnlineState(Upload upload)

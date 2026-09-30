@@ -33,6 +33,8 @@ public class ApiClient(
 
     private const int MaxFilesInfoAttempts = 3;
 
+    private const int InvalidLoginOrPasswordErrorCode = 70;
+
     private readonly KeyedAuthTokenCache authTokenCache = new(TimeSpan.FromSeconds(1500));
 
     public async Task<LoginResponse> LoginAsync(
@@ -40,13 +42,25 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        return await LoginAsync(
+        var response = await LoginAsync(
             config,
             null,
             null,
             throwOnCaptchaRequired: true,
             cancellationToken
         );
+
+        if (
+            response.Code == (int)HttpStatusCode.NotAcceptable
+            && response.ErrorCode == InvalidLoginOrPasswordErrorCode
+        )
+        {
+            throw new HosterCredentialsRejectedException(
+                response.Message ?? "Keep2Share rejected the login credentials"
+            );
+        }
+
+        return response;
     }
 
     public async Task<CaptchaChallengeResult> RequestCaptchaChallengeAsync(

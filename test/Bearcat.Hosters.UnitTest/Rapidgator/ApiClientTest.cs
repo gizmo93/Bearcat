@@ -694,6 +694,62 @@ public class ApiClientTest
         File.Exists(targetFilePath + ".part").ShouldBeFalse();
     }
 
+    [Test]
+    public async Task LoginAsync_WrongPassword_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+        var handler = new RecordingUploadHandler(
+            """{"response":null,"status":401,"details":"Error: Wrong e-mail or password."}"""
+        );
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://rapidgator.test/"),
+        };
+        var client = new RapidgatorApiClient(
+            RestService.For<IRapidgatorApi>(httpClient),
+            new HttpClientProvider(new Mock<IHttpClientFactory>().Object),
+            new HosterFileDownloader(new HttpClientProvider(new Mock<IHttpClientFactory>().Object)),
+            new Mock<ILogger<RapidgatorApiClient>>().Object
+        );
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            client.LoginAsync(config, CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Error: Wrong e-mail or password.");
+    }
+
+    [Test]
+    public async Task LoginAsync_HttpErrorWithoutContent_ThrowsHttpRequestException()
+    {
+        // Arrange
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+        apiMock
+            .Setup(x => x.LoginAsync("user", "password", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new ApiResponse<LoginResponse>(
+                    new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+                    {
+                        RequestMessage = new HttpRequestMessage(),
+                    },
+                    content: null,
+                    new RefitSettings(),
+                    error: null
+                )
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.LoginAsync(config, CancellationToken.None)
+        );
+
+        // Assert
+        exception.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
+    }
+
     private void SetupLogin()
     {
         apiMock

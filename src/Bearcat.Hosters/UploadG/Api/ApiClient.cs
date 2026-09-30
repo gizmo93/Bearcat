@@ -1,8 +1,11 @@
 using System.Buffers;
 using System.Net;
+using System.Text.Json;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
+using Refit;
 
 namespace Bearcat.Hosters.UploadG.Api;
 
@@ -280,7 +283,7 @@ public class ApiClient(
             .ToDictionary(result => result.FileUrl, result => result.IsOnline!.Value);
     }
 
-    public async Task<bool> IsApiKeyValidAsync(
+    public async Task EnsureApiKeyAcceptedAsync(
         UploadGConfig config,
         CancellationToken cancellationToken
     )
@@ -291,7 +294,14 @@ public class ApiClient(
             cancellationToken: cancellationToken
         );
 
-        return response.StatusCode == HttpStatusCode.OK;
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            throw new HttpRequestException(
+                $"UploadG space usage request failed with status code {response.StatusCode}",
+                inner: null,
+                statusCode: response.StatusCode
+            );
+        }
     }
 
     public async Task<string> GetOrCreateShareableLinkAsync(
@@ -563,7 +573,18 @@ public class ApiClient(
 
         try
         {
-            return await action(timeoutCancellationTokenSource.Token);
+            var response = await action(timeoutCancellationTokenSource.Token);
+
+            if (response is IApiResponse { StatusCode: HttpStatusCode.Unauthorized } apiResponse)
+            {
+                throw CreateApiKeyRejectedException((apiResponse.Error as ApiException)?.Content);
+            }
+
+            return response;
+        }
+        catch (ApiException exception) when (exception.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            throw CreateApiKeyRejectedException(exception.Content);
         }
         catch (OperationCanceledException)
             when (timeoutCancellationTokenSource.IsCancellationRequested
@@ -573,6 +594,34 @@ public class ApiClient(
             throw new TimeoutException(
                 $"UploadG {operationName} timed out after {FastApiRequestTimeout.Seconds} seconds"
             );
+        }
+    }
+
+    private static HosterCredentialsRejectedException CreateApiKeyRejectedException(
+        string? responseContent
+    )
+    {
+        var message = TryReadErrorMessage(responseContent);
+
+        return new HosterCredentialsRejectedException(
+            string.IsNullOrWhiteSpace(message) ? "UploadG rejected the API key" : message
+        );
+    }
+
+    private static string? TryReadErrorMessage(string? responseContent)
+    {
+        if (string.IsNullOrWhiteSpace(responseContent))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<ErrorResponse>(responseContent)?.Message;
+        }
+        catch (JsonException)
+        {
+            return null;
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using Bearcat.Domain.Entities;
+using Bearcat.Domain.ValueObjects;
 
 namespace Bearcat.Domain.UseCases.ManageUploads.Repositories;
 
@@ -23,6 +24,12 @@ public interface IUploadStateRepository
     Task<Upload?> GetUploadForOnlineCheckAsync(int uploadId, CancellationToken cancellationToken);
 
     Task<Upload?> GetByIdAsync(int uploadId, CancellationToken cancellationToken);
+
+    Task<IReadOnlySet<int>> GetUploadIdsWithUnresolvedNotificationAsync(
+        IReadOnlyList<int> uploadIds,
+        NotificationKind kind,
+        CancellationToken cancellationToken
+    );
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 

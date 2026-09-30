@@ -2,12 +2,18 @@ using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Rapidgator.Api.File;
+using Bearcat.Hosters.Rapidgator.Api.User;
 using Bearcat.Hosters.Shared;
 
 namespace Bearcat.Hosters.Rapidgator.Api;
 
 public interface IRapidgatorApiClient
 {
+    Task<LoginResponse.ResponseObject> LoginAsync(
+        RapidgatorConfig config,
+        CancellationToken cancellationToken
+    );
+
     Task<UploadFileResponse> RequestUploadFileAsync(
         string name,
         long size,

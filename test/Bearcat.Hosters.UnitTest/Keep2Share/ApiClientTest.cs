@@ -638,6 +638,58 @@ public class ApiClientTest
         result.ShouldNotContainKey("https://keep2share.cc/file/ghi789jkl012");
     }
 
+    [Test]
+    public async Task LoginAsync_WrongPassword_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "wrong",
+        };
+        var error = await CreateApiExceptionAsync(
+            HttpStatusCode.NotAcceptable,
+            """{"message":"Invalid login or password","status":"error","code":406,"errorCode":70}"""
+        );
+        apiMock
+            .Setup(x => x.LoginAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(error);
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            apiClient.LoginAsync(config, CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Invalid login or password");
+    }
+
+    [Test]
+    public async Task LoginAsync_CaptchaRequired_ThrowsCaptchaVerificationRequired()
+    {
+        // Arrange
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
+        var error = await CreateApiExceptionAsync(
+            HttpStatusCode.NotAcceptable,
+            """{"message":"Please verify your request via re-captcha challenge","status":"error","code":406,"errorCode":33}"""
+        );
+        apiMock
+            .Setup(x => x.LoginAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(error);
+
+        // Act
+        var exception = await Should.ThrowAsync<CaptchaVerificationRequiredException>(() =>
+            apiClient.LoginAsync(config, CancellationToken.None)
+        );
+
+        // Assert
+        exception.ErrorCode.ShouldBe(33);
+    }
+
     private static async Task<ApiException> CreateApiExceptionAsync(
         HttpStatusCode statusCode,
         string content

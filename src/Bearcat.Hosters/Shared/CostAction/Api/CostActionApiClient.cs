@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.Shared.CostAction.Api.Models;
 using Microsoft.Extensions.Logging;
 using Refit;
@@ -17,6 +18,8 @@ public class CostActionApiClient(
     public const string ApiBaseUrl = "https://api.costaction.com";
 
     private const string SuccessStatus = "success";
+
+    private const string ErrorStatus = "error";
 
     private const string DownloadCountProperty = "download_count";
 
@@ -384,8 +387,17 @@ public class CostActionApiClient(
     {
         if (!response.IsSuccessStatusCode || response.Content is null)
         {
+            var error = DeserializeError(response);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized && error?.Status == ErrorStatus)
+            {
+                throw new HosterCredentialsRejectedException(
+                    error.Message ?? $"{operationName} was rejected as unauthorized"
+                );
+            }
+
             throw new HttpRequestException(
-                $"{operationName} failed with status code {response.StatusCode}: {DeserializeError(response)?.Message ?? GetErrorContent(response)}"
+                $"{operationName} failed with status code {response.StatusCode}: {error?.Message ?? GetErrorContent(response)}"
             );
         }
 

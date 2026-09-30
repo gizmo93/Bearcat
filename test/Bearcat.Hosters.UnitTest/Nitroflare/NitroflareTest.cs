@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Nitroflare;
 using Bearcat.Hosters.Nitroflare.Api;
@@ -152,6 +153,67 @@ public class NitroflareTest
         result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeTrue();
         result.ErrorMessage.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task UploadFileAsync_UserHashRejected_ThrowsWithoutRetrying()
+    {
+        // Arrange
+        var filePath = CreateTemporaryFile("upload-content");
+        var fileDto = new FileDto(Id: 42, FullFileName: filePath, UploadId: 142);
+        var config = new NitroflareConfig { UserHash = "wrong-hash" };
+
+        apiClientMock
+            .Setup(x =>
+                x.UploadFileAsync(
+                    config,
+                    It.IsAny<Stream>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(new HosterCredentialsRejectedException("Invalid User - Wrong hash"));
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            service.UploadFileAsync(
+                fileDto,
+                config,
+                NullTransferProgress.Instance,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Invalid User - Wrong hash");
+        apiClientMock.Verify(
+            x =>
+                x.UploadFileAsync(
+                    config,
+                    It.IsAny<Stream>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task TryLoginAsync_UserHashRejected_ReturnsFailureWithHosterMessage()
+    {
+        // Arrange
+        var config = new NitroflareConfig { UserHash = "wrong-hash" };
+
+        apiClientMock
+            .Setup(x => x.TestUserHashAsync(config, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HosterCredentialsRejectedException("Invalid User - Wrong hash"));
+
+        // Act
+        var result = await service.TryLoginAsync(config, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe("Invalid User - Wrong hash");
     }
 
     [Test]

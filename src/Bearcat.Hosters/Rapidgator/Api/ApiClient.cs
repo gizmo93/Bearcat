@@ -428,13 +428,9 @@ public class ApiClient(
                     "Authenticating to Rapidgator for user {Username}",
                     config.Username
                 );
-                var loginResponse = await LoginAsync(
-                    login: config.Username,
-                    password: config.Password,
-                    cancellationToken: ct
-                );
+                var loginResponse = await LoginAsync(config: config, cancellationToken: ct);
 
-                return loginResponse.Response.Token;
+                return loginResponse.Token;
             },
             cancellationToken
         );
@@ -451,13 +447,40 @@ public class ApiClient(
         }
     }
 
-    private async Task<LoginResponse> LoginAsync(
-        string login,
-        string password,
+    public async Task<LoginResponse.ResponseObject> LoginAsync(
+        RapidgatorConfig config,
         CancellationToken cancellationToken
     )
     {
-        var response = await api.LoginAsync(login, password, cancellationToken);
-        return response.Content!;
+        var response = await api.LoginAsync(config.Username, config.Password, cancellationToken);
+        var content = response.Content;
+
+        if (content is null)
+        {
+            throw new HttpRequestException(
+                $"Rapidgator login failed with HTTP status {response.StatusCode}: {response.Error?.Message}",
+                inner: response.Error,
+                statusCode: response.StatusCode
+            );
+        }
+
+        if (content.Status == (int)HttpStatusCode.Unauthorized)
+        {
+            throw new HosterCredentialsRejectedException(
+                content.Details ?? "Rapidgator rejected the login credentials"
+            );
+        }
+
+        if (
+            content.Status != (int)HttpStatusCode.OK
+            || string.IsNullOrWhiteSpace(content.Response?.Token)
+        )
+        {
+            throw new HttpRequestException(
+                content.Details ?? $"Rapidgator login failed with status {content.Status}"
+            );
+        }
+
+        return content.Response;
     }
 }

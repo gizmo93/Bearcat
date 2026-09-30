@@ -4,6 +4,7 @@ using System.Text.Json;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Extensions;
@@ -59,7 +60,7 @@ public abstract class XFilesharingHosterBase<TConfig>(
                     FileUrl: BuildFileUrl(response.FileCode)
                 );
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not HosterCredentialsRejectedException)
             {
                 var message = ex.InnerException?.Message ?? ex.Message;
 
@@ -130,7 +131,7 @@ public abstract class XFilesharingHosterBase<TConfig>(
                 DownloadCountPerFileUrl: downloadCountPerFileUrl
             );
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not HosterCredentialsRejectedException)
         {
             return new FileExistResult(
                 IsSuccess: false,
@@ -169,7 +170,8 @@ public abstract class XFilesharingHosterBase<TConfig>(
 
             return new DownloadFileResult(IsSuccess: true, ErrorMessages: []);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
         {
             logger.LogError(
                 ex,
@@ -210,7 +212,8 @@ public abstract class XFilesharingHosterBase<TConfig>(
                 .Where(kvp => fileUrlByFileCode.ContainsKey(kvp.Key))
                 .ToDictionary(kvp => fileUrlByFileCode[kvp.Key], kvp => kvp.Value);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
         {
             logger.LogError(
                 ex,
@@ -357,6 +360,8 @@ public abstract class XFilesharingHosterBase<TConfig>(
 
         if (!((HttpStatusCode)uploadRequest.Status).IsSuccessStatusCode)
         {
+            XFilesharingApiKeyRejection.ThrowIfRejected(uploadRequest.Status, uploadRequest.Msg);
+
             throw new InvalidOperationException(uploadRequest.Msg);
         }
 

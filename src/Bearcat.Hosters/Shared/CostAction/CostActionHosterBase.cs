@@ -2,6 +2,7 @@ using System.Text.Json;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Extensions;
@@ -77,7 +78,7 @@ public abstract class CostActionHosterBase<TConfig>(ICostActionApiClient apiClie
             {
                 throw;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not HosterCredentialsRejectedException)
             {
                 var message = ex.InnerException?.Message ?? ex.Message;
                 logger.LogError(
@@ -157,7 +158,7 @@ public abstract class CostActionHosterBase<TConfig>(ICostActionApiClient apiClie
                 DownloadCountPerFileUrl: downloadCountPerFileUrl
             );
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not HosterCredentialsRejectedException)
         {
             return new FileExistResult(
                 IsSuccess: false,

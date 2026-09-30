@@ -1,8 +1,8 @@
 using System.Net;
-using System.Security.Authentication;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Alfafile.Api.File;
 using Bearcat.Hosters.Alfafile.Api.User;
@@ -498,14 +498,23 @@ public class ApiClient(
 
                 var content = response.Content;
 
+                if (content?.Status == (int)HttpStatusCode.Unauthorized)
+                {
+                    throw new HosterCredentialsRejectedException(
+                        content.Details ?? "Alfafile rejected the login credentials"
+                    );
+                }
+
                 if (
                     !response.IsSuccessStatusCode
                     || content?.Status != (int)HttpStatusCode.OK
                     || string.IsNullOrWhiteSpace(content.Response?.Token)
                 )
                 {
-                    throw new AuthenticationException(
-                        content?.Details ?? $"Login failed with status code {response.StatusCode}"
+                    throw new HttpRequestException(
+                        content?.Details ?? $"Login failed with status code {response.StatusCode}",
+                        inner: null,
+                        statusCode: response.StatusCode
                     );
                 }
 

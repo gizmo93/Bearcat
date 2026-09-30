@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.Shared;
 using Bearcat.Hosters.UploadG;
 using Bearcat.Hosters.UploadG.Api;
@@ -316,7 +317,7 @@ public class ApiClientTest
     }
 
     [Test]
-    public async Task IsApiKeyValidAsync_SpaceUsageOk_ReturnsTrue()
+    public async Task EnsureApiKeyAcceptedAsync_SpaceUsageOk_Completes()
     {
         // Arrange
         var config = new UploadGConfig { ApiKey = "api-key" };
@@ -330,10 +331,95 @@ public class ApiClientTest
             );
 
         // Act
-        var result = await apiClient.IsApiKeyValidAsync(config, CancellationToken.None);
+        var action = () => apiClient.EnsureApiKeyAcceptedAsync(config, CancellationToken.None);
 
         // Assert
-        result.ShouldBeTrue();
+        await action.ShouldNotThrowAsync();
+    }
+
+    [Test]
+    public async Task EnsureApiKeyAcceptedAsync_SpaceUsageUnauthorized_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        var config = new UploadGConfig { ApiKey = "api-key" };
+        apiMock
+            .Setup(x => x.GetSpaceUsageAsync("Bearer api-key", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                await CreateUnauthorizedApiResponseAsync<SpaceUsageResponse>("""{"message": ""}""")
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            apiClient.EnsureApiKeyAcceptedAsync(config, CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldBe("UploadG rejected the API key");
+    }
+
+    [Test]
+    public async Task UploadFileAsync_MultipartCreateUnauthenticated_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        var config = new UploadGConfig { ApiKey = "api-key" };
+        apiMock
+            .Setup(x =>
+                x.CreateMultipartUploadAsync(
+                    "Bearer api-key",
+                    It.IsAny<MultipartCreateRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(
+                await CreateUnauthorizedExceptionAsync("""{"message":"Unauthenticated."}""")
+            );
+        using var stream = new MemoryStream([1, 2, 3]);
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            apiClient.UploadFileAsync(
+                config,
+                stream,
+                "file.bin",
+                folderId: null,
+                fileSize: 3,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Unauthenticated.");
+    }
+
+    private static async Task<ApiException> CreateUnauthorizedExceptionAsync(string content)
+    {
+        var (request, response) = CreateUnauthorizedHttpResponse(content);
+
+        return await ApiException.Create(request, HttpMethod.Post, response, new RefitSettings());
+    }
+
+    private static async Task<ApiResponse<T>> CreateUnauthorizedApiResponseAsync<T>(string content)
+    {
+        var (request, response) = CreateUnauthorizedHttpResponse(content);
+        var settings = new RefitSettings();
+        var error = await ApiException.Create(request, HttpMethod.Post, response, settings);
+
+        return new ApiResponse<T>(response, default, settings, error);
+    }
+
+    private static (
+        HttpRequestMessage Request,
+        HttpResponseMessage Response
+    ) CreateUnauthorizedHttpResponse(string content)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://uploadg.test/api/v1/test");
+        var response = new HttpResponseMessage(HttpStatusCode.Unauthorized)
+        {
+            RequestMessage = request,
+            Content = new StringContent(content),
+        };
+
+        return (request, response);
     }
 
     private static ApiResponse<T> CreateApiResponse<T>(HttpStatusCode statusCode, T content)

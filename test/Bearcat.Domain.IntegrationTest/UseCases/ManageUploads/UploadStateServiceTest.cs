@@ -841,6 +841,136 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task CheckUploadStatesAsync_HosterCheckFailsInConsecutiveRuns_CreatesSingleErrorNotification()
+    {
+        // Arrange
+        await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-4),
+            uploadedFileLinks: ["https://hoster.test/1"]
+        );
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(false, ["API unavailable"], new Dictionary<string, bool>())
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+        dbContext.ChangeTracker.Clear();
+        await service.CheckUploadStatesAsync(localNow.AddSeconds(20), CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var notifications = await dbContext
+            .Notifications.Where(n =>
+                n.NotificationKind == NotificationKind.HosterStatusCheckFailed
+            )
+            .ToListAsync();
+
+        notifications.Count.ShouldBe(1);
+        hosterMock.Verify(
+            h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Exactly(2)
+        );
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_HosterRejectsCredentialsForMultipleUploads_DeactivatesRegistrationWithSingleNotification()
+    {
+        // Arrange
+        var hosterRegistration = CreateHosterRegistration();
+        await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-4),
+            uploadedFileLinks: ["https://hoster.test/1"],
+            hosterRegistration: hosterRegistration
+        );
+        await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-4),
+            uploadedFileLinks: ["https://hoster.test/2"],
+            hosterRegistration: hosterRegistration
+        );
+
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(
+                new HosterCredentialsRejectedException("Error: Wrong e-mail or password.")
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var registration = await dbContext.HosterRegistrations.SingleAsync();
+        var notification = await dbContext.Notifications.SingleAsync();
+
+        registration.IsActive.ShouldBeFalse();
+        notification.NotificationKind.ShouldBe(NotificationKind.HosterCredentialsRejected);
+        notification.NotificationSeverity.ShouldBe(NotificationSeverity.Error);
+        notification.Message.ShouldBe(
+            "Hoster registration 'Hoster' was deactivated because the hoster rejected the credentials: Error: Wrong e-mail or password."
+        );
+        (await dbContext.Uploads.ToListAsync()).ShouldAllBe(u =>
+            u.OnlineState == OnlineState.Online
+        );
+    }
+
+    [Test]
+    public async Task CheckUploadStateNowAsync_HosterRejectsCredentialsOfInactiveRegistration_DoesNotCreateNotification()
+    {
+        // Arrange
+        var hosterRegistration = CreateHosterRegistration();
+        hosterRegistration.IsActive = false;
+        var upload = await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-4),
+            uploadedFileLinks: ["https://hoster.test/1"],
+            hosterRegistration: hosterRegistration
+        );
+
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(
+                new HosterCredentialsRejectedException("Error: Wrong e-mail or password.")
+            );
+
+        // Act
+        await service.CheckUploadStateNowAsync(upload.Id, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        (await dbContext.Notifications.ToListAsync()).ShouldBeEmpty();
+        (await dbContext.HosterRegistrations.SingleAsync()).IsActive.ShouldBeFalse();
+        hosterMock.VerifyAll();
+    }
+
+    [Test]
     public async Task CheckUploadStatesAsync_UploadConfigWithoutUploads_CreatesInitialWaitingForArchiveUpload()
     {
         // Arrange
@@ -2127,6 +2257,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             new TestApplicationConfigurationProvider(initialUploadCooldownMinutes),
             notificationService,
             new HosterCaptchaVerificationService(notificationService),
+            new HosterCredentialsRejectionService(notificationService),
             Mock.Of<ILogger<UploadStateService>>(),
             NoOpSecretProtector.Instance,
             new QualityGateEvaluator(

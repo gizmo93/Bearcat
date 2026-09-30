@@ -130,6 +130,26 @@ public class UploadStateRepository(IBearcatWriteDbContext dbWrite) : IUploadStat
         return await dbWrite.Uploads.FirstOrDefaultAsync(u => u.Id == uploadId, cancellationToken);
     }
 
+    public async Task<IReadOnlySet<int>> GetUploadIdsWithUnresolvedNotificationAsync(
+        IReadOnlyList<int> uploadIds,
+        NotificationKind kind,
+        CancellationToken cancellationToken
+    )
+    {
+        var uploadIdsWithNotification = await dbWrite
+            .Notifications.Where(n =>
+                n.UploadId != null
+                && uploadIds.Contains(n.UploadId.Value)
+                && n.NotificationKind == kind
+                && n.ResolvedAt == null
+            )
+            .Select(n => n.UploadId!.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        return uploadIdsWithNotification.ToHashSet();
+    }
+
     public async Task<IReadOnlyList<UploadConfig>> GetUploadConfigsWithoutUploadsAsync(
         DateTime releaseCreatedBefore,
         CancellationToken cancellationToken

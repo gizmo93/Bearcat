@@ -3,6 +3,7 @@ using System.Text.Json;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Extensions;
@@ -62,7 +63,7 @@ public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> l
                     FileUrl: response.Data?.Url
                 );
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not HosterCredentialsRejectedException)
             {
                 logger.LogError(
                     ex,
@@ -115,7 +116,7 @@ public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> l
                 DownloadCountPerFileUrl: downloadCountPerFileUrl
             );
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not HosterCredentialsRejectedException)
         {
             return new FileExistResult(
                 IsSuccess: false,
@@ -189,12 +190,9 @@ public class KrakenFiles(IKrakenFilesApiClient apiClient, ILogger<KrakenFiles> l
 
         try
         {
-            var success = await apiClient.IsApiKeyValidAsync(config, cancellationToken);
+            await apiClient.EnsureApiKeyAcceptedAsync(config, cancellationToken);
 
-            return new TryLoginResult(
-                IsSuccess: success,
-                ErrorMessage: success ? null : "Invalid credentials"
-            );
+            return new TryLoginResult(IsSuccess: true, ErrorMessage: null);
         }
         catch (Exception ex)
         {

@@ -1,8 +1,10 @@
 using System.Net;
 using System.Text;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.Mega4Upload.Api;
 using Bearcat.Hosters.Shared;
 using Moq;
+using Refit;
 using Shouldly;
 
 namespace Bearcat.Hosters.UnitTest.Mega4Upload;
@@ -35,6 +37,60 @@ public class ApiClientTest
         handler.RequestBody.ShouldContain("name=\"ajax\"");
         handler.RequestBody.ShouldContain("name=\"sess_id\"");
         handler.RequestBody.ShouldContain("name=\"file\"");
+    }
+
+    [Test]
+    public async Task FilesExistAsync_ApiAnswersUnauthorized_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        var apiClient = CreateRefitApiClient(
+            new UnauthorizedHandler(
+                """{"msg":"Unauthorized","server_time":"2026-09-30 10:15:03","status":401}"""
+            )
+        );
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            apiClient.FilesExistAsync(
+                "api-key",
+                new HashSet<string> { "zphzpngmx66a" },
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Unauthorized");
+    }
+
+    [Test]
+    public async Task RequestUploadAsync_ApiAnswersUnauthorized_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        var apiClient = CreateRefitApiClient(
+            new UnauthorizedHandler(
+                """{"msg":"Unauthorized","server_time":"2026-09-30 10:15:03","status":401}"""
+            )
+        );
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            apiClient.RequestUploadAsync("api-key", CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Unauthorized");
+    }
+
+    private static ApiClient CreateRefitApiClient(HttpMessageHandler handler)
+    {
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri(ApiClient.ApiBaseUrl) };
+        var httpClientProvider = new HttpClientProvider(new Mock<IHttpClientFactory>().Object);
+
+        return new ApiClient(
+            RestService.For<IMega4UploadApi>(httpClient),
+            httpClientProvider,
+            new HosterFileDownloader(httpClientProvider)
+        );
     }
 
     private static ApiClient CreateApiClient(HttpMessageHandler handler)
@@ -71,6 +127,23 @@ public class ApiClientTest
             {
                 Content = new StringContent(responseContent),
             };
+        }
+    }
+
+    private sealed class UnauthorizedHandler(string responseContent) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
+        {
+            return Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.Unauthorized)
+                {
+                    Content = new StringContent(responseContent),
+                    RequestMessage = request,
+                }
+            );
         }
     }
 }

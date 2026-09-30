@@ -1,5 +1,7 @@
 using System.Net;
+using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Alfafile;
 using Bearcat.Hosters.Alfafile.Api;
@@ -482,6 +484,39 @@ public class ApiClientTest
         // Assert
         result[fileUrl].IsOnline.ShouldBeTrue();
         result[fileUrl].DownloadCount.ShouldBe(42);
+    }
+
+    [Test]
+    public async Task GetUserInfoAsync_WrongPassword_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        apiMock
+            .Setup(x =>
+                x.LoginAsync(config.Username, config.Password, It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    DeserializeResponse<LoginResponse>(
+                        """{"response":null,"status":401,"details":"Unauthorized. Wrong login or password."}"""
+                    )
+                )
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            apiClient.GetUserInfoAsync(config, CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Unauthorized. Wrong login or password.");
+    }
+
+    private static T DeserializeResponse<T>(string json)
+    {
+        return JsonSerializer.Deserialize<T>(
+            json,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        )!;
     }
 
     private static ApiResponse<T> CreateApiResponse<T>(

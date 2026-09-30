@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Fast2Share;
 using Bearcat.Hosters.Fast2Share.Api;
@@ -230,15 +231,15 @@ public class Fast2ShareTest
     {
         // Arrange
         apiClientMock
-            .Setup(x => x.IsApiKeyValidAsync(config, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+            .Setup(x => x.EnsureApiKeyAcceptedAsync(config, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HosterCredentialsRejectedException("Invalid or revoked API token."));
 
         // Act
         var result = await service.TryLoginAsync(config, CancellationToken.None);
 
         // Assert
         result.IsSuccess.ShouldBeFalse();
-        result.ErrorMessage.ShouldBe("Invalid credentials");
+        result.ErrorMessage.ShouldBe("Invalid or revoked API token.");
     }
 
     [Test]

@@ -1,12 +1,14 @@
 using System.Net;
 using System.Net.Http.Headers;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Fichier;
 using Bearcat.Hosters.Fichier.Api;
 using Bearcat.Hosters.Fichier.Api.Download;
 using Bearcat.Hosters.Fichier.Api.File;
 using Bearcat.Hosters.Fichier.Api.Folder;
+using Bearcat.Hosters.Fichier.Api.User;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -340,6 +342,67 @@ public class ApiClientTest
     }
 
     [Test]
+    public async Task CheckLinksAsync_NoSuchUser_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+        var fileUrl = "https://1fichier.com/?abc";
+
+        apiMock
+            .Setup(x =>
+                x.GetFileInfoAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<FileInfoRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                await CreateErrorApiResponseAsync<FileInfoResponse>(
+                    HttpStatusCode.Forbidden,
+                    """{"status":"KO","message":"No such user #133"}"""
+                )
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            apiClient.CheckLinksAsync(config, [fileUrl], CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldBe("No such user #133");
+    }
+
+    [Test]
+    public async Task GetUserInfoAsync_NotAuthenticated_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "" };
+
+        apiMock
+            .Setup(x =>
+                x.GetUserInfoAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<UserInfoRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                await CreateErrorApiResponseAsync<UserInfoResponse>(
+                    HttpStatusCode.Unauthorized,
+                    """{"message":"Not authenticated #247","status":"KO"}"""
+                )
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            apiClient.GetUserInfoAsync(config, CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Not authenticated #247");
+    }
+
+    [Test]
     public async Task GetFileSizesAsync_FileInfoReportsSize_MapsItPerFileUrl()
     {
         // Arrange
@@ -584,6 +647,23 @@ public class ApiClientTest
             new RefitSettings(),
             error: null
         );
+    }
+
+    private static async Task<ApiResponse<T>> CreateErrorApiResponseAsync<T>(
+        HttpStatusCode statusCode,
+        string content
+    )
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://api.1fichier.com/v1/test");
+        var response = new HttpResponseMessage(statusCode)
+        {
+            RequestMessage = request,
+            Content = new StringContent(content),
+        };
+        var settings = new RefitSettings();
+        var error = await ApiException.Create(request, HttpMethod.Post, response, settings);
+
+        return new ApiResponse<T>(response, default, settings, error);
     }
 
     private static HttpResponseMessage CreateJsonResponse(string content)

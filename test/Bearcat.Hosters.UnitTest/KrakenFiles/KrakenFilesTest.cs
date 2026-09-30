@@ -1,6 +1,7 @@
 using System.Net;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.KrakenFiles;
 using Bearcat.Hosters.KrakenFiles.Api;
@@ -109,8 +110,8 @@ public class KrakenFilesTest
         var config = new KrakenFilesConfig { ApiKey = "api-key" };
 
         apiClientMock
-            .Setup(x => x.IsApiKeyValidAsync(config, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .Setup(x => x.EnsureApiKeyAcceptedAsync(config, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         // Act
         var result = await service.TryLoginAsync(config, CancellationToken.None);
@@ -128,8 +129,8 @@ public class KrakenFilesTest
         var config = new KrakenFilesConfig { ApiKey = "api-key" };
 
         apiClientMock
-            .Setup(x => x.IsApiKeyValidAsync(config, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+            .Setup(x => x.EnsureApiKeyAcceptedAsync(config, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HosterCredentialsRejectedException("Invalid credentials."));
 
         // Act
         var result = await service.TryLoginAsync(config, CancellationToken.None);
@@ -137,6 +138,6 @@ public class KrakenFilesTest
         // Assert
         result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeFalse();
-        result.ErrorMessage.ShouldBe("Invalid credentials");
+        result.ErrorMessage.ShouldBe("Invalid credentials.");
     }
 }

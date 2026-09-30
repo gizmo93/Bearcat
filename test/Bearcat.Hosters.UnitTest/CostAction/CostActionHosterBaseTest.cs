@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Hitfile;
 using Bearcat.Hosters.Shared;
@@ -177,6 +178,80 @@ public class CostActionHosterBaseTest
         result.StatusPerFileUrl["https://turbobit.net/whatever.html"].ShouldBeFalse();
         result.DownloadCountPerFileUrl!["https://trbt.cc/online1.html"].ShouldBe(4);
         result.DownloadCountPerFileUrl.ShouldNotContainKey("https://turbobit.net/whatever.html");
+    }
+
+    [Test]
+    public async Task UploadFileAsync_CredentialsRejected_ThrowsWithoutRetrying()
+    {
+        // Arrange
+        var fileDto = new FileDto(Id: 1, FullFileName: filePath, UploadId: 11);
+        apiClientMock
+            .Setup(x =>
+                x.UploadFileAsync(
+                    ApiKey,
+                    "fd1",
+                    It.IsAny<Stream>(),
+                    It.IsAny<string>(),
+                    It.IsAny<long>(),
+                    null,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(new HosterCredentialsRejectedException("This action is unauthorized."));
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            turbobit.UploadFileAsync(
+                fileDto,
+                turbobitConfig,
+                NullTransferProgress.Instance,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("This action is unauthorized.");
+        apiClientMock.Verify(
+            x =>
+                x.UploadFileAsync(
+                    ApiKey,
+                    "fd1",
+                    It.IsAny<Stream>(),
+                    It.IsAny<string>(),
+                    It.IsAny<long>(),
+                    null,
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task CheckFilesExistAsync_CredentialsRejected_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        apiClientMock
+            .Setup(x =>
+                x.CheckFilesAsync(
+                    ApiKey,
+                    "fd2",
+                    It.IsAny<IReadOnlyList<string>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(new HosterCredentialsRejectedException("This action is unauthorized."));
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            hitfile.CheckFilesExistAsync(
+                hitfileConfig,
+                [new FileUrlToCheckDto("https://htfl.net/tHzfhvR", ExternalId: null)],
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("This action is unauthorized.");
     }
 
     [Test]

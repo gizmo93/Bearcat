@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.Nitroflare.Api.File;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,8 @@ public class ApiClient(
 ) : INitroflareApiClient
 {
     private const int MaxFileIdsPerFileInfoRequest = 100;
+
+    private const string WrongUserHashResponse = "Invalid User - Wrong hash";
 
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
@@ -42,6 +45,11 @@ public class ApiClient(
         );
 
         var content = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
+
+        if (string.Equals(content.Trim(), WrongUserHashResponse, StringComparison.Ordinal))
+        {
+            throw new HosterCredentialsRejectedException(WrongUserHashResponse);
+        }
 
         if (!httpResponse.IsSuccessStatusCode)
         {
