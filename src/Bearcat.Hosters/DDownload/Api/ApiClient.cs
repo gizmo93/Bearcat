@@ -38,11 +38,15 @@ public class ApiClient(
 
         foreach (var batch in fileCodes.Chunk(FileCheckBatchSize))
         {
-            var response = await Api.CheckFilesAsync(
-                apiKey: apiKey,
-                fileCodes: string.Join(',', batch),
-                cancellationToken: cancellationToken
+            var response = await SendApiRequestAsync(() =>
+                Api.CheckFilesAsync(
+                    apiKey: apiKey,
+                    fileCodes: string.Join(',', batch),
+                    cancellationToken: cancellationToken
+                )
             );
+
+            XFilesharingApiKeyRejection.ThrowIfRejected(response.Status, response.Msg);
 
             foreach (var file in response.Result.Files.Where(file => file.FileCode is not null))
             {

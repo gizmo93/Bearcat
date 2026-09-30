@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
@@ -173,6 +174,8 @@ public class ApiClient(
 
         if (!response.IsSuccessStatusCode || response.Content is null)
         {
+            ThrowIfApiKeyRejected(response);
+
             throw new HttpRequestException(
                 $"Fast2Share folder creation failed with status code {response.StatusCode}: {GetErrorMessage(response)}"
             );
@@ -212,10 +215,7 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        if (!await IsApiKeyValidAsync(config, cancellationToken))
-        {
-            throw new HttpRequestException("Invalid credentials");
-        }
+        await EnsureApiKeyAcceptedAsync(config, cancellationToken);
 
         var authorization = GetAuthorizationHeader(config.ApiKey);
         using var semaphore = new SemaphoreSlim(MaxParallelLinkChecks);
@@ -232,7 +232,7 @@ public class ApiClient(
             .ToDictionary(result => result.FileUrl, result => result.Status!);
     }
 
-    public async Task<bool> IsApiKeyValidAsync(
+    public async Task EnsureApiKeyAcceptedAsync(
         Fast2ShareConfig config,
         CancellationToken cancellationToken
     )
@@ -242,7 +242,18 @@ public class ApiClient(
             cancellationToken
         );
 
-        return response.StatusCode == HttpStatusCode.OK;
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            return;
+        }
+
+        ThrowIfApiKeyRejected(response);
+
+        throw new HttpRequestException(
+            $"Fast2Share user request failed with status code {response.StatusCode}: {GetErrorMessage(response)}",
+            inner: null,
+            statusCode: response.StatusCode
+        );
     }
 
     public async Task DownloadFileAsync(
@@ -272,6 +283,8 @@ public class ApiClient(
 
         if (!response.IsSuccessStatusCode || response.Content is null)
         {
+            ThrowIfApiKeyRejected(response);
+
             throw new HttpRequestException(
                 $"Fast2Share download request failed with status code {response.StatusCode}: {GetErrorMessage(response)}"
             );
@@ -424,6 +437,8 @@ public class ApiClient(
 
         if (!response.IsSuccessStatusCode || response.Content is null)
         {
+            ThrowIfApiKeyRejected(response);
+
             throw new HttpRequestException(
                 $"{operationName} failed with status code {response.StatusCode}: {GetErrorMessage(response)}"
             );
@@ -446,6 +461,8 @@ public class ApiClient(
 
             if (!response.IsSuccessStatusCode || response.Content is null)
             {
+                ThrowIfApiKeyRejected(response);
+
                 throw new HttpRequestException(
                     $"Fast2Share upload status request failed with status code {response.StatusCode}: {GetErrorMessage(response)}"
                 );
@@ -495,6 +512,8 @@ public class ApiClient(
 
         if (!response.IsSuccessStatusCode)
         {
+            ThrowIfApiKeyRejected(response);
+
             throw new HttpRequestException(
                 $"Fast2Share file move failed with status code {response.StatusCode}: {GetErrorMessage(response)}"
             );
@@ -511,6 +530,8 @@ public class ApiClient(
 
         if (!response.IsSuccessStatusCode || response.Content is null)
         {
+            ThrowIfApiKeyRejected(response);
+
             throw new HttpRequestException(
                 $"Fast2Share folder list failed with status code {response.StatusCode}: {GetErrorMessage(response)}"
             );
@@ -650,6 +671,21 @@ public class ApiClient(
     private static string GetAuthorizationHeader(string apiKey)
     {
         return $"Bearer {apiKey}";
+    }
+
+    private static void ThrowIfApiKeyRejected(IApiResponse response)
+    {
+        if (response.StatusCode != HttpStatusCode.Unauthorized)
+        {
+            return;
+        }
+
+        var message = DeserializeErrorContent<ErrorResponse>(response)?.Error;
+
+        if (message is "Invalid or revoked API token." or "Missing bearer token.")
+        {
+            throw new HosterCredentialsRejectedException(message);
+        }
     }
 
     private static string? GetErrorMessage(IApiResponse response)

@@ -34,7 +34,7 @@ public interface ICloudFamApiClient
         CancellationToken cancellationToken
     );
 
-    Task<bool> IsApiKeyValidAsync(CloudFamConfig config, CancellationToken cancellationToken);
+    Task EnsureApiKeyAcceptedAsync(CloudFamConfig config, CancellationToken cancellationToken);
 }
 
 public record CloudFamUploadResult(string FileId, string FileUrl);

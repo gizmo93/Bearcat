@@ -2,6 +2,7 @@ using System.Text.Json;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Extensions;
@@ -66,7 +67,7 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger)
                     );
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not HosterCredentialsRejectedException)
             {
                 logger.LogError(
                     ex,
@@ -113,7 +114,7 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger)
                 StatusPerFileUrl: statusPerFileUrl
             );
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not HosterCredentialsRejectedException)
         {
             return new FileExistResult(
                 IsSuccess: false,
@@ -159,7 +160,8 @@ public class Fichier(IFichierApiClient apiClient, ILogger<Fichier> logger)
 
             return new DownloadFileResult(IsSuccess: true, ErrorMessages: []);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
         {
             logger.LogError(
                 ex,

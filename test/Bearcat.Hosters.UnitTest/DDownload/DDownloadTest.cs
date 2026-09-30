@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.DDownload;
 using Bearcat.Hosters.DDownload.Api;
@@ -287,6 +288,71 @@ public class DDownloadTest
                 ),
             Times.Never
         );
+    }
+
+    [Test]
+    public async Task UploadFileAsync_UploadServerRejectsKey_ThrowsWithoutRetrying()
+    {
+        // Arrange
+        var filePath = CreateTemporaryFile("upload-content");
+        var fileDto = new FileDto(Id: 19, FullFileName: filePath, UploadId: 119);
+        var config = new DDownloadConfig { ApiKey = "api-key" };
+
+        apiClientMock
+            .Setup(x => x.RequestUploadAsync("api-key", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new RequestUploadResponse
+                {
+                    Status = (int)HttpStatusCode.BadRequest,
+                    Msg = "Invalid key",
+                }
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            service.UploadFileAsync(
+                fileDto,
+                config,
+                NullTransferProgress.Instance,
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Invalid key");
+        apiClientMock.Verify(
+            x => x.RequestUploadAsync("api-key", It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task CheckFilesExistAsync_CredentialsRejected_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        var config = new DDownloadConfig { ApiKey = "api-key" };
+
+        apiClientMock
+            .Setup(x =>
+                x.FilesExistAsync(
+                    "api-key",
+                    It.IsAny<IReadOnlySet<string>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(new HosterCredentialsRejectedException("Invalid key"));
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            service.CheckFilesExistAsync(
+                config,
+                [new FileUrlToCheckDto("https://www.ddownload.com/file-code", null)],
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Invalid key");
     }
 
     [Test]

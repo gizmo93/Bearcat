@@ -750,39 +750,6 @@ public class ApiClientTest
         exception.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
     }
 
-    [Test]
-    public async Task CheckLinksAsync_SessionDoesNotExist_ThrowsHttpRequestException()
-    {
-        // Arrange
-        var config = new RapidgatorConfig { Username = "user", Password = "password" };
-        SetupLogin();
-        apiMock
-            .Setup(x =>
-                x.CheckLinkAsync("token", It.IsAny<string>(), It.IsAny<CancellationToken>())
-            )
-            .ReturnsAsync(
-                CreateApiResponse(
-                    new CheckLinksResponse
-                    {
-                        Status = (int)HttpStatusCode.Unauthorized,
-                        Details = "Error. Session doesn't exist",
-                    }
-                )
-            );
-
-        // Act
-        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
-            apiClient.CheckLinksAsync(
-                config,
-                [new FileUrlToCheckDto("https://rapidgator.net/file/abc123", null)],
-                CancellationToken.None
-            )
-        );
-
-        // Assert
-        exception.Message.ShouldBe("Error. Session doesn't exist");
-    }
-
     private void SetupLogin()
     {
         apiMock

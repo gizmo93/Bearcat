@@ -32,7 +32,7 @@ public interface IUploadGApiClient
         CancellationToken cancellationToken
     );
 
-    Task<bool> IsApiKeyValidAsync(UploadGConfig config, CancellationToken cancellationToken);
+    Task EnsureApiKeyAcceptedAsync(UploadGConfig config, CancellationToken cancellationToken);
 
     Task<string> GetOrCreateShareableLinkAsync(
         UploadGConfig config,

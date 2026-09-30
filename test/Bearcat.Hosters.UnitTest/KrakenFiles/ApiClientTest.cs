@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.KrakenFiles;
 using Bearcat.Hosters.KrakenFiles.Api;
 using Bearcat.Hosters.Shared;
@@ -211,7 +212,7 @@ public class ApiClientTest
     }
 
     [Test]
-    public async Task IsApiKeyValidAsync_FileNotFoundForProbeHash_ReturnsTrue()
+    public async Task EnsureApiKeyAcceptedAsync_FileNotFoundForProbeHash_Completes()
     {
         // Arrange
         var config = new KrakenFilesConfig { ApiKey = "api-key" };
@@ -223,14 +224,14 @@ public class ApiClientTest
             .ReturnsAsync(CreateApiResponse<FileResponse>(HttpStatusCode.NotFound));
 
         // Act
-        var result = await apiClient.IsApiKeyValidAsync(config, CancellationToken.None);
+        var action = () => apiClient.EnsureApiKeyAcceptedAsync(config, CancellationToken.None);
 
         // Assert
-        result.ShouldBeTrue();
+        await action.ShouldNotThrowAsync();
     }
 
     [Test]
-    public async Task IsApiKeyValidAsync_UnauthorizedForProbeHash_ReturnsFalse()
+    public async Task EnsureApiKeyAcceptedAsync_InvalidCredentialsForProbeHash_ThrowsHosterCredentialsRejected()
     {
         // Arrange
         var config = new KrakenFilesConfig { ApiKey = "api-key" };
@@ -239,13 +240,46 @@ public class ApiClientTest
             .Setup(x =>
                 x.GetFileAsync("bearcat-login-check", "api-key", It.IsAny<CancellationToken>())
             )
-            .ReturnsAsync(CreateApiResponse<FileResponse>(HttpStatusCode.Unauthorized));
+            .ReturnsAsync(
+                await CreateErrorApiResponseAsync<FileResponse>(
+                    HttpStatusCode.Unauthorized,
+                    """{"message":"Invalid credentials."}"""
+                )
+            );
 
         // Act
-        var result = await apiClient.IsApiKeyValidAsync(config, CancellationToken.None);
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            apiClient.EnsureApiKeyAcceptedAsync(config, CancellationToken.None)
+        );
 
         // Assert
-        result.ShouldBeFalse();
+        exception.Message.ShouldBe("Invalid credentials.");
+    }
+
+    [Test]
+    public async Task EnsureApiKeyAcceptedAsync_ServerErrorForProbeHash_ThrowsHttpRequestException()
+    {
+        // Arrange
+        var config = new KrakenFilesConfig { ApiKey = "api-key" };
+
+        apiMock
+            .Setup(x =>
+                x.GetFileAsync("bearcat-login-check", "api-key", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                await CreateErrorApiResponseAsync<FileResponse>(
+                    HttpStatusCode.BadGateway,
+                    "<html>Bad Gateway</html>"
+                )
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+            apiClient.EnsureApiKeyAcceptedAsync(config, CancellationToken.None)
+        );
+
+        // Assert
+        exception.StatusCode.ShouldBe(HttpStatusCode.BadGateway);
     }
 
     [Test]
@@ -317,6 +351,27 @@ public class ApiClientTest
             new RefitSettings(),
             error: null
         );
+    }
+
+    private static async Task<ApiResponse<T>> CreateErrorApiResponseAsync<T>(
+        HttpStatusCode statusCode,
+        string content
+    )
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "https://krakenfiles.test/api/file");
+        var response = new HttpResponseMessage(statusCode)
+        {
+            RequestMessage = request,
+            Content = new StringContent(content),
+        };
+        var error = await ApiException.Create(
+            request,
+            HttpMethod.Get,
+            response,
+            new RefitSettings()
+        );
+
+        return new ApiResponse<T>(response, default, new RefitSettings(), error);
     }
 
     private sealed class TestHttpMessageHandler(HttpResponseMessage response) : HttpMessageHandler

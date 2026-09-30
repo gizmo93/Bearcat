@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.DDownload.Api;
 using Bearcat.Hosters.Shared;
 using Bearcat.Hosters.Shared.XFilesharing.Api;
@@ -150,6 +151,32 @@ public class ApiClientTest
         result["not-found-code"].DownloadCount.ShouldBeNull();
         result["dmca-code"].Exists.ShouldBeFalse();
         result["dmca-code"].DownloadCount.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task FilesExistAsync_ApiRejectsKey_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        var response = JsonSerializer.Deserialize<FileCheckResponse>(
+            """{"status":400,"msg":"Invalid key","server_time":"2026-09-30 10:12:44"}"""
+        )!;
+        apiMock
+            .Setup(x =>
+                x.CheckFilesAsync("api-key", It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(response);
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            apiClient.FilesExistAsync(
+                "api-key",
+                new HashSet<string> { "file-code" },
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Invalid key");
     }
 
     [Test]

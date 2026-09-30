@@ -2,6 +2,7 @@ using System.Text.Json;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.CloudFam.Api;
@@ -72,7 +73,7 @@ public class CloudFam(ICloudFamApiClient apiClient, ILogger<CloudFam> logger) : 
             {
                 throw;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not HosterCredentialsRejectedException)
             {
                 var message = ex.InnerException?.Message ?? ex.Message;
                 logger.LogError(
@@ -125,7 +126,7 @@ public class CloudFam(ICloudFamApiClient apiClient, ILogger<CloudFam> logger) : 
                 DownloadCountPerFileUrl: downloadCountPerFileUrl
             );
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not HosterCredentialsRejectedException)
         {
             return new FileExistResult(
                 IsSuccess: false,
@@ -200,12 +201,9 @@ public class CloudFam(ICloudFamApiClient apiClient, ILogger<CloudFam> logger) : 
 
         try
         {
-            var success = await apiClient.IsApiKeyValidAsync(config, cancellationToken);
+            await apiClient.EnsureApiKeyAcceptedAsync(config, cancellationToken);
 
-            return new TryLoginResult(
-                IsSuccess: success,
-                ErrorMessage: success ? null : "Invalid credentials"
-            );
+            return new TryLoginResult(IsSuccess: true, ErrorMessage: null);
         }
         catch (Exception ex)
         {

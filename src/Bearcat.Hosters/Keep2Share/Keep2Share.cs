@@ -77,7 +77,9 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
             }
             catch (Exception ex)
             {
-                if (ex is CaptchaVerificationRequiredException)
+                if (
+                    ex is CaptchaVerificationRequiredException or HosterCredentialsRejectedException
+                )
                 {
                     throw;
                 }
@@ -129,7 +131,7 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
         }
         catch (Exception ex)
         {
-            if (ex is CaptchaVerificationRequiredException)
+            if (ex is CaptchaVerificationRequiredException or HosterCredentialsRejectedException)
             {
                 throw;
             }
@@ -250,7 +252,8 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
 
             return new DownloadFileResult(IsSuccess: true, ErrorMessages: []);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
         {
             logger.LogError(
                 ex,
@@ -279,7 +282,8 @@ public class Keep2Share(IKeep2ShareApiClient apiClient, ILogger<Keep2Share> logg
                 cancellationToken: cancellationToken
             );
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
         {
             logger.LogError(
                 ex,

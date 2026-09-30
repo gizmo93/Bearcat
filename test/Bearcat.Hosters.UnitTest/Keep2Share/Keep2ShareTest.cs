@@ -337,6 +337,56 @@ public class Keep2ShareTest
     }
 
     [Test]
+    public async Task CheckFilesExistAsync_CredentialsRejected_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "password",
+        };
+        var fileUrls = new[] { "http://k2s.cc/file/file-code" };
+
+        apiClientMock
+            .Setup(x => x.CheckLinksAsync(config, fileUrls, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HosterCredentialsRejectedException("Invalid login or password"));
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            service.CheckFilesExistAsync(
+                config,
+                fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(),
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Invalid login or password");
+    }
+
+    [Test]
+    public async Task TryLoginAsync_CredentialsRejected_ReturnsFailureWithHosterMessage()
+    {
+        // Arrange
+        var config = new Keep2ShareConfig
+        {
+            EmailAddress = "user@example.test",
+            Password = "wrong",
+        };
+
+        apiClientMock
+            .Setup(x => x.LoginAsync(config, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HosterCredentialsRejectedException("Invalid login or password"));
+
+        // Act
+        var result = await service.TryLoginAsync(config, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe("Invalid login or password");
+    }
+
+    [Test]
     public async Task TryLoginAsync_LoginReturnsOk_ReturnsSuccess()
     {
         // Arrange

@@ -1,4 +1,5 @@
 using System.Net;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.GoFile.Api;
 using Bearcat.Hosters.GoFile.Api.GetFileInfo;
 using Bearcat.Hosters.Shared;
@@ -422,6 +423,59 @@ public class ApiClientTest
         result[fileUrl].ErrorMessage.ShouldBeNull();
     }
 
+    [Test]
+    public async Task CheckOnlineStatusAsync_WrongToken_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        apiMock
+            .Setup(x =>
+                x.GetFileInfoAsync(
+                    "file-id",
+                    "Bearer api-key",
+                    "Bearcat",
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(
+                await CreateUnauthorizedExceptionAsync(
+                    """{"status":"error-wrongToken","data":{}}"""
+                )
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            apiClient.CheckOnlineStatusAsync(
+                ["https://gofile.io/d/file-id"],
+                "api-key",
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldContain("error-wrongToken");
+    }
+
+    [Test]
+    public async Task GetAccountAsync_WrongToken_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        apiMock
+            .Setup(x => x.GetAccountAsync("Bearer api-key", It.IsAny<CancellationToken>()))
+            .ThrowsAsync(
+                await CreateUnauthorizedExceptionAsync(
+                    """{"status":"error-wrongToken","data":{}}"""
+                )
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            apiClient.GetAccountAsync("api-key", CancellationToken.None)
+        );
+
+        // Assert
+        exception.Message.ShouldContain("error-wrongToken");
+    }
+
     private void SetupAccountFileInfo(Response response)
     {
         apiMock
@@ -463,13 +517,20 @@ public class ApiClientTest
 
     private static async Task<ApiException> CreateNotPremiumExceptionAsync()
     {
+        return await CreateUnauthorizedExceptionAsync(
+            """{"status":"error-notPremium","data":{}}"""
+        );
+    }
+
+    private static async Task<ApiException> CreateUnauthorizedExceptionAsync(string content)
+    {
         using var request = new HttpRequestMessage(
             HttpMethod.Get,
             "https://api.gofile.io/contents/root-folder-id"
         );
         using var response = new HttpResponseMessage(HttpStatusCode.Unauthorized)
         {
-            Content = new StringContent("""{"status":"error-notPremium","data":{}}"""),
+            Content = new StringContent(content),
         };
 
         return await ApiException.Create(request, HttpMethod.Get, response, new RefitSettings());

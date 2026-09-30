@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.UploadG;
 using Bearcat.Hosters.UploadG.Api;
@@ -158,14 +159,14 @@ public class UploadGTest
         var config = new UploadGConfig { ApiKey = "api-key" };
 
         apiClientMock
-            .Setup(x => x.IsApiKeyValidAsync(config, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+            .Setup(x => x.EnsureApiKeyAcceptedAsync(config, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HosterCredentialsRejectedException("Unauthenticated."));
 
         // Act
         var result = await service.TryLoginAsync(config, CancellationToken.None);
 
         // Assert
         result.IsSuccess.ShouldBeFalse();
-        result.ErrorMessage.ShouldBe("Invalid credentials");
+        result.ErrorMessage.ShouldBe("Unauthenticated.");
     }
 }

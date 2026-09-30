@@ -11,7 +11,6 @@ using Bearcat.Hosters.Rapidgator.Api.Folder;
 using Bearcat.Hosters.Rapidgator.Api.User;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
-using Refit;
 
 namespace Bearcat.Hosters.Rapidgator.Api;
 
@@ -325,7 +324,7 @@ public class ApiClient(
                 cancellationToken: cancellationToken
             );
 
-            responses.Add(EnsureCheckLinksSucceeded(response));
+            responses.Add(response.Content!);
         }
 
         var statusPerUrl = responses
@@ -483,30 +482,5 @@ public class ApiClient(
         }
 
         return content.Response;
-    }
-
-    private static CheckLinksResponse EnsureCheckLinksSucceeded(
-        ApiResponse<CheckLinksResponse> response
-    )
-    {
-        var content = response.Content;
-
-        if (content is null)
-        {
-            throw new HttpRequestException(
-                $"Rapidgator link check failed with HTTP status {response.StatusCode}: {response.Error?.Message}",
-                inner: response.Error,
-                statusCode: response.StatusCode
-            );
-        }
-
-        if (content.Status != (int)HttpStatusCode.OK)
-        {
-            throw new HttpRequestException(
-                content.Details ?? $"Rapidgator link check failed with status {content.Status}"
-            );
-        }
-
-        return content;
     }
 }

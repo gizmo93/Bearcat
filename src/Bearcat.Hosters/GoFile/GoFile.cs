@@ -2,6 +2,7 @@ using System.Text.Json;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Extensions;
@@ -77,7 +78,7 @@ public class GoFile(IGoFileApiClient apiClient, ILogger<GoFile> logger) : IHoste
                     FileUrl: GetFileUrl(response.Data!)
                 );
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not HosterCredentialsRejectedException)
             {
                 logger.LogError(
                     ex,

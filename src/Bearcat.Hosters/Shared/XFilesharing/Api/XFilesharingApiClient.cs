@@ -34,11 +34,11 @@ public abstract class XFilesharingApiClient<TApi>(
 
         foreach (var batch in fileCodes.Chunk(50))
         {
-            var response = await api.GetFileInfoAsync(
-                apiKey,
-                string.Join(',', batch),
-                cancellationToken
+            var response = await SendApiRequestAsync(() =>
+                api.GetFileInfoAsync(apiKey, string.Join(',', batch), cancellationToken)
             );
+
+            XFilesharingApiKeyRejection.ThrowIfRejected(response.Status, response.Msg);
 
             foreach (var file in response.Results.Where(file => file.FileCode is not null))
             {
@@ -62,11 +62,11 @@ public abstract class XFilesharingApiClient<TApi>(
 
         foreach (var batch in fileCodes.Chunk(50))
         {
-            var response = await api.GetFileInfoAsync(
-                apiKey,
-                string.Join(',', batch),
-                cancellationToken
+            var response = await SendApiRequestAsync(() =>
+                api.GetFileInfoAsync(apiKey, string.Join(',', batch), cancellationToken)
             );
+
+            XFilesharingApiKeyRejection.ThrowIfRejected(response.Status, response.Msg);
 
             foreach (var file in response.Results.Where(file => file.FileCode is not null))
             {
@@ -91,10 +91,12 @@ public abstract class XFilesharingApiClient<TApi>(
         CancellationToken cancellationToken
     )
     {
-        var response = await api.GetDirectLinkAsync(
-            apiKey: apiKey,
-            fileCode: fileCode,
-            cancellationToken: cancellationToken
+        var response = await SendApiRequestAsync(() =>
+            api.GetDirectLinkAsync(
+                apiKey: apiKey,
+                fileCode: fileCode,
+                cancellationToken: cancellationToken
+            )
         );
 
         var downloadUrl = response.Result?.Url;
@@ -104,6 +106,8 @@ public abstract class XFilesharingApiClient<TApi>(
             || string.IsNullOrWhiteSpace(downloadUrl)
         )
         {
+            XFilesharingApiKeyRejection.ThrowIfRejected(response.Status, response.Msg);
+
             var message = string.IsNullOrWhiteSpace(response.Msg)
                 ? $"XFilesharing did not return a download URL for file {fileCode} (status {response.Status})"
                 : response.Msg;
@@ -151,7 +155,7 @@ public abstract class XFilesharingApiClient<TApi>(
         CancellationToken cancellationToken
     )
     {
-        return await api.GetAccountInfoAsync(apiKey, cancellationToken);
+        return await SendApiRequestAsync(() => api.GetAccountInfoAsync(apiKey, cancellationToken));
     }
 
     public async Task<RequestUploadResponse> RequestUploadAsync(
@@ -163,8 +167,12 @@ public abstract class XFilesharingApiClient<TApi>(
 
         if (!response.IsSuccessStatusCode)
         {
+            var errorContent = (response.Error as ApiException)?.Content;
+
+            XFilesharingApiKeyRejection.ThrowIfRejected(response.StatusCode, errorContent);
+
             throw new HttpRequestException(
-                $"Request upload server failed with status code {response.StatusCode}{FormatErrorDetail((response.Error as ApiException)?.Content)}"
+                $"Request upload server failed with status code {response.StatusCode}{FormatErrorDetail(errorContent)}"
             );
         }
 
@@ -223,10 +231,12 @@ public abstract class XFilesharingApiClient<TApi>(
         CancellationToken cancellationToken
     )
     {
-        var rootFolder = await api.GetFolderListAsync(
-            apiKey: apiKey,
-            folderId: null,
-            cancellationToken: cancellationToken
+        var rootFolder = await SendApiRequestAsync(() =>
+            api.GetFolderListAsync(
+                apiKey: apiKey,
+                folderId: null,
+                cancellationToken: cancellationToken
+            )
         );
 
         EnsureSuccess(rootFolder.Status, rootFolder.Msg, "XFilesharing folder list failed");
@@ -240,10 +250,12 @@ public abstract class XFilesharingApiClient<TApi>(
             return existingFolder.FolderId;
         }
 
-        var createdFolder = await api.CreateFolderAsync(
-            apiKey: apiKey,
-            name: folderName,
-            cancellationToken: cancellationToken
+        var createdFolder = await SendApiRequestAsync(() =>
+            api.CreateFolderAsync(
+                apiKey: apiKey,
+                name: folderName,
+                cancellationToken: cancellationToken
+            )
         );
 
         EnsureSuccess(
@@ -273,11 +285,13 @@ public abstract class XFilesharingApiClient<TApi>(
 
         foreach (var attempt in Enumerable.Range(start: 1, count: FileFolderRetryAttempts))
         {
-            response = await api.SetFileFolderAsync(
-                apiKey: apiKey,
-                fileCode: fileCode,
-                folderId: folderId,
-                cancellationToken: cancellationToken
+            response = await SendApiRequestAsync(() =>
+                api.SetFileFolderAsync(
+                    apiKey: apiKey,
+                    fileCode: fileCode,
+                    folderId: folderId,
+                    cancellationToken: cancellationToken
+                )
             );
 
             if (((HttpStatusCode)response.Status).IsSuccessStatusCode)
@@ -303,14 +317,32 @@ public abstract class XFilesharingApiClient<TApi>(
         CancellationToken cancellationToken
     )
     {
-        var response = await api.SetFilePropertiesAsync(
-            apiKey: apiKey,
-            fileCode: fileCode,
-            premiumOnly: premiumOnly ? 1 : 0,
-            cancellationToken: cancellationToken
+        var response = await SendApiRequestAsync(() =>
+            api.SetFilePropertiesAsync(
+                apiKey: apiKey,
+                fileCode: fileCode,
+                premiumOnly: premiumOnly ? 1 : 0,
+                cancellationToken: cancellationToken
+            )
         );
 
         EnsureSuccess(response.Status, response.Msg, "XFilesharing file properties update failed");
+    }
+
+    protected static async Task<TResponse> SendApiRequestAsync<TResponse>(
+        Func<Task<TResponse>> sendRequest
+    )
+    {
+        try
+        {
+            return await sendRequest();
+        }
+        catch (ApiException ex)
+        {
+            XFilesharingApiKeyRejection.ThrowIfRejected(ex.StatusCode, ex.Content);
+
+            throw;
+        }
     }
 
     protected virtual MultipartFormDataContent AddHosterSpecificUploadFields(
@@ -399,6 +431,8 @@ public abstract class XFilesharingApiClient<TApi>(
     {
         if (!((HttpStatusCode)status).IsSuccessStatusCode)
         {
+            XFilesharingApiKeyRejection.ThrowIfRejected(status, message);
+
             throw new InvalidOperationException($"{errorPrefix}: {message}");
         }
     }

@@ -2,8 +2,10 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
+using Refit;
 
 namespace Bearcat.Hosters.KrakenFiles.Api;
 
@@ -16,6 +18,8 @@ public class ApiClient(
     private const int MaxParallelLinkChecks = 5;
 
     private const string LoginProbeHash = "bearcat-login-check";
+
+    private const string InvalidCredentialsMessage = "Invalid credentials.";
 
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
@@ -71,6 +75,8 @@ public class ApiClient(
 
         if (!httpResponse.IsSuccessStatusCode)
         {
+            ThrowIfApiKeyRejected(httpResponse.StatusCode, content);
+
             throw new HttpRequestException(
                 $"KrakenFiles upload request failed with status code {httpResponse.StatusCode}: {content}"
             );
@@ -112,10 +118,12 @@ public class ApiClient(
             return existingFolderId;
         }
 
-        var createResponse = await api.CreateFolderAsync(
-            config.ApiKey,
-            new CreateFolderRequest(folderName),
-            cancellationToken
+        var createResponse = await SendApiRequestAsync(() =>
+            api.CreateFolderAsync(
+                config.ApiKey,
+                new CreateFolderRequest(folderName),
+                cancellationToken
+            )
         );
 
         if (createResponse.Status != (int)HttpStatusCode.OK)
@@ -148,11 +156,13 @@ public class ApiClient(
             );
         }
 
-        var response = await api.MoveFileAsync(
-            fileHash,
-            config.ApiKey,
-            new MoveFileRequest(folderId),
-            cancellationToken
+        var response = await SendApiRequestAsync(() =>
+            api.MoveFileAsync(
+                fileHash,
+                config.ApiKey,
+                new MoveFileRequest(folderId),
+                cancellationToken
+            )
         );
 
         if (response.Status != (int)HttpStatusCode.OK)
@@ -170,10 +180,7 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        if (!await IsApiKeyValidAsync(config, cancellationToken))
-        {
-            throw new HttpRequestException("Invalid credentials");
-        }
+        await EnsureApiKeyAcceptedAsync(config, cancellationToken);
 
         using var semaphore = new SemaphoreSlim(MaxParallelLinkChecks);
 
@@ -192,15 +199,25 @@ public class ApiClient(
             );
     }
 
-    public async Task<bool> IsApiKeyValidAsync(
+    public async Task EnsureApiKeyAcceptedAsync(
         KrakenFilesConfig config,
         CancellationToken cancellationToken
     )
     {
         var response = await api.GetFileAsync(LoginProbeHash, config.ApiKey, cancellationToken);
 
-        return response.StatusCode == HttpStatusCode.NotFound
-            || response.StatusCode == HttpStatusCode.OK;
+        if (response.StatusCode is HttpStatusCode.OK or HttpStatusCode.NotFound)
+        {
+            return;
+        }
+
+        ThrowIfApiKeyRejected(response.StatusCode, (response.Error as ApiException)?.Content);
+
+        throw new HttpRequestException(
+            $"KrakenFiles API key check failed with status code {response.StatusCode}",
+            inner: response.Error,
+            statusCode: response.StatusCode
+        );
     }
 
     private async Task<(string FileUrl, bool? IsOnline, int? DownloadCount)> CheckLinkAsync(
@@ -249,7 +266,9 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        var folderList = await api.ListFoldersAsync(apiKey, cancellationToken);
+        var folderList = await SendApiRequestAsync(() =>
+            api.ListFoldersAsync(apiKey, cancellationToken)
+        );
 
         if (folderList.Status != (int)HttpStatusCode.OK)
         {
@@ -266,6 +285,49 @@ public class ApiClient(
                 && !string.IsNullOrWhiteSpace(folder.Id)
             )
             ?.Id;
+    }
+
+    private static async Task<TResponse> SendApiRequestAsync<TResponse>(
+        Func<Task<TResponse>> sendRequest
+    )
+    {
+        try
+        {
+            return await sendRequest();
+        }
+        catch (ApiException ex)
+        {
+            ThrowIfApiKeyRejected(ex.StatusCode, ex.Content);
+
+            throw;
+        }
+    }
+
+    private static void ThrowIfApiKeyRejected(HttpStatusCode? statusCode, string? responseContent)
+    {
+        if (statusCode != HttpStatusCode.Unauthorized || string.IsNullOrWhiteSpace(responseContent))
+        {
+            return;
+        }
+
+        FileResponse? response;
+
+        try
+        {
+            response = JsonSerializer.Deserialize<FileResponse>(
+                responseContent,
+                JsonSerializerOptions
+            );
+        }
+        catch (JsonException)
+        {
+            return;
+        }
+
+        if (string.Equals(response?.Message, InvalidCredentialsMessage, StringComparison.Ordinal))
+        {
+            throw new HosterCredentialsRejectedException(InvalidCredentialsMessage);
+        }
     }
 
     private static string? TryExtractFileHash(string fileUrl)

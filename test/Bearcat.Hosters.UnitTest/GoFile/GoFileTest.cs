@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.GoFile;
 using Bearcat.Hosters.GoFile.Api;
@@ -238,6 +239,28 @@ public class GoFileTest
         result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeTrue();
         result.ErrorMessage.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task TryLoginAsync_TokenRejected_ReturnsFailureWithHosterMessage()
+    {
+        // Arrange
+        var config = new GoFileConfig { ApiKey = "api-key" };
+
+        apiClientMock
+            .Setup(x => x.GetAccountAsync("api-key", It.IsAny<CancellationToken>()))
+            .ThrowsAsync(
+                new HosterCredentialsRejectedException(
+                    "GoFile rejected the API token (error-wrongToken)"
+                )
+            );
+
+        // Act
+        var result = await service.TryLoginAsync(config, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeFalse();
+        result.ErrorMessage.ShouldBe("GoFile rejected the API token (error-wrongToken)");
     }
 
     [Test]

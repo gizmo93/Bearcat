@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Fichier;
 using Bearcat.Hosters.Fichier.Api;
@@ -237,6 +238,30 @@ public class FichierTest
         result.StatusPerFileUrl[fileUrls[0]].ShouldBeTrue();
         result.StatusPerFileUrl[fileUrls[1]].ShouldBeFalse();
         result.ErrorMessages.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task CheckFilesExistAsync_CredentialsRejected_ThrowsHosterCredentialsRejected()
+    {
+        // Arrange
+        var config = new FichierConfig { ApiKey = "api-key" };
+        var fileUrls = new[] { "https://1fichier.com/?file" };
+
+        apiClientMock
+            .Setup(x => x.CheckLinksAsync(config, fileUrls, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HosterCredentialsRejectedException("No such user #133"));
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            service.CheckFilesExistAsync(
+                config,
+                fileUrls.Select(url => new FileUrlToCheckDto(url, null)).ToList(),
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("No such user #133");
     }
 
     [Test]

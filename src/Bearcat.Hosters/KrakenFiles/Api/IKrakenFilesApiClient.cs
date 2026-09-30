@@ -31,5 +31,5 @@ public interface IKrakenFilesApiClient
         CancellationToken cancellationToken
     );
 
-    Task<bool> IsApiKeyValidAsync(KrakenFilesConfig config, CancellationToken cancellationToken);
+    Task EnsureApiKeyAcceptedAsync(KrakenFilesConfig config, CancellationToken cancellationToken);
 }
