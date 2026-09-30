@@ -31,6 +31,7 @@ public static class ServiceProviderConfig
                 {
                     c.BaseAddress = new Uri(ApiClient.ApiBaseUrl);
                     c.Timeout = Timeout.InfiniteTimeSpan;
+                    c.DefaultRequestHeaders.UserAgent.ParseAdd("Bearcat/1.0");
                 })
                 .UseProxyForCategory(ProxyCategory.HosterUploads);
 
