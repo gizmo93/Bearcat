@@ -614,6 +614,7 @@ public class ArchiveRestoreServiceTest
                 transferProgressTracker,
                 new ArchiveFileDownloader(
                     transferProgressTracker,
+                    new TransferSpeedLimitService(configurationProviderMock.Object),
                     NullLogger<ArchiveFileDownloader>.Instance
                 )
             ),

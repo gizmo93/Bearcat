@@ -16,11 +16,19 @@ public class HosterRegistrationConfiguration : IEntityTypeConfiguration<HosterRe
         builder.Property(h => h.SerializedConfig).IsRequired().HasMaxLength(4000);
         builder.Property(h => h.HosterClassName).IsRequired().HasMaxLength(500);
         builder.Property(h => h.MaxParallelUploadsOverride);
+        builder
+            .Property(h => h.UploadSpeedLimitMegabytesPerSecond)
+            .IsRequired(false)
+            .HasPrecision(10, 3);
         builder.Property(h => h.NumberOfHoursUntilReuploadOverride).IsRequired(false);
         builder.Property(h => h.ReuploadTriggerOverride).IsRequired(false);
         builder.Property(h => h.AlwaysReuploadAllFiles).IsRequired();
         builder.Property(h => h.UseForMirrorDownloads).IsRequired();
         builder.Property(h => h.MirrorPriority).IsRequired().HasDefaultValue(100);
+        builder
+            .Property(h => h.MirrorDownloadSpeedLimitMegabytesPerSecond)
+            .IsRequired(false)
+            .HasPrecision(10, 3);
         builder.Property(h => h.UploadProxySelection).IsRequired();
         builder.Property(h => h.UploadProxyServerId).IsRequired(false);
         builder.Property(h => h.MirrorDownloadProxySelection).IsRequired();

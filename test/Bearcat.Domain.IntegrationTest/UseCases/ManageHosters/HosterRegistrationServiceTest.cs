@@ -708,6 +708,61 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
     }
 
     [Test]
+    public async Task RegisterHosterAsync_DownloadHosterWithSpeedLimits_PersistsSpeedLimits()
+    {
+        // Arrange
+        var configuration = new Dictionary<string, string> { ["apiKey"] = "secret" };
+        var downloadHosterMock = new Mock<IHosterWithDownload>(MockBehavior.Strict);
+        downloadHosterMock.Setup(h => h.HasFixedParallelUploadLimit).Returns(false);
+        downloadHosterMock
+            .Setup(h => h.SerializeHosterConfig(configuration))
+            .Returns(SerializedConfig);
+        hosterFactoryMock
+            .Setup(f => f.GetByName(DownloadHosterClassName))
+            .Returns(downloadHosterMock.Object);
+
+        // Act
+        await service.RegisterHosterAsync(
+            "Download hoster",
+            true,
+            configuration,
+            DownloadHosterClassName,
+            uploadSpeedLimitMegabytesPerSecond: 2.5m,
+            mirrorDownloadSpeedLimitMegabytesPerSecond: 0.75m,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        var registration = await dbContext.HosterRegistrations.SingleAsync();
+        registration.UploadSpeedLimitMegabytesPerSecond.ShouldBe(2.5m);
+        registration.MirrorDownloadSpeedLimitMegabytesPerSecond.ShouldBe(0.75m);
+    }
+
+    [Test]
+    public async Task RegisterHosterAsync_HosterWithoutDownloadSupport_IgnoresMirrorDownloadSpeedLimit()
+    {
+        // Arrange
+        var configuration = new Dictionary<string, string> { ["apiKey"] = "secret" };
+        hosterMock.Setup(h => h.SerializeHosterConfig(configuration)).Returns(SerializedConfig);
+
+        // Act
+        await service.RegisterHosterAsync(
+            "Primary hoster",
+            true,
+            configuration,
+            HosterClassName,
+            uploadSpeedLimitMegabytesPerSecond: 1,
+            mirrorDownloadSpeedLimitMegabytesPerSecond: 3,
+            cancellationToken: CancellationToken.None
+        );
+
+        // Assert
+        var registration = await dbContext.HosterRegistrations.SingleAsync();
+        registration.UploadSpeedLimitMegabytesPerSecond.ShouldBe(1);
+        registration.MirrorDownloadSpeedLimitMegabytesPerSecond.ShouldBeNull();
+    }
+
+    [Test]
     public async Task RegisterHosterAsync_SpecificProxyServerWithoutProxyServerId_ThrowsAndStoresNothing()
     {
         // Arrange

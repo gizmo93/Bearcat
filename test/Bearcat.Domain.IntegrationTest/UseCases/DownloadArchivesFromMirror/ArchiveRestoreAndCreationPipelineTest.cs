@@ -95,6 +95,7 @@ public class ArchiveRestoreAndCreationPipelineTest : BearcatIntegrationTest
                 transferProgressTracker,
                 new ArchiveFileDownloader(
                     transferProgressTracker,
+                    new TransferSpeedLimitService(new DefaultConfigurationProvider()),
                     NullLogger<ArchiveFileDownloader>.Instance
                 )
             ),
@@ -366,6 +367,12 @@ public class ArchiveRestoreAndCreationPipelineTest : BearcatIntegrationTest
             selector.Compile()(new TConfiguration());
 
         public int? GetValue<TConfiguration>(Expression<Func<TConfiguration, int?>> selector)
+            where TConfiguration : IApplicationConfiguration, new() =>
+            selector.Compile()(new TConfiguration());
+
+        public decimal? GetValue<TConfiguration>(
+            Expression<Func<TConfiguration, decimal?>> selector
+        )
             where TConfiguration : IApplicationConfiguration, new() =>
             selector.Compile()(new TConfiguration());
 

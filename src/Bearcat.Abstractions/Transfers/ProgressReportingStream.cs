@@ -6,6 +6,9 @@ public sealed class ProgressReportingStream : Stream
 
     private readonly ITransferProgress progress;
 
+    private readonly IReadOnlyList<TransferSpeedLimiter>? speedLimiters =
+        TransferSpeedLimitScope.Current;
+
     public ProgressReportingStream(Stream inner, ITransferProgress progress, long? totalBytes)
     {
         this.inner = inner;
@@ -29,21 +32,36 @@ public sealed class ProgressReportingStream : Stream
 
     public override int Read(byte[] buffer, int offset, int count)
     {
-        var bytesRead = inner.Read(buffer, offset, count);
-        Report(bytesRead);
-        return bytesRead;
+        if (speedLimiters is null)
+        {
+            var bytesRead = inner.Read(buffer, offset, count);
+            Report(bytesRead);
+            return bytesRead;
+        }
+
+        var clampedCount = ClampToSmallestMaximumBytesPerAcquire(speedLimiters, count);
+        var limitedBytesRead = inner.Read(buffer, offset, clampedCount);
+
+        if (limitedBytesRead > 0)
+        {
+            AcquireBytesOnAllLimitersAsync(speedLimiters, limitedBytesRead, CancellationToken.None)
+                .AsTask()
+                .GetAwaiter()
+                .GetResult();
+        }
+
+        Report(limitedBytesRead);
+        return limitedBytesRead;
     }
 
-    public override async Task<int> ReadAsync(
+    public override Task<int> ReadAsync(
         byte[] buffer,
         int offset,
         int count,
         CancellationToken cancellationToken
     )
     {
-        var bytesRead = await inner.ReadAsync(buffer.AsMemory(offset, count), cancellationToken);
-        Report(bytesRead);
-        return bytesRead;
+        return ReadAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
     }
 
     public override async ValueTask<int> ReadAsync(
@@ -51,9 +69,27 @@ public sealed class ProgressReportingStream : Stream
         CancellationToken cancellationToken = default
     )
     {
-        var bytesRead = await inner.ReadAsync(buffer, cancellationToken);
-        Report(bytesRead);
-        return bytesRead;
+        if (speedLimiters is null)
+        {
+            var bytesRead = await inner.ReadAsync(buffer, cancellationToken);
+            Report(bytesRead);
+            return bytesRead;
+        }
+
+        var clampedLength = ClampToSmallestMaximumBytesPerAcquire(speedLimiters, buffer.Length);
+        var limitedBytesRead = await inner.ReadAsync(buffer[..clampedLength], cancellationToken);
+
+        if (limitedBytesRead > 0)
+        {
+            await AcquireBytesOnAllLimitersAsync(
+                speedLimiters,
+                limitedBytesRead,
+                cancellationToken
+            );
+        }
+
+        Report(limitedBytesRead);
+        return limitedBytesRead;
     }
 
     public override long Seek(long offset, SeekOrigin origin) => inner.Seek(offset, origin);
@@ -64,6 +100,33 @@ public sealed class ProgressReportingStream : Stream
 
     public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException();
+
+    private static int ClampToSmallestMaximumBytesPerAcquire(
+        IReadOnlyList<TransferSpeedLimiter> limiters,
+        int requestedByteCount
+    )
+    {
+        var clampedByteCount = requestedByteCount;
+
+        for (var index = 0; index < limiters.Count; index++)
+        {
+            clampedByteCount = Math.Min(clampedByteCount, limiters[index].MaximumBytesPerAcquire);
+        }
+
+        return clampedByteCount;
+    }
+
+    private static async ValueTask AcquireBytesOnAllLimitersAsync(
+        IReadOnlyList<TransferSpeedLimiter> limiters,
+        int byteCount,
+        CancellationToken cancellationToken
+    )
+    {
+        for (var index = 0; index < limiters.Count; index++)
+        {
+            await limiters[index].AcquireAsync(byteCount, cancellationToken);
+        }
+    }
 
     private void Report(int bytesRead)
     {

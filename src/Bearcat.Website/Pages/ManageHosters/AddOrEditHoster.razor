@@ -70,6 +70,17 @@
                 }
 
                 <div class="space-y-1">
+                    <BbFormFieldInput TValue="string"
+                                      @bind-Value="FormModel.UploadSpeedLimitMegabytesPerSecondInput"
+                                      Label="@L["UploadSpeedLimitMegabytesPerSecondOverride"]"
+                                      Placeholder="@L["NoLimit"]"
+                                      inputmode="decimal" />
+                    <p class="text-xs text-muted-foreground">
+                        @L["UploadSpeedLimitMegabytesPerSecondOverrideHelp"]
+                    </p>
+                </div>
+
+                <div class="space-y-1">
                     <BbFormFieldInput TValue="int?"
                                       @bind-Value="FormModel.NumberOfHoursUntilReuploadOverride"
                                       Label="@L["HoursUntilReuploadOverride"]"
@@ -120,6 +131,17 @@
                                           ProxyCategory="ProxyCategory.HosterMirrorDownloads"
                                           @bind-ProxySelection="FormModel.MirrorDownloadProxySelection"
                                           @bind-ProxyServerId="FormModel.MirrorDownloadProxyServerId" />
+
+                    <div class="space-y-1">
+                        <BbFormFieldInput TValue="string"
+                                          @bind-Value="FormModel.MirrorDownloadSpeedLimitMegabytesPerSecondInput"
+                                          Label="@L["MirrorDownloadSpeedLimitMegabytesPerSecondOverride"]"
+                                          Placeholder="@L["NoLimit"]"
+                                          inputmode="decimal" />
+                        <p class="text-xs text-muted-foreground">
+                            @L["MirrorDownloadSpeedLimitMegabytesPerSecondOverrideHelp"]
+                        </p>
+                    </div>
 
                     @if (selectedHoster.DownloadRequiresPremium)
                     {

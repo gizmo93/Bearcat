@@ -183,3 +183,11 @@ Each hoster's own limit also applies, so a hoster cannot exceed either limit.
 View and, where allowed, override individual limits on the "Hoster registrations" page. See [Parallel uploads per hoster](/Bearcat/post-installation/#parallel-uploads-per-hoster).
 
 Lower the global limit to reduce bandwidth and CPU usage. Raise it to transfer more files at once.
+
+"Maximum upload speed (MB/s)" is empty by default, which means no limit. It caps the combined upload
+speed of all running uploads across all hosters. Decimal values such as `0.5` or `0,5` are allowed.
+Each hoster registration can set its own limit as well. See
+[Upload speed limit per hoster](/Bearcat/post-installation/#upload-speed-limit-per-hoster).
+
+Very low limits can make uploads fail on hosters that abort long requests, for example hosters
+behind Cloudflare, which stop requests after about 100 seconds.

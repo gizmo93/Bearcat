@@ -11,6 +11,7 @@ namespace Bearcat.Domain.UseCases.DownloadArchivesFromMirror.Downloading;
 
 public class ArchiveFileDownloader(
     ITransferProgressTracker transferProgressTracker,
+    TransferSpeedLimitService transferSpeedLimitService,
     ILogger<ArchiveFileDownloader> logger
 )
 {
@@ -223,6 +224,10 @@ public class ArchiveFileDownloader(
         try
         {
             using var proxyScope = HosterRegistrationProxyScope.EnterForMirrorDownload(
+                resolved.Registration
+            );
+
+            using var speedLimitScope = transferSpeedLimitService.EnterMirrorDownloadScope(
                 resolved.Registration
             );
 

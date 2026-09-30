@@ -2,6 +2,7 @@ using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Formatting;
 using Bearcat.Website.Localization;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Components;
@@ -18,6 +19,9 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
 
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
+
+    private const decimal MinimumSpeedLimitMegabytesPerSecond = 0.001m;
+    private const decimal MaximumSpeedLimitMegabytesPerSecond = 1_000_000m;
 
     private IReadOnlyList<HosterDto> hosterReadModels = [];
     private HosterDto? selectedHoster;
@@ -58,6 +62,13 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
 
     private async Task SaveAsync()
     {
+        var uploadSpeedLimitMegabytesPerSecond = ParseSpeedLimit(
+            FormModel.UploadSpeedLimitMegabytesPerSecondInput
+        );
+        var mirrorDownloadSpeedLimitMegabytesPerSecond = ParseSpeedLimit(
+            FormModel.MirrorDownloadSpeedLimitMegabytesPerSecondInput
+        );
+
         if (!FormModel.IsEdit)
         {
             await operationRunner.RunAsync(
@@ -68,11 +79,13 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
                         configuration: FormModel.Configuration,
                         hosterClassName: FormModel.FullClassName,
                         maxParallelUploadsOverride: FormModel.MaxParallelUploadsOverride,
+                        uploadSpeedLimitMegabytesPerSecond: uploadSpeedLimitMegabytesPerSecond,
                         numberOfHoursUntilReuploadOverride: FormModel.NumberOfHoursUntilReuploadOverride,
                         reuploadTriggerOverride: FormModel.ReuploadTriggerOverride,
                         alwaysReuploadAllFiles: FormModel.AlwaysReuploadAllFiles,
                         useForMirrorDownloads: FormModel.UseForMirrorDownloads,
                         mirrorPriority: FormModel.MirrorPriority,
+                        mirrorDownloadSpeedLimitMegabytesPerSecond: mirrorDownloadSpeedLimitMegabytesPerSecond,
                         uploadProxySelection: FormModel.UploadProxySelection,
                         uploadProxyServerId: FormModel.UploadProxyServerId,
                         mirrorDownloadProxySelection: FormModel.MirrorDownloadProxySelection,
@@ -85,15 +98,17 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
             await operationRunner.RunAsync(
                 (HosterRegistrationService service) =>
                     service.UpdateRegistrationAsync(
-                        FormModel.HosterRegistrationId!.Value,
-                        FormModel.Name,
-                        FormModel.Configuration,
-                        FormModel.MaxParallelUploadsOverride,
-                        FormModel.NumberOfHoursUntilReuploadOverride,
-                        FormModel.ReuploadTriggerOverride,
-                        FormModel.AlwaysReuploadAllFiles,
-                        FormModel.UseForMirrorDownloads,
-                        FormModel.MirrorPriority,
+                        id: FormModel.HosterRegistrationId!.Value,
+                        name: FormModel.Name,
+                        configuration: FormModel.Configuration,
+                        maxParallelUploadsOverride: FormModel.MaxParallelUploadsOverride,
+                        uploadSpeedLimitMegabytesPerSecond: uploadSpeedLimitMegabytesPerSecond,
+                        numberOfHoursUntilReuploadOverride: FormModel.NumberOfHoursUntilReuploadOverride,
+                        reuploadTriggerOverride: FormModel.ReuploadTriggerOverride,
+                        alwaysReuploadAllFiles: FormModel.AlwaysReuploadAllFiles,
+                        useForMirrorDownloads: FormModel.UseForMirrorDownloads,
+                        mirrorPriority: FormModel.MirrorPriority,
+                        mirrorDownloadSpeedLimitMegabytesPerSecond: mirrorDownloadSpeedLimitMegabytesPerSecond,
                         uploadProxySelection: FormModel.UploadProxySelection,
                         uploadProxyServerId: FormModel.UploadProxyServerId,
                         mirrorDownloadProxySelection: FormModel.MirrorDownloadProxySelection,
@@ -124,6 +139,28 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
             messageStore.Add(() => FormModel.FullClassName, L["SelectHosterRequired"]);
         }
 
+        if (!IsValidSpeedLimitInput(FormModel.UploadSpeedLimitMegabytesPerSecondInput))
+        {
+            messageStore.Add(
+                new FieldIdentifier(
+                    FormModel,
+                    nameof(HosterFormModel.UploadSpeedLimitMegabytesPerSecondInput)
+                ),
+                L["SpeedLimitMegabytesPerSecondInvalid"]
+            );
+        }
+
+        if (!IsValidSpeedLimitInput(FormModel.MirrorDownloadSpeedLimitMegabytesPerSecondInput))
+        {
+            messageStore.Add(
+                new FieldIdentifier(
+                    FormModel,
+                    nameof(HosterFormModel.MirrorDownloadSpeedLimitMegabytesPerSecondInput)
+                ),
+                L["SpeedLimitMegabytesPerSecondInvalid"]
+            );
+        }
+
         if (selectedHoster is null)
         {
             return;
@@ -149,6 +186,26 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
         }
     }
 
+    private static bool IsValidSpeedLimitInput(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return true;
+        }
+
+        return DecimalInputConverter.TryParse(input, out var megabytesPerSecond)
+            && megabytesPerSecond
+                is >= MinimumSpeedLimitMegabytesPerSecond
+                    and <= MaximumSpeedLimitMegabytesPerSecond;
+    }
+
+    private static decimal? ParseSpeedLimit(string? input)
+    {
+        return DecimalInputConverter.TryParse(input, out var megabytesPerSecond)
+            ? megabytesPerSecond
+            : null;
+    }
+
     private void OnSelectedHosterChanged()
     {
         selectedHoster = string.IsNullOrEmpty(FormModel.FullClassName)
@@ -160,6 +217,7 @@ public partial class AddOrEditHoster(IScopedOperationRunner operationRunner) : C
         if (selectedHoster is null or { SupportsDownload: false })
         {
             FormModel.UseForMirrorDownloads = false;
+            FormModel.MirrorDownloadSpeedLimitMegabytesPerSecondInput = null;
         }
 
         if (!FormModel.IsEdit)

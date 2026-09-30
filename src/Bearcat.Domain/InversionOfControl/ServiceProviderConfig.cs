@@ -153,6 +153,7 @@ public static class ServiceProviderConfig
             services.AddSingleton<ITransferProgressTracker, TransferProgressTracker>();
             services.AddSingleton<FolderSizeProgressReporter>();
             services.AddSingleton<ITransferCancellationRegistry, TransferCancellationRegistry>();
+            services.AddSingleton<TransferSpeedLimitService>();
             services.AddScoped<UploadFilesService>();
             services.AddScoped<UploadFinalizationService>();
             services.AddScoped<FileUploadExecutionService>();
@@ -195,7 +196,7 @@ public static class ServiceProviderConfig
             services.AddApplicationConfiguration<NotificationConfiguration>();
             services.AddApplicationConfiguration<PostQueueConfiguration>();
             services.AddSingleton<ApplicationConfigurationRegistry>();
-            services.AddScoped<
+            services.AddSingleton<
                 IApplicationConfigurationProvider,
                 ApplicationConfigurationProvider
             >();

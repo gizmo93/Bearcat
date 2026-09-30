@@ -29,11 +29,13 @@ public class HosterRegistrationService(
         Dictionary<string, string> configuration,
         string hosterClassName,
         int? maxParallelUploadsOverride = null,
+        decimal? uploadSpeedLimitMegabytesPerSecond = null,
         int? numberOfHoursUntilReuploadOverride = null,
         ReuploadTrigger? reuploadTriggerOverride = null,
         bool alwaysReuploadAllFiles = false,
         bool useForMirrorDownloads = false,
         int mirrorPriority = 100,
+        decimal? mirrorDownloadSpeedLimitMegabytesPerSecond = null,
         ProxySelection uploadProxySelection = ProxySelection.UseCategoryDefault,
         int? uploadProxyServerId = null,
         ProxySelection mirrorDownloadProxySelection = ProxySelection.UseCategoryDefault,
@@ -57,11 +59,16 @@ public class HosterRegistrationService(
             MaxParallelUploadsOverride = hoster.HasFixedParallelUploadLimit
                 ? null
                 : maxParallelUploadsOverride,
+            UploadSpeedLimitMegabytesPerSecond = uploadSpeedLimitMegabytesPerSecond,
             NumberOfHoursUntilReuploadOverride = numberOfHoursUntilReuploadOverride,
             ReuploadTriggerOverride = reuploadTriggerOverride,
             AlwaysReuploadAllFiles = alwaysReuploadAllFiles,
             UseForMirrorDownloads = useForMirrorDownloads && hoster is IHosterWithDownload,
             MirrorPriority = mirrorPriority,
+            MirrorDownloadSpeedLimitMegabytesPerSecond = GetEffectiveMirrorDownloadSpeedLimit(
+                hoster,
+                mirrorDownloadSpeedLimitMegabytesPerSecond
+            ),
             UploadProxySelection = uploadProxySelection,
             UploadProxyServerId = await proxySelectionValidator.GetProxyServerIdToStoreAsync(
                 uploadProxySelection,
@@ -109,11 +116,13 @@ public class HosterRegistrationService(
         string name,
         Dictionary<string, string> configuration,
         int? maxParallelUploadsOverride = null,
+        decimal? uploadSpeedLimitMegabytesPerSecond = null,
         int? numberOfHoursUntilReuploadOverride = null,
         ReuploadTrigger? reuploadTriggerOverride = null,
         bool alwaysReuploadAllFiles = false,
         bool useForMirrorDownloads = false,
         int mirrorPriority = 100,
+        decimal? mirrorDownloadSpeedLimitMegabytesPerSecond = null,
         ProxySelection uploadProxySelection = ProxySelection.UseCategoryDefault,
         int? uploadProxyServerId = null,
         ProxySelection mirrorDownloadProxySelection = ProxySelection.UseCategoryDefault,
@@ -139,11 +148,17 @@ public class HosterRegistrationService(
         registration.MaxParallelUploadsOverride = hoster.HasFixedParallelUploadLimit
             ? null
             : maxParallelUploadsOverride;
+        registration.UploadSpeedLimitMegabytesPerSecond = uploadSpeedLimitMegabytesPerSecond;
         registration.NumberOfHoursUntilReuploadOverride = numberOfHoursUntilReuploadOverride;
         registration.ReuploadTriggerOverride = reuploadTriggerOverride;
         registration.AlwaysReuploadAllFiles = alwaysReuploadAllFiles;
         registration.UseForMirrorDownloads = useForMirrorDownloads && hoster is IHosterWithDownload;
         registration.MirrorPriority = mirrorPriority;
+        registration.MirrorDownloadSpeedLimitMegabytesPerSecond =
+            GetEffectiveMirrorDownloadSpeedLimit(
+                hoster,
+                mirrorDownloadSpeedLimitMegabytesPerSecond
+            );
         registration.UploadProxySelection = uploadProxySelection;
         registration.UploadProxyServerId =
             await proxySelectionValidator.GetProxyServerIdToStoreAsync(
@@ -274,6 +289,14 @@ public class HosterRegistrationService(
         return hoster is IHosterWithDownload
             ? mirrorDownloadProxySelection
             : ProxySelection.UseCategoryDefault;
+    }
+
+    private static decimal? GetEffectiveMirrorDownloadSpeedLimit(
+        IHoster hoster,
+        decimal? mirrorDownloadSpeedLimitMegabytesPerSecond
+    )
+    {
+        return hoster is IHosterWithDownload ? mirrorDownloadSpeedLimitMegabytesPerSecond : null;
     }
 
     private (IHoster Hoster, IHosterWithCaptchaVerification CaptchaHoster) GetCaptchaHoster(

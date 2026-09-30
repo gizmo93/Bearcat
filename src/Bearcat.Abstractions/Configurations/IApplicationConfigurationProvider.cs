@@ -16,6 +16,9 @@ public interface IApplicationConfigurationProvider
     int? GetValue<TConfiguration>(Expression<Func<TConfiguration, int?>> propertySelector)
         where TConfiguration : IApplicationConfiguration, new();
 
+    decimal? GetValue<TConfiguration>(Expression<Func<TConfiguration, decimal?>> propertySelector)
+        where TConfiguration : IApplicationConfiguration, new();
+
     string? GetValue<TConfiguration>(Expression<Func<TConfiguration, string?>> propertySelector)
         where TConfiguration : IApplicationConfiguration, new();
 

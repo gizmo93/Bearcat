@@ -1,6 +1,7 @@
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Formatting;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Primitives;
 
@@ -159,9 +160,25 @@ public partial class ApplicationConfigurationsPage(IScopedOperationRunner operat
         var editorValue = GetEditorValue(property);
         object? value = editorValue;
 
-        if (property.ValueType == typeof(int) || property.ValueType == typeof(int?))
+        if (property.ValueType == typeof(int))
         {
             value = int.TryParse(editorValue, out var intValue) ? intValue : 0;
+        }
+        else if (property.ValueType == typeof(int?))
+        {
+            value = int.TryParse(editorValue, out var intValue) ? intValue : null;
+        }
+        else if (property.ValueType == typeof(decimal))
+        {
+            value = DecimalInputConverter.TryParse(editorValue, out var decimalValue)
+                ? decimalValue
+                : 0m;
+        }
+        else if (property.ValueType == typeof(decimal?))
+        {
+            value = DecimalInputConverter.TryParse(editorValue, out var decimalValue)
+                ? decimalValue
+                : null;
         }
 
         await operationRunner.RunAsync(
@@ -239,6 +256,13 @@ public partial class ApplicationConfigurationsPage(IScopedOperationRunner operat
         var localizedValue = property is null ? L[value] : L[$"{property.DisplayName}.{value}"];
 
         return localizedValue.ResourceNotFound ? value : localizedValue;
+    }
+
+    private static string? GetInputMode(ApplicationConfigurationPropertyDto property)
+    {
+        return property.ValueType == typeof(decimal) || property.ValueType == typeof(decimal?)
+            ? "decimal"
+            : null;
     }
 
     private static string GetEditorKey(ApplicationConfigurationPropertyDto property)

@@ -1,6 +1,7 @@
 using Bearcat.Domain.UseCases.ManageHosters;
 using Bearcat.Domain.UseCases.ManageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageHosters.Repositories;
+using Bearcat.Website.Formatting;
 using Bearcat.Website.ScopedOperations;
 using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
@@ -64,12 +65,19 @@ public partial class AllHostersPage(
                 HasUnreadableSecrets = hosterRegistration.HasUnreadableSecrets,
                 HosterRegistrationId = hosterRegistration.Id,
                 MaxParallelUploadsOverride = hosterRegistration.MaxParallelUploadsOverride,
+                UploadSpeedLimitMegabytesPerSecondInput = DecimalInputConverter.FormatForInput(
+                    hosterRegistration.UploadSpeedLimitMegabytesPerSecond
+                ),
                 NumberOfHoursUntilReuploadOverride =
                     hosterRegistration.NumberOfHoursUntilReuploadOverride,
                 ReuploadTriggerOverride = hosterRegistration.ReuploadTriggerOverride,
                 AlwaysReuploadAllFiles = hosterRegistration.AlwaysReuploadAllFiles,
                 UseForMirrorDownloads = hosterRegistration.UseForMirrorDownloads,
                 MirrorPriority = hosterRegistration.MirrorPriority,
+                MirrorDownloadSpeedLimitMegabytesPerSecondInput =
+                    DecimalInputConverter.FormatForInput(
+                        hosterRegistration.MirrorDownloadSpeedLimitMegabytesPerSecond
+                    ),
                 UploadProxySelection = hosterRegistration.UploadProxySelection,
                 UploadProxyServerId = hosterRegistration.UploadProxyServerId,
                 MirrorDownloadProxySelection = hosterRegistration.MirrorDownloadProxySelection,

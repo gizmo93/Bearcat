@@ -162,6 +162,15 @@ The **Parallel uploads** column shows the effective limit and an **Override** ba
 The [global upload limit](/Bearcat/advanced-configuration/#upload-concurrency) also applies:
 Bearcat uses the smaller of the global and per-hoster limits.
 
+### Upload speed limit per hoster
+
+**New hoster** and **Edit** offer a **Maximum upload speed (MB/s)** field. It caps the combined
+upload speed of all uploads to this hoster registration. Decimal values such as `0.5` or `0,5` are
+allowed. Leave it empty for no limit.
+
+The [global upload speed limit](/Bearcat/advanced-configuration/#upload-concurrency) also applies,
+so the lower of both limits takes effect. The **Parallel uploads** column shows a configured limit.
+
 ## Setting up release templates
 
 A release template saves the release group, archive configurations, upload configurations, image

@@ -7,4 +7,10 @@ public class UploadConcurrencyConfiguration : IApplicationConfiguration
 {
     [ApplicationConfigurationProperty("MaxParallelUploads", "MaxParallelUploadsDescription")]
     public int MaxParallelUploads { get; set; } = 10;
+
+    [ApplicationConfigurationProperty(
+        "UploadSpeedLimitMegabytesPerSecond",
+        "UploadSpeedLimitMegabytesPerSecondDescription"
+    )]
+    public decimal? UploadSpeedLimitMegabytesPerSecond { get; set; }
 }

@@ -13,7 +13,8 @@ public class FileUploadExecutionService(
     ILogger<FileUploadExecutionService> logger,
     HosterCaptchaVerificationService captchaVerificationService,
     HosterCredentialsRejectionService credentialsRejectionService,
-    ITransferProgressTracker progressTracker
+    ITransferProgressTracker progressTracker,
+    TransferSpeedLimitService transferSpeedLimitService
 )
 {
     public TimeSpan FileUploadTimeout { get; set; } = Timeout.InfiniteTimeSpan;
@@ -47,6 +48,10 @@ public class FileUploadExecutionService(
             );
 
             using var proxyScope = HosterRegistrationProxyScope.EnterForUpload(
+                context.Upload.UploadConfig.HosterRegistration
+            );
+
+            using var speedLimitScope = transferSpeedLimitService.EnterUploadScope(
                 context.Upload.UploadConfig.HosterRegistration
             );
 
