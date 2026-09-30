@@ -1,6 +1,8 @@
+using Bearcat.Hosters.Shared;
+
 namespace Bearcat.Hosters.Alfafile.Api.User;
 
-public class InfoResponse
+public class InfoResponse : IResponseWithStatus
 {
     public ResponseObject? Response { get; set; }
 

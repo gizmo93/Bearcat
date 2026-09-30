@@ -1,9 +1,10 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Hosters.Shared;
 
 namespace Bearcat.Hosters.Rapidgator.Api.File;
 
-public class UploadFileResponse
+public class UploadFileResponse : IResponseWithStatus
 {
     public ResponseObject? Response { get; set; } = null!;
 

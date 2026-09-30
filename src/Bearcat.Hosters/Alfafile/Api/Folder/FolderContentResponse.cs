@@ -1,8 +1,9 @@
 using System.Text.Json.Serialization;
+using Bearcat.Hosters.Shared;
 
 namespace Bearcat.Hosters.Alfafile.Api.Folder;
 
-public class FolderContentResponse
+public class FolderContentResponse : IResponseWithStatus
 {
     public ResponseObject? Response { get; set; }
 

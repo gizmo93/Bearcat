@@ -750,6 +750,76 @@ public class ApiClientTest
         exception.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
     }
 
+    [Test]
+    public async Task CreateFolderAsync_TokenRejected_LogsInAgainAndRetriesWithRenewedToken()
+    {
+        // Arrange
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+        apiMock
+            .SetupSequence(x => x.LoginAsync("user", "password", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new LoginResponse
+                    {
+                        Status = (int)HttpStatusCode.OK,
+                        Response = new LoginResponse.ResponseObject { Token = "expired-token" },
+                    }
+                )
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new LoginResponse
+                    {
+                        Status = (int)HttpStatusCode.OK,
+                        Response = new LoginResponse.ResponseObject { Token = "renewed-token" },
+                    }
+                )
+            );
+        apiMock
+            .Setup(x => x.GetFolderInfoAsync("expired-token", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new FolderResponse
+                {
+                    Status = (int)HttpStatusCode.Unauthorized,
+                    Details = "Unauthorized. Token doesn't exist",
+                }
+            );
+        apiMock
+            .Setup(x => x.GetFolderInfoAsync("renewed-token", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                CreateFolderResponse(
+                    new FolderResponse.Folder
+                    {
+                        FolderId = "root-folder-id",
+                        Name = "root",
+                        Folders =
+                        [
+                            new FolderResponse.Folder
+                            {
+                                FolderId = "folder-id",
+                                Name = "release-folder",
+                                Created = 1,
+                            },
+                        ],
+                    }
+                )
+            );
+
+        // Act
+        var result = await apiClient.CreateFolderAsync(
+            "release-folder",
+            config,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("folder-id");
+        apiMock.Verify(
+            x => x.LoginAsync("user", "password", It.IsAny<CancellationToken>()),
+            Times.Exactly(2)
+        );
+    }
+
     private void SetupLogin()
     {
         apiMock

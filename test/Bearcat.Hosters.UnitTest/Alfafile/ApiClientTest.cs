@@ -511,6 +511,161 @@ public class ApiClientTest
         exception.Message.ShouldBe("Unauthorized. Wrong login or password.");
     }
 
+    [Test]
+    public async Task CreateFolderAsync_TokenRejected_LogsInAgainAndRetriesWithRenewedToken()
+    {
+        // Arrange
+        SetupLoginTokens("expired-token", "renewed-token");
+
+        apiMock
+            .Setup(x =>
+                x.CreateFolderAsync(
+                    "expired-token",
+                    "release-folder",
+                    null,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new FolderResponse
+                {
+                    Status = (int)HttpStatusCode.Unauthorized,
+                    Details = "Unauthorized. Token doesn't exist",
+                }
+            );
+
+        apiMock
+            .Setup(x =>
+                x.CreateFolderAsync(
+                    "renewed-token",
+                    "release-folder",
+                    null,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new FolderResponse
+                {
+                    Status = (int)HttpStatusCode.OK,
+                    Response = new FolderResponse.ResponseObject
+                    {
+                        Folder = new FolderResponse.Folder
+                        {
+                            FolderId = "created-folder-id",
+                            Name = "release-folder",
+                        },
+                    },
+                }
+            );
+
+        // Act
+        var result = await apiClient.CreateFolderAsync(
+            config,
+            "release-folder",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("created-folder-id");
+        apiMock.Verify(
+            x => x.LoginAsync(config.Username, config.Password, It.IsAny<CancellationToken>()),
+            Times.Exactly(2)
+        );
+    }
+
+    [Test]
+    public async Task CheckLinksAsync_TokenRejected_LogsInAgainInsteadOfMarkingOffline()
+    {
+        // Arrange
+        var fileUrl = "https://alfafile.net/file/file-1";
+        SetupLoginTokens("expired-token", "renewed-token");
+
+        apiMock
+            .Setup(x =>
+                x.GetFileInfoAsync("expired-token", "file-1", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new FileInfoResponse
+                    {
+                        Status = (int)HttpStatusCode.Unauthorized,
+                        Details = "Unauthorized. Token doesn't exist",
+                    }
+                )
+            );
+
+        apiMock
+            .Setup(x =>
+                x.GetFileInfoAsync("renewed-token", "file-1", It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new FileInfoResponse
+                    {
+                        Status = (int)HttpStatusCode.OK,
+                        Response = new FileInfoResponse.ResponseObject
+                        {
+                            File = new UploadedFile(),
+                        },
+                    }
+                )
+            );
+
+        apiMock
+            .Setup(x =>
+                x.GetFolderContentAsync(
+                    "renewed-token",
+                    It.IsAny<string?>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new FolderContentResponse
+                    {
+                        Status = (int)HttpStatusCode.OK,
+                        Response = new FolderContentResponse.ResponseObject
+                        {
+                            Pager = new FolderContentResponse.Pager { Current = 1, Total = 1 },
+                        },
+                    }
+                )
+            );
+
+        // Act
+        var result = await apiClient.CheckLinksAsync(config, [fileUrl], CancellationToken.None);
+
+        // Assert
+        result[fileUrl].IsOnline.ShouldBeTrue();
+    }
+
+    private void SetupLoginTokens(string firstToken, string secondToken)
+    {
+        apiMock
+            .SetupSequence(x =>
+                x.LoginAsync(config.Username, config.Password, It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new LoginResponse
+                    {
+                        Status = (int)HttpStatusCode.OK,
+                        Response = new LoginResponse.ResponseObject { Token = firstToken },
+                    }
+                )
+            )
+            .ReturnsAsync(
+                CreateApiResponse(
+                    new LoginResponse
+                    {
+                        Status = (int)HttpStatusCode.OK,
+                        Response = new LoginResponse.ResponseObject { Token = secondToken },
+                    }
+                )
+            );
+    }
+
     private static T DeserializeResponse<T>(string json)
     {
         return JsonSerializer.Deserialize<T>(
