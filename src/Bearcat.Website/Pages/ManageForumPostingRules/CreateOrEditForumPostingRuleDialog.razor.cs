@@ -316,7 +316,7 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
             {
                 accumulator.Add(
                     new FlatForumTarget(
-                        Key: node.StableId ?? node.Id.Value,
+                        Key: node.NumericNodeId ?? node.Id.Value,
                         Url: node.Id.Value,
                         Label: string.Join(" › ", path)
                     )

@@ -2,9 +2,12 @@ using Bearcat.Abstractions.DistributionSite.Dto;
 
 namespace Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 
-public interface IDistributionSessionStore
+public interface IDistributionSessionRepository
 {
-    Task<DistributionSession?> TryGetAsync(int registrationId, CancellationToken cancellationToken);
+    Task<DistributionSession?> GetByRegistrationIdAsync(
+        int registrationId,
+        CancellationToken cancellationToken
+    );
 
     Task SaveAsync(
         int registrationId,

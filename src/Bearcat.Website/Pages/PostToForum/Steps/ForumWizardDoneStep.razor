@@ -4,7 +4,7 @@
         @L["DraftPrepared"]
     </div>
     <p class="text-sm text-muted-foreground">@L["DraftPreparedHelp"]</p>
-    <a href="@OpenUrl"
+    <a href="@DraftEditorUrl"
        target="_blank"
        rel="noopener noreferrer"
        class="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-accent">
@@ -16,5 +16,5 @@
 @code
 {
     [Parameter]
-    public string OpenUrl { get; set; } = string.Empty;
+    public string DraftEditorUrl { get; set; } = string.Empty;
 }

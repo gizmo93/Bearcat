@@ -44,7 +44,7 @@
             break;
 
         case WizardStep.Done:
-            <ForumWizardDoneStep OpenUrl="@preparedDraft!.OpenUrl" />
+            <ForumWizardDoneStep DraftEditorUrl="@preparedDraft!.DraftEditorUrl" />
 
             @if (postRecorded)
             {

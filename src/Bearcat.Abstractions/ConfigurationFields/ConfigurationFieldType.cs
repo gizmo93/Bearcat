@@ -7,4 +7,5 @@ public enum ConfigurationFieldType
     Number = 3,
     Boolean = 4,
     Select = 5,
+    Url = 6,
 }

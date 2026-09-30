@@ -7,12 +7,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bearcat.Infrastructure.DistributionSites;
 
-public sealed class DatabaseDistributionSessionStore(
+public sealed class DistributionSessionRepository(
     IBearcatWriteDbContext dbContext,
     ISecretProtector secretProtector
-) : IDistributionSessionStore
+) : IDistributionSessionRepository
 {
-    public async Task<DistributionSession?> TryGetAsync(
+    public async Task<DistributionSession?> GetByRegistrationIdAsync(
         int registrationId,
         CancellationToken cancellationToken
     )
@@ -28,13 +28,17 @@ public sealed class DatabaseDistributionSessionStore(
         }
 
         var json = secretProtector.Unprotect(registration.EncryptedSession);
-        var payload = JsonSerializer.Deserialize<SessionPayload>(json);
-        if (payload is null)
+        var serializedSession = JsonSerializer.Deserialize<SerializedSession>(json);
+        if (serializedSession?.BaseUrl is null)
         {
             return null;
         }
 
-        return new DistributionSession(payload.UserAgent, payload.Cookies);
+        return new DistributionSession(
+            BaseUrl: serializedSession.BaseUrl,
+            UserAgent: serializedSession.UserAgent,
+            Cookies: serializedSession.Cookies
+        );
     }
 
     public async Task SaveAsync(
@@ -48,7 +52,13 @@ public sealed class DatabaseDistributionSessionStore(
             cancellationToken
         );
 
-        var json = JsonSerializer.Serialize(new SessionPayload(session.UserAgent, session.Cookies));
+        var json = JsonSerializer.Serialize(
+            new SerializedSession(
+                BaseUrl: session.BaseUrl,
+                UserAgent: session.UserAgent,
+                Cookies: session.Cookies
+            )
+        );
         registration.EncryptedSession = secretProtector.Protect(json);
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -70,5 +80,9 @@ public sealed class DatabaseDistributionSessionStore(
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private sealed record SessionPayload(string UserAgent, IReadOnlyList<SessionCookie> Cookies);
+    private sealed record SerializedSession(
+        string? BaseUrl,
+        string UserAgent,
+        IReadOnlyList<SessionCookie> Cookies
+    );
 }

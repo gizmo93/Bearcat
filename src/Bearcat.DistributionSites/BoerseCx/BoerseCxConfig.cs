@@ -8,8 +8,8 @@ public record BoerseCxConfig : IXenForoDistributionSiteConfig
 
     public string Password { get; init; } = null!;
 
-    public IReadOnlyDictionary<string, string> ToDictionary() =>
-        new Dictionary<string, string>
+    public IReadOnlyDictionary<string, object?> ToDictionary() =>
+        new Dictionary<string, object?>
         {
             [nameof(Username)] = Username,
             [nameof(Password)] = Password,

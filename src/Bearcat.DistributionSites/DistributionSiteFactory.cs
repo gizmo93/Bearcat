@@ -17,7 +17,7 @@ public sealed class DistributionSiteFactory(IServiceProvider serviceProvider)
                 Kind: site is IForumDistributionSite
                     ? DistributionSiteKind.Forum
                     : DistributionSiteKind.Blog,
-                ConfigurationKeys: site.ConfigurationKeys
+                ConfigurationFields: site.ConfigurationFields
             ))
             .ToList();
     }

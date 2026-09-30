@@ -125,15 +125,43 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
     > OrderByPostingHistoryAsync(List<DistributionSiteRegistrationReadModel> forums)
     {
         var postedHosts = await GetPostedHostsAsync();
-        return operationRunner.Run(
-            (IDistributionSiteFactory factory) =>
-                (IReadOnlyList<DistributionSiteRegistrationReadModel>)
-                    forums
-                        .OrderBy(registration =>
-                            HasAlreadyPosted(registration, factory, postedHosts) ? 1 : 0
-                        )
-                        .ThenBy(registration => registration.Name, StringComparer.OrdinalIgnoreCase)
-                        .ToList()
+        var alreadyPostedRegistrationIds = await GetAlreadyPostedRegistrationIdsAsync(
+            registrationIds: forums
+                .Select(registration => registration.DistributionSiteRegistrationId)
+                .ToList(),
+            postedHosts: postedHosts
+        );
+
+        return forums
+            .OrderBy(registration =>
+                alreadyPostedRegistrationIds.Contains(registration.DistributionSiteRegistrationId)
+                    ? 1
+                    : 0
+            )
+            .ThenBy(registration => registration.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private async Task<HashSet<int>> GetAlreadyPostedRegistrationIdsAsync(
+        List<int> registrationIds,
+        HashSet<string> postedHosts
+    )
+    {
+        return await operationRunner.RunAsync(
+            async (DistributionSiteRegistrationService service) =>
+            {
+                var alreadyPostedRegistrationIds = new HashSet<int>();
+                foreach (var registrationId in registrationIds)
+                {
+                    var baseUrl = await service.GetBaseUrlAsync(registrationId);
+                    if (HasAlreadyPosted(baseUrl, postedHosts))
+                    {
+                        alreadyPostedRegistrationIds.Add(registrationId);
+                    }
+                }
+
+                return alreadyPostedRegistrationIds;
+            }
         );
     }
 
@@ -158,15 +186,9 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
         return hosts;
     }
 
-    private static bool HasAlreadyPosted(
-        DistributionSiteRegistrationReadModel registration,
-        IDistributionSiteFactory factory,
-        HashSet<string> postedHosts
-    )
+    private static bool HasAlreadyPosted(string? baseUrl, HashSet<string> postedHosts)
     {
-        var site = factory.Get(registration.DistributionSiteClassName);
-
-        return Uri.TryCreate(site.BaseUrl, UriKind.Absolute, out var uri)
+        return Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri)
             && postedHosts.Contains(NormalizeHost(uri.Host));
     }
 
@@ -330,7 +352,7 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
         {
             var url = await operationRunner.RunAsync(
                 (DistributionSiteSessionService service) =>
-                    service.ResolvePostedUrlAsync(
+                    service.FindUrlOfSubmittedPostAsync(
                         registrationId: selectedRegistrationId,
                         target: new ForumTargetId(selectedTargetId ?? string.Empty),
                         isNewThread: IsNewThread,
@@ -400,7 +422,7 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
 
     private void StartManualUrlEntry()
     {
-        manualUrl = IsNewThread ? preparedDraft?.OpenUrl ?? string.Empty : threadSelection;
+        manualUrl = IsNewThread ? preparedDraft?.DraftEditorUrl ?? string.Empty : threadSelection;
         showManualUrlEntry = true;
     }
 

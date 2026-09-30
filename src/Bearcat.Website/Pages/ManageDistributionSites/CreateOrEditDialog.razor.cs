@@ -1,178 +1,186 @@
 using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.DistributionSite.Dto;
+using Bearcat.Domain.Shared.ConfigurationFields;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
-using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
+using Bearcat.Domain.UseCases.ManageDistributionSites.ReadModels;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
 
 namespace Bearcat.Website.Pages.ManageDistributionSites;
 
-public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner)
+public partial class CreateOrEditDialog(IScopedOperationRunner operationRunner) : ComponentBase
 {
+    private const string ConfigResourcePrefix = "DistributionSiteConfig_";
+    private const string NameKey = "Registration.Name";
+    private const int MaxNameLength = 100;
+
     [Parameter]
-    public int? DistributionSiteRegistrationId { get; set; }
+    public DistributionSiteRegistrationReadModel? Registration { get; set; }
 
     [CascadingParameter]
     public IDialogReference DialogRef { get; set; } = null!;
 
-    private bool IsEditMode => DistributionSiteRegistrationId.HasValue;
-    private bool hasUnreadableSecrets;
-    private bool RequiresAllConfigurationValues => !IsEditMode || hasUnreadableSecrets;
-    private RegistrationFormModel formModel = new();
-    private EditContext editContext = null!;
-    private ValidationMessageStore validationMessageStore = null!;
     private IReadOnlyList<DistributionSiteDto> distributionSites = [];
-    private readonly HashSet<string> displayedSecrets = [];
-    private DistributionSiteDto? SelectedDistributionSite =>
-        distributionSites.FirstOrDefault(distributionSite =>
-            distributionSite.ClassName == formModel.ClassName
-        );
-    private bool isInitialized;
+    private string? selectedClassName;
+    private FormSchema? schema;
+    private Dictionary<string, object?> values = new();
+    private string? errorMessage;
+    private bool isSaving;
+
+    private bool IsEdit => Registration is not null;
+
+    private bool KeepsStoredConfigurationValues => Registration is { HasUnreadableSecrets: false };
 
     protected override async Task OnInitializedAsync()
     {
-        await InitializeFormModelAsync();
         distributionSites = operationRunner.Run(
             (IDistributionSiteFactory factory) => factory.GetDistributionSites()
         );
 
-        editContext = new EditContext(formModel);
-        editContext.OnValidationRequested += OnValidationRequested;
-        validationMessageStore = new ValidationMessageStore(editContext);
-        isInitialized = true;
+        if (Registration is null)
+        {
+            return;
+        }
+
+        var storedConfigValues = KeepsStoredConfigurationValues
+            ? await operationRunner.RunAsync(
+                (DistributionSiteRegistrationService service) =>
+                    service.GetConfigValuesWithoutSecretsAsync(
+                        Registration.DistributionSiteRegistrationId
+                    )
+            )
+            : new Dictionary<string, object?>();
+
+        selectedClassName = Registration.DistributionSiteClassName;
+        values = new Dictionary<string, object?>(storedConfigValues)
+        {
+            [NameKey] = Registration.Name,
+        };
+        schema = BuildSchema(GetSelectedDistributionSite());
     }
 
-    private async Task SaveAsync()
+    private void OnDistributionSiteChanged(string? className)
     {
-        await operationRunner.RunAsync<DistributionSiteRegistrationService>(async service =>
-        {
-            if (!IsEditMode)
-            {
-                await service.CreateAsync(
-                    name: formModel.Name!,
-                    className: formModel.ClassName!,
-                    configuration: formModel.Configuration
-                );
-                return;
-            }
+        selectedClassName = className;
+        errorMessage = null;
+        values = values
+            .Where(entry => entry.Key is NameKey && entry.Value is not null)
+            .ToDictionary(entry => entry.Key, entry => entry.Value);
+        schema = string.IsNullOrEmpty(className)
+            ? null
+            : BuildSchema(GetSelectedDistributionSite());
+    }
 
-            await service.UpdateAsync(
-                id: DistributionSiteRegistrationId!.Value,
-                name: formModel.Name!,
-                configuration: formModel.Configuration
+    private DistributionSiteDto GetSelectedDistributionSite()
+    {
+        return distributionSites.First(distributionSite =>
+            distributionSite.ClassName == selectedClassName
+        );
+    }
+
+    private FormSchema BuildSchema(DistributionSiteDto distributionSite)
+    {
+        return new FormSchema
+        {
+            Sections =
+            [
+                new FormSectionDefinition
+                {
+                    Fields =
+                    [
+                        new FormFieldDefinition
+                        {
+                            Name = NameKey,
+                            Label = L["Name"],
+                            Placeholder = L["ConfigurationNamePlaceholder"],
+                            Type = FieldType.Text,
+                            Required = true,
+                            Validations =
+                            [
+                                new FieldValidation
+                                {
+                                    Type = ValidationType.MaxLength,
+                                    Value = MaxNameLength,
+                                },
+                            ],
+                        },
+                    ],
+                },
+                new FormSectionDefinition
+                {
+                    Title = L["Configuration"],
+                    Fields = distributionSite
+                        .ConfigurationFields.Select(field =>
+                            ConfigurationFieldFormMapper.ToFormField(
+                                field,
+                                L,
+                                ConfigResourcePrefix,
+                                KeepsStoredConfigurationValues
+                            )
+                        )
+                        .ToList(),
+                },
+            ],
+        };
+    }
+
+    private async Task SaveAsync(Dictionary<string, object?> submittedValues)
+    {
+        errorMessage = null;
+        isSaving = true;
+
+        var name = submittedValues.GetValueOrDefault(NameKey) as string ?? string.Empty;
+        var configValues = submittedValues
+            .Where(entry => entry.Key is not NameKey)
+            .ToDictionary(entry => entry.Key, entry => entry.Value);
+
+        try
+        {
+            if (Registration is null)
+            {
+                await operationRunner.RunAsync(
+                    (DistributionSiteRegistrationService service) =>
+                        service.CreateAsync(
+                            name: name,
+                            className: selectedClassName!,
+                            values: configValues
+                        )
+                );
+            }
+            else
+            {
+                await operationRunner.RunAsync(
+                    (DistributionSiteRegistrationService service) =>
+                        service.UpdateAsync(
+                            id: Registration.DistributionSiteRegistrationId,
+                            name: name,
+                            values: configValues
+                        )
+                );
+            }
+        }
+        catch (ConfigurationFieldValidationException exception)
+        {
+            errorMessage = ConfigurationFieldFormMapper.CreateFieldErrorMessage(
+                exception,
+                L,
+                ConfigResourcePrefix
             );
-        });
+
+            return;
+        }
+        finally
+        {
+            isSaving = false;
+        }
 
         await DialogRef.CloseAsync(DialogResult.Ok());
-    }
-
-    private void OnValidationRequested(object? sender, ValidationRequestedEventArgs e)
-    {
-        validationMessageStore.Clear();
-
-        if (string.IsNullOrWhiteSpace(formModel.Name))
-        {
-            validationMessageStore.Add(() => formModel.Name!, L["NameIsRequired"]);
-        }
-
-        if (string.IsNullOrWhiteSpace(formModel.ClassName))
-        {
-            validationMessageStore.Add(
-                () => formModel.ClassName!,
-                L["SelectDistributionSiteRequired"]
-            );
-        }
-
-        if (SelectedDistributionSite is null || !RequiresAllConfigurationValues)
-        {
-            return;
-        }
-
-        var missingKeys = SelectedDistributionSite
-            .ConfigurationKeys.Where(key =>
-                string.IsNullOrWhiteSpace(formModel.Configuration.GetValueOrDefault(key))
-            )
-            .ToList();
-
-        foreach (var key in missingKeys)
-        {
-            validationMessageStore.Add(
-                () => formModel.Configuration,
-                L["ConfigurationValueMustBeProvided", key]
-            );
-        }
-    }
-
-    private async Task InitializeFormModelAsync()
-    {
-        if (!IsEditMode)
-        {
-            formModel = new RegistrationFormModel();
-            return;
-        }
-
-        var registration = await operationRunner.RunAsync(
-            (IDistributionSiteRegistrationReadRepository repository) =>
-                repository.GetByIdAsync(DistributionSiteRegistrationId!.Value)
-        );
-
-        if (registration is null)
-        {
-            await DialogRef.CancelAsync();
-            return;
-        }
-
-        hasUnreadableSecrets = registration.HasUnreadableSecrets;
-        formModel = new RegistrationFormModel
-        {
-            Name = registration.Name,
-            ClassName = registration.DistributionSiteClassName,
-        };
     }
 
     private async Task CancelAsync()
     {
         await DialogRef.CancelAsync();
-    }
-
-    private void ToggleShowHideSecret(string key)
-    {
-        if (displayedSecrets.Add(key))
-        {
-            return;
-        }
-
-        displayedSecrets.Remove(key);
-    }
-
-    private void OnSelectedDistributionSiteChanged()
-    {
-        if (IsEditMode)
-        {
-            return;
-        }
-
-        displayedSecrets.Clear();
-        formModel.Configuration = new Dictionary<string, string>();
-    }
-
-    private void OnConfigurationValueChanged(string key, string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            formModel.Configuration.Remove(key);
-            return;
-        }
-
-        formModel.Configuration[key] = value;
-    }
-
-    private static bool IsSecretField(string key)
-    {
-        return key.Contains("password", StringComparison.OrdinalIgnoreCase)
-            || key.Contains("apikey", StringComparison.OrdinalIgnoreCase)
-            || key.Contains("token", StringComparison.OrdinalIgnoreCase);
     }
 }

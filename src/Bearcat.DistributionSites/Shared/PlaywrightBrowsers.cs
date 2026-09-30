@@ -7,19 +7,19 @@ internal static class PlaywrightBrowsers
     private const string BrowsersPathVariable = "PLAYWRIGHT_BROWSERS_PATH";
     private const string BundledFolderName = "playwright-browsers";
 
-    private static readonly Lock Gate = new();
-    private static bool ready;
+    private static readonly Lock InstallLock = new();
+    private static bool chromiumIsInstalled;
 
-    public static void Ensure()
+    public static void InstallChromiumIfMissing()
     {
-        lock (Gate)
+        lock (InstallLock)
         {
-            if (ready)
+            if (chromiumIsInstalled)
             {
                 return;
             }
 
-            var browsersPath = ResolveBrowsersPath();
+            var browsersPath = GetBrowsersPath();
             Environment.SetEnvironmentVariable(BrowsersPathVariable, browsersPath);
 
             if (!HasChromium(browsersPath))
@@ -34,11 +34,11 @@ internal static class PlaywrightBrowsers
                 }
             }
 
-            ready = true;
+            chromiumIsInstalled = true;
         }
     }
 
-    private static string ResolveBrowsersPath()
+    private static string GetBrowsersPath()
     {
         var configured = Environment.GetEnvironmentVariable(BrowsersPathVariable);
         if (!string.IsNullOrWhiteSpace(configured))

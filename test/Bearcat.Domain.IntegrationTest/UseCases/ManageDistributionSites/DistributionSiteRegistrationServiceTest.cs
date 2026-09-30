@@ -1,6 +1,8 @@
+using Bearcat.Abstractions.ConfigurationFields;
 using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
+using Bearcat.Domain.Shared.ConfigurationFields;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -15,6 +17,7 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageDistributionSites;
 public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
 {
     private const string DistributionSiteClassName = "TestForum";
+    private const string StoredSerializedConfig = "stored-config";
 
     private BearcatDbContext dbContext = null!;
     private Mock<IDistributionSite> distributionSiteMock = null!;
@@ -53,25 +56,21 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task UpdateAsync_RegistrationHasUnreadableSecrets_ReplacesConfigAndClearsFlag()
+    public async Task CreateAsync_ValidValues_StoresNormalizedConfig()
     {
         // Arrange
-        var registration = await AddRegistrationWithUnreadableSecretsAsync();
-        distributionSiteMock
-            .Setup(site =>
-                site.SerializeConfig(
-                    It.Is<Dictionary<string, string>>(config =>
-                        config.Count == 1 && config["Password"] == "new-password"
-                    )
-                )
-            )
-            .Returns("{\"Password\":\"new-password\"}");
+        SetupConfigurationFields();
 
         // Act
-        await registrationService.UpdateAsync(
-            registration.Id,
+        await registrationService.CreateAsync(
             "Forum",
-            new Dictionary<string, string> { ["Password"] = "new-password" },
+            DistributionSiteClassName,
+            new Dictionary<string, object?>
+            {
+                ["BaseUrl"] = " https://example.org/community/ ",
+                ["Username"] = " uploader ",
+                ["Password"] = "secret",
+            },
             CancellationToken.None
         );
 
@@ -79,12 +78,165 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
         dbContext.ChangeTracker.Clear();
         var result = await dbContext.DistributionSiteRegistrations.SingleAsync();
 
-        result.SerializedConfig.ShouldBe("{\"Password\":\"new-password\"}");
+        result.Name.ShouldBe("Forum");
+        result.DistributionSiteClassName.ShouldBe(DistributionSiteClassName);
+        result.SerializedConfig.ShouldBe(
+            "{\"BaseUrl\":\"https://example.org/community/\",\"Username\":\"uploader\",\"Password\":\"secret\"}"
+        );
+        result.IsActive.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task CreateAsync_InvalidUrl_ThrowsAndStoresNothing()
+    {
+        // Arrange
+        SetupConfigurationFields();
+
+        // Act
+        var exception = await Should.ThrowAsync<ConfigurationFieldValidationException>(() =>
+            registrationService.CreateAsync(
+                "Forum",
+                DistributionSiteClassName,
+                new Dictionary<string, object?>
+                {
+                    ["BaseUrl"] = "example.org",
+                    ["Username"] = "uploader",
+                    ["Password"] = "secret",
+                },
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.FieldKey.ShouldBe("BaseUrl");
+        exception.Error.ShouldBe(ConfigurationFieldValidationError.InvalidUrl);
+        (await dbContext.DistributionSiteRegistrations.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task UpdateAsync_RegistrationHasUnreadableSecrets_ReplacesConfigAndClearsFlag()
+    {
+        // Arrange
+        SetupConfigurationFields();
+        var registration = await AddRegistrationWithUnreadableSecretsAsync();
+
+        // Act
+        await registrationService.UpdateAsync(
+            registration.Id,
+            "Forum",
+            new Dictionary<string, object?>
+            {
+                ["BaseUrl"] = "https://example.org/",
+                ["Username"] = "uploader",
+                ["Password"] = "new-password",
+            },
+            CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.DistributionSiteRegistrations.SingleAsync();
+
+        result.SerializedConfig.ShouldBe(
+            "{\"BaseUrl\":\"https://example.org/\",\"Username\":\"uploader\",\"Password\":\"new-password\"}"
+        );
         result.HasUnreadableSecrets.ShouldBeFalse();
         distributionSiteMock.Verify(
             site => site.DeserializeConfig(It.IsAny<string>()),
             Times.Never
         );
+    }
+
+    [Test]
+    public async Task UpdateAsync_EmptyPassword_KeepsStoredPasswordAndClearsSession()
+    {
+        // Arrange
+        SetupConfigurationFields();
+        SetupStoredConfig();
+        var registration = await AddReadableRegistrationAsync();
+
+        // Act
+        await registrationService.UpdateAsync(
+            registration.Id,
+            "Renamed forum",
+            new Dictionary<string, object?>
+            {
+                ["BaseUrl"] = "https://example.org/forum/",
+                ["Username"] = "new-uploader",
+                ["Password"] = "",
+            },
+            CancellationToken.None
+        );
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var result = await dbContext.DistributionSiteRegistrations.SingleAsync();
+
+        result.Name.ShouldBe("Renamed forum");
+        result.SerializedConfig.ShouldBe(
+            "{\"BaseUrl\":\"https://example.org/forum/\",\"Username\":\"new-uploader\",\"Password\":\"stored-password\"}"
+        );
+        result.EncryptedSession.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task GetConfigValuesWithoutSecretsAsync_StoredConfig_ReturnsValuesWithoutPassword()
+    {
+        // Arrange
+        SetupConfigurationFields();
+        SetupStoredConfig();
+        var registration = await AddReadableRegistrationAsync();
+
+        // Act
+        var result = await registrationService.GetConfigValuesWithoutSecretsAsync(
+            registration.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(
+            new Dictionary<string, object?>
+            {
+                ["BaseUrl"] = "https://example.org/community/",
+                ["Username"] = "uploader",
+            }
+        );
+    }
+
+    [Test]
+    public async Task GetBaseUrlAsync_ReadableConfig_ReturnsBaseUrlOfSite()
+    {
+        // Arrange
+        var storedConfig = SetupStoredConfig();
+        distributionSiteMock
+            .Setup(site => site.GetBaseUrl(storedConfig))
+            .Returns("https://example.org/community/");
+        var registration = await AddReadableRegistrationAsync();
+
+        // Act
+        var result = await registrationService.GetBaseUrlAsync(
+            registration.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe("https://example.org/community/");
+    }
+
+    [Test]
+    public async Task GetBaseUrlAsync_RegistrationHasUnreadableSecrets_ReturnsNull()
+    {
+        // Arrange
+        var registration = await AddRegistrationWithUnreadableSecretsAsync();
+
+        // Act
+        var result = await registrationService.GetBaseUrlAsync(
+            registration.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeNull();
     }
 
     [Test]
@@ -133,6 +285,59 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
 
         // Assert
         result.ShouldBe(0);
+    }
+
+    private void SetupConfigurationFields()
+    {
+        distributionSiteMock
+            .Setup(site => site.ConfigurationFields)
+            .Returns([
+                new ConfigurationField("BaseUrl", ConfigurationFieldType.Url, IsRequired: true),
+                new ConfigurationField("Username", ConfigurationFieldType.Text, IsRequired: true),
+                new ConfigurationField(
+                    "Password",
+                    ConfigurationFieldType.Password,
+                    IsRequired: true
+                ),
+            ]);
+    }
+
+    private IDistributionSiteConfig SetupStoredConfig()
+    {
+        var storedConfig = new Mock<IDistributionSiteConfig>(MockBehavior.Strict);
+        storedConfig
+            .Setup(config => config.ToDictionary())
+            .Returns(
+                new Dictionary<string, object?>
+                {
+                    ["BaseUrl"] = "https://example.org/community/",
+                    ["Username"] = "uploader",
+                    ["Password"] = "stored-password",
+                }
+            );
+        distributionSiteMock
+            .Setup(site => site.DeserializeConfig(StoredSerializedConfig))
+            .Returns(storedConfig.Object);
+
+        return storedConfig.Object;
+    }
+
+    private async Task<DistributionSiteRegistration> AddReadableRegistrationAsync()
+    {
+        var registration = new DistributionSiteRegistration
+        {
+            Name = "Forum",
+            DistributionSiteClassName = DistributionSiteClassName,
+            SerializedConfig = StoredSerializedConfig,
+            EncryptedSession = "stored-session",
+            IsActive = true,
+        };
+
+        dbContext.DistributionSiteRegistrations.Add(registration);
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        return registration;
     }
 
     private async Task<DistributionSiteRegistration> AddRegistrationWithUnreadableSecretsAsync()

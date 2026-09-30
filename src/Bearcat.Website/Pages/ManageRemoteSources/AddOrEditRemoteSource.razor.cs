@@ -6,6 +6,7 @@ using Bearcat.Domain.Shared.ConfigurationFields;
 using Bearcat.Domain.UseCases.ManageRemoteSources;
 using Bearcat.Domain.UseCases.ManageRemoteSources.ReadModels;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
@@ -183,7 +184,11 @@ public partial class AddOrEditRemoteSource(IScopedOperationRunner operationRunne
         }
         catch (ConfigurationFieldValidationException exception)
         {
-            errorMessage = DescribeFieldError(exception);
+            errorMessage = ConfigurationFieldFormMapper.CreateFieldErrorMessage(
+                exception,
+                L,
+                ConfigResourcePrefix
+            );
 
             return;
         }
@@ -199,14 +204,6 @@ public partial class AddOrEditRemoteSource(IScopedOperationRunner operationRunne
         }
 
         await DialogRef.CloseAsync(DialogResult.Ok());
-    }
-
-    private string DescribeFieldError(ConfigurationFieldValidationException exception)
-    {
-        var label = L[$"{ConfigResourcePrefix}{exception.FieldKey}"];
-        var fieldName = label.ResourceNotFound ? exception.FieldKey : label.Value;
-
-        return L[$"ConfigurationFieldError_{exception.Error}", fieldName];
     }
 
     private async Task CancelAsync()

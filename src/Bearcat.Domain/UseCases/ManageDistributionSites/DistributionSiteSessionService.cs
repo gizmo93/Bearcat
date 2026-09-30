@@ -10,7 +10,7 @@ namespace Bearcat.Domain.UseCases.ManageDistributionSites;
 
 public class DistributionSiteSessionService(
     IDistributionSiteRegistrationWriteRepository repository,
-    IDistributionSessionStore sessionStore,
+    IDistributionSessionRepository sessionRepository,
     IDistributionSiteFactory distributionSiteFactory,
     ISecretProtector secretProtector
 ) : IForumPostSubmitter
@@ -32,7 +32,7 @@ public class DistributionSiteSessionService(
             );
         }
 
-        await sessionStore.SaveAsync(registrationId, session, cancellationToken);
+        await sessionRepository.SaveAsync(registrationId, session, cancellationToken);
         return new TryLoginResult(IsSuccess: true);
     }
 
@@ -41,7 +41,10 @@ public class DistributionSiteSessionService(
         CancellationToken cancellationToken = default
     )
     {
-        var (forum, session) = await EnsureForumSessionAsync(registrationId, cancellationToken);
+        var (forum, session) = await GetForumSiteAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
         return await forum.GetTargetHierarchyAsync(session, cancellationToken);
     }
 
@@ -52,7 +55,10 @@ public class DistributionSiteSessionService(
         CancellationToken cancellationToken = default
     )
     {
-        var (forum, session) = await EnsureForumSessionAsync(registrationId, cancellationToken);
+        var (forum, session) = await GetForumSiteAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
 
         return await forum.FindExistingThreadsAsync(
             session: session,
@@ -69,11 +75,14 @@ public class DistributionSiteSessionService(
         CancellationToken cancellationToken = default
     )
     {
-        var (forum, session) = await EnsureForumSessionAsync(registrationId, cancellationToken);
+        var (forum, session) = await GetForumSiteAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
 
         return await forum.FindExistingThreadsAsync(
             session: session,
-            target: forum.ResolveTarget(targetNodeId),
+            target: forum.CreateForumTargetIdFromStoredValue(session, targetNodeId),
             releaseName: releaseName,
             cancellationToken: cancellationToken
         );
@@ -85,7 +94,10 @@ public class DistributionSiteSessionService(
         CancellationToken cancellationToken = default
     )
     {
-        var (forum, session) = await EnsureForumSessionAsync(registrationId, cancellationToken);
+        var (forum, session) = await GetForumSiteAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
         return await forum.GetThreadPrefixesAsync(session, target, cancellationToken);
     }
 
@@ -98,7 +110,10 @@ public class DistributionSiteSessionService(
         CancellationToken cancellationToken = default
     )
     {
-        var (forum, session) = await EnsureForumSessionAsync(registrationId, cancellationToken);
+        var (forum, session) = await GetForumSiteAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
 
         return await forum.PrepareNewThreadDraftAsync(
             session: session,
@@ -117,7 +132,10 @@ public class DistributionSiteSessionService(
         CancellationToken cancellationToken = default
     )
     {
-        var (forum, session) = await EnsureForumSessionAsync(registrationId, cancellationToken);
+        var (forum, session) = await GetForumSiteAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
         return await forum.PrepareReplyDraftAsync(session, threadUrl, body, cancellationToken);
     }
 
@@ -130,11 +148,14 @@ public class DistributionSiteSessionService(
         CancellationToken cancellationToken = default
     )
     {
-        var (forum, session) = await EnsureForumSessionAsync(registrationId, cancellationToken);
+        var (forum, session) = await GetForumSiteAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
 
         return await forum.SubmitNewThreadAsync(
             session: session,
-            target: forum.ResolveTarget(targetNodeId),
+            target: forum.CreateForumTargetIdFromStoredValue(session, targetNodeId),
             title: title,
             prefixIds: prefixIds,
             body: body,
@@ -149,7 +170,10 @@ public class DistributionSiteSessionService(
         CancellationToken cancellationToken = default
     )
     {
-        var (forum, session) = await EnsureForumSessionAsync(registrationId, cancellationToken);
+        var (forum, session) = await GetForumSiteAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
         return await forum.SubmitReplyAsync(session, threadUrl, body, cancellationToken);
     }
 
@@ -160,11 +184,14 @@ public class DistributionSiteSessionService(
         CancellationToken cancellationToken = default
     )
     {
-        var (forum, session) = await EnsureForumSessionAsync(registrationId, cancellationToken);
+        var (forum, session) = await GetForumSiteAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
         return await forum.EditPostAsync(session, postedUrl, body, cancellationToken);
     }
 
-    public async Task<string?> ResolvePostedUrlAsync(
+    public async Task<string?> FindUrlOfSubmittedPostAsync(
         int registrationId,
         ForumTargetId target,
         bool isNewThread,
@@ -173,9 +200,12 @@ public class DistributionSiteSessionService(
         CancellationToken cancellationToken = default
     )
     {
-        var (forum, session) = await EnsureForumSessionAsync(registrationId, cancellationToken);
+        var (forum, session) = await GetForumSiteAndValidSessionAsync(
+            registrationId,
+            cancellationToken
+        );
 
-        return await forum.ResolvePostedUrlAsync(
+        return await forum.FindUrlOfSubmittedPostAsync(
             session: session,
             target: target,
             isNewThread: isNewThread,
@@ -188,7 +218,7 @@ public class DistributionSiteSessionService(
     private async Task<(
         IForumDistributionSite Forum,
         DistributionSession Session
-    )> EnsureForumSessionAsync(int registrationId, CancellationToken cancellationToken)
+    )> GetForumSiteAndValidSessionAsync(int registrationId, CancellationToken cancellationToken)
     {
         var registration = await repository.GetByIdAsync(registrationId, cancellationToken);
         var site = distributionSiteFactory.Get(registration.DistributionSiteClassName);
@@ -200,20 +230,30 @@ public class DistributionSiteSessionService(
             );
         }
 
-        var session = await EnsureSessionAsync(registration, site, cancellationToken);
+        var session = await GetStoredValidSessionOrLogInAsync(
+            registration,
+            site,
+            cancellationToken
+        );
         return (forum, session);
     }
 
-    private async Task<DistributionSession> EnsureSessionAsync(
+    private async Task<DistributionSession> GetStoredValidSessionOrLogInAsync(
         DistributionSiteRegistration registration,
         IDistributionSite site,
         CancellationToken cancellationToken
     )
     {
-        var cached = await sessionStore.TryGetAsync(registration.Id, cancellationToken);
-        if (cached is not null && await site.IsSessionValidAsync(cached, cancellationToken))
+        var storedSession = await sessionRepository.GetByRegistrationIdAsync(
+            registration.Id,
+            cancellationToken
+        );
+        if (
+            storedSession is not null
+            && await site.IsSessionValidAsync(storedSession, cancellationToken)
+        )
         {
-            return cached;
+            return storedSession;
         }
 
         var session =
@@ -222,7 +262,7 @@ public class DistributionSiteSessionService(
                 $"Login to distribution site '{registration.Name}' failed; could not establish a session."
             );
 
-        await sessionStore.SaveAsync(registration.Id, session, cancellationToken);
+        await sessionRepository.SaveAsync(registration.Id, session, cancellationToken);
         return session;
     }
 

@@ -15,7 +15,7 @@ public static class XenForoBrowserLogin
         string password
     )
     {
-        PlaywrightBrowsers.Ensure();
+        PlaywrightBrowsers.InstallChromiumIfMissing();
 
         using var playwright = await Playwright.CreateAsync();
 
@@ -68,7 +68,11 @@ public static class XenForoBrowserLogin
             ))
             .ToList();
 
-        return new DistributionSession(UserAgent, sessionCookies);
+        return new DistributionSession(
+            BaseUrl: baseUrl,
+            UserAgent: UserAgent,
+            Cookies: sessionCookies
+        );
     }
 
     private static async Task OpenLoginModalAsync(IPage page)
@@ -105,7 +109,7 @@ public static class XenForoBrowserLogin
             return true;
         }
 
-        var loginLink = page.Locator("a.p-navgroup-link--logIn, a[href='/login/']");
-        return await loginLink.CountAsync() == 0;
+        var loggedIn = await page.Locator("html").GetAttributeAsync("data-logged-in");
+        return string.Equals(loggedIn, "true", StringComparison.OrdinalIgnoreCase);
     }
 }

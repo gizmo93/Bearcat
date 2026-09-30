@@ -923,9 +923,7 @@
   <data name="DistributionSite" xml:space="preserve"><value>Verteilungsseite</value></data>
   <data name="AddDistributionSite" xml:space="preserve"><value>Verteilungsseite hinzufügen</value></data>
   <data name="DistributionSiteDialogDescription" xml:space="preserve"><value>Füge Zugangsdaten für eine Verteilungsseite hinzu.</value></data>
-  <data name="DistributionSiteConfigurationHelp" xml:space="preserve"><value>Gib die Zugangsdaten für die ausgewählte Verteilungsseite an.</value></data>
   <data name="SelectDistributionSite" xml:space="preserve"><value>Verteilungsseite auswählen</value></data>
-  <data name="SelectDistributionSiteRequired" xml:space="preserve"><value>Du musst eine Verteilungsseite auswählen.</value></data>
   <data name="OpenDistributionSiteActions" xml:space="preserve"><value>Aktionen öffnen</value></data>
   <data name="DistributionSiteRegistrationActivated" xml:space="preserve"><value>Verteilungsseiten Registrierung {0} aktiviert</value></data>
   <data name="DistributionSiteRegistrationDeactivated" xml:space="preserve"><value>Verteilungsseiten Registrierung {0} deaktiviert</value></data>
@@ -1265,6 +1263,7 @@
   <data name="ConfigurationFieldError_InvalidValue" xml:space="preserve"><value>{0} hat einen ungültigen Wert</value></data>
   <data name="ConfigurationFieldError_NotAnInteger" xml:space="preserve"><value>{0} muss eine ganze Zahl sein</value></data>
   <data name="ConfigurationFieldError_InvalidOption" xml:space="preserve"><value>{0} enthält eine unbekannte Option</value></data>
+  <data name="ConfigurationFieldError_InvalidUrl" xml:space="preserve"><value>{0} muss eine vollständige Adresse sein, die mit http:// oder https:// beginnt</value></data>
   <data name="RemoteSourceConfig_Host" xml:space="preserve"><value>Host</value></data>
   <data name="RemoteSourceConfig_Port" xml:space="preserve"><value>Port</value></data>
   <data name="RemoteSourceConfig_Username" xml:space="preserve"><value>Benutzername</value></data>
@@ -1277,6 +1276,10 @@
   <data name="RemoteSourceConfig_TlsProvider_Description" xml:space="preserve"><value>BouncyCastle funktioniert mit den meisten FTPS-Servern. Wechsle nur zu System, wenn die Verbindung fehlschlägt.</value></data>
   <data name="RemoteSourceConfig_ValidateCertificate" xml:space="preserve"><value>Zertifikat prüfen</value></data>
   <data name="RemoteSourceConfig_ValidateCertificate_Description" xml:space="preserve"><value>Viele FTP-Server nutzen selbstsignierte Zertifikate. Aktiviere diese Option nur, wenn der Server ein vertrauenswürdiges Zertifikat hat.</value></data>
+  <data name="DistributionSiteConfig_BaseUrl" xml:space="preserve"><value>Forenadresse</value></data>
+  <data name="DistributionSiteConfig_BaseUrl_Description" xml:space="preserve"><value>Adresse der Forenstartseite inklusive Installationsordner, z. B. https://example.org/community/. Verwende die Adresse, die der Browser nach Weiterleitungen anzeigt.</value></data>
+  <data name="DistributionSiteConfig_Username" xml:space="preserve"><value>Benutzername</value></data>
+  <data name="DistributionSiteConfig_Password" xml:space="preserve"><value>Passwort</value></data>
   <data name="RemoteSourceAutomations" xml:space="preserve"><value>Remoteautomatisierungen</value></data>
   <data name="RemoteSourceAutomationsIntro" xml:space="preserve"><value>Überwacht Ordner auf Remotequellen und merkt neue Releases zum Herunterladen vor</value></data>
   <data name="NewRemoteSourceAutomation" xml:space="preserve"><value>Neue Remoteautomatisierung</value></data>
