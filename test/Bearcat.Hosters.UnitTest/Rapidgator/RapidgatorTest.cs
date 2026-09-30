@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Rapidgator;
 using Bearcat.Hosters.Rapidgator.Api;
@@ -19,20 +20,14 @@ public class RapidgatorTest
 {
     private readonly List<string> temporaryFiles = [];
     private Mock<IRapidgatorApiClient> apiClientMock = null!;
-    private Mock<IRapidgatorApi> rapidgatorApiMock = null!;
     private Hosters.Rapidgator.Rapidgator service = null!;
 
     [SetUp]
     public void SetUp()
     {
         apiClientMock = new Mock<IRapidgatorApiClient>(MockBehavior.Strict);
-        rapidgatorApiMock = new Mock<IRapidgatorApi>(MockBehavior.Strict);
         var loggerMock = new Mock<ILogger<Hosters.Rapidgator.Rapidgator>>();
-        service = new Hosters.Rapidgator.Rapidgator(
-            apiClientMock.Object,
-            rapidgatorApiMock.Object,
-            loggerMock.Object
-        );
+        service = new Hosters.Rapidgator.Rapidgator(apiClientMock.Object, loggerMock.Object);
         service.UploadRetryDelay = TimeSpan.Zero;
         service.UploadStatusPollDelay = TimeSpan.Zero;
     }
@@ -603,18 +598,49 @@ public class RapidgatorTest
         result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeFalse();
         result.StatusPerFileUrl.ShouldBeEmpty();
-        result.ErrorMessages.ShouldBe(["Login failed: login failed"]);
+        result.ErrorMessages.ShouldBe(["Link check failed: login failed"]);
     }
 
     [Test]
-    public async Task TryLoginAsync_LoginReturnsOk_ReturnsSuccess()
+    public async Task CheckFilesExistAsync_CredentialsRejected_ThrowsHosterCredentialsRejected()
     {
         // Arrange
         var config = new RapidgatorConfig { Username = "user", Password = "password" };
 
-        rapidgatorApiMock
-            .Setup(x => x.LoginAsync("user", "password", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreateApiResponse(CreateLoginResponse(uploadPipes: 8)));
+        apiClientMock
+            .Setup(x =>
+                x.CheckLinksAsync(
+                    config,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(
+                new HosterCredentialsRejectedException("Error: Wrong e-mail or password.")
+            );
+
+        // Act
+        var exception = await Should.ThrowAsync<HosterCredentialsRejectedException>(() =>
+            service.CheckFilesExistAsync(
+                config,
+                [new FileUrlToCheckDto("https://rapidgator.net/file/online", null)],
+                CancellationToken.None
+            )
+        );
+
+        // Assert
+        exception.Message.ShouldBe("Error: Wrong e-mail or password.");
+    }
+
+    [Test]
+    public async Task TryLoginAsync_LoginSucceeds_ReturnsSuccess()
+    {
+        // Arrange
+        var config = new RapidgatorConfig { Username = "user", Password = "password" };
+
+        apiClientMock
+            .Setup(x => x.LoginAsync(config, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateLoginResponse(uploadPipes: 8));
 
         // Act
         var result = await service.TryLoginAsync(config, CancellationToken.None);
@@ -626,17 +652,15 @@ public class RapidgatorTest
     }
 
     [Test]
-    public async Task TryLoginAsync_LoginReturnsError_ReturnsFailure()
+    public async Task TryLoginAsync_CredentialsRejected_ReturnsFailure()
     {
         // Arrange
         var config = new RapidgatorConfig { Username = "user", Password = "password" };
 
-        rapidgatorApiMock
-            .Setup(x => x.LoginAsync("user", "password", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(
-                CreateApiResponse(
-                    CreateLoginResponse(uploadPipes: 0, status: 400, details: "invalid credentials")
-                )
+        apiClientMock
+            .Setup(x => x.LoginAsync(config, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(
+                new HosterCredentialsRejectedException("Error: Wrong e-mail or password.")
             );
 
         // Act
@@ -645,7 +669,7 @@ public class RapidgatorTest
         // Assert
         result.ShouldNotBeNull();
         result.IsSuccess.ShouldBeFalse();
-        result.ErrorMessage.ShouldBe("invalid credentials");
+        result.ErrorMessage.ShouldBe("Error: Wrong e-mail or password.");
     }
 
     [Test]
@@ -654,11 +678,9 @@ public class RapidgatorTest
         // Arrange
         var config = new RapidgatorConfig { Username = "user", Password = "password" };
 
-        rapidgatorApiMock
-            .Setup(x => x.LoginAsync("user", "password", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(
-                CreateApiResponse(CreateLoginResponse(uploadPipes: 5, remoteUploadJobs: 200))
-            );
+        apiClientMock
+            .Setup(x => x.LoginAsync(config, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateLoginResponse(uploadPipes: 5, remoteUploadJobs: 200));
 
         // Act
         var result = await service.GetMaximumParallelUploadsAsync(config, CancellationToken.None);
@@ -693,39 +715,19 @@ public class RapidgatorTest
         return filePath;
     }
 
-    private static LoginResponse CreateLoginResponse(
+    private static LoginResponse.ResponseObject CreateLoginResponse(
         int uploadPipes,
-        int remoteUploadJobs = 0,
-        int status = (int)HttpStatusCode.OK,
-        string? details = null
+        int remoteUploadJobs = 0
     )
     {
-        return new LoginResponse
+        return new LoginResponse.ResponseObject
         {
-            Status = status,
-            Details = details,
-            Response = new LoginResponse.ResponseObject
+            Token = "token",
+            User = new LoginResponse.User
             {
-                Token = "token",
-                User = new LoginResponse.User
-                {
-                    Upload = new LoginResponse.Upload { NbPipes = uploadPipes },
-                    RemoteUpload = new LoginResponse.RemoteUpload { MaxNbJobs = remoteUploadJobs },
-                },
+                Upload = new LoginResponse.Upload { NbPipes = uploadPipes },
+                RemoteUpload = new LoginResponse.RemoteUpload { MaxNbJobs = remoteUploadJobs },
             },
         };
-    }
-
-    private static ApiResponse<T> CreateApiResponse<T>(T content)
-    {
-        return new ApiResponse<T>(
-            new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                RequestMessage = new HttpRequestMessage(),
-            },
-            content,
-            new RefitSettings(),
-            error: null
-        );
     }
 }

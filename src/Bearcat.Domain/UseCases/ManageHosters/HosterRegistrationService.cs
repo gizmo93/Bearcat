@@ -201,6 +201,10 @@ public class HosterRegistrationService(
 
             return new TryLoginResult(IsSuccess: false, ErrorMessage: ex.Message);
         }
+        catch (HosterCredentialsRejectedException ex)
+        {
+            return new TryLoginResult(IsSuccess: false, ErrorMessage: ex.Message);
+        }
     }
 
     public async Task<CaptchaChallengeResult> RequestCaptchaChallengeAsync(

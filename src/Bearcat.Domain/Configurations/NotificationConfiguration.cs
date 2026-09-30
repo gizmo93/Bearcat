@@ -106,6 +106,12 @@ public class NotificationConfiguration : IApplicationConfiguration
     public bool CaptchaVerificationRequired { get; set; } = true;
 
     [ApplicationConfigurationProperty(
+        "NotificationKind.HosterCredentialsRejected",
+        "NotificationKind.HosterCredentialsRejected.Description"
+    )]
+    public bool HosterCredentialsRejected { get; set; } = true;
+
+    [ApplicationConfigurationProperty(
         "NotificationKind.LinkCrypterContainerCreationFailed",
         "NotificationKind.LinkCrypterContainerCreationFailed.Description"
     )]

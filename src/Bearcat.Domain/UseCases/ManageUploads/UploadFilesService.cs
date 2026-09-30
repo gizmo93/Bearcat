@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Threading.Channels;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Proxies;
@@ -23,6 +24,7 @@ public class UploadFilesService(
     UploadFinalizationService finalizationService,
     FileUploadExecutionService fileUploadExecutionService,
     UploadConcurrencyService concurrencyService,
+    HosterCredentialsRejectionService credentialsRejectionService,
     ITransferProgressTracker progressTracker
 )
 {
@@ -204,9 +206,24 @@ public class UploadFilesService(
                 continue;
             }
 
+            var hosterClassName = upload.UploadConfig.HosterRegistration.HosterClassName;
+
+            if (
+                !upload.UploadConfig.HosterRegistration.IsActive
+                || !concurrencyService.HasHosterSemaphore(hosterClassName)
+            )
+            {
+                logger.LogInformation(
+                    "Skipping pending upload {UploadId} because its hoster registration {HosterRegistration} is inactive or its parallel upload limit could not be determined",
+                    upload.Id,
+                    upload.UploadConfig.HosterRegistration.Name
+                );
+
+                continue;
+            }
+
             trackedUploadIds.Add(upload.Id);
 
-            var hosterClassName = upload.UploadConfig.HosterRegistration.HosterClassName;
             var hoster = hosters[hosterClassName];
             var hosterConfig = hoster.DeserializeHosterConfig(
                 hosterConfigsByRegistrationId[upload.UploadConfig.HosterRegistrationId]
@@ -223,6 +240,13 @@ public class UploadFilesService(
                     hosterClassName: hosterClassName,
                     cancellationToken: cancellationToken
                 );
+            }
+            catch (HosterCredentialsRejectedException ex)
+            {
+                credentialsRejectionService.DeactivateAndNotify(upload, ex.Message);
+
+                trackedUploadIds.Remove(upload.Id);
+                continue;
             }
             catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
             {
@@ -387,7 +411,7 @@ public class UploadFilesService(
                     upload.Id
                 );
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not HosterCredentialsRejectedException)
             {
                 logger.LogWarning(
                     ex,
@@ -442,7 +466,10 @@ public class UploadFilesService(
                     cancellationToken
                 );
             }
-            catch (Exception ex) when (attempt < FolderCreationRetryAttempts)
+            catch (Exception ex)
+                when (attempt < FolderCreationRetryAttempts
+                    && ex is not HosterCredentialsRejectedException
+                )
             {
                 logger.LogWarning(
                     ex,

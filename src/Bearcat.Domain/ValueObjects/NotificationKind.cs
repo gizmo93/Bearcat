@@ -29,4 +29,5 @@ public enum NotificationKind
     RemoteDownloadFailed = 25,
     ReleaseCreatedFromRemoteDownload = 26,
     UnreadableSecretsDetected = 27,
+    HosterCredentialsRejected = 28,
 }

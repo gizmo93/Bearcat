@@ -3,6 +3,7 @@ using System.Text.Json;
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Abstractions.Hoster.Results;
 using Bearcat.Abstractions.Transfers;
 using Bearcat.Hosters.Extensions;
@@ -15,11 +16,9 @@ using Refit;
 
 namespace Bearcat.Hosters.Rapidgator;
 
-public class Rapidgator(
-    IRapidgatorApiClient apiClient,
-    IRapidgatorApi rapidgatorApi,
-    ILogger<Rapidgator> logger
-) : IHosterWithFolders, IHosterWithDownload
+public class Rapidgator(IRapidgatorApiClient apiClient, ILogger<Rapidgator> logger)
+    : IHosterWithFolders,
+        IHosterWithDownload
 {
     public string Name => "Rapidgator";
 
@@ -141,10 +140,11 @@ public class Rapidgator(
             );
         }
         catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
         {
             return new FileExistResult(
                 IsSuccess: false,
-                ErrorMessages: [$"Login failed: {ex.Message}"],
+                ErrorMessages: [$"Link check failed: {ex.Message}"],
                 StatusPerFileUrl: new Dictionary<string, bool>()
             );
         }
@@ -178,15 +178,12 @@ public class Rapidgator(
         CancellationToken cancellationToken
     )
     {
-        var config = hosterConfig.As<RapidgatorConfig>();
-
-        var response = await rapidgatorApi.LoginAsync(
-            login: config.Username,
-            password: config.Password,
+        var loginResponse = await apiClient.LoginAsync(
+            config: hosterConfig.As<RapidgatorConfig>(),
             cancellationToken: cancellationToken
         );
 
-        return response.Content!.Response.User.Upload.NbPipes;
+        return loginResponse.User.Upload.NbPipes;
     }
 
     public async Task<TryLoginResult> TryLoginAsync(
@@ -201,16 +198,9 @@ public class Rapidgator(
 
         try
         {
-            var response = await rapidgatorApi.LoginAsync(
-                rapidgatorConfig.Username,
-                rapidgatorConfig.Password,
-                cancellationToken: cancellationToken
-            );
+            await apiClient.LoginAsync(rapidgatorConfig, cancellationToken);
 
-            return new TryLoginResult(
-                IsSuccess: response.Content!.Status == (int)HttpStatusCode.OK,
-                ErrorMessage: response.Content.Details
-            );
+            return new TryLoginResult(IsSuccess: true, ErrorMessage: null);
         }
         catch (Exception e)
         {
@@ -282,7 +272,8 @@ public class Rapidgator(
 
             return new DownloadFileResult(IsSuccess: true, ErrorMessages: []);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex)
+            when (ex is not (OperationCanceledException or HosterCredentialsRejectedException))
         {
             logger.LogError(
                 ex,

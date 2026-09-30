@@ -25,4 +25,9 @@ public interface IUploadFilesRepository
     Task<IReadOnlyDictionary<string, HosterUploadConcurrencyInfo>> GetConfigByHosterClassName(
         CancellationToken cancellationToken
     );
+
+    Task<HosterRegistration> GetHosterRegistrationByIdAsync(
+        int hosterRegistrationId,
+        CancellationToken cancellationToken
+    );
 }

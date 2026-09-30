@@ -101,6 +101,7 @@ public class UploadFilesRepository(
             .HosterRegistrations.Where(h => h.IsActive)
             .Select(h => new
             {
+                h.Id,
                 h.HosterClassName,
                 h.SerializedConfig,
                 h.MaxParallelUploadsOverride,
@@ -114,12 +115,24 @@ public class UploadFilesRepository(
             .ToDictionary(
                 r => r.HosterClassName,
                 r => new HosterUploadConcurrencyInfo(
+                    r.Id,
                     secretProtector.Unprotect(r.SerializedConfig),
                     r.MaxParallelUploadsOverride,
                     r.UploadProxySelection,
                     r.UploadProxyServerId
                 )
             );
+    }
+
+    public async Task<HosterRegistration> GetHosterRegistrationByIdAsync(
+        int hosterRegistrationId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite.HosterRegistrations.FirstAsync(
+            h => h.Id == hosterRegistrationId,
+            cancellationToken
+        );
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)

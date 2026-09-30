@@ -1,37 +1,32 @@
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Abstractions.Hoster;
+using Bearcat.Abstractions.Hoster.Exceptions;
 using Bearcat.Domain.Configurations;
+using Bearcat.Domain.Shared;
 using Bearcat.Domain.Shared.Proxies;
 using Bearcat.Domain.UseCases.ManageUploads.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace Bearcat.Domain.UseCases.ManageUploads;
 
-public class UploadConcurrencyService : IDisposable
+public class UploadConcurrencyService(
+    IUploadFilesRepository repository,
+    IApplicationConfigurationProvider configuration,
+    HosterCredentialsRejectionService credentialsRejectionService,
+    ILogger<UploadConcurrencyService> logger
+) : IDisposable
 {
-    private readonly IUploadFilesRepository repository;
-
-    private readonly SemaphoreSlim globalUploadSemaphore;
+    private readonly SemaphoreSlim globalUploadSemaphore = CreateGlobalUploadSemaphore(
+        configuration
+    );
 
     private readonly Dictionary<string, SemaphoreSlim> hosterUploadSemaphores = new();
 
     private bool disposed;
 
-    public UploadConcurrencyService(
-        IUploadFilesRepository repository,
-        IApplicationConfigurationProvider configuration
-    )
+    public bool HasHosterSemaphore(string hosterClassName)
     {
-        this.repository = repository;
-
-        var maxParallelUploads = Math.Max(
-            1,
-            configuration.GetValue<UploadConcurrencyConfiguration>(c => c.MaxParallelUploads)
-        );
-
-        globalUploadSemaphore = new SemaphoreSlim(
-            initialCount: maxParallelUploads,
-            maxCount: maxParallelUploads
-        );
+        return hosterUploadSemaphores.ContainsKey(hosterClassName);
     }
 
     public async Task<bool> TryAcquireGlobalSlotAsync(CancellationToken cancellationToken)
@@ -93,14 +88,41 @@ public class UploadConcurrencyService : IDisposable
                 concurrencyInfo.UploadProxyServerId
             );
 
-            var maxParallelUploads = await ResolveMaximumParallelUploadsAsync(
-                hoster: hoster,
-                hosterConfig: hosterConfig,
-                maxParallelUploadsOverride: concurrencyInfo.MaxParallelUploadsOverride,
-                cancellationToken: cancellationToken
-            );
+            try
+            {
+                var maxParallelUploads = await ResolveMaximumParallelUploadsAsync(
+                    hoster: hoster,
+                    hosterConfig: hosterConfig,
+                    maxParallelUploadsOverride: concurrencyInfo.MaxParallelUploadsOverride,
+                    cancellationToken: cancellationToken
+                );
 
-            hosterUploadSemaphores[hosterName] = new SemaphoreSlim(maxParallelUploads);
+                hosterUploadSemaphores[hosterName] = new SemaphoreSlim(maxParallelUploads);
+            }
+            catch (HosterCredentialsRejectedException ex)
+            {
+                var registration = await repository.GetHosterRegistrationByIdAsync(
+                    concurrencyInfo.HosterRegistrationId,
+                    cancellationToken
+                );
+
+                await credentialsRejectionService.DeactivateAndNotifyAsync(
+                    registration,
+                    ex.Message,
+                    cancellationToken
+                );
+            }
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                logger.LogWarning(
+                    ex,
+                    "Failed to determine the maximum number of parallel uploads for hoster {HosterName}, falling back to 1 parallel upload: {Message}",
+                    hosterName,
+                    ex.Message
+                );
+
+                hosterUploadSemaphores[hosterName] = new SemaphoreSlim(1);
+            }
         }
     }
 
@@ -111,14 +133,24 @@ public class UploadConcurrencyService : IDisposable
         CancellationToken cancellationToken
     )
     {
-        // Hosters that report their limit via API (e.g. Rapidgator) must not be overridden.
-        // The others have just an assumed limit hardcoded and can be overridden
         if (!hoster.HasFixedParallelUploadLimit && maxParallelUploadsOverride is { } overrideValue)
         {
             return Math.Max(1, overrideValue);
         }
 
         return await hoster.GetMaximumParallelUploadsAsync(hosterConfig, cancellationToken) ?? 1;
+    }
+
+    private static SemaphoreSlim CreateGlobalUploadSemaphore(
+        IApplicationConfigurationProvider configuration
+    )
+    {
+        var maxParallelUploads = Math.Max(
+            1,
+            configuration.GetValue<UploadConcurrencyConfiguration>(c => c.MaxParallelUploads)
+        );
+
+        return new SemaphoreSlim(initialCount: maxParallelUploads, maxCount: maxParallelUploads);
     }
 
     public void Dispose()

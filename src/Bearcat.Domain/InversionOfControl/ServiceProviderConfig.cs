@@ -172,6 +172,7 @@ public static class ServiceProviderConfig
             services.AddSingleton<TelegramConfigurationCache>();
             services.AddScoped<TelegramNotificationService>();
             services.AddScoped<HosterCaptchaVerificationService>();
+            services.AddScoped<HosterCredentialsRejectionService>();
             services.AddScoped<ArchiveConfigService>();
             services.AddScoped<TimeProvider>();
             services.AddScoped<UploadConfigService>();
