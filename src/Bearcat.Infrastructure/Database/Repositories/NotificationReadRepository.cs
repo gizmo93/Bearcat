@@ -148,6 +148,8 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
             n.LinkCrypterContainerId == null
                 ? null
                 : n.LinkCrypterContainer!.LinkCrypterRegistration.Name,
+            n.HosterRegistrationId,
+            n.HosterRegistrationId == null ? null : n.HosterRegistration!.Name,
             n.ReleaseId,
             n.ReleaseId == null ? null : n.Release!.Name
         );
@@ -219,6 +221,15 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
             );
         }
 
+        if (notification.HosterRegistrationId is not null)
+        {
+            return new NotificationRelatedEntityReadModel(
+                EntityType: "HosterRegistration",
+                DisplayName: JoinDisplayName(notification.HosterRegistrationName),
+                TargetUrl: "/hoster-registrations"
+            );
+        }
+
         if (notification.ReleaseId is not null)
         {
             return new NotificationRelatedEntityReadModel(
@@ -260,6 +271,8 @@ public class NotificationReadRepository(IBearcatReadDbContext dbRead) : INotific
         int? LinkReleaseId,
         string? LinkReleaseName,
         string? LinkCrypterName,
+        int? HosterRegistrationId,
+        string? HosterRegistrationName,
         int? ReleaseId,
         string? ReleaseName
     );

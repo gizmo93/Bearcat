@@ -20,6 +20,19 @@ public sealed class FakeNotificationService : INotificationService
         return Task.CompletedTask;
     }
 
+    public Task CreateAsync<TEntity>(
+        NotificationKind kind,
+        string message,
+        TEntity entity,
+        Expression<Func<Notification, TEntity?>> selector,
+        CancellationToken cancellationToken
+    )
+    {
+        Created.Add(new CreatedNotification(kind, message));
+
+        return Task.CompletedTask;
+    }
+
     public Task ResolveAsync(int notificationId, CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;

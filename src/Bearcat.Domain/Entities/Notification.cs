@@ -31,4 +31,8 @@ public class Notification
     public int? LinkCrypterContainerId { get; set; }
 
     public LinkCrypterContainer? LinkCrypterContainer { get; set; }
+
+    public int? HosterRegistrationId { get; set; }
+
+    public HosterRegistration? HosterRegistration { get; set; }
 }

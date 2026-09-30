@@ -14,6 +14,11 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(n => n.NotificationSeverity).IsRequired();
         builder.Property(n => n.NotificationKind).IsRequired();
         builder.Property(n => n.Message).IsRequired().HasMaxLength(2000);
+        builder.Property(n => n.UploadId).IsRequired(false);
+        builder.Property(n => n.ArchiveId).IsRequired(false);
+        builder.Property(n => n.ReleaseId).IsRequired(false);
+        builder.Property(n => n.LinkCrypterContainerId).IsRequired(false);
+        builder.Property(n => n.HosterRegistrationId).IsRequired(false);
 
         builder
             .HasIndex(n => new { n.CreatedAt, n.Id })
@@ -49,6 +54,14 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
             .WithMany(l => l.Notifications)
             .HasForeignKey(n => n.ReleaseId)
             .HasPrincipalKey(l => l.Id)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .HasOne(n => n.HosterRegistration)
+            .WithMany(h => h.Notifications)
+            .HasForeignKey(n => n.HosterRegistrationId)
+            .HasPrincipalKey(h => h.Id)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
     }

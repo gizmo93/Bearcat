@@ -521,21 +521,20 @@ public class UploadStateServiceTest : BearcatIntegrationTest
 
         // Assert
         dbContext.ChangeTracker.Clear();
-        var result = await dbContext
-            .Uploads.Include(u => u.UploadedFiles)
-            .Include(u => u.Notifications)
-            .SingleAsync();
+        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+        var registration = await dbContext.HosterRegistrations.SingleAsync();
+        var notification = await dbContext.Notifications.SingleAsync();
 
-        result.ShouldNotBeNull();
         result.Id.ShouldBe(upload.Id);
         result.OnlineState.ShouldBe(OnlineState.Online);
         result.UploadedFiles.Single().OnlineState.ShouldBe(OnlineState.Online);
-        result.Notifications.Single().NotificationSeverity.ShouldBe(NotificationSeverity.Error);
-        result
-            .Notifications.Single()
-            .Message.ShouldBe(
-                "Failed to check file existence on hoster, Error messages: API unavailable"
-            );
+        notification.NotificationKind.ShouldBe(NotificationKind.HosterStatusCheckFailed);
+        notification.NotificationSeverity.ShouldBe(NotificationSeverity.Error);
+        notification.HosterRegistrationId.ShouldBe(registration.Id);
+        notification.UploadId.ShouldBeNull();
+        notification.Message.ShouldBe(
+            "Failed to check file existence on hoster registration 'Hoster' for 1 uploads, Error messages: API unavailable"
+        );
         hosterMock.VerifyAll();
         hosterFactoryMock.VerifyAll();
     }
@@ -575,20 +574,16 @@ public class UploadStateServiceTest : BearcatIntegrationTest
 
         // Assert
         dbContext.ChangeTracker.Clear();
-        var result = await dbContext
-            .Uploads.Include(u => u.UploadedFiles)
-            .Include(u => u.Notifications)
-            .SingleAsync();
+        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+        var notification = await dbContext.Notifications.SingleAsync();
 
         result.Id.ShouldBe(upload.Id);
         result.OnlineState.ShouldBe(OnlineState.Online);
         result.UploadedFiles.Single().OnlineState.ShouldBe(OnlineState.Online);
-        result.Notifications.Single().NotificationSeverity.ShouldBe(NotificationSeverity.Error);
-        result
-            .Notifications.Single()
-            .Message.ShouldBe(
-                "Failed to check file existence on hoster, Error messages: The link check did not finish within 00:00:00.0200000."
-            );
+        notification.NotificationSeverity.ShouldBe(NotificationSeverity.Error);
+        notification.Message.ShouldBe(
+            "Failed to check file existence on hoster registration 'Hoster' for 1 uploads, Error messages: The link check did not finish within 00:00:00.0200000."
+        );
     }
 
     [Test]
@@ -617,14 +612,11 @@ public class UploadStateServiceTest : BearcatIntegrationTest
 
         // Assert
         dbContext.ChangeTracker.Clear();
-        var result = await dbContext
-            .Uploads.Include(u => u.UploadedFiles)
-            .Include(u => u.Notifications)
-            .SingleAsync();
+        var result = await dbContext.Uploads.SingleAsync();
 
         result.Id.ShouldBe(upload.Id);
         result.OnlineState.ShouldBe(OnlineState.Online);
-        result.Notifications.ShouldBeEmpty();
+        (await dbContext.Notifications.ToListAsync()).ShouldBeEmpty();
         hosterMock.VerifyAll();
         hosterFactoryMock.VerifyAll();
     }
@@ -841,13 +833,71 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task CheckUploadStatesAsync_HosterCheckFailsInConsecutiveRuns_CreatesSingleErrorNotification()
+    public async Task CheckUploadStatesAsync_HosterCheckFailsForMultipleUploads_CreatesSingleNotificationForRegistration()
     {
         // Arrange
+        var hosterRegistration = CreateHosterRegistration();
         await AddCompletedUploadAsync(
             OnlineState.Online,
             checkedAt: localNow.AddHours(-4),
-            uploadedFileLinks: ["https://hoster.test/1"]
+            uploadedFileLinks: ["https://hoster.test/1"],
+            hosterRegistration: hosterRegistration
+        );
+        await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-5),
+            uploadedFileLinks: ["https://hoster.test/2"],
+            hosterRegistration: hosterRegistration
+        );
+        await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-1),
+            uploadedFileLinks: ["https://hoster.test/3"],
+            hosterRegistration: hosterRegistration
+        );
+        hosterMock
+            .Setup(h =>
+                h.CheckFilesExistAsync(
+                    hosterConfigMock.Object,
+                    It.IsAny<IReadOnlyList<FileUrlToCheckDto>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new FileExistResult(false, ["API unavailable"], new Dictionary<string, bool>())
+            );
+
+        // Act
+        await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
+
+        // Assert
+        dbContext.ChangeTracker.Clear();
+        var notification = await dbContext.Notifications.SingleAsync();
+
+        notification.NotificationKind.ShouldBe(NotificationKind.HosterStatusCheckFailed);
+        notification.HosterRegistrationId.ShouldBe(hosterRegistration.Id);
+        notification.UploadId.ShouldBeNull();
+        notification.Message.ShouldBe(
+            "Failed to check file existence on hoster registration 'Hoster' for 2 uploads, Error messages: API unavailable"
+        );
+    }
+
+    [Test]
+    public async Task CheckUploadStatesAsync_HosterCheckFailsInConsecutiveRuns_CreatesSingleNotificationForRegistration()
+    {
+        // Arrange
+        var hosterRegistration = CreateHosterRegistration();
+        await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-4),
+            uploadedFileLinks: ["https://hoster.test/1"],
+            hosterRegistration: hosterRegistration
+        );
+        await AddCompletedUploadAsync(
+            OnlineState.Online,
+            checkedAt: localNow.AddHours(-4),
+            uploadedFileLinks: ["https://hoster.test/2"],
+            hosterRegistration: hosterRegistration
         );
         hosterMock
             .Setup(h =>
@@ -868,13 +918,13 @@ public class UploadStateServiceTest : BearcatIntegrationTest
 
         // Assert
         dbContext.ChangeTracker.Clear();
-        var notifications = await dbContext
+        var notification = await dbContext
             .Notifications.Where(n =>
                 n.NotificationKind == NotificationKind.HosterStatusCheckFailed
             )
-            .ToListAsync();
+            .SingleAsync();
 
-        notifications.Count.ShouldBe(1);
+        notification.HosterRegistrationId.ShouldBe(hosterRegistration.Id);
         hosterMock.Verify(
             h =>
                 h.CheckFilesExistAsync(
@@ -927,6 +977,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         registration.IsActive.ShouldBeFalse();
         notification.NotificationKind.ShouldBe(NotificationKind.HosterCredentialsRejected);
         notification.NotificationSeverity.ShouldBe(NotificationSeverity.Error);
+        notification.HosterRegistrationId.ShouldBe(registration.Id);
+        notification.UploadId.ShouldBeNull();
         notification.Message.ShouldBe(
             "Hoster registration 'Hoster' was deactivated because the hoster rejected the credentials: Error: Wrong e-mail or password."
         );

@@ -135,6 +135,7 @@ public partial class NotificationsPage(
         {
             "Archive" => "archive",
             "LinkCrypterContainer" => "shield",
+            "HosterRegistration" => "key-round",
             "Upload" => "upload",
             _ => "link",
         };

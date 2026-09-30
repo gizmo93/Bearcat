@@ -30,6 +30,19 @@ public class NotificationService(
         await repository.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task CreateAsync<TEntity>(
+        NotificationKind kind,
+        string message,
+        TEntity entity,
+        Expression<Func<Notification, TEntity?>> selector,
+        CancellationToken cancellationToken
+    )
+    {
+        Create(kind: kind, message: message, entity: entity, selector: selector);
+
+        await repository.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task ResolveAsync(
         int notificationId,
         CancellationToken cancellationToken = default

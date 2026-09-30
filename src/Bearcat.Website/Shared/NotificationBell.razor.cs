@@ -139,6 +139,7 @@ public partial class NotificationBell(
         {
             "Archive" => "archive",
             "LinkCrypterContainer" => "shield",
+            "HosterRegistration" => "key-round",
             "Upload" => "upload",
             _ => "link",
         };

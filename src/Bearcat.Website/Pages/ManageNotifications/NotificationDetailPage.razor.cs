@@ -66,6 +66,7 @@ public partial class NotificationDetailPage(
         {
             "Archive" => "archive",
             "LinkCrypterContainer" => "shield",
+            "HosterRegistration" => "key-round",
             "Upload" => "upload",
             _ => "link",
         };

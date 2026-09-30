@@ -160,7 +160,8 @@ Bearcat will then classify the upload using the following states:
 - **`Offline`**: all uploaded files are offline.
 
 If the hoster check fails, Bearcat creates an error notification and keeps the previous online state.
-While that notification is unresolved, Bearcat does not create another one for the same upload.
+The notification is created once per hoster registration and lists how many uploads are affected.
+While it is unresolved, Bearcat does not create another one for the same hoster registration.
 If the hoster requires captcha verification, Bearcat marks the upload as requiring a captcha and
 notifies you to solve it.
 If the hoster rejects the credentials, Bearcat deactivates the hoster registration and creates one

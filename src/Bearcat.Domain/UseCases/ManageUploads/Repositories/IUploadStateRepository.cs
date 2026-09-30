@@ -25,8 +25,8 @@ public interface IUploadStateRepository
 
     Task<Upload?> GetByIdAsync(int uploadId, CancellationToken cancellationToken);
 
-    Task<IReadOnlySet<int>> GetUploadIdsWithUnresolvedNotificationAsync(
-        IReadOnlyList<int> uploadIds,
+    Task<bool> HasUnresolvedNotificationForHosterRegistrationAsync(
+        int hosterRegistrationId,
         NotificationKind kind,
         CancellationToken cancellationToken
     );

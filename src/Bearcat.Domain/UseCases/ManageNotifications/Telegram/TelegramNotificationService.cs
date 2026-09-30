@@ -572,6 +572,7 @@ public sealed class TelegramNotificationService(
             "Upload" => "Upload",
             "Archive" => "Archive",
             "LinkCrypterContainer" => "Link container",
+            "HosterRegistration" => "Hoster registration",
             "Release" => "Release",
             _ => entityType,
         };

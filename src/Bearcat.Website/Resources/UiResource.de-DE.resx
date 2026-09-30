@@ -524,6 +524,7 @@
   <data name="NotificationDetails" xml:space="preserve"><value>Notificationdetails</value></data>
   <data name="NotificationEntity.Archive" xml:space="preserve"><value>Archiv</value></data>
   <data name="NotificationEntity.LinkCrypterContainer" xml:space="preserve"><value>Linkcrypter</value></data>
+  <data name="NotificationEntity.HosterRegistration" xml:space="preserve"><value>Hosterregistrierung</value></data>
   <data name="NotificationEntity.Upload" xml:space="preserve"><value>Upload</value></data>
   <data name="NotificationResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Notifications</value></data>
   <data name="Notifications" xml:space="preserve"><value>Notifications</value></data>

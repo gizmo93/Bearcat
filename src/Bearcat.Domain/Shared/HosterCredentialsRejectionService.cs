@@ -19,6 +19,8 @@ public class HosterCredentialsRejectionService(INotificationService notification
         await notificationService.CreateAsync(
             kind: NotificationKind.HosterCredentialsRejected,
             message: CreateMessage(registration, message),
+            entity: registration,
+            selector: n => n.HosterRegistration,
             cancellationToken: cancellationToken
         );
     }
@@ -35,8 +37,8 @@ public class HosterCredentialsRejectionService(INotificationService notification
         notificationService.Create(
             kind: NotificationKind.HosterCredentialsRejected,
             message: CreateMessage(registration, message),
-            entity: upload,
-            selector: n => n.Upload
+            entity: registration,
+            selector: n => n.HosterRegistration
         );
     }
 
