@@ -16,8 +16,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0.12-noble
 ENV \
     ASPNETCORE_ENVIRONMENT=Production \
     LC_ALL=en_US.UTF-8 \
-    LANG=en_US.UTF-8 \
-    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+    LANG=en_US.UTF-8
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -35,12 +34,5 @@ RUN apt-get update && \
 
 WORKDIR /App
 COPY --from=build /App/out .
-
-# Install Chromium and its OS dependencies for Playwright (forum auto-posting login).
-# Uses the Playwright node driver shipped in the published output, so no SDK/pwsh is needed.
-RUN apt-get update \
-    && "$(find .playwright/node -name node -type f | head -n1)" \
-    .playwright/package/cli.js install --with-deps chromium \
-    && rm -rf /var/lib/apt/lists/*
 
 ENTRYPOINT ["dotnet", "Bearcat.Host.dll"]

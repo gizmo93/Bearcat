@@ -23,16 +23,13 @@ public class DistributionSiteSessionService(
         var registration = await repository.GetByIdAsync(registrationId, cancellationToken);
         var site = distributionSiteFactory.GetByClassName(registration.DistributionSiteClassName);
 
-        var session = await LogInAsync(site, registration, cancellationToken);
-        if (session is null)
+        var loginResult = await LogInAsync(site, registration, cancellationToken);
+        if (loginResult.Session is null)
         {
-            return new TryLoginResult(
-                IsSuccess: false,
-                ErrorMessage: "Login failed (credentials rejected or a challenge appeared)."
-            );
+            return new TryLoginResult(IsSuccess: false, ErrorMessage: loginResult.ErrorMessage);
         }
 
-        await sessionRepository.SaveAsync(registrationId, session, cancellationToken);
+        await sessionRepository.SaveAsync(registrationId, loginResult.Session, cancellationToken);
         return new TryLoginResult(IsSuccess: true);
     }
 
@@ -256,17 +253,19 @@ public class DistributionSiteSessionService(
             return storedSession;
         }
 
-        var session =
-            await LogInAsync(site, registration, cancellationToken)
-            ?? throw new InvalidOperationException(
-                $"Login to distribution site '{registration.Name}' failed; could not establish a session."
+        var loginResult = await LogInAsync(site, registration, cancellationToken);
+        if (loginResult.Session is null)
+        {
+            throw new InvalidOperationException(
+                $"Login to distribution site '{registration.Name}' failed: {loginResult.ErrorMessage}"
             );
+        }
 
-        await sessionRepository.SaveAsync(registration.Id, session, cancellationToken);
-        return session;
+        await sessionRepository.SaveAsync(registration.Id, loginResult.Session, cancellationToken);
+        return loginResult.Session;
     }
 
-    private Task<DistributionSession?> LogInAsync(
+    private Task<DistributionSiteLoginResult> LogInAsync(
         IDistributionSite site,
         DistributionSiteRegistration registration,
         CancellationToken cancellationToken

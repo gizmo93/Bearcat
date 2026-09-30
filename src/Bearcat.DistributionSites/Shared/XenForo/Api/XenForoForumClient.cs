@@ -7,6 +7,7 @@ using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Bearcat.Abstractions.DistributionSite.Dto;
+using Bearcat.Abstractions.DistributionSite.Results;
 
 namespace Bearcat.DistributionSites.Shared.XenForo.Api;
 
@@ -14,7 +15,14 @@ public sealed partial class XenForoForumClient : IDisposable
 {
     public const string HttpClientName = "XenForo";
 
+    private const string LoginCaptchaSelector =
+        "[data-xf-init*='captcha'], [data-xf-init*='turnstile'], .g-recaptcha, .h-captcha, .cf-turnstile";
+
+    private const string CloudflareChallengeErrorMessage =
+        "The forum answered with a Cloudflare challenge, which Bearcat cannot solve.";
+
     private readonly Uri baseUri;
+    private readonly DistributionSession session;
     private readonly HttpClient http;
     private readonly HtmlParser parser = new();
     private readonly CookieContainer cookies = new();
@@ -26,6 +34,7 @@ public sealed partial class XenForoForumClient : IDisposable
     )
     {
         this.baseUri = baseUri;
+        this.session = session;
 
         http = httpClientFactory.CreateClient(HttpClientName);
         http.BaseAddress = baseUri;
@@ -51,8 +60,225 @@ public sealed partial class XenForoForumClient : IDisposable
     public async Task<bool> IsLoggedInAsync(CancellationToken cancellationToken)
     {
         var document = await GetDocumentAsync("", cancellationToken);
-        var loggedIn = document.QuerySelector("html")?.GetAttribute("data-logged-in");
+        return IsLoggedIn(document);
+    }
 
+    public async Task<DistributionSiteLoginResult> LogInAsync(
+        string username,
+        string password,
+        CancellationToken cancellationToken
+    )
+    {
+        var homePage = await DownloadPageForLoginAsync(baseUri, cancellationToken);
+        if (homePage.ErrorMessage is not null)
+        {
+            return CreateLoginFailure(homePage.ErrorMessage);
+        }
+
+        var loginPageUrl = baseUri;
+        var loginForm = FindLoginForm(homePage.Document);
+
+        if (loginForm is null)
+        {
+            loginPageUrl = ReadLoginPageUrl(homePage.Document);
+
+            var loginPage = await DownloadPageForLoginAsync(loginPageUrl, cancellationToken);
+            if (loginPage.ErrorMessage is not null)
+            {
+                return CreateLoginFailure(loginPage.ErrorMessage);
+            }
+
+            loginForm = FindLoginForm(loginPage.Document);
+        }
+
+        if (loginForm is null)
+        {
+            return CreateLoginFailure($"Could not locate the login form at {loginPageUrl}.");
+        }
+
+        if (LoginFormRequiresCaptcha(loginForm))
+        {
+            return CreateLoginFailure(
+                "The forum requires a captcha for login, which Bearcat cannot solve."
+            );
+        }
+
+        List<KeyValuePair<string, string>> credentials =
+        [
+            new("login", username),
+            new("password", password),
+            new("remember", "1"),
+        ];
+        var fields = CollectFormFields(loginForm, credentials);
+        fields.AddRange(credentials);
+
+        using var loginRequest = new HttpRequestMessage(
+            HttpMethod.Post,
+            GetFormActionUrl(loginForm, loginPageUrl)
+        )
+        {
+            Content = new FormUrlEncodedContent(fields),
+        };
+        loginRequest.Headers.Referrer = loginPageUrl;
+
+        using var loginResponse = await SendAsync(loginRequest, cancellationToken);
+        return await ReadLoginResultAsync(loginResponse, cancellationToken);
+    }
+
+    private async Task<DownloadedPage> DownloadPageForLoginAsync(
+        Uri pageUrl,
+        CancellationToken cancellationToken
+    )
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, pageUrl);
+        using var response = await SendAsync(request, cancellationToken);
+        var document = await ParseResponseDocumentAsync(response, cancellationToken);
+
+        if (IsCloudflareChallenge(response, document))
+        {
+            return new DownloadedPage(document, CloudflareChallengeErrorMessage);
+        }
+
+        return response.IsSuccessStatusCode
+            ? new DownloadedPage(document, ErrorMessage: null)
+            : new DownloadedPage(
+                document,
+                $"The forum page {pageUrl} returned HTTP {(int)response.StatusCode}."
+            );
+    }
+
+    private Uri ReadLoginPageUrl(IDocument document)
+    {
+        var loginLinkHref = (
+            document.QuerySelector("a.p-navgroup-link--logIn")
+            ?? document.QuerySelector(".p-navgroup--guest a[href*='login']")
+        )?.GetAttribute("href");
+
+        return string.IsNullOrWhiteSpace(loginLinkHref)
+            ? new Uri(baseUri, "login/")
+            : new Uri(baseUri, loginLinkHref);
+    }
+
+    private async Task<DistributionSiteLoginResult> ReadLoginResultAsync(
+        HttpResponseMessage loginResponse,
+        CancellationToken cancellationToken
+    )
+    {
+        var document = await ParseResponseDocumentAsync(loginResponse, cancellationToken);
+
+        if (IsTwoStepVerificationPage(loginResponse.RequestMessage!.RequestUri!, document))
+        {
+            return CreateLoginFailure(
+                "The forum requires two-step verification for this account, which Bearcat cannot complete."
+            );
+        }
+
+        if (IsCloudflareChallenge(loginResponse, document))
+        {
+            return CreateLoginFailure(CloudflareChallengeErrorMessage);
+        }
+
+        if (IsLoggedIn(document))
+        {
+            return new DistributionSiteLoginResult(
+                Session: CreateSessionFromCookies(),
+                ErrorMessage: null
+            );
+        }
+
+        return CreateLoginFailure(
+            ReadLoginErrorMessage(loginResponse, document) ?? "Login was rejected by the forum."
+        );
+    }
+
+    private static IElement? FindLoginForm(IDocument document)
+    {
+        return document
+            .QuerySelectorAll("form")
+            .FirstOrDefault(form =>
+                form.QuerySelector("input[name='login']") is not null
+                && form.QuerySelector("input[name='password']") is not null
+            );
+    }
+
+    private static bool IsTwoStepVerificationPage(Uri pageUrl, IDocument document)
+    {
+        if (pageUrl.AbsoluteUri.Contains("login/two-step", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return document
+            .QuerySelectorAll("form")
+            .Any(form =>
+                form.GetAttribute("action")
+                    ?.Contains("two-step", StringComparison.OrdinalIgnoreCase) == true
+                && form.QuerySelector("input[name='code']") is not null
+            );
+    }
+
+    private static bool LoginFormRequiresCaptcha(IElement loginForm)
+    {
+        return loginForm.QuerySelector(LoginCaptchaSelector) is not null;
+    }
+
+    private static bool IsCloudflareChallenge(HttpResponseMessage response, IDocument document)
+    {
+        if (
+            response.Headers.TryGetValues("cf-mitigated", out var mitigations)
+            && mitigations.Contains("challenge", StringComparer.OrdinalIgnoreCase)
+        )
+        {
+            return true;
+        }
+
+        return response.StatusCode is HttpStatusCode.Forbidden or HttpStatusCode.ServiceUnavailable
+            && document.Title?.Contains("Just a moment", StringComparison.OrdinalIgnoreCase)
+                == true;
+    }
+
+    private string? ReadLoginErrorMessage(HttpResponseMessage loginResponse, IDocument document)
+    {
+        var errorBlock =
+            document.QuerySelector(".blockMessage--error")
+            ?? (loginResponse.IsSuccessStatusCode ? null : document.QuerySelector(".blockMessage"));
+
+        if (errorBlock is null)
+        {
+            return null;
+        }
+
+        var errorText = StripHtml(errorBlock.InnerHtml);
+        return errorText.Length > 0 ? errorText : null;
+    }
+
+    private DistributionSession CreateSessionFromCookies()
+    {
+        var sessionCookies = cookies
+            .GetAllCookies()
+            .Where(cookie => !cookie.Expired)
+            .Select(cookie => new SessionCookie(
+                Name: cookie.Name,
+                Value: cookie.Value,
+                Domain: cookie.Domain,
+                Path: cookie.Path
+            ))
+            .ToList();
+
+        return session with
+        {
+            Cookies = sessionCookies,
+        };
+    }
+
+    private static DistributionSiteLoginResult CreateLoginFailure(string errorMessage)
+    {
+        return new DistributionSiteLoginResult(Session: null, ErrorMessage: errorMessage);
+    }
+
+    private static bool IsLoggedIn(IDocument document)
+    {
+        var loggedIn = document.QuerySelector("html")?.GetAttribute("data-logged-in");
         return string.Equals(loggedIn, "true", StringComparison.OrdinalIgnoreCase);
     }
 
@@ -877,6 +1103,14 @@ public sealed partial class XenForoForumClient : IDisposable
         using var response = await SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
+        return await ParseResponseDocumentAsync(response, cancellationToken);
+    }
+
+    private async Task<IHtmlDocument> ParseResponseDocumentAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken
+    )
+    {
         var html = await response.Content.ReadAsStringAsync(cancellationToken);
         return await parser.ParseDocumentAsync(html, cancellationToken);
     }
@@ -1020,6 +1254,8 @@ public sealed partial class XenForoForumClient : IDisposable
 
     [GeneratedRegex(@"(?:/posts/|post-)(\d+)")]
     private static partial Regex PostIdPattern();
+
+    private sealed record DownloadedPage(IHtmlDocument Document, string? ErrorMessage);
 
     private sealed class NodeBuilder(ForumTargetId id, string title, bool canReceivePosts)
     {

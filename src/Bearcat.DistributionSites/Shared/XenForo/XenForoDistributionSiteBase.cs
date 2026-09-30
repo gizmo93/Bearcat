@@ -2,6 +2,7 @@ using System.Text.Json;
 using Bearcat.Abstractions.ConfigurationFields;
 using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.DistributionSite.Dto;
+using Bearcat.Abstractions.DistributionSite.Results;
 using Bearcat.DistributionSites.Extensions;
 using Bearcat.DistributionSites.Shared.XenForo.Api;
 
@@ -11,6 +12,10 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
     : IForumDistributionSite
     where TConfig : IXenForoDistributionSiteConfig
 {
+    private const string UserAgent =
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+        + "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+
     public abstract string Name { get; }
 
     public virtual PostContentFormat ContentFormat => PostContentFormat.BBCode;
@@ -42,17 +47,23 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
             );
     }
 
-    public Task<DistributionSession?> LogInAsync(
+    public async Task<DistributionSiteLoginResult> LogInAsync(
         IDistributionSiteConfig config,
         CancellationToken cancellationToken
     )
     {
         var xenForoConfig = config.As<TConfig>();
+        var sessionWithoutCookies = new DistributionSession(
+            BaseUrl: GetBaseUrl(config),
+            UserAgent: UserAgent,
+            Cookies: []
+        );
 
-        return XenForoBrowserLogin.LoginAsync(
-            baseUrl: GetBaseUrl(config),
+        using var client = CreateClient(sessionWithoutCookies);
+        return await client.LogInAsync(
             username: xenForoConfig.Username,
-            password: xenForoConfig.Password
+            password: xenForoConfig.Password,
+            cancellationToken: cancellationToken
         );
     }
 

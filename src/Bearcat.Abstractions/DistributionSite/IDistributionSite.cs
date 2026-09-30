@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.ConfigurationFields;
 using Bearcat.Abstractions.DistributionSite.Dto;
+using Bearcat.Abstractions.DistributionSite.Results;
 
 namespace Bearcat.Abstractions.DistributionSite;
 
@@ -15,7 +16,7 @@ public interface IDistributionSite
 
     string GetBaseUrl(IDistributionSiteConfig config);
 
-    Task<DistributionSession?> LogInAsync(
+    Task<DistributionSiteLoginResult> LogInAsync(
         IDistributionSiteConfig config,
         CancellationToken cancellationToken
     );
