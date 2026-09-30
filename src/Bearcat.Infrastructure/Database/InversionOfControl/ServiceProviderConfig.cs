@@ -83,7 +83,7 @@ public static class ServiceProviderConfig
 
             services.AddRepositories();
 
-            services.AddScoped<IDistributionSessionStore, DatabaseDistributionSessionStore>();
+            services.AddScoped<IDistributionSessionRepository, DistributionSessionRepository>();
         }
 
         private void AddRepositories()

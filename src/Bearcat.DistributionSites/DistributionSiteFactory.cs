@@ -17,12 +17,12 @@ public sealed class DistributionSiteFactory(IServiceProvider serviceProvider)
                 Kind: site is IForumDistributionSite
                     ? DistributionSiteKind.Forum
                     : DistributionSiteKind.Blog,
-                ConfigurationKeys: site.ConfigurationKeys
+                ConfigurationFields: site.ConfigurationFields
             ))
             .ToList();
     }
 
-    public IDistributionSite Get(string className)
+    public IDistributionSite GetByClassName(string className)
     {
         return serviceProvider.GetRequiredKeyedService<IDistributionSite>(className);
     }

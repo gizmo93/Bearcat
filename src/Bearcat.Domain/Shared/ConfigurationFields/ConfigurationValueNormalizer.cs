@@ -68,6 +68,7 @@ public static class ConfigurationValueNormalizer
             ConfigurationFieldType.Number => NormalizeNumber(field, value),
             ConfigurationFieldType.Boolean => NormalizeBoolean(field, value),
             ConfigurationFieldType.Select => NormalizeSelect(field, value),
+            ConfigurationFieldType.Url => NormalizeUrl(field, value),
             _ => throw new ArgumentOutOfRangeException(
                 nameof(field),
                 field.Type,
@@ -103,6 +104,27 @@ public static class ConfigurationValueNormalizer
         }
 
         return option;
+    }
+
+    private static string? NormalizeUrl(ConfigurationField field, object value)
+    {
+        var url = NormalizeText(field, value);
+
+        if (url is not null && !IsAbsoluteHttpOrHttpsUrl(url))
+        {
+            throw new ConfigurationFieldValidationException(
+                field.Key,
+                ConfigurationFieldValidationError.InvalidUrl
+            );
+        }
+
+        return url;
+    }
+
+    private static bool IsAbsoluteHttpOrHttpsUrl(string url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
     }
 
     private static int? NormalizeNumber(ConfigurationField field, object value)

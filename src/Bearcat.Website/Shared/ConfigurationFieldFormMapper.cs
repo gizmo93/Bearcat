@@ -1,9 +1,10 @@
 using Bearcat.Abstractions.ConfigurationFields;
+using Bearcat.Domain.Shared.ConfigurationFields;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.Extensions.Localization;
 
-namespace Bearcat.Website.Pages.ManageRemoteSources;
+namespace Bearcat.Website.Shared;
 
 public static class ConfigurationFieldFormMapper
 {
@@ -48,6 +49,19 @@ public static class ConfigurationFieldFormMapper
         };
     }
 
+    public static string CreateFieldErrorMessage(
+        ConfigurationFieldValidationException exception,
+        IStringLocalizer localizer,
+        string resourcePrefix
+    )
+    {
+        var fieldName =
+            LocalizeOrDefault(localizer, $"{resourcePrefix}{exception.FieldKey}")
+            ?? exception.FieldKey;
+
+        return localizer[$"ConfigurationFieldError_{exception.Error}", fieldName].Value;
+    }
+
     public static Dictionary<string, object> CreateWholeNumberMetadata(
         string errorMessage,
         int? minimum = null
@@ -89,6 +103,7 @@ public static class ConfigurationFieldFormMapper
             ConfigurationFieldType.Number => FieldType.Number,
             ConfigurationFieldType.Boolean => FieldType.Switch,
             ConfigurationFieldType.Select => FieldType.Select,
+            ConfigurationFieldType.Url => FieldType.Url,
             _ => throw new ArgumentOutOfRangeException(
                 nameof(type),
                 type,

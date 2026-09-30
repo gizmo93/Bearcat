@@ -1,10 +1,10 @@
 using Bearcat.Abstractions.ConfigurationFields;
-using Bearcat.Website.Pages.ManageRemoteSources;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using Microsoft.Extensions.Localization;
 using Shouldly;
 
-namespace Bearcat.Website.UnitTest.Pages.ManageRemoteSources;
+namespace Bearcat.Website.UnitTest.Shared;
 
 public class ConfigurationFieldFormMapperTest
 {
@@ -29,6 +29,7 @@ public class ConfigurationFieldFormMapperTest
     [TestCase(ConfigurationFieldType.Number, FieldType.Number)]
     [TestCase(ConfigurationFieldType.Boolean, FieldType.Switch)]
     [TestCase(ConfigurationFieldType.Select, FieldType.Select)]
+    [TestCase(ConfigurationFieldType.Url, FieldType.Url)]
     public void ToFormField_FieldType_MapsToBlueprintFieldType(
         ConfigurationFieldType type,
         FieldType expected

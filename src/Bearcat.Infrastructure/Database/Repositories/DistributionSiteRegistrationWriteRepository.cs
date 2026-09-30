@@ -18,6 +18,16 @@ public class DistributionSiteRegistrationWriteRepository(IBearcatWriteDbContext 
         );
     }
 
+    public async Task<IReadOnlyList<DistributionSiteRegistration>> GetByIdsAsync(
+        IReadOnlyList<int> ids,
+        CancellationToken cancellationToken
+    )
+    {
+        return await dbWrite
+            .DistributionSiteRegistrations.Where(registration => ids.Contains(registration.Id))
+            .ToListAsync(cancellationToken);
+    }
+
     public void Add(DistributionSiteRegistration registration)
     {
         dbWrite.DistributionSiteRegistrations.Add(registration);

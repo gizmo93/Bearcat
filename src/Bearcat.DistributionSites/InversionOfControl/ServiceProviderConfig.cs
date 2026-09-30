@@ -2,6 +2,7 @@ using System.Net;
 using Bearcat.Abstractions.DistributionSite;
 using Bearcat.DistributionSites.BoerseCx.InversionOfControl;
 using Bearcat.DistributionSites.DataLoadMe.InversionOfControl;
+using Bearcat.DistributionSites.GenericXenForo.InversionOfControl;
 using Bearcat.DistributionSites.Shared.XenForo.Api;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,6 +20,7 @@ public static class ServiceProviderConfig
                     new SocketsHttpHandler
                     {
                         UseCookies = false,
+                        AllowAutoRedirect = false,
                         AutomaticDecompression = DecompressionMethods.All,
                         PooledConnectionLifetime = TimeSpan.FromMinutes(5),
                     }
@@ -26,6 +28,7 @@ public static class ServiceProviderConfig
 
             services.AddBoerseCx();
             services.AddDataLoadMe();
+            services.AddGenericXenForo();
 
             services.AddScoped<IDistributionSiteFactory, DistributionSiteFactory>();
         }

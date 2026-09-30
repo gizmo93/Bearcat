@@ -61,7 +61,7 @@ public interface IForumDistributionSite : IDistributionSite
         CancellationToken cancellationToken
     );
 
-    Task<string?> ResolvePostedUrlAsync(
+    Task<string?> FindUrlOfSubmittedPostAsync(
         DistributionSession session,
         ForumTargetId target,
         bool isNewThread,
@@ -70,5 +70,8 @@ public interface IForumDistributionSite : IDistributionSite
         CancellationToken cancellationToken
     );
 
-    ForumTargetId ResolveTarget(string storedTargetId);
+    ForumTargetId CreateForumTargetIdFromStoredValue(
+        DistributionSession session,
+        string storedTargetId
+    );
 }

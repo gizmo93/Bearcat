@@ -1,7 +1,8 @@
+using Bearcat.Abstractions.ConfigurationFields;
 using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.Shared;
+using Bearcat.Domain.Shared.ConfigurationFields;
 using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageDistributionSites.Repositories;
 
@@ -18,20 +19,21 @@ public class DistributionSiteRegistrationService(
     public async Task CreateAsync(
         string name,
         string className,
-        IReadOnlyDictionary<string, string> configuration,
+        IReadOnlyDictionary<string, object?> values,
         CancellationToken cancellationToken = default
     )
     {
-        var distributionSite = distributionSiteFactory.Get(className);
-        var serializedConfig = distributionSite.SerializeConfig(
-            new Dictionary<string, string>(configuration)
+        var distributionSite = distributionSiteFactory.GetByClassName(className);
+        var normalizedValues = ConfigurationValueNormalizer.Normalize(
+            distributionSite.ConfigurationFields,
+            values
         );
 
         var registration = new DistributionSiteRegistration
         {
             Name = name,
             DistributionSiteClassName = className,
-            SerializedConfig = secretProtector.Protect(serializedConfig),
+            SerializedConfig = EncryptConfig(normalizedValues),
             IsActive = true,
         };
 
@@ -42,24 +44,24 @@ public class DistributionSiteRegistrationService(
     public async Task UpdateAsync(
         int id,
         string name,
-        IReadOnlyDictionary<string, string> configuration,
+        IReadOnlyDictionary<string, object?> values,
         CancellationToken cancellationToken = default
     )
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
-        var distributionSite = distributionSiteFactory.Get(registration.DistributionSiteClassName);
-        var mergedConfiguration = StoredConfigurationMerger.MergeSubmittedIntoStoredConfiguration(
-            registration: registration,
-            submittedConfiguration: configuration,
-            deserializeStoredConfiguration: serializedConfig =>
-                distributionSite.DeserializeConfig(serializedConfig).ToDictionary(),
-            secretProtector: secretProtector
+        var distributionSite = distributionSiteFactory.GetByClassName(
+            registration.DistributionSiteClassName
+        );
+        var normalizedValues = ConfigurationValueNormalizer.Normalize(
+            fields: distributionSite.ConfigurationFields,
+            submittedValues: values,
+            existingValues: registration.HasUnreadableSecrets
+                ? null
+                : DecryptConfig(distributionSite, registration).ToDictionary()
         );
 
         registration.Name = name;
-        registration.SerializedConfig = secretProtector.Protect(
-            distributionSite.SerializeConfig(mergedConfiguration)
-        );
+        registration.SerializedConfig = EncryptConfig(normalizedValues);
         registration.HasUnreadableSecrets = false;
         registration.EncryptedSession = null;
 
@@ -67,6 +69,38 @@ public class DistributionSiteRegistrationService(
         await unreadableSecretsNotificationService.ResolveNotificationWhenNoUnreadableSecretsRemainAsync(
             cancellationToken
         );
+    }
+
+    public async Task<IReadOnlyDictionary<string, object?>> GetConfigValuesWithoutSecretsAsync(
+        int id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var registration = await repository.GetByIdAsync(id, cancellationToken);
+        var distributionSite = distributionSiteFactory.GetByClassName(
+            registration.DistributionSiteClassName
+        );
+        var passwordKeys = distributionSite
+            .ConfigurationFields.Where(field => field.Type == ConfigurationFieldType.Password)
+            .Select(field => field.Key)
+            .ToHashSet(StringComparer.Ordinal);
+
+        return DecryptConfig(distributionSite, registration)
+            .ToDictionary()
+            .Where(entry => !passwordKeys.Contains(entry.Key))
+            .ToDictionary(entry => entry.Key, entry => entry.Value, StringComparer.Ordinal);
+    }
+
+    public async Task<IReadOnlyDictionary<int, string>> GetBaseUrlsByRegistrationIdAsync(
+        IReadOnlyList<int> registrationIds,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var registrations = await repository.GetByIdsAsync(registrationIds, cancellationToken);
+
+        return registrations
+            .Where(registration => !registration.HasUnreadableSecrets)
+            .ToDictionary(registration => registration.Id, GetBaseUrl);
     }
 
     public async Task<int> GetForumPostingRuleCountAsync(
@@ -118,5 +152,28 @@ public class DistributionSiteRegistrationService(
         registration.StripDotsForThreadSearch = isEnabled;
 
         await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    private string GetBaseUrl(DistributionSiteRegistration registration)
+    {
+        var distributionSite = distributionSiteFactory.GetByClassName(
+            registration.DistributionSiteClassName
+        );
+        return distributionSite.GetBaseUrl(DecryptConfig(distributionSite, registration));
+    }
+
+    private IDistributionSiteConfig DecryptConfig(
+        IDistributionSite distributionSite,
+        DistributionSiteRegistration registration
+    )
+    {
+        return distributionSite.DeserializeConfig(
+            secretProtector.Unprotect(registration.SerializedConfig)
+        );
+    }
+
+    private string EncryptConfig(IReadOnlyDictionary<string, object?> values)
+    {
+        return secretProtector.Protect(ConfigurationValueSerializer.Serialize(values));
     }
 }

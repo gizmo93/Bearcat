@@ -1,4 +1,6 @@
+using Bearcat.Abstractions.ConfigurationFields;
 using Bearcat.Abstractions.DistributionSite.Dto;
+using Bearcat.Abstractions.DistributionSite.Results;
 
 namespace Bearcat.Abstractions.DistributionSite;
 
@@ -6,17 +8,15 @@ public interface IDistributionSite
 {
     string Name { get; }
 
-    string BaseUrl { get; }
-
     PostContentFormat ContentFormat { get; }
 
-    IReadOnlyList<string> ConfigurationKeys { get; }
+    IReadOnlyList<ConfigurationField> ConfigurationFields { get; }
 
     IDistributionSiteConfig DeserializeConfig(string serializedConfig);
 
-    string SerializeConfig(Dictionary<string, string> config);
+    string GetBaseUrl(IDistributionSiteConfig config);
 
-    Task<DistributionSession?> LogInAsync(
+    Task<DistributionSiteLoginResult> LogInAsync(
         IDistributionSiteConfig config,
         CancellationToken cancellationToken
     );

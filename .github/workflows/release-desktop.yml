@@ -123,16 +123,8 @@ jobs:
             ln -s "../Resources/wwwroot" "$macos_dir/wwwroot"
           fi
 
-          # The Playwright driver ships a nested node binary. Nested code under
-          # Contents/MacOS breaks codesign ("bundle format unrecognized"). Relocate it
-          # into Resources and symlink it back, exactly like wwwroot above.
-          if [ -d "$macos_dir/.playwright" ]; then
-            mv "$macos_dir/.playwright" "$resources_dir/.playwright"
-            ln -s "../Resources/.playwright" "$macos_dir/.playwright"
-          fi
-
-          # Same treatment for the bundled MediaInfo CLI: a loose Mach-O binary under
-          # Contents/MacOS trips codesign, so relocate it into Resources and symlink back.
+          # The bundled MediaInfo CLI is a loose Mach-O binary; under Contents/MacOS it
+          # trips codesign, so relocate it into Resources and symlink it back like wwwroot.
           if [ -d "$macos_dir/mediainfo" ]; then
             mv "$macos_dir/mediainfo" "$resources_dir/mediainfo"
             ln -s "../Resources/mediainfo" "$macos_dir/mediainfo"
@@ -290,14 +282,6 @@ jobs:
           --output "$env:RUNNER_TEMP\bearcat-desktop"
           -p:PublishSingleFile=false
           -p:Version=${{ steps.version.outputs.value }}
-
-      - name: Bundle Playwright Chromium
-        shell: pwsh
-        run: |
-          # Ships Chromium next to the host so forum auto-posting works without a
-          # runtime download. The win-x64 Chromium build also runs on win-arm64 via emulation.
-          $env:PLAYWRIGHT_BROWSERS_PATH = "$env:RUNNER_TEMP\bearcat-host\playwright-browsers"
-          & "$env:RUNNER_TEMP\bearcat-host\playwright.ps1" install chromium
 
       - name: Bundle MediaInfo
         shell: pwsh

@@ -58,8 +58,7 @@ public partial class AllDistributionSitesPage(
     {
         var parameters = new Dictionary<string, object?>
         {
-            [nameof(CreateOrEditDialog.DistributionSiteRegistrationId)] =
-                distributionSite.DistributionSiteRegistrationId,
+            [nameof(CreateOrEditDialog.Registration)] = distributionSite,
         };
 
         var dialog = await dialogService.OpenAsync<CreateOrEditDialog>(

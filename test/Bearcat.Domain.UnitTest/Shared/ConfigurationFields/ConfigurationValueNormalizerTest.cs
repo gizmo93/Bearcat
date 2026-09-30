@@ -16,6 +16,12 @@ public class ConfigurationValueNormalizerTest
         new("Comment", ConfigurationFieldType.Text, IsRequired: false),
     ];
 
+    private static readonly IReadOnlyList<ConfigurationField> UrlFields =
+    [
+        new("RequiredUrl", ConfigurationFieldType.Url, IsRequired: true),
+        new("OptionalUrl", ConfigurationFieldType.Url, IsRequired: false),
+    ];
+
     [Test]
     public void Normalize_FormValues_ConvertsToTypedValues()
     {
@@ -228,6 +234,77 @@ public class ConfigurationValueNormalizerTest
         // Assert
         exception.FieldKey.ShouldBe(key);
         exception.Error.ShouldBe(ConfigurationFieldValidationError.InvalidValue);
+    }
+
+    [TestCase("https://example.org/community/", "https://example.org/community/")]
+    [TestCase("  http://example.org  ", "http://example.org")]
+    public void Normalize_HttpOrHttpsUrl_ReturnsTrimmedUrl(string value, string expected)
+    {
+        // Arrange
+        var submitted = new Dictionary<string, object?> { ["RequiredUrl"] = value };
+
+        // Act
+        var result = ConfigurationValueNormalizer.Normalize(UrlFields, submitted);
+
+        // Assert
+        result["RequiredUrl"].ShouldBe(expected);
+    }
+
+    [TestCase("")]
+    [TestCase("   ")]
+    public void Normalize_BlankOptionalUrl_RemovesValue(string value)
+    {
+        // Arrange
+        var submitted = new Dictionary<string, object?>
+        {
+            ["RequiredUrl"] = "https://example.org/",
+            ["OptionalUrl"] = value,
+        };
+        var existingValues = new Dictionary<string, object?>
+        {
+            ["OptionalUrl"] = "https://old.example.org/",
+        };
+
+        // Act
+        var result = ConfigurationValueNormalizer.Normalize(UrlFields, submitted, existingValues);
+
+        // Assert
+        result.ShouldNotContainKey("OptionalUrl");
+    }
+
+    [Test]
+    public void Normalize_BlankRequiredUrl_Throws()
+    {
+        // Arrange
+        var submitted = new Dictionary<string, object?> { ["RequiredUrl"] = " " };
+
+        // Act
+        var exception = Should.Throw<ConfigurationFieldValidationException>(() =>
+            ConfigurationValueNormalizer.Normalize(UrlFields, submitted)
+        );
+
+        // Assert
+        exception.FieldKey.ShouldBe("RequiredUrl");
+        exception.Error.ShouldBe(ConfigurationFieldValidationError.Required);
+    }
+
+    [TestCase("/community/")]
+    [TestCase("example.org/community/")]
+    [TestCase("ftp://example.org/")]
+    [TestCase("file:///community/")]
+    public void Normalize_RelativeOrNonHttpUrl_Throws(string value)
+    {
+        // Arrange
+        var submitted = new Dictionary<string, object?> { ["RequiredUrl"] = value };
+
+        // Act
+        var exception = Should.Throw<ConfigurationFieldValidationException>(() =>
+            ConfigurationValueNormalizer.Normalize(UrlFields, submitted)
+        );
+
+        // Assert
+        exception.FieldKey.ShouldBe("RequiredUrl");
+        exception.Error.ShouldBe(ConfigurationFieldValidationError.InvalidUrl);
     }
 
     [Test]

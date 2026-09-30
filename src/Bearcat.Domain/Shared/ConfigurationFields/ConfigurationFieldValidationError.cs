@@ -7,4 +7,5 @@ public enum ConfigurationFieldValidationError
     InvalidValue = 3,
     NotAnInteger = 4,
     InvalidOption = 5,
+    InvalidUrl = 6,
 }

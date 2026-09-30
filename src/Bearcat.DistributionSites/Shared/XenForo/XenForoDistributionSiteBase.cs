@@ -1,6 +1,8 @@
 using System.Text.Json;
+using Bearcat.Abstractions.ConfigurationFields;
 using Bearcat.Abstractions.DistributionSite;
 using Bearcat.Abstractions.DistributionSite.Dto;
+using Bearcat.Abstractions.DistributionSite.Results;
 using Bearcat.DistributionSites.Extensions;
 using Bearcat.DistributionSites.Shared.XenForo.Api;
 
@@ -10,39 +12,58 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
     : IForumDistributionSite
     where TConfig : IXenForoDistributionSiteConfig
 {
-    public abstract string Name { get; }
+    private const string UserAgent =
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+        + "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
-    public abstract string BaseUrl { get; }
+    public abstract string Name { get; }
 
     public virtual PostContentFormat ContentFormat => PostContentFormat.BBCode;
 
-    public IReadOnlyList<string> ConfigurationKeys =>
+    public virtual IReadOnlyList<ConfigurationField> ConfigurationFields =>
         [
-            nameof(IXenForoDistributionSiteConfig.Username),
-            nameof(IXenForoDistributionSiteConfig.Password),
+            new(
+                nameof(IXenForoDistributionSiteConfig.Username),
+                ConfigurationFieldType.Text,
+                IsRequired: true
+            ),
+            new(
+                nameof(IXenForoDistributionSiteConfig.Password),
+                ConfigurationFieldType.Password,
+                IsRequired: true
+            ),
         ];
+
+    public abstract string GetBaseUrl(IDistributionSiteConfig config);
 
     public IDistributionSiteConfig DeserializeConfig(string serializedConfig)
     {
-        return JsonSerializer.Deserialize<TConfig>(serializedConfig)
+        return JsonSerializer.Deserialize<TConfig>(
+                serializedConfig,
+                XenForoConfigSerializerOptions.CaseInsensitivePropertyNames
+            )
             ?? throw new InvalidOperationException(
                 $"Could not deserialize the {typeof(TConfig).Name} configuration."
             );
     }
 
-    public string SerializeConfig(Dictionary<string, string> config) =>
-        JsonSerializer.Serialize(config);
-
-    public Task<DistributionSession?> LogInAsync(
+    public async Task<DistributionSiteLoginResult> LogInAsync(
         IDistributionSiteConfig config,
         CancellationToken cancellationToken
     )
     {
         var xenForoConfig = config.As<TConfig>();
-        return XenForoBrowserLogin.LoginAsync(
-            baseUrl: BaseUrl,
+        var sessionWithoutCookies = new DistributionSession(
+            BaseUrl: GetBaseUrl(config),
+            UserAgent: UserAgent,
+            Cookies: []
+        );
+
+        using var client = CreateClient(sessionWithoutCookies);
+        return await client.LogInAsync(
             username: xenForoConfig.Username,
-            password: xenForoConfig.Password
+            password: xenForoConfig.Password,
+            cancellationToken: cancellationToken
         );
     }
 
@@ -160,16 +181,19 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
         return await client.EditPostAsync(postedUrl, body, cancellationToken);
     }
 
-    public ForumTargetId ResolveTarget(string storedTargetId)
+    public ForumTargetId CreateForumTargetIdFromStoredValue(
+        DistributionSession session,
+        string storedTargetId
+    )
     {
         var trimmed = storedTargetId.Trim();
 
         return trimmed.Length > 0 && trimmed.All(char.IsAsciiDigit)
-            ? new ForumTargetId($"{BaseUrl.TrimEnd('/')}/forums/{trimmed}/")
+            ? new ForumTargetId($"{session.BaseUrl.TrimEnd('/')}/forums/{trimmed}/")
             : new ForumTargetId(trimmed);
     }
 
-    public async Task<string?> ResolvePostedUrlAsync(
+    public async Task<string?> FindUrlOfSubmittedPostAsync(
         DistributionSession session,
         ForumTargetId target,
         bool isNewThread,
@@ -202,7 +226,9 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
 
     private XenForoForumClient CreateClient(DistributionSession session)
     {
-        var baseUri = new Uri(BaseUrl.EndsWith('/') ? BaseUrl : BaseUrl + "/");
+        var baseUri = new Uri(
+            session.BaseUrl.EndsWith('/') ? session.BaseUrl : session.BaseUrl + "/"
+        );
         return new XenForoForumClient(httpClientFactory, baseUri, session);
     }
 }
