@@ -22,6 +22,8 @@ public class HosterRegistration : IEntityWithEncryptedSecrets, IActivatableEntit
 
     public int? MaxParallelUploadsOverride { get; set; }
 
+    public decimal? UploadSpeedLimitMegabytesPerSecond { get; set; }
+
     public int? NumberOfHoursUntilReuploadOverride { get; set; }
 
     public ReuploadTrigger? ReuploadTriggerOverride { get; set; }
@@ -31,6 +33,8 @@ public class HosterRegistration : IEntityWithEncryptedSecrets, IActivatableEntit
     public bool UseForMirrorDownloads { get; set; }
 
     public int MirrorPriority { get; set; } = 100;
+
+    public decimal? MirrorDownloadSpeedLimitMegabytesPerSecond { get; set; }
 
     public ProxySelection UploadProxySelection { get; set; } = ProxySelection.UseCategoryDefault;
 

@@ -107,13 +107,23 @@ A failed restore also fails the waiting uploads. Create a manual reupload once y
 
 ## Parallel downloads
 
-The "Mirror downloads" section on the "Configurations" page has one setting:
+The "Mirror downloads" section on the "Configurations" page includes:
 
 - **"Max parallel downloads"** defaults to `2`. It limits how many archive files Bearcat downloads
   at the same time while restoring an archive.
 
 Raise it if your line is fast and your hoster account allows several connections. Lower it to `1` if
 the hoster throttles or rejects parallel downloads.
+
+## Speed limits
+
+- **"Maximum download speed (MB/s)"** in the "Mirror downloads" section on the "Configurations"
+  page caps the combined speed of all running mirror downloads.
+- **"Maximum mirror download speed (MB/s)"** in the hoster registration caps the combined speed of
+  all mirror downloads from that hoster registration.
+
+Both are empty by default, which means no limit. Decimal values such as `0.5` or `0,5` are allowed.
+When both are set, the lower limit takes effect.
 
 ## Delete local archives yourself
 

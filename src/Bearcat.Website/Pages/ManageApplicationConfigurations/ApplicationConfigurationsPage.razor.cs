@@ -1,7 +1,7 @@
-using System.Globalization;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Website.Formatting;
 using Bearcat.Website.ScopedOperations;
 using BlazorBlueprint.Primitives;
 
@@ -170,11 +170,15 @@ public partial class ApplicationConfigurationsPage(IScopedOperationRunner operat
         }
         else if (property.ValueType == typeof(decimal))
         {
-            value = TryParseDecimal(editorValue, out var decimalValue) ? decimalValue : 0m;
+            value = DecimalInputConverter.TryParse(editorValue, out var decimalValue)
+                ? decimalValue
+                : 0m;
         }
         else if (property.ValueType == typeof(decimal?))
         {
-            value = TryParseDecimal(editorValue, out var decimalValue) ? decimalValue : null;
+            value = DecimalInputConverter.TryParse(editorValue, out var decimalValue)
+                ? decimalValue
+                : null;
         }
 
         await operationRunner.RunAsync(
@@ -252,16 +256,6 @@ public partial class ApplicationConfigurationsPage(IScopedOperationRunner operat
         var localizedValue = property is null ? L[value] : L[$"{property.DisplayName}.{value}"];
 
         return localizedValue.ResourceNotFound ? value : localizedValue;
-    }
-
-    private static bool TryParseDecimal(string? editorValue, out decimal value)
-    {
-        return decimal.TryParse(
-            editorValue?.Replace(',', '.'),
-            NumberStyles.Float,
-            CultureInfo.InvariantCulture,
-            out value
-        );
     }
 
     private static string? GetInputMode(ApplicationConfigurationPropertyDto property)

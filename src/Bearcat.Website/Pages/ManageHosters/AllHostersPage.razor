@@ -1,5 +1,6 @@
 @page "/hoster-registrations"
 @using Bearcat.Abstractions.Proxies
+@using Bearcat.Website.Formatting
 
 <PageTitle>@L["HosterRegistrations"] - Bearcat</PageTitle>
 
@@ -81,6 +82,14 @@
                     {
                         <span class="text-sm">@(hoster.DefaultMaximumParallelUploads?.ToString() ?? "-")</span>
                     }
+                    @if (hoster.UploadSpeedLimitMegabytesPerSecond is { } uploadSpeedLimit)
+                    {
+                        <span class="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground"
+                              title="@L["UploadSpeedLimitMegabytesPerSecondOverride"]">
+                            <LucideIcon Name="gauge" class="h-3.5 w-3.5 shrink-0" />
+                            @L["UploadSpeedLimitShort", DecimalInputConverter.FormatMegabytesPerSecond(uploadSpeedLimit)]
+                        </span>
+                    }
                 </CellTemplate>
             </BbDataTableColumn>
             <BbDataTableColumn TData="HosterRegistrationReadModel" TValue="string"
@@ -125,6 +134,14 @@
                                 <LucideIcon Name="cloud-download" class="h-3.5 w-3.5 shrink-0" />
                                 @L["UseForMirrorDownloadsShortWithPriority", hoster.MirrorPriority]
                             </span>
+                            @if (hoster.MirrorDownloadSpeedLimitMegabytesPerSecond is { } mirrorDownloadSpeedLimit)
+                            {
+                                <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+                                      title="@L["MirrorDownloadSpeedLimitMegabytesPerSecondOverride"]">
+                                    <LucideIcon Name="gauge" class="h-3.5 w-3.5 shrink-0" />
+                                    @L["MirrorDownloadSpeedLimitShort", DecimalInputConverter.FormatMegabytesPerSecond(mirrorDownloadSpeedLimit)]
+                                </span>
+                            }
                         }
                     </div>
                 </CellTemplate>

@@ -171,4 +171,187 @@ public class TransferSpeedLimitServiceTest
         limiters.Count.ShouldBe(1);
         limiters[0].BytesPerSecond.ShouldBe(1_572_864);
     }
+
+    [Test]
+    public void EnterUploadScope_OnlyHosterSpeedLimitConfigured_ScopeContainsOnlyHosterLimiter()
+    {
+        // Arrange
+        var registration = CreateRegistration(id: 2, uploadSpeedLimitMegabytesPerSecond: 3);
+
+        // Act
+        using var scope = service.EnterUploadScope(registration);
+
+        // Assert
+        var limiters = TransferSpeedLimitScope.Current.ShouldNotBeNull();
+        limiters.Count.ShouldBe(1);
+        limiters[0].BytesPerSecond.ShouldBe(3 * 1024 * 1024);
+    }
+
+    [Test]
+    public void EnterUploadScope_HosterAndGlobalSpeedLimitConfigured_ScopeContainsHosterLimiterBeforeGlobalLimiter()
+    {
+        // Arrange
+        uploadSpeedLimitMegabytesPerSecond = 10;
+        var registration = CreateRegistration(id: 2, uploadSpeedLimitMegabytesPerSecond: 3);
+
+        // Act
+        using var scope = service.EnterUploadScope(registration);
+
+        // Assert
+        var limiters = TransferSpeedLimitScope.Current.ShouldNotBeNull();
+        limiters.Count.ShouldBe(2);
+        limiters[0].BytesPerSecond.ShouldBe(3 * 1024 * 1024);
+        limiters[1].BytesPerSecond.ShouldBe(10 * 1024 * 1024);
+    }
+
+    [Test]
+    public void EnterUploadScope_HosterSpeedLimitChanged_ReusesHosterLimiterWithNewRate()
+    {
+        // Arrange
+        var registration = CreateRegistration(id: 2, uploadSpeedLimitMegabytesPerSecond: 3);
+        TransferSpeedLimiter firstLimiter;
+
+        using (service.EnterUploadScope(registration))
+        {
+            firstLimiter = TransferSpeedLimitScope.Current.ShouldNotBeNull()[0];
+        }
+
+        registration.UploadSpeedLimitMegabytesPerSecond = 0.5m;
+
+        // Act
+        using var scope = service.EnterUploadScope(registration);
+
+        // Assert
+        var secondLimiter = TransferSpeedLimitScope.Current.ShouldNotBeNull()[0];
+        secondLimiter.ShouldBeSameAs(firstLimiter);
+        secondLimiter.BytesPerSecond.ShouldBe(524_288);
+    }
+
+    [Test]
+    public void EnterUploadScope_HosterSpeedLimitRemoved_ScopeContainsOnlyGlobalLimiter()
+    {
+        // Arrange
+        uploadSpeedLimitMegabytesPerSecond = 10;
+        var registration = CreateRegistration(id: 2, uploadSpeedLimitMegabytesPerSecond: 3);
+
+        using (service.EnterUploadScope(registration)) { }
+
+        registration.UploadSpeedLimitMegabytesPerSecond = null;
+
+        // Act
+        using var scope = service.EnterUploadScope(registration);
+
+        // Assert
+        var limiters = TransferSpeedLimitScope.Current.ShouldNotBeNull();
+        limiters.Count.ShouldBe(1);
+        limiters[0].BytesPerSecond.ShouldBe(10 * 1024 * 1024);
+    }
+
+    [Test]
+    public void EnterUploadScope_HosterSpeedLimitRemovedAndConfiguredAgain_CreatesNewHosterLimiter()
+    {
+        // Arrange
+        var registration = CreateRegistration(id: 2, uploadSpeedLimitMegabytesPerSecond: 3);
+        TransferSpeedLimiter firstLimiter;
+
+        using (service.EnterUploadScope(registration))
+        {
+            firstLimiter = TransferSpeedLimitScope.Current.ShouldNotBeNull()[0];
+        }
+
+        registration.UploadSpeedLimitMegabytesPerSecond = null;
+
+        using (service.EnterUploadScope(registration)) { }
+
+        registration.UploadSpeedLimitMegabytesPerSecond = 3;
+
+        // Act
+        using var scope = service.EnterUploadScope(registration);
+
+        // Assert
+        TransferSpeedLimitScope.Current.ShouldNotBeNull()[0].ShouldNotBeSameAs(firstLimiter);
+    }
+
+    [Test]
+    public void EnterUploadScope_DifferentRegistrations_UseDifferentHosterLimiters()
+    {
+        // Arrange
+        var firstRegistration = CreateRegistration(id: 2, uploadSpeedLimitMegabytesPerSecond: 3);
+        var secondRegistration = CreateRegistration(id: 3, uploadSpeedLimitMegabytesPerSecond: 3);
+        TransferSpeedLimiter firstLimiter;
+
+        using (service.EnterUploadScope(firstRegistration))
+        {
+            firstLimiter = TransferSpeedLimitScope.Current.ShouldNotBeNull()[0];
+        }
+
+        // Act
+        using var scope = service.EnterUploadScope(secondRegistration);
+
+        // Assert
+        var secondLimiter = TransferSpeedLimitScope.Current.ShouldNotBeNull()[0];
+        secondLimiter.ShouldNotBeSameAs(firstLimiter);
+    }
+
+    [Test]
+    public void EnterMirrorDownloadScope_HosterAndGlobalSpeedLimitConfigured_UsesMirrorDownloadLimits()
+    {
+        // Arrange
+        uploadSpeedLimitMegabytesPerSecond = 50;
+        downloadSpeedLimitMegabytesPerSecond = 10;
+        var registration = CreateRegistration(
+            id: 2,
+            uploadSpeedLimitMegabytesPerSecond: 4,
+            mirrorDownloadSpeedLimitMegabytesPerSecond: 2
+        );
+
+        // Act
+        using var scope = service.EnterMirrorDownloadScope(registration);
+
+        // Assert
+        var limiters = TransferSpeedLimitScope.Current.ShouldNotBeNull();
+        limiters.Count.ShouldBe(2);
+        limiters[0].BytesPerSecond.ShouldBe(2 * 1024 * 1024);
+        limiters[1].BytesPerSecond.ShouldBe(10 * 1024 * 1024);
+    }
+
+    [Test]
+    public void EnterMirrorDownloadScope_SameRegistrationAsUpload_UsesSeparateHosterLimiter()
+    {
+        // Arrange
+        var registration = CreateRegistration(
+            id: 2,
+            uploadSpeedLimitMegabytesPerSecond: 2,
+            mirrorDownloadSpeedLimitMegabytesPerSecond: 2
+        );
+        TransferSpeedLimiter uploadLimiter;
+
+        using (service.EnterUploadScope(registration))
+        {
+            uploadLimiter = TransferSpeedLimitScope.Current.ShouldNotBeNull()[0];
+        }
+
+        // Act
+        using var scope = service.EnterMirrorDownloadScope(registration);
+
+        // Assert
+        TransferSpeedLimitScope.Current.ShouldNotBeNull()[0].ShouldNotBeSameAs(uploadLimiter);
+    }
+
+    private static HosterRegistration CreateRegistration(
+        int id,
+        decimal? uploadSpeedLimitMegabytesPerSecond = null,
+        decimal? mirrorDownloadSpeedLimitMegabytesPerSecond = null
+    )
+    {
+        return new HosterRegistration
+        {
+            Id = id,
+            Name = "Hoster",
+            SerializedConfig = "{}",
+            HosterClassName = "Hoster",
+            UploadSpeedLimitMegabytesPerSecond = uploadSpeedLimitMegabytesPerSecond,
+            MirrorDownloadSpeedLimitMegabytesPerSecond = mirrorDownloadSpeedLimitMegabytesPerSecond,
+        };
+    }
 }

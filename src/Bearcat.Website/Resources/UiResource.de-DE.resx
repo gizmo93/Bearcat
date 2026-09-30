@@ -658,6 +658,11 @@
   <data name="MaxParallelUploadsOverride" xml:space="preserve"><value>Maximale parallele Uploads</value></data>
   <data name="MaxParallelUploadsOverridePlaceholder" xml:space="preserve"><value>Hosterstandard</value></data>
   <data name="MaxParallelUploadsOverrideHelp" xml:space="preserve"><value>Überschreibt das angenommene Limit paralleler Uploads für diesen Hoster. Leer lassen, um den Hosterstandard ({0}) zu verwenden.</value></data>
+  <data name="UploadSpeedLimitMegabytesPerSecondOverride" xml:space="preserve"><value>Maximale Uploadgeschwindigkeit (MB/s)</value></data>
+  <data name="UploadSpeedLimitMegabytesPerSecondOverrideHelp" xml:space="preserve"><value>Begrenzt die gemeinsame Uploadgeschwindigkeit aller Uploads zu diesem Hoster. Kommazahlen sind erlaubt, zum Beispiel 0,5. Leer lassen für kein Limit. Das globale Limit der Uploadgeschwindigkeit gilt zusätzlich, es greift also das niedrigere Limit.</value></data>
+  <data name="UploadSpeedLimitShort" xml:space="preserve"><value>Max. {0}</value></data>
+  <data name="NoLimit" xml:space="preserve"><value>Kein Limit</value></data>
+  <data name="SpeedLimitMegabytesPerSecondInvalid" xml:space="preserve"><value>Gib eine Zahl zwischen 0,001 und 1000000 ein oder lass das Feld für kein Limit leer.</value></data>
   <data name="HoursUntilReuploadOverride" xml:space="preserve"><value>Stunden bis Reupload (Override)</value></data>
   <data name="HoursUntilReuploadOverridePlaceholder" xml:space="preserve"><value>Releasegruppen Standard</value></data>
   <data name="HoursUntilReuploadOverrideHelp" xml:space="preserve"><value>Überschreibt die auf der Releasegruppe konfigurierten Stunden bis Reupload für diesen Hoster. Leer lassen, um die Einstellung der Releasegruppe zu verwenden.</value></data>
@@ -1199,6 +1204,9 @@
   <data name="MirrorDownloadsRequirePremium" xml:space="preserve"><value>Mirrordownloads von diesem Hoster benötigen einen Premiumaccount.</value></data>
   <data name="MirrorPriority" xml:space="preserve"><value>Mirrorpriorität</value></data>
   <data name="MirrorPriorityHelp" xml:space="preserve"><value>Niedrigere Zahlen werden bevorzugt, wenn Bearcat einen Mirror zum Wiederherstellen von Archivdateien auswählt.</value></data>
+  <data name="MirrorDownloadSpeedLimitMegabytesPerSecondOverride" xml:space="preserve"><value>Maximale Downloadgeschwindigkeit für Mirrordownloads (MB/s)</value></data>
+  <data name="MirrorDownloadSpeedLimitMegabytesPerSecondOverrideHelp" xml:space="preserve"><value>Begrenzt die gemeinsame Downloadgeschwindigkeit aller Mirrordownloads von diesem Hoster. Kommazahlen sind erlaubt, zum Beispiel 0,5. Leer lassen für kein Limit. Das globale Limit der Downloadgeschwindigkeit für Mirrordownloads gilt zusätzlich, es greift also das niedrigere Limit.</value></data>
+  <data name="MirrorDownloadSpeedLimitShort" xml:space="preserve"><value>Mirrordownloads: max. {0}</value></data>
   <data name="MaxParallelDownloads" xml:space="preserve"><value>Maximale parallele Downloads</value></data>
   <data name="MaxParallelDownloadsDescription" xml:space="preserve"><value>Die Obergrenze gleichzeitig geladener Archivdateien beim Wiederherstellen eines Archivs von einem Mirror.</value></data>
   <data name="MaxParallelHashOperations" xml:space="preserve"><value>Maximale parallele Hashvorgänge</value></data>

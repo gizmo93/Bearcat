@@ -19,6 +19,8 @@ public class HosterFormModel
 
     public int? MaxParallelUploadsOverride { get; set; }
 
+    public string? UploadSpeedLimitMegabytesPerSecondInput { get; set; }
+
     public int? NumberOfHoursUntilReuploadOverride { get; set; }
 
     public ReuploadTrigger? ReuploadTriggerOverride { get; set; }
@@ -28,6 +30,8 @@ public class HosterFormModel
     public bool UseForMirrorDownloads { get; set; }
 
     public int MirrorPriority { get; set; } = 100;
+
+    public string? MirrorDownloadSpeedLimitMegabytesPerSecondInput { get; set; }
 
     public ProxySelection UploadProxySelection { get; set; } = ProxySelection.UseCategoryDefault;
 

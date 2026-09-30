@@ -13,64 +13,89 @@ public sealed class TransferSpeedLimitService(
 
     private readonly Lock limiterUpdateLock = new();
 
-    private TransferSpeedLimiter? globalUploadSpeedLimiter;
+    private readonly SpeedLimitersForTransferDirection uploadSpeedLimiters = new();
 
-    private TransferSpeedLimiter? globalMirrorDownloadSpeedLimiter;
+    private readonly SpeedLimitersForTransferDirection mirrorDownloadSpeedLimiters = new();
 
     public IDisposable EnterUploadScope(HosterRegistration registration)
     {
-        var megabytesPerSecond = configurationProvider.GetValue<UploadConcurrencyConfiguration>(
-            configuration => configuration.UploadSpeedLimitMegabytesPerSecond
-        );
-
-        TransferSpeedLimiter? globalLimiter;
-
-        lock (limiterUpdateLock)
-        {
-            globalUploadSpeedLimiter = ApplyConfiguredLimit(
-                currentLimiter: globalUploadSpeedLimiter,
-                megabytesPerSecond: megabytesPerSecond
+        var globalMegabytesPerSecond =
+            configurationProvider.GetValue<UploadConcurrencyConfiguration>(configuration =>
+                configuration.UploadSpeedLimitMegabytesPerSecond
             );
-            globalLimiter = globalUploadSpeedLimiter;
-        }
 
-        return EnterScope(globalLimiter);
+        return EnterScope(
+            speedLimiters: uploadSpeedLimiters,
+            hosterRegistrationId: registration.Id,
+            hosterRegistrationMegabytesPerSecond: registration.UploadSpeedLimitMegabytesPerSecond,
+            globalMegabytesPerSecond: globalMegabytesPerSecond
+        );
     }
 
     public IDisposable EnterMirrorDownloadScope(HosterRegistration registration)
     {
-        var megabytesPerSecond = configurationProvider.GetValue<DownloadConfiguration>(
+        var globalMegabytesPerSecond = configurationProvider.GetValue<DownloadConfiguration>(
             configuration => configuration.DownloadSpeedLimitMegabytesPerSecond
         );
 
-        TransferSpeedLimiter? globalLimiter;
-
-        lock (limiterUpdateLock)
-        {
-            globalMirrorDownloadSpeedLimiter = ApplyConfiguredLimit(
-                currentLimiter: globalMirrorDownloadSpeedLimiter,
-                megabytesPerSecond: megabytesPerSecond
-            );
-            globalLimiter = globalMirrorDownloadSpeedLimiter;
-        }
-
-        return EnterScope(globalLimiter);
+        return EnterScope(
+            speedLimiters: mirrorDownloadSpeedLimiters,
+            hosterRegistrationId: registration.Id,
+            hosterRegistrationMegabytesPerSecond: registration.MirrorDownloadSpeedLimitMegabytesPerSecond,
+            globalMegabytesPerSecond: globalMegabytesPerSecond
+        );
     }
 
     public void Dispose()
     {
         lock (limiterUpdateLock)
         {
-            globalUploadSpeedLimiter?.Dispose();
-            globalUploadSpeedLimiter = null;
-            globalMirrorDownloadSpeedLimiter?.Dispose();
-            globalMirrorDownloadSpeedLimiter = null;
+            uploadSpeedLimiters.DisposeAll();
+            mirrorDownloadSpeedLimiters.DisposeAll();
         }
     }
 
-    private static IDisposable EnterScope(TransferSpeedLimiter? globalLimiter)
+    private IDisposable EnterScope(
+        SpeedLimitersForTransferDirection speedLimiters,
+        int hosterRegistrationId,
+        decimal? hosterRegistrationMegabytesPerSecond,
+        decimal? globalMegabytesPerSecond
+    )
     {
-        return TransferSpeedLimitScope.Enter(globalLimiter is null ? [] : [globalLimiter]);
+        List<TransferSpeedLimiter> activeLimiters = [];
+
+        lock (limiterUpdateLock)
+        {
+            var hosterRegistrationLimiter = ApplyConfiguredLimit(
+                currentLimiter: speedLimiters.LimiterByHosterRegistrationId.GetValueOrDefault(
+                    hosterRegistrationId
+                ),
+                megabytesPerSecond: hosterRegistrationMegabytesPerSecond
+            );
+
+            if (hosterRegistrationLimiter is null)
+            {
+                speedLimiters.LimiterByHosterRegistrationId.Remove(hosterRegistrationId);
+            }
+            else
+            {
+                speedLimiters.LimiterByHosterRegistrationId[hosterRegistrationId] =
+                    hosterRegistrationLimiter;
+                activeLimiters.Add(hosterRegistrationLimiter);
+            }
+
+            speedLimiters.GlobalLimiter = ApplyConfiguredLimit(
+                currentLimiter: speedLimiters.GlobalLimiter,
+                megabytesPerSecond: globalMegabytesPerSecond
+            );
+
+            if (speedLimiters.GlobalLimiter is not null)
+            {
+                activeLimiters.Add(speedLimiters.GlobalLimiter);
+            }
+        }
+
+        return TransferSpeedLimitScope.Enter(activeLimiters);
     }
 
     private static TransferSpeedLimiter? ApplyConfiguredLimit(
@@ -104,5 +129,24 @@ public sealed class TransferSpeedLimitService(
         var bytesPerSecond = Math.Min(megabytesPerSecond, int.MaxValue) * BytesPerMegabyte;
 
         return (int)Math.Clamp(bytesPerSecond, 1, int.MaxValue);
+    }
+
+    private sealed class SpeedLimitersForTransferDirection
+    {
+        public Dictionary<int, TransferSpeedLimiter> LimiterByHosterRegistrationId { get; } = [];
+
+        public TransferSpeedLimiter? GlobalLimiter { get; set; }
+
+        public void DisposeAll()
+        {
+            foreach (var limiter in LimiterByHosterRegistrationId.Values)
+            {
+                limiter.Dispose();
+            }
+
+            LimiterByHosterRegistrationId.Clear();
+            GlobalLimiter?.Dispose();
+            GlobalLimiter = null;
+        }
     }
 }
