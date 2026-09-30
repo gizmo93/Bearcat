@@ -39,7 +39,7 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
 
     private IReadOnlyList<ForumPostTemplateSummaryReadModel> templates = [];
 
-    private List<FlatForumTarget> targets = [];
+    private List<ForumTargetWithPath> targets = [];
     private bool targetsLoaded;
     private bool isLoadingTargets;
     private string? targetsErrorMessage;
@@ -162,9 +162,9 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
                     service.GetTargetHierarchyAsync(DistributionSiteRegistrationId)
             );
 
-            var flattened = new List<FlatForumTarget>();
-            Flatten(hierarchy, ancestors: [], flattened);
-            targets = flattened;
+            var targetsWithPath = new List<ForumTargetWithPath>();
+            AddTargetsWithAncestorPath(hierarchy, ancestors: [], targetsWithPath);
+            targets = targetsWithPath;
             targetsLoaded = true;
         }
         catch (Exception exception)
@@ -302,10 +302,10 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
         await DialogRef.CancelAsync();
     }
 
-    private static void Flatten(
+    private static void AddTargetsWithAncestorPath(
         IReadOnlyList<ForumTargetNode> nodes,
         IReadOnlyList<string> ancestors,
-        List<FlatForumTarget> accumulator
+        List<ForumTargetWithPath> targetsWithPath
     )
     {
         foreach (var node in nodes)
@@ -314,8 +314,8 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
 
             if (node.CanReceivePosts)
             {
-                accumulator.Add(
-                    new FlatForumTarget(
+                targetsWithPath.Add(
+                    new ForumTargetWithPath(
                         Key: node.NumericNodeId ?? node.Id.Value,
                         Url: node.Id.Value,
                         Label: string.Join(" › ", path)
@@ -323,9 +323,9 @@ public partial class CreateOrEditForumPostingRuleDialog(IScopedOperationRunner o
                 );
             }
 
-            Flatten(node.Children, path, accumulator);
+            AddTargetsWithAncestorPath(node.Children, path, targetsWithPath);
         }
     }
 
-    private sealed record FlatForumTarget(string Key, string Url, string Label);
+    private sealed record ForumTargetWithPath(string Key, string Url, string Label);
 }

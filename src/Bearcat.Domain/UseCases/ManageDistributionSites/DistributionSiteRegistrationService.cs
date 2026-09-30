@@ -23,7 +23,7 @@ public class DistributionSiteRegistrationService(
         CancellationToken cancellationToken = default
     )
     {
-        var distributionSite = distributionSiteFactory.Get(className);
+        var distributionSite = distributionSiteFactory.GetByClassName(className);
         var normalizedValues = ConfigurationValueNormalizer.Normalize(
             distributionSite.ConfigurationFields,
             values
@@ -49,7 +49,9 @@ public class DistributionSiteRegistrationService(
     )
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
-        var distributionSite = distributionSiteFactory.Get(registration.DistributionSiteClassName);
+        var distributionSite = distributionSiteFactory.GetByClassName(
+            registration.DistributionSiteClassName
+        );
         var normalizedValues = ConfigurationValueNormalizer.Normalize(
             fields: distributionSite.ConfigurationFields,
             submittedValues: values,
@@ -75,7 +77,9 @@ public class DistributionSiteRegistrationService(
     )
     {
         var registration = await repository.GetByIdAsync(id, cancellationToken);
-        var distributionSite = distributionSiteFactory.Get(registration.DistributionSiteClassName);
+        var distributionSite = distributionSiteFactory.GetByClassName(
+            registration.DistributionSiteClassName
+        );
         var passwordKeys = distributionSite
             .ConfigurationFields.Where(field => field.Type == ConfigurationFieldType.Password)
             .Select(field => field.Key)
@@ -87,19 +91,16 @@ public class DistributionSiteRegistrationService(
             .ToDictionary(entry => entry.Key, entry => entry.Value, StringComparer.Ordinal);
     }
 
-    public async Task<string?> GetBaseUrlAsync(
-        int id,
+    public async Task<IReadOnlyDictionary<int, string>> GetBaseUrlsByRegistrationIdAsync(
+        IReadOnlyList<int> registrationIds,
         CancellationToken cancellationToken = default
     )
     {
-        var registration = await repository.GetByIdAsync(id, cancellationToken);
-        if (registration.HasUnreadableSecrets)
-        {
-            return null;
-        }
+        var registrations = await repository.GetByIdsAsync(registrationIds, cancellationToken);
 
-        var distributionSite = distributionSiteFactory.Get(registration.DistributionSiteClassName);
-        return distributionSite.GetBaseUrl(DecryptConfig(distributionSite, registration));
+        return registrations
+            .Where(registration => !registration.HasUnreadableSecrets)
+            .ToDictionary(registration => registration.Id, GetBaseUrl);
     }
 
     public async Task<int> GetForumPostingRuleCountAsync(
@@ -151,6 +152,14 @@ public class DistributionSiteRegistrationService(
         registration.StripDotsForThreadSearch = isEnabled;
 
         await repository.SaveChangesAsync(cancellationToken);
+    }
+
+    private string GetBaseUrl(DistributionSiteRegistration registration)
+    {
+        var distributionSite = distributionSiteFactory.GetByClassName(
+            registration.DistributionSiteClassName
+        );
+        return distributionSite.GetBaseUrl(DecryptConfig(distributionSite, registration));
     }
 
     private IDistributionSiteConfig DecryptConfig(

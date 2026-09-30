@@ -14,6 +14,4 @@ public interface IDistributionSessionRepository
         DistributionSession session,
         CancellationToken cancellationToken
     );
-
-    Task RemoveAsync(int registrationId, CancellationToken cancellationToken);
 }

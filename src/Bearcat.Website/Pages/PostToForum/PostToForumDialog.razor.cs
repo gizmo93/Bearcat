@@ -49,7 +49,7 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
     private IReadOnlyList<DistributionSiteRegistrationReadModel> registrations = [];
     private int selectedRegistrationId;
 
-    private IReadOnlyList<FlatForumTarget> targets = [];
+    private IReadOnlyList<ForumTargetWithPath> targets = [];
     private string? selectedTargetId;
 
     private IReadOnlyList<ExistingThread> existingThreads = [];
@@ -147,22 +147,15 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
         HashSet<string> postedHosts
     )
     {
-        return await operationRunner.RunAsync(
-            async (DistributionSiteRegistrationService service) =>
-            {
-                var alreadyPostedRegistrationIds = new HashSet<int>();
-                foreach (var registrationId in registrationIds)
-                {
-                    var baseUrl = await service.GetBaseUrlAsync(registrationId);
-                    if (HasAlreadyPosted(baseUrl, postedHosts))
-                    {
-                        alreadyPostedRegistrationIds.Add(registrationId);
-                    }
-                }
-
-                return alreadyPostedRegistrationIds;
-            }
+        var baseUrlsByRegistrationId = await operationRunner.RunAsync(
+            (DistributionSiteRegistrationService service) =>
+                service.GetBaseUrlsByRegistrationIdAsync(registrationIds)
         );
+
+        return baseUrlsByRegistrationId
+            .Where(entry => HasAlreadyPosted(entry.Value, postedHosts))
+            .Select(entry => entry.Key)
+            .ToHashSet();
     }
 
     private async Task<HashSet<string>> GetPostedHostsAsync()
@@ -179,20 +172,20 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
         {
             if (Uri.TryCreate(location.Url, UriKind.Absolute, out var uri))
             {
-                hosts.Add(NormalizeHost(uri.Host));
+                hosts.Add(RemoveWwwPrefix(uri.Host));
             }
         }
 
         return hosts;
     }
 
-    private static bool HasAlreadyPosted(string? baseUrl, HashSet<string> postedHosts)
+    private static bool HasAlreadyPosted(string baseUrl, HashSet<string> postedHosts)
     {
         return Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri)
-            && postedHosts.Contains(NormalizeHost(uri.Host));
+            && postedHosts.Contains(RemoveWwwPrefix(uri.Host));
     }
 
-    private static string NormalizeHost(string host) =>
+    private static string RemoveWwwPrefix(string host) =>
         host.StartsWith("www.", StringComparison.OrdinalIgnoreCase) ? host[4..] : host;
 
     private async Task LoadHierarchyAsync()
@@ -203,9 +196,9 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
                 (DistributionSiteSessionService service) =>
                     service.GetTargetHierarchyAsync(selectedRegistrationId)
             );
-            var flattened = new List<FlatForumTarget>();
-            Flatten(hierarchy, ancestors: [], flattened);
-            targets = flattened;
+            var targetsWithPath = new List<ForumTargetWithPath>();
+            AddTargetsWithAncestorPath(hierarchy, ancestors: [], targetsWithPath);
+            targets = targetsWithPath;
             selectedTargetId = targets.FirstOrDefault()?.Id;
             step = WizardStep.Target;
         });
@@ -467,10 +460,10 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
         }
     }
 
-    private static void Flatten(
+    private static void AddTargetsWithAncestorPath(
         IReadOnlyList<ForumTargetNode> nodes,
         IReadOnlyList<string> ancestors,
-        List<FlatForumTarget> accumulator
+        List<ForumTargetWithPath> targetsWithPath
     )
     {
         foreach (var node in nodes)
@@ -479,12 +472,14 @@ public partial class PostToForumDialog(IScopedOperationRunner operationRunner) :
 
             if (node.CanReceivePosts)
             {
-                accumulator.Add(new FlatForumTarget(node.Id.Value, string.Join(" › ", path)));
+                targetsWithPath.Add(
+                    new ForumTargetWithPath(node.Id.Value, string.Join(" › ", path))
+                );
             }
 
-            Flatten(node.Children, path, accumulator);
+            AddTargetsWithAncestorPath(node.Children, path, targetsWithPath);
         }
     }
 
-    private sealed record FlatForumTarget(string Id, string Label);
+    private sealed record ForumTargetWithPath(string Id, string Label);
 }

@@ -17,10 +17,12 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageDistributionSites;
 public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
 {
     private const string DistributionSiteClassName = "TestForum";
+    private const string FixedUrlDistributionSiteClassName = "FixedUrlForum";
     private const string StoredSerializedConfig = "stored-config";
 
     private BearcatDbContext dbContext = null!;
     private Mock<IDistributionSite> distributionSiteMock = null!;
+    private Mock<IDistributionSite> fixedUrlDistributionSiteMock = null!;
     private Mock<IDistributionSiteFactory> distributionSiteFactoryMock = null!;
     private DistributionSiteRegistrationService registrationService = null!;
 
@@ -29,10 +31,14 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
     {
         dbContext = Database.CreateDbContext();
         distributionSiteMock = new Mock<IDistributionSite>(MockBehavior.Strict);
+        fixedUrlDistributionSiteMock = new Mock<IDistributionSite>(MockBehavior.Strict);
         distributionSiteFactoryMock = new Mock<IDistributionSiteFactory>(MockBehavior.Strict);
         distributionSiteFactoryMock
-            .Setup(factory => factory.Get(DistributionSiteClassName))
+            .Setup(factory => factory.GetByClassName(DistributionSiteClassName))
             .Returns(distributionSiteMock.Object);
+        distributionSiteFactoryMock
+            .Setup(factory => factory.GetByClassName(FixedUrlDistributionSiteClassName))
+            .Returns(fixedUrlDistributionSiteMock.Object);
 
         registrationService = new DistributionSiteRegistrationService(
             new DistributionSiteRegistrationWriteRepository(dbContext),
@@ -204,39 +210,67 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
     }
 
     [Test]
-    public async Task GetBaseUrlAsync_ReadableConfig_ReturnsBaseUrlOfSite()
+    public async Task GetBaseUrlsByRegistrationIdAsync_ConfiguredAndFixedUrlSites_ReturnsBaseUrlOfEachRegistration()
     {
         // Arrange
         var storedConfig = SetupStoredConfig();
         distributionSiteMock
             .Setup(site => site.GetBaseUrl(storedConfig))
             .Returns("https://example.org/community/");
-        var registration = await AddReadableRegistrationAsync();
+        var fixedUrlConfig = Mock.Of<IDistributionSiteConfig>();
+        fixedUrlDistributionSiteMock
+            .Setup(site => site.DeserializeConfig(StoredSerializedConfig))
+            .Returns(fixedUrlConfig);
+        fixedUrlDistributionSiteMock
+            .Setup(site => site.GetBaseUrl(fixedUrlConfig))
+            .Returns("https://fixed.example/");
+        var configuredUrlRegistration = await AddReadableRegistrationAsync();
+        var fixedUrlRegistration = await AddReadableRegistrationAsync(
+            FixedUrlDistributionSiteClassName
+        );
+        await AddReadableRegistrationAsync();
 
         // Act
-        var result = await registrationService.GetBaseUrlAsync(
-            registration.Id,
+        var result = await registrationService.GetBaseUrlsByRegistrationIdAsync(
+            [configuredUrlRegistration.Id, fixedUrlRegistration.Id],
             CancellationToken.None
         );
 
         // Assert
-        result.ShouldBe("https://example.org/community/");
+        result.ShouldBe(
+            new Dictionary<int, string>
+            {
+                [configuredUrlRegistration.Id] = "https://example.org/community/",
+                [fixedUrlRegistration.Id] = "https://fixed.example/",
+            },
+            ignoreOrder: true
+        );
     }
 
     [Test]
-    public async Task GetBaseUrlAsync_RegistrationHasUnreadableSecrets_ReturnsNull()
+    public async Task GetBaseUrlsByRegistrationIdAsync_RegistrationHasUnreadableSecrets_LeavesRegistrationOut()
     {
         // Arrange
-        var registration = await AddRegistrationWithUnreadableSecretsAsync();
+        var storedConfig = SetupStoredConfig();
+        distributionSiteMock
+            .Setup(site => site.GetBaseUrl(storedConfig))
+            .Returns("https://example.org/community/");
+        var readableRegistration = await AddReadableRegistrationAsync();
+        var unreadableRegistration = await AddRegistrationWithUnreadableSecretsAsync();
 
         // Act
-        var result = await registrationService.GetBaseUrlAsync(
-            registration.Id,
+        var result = await registrationService.GetBaseUrlsByRegistrationIdAsync(
+            [readableRegistration.Id, unreadableRegistration.Id],
             CancellationToken.None
         );
 
         // Assert
-        result.ShouldBeNull();
+        result.ShouldBe(
+            new Dictionary<int, string>
+            {
+                [readableRegistration.Id] = "https://example.org/community/",
+            }
+        );
     }
 
     [Test]
@@ -322,12 +356,14 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
         return storedConfig.Object;
     }
 
-    private async Task<DistributionSiteRegistration> AddReadableRegistrationAsync()
+    private async Task<DistributionSiteRegistration> AddReadableRegistrationAsync(
+        string distributionSiteClassName = DistributionSiteClassName
+    )
     {
         var registration = new DistributionSiteRegistration
         {
             Name = "Forum",
-            DistributionSiteClassName = DistributionSiteClassName,
+            DistributionSiteClassName = distributionSiteClassName,
             SerializedConfig = StoredSerializedConfig,
             EncryptedSession = "stored-session",
             IsActive = true,

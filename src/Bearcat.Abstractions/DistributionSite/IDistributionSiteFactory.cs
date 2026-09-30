@@ -6,5 +6,5 @@ public interface IDistributionSiteFactory
 {
     IReadOnlyList<DistributionSiteDto> GetDistributionSites();
 
-    IDistributionSite Get(string className);
+    IDistributionSite GetByClassName(string className);
 }

@@ -22,7 +22,7 @@ public sealed class DistributionSiteFactory(IServiceProvider serviceProvider)
             .ToList();
     }
 
-    public IDistributionSite Get(string className)
+    public IDistributionSite GetByClassName(string className)
     {
         return serviceProvider.GetRequiredKeyedService<IDistributionSite>(className);
     }

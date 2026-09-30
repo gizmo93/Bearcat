@@ -70,8 +70,8 @@ public sealed partial class XenForoForumClient : IDisposable
             if (card.ClassList.Contains("node--category"))
             {
                 currentCategory = new NodeBuilder(
-                    BuildNodeId(card),
-                    BuildNodeTitle(card),
+                    ReadForumTargetId(card),
+                    ReadNodeTitle(card),
                     canReceivePosts: false
                 );
                 roots.Add(currentCategory);
@@ -79,8 +79,8 @@ public sealed partial class XenForoForumClient : IDisposable
             }
 
             var forum = new NodeBuilder(
-                BuildNodeId(card),
-                BuildNodeTitle(card),
+                ReadForumTargetId(card),
+                ReadNodeTitle(card),
                 canReceivePosts: true
             );
 
@@ -108,7 +108,7 @@ public sealed partial class XenForoForumClient : IDisposable
         CancellationToken cancellationToken
     )
     {
-        var token = ExtractToken(await GetDocumentAsync("search/", cancellationToken));
+        var token = GetCsrfToken(await GetDocumentAsync("search/", cancellationToken));
 
         var form = new List<KeyValuePair<string, string>>
         {
@@ -171,7 +171,7 @@ public sealed partial class XenForoForumClient : IDisposable
         CancellationToken cancellationToken
     )
     {
-        var formUrl = new Uri(EnsureTrailingSlash(forumUrl), "post-thread");
+        var formUrl = new Uri(CreateUriWithTrailingSlash(forumUrl), "post-thread");
         var document = await GetDocumentAsync(formUrl.ToString(), cancellationToken);
 
         var select =
@@ -201,7 +201,7 @@ public sealed partial class XenForoForumClient : IDisposable
         CancellationToken cancellationToken
     )
     {
-        var formUrl = new Uri(EnsureTrailingSlash(forumUrl), "post-thread");
+        var formUrl = new Uri(CreateUriWithTrailingSlash(forumUrl), "post-thread");
         var (token, draftUrl) = await GetCsrfTokenAndDraftUrlAsync(formUrl, cancellationToken);
 
         var fields = new List<KeyValuePair<string, string>>
@@ -229,7 +229,7 @@ public sealed partial class XenForoForumClient : IDisposable
         CancellationToken cancellationToken
     )
     {
-        var thread = EnsureTrailingSlash(threadUrl);
+        var thread = CreateUriWithTrailingSlash(threadUrl);
         var (token, draftUrl) = await GetCsrfTokenAndDraftUrlAsync(thread, cancellationToken);
 
         await SaveDraftAsync(
@@ -250,19 +250,19 @@ public sealed partial class XenForoForumClient : IDisposable
         CancellationToken cancellationToken
     )
     {
-        var overrides = new List<KeyValuePair<string, string>>
+        var fieldValuesToSubmit = new List<KeyValuePair<string, string>>
         {
             new("title", title),
             new("message", message),
         };
-        overrides.AddRange(
+        fieldValuesToSubmit.AddRange(
             prefixIds.Select(prefixId => new KeyValuePair<string, string>("prefix_id[]", prefixId))
         );
 
         return await SubmitFormAsync(
-            pageUrl: new Uri(EnsureTrailingSlash(forumUrl), "post-thread"),
-            actionMarker: "post-thread",
-            overrides: overrides,
+            pageUrl: new Uri(CreateUriWithTrailingSlash(forumUrl), "post-thread"),
+            textInFormActionUrl: "post-thread",
+            fieldValuesToSubmit: fieldValuesToSubmit,
             cancellationToken: cancellationToken
         );
     }
@@ -274,9 +274,9 @@ public sealed partial class XenForoForumClient : IDisposable
     )
     {
         return await SubmitFormAsync(
-            pageUrl: EnsureTrailingSlash(threadUrl),
-            actionMarker: "add-reply",
-            overrides: [new KeyValuePair<string, string>("message", message)],
+            pageUrl: CreateUriWithTrailingSlash(threadUrl),
+            textInFormActionUrl: "add-reply",
+            fieldValuesToSubmit: [new KeyValuePair<string, string>("message", message)],
             cancellationToken: cancellationToken
         );
     }
@@ -292,8 +292,8 @@ public sealed partial class XenForoForumClient : IDisposable
 
         return await SubmitFormAsync(
             pageUrl: new Uri(baseUri, editPath),
-            actionMarker: editPath,
-            overrides: [new KeyValuePair<string, string>("message", message)],
+            textInFormActionUrl: editPath,
+            fieldValuesToSubmit: [new KeyValuePair<string, string>("message", message)],
             cancellationToken: cancellationToken,
             keepExistingFieldValues: true
         );
@@ -350,7 +350,7 @@ public sealed partial class XenForoForumClient : IDisposable
         var lastPage = GetLastPageNumber(document);
         if (lastPage > 1)
         {
-            var pageUrl = new Uri(EnsureTrailingSlash(threadUrl), $"page-{lastPage}");
+            var pageUrl = new Uri(CreateUriWithTrailingSlash(threadUrl), $"page-{lastPage}");
             document = await GetDocumentAsync(pageUrl.ToString(), cancellationToken);
         }
 
@@ -524,7 +524,7 @@ public sealed partial class XenForoForumClient : IDisposable
     private List<NodeBuilder> ReadSubforums(IElement card)
     {
         var subforums = new List<NodeBuilder>();
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var alreadyAddedUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (
             var link in card.QuerySelectorAll(
@@ -545,7 +545,7 @@ public sealed partial class XenForoForumClient : IDisposable
             }
 
             var absolute = uri.ToString();
-            if (seen.Add(absolute))
+            if (alreadyAddedUrls.Add(absolute))
             {
                 subforums.Add(
                     new NodeBuilder(
@@ -560,7 +560,7 @@ public sealed partial class XenForoForumClient : IDisposable
         return subforums;
     }
 
-    private ForumTargetId BuildNodeId(IElement card)
+    private ForumTargetId ReadForumTargetId(IElement card)
     {
         var titleLink = card.QuerySelector(".node-title a");
         var href = titleLink?.GetAttribute("href");
@@ -574,7 +574,7 @@ public sealed partial class XenForoForumClient : IDisposable
         );
     }
 
-    private static string BuildNodeTitle(IElement card)
+    private static string ReadNodeTitle(IElement card)
     {
         var titleLink = card.QuerySelector(".node-title a") ?? card.QuerySelector(".node-title");
         return titleLink?.TextContent.Trim() ?? string.Empty;
@@ -614,8 +614,8 @@ public sealed partial class XenForoForumClient : IDisposable
 
     private async Task<SubmittedPost> SubmitFormAsync(
         Uri pageUrl,
-        string actionMarker,
-        List<KeyValuePair<string, string>> overrides,
+        string textInFormActionUrl,
+        List<KeyValuePair<string, string>> fieldValuesToSubmit,
         CancellationToken cancellationToken,
         bool keepExistingFieldValues = false
     )
@@ -623,20 +623,20 @@ public sealed partial class XenForoForumClient : IDisposable
         var document = await GetDocumentAsync(pageUrl.ToString(), cancellationToken);
 
         var form =
-            FindForm(document, actionMarker)
+            FindForm(document, textInFormActionUrl)
             ?? throw new InvalidOperationException(
-                $"Could not locate the '{actionMarker}' form at {pageUrl}."
+                $"Could not locate the '{textInFormActionUrl}' form at {pageUrl}."
             );
 
         var fields = keepExistingFieldValues
-            ? CollectFormFields(form, overrides)
-            : CollectHiddenFields(form, overrides);
+            ? CollectFormFields(form, fieldValuesToSubmit)
+            : CollectHiddenFields(form, fieldValuesToSubmit);
 
-        fields.AddRange(overrides);
+        fields.AddRange(fieldValuesToSubmit);
 
         if (fields.TrueForAll(field => field.Key != "_xfToken"))
         {
-            fields.Add(new KeyValuePair<string, string>("_xfToken", ExtractToken(document)));
+            fields.Add(new KeyValuePair<string, string>("_xfToken", GetCsrfToken(document)));
         }
 
         fields.Add(new KeyValuePair<string, string>("_xfResponseType", "json"));
@@ -651,25 +651,25 @@ public sealed partial class XenForoForumClient : IDisposable
         response.EnsureSuccessStatusCode();
 
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        return new SubmittedPost(ExtractRedirectUrl(body));
+        return new SubmittedPost(ReadRedirectUrlFromJsonResponse(body));
     }
 
-    private static IElement? FindForm(IDocument document, string actionMarker)
+    private static IElement? FindForm(IDocument document, string textInFormActionUrl)
     {
         return document
             .QuerySelectorAll("form")
             .FirstOrDefault(form =>
-                form.GetAttribute("action")?.Contains(actionMarker, StringComparison.Ordinal)
+                form.GetAttribute("action")?.Contains(textInFormActionUrl, StringComparison.Ordinal)
                 == true
             );
     }
 
     private static List<KeyValuePair<string, string>> CollectFormFields(
         IElement form,
-        List<KeyValuePair<string, string>> overrides
+        List<KeyValuePair<string, string>> fieldValuesToSubmit
     )
     {
-        var fieldNamesNotCopiedFromForm = GetFieldNamesNotCopiedFromForm(overrides);
+        var fieldNamesNotCopiedFromForm = GetFieldNamesNotCopiedFromForm(fieldValuesToSubmit);
         var fields = new List<KeyValuePair<string, string>>();
 
         foreach (var control in form.QuerySelectorAll("input, select, textarea"))
@@ -678,7 +678,7 @@ public sealed partial class XenForoForumClient : IDisposable
 
             if (
                 string.IsNullOrEmpty(name)
-                || fieldNamesNotCopiedFromForm.Contains(NormalizeFieldName(name))
+                || fieldNamesNotCopiedFromForm.Contains(RemoveArraySuffixFromFieldName(name))
             )
             {
                 continue;
@@ -718,10 +718,10 @@ public sealed partial class XenForoForumClient : IDisposable
 
     private static List<KeyValuePair<string, string>> CollectHiddenFields(
         IElement form,
-        List<KeyValuePair<string, string>> overrides
+        List<KeyValuePair<string, string>> fieldValuesToSubmit
     )
     {
-        var fieldNamesNotCopiedFromForm = GetFieldNamesNotCopiedFromForm(overrides);
+        var fieldNamesNotCopiedFromForm = GetFieldNamesNotCopiedFromForm(fieldValuesToSubmit);
 
         return form.QuerySelectorAll("input[type='hidden']")
             .Select(input => new KeyValuePair<string, string>(
@@ -730,17 +730,17 @@ public sealed partial class XenForoForumClient : IDisposable
             ))
             .Where(field =>
                 field.Key.Length > 0
-                && !fieldNamesNotCopiedFromForm.Contains(NormalizeFieldName(field.Key))
+                && !fieldNamesNotCopiedFromForm.Contains(RemoveArraySuffixFromFieldName(field.Key))
             )
             .ToList();
     }
 
     private static HashSet<string> GetFieldNamesNotCopiedFromForm(
-        List<KeyValuePair<string, string>> overrides
+        List<KeyValuePair<string, string>> fieldValuesToSubmit
     )
     {
-        return overrides
-            .Select(field => NormalizeFieldName(field.Key))
+        return fieldValuesToSubmit
+            .Select(field => RemoveArraySuffixFromFieldName(field.Key))
             .Append("_xfResponseType")
             .ToHashSet(StringComparer.Ordinal);
     }
@@ -751,19 +751,19 @@ public sealed partial class XenForoForumClient : IDisposable
         return string.IsNullOrWhiteSpace(action) ? pageUrl : new Uri(baseUri, action);
     }
 
-    private static string NormalizeFieldName(string name)
+    private static string RemoveArraySuffixFromFieldName(string name)
     {
         return name.EndsWith("[]", StringComparison.Ordinal) ? name[..^2] : name;
     }
 
-    private string ExtractRedirectUrl(string body)
+    private string ReadRedirectUrlFromJsonResponse(string body)
     {
         using var json = ParseJson(body);
         var root = json.RootElement;
 
         if (root.ValueKind is not JsonValueKind.Object)
         {
-            throw new InvalidOperationException(UnexpectedResponseMessage(body));
+            throw new InvalidOperationException(CreateUnexpectedResponseMessage(body));
         }
 
         if (ReadErrorMessages(root) is { Count: > 0 } errors)
@@ -781,7 +781,7 @@ public sealed partial class XenForoForumClient : IDisposable
             || string.IsNullOrWhiteSpace(redirect)
         )
         {
-            throw new InvalidOperationException(UnexpectedResponseMessage(body));
+            throw new InvalidOperationException(CreateUnexpectedResponseMessage(body));
         }
 
         return new Uri(baseUri, redirect).ToString();
@@ -795,7 +795,7 @@ public sealed partial class XenForoForumClient : IDisposable
         }
         catch (JsonException exception)
         {
-            throw new InvalidOperationException(UnexpectedResponseMessage(body), exception);
+            throw new InvalidOperationException(CreateUnexpectedResponseMessage(body), exception);
         }
     }
 
@@ -847,7 +847,7 @@ public sealed partial class XenForoForumClient : IDisposable
         return parser.ParseDocument(value).Body?.TextContent.Trim() ?? value.Trim();
     }
 
-    private static string UnexpectedResponseMessage(string body)
+    private static string CreateUnexpectedResponseMessage(string body)
     {
         return $"Unexpected XenForo response to the post: {body[..Math.Min(body.Length, 200)]}";
     }
@@ -858,11 +858,11 @@ public sealed partial class XenForoForumClient : IDisposable
     )
     {
         var document = await GetDocumentAsync(pageUrl.ToString(), cancellationToken);
-        var token = ExtractToken(document);
+        var token = GetCsrfToken(document);
 
         var draftHref = document.QuerySelector("[data-draft-url]")?.GetAttribute("data-draft-url");
         var draftUrl = string.IsNullOrWhiteSpace(draftHref)
-            ? new Uri(EnsureTrailingSlash(pageUrl.ToString()), "draft")
+            ? new Uri(CreateUriWithTrailingSlash(pageUrl.ToString()), "draft")
             : new Uri(baseUri, draftHref);
 
         return (token, draftUrl);
@@ -966,7 +966,7 @@ public sealed partial class XenForoForumClient : IDisposable
         }
     }
 
-    private static string ExtractToken(IDocument document)
+    private static string GetCsrfToken(IDocument document)
     {
         var token =
             document.QuerySelector("html")?.GetAttribute("data-csrf")
@@ -1002,7 +1002,7 @@ public sealed partial class XenForoForumClient : IDisposable
         return match.Success ? int.Parse(match.Groups[1].Value) : null;
     }
 
-    private static Uri EnsureTrailingSlash(string url)
+    private static Uri CreateUriWithTrailingSlash(string url)
     {
         return new Uri(url.EndsWith('/') ? url : url + "/");
     }

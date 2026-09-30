@@ -21,7 +21,7 @@ public class DistributionSiteSessionService(
     )
     {
         var registration = await repository.GetByIdAsync(registrationId, cancellationToken);
-        var site = distributionSiteFactory.Get(registration.DistributionSiteClassName);
+        var site = distributionSiteFactory.GetByClassName(registration.DistributionSiteClassName);
 
         var session = await LogInAsync(site, registration, cancellationToken);
         if (session is null)
@@ -221,7 +221,7 @@ public class DistributionSiteSessionService(
     )> GetForumSiteAndValidSessionAsync(int registrationId, CancellationToken cancellationToken)
     {
         var registration = await repository.GetByIdAsync(registrationId, cancellationToken);
-        var site = distributionSiteFactory.Get(registration.DistributionSiteClassName);
+        var site = distributionSiteFactory.GetByClassName(registration.DistributionSiteClassName);
 
         if (site is not IForumDistributionSite forum)
         {

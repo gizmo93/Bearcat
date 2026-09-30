@@ -48,6 +48,7 @@ public abstract class XenForoDistributionSiteBase<TConfig>(IHttpClientFactory ht
     )
     {
         var xenForoConfig = config.As<TConfig>();
+
         return XenForoBrowserLogin.LoginAsync(
             baseUrl: GetBaseUrl(config),
             username: xenForoConfig.Username,

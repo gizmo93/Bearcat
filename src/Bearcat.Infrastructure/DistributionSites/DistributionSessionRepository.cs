@@ -64,22 +64,6 @@ public sealed class DistributionSessionRepository(
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task RemoveAsync(int registrationId, CancellationToken cancellationToken)
-    {
-        var registration = await dbContext.DistributionSiteRegistrations.FirstOrDefaultAsync(
-            entity => entity.Id == registrationId,
-            cancellationToken
-        );
-
-        if (registration?.EncryptedSession is null)
-        {
-            return;
-        }
-
-        registration.EncryptedSession = null;
-        await dbContext.SaveChangesAsync(cancellationToken);
-    }
-
     private sealed record SerializedSession(
         string? BaseUrl,
         string UserAgent,
