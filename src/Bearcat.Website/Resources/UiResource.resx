@@ -650,6 +650,8 @@
   <data name="UploadConcurrencyDescription" xml:space="preserve"><value>Controls how many file uploads run in parallel across all hosters.</value></data>
   <data name="MaxParallelUploads" xml:space="preserve"><value>Maximum parallel uploads</value></data>
   <data name="MaxParallelUploadsDescription" xml:space="preserve"><value>The global upper limit of file uploads running at the same time across all hosters.</value></data>
+  <data name="UploadSpeedLimitMegabytesPerSecond" xml:space="preserve"><value>Maximum upload speed (MB/s)</value></data>
+  <data name="UploadSpeedLimitMegabytesPerSecondDescription" xml:space="preserve"><value>The global upper limit of the upload speed in MB/s, shared by all running uploads across all hosters. Decimal values are allowed, for example 0.5. Leave empty for unlimited. Very low limits can make uploads to hosters with request time limits fail, for example hosters behind Cloudflare abort requests after about 100 seconds.</value></data>
   <data name="MaxParallelUploadsOverride" xml:space="preserve"><value>Maximum parallel uploads</value></data>
   <data name="MaxParallelUploadsOverridePlaceholder" xml:space="preserve"><value>Hoster default</value></data>
   <data name="MaxParallelUploadsOverrideHelp" xml:space="preserve"><value>Overrides the assumed parallel upload limit for this hoster. Leave empty to use the hoster default ({0}).</value></data>
@@ -1202,6 +1204,8 @@
   <data name="MaxDownloadAttemptsDescription" xml:space="preserve"><value>How often a single archive file is downloaded again before the restore of the archive fails.</value></data>
   <data name="DownloadRetryDelaySeconds" xml:space="preserve"><value>Download retry delay (seconds)</value></data>
   <data name="DownloadRetryDelaySecondsDescription" xml:space="preserve"><value>How long Bearcat waits before it downloads an archive file again after a failed attempt.</value></data>
+  <data name="DownloadSpeedLimitMegabytesPerSecond" xml:space="preserve"><value>Maximum download speed (MB/s)</value></data>
+  <data name="DownloadSpeedLimitMegabytesPerSecondDescription" xml:space="preserve"><value>The global upper limit of the download speed in MB/s while restoring archives from mirrors, shared by all running downloads. Decimal values are allowed, for example 0.5. Leave empty for unlimited.</value></data>
   <data name="UseForMirrorDownloads" xml:space="preserve"><value>Use for mirror downloads</value></data>
   <data name="UseForMirrorDownloadsHelp" xml:space="preserve"><value>Allow Bearcat to download archive files from this hoster when local archives need to be restored for a reupload.</value></data>
   <data name="UseForMirrorDownloadsShortWithPriority" xml:space="preserve"><value>Mirror downloads (Prio: {0})</value></data>

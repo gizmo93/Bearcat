@@ -653,6 +653,8 @@
   <data name="UploadConcurrencyDescription" xml:space="preserve"><value>Steuert, wie viele Dateiuploads über alle Hoster hinweg gleichzeitig laufen.</value></data>
   <data name="MaxParallelUploads" xml:space="preserve"><value>Maximale parallele Uploads</value></data>
   <data name="MaxParallelUploadsDescription" xml:space="preserve"><value>Das globale Limit gleichzeitig laufender Dateiuploads über alle Hoster hinweg.</value></data>
+  <data name="UploadSpeedLimitMegabytesPerSecond" xml:space="preserve"><value>Maximale Uploadgeschwindigkeit (MB/s)</value></data>
+  <data name="UploadSpeedLimitMegabytesPerSecondDescription" xml:space="preserve"><value>Die globale Obergrenze der Uploadgeschwindigkeit in MB/s, geteilt von allen laufenden Uploads über alle Hoster hinweg. Kommazahlen sind erlaubt, zum Beispiel 0,5. Leer lassen für unbegrenzt. Sehr niedrige Limits können Uploads zu Hostern mit Zeitlimits pro Anfrage scheitern lassen, zum Beispiel brechen Hoster hinter Cloudflare Anfragen nach etwa 100 Sekunden ab.</value></data>
   <data name="MaxParallelUploadsOverride" xml:space="preserve"><value>Maximale parallele Uploads</value></data>
   <data name="MaxParallelUploadsOverridePlaceholder" xml:space="preserve"><value>Hosterstandard</value></data>
   <data name="MaxParallelUploadsOverrideHelp" xml:space="preserve"><value>Überschreibt das angenommene Limit paralleler Uploads für diesen Hoster. Leer lassen, um den Hosterstandard ({0}) zu verwenden.</value></data>
@@ -1205,6 +1207,8 @@
   <data name="MaxDownloadAttemptsDescription" xml:space="preserve"><value>Wie oft eine einzelne Archivdatei erneut geladen wird, bevor die Wiederherstellung des Archivs fehlschlägt.</value></data>
   <data name="DownloadRetryDelaySeconds" xml:space="preserve"><value>Wiederholungsverzögerung (Sekunden)</value></data>
   <data name="DownloadRetryDelaySecondsDescription" xml:space="preserve"><value>Wie lange Bearcat nach einem fehlgeschlagenen Versuch wartet, bevor eine Archivdatei erneut geladen wird.</value></data>
+  <data name="DownloadSpeedLimitMegabytesPerSecond" xml:space="preserve"><value>Maximale Downloadgeschwindigkeit (MB/s)</value></data>
+  <data name="DownloadSpeedLimitMegabytesPerSecondDescription" xml:space="preserve"><value>Die globale Obergrenze der Downloadgeschwindigkeit in MB/s beim Wiederherstellen von Archiven von Mirrors, geteilt von allen laufenden Downloads. Kommazahlen sind erlaubt, zum Beispiel 0,5. Leer lassen für unbegrenzt.</value></data>
   <data name="UseForMirrorDownloads" xml:space="preserve"><value>Für Mirrordownloads verwenden</value></data>
   <data name="UseForMirrorDownloadsHelp" xml:space="preserve"><value>Erlaubt Bearcat, Archivdateien von diesem Hoster zu laden, wenn lokale Archive für einen Reupload wiederhergestellt werden müssen.</value></data>
   <data name="UseForMirrorDownloadsShortWithPriority" xml:space="preserve"><value>Mirrordownloads (Prio: {0})</value></data>

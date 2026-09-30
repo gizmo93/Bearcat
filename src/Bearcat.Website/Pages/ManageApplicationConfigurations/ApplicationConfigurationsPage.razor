@@ -114,6 +114,7 @@
                                             else
                                             {
                                                 <input class="h-9 min-w-48 rounded-md border border-input bg-background px-3 text-sm"
+                                                       inputmode="@GetInputMode(property)"
                                                        value="@GetEditorValue(property)"
                                                        @oninput="eventArgs => SetEditorValue(property, eventArgs.Value?.ToString())" />
                                                 <BbButton Variant="ButtonVariant.Outline"

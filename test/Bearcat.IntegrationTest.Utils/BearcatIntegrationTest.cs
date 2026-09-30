@@ -68,6 +68,12 @@ public abstract class BearcatIntegrationTest
             where TConfiguration : IApplicationConfiguration, new() =>
             propertySelector.Compile()(new());
 
+        public decimal? GetValue<TConfiguration>(
+            System.Linq.Expressions.Expression<Func<TConfiguration, decimal?>> propertySelector
+        )
+            where TConfiguration : IApplicationConfiguration, new() =>
+            propertySelector.Compile()(new());
+
         public string? GetValue<TConfiguration>(
             System.Linq.Expressions.Expression<Func<TConfiguration, string?>> propertySelector
         )

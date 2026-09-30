@@ -16,4 +16,10 @@ public class DownloadConfiguration : IApplicationConfiguration
         "DownloadRetryDelaySecondsDescription"
     )]
     public int DownloadRetryDelaySeconds { get; set; } = 30;
+
+    [ApplicationConfigurationProperty(
+        "DownloadSpeedLimitMegabytesPerSecond",
+        "DownloadSpeedLimitMegabytesPerSecondDescription"
+    )]
+    public decimal? DownloadSpeedLimitMegabytesPerSecond { get; set; }
 }

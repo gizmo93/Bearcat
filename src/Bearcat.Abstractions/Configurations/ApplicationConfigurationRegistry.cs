@@ -102,6 +102,7 @@ public class ApplicationConfigurationRegistry
 
         return underlyingType == typeof(bool)
             || underlyingType == typeof(int)
+            || underlyingType == typeof(decimal)
             || underlyingType == typeof(string);
     }
 }

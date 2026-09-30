@@ -51,6 +51,14 @@ public class ApplicationConfigurationProvider(
         return GetValue<TConfiguration, int?>(propertySelector);
     }
 
+    public decimal? GetValue<TConfiguration>(
+        Expression<Func<TConfiguration, decimal?>> propertySelector
+    )
+        where TConfiguration : IApplicationConfiguration, new()
+    {
+        return GetValue<TConfiguration, decimal?>(propertySelector);
+    }
+
     public string? GetValue<TConfiguration>(
         Expression<Func<TConfiguration, string?>> propertySelector
     )

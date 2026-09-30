@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bearcat.Domain.UseCases.ManageApplicationConfigurations;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.ValueObjects;
@@ -159,9 +160,21 @@ public partial class ApplicationConfigurationsPage(IScopedOperationRunner operat
         var editorValue = GetEditorValue(property);
         object? value = editorValue;
 
-        if (property.ValueType == typeof(int) || property.ValueType == typeof(int?))
+        if (property.ValueType == typeof(int))
         {
             value = int.TryParse(editorValue, out var intValue) ? intValue : 0;
+        }
+        else if (property.ValueType == typeof(int?))
+        {
+            value = int.TryParse(editorValue, out var intValue) ? intValue : null;
+        }
+        else if (property.ValueType == typeof(decimal))
+        {
+            value = TryParseDecimal(editorValue, out var decimalValue) ? decimalValue : 0m;
+        }
+        else if (property.ValueType == typeof(decimal?))
+        {
+            value = TryParseDecimal(editorValue, out var decimalValue) ? decimalValue : null;
         }
 
         await operationRunner.RunAsync(
@@ -239,6 +252,23 @@ public partial class ApplicationConfigurationsPage(IScopedOperationRunner operat
         var localizedValue = property is null ? L[value] : L[$"{property.DisplayName}.{value}"];
 
         return localizedValue.ResourceNotFound ? value : localizedValue;
+    }
+
+    private static bool TryParseDecimal(string? editorValue, out decimal value)
+    {
+        return decimal.TryParse(
+            editorValue?.Replace(',', '.'),
+            NumberStyles.Float,
+            CultureInfo.InvariantCulture,
+            out value
+        );
+    }
+
+    private static string? GetInputMode(ApplicationConfigurationPropertyDto property)
+    {
+        return property.ValueType == typeof(decimal) || property.ValueType == typeof(decimal?)
+            ? "decimal"
+            : null;
     }
 
     private static string GetEditorKey(ApplicationConfigurationPropertyDto property)

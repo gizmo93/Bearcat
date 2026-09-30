@@ -98,7 +98,8 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             Mock.Of<ILogger<FileUploadExecutionService>>(),
             captchaVerificationService,
             credentialsRejectionService,
-            progressTracker
+            progressTracker,
+            new TransferSpeedLimitService(new DefaultConfigurationProvider())
         );
         var missingFileValidationService = new MissingFileValidationService(
             uploadFilesRepository,
@@ -1575,7 +1576,8 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             Mock.Of<ILogger<FileUploadExecutionService>>(),
             captchaService,
             credentialsRejectionService,
-            progressTracker
+            progressTracker,
+            new TransferSpeedLimitService(new DefaultConfigurationProvider())
         );
         var missingFileValidation = new MissingFileValidationService(
             repository,
@@ -1866,6 +1868,12 @@ public class UploadFilesServiceTest : BearcatIntegrationTest
             selector.Compile()(new TConfiguration());
 
         public int? GetValue<TConfiguration>(Expression<Func<TConfiguration, int?>> selector)
+            where TConfiguration : IApplicationConfiguration, new() =>
+            selector.Compile()(new TConfiguration());
+
+        public decimal? GetValue<TConfiguration>(
+            Expression<Func<TConfiguration, decimal?>> selector
+        )
             where TConfiguration : IApplicationConfiguration, new() =>
             selector.Compile()(new TConfiguration());
 
