@@ -43,15 +43,18 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        var token = await GetAuthTokenAsync(config, cancellationToken);
-
-        return await api.RequestUploadFileAsync(
-            token: token,
-            name: name,
-            size: size,
-            hash: hash,
-            folderId: folderId,
-            cancellationToken: cancellationToken
+        return await SendWithAuthTokenAsync(
+            config,
+            token =>
+                api.RequestUploadFileAsync(
+                    token: token,
+                    name: name,
+                    size: size,
+                    hash: hash,
+                    folderId: folderId,
+                    cancellationToken: cancellationToken
+                ),
+            cancellationToken
         );
     }
 
@@ -61,18 +64,21 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        var token = await GetAuthTokenAsync(config, cancellationToken);
-
-        var createdFolder = await api.CreateFolderAsync(
-            token: token,
-            name: folderName,
-            folderId: null,
-            cancellationToken: cancellationToken
+        var createdFolder = await SendWithAuthTokenAsync(
+            config,
+            token =>
+                api.CreateFolderAsync(
+                    token: token,
+                    name: folderName,
+                    folderId: null,
+                    cancellationToken: cancellationToken
+                ),
+            cancellationToken
         );
 
         if (createdFolder.Status == (int)HttpStatusCode.Conflict)
         {
-            var existingFolderId = await GetFolderIdAsync(token, folderName, cancellationToken);
+            var existingFolderId = await GetFolderIdAsync(config, folderName, cancellationToken);
 
             return existingFolderId
                 ?? throw new HttpRequestException(
@@ -110,9 +116,11 @@ public class ApiClient(
             );
         }
 
-        var token = await GetAuthTokenAsync(config, cancellationToken);
-
-        var response = await api.MoveFileAsync(token, fileId, folderId, cancellationToken);
+        var response = await SendWithAuthTokenAsync(
+            config,
+            token => api.MoveFileAsync(token, fileId, folderId, cancellationToken),
+            cancellationToken
+        );
         var result = response.Response?.Result;
 
         if (
@@ -175,8 +183,11 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        var token = await GetAuthTokenAsync(config, cancellationToken);
-        return await api.GetUploadInfoAsync(token, uploadId, cancellationToken);
+        return await SendWithAuthTokenAsync(
+            config,
+            token => api.GetUploadInfoAsync(token, uploadId, cancellationToken),
+            cancellationToken
+        );
     }
 
     public async Task<IReadOnlyDictionary<string, LinkCheckStatus>> CheckLinksAsync(
@@ -185,15 +196,13 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        var token = await GetAuthTokenAsync(config, cancellationToken);
-
         using var semaphore = new SemaphoreSlim(MaxParallelLinkChecks);
 
         var checkTasks = fileUrls
             .Distinct()
             .Select(fileUrl =>
                 CheckLinkAsync(
-                    token: token,
+                    config: config,
                     fileUrl: fileUrl,
                     semaphore: semaphore,
                     cancellationToken: cancellationToken
@@ -210,7 +219,7 @@ public class ApiClient(
             .ToList();
 
         var downloadCountByFileId = await GetDownloadCountsByFileIdAsync(
-            token: token,
+            config: config,
             folderIds: folderIds,
             cancellationToken: cancellationToken
         );
@@ -243,12 +252,15 @@ public class ApiClient(
                 $"Could not extract Alfafile file id from URL {fileUrl}"
             );
 
-        var token = await GetAuthTokenAsync(config, cancellationToken);
-
-        var response = await api.DownloadFileAsync(
-            token: token,
-            fileId: fileId,
-            cancellationToken: cancellationToken
+        var response = await SendWithAuthTokenAsync(
+            config,
+            token =>
+                api.DownloadFileAsync(
+                    token: token,
+                    fileId: fileId,
+                    cancellationToken: cancellationToken
+                ),
+            cancellationToken
         );
 
         var downloadUrl = response.Response?.DownloadUrl;
@@ -279,15 +291,13 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        var token = await GetAuthTokenAsync(config, cancellationToken);
-
         using var semaphore = new SemaphoreSlim(MaxParallelLinkChecks);
 
         var checkTasks = fileUrls
             .Distinct()
             .Select(fileUrl =>
                 CheckLinkAsync(
-                    token: token,
+                    config: config,
                     fileUrl: fileUrl,
                     semaphore: semaphore,
                     cancellationToken: cancellationToken
@@ -303,7 +313,7 @@ public class ApiClient(
     }
 
     private async Task<Dictionary<string, int?>> GetDownloadCountsByFileIdAsync(
-        string token,
+        AlfafileConfig config,
         IReadOnlyList<string?> folderIds,
         CancellationToken cancellationToken
     )
@@ -318,11 +328,16 @@ public class ApiClient(
 
                 while (true)
                 {
-                    var response = await api.GetFolderContentAsync(
-                        token: token,
-                        folderId: folderId,
-                        page: page,
-                        cancellationToken: cancellationToken
+                    var response = await SendWithAuthTokenAsync(
+                        config,
+                        token =>
+                            api.GetFolderContentAsync(
+                                token: token,
+                                folderId: folderId,
+                                page: page,
+                                cancellationToken: cancellationToken
+                            ),
+                        cancellationToken
                     );
 
                     var files = response.Content?.Response?.Folder?.Files ?? [];
@@ -357,7 +372,7 @@ public class ApiClient(
     }
 
     private async Task<(string FileUrl, bool? IsOnline, UploadedFile? File)> CheckLinkAsync(
-        string token,
+        AlfafileConfig config,
         string fileUrl,
         SemaphoreSlim semaphore,
         CancellationToken cancellationToken
@@ -376,7 +391,11 @@ public class ApiClient(
 
             try
             {
-                var response = await api.GetFileInfoAsync(token, fileId, cancellationToken);
+                var response = await SendWithAuthTokenAsync(
+                    config,
+                    token => api.GetFileInfoAsync(token, fileId, cancellationToken),
+                    cancellationToken
+                );
 
                 if (response.StatusCode == HttpStatusCode.TooManyRequests)
                 {
@@ -436,8 +455,11 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        var token = await GetAuthTokenAsync(config, cancellationToken);
-        var response = await api.GetUserInfoAsync(token, cancellationToken);
+        var response = await SendWithAuthTokenAsync(
+            config,
+            token => api.GetUserInfoAsync(token, cancellationToken),
+            cancellationToken
+        );
 
         if (!response.IsSuccessStatusCode || response.Content is null)
         {
@@ -450,15 +472,20 @@ public class ApiClient(
     }
 
     private async Task<string?> GetFolderIdAsync(
-        string token,
+        AlfafileConfig config,
         string folderName,
         CancellationToken cancellationToken
     )
     {
-        var rootFolder = await api.GetFolderInfoAsync(
-            token: token,
-            folderId: null,
-            cancellationToken: cancellationToken
+        var rootFolder = await SendWithAuthTokenAsync(
+            config,
+            token =>
+                api.GetFolderInfoAsync(
+                    token: token,
+                    folderId: null,
+                    cancellationToken: cancellationToken
+                ),
+            cancellationToken
         );
 
         if (!((HttpStatusCode)rootFolder.Status).IsSuccessStatusCode)
@@ -476,52 +503,76 @@ public class ApiClient(
             ?.FolderId;
     }
 
-    private async Task<string> GetAuthTokenAsync(
+    private Task<TResponse> SendWithAuthTokenAsync<TResponse>(
+        AlfafileConfig config,
+        Func<string, Task<TResponse>> sendRequestAsync,
+        CancellationToken cancellationToken
+    )
+        where TResponse : IResponseWithStatus
+    {
+        return authTokenCache.SendWithAuthTokenAsync(
+            accountKey: config.Username,
+            authenticateAsync: ct => LoginAsync(config, ct),
+            sendRequestAsync: sendRequestAsync,
+            isAuthTokenRejected: response => response.Status == (int)HttpStatusCode.Unauthorized,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private Task<ApiResponse<TContent>> SendWithAuthTokenAsync<TContent>(
+        AlfafileConfig config,
+        Func<string, Task<ApiResponse<TContent>>> sendRequestAsync,
+        CancellationToken cancellationToken
+    )
+        where TContent : IResponseWithStatus
+    {
+        return authTokenCache.SendWithAuthTokenAsync(
+            accountKey: config.Username,
+            authenticateAsync: ct => LoginAsync(config, ct),
+            sendRequestAsync: sendRequestAsync,
+            isAuthTokenRejected: response =>
+                response.StatusCode == HttpStatusCode.Unauthorized
+                || response.Content?.Status == (int)HttpStatusCode.Unauthorized,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task<string> LoginAsync(
         AlfafileConfig config,
         CancellationToken cancellationToken
     )
     {
-        return await authTokenCache.GetOrAuthenticateAsync(
-            config.Username,
-            async ct =>
-            {
-                logger.LogInformation(
-                    "Authenticating to Alfafile for user {Username}",
-                    config.Username
-                );
+        logger.LogInformation("Authenticating to Alfafile for user {Username}", config.Username);
 
-                var response = await api.LoginAsync(
-                    login: config.Username,
-                    password: config.Password,
-                    cancellationToken: ct
-                );
-
-                var content = response.Content;
-
-                if (content?.Status == (int)HttpStatusCode.Unauthorized)
-                {
-                    throw new HosterCredentialsRejectedException(
-                        content.Details ?? "Alfafile rejected the login credentials"
-                    );
-                }
-
-                if (
-                    !response.IsSuccessStatusCode
-                    || content?.Status != (int)HttpStatusCode.OK
-                    || string.IsNullOrWhiteSpace(content.Response?.Token)
-                )
-                {
-                    throw new HttpRequestException(
-                        content?.Details ?? $"Login failed with status code {response.StatusCode}",
-                        inner: null,
-                        statusCode: response.StatusCode
-                    );
-                }
-
-                return content.Response.Token;
-            },
-            cancellationToken
+        var response = await api.LoginAsync(
+            login: config.Username,
+            password: config.Password,
+            cancellationToken: cancellationToken
         );
+
+        var content = response.Content;
+
+        if (content?.Status == (int)HttpStatusCode.Unauthorized)
+        {
+            throw new HosterCredentialsRejectedException(
+                content.Details ?? "Alfafile rejected the login credentials"
+            );
+        }
+
+        if (
+            !response.IsSuccessStatusCode
+            || content?.Status != (int)HttpStatusCode.OK
+            || string.IsNullOrWhiteSpace(content.Response?.Token)
+        )
+        {
+            throw new HttpRequestException(
+                content?.Details ?? $"Login failed with status code {response.StatusCode}",
+                inner: null,
+                statusCode: response.StatusCode
+            );
+        }
+
+        return content.Response.Token;
     }
 
     private static string? GetFileId(string fileUrl)

@@ -1,9 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Bearcat.Hosters.Shared;
 
 namespace Bearcat.Hosters.Alfafile.Api.File;
 
-public class UploadFileResponse
+public class UploadFileResponse : IResponseWithStatus
 {
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
