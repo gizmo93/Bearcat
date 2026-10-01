@@ -1,9 +1,8 @@
 ﻿using System.Text.Json.Serialization;
-using Bearcat.Hosters.Shared;
 
 namespace Bearcat.Hosters.Rapidgator.Api.File;
 
-public class CheckLinksResponse : IResponseWithStatus
+public class CheckLinksResponse
 {
     [JsonPropertyName("response")]
     public List<ResponseObject>? Responses { get; set; }

@@ -1,9 +1,8 @@
 using System.Text.Json.Serialization;
-using Bearcat.Hosters.Shared;
 
 namespace Bearcat.Hosters.Rapidgator.Api.Folder;
 
-public class FolderContentResponse : IResponseWithStatus
+public class FolderContentResponse
 {
     public ResponseObject? Response { get; set; }
 

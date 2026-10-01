@@ -1,9 +1,8 @@
 ﻿using System.Text.Json.Serialization;
-using Bearcat.Hosters.Shared;
 
 namespace Bearcat.Hosters.Rapidgator.Api.User;
 
-public class InfoResponse : IResponseWithStatus
+public class InfoResponse
 {
     public ResponseObject Response { get; set; } = null!;
 

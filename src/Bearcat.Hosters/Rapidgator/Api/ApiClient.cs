@@ -11,7 +11,6 @@ using Bearcat.Hosters.Rapidgator.Api.Folder;
 using Bearcat.Hosters.Rapidgator.Api.User;
 using Bearcat.Hosters.Shared;
 using Microsoft.Extensions.Logging;
-using Refit;
 
 namespace Bearcat.Hosters.Rapidgator.Api;
 
@@ -35,19 +34,15 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        return await SendWithAuthTokenAsync(
-            config,
-            token =>
-                api.RequestUploadFileAsync(
-                    token: token,
-                    name: name,
-                    size: size,
-                    hash: hash,
-                    folderId: folderId,
-                    multipart: 1,
-                    cancellationToken: cancellationToken
-                ),
-            cancellationToken
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+        return await api.RequestUploadFileAsync(
+            token: token,
+            name: name,
+            size: size,
+            hash: hash,
+            folderId: folderId,
+            multipart: 1,
+            cancellationToken: cancellationToken
         );
     }
 
@@ -58,16 +53,12 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        return await SendWithAuthTokenAsync(
-            config,
-            token =>
-                api.ChangeFileModeAsync(
-                    token: token,
-                    fileId: fileId,
-                    mode: (int)mode,
-                    cancellationToken: cancellationToken
-                ),
-            cancellationToken
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+        return await api.ChangeFileModeAsync(
+            token: token,
+            fileId: fileId,
+            mode: (int)mode,
+            cancellationToken: cancellationToken
         );
     }
 
@@ -77,15 +68,11 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        var rootFolder = await SendWithAuthTokenAsync(
-            config,
-            token =>
-                api.GetFolderInfoAsync(
-                    token: token,
-                    folderId: null,
-                    cancellationToken: cancellationToken
-                ),
-            cancellationToken
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+        var rootFolder = await api.GetFolderInfoAsync(
+            token: token,
+            folderId: null,
+            cancellationToken: cancellationToken
         );
 
         EnsureFolderResponseSucceeded(rootFolder, "Rapidgator root folder lookup failed");
@@ -103,16 +90,11 @@ public class ApiClient(
             return existingFolder.FolderId;
         }
 
-        var createdFolder = await SendWithAuthTokenAsync(
-            config,
-            token =>
-                api.CreateFolderAsync(
-                    token: token,
-                    name: folderName,
-                    folderId: rootFolder.Response.Folder.FolderId,
-                    cancellationToken: cancellationToken
-                ),
-            cancellationToken
+        var createdFolder = await api.CreateFolderAsync(
+            token: token,
+            name: folderName,
+            folderId: rootFolder.Response.Folder.FolderId,
+            cancellationToken: cancellationToken
         );
 
         EnsureFolderResponseSucceeded(createdFolder, "Rapidgator folder creation failed");
@@ -136,11 +118,9 @@ public class ApiClient(
             );
         }
 
-        var response = await SendWithAuthTokenAsync(
-            config,
-            token => api.MoveFileAsync(token, fileId, folderId, cancellationToken),
-            cancellationToken
-        );
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+
+        var response = await api.MoveFileAsync(token, fileId, folderId, cancellationToken);
         var result = response.Response?.Result;
 
         if (
@@ -174,15 +154,12 @@ public class ApiClient(
                 $"Could not extract Rapidgator file id from URL {fileUrl}"
             );
 
-        var response = await SendWithAuthTokenAsync(
-            config,
-            token =>
-                api.DownloadFileAsync(
-                    token: token,
-                    fileId: fileId,
-                    cancellationToken: cancellationToken
-                ),
-            cancellationToken
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+
+        var response = await api.DownloadFileAsync(
+            token: token,
+            fileId: fileId,
+            cancellationToken: cancellationToken
         );
 
         var content = response.Content;
@@ -298,11 +275,9 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
-        return await SendWithAuthTokenAsync(
-            config,
-            token => api.GetFileStatusAsync(token, uploadId, cancellationToken),
-            cancellationToken
-        );
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+        var response = await api.GetFileStatusAsync(token, uploadId, cancellationToken);
+        return response;
     }
 
     public async Task<IReadOnlyDictionary<string, long>> GetFileSizesAsync(
@@ -311,19 +286,15 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
+        var token = await GetAuthTokenAsync(config, cancellationToken);
         var sizePerFileUrl = new Dictionary<string, long>();
 
         foreach (var linksBatch in fileUrls.Distinct().Chunk(CheckLinkBatchSize))
         {
-            var response = await SendWithAuthTokenAsync(
-                config,
-                token =>
-                    api.CheckLinkAsync(
-                        token: token,
-                        links: string.Join(',', linksBatch),
-                        cancellationToken: cancellationToken
-                    ),
-                cancellationToken
+            var response = await api.CheckLinkAsync(
+                token: token,
+                links: string.Join(',', linksBatch),
+                cancellationToken: cancellationToken
             );
 
             foreach (var file in (response.Content?.Responses ?? []).Where(f => f.Size is > 0))
@@ -341,19 +312,16 @@ public class ApiClient(
         CancellationToken cancellationToken
     )
     {
+        var token = await GetAuthTokenAsync(config, cancellationToken);
+
         var responses = new List<CheckLinksResponse>();
 
         foreach (var linksBatch in files.Select(file => file.Url).Chunk(CheckLinkBatchSize))
         {
-            var response = await SendWithAuthTokenAsync(
-                config,
-                token =>
-                    api.CheckLinkAsync(
-                        token: token,
-                        links: string.Join(',', linksBatch),
-                        cancellationToken: cancellationToken
-                    ),
-                cancellationToken
+            var response = await api.CheckLinkAsync(
+                token: token,
+                links: string.Join(',', linksBatch),
+                cancellationToken: cancellationToken
             );
 
             responses.Add(response.Content!);
@@ -372,7 +340,7 @@ public class ApiClient(
             .ToList();
 
         var downloadCountByFileId = await GetDownloadCountsByFileIdAsync(
-            config: config,
+            token: token,
             folderIds: folderIds,
             cancellationToken: cancellationToken
         );
@@ -394,7 +362,7 @@ public class ApiClient(
     }
 
     private async Task<Dictionary<string, int?>> GetDownloadCountsByFileIdAsync(
-        RapidgatorConfig config,
+        string token,
         IReadOnlyList<string?> folderIds,
         CancellationToken cancellationToken
     )
@@ -409,16 +377,11 @@ public class ApiClient(
 
                 while (true)
                 {
-                    var response = await SendWithAuthTokenAsync(
-                        config,
-                        token =>
-                            api.GetFolderContentAsync(
-                                token: token,
-                                folderId: folderId,
-                                page: page,
-                                cancellationToken: cancellationToken
-                            ),
-                        cancellationToken
+                    var response = await api.GetFolderContentAsync(
+                        token: token,
+                        folderId: folderId,
+                        page: page,
+                        cancellationToken: cancellationToken
                     );
 
                     var contentFiles = response.Content?.Response?.Folder?.Files ?? [];
@@ -452,50 +415,25 @@ public class ApiClient(
         return downloadCountByFileId;
     }
 
-    private Task<TResponse> SendWithAuthTokenAsync<TResponse>(
+    private async Task<string> GetAuthTokenAsync(
         RapidgatorConfig config,
-        Func<string, Task<TResponse>> sendRequestAsync,
         CancellationToken cancellationToken
     )
-        where TResponse : IResponseWithStatus
     {
-        return authTokenCache.SendWithAuthTokenAsync(
-            accountKey: config.Username,
-            authenticateAsync: ct => AuthenticateAsync(config, ct),
-            sendRequestAsync: sendRequestAsync,
-            isAuthTokenRejected: response => response.Status == (int)HttpStatusCode.Unauthorized,
-            cancellationToken: cancellationToken
+        return await authTokenCache.GetOrAuthenticateAsync(
+            config.Username,
+            async ct =>
+            {
+                logger.LogInformation(
+                    "Authenticating to Rapidgator for user {Username}",
+                    config.Username
+                );
+                var loginResponse = await LoginAsync(config: config, cancellationToken: ct);
+
+                return loginResponse.Token;
+            },
+            cancellationToken
         );
-    }
-
-    private Task<ApiResponse<TContent>> SendWithAuthTokenAsync<TContent>(
-        RapidgatorConfig config,
-        Func<string, Task<ApiResponse<TContent>>> sendRequestAsync,
-        CancellationToken cancellationToken
-    )
-        where TContent : IResponseWithStatus
-    {
-        return authTokenCache.SendWithAuthTokenAsync(
-            accountKey: config.Username,
-            authenticateAsync: ct => AuthenticateAsync(config, ct),
-            sendRequestAsync: sendRequestAsync,
-            isAuthTokenRejected: response =>
-                response.StatusCode == HttpStatusCode.Unauthorized
-                || response.Content?.Status == (int)HttpStatusCode.Unauthorized,
-            cancellationToken: cancellationToken
-        );
-    }
-
-    private async Task<string> AuthenticateAsync(
-        RapidgatorConfig config,
-        CancellationToken cancellationToken
-    )
-    {
-        logger.LogInformation("Authenticating to Rapidgator for user {Username}", config.Username);
-
-        var loginResponse = await LoginAsync(config: config, cancellationToken: cancellationToken);
-
-        return loginResponse.Token;
     }
 
     private static void EnsureFolderResponseSucceeded(FolderResponse response, string message)

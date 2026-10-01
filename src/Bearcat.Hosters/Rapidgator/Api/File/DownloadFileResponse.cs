@@ -1,9 +1,8 @@
 using System.Text.Json.Serialization;
-using Bearcat.Hosters.Shared;
 
 namespace Bearcat.Hosters.Rapidgator.Api.File;
 
-public class DownloadFileResponse : IResponseWithStatus
+public class DownloadFileResponse
 {
     [JsonPropertyName("response")]
     public DownloadResponseObject? Response { get; set; }

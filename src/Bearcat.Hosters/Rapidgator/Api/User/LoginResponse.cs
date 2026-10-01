@@ -1,9 +1,8 @@
 ﻿using System.Text.Json.Serialization;
-using Bearcat.Hosters.Shared;
 
 namespace Bearcat.Hosters.Rapidgator.Api.User;
 
-public class LoginResponse : IResponseWithStatus
+public class LoginResponse
 {
     public ResponseObject? Response { get; set; }
 
