@@ -41,8 +41,8 @@ public class LoginResponse : IResponseWithStatus
 
     public class Traffic
     {
-        public long Total { get; set; }
-        public long Left { get; set; }
+        public long? Total { get; set; }
+        public long? Left { get; set; }
     }
 
     public class Storage

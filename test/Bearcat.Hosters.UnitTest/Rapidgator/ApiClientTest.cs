@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Bearcat.Abstractions.Hoster;
 using Bearcat.Abstractions.Hoster.Dto;
 using Bearcat.Abstractions.Hoster.Exceptions;
@@ -818,6 +819,30 @@ public class ApiClientTest
             x => x.LoginAsync("user", "password", It.IsAny<CancellationToken>()),
             Times.Exactly(2)
         );
+    }
+
+    [Test]
+    public void LoginResponse_FreeAccountWithoutTrafficLimits_Deserializes()
+    {
+        // Arrange
+        var json = """
+            {"response":{"token":"token","user":{"email":"user@example.test","is_premium":false,"premium_end_time":null,"state":1,"state_label":"Activated","traffic":{"total":null,"left":null},"storage":{"total":"4398046511104","left":3561670076227,"nb_files":1024},"upload":{"max_file_size":5368709120,"nb_pipes":5},"remote_upload":{"max_nb_jobs":200,"refresh_time":60}}},"status":200,"details":null}
+            """;
+
+        // Act
+        var response = JsonSerializer.Deserialize<LoginResponse>(
+            json,
+            new JsonSerializerOptions
+            {
+                NumberHandling = JsonNumberHandling.AllowReadingFromString,
+                PropertyNameCaseInsensitive = true,
+            }
+        )!;
+
+        // Assert
+        response.Response!.Token.ShouldBe("token");
+        response.Response.User.Traffic.Total.ShouldBeNull();
+        response.Response.User.Traffic.Left.ShouldBeNull();
     }
 
     private void SetupLogin()
