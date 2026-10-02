@@ -43,66 +43,68 @@ export default defineConfig({
 					}),
 			sidebar: [
 				{
-					label: 'Start',
+					label: 'Getting started',
 					items: [
 						{ label: 'Overview', slug: 'index' },
+						{ label: 'Desktop app', slug: 'use-the-desktop-launcher' },
+						{ label: 'Docker', slug: 'use-the-docker-image' },
+						{ label: 'Windows service', slug: 'use-the-windows-service' },
+						{ label: 'Your first upload', slug: 'post-installation' },
 					],
 				},
 				{
-					label: 'Installation',
+					label: 'Releases and uploads',
+					collapsed: true,
 					items: [
-						{
-							label: 'Desktop App',
-							items: [
-								{ label: 'Overview', slug: 'use-the-desktop-launcher' },
-								{ label: 'PostgreSQL (optional)', slug: 'install-postgresql-for-desktop' },
-							],
-						},
-						{ label: 'Windows Service', slug: 'use-the-windows-service' },
-						{ label: 'Docker Container', slug: 'use-the-docker-image' },
-					],  
+						{ label: 'Release types', slug: 'release-types' },
+						{ label: 'Release detail page', slug: 'release-detail-page' },
+						{ label: 'Accounts and reuploads', slug: 'account-settings' },
+						{ label: 'Upload lifecycle', slug: 'upload-lifecycle' },
+						{ label: 'Release collections', slug: 'release-collections' },
+						{ label: 'Metadata and cover images', slug: 'release-information-and-metadata' },
+						{ label: 'Additional archive contents', slug: 'additional-archive-contents' },
+						{ label: 'Mirror downloads', slug: 'mirror-downloads' },
+					],
 				},
-                {
-                    label: 'First Steps',
-                    items: [
-                        { label: 'Initial Setup', slug: 'post-installation' },
-                        { label: 'Release Types', slug: 'release-types' },
-                        { label: 'Additional Archive Contents', slug: 'additional-archive-contents' },
-                        { label: 'Release Information and Metadata', slug: 'release-information-and-metadata' },
-                        { label: 'Release Collections', slug: 'release-collections' },
-                        { label: 'The upload lifecycle', slug: 'upload-lifecycle' },
-                        { label: 'FTP / FTPS Downloads', slug: 'remote-downloads' },
-                        { label: 'Mirror Downloads', slug: 'mirror-downloads' },
-                        { label: 'Quality Gates', slug: 'quality-gates' },
-                        { label: 'Post Queue', slug: 'post-queue' },
-                        { label: 'Telegram Notifications', slug: 'telegram-notifications' },
-
-                    ],
-                },
+				{
+					label: 'Automation',
+					collapsed: true,
+					items: [
+						{ label: 'Templates and folder automations', slug: 'release-templates-and-automations' },
+						{ label: 'FTP / FTPS downloads', slug: 'remote-downloads' },
+						{ label: 'Quality gates', slug: 'quality-gates' },
+						{ label: 'Telegram notifications', slug: 'telegram-notifications' },
+					],
+				},
+				{
+					label: 'Forum posting',
+					collapsed: true,
+					items: [
+						{ label: 'Posting to forums', slug: 'posting-to-forums' },
+						{ label: 'Forum post templates', slug: 'forum-post-templates' },
+						{ label: 'Post queue', slug: 'post-queue' },
+						{ label: 'Automatic forum posting', slug: 'automatic-forum-posting' },
+					],
+				},
 				{
 					label: 'Advanced',
+					collapsed: true,
 					items: [
-						{ label: 'Advanced Configuration', slug: 'advanced-configuration' },
-						{ label: 'Proxy Servers', slug: 'proxy-servers' },
-						{ label: 'Forum Post Templates', slug: 'forum-post-templates' },
-						{ label: 'Posting to Forums', slug: 'posting-to-forums' },
-						{ label: 'Automatic Forum Posting', slug: 'automatic-forum-posting' },
+						{ label: 'Advanced configuration', slug: 'advanced-configuration' },
+						{ label: 'PostgreSQL (optional)', slug: 'install-postgresql-for-desktop' },
+						{ label: 'Proxy servers', slug: 'proxy-servers' },
 						{ label: 'REST API', slug: 'rest-api' },
-						{ label: 'External Orchestration', slug: 'external-orchestration' },
+						{ label: 'External orchestration', slug: 'external-orchestration' },
 					],
 				},
-                {
-                    label: 'Special hoster related topics',
-                    items: [
-                        { label: 'Keep2Share', slug: 'keep2share' }
-                    ],
-                },
-                {
-                    label: 'Special link crypter related topics',
-                    items: [
-                        { label: 'filecrypt.cc', slug: 'filecrypt' }
-                    ],
-                },
+				{
+					label: 'Service-specific help',
+					collapsed: true,
+					items: [
+						{ label: 'Keep2Share', slug: 'keep2share' },
+						{ label: 'filecrypt.cc', slug: 'filecrypt' },
+					],
+				},
 			],
 		}),
 	],

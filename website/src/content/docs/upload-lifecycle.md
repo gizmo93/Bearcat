@@ -195,7 +195,7 @@ parts cannot be combined with the old ones.
 ### Per-hoster overrides
 
 A hoster registration can override the release group's waiting time and trigger. See
-[Reupload overrides per hoster](/Bearcat/post-installation/#reupload-overrides-per-hoster) for setup.
+[Reupload overrides per hoster](/Bearcat/account-settings/#reupload-overrides-per-hoster) for setup.
 
 - **Hours until reupload:** replaces the release group's waiting time for this hoster.
 - **Reupload trigger:** controls when that waiting time starts:

@@ -1,59 +1,74 @@
 ---
 title: "Run Bearcat as a Windows Service"
-description: "Run Bearcat as an always-on Windows background service, configured through a small CLI."
+description: "Start Bearcat automatically with Windows, even when nobody is logged in."
+prev:
+  label: "Choose an installation"
+  link: "/Bearcat/#get-started"
+next:
+  label: "Your first upload"
+  link: "/Bearcat/post-installation/"
 ---
 
-Run Bearcat as a Windows service to start it automatically with the machine and keep it running when no user is logged in.
-For on-demand use, choose the [Desktop app](/Bearcat/use-the-desktop-launcher/) instead. Both run the same application.
+Use the Windows service to keep Bearcat running when you are not logged in.
+New installations use **SQLite**, which needs no database server.
+For an app you start and stop yourself, use the [Desktop app](/Bearcat/use-the-desktop-launcher/).
 
-## Requirements
+## 1. Install the archive tools and download Bearcat
 
-- RAR command line executable (on Windows this comes with WinRAR)
-- 7z command line executable
-- At least one working directory the service can read and write
-- An Administrator terminal to run the setup
-- PostgreSQL 18, only if you choose the PostgreSQL database. See [Set Up PostgreSQL for Bearcat](/Bearcat/install-postgresql-for-desktop/).
+Install [WinRAR](https://www.rarlab.com/download.htm) and [7-Zip](https://www.7-zip.org/download.html).
+Create a folder for your releases, for example `C:\Bearcat\releases`.
 
-## Downloading
+Download the `Bearcat.Service-win-...zip` package for your computer from
+[GitHub releases](https://github.com/gizmo93/Bearcat/releases) and extract it, for example to
+`C:\Program Files\Bearcat`. Keep all files together.
 
-Get the latest Windows Service package from the [GitHub releases page](https://github.com/gizmo93/Bearcat/releases) and extract it to a folder of your choice, for example `C:\Program Files\Bearcat`.
+## 2. Run setup
 
-The package includes `Bearcat.Host.exe`, which runs the service, and `Bearcat.Cli.exe`, which installs and configures it.
+Open PowerShell **as Administrator**, change into the extracted folder, and run:
 
-## Installing
-
-Open a terminal **as Administrator** (right-click => Run as administrator), change into the Bearcat folder, and run:
-
-```text
-Bearcat.Cli.exe setup
+```powershell
+cd "C:\Program Files\Bearcat"
+.\Bearcat.Cli.exe setup
 ```
 
-![cli.png](images/cli.png)
+Use these answers for a new installation:
 
-The setup asks you for:
+| Prompt | What to enter |
+| --- | --- |
+| **Database** | Keep **SQLite (recommended)**. |
+| **SQLite database file** | Keep the default, `%ProgramData%\Bearcat\bearcat.db`. |
+| **Path to 7z executable** | Usually `C:\Program Files\7-Zip\7z.exe`. |
+| **Path to rar executable** | Usually `C:\Program Files\WinRAR\Rar.exe`. |
+| **Working directory** | Your release folder, for example `C:\Bearcat\releases`. |
+| **Additional working directory** | Leave empty to continue. |
+| **Web port** | Keep `17208`. |
 
-- **Database**: `SQLite (recommended)` or `PostgreSQL`
-  - SQLite: **SQLite database file**, default `%ProgramData%\Bearcat\bearcat.db`. Must be on a local drive, not on a network share or mapped network drive.
-  - PostgreSQL: **database host / port / name / username / password**. The setup tests the connection right away.
-- **7z executable**: full path, or empty to use `PATH`
-- **rar executable**: full path, or empty to use `PATH`
-- **Working directories**: one or more folders where Bearcat looks for your release files. Leave the prompt empty to finish.
-- **Web port**: the local HTTP port for the web UI (default `17208`)
+If you installed the archive tools elsewhere, enter their actual paths.
+Keep the SQLite database on a local drive. For releases on a network share, see
+[Using a network share](#using-a-network-share-for-releases).
 
-It then writes the configuration file, registers and starts the `Bearcat` Windows service, and waits until the service reports healthy.
+Setup saves the configuration, installs the service, and starts Bearcat.
 
-Bearcat cannot move data between SQLite and PostgreSQL. Switching the database starts with an empty database.
+## 3. Open Bearcat
 
-When it's done, Bearcat is reachable at:
+Open [http://127.0.0.1:17208](http://127.0.0.1:17208), or use the port you chose during setup.
+Bearcat starts automatically with Windows from now on.
 
-```text
-http://127.0.0.1:<web-port>
-```
+**Next: [Add your hoster account and upload your first release](/Bearcat/post-installation/).**
 
-Re-running `setup` later is safe: if the service already exists it keeps the registration (including any account you set, see below) and just applies the new configuration.
-The database prompt preselects the database of the existing configuration. A new installation preselects SQLite.
+## Change the setup later
 
-## Where The Configuration is stored
+Run `.\Bearcat.Cli.exe setup` again to change paths, the port, or the database.
+It keeps the existing service registration and service account. For existing installations,
+the database prompt preselects the database already in use.
+
+To use PostgreSQL, [set up a PostgreSQL server](/Bearcat/install-postgresql-for-desktop/) first.
+Select **PostgreSQL** during setup and enter its host, port, database name, username, and password.
+Setup tests the connection.
+
+Changing the database type does not transfer existing data. A new database starts empty.
+
+## Where the configuration is stored
 
 The setup writes a single machine-wide configuration file:
 
@@ -80,7 +95,7 @@ Without `bearcat.key`, Bearcat cannot decrypt your stored account configurations
 
 To enable the REST API command endpoints, add `Bearcat.ApiKey`. See [Orchestrate Bearcat from External Tools](/Bearcat/external-orchestration/#windows-service).
 
-## Managing The Service
+## Managing the service
 
 The service is registered under the name **Bearcat**. You can manage it like any other Windows service:
 
@@ -90,20 +105,20 @@ The service is registered under the name **Bearcat**. You can manage it like any
 - Or from an Administrator terminal:
 
 ```text
-sc start Bearcat
-sc stop Bearcat
-sc query Bearcat
+sc.exe start Bearcat
+sc.exe stop Bearcat
+sc.exe query Bearcat
 ```
 
 It is set to start automatically and to restart itself if it crashes.
 
-## Checking The Logs
+## Checking the logs
 
 The service logs to the Windows **Event Log**. Open the **Event Viewer**, go to **Windows Logs => Application**, and filter by the source **Bearcat**.
 
 ![windows-event-viewer.png](images/windows-event-viewer.png)
 
-## Logging More
+## More detailed logs
 
 Bearcat logs warnings and errors by default. For more detail, add the following `Logging` section to `config.json`. Keep your existing connection, paths, and port values:
 
@@ -125,11 +140,11 @@ Bearcat logs warnings and errors by default. For more detail, add the following 
 Then restart the service so it picks up the change:
 
 ```text
-sc stop Bearcat
-sc start Bearcat
+sc.exe stop Bearcat
+sc.exe start Bearcat
 ```
 
-## Using A Network Share For Releases
+## Using a network share for releases
 
 The service runs as `LocalSystem` by default, which cannot reach a protected network share, and mapped drive letters (like `Z:`) are not visible to services at all. If your release data lives on a network share:
 
@@ -140,12 +155,12 @@ The service runs as `LocalSystem` by default, which cannot reach a protected net
 
 The setup reminds you about this when it detects a UNC path. The account you set here is preserved when you re-run `setup`.
 
-## Changing The Database Password
+## Changing the database password
 
 PostgreSQL only. If your PostgreSQL password changes, you don't need to edit `config.json` by hand. Run (as Administrator):
 
 ```text
-Bearcat.Cli.exe set-db-password
+.\Bearcat.Cli.exe set-db-password
 ```
 
 It prompts for the new password, tests the connection, updates the configuration, and restarts the service.
@@ -155,9 +170,9 @@ With SQLite, it exits with an error and leaves the configuration unchanged.
 
 To update Bearcat, replace the application files. Your configuration and encryption key are stored outside the install folder:
 
-1. Stop the service: `sc stop Bearcat` (the running `.exe` and its DLLs are locked while it runs).
+1. Stop the service: `sc.exe stop Bearcat` (the running `.exe` and its DLLs are locked while it runs).
 2. Replace the contents of the install folder with the new release. Replace the whole folder, not just `Bearcat.Host.exe`, so all files match the new version.
-3. Start the service: `sc start Bearcat`.
+3. Start the service: `sc.exe start Bearcat`.
 
 `config.json`, `bearcat.key`, and the SQLite database in `%ProgramData%\Bearcat` are untouched, and the service registration and run-as account stay as they were. Database migrations run automatically on start, so back up your database before a major update.
 
@@ -166,7 +181,7 @@ To update Bearcat, replace the application files. Your configuration and encrypt
 To stop and remove the service, run (as Administrator):
 
 ```text
-Bearcat.Cli.exe uninstall
+.\Bearcat.Cli.exe uninstall
 ```
 
 It removes the Windows service and offers to delete `config.json`. Your database (SQLite file or PostgreSQL) is never touched.

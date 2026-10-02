@@ -10,10 +10,40 @@ hero:
     alt: "Bearcat holding a RAR archive"
   actions:
     - text: "Getting started"
-      link: "/Bearcat/#installing--running-bearcat"
+      link: "/Bearcat/#get-started"
 ---
 
 import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+<span id="installing--running-bearcat" />
+
+## Get started
+
+New installations use **SQLite**. Bearcat creates the database for you, so you do not need to install a database server.
+Choose how you want to run Bearcat, then follow [Your first upload](/Bearcat/post-installation/).
+
+<CardGrid>
+	<LinkCard
+		title="Desktop app"
+		description="Start here for Windows or Apple Silicon Macs."
+		href="/Bearcat/use-the-desktop-launcher/"
+	/>
+	<LinkCard
+		title="Windows service"
+		description="Run Bearcat in the background, even when you are not logged in."
+		href="/Bearcat/use-the-windows-service/"
+	/>
+	<LinkCard
+		title="Docker container"
+		description="Run Bearcat on Linux, a NAS, or a server with Docker."
+		href="/Bearcat/use-the-docker-image/"
+	/>
+	<LinkCard
+		title="Your first upload"
+		description="After installation: add a hoster account, choose files, and upload."
+		href="/Bearcat/post-installation/"
+	/>
+</CardGrid>
 
 ## What is Bearcat?
 
@@ -35,37 +65,11 @@ You can:
 
 ![Bearcat web interface](images/gui.png)
 
-## Automatic FTP/FTPS downloads and archive extraction
-
-Automatically download new releases from FTP/FTPS servers, optionally extract their archives, and upload
-them to your hosters. [Set up automatic downloads](/Bearcat/remote-downloads/).
-
-## Installing & running Bearcat
-
-<CardGrid>
-	<LinkCard
-		title="Desktop app"
-		description="Start and stop Bearcat on demand on Windows or macOS."
-		href="/Bearcat/use-the-desktop-launcher/"
-	/>
-	<LinkCard
-		title="Windows service"
-		description="Run Bearcat in the background, even when you are not logged in."
-		href="/Bearcat/use-the-windows-service/"
-	/>
-	<LinkCard
-		title="Docker container"
-		description="Run Bearcat on Linux, a NAS, or a server with Docker."
-		href="/Bearcat/use-the-docker-image/"
-	/>
-	<LinkCard
-		title="Initial setup"
-		description="Add your hoster accounts and create your first release after installation."
-		href="/Bearcat/post-installation/"
-	/>
-</CardGrid>
-
 ## Common questions
+
+### Can I use PostgreSQL?
+
+Yes. PostgreSQL is optional and needs a running PostgreSQL server. See the [PostgreSQL setup](/Bearcat/install-postgresql-for-desktop/) or the [Docker option](/Bearcat/use-the-docker-image/#database). Existing PostgreSQL installations can keep using it.
 
 ### Can I upload existing archives?
 

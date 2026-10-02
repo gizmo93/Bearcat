@@ -180,19 +180,21 @@ Changes only affect upload configurations without an upload. Existing uploads ar
 "Maximum parallel uploads" defaults to `10`. It limits parallel file uploads across all hosters.
 Each hoster's own limit also applies, so a hoster cannot exceed either limit.
 
-View and, where allowed, override individual limits on the "Hoster registrations" page. See [Parallel uploads per hoster](/Bearcat/post-installation/#parallel-uploads-per-hoster).
+View and, where allowed, override individual limits on the "Hoster registrations" page. See [Parallel uploads per hoster](/Bearcat/account-settings/#parallel-uploads-per-hoster).
 
 Lower the global limit to reduce bandwidth and CPU usage. Raise it to transfer more files at once.
 
 "Maximum upload speed (MB/s)" is empty by default, which means no limit. It caps the combined upload
 speed of all running uploads across all hosters. Decimal values such as `0.5` or `0,5` are allowed.
 Each hoster registration can set its own limit as well. See
-[Upload speed limit per hoster](/Bearcat/post-installation/#upload-speed-limit-per-hoster).
+[Upload speed limit per hoster](/Bearcat/account-settings/#upload-speed-limit-per-hoster).
 
 Very low limits can make uploads fail on hosters that abort long requests, for example hosters
 behind Cloudflare, which stop requests after about 100 seconds.
 
 ## Database
+
+New Desktop, Windows service, and Docker installations use SQLite. Existing PostgreSQL setups keep using PostgreSQL.
 
 Bearcat stores its data in SQLite or PostgreSQL. These settings are not part of the "Configurations" page. They are read on startup from environment variables or a settings file:
 
@@ -222,4 +224,5 @@ SQLite notes:
 - Bearcat runs SQLite in WAL mode. Keep the database file on local storage, not on a network share (NFS/SMB).
 - Back up `bearcat.key` from the data directory together with the database file. Stop Bearcat first, or copy the `-wal` and `-shm` files next to the database file as well (`bearcat.db-wal`, `bearcat.db-shm`).
 
-Bearcat cannot move data between SQLite and PostgreSQL. Changing `Database:Provider` starts with an empty database.
+Changing `Database:Provider` does not transfer existing data. A new database starts empty.
+The fallback to `Postgres` when the setting is absent keeps older configurations working.

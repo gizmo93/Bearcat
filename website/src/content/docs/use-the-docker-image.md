@@ -1,100 +1,81 @@
 ---
 title: "Run Bearcat in Docker"
-description: "Host Bearcat with Docker on Linux, NAS devices, servers, Windows, or macOS."
+description: "Start Bearcat with Docker Compose and SQLite on a Linux computer, NAS, or server."
+prev:
+  label: "Choose an installation"
+  link: "/Bearcat/#get-started"
+next:
+  label: "Your first upload"
+  link: "/Bearcat/post-installation/"
 ---
 
-Docker is the recommended setup for Linux, NAS, and server deployments.
+The Docker image includes the archive tools. The default setup uses **SQLite**, so it runs as
+one container and needs no database server.
 
-On Windows, prefer the [Windows service](/Bearcat/use-the-windows-service/) for always-on use or the [Desktop app](/Bearcat/use-the-desktop-launcher/) for on-demand use. Docker also works, but reading release files through its Linux VM is slower than with the native options.
+You need Docker with Docker Compose. On a supported x86_64 Synology NAS, use **Container Manager**.
+The image uses `linux/amd64`. For Windows or an Apple Silicon Mac, you can use the
+[native Desktop app](/Bearcat/use-the-desktop-launcher/).
 
-On Apple Silicon Macs, prefer the native [Desktop app](/Bearcat/use-the-desktop-launcher/). The Docker image uses `linux/amd64` because its bundled RAR tools require Linux x64.
+## 1. Get the Compose file
 
-## Initial setup
+Create a folder for the setup. Save these two files from the Bearcat repository into it:
 
-### Windows
-Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) or [Rancher Desktop](https://rancherdesktop.io).
+- [docker-compose.yml](https://github.com/gizmo93/Bearcat/blob/main/docker-compose.yml)
+- [.env.example](https://github.com/gizmo93/Bearcat/blob/main/.env.example), renamed to `.env`
 
-### macOS
-Install [Docker Desktop](https://www.docker.com/products/docker-desktop/), [Rancher Desktop](https://rancherdesktop.io), or [OrbStack](https://orbstack.dev). I use OrbStack to run containers while developing Bearcat on macOS.
+Use GitHub's **Download raw file** button to save each file's contents.
 
-![Bearcat running in OrbStack on macOS](images/bearcat-orbstack.png)
+## 2. Set your release folder
 
-### Linux
-Docker containers run directly on Linux. Docker Desktop and Rancher Desktop are also available; follow their documentation for installation.
-
-### Synology NAS
-On a supported x86_64 Synology NAS, install **Container Manager** from Package Manager.
-
-
-## Running Bearcat
-
-Use the repository's `docker-compose.yml` and copy `.env.example` to `.env`.
-Before starting the containers:
-
-1. Set `RELEASES_DIR` to your release folder. It must exist and allow Bearcat to read and write files. Mounted network folders work too.
-2. Check `BEARCAT_DATA_DIR`. This folder keeps the application data between container updates, and the database with SQLite.
-
-The remaining settings control ports, resource limits, and the image version.
-
-### Database
-
-| Database | Compose files | Data location |
-| --- | --- | --- |
-| SQLite (default) | `docker-compose.yml` | `bearcat.db` in `BEARCAT_DATA_DIR` |
-| PostgreSQL | `docker-compose.yml` and `docker-compose.postgres.yml` | Separate `bearcat-postgres` container, data in `POSTGRES_DATA_DIR` |
-
-With SQLite, `BEARCAT_DATA_DIR` must be on local storage, not on a network share (NFS/SMB).
-
-To use PostgreSQL, start with both files:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d
-```
-
-Or add this line to `.env`, so that a plain `docker compose` command includes both files:
+Open `.env` in a text editor and set `RELEASES_DIR` to an existing folder containing your release
+files. Bearcat needs read and write access to it. For example:
 
 ```text
-COMPOSE_FILE=docker-compose.yml:docker-compose.postgres.yml
+RELEASES_DIR=/srv/releases
+BEARCAT_DATA_DIR=./bearcat-data
 ```
 
-On Windows, separate the files with `;` instead of `:`.
+Replace `/srv/releases` with your own path. You can leave the other settings unchanged.
 
-Bearcat cannot move data between SQLite and PostgreSQL. Switching the database starts with an empty database.
+`BEARCAT_DATA_DIR` keeps the database and encryption key. The default creates `bearcat-data` next
+to your Compose file. Keep this folder on local storage, not an NFS or SMB share.
+Your release files can be on a mounted network share.
 
-### Bearcat related
+## 3. Start Bearcat
 
-| Variable | Purpose |
-| --- | --- |
-| `RELEASES_DIR` | Host directory containing your release files. Required. |
-| `BEARCAT_DATA_DIR` | Persistent application data: the `bearcat.key` encryption key created on first start, and `bearcat.db` with SQLite. |
-| `BEARCAT_PORT` | Web interface port, normally `8080`. |
-| `BEARCAT_API_KEY` | Key for the REST API command endpoints. Empty disables them. See [Orchestrate Bearcat from External Tools](/Bearcat/external-orchestration/#api-key). |
-| `BEARCAT_IMAGE` | Image to run. Defaults to `ghcr.io/gizmo93/bearcat:latest`; change it to select a version or your own image. |
-| `BEARCAT_CPU_LIMIT` | CPU limit in cores, for example `0.5` for half a core. |
-| `BEARCAT_MEMORY_LIMIT` | Memory limit, for example `512m` or `1g`. |
-
-### PostgreSQL related
-
-Only used with `docker-compose.postgres.yml`.
-
-| Variable | Purpose |
-| --- | --- |
-| `POSTGRES_DATA_DIR` | Host directory for persistent PostgreSQL data. |
-| `POSTGRES_USER` | PostgreSQL username. |
-| `POSTGRES_PASSWORD` | PostgreSQL password. Choose your own. |
-| `POSTGRES_DB` | Database name. |
-| `POSTGRES_PORT` | Host port for database connections, normally `5432`. Change it if that port is already in use. |
-| `POSTGRES_CPU_LIMIT` | CPU limit in cores, for example `0.5` for half a core. |
-| `POSTGRES_MEMORY_LIMIT` | Memory limit, for example `512m` or `1g`. |
-
-From the directory containing `docker-compose.yml`, run:
+Open a terminal in the folder containing `docker-compose.yml` and run:
 
 ```bash
 docker compose up -d
 ```
 
-This starts Bearcat using your `.env` settings, and PostgreSQL if `docker-compose.postgres.yml` is included. The first start may take a while.
+Open [http://localhost:8080](http://localhost:8080). If Docker runs on another computer or a NAS,
+open `http://<server-address>:8080` instead. The first start may take a moment.
 
+**Next: [Add your hoster account and upload your first release](/Bearcat/post-installation/).**
+
+In Bearcat's folder picker, your release folder appears as `/mnt/data/releases`.
+
+## Database
+
+SQLite is already configured. Use the following option only if you want PostgreSQL.
+
+### Use PostgreSQL instead
+
+1. Save [docker-compose.postgres.yml](https://github.com/gizmo93/Bearcat/blob/main/docker-compose.postgres.yml) next to your Compose file.
+2. In `.env`, set `POSTGRES_PASSWORD` to your own password.
+3. Add this line to `.env` so all Compose commands use PostgreSQL:
+
+```text
+COMPOSE_FILE=docker-compose.yml:docker-compose.postgres.yml
+```
+
+On Windows, use `;` between the filenames instead of `:`.
+Then run `docker compose up -d`. This starts a PostgreSQL server in a second container and connects Bearcat to it.
+
+PostgreSQL stores its data in `POSTGRES_DATA_DIR`, which defaults to `./postgres-data`.
+Bearcat still needs `BEARCAT_DATA_DIR` for its encryption key.
+Changing the database type does not transfer existing data. A new database starts empty.
 
 ## Updating Bearcat
 
@@ -106,7 +87,7 @@ docker compose up -d
 ```
 
 This will only recreate the container if the newer image is different from the one you already have.
-As Bearcat's database and application data directory are both mounted to persistent locations on your host machine, you won't lose any data by updating the container image.
+The database and encryption key stay in the data folders on your host. Keep these folders when updating.
 
 ### Upgrading existing Docker installs
 
@@ -126,24 +107,49 @@ docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d
 
 Without the PostgreSQL override, Bearcat starts with an empty SQLite database. Your data is still in PostgreSQL. Add the override and run `docker compose up -d` again to switch back.
 
-## Account data encryption key
-
-Bearcat stores hoster, link crypter, and NFO database account configurations encrypted in the database. The encryption key is not part of the Docker image. On first start, Bearcat creates a random key file here:
-
-```text
-${BEARCAT_DATA_DIR:-./bearcat-data}/bearcat.key
-```
-
-Keep this file. Without `bearcat.key`, Bearcat cannot decrypt the stored account configurations anymore.
-
-On the first start of a version with encrypted account data, Bearcat automatically migrates existing plaintext registration configs to encrypted values.
-
 ## Backups
 
-For backups and server moves, copy:
+With the default SQLite setup, run:
 
-- the Bearcat application data directory, usually `${BEARCAT_DATA_DIR:-./bearcat-data}`. It contains `bearcat.key` and, with SQLite, `bearcat.db`.
-- with PostgreSQL, also the PostgreSQL data directory, usually `${POSTGRES_DATA_DIR:-./postgres-data}`.
+```bash
+docker compose stop
+```
 
-With SQLite, stop Bearcat before copying (`docker compose stop`), or copy `bearcat.db-wal` and `bearcat.db-shm` together with `bearcat.db`.
+Copy the entire `BEARCAT_DATA_DIR` folder, normally `bearcat-data`, to your backup location.
+It contains both `bearcat.db` and `bearcat.key`. Then start Bearcat again:
 
+```bash
+docker compose start
+```
+
+With PostgreSQL, stop both containers before copying `BEARCAT_DATA_DIR` and `POSTGRES_DATA_DIR`,
+then start them again. These backups contain Bearcat's settings and records. Back up your release
+files separately if you need them too.
+
+Keep `bearcat.key` with your database backup. Without it, Bearcat cannot read your saved account credentials.
+
+## Docker settings
+
+| Variable | Purpose |
+| --- | --- |
+| `RELEASES_DIR` | Host directory containing your release files. Required. |
+| `BEARCAT_DATA_DIR` | Persistent application data: the `bearcat.key` encryption key created on first start, and `bearcat.db` with SQLite. |
+| `BEARCAT_PORT` | Web interface port, normally `8080`. |
+| `BEARCAT_API_KEY` | Key for the REST API command endpoints. Empty disables them. See [Orchestrate Bearcat from External Tools](/Bearcat/external-orchestration/#api-key). |
+| `BEARCAT_IMAGE` | Image to run. Defaults to `ghcr.io/gizmo93/bearcat:latest`; change it to select a version or your own image. |
+| `BEARCAT_CPU_LIMIT` | CPU limit in cores, for example `0.5` for half a core. |
+| `BEARCAT_MEMORY_LIMIT` | Memory limit, for example `512m` or `1g`. |
+
+### PostgreSQL settings
+
+Only used with `docker-compose.postgres.yml`.
+
+| Variable | Purpose |
+| --- | --- |
+| `POSTGRES_DATA_DIR` | Host directory for persistent PostgreSQL data. |
+| `POSTGRES_USER` | PostgreSQL username. |
+| `POSTGRES_PASSWORD` | PostgreSQL password. Choose your own. |
+| `POSTGRES_DB` | Database name. |
+| `POSTGRES_PORT` | Host port for database connections, normally `5432`. Change it if that port is already in use. |
+| `POSTGRES_CPU_LIMIT` | CPU limit in cores, for example `0.5` for half a core. |
+| `POSTGRES_MEMORY_LIMIT` | Memory limit, for example `512m` or `1g`. |

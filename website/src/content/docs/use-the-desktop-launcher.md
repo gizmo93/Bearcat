@@ -1,159 +1,130 @@
 ---
 title: "Install Bearcat on Windows and macOS"
-description: "Run Bearcat locally on Windows or macOS with the desktop launcher."
+description: "Install the desktop app, choose your release folder, and start Bearcat with SQLite."
+prev:
+  label: "Choose an installation"
+  link: "/Bearcat/#get-started"
+next:
+  label: "Your first upload"
+  link: "/Bearcat/post-installation/"
 ---
 
-Bearcat Desktop starts Bearcat and opens it in your browser. Use the tray menu to start and stop it, or quit the app to stop Bearcat.
+The Desktop app starts Bearcat on your computer and opens its web interface in your browser.
+New installations use **SQLite**, which needs no separate database installation.
 
-On Windows, use the Desktop app for on-demand use or the [Windows service](/Bearcat/use-the-windows-service/) to keep Bearcat running continuously. Both run the same application.
-On Apple Silicon Macs, I recommend the Desktop app because it runs natively on ARM.
+## 1. Install the archive tools
 
-| macOS | Windows |
+Bearcat needs both RAR and 7-Zip to start.
+
+| System | What to install |
 | --- | --- |
-| ![Bearcat Desktop on macOS](images/desktop-mac.png) | ![Bearcat Desktop on Windows](images/desktop-windows.png) |
+| Windows | [WinRAR](https://www.rarlab.com/download.htm) and [7-Zip](https://www.7-zip.org/download.html). |
+| macOS | [RAR for macOS ARM](https://www.rarlab.com/download.htm) and the [7-Zip console version for macOS](https://www.7-zip.org/download.html). Extract both into folders you will keep. |
 
-## Requirements
+On Windows, the usual executable paths are `C:\Program Files\WinRAR\Rar.exe` and
+`C:\Program Files\7-Zip\7z.exe`. On macOS, select the extracted `rar` and `7zz` files in step 3.
+If you already installed the tools another way, use their executable paths.
 
-- RAR command line executable (on Windows this comes with WinRAR)
-- 7z command line executable
-- A release data directory on your local machine
-- PostgreSQL 18, only if you choose the PostgreSQL database. See [Set Up PostgreSQL for Bearcat](/Bearcat/install-postgresql-for-desktop/).
+## 2. Download and open Bearcat
 
-## Downloading the newest release
-You can get the latest release of the Desktop app from the [GitHub releases page](https://github.com/gizmo93/Bearcat/releases).
-![download-desktop-app.png](images/download-desktop-app.png)
+Download the Desktop package for your computer from [GitHub releases](https://github.com/gizmo93/Bearcat/releases):
 
+- **Windows:** extract the `Bearcat.Desktop-win-...zip` package and open `Bearcat.Desktop.exe`. Keep the extracted files together.
+- **macOS (Apple Silicon):** extract `Bearcat.Desktop-macos-arm64.zip`, move **Bearcat Desktop.app** to **Applications**, and open it.
 
-### macOS Gatekeeper
+<details>
+<summary>macOS says the app is damaged or blocks it from opening</summary>
 
-The macOS app is ad-hoc signed because I don't have an Apple Developer License. macOS may quarantine the download and block it from opening.
-If macOS reports that the app is damaged after downloading it from GitHub, move the app to `/Applications`, open the Terminal and remove the quarantine attribute:
+The app is ad-hoc signed. If macOS blocks your GitHub download, move the app to `/Applications`,
+then open Terminal and run:
 
 ```bash
 xattr -dr com.apple.quarantine "/Applications/Bearcat Desktop.app"
 ```
 
-After that, open the app again.
+Open the app again.
 
-## Settings
+</details>
 
-On first start, open the launcher settings and enter:
+## 3. Choose your folders and tools
 
-### Release path
+Create a folder for your releases, for example `C:\Bearcat\releases` on Windows or
+`~/Bearcat/releases` on macOS. In the Desktop app, fill in:
 
-The folder where Bearcat looks for release files. This should be a local folder, mounted drive, or network share that the desktop user can read and write.
+| Field | What to enter |
+| --- | --- |
+| **Working directories** | Click **Add...** and select your release folder. Bearcat must be able to read and write here. |
+| **RAR executable** | Click **Browse...** and select `Rar.exe` on Windows or `rar` on macOS. |
+| **7z executable** | Click **Browse...** and select `7z.exe` on Windows or `7zz` on macOS. |
 
-### RAR executable
+Keep **SQLite (recommended)** selected and leave **Database file** at its default.
+You can also leave **Bearcat Host**, **Web port**, and **API key** unchanged.
 
-Path to the RAR command line executable. You can enter a full path, or a command name if it is available on `PATH`.
+## 4. Start Bearcat
 
-Examples:
+Click **Save**, then **Start Bearcat**. Once it is ready, click **Open Bearcat** or open
+[http://127.0.0.1:17208](http://127.0.0.1:17208).
 
-```text
-rar
-C:\Program Files\WinRAR\Rar.exe
-/usr/local/bin/rar
-```
+**Next: [Add your hoster account and upload your first release](/Bearcat/post-installation/).**
 
-### 7z executable
+Closing the settings window keeps Bearcat running. Use **Stop** or **Quit** to stop it.
+For Windows installations that should run even when nobody is logged in, use the [Windows service](/Bearcat/use-the-windows-service/).
 
-Path to the 7-Zip command line executable. You can enter a full path, or a command name if it is available on `PATH`.
+## Other settings
 
-Examples:
-
-```text
-7z
-C:\Program Files\7-Zip\7z.exe
-/opt/homebrew/bin/7z
-```
-
-### Bearcat Host
-
-Leave this empty to let the launcher find `Bearcat.Host` automatically. If detection fails, select the published executable or `Bearcat.Host.dll`.
-
-For development builds, the launcher can also find the host in the local repository.
+Change these only when you need them.
 
 ### Database type
 
-| Option | Settings |
-| --- | --- |
-| SQLite (recommended) | **Database file**: absolute path to the database file on a local drive. Created on first start. |
-| PostgreSQL | Your own PostgreSQL server: host, port, database name, username, password. |
-
-New installations start with SQLite. Settings saved by an older version keep PostgreSQL.
-
-Default SQLite database file:
+SQLite stores your data in a file on this computer. Keep it on a local drive, not a network share.
+The default location is:
 
 ```text
 Windows: %APPDATA%\Bearcat\bearcat.db
 macOS: ~/Library/Application Support/Bearcat/bearcat.db
 ```
 
-PostgreSQL values:
+To use PostgreSQL, [set up a PostgreSQL server](/Bearcat/install-postgresql-for-desktop/), select
+**PostgreSQL**, and enter its host, port, database name, username, and password.
+Bearcat updates the database on startup and can create a PostgreSQL database if the user has permission.
 
-- Host: PostgreSQL server hostname, usually `localhost` for a local database.
-- Port: PostgreSQL port, usually `5432`.
-- Database: Bearcat database name, for example `bearcat`.
-- Username: PostgreSQL user.
-- Password: PostgreSQL password.
+Older installations keep their PostgreSQL settings. Changing the database type does not transfer
+existing data. A new database starts empty.
 
-Bearcat updates the database schema on startup. With PostgreSQL, it can also create the database if the PostgreSQL user has permission.
+### Bearcat Host
 
-Bearcat cannot move data between SQLite and PostgreSQL. Switching the database type starts with an empty database.
+Leave this empty for automatic detection. If detection fails, select the `Bearcat.Host` executable
+or `Bearcat.Host.dll` from the downloaded package.
 
 ### Web port
 
-The local HTTP port for the Bearcat web UI. The default is `17208`, so the app opens:
-
-```text
-http://127.0.0.1:17208
-```
-
-Change this only if the port is already used by another application.
+Keep `17208` unless another application uses that port. If you change it, use the new port in the browser address.
 
 ### API key
 
-Optional. Enables the command endpoints of the REST API. Leave it empty to keep them disabled. See [Orchestrate Bearcat from External Tools](/Bearcat/external-orchestration/#api-key).
+Leave this empty unless you want to [control Bearcat through the REST API](/Bearcat/external-orchestration/#api-key).
 
-## Where Settings Are Stored
+## Settings and backups
 
-Settings are stored as JSON in the user's application data directory:
+The launcher saves its settings here:
 
 ```text
 Windows: %APPDATA%\Bearcat\Desktop\settings.json
 macOS: ~/Library/Application Support/Bearcat/Desktop/settings.json
 ```
 
-The file contains the Desktop app settings, including the PostgreSQL password and the API key. Protect your operating system user account accordingly.
+This file includes the API key and PostgreSQL password if you configured them.
 
-## Where The Encryption Key Is Stored
+Bearcat also creates `bearcat.key` in `%APPDATA%\Bearcat` on Windows or
+`~/Library/Application Support/Bearcat` on macOS. It uses this key to read your saved account credentials.
 
-Bearcat encrypts stored hoster, link crypter, and NFO database account configurations.
-The Desktop app creates the encryption key automatically on first start.
+For a SQLite backup, stop Bearcat and copy both `bearcat.db` and `bearcat.key`.
+If you changed the database file location, copy it from there. With PostgreSQL, back up that database and `bearcat.key`.
+Keep both when moving to another computer. Without the key, Bearcat cannot read your saved account credentials.
 
-Default key locations:
+## If Bearcat does not start
 
-```text
-Windows: %APPDATA%\Bearcat\bearcat.key
-macOS: ~/Library/Application Support/Bearcat/bearcat.key
-```
-
-Back up this file together with your database:
-
-- SQLite: the database file, by default `bearcat.db` in the same folder. Stop Bearcat before copying, or copy `bearcat.db-wal` and `bearcat.db-shm` together with `bearcat.db`.
-- PostgreSQL: your PostgreSQL database.
-
-If you move the Desktop setup to another computer, copy both the database and `bearcat.key`.
-Without `bearcat.key`, Bearcat cannot decrypt stored account configurations.
-
-## Starting Bearcat
-
-Choose `Start Bearcat` in the app window or tray menu. Once Bearcat is ready, you can open it at:
-
-```text
-http://127.0.0.1:<web-port>
-```
-
-Closing the settings window hides it. Bearcat keeps running until you choose `Stop` or `Quit Bearcat`.
-
-Attention: On Windows, multiple copies of the app can be started at the same time. If a setting or update appears not to take effect, check the tray area and quit old Bearcat Desktop instances.
+- **RAR or 7z was not found:** select the executable files with **Browse...**. On macOS, the official 7-Zip download names its executable `7zz`.
+- **A folder is missing or not writable:** check your working directories and database file location.
+- **The web port is in use:** choose another port and start Bearcat again.
+- **Changes seem to have no effect on Windows:** check the tray for another running copy of Bearcat Desktop and quit it.

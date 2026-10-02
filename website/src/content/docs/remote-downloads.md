@@ -32,7 +32,7 @@ server has a trusted certificate.
 
 ## Watch a remote folder
 
-First, [create a release template](/Bearcat/post-installation/#setting-up-release-templates).
+First, [create a release template](/Bearcat/release-templates-and-automations/#setting-up-release-templates).
 Use a **managed** template to let Bearcat pack the downloaded files, or an **unmanaged** template
 if the server already provides the archives you want to upload.
 
