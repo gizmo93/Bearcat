@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -81,9 +82,13 @@ public partial class MainWindow : Window
         {
             settingsStore.Save(settings);
             AppendLog("Validating settings...");
-            AppendLog(
-                "PostgreSQL validation uses the maintenance database, not the Bearcat database."
-            );
+            if (settings.DatabaseProvider == DatabaseProvider.Postgres)
+            {
+                AppendLog(
+                    "PostgreSQL validation uses the maintenance database, not the Bearcat database."
+                );
+            }
+
             await DesktopSettingsValidator.ValidateAsync(settings);
 
             AppendLog("Starting Bearcat.Host...");
@@ -137,6 +142,9 @@ public partial class MainWindow : Window
         RarPathTextBox.Text = settings.RarPath;
         SevenZipPathTextBox.Text = settings.SevenZipPath;
         BearcatHostPathTextBox.Text = settings.BearcatHostPath;
+        SqliteRadioButton.IsChecked = settings.DatabaseProvider == DatabaseProvider.Sqlite;
+        PostgresRadioButton.IsChecked = settings.DatabaseProvider == DatabaseProvider.Postgres;
+        SqliteFilePathTextBox.Text = settings.SqliteFilePath;
         PostgresHostTextBox.Text = settings.PostgresHost;
         PostgresPortTextBox.Text = settings.PostgresPort.ToString();
         PostgresDatabaseTextBox.Text = settings.PostgresDatabase;
@@ -144,6 +152,21 @@ public partial class MainWindow : Window
         PostgresPasswordTextBox.Text = settings.PostgresPassword;
         WebPortTextBox.Text = settings.WebPort.ToString();
         ApiKeyTextBox.Text = settings.ApiKey;
+        UpdateDatabaseSettingsVisibility();
+    }
+
+    private DatabaseProvider GetSelectedDatabaseProvider()
+    {
+        return SqliteRadioButton.IsChecked == true
+            ? DatabaseProvider.Sqlite
+            : DatabaseProvider.Postgres;
+    }
+
+    private void UpdateDatabaseSettingsVisibility()
+    {
+        var sqliteIsSelected = GetSelectedDatabaseProvider() == DatabaseProvider.Sqlite;
+        SqliteSettingsGrid.IsVisible = sqliteIsSelected;
+        PostgresSettingsGrid.IsVisible = !sqliteIsSelected;
     }
 
     private bool TryReadSettings(out DesktopSettings settings)
@@ -154,6 +177,8 @@ public partial class MainWindow : Window
             RarPath = RarPathTextBox.Text?.Trim() ?? string.Empty,
             SevenZipPath = SevenZipPathTextBox.Text?.Trim() ?? string.Empty,
             BearcatHostPath = BearcatHostPathTextBox.Text?.Trim() ?? string.Empty,
+            DatabaseProvider = GetSelectedDatabaseProvider(),
+            SqliteFilePath = SqliteFilePathTextBox.Text?.Trim() ?? string.Empty,
             PostgresHost = PostgresHostTextBox.Text?.Trim() ?? string.Empty,
             PostgresDatabase = PostgresDatabaseTextBox.Text?.Trim() ?? string.Empty,
             PostgresUsername = PostgresUsernameTextBox.Text?.Trim() ?? string.Empty,
@@ -321,6 +346,38 @@ public partial class MainWindow : Window
     private async void BrowseBearcatHostPath_Click(object? sender, RoutedEventArgs e)
     {
         await PickFileIntoTextBoxAsync(BearcatHostPathTextBox, "Choose Bearcat.Host executable");
+    }
+
+    private void DatabaseProviderRadioButton_IsCheckedChanged(object? sender, RoutedEventArgs e)
+    {
+        UpdateDatabaseSettingsVisibility();
+    }
+
+    private async void BrowseSqliteFilePath_Click(object? sender, RoutedEventArgs e)
+    {
+        var currentDirectory = Path.GetDirectoryName(SqliteFilePathTextBox.Text?.Trim());
+        var file = await StorageProvider.SaveFilePickerAsync(
+            new FilePickerSaveOptions
+            {
+                Title = "Choose SQLite database file",
+                SuggestedFileName = "bearcat.db",
+                DefaultExtension = "db",
+                ShowOverwritePrompt = false,
+                FileTypeChoices =
+                [
+                    new FilePickerFileType("SQLite database") { Patterns = ["*.db"] },
+                ],
+                SuggestedStartLocation = string.IsNullOrWhiteSpace(currentDirectory)
+                    ? null
+                    : await StorageProvider.TryGetFolderFromPathAsync(currentDirectory),
+            }
+        );
+        var path = file?.TryGetLocalPath();
+
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            SqliteFilePathTextBox.Text = path;
+        }
     }
 
     private async Task PickFileIntoTextBoxAsync(TextBox textBox, string title)

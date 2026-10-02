@@ -3,6 +3,7 @@ using Bearcat.Domain.UseCases.DetectUnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
+using Bearcat.IntegrationTest.Utils;
 
 namespace Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 

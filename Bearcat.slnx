@@ -39,6 +39,7 @@
         <Project Path="test/Bearcat.Domain.UnitTest/Bearcat.Domain.UnitTest.csproj" />
         <Project Path="test/Bearcat.Hosters.UnitTest/Bearcat.Hosters.UnitTest.csproj" />
         <Project Path="test/Bearcat.ImageHosters.UnitTest/Bearcat.ImageHosters.UnitTest.csproj" />
+        <Project Path="test/Bearcat.Infrastructure.IntegrationTest/Bearcat.Infrastructure.IntegrationTest.csproj" />
         <Project Path="test/Bearcat.Infrastructure.UnitTest/Bearcat.Infrastructure.UnitTest.csproj" />
         <Project Path="test/Bearcat.IntegrationTest.Utils/Bearcat.IntegrationTest.Utils.csproj" />
         <Project Path="test/Bearcat.LinkCrypters.UnitTest/Bearcat.LinkCrypters.UnitTest.csproj" />

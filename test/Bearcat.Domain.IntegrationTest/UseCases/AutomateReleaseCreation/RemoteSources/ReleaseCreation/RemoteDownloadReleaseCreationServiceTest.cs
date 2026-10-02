@@ -2,7 +2,6 @@ using Bearcat.Abstractions.Media;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.IntegrationTest.Shared;
 using Bearcat.Domain.IntegrationTest.Shared.UnmanagedReleases;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.UnmanagedReleases;

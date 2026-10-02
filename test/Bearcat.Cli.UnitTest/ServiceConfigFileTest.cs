@@ -145,6 +145,165 @@ public class ServiceConfigFileTest
         savedConfiguration["WorkingDirectories"]![0]!.GetValue<string>().ShouldBe("D:\\Releases");
     }
 
+    [Test]
+    public void Load_FileWithoutProvider_UsesPostgres()
+    {
+        // Arrange
+        WriteExistingConfiguration(
+            """
+            {
+              "Database": { "ConnectionString": "Host=localhost" },
+              "Urls": "http://127.0.0.1:17208"
+            }
+            """
+        );
+
+        // Act
+        var config = ServiceConfigFile.Load(configPath);
+
+        // Assert
+        config.Database.Provider.ShouldBeNull();
+        config.Database.EffectiveProvider.ShouldBe(DatabaseProvider.Postgres);
+        config.Database.ConnectionString.ShouldBe("Host=localhost");
+        config.Database.SqliteFilePath.ShouldBeNull();
+    }
+
+    [Test]
+    public void Save_LoadedFileWithoutProvider_DoesNotAddProvider()
+    {
+        // Arrange
+        WriteExistingConfiguration(
+            """
+            {
+              "Database": { "ConnectionString": "Host=old" },
+              "Urls": "http://127.0.0.1:17208"
+            }
+            """
+        );
+        var config = ServiceConfigFile.Load(configPath);
+        config.Database.ConnectionString = "Host=new";
+
+        // Act
+        config.Save(configPath);
+
+        // Assert
+        var savedDatabaseSection = ReadSavedConfiguration()["Database"]!.AsObject();
+        savedDatabaseSection.ContainsKey("Provider").ShouldBeFalse();
+        savedDatabaseSection.ContainsKey("SqliteFilePath").ShouldBeFalse();
+        savedDatabaseSection["ConnectionString"]!.GetValue<string>().ShouldBe("Host=new");
+    }
+
+    [Test]
+    public void Save_SqliteConfiguration_WritesProviderAndFilePathWithoutConnectionString()
+    {
+        // Arrange
+        var config = new ServiceConfigFile
+        {
+            Database =
+            {
+                Provider = DatabaseProvider.Sqlite,
+                SqliteFilePath = "C:\\ProgramData\\Bearcat\\bearcat.db",
+            },
+            WorkingDirectories = ["D:\\Releases"],
+            Urls = "http://127.0.0.1:17208",
+        };
+
+        // Act
+        config.Save(configPath);
+
+        // Assert
+        var savedDatabaseSection = ReadSavedConfiguration()["Database"]!.AsObject();
+        savedDatabaseSection["Provider"]!.GetValue<string>().ShouldBe("Sqlite");
+        savedDatabaseSection["SqliteFilePath"]!
+            .GetValue<string>()
+            .ShouldBe("C:\\ProgramData\\Bearcat\\bearcat.db");
+        savedDatabaseSection.ContainsKey("ConnectionString").ShouldBeFalse();
+    }
+
+    [Test]
+    public void Load_SavedSqliteConfiguration_ReadsProviderAndFilePath()
+    {
+        // Arrange
+        new ServiceConfigFile
+        {
+            Database =
+            {
+                Provider = DatabaseProvider.Sqlite,
+                SqliteFilePath = "C:\\ProgramData\\Bearcat\\bearcat.db",
+            },
+            Urls = "http://127.0.0.1:17208",
+        }.Save(configPath);
+
+        // Act
+        var config = ServiceConfigFile.Load(configPath);
+
+        // Assert
+        config.Database.Provider.ShouldBe(DatabaseProvider.Sqlite);
+        config.Database.EffectiveProvider.ShouldBe(DatabaseProvider.Sqlite);
+        config.Database.SqliteFilePath.ShouldBe("C:\\ProgramData\\Bearcat\\bearcat.db");
+        config.Database.ConnectionString.ShouldBeNull();
+    }
+
+    [Test]
+    public void Save_SqliteConfigurationOverExistingPostgresFile_RemovesConnectionString()
+    {
+        // Arrange
+        WriteExistingConfiguration(
+            """
+            {
+              "Database": { "ConnectionString": "Host=old", "CommandTimeout": 60 },
+              "Urls": "http://127.0.0.1:17208"
+            }
+            """
+        );
+        var config = new ServiceConfigFile
+        {
+            Database =
+            {
+                Provider = DatabaseProvider.Sqlite,
+                SqliteFilePath = "C:\\ProgramData\\Bearcat\\bearcat.db",
+            },
+            Urls = "http://127.0.0.1:17208",
+        };
+
+        // Act
+        config.Save(configPath);
+
+        // Assert
+        var savedDatabaseSection = ReadSavedConfiguration()["Database"]!.AsObject();
+        savedDatabaseSection["Provider"]!.GetValue<string>().ShouldBe("Sqlite");
+        savedDatabaseSection.ContainsKey("ConnectionString").ShouldBeFalse();
+        savedDatabaseSection["CommandTimeout"]!.GetValue<int>().ShouldBe(60);
+    }
+
+    [Test]
+    public void Save_PostgresConfigurationOverExistingSqliteFile_RemovesSqliteFilePath()
+    {
+        // Arrange
+        WriteExistingConfiguration(
+            """
+            {
+              "Database": { "Provider": "Sqlite", "SqliteFilePath": "C:\\Old\\bearcat.db" },
+              "Urls": "http://127.0.0.1:17208"
+            }
+            """
+        );
+        var config = new ServiceConfigFile
+        {
+            Database = { Provider = DatabaseProvider.Postgres, ConnectionString = "Host=new" },
+            Urls = "http://127.0.0.1:17208",
+        };
+
+        // Act
+        config.Save(configPath);
+
+        // Assert
+        var savedDatabaseSection = ReadSavedConfiguration()["Database"]!.AsObject();
+        savedDatabaseSection["Provider"]!.GetValue<string>().ShouldBe("Postgres");
+        savedDatabaseSection["ConnectionString"]!.GetValue<string>().ShouldBe("Host=new");
+        savedDatabaseSection.ContainsKey("SqliteFilePath").ShouldBeFalse();
+    }
+
     private void WriteExistingConfiguration(string json)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);

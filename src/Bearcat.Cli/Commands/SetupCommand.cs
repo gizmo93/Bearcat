@@ -34,6 +34,28 @@ public sealed class SetupCommand : AsyncCommand
             return 1;
         }
 
+        var databaseProvider = await AnsiConsole.PromptAsync(
+            new SelectionPrompt<DatabaseProvider>()
+                .Title("Database:")
+                .AddChoices(DatabaseProvider.Sqlite, DatabaseProvider.Postgres)
+                .UseConverter(provider =>
+                    provider == DatabaseProvider.Sqlite
+                        ? $"{GetDisplayName(provider)} (recommended)"
+                        : GetDisplayName(provider)
+                ),
+            cancellationToken
+        );
+        AnsiConsole.MarkupLineInterpolated($"Database: {GetDisplayName(databaseProvider)}");
+
+        var database =
+            databaseProvider == DatabaseProvider.Sqlite
+                ? await PromptSqliteDatabaseAsync(cancellationToken)
+                : await PromptPostgresDatabaseAsync(cancellationToken);
+        if (database is null)
+        {
+            return 1;
+        }
+
         var sevenZipPath = await AnsiConsole.PromptAsync(
             new TextPrompt<string>("Path to 7z executable (empty = use PATH):")
                 .AllowEmpty()
@@ -94,45 +116,6 @@ public sealed class SetupCommand : AsyncCommand
             workingDirectories.Add(workingDirectory);
         }
 
-        var connectionString = new NpgsqlConnectionStringBuilder
-        {
-            Host = await AnsiConsole.PromptAsync(
-                new TextPrompt<string>("Database host:").DefaultValue("localhost"),
-                cancellationToken
-            ),
-            Port = await AnsiConsole.PromptAsync(
-                new TextPrompt<int>("Database port:").DefaultValue(5432),
-                cancellationToken
-            ),
-            Database = await AnsiConsole.PromptAsync(
-                new TextPrompt<string>("Database name:").DefaultValue("bearcat"),
-                cancellationToken
-            ),
-            Username = await AnsiConsole.PromptAsync(
-                new TextPrompt<string>("Database username:").DefaultValue("bearcat"),
-                cancellationToken
-            ),
-            Password = await AnsiConsole.PromptAsync(
-                new TextPrompt<string>("Database password:").Secret(),
-                cancellationToken
-            ),
-        }.ConnectionString;
-
-        AnsiConsole.WriteLine("Testing database connection...");
-        var (success, error) = await ConfigValidation.TestDatabaseConnectionAsync(
-            connectionString,
-            cancellationToken
-        );
-        if (!success)
-        {
-            AnsiConsole.MarkupLineInterpolated(
-                $"[red]Could not connect to the database:[/] {error}"
-            );
-            return 1;
-        }
-
-        AnsiConsole.MarkupLine("[green]Database connection OK.[/]");
-
         var webPort = await AnsiConsole.PromptAsync(
             new TextPrompt<int>("Web port:").DefaultValue(17208),
             cancellationToken
@@ -141,7 +124,7 @@ public sealed class SetupCommand : AsyncCommand
 
         new ServiceConfigFile
         {
-            Database = { ConnectionString = connectionString },
+            Database = database,
             Archivers = { RarPath = rarPath, SevenZipPath = sevenZipPath },
             WorkingDirectories = workingDirectories,
             Urls = urls,
@@ -171,10 +154,85 @@ public sealed class SetupCommand : AsyncCommand
                 }
             }
 
-            PrintKeyBackupNotice();
+            PrintKeyBackupNotice(database);
         }
 
         return result;
+    }
+
+    private static string GetDisplayName(DatabaseProvider databaseProvider) =>
+        databaseProvider == DatabaseProvider.Sqlite ? "SQLite" : "PostgreSQL";
+
+    private static async Task<ServiceConfigFile.DatabaseSection> PromptSqliteDatabaseAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        var defaultSqliteFilePath = Path.Combine(
+            Path.GetDirectoryName(BearcatPaths.WindowsServiceConfigPath)!,
+            "bearcat.db"
+        );
+        var sqliteFilePath = await AnsiConsole.PromptAsync(
+            new TextPrompt<string>("SQLite database file:")
+                .DefaultValue(defaultSqliteFilePath)
+                .Validate(ValidateSqliteFilePath),
+            cancellationToken
+        );
+
+        return new ServiceConfigFile.DatabaseSection
+        {
+            Provider = DatabaseProvider.Sqlite,
+            SqliteFilePath = sqliteFilePath.Trim(),
+        };
+    }
+
+    private static async Task<ServiceConfigFile.DatabaseSection?> PromptPostgresDatabaseAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        var connectionString = new NpgsqlConnectionStringBuilder
+        {
+            Host = await AnsiConsole.PromptAsync(
+                new TextPrompt<string>("Database host:").DefaultValue("localhost"),
+                cancellationToken
+            ),
+            Port = await AnsiConsole.PromptAsync(
+                new TextPrompt<int>("Database port:").DefaultValue(5432),
+                cancellationToken
+            ),
+            Database = await AnsiConsole.PromptAsync(
+                new TextPrompt<string>("Database name:").DefaultValue("bearcat"),
+                cancellationToken
+            ),
+            Username = await AnsiConsole.PromptAsync(
+                new TextPrompt<string>("Database username:").DefaultValue("bearcat"),
+                cancellationToken
+            ),
+            Password = await AnsiConsole.PromptAsync(
+                new TextPrompt<string>("Database password:").Secret(),
+                cancellationToken
+            ),
+        }.ConnectionString;
+
+        AnsiConsole.WriteLine("Testing database connection...");
+        var (success, error) = await ConfigValidation.TestPostgresConnectionAsync(
+            connectionString,
+            cancellationToken
+        );
+        if (!success)
+        {
+            AnsiConsole.MarkupLineInterpolated(
+                $"[red]Could not connect to the database:[/] {error}"
+            );
+            return null;
+        }
+
+        AnsiConsole.MarkupLine("[green]Database connection OK.[/]");
+
+        return new ServiceConfigFile.DatabaseSection
+        {
+            Provider = DatabaseProvider.Postgres,
+            ConnectionString = connectionString,
+        };
     }
 
     private static async Task<int> RegisterServiceAsync(
@@ -241,6 +299,23 @@ public sealed class SetupCommand : AsyncCommand
         return ValidationResult.Success();
     }
 
+    private static ValidationResult ValidateSqliteFilePath(string path)
+    {
+        var trimmedPath = path.Trim();
+        if (
+            IsUncPath(trimmedPath)
+            || (OperatingSystem.IsWindows() && IsMappedNetworkDrive(trimmedPath))
+        )
+        {
+            return ValidationResult.Error(
+                "The SQLite database file must be on a local drive, not on a network share."
+            );
+        }
+
+        var (success, error) = ConfigValidation.TestSqliteFileLocation(trimmedPath);
+        return success ? ValidationResult.Success() : ValidationResult.Error(error!);
+    }
+
     private static bool IsMappedNetworkDrive(string path)
     {
         var root = Path.GetPathRoot(path);
@@ -291,15 +366,19 @@ public sealed class SetupCommand : AsyncCommand
         );
     }
 
-    private static void PrintKeyBackupNotice()
+    private static void PrintKeyBackupNotice(ServiceConfigFile.DatabaseSection database)
     {
         var keyPath = Path.Combine(
             Path.GetDirectoryName(BearcatPaths.WindowsServiceConfigPath)!,
             "bearcat.key"
         );
+        var databaseDescription =
+            database.EffectiveProvider == DatabaseProvider.Sqlite
+                ? database.SqliteFilePath
+                : "your database";
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLineInterpolated(
-            $"[yellow]Back up {keyPath} together with your database.[/]"
+            $"[yellow]Back up {keyPath} together with {databaseDescription}.[/]"
         );
         AnsiConsole.MarkupLine(
             "Losing this key makes encrypted secrets in the database unrecoverable."

@@ -1,7 +1,6 @@
 using Bearcat.Abstractions;
 using Bearcat.Abstractions.Media;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.IntegrationTest.Shared;
 using Bearcat.Domain.UseCases.ManageReleases;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;

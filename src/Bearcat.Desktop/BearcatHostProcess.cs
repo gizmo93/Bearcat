@@ -88,7 +88,17 @@ public sealed class BearcatHostProcess : IDisposable
         startInfo.Environment["DOTNET_gcServer"] = "0"; // Workstation mode to save RAM. Default is Server Mode.
         startInfo.Environment["ASPNETCORE_URLS"] = settings.WebUrl;
         startInfo.Environment["Bearcat__DesktopMode"] = "true";
-        startInfo.Environment["Database__ConnectionString"] = settings.CreateConnectionString();
+        startInfo.Environment["Database__Provider"] = settings.DatabaseProvider.ToString();
+        if (settings.DatabaseProvider == DatabaseProvider.Sqlite)
+        {
+            startInfo.Environment["Database__SqliteFilePath"] = settings.SqliteFilePath;
+        }
+        else
+        {
+            startInfo.Environment["Database__ConnectionString"] =
+                settings.CreatePostgresConnectionString();
+        }
+
         for (var index = 0; index < settings.WorkingDirectories.Count; index++)
         {
             startInfo.Environment[$"WorkingDirectories__{index}"] = settings.WorkingDirectories[

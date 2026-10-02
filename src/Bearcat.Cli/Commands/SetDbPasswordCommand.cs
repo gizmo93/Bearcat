@@ -25,6 +25,15 @@ public sealed class SetDbPasswordCommand : AsyncCommand
         }
 
         var config = ServiceConfigFile.Load(BearcatPaths.WindowsServiceConfigPath);
+        if (config.Database.EffectiveProvider == DatabaseProvider.Sqlite)
+        {
+            AnsiConsole.MarkupLine(
+                "[red]This installation uses SQLite, which has no database password.[/] "
+                    + "'set-db-password' only applies to PostgreSQL. Configuration left unchanged."
+            );
+            return 1;
+        }
+
         var connectionStringBuilder = new NpgsqlConnectionStringBuilder(
             config.Database.ConnectionString
         )
@@ -36,7 +45,7 @@ public sealed class SetDbPasswordCommand : AsyncCommand
         };
 
         AnsiConsole.WriteLine("Testing database connection...");
-        var (success, error) = await ConfigValidation.TestDatabaseConnectionAsync(
+        var (success, error) = await ConfigValidation.TestPostgresConnectionAsync(
             connectionStringBuilder.ConnectionString,
             cancellationToken
         );

@@ -10,10 +10,6 @@ public static class DesktopSettingsValidator
 {
     public static async Task ValidateAsync(DesktopSettings settings)
     {
-        RequireValue(settings.PostgresHost, "Postgres host is required.");
-        RequireValue(settings.PostgresDatabase, "Database name is required.");
-        RequireValue(settings.PostgresUsername, "Postgres username is required.");
-
         if (settings.WorkingDirectories.Count == 0)
         {
             throw new InvalidOperationException("At least one working directory is required.");
@@ -39,7 +35,17 @@ public static class DesktopSettingsValidator
             throw new InvalidOperationException("7z executable was not found.");
         }
 
-        await ValidatePostgresServerAsync(settings);
+        if (settings.DatabaseProvider == DatabaseProvider.Sqlite)
+        {
+            ValidateSqliteFilePath(settings.SqliteFilePath);
+        }
+        else
+        {
+            RequireValue(settings.PostgresHost, "Postgres host is required.");
+            RequireValue(settings.PostgresDatabase, "Database name is required.");
+            RequireValue(settings.PostgresUsername, "Postgres username is required.");
+            await ValidatePostgresServerAsync(settings);
+        }
     }
 
     public static bool CommandExists(string command)
@@ -82,9 +88,53 @@ public static class DesktopSettingsValidator
         }
     }
 
+    private static void ValidateSqliteFilePath(string sqliteFilePath)
+    {
+        RequireValue(sqliteFilePath, "SQLite database file is required.");
+
+        if (!Path.IsPathFullyQualified(sqliteFilePath))
+        {
+            throw new InvalidOperationException("SQLite database file must be an absolute path.");
+        }
+
+        if (sqliteFilePath.StartsWith(@"\\", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(
+                "SQLite database file must be on a local drive, not on a network share."
+            );
+        }
+
+        if (
+            Directory.Exists(sqliteFilePath)
+            || string.IsNullOrEmpty(Path.GetFileName(sqliteFilePath))
+        )
+        {
+            throw new InvalidOperationException(
+                $"SQLite database file must be a file, not a directory: {sqliteFilePath}"
+            );
+        }
+
+        var directory = Path.GetDirectoryName(sqliteFilePath)!;
+        var probeFilePath = Path.Combine(directory, $".bearcat-write-test-{Guid.NewGuid():N}");
+
+        try
+        {
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(probeFilePath, string.Empty);
+            File.Delete(probeFilePath);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            throw new InvalidOperationException(
+                $"The directory for the SQLite database file is not writable: {directory}",
+                exception
+            );
+        }
+    }
+
     private static async Task ValidatePostgresServerAsync(DesktopSettings settings)
     {
-        var builder = new NpgsqlConnectionStringBuilder(settings.CreateConnectionString())
+        var builder = new NpgsqlConnectionStringBuilder(settings.CreatePostgresConnectionString())
         {
             Database = "postgres",
         };

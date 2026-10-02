@@ -8,7 +8,6 @@ using Bearcat.Abstractions.RemoteSource;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.IntegrationTest.Shared;
 using Bearcat.Domain.IntegrationTest.Shared.UnmanagedReleases;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.Transfers;

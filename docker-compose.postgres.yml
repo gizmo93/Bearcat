@@ -1,0 +1,35 @@
+# Runs Bearcat with PostgreSQL instead of SQLite.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d
+# Or set COMPOSE_FILE=docker-compose.yml:docker-compose.postgres.yml in .env and use docker compose up -d.
+services:
+  bearcat:
+    environment:
+      - Database__Provider=Postgres
+      - Database__ConnectionString=Host=postgres;Database=${POSTGRES_DB:-bearcat};Username=${POSTGRES_USER:-bearcat};Password=${POSTGRES_PASSWORD:-bearcat123}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:18-alpine
+    container_name: bearcat-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-bearcat}
+      - POSTGRES_USER=${POSTGRES_USER:-bearcat}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-bearcat123}
+    volumes:
+      - ${POSTGRES_DATA_DIR:-./postgres-data}:/var/lib/postgresql
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - bearcat-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bearcat} -d ${POSTGRES_DB:-bearcat}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    mem_reservation: 200m
+    mem_limit: ${POSTGRES_MEMORY_LIMIT:-512m}
+    cpus: ${POSTGRES_CPU_LIMIT:-0.5}
+    memswap_limit: 0m

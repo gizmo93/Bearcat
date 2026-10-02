@@ -3,7 +3,6 @@ using System.Text;
 using Bearcat.Abstractions.Archiver;
 using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.IntegrationTest.Shared;
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.Extraction;
