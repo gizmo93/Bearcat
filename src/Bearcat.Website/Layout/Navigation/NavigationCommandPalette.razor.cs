@@ -1,6 +1,7 @@
 using BlazorBlueprint.Primitives.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http;
+using Microsoft.JSInterop;
 
 namespace Bearcat.Website.Layout.Navigation;
 
@@ -42,10 +43,18 @@ public sealed partial class NavigationCommandPalette(
             return;
         }
 
-        shortcutRegistration = await keyboardShortcutService.RegisterAsync(
-            OpenPaletteShortcut,
-            OpenPaletteFromShortcutAsync
-        );
+        try
+        {
+            shortcutRegistration = await keyboardShortcutService.RegisterAsync(
+                OpenPaletteShortcut,
+                OpenPaletteFromShortcutAsync
+            );
+        }
+        catch (Exception exception)
+            when (exception is ObjectDisposedException or JSDisconnectedException)
+        {
+            return;
+        }
     }
 
     private Task PersistIsMacPlatform()
