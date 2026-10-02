@@ -8,20 +8,16 @@ Bearcat Desktop starts Bearcat and opens it in your browser. Use the tray menu t
 On Windows, use the Desktop app for on-demand use or the [Windows service](/Bearcat/use-the-windows-service/) to keep Bearcat running continuously. Both run the same application.
 On Apple Silicon Macs, I recommend the Desktop app because it runs natively on ARM.
 
-Install PostgreSQL separately before you start.
-
 | macOS | Windows |
 | --- | --- |
 | ![Bearcat Desktop on macOS](images/desktop-mac.png) | ![Bearcat Desktop on Windows](images/desktop-windows.png) |
 
 ## Requirements
 
-- PostgreSQL 18 running locally or on a reachable machine
 - RAR command line executable (on Windows this comes with WinRAR)
 - 7z command line executable
 - A release data directory on your local machine
-
-For PostgreSQL setup instructions, see [Set Up PostgreSQL for Bearcat](/Bearcat/install-postgresql-for-desktop/).
+- PostgreSQL 18, only if you choose the PostgreSQL database. See [Set Up PostgreSQL for Bearcat](/Bearcat/install-postgresql-for-desktop/).
 
 ## Downloading the newest release
 You can get the latest release of the Desktop app from the [GitHub releases page](https://github.com/gizmo93/Bearcat/releases).
@@ -77,9 +73,23 @@ Leave this empty to let the launcher find `Bearcat.Host` automatically. If detec
 
 For development builds, the launcher can also find the host in the local repository.
 
-### PostgreSQL settings
+### Database type
 
-The Desktop app uses your own PostgreSQL server. Enter:
+| Option | Settings |
+| --- | --- |
+| SQLite (recommended) | **Database file**: absolute path to the database file on a local drive. Created on first start. |
+| PostgreSQL | Your own PostgreSQL server: host, port, database name, username, password. |
+
+New installations start with SQLite. Settings saved by an older version keep PostgreSQL.
+
+Default SQLite database file:
+
+```text
+Windows: %APPDATA%\Bearcat\bearcat.db
+macOS: ~/Library/Application Support/Bearcat/bearcat.db
+```
+
+PostgreSQL values:
 
 - Host: PostgreSQL server hostname, usually `localhost` for a local database.
 - Port: PostgreSQL port, usually `5432`.
@@ -87,7 +97,9 @@ The Desktop app uses your own PostgreSQL server. Enter:
 - Username: PostgreSQL user.
 - Password: PostgreSQL password.
 
-Bearcat updates the database schema on startup. It can also create the database if the PostgreSQL user has permission.
+Bearcat updates the database schema on startup. With PostgreSQL, it can also create the database if the PostgreSQL user has permission.
+
+Bearcat cannot move data between SQLite and PostgreSQL. Switching the database type starts with an empty database.
 
 ### Web port
 
@@ -126,7 +138,11 @@ Windows: %APPDATA%\Bearcat\bearcat.key
 macOS: ~/Library/Application Support/Bearcat/bearcat.key
 ```
 
-Back up this file together with your PostgreSQL database.
+Back up this file together with your database:
+
+- SQLite: the database file, by default `bearcat.db` in the same folder. Stop Bearcat before copying, or copy `bearcat.db-wal` and `bearcat.db-shm` together with `bearcat.db`.
+- PostgreSQL: your PostgreSQL database.
+
 If you move the Desktop setup to another computer, copy both the database and `bearcat.key`.
 Without `bearcat.key`, Bearcat cannot decrypt stored account configurations.
 

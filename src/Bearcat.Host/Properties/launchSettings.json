@@ -10,6 +10,16 @@
           "ASPNETCORE_ENVIRONMENT": "Development"
         }
       },
+      "http (SQLite)": {
+        "commandName": "Project",
+        "dotnetRunMessages": true,
+        "launchBrowser": true,
+        "applicationUrl": "http://localhost:5097",
+        "environmentVariables": {
+          "ASPNETCORE_ENVIRONMENT": "Development",
+          "Database__Provider": "Sqlite"
+        }
+      },
       "https": {
         "commandName": "Project",
         "dotnetRunMessages": true,

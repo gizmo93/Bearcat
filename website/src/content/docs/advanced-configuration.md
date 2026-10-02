@@ -191,3 +191,35 @@ Each hoster registration can set its own limit as well. See
 
 Very low limits can make uploads fail on hosters that abort long requests, for example hosters
 behind Cloudflare, which stop requests after about 100 seconds.
+
+## Database
+
+Bearcat stores its data in SQLite or PostgreSQL. These settings are not part of the "Configurations" page. They are read on startup from environment variables or a settings file:
+
+| Installation | Where to set them |
+| --- | --- |
+| Docker | `docker-compose.yml`, or `docker-compose.postgres.yml` for PostgreSQL. See [Run Bearcat in Docker](/Bearcat/use-the-docker-image/#database). |
+| Desktop app | **Database type** in the [Desktop app](/Bearcat/use-the-desktop-launcher/#database-type) settings. |
+| Windows service | `Database` section in `%ProgramData%\Bearcat\config.json`, written by `Bearcat.Cli.exe setup`. |
+
+| Setting | Environment variable | Value |
+| --- | --- | --- |
+| `Database:Provider` | `Database__Provider` | `Sqlite` or `Postgres`, case-insensitive. Not set: `Postgres`. |
+| `Database:SqliteFilePath` | `Database__SqliteFilePath` | Path to the SQLite database file. Not set: `bearcat.db` in the data directory. |
+| `Database:ConnectionString` | `Database__ConnectionString` | PostgreSQL connection string, for example `Host=localhost;Database=bearcat;Username=bearcat;Password=...`. Only used with `Postgres`. |
+
+The data directory is the first of:
+
+1. Environment variable `BEARCAT_DATA_DIR`
+2. Setting `Bearcat:DataDirectory` (environment variable `Bearcat__DataDirectory`)
+3. `/data` inside a container
+4. The user's application data folder plus `Bearcat`: `%APPDATA%\Bearcat` on Windows, `~/Library/Application Support/Bearcat` on macOS
+
+The Windows service uses `%ProgramData%\Bearcat` as its data directory.
+
+SQLite notes:
+
+- Bearcat runs SQLite in WAL mode. Keep the database file on local storage, not on a network share (NFS/SMB).
+- Back up `bearcat.key` from the data directory together with the database file. Stop Bearcat first, or copy the `-wal` and `-shm` files next to the database file as well (`bearcat.db-wal`, `bearcat.db-shm`).
+
+Bearcat cannot move data between SQLite and PostgreSQL. Changing `Database:Provider` starts with an empty database.

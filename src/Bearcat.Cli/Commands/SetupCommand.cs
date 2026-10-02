@@ -37,7 +37,7 @@ public sealed class SetupCommand : AsyncCommand
         var databaseProvider = await AnsiConsole.PromptAsync(
             new SelectionPrompt<DatabaseProvider>()
                 .Title("Database:")
-                .AddChoices(DatabaseProvider.Sqlite, DatabaseProvider.Postgres)
+                .AddChoices(GetDatabaseProviderChoicesWithPreselectedFirst())
                 .UseConverter(provider =>
                     provider == DatabaseProvider.Sqlite
                         ? $"{GetDisplayName(provider)} (recommended)"
@@ -158,6 +158,19 @@ public sealed class SetupCommand : AsyncCommand
         }
 
         return result;
+    }
+
+    private static List<DatabaseProvider> GetDatabaseProviderChoicesWithPreselectedFirst()
+    {
+        var preselectedProvider = File.Exists(BearcatPaths.WindowsServiceConfigPath)
+            ? ServiceConfigFile
+                .Load(BearcatPaths.WindowsServiceConfigPath)
+                .Database.EffectiveProvider
+            : DatabaseProvider.Sqlite;
+
+        return preselectedProvider == DatabaseProvider.Sqlite
+            ? [DatabaseProvider.Sqlite, DatabaseProvider.Postgres]
+            : [DatabaseProvider.Postgres, DatabaseProvider.Sqlite];
     }
 
     private static string GetDisplayName(DatabaseProvider databaseProvider) =>
