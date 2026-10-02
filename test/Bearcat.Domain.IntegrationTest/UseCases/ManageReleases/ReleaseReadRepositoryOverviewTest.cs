@@ -33,7 +33,7 @@ public class ReleaseReadRepositoryOverviewTest(DatabaseProvider databaseProvider
             ]);
 
         repository = new ReleaseReadRepository(
-            CreateDbContext(),
+            ReadDbContext,
             archiverFactory.Object,
             Mock.Of<ILinkCrypterFactory>()
         );

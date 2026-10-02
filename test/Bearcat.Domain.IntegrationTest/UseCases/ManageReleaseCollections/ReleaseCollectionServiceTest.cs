@@ -243,7 +243,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             new EditCollectionMetadataData(
                 Title: " Hostage (2025) ",
                 CoverUrl: "https://artworks.example/new.jpg",
-                Description: "Geiselnahme",
+                Description: "Hostage drama",
                 MetadataDatabaseUrl: null
             )
         );
@@ -255,7 +255,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
         metadata.MetadataDatabaseClassName.ShouldBe("TvdbMetadataDatabase");
         metadata.Title.ShouldBe("Hostage (2025)");
         metadata.CoverUrl.ShouldBe("https://artworks.example/new.jpg");
-        metadata.Description.ShouldBe("Geiselnahme");
+        metadata.Description.ShouldBe("Hostage drama");
         metadata.MetadataDatabaseUrl.ShouldBeNull();
 
         var remainingUpload = await DbContext.ImageUploads.SingleAsync();

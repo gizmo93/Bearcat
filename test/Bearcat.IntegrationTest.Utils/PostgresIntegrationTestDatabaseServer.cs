@@ -84,6 +84,7 @@ public sealed class PostgresIntegrationTestDatabaseServer : IAsyncDisposable
         );
         await MigrateAsync(templateConnectionString);
         var respawner = await CreateRespawnerAsync(templateConnectionString);
+        await DeleteAllRowsAsync(respawner, templateConnectionString);
         NpgsqlConnection.ClearAllPools();
 
         return new PostgresIntegrationTestDatabaseServer(postgreSqlContainer, respawner);
@@ -144,7 +145,7 @@ public sealed class PostgresIntegrationTestDatabaseServer : IAsyncDisposable
                 postgreSqlContainer,
                 unusedDatabaseName
             );
-            await DeleteAllRowsAsync(unusedConnectionString);
+            await DeleteAllRowsAsync(respawner, unusedConnectionString);
 
             return new PostgresIntegrationTestDatabase(
                 this,
@@ -162,7 +163,7 @@ public sealed class PostgresIntegrationTestDatabaseServer : IAsyncDisposable
         );
     }
 
-    private async Task DeleteAllRowsAsync(string connectionString)
+    private static async Task DeleteAllRowsAsync(Respawner respawner, string connectionString)
     {
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync();

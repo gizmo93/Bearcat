@@ -23,7 +23,7 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
     public void Setup()
     {
         var releaseReadRepository = new ReleaseReadRepository(
-            DbContext,
+            ReadDbContext,
             Mock.Of<IArchiverFactory>(factory =>
                 factory.GetArchivers()
                 == new List<ArchiverDto> { new("RAR", "RarArchiver", ".rar") }

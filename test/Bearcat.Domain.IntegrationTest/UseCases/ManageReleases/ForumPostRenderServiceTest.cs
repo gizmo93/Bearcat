@@ -24,7 +24,7 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
     {
         var forumPostTemplateRepository = new ForumPostTemplateRepository(DbContext, DbContext);
         var releaseReadRepository = new ReleaseReadRepository(
-            DbContext,
+            ReadDbContext,
             Mock.Of<IArchiverFactory>(factory => factory.GetArchivers() == new List<ArchiverDto>()),
             Mock.Of<ILinkCrypterFactory>()
         );

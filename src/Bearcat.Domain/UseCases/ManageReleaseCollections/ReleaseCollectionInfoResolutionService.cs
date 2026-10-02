@@ -169,6 +169,7 @@ public partial class ReleaseCollectionInfoResolutionService(
         catch (UniqueConstraintException exception) when (IsDuplicateMetadataException(exception))
         {
             repository.DetachPendingMetadata(collection);
+            await repository.SaveChangesAsync(cancellationToken);
             logger.LogInformation(
                 exception,
                 "Metadata for collection {CollectionName} was already resolved by another worker",

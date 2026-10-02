@@ -620,6 +620,18 @@ namespace Bearcat.Infrastructure.Migrations.Sqlite
                 }
             );
 
+            migrationBuilder.InsertData(
+                table: "ReleaseGroups",
+                columns: new[]
+                {
+                    "Id",
+                    "Name",
+                    "EnableAutomaticReuploads",
+                    "NumberOfHoursUntilReupload",
+                },
+                values: new object[] { 1, "Default", true, 0 }
+            );
+
             migrationBuilder.CreateTable(
                 name: "ReleaseCollections",
                 columns: table => new

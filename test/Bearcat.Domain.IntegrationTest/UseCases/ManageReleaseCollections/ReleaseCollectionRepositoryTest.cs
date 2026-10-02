@@ -298,7 +298,7 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
         {
             MetadataDatabaseClassName = TvdbMetadataDatabaseClassName,
             Title = "Hostage",
-            Description = "Geiselnahme",
+            Description = "Hostage drama",
             CoverUrl = "https://artworks.example/hostage.jpg",
             MetadataDatabaseUrl = "https://www.thetvdb.com/series/hostage",
         };
@@ -316,7 +316,7 @@ public class ReleaseCollectionRepositoryTest(DatabaseProvider databaseProvider)
             new ReleaseCollectionMetadataReadModel(
                 MetadataDatabaseName: "TheTVDB",
                 Title: "Hostage",
-                Description: "Geiselnahme",
+                Description: "Hostage drama",
                 CoverUrl: "https://artworks.example/hostage.jpg",
                 MetadataDatabaseUrl: "https://www.thetvdb.com/series/hostage"
             )

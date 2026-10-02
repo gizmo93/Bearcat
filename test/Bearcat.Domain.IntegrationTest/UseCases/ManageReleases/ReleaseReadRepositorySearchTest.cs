@@ -24,7 +24,7 @@ public class ReleaseReadRepositorySearchTest(DatabaseProvider databaseProvider)
     {
         testData = new ReleaseReadRepositoryTestData(DbContext);
         repository = new ReleaseReadRepository(
-            CreateDbContext(),
+            ReadDbContext,
             Mock.Of<IArchiverFactory>(),
             Mock.Of<ILinkCrypterFactory>()
         );

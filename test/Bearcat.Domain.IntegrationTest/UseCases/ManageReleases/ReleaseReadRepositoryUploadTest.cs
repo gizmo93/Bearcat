@@ -38,7 +38,7 @@ public class ReleaseReadRepositoryUploadTest(DatabaseProvider databaseProvider)
             ]);
 
         repository = new ReleaseReadRepository(
-            CreateDbContext(),
+            ReadDbContext,
             archiverFactory.Object,
             linkCrypterFactory.Object
         );

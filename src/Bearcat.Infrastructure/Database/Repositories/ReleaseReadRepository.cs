@@ -700,10 +700,12 @@ public class ReleaseReadRepository(
                             .FirstOrDefault()
                     )
                     .SelectMany(upload =>
-                        upload
-                            .ImageUrls.OrderBy(url => url.ImageSize)
-                            .ThenBy(url => url.Id)
-                            .Select(url => new { url.ImageSize, url.Url })
+                        upload.ImageUrls.Select(url => new
+                        {
+                            url.Id,
+                            url.ImageSize,
+                            url.Url,
+                        })
                     )
                     .ToList(),
             })
@@ -713,7 +715,9 @@ public class ReleaseReadRepository(
             .Select(config => new ForumPostImageLinkReadModel(
                 config.Name,
                 config
-                    .Urls.Select(url => new ForumPostImageLinkUrlReadModel(url.ImageSize, url.Url))
+                    .Urls.OrderBy(url => url.ImageSize)
+                    .ThenBy(url => url.Id)
+                    .Select(url => new ForumPostImageLinkUrlReadModel(url.ImageSize, url.Url))
                     .ToList()
             ))
             .ToList();
@@ -724,10 +728,11 @@ public class ReleaseReadRepository(
         CancellationToken cancellationToken = default
     )
     {
-        return await dbRead
+        var releaseInfo = await dbRead
             .Releases.AsSplitQuery()
             .Where(release => release.Id == releaseId && release.ReleaseInfo != null)
-            .Select(release => new ReleaseInfoReadModel(
+            .Select(release => new
+            {
                 release.ReleaseInfo!.NfoDatabaseClassName,
                 release.ReleaseInfo.ReleaseName,
                 release.ReleaseInfo.ReleaseDatabaseUrl,
@@ -735,22 +740,43 @@ public class ReleaseReadRepository(
                 release.ReleaseInfo.SizeUnit,
                 release.ReleaseInfo.VideoType,
                 release.ReleaseInfo.AudioType,
-                release
+                ExternalInfos = release
                     .ReleaseInfo.ExternalInfos.OrderBy(externalInfo => externalInfo.Id)
-                    .Select(externalInfo => new ReleaseExternalInfoReadModel(
+                    .Select(externalInfo => new
+                    {
                         externalInfo.Id,
                         externalInfo.Type,
                         externalInfo.Title,
-                        externalInfo
-                            .Urls.Select(url => new ReleaseExternalInfoUrlReadModel(
-                                url.Type,
-                                url.Url
-                            ))
-                            .ToList()
-                    ))
-                    .ToList()
-            ))
+                        externalInfo.Urls,
+                    })
+                    .ToList(),
+            })
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+
+        if (releaseInfo is null)
+        {
+            return null;
+        }
+
+        return new ReleaseInfoReadModel(
+            releaseInfo.NfoDatabaseClassName,
+            releaseInfo.ReleaseName,
+            releaseInfo.ReleaseDatabaseUrl,
+            releaseInfo.SizeNumber,
+            releaseInfo.SizeUnit,
+            releaseInfo.VideoType,
+            releaseInfo.AudioType,
+            releaseInfo
+                .ExternalInfos.Select(externalInfo => new ReleaseExternalInfoReadModel(
+                    externalInfo.Id,
+                    externalInfo.Type,
+                    externalInfo.Title,
+                    externalInfo
+                        .Urls.Select(url => new ReleaseExternalInfoUrlReadModel(url.Type, url.Url))
+                        .ToList()
+                ))
+                .ToList()
+        );
     }
 
     public async Task<ReleaseMetadataReadModel?> GetReleaseMetadataAsync(

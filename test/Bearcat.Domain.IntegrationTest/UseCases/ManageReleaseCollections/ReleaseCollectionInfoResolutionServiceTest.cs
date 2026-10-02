@@ -554,17 +554,17 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
     }
 
     [Test]
-    public async Task ProcessMissingCollectionMetadataAsync_OtherWorkerStoredMetadataFirst_KeepsExistingMetadataAndResolvesNextCollection()
+    public async Task ProcessMissingCollectionMetadataAsync_OtherWorkerStoredMetadataFirst_KeepsExistingMetadataAndPersistsCheckedTimestamps()
     {
         // Arrange
         await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: true);
+        var resolvedCollection = await AddCollectionAsync(
+            "Hostage.2025.S01.German.DL.1080p",
+            CreateRelease("Hostage.2025.S01E01.German.DL.1080p-GRP")
+        );
         var conflictingCollection = await AddCollectionAsync(
             "Bodies.2023.S01.German.DL.1080p",
             CreateRelease("Bodies.2023.S01E01.German.DL.1080p-GRP")
-        );
-        var nextCollection = await AddCollectionAsync(
-            "Hostage.2025.S01.German.DL.1080p",
-            CreateRelease("Hostage.2025.S01E01.German.DL.1080p-GRP")
         );
         DbContext.ChangeTracker.Clear();
 
@@ -593,7 +593,7 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
             .ReturnsAsync(
                 new MediaMetadata(
                     Title: "Hostage",
-                    Description: "Geiselnahme",
+                    Description: "Hostage drama",
                     Genre: null,
                     CoverUrl: "https://artworks.thetvdb.com/banners/hostage.jpg",
                     DatabaseUrl: "https://www.thetvdb.com/series/hostage"
@@ -614,10 +614,15 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
         conflictingMetadata.MetadataDatabaseClassName.ShouldBe("OtherWorkerDatabase");
         conflictingMetadata.Title.ShouldBe("Bodies (other worker)");
 
-        var nextMetadata = metadata.Single(item => item.ReleaseCollectionId == nextCollection.Id);
-        nextMetadata.MetadataDatabaseClassName.ShouldBe(MetadataDatabaseClassName);
-        nextMetadata.Title.ShouldBe("Hostage");
-        nextMetadata.CoverUrl.ShouldBe("https://artworks.thetvdb.com/banners/hostage.jpg");
+        var resolvedMetadata = metadata.Single(item =>
+            item.ReleaseCollectionId == resolvedCollection.Id
+        );
+        resolvedMetadata.MetadataDatabaseClassName.ShouldBe(MetadataDatabaseClassName);
+        resolvedMetadata.Title.ShouldBe("Hostage");
+        resolvedMetadata.CoverUrl.ShouldBe("https://artworks.thetvdb.com/banners/hostage.jpg");
+
+        var collections = await DbContext.ReleaseCollections.ToListAsync();
+        collections.ShouldAllBe(collection => collection.MetadataCheckedAt != null);
     }
 
     private async Task AddMetadataFromOtherWorkerAsync(int releaseCollectionId)

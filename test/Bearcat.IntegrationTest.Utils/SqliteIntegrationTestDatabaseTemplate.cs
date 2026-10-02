@@ -68,13 +68,49 @@ public sealed class SqliteIntegrationTestDatabaseTemplate
         await using (var connection = new SqliteConnection(connectionString))
         {
             await connection.OpenAsync();
-
-            await using var command = connection.CreateCommand();
-            command.CommandText = "PRAGMA wal_checkpoint(TRUNCATE);";
-            await command.ExecuteNonQueryAsync();
+            await DeleteAllRowsAsync(connection);
+            await ExecuteNonQueryAsync(connection, "PRAGMA wal_checkpoint(TRUNCATE);");
         }
 
         SqliteIntegrationTestDatabase.ClearConnectionPool(connectionString);
+    }
+
+    private static async Task DeleteAllRowsAsync(SqliteConnection connection)
+    {
+        var tableNames = await GetTableNamesAsync(connection);
+
+        await ExecuteNonQueryAsync(connection, "PRAGMA foreign_keys = OFF;");
+        foreach (var tableName in tableNames)
+        {
+            await ExecuteNonQueryAsync(connection, $"DELETE FROM \"{tableName}\";");
+        }
+    }
+
+    private static async Task<List<string>> GetTableNamesAsync(SqliteConnection connection)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT name FROM sqlite_master
+            WHERE type = 'table'
+              AND name NOT LIKE 'sqlite_%'
+              AND name <> '__EFMigrationsHistory';
+            """;
+
+        var tableNames = new List<string>();
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            tableNames.Add(reader.GetString(0));
+        }
+
+        return tableNames;
+    }
+
+    private static async Task ExecuteNonQueryAsync(SqliteConnection connection, string commandText)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = commandText;
+        await command.ExecuteNonQueryAsync();
     }
 
     private SqliteIntegrationTestDatabase CopyTemplateToNewDatabase()

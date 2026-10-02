@@ -156,6 +156,7 @@ public sealed class FakeRemoteServer
         }
 
         var partialFilePath = localFilePath + ".part";
+        Directory.CreateDirectory(Path.GetDirectoryName(localFilePath)!);
 
         try
         {
@@ -174,7 +175,6 @@ public sealed class FakeRemoteServer
 
             ThrowIfFailureIsConfigured(file.RelativePath);
 
-            Directory.CreateDirectory(Path.GetDirectoryName(localFilePath)!);
             await File.WriteAllBytesAsync(
                 partialFilePath,
                 new byte[file.SizeBytes],
