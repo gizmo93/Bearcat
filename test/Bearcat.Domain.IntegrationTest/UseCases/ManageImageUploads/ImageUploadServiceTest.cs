@@ -18,19 +18,17 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageImageUploads;
 
-public class ImageUploadServiceTest : BearcatIntegrationTest
+public class ImageUploadServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string ImageHosterClassName = "ImgBb";
 
-    private BearcatDbContext dbContext = null!;
     private Mock<IImageHoster> imageHosterMock = null!;
     private ImageUploadService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
-
         imageHosterMock = new Mock<IImageHoster>();
         imageHosterMock
             .Setup(hoster => hoster.DeserializeConfig(It.IsAny<string>()))
@@ -47,17 +45,11 @@ public class ImageUploadServiceTest : BearcatIntegrationTest
             );
 
         service = new ImageUploadService(
-            new ImageUploadRepository(dbContext, NoOpSecretProtector.Instance),
+            new ImageUploadRepository(DbContext, NoOpSecretProtector.Instance),
             imageHosterFactoryMock.Object,
             CreateTimeProvider(),
             NullLogger<ImageUploadService>.Instance
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -73,7 +65,7 @@ public class ImageUploadServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        var imageUpload = await dbContext
+        var imageUpload = await DbContext
             .ImageUploads.Include(upload => upload.ImageUrls)
             .SingleAsync(upload => upload.ImageUploadConfig.ReleaseCollectionId == collection.Id);
 
@@ -125,12 +117,12 @@ public class ImageUploadServiceTest : BearcatIntegrationTest
             Host = "proxy.example.com",
             Port = 8080,
         };
-        dbContext.ProxyServers.Add(proxyServer);
-        await dbContext.SaveChangesAsync();
-        var registration = await dbContext.ImageHosterRegistrations.SingleAsync();
+        DbContext.ProxyServers.Add(proxyServer);
+        await DbContext.SaveChangesAsync();
+        var registration = await DbContext.ImageHosterRegistrations.SingleAsync();
         registration.ProxySelection = ProxySelection.SpecificProxyServer;
         registration.ProxyServerId = proxyServer.Id;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
@@ -156,7 +148,7 @@ public class ImageUploadServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        var hasUpload = await dbContext.ImageUploads.AnyAsync(upload =>
+        var hasUpload = await DbContext.ImageUploads.AnyAsync(upload =>
             upload.ImageUploadConfig.ReleaseCollectionId == collection.Id
         );
         hasUpload.ShouldBeFalse();
@@ -174,7 +166,7 @@ public class ImageUploadServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        var imageUpload = await dbContext.ImageUploads.SingleAsync(upload =>
+        var imageUpload = await DbContext.ImageUploads.SingleAsync(upload =>
             upload.ImageUploadConfig.ReleaseId == release.Id
         );
         imageUpload.UploadState.ShouldBe(UploadState.Completed);
@@ -190,7 +182,7 @@ public class ImageUploadServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        var persisted = await dbContext.ImageUploads.SingleAsync(upload =>
+        var persisted = await DbContext.ImageUploads.SingleAsync(upload =>
             upload.Id == imageUpload.Id
         );
         persisted.UploadState.ShouldBe(UploadState.Failed);
@@ -235,7 +227,7 @@ public class ImageUploadServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        var imageUpload = await dbContext.ImageUploads.SingleAsync(upload =>
+        var imageUpload = await DbContext.ImageUploads.SingleAsync(upload =>
             upload.ImageUploadConfig.ReleaseCollectionId == collection.Id
         );
         imageUpload.UploadState.ShouldBe(UploadState.Failed);
@@ -265,7 +257,7 @@ public class ImageUploadServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        var imageUpload = await dbContext.ImageUploads.SingleAsync(upload =>
+        var imageUpload = await DbContext.ImageUploads.SingleAsync(upload =>
             upload.ImageUploadConfig.ReleaseCollectionId == collection.Id
         );
         imageUpload.UploadState.ShouldBe(UploadState.Failed);
@@ -308,8 +300,8 @@ public class ImageUploadServiceTest : BearcatIntegrationTest
             ImageUploads = [imageUpload],
         };
 
-        dbContext.AddRange(releaseGroup, release, imageHosterRegistration, imageUploadConfig);
-        await dbContext.SaveChangesAsync();
+        DbContext.AddRange(releaseGroup, release, imageHosterRegistration, imageUploadConfig);
+        await DbContext.SaveChangesAsync();
 
         return imageUpload;
     }
@@ -368,8 +360,8 @@ public class ImageUploadServiceTest : BearcatIntegrationTest
             ImageUploads = [],
         };
 
-        dbContext.AddRange(releaseGroup, collection, imageHosterRegistration, imageUploadConfig);
-        await dbContext.SaveChangesAsync();
+        DbContext.AddRange(releaseGroup, collection, imageHosterRegistration, imageUploadConfig);
+        await DbContext.SaveChangesAsync();
 
         return collection;
     }
@@ -414,8 +406,8 @@ public class ImageUploadServiceTest : BearcatIntegrationTest
             ImageUploads = [],
         };
 
-        dbContext.AddRange(releaseGroup, release, imageHosterRegistration, imageUploadConfig);
-        await dbContext.SaveChangesAsync();
+        DbContext.AddRange(releaseGroup, release, imageHosterRegistration, imageUploadConfig);
+        await DbContext.SaveChangesAsync();
 
         return release;
     }

@@ -2,7 +2,6 @@ using Bearcat.Abstractions.Media;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.IntegrationTest.Shared;
 using Bearcat.Domain.IntegrationTest.Shared.UnmanagedReleases;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.UnmanagedReleases;
@@ -25,7 +24,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.RemoteSources.ReleaseCreation;
 
-public class RemoteDownloadReleaseCreationServiceTest : BearcatIntegrationTest
+public class RemoteDownloadReleaseCreationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string FirstEpisodeName =
         "Bodies.2023.S01E01.German.DL.EAC3.1080p.DV.HDR.NF.WEB.H265-ZeroTwo";

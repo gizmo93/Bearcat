@@ -9,26 +9,19 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageRemoteSourceAutomations;
 
-public class RemoteSourceAutomationServiceTest : BearcatIntegrationTest
+public class RemoteSourceAutomationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string TargetPath = "/data/downloads";
 
-    private BearcatDbContext dbContext = null!;
     private RemoteSourceAutomationRepository repository = null!;
     private RemoteSourceAutomationService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
-        repository = new RemoteSourceAutomationRepository(dbContext, dbContext);
+        repository = new RemoteSourceAutomationRepository(DbContext, DbContext);
         service = new RemoteSourceAutomationService(repository);
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -377,6 +370,62 @@ public class RemoteSourceAutomationServiceTest : BearcatIntegrationTest
         catchAll.DownloadCountsByState.ShouldBeEmpty();
     }
 
+    [Test]
+    public async Task DiscardPendingChanges_PendingAddModifyAndDelete_PersistsOnlyChangesMadeAfterwards()
+    {
+        // Arrange
+        var automationId = await CreateAutomationAsync();
+        var storedAutomation = await ReloadAsync(automationId);
+        var changedDownload = await AddDownloadAsync(
+            storedAutomation,
+            "First.Release",
+            RemoteSourceDownloadState.Observing
+        );
+        var removedDownload = await AddDownloadAsync(
+            storedAutomation,
+            "Second.Release",
+            RemoteSourceDownloadState.Observing
+        );
+        DbContext.ChangeTracker.Clear();
+        var automation = await repository.GetByIdAsync(automationId);
+        var downloads = await repository.GetObservingDownloadsAsync(automationId);
+        automation.Name = "Discarded name";
+        downloads.Single(d => d.Id == changedDownload.Id).State = RemoteSourceDownloadState.Pending;
+        repository.Remove(downloads.Single(d => d.Id == removedDownload.Id));
+        repository.Add(
+            new RemoteSourceDownload
+            {
+                RemoteSourceAutomationId = automationId,
+                RemoteSourceRegistrationId = automation.RemoteSourceRegistrationId,
+                SourceName = "Main FTP",
+                RemoteFolderPath = "/incoming/Third.Release",
+                FolderName = "Third.Release",
+                LocalFolderPath = Path.Combine(TargetPath, "Third.Release"),
+                State = RemoteSourceDownloadState.Observing,
+                LastChangedAt = new DateTime(2026, 9, 23, 12, 0, 0, DateTimeKind.Unspecified),
+                DiscoveredAt = new DateTime(2026, 9, 23, 12, 0, 0, DateTimeKind.Unspecified),
+            }
+        );
+
+        // Act
+        repository.DiscardPendingChanges();
+        automation.Priority = 5;
+        await repository.SaveChangesAsync();
+
+        // Assert
+        var reloadedAutomation = await ReloadAsync(automationId);
+        reloadedAutomation.Name.ShouldBe("Scene TV");
+        reloadedAutomation.Priority.ShouldBe(5);
+        var storedDownloads = await CreateDbContext()
+            .RemoteSourceDownloads.OrderBy(download => download.Id)
+            .Select(download => new { download.Id, download.State })
+            .ToListAsync();
+        storedDownloads.ShouldBe([
+            new { changedDownload.Id, State = RemoteSourceDownloadState.Observing },
+            new { removedDownload.Id, State = RemoteSourceDownloadState.Observing },
+        ]);
+    }
+
     private async Task<int> CreateAutomationAsync()
     {
         var registration = await AddRegistrationAsync("Main FTP");
@@ -412,7 +461,7 @@ public class RemoteSourceAutomationServiceTest : BearcatIntegrationTest
         var automation = await context.RemoteSourceAutomations.SingleAsync(a => a.Id == id);
         automation.HasCompletedInitialScan = true;
         await context.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
     }
 
     private async Task<RemoteSourceRegistration> AddRegistrationAsync(string name)

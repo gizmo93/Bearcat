@@ -18,14 +18,14 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageHosters;
 
-public class HosterRegistrationServiceTest : BearcatIntegrationTest
+public class HosterRegistrationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string HosterClassName = "TestHoster";
     private const string CaptchaHosterClassName = "CaptchaHoster";
     private const string DownloadHosterClassName = "DownloadHoster";
     private const string SerializedConfig = "{\"apiKey\":\"secret\"}";
 
-    private BearcatDbContext dbContext = null!;
     private Mock<IHoster> hosterMock = null!;
     private Mock<IHosterWithCaptchaVerification> captchaHosterMock = null!;
     private Mock<IHosterConfig> hosterConfigMock = null!;
@@ -36,7 +36,6 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         hosterConfigMock = new Mock<IHosterConfig>(MockBehavior.Strict);
         hosterMock = new Mock<IHoster>(MockBehavior.Strict);
         hosterMock.Setup(h => h.HasFixedParallelUploadLimit).Returns(false);
@@ -47,8 +46,8 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         hosterFactoryMock.Setup(f => f.GetByName(HosterClassName)).Returns(hosterMock.Object);
 
         var repository = new HosterConfigurationRepository(
-            dbContext,
-            dbContext,
+            DbContext,
+            DbContext,
             hosterFactoryMock.Object
         );
         service = new HosterRegistrationService(
@@ -58,10 +57,10 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
             new HosterCaptchaVerificationService(notificationServiceMock.Object),
             NoOpSecretProtector.Instance,
             UnreadableSecretsNotificationServiceFactory.Create(
-                dbContext,
+                DbContext,
                 CreateNotificationConfigurationProvider()
             ),
-            new ProxySelectionValidator(new ProxyServerRepository(dbContext, dbContext))
+            new ProxySelectionValidator(new ProxyServerRepository(DbContext, DbContext))
         );
     }
 
@@ -90,7 +89,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         var result = await service.TryLoginAsync(registration.Id, CancellationToken.None);
 
         // Assert
-        var updatedRegistration = await dbContext.HosterRegistrations.SingleAsync();
+        var updatedRegistration = await DbContext.HosterRegistrations.SingleAsync();
         result.IsSuccess.ShouldBeFalse();
         result.ErrorMessage.ShouldBe("Captcha required");
         updatedRegistration.IsActive.ShouldBeFalse();
@@ -104,12 +103,6 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
                 ),
             Times.Once
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -129,7 +122,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var registration = await dbContext.HosterRegistrations.SingleAsync();
+        var registration = await DbContext.HosterRegistrations.SingleAsync();
 
         result.ShouldBeGreaterThan(0);
         registration.ShouldNotBeNull();
@@ -152,7 +145,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         await service.ToggleIsActiveAsync(registration.Id, CancellationToken.None);
 
         // Assert
-        var result = await dbContext.HosterRegistrations.SingleAsync();
+        var result = await DbContext.HosterRegistrations.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(registration.Id);
@@ -188,7 +181,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var result = await dbContext.HosterRegistrations.SingleAsync();
+        var result = await DbContext.HosterRegistrations.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(registration.Id);
@@ -233,8 +226,8 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.HosterRegistrations.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.HosterRegistrations.SingleAsync();
 
         result.Name.ShouldBe("Updated hoster");
         result.SerializedConfig.ShouldBe("{\"apiKey\":\"updated\"}");
@@ -264,9 +257,9 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
         (
-            await dbContext.Notifications.SingleAsync(n => n.Id == notification.Id)
+            await DbContext.Notifications.SingleAsync(n => n.Id == notification.Id)
         ).ResolvedAt.ShouldNotBeNull();
     }
 
@@ -278,7 +271,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
             isActive: true,
             hasUnreadableSecrets: true
         );
-        dbContext.LinkCrypterRegistrations.Add(
+        DbContext.LinkCrypterRegistrations.Add(
             new LinkCrypterRegistration
             {
                 Name = "Crypter",
@@ -287,7 +280,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
                 HasUnreadableSecrets = true,
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
         var notification = await AddUnreadableSecretsNotificationAsync();
         hosterMock
             .Setup(h => h.SerializeHosterConfig(It.IsAny<Dictionary<string, string>>()))
@@ -302,9 +295,9 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
         (
-            await dbContext.Notifications.SingleAsync(n => n.Id == notification.Id)
+            await DbContext.Notifications.SingleAsync(n => n.Id == notification.Id)
         ).ResolvedAt.ShouldBeNull();
     }
 
@@ -345,7 +338,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         await service.RemoveAsync(registration.Id, CancellationToken.None);
 
         // Assert
-        var result = await dbContext.HosterRegistrations.AnyAsync();
+        var result = await DbContext.HosterRegistrations.AnyAsync();
 
         result.ShouldBeFalse();
     }
@@ -369,7 +362,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var registration = await dbContext.HosterRegistrations.SingleAsync();
+        var registration = await DbContext.HosterRegistrations.SingleAsync();
         registration.MaxParallelUploadsOverride.ShouldBeNull();
     }
 
@@ -391,7 +384,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var registration = await dbContext.HosterRegistrations.SingleAsync();
+        var registration = await DbContext.HosterRegistrations.SingleAsync();
         registration.MaxParallelUploadsOverride.ShouldBe(5);
     }
 
@@ -415,7 +408,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
-        var updated = await dbContext.HosterRegistrations.SingleAsync();
+        var updated = await DbContext.HosterRegistrations.SingleAsync();
         updated.RequiresCaptchaVerification.ShouldBeFalse();
     }
 
@@ -480,7 +473,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
-        var updated = await dbContext.HosterRegistrations.SingleAsync();
+        var updated = await DbContext.HosterRegistrations.SingleAsync();
         updated.RequiresCaptchaVerification.ShouldBeFalse();
         updated.IsActive.ShouldBeTrue();
     }
@@ -516,7 +509,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
 
         // Assert
         result.IsSuccess.ShouldBeFalse();
-        var updated = await dbContext.HosterRegistrations.SingleAsync();
+        var updated = await DbContext.HosterRegistrations.SingleAsync();
         updated.RequiresCaptchaVerification.ShouldBeTrue();
         updated.IsActive.ShouldBeFalse();
     }
@@ -557,7 +550,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var updated = await dbContext.HosterRegistrations.SingleAsync();
+        var updated = await DbContext.HosterRegistrations.SingleAsync();
         updated.RequiresCaptchaVerification.ShouldBeTrue();
         updated.IsActive.ShouldBeFalse();
         notificationServiceMock.Verify(
@@ -593,12 +586,12 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
             EnableAutomaticReuploads = false,
             NumberOfHoursUntilReupload = 24,
         };
-        dbContext.UploadConfigs.AddRange(
+        DbContext.UploadConfigs.AddRange(
             CreateUploadConfig(releaseGroup, "First.Release", registration, uploadCount: 2),
             CreateUploadConfig(releaseGroup, "Second.Release", registration, uploadCount: 1),
             CreateUploadConfig(releaseGroup, "Third.Release", otherRegistration, uploadCount: 1)
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await service.GetUploadCountAsync(registration.Id, CancellationToken.None);
@@ -640,7 +633,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var registration = await dbContext.HosterRegistrations.SingleAsync();
+        var registration = await DbContext.HosterRegistrations.SingleAsync();
         registration.UploadProxySelection.ShouldBe(ProxySelection.SpecificProxyServer);
         registration.UploadProxyServerId.ShouldBe(proxyServer.Id);
         registration.MirrorDownloadProxySelection.ShouldBe(ProxySelection.UseCategoryDefault);
@@ -675,7 +668,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var registration = await dbContext.HosterRegistrations.SingleAsync();
+        var registration = await DbContext.HosterRegistrations.SingleAsync();
         registration.UploadProxySelection.ShouldBe(ProxySelection.NoProxy);
         registration.UploadProxyServerId.ShouldBeNull();
         registration.MirrorDownloadProxySelection.ShouldBe(ProxySelection.SpecificProxyServer);
@@ -702,7 +695,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var registration = await dbContext.HosterRegistrations.SingleAsync();
+        var registration = await DbContext.HosterRegistrations.SingleAsync();
         registration.MirrorDownloadProxySelection.ShouldBe(ProxySelection.UseCategoryDefault);
         registration.MirrorDownloadProxyServerId.ShouldBeNull();
     }
@@ -733,7 +726,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var registration = await dbContext.HosterRegistrations.SingleAsync();
+        var registration = await DbContext.HosterRegistrations.SingleAsync();
         registration.UploadSpeedLimitMegabytesPerSecond.ShouldBe(2.5m);
         registration.MirrorDownloadSpeedLimitMegabytesPerSecond.ShouldBe(0.75m);
     }
@@ -757,7 +750,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var registration = await dbContext.HosterRegistrations.SingleAsync();
+        var registration = await DbContext.HosterRegistrations.SingleAsync();
         registration.UploadSpeedLimitMegabytesPerSecond.ShouldBe(1);
         registration.MirrorDownloadSpeedLimitMegabytesPerSecond.ShouldBeNull();
     }
@@ -783,7 +776,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
 
         // Assert
         await act.ShouldThrowAsync<InvalidProxySelectionException>();
-        (await dbContext.HosterRegistrations.CountAsync()).ShouldBe(0);
+        (await DbContext.HosterRegistrations.CountAsync()).ShouldBe(0);
     }
 
     [Test]
@@ -817,7 +810,7 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         var registration = await AddHosterRegistrationAsync(isActive: true);
         registration.UploadProxySelection = ProxySelection.SpecificProxyServer;
         registration.UploadProxyServerId = proxyServer.Id;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
         hosterMock
             .Setup(h => h.DeserializeHosterConfig(SerializedConfig))
             .Returns(hosterConfigMock.Object);
@@ -839,8 +832,8 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.HosterRegistrations.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.HosterRegistrations.SingleAsync();
         result.UploadProxySelection.ShouldBe(ProxySelection.NoProxy);
         result.UploadProxyServerId.ShouldBeNull();
     }
@@ -963,8 +956,8 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
             Port = 8080,
         };
 
-        dbContext.ProxyServers.Add(proxyServer);
-        await dbContext.SaveChangesAsync();
+        DbContext.ProxyServers.Add(proxyServer);
+        await DbContext.SaveChangesAsync();
 
         return proxyServer;
     }
@@ -990,8 +983,8 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
             HasUnreadableSecrets = hasUnreadableSecrets,
         };
 
-        dbContext.HosterRegistrations.Add(registration);
-        await dbContext.SaveChangesAsync();
+        DbContext.HosterRegistrations.Add(registration);
+        await DbContext.SaveChangesAsync();
 
         return registration;
     }
@@ -1006,8 +999,8 @@ public class HosterRegistrationServiceTest : BearcatIntegrationTest
             CreatedAt = DateTime.UtcNow,
         };
 
-        dbContext.Notifications.Add(notification);
-        await dbContext.SaveChangesAsync();
+        DbContext.Notifications.Add(notification);
+        await DbContext.SaveChangesAsync();
 
         return notification;
     }

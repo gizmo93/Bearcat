@@ -173,8 +173,6 @@ app.MapGet(
     }
 );
 
-AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
 if (app.Environment.IsProduction() || isDesktopMode)
 {
     using var scope = app.Services.CreateScope();

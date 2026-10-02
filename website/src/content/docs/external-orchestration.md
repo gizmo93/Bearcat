@@ -47,7 +47,7 @@ Add a `Bearcat` section to `%ProgramData%\Bearcat\config.json`:
 
 ```json
 {
-  "Database": { "ConnectionString": "..." },
+  "Database": { "Provider": "Sqlite", "SqliteFilePath": "..." },
   "Bearcat": {
     "ApiKey": "your-key"
   }

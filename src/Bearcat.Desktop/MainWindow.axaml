@@ -21,7 +21,7 @@
                 <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
                     <TextBlock Text="Bearcat Desktop" FontSize="26" FontWeight="SemiBold" />
                     <TextBlock
-                        Text="Start Bearcat locally with your own PostgreSQL server."
+                        Text="Start Bearcat locally with SQLite or your own PostgreSQL server."
                         Foreground="{DynamicResource TextControlPlaceholderForeground}"
                     />
                 </StackPanel>
@@ -127,49 +127,92 @@
                 BorderThickness="1"
                 CornerRadius="8"
             >
-                <Grid
-                    RowDefinitions="Auto,Auto,Auto"
-                    ColumnDefinitions="160,*,110"
-                    RowSpacing="10"
-                    ColumnSpacing="10"
-                >
-                    <TextBlock
-                        Grid.Row="0"
-                        Grid.Column="0"
-                        Text="Postgres host"
-                        VerticalAlignment="Center"
-                    />
-                    <TextBox x:Name="PostgresHostTextBox" Grid.Row="0" Grid.Column="1" />
-                    <TextBox x:Name="PostgresPortTextBox" Grid.Row="0" Grid.Column="2" />
+                <StackPanel Spacing="10">
+                    <Grid ColumnDefinitions="160,*" ColumnSpacing="10">
+                        <TextBlock
+                            Grid.Column="0"
+                            Text="Database type"
+                            VerticalAlignment="Center"
+                        />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="18">
+                            <RadioButton
+                                x:Name="SqliteRadioButton"
+                                GroupName="DatabaseProvider"
+                                Content="SQLite (recommended)"
+                                IsCheckedChanged="DatabaseProviderRadioButton_IsCheckedChanged"
+                            />
+                            <RadioButton
+                                x:Name="PostgresRadioButton"
+                                GroupName="DatabaseProvider"
+                                Content="PostgreSQL"
+                                IsCheckedChanged="DatabaseProviderRadioButton_IsCheckedChanged"
+                            />
+                        </StackPanel>
+                    </Grid>
 
-                    <TextBlock
-                        Grid.Row="1"
-                        Grid.Column="0"
-                        Text="Database"
-                        VerticalAlignment="Center"
-                    />
-                    <TextBox
-                        x:Name="PostgresDatabaseTextBox"
-                        Grid.Row="1"
-                        Grid.Column="1"
-                        Grid.ColumnSpan="2"
-                    />
+                    <Grid
+                        x:Name="SqliteSettingsGrid"
+                        ColumnDefinitions="160,*,110"
+                        ColumnSpacing="10"
+                    >
+                        <TextBlock
+                            Grid.Column="0"
+                            Text="Database file"
+                            VerticalAlignment="Center"
+                        />
+                        <TextBox x:Name="SqliteFilePathTextBox" Grid.Column="1" />
+                        <Button
+                            Grid.Column="2"
+                            Content="Browse..."
+                            Click="BrowseSqliteFilePath_Click"
+                        />
+                    </Grid>
 
-                    <TextBlock
-                        Grid.Row="2"
-                        Grid.Column="0"
-                        Text="Credentials"
-                        VerticalAlignment="Center"
-                    />
-                    <TextBox x:Name="PostgresUsernameTextBox" Grid.Row="2" Grid.Column="1" />
-                    <TextBox
-                        x:Name="PostgresPasswordTextBox"
-                        Grid.Row="2"
-                        Grid.Column="2"
-                        PasswordChar="*"
-                        PlaceholderText="Password"
-                    />
-                </Grid>
+                    <Grid
+                        x:Name="PostgresSettingsGrid"
+                        RowDefinitions="Auto,Auto,Auto"
+                        ColumnDefinitions="160,*,110"
+                        RowSpacing="10"
+                        ColumnSpacing="10"
+                    >
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Text="Postgres host"
+                            VerticalAlignment="Center"
+                        />
+                        <TextBox x:Name="PostgresHostTextBox" Grid.Row="0" Grid.Column="1" />
+                        <TextBox x:Name="PostgresPortTextBox" Grid.Row="0" Grid.Column="2" />
+
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Text="Database"
+                            VerticalAlignment="Center"
+                        />
+                        <TextBox
+                            x:Name="PostgresDatabaseTextBox"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                        />
+
+                        <TextBlock
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            Text="Credentials"
+                            VerticalAlignment="Center"
+                        />
+                        <TextBox x:Name="PostgresUsernameTextBox" Grid.Row="2" Grid.Column="1" />
+                        <TextBox
+                            x:Name="PostgresPasswordTextBox"
+                            Grid.Row="2"
+                            Grid.Column="2"
+                            PasswordChar="*"
+                            PlaceholderText="Password"
+                        />
+                    </Grid>
+                </StackPanel>
             </Border>
 
             <Border

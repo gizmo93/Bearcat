@@ -44,7 +44,7 @@ After installation, follow the [initial setup guide](https://gizmo93.github.io/B
 
 ## Local development
 
-Bearcat uses .NET 10, ASP.NET Core, Blazor, and PostgreSQL.
+Bearcat uses .NET 10, ASP.NET Core, Blazor, and EF Core with SQLite or PostgreSQL.
 
 Install the .NET 10 SDK version declared in `global.json`, then restore and build the solution from the repository root:
 
@@ -59,17 +59,34 @@ Run the test suite with:
 dotnet test Bearcat.slnx
 ```
 
-For local development, Bearcat can load `appsettings.user.json` in development mode. Use it for machine-specific settings such as local database credentials and release directories. This file is ignored by Git and should not be committed.
+Database integration tests run against SQLite and PostgreSQL. The PostgreSQL part uses Testcontainers and needs Docker.
 
-Example for `Bearcat.Host/appsettings.user.json`:
+Outside a container, Bearcat loads an optional `appsettings.user.json`. Use it for machine-specific settings such as the database and release directories. This file is ignored by Git and should not be committed.
+
+Example for `src/Bearcat.Host/appsettings.user.json` with SQLite:
 
 ```json
 {
-  "ReleaseDataDirectory": "/path/to/releases",
+  "WorkingDirectories": ["/path/to/releases"],
   "Database": {
-    "ConnectionString": "Host=localhost;Database=<your-local-db-name>;Username=<db-username>;Password=<db-password>>"
+    "Provider": "Sqlite",
+    "SqliteFilePath": "/path/to/bearcat.db"
   }
 }
 ```
+
+With PostgreSQL:
+
+```json
+{
+  "WorkingDirectories": ["/path/to/releases"],
+  "Database": {
+    "Provider": "Postgres",
+    "ConnectionString": "Host=localhost;Database=<your-local-db-name>;Username=<db-username>;Password=<db-password>"
+  }
+}
+```
+
+Without `Database:Provider`, Bearcat uses PostgreSQL. The `http (SQLite)` launch profile of `Bearcat.Host` sets `Database__Provider=Sqlite` and overrides the file. Create new migrations with `scripts/add-migration.sh <Name>`, which adds them for both providers. See [development notes](docs/development.md).
 
 The main host application is `Bearcat.Host`. The Blazor UI project is `Bearcat.Website`.

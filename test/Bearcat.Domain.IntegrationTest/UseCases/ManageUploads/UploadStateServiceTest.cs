@@ -28,12 +28,12 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageUploads;
 
-public class UploadStateServiceTest : BearcatIntegrationTest
+public class UploadStateServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string HosterClassName = "TestHoster";
     private const string SerializedHosterConfig = "{\"apiKey\":\"test\"}";
 
-    private BearcatDbContext dbContext = null!;
     private Mock<IHoster> hosterMock = null!;
     private Mock<IHosterConfig> hosterConfigMock = null!;
     private Mock<IHosterFactory> hosterFactoryMock = null!;
@@ -43,7 +43,6 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         localNow = new DateTime(2026, 5, 17, 12, 0, 0, DateTimeKind.Utc);
 
         hosterConfigMock = new Mock<IHosterConfig>(MockBehavior.Strict);
@@ -59,12 +58,6 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         service = CreateService();
     }
 
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
-    }
-
     [Test]
     public async Task CheckUploadStatesAsync_HosterReportsAllFilesOnline_KeepsUploadOnline()
     {
@@ -75,7 +68,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"]
         );
         upload.UploadedFiles[0].ExternalId = "external-1";
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         hosterMock
             .Setup(h =>
@@ -106,8 +99,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(upload.Id);
@@ -129,8 +122,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             Host = "proxy.example.com",
             Port = 8080,
         };
-        dbContext.ProxyServers.Add(proxyServer);
-        await dbContext.SaveChangesAsync();
+        DbContext.ProxyServers.Add(proxyServer);
+        await DbContext.SaveChangesAsync();
         var hosterRegistration = CreateHosterRegistration();
         hosterRegistration.UploadProxySelection = ProxySelection.SpecificProxyServer;
         hosterRegistration.UploadProxyServerId = proxyServer.Id;
@@ -182,7 +175,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             checkedAt: localNow.AddHours(-1),
             uploadedFileLinks: ["https://hoster.test/1", "https://hoster.test/2"]
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         hosterMock
             .Setup(h =>
@@ -209,8 +202,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
 
         var firstFile = result.UploadedFiles.Single(f =>
             f.HosterFileLink == "https://hoster.test/1"
@@ -281,8 +274,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                 },
             ],
         };
-        dbContext.Uploads.Add(newerUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(newerUpload);
+        await DbContext.SaveChangesAsync();
 
         hosterMock
             .Setup(h =>
@@ -314,11 +307,11 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var superseded = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var superseded = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .SingleAsync(u => u.Id == supersededUpload.Id);
-        var newer = await dbContext
+        var newer = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .SingleAsync(u => u.Id == newerUpload.Id);
 
@@ -344,8 +337,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
 
         result.Id.ShouldBe(upload.Id);
         result.OnlineState.ShouldBe(OnlineState.Online);
@@ -386,8 +379,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .Include(u => u.Notifications)
             .SingleAsync();
@@ -435,8 +428,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .Include(u => u.Notifications)
             .SingleAsync();
@@ -481,8 +474,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .Include(u => u.Notifications)
             .SingleAsync();
@@ -520,10 +513,10 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
-        var registration = await dbContext.HosterRegistrations.SingleAsync();
-        var notification = await dbContext.Notifications.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+        var registration = await DbContext.HosterRegistrations.SingleAsync();
+        var notification = await DbContext.Notifications.SingleAsync();
 
         result.Id.ShouldBe(upload.Id);
         result.OnlineState.ShouldBe(OnlineState.Online);
@@ -573,9 +566,9 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
-        var notification = await dbContext.Notifications.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+        var notification = await DbContext.Notifications.SingleAsync();
 
         result.Id.ShouldBe(upload.Id);
         result.OnlineState.ShouldBe(OnlineState.Online);
@@ -611,12 +604,12 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.SingleAsync();
 
         result.Id.ShouldBe(upload.Id);
         result.OnlineState.ShouldBe(OnlineState.Online);
-        (await dbContext.Notifications.ToListAsync()).ShouldBeEmpty();
+        (await DbContext.Notifications.ToListAsync()).ShouldBeEmpty();
         hosterMock.VerifyAll();
         hosterFactoryMock.VerifyAll();
     }
@@ -664,8 +657,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var results = await dbContext.Uploads.ToDictionaryAsync(u => u.Id);
+        DbContext.ChangeTracker.Clear();
+        var results = await DbContext.Uploads.ToDictionaryAsync(u => u.Id);
 
         results[firstUpload.Id].OnlineState.ShouldBe(OnlineState.Online);
         results[secondUpload.Id].OnlineState.ShouldBe(OnlineState.Offline);
@@ -743,8 +736,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var results = await dbContext.Uploads.ToDictionaryAsync(u => u.Id);
+        DbContext.ChangeTracker.Clear();
+        var results = await DbContext.Uploads.ToDictionaryAsync(u => u.Id);
 
         results[firstUpload.Id].OnlineState.ShouldBe(OnlineState.Online);
         results[secondUpload.Id].OnlineState.ShouldBe(OnlineState.Offline);
@@ -783,9 +776,9 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var registration = await dbContext.HosterRegistrations.SingleAsync();
-        var notifications = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var registration = await DbContext.HosterRegistrations.SingleAsync();
+        var notifications = await DbContext
             .Notifications.Where(n =>
                 n.NotificationKind == NotificationKind.CaptchaVerificationRequired
             )
@@ -794,7 +787,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         registration.RequiresCaptchaVerification.ShouldBeTrue();
         registration.IsActive.ShouldBeFalse();
         notifications.Single().Message.ShouldContain("Captcha required");
-        (await dbContext.Uploads.ToListAsync()).ShouldAllBe(u =>
+        (await DbContext.Uploads.ToListAsync()).ShouldAllBe(u =>
             u.OnlineState == OnlineState.Online
         );
     }
@@ -827,8 +820,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStateNowAsync(upload.Id, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        (await dbContext.Notifications.ToListAsync()).ShouldBeEmpty();
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.Notifications.ToListAsync()).ShouldBeEmpty();
         hosterMock.VerifyAll();
     }
 
@@ -871,8 +864,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var notification = await dbContext.Notifications.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var notification = await DbContext.Notifications.SingleAsync();
 
         notification.NotificationKind.ShouldBe(NotificationKind.HosterStatusCheckFailed);
         notification.HosterRegistrationId.ShouldBe(hosterRegistration.Id);
@@ -913,12 +906,12 @@ public class UploadStateServiceTest : BearcatIntegrationTest
 
         // Act
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
         await service.CheckUploadStatesAsync(localNow.AddSeconds(20), CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var notification = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var notification = await DbContext
             .Notifications.Where(n =>
                 n.NotificationKind == NotificationKind.HosterStatusCheckFailed
             )
@@ -970,9 +963,9 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var registration = await dbContext.HosterRegistrations.SingleAsync();
-        var notification = await dbContext.Notifications.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var registration = await DbContext.HosterRegistrations.SingleAsync();
+        var notification = await DbContext.Notifications.SingleAsync();
 
         registration.IsActive.ShouldBeFalse();
         notification.NotificationKind.ShouldBe(NotificationKind.HosterCredentialsRejected);
@@ -982,7 +975,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         notification.Message.ShouldBe(
             "Hoster registration 'Hoster' was deactivated because the hoster rejected the credentials: Error: Wrong e-mail or password."
         );
-        (await dbContext.Uploads.ToListAsync()).ShouldAllBe(u =>
+        (await DbContext.Uploads.ToListAsync()).ShouldAllBe(u =>
             u.OnlineState == OnlineState.Online
         );
     }
@@ -1016,9 +1009,9 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStateNowAsync(upload.Id, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        (await dbContext.Notifications.ToListAsync()).ShouldBeEmpty();
-        (await dbContext.HosterRegistrations.SingleAsync()).IsActive.ShouldBeFalse();
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.Notifications.ToListAsync()).ShouldBeEmpty();
+        (await DbContext.HosterRegistrations.SingleAsync()).IsActive.ShouldBeFalse();
         hosterMock.VerifyAll();
     }
 
@@ -1032,7 +1025,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        var result = await dbContext.Uploads.Include(u => u.Notifications).SingleAsync();
+        var result = await DbContext.Uploads.Include(u => u.Notifications).SingleAsync();
 
         result.ShouldNotBeNull();
         result.UploadConfigId.ShouldBe(uploadConfig.Id);
@@ -1052,7 +1045,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        var uploadExists = await dbContext.Uploads.AnyAsync();
+        var uploadExists = await DbContext.Uploads.AnyAsync();
 
         uploadExists.ShouldBeFalse();
     }
@@ -1070,7 +1063,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        var uploadExists = await dbContext.Uploads.AnyAsync();
+        var uploadExists = await DbContext.Uploads.AnyAsync();
 
         uploadExists.ShouldBeFalse();
     }
@@ -1089,7 +1082,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        var upload = await dbContext.Uploads.SingleAsync();
+        var upload = await DbContext.Uploads.SingleAsync();
 
         upload.UploadState.ShouldBe(UploadState.WaitingForArchive);
         upload.OnlineState.ShouldBe(OnlineState.Unknown);
@@ -1110,8 +1103,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
         var reupload = result.Single(u => u.Id != upload.Id);
 
         result.ShouldNotBeNull();
@@ -1137,8 +1130,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var uploads = await dbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
+        DbContext.ChangeTracker.Clear();
+        var uploads = await DbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
 
         uploads.Count.ShouldBe(2);
         uploads.Single(u => u.Id != upload.Id).UploadState.ShouldBe(UploadState.WaitingForArchive);
@@ -1179,8 +1172,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var uploads = await dbContext.Uploads.ToListAsync();
+        DbContext.ChangeTracker.Clear();
+        var uploads = await DbContext.Uploads.ToListAsync();
 
         uploads.Count.ShouldBe(1);
         uploads.Single().Id.ShouldBe(upload.Id);
@@ -1202,8 +1195,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var uploads = await dbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
+        DbContext.ChangeTracker.Clear();
+        var uploads = await DbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
 
         uploads.Count.ShouldBe(2);
         uploads.Single(u => u.Id != upload.Id).UploadState.ShouldBe(UploadState.WaitingForArchive);
@@ -1225,7 +1218,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        var uploads = await dbContext.Uploads.ToListAsync();
+        var uploads = await DbContext.Uploads.ToListAsync();
 
         uploads.Count.ShouldBe(1);
         uploads.Single().Id.ShouldBe(upload.Id);
@@ -1242,13 +1235,13 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             enableAutomaticReuploads: true
         );
         upload.UploadState = UploadState.Canceled;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        var uploads = await dbContext.Uploads.ToListAsync();
+        var uploads = await DbContext.Uploads.ToListAsync();
 
         uploads.Count.ShouldBe(1);
         uploads.Single().Id.ShouldBe(upload.Id);
@@ -1274,14 +1267,14 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             UploadedFiles = [],
             ErrorMessages = [],
         };
-        dbContext.Uploads.Add(canceledReupload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(canceledReupload);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        var uploads = await dbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
+        var uploads = await DbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
 
         uploads.Count.ShouldBe(2);
         uploads.Select(u => u.Id).ShouldBe([upload.Id, canceledReupload.Id]);
@@ -1301,8 +1294,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         var result = await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var reupload = await dbContext.Uploads.SingleAsync(u => u.Id == result);
+        DbContext.ChangeTracker.Clear();
+        var reupload = await DbContext.Uploads.SingleAsync(u => u.Id == result);
 
         reupload.ShouldNotBeNull();
         reupload.UploadConfigId.ShouldBe(upload.UploadConfigId);
@@ -1342,14 +1335,14 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             uploadedFileLinks: []
         );
         upload.UploadState = UploadState.Canceled;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var reupload = await dbContext.Uploads.SingleAsync(u => u.Id == result);
+        DbContext.ChangeTracker.Clear();
+        var reupload = await DbContext.Uploads.SingleAsync(u => u.Id == result);
 
         reupload.ShouldNotBeNull();
         reupload.UploadConfigId.ShouldBe(upload.UploadConfigId);
@@ -1367,14 +1360,14 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             uploadedFileLinks: []
         );
         upload.UploadState = UploadState.Failed;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await service.CreateManualReuploadAsync(upload.Id, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var reupload = await dbContext.Uploads.SingleAsync(u => u.Id == result);
+        DbContext.ChangeTracker.Clear();
+        var reupload = await DbContext.Uploads.SingleAsync(u => u.Id == result);
 
         reupload.ShouldNotBeNull();
         reupload.UploadConfigId.ShouldBe(upload.UploadConfigId);
@@ -1391,7 +1384,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             checkedAt: localNow,
             uploadedFileLinks: ["https://hoster.test/1"]
         );
-        dbContext.Uploads.Add(
+        DbContext.Uploads.Add(
             new Upload
             {
                 UploadConfigId = upload.UploadConfigId,
@@ -1401,7 +1394,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                 ErrorMessages = [],
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await Should.ThrowAsync<InvalidUploadStateException>(async () =>
@@ -1424,7 +1417,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             checkedAt: localNow,
             uploadedFileLinks: ["https://hoster.test/1"]
         );
-        dbContext.Uploads.Add(
+        DbContext.Uploads.Add(
             new Upload
             {
                 UploadConfigId = upload.UploadConfigId,
@@ -1434,7 +1427,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
                 ErrorMessages = [],
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await Should.ThrowAsync<InvalidUploadStateException>(async () =>
@@ -1464,8 +1457,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         // Assert
         result.ShouldBeTrue();
 
-        dbContext.ChangeTracker.Clear();
-        var updated = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var updated = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .Include(u => u.Notifications)
             .SingleAsync();
@@ -1495,8 +1488,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         // Assert
         result.ShouldBeTrue();
 
-        dbContext.ChangeTracker.Clear();
-        var updated = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var updated = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
 
         updated.OnlineState.ShouldBe(OnlineState.Offline);
         updated.UploadedFiles.ShouldAllBe(f => f.OnlineState == OnlineState.Offline);
@@ -1549,7 +1542,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             uploadedFileLinks: []
         );
         upload.UploadState = UploadState.CancellationRequested;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await service.CancelUploadAsync(upload.Id, CancellationToken.None);
@@ -1588,14 +1581,14 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             uploadedFileLinks: []
         );
         upload.UploadState = uploadState;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await service.CancelUploadAsync(upload.Id, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var updatedUpload = await dbContext.Uploads.Include(u => u.Notifications).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var updatedUpload = await DbContext.Uploads.Include(u => u.Notifications).SingleAsync();
 
         result.ShouldBeTrue();
         updatedUpload.UploadState.ShouldBe(UploadState.CancellationRequested);
@@ -1622,14 +1615,14 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             uploadedFileLinks: []
         );
         upload.UploadState = UploadState.Canceled;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await service.ResumeUploadAsync(upload.Id, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var updatedUpload = await dbContext.Uploads.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var updatedUpload = await DbContext.Uploads.SingleAsync();
 
         result.ShouldBeTrue();
         updatedUpload.UploadState.ShouldBe(UploadState.Pending);
@@ -1649,15 +1642,15 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             UploadedFiles = [],
             ErrorMessages = [],
         };
-        dbContext.Uploads.Add(upload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(upload);
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await service.ResumeUploadAsync(upload.Id, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var updatedUpload = await dbContext.Uploads.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var updatedUpload = await DbContext.Uploads.SingleAsync();
 
         result.ShouldBeTrue();
         updatedUpload.ArchiveId.ShouldBeNull();
@@ -1680,14 +1673,14 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             uploadedFileLinks: []
         );
         upload.UploadState = uploadState;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await service.ResumeUploadAsync(upload.Id, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var updatedUpload = await dbContext.Uploads.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var updatedUpload = await DbContext.Uploads.SingleAsync();
 
         result.ShouldBeFalse();
         updatedUpload.UploadState.ShouldBe(uploadState);
@@ -1716,17 +1709,17 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             uploadedFileLinks: ["https://hoster.test/1"]
         );
         upload.UploadState = uploadState;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await service.DeleteUploadAsync(upload.Id, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         result.ShouldBeTrue();
-        (await dbContext.Uploads.AnyAsync(u => u.Id == upload.Id)).ShouldBeFalse();
-        (await dbContext.UploadedFiles.AnyAsync(f => f.UploadId == upload.Id)).ShouldBeFalse();
+        (await DbContext.Uploads.AnyAsync(u => u.Id == upload.Id)).ShouldBeFalse();
+        (await DbContext.UploadedFiles.AnyAsync(f => f.UploadId == upload.Id)).ShouldBeFalse();
     }
 
     [TestCase(UploadState.WaitingForArchive)]
@@ -1741,16 +1734,16 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             uploadedFileLinks: []
         );
         upload.UploadState = uploadState;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await service.DeleteUploadAsync(upload.Id, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         result.ShouldBeFalse();
-        (await dbContext.Uploads.AnyAsync(u => u.Id == upload.Id)).ShouldBeTrue();
+        (await DbContext.Uploads.AnyAsync(u => u.Id == upload.Id)).ShouldBeTrue();
     }
 
     [Test]
@@ -1786,8 +1779,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .Include(u => u.Notifications)
             .SingleAsync();
@@ -1813,7 +1806,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        var uploads = await dbContext.Uploads.ToListAsync();
+        var uploads = await DbContext.Uploads.ToListAsync();
 
         uploads.Count.ShouldBe(1);
     }
@@ -1833,7 +1826,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        var uploads = await dbContext.Uploads.ToListAsync();
+        var uploads = await DbContext.Uploads.ToListAsync();
 
         uploads.Count.ShouldBe(1);
     }
@@ -1850,7 +1843,7 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         );
         upload.NotFullyOnlineSince = localNow.AddHours(-25);
         upload.UploadedFiles[1].OnlineState = OnlineState.Offline;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         hosterMock
             .Setup(h =>
@@ -1876,8 +1869,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .OrderBy(u => u.Id)
             .ToListAsync();
@@ -1904,9 +1897,9 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        (await dbContext.Uploads.AnyAsync()).ShouldBeFalse();
-        var release = await dbContext.Releases.Include(r => r.QualityIssues).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.Uploads.AnyAsync()).ShouldBeFalse();
+        var release = await DbContext.Releases.Include(r => r.QualityIssues).SingleAsync();
         release.QualityGateState.ShouldBe(QualityGateState.Failed);
         release.QualityGateEvaluatedAt.ShouldBe(localNow);
         release.QualityIssues.Single().Description.ShouldBe("NFO is missing");
@@ -1927,10 +1920,10 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var upload = await dbContext.Uploads.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var upload = await DbContext.Uploads.SingleAsync();
         upload.UploadState.ShouldBe(UploadState.WaitingForArchive);
-        var release = await dbContext.Releases.SingleAsync();
+        var release = await DbContext.Releases.SingleAsync();
         release.QualityGateState.ShouldBe(QualityGateState.Passed);
     }
 
@@ -1942,17 +1935,17 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             enableAutomaticReuploads: false,
             qualityProfile: CreateRequireNfoProfile()
         );
-        var release = await dbContext.Releases.SingleAsync();
+        var release = await DbContext.Releases.SingleAsync();
         release.QualityGateState = QualityGateState.ManuallyApproved;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        (await dbContext.Uploads.AnyAsync()).ShouldBeTrue();
-        var updated = await dbContext.Releases.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.Uploads.AnyAsync()).ShouldBeTrue();
+        var updated = await DbContext.Releases.SingleAsync();
         updated.QualityGateState.ShouldBe(QualityGateState.ManuallyApproved);
     }
 
@@ -1967,15 +1960,15 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             enableAutomaticReuploads: true,
             qualityProfile: CreateRequireNfoProfile()
         );
-        var release = await dbContext.Releases.SingleAsync();
+        var release = await DbContext.Releases.SingleAsync();
         release.QualityGateState = QualityGateState.Failed;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        var uploads = await dbContext.Uploads.ToListAsync();
+        var uploads = await DbContext.Uploads.ToListAsync();
         uploads.Count.ShouldBe(1);
         uploads.Single().Id.ShouldBe(upload.Id);
     }
@@ -1998,11 +1991,11 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var uploads = await dbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
+        DbContext.ChangeTracker.Clear();
+        var uploads = await DbContext.Uploads.OrderBy(u => u.Id).ToListAsync();
         uploads.Count.ShouldBe(2);
         uploads.Single(u => u.Id != upload.Id).UploadConfigId.ShouldBe(upload.UploadConfigId);
-        var release = await dbContext.Releases.SingleAsync();
+        var release = await DbContext.Releases.SingleAsync();
         release.QualityGateState.ShouldBe(QualityGateState.Passed);
     }
 
@@ -2022,11 +2015,11 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var uploads = await dbContext.Uploads.ToListAsync();
+        DbContext.ChangeTracker.Clear();
+        var uploads = await DbContext.Uploads.ToListAsync();
         uploads.Count.ShouldBe(1);
         uploads.Single().Id.ShouldBe(upload.Id);
-        var release = await dbContext.Releases.Include(r => r.QualityIssues).SingleAsync();
+        var release = await DbContext.Releases.Include(r => r.QualityIssues).SingleAsync();
         release.QualityGateState.ShouldBe(QualityGateState.Failed);
         release.QualityIssues.Single().Description.ShouldBe("NFO is missing");
     }
@@ -2041,9 +2034,9 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        (await dbContext.Uploads.AnyAsync()).ShouldBeTrue();
-        var release = await dbContext.Releases.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.Uploads.AnyAsync()).ShouldBeTrue();
+        var release = await DbContext.Releases.SingleAsync();
         release.QualityGateState.ShouldBe(QualityGateState.Passed);
         release.QualityGateEvaluatedAt.ShouldBe(localNow);
     }
@@ -2062,9 +2055,9 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        (await dbContext.Uploads.AnyAsync()).ShouldBeFalse();
-        var release = await dbContext.Releases.Include(r => r.QualityIssues).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.Uploads.AnyAsync()).ShouldBeFalse();
+        var release = await DbContext.Releases.Include(r => r.QualityIssues).SingleAsync();
         release.QualityGateState.ShouldBe(QualityGateState.Failed);
         release.QualityIssues.Single().Description.ShouldBe("NFO is missing");
     }
@@ -2083,10 +2076,10 @@ public class UploadStateServiceTest : BearcatIntegrationTest
         await service.CheckUploadStatesAsync(localNow, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var upload = await dbContext.Uploads.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var upload = await DbContext.Uploads.SingleAsync();
         upload.UploadState.ShouldBe(UploadState.WaitingForArchive);
-        var release = await dbContext.Releases.Include(r => r.QualityIssues).SingleAsync();
+        var release = await DbContext.Releases.Include(r => r.QualityIssues).SingleAsync();
         release.QualityGateState.ShouldBe(QualityGateState.Passed);
         release.QualityIssues.ShouldBeEmpty();
     }
@@ -2214,8 +2207,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             );
         }
 
-        dbContext.Uploads.Add(upload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(upload);
+        await DbContext.SaveChangesAsync();
 
         return upload;
     }
@@ -2279,8 +2272,8 @@ public class UploadStateServiceTest : BearcatIntegrationTest
             Name = "Default upload",
         };
 
-        dbContext.UploadConfigs.Add(uploadConfig);
-        await dbContext.SaveChangesAsync();
+        DbContext.UploadConfigs.Add(uploadConfig);
+        await DbContext.SaveChangesAsync();
 
         return uploadConfig;
     }
@@ -2297,13 +2290,13 @@ public class UploadStateServiceTest : BearcatIntegrationTest
     private UploadStateService CreateService(int initialUploadCooldownMinutes = 5)
     {
         var notificationService = new NotificationService(
-            repository: new NotificationRepository(dbContext),
+            repository: new NotificationRepository(DbContext),
             timeProvider: CreateTimeProvider(),
             configurationProvider: CreateNotificationConfigurationProvider()
         );
 
         return new UploadStateService(
-            new UploadStateRepository(dbContext),
+            new UploadStateRepository(DbContext),
             hosterFactoryMock.Object,
             CreateTimeProvider(),
             new TestApplicationConfigurationProvider(initialUploadCooldownMinutes),

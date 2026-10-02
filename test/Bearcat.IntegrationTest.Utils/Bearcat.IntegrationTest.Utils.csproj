@@ -14,5 +14,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\Bearcat.Infrastructure\Bearcat.Infrastructure.csproj" />
+        <ProjectReference Include="..\..\src\Bearcat.Infrastructure.Migrations.Postgres\Bearcat.Infrastructure.Migrations.Postgres.csproj" />
+        <ProjectReference Include="..\..\src\Bearcat.Infrastructure.Migrations.Sqlite\Bearcat.Infrastructure.Migrations.Sqlite.csproj" />
     </ItemGroup>
 </Project>

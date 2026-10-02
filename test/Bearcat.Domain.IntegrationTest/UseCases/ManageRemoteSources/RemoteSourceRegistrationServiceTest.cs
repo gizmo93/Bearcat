@@ -21,11 +21,11 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageRemoteSources;
 
-public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
+public class RemoteSourceRegistrationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string SourceClassName = nameof(FakeRemoteSource);
 
-    private BearcatDbContext dbContext = null!;
     private AesGcmSecretProtector secretProtector = null!;
     private FakeRemoteSource remoteSource = null!;
     private RemoteSourceRegistrationService service = null!;
@@ -35,7 +35,6 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         var keyProvider = new Mock<IEncryptionKeyProvider>();
         keyProvider
             .Setup(provider => provider.GetKey())
@@ -55,7 +54,7 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
                 ),
             ]);
 
-        repository = new RemoteSourceRegistrationRepository(dbContext, dbContext, factory.Object);
+        repository = new RemoteSourceRegistrationRepository(DbContext, DbContext, factory.Object);
         sessionPool = new RemoteSourceSessionPool(NullLogger<RemoteSourceSessionPool>.Instance);
         service = new RemoteSourceRegistrationService(
             repository,
@@ -64,7 +63,7 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
             secretProtector,
             new RemoteSourceSessionProvider(sessionPool, factory.Object, secretProtector),
             UnreadableSecretsNotificationServiceFactory.Create(
-                dbContext,
+                DbContext,
                 CreateNotificationConfigurationProvider()
             ),
             NullLogger<RemoteSourceRegistrationService>.Instance
@@ -72,10 +71,9 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
     }
 
     [TearDown]
-    public async Task DisposeDbContextAsync()
+    public async Task DisposeSessionPoolAsync()
     {
         await sessionPool.DisposeAsync();
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -88,7 +86,7 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
         var id = await service.CreateAsync(" Main server ", SourceClassName, values, 3);
 
         // Assert
-        var registration = await dbContext.RemoteSourceRegistrations.SingleAsync();
+        var registration = await DbContext.RemoteSourceRegistrations.SingleAsync();
         registration.Id.ShouldBe(id);
         registration.Name.ShouldBe("Main server");
         registration.SourceClassName.ShouldBe(SourceClassName);
@@ -123,7 +121,7 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
 
         // Assert
         exception.Error.ShouldBe(ConfigurationFieldValidationError.InvalidOption);
-        (await dbContext.RemoteSourceRegistrations.CountAsync()).ShouldBe(0);
+        (await DbContext.RemoteSourceRegistrations.CountAsync()).ShouldBe(0);
     }
 
     [TestCase(0)]
@@ -415,7 +413,7 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
                     .SetProperty(registration => registration.SerializedConfig, unreadableConfig)
                     .SetProperty(registration => registration.HasUnreadableSecrets, true)
             );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
     }
 
     [Test]
@@ -439,12 +437,12 @@ public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
                 NumberOfHoursUntilReupload = 24,
             },
         };
-        dbContext.RemoteSourceAutomations.AddRange(
+        DbContext.RemoteSourceAutomations.AddRange(
             CreateAutomation("First", registrationId, releaseTemplate),
             CreateAutomation("Second", registrationId, releaseTemplate),
             CreateAutomation("Other", otherRegistrationId, releaseTemplate)
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await service.GetRemoteSourceAutomationCountAsync(

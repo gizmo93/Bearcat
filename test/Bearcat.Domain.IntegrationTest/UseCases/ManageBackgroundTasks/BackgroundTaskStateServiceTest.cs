@@ -13,32 +13,25 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageBackgroundTasks;
 
-public class BackgroundTaskStateServiceTest : BearcatIntegrationTest
+public class BackgroundTaskStateServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string Key = "release-import";
     private const string DisplayName = "Release import";
 
-    private BearcatDbContext dbContext = null!;
     private Mock<IBackgroundTaskScheduleCache> scheduleCacheMock = null!;
     private BackgroundTaskStateService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         scheduleCacheMock = new Mock<IBackgroundTaskScheduleCache>(MockBehavior.Strict);
 
         service = new BackgroundTaskStateService(
-            new BackgroundTaskStateRepository(dbContext, dbContext),
+            new BackgroundTaskStateRepository(DbContext, DbContext),
             scheduleCacheMock.Object,
             CreateTimeProvider()
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -59,7 +52,7 @@ public class BackgroundTaskStateServiceTest : BearcatIntegrationTest
         // Assert
         isEnabled.ShouldBeTrue();
 
-        var taskState = await dbContext.BackgroundTaskStates.SingleAsync();
+        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
         taskState.Key.ShouldBe(Key);
         taskState.DisplayName.ShouldBe(DisplayName);
         taskState.IsEnabled.ShouldBeTrue();
@@ -85,7 +78,7 @@ public class BackgroundTaskStateServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var taskState = await dbContext.BackgroundTaskStates.SingleAsync();
+        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
         taskState.DisplayName.ShouldBe("New name");
         taskState.DefaultInterval.ShouldBe(TimeSpan.FromMinutes(30));
     }
@@ -128,15 +121,15 @@ public class BackgroundTaskStateServiceTest : BearcatIntegrationTest
         existing.LastFinishedAt = DateTime.UtcNow;
         existing.LastExecutionStatus = BackgroundTaskExecutionStatus.Success;
         existing.LastErrorMessage = "stale";
-        dbContext.Update(existing);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.Update(existing);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         await service.MarkStartedAsync(Key, DisplayName, CancellationToken.None);
 
         // Assert
-        var taskState = await dbContext.BackgroundTaskStates.SingleAsync();
+        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
         taskState.LastStartedAt.ShouldNotBeNull();
         taskState.LastFinishedAt.ShouldBeNull();
         taskState.LastExecutionStatus.ShouldBeNull();
@@ -153,7 +146,7 @@ public class BackgroundTaskStateServiceTest : BearcatIntegrationTest
         await service.MarkSucceededAsync(Key, DisplayName, CancellationToken.None);
 
         // Assert
-        var taskState = await dbContext.BackgroundTaskStates.SingleAsync();
+        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
         taskState.LastFinishedAt.ShouldNotBeNull();
         taskState.LastExecutionStatus.ShouldBe(BackgroundTaskExecutionStatus.Success);
         taskState.LastErrorMessage.ShouldBeNull();
@@ -174,7 +167,7 @@ public class BackgroundTaskStateServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var taskState = await dbContext.BackgroundTaskStates.SingleAsync();
+        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
         taskState.LastFinishedAt.ShouldNotBeNull();
         taskState.LastExecutionStatus.ShouldBe(BackgroundTaskExecutionStatus.Error);
         taskState.LastErrorMessage.ShouldBe("boom");
@@ -196,7 +189,7 @@ public class BackgroundTaskStateServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var taskState = await dbContext.BackgroundTaskStates.SingleAsync();
+        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
         taskState.LastErrorMessage!.Length.ShouldBe(2000);
     }
 
@@ -207,7 +200,7 @@ public class BackgroundTaskStateServiceTest : BearcatIntegrationTest
         await service.MarkStartedAsync(Key, DisplayName, CancellationToken.None);
 
         // Assert
-        var taskState = await dbContext.BackgroundTaskStates.SingleAsync();
+        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
         taskState.DefaultInterval.ShouldBe(TimeSpan.Zero);
         taskState.LastStartedAt.ShouldNotBeNull();
     }
@@ -223,7 +216,7 @@ public class BackgroundTaskStateServiceTest : BearcatIntegrationTest
         await service.SetIsEnabledAsync(existing.Id, false, CancellationToken.None);
 
         // Assert
-        var taskState = await dbContext.BackgroundTaskStates.SingleAsync();
+        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
         taskState.IsEnabled.ShouldBeFalse();
         scheduleCacheMock.Verify(cache => cache.SetEnabled(Key, false), Times.Once);
     }
@@ -240,7 +233,7 @@ public class BackgroundTaskStateServiceTest : BearcatIntegrationTest
         await service.SetIntervalOverrideAsync(existing.Id, interval, CancellationToken.None);
 
         // Assert
-        var taskState = await dbContext.BackgroundTaskStates.SingleAsync();
+        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
         taskState.IntervalOverride.ShouldBe(interval);
         scheduleCacheMock.Verify(cache => cache.SetOverride(Key, interval), Times.Once);
     }
@@ -256,7 +249,7 @@ public class BackgroundTaskStateServiceTest : BearcatIntegrationTest
         await service.SetIntervalOverrideAsync(existing.Id, null, CancellationToken.None);
 
         // Assert
-        var taskState = await dbContext.BackgroundTaskStates.SingleAsync();
+        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
         taskState.IntervalOverride.ShouldBeNull();
         scheduleCacheMock.Verify(cache => cache.SetOverride(Key, null), Times.Once);
     }
@@ -276,7 +269,7 @@ public class BackgroundTaskStateServiceTest : BearcatIntegrationTest
             )
         );
 
-        var taskState = await dbContext.BackgroundTaskStates.SingleAsync();
+        var taskState = await DbContext.BackgroundTaskStates.SingleAsync();
         taskState.IntervalOverride.ShouldBeNull();
     }
 
@@ -297,9 +290,9 @@ public class BackgroundTaskStateServiceTest : BearcatIntegrationTest
             UpdatedAt = DateTime.UtcNow,
         };
 
-        dbContext.BackgroundTaskStates.Add(taskState);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.BackgroundTaskStates.Add(taskState);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         return taskState;
     }

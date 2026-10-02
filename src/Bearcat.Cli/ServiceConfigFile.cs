@@ -50,12 +50,35 @@ public sealed class ServiceConfigFile
             ? JsonNode.Parse(File.ReadAllText(path))!.AsObject()
             : new JsonObject();
         configuration.Remove(nameof(ReleaseDataDirectory));
+        if (configuration[nameof(Database)] is JsonObject existingDatabaseSection)
+        {
+            RemoveUnsetDatabaseKeys(existingDatabaseSection);
+        }
+
         MergeInto(
             configuration,
             JsonSerializer.SerializeToNode(this, SerializerOptions)!.AsObject()
         );
 
         File.WriteAllText(path, configuration.ToJsonString(SerializerOptions));
+    }
+
+    private void RemoveUnsetDatabaseKeys(JsonObject existingDatabaseSection)
+    {
+        if (Database.Provider is null)
+        {
+            existingDatabaseSection.Remove(nameof(DatabaseSection.Provider));
+        }
+
+        if (Database.ConnectionString is null)
+        {
+            existingDatabaseSection.Remove(nameof(DatabaseSection.ConnectionString));
+        }
+
+        if (Database.SqliteFilePath is null)
+        {
+            existingDatabaseSection.Remove(nameof(DatabaseSection.SqliteFilePath));
+        }
     }
 
     private static void MergeInto(JsonObject target, JsonObject ownedFields)
@@ -75,7 +98,15 @@ public sealed class ServiceConfigFile
 
     public sealed class DatabaseSection
     {
-        public string ConnectionString { get; set; } = string.Empty;
+        [JsonConverter(typeof(JsonStringEnumConverter<DatabaseProvider>))]
+        public DatabaseProvider? Provider { get; set; }
+
+        public string? ConnectionString { get; set; }
+
+        public string? SqliteFilePath { get; set; }
+
+        [JsonIgnore]
+        public DatabaseProvider EffectiveProvider => Provider ?? DatabaseProvider.Postgres;
     }
 
     public sealed class ArchiversSection

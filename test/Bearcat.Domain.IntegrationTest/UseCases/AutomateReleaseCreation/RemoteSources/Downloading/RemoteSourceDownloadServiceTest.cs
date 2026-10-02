@@ -8,7 +8,6 @@ using Bearcat.Abstractions.RemoteSource;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.IntegrationTest.Shared;
 using Bearcat.Domain.IntegrationTest.Shared.UnmanagedReleases;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.Shared.Transfers;
@@ -37,7 +36,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
 
-public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
+public class RemoteSourceDownloadServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string SourceClassName = nameof(FakeRemoteSource);
     private const string IncomingPath = "/incoming";

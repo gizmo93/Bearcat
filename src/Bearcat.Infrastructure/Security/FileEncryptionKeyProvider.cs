@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Bearcat.Infrastructure.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -90,30 +91,7 @@ public sealed class FileEncryptionKeyProvider(
             return Path.GetFullPath(configuredKeyPath);
         }
 
-        var dataDirectory =
-            Environment.GetEnvironmentVariable("BEARCAT_DATA_DIR")
-            ?? configuration["Bearcat:DataDirectory"];
-
-        if (string.IsNullOrWhiteSpace(dataDirectory))
-        {
-            dataDirectory = IsRunningInContainer()
-                ? "/data"
-                : Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "Bearcat"
-                );
-        }
-
-        return Path.GetFullPath(Path.Combine(dataDirectory, KeyFileName));
-    }
-
-    private static bool IsRunningInContainer()
-    {
-        return string.Equals(
-            Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"),
-            "true",
-            StringComparison.OrdinalIgnoreCase
-        );
+        return Path.Combine(BearcatDataDirectory.Resolve(configuration), KeyFileName);
     }
 
     private static void TryRestrictFilePermissions(string keyPath)

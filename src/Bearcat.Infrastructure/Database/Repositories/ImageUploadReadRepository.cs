@@ -23,7 +23,7 @@ public class ImageUploadReadRepository(IBearcatReadDbContext dbRead) : IImageUpl
                 upload.UploadedAt,
                 upload.UploadState,
                 upload.ImageUrls.Count,
-                upload.ErrorMessages.ToList()
+                upload.ErrorMessages
             ))
             .ToListAsync(cancellationToken);
     }

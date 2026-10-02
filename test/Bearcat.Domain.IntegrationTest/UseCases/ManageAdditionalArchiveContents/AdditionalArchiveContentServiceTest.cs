@@ -12,9 +12,9 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageAdditionalArchiveContents;
 
-public class AdditionalArchiveContentServiceTest : BearcatIntegrationTest
+public class AdditionalArchiveContentServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private string tempRootPath = null!;
     private string sourceFolderPath = null!;
     private string sourceFilePath = null!;
@@ -23,22 +23,19 @@ public class AdditionalArchiveContentServiceTest : BearcatIntegrationTest
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
         sourceFolderPath = Directory.CreateDirectory(Path.Combine(tempRootPath, "ads")).FullName;
         sourceFilePath = Path.Combine(tempRootPath, "premium.txt");
         File.WriteAllText(sourceFilePath, "premium");
         service = new AdditionalArchiveContentService(
-            new AdditionalArchiveContentRepository(dbContext, dbContext),
+            new AdditionalArchiveContentRepository(DbContext, DbContext),
             new FileSystemService()
         );
     }
 
     [TearDown]
-    public async Task DisposeResourcesAsync()
+    public void DeleteTempRootPath()
     {
-        await dbContext.DisposeAsync();
-
         if (Directory.Exists(tempRootPath))
         {
             Directory.Delete(tempRootPath, recursive: true);
@@ -109,7 +106,7 @@ public class AdditionalArchiveContentServiceTest : BearcatIntegrationTest
             AdditionalArchiveContentValidationError.SourcePathNotFound,
         ]);
         result.AdditionalArchiveContentId.ShouldBeNull();
-        (await dbContext.AdditionalArchiveContents.AnyAsync()).ShouldBeFalse();
+        (await DbContext.AdditionalArchiveContents.AnyAsync()).ShouldBeFalse();
     }
 
     [TestCase(null)]
@@ -180,7 +177,7 @@ public class AdditionalArchiveContentServiceTest : BearcatIntegrationTest
         result.ValidationErrors.ShouldBe([
             AdditionalArchiveContentValidationError.NameAlreadyExists,
         ]);
-        (await dbContext.AdditionalArchiveContents.CountAsync()).ShouldBe(1);
+        (await DbContext.AdditionalArchiveContents.CountAsync()).ShouldBe(1);
     }
 
     [Test]
@@ -333,8 +330,8 @@ public class AdditionalArchiveContentServiceTest : BearcatIntegrationTest
         result.ValidationErrors.ShouldBe([
             AdditionalArchiveContentValidationError.NameAlreadyExists,
         ]);
-        dbContext.ChangeTracker.Clear();
-        var content = await dbContext.AdditionalArchiveContents.SingleAsync(content =>
+        DbContext.ChangeTracker.Clear();
+        var content = await DbContext.AdditionalArchiveContents.SingleAsync(content =>
             content.Id == id
         );
         content.Name.ShouldBe("Other ad");
@@ -412,7 +409,7 @@ public class AdditionalArchiveContentServiceTest : BearcatIntegrationTest
         result.IsDeleted.ShouldBeTrue();
         result.UsingReleaseTemplateNames.ShouldBeEmpty();
         result.UsingReleaseNames.ShouldBeEmpty();
-        (await dbContext.AdditionalArchiveContents.AnyAsync()).ShouldBeFalse();
+        (await DbContext.AdditionalArchiveContents.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -430,8 +427,8 @@ public class AdditionalArchiveContentServiceTest : BearcatIntegrationTest
         result.IsDeleted.ShouldBeFalse();
         result.UsingReleaseTemplateNames.ShouldBe(["Managed template"]);
         result.UsingReleaseNames.ShouldBe(["Bearcat.Release.001"]);
-        dbContext.ChangeTracker.Clear();
-        (await dbContext.AdditionalArchiveContents.CountAsync()).ShouldBe(1);
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.AdditionalArchiveContents.CountAsync()).ShouldBe(1);
     }
 
     private static AdditionalArchiveContentInput CreatePathInput(string name, string? sourcePath)

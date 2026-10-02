@@ -4,10 +4,10 @@ using Bearcat.Abstractions.RemoteSource;
 using Bearcat.Abstractions.Security;
 using Bearcat.Domain.Configurations;
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.IntegrationTest.Shared;
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Scanning;
 using Bearcat.Domain.UseCases.ManageRemoteSources.Sessions;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +17,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.RemoteSources.Scanning;
 
-public class RemoteSourceScanServiceTest : BearcatIntegrationTest
+public class RemoteSourceScanServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string SourceClassName = nameof(FakeRemoteSource);
     private const string IncomingPath = "/incoming";

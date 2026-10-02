@@ -2,9 +2,8 @@ using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
-using Microsoft.EntityFrameworkCore;
+using EntityFramework.Exceptions.Common;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ManageReleases.ReleaseInfoResolution;
@@ -83,7 +82,8 @@ public class ReleaseInfoResolutionService(
         {
             await repository.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException exception) when (IsDuplicateReleaseDataException(exception))
+        catch (UniqueConstraintException exception)
+            when (IsDuplicateReleaseDataException(exception))
         {
             repository.DetachPendingReleaseInfo(release);
             await repository.SaveChangesAsync(cancellationToken);
@@ -116,7 +116,8 @@ public class ReleaseInfoResolutionService(
         {
             await repository.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException exception) when (IsDuplicateReleaseDataException(exception))
+        catch (UniqueConstraintException exception)
+            when (IsDuplicateReleaseDataException(exception))
         {
             repository.DetachPendingReleaseInfo(release);
             await repository.SaveChangesAsync(cancellationToken);
@@ -232,7 +233,8 @@ public class ReleaseInfoResolutionService(
             {
                 await repository.SaveChangesAsync(cancellationToken);
             }
-            catch (DbUpdateException exception) when (IsDuplicateReleaseDataException(exception))
+            catch (UniqueConstraintException exception)
+                when (IsDuplicateReleaseDataException(exception))
             {
                 repository.DetachPendingReleaseInfo(release);
                 await repository.SaveChangesAsync(cancellationToken);
@@ -263,15 +265,10 @@ public class ReleaseInfoResolutionService(
         return activeNfoDatabaseRegistrations;
     }
 
-    private static bool IsDuplicateReleaseDataException(DbUpdateException exception)
+    private static bool IsDuplicateReleaseDataException(UniqueConstraintException exception)
     {
-        return exception.InnerException
-            is PostgresException
-            {
-                SqlState: PostgresErrorCodes.UniqueViolation,
-                ConstraintName: "IX_ReleaseInfos_ReleaseId"
-                    or "IX_ReleaseMetadata_ReleaseId"
-                    or "IX_ReleaseClassifications_ReleaseId",
-            };
+        return exception.Entries.Any(entry =>
+            entry.Entity is Entities.ReleaseInfo or ReleaseMetadata or ReleaseClassification
+        );
     }
 }

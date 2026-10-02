@@ -9,24 +9,17 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageUploadConfigLinkCrypters;
 
-public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
+public class UploadConfigLinkCrypterServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private UploadConfigLinkCrypterService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         service = new UploadConfigLinkCrypterService(
-            new UploadConfigLinkCrypterWriteRepository(dbContext)
+            new UploadConfigLinkCrypterWriteRepository(DbContext)
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -44,7 +37,7 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var result = await dbContext.UploadConfigLinkCrypters.SingleAsync();
+        var result = await DbContext.UploadConfigLinkCrypters.SingleAsync();
 
         result.ShouldNotBeNull();
         result.UploadConfigId.ShouldBe(seed.UploadConfigId);
@@ -70,7 +63,7 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var result = await dbContext.UploadConfigLinkCrypters.SingleAsync();
+        var result = await DbContext.UploadConfigLinkCrypters.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Password.ShouldBeNull();
@@ -90,7 +83,7 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var result = await dbContext.UploadConfigLinkCrypters.SingleAsync();
+        var result = await DbContext.UploadConfigLinkCrypters.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(linkCrypter.Id);
@@ -107,7 +100,7 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
         await service.UpdateAsync(linkCrypter.Id, "", cancellationToken: CancellationToken.None);
 
         // Assert
-        var result = await dbContext.UploadConfigLinkCrypters.SingleAsync();
+        var result = await DbContext.UploadConfigLinkCrypters.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Password.ShouldBeNull();
@@ -123,7 +116,7 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
         await service.DeleteAsync(linkCrypter.Id, CancellationToken.None);
 
         // Assert
-        var result = await dbContext.UploadConfigLinkCrypters.AnyAsync();
+        var result = await DbContext.UploadConfigLinkCrypters.AnyAsync();
 
         result.ShouldBeFalse();
     }
@@ -146,7 +139,7 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
         exception.Message.ShouldBe(
             "Collection scoped link crypters are managed through release templates."
         );
-        var result = await dbContext.UploadConfigLinkCrypters.SingleAsync();
+        var result = await DbContext.UploadConfigLinkCrypters.SingleAsync();
 
         result.Id.ShouldBe(linkCrypter.Id);
     }
@@ -176,7 +169,7 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
         exception.Message.ShouldBe(
             "Collection scoped link crypters are managed through release templates."
         );
-        var result = await dbContext.UploadConfigLinkCrypters.SingleAsync();
+        var result = await DbContext.UploadConfigLinkCrypters.SingleAsync();
 
         result.Password.ShouldBe("secret");
         result.EnableCaptcha.ShouldBeTrue();
@@ -198,8 +191,8 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
             ContainerScope = containerScope,
         };
 
-        dbContext.UploadConfigLinkCrypters.Add(linkCrypter);
-        await dbContext.SaveChangesAsync();
+        DbContext.UploadConfigLinkCrypters.Add(linkCrypter);
+        await DbContext.SaveChangesAsync();
 
         return linkCrypter;
     }
@@ -251,9 +244,9 @@ public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
             IsActive = true,
         };
 
-        dbContext.UploadConfigs.Add(uploadConfig);
-        dbContext.LinkCrypterRegistrations.Add(linkCrypterRegistration);
-        await dbContext.SaveChangesAsync();
+        DbContext.UploadConfigs.Add(uploadConfig);
+        DbContext.LinkCrypterRegistrations.Add(linkCrypterRegistration);
+        await DbContext.SaveChangesAsync();
 
         return new UploadConfigLinkCrypterSeed(uploadConfig.Id, linkCrypterRegistration.Id);
     }

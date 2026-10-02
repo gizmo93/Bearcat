@@ -15,26 +15,19 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageNotifications;
 
-public class NotificationServiceTest : BearcatIntegrationTest
+public class NotificationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private NotificationService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         service = new NotificationService(
-            repository: new NotificationRepository(dbContext),
+            repository: new NotificationRepository(DbContext),
             timeProvider: CreateTimeProvider(),
             configurationProvider: CreateConfigurationProvider()
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -51,7 +44,7 @@ public class NotificationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var result = await dbContext.Notifications.SingleAsync();
+        var result = await DbContext.Notifications.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Message.ShouldBe(message);
@@ -75,7 +68,7 @@ public class NotificationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var result = await dbContext.Notifications.SingleAsync();
+        var result = await DbContext.Notifications.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Message.ShouldBe(message);
@@ -96,7 +89,7 @@ public class NotificationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var result = await dbContext.Notifications.SingleAsync();
+        var result = await DbContext.Notifications.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Message.ShouldBe(message);
@@ -113,9 +106,9 @@ public class NotificationServiceTest : BearcatIntegrationTest
             ReleaseType = ReleaseType.Managed,
             ReleaseGroup = new ReleaseGroup { Name = "Saved group" },
         };
-        dbContext.Releases.Add(pendingRelease);
+        DbContext.Releases.Add(pendingRelease);
         var disabledService = new NotificationService(
-            repository: new NotificationRepository(dbContext),
+            repository: new NotificationRepository(DbContext),
             timeProvider: CreateTimeProvider(),
             configurationProvider: CreateConfigurationProvider(configuration)
         );
@@ -126,7 +119,7 @@ public class NotificationServiceTest : BearcatIntegrationTest
             cancellationToken: CancellationToken.None
         );
 
-        (await dbContext.Notifications.CountAsync()).ShouldBe(0);
+        (await DbContext.Notifications.CountAsync()).ShouldBe(0);
         pendingRelease.Id.ShouldBeGreaterThan(0);
     }
 
@@ -143,10 +136,10 @@ public class NotificationServiceTest : BearcatIntegrationTest
             entity: upload,
             selector: n => n.Upload
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Assert
-        var result = await dbContext.Notifications.SingleAsync();
+        var result = await DbContext.Notifications.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Message.ShouldBe("Upload failed");
@@ -172,7 +165,7 @@ public class NotificationServiceTest : BearcatIntegrationTest
         {
             var configuration = new NotificationConfiguration();
             var configuredService = new NotificationService(
-                repository: new NotificationRepository(dbContext),
+                repository: new NotificationRepository(DbContext),
                 timeProvider: CreateTimeProvider(),
                 configurationProvider: CreateConfigurationProvider(configuration)
             );
@@ -183,7 +176,7 @@ public class NotificationServiceTest : BearcatIntegrationTest
                 cancellationToken: CancellationToken.None
             );
 
-            var created = await dbContext.Notifications.SingleAsync(notification =>
+            var created = await DbContext.Notifications.SingleAsync(notification =>
                 notification.NotificationKind == definition.Kind
             );
             created.NotificationSeverity.ShouldBe(definition.Severity);
@@ -195,7 +188,7 @@ public class NotificationServiceTest : BearcatIntegrationTest
                 cancellationToken: CancellationToken.None
             );
             (
-                await dbContext.Notifications.CountAsync(notification =>
+                await DbContext.Notifications.CountAsync(notification =>
                     notification.NotificationKind == definition.Kind
                 )
             ).ShouldBe(1);
@@ -207,7 +200,7 @@ public class NotificationServiceTest : BearcatIntegrationTest
                 cancellationToken: CancellationToken.None
             );
             (
-                await dbContext.Notifications.CountAsync(notification =>
+                await DbContext.Notifications.CountAsync(notification =>
                     notification.NotificationKind == definition.Kind
                 )
             ).ShouldBe(2);
@@ -220,7 +213,7 @@ public class NotificationServiceTest : BearcatIntegrationTest
         var upload = await AddUploadAsync();
         var configuration = new NotificationConfiguration { UploadFailed = false };
         var configuredService = new NotificationService(
-            repository: new NotificationRepository(dbContext),
+            repository: new NotificationRepository(DbContext),
             timeProvider: CreateTimeProvider(),
             configurationProvider: CreateConfigurationProvider(configuration)
         );
@@ -233,11 +226,11 @@ public class NotificationServiceTest : BearcatIntegrationTest
             selector: notification => notification.Upload
         );
 
-        dbContext.ChangeTracker.Entries<Notification>().ShouldBeEmpty();
-        dbContext.ChangeTracker.Entries<Upload>().Single().State.ShouldBe(EntityState.Modified);
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Entries<Notification>().ShouldBeEmpty();
+        DbContext.ChangeTracker.Entries<Upload>().Single().State.ShouldBe(EntityState.Modified);
+        DbContext.ChangeTracker.Clear();
         (
-            await dbContext.Uploads.SingleAsync(entity => entity.Id == upload.Id)
+            await DbContext.Uploads.SingleAsync(entity => entity.Id == upload.Id)
         ).UploadState.ShouldBe(UploadState.Completed);
     }
 
@@ -251,12 +244,12 @@ public class NotificationServiceTest : BearcatIntegrationTest
             HosterClassName = "TestHoster",
             IsActive = true,
         };
-        dbContext.HosterRegistrations.Add(registration);
-        await dbContext.SaveChangesAsync();
+        DbContext.HosterRegistrations.Add(registration);
+        await DbContext.SaveChangesAsync();
 
         var configuration = new NotificationConfiguration { CaptchaVerificationRequired = false };
         var configuredService = new NotificationService(
-            repository: new NotificationRepository(dbContext),
+            repository: new NotificationRepository(DbContext),
             timeProvider: CreateTimeProvider(),
             configurationProvider: CreateConfigurationProvider(configuration)
         );
@@ -302,8 +295,8 @@ public class NotificationServiceTest : BearcatIntegrationTest
         await service.ResolveAsync(notification.Id, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Notifications.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Notifications.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(notification.Id);
@@ -321,8 +314,8 @@ public class NotificationServiceTest : BearcatIntegrationTest
         await service.ResolveAllAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Notifications.ToListAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Notifications.ToListAsync();
 
         result.ShouldNotBeNull();
         result.Count.ShouldBe(2);
@@ -339,8 +332,8 @@ public class NotificationServiceTest : BearcatIntegrationTest
             CreatedAt = DateTime.UtcNow,
         };
 
-        dbContext.Notifications.Add(notification);
-        await dbContext.SaveChangesAsync();
+        DbContext.Notifications.Add(notification);
+        await DbContext.SaveChangesAsync();
 
         return notification;
     }
@@ -380,8 +373,8 @@ public class NotificationServiceTest : BearcatIntegrationTest
             ErrorMessages = [],
         };
 
-        dbContext.Uploads.Add(upload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(upload);
+        await DbContext.SaveChangesAsync();
 
         return upload;
     }
@@ -426,8 +419,8 @@ public class NotificationServiceTest : BearcatIntegrationTest
             Name = "Default upload",
         };
 
-        dbContext.UploadConfigs.Add(uploadConfig);
-        await dbContext.SaveChangesAsync();
+        DbContext.UploadConfigs.Add(uploadConfig);
+        await DbContext.SaveChangesAsync();
 
         return uploadConfig;
     }

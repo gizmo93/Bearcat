@@ -15,7 +15,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.DetectUnreadableSecrets;
 
-public class UnreadableSecretsDetectionServiceTest : BearcatIntegrationTest
+public class UnreadableSecretsDetectionServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string PlaintextConfig = "{\"ApiKey\":\"plain\"}";
 

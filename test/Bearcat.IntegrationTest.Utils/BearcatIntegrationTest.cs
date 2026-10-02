@@ -1,30 +1,37 @@
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 
 namespace Bearcat.IntegrationTest.Utils;
 
-[NonParallelizable]
-public abstract class BearcatIntegrationTest
+[TestFixtureSource(typeof(BearcatIntegrationTest), nameof(DatabaseProviders))]
+public abstract class BearcatIntegrationTest(DatabaseProvider databaseProvider)
 {
     private readonly List<BearcatDbContext> dbContexts = [];
 
+    public static IReadOnlyList<DatabaseProvider> DatabaseProviders { get; } =
+    [DatabaseProvider.Postgres, DatabaseProvider.Sqlite];
+
+    protected DatabaseProvider DatabaseProvider { get; } = databaseProvider;
+
     protected BearcatIntegrationTestDatabase Database { get; private set; } = null!;
 
-    [OneTimeSetUp]
-    public async Task StartDatabaseAsync()
-    {
-        Database = await BearcatIntegrationTestDatabase.GetOrStartAsync();
-    }
+    protected BearcatDbContext DbContext { get; private set; } = null!;
+
+    protected BearcatDbContext ReadDbContext { get; private set; } = null!;
 
     [SetUp]
-    public async Task ResetDatabaseAsync()
+    public async Task CreateDatabaseAsync()
     {
-        await Database.ResetAsync();
+        Database = await BearcatIntegrationTestDatabase.CreateAsync(DatabaseProvider);
+        DbContext = CreateDbContext();
+        ReadDbContext = CreateDbContext();
+        ReadDbContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
     }
 
     [TearDown]
-    public async Task DisposeDbContextsAsync()
+    public async Task DisposeDatabaseAsync()
     {
         foreach (var dbContext in dbContexts)
         {
@@ -32,6 +39,7 @@ public abstract class BearcatIntegrationTest
         }
 
         dbContexts.Clear();
+        await Database.DisposeAsync();
     }
 
     protected BearcatDbContext CreateDbContext()

@@ -82,10 +82,10 @@ public class ReleaseCollectionRepository(
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
-            var searchTerm = $"%{query.SearchTerm.Trim()}%";
+            var searchTerm = $"%{query.SearchTerm.Trim().ToLowerInvariant()}%";
             collections = collections.Where(collection =>
-                EF.Functions.ILike(collection.Name, searchTerm)
-                || EF.Functions.ILike(collection.Key, searchTerm)
+                EF.Functions.Like(collection.Name.ToLower(), searchTerm)
+                || EF.Functions.Like(collection.Key.ToLower(), searchTerm)
             );
         }
 
@@ -255,7 +255,7 @@ public class ReleaseCollectionRepository(
                     container.State,
                     container.CreatedAt,
                     container.SourceUploads.Count,
-                    container.Errors.ToList()
+                    container.Errors
                 ),
             })
             .ToListAsync(cancellationToken);
@@ -638,7 +638,7 @@ public class ReleaseCollectionRepository(
                         upload.CreatedAt,
                         upload.UploadedAt,
                         upload.UploadState,
-                        ErrorMessages = upload.ErrorMessages.ToList(),
+                        ErrorMessages = upload.ErrorMessages,
                         ImageUrls = upload
                             .ImageUrls.OrderBy(url => url.ImageSize)
                             .ThenBy(url => url.Id)
@@ -697,8 +697,8 @@ public class ReleaseCollectionRepository(
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            var term = $"%{searchTerm.Trim()}%";
-            query = query.Where(release => EF.Functions.ILike(release.Name, term));
+            var term = $"%{searchTerm.Trim().ToLowerInvariant()}%";
+            query = query.Where(release => EF.Functions.Like(release.Name.ToLower(), term));
         }
 
         return await query

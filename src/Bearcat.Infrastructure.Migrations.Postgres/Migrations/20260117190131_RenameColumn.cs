@@ -1,0 +1,29 @@
+﻿using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace Bearcat.Infrastructure.Migrations.Postgres;
+
+/// <inheritdoc />
+public partial class RenameColumn : Migration
+{
+    /// <inheritdoc />
+    protected override void Up(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.RenameColumn(
+            name: "HosterFullClassName",
+            table: "HosterRegistrations",
+            newName: "HosterClassName"
+        );
+    }
+
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.RenameColumn(
+            name: "HosterClassName",
+            table: "HosterRegistrations",
+            newName: "HosterFullClassName"
+        );
+    }
+}

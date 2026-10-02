@@ -2,6 +2,7 @@ using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageNfoDatabases;
+using Bearcat.Domain.UseCases.ManageNfoDatabases.ReadModels;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.Security;
@@ -12,12 +13,13 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageNfoDatabases;
 
-public class NfoDatabaseRegistrationServiceTest : BearcatIntegrationTest
+public class NfoDatabaseRegistrationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string ClassName = "srrDB";
+    private const string OtherClassName = "preDB";
     private const string SerializedConfig = "{\"ApiKey\":\"secret\"}";
 
-    private BearcatDbContext dbContext = null!;
     private Mock<INfoDatabase> databaseMock = null!;
     private Mock<INfoDatabaseConfig> configMock = null!;
     private Mock<INfoDatabaseFactory> factoryMock = null!;
@@ -26,27 +28,20 @@ public class NfoDatabaseRegistrationServiceTest : BearcatIntegrationTest
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         databaseMock = new Mock<INfoDatabase>(MockBehavior.Strict);
         configMock = new Mock<INfoDatabaseConfig>(MockBehavior.Strict);
         factoryMock = new Mock<INfoDatabaseFactory>(MockBehavior.Strict);
         factoryMock.Setup(factory => factory.Get(ClassName)).Returns(databaseMock.Object);
 
         service = new NfoDatabaseRegistrationService(
-            new NfoDatabaseRegistrationRepository(dbContext, dbContext, factoryMock.Object),
+            new NfoDatabaseRegistrationRepository(DbContext, DbContext, factoryMock.Object),
             factoryMock.Object,
             NoOpSecretProtector.Instance,
             UnreadableSecretsNotificationServiceFactory.Create(
-                dbContext,
+                DbContext,
                 CreateNotificationConfigurationProvider()
             )
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -68,7 +63,7 @@ public class NfoDatabaseRegistrationServiceTest : BearcatIntegrationTest
         await service.CreateAsync(ClassName, configuration, CancellationToken.None);
 
         // Assert
-        var registration = await dbContext.NfoDatabaseRegistrations.SingleAsync();
+        var registration = await DbContext.NfoDatabaseRegistrations.SingleAsync();
         registration.NfoDatabaseClassName.ShouldBe(ClassName);
         registration.SerializedConfig.ShouldBe(SerializedConfig);
         registration.IsActive.ShouldBeTrue();
@@ -116,7 +111,7 @@ public class NfoDatabaseRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var updated = await dbContext.NfoDatabaseRegistrations.SingleAsync();
+        var updated = await DbContext.NfoDatabaseRegistrations.SingleAsync();
         updated.SerializedConfig.ShouldBe("{\"ApiKey\":\"updated\",\"Lang\":\"de\"}");
     }
 
@@ -143,8 +138,8 @@ public class NfoDatabaseRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var updated = await dbContext.NfoDatabaseRegistrations.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var updated = await DbContext.NfoDatabaseRegistrations.SingleAsync();
         updated.SerializedConfig.ShouldBe("{\"ApiKey\":\"updated\"}");
         updated.HasUnreadableSecrets.ShouldBeFalse();
         databaseMock.Verify(
@@ -163,7 +158,7 @@ public class NfoDatabaseRegistrationServiceTest : BearcatIntegrationTest
         await service.ToggleIsActiveAsync(registration.Id, CancellationToken.None);
 
         // Assert
-        var updated = await dbContext.NfoDatabaseRegistrations.SingleAsync();
+        var updated = await DbContext.NfoDatabaseRegistrations.SingleAsync();
         updated.IsActive.ShouldBeFalse();
     }
 
@@ -177,25 +172,140 @@ public class NfoDatabaseRegistrationServiceTest : BearcatIntegrationTest
         await service.DeleteAsync(registration.Id, CancellationToken.None);
 
         // Assert
-        (await dbContext.NfoDatabaseRegistrations.AnyAsync()).ShouldBeFalse();
+        (await DbContext.NfoDatabaseRegistrations.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task GetAllAsync_SeveralRegistrations_ReturnsReadModelsOrderedByClassName()
+    {
+        // Arrange
+        var registration = await AddRegistrationAsync();
+        var otherRegistration = await AddRegistrationAsync(
+            isActive: false,
+            hasUnreadableSecrets: true,
+            className: OtherClassName
+        );
+        var repository = CreateRepositoryWithDatabaseLookup();
+
+        // Act
+        var result = await repository.GetAllAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe([
+            new NfoDatabaseRegistrationReadModel(
+                otherRegistration.Id,
+                IsActive: false,
+                HasUnreadableSecrets: true,
+                "Other database",
+                OtherClassName
+            ),
+            new NfoDatabaseRegistrationReadModel(
+                registration.Id,
+                IsActive: true,
+                HasUnreadableSecrets: false,
+                "Test database",
+                ClassName
+            ),
+        ]);
+    }
+
+    [Test]
+    public async Task GetByIdAsync_RegistrationExists_ReturnsReadModel()
+    {
+        // Arrange
+        await AddRegistrationAsync();
+        var registration = await AddRegistrationAsync(
+            hasUnreadableSecrets: true,
+            className: OtherClassName
+        );
+        var repository = CreateRepositoryWithDatabaseLookup();
+
+        // Act
+        var result = await repository.GetByIdAsync(registration.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(
+            new NfoDatabaseRegistrationReadModel(
+                registration.Id,
+                IsActive: true,
+                HasUnreadableSecrets: true,
+                "Other database",
+                OtherClassName
+            )
+        );
+    }
+
+    [Test]
+    public async Task GetByIdAsync_RegistrationDoesNotExist_ReturnsNull()
+    {
+        // Arrange
+        var registration = await AddRegistrationAsync();
+        var repository = CreateRepositoryWithDatabaseLookup();
+
+        // Act
+        var result = await repository.GetByIdAsync(registration.Id + 1, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ExistsForClassNameAsync_RegisteredAndUnregisteredClassName_ReturnsWhetherRegistered()
+    {
+        // Arrange
+        await AddRegistrationAsync();
+        var repository = CreateRepositoryWithDatabaseLookup();
+
+        // Act
+        var registeredExists = await repository.ExistsForClassNameAsync(
+            ClassName,
+            CancellationToken.None
+        );
+        var unregisteredExists = await repository.ExistsForClassNameAsync(
+            OtherClassName,
+            CancellationToken.None
+        );
+
+        // Assert
+        registeredExists.ShouldBeTrue();
+        unregisteredExists.ShouldBeFalse();
+    }
+
+    private NfoDatabaseRegistrationRepository CreateRepositoryWithDatabaseLookup()
+    {
+        databaseMock.Setup(database => database.Name).Returns("Test database");
+        var otherDatabaseMock = new Mock<INfoDatabase>(MockBehavior.Strict);
+        otherDatabaseMock.Setup(database => database.Name).Returns("Other database");
+        factoryMock
+            .Setup(factory => factory.GetByClassName())
+            .Returns(
+                new Dictionary<string, INfoDatabase>
+                {
+                    [ClassName] = databaseMock.Object,
+                    [OtherClassName] = otherDatabaseMock.Object,
+                }
+            );
+
+        return new NfoDatabaseRegistrationRepository(DbContext, DbContext, factoryMock.Object);
     }
 
     private async Task<NfoDatabaseRegistration> AddRegistrationAsync(
         bool isActive = true,
-        bool hasUnreadableSecrets = false
+        bool hasUnreadableSecrets = false,
+        string className = ClassName
     )
     {
         var registration = new NfoDatabaseRegistration
         {
-            NfoDatabaseClassName = ClassName,
+            NfoDatabaseClassName = className,
             SerializedConfig = SerializedConfig,
             IsActive = isActive,
             HasUnreadableSecrets = hasUnreadableSecrets,
         };
 
-        dbContext.NfoDatabaseRegistrations.Add(registration);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.NfoDatabaseRegistrations.Add(registration);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         return registration;
     }

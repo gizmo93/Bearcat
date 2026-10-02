@@ -4,27 +4,47 @@ This page collects project notes that are useful while working on Bearcat locall
 
 ## Local Configuration
 
-In development mode, `Bearcat.Host` loads an optional `appsettings.user.json` file. Use this file for local paths and credentials that should not be committed, such as:
+Outside a container, `Bearcat.Host` loads an optional `src/Bearcat.Host/appsettings.user.json` file. Use this file for local paths and credentials that should not be committed, such as:
 
-- `ReleaseDataDirectory`
-- `Database:ConnectionString`
+- `WorkingDirectories`
+- `Database:Provider`, `Database:SqliteFilePath`, `Database:ConnectionString`
 - `Bearcat:DataDirectory` or `Security:MasterKeyPath` if you want the local encryption key somewhere specific
 
-Example:
+| Setting | Value |
+| --- | --- |
+| `Database:Provider` | `Sqlite` or `Postgres`, case-insensitive. Not set: `Postgres`. |
+| `Database:SqliteFilePath` | SQLite only. Not set: `bearcat.db` in the data directory. |
+| `Database:ConnectionString` | PostgreSQL only. |
+
+Example with SQLite:
 
 ```json
 {
-  "ReleaseDataDirectory": "/path/to/releases",
+  "WorkingDirectories": ["/path/to/releases"],
   "Bearcat": {
     "DataDirectory": "/path/to/bearcat-app-data"
   },
   "Database": {
+    "Provider": "Sqlite"
+  }
+}
+```
+
+Example with PostgreSQL:
+
+```json
+{
+  "WorkingDirectories": ["/path/to/releases"],
+  "Database": {
+    "Provider": "Postgres",
     "ConnectionString": "Host=localhost;Database=<local-database-name>;Username=<db-username>;Password=<db-password>"
   }
 }
 ```
 
-If no key path or data directory is configured, Bearcat stores `bearcat.key` in the operating system's application data folder.
+To run the host on SQLite for one session without changing the file, use the `http (SQLite)` launch profile or set `Database__Provider=Sqlite`.
+
+If no data directory is configured, Bearcat stores `bearcat.key` and the default `bearcat.db` in the operating system's application data folder (`Bearcat` subfolder).
 
 ## Formatting
 
@@ -55,6 +75,24 @@ Focused test projects can also be run directly, for example:
 dotnet test test/Bearcat.Domain.UnitTest/Bearcat.Domain.UnitTest.csproj
 ```
 
+### Database integration tests
+
+| Project | Covers |
+| --- | --- |
+| `test/Bearcat.Domain.IntegrationTest` | Domain services against a real database |
+| `test/Bearcat.Infrastructure.IntegrationTest` | Repositories and database infrastructure |
+
+- Every database test fixture runs once per provider: `XTest(Postgres)` and `XTest(Sqlite)`.
+- Tests run in parallel. Each test gets its own database.
+- The PostgreSQL part uses Testcontainers and needs Docker.
+
+To run one provider only, build the project and call the test executable with a filter. Escape the parentheses:
+
+```bash
+dotnet build test/Bearcat.Infrastructure.IntegrationTest
+test/Bearcat.Infrastructure.IntegrationTest/bin/Debug/net10.0/Bearcat.Infrastructure.IntegrationTest --filter 'FullyQualifiedName~\(Sqlite\)'
+```
+
 ## OpenAPI Spec
 
 The docs website in `website/` contains an API reference page that renders `website/public/openapi/v1.json`. That file is generated and gitignored, so it is missing after a fresh checkout.
@@ -73,26 +111,41 @@ The script starts `Bearcat.Host` in OpenAPI spec only mode (`Bearcat:OpenApiSpec
 
 ## Database Migrations
 
-Entity Framework migrations are created from the infrastructure project:
+| Provider | Migrations project |
+| --- | --- |
+| PostgreSQL | `src/Bearcat.Infrastructure.Migrations.Postgres` |
+| SQLite | `src/Bearcat.Infrastructure.Migrations.Sqlite` |
+
+Always create migrations with the script. It adds the migration to both projects and formats them:
 
 ```bash
-cd src/Bearcat.Infrastructure
-dotnet ef migrations add <migration-name> --startup-project .
+dotnet tool restore
+scripts/add-migration.sh <MigrationName>
 ```
 
-Apply migrations to the local database with:
+`dotnet tool restore` installs `dotnet-ef` from `.config/dotnet-tools.json`.
+
+Raw SQL in a migration must be written for each provider separately.
+
+Bearcat applies pending migrations on startup. The pull request workflow fails if the model has changes without a migration in either project. Check locally with:
 
 ```bash
-dotnet ef database update
+dotnet ef migrations has-pending-model-changes --project src/Bearcat.Infrastructure.Migrations.Postgres --startup-project src/Bearcat.Infrastructure.Migrations.Postgres
+dotnet ef migrations has-pending-model-changes --project src/Bearcat.Infrastructure.Migrations.Sqlite --startup-project src/Bearcat.Infrastructure.Migrations.Sqlite
 ```
 
 ## Docker
 
-Docker Compose starts Bearcat together with PostgreSQL. Copy `.env.example` to `.env`, set `RELEASES_DIR`, then run:
+`docker-compose.yml` runs Bearcat with SQLite (`/data/bearcat.db` in the `BEARCAT_DATA_DIR` volume). `docker-compose.postgres.yml` adds a PostgreSQL container and switches Bearcat to it. `docker-compose.build.yml` builds the image locally.
 
-```bash
-docker compose up --build
-```
+Copy `.env.example` to `.env`, set `RELEASES_DIR`, then run:
+
+| Database | Command |
+| --- | --- |
+| SQLite | `docker compose up -d` |
+| PostgreSQL | `docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d` |
+
+Instead of `-f`, `COMPOSE_FILE=docker-compose.yml:docker-compose.postgres.yml` in `.env` works too (separator `;` on Windows). To build the image from source, add `-f docker-compose.build.yml` and `--build`.
 
 The Docker image sets `ASPNETCORE_ENVIRONMENT=Production` so startup database migrations are enabled when the container runs.
 

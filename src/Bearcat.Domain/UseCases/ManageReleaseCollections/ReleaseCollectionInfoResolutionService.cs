@@ -4,9 +4,8 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.Shared.MediaMetadataResolution;
 using Bearcat.Domain.UseCases.ManageReleaseCollections.Repositories;
 using Bearcat.Domain.ValueObjects;
-using Microsoft.EntityFrameworkCore;
+using EntityFramework.Exceptions.Common;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ManageReleaseCollections;
@@ -167,9 +166,10 @@ public partial class ReleaseCollectionInfoResolutionService(
         {
             await repository.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException exception) when (IsDuplicateMetadataException(exception))
+        catch (UniqueConstraintException exception) when (IsDuplicateMetadataException(exception))
         {
             repository.DetachPendingMetadata(collection);
+            await repository.SaveChangesAsync(cancellationToken);
             logger.LogInformation(
                 exception,
                 "Metadata for collection {CollectionName} was already resolved by another worker",
@@ -209,14 +209,9 @@ public partial class ReleaseCollectionInfoResolutionService(
         return string.IsNullOrWhiteSpace(normalized) ? null : normalized;
     }
 
-    private static bool IsDuplicateMetadataException(DbUpdateException exception)
+    private static bool IsDuplicateMetadataException(UniqueConstraintException exception)
     {
-        return exception.InnerException
-            is PostgresException
-            {
-                SqlState: PostgresErrorCodes.UniqueViolation,
-                ConstraintName: "IX_ReleaseCollectionMetadata_ReleaseCollectionId",
-            };
+        return exception.Entries.Any(entry => entry.Entity is ReleaseCollectionMetadata);
     }
 
     [GeneratedRegex(@"\b(?:(?:19|20)\d{2}|S\d{1,2}(?:E\d{1,3})?)\b", RegexOptions.IgnoreCase)]

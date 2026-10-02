@@ -55,7 +55,7 @@ export default defineConfig({
 							label: 'Desktop App',
 							items: [
 								{ label: 'Overview', slug: 'use-the-desktop-launcher' },
-								{ label: 'PostgreSQL for Desktop', slug: 'install-postgresql-for-desktop' },
+								{ label: 'PostgreSQL (optional)', slug: 'install-postgresql-for-desktop' },
 							],
 						},
 						{ label: 'Windows Service', slug: 'use-the-windows-service' },

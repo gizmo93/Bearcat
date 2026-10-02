@@ -4,6 +4,7 @@ using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.Shared.ConfigurationFields;
 using Bearcat.Domain.UseCases.ManageDistributionSites;
+using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.Security;
@@ -14,13 +15,13 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageDistributionSites;
 
-public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
+public class DistributionSiteRegistrationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string DistributionSiteClassName = "TestForum";
     private const string FixedUrlDistributionSiteClassName = "FixedUrlForum";
     private const string StoredSerializedConfig = "stored-config";
 
-    private BearcatDbContext dbContext = null!;
     private Mock<IDistributionSite> distributionSiteMock = null!;
     private Mock<IDistributionSite> fixedUrlDistributionSiteMock = null!;
     private Mock<IDistributionSiteFactory> distributionSiteFactoryMock = null!;
@@ -29,7 +30,6 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         distributionSiteMock = new Mock<IDistributionSite>(MockBehavior.Strict);
         fixedUrlDistributionSiteMock = new Mock<IDistributionSite>(MockBehavior.Strict);
         distributionSiteFactoryMock = new Mock<IDistributionSiteFactory>(MockBehavior.Strict);
@@ -41,24 +41,18 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
             .Returns(fixedUrlDistributionSiteMock.Object);
 
         registrationService = new DistributionSiteRegistrationService(
-            new DistributionSiteRegistrationWriteRepository(dbContext),
+            new DistributionSiteRegistrationWriteRepository(DbContext),
             new DistributionSiteRegistrationReadRepository(
-                dbContext,
+                DbContext,
                 distributionSiteFactoryMock.Object
             ),
             distributionSiteFactoryMock.Object,
             NoOpSecretProtector.Instance,
             UnreadableSecretsNotificationServiceFactory.Create(
-                dbContext,
+                DbContext,
                 CreateNotificationConfigurationProvider()
             )
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -81,8 +75,8 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.DistributionSiteRegistrations.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.DistributionSiteRegistrations.SingleAsync();
 
         result.Name.ShouldBe("Forum");
         result.DistributionSiteClassName.ShouldBe(DistributionSiteClassName);
@@ -116,7 +110,7 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
         // Assert
         exception.FieldKey.ShouldBe("BaseUrl");
         exception.Error.ShouldBe(ConfigurationFieldValidationError.InvalidUrl);
-        (await dbContext.DistributionSiteRegistrations.AnyAsync()).ShouldBeFalse();
+        (await DbContext.DistributionSiteRegistrations.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -140,8 +134,8 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.DistributionSiteRegistrations.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.DistributionSiteRegistrations.SingleAsync();
 
         result.SerializedConfig.ShouldBe(
             "{\"BaseUrl\":\"https://example.org/\",\"Username\":\"uploader\",\"Password\":\"new-password\"}"
@@ -175,8 +169,8 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.DistributionSiteRegistrations.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.DistributionSiteRegistrations.SingleAsync();
 
         result.Name.ShouldBe("Renamed forum");
         result.SerializedConfig.ShouldBe(
@@ -286,12 +280,12 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
-        dbContext.ForumPostingRules.AddRange(
+        DbContext.ForumPostingRules.AddRange(
             CreateRule(registration, forumPostTemplate, sortOrder: 0),
             CreateRule(registration, forumPostTemplate, sortOrder: 1),
             CreateRule(otherRegistration, forumPostTemplate, sortOrder: 0)
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await registrationService.GetForumPostingRuleCountAsync(
@@ -308,8 +302,8 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
     {
         // Arrange
         var registration = CreateRegistration("Primary forum");
-        dbContext.DistributionSiteRegistrations.Add(registration);
-        await dbContext.SaveChangesAsync();
+        DbContext.DistributionSiteRegistrations.Add(registration);
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await registrationService.GetForumPostingRuleCountAsync(
@@ -319,6 +313,67 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
 
         // Assert
         result.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task DeleteAsync_RegistrationHasRulesAndPostedLocations_DeletesRulesAndKeepsPostedLocationsWithoutRegistration()
+    {
+        // Arrange
+        var registration = CreateRegistration("Primary forum");
+        var otherRegistration = CreateRegistration("Other forum");
+        var forumPostTemplate = new ForumPostTemplate
+        {
+            Name = "Release post",
+            TemplateBody = string.Empty,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+        var otherRule = CreateRule(otherRegistration, forumPostTemplate, sortOrder: 0);
+        DbContext.ForumPostingRules.AddRange(
+            CreateRule(registration, forumPostTemplate, sortOrder: 0),
+            CreateRule(registration, forumPostTemplate, sortOrder: 1),
+            otherRule
+        );
+        var postedLocation = new PostedLocation
+        {
+            Release = new Release
+            {
+                Name = "Bearcat.Release.001",
+                CreatedAt = DateTime.UtcNow,
+                ReleaseType = ReleaseType.Managed,
+                ReleaseFolderPath = "/tmp/Bearcat.Release.001",
+                ReleaseGroup = new ReleaseGroup
+                {
+                    Name = "Release group",
+                    EnableAutomaticReuploads = false,
+                    NumberOfHoursUntilReupload = 24,
+                },
+            },
+            DistributionSiteRegistration = registration,
+            ForumPostTemplate = forumPostTemplate,
+            Url = "https://example.org/threads/1",
+            CreatedAt = DateTime.UtcNow,
+        };
+        DbContext.PostedLocations.Add(postedLocation);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await registrationService.DeleteAsync(registration.Id, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        (
+            await DbContext.DistributionSiteRegistrations.Select(site => site.Id).ToListAsync()
+        ).ShouldBe([otherRegistration.Id]);
+        (await DbContext.ForumPostingRules.Select(rule => rule.Id).ToListAsync()).ShouldBe([
+            otherRule.Id,
+        ]);
+        var remainingPostedLocation = await DbContext.PostedLocations.SingleAsync();
+        remainingPostedLocation.Id.ShouldBe(postedLocation.Id);
+        remainingPostedLocation.DistributionSiteRegistrationId.ShouldBeNull();
+        remainingPostedLocation.ForumPostTemplateId.ShouldBe(forumPostTemplate.Id);
+        (await DbContext.ForumPostTemplates.CountAsync()).ShouldBe(1);
     }
 
     private void SetupConfigurationFields()
@@ -369,9 +424,9 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
             IsActive = true,
         };
 
-        dbContext.DistributionSiteRegistrations.Add(registration);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.DistributionSiteRegistrations.Add(registration);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         return registration;
     }
@@ -387,9 +442,9 @@ public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
             HasUnreadableSecrets = true,
         };
 
-        dbContext.DistributionSiteRegistrations.Add(registration);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.DistributionSiteRegistrations.Add(registration);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         return registration;
     }

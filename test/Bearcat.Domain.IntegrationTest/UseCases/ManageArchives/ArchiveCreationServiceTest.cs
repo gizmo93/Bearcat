@@ -25,9 +25,9 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageArchives;
 
-public class ArchiveCreationServiceTest : BearcatIntegrationTest
+public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private string releaseFolderPath = null!;
     private string archiveFilesBasePath = null!;
     private string tempRootPath = null!;
@@ -42,7 +42,6 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
         releaseFolderPath = Directory
             .CreateDirectory(Path.Combine(tempRootPath, "release"))
@@ -86,13 +85,13 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
     private ArchiveCreationService CreateService(IFileSystemService fileSystemService)
     {
         return new ArchiveCreationService(
-            new ArchiveCreationRepository(dbContext),
+            new ArchiveCreationRepository(DbContext),
             Mock.Of<ILogger<ArchiveCreationService>>(),
             archiverFactoryMock.Object,
             fileSystemService,
             CreateTimeProvider(),
             new NotificationService(
-                repository: new NotificationRepository(dbContext),
+                repository: new NotificationRepository(DbContext),
                 timeProvider: CreateTimeProvider(),
                 configurationProvider: CreateNotificationConfigurationProvider()
             ),
@@ -104,10 +103,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
     }
 
     [TearDown]
-    public async Task DisposeResourcesAsync()
+    public void DeleteTempRootPath()
     {
-        await dbContext.DisposeAsync();
-
         if (Directory.Exists(tempRootPath))
         {
             Directory.Delete(tempRootPath, recursive: true);
@@ -130,14 +127,14 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             Uploads = [],
             ErrorMessages = [],
         };
-        dbContext.Archives.Add(orphanedArchive);
-        await dbContext.SaveChangesAsync();
+        DbContext.Archives.Add(orphanedArchive);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        var result = await dbContext.Archives.AnyAsync();
+        var result = await DbContext.Archives.AnyAsync();
 
         result.ShouldBeFalse();
     }
@@ -160,15 +157,15 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             Uploads = [],
             ErrorMessages = [],
         };
-        dbContext.Archives.Add(existingArchive);
-        await dbContext.SaveChangesAsync();
+        DbContext.Archives.Add(existingArchive);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.SingleAsync();
 
         result.ShouldNotBeNull();
         result.ArchiveId.ShouldBe(existingArchive.Id);
@@ -208,18 +205,18 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             OnlineState = OnlineState.Offline,
             ErrorMessages = [],
         };
-        dbContext.Archives.Add(existingArchive);
-        dbContext.Uploads.Add(previousUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
         var changedArchiveBytes = await File.ReadAllBytesAsync(archiveFilePath);
-        var changedArchiveFile = await dbContext.ArchiveFiles.SingleAsync(f =>
+        var changedArchiveFile = await DbContext.ArchiveFiles.SingleAsync(f =>
             f.FullFileName == archiveFilePath
         );
 
@@ -268,16 +265,16 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             OnlineState = OnlineState.Offline,
             ErrorMessages = [],
         };
-        dbContext.Archives.Add(existingArchive);
-        dbContext.Uploads.Add(previousUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
 
         result.ArchiveId.ShouldBe(existingArchive.Id);
         result.UploadState.ShouldBe(UploadState.Pending);
@@ -340,20 +337,20 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             OnlineState = OnlineState.Offline,
             ErrorMessages = [],
         };
-        dbContext.Archives.Add(existingArchive);
-        dbContext.Uploads.AddRange(
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.AddRange(
             secondUpload,
             previousFirstHosterUpload,
             previousSecondHosterUpload
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Where(u => u.Id == firstUpload.Id || u.Id == secondUpload.Id)
             .OrderBy(u => u.Id)
             .ToListAsync();
@@ -406,9 +403,9 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             OnlineState = OnlineState.Offline,
             ErrorMessages = [],
         };
-        dbContext.Archives.Add(existingArchive);
-        dbContext.Uploads.Add(previousUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
 
         archiverFactoryMock.Setup(f => f.GetByName("7Zip")).Returns(archiverMock.Object);
         archiverMock.SetupGet(a => a.CanChangeHashInPlace).Returns(false);
@@ -430,8 +427,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.Archive)
                 .ThenInclude(a => a!.ArchiveFiles)
             .SingleAsync(u => u.Id == upload.Id);
@@ -486,16 +483,16 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             OnlineState = OnlineState.Unknown,
             ErrorMessages = [],
         };
-        dbContext.Archives.Add(existingArchive);
-        dbContext.Uploads.AddRange(previousUpload, activeUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.AddRange(previousUpload, activeUpload);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
 
         result.ArchiveId.ShouldBeNull();
         result.UploadState.ShouldBe(UploadState.WaitingForArchive);
@@ -529,8 +526,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Archives.Include(a => a.ArchiveFiles)
             .Include(a => a.Uploads)
             .SingleAsync();
@@ -581,7 +578,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        var archiveId = (await dbContext.Archives.SingleAsync()).Id;
+        var archiveId = (await DbContext.Archives.SingleAsync()).Id;
         var identifier = new TransferIdentifier(TransferType.ArchiveCreation, archiveId);
         progressTracker
             .PlannedFilesPerIdentifier[identifier]
@@ -614,8 +611,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var archive = await dbContext.Archives.Include(a => a.ArchiveFiles).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var archive = await DbContext.Archives.Include(a => a.ArchiveFiles).SingleAsync();
         var identifier = new TransferIdentifier(TransferType.ArchiveHashing, archive.Id);
         progressTracker
             .PlannedFilesPerIdentifier[identifier]
@@ -663,8 +660,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var archive = await dbContext.Archives.Include(a => a.ArchiveFiles).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var archive = await DbContext.Archives.Include(a => a.ArchiveFiles).SingleAsync();
         var identifier = new TransferIdentifier(TransferType.ArchiveHashing, archive.Id);
         var archiveFile = archive.ArchiveFiles.ShouldHaveSingleItem();
         (await File.ReadAllTextAsync(archiveFile.FullFileName)).ShouldBe("first");
@@ -753,8 +750,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Archives.Include(a => a.Uploads).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.Include(a => a.Uploads).SingleAsync();
 
         result.ArchiveFileSizeMb.ShouldBe(512);
         result.Uploads.Single().Id.ShouldBe(upload.Id);
@@ -765,7 +762,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
     {
         // Arrange
         var upload = await AddUploadWaitingForArchiveAsync();
-        dbContext.Archives.Add(
+        DbContext.Archives.Add(
             new Archive
             {
                 ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
@@ -780,7 +777,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                 ErrorMessages = [],
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         archiverFactoryMock.Setup(f => f.GetByName("zip")).Returns(archiverMock.Object);
         archiverMock
@@ -801,8 +798,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Archives.OrderByDescending(a => a.Id).FirstAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.OrderByDescending(a => a.Id).FirstAsync();
 
         result.ArchiveFileSizeMb.ShouldBe(513);
     }
@@ -812,7 +809,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
     {
         // Arrange
         var upload = await AddUploadWaitingForArchiveAsync();
-        dbContext.Archives.Add(
+        DbContext.Archives.Add(
             new Archive
             {
                 ArchiveConfigId = upload.UploadConfig.ArchiveConfigId,
@@ -834,7 +831,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                 ErrorMessages = [],
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         archiverFactoryMock.Setup(f => f.GetByName("zip")).Returns(archiverMock.Object);
         archiverMock
@@ -855,8 +852,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Archives.OrderByDescending(a => a.Id).FirstAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.OrderByDescending(a => a.Id).FirstAsync();
 
         result.ArchiveFileSizeMb.ShouldBe(512);
     }
@@ -915,17 +912,17 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             OnlineState = OnlineState.Offline,
             ErrorMessages = [],
         };
-        dbContext.Archives.AddRange(existingArchive, blockedHashArchive);
-        dbContext.Uploads.Add(previousUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Archives.AddRange(existingArchive, blockedHashArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
         var changedArchiveBytes = await File.ReadAllBytesAsync(archiveFilePath);
-        var changedArchiveFile = await dbContext.ArchiveFiles.SingleAsync(f =>
+        var changedArchiveFile = await DbContext.ArchiveFiles.SingleAsync(f =>
             f.FullFileName == archiveFilePath
         );
 
@@ -958,8 +955,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Archives.Include(a => a.Uploads)
             .Include(a => a.Notifications)
             .SingleAsync();
@@ -1003,8 +1000,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             OnlineState = OnlineState.Unknown,
             ErrorMessages = [],
         };
-        dbContext.Uploads.Add(secondUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(secondUpload);
+        await DbContext.SaveChangesAsync();
 
         archiverFactoryMock.Setup(f => f.GetByName("zip")).Returns(archiverMock.Object);
         archiverMock
@@ -1025,8 +1022,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Archives.Include(a => a.Uploads).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.Include(a => a.Uploads).SingleAsync();
 
         result.ShouldNotBeNull();
         result.ArchiveState.ShouldBe(ArchiveState.Created);
@@ -1111,16 +1108,16 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                 },
             ],
         };
-        dbContext.Archives.Add(existingArchive);
-        dbContext.Uploads.Add(previousUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .SingleAsync(u => u.Id == upload.Id);
 
@@ -1187,9 +1184,9 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             ],
         };
 
-        dbContext.Archives.Add(existingArchive);
-        dbContext.Uploads.Add(olderUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(olderUpload);
+        await DbContext.SaveChangesAsync();
 
         var newestUpload = new Upload
         {
@@ -1214,15 +1211,15 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             ],
         };
 
-        dbContext.Uploads.Add(newestUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(newestUpload);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .SingleAsync(u => u.Id == upload.Id);
 
@@ -1288,16 +1285,16 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             ],
         };
 
-        dbContext.Archives.Add(existingArchive);
-        dbContext.Uploads.Add(previousUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Archives.Add(existingArchive);
+        DbContext.Uploads.Add(previousUpload);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .SingleAsync(u => u.Id == upload.Id);
 
@@ -1346,8 +1343,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Archives.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.SingleAsync();
 
         releaseFolderEntriesDuringArchiving.ShouldBe(
             [
@@ -1418,8 +1415,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Archives.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.SingleAsync();
 
         Guid.TryParse(nonceDuringArchiving, out _).ShouldBeTrue();
         File.Exists(noncePath).ShouldBeFalse();
@@ -1443,8 +1440,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Archives.Include(a => a.Uploads)
             .Include(a => a.Notifications)
             .SingleAsync();
@@ -1491,8 +1488,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Archives.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.SingleAsync();
 
         result.ArchiveState.ShouldBe(ArchiveState.CreationFailed);
         var errorMessage = result.ErrorMessages.ShouldHaveSingleItem();
@@ -1519,8 +1516,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Archives.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.SingleAsync();
 
         result.ArchiveState.ShouldBe(ArchiveState.CreationFailed);
         result.ErrorMessages.ShouldBe([
@@ -1542,8 +1539,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Archives.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.SingleAsync();
 
         result.ArchiveState.ShouldBe(ArchiveState.CreationFailed);
         result.ErrorMessages.ShouldBe([
@@ -1573,8 +1570,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await failingCopyService.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Archives.Include(a => a.Uploads)
             .Include(a => a.Notifications)
             .SingleAsync();
@@ -1631,8 +1628,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         await Should.ThrowAsync<IOException>(() => service.ProcessAsync(CancellationToken.None));
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Archives.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.SingleAsync();
 
         result.ArchiveState.ShouldBe(ArchiveState.Creating);
         result.ReleaseFolderEntriesCopiedForPacking.ShouldBeEmpty();
@@ -1650,7 +1647,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             .FullName;
         var archiveFilePath = Path.Combine(archiveFolderPath, "interrupted.part1.rar");
         await File.WriteAllTextAsync(archiveFilePath, "archive-data");
-        dbContext.Archives.Add(
+        DbContext.Archives.Add(
             new Archive
             {
                 ArchiveConfigId = archiveConfig.Id,
@@ -1664,14 +1661,14 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                 ReleaseFolderEntriesCopiedForPacking = ["__nonce.txt", "Extras", "Mirror.txt"],
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Archives.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Archives.SingleAsync();
 
         result.ArchiveState.ShouldBe(ArchiveState.Created);
         result.ReleaseFolderEntriesCopiedForPacking.ShouldBeEmpty();
@@ -1684,7 +1681,7 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
         // Arrange
         var archiveConfig = await AddArchiveConfigAsync();
         await CreateReleaseFolderEntriesLeftBehindByCrashAsync();
-        dbContext.Archives.Add(
+        DbContext.Archives.Add(
             new Archive
             {
                 ArchiveConfigId = archiveConfig.Id,
@@ -1698,13 +1695,13 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
                 ReleaseFolderEntriesCopiedForPacking = ["__nonce.txt", "Extras", "Mirror.txt"],
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        var result = await dbContext.Archives.AnyAsync();
+        var result = await DbContext.Archives.AnyAsync();
 
         result.ShouldBeFalse();
         GetRelativePathsInReleaseFolder().ShouldBe(["movie.mkv"]);
@@ -1873,8 +1870,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             ErrorMessages = [],
         };
 
-        dbContext.Uploads.Add(upload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(upload);
+        await DbContext.SaveChangesAsync();
 
         return upload;
     }
@@ -1901,8 +1898,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             Name = name,
         };
 
-        dbContext.UploadConfigs.Add(uploadConfig);
-        await dbContext.SaveChangesAsync();
+        DbContext.UploadConfigs.Add(uploadConfig);
+        await DbContext.SaveChangesAsync();
 
         return uploadConfig;
     }
@@ -1936,8 +1933,8 @@ public class ArchiveCreationServiceTest : BearcatIntegrationTest
             AdditionalArchiveContents = additionalArchiveContents ?? [],
         };
 
-        dbContext.ArchiveConfigs.Add(archiveConfig);
-        await dbContext.SaveChangesAsync();
+        DbContext.ArchiveConfigs.Add(archiveConfig);
+        await DbContext.SaveChangesAsync();
 
         return archiveConfig;
     }

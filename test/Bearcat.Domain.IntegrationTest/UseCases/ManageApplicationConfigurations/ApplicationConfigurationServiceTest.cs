@@ -13,27 +13,19 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageApplicationConfigurations;
 
-public class ApplicationConfigurationServiceTest : BearcatIntegrationTest
+public class ApplicationConfigurationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string ConfigurationKey = "ArchiveCleanup";
     private const string PropertyName = "AutoConvertToUnmanaged";
 
     private Mock<IApplicationConfigurationOverrideCache> overrideCacheMock = null!;
-    private BearcatDbContext readDbContext = null!;
     private ApplicationConfigurationService service = null!;
-    private BearcatDbContext writeDbContext = null!;
 
     [SetUp]
     public void Setup()
     {
-        readDbContext = Database.CreateDbContext();
-        readDbContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-        writeDbContext = Database.CreateDbContext();
-
-        var repository = new ApplicationConfigurationOverrideRepository(
-            readDbContext,
-            writeDbContext
-        );
+        var repository = new ApplicationConfigurationOverrideRepository(ReadDbContext, DbContext);
         overrideCacheMock = new Mock<IApplicationConfigurationOverrideCache>(MockBehavior.Strict);
 
         service = new ApplicationConfigurationService(
@@ -43,13 +35,6 @@ public class ApplicationConfigurationServiceTest : BearcatIntegrationTest
             overrideCacheMock.Object,
             CreateTimeProvider()
         );
-    }
-
-    [TearDown]
-    public async Task DisposeServiceDbContextsAsync()
-    {
-        await readDbContext.DisposeAsync();
-        await writeDbContext.DisposeAsync();
     }
 
     [Test]
@@ -132,7 +117,7 @@ public class ApplicationConfigurationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var result = await writeDbContext.ApplicationConfigurationOverrides.SingleAsync();
+        var result = await DbContext.ApplicationConfigurationOverrides.SingleAsync();
 
         result.ShouldNotBeNull();
         result.ConfigurationKey.ShouldBe(ConfigurationKey);
@@ -161,7 +146,7 @@ public class ApplicationConfigurationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var result = await writeDbContext.ApplicationConfigurationOverrides.SingleAsync();
+        var result = await DbContext.ApplicationConfigurationOverrides.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(configurationOverride.Id);
@@ -181,7 +166,7 @@ public class ApplicationConfigurationServiceTest : BearcatIntegrationTest
         await service.ResetOverrideAsync(ConfigurationKey, PropertyName, CancellationToken.None);
 
         // Assert
-        var result = await writeDbContext.ApplicationConfigurationOverrides.AnyAsync();
+        var result = await DbContext.ApplicationConfigurationOverrides.AnyAsync();
 
         result.ShouldBeFalse();
         overrideCacheMock.Verify();
@@ -199,7 +184,7 @@ public class ApplicationConfigurationServiceTest : BearcatIntegrationTest
         await service.ResetOverrideAsync(ConfigurationKey, PropertyName, CancellationToken.None);
 
         // Assert
-        var result = await writeDbContext.ApplicationConfigurationOverrides.AnyAsync();
+        var result = await DbContext.ApplicationConfigurationOverrides.AnyAsync();
 
         result.ShouldBeFalse();
         overrideCacheMock.Verify();
@@ -258,8 +243,8 @@ public class ApplicationConfigurationServiceTest : BearcatIntegrationTest
             UpdatedAt = DateTime.UtcNow.AddMinutes(-1),
         };
 
-        writeDbContext.ApplicationConfigurationOverrides.Add(configurationOverride);
-        await writeDbContext.SaveChangesAsync();
+        DbContext.ApplicationConfigurationOverrides.Add(configurationOverride);
+        await DbContext.SaveChangesAsync();
 
         return configurationOverride;
     }

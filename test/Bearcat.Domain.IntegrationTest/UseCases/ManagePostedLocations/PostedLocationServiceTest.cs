@@ -1,5 +1,4 @@
 using Bearcat.Domain.Entities;
-using Bearcat.Domain.IntegrationTest.Shared;
 using Bearcat.Domain.UseCases.ManagePostedLocations;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -10,27 +9,20 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManagePostedLocations;
 
-public class PostedLocationServiceTest : BearcatIntegrationTest
+public class PostedLocationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private static readonly DateTime Now = new(2026, 9, 26, 12, 0, 0, DateTimeKind.Utc);
 
-    private BearcatDbContext dbContext = null!;
     private PostedLocationService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         service = new PostedLocationService(
-            new PostedLocationWriteRepository(dbContext),
+            new PostedLocationWriteRepository(DbContext),
             new ControllableTimeProvider(Now)
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -48,8 +40,8 @@ public class PostedLocationServiceTest : BearcatIntegrationTest
 
         // Assert
         result.WasCreated.ShouldBeTrue();
-        dbContext.ChangeTracker.Clear();
-        var postedLocation = await dbContext.PostedLocations.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var postedLocation = await DbContext.PostedLocations.SingleAsync();
         postedLocation.Id.ShouldBe(result.PostedLocationId);
         postedLocation.ReleaseId.ShouldBe(release.Id);
         postedLocation.Url.ShouldBe("https://forum.example/threads/1");
@@ -78,8 +70,8 @@ public class PostedLocationServiceTest : BearcatIntegrationTest
         // Assert
         result.WasCreated.ShouldBeFalse();
         result.PostedLocationId.ShouldBe(existingPostedLocationId);
-        dbContext.ChangeTracker.Clear();
-        (await dbContext.PostedLocations.CountAsync()).ShouldBe(1);
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.PostedLocations.CountAsync()).ShouldBe(1);
     }
 
     [Test]
@@ -127,11 +119,39 @@ public class PostedLocationServiceTest : BearcatIntegrationTest
         // Assert
         result.WasCreated.ShouldBeTrue();
         result.PostedLocationId.ShouldNotBe(otherPostedLocationId);
-        dbContext.ChangeTracker.Clear();
-        var postedLocation = await dbContext.PostedLocations.SingleAsync(location =>
+        DbContext.ChangeTracker.Clear();
+        var postedLocation = await DbContext.PostedLocations.SingleAsync(location =>
             location.Id == result.PostedLocationId
         );
         postedLocation.ReleaseId.ShouldBe(release.Id);
+    }
+
+    [Test]
+    public async Task DeleteAsync_PostedLocationExists_DeletesOnlyThatPostedLocation()
+    {
+        // Arrange
+        var release = await AddReleaseAsync("Bearcat.Release.001");
+        var postedLocationId = await service.AddForReleaseAsync(
+            release.Id,
+            "https://forum.example/threads/1",
+            cancellationToken: CancellationToken.None
+        );
+        var otherPostedLocationId = await service.AddForReleaseAsync(
+            release.Id,
+            "https://forum.example/threads/2",
+            cancellationToken: CancellationToken.None
+        );
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.DeleteAsync(postedLocationId, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.PostedLocations.Select(location => location.Id).ToListAsync()).ShouldBe([
+            otherPostedLocationId,
+        ]);
+        (await DbContext.Releases.SingleAsync()).Id.ShouldBe(release.Id);
     }
 
     private async Task<Release> AddReleaseAsync(string name)
@@ -150,8 +170,8 @@ public class PostedLocationServiceTest : BearcatIntegrationTest
             },
         };
 
-        dbContext.Releases.Add(release);
-        await dbContext.SaveChangesAsync();
+        DbContext.Releases.Add(release);
+        await DbContext.SaveChangesAsync();
 
         return release;
     }

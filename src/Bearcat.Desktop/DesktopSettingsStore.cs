@@ -25,7 +25,7 @@ public sealed class DesktopSettingsStore
     {
         if (!File.Exists(SettingsPath))
         {
-            return new DesktopSettings();
+            return DesktopSettings.CreateForNewInstallation();
         }
 
         var json = File.ReadAllText(SettingsPath);

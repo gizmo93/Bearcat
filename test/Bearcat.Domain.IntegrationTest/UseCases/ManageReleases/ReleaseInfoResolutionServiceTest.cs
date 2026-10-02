@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Abstractions.NfoDatabase;
 using Bearcat.Domain.Entities;
@@ -21,13 +22,14 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 
-public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
+public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string WorkingDatabaseClassName = "WorkingNfoDatabase";
     private const string NfoProviderDatabaseClassName = "NfoProviderDatabase";
+    private const string OtherWorkerNfoDatabaseClassName = "OtherWorkerNfoDatabase";
     private const string SerializedConfig = "{\"apiKey\":\"secret\"}";
 
-    private BearcatDbContext dbContext = null!;
     private Mock<INfoDatabaseFactory> nfoDatabaseFactoryMock = null!;
     private Dictionary<string, INfoDatabase> nfoDatabasesByClassName = null!;
     private Mock<IMediaMetadataDatabaseFactory> metadataDatabaseFactoryMock = null!;
@@ -37,7 +39,6 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         nfoDatabaseFactoryMock = new Mock<INfoDatabaseFactory>(MockBehavior.Strict);
         nfoDatabasesByClassName = [];
         nfoDatabaseFactoryMock
@@ -46,8 +47,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         metadataDatabaseFactoryMock = new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict);
 
         var releaseInfoRepository = new ReleaseInfoRepository(
-            dbContext,
-            dbContext,
+            DbContext,
+            DbContext,
             NoOpSecretProtector.Instance
         );
 
@@ -65,7 +66,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             ),
             new ReleaseMetadataResolver(
                 new MediaMetadataResolver(
-                    new MediaMetadataResolverRepository(dbContext, NoOpSecretProtector.Instance),
+                    new MediaMetadataResolverRepository(DbContext, NoOpSecretProtector.Instance),
                     metadataDatabaseFactoryMock.Object,
                     new Mock<ILogger<MediaMetadataResolver>>().Object
                 ),
@@ -73,7 +74,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
                 new Mock<ILogger<ReleaseMetadataResolver>>().Object
             ),
             new ReleaseClassificationService(
-                new ReleaseClassificationRepository(dbContext),
+                new ReleaseClassificationRepository(DbContext),
                 CreateTimeProvider(),
                 new Mock<ILogger<ReleaseClassificationService>>().Object
             ),
@@ -83,10 +84,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     }
 
     [TearDown]
-    public async Task DisposeDbContextAsync()
+    public void DeleteTempReleaseFolders()
     {
-        await dbContext.DisposeAsync();
-
         foreach (var tempReleaseFolder in tempReleaseFolders)
         {
             if (Directory.Exists(tempReleaseFolder))
@@ -117,8 +116,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         // Assert
         resolvedCount.ShouldBe(1);
 
-        dbContext.ChangeTracker.Clear();
-        var persistedInfo = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var persistedInfo = await DbContext
             .ReleaseInfos.Include(info => info.ExternalInfos)
             .SingleAsync();
 
@@ -131,7 +130,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         persistedInfo.VideoType.ShouldBe("WEB");
         persistedInfo.AudioType.ShouldBe("AC3");
 
-        var metadata = await dbContext.ReleaseMetadata.SingleAsync();
+        var metadata = await DbContext.ReleaseMetadata.SingleAsync();
         metadata.ReleaseId.ShouldBe(release.Id);
         metadata.MetadataDatabaseClassName.ShouldBe(WorkingDatabaseClassName);
         metadata.Title.ShouldBe("Bearcat Movie");
@@ -184,8 +183,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         // Assert
         resolvedCount.ShouldBe(1);
 
-        dbContext.ChangeTracker.Clear();
-        var persistedRelease = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var persistedRelease = await DbContext
             .Releases.Include(item => item.ReleaseInfo)
             .Include(item => item.ReleaseNfo)
             .SingleAsync();
@@ -223,8 +222,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         // Assert
         resolvedCount.ShouldBe(1);
 
-        dbContext.ChangeTracker.Clear();
-        var persistedRelease = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var persistedRelease = await DbContext
             .Releases.Include(item => item.ReleaseInfo)
             .Include(item => item.ReleaseNfo)
             .SingleAsync();
@@ -278,8 +277,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         File.Exists(nfoFilePath).ShouldBeTrue();
         (await File.ReadAllTextAsync(nfoFilePath)).ShouldBe("remote nfo content");
 
-        dbContext.ChangeTracker.Clear();
-        var persistedRelease = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var persistedRelease = await DbContext
             .Releases.Include(item => item.ReleaseInfo)
             .Include(item => item.ReleaseNfo)
             .SingleAsync();
@@ -359,8 +358,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         // Assert
         resolvedCount.ShouldBe(1);
 
-        dbContext.ChangeTracker.Clear();
-        var persistedInfo = await dbContext.ReleaseInfos.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var persistedInfo = await DbContext.ReleaseInfos.SingleAsync();
 
         persistedInfo.NfoDatabaseClassName.ShouldBe(WorkingDatabaseClassName);
         emptyDatabaseMock.Verify(
@@ -397,8 +396,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
 
         await service.ProcessMissingReleaseInfosAsync(CancellationToken.None);
 
-        dbContext.ChangeTracker.Clear();
-        var release = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var release = await DbContext
             .Releases.Include(item => item.ReleaseInfo)
             .Include(item => item.ExternalIdentifiers)
             .SingleAsync();
@@ -421,7 +420,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
 
         // Assert
         resolvedCount.ShouldBe(0);
-        (await dbContext.ReleaseInfos.AnyAsync()).ShouldBeFalse();
+        (await DbContext.ReleaseInfos.AnyAsync()).ShouldBeFalse();
         nfoDatabaseFactoryMock.Verify(factory => factory.Get(It.IsAny<string>()), Times.Never);
     }
 
@@ -454,8 +453,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         await service.ProcessMissingReleaseInfosAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var releases = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var releases = await DbContext
             .Releases.Include(release => release.ReleaseInfo)
             .ToDictionaryAsync(release => release.Name);
 
@@ -617,7 +616,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             ArchiveConfigs = [],
             UploadConfigs = [],
         };
-        dbContext.Releases.Add(release);
+        DbContext.Releases.Add(release);
 
         SetupNfoDatabase(
             WorkingDatabaseClassName,
@@ -649,8 +648,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             CancellationToken.None
         );
 
-        dbContext.ChangeTracker.Clear();
-        var persistedRelease = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var persistedRelease = await DbContext
             .Releases.Include(item => item.ReleaseInfo)
             .Include(item => item.ReleaseNfo)
             .Include(item => item.ExternalIdentifiers)
@@ -672,15 +671,15 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         };
         release.MetadataCheckedAt = DateTime.UtcNow;
         release.ReleaseInfoCheckedAt = DateTime.UtcNow;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         var infoService = CreateReleaseInfoService();
 
         await infoService.DeleteAsync(release.Id, CancellationToken.None);
 
-        dbContext.ChangeTracker.Clear();
-        (await dbContext.ReleaseMetadata.AnyAsync()).ShouldBeFalse();
-        var persistedRelease = await dbContext.Releases.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.ReleaseMetadata.AnyAsync()).ShouldBeFalse();
+        var persistedRelease = await DbContext.Releases.SingleAsync();
         persistedRelease.ReleaseInfoCheckedAt.ShouldBeNull();
         persistedRelease.MetadataCheckedAt.ShouldBeNull();
     }
@@ -708,8 +707,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             CancellationToken.None
         );
 
-        dbContext.ChangeTracker.Clear();
-        var persistedRelease = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var persistedRelease = await DbContext
             .Releases.Include(item => item.ReleaseInfo)
             .Include(item => item.Metadata)
             .Include(item => item.ExternalIdentifiers)
@@ -758,7 +757,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         };
 
         const string databaseClassName = "MovieMetadataDatabase";
-        dbContext.MediaDatabaseRegistrations.Add(
+        DbContext.MediaDatabaseRegistrations.Add(
             new MediaDatabaseRegistration
             {
                 MediaDatabaseClassName = databaseClassName,
@@ -766,7 +765,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
                 IsActive = true,
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         var config = new Mock<IMediaMetadataDatabaseConfig>(MockBehavior.Strict).Object;
         var database = new Mock<IMediaMetadataDatabase>(MockBehavior.Strict);
@@ -805,8 +804,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             : await service.ResolveAsync(release.Id, CancellationToken.None);
 
         resolved.ShouldBeTrue();
-        dbContext.ChangeTracker.Clear();
-        var metadata = await dbContext.ReleaseMetadata.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var metadata = await DbContext.ReleaseMetadata.SingleAsync();
         metadata.MetadataDatabaseClassName.ShouldBe(databaseClassName);
         metadata.Title.ShouldBe("Amok");
         metadata.Genre.ShouldBe("Drama");
@@ -825,7 +824,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         SetupNfoDatabase("XrelNfoDatabase", release.Name, CreateReleaseInfo(release.Name));
 
         const string databaseClassName = "MovieMetadataDatabase";
-        dbContext.MediaDatabaseRegistrations.Add(
+        DbContext.MediaDatabaseRegistrations.Add(
             new MediaDatabaseRegistration
             {
                 MediaDatabaseClassName = databaseClassName,
@@ -833,7 +832,7 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
                 IsActive = true,
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         var config = new Mock<IMediaMetadataDatabaseConfig>(MockBehavior.Strict).Object;
         var database = new Mock<IMediaMetadataDatabase>(MockBehavior.Strict);
@@ -866,12 +865,12 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         var resolved = await service.ResolveAsync(release.Id, CancellationToken.None);
 
         resolved.ShouldBeTrue();
-        dbContext.ChangeTracker.Clear();
-        var releaseInfo = await dbContext.ReleaseInfos.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var releaseInfo = await DbContext.ReleaseInfos.SingleAsync();
         releaseInfo.VideoType.ShouldBe("WEB");
         releaseInfo.AudioType.ShouldBe("AC3");
 
-        var metadata = await dbContext.ReleaseMetadata.SingleAsync();
+        var metadata = await DbContext.ReleaseMetadata.SingleAsync();
         metadata.MetadataDatabaseClassName.ShouldBe(databaseClassName);
         metadata.CoverUrl.ShouldBe(
             metadataCoverExists
@@ -902,22 +901,354 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
         };
         await AddNfoDatabaseRegistrationAsync("XrelNfoDatabase", isActive: true);
         SetupNfoDatabase("XrelNfoDatabase", release.Name, CreateReleaseInfo(release.Name));
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         var resolved = await service.ResolveAsync(release.Id, CancellationToken.None);
 
         resolved.ShouldBeTrue();
-        dbContext.ChangeTracker.Clear();
-        var releaseInfo = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var releaseInfo = await DbContext
             .ReleaseInfos.Include(info => info.ExternalInfos)
             .SingleAsync();
         releaseInfo.NfoDatabaseClassName.ShouldBe("XrelNfoDatabase");
         releaseInfo.SizeNumber.ShouldBe(12);
         releaseInfo.VideoType.ShouldBe("WEB");
         releaseInfo.ExternalInfos.ShouldHaveSingleItem();
-        (await dbContext.ReleaseMetadata.SingleAsync()).MetadataDatabaseClassName.ShouldBe(
+        (await DbContext.ReleaseMetadata.SingleAsync()).MetadataDatabaseClassName.ShouldBe(
             "TmdbMetadataDatabase"
         );
+    }
+
+    [Test]
+    public async Task ResolveAsync_OtherWorkerStoredReleaseInfoFirst_ReturnsFalseAndKeepsExistingReleaseInfo()
+    {
+        // Arrange
+        var release = await AddReleaseAsync("Bearcat.Race.2026-GRP");
+        await AddNfoDatabaseRegistrationAsync(WorkingDatabaseClassName, isActive: true);
+        var nfoDatabaseMock = SetupNfoDatabase(
+            WorkingDatabaseClassName,
+            release.Name,
+            CreateReleaseInfo(release.Name)
+        );
+        nfoDatabaseMock
+            .Setup(database =>
+                database.GetReleaseInfoAsync(
+                    It.IsAny<INfoDatabaseConfig>(),
+                    release.Name,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(async () =>
+            {
+                await AddReleaseInfoFromOtherWorkerAsync(release.Id, release.Name);
+                return CreateReleaseInfo(release.Name);
+            });
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var resolved = await service.ResolveAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        resolved.ShouldBeFalse();
+
+        DbContext.ChangeTracker.Clear();
+        var persistedRelease = await DbContext
+            .Releases.Include(item => item.ReleaseInfo)
+            .Include(item => item.Metadata)
+            .Include(item => item.Classification)
+            .SingleAsync();
+        persistedRelease.ReleaseInfo.ShouldNotBeNull();
+        persistedRelease.ReleaseInfo.NfoDatabaseClassName.ShouldBe(OtherWorkerNfoDatabaseClassName);
+        persistedRelease.Metadata.ShouldBeNull();
+        persistedRelease.Classification.ShouldBeNull();
+        persistedRelease.ReleaseInfoCheckedAt.ShouldNotBeNull();
+        (await DbContext.ReleaseInfos.CountAsync()).ShouldBe(1);
+        (await DbContext.ReleaseExternalInfos.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task RefreshMetadataAsync_OtherWorkerStoredMetadataFirst_ReturnsFalseAndKeepsExistingMetadata()
+    {
+        // Arrange
+        var release = await AddReleaseAsync("Amok.1994.1080p.BluRay.x264-PL3X");
+        release.ReleaseContentType = ReleaseContentType.Movie;
+        release.ExternalIdentifiers.Add(
+            new ReleaseExternalIdentifier
+            {
+                Type = ExternalIdentifierType.Imdb,
+                Value = "tt0109093",
+                Source = ExternalIdentifierSource.Nfo,
+            }
+        );
+
+        const string databaseClassName = "MovieMetadataDatabase";
+        DbContext.MediaDatabaseRegistrations.Add(
+            new MediaDatabaseRegistration
+            {
+                MediaDatabaseClassName = databaseClassName,
+                SerializedConfig = SerializedConfig,
+                IsActive = true,
+            }
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        var config = new Mock<IMediaMetadataDatabaseConfig>(MockBehavior.Strict).Object;
+        var database = new Mock<IMediaMetadataDatabase>(MockBehavior.Strict);
+        database.SetupGet(item => item.SupportedMediaKinds).Returns([MediaKind.Movie]);
+        database.SetupGet(item => item.ResolutionPriority).Returns(0);
+        database.Setup(item => item.DeserializeConfig(SerializedConfig)).Returns(config);
+        database
+            .Setup(item =>
+                item.GetByExternalIdAsync(
+                    config,
+                    It.Is<MediaMetadataLookup>(lookup => lookup.ImdbId == "tt0109093"),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(async () =>
+            {
+                await AddMetadataFromOtherWorkerAsync(release.Id);
+                return new MediaMetadata(
+                    "Amok",
+                    "Description",
+                    "Drama",
+                    "https://images.test/amok.jpg",
+                    "https://metadata.test/amok"
+                );
+            });
+        metadataDatabaseFactoryMock
+            .Setup(factory => factory.Get(databaseClassName))
+            .Returns(database.Object);
+
+        // Act
+        var resolved = await service.RefreshMetadataAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        resolved.ShouldBeFalse();
+
+        DbContext.ChangeTracker.Clear();
+        var metadata = await DbContext.ReleaseMetadata.SingleAsync();
+        metadata.ReleaseId.ShouldBe(release.Id);
+        metadata.MetadataDatabaseClassName.ShouldBe("OtherWorkerMetadataDatabase");
+        metadata.Title.ShouldBe("Amok (other worker)");
+        var persistedRelease = await DbContext.Releases.SingleAsync();
+        persistedRelease.MetadataCheckedAt.ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task ProcessMissingReleaseInfosAsync_OtherWorkerStoredReleaseInfoFirst_KeepsExistingInfoAndResolvesNextRelease()
+    {
+        // Arrange
+        var conflictingRelease = await AddReleaseAsync("Bearcat.Race.2026-GRP");
+        var nextRelease = await AddReleaseAsync("Bearcat.Next.2026-GRP");
+        await AddNfoDatabaseRegistrationAsync(WorkingDatabaseClassName, isActive: true);
+        var nfoDatabaseMock = SetupNfoDatabase(
+            WorkingDatabaseClassName,
+            nextRelease.Name,
+            CreateReleaseInfo(nextRelease.Name)
+        );
+        nfoDatabaseMock
+            .Setup(database =>
+                database.GetReleaseInfoAsync(
+                    It.IsAny<INfoDatabaseConfig>(),
+                    conflictingRelease.Name,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(async () =>
+            {
+                await AddReleaseInfoFromOtherWorkerAsync(
+                    conflictingRelease.Id,
+                    conflictingRelease.Name
+                );
+                return CreateReleaseInfo(conflictingRelease.Name);
+            });
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.ProcessMissingReleaseInfosAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var releases = await DbContext
+            .Releases.Include(release => release.ReleaseInfo)
+            .Include(release => release.Metadata)
+            .Include(release => release.Classification)
+            .ToDictionaryAsync(release => release.Id);
+
+        var persistedConflictingRelease = releases[conflictingRelease.Id];
+        persistedConflictingRelease.ReleaseInfo.ShouldNotBeNull();
+        persistedConflictingRelease.ReleaseInfo.NfoDatabaseClassName.ShouldBe(
+            OtherWorkerNfoDatabaseClassName
+        );
+        persistedConflictingRelease.Metadata.ShouldBeNull();
+        persistedConflictingRelease.Classification.ShouldBeNull();
+        persistedConflictingRelease.ReleaseInfoCheckedAt.ShouldNotBeNull();
+
+        var persistedNextRelease = releases[nextRelease.Id];
+        persistedNextRelease.ReleaseInfo.ShouldNotBeNull();
+        persistedNextRelease.ReleaseInfo.NfoDatabaseClassName.ShouldBe(WorkingDatabaseClassName);
+        persistedNextRelease.Metadata.ShouldNotBeNull();
+        persistedNextRelease.Metadata.Title.ShouldBe("Bearcat Movie");
+        persistedNextRelease.Classification.ShouldNotBeNull();
+
+        (await DbContext.ReleaseInfos.CountAsync()).ShouldBe(2);
+    }
+
+    [Test]
+    public async Task DeleteAsync_ReleaseInfoWithExternalInfosExists_RemovesInfoExternalInfosAndMetadata()
+    {
+        // Arrange
+        var release = await AddReleaseAsync("Delete.Info.Release.2026-GRP");
+        release.ReleaseInfo = new Entities.ReleaseInfo
+        {
+            NfoDatabaseClassName = WorkingDatabaseClassName,
+            ReleaseName = release.Name,
+            ExternalInfos =
+            [
+                new ReleaseExternalInfo
+                {
+                    Type = ExternalInfoType.Movie,
+                    Title = "Bearcat Movie",
+                    Urls =
+                    [
+                        new ReleaseExternalInfoUrl
+                        {
+                            Type = UrlType.Imdb,
+                            Url = "https://www.imdb.com/title/tt1234567/",
+                        },
+                    ],
+                },
+            ],
+        };
+        release.Metadata = new ReleaseMetadata
+        {
+            MetadataDatabaseClassName = WorkingDatabaseClassName,
+            Title = "Bearcat Movie",
+        };
+        release.ReleaseInfoCheckedAt = DateTime.UtcNow;
+        release.MetadataCheckedAt = DateTime.UtcNow;
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+        var infoService = CreateReleaseInfoService();
+
+        // Act
+        await infoService.DeleteAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.ReleaseInfos.AnyAsync()).ShouldBeFalse();
+        (await DbContext.ReleaseExternalInfos.AnyAsync()).ShouldBeFalse();
+        (await DbContext.ReleaseMetadata.AnyAsync()).ShouldBeFalse();
+        var persistedRelease = await DbContext.Releases.SingleAsync();
+        persistedRelease.ReleaseInfoCheckedAt.ShouldBeNull();
+        persistedRelease.MetadataCheckedAt.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task UpdateReleaseInfoAsync_CoverUrlChanged_RemovesCompletedImageUploads()
+    {
+        // Arrange
+        var release = await AddReleaseAsync("Cover.Change.Release.2026-GRP");
+        release.Metadata = new ReleaseMetadata
+        {
+            MetadataDatabaseClassName = WorkingDatabaseClassName,
+            Title = "Cover Change",
+            CoverUrl = "https://images.test/old.jpg",
+        };
+        var imageUploadConfig = new ImageUploadConfig
+        {
+            Release = release,
+            ImageHosterRegistration = new ImageHosterRegistration
+            {
+                Name = "PiXhost",
+                ImageHosterClassName = "PiXhost",
+                SerializedConfig = "{}",
+                IsActive = true,
+            },
+            Name = "Cover",
+        };
+        var completedUpload = new ImageUpload
+        {
+            ImageUploadConfig = imageUploadConfig,
+            CreatedAt = DateTime.UtcNow,
+            UploadedAt = DateTime.UtcNow,
+            UploadState = UploadState.Completed,
+            ImageUrls =
+            [
+                new ImageUploadUrl
+                {
+                    ImageSize = ImageSize.Full,
+                    Url = "https://pixhost.example/old.jpg",
+                },
+            ],
+        };
+        var failedUpload = new ImageUpload
+        {
+            ImageUploadConfig = imageUploadConfig,
+            CreatedAt = DateTime.UtcNow,
+            UploadState = UploadState.Failed,
+            ErrorMessages = ["Timeout"],
+        };
+        DbContext.AddRange(imageUploadConfig, completedUpload, failedUpload);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+        var infoService = CreateReleaseInfoService();
+
+        // Act
+        await infoService.UpdateReleaseInfoAsync(
+            release.Id,
+            new EditReleaseInfoData(
+                ReleaseName: release.Name,
+                CoverUrl: "https://images.test/new.jpg",
+                Genre: null,
+                VideoType: null,
+                AudioType: null,
+                SizeNumber: null,
+                SizeUnit: null,
+                ReleaseDatabaseUrl: null,
+                Description: null,
+                ImdbId: null
+            ),
+            CancellationToken.None
+        );
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var metadata = await DbContext.ReleaseMetadata.SingleAsync();
+        metadata.CoverUrl.ShouldBe("https://images.test/new.jpg");
+        var remainingUpload = await DbContext.ImageUploads.SingleAsync();
+        remainingUpload.Id.ShouldBe(failedUpload.Id);
+        (await DbContext.ImageUploadUrls.AnyAsync()).ShouldBeFalse();
+    }
+
+    private async Task AddReleaseInfoFromOtherWorkerAsync(int releaseId, string releaseName)
+    {
+        var otherWorkerDbContext = CreateDbContext();
+        otherWorkerDbContext.ReleaseInfos.Add(
+            new Entities.ReleaseInfo
+            {
+                ReleaseId = releaseId,
+                NfoDatabaseClassName = OtherWorkerNfoDatabaseClassName,
+                ReleaseName = releaseName,
+            }
+        );
+        await otherWorkerDbContext.SaveChangesAsync();
+    }
+
+    private async Task AddMetadataFromOtherWorkerAsync(int releaseId)
+    {
+        var otherWorkerDbContext = CreateDbContext();
+        otherWorkerDbContext.ReleaseMetadata.Add(
+            new ReleaseMetadata
+            {
+                ReleaseId = releaseId,
+                MetadataDatabaseClassName = "OtherWorkerMetadataDatabase",
+                Title = "Amok (other worker)",
+            }
+        );
+        await otherWorkerDbContext.SaveChangesAsync();
     }
 
     private Mock<INfoDatabase> SetupNfoDatabase(
@@ -1022,8 +1353,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             IsActive = isActive,
         };
 
-        dbContext.NfoDatabaseRegistrations.Add(registration);
-        await dbContext.SaveChangesAsync();
+        DbContext.NfoDatabaseRegistrations.Add(registration);
+        await DbContext.SaveChangesAsync();
     }
 
     private async Task<Release> AddReleaseAsync(
@@ -1045,8 +1376,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             UploadConfigs = [],
         };
 
-        dbContext.Releases.Add(release);
-        await dbContext.SaveChangesAsync();
+        DbContext.Releases.Add(release);
+        await DbContext.SaveChangesAsync();
 
         return release;
     }
@@ -1069,8 +1400,8 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
             Releases = [],
         };
 
-        dbContext.ReleaseGroups.Add(releaseGroup);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseGroups.Add(releaseGroup);
+        await DbContext.SaveChangesAsync();
 
         return releaseGroup;
     }
@@ -1105,9 +1436,9 @@ public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
     private ReleaseInfoService CreateReleaseInfoService()
     {
         return new ReleaseInfoService(
-            new ReleaseInfoRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
+            new ReleaseInfoRepository(DbContext, DbContext, NoOpSecretProtector.Instance),
             new ReleaseClassificationService(
-                new ReleaseClassificationRepository(dbContext),
+                new ReleaseClassificationRepository(DbContext),
                 CreateTimeProvider(),
                 new Mock<ILogger<ReleaseClassificationService>>().Object
             ),

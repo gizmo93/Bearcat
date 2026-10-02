@@ -16,41 +16,35 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageNotifications;
 
-public class TelegramNotificationServiceTest : BearcatIntegrationTest
+public class TelegramNotificationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext readDbContext = null!;
-    private BearcatDbContext writeDbContext = null!;
     private TelegramHttpMessageHandler telegram = null!;
     private TelegramNotificationService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        readDbContext = Database.CreateDbContext();
-        readDbContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-        writeDbContext = Database.CreateDbContext();
         telegram = new TelegramHttpMessageHandler();
         service = new TelegramNotificationService(
-            new TelegramConfigurationRepository(writeDbContext),
-            new TelegramNotificationReadRepository(readDbContext),
-            new NotificationReadRepository(readDbContext),
-            new TelegramDeliveryRepository(writeDbContext),
+            new TelegramConfigurationRepository(DbContext),
+            new TelegramNotificationReadRepository(ReadDbContext),
+            new NotificationReadRepository(ReadDbContext),
+            new TelegramDeliveryRepository(DbContext),
             NoOpSecretProtector.Instance,
             new TelegramClient(new TestHttpClientFactory(telegram)),
             CreateTimeProvider(),
             new TelegramConfigurationCache(),
             UnreadableSecretsNotificationServiceFactory.Create(
-                writeDbContext,
+                DbContext,
                 CreateNotificationConfigurationProvider()
             )
         );
     }
 
     [TearDown]
-    public async Task TearDownAsync()
+    public void DisposeTelegramHandler()
     {
-        await readDbContext.DisposeAsync();
-        await writeDbContext.DisposeAsync();
         telegram.Dispose();
     }
 
@@ -67,8 +61,8 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
 
         await service.PollPairingAsync(CancellationToken.None);
 
-        writeDbContext.ChangeTracker.Clear();
-        var configuration = await writeDbContext.TelegramConfigurations.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var configuration = await DbContext.TelegramConfigurations.SingleAsync();
         configuration.ChatId.ShouldBe(987654321);
         configuration.ChatName.ShouldBe("Gizmo");
         configuration.PairingTokenHash.ShouldBeNull();
@@ -77,7 +71,7 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
     [Test]
     public async Task ProcessDeliveries_ErrorEnabledAndInfoDisabled_SendsOnlyError()
     {
-        writeDbContext.TelegramConfigurations.Add(
+        DbContext.TelegramConfigurations.Add(
             new TelegramConfiguration
             {
                 EncryptedBotToken = "1234567:4TT8bAc8GHUspu3ERYn-KGcvsvGB9u_n4ddy",
@@ -91,7 +85,7 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
                 ForwardNotificationsAfterId = 0,
             }
         );
-        writeDbContext.Notifications.AddRange(
+        DbContext.Notifications.AddRange(
             new Notification
             {
                 CreatedAt = DateTime.UtcNow,
@@ -115,12 +109,12 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
                 Message = "Already resolved",
             }
         );
-        await writeDbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         await service.ProcessDeliveriesAsync(CancellationToken.None);
 
-        writeDbContext.ChangeTracker.Clear();
-        var delivery = await writeDbContext
+        DbContext.ChangeTracker.Clear();
+        var delivery = await DbContext
             .TelegramDeliveries.Include(item => item.Notification)
             .SingleAsync();
         delivery.Notification.NotificationSeverity.ShouldBe(NotificationSeverity.Error);
@@ -151,8 +145,8 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
             ArchiveConfigs = [],
             UploadConfigs = [],
         };
-        writeDbContext.AddRange(releaseGroup, release);
-        writeDbContext.TelegramConfigurations.Add(
+        DbContext.AddRange(releaseGroup, release);
+        DbContext.TelegramConfigurations.Add(
             new TelegramConfiguration
             {
                 EncryptedBotToken = "1234567:4TT8bAc8GHUspu3ERYn-KGcvsvGB9u_n4ddy",
@@ -166,7 +160,7 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
                 ForwardNotificationsAfterId = 0,
             }
         );
-        writeDbContext.Notifications.Add(
+        DbContext.Notifications.Add(
             new Notification
             {
                 CreatedAt = DateTime.UtcNow,
@@ -176,7 +170,7 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
                 Release = release,
             }
         );
-        await writeDbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         await service.ProcessDeliveriesAsync(CancellationToken.None);
 
@@ -188,7 +182,7 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
     public async Task ProcessDeliveries_BotTokenUnreadable_LeavesDeliveriesPendingWithoutSending()
     {
         // Arrange
-        writeDbContext.TelegramConfigurations.Add(
+        DbContext.TelegramConfigurations.Add(
             CreateConnectedConfiguration(hasUnreadableSecrets: true)
         );
         var notification = new Notification
@@ -198,17 +192,17 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
             NotificationKind = NotificationKind.UploadFailed,
             Message = "Upload failed",
         };
-        writeDbContext.TelegramDeliveries.Add(
+        DbContext.TelegramDeliveries.Add(
             new TelegramDelivery { Notification = notification, CreatedAt = DateTime.UtcNow }
         );
-        await writeDbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.ProcessDeliveriesAsync(CancellationToken.None);
 
         // Assert
-        writeDbContext.ChangeTracker.Clear();
-        var delivery = await writeDbContext.TelegramDeliveries.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var delivery = await DbContext.TelegramDeliveries.SingleAsync();
         delivery.DeliveredAt.ShouldBeNull();
         delivery.AttemptCount.ShouldBe(0);
         telegram.LastSentMessage.ShouldBeEmpty();
@@ -218,7 +212,7 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
     public async Task SaveConfigurationAsync_NewBotTokenForUnreadableConfiguration_ClearsFlagAndResolvesNotification()
     {
         // Arrange
-        writeDbContext.TelegramConfigurations.Add(
+        DbContext.TelegramConfigurations.Add(
             CreateConnectedConfiguration(hasUnreadableSecrets: true)
         );
         var notification = new Notification
@@ -228,8 +222,8 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
             NotificationKind = NotificationKind.UnreadableSecretsDetected,
             Message = "Stored credentials could not be decrypted",
         };
-        writeDbContext.Notifications.Add(notification);
-        await writeDbContext.SaveChangesAsync();
+        DbContext.Notifications.Add(notification);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.SaveConfigurationAsync(
@@ -239,12 +233,12 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        writeDbContext.ChangeTracker.Clear();
-        var configuration = await writeDbContext.TelegramConfigurations.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var configuration = await DbContext.TelegramConfigurations.SingleAsync();
         configuration.HasUnreadableSecrets.ShouldBeFalse();
         configuration.EncryptedBotToken.ShouldBe("1234567:4TT8bAc8GHUspu3ERYn-KGcvsvGB9u_n4ddy");
         (
-            await writeDbContext.Notifications.SingleAsync(n => n.Id == notification.Id)
+            await DbContext.Notifications.SingleAsync(n => n.Id == notification.Id)
         ).ResolvedAt.ShouldNotBeNull();
     }
 
@@ -255,10 +249,8 @@ public class TelegramNotificationServiceTest : BearcatIntegrationTest
     )
     {
         // Arrange
-        writeDbContext.TelegramConfigurations.Add(
-            CreateConnectedConfiguration(hasUnreadableSecrets)
-        );
-        await writeDbContext.SaveChangesAsync();
+        DbContext.TelegramConfigurations.Add(CreateConnectedConfiguration(hasUnreadableSecrets));
+        await DbContext.SaveChangesAsync();
 
         // Act
         var settings = await service.GetSettingsAsync(

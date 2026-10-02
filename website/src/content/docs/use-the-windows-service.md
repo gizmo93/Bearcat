@@ -6,15 +6,13 @@ description: "Run Bearcat as an always-on Windows background service, configured
 Run Bearcat as a Windows service to start it automatically with the machine and keep it running when no user is logged in.
 For on-demand use, choose the [Desktop app](/Bearcat/use-the-desktop-launcher/) instead. Both run the same application.
 
-Install PostgreSQL separately. See [Set Up PostgreSQL for Bearcat](/Bearcat/install-postgresql-for-desktop/).
-
 ## Requirements
 
-- PostgreSQL 18 running locally or on a reachable machine
 - RAR command line executable (on Windows this comes with WinRAR)
 - 7z command line executable
 - At least one working directory the service can read and write
 - An Administrator terminal to run the setup
+- PostgreSQL 18, only if you choose the PostgreSQL database. See [Set Up PostgreSQL for Bearcat](/Bearcat/install-postgresql-for-desktop/).
 
 ## Downloading
 
@@ -34,13 +32,17 @@ Bearcat.Cli.exe setup
 
 The setup asks you for:
 
+- **Database**: `SQLite (recommended)` or `PostgreSQL`
+  - SQLite: **SQLite database file**, default `%ProgramData%\Bearcat\bearcat.db`. Must be on a local drive, not on a network share or mapped network drive.
+  - PostgreSQL: **database host / port / name / username / password**. The setup tests the connection right away.
 - **7z executable**: full path, or empty to use `PATH`
 - **rar executable**: full path, or empty to use `PATH`
 - **Working directories**: one or more folders where Bearcat looks for your release files. Leave the prompt empty to finish.
-- **Database host / port / name / user / password**: your PostgreSQL connection
 - **Web port**: the local HTTP port for the web UI (default `17208`)
 
-It then tests the database connection, writes the configuration file, registers and starts the `Bearcat` Windows service, and waits until the service reports healthy.
+It then writes the configuration file, registers and starts the `Bearcat` Windows service, and waits until the service reports healthy.
+
+Bearcat cannot move data between SQLite and PostgreSQL. Switching the database starts with an empty database.
 
 When it's done, Bearcat is reachable at:
 
@@ -49,6 +51,7 @@ http://127.0.0.1:<web-port>
 ```
 
 Re-running `setup` later is safe: if the service already exists it keeps the registration (including any account you set, see below) and just applies the new configuration.
+The database prompt preselects the database of the existing configuration. A new installation preselects SQLite.
 
 ## Where The Configuration is stored
 
@@ -58,7 +61,7 @@ The setup writes a single machine-wide configuration file:
 %ProgramData%\Bearcat\config.json
 ```
 
-It holds the database connection string, the 7z/RAR paths, the working directories, and the web port. The folder's access is restricted to the service account and Administrators, because the file contains the database password in plain text.
+It holds the database settings, the 7z/RAR paths, the working directories, and the web port. The folder's access is restricted to the service account and Administrators. With PostgreSQL, the file contains the database password in plain text.
 
 The encryption key for stored hoster, link crypter, and NFO database account configurations is created next to it on first start:
 
@@ -66,7 +69,12 @@ The encryption key for stored hoster, link crypter, and NFO database account con
 %ProgramData%\Bearcat\bearcat.key
 ```
 
-Back up `bearcat.key` together with your PostgreSQL database. Without it, Bearcat cannot decrypt your stored account configurations anymore.
+Back up `bearcat.key` together with your database:
+
+- SQLite: the database file, by default `%ProgramData%\Bearcat\bearcat.db`. Stop the service before copying, or copy `bearcat.db-wal` and `bearcat.db-shm` together with `bearcat.db`.
+- PostgreSQL: your PostgreSQL database.
+
+Without `bearcat.key`, Bearcat cannot decrypt your stored account configurations anymore.
 
 `setup` and `set-db-password` only update these values. Sections you add by hand, like `Logging` or `Bearcat`, are kept.
 
@@ -101,7 +109,7 @@ Bearcat logs warnings and errors by default. For more detail, add the following 
 
 ```json
 {
-  "Database": { "ConnectionString": "..." },
+  "Database": { "Provider": "Sqlite", "SqliteFilePath": "..." },
   "Archivers": { "RarPath": "...", "SevenZipPath": "..." },
   "WorkingDirectories": ["..."],
   "Urls": "http://127.0.0.1:17208",
@@ -134,13 +142,14 @@ The setup reminds you about this when it detects a UNC path. The account you set
 
 ## Changing The Database Password
 
-If your PostgreSQL password changes, you don't need to edit `config.json` by hand. Run (as Administrator):
+PostgreSQL only. If your PostgreSQL password changes, you don't need to edit `config.json` by hand. Run (as Administrator):
 
 ```text
 Bearcat.Cli.exe set-db-password
 ```
 
 It prompts for the new password, tests the connection, updates the configuration, and restarts the service.
+With SQLite, it exits with an error and leaves the configuration unchanged.
 
 ## Updating
 
@@ -150,7 +159,7 @@ To update Bearcat, replace the application files. Your configuration and encrypt
 2. Replace the contents of the install folder with the new release. Replace the whole folder, not just `Bearcat.Host.exe`, so all files match the new version.
 3. Start the service: `sc start Bearcat`.
 
-`config.json` and `bearcat.key` in `%ProgramData%\Bearcat` are untouched, and the service registration and run-as account stay as they were. Database migrations run automatically on start, so back up your database before a major update.
+`config.json`, `bearcat.key`, and the SQLite database in `%ProgramData%\Bearcat` are untouched, and the service registration and run-as account stay as they were. Database migrations run automatically on start, so back up your database before a major update.
 
 ## Uninstalling
 
@@ -160,4 +169,4 @@ To stop and remove the service, run (as Administrator):
 Bearcat.Cli.exe uninstall
 ```
 
-It removes the Windows service and offers to delete `config.json`. Your PostgreSQL database is never touched.
+It removes the Windows service and offers to delete `config.json`. Your database (SQLite file or PostgreSQL) is never touched.

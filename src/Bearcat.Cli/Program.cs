@@ -10,7 +10,7 @@ app.Configure(config =>
         .WithDescription("Configure and register the Windows service");
     config
         .AddCommand<SetDbPasswordCommand>("set-db-password")
-        .WithDescription("Change the database password and restart the service");
+        .WithDescription("Change the PostgreSQL database password and restart the service");
     config
         .AddCommand<UninstallCommand>("uninstall")
         .WithDescription("Stop and remove the Windows service");

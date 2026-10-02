@@ -4,6 +4,7 @@ using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageImageHosters;
+using Bearcat.Domain.UseCases.ManageImageHosters.ReadModels;
 using Bearcat.Domain.UseCases.ManageProxyServers.Selection;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -16,12 +17,12 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageImageHosters;
 
-public class ImageHosterServiceTest : BearcatIntegrationTest
+public class ImageHosterServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string ImageHosterClassName = "TestImageHoster";
     private const string SerializedConfig = "{\"apiKey\":\"secret\"}";
 
-    private BearcatDbContext dbContext = null!;
     private Mock<IImageHoster> imageHosterMock = null!;
     private Mock<IImageHosterConfig> imageHosterConfigMock = null!;
     private Mock<IImageHosterFactory> imageHosterFactoryMock = null!;
@@ -30,7 +31,6 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         imageHosterConfigMock = new Mock<IImageHosterConfig>(MockBehavior.Strict);
         imageHosterMock = new Mock<IImageHoster>(MockBehavior.Strict);
         imageHosterMock.As<ISupportsLogin>();
@@ -41,22 +41,16 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
             .Returns(imageHosterMock.Object);
 
         service = new ImageHosterService(
-            new ImageHosterRegistrationWriteRepository(dbContext),
-            new ImageHosterRegistrationReadRepository(dbContext, imageHosterFactoryMock.Object),
+            new ImageHosterRegistrationWriteRepository(DbContext),
+            new ImageHosterRegistrationReadRepository(DbContext, imageHosterFactoryMock.Object),
             imageHosterFactoryMock.Object,
             NoOpSecretProtector.Instance,
             UnreadableSecretsNotificationServiceFactory.Create(
-                dbContext,
+                DbContext,
                 CreateNotificationConfigurationProvider()
             ),
-            new ProxySelectionValidator(new ProxyServerRepository(dbContext, dbContext))
+            new ProxySelectionValidator(new ProxyServerRepository(DbContext, DbContext))
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -77,7 +71,7 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var registration = await dbContext.ImageHosterRegistrations.SingleAsync();
+        var registration = await DbContext.ImageHosterRegistrations.SingleAsync();
 
         registration.Name.ShouldBe("Primary image hoster");
         registration.ImageHosterClassName.ShouldBe(ImageHosterClassName);
@@ -116,7 +110,7 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var result = await dbContext.ImageHosterRegistrations.SingleAsync();
+        var result = await DbContext.ImageHosterRegistrations.SingleAsync();
 
         result.Name.ShouldBe("Updated image hoster");
         result.SerializedConfig.ShouldBe("{\"apiKey\":\"updated\"}");
@@ -150,8 +144,8 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.ImageHosterRegistrations.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.ImageHosterRegistrations.SingleAsync();
 
         result.SerializedConfig.ShouldBe("{\"apiKey\":\"updated\"}");
         result.HasUnreadableSecrets.ShouldBeFalse();
@@ -168,7 +162,7 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
         await service.ToggleIsActiveAsync(registration.Id, CancellationToken.None);
 
         // Assert
-        var result = await dbContext.ImageHosterRegistrations.SingleAsync();
+        var result = await DbContext.ImageHosterRegistrations.SingleAsync();
 
         result.IsActive.ShouldBeFalse();
     }
@@ -206,7 +200,7 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
         await service.DeleteAsync(registration.Id, CancellationToken.None);
 
         // Assert
-        var result = await dbContext.ImageHosterRegistrations.AnyAsync();
+        var result = await DbContext.ImageHosterRegistrations.AnyAsync();
 
         result.ShouldBeFalse();
     }
@@ -237,7 +231,7 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
             Name = "Collection",
             CreatedAt = DateTime.UtcNow,
         };
-        dbContext.ImageUploadConfigs.AddRange(
+        DbContext.ImageUploadConfigs.AddRange(
             new ImageUploadConfig
             {
                 Release = release,
@@ -260,7 +254,7 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
                 ImageUploads = [CreateImageUpload()],
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await service.GetImageUploadCountAsync(
@@ -308,7 +302,7 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var registration = await dbContext.ImageHosterRegistrations.SingleAsync();
+        var registration = await DbContext.ImageHosterRegistrations.SingleAsync();
         registration.ProxySelection.ShouldBe(ProxySelection.SpecificProxyServer);
         registration.ProxyServerId.ShouldBe(proxyServer.Id);
     }
@@ -334,7 +328,7 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
 
         // Assert
         await act.ShouldThrowAsync<InvalidProxySelectionException>();
-        (await dbContext.ImageHosterRegistrations.CountAsync()).ShouldBe(0);
+        (await DbContext.ImageHosterRegistrations.CountAsync()).ShouldBe(0);
     }
 
     [Test]
@@ -391,8 +385,8 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.ImageHosterRegistrations.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.ImageHosterRegistrations.SingleAsync();
         result.ProxySelection.ShouldBe(ProxySelection.UseCategoryDefault);
         result.ProxyServerId.ShouldBeNull();
     }
@@ -433,6 +427,112 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
         ProxyCategoryScope.Current.ShouldBeNull();
     }
 
+    [Test]
+    public async Task GetAllAsync_SeveralRegistrations_ReturnsReadModelsOrderedByName()
+    {
+        // Arrange
+        var proxyServer = await AddProxyServerAsync();
+        var secondaryRegistration = await AddImageHosterRegistrationAsync(
+            isActive: false,
+            hasUnreadableSecrets: true,
+            proxySelection: ProxySelection.SpecificProxyServer,
+            proxyServerId: proxyServer.Id,
+            name: "Secondary image hoster"
+        );
+        var primaryRegistration = await AddImageHosterRegistrationAsync(isActive: true);
+        DbContext.ChangeTracker.Clear();
+        var readRepository = CreateReadRepositoryWithImageHosterLookup();
+
+        // Act
+        var result = await readRepository.GetAllAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe([
+            new ImageHosterRegistrationReadModel(
+                primaryRegistration.Id,
+                "Primary image hoster",
+                ImageHosterClassName,
+                "Test image hoster",
+                IsActive: true,
+                HasUnreadableSecrets: false,
+                ProxySelection.UseCategoryDefault,
+                null
+            ),
+            new ImageHosterRegistrationReadModel(
+                secondaryRegistration.Id,
+                "Secondary image hoster",
+                ImageHosterClassName,
+                "Test image hoster",
+                IsActive: false,
+                HasUnreadableSecrets: true,
+                ProxySelection.SpecificProxyServer,
+                proxyServer.Id
+            ),
+        ]);
+    }
+
+    [Test]
+    public async Task GetByIdAsync_RegistrationExists_ReturnsReadModel()
+    {
+        // Arrange
+        await AddImageHosterRegistrationAsync(isActive: true);
+        var proxyServer = await AddProxyServerAsync();
+        var registration = await AddImageHosterRegistrationAsync(
+            isActive: false,
+            proxySelection: ProxySelection.SpecificProxyServer,
+            proxyServerId: proxyServer.Id,
+            name: "Secondary image hoster"
+        );
+        DbContext.ChangeTracker.Clear();
+        var readRepository = CreateReadRepositoryWithImageHosterLookup();
+
+        // Act
+        var result = await readRepository.GetByIdAsync(registration.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(
+            new ImageHosterRegistrationReadModel(
+                registration.Id,
+                "Secondary image hoster",
+                ImageHosterClassName,
+                "Test image hoster",
+                IsActive: false,
+                HasUnreadableSecrets: false,
+                ProxySelection.SpecificProxyServer,
+                proxyServer.Id
+            )
+        );
+    }
+
+    [Test]
+    public async Task GetByIdAsync_RegistrationDoesNotExist_ReturnsNull()
+    {
+        // Arrange
+        var registration = await AddImageHosterRegistrationAsync(isActive: true);
+        var readRepository = CreateReadRepositoryWithImageHosterLookup();
+
+        // Act
+        var result = await readRepository.GetByIdAsync(registration.Id + 1, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    private ImageHosterRegistrationReadRepository CreateReadRepositoryWithImageHosterLookup()
+    {
+        imageHosterMock.Setup(hoster => hoster.Name).Returns("Test image hoster");
+        imageHosterFactoryMock
+            .Setup(factory => factory.GetByClassName())
+            .Returns(
+                new Dictionary<string, IImageHoster>
+                {
+                    [ImageHosterClassName] = imageHosterMock.Object,
+                }
+            );
+
+        return new ImageHosterRegistrationReadRepository(DbContext, imageHosterFactoryMock.Object);
+    }
+
     private async Task<ProxyServer> AddProxyServerAsync()
     {
         var proxyServer = new ProxyServer
@@ -443,8 +543,8 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
             Port = 8080,
         };
 
-        dbContext.ProxyServers.Add(proxyServer);
-        await dbContext.SaveChangesAsync();
+        DbContext.ProxyServers.Add(proxyServer);
+        await DbContext.SaveChangesAsync();
 
         return proxyServer;
     }
@@ -453,22 +553,23 @@ public class ImageHosterServiceTest : BearcatIntegrationTest
         bool isActive,
         bool hasUnreadableSecrets = false,
         ProxySelection proxySelection = ProxySelection.UseCategoryDefault,
-        int? proxyServerId = null
+        int? proxyServerId = null,
+        string name = "Primary image hoster"
     )
     {
         var registration = new ImageHosterRegistration
         {
             ProxySelection = proxySelection,
             ProxyServerId = proxyServerId,
-            Name = "Primary image hoster",
+            Name = name,
             IsActive = isActive,
             HasUnreadableSecrets = hasUnreadableSecrets,
             ImageHosterClassName = ImageHosterClassName,
             SerializedConfig = SerializedConfig,
         };
 
-        dbContext.ImageHosterRegistrations.Add(registration);
-        await dbContext.SaveChangesAsync();
+        DbContext.ImageHosterRegistrations.Add(registration);
+        await DbContext.SaveChangesAsync();
 
         return registration;
     }

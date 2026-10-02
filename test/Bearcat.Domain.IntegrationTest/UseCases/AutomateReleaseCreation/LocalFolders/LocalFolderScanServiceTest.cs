@@ -30,12 +30,12 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.LocalFolders;
 
-public class LocalFolderScanServiceTest : BearcatIntegrationTest
+public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string WorkingDatabaseClassName = "WorkingNfoDatabase";
     private const string SerializedConfig = "{\"apiKey\":\"secret\"}";
 
-    private BearcatDbContext dbContext = null!;
     private Mock<INfoDatabaseFactory> nfoDatabaseFactoryMock = null!;
     private Dictionary<string, INfoDatabase> nfoDatabasesByClassName = null!;
     private string tempRootPath = null!;
@@ -48,7 +48,6 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
     {
         stabilityMinutes = 0;
         minimumFolderSizeMegabytes = 0;
-        dbContext = Database.CreateDbContext();
         nfoDatabaseFactoryMock = new Mock<INfoDatabaseFactory>(MockBehavior.Strict);
         nfoDatabasesByClassName = [];
         nfoDatabaseFactoryMock
@@ -58,7 +57,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
 
         Directory.CreateDirectory(tempRootPath);
 
-        var notificationRepository = new NotificationRepository(dbContext);
+        var notificationRepository = new NotificationRepository(DbContext);
 
         var notificationService = new NotificationService(
             repository: notificationRepository,
@@ -67,8 +66,8 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
         );
 
         service = new LocalFolderScanService(
-            repository: new ReleaseFolderAutomationRepository(dbContext, dbContext),
-            releaseFolderUsageRepository: new ReleaseFolderUsageRepository(dbContext),
+            repository: new ReleaseFolderAutomationRepository(DbContext, DbContext),
+            releaseFolderUsageRepository: new ReleaseFolderUsageRepository(DbContext),
             fileSystemService: new FileSystemService(),
             releaseFromFolderCreationService: new ReleaseFromFolderCreationService(
                 releaseInfoResolutionService: CreateReleaseInfoResolutionService(),
@@ -78,8 +77,8 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
                 ),
                 releaseCollectionAssigner: new ReleaseCollectionAssignmentService(
                     new ReleaseCollectionRepository(
-                        dbRead: dbContext,
-                        dbWrite: dbContext,
+                        dbRead: DbContext,
+                        dbWrite: DbContext,
                         metadataDatabaseFactory: Mock.Of<IMediaMetadataDatabaseFactory>()
                     ),
                     CreateTimeProvider()
@@ -137,10 +136,8 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
     }
 
     [TearDown]
-    public async Task DisposeResourcesAsync()
+    public void DeleteTempRootPath()
     {
-        await dbContext.DisposeAsync();
-
         if (Directory.Exists(tempRootPath))
         {
             Directory.Delete(tempRootPath, recursive: true);
@@ -178,7 +175,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
         // Assert
         result.ShouldBe(1);
 
-        var releases = await dbContext
+        var releases = await DbContext
             .Releases.AsSplitQuery()
             .Include(release => release.ArchiveConfigs)
             .Include(release => release.UploadConfigs)
@@ -223,7 +220,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
             .LinkCrypterRegistrationId.ShouldBe(releaseTemplate.LinkCrypterRegistrationId);
         uploadConfig.LinkCrypters.Single().Password.ShouldBe("container-secret");
 
-        var notification = await dbContext.Notifications.SingleAsync();
+        var notification = await DbContext.Notifications.SingleAsync();
         notification.NotificationSeverity.ShouldBe(NotificationSeverity.Info);
         notification.Message.ShouldBe(
             "Release 'Bearcat.Release.1080p' was created automatically from template 'Managed template'"
@@ -252,8 +249,8 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
         // Assert
         result.ShouldBe(1);
 
-        dbContext.ChangeTracker.Clear();
-        var release = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var release = await DbContext
             .Releases.AsSplitQuery()
             .Include(release => release.ReleaseInfo)
                 .ThenInclude(info => info!.ExternalInfos)
@@ -290,12 +287,12 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
     {
         // Arrange
         var releaseTemplate = await AddReleaseTemplateAsync();
-        var template = await dbContext.ReleaseTemplates.SingleAsync(template =>
+        var template = await DbContext.ReleaseTemplates.SingleAsync(template =>
             template.Id == releaseTemplate.ReleaseTemplateId
         );
         template.ReleaseCollectionDetectionMode =
             ReleaseCollectionDetectionMode.SeriesEpisodePattern;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         Directory.CreateDirectory(
             Path.Combine(
@@ -323,7 +320,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
         // Assert
         result.ShouldBe(3);
 
-        var releaseCollection = await dbContext
+        var releaseCollection = await DbContext
             .ReleaseCollections.Include(collection => collection.Releases)
             .SingleAsync();
 
@@ -339,7 +336,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
         // Arrange
         var releaseTemplate = await AddReleaseTemplateAsync();
         var imageHosterRegistration = await AddImageHosterRegistrationAsync();
-        var template = await dbContext.ReleaseTemplates.SingleAsync(template =>
+        var template = await DbContext.ReleaseTemplates.SingleAsync(template =>
             template.Id == releaseTemplate.ReleaseTemplateId
         );
         template.ReleaseCollectionDetectionMode =
@@ -352,7 +349,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
                 Name = "Series cover",
             },
         ];
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         Directory.CreateDirectory(
             Path.Combine(
@@ -374,7 +371,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
         // Assert
         result.ShouldBe(2);
 
-        var releaseCollection = await dbContext
+        var releaseCollection = await DbContext
             .ReleaseCollections.Include(collection => collection.ImageUploadConfigs)
             .SingleAsync();
 
@@ -403,8 +400,8 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
 
         // Assert
         result.ShouldBe(0);
-        var releaseExists = await dbContext.Releases.AnyAsync();
-        var notificationExists = await dbContext.Notifications.AnyAsync();
+        var releaseExists = await DbContext.Releases.AnyAsync();
+        var notificationExists = await DbContext.Notifications.AnyAsync();
 
         releaseExists.ShouldBeFalse();
         notificationExists.ShouldBeFalse();
@@ -423,8 +420,8 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
 
         // Assert
         result.ShouldBe(0);
-        (await dbContext.Releases.AnyAsync()).ShouldBeFalse();
-        (await dbContext.Notifications.AnyAsync()).ShouldBeFalse();
+        (await DbContext.Releases.AnyAsync()).ShouldBeFalse();
+        (await DbContext.Notifications.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -444,7 +441,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
         // Assert
         result.ShouldBe(1);
 
-        var release = await dbContext.Releases.SingleAsync();
+        var release = await DbContext.Releases.SingleAsync();
         release.Name.ShouldBe("Bearcat.Release.720p");
         release.ReleaseFolderPath.ShouldBe(releaseFolder.FullName);
     }
@@ -472,7 +469,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
 
         // Assert
         result.ShouldBe(1);
-        var release = await dbContext
+        var release = await DbContext
             .Releases.AsSplitQuery()
             .Include(r => r.ArchiveConfigs)
                 .ThenInclude(c => c.Archives)
@@ -518,8 +515,8 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
         created.ShouldBe(1);
         firstRerun.ShouldBe(0);
         secondRerun.ShouldBe(0);
-        (await dbContext.Releases.CountAsync()).ShouldBe(1);
-        (await dbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
+        (await DbContext.Releases.CountAsync()).ShouldBe(1);
+        (await DbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -535,10 +532,10 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
 
         // Assert
         result.ShouldBe(0);
-        (await dbContext.Releases.AnyAsync()).ShouldBeFalse();
-        (await dbContext.Notifications.AnyAsync()).ShouldBeFalse();
+        (await DbContext.Releases.AnyAsync()).ShouldBeFalse();
+        (await DbContext.Notifications.AnyAsync()).ShouldBeFalse();
 
-        var observation = await dbContext.ReleaseFolderObservations.SingleAsync();
+        var observation = await DbContext.ReleaseFolderObservations.SingleAsync();
         observation.FolderPath.ShouldBe(folder.FullName);
     }
 
@@ -563,9 +560,9 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
         secondTick.ShouldBe(0);
         thirdTick.ShouldBe(1);
 
-        var release = await dbContext.Releases.SingleAsync();
+        var release = await DbContext.Releases.SingleAsync();
         release.ReleaseFolderPath.ShouldBe(folder.FullName);
-        (await dbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
+        (await DbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -584,8 +581,8 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
 
         // Assert
         result.ShouldBe(0);
-        (await dbContext.Releases.AnyAsync()).ShouldBeFalse();
-        (await dbContext.ReleaseFolderObservations.SingleAsync()).FolderPath.ShouldBe(
+        (await DbContext.Releases.AnyAsync()).ShouldBeFalse();
+        (await DbContext.ReleaseFolderObservations.SingleAsync()).FolderPath.ShouldBe(
             folder.FullName
         );
     }
@@ -600,14 +597,14 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
-        (await dbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeTrue();
+        (await DbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeTrue();
 
         Directory.Delete(folder.FullName, recursive: true);
         var result = await service.ProcessAsync(CancellationToken.None);
 
         // Assert
         result.ShouldBe(0);
-        (await dbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
+        (await DbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -625,8 +622,8 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
 
         // Assert
         result.ShouldBe(0);
-        (await dbContext.Releases.AnyAsync()).ShouldBeFalse();
-        (await dbContext.ReleaseFolderObservations.SingleAsync()).FolderPath.ShouldBe(
+        (await DbContext.Releases.AnyAsync()).ShouldBeFalse();
+        (await DbContext.ReleaseFolderObservations.SingleAsync()).FolderPath.ShouldBe(
             folder.FullName
         );
     }
@@ -649,7 +646,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
 
         // Assert
         result.ShouldBe(1);
-        var release = await dbContext.Releases.SingleAsync();
+        var release = await DbContext.Releases.SingleAsync();
         release.ReleaseFolderPath.ShouldBe(folder.FullName);
     }
 
@@ -682,8 +679,8 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
 
         // Assert
         result.ShouldBe(1);
-        (await dbContext.Releases.SingleAsync()).ReleaseFolderPath.ShouldBe(localFolder.FullName);
-        (await dbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
+        (await DbContext.Releases.SingleAsync()).ReleaseFolderPath.ShouldBe(localFolder.FullName);
+        (await DbContext.ReleaseFolderObservations.AnyAsync()).ShouldBeFalse();
     }
 
     private async Task AddRemoteSourceDownloadAsync(
@@ -691,7 +688,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
         RemoteSourceDownloadState state
     )
     {
-        dbContext.RemoteSourceDownloads.Add(
+        DbContext.RemoteSourceDownloads.Add(
             new RemoteSourceDownload
             {
                 SourceName = "Main FTP",
@@ -701,7 +698,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
                 State = state,
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
     }
 
     private async Task<ReleaseTemplateSeed> AddReleaseTemplateAsync(
@@ -767,8 +764,8 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
             },
         ];
 
-        dbContext.ReleaseTemplates.Add(releaseTemplate);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseTemplates.Add(releaseTemplate);
+        await DbContext.SaveChangesAsync();
 
         return new ReleaseTemplateSeed(
             releaseTemplate.Id,
@@ -786,7 +783,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
         string? primaryLanguageCode = null
     )
     {
-        dbContext.ReleaseFolderAutomations.Add(
+        DbContext.ReleaseFolderAutomations.Add(
             new ReleaseFolderAutomation
             {
                 BasePath = basePath,
@@ -796,7 +793,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
                 IsEnabled = isEnabled,
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
     }
 
     private async Task<ImageHosterRegistration> AddImageHosterRegistrationAsync()
@@ -809,15 +806,15 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
             IsActive = true,
         };
 
-        dbContext.ImageHosterRegistrations.Add(imageHosterRegistration);
-        await dbContext.SaveChangesAsync();
+        DbContext.ImageHosterRegistrations.Add(imageHosterRegistration);
+        await DbContext.SaveChangesAsync();
 
         return imageHosterRegistration;
     }
 
     private async Task AddReleaseAsync(int releaseGroupId, string releaseFolderPath)
     {
-        dbContext.Releases.Add(
+        DbContext.Releases.Add(
             new Release
             {
                 Name = Path.GetFileName(releaseFolderPath),
@@ -828,7 +825,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
                 UploadConfigs = [],
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
     }
 
     private static TimeProvider CreateTimeProvider()
@@ -843,8 +840,8 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
     private ReleaseInfoResolutionService CreateReleaseInfoResolutionService()
     {
         var releaseInfoRepository = new ReleaseInfoRepository(
-            dbContext,
-            dbContext,
+            DbContext,
+            DbContext,
             NoOpSecretProtector.Instance
         );
 
@@ -862,7 +859,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
             ),
             new ReleaseMetadataResolver(
                 new MediaMetadataResolver(
-                    new MediaMetadataResolverRepository(dbContext, NoOpSecretProtector.Instance),
+                    new MediaMetadataResolverRepository(DbContext, NoOpSecretProtector.Instance),
                     new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict).Object,
                     NullLogger<MediaMetadataResolver>.Instance
                 ),
@@ -870,7 +867,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
                 NullLogger<ReleaseMetadataResolver>.Instance
             ),
             new ReleaseClassificationService(
-                new ReleaseClassificationRepository(dbContext),
+                new ReleaseClassificationRepository(DbContext),
                 CreateTimeProvider(),
                 NullLogger<ReleaseClassificationService>.Instance
             ),
@@ -889,7 +886,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
             .ReturnsAsync((MediaProbeResult?)null);
 
         return new MediaMetadataService(
-            new MediaMetadataRepository(dbContext),
+            new MediaMetadataRepository(DbContext),
             extractorMock.Object,
             new FileSystemService(),
             CreateReleaseClassificationService(),
@@ -901,7 +898,7 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
     private ReleaseClassificationService CreateReleaseClassificationService()
     {
         return new ReleaseClassificationService(
-            new ReleaseClassificationRepository(dbContext),
+            new ReleaseClassificationRepository(DbContext),
             CreateTimeProvider(),
             NullLogger<ReleaseClassificationService>.Instance
         );
@@ -946,8 +943,8 @@ public class LocalFolderScanServiceTest : BearcatIntegrationTest
             IsActive = isActive,
         };
 
-        dbContext.NfoDatabaseRegistrations.Add(registration);
-        await dbContext.SaveChangesAsync();
+        DbContext.NfoDatabaseRegistrations.Add(registration);
+        await DbContext.SaveChangesAsync();
 
         return registration;
     }

@@ -1,11 +1,11 @@
 ---
 title: "Set Up PostgreSQL for Bearcat"
-description: "Install and run PostgreSQL for Bearcat, for the Desktop app or the Windows service."
+description: "Install PostgreSQL for the optional PostgreSQL database of the Desktop app or the Windows service."
 ---
 
-Bearcat needs a PostgreSQL database to store its data.
+Only needed if you choose **PostgreSQL** as the database in the [Desktop app](/Bearcat/use-the-desktop-launcher/) or the [Windows service](/Bearcat/use-the-windows-service/). The default SQLite database needs no database server.
 
-Both the Desktop app and the [Windows service](/Bearcat/use-the-windows-service/) connect to a PostgreSQL server you install separately.
+For Docker, `docker-compose.postgres.yml` starts PostgreSQL in its own container. See [Run Bearcat in Docker](/Bearcat/use-the-docker-image/#database).
 
 Use PostgreSQL 18. Older PostgreSQL versions are currently untested.
 

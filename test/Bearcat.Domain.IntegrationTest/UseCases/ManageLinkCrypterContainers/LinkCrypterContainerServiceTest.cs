@@ -18,12 +18,12 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageLinkCrypterContainers;
 
-public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
+public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string LinkCrypterClassName = "TestCrypter";
     private const string SerializedConfig = "{\"apiKey\":\"secret\"}";
 
-    private BearcatDbContext dbContext = null!;
     private Mock<ILinkCrypter> linkCrypterMock = null!;
     private Mock<ILinkCrypterConfig> linkCrypterConfigMock = null!;
     private Mock<ILinkCrypterFactory> linkCrypterFactoryMock = null!;
@@ -33,7 +33,6 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         linkCrypterConfigMock = new Mock<ILinkCrypterConfig>(MockBehavior.Strict);
         linkCrypterMock = new Mock<ILinkCrypter>(MockBehavior.Strict);
         linkCrypterMock
@@ -45,9 +44,9 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             .Setup(f => f.Get(LinkCrypterClassName))
             .Returns(linkCrypterMock.Object);
 
-        var repository = new LinkCrypterContainerCreationWriteRepository(dbContext);
+        var repository = new LinkCrypterContainerCreationWriteRepository(DbContext);
         var notificationService = new NotificationService(
-            repository: new NotificationRepository(dbContext),
+            repository: new NotificationRepository(DbContext),
             timeProvider: CreateTimeProvider(),
             configurationProvider: CreateNotificationConfigurationProvider()
         );
@@ -70,12 +69,6 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             NoOpSecretProtector.Instance,
             collectionContainerService
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -108,7 +101,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         await service.CreateMissingLinkCrypterContainersAsync(CancellationToken.None);
 
         // Assert
-        var result = await dbContext.LinkCrypterContainers.SingleAsync();
+        var result = await DbContext.LinkCrypterContainers.SingleAsync();
 
         result.ShouldNotBeNull();
         result.UploadId.ShouldBe(seed.UploadId);
@@ -151,7 +144,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         await service.CreateMissingLinkCrypterContainersAsync(CancellationToken.None);
 
         // Assert
-        var result = await dbContext
+        var result = await DbContext
             .LinkCrypterContainers.Include(c => c.Notifications)
             .SingleAsync();
 
@@ -173,7 +166,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
     {
         // Arrange
         var seed = await AddUploadWithMissingContainerAsync();
-        dbContext.LinkCrypterContainers.Add(
+        DbContext.LinkCrypterContainers.Add(
             new LinkCrypterContainer
             {
                 Scope = LinkCrypterContainerScope.Release,
@@ -188,13 +181,13 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
                 CreatedAt = DateTime.UtcNow,
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.CreateMissingLinkCrypterContainersAsync(CancellationToken.None);
 
         // Assert
-        var result = await dbContext.LinkCrypterContainers.ToListAsync();
+        var result = await DbContext.LinkCrypterContainers.ToListAsync();
 
         result.ShouldNotBeNull();
         result.Count.ShouldBe(1);
@@ -230,7 +223,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         await service.CreateMissingLinkCrypterContainersAsync(CancellationToken.None);
 
         // Assert
-        var result = await dbContext.LinkCrypterContainers.SingleAsync();
+        var result = await DbContext.LinkCrypterContainers.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(seed.PreviousContainerId);
@@ -270,7 +263,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         await service.CreateMissingLinkCrypterContainersAsync(CancellationToken.None);
 
         // Assert
-        var containers = await dbContext.LinkCrypterContainers.ToListAsync();
+        var containers = await DbContext.LinkCrypterContainers.ToListAsync();
 
         var reused = containers.Single(c => c.UploadId == seed.NewUploadId);
         reused.Id.ShouldBe(seed.RecentContainerId);
@@ -308,7 +301,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         await service.CreateMissingLinkCrypterContainersAsync(CancellationToken.None);
 
         // Assert
-        var reused = await dbContext.LinkCrypterContainers.SingleAsync(c =>
+        var reused = await DbContext.LinkCrypterContainers.SingleAsync(c =>
             c.UploadId == seed.NewUploadId
         );
         reused.Id.ShouldBe(seed.CreatedContainerId);
@@ -327,7 +320,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         await service.DeleteFailedContainerAsync(containerId, CancellationToken.None);
 
         // Assert
-        (await dbContext.LinkCrypterContainers.AnyAsync()).ShouldBeFalse();
+        (await DbContext.LinkCrypterContainers.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -352,18 +345,18 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
                 })
                 .ToList(),
         };
-        dbContext.LinkCrypterContainers.Add(container);
-        await dbContext.SaveChangesAsync();
+        DbContext.LinkCrypterContainers.Add(container);
+        await DbContext.SaveChangesAsync();
         var containerId = container.Id;
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         await service.DeleteFailedContainerAsync(containerId, CancellationToken.None);
 
         // Assert
-        (await dbContext.LinkCrypterContainers.AnyAsync()).ShouldBeFalse();
-        (await dbContext.LinkCrypterContainerSourceUploads.AnyAsync()).ShouldBeFalse();
-        var remainingUploadIds = await dbContext.Uploads.Select(upload => upload.Id).ToListAsync();
+        (await DbContext.LinkCrypterContainers.AnyAsync()).ShouldBeFalse();
+        (await DbContext.LinkCrypterContainerSourceUploads.AnyAsync()).ShouldBeFalse();
+        var remainingUploadIds = await DbContext.Uploads.Select(upload => upload.Id).ToListAsync();
         remainingUploadIds.Order().ShouldBe(seed.UploadIds.Order());
     }
 
@@ -379,7 +372,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
 
         // Assert
         await act.ShouldThrowAsync<InvalidOperationException>();
-        (await dbContext.LinkCrypterContainers.CountAsync()).ShouldBe(1);
+        (await DbContext.LinkCrypterContainers.CountAsync()).ShouldBe(1);
     }
 
     [Test]
@@ -412,7 +405,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         await service.CreateMissingLinkCrypterContainersAsync(CancellationToken.None);
 
         // Assert
-        var created = await dbContext.LinkCrypterContainers.SingleAsync(c =>
+        var created = await DbContext.LinkCrypterContainers.SingleAsync(c =>
             c.UploadId == seed.NewUploadId
         );
         created.Id.ShouldNotBe(seed.FailedContainerId);
@@ -475,7 +468,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         await service.CreateMissingLinkCrypterContainersAsync(CancellationToken.None);
 
         // Assert
-        var result = await dbContext
+        var result = await DbContext
             .LinkCrypterContainers.Include(container => container.SourceUploads)
             .SingleAsync();
 
@@ -500,7 +493,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             seed,
             [seed.UploadIds[0]]
         );
-        var linkCrypters = await dbContext
+        var linkCrypters = await DbContext
             .UploadConfigLinkCrypters.Where(linkCrypter =>
                 linkCrypter.UploadConfig.CollectionUploadSlotId == seed.CollectionUploadSlotId
             )
@@ -514,7 +507,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             linkCrypter.EnableClickAndLoad = false;
         }
 
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         linkCrypterMock
             .Setup(c =>
@@ -546,8 +539,8 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             CancellationToken.None
         );
 
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .LinkCrypterContainers.Include(container => container.SourceUploads)
             .SingleAsync(container => container.Id == existingContainerId);
 
@@ -565,7 +558,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
     {
         var seed = await AddCollectionUploadsWithMissingContainerAsync();
         var existingContainerId = await AddExistingCollectionContainerAsync(seed, seed.UploadIds);
-        var uploadConfigs = await dbContext
+        var uploadConfigs = await DbContext
             .UploadConfigs.Include(uploadConfig => uploadConfig.ArchiveConfig)
             .Where(uploadConfig =>
                 uploadConfig.CollectionUploadSlotId == seed.CollectionUploadSlotId
@@ -574,21 +567,21 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             .ToListAsync();
 
         uploadConfigs[1].ArchiveConfig.ArchivePassword = "different";
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         await collectionContainerService.UpdateContainersAsync(
             seed.CollectionUploadSlotId,
             CancellationToken.None
         );
 
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.LinkCrypterContainers.SingleAsync(container =>
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.LinkCrypterContainers.SingleAsync(container =>
             container.Id == existingContainerId
         );
 
         result.State.ShouldBe(LinkCrypterContainerState.CreationFailed);
         result.Errors.ShouldBe(["Archive passwords differ across releases."]);
-        (await dbContext.Notifications.CountAsync()).ShouldBe(1);
+        (await DbContext.Notifications.CountAsync()).ShouldBe(1);
         linkCrypterFactoryMock.Verify(f => f.Get(It.IsAny<string>()), Times.Never);
     }
 
@@ -598,13 +591,13 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         // Arrange
         var seed = await AddCollectionUploadsWithMissingContainerAsync();
 
-        var uploads = await dbContext.Uploads.ToListAsync();
+        var uploads = await DbContext.Uploads.ToListAsync();
         foreach (var upload in uploads)
         {
             upload.OnlineState = OnlineState.Offline;
         }
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         await collectionContainerService.UpdateContainersAsync(
@@ -613,7 +606,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        (await dbContext.LinkCrypterContainers.AnyAsync()).ShouldBeFalse();
+        (await DbContext.LinkCrypterContainers.AnyAsync()).ShouldBeFalse();
         linkCrypterFactoryMock.Verify(f => f.Get(It.IsAny<string>()), Times.Never);
     }
 
@@ -624,9 +617,9 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         var seed = await AddCollectionUploadsWithMissingContainerAsync();
         var existingContainerId = await AddExistingCollectionContainerAsync(seed, seed.UploadIds);
 
-        var firstUpload = await dbContext.Uploads.FindAsync(seed.UploadIds[0]);
+        var firstUpload = await DbContext.Uploads.FindAsync(seed.UploadIds[0]);
         firstUpload!.OnlineState = OnlineState.Offline;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         linkCrypterMock
             .Setup(c =>
@@ -653,8 +646,8 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var container = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var container = await DbContext
             .LinkCrypterContainers.Include(c => c.SourceUploads)
             .SingleAsync(c => c.Id == existingContainerId);
 
@@ -692,7 +685,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var container = await dbContext.LinkCrypterContainers.SingleAsync();
+        var container = await DbContext.LinkCrypterContainers.SingleAsync();
         container.State.ShouldBe(LinkCrypterContainerState.Created);
         linkCrypterFactoryMock.Verify(f => f.Get(LinkCrypterClassName), Times.Once);
     }
@@ -714,8 +707,8 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var container = await dbContext.LinkCrypterContainers.SingleAsync(c =>
+        DbContext.ChangeTracker.Clear();
+        var container = await DbContext.LinkCrypterContainers.SingleAsync(c =>
             c.Id == existingContainerId
         );
 
@@ -731,7 +724,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         var seed = await AddCollectionUploadsWithMissingContainerAsync();
         var existingContainerId = await AddExistingCollectionContainerAsync(seed, seed.UploadIds);
 
-        var linkCrypters = await dbContext
+        var linkCrypters = await DbContext
             .UploadConfigLinkCrypters.Where(lc =>
                 lc.UploadConfig.CollectionUploadSlotId == seed.CollectionUploadSlotId
             )
@@ -740,7 +733,7 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
 
         linkCrypters[0].Password = "password-a";
         linkCrypters[1].Password = "password-b";
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         await collectionContainerService.UpdateContainersAsync(
@@ -749,8 +742,8 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var container = await dbContext.LinkCrypterContainers.SingleAsync(c =>
+        DbContext.ChangeTracker.Clear();
+        var container = await DbContext.LinkCrypterContainers.SingleAsync(c =>
             c.Id == existingContainerId
         );
 
@@ -765,20 +758,20 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
         var seed = await AddCollectionUploadsWithMissingContainerAsync();
         await AddExistingCollectionContainerAsync(seed, seed.UploadIds);
 
-        var linkCrypters = await dbContext
+        var linkCrypters = await DbContext
             .UploadConfigLinkCrypters.Where(linkCrypter =>
                 linkCrypter.UploadConfig.CollectionUploadSlotId == seed.CollectionUploadSlotId
             )
             .ToListAsync();
-        dbContext.UploadConfigLinkCrypters.RemoveRange(linkCrypters);
-        await dbContext.SaveChangesAsync();
+        DbContext.UploadConfigLinkCrypters.RemoveRange(linkCrypters);
+        await DbContext.SaveChangesAsync();
 
         await collectionContainerService.UpdateContainersAsync(
             seed.CollectionUploadSlotId,
             CancellationToken.None
         );
 
-        (await dbContext.LinkCrypterContainers.AnyAsync()).ShouldBeFalse();
+        (await DbContext.LinkCrypterContainers.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -888,15 +881,15 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
                 Host = "proxy.example.com",
                 Port = 8080,
             };
-            dbContext.ProxyServers.Add(proxyServer);
-            await dbContext.SaveChangesAsync();
+            DbContext.ProxyServers.Add(proxyServer);
+            await DbContext.SaveChangesAsync();
             proxyServerId = proxyServer.Id;
         }
 
-        var registration = await dbContext.LinkCrypterRegistrations.SingleAsync();
+        var registration = await DbContext.LinkCrypterRegistrations.SingleAsync();
         registration.ProxySelection = proxySelection;
         registration.ProxyServerId = proxyServerId;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         return proxyServerId;
     }
@@ -1026,8 +1019,8 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             ErrorMessages = [],
         };
 
-        dbContext.Uploads.AddRange(firstUpload, secondUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.AddRange(firstUpload, secondUpload);
+        await DbContext.SaveChangesAsync();
 
         return new CollectionContainerSeed(
             collectionSlot.Id,
@@ -1054,8 +1047,8 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             ErrorMessages = [],
         };
 
-        dbContext.Uploads.Add(upload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(upload);
+        await DbContext.SaveChangesAsync();
 
         var linkCrypterConfig = uploadConfig.LinkCrypters.Single();
         return new MissingContainerSeed(
@@ -1109,10 +1102,10 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             ErrorMessages = [],
         };
 
-        dbContext.Uploads.Add(previousUpload);
-        dbContext.LinkCrypterContainers.Add(previousContainer);
-        dbContext.Uploads.Add(newUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(previousUpload);
+        DbContext.LinkCrypterContainers.Add(previousContainer);
+        DbContext.Uploads.Add(newUpload);
+        await DbContext.SaveChangesAsync();
 
         return new PreviousContainerSeed(
             newUpload.Id,
@@ -1190,12 +1183,12 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             ErrorMessages = [],
         };
 
-        dbContext.Uploads.Add(oldestUpload);
-        dbContext.LinkCrypterContainers.Add(staleContainer);
-        dbContext.Uploads.Add(recentUpload);
-        dbContext.LinkCrypterContainers.Add(recentContainer);
-        dbContext.Uploads.Add(newUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(oldestUpload);
+        DbContext.LinkCrypterContainers.Add(staleContainer);
+        DbContext.Uploads.Add(recentUpload);
+        DbContext.LinkCrypterContainers.Add(recentContainer);
+        DbContext.Uploads.Add(newUpload);
+        await DbContext.SaveChangesAsync();
 
         return new MultiplePreviousContainerSeed(newUpload.Id, recentContainer.Id);
     }
@@ -1246,10 +1239,10 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             ErrorMessages = [],
         };
 
-        dbContext.Uploads.Add(previousUpload);
-        dbContext.LinkCrypterContainers.Add(failedContainer);
-        dbContext.Uploads.Add(newUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(previousUpload);
+        DbContext.LinkCrypterContainers.Add(failedContainer);
+        DbContext.Uploads.Add(newUpload);
+        await DbContext.SaveChangesAsync();
 
         return new OnlyFailedContainerSeed(newUpload.Id, failedContainer.Id);
     }
@@ -1271,8 +1264,8 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             CreatedAt = DateTime.UtcNow,
         };
 
-        dbContext.LinkCrypterContainers.Add(container);
-        await dbContext.SaveChangesAsync();
+        DbContext.LinkCrypterContainers.Add(container);
+        await DbContext.SaveChangesAsync();
 
         return container.Id;
     }
@@ -1346,12 +1339,12 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             ErrorMessages = [],
         };
 
-        dbContext.Uploads.Add(createdUpload);
-        dbContext.LinkCrypterContainers.Add(createdContainer);
-        dbContext.Uploads.Add(failedUpload);
-        dbContext.LinkCrypterContainers.Add(failedContainer);
-        dbContext.Uploads.Add(newUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(createdUpload);
+        DbContext.LinkCrypterContainers.Add(createdContainer);
+        DbContext.Uploads.Add(failedUpload);
+        DbContext.LinkCrypterContainers.Add(failedContainer);
+        DbContext.Uploads.Add(newUpload);
+        await DbContext.SaveChangesAsync();
 
         return new FailedAndCreatedContainerSeed(newUpload.Id, createdContainer.Id);
     }
@@ -1439,8 +1432,8 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             ErrorMessages = [],
         };
 
-        dbContext.Uploads.AddRange(firstUpload, secondUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.AddRange(firstUpload, secondUpload);
+        await DbContext.SaveChangesAsync();
 
         return new CollectionContainerSeed(
             collectionSlot.Id,
@@ -1473,8 +1466,8 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
                 .ToList(),
         };
 
-        dbContext.LinkCrypterContainers.Add(container);
-        await dbContext.SaveChangesAsync();
+        DbContext.LinkCrypterContainers.Add(container);
+        await DbContext.SaveChangesAsync();
 
         return container.Id;
     }
@@ -1582,8 +1575,8 @@ public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
             ],
         };
 
-        dbContext.UploadConfigs.Add(uploadConfig);
-        await dbContext.SaveChangesAsync();
+        DbContext.UploadConfigs.Add(uploadConfig);
+        await DbContext.SaveChangesAsync();
 
         return uploadConfig;
     }

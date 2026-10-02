@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageUploadConfigs;
+using Bearcat.Domain.UseCases.ManageUploadConfigs.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -9,22 +10,15 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageUploadConfigs;
 
-public class UploadConfigServiceTest : BearcatIntegrationTest
+public class UploadConfigServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private UploadConfigService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
-        service = new UploadConfigService(new UploadConfigWriteRepository(dbContext));
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
+        service = new UploadConfigService(new UploadConfigWriteRepository(DbContext));
     }
 
     [Test]
@@ -44,7 +38,7 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var uploadConfig = await dbContext.UploadConfigs.SingleAsync();
+        var uploadConfig = await DbContext.UploadConfigs.SingleAsync();
 
         result.ShouldBeGreaterThan(0);
         uploadConfig.ShouldNotBeNull();
@@ -75,7 +69,7 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
         );
 
         // Assert
-        var result = await dbContext.UploadConfigs.SingleAsync();
+        var result = await DbContext.UploadConfigs.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(uploadConfig.Id);
@@ -96,7 +90,7 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
         await service.DeleteAsync(uploadConfig.Id, CancellationToken.None);
 
         // Assert
-        var result = await dbContext.UploadConfigs.AnyAsync();
+        var result = await DbContext.UploadConfigs.AnyAsync();
 
         result.ShouldBeFalse();
     }
@@ -110,7 +104,7 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
             "Inactive",
             hosterIsActive: false
         );
-        var readRepository = new UploadConfigReadRepository(dbContext);
+        var readRepository = new UploadConfigReadRepository(DbContext);
 
         // Act
         var result = await readRepository.GetHosterRegistrationOptionsAsync(CancellationToken.None);
@@ -131,7 +125,7 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
         await AddUploadWithFilesAsync(uploadConfig.Id, archive.Id, [10, 12, 8]);
         await AddUploadWithFilesAsync(uploadConfig.Id, archive.Id, [4, 6, null]);
 
-        var readRepository = new UploadConfigReadRepository(dbContext);
+        var readRepository = new UploadConfigReadRepository(DbContext);
 
         // Act
         var result = await readRepository.GetUploadConfigsAsync(
@@ -155,7 +149,7 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
 
         await AddUploadWithFilesAsync(uploadConfig.Id, archive.Id, [null, null]);
 
-        var readRepository = new UploadConfigReadRepository(dbContext);
+        var readRepository = new UploadConfigReadRepository(DbContext);
 
         // Act
         var result = await readRepository.GetUploadConfigsAsync(
@@ -169,6 +163,85 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
         config.TotalCompleteDownloads.ShouldBeNull();
     }
 
+    [Test]
+    public async Task GetReadModelByIdAsync_SeveralUploadConfigsWithDownloads_ReturnsRequestedConfigWithItsAggregates()
+    {
+        // Arrange
+        var seed = await AddUploadConfigDependenciesAsync();
+        var firstUploadConfig = await AddUploadConfigAsync(seed);
+        var secondUploadConfig = await AddUploadConfigAsync(
+            seed,
+            "Mirror upload",
+            premiumOnlyDownload: true
+        );
+        var archive = await AddArchiveAsync(seed.ArchiveConfigId);
+
+        await AddUploadWithFilesAsync(firstUploadConfig.Id, archive.Id, [100, 200]);
+        await AddUploadWithFilesAsync(secondUploadConfig.Id, archive.Id, [7, 9, null]);
+        await AddUploadWithFilesAsync(secondUploadConfig.Id, archive.Id, [3]);
+        DbContext.ChangeTracker.Clear();
+
+        var readRepository = new UploadConfigReadRepository(DbContext);
+
+        // Act
+        var result = await readRepository.GetReadModelByIdAsync(
+            secondUploadConfig.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.UploadConfigId.ShouldBe(secondUploadConfig.Id);
+        result.Name.ShouldBe("Mirror upload");
+        result.HosterRegistrationName.ShouldBe("First hoster");
+        result.HosterRegistrationId.ShouldBe(seed.HosterRegistrationId);
+        result.ArchiveConfigId.ShouldBe(seed.ArchiveConfigId);
+        result.ArchiveConfigName.ShouldBe("First archive");
+        result.ReleaseName.ShouldBe("Bearcat.Release.First");
+        result.PremiumOnlyDownload.ShouldBeTrue();
+        result.TotalIndividualDownloads.ShouldBe(19);
+        result.TotalCompleteDownloads.ShouldBe(11d);
+    }
+
+    [Test]
+    public async Task GetArchiveConfigOptionsAsync_SeveralReleases_ReturnsArchiveConfigsOfRelease()
+    {
+        // Arrange
+        var firstSeed = await AddUploadConfigDependenciesAsync();
+        await AddUploadConfigDependenciesAsync("Second");
+        var additionalArchiveConfig = new ArchiveConfig
+        {
+            ReleaseId = firstSeed.ReleaseId,
+            Name = "Additional archive",
+            ArchiveFilesBasePath = "/tmp/archive-additional",
+            ArchiverName = "zip",
+            ArchiveFileSizeMb = 1024,
+        };
+        DbContext.ArchiveConfigs.Add(additionalArchiveConfig);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        var readRepository = new UploadConfigReadRepository(DbContext);
+
+        // Act
+        var result = await readRepository.GetArchiveConfigOptionsAsync(
+            firstSeed.ReleaseId,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(
+            [
+                new ArchiveConfigOptionReadModel(firstSeed.ArchiveConfigId, "First archive", 512),
+                new ArchiveConfigOptionReadModel(
+                    additionalArchiveConfig.Id,
+                    "Additional archive",
+                    1024
+                ),
+            ],
+            ignoreOrder: true
+        );
+    }
+
     private async Task<Archive> AddArchiveAsync(int archiveConfigId)
     {
         var archive = new Archive
@@ -180,8 +253,8 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
             CreatedAt = DateTime.UtcNow,
         };
 
-        dbContext.Archives.Add(archive);
-        await dbContext.SaveChangesAsync();
+        DbContext.Archives.Add(archive);
+        await DbContext.SaveChangesAsync();
 
         return archive;
     }
@@ -220,22 +293,27 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
             );
         }
 
-        dbContext.Uploads.Add(upload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(upload);
+        await DbContext.SaveChangesAsync();
     }
 
-    private async Task<UploadConfig> AddUploadConfigAsync(UploadConfigSeed seed)
+    private async Task<UploadConfig> AddUploadConfigAsync(
+        UploadConfigSeed seed,
+        string name = "Default upload",
+        bool premiumOnlyDownload = false
+    )
     {
         var uploadConfig = new UploadConfig
         {
             ReleaseId = seed.ReleaseId,
             ArchiveConfigId = seed.ArchiveConfigId,
             HosterRegistrationId = seed.HosterRegistrationId,
-            Name = "Default upload",
+            Name = name,
+            PremiumOnlyDownload = premiumOnlyDownload,
         };
 
-        dbContext.UploadConfigs.Add(uploadConfig);
-        await dbContext.SaveChangesAsync();
+        DbContext.UploadConfigs.Add(uploadConfig);
+        await DbContext.SaveChangesAsync();
 
         return uploadConfig;
     }
@@ -276,9 +354,9 @@ public class UploadConfigServiceTest : BearcatIntegrationTest
             IsActive = hosterIsActive,
         };
 
-        dbContext.ArchiveConfigs.Add(archiveConfig);
-        dbContext.HosterRegistrations.Add(hosterRegistration);
-        await dbContext.SaveChangesAsync();
+        DbContext.ArchiveConfigs.Add(archiveConfig);
+        DbContext.HosterRegistrations.Add(hosterRegistration);
+        await DbContext.SaveChangesAsync();
 
         return new UploadConfigSeed(release.Id, archiveConfig.Id, hosterRegistration.Id);
     }
