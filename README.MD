@@ -79,6 +79,6 @@ With PostgreSQL:
 }
 ```
 
-Without `Database:Provider`, Bearcat uses PostgreSQL. The `http (SQLite)` launch profile of `Bearcat.Host` sets `Database__Provider=Sqlite` and overrides the file. Create new migrations with `scripts/add-migration.sh <Name>`, which adds them for both providers. See [development notes](docs/development.md).
+Without `Database:Provider`, Bearcat uses PostgreSQL. The file overrides all other configuration sources, including environment variables and launch profile settings. The `http (SQLite)` launch profile of `Bearcat.Host` sets `Database__Provider=Sqlite` and `Database__MigrateOnStartup=true`, which only takes effect if the file does not set these keys. Create new migrations with `scripts/add-migration.sh <Name>`, which adds them for both providers. See [development notes](docs/development.md).
 
 The main host application is `Bearcat.Host`. The Blazor UI project is `Bearcat.Website`.

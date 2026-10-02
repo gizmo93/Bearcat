@@ -122,6 +122,8 @@ It contains both `bearcat.db` and `bearcat.key`. Then start Bearcat again:
 docker compose start
 ```
 
+To back up the database while Bearcat runs, use `sqlite3 bearcat-data/bearcat.db ".backup bearcat-backup.db"` on the host instead. Copying `bearcat.db` while Bearcat runs does not give a consistent backup.
+
 With PostgreSQL, stop both containers before copying `BEARCAT_DATA_DIR` and `POSTGRES_DATA_DIR`,
 then start them again. These backups contain Bearcat's settings and records. Back up your release
 files separately if you need them too.

@@ -119,6 +119,7 @@ Bearcat also creates `bearcat.key` in `%APPDATA%\Bearcat` on Windows or
 `~/Library/Application Support/Bearcat` on macOS. It uses this key to read your saved account credentials.
 
 For a SQLite backup, stop Bearcat and copy both `bearcat.db` and `bearcat.key`.
+While Bearcat runs, use `sqlite3 bearcat.db ".backup bearcat-backup.db"` instead of copying `bearcat.db`.
 If you changed the database file location, copy it from there. With PostgreSQL, back up that database and `bearcat.key`.
 Keep both when moving to another computer. Without the key, Bearcat cannot read your saved account credentials.
 

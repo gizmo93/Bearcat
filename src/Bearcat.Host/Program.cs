@@ -173,7 +173,12 @@ app.MapGet(
     }
 );
 
-if (app.Environment.IsProduction() || isDesktopMode)
+if (
+    builder.Configuration.GetValue(
+        "Database:MigrateOnStartup",
+        app.Environment.IsProduction() || isDesktopMode
+    )
+)
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<BearcatDbContext>();

@@ -222,7 +222,7 @@ The Windows service uses `%ProgramData%\Bearcat` as its data directory.
 SQLite notes:
 
 - Bearcat runs SQLite in WAL mode. Keep the database file on local storage, not on a network share (NFS/SMB).
-- Back up `bearcat.key` from the data directory together with the database file. Stop Bearcat first, or copy the `-wal` and `-shm` files next to the database file as well (`bearcat.db-wal`, `bearcat.db-shm`).
+- Back up `bearcat.key` from the data directory together with the database file. Stop Bearcat before copying the database file. Copying `bearcat.db` with its `-wal` and `-shm` files while Bearcat runs does not give a consistent backup. While Bearcat runs, use `sqlite3 bearcat.db ".backup bearcat-backup.db"`.
 
 Changing `Database:Provider` does not transfer existing data. A new database starts empty.
 The fallback to `Postgres` when the setting is absent keeps older configurations working.

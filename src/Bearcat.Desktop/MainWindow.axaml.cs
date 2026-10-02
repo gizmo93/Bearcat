@@ -186,7 +186,11 @@ public partial class MainWindow : Window
             ApiKey = ApiKeyTextBox.Text?.Trim() ?? string.Empty,
         };
 
-        if (!int.TryParse(PostgresPortTextBox.Text, out var postgresPort))
+        if (int.TryParse(PostgresPortTextBox.Text, out var postgresPort))
+        {
+            settings.PostgresPort = postgresPort;
+        }
+        else if (settings.DatabaseProvider == DatabaseProvider.Postgres)
         {
             AppendLog("Postgres port must be a number.");
             return false;
@@ -198,7 +202,6 @@ public partial class MainWindow : Window
             return false;
         }
 
-        settings.PostgresPort = postgresPort;
         settings.WebPort = webPort;
         return true;
     }

@@ -86,7 +86,7 @@ The encryption key for stored hoster, link crypter, and NFO database account con
 
 Back up `bearcat.key` together with your database:
 
-- SQLite: the database file, by default `%ProgramData%\Bearcat\bearcat.db`. Stop the service before copying, or copy `bearcat.db-wal` and `bearcat.db-shm` together with `bearcat.db`.
+- SQLite: the database file, by default `%ProgramData%\Bearcat\bearcat.db`. Stop the service before copying the file. While the service runs, use `sqlite3 bearcat.db ".backup bearcat-backup.db"` instead.
 - PostgreSQL: your PostgreSQL database.
 
 Without `bearcat.key`, Bearcat cannot decrypt your stored account configurations anymore.

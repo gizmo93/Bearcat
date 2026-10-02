@@ -15,6 +15,7 @@ Outside a container, `Bearcat.Host` loads an optional `src/Bearcat.Host/appsetti
 | `Database:Provider` | `Sqlite` or `Postgres`, case-insensitive. Not set: `Postgres`. |
 | `Database:SqliteFilePath` | SQLite only. Not set: `bearcat.db` in the data directory. |
 | `Database:ConnectionString` | PostgreSQL only. |
+| `Database:MigrateOnStartup` | `true` or `false`. Not set: `true` in Production and desktop mode, `false` otherwise. |
 
 Example with SQLite:
 
@@ -42,7 +43,7 @@ Example with PostgreSQL:
 }
 ```
 
-To run the host on SQLite for one session without changing the file, use the `http (SQLite)` launch profile or set `Database__Provider=Sqlite`.
+`appsettings.user.json` overrides all other configuration sources, including environment variables and launch profile settings. To run the host on SQLite for one session, use the `http (SQLite)` launch profile. It sets `Database__Provider=Sqlite` and `Database__MigrateOnStartup=true`, so a fresh database is created on the first start. This only takes effect if `appsettings.user.json` does not set these keys.
 
 If no data directory is configured, Bearcat stores `bearcat.key` and the default `bearcat.db` in the operating system's application data folder (`Bearcat` subfolder).
 
@@ -127,7 +128,7 @@ scripts/add-migration.sh <MigrationName>
 
 Raw SQL in a migration must be written for each provider separately.
 
-Bearcat applies pending migrations on startup. The pull request workflow fails if the model has changes without a migration in either project. Check locally with:
+Bearcat applies pending migrations on startup in Production and desktop mode, or when `Database:MigrateOnStartup` is `true`. In Development, set `Database__MigrateOnStartup=true` (the `http (SQLite)` profile does this). The pull request workflow fails if the model has changes without a migration in either project. Check locally with:
 
 ```bash
 dotnet ef migrations has-pending-model-changes --project src/Bearcat.Infrastructure.Migrations.Postgres --startup-project src/Bearcat.Infrastructure.Migrations.Postgres
