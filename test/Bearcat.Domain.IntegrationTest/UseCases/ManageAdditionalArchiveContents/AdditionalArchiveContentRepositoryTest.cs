@@ -1,6 +1,7 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageAdditionalArchiveContents.ReadModels;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageAdditionalArchiveContents;
 
-public class AdditionalArchiveContentRepositoryTest : BearcatIntegrationTest
+public class AdditionalArchiveContentRepositoryTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     [Test]
     public async Task GetDetailAsync_AddedPathAndTextFileContents_ReturnsAllProperties()

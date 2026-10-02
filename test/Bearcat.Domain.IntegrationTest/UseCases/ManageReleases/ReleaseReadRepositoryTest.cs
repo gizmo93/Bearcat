@@ -15,7 +15,8 @@ using ReleaseNfo = Bearcat.Domain.Entities.ReleaseNfo;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 
-public class ReleaseReadRepositoryTest : BearcatIntegrationTest
+public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private ReleaseReadRepository repository = null!;
@@ -432,13 +433,25 @@ public class ReleaseReadRepositoryTest : BearcatIntegrationTest
 
         const string legacyUrlsJson =
             """[{"type":1,"url":"https://www.imdb.com/de/title/tt1234567"}]""";
-        await dbContext.Database.ExecuteSqlInterpolatedAsync(
-            $"""
-            INSERT INTO "ReleaseExternalInfos" ("ReleaseInfoId", "Title", "Type", "Urls")
-            VALUES ({releaseInfo.Id}, {"Legacy Movie"}, {(int)
-                ExternalInfoType.Movie}, {legacyUrlsJson}::jsonb)
-            """
-        );
+        FormattableString insertLegacyExternalInfoSql;
+        if (DatabaseProvider == DatabaseProvider.Postgres)
+        {
+            insertLegacyExternalInfoSql = $"""
+                INSERT INTO "ReleaseExternalInfos" ("ReleaseInfoId", "Title", "Type", "Urls")
+                VALUES ({releaseInfo.Id}, {"Legacy Movie"}, {(int)
+                    ExternalInfoType.Movie}, {legacyUrlsJson}::jsonb)
+                """;
+        }
+        else
+        {
+            insertLegacyExternalInfoSql = $"""
+                INSERT INTO "ReleaseExternalInfos" ("ReleaseInfoId", "Title", "Type", "Urls")
+                VALUES ({releaseInfo.Id}, {"Legacy Movie"}, {(int)
+                    ExternalInfoType.Movie}, {legacyUrlsJson})
+                """;
+        }
+
+        await dbContext.Database.ExecuteSqlInterpolatedAsync(insertLegacyExternalInfoSql);
         dbContext.ChangeTracker.Clear();
 
         // Act

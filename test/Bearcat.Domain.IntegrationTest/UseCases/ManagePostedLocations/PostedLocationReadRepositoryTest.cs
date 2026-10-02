@@ -8,7 +8,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManagePostedLocations;
 
-public class PostedLocationReadRepositoryTest : BearcatIntegrationTest
+public class PostedLocationReadRepositoryTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private PostedLocationReadRepository repository = null!;

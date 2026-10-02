@@ -30,7 +30,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.LocalFolders;
 
-public class LocalFolderScanServiceTest : BearcatIntegrationTest
+public class LocalFolderScanServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string WorkingDatabaseClassName = "WorkingNfoDatabase";
     private const string SerializedConfig = "{\"apiKey\":\"secret\"}";

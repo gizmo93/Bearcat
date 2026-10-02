@@ -9,7 +9,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseCollections;
 
-public class ReleaseCollectionPostQueueTest : BearcatIntegrationTest
+public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private ReleaseCollectionRepository repository = null!;

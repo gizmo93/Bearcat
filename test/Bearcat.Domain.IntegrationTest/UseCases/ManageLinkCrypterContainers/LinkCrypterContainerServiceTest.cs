@@ -18,7 +18,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageLinkCrypterContainers;
 
-public class LinkCrypterContainerServiceTest : BearcatIntegrationTest
+public class LinkCrypterContainerServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string LinkCrypterClassName = "TestCrypter";
     private const string SerializedConfig = "{\"apiKey\":\"secret\"}";

@@ -16,7 +16,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageNotifications;
 
-public class TelegramNotificationServiceTest : BearcatIntegrationTest
+public class TelegramNotificationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext readDbContext = null!;
     private BearcatDbContext writeDbContext = null!;

@@ -12,7 +12,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageAdditionalArchiveContents;
 
-public class AdditionalArchiveContentServiceTest : BearcatIntegrationTest
+public class AdditionalArchiveContentServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private string tempRootPath = null!;

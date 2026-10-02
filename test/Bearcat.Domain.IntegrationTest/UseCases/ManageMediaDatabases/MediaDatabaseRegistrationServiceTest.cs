@@ -12,7 +12,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageMediaDatabases;
 
-public class MediaDatabaseRegistrationServiceTest : BearcatIntegrationTest
+public class MediaDatabaseRegistrationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string ClassName = "TvdbMetadataDatabase";
     private const string SerializedConfig = "{\"ApiKey\":\"secret\"}";

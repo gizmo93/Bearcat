@@ -9,7 +9,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageNotifications;
 
-public class NotificationReadRepositoryTest : BearcatIntegrationTest
+public class NotificationReadRepositoryTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     [TestCase(null, false, 15)]
     [TestCase(null, true, 16)]

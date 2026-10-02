@@ -21,7 +21,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageRemoteSources;
 
-public class RemoteSourceRegistrationServiceTest : BearcatIntegrationTest
+public class RemoteSourceRegistrationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string SourceClassName = nameof(FakeRemoteSource);
 

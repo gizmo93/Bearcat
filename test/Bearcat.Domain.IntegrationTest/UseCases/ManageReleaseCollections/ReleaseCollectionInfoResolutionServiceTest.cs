@@ -20,7 +20,8 @@ using UrlType = Bearcat.Abstractions.NfoDatabase.UrlType;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseCollections;
 
-public class ReleaseCollectionInfoResolutionServiceTest : BearcatIntegrationTest
+public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string MetadataDatabaseClassName = "TvdbMetadataDatabase";
     private const string SecondMetadataDatabaseClassName = "OtherMediaDatabase";

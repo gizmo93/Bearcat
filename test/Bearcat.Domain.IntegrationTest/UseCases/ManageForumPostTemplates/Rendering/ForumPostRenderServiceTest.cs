@@ -11,7 +11,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageForumPostTemplates.Rendering;
 
-public class ForumPostRenderServiceTest : BearcatIntegrationTest
+public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private Mock<IForumPostRenderSource> renderSourceMock = null!;

@@ -37,7 +37,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.RemoteSources.Downloading;
 
-public class RemoteSourceDownloadServiceTest : BearcatIntegrationTest
+public class RemoteSourceDownloadServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string SourceClassName = nameof(FakeRemoteSource);
     private const string IncomingPath = "/incoming";

@@ -12,7 +12,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseTemplates;
 
-public class ReleaseTemplateServiceTest : BearcatIntegrationTest
+public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private ReleaseTemplateService service = null!;

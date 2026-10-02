@@ -8,7 +8,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageRemoteSourceDownloads;
 
-public class RemoteSourceDownloadReadRepositoryTest : BearcatIntegrationTest
+public class RemoteSourceDownloadReadRepositoryTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private static readonly DateTime DiscoveredAt = new(
         2026,

@@ -28,7 +28,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageUploads;
 
-public class UploadStateServiceTest : BearcatIntegrationTest
+public class UploadStateServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string HosterClassName = "TestHoster";
     private const string SerializedHosterConfig = "{\"apiKey\":\"test\"}";

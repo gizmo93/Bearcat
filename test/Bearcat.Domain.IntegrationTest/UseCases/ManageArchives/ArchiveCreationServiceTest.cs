@@ -25,7 +25,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageArchives;
 
-public class ArchiveCreationServiceTest : BearcatIntegrationTest
+public class ArchiveCreationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private string releaseFolderPath = null!;

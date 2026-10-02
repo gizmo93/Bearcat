@@ -7,7 +7,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.DetectUnreadableSecrets;
 
-public class UnreadableSecretsRepositoryTest : BearcatIntegrationTest
+public class UnreadableSecretsRepositoryTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string Config = "config";
 

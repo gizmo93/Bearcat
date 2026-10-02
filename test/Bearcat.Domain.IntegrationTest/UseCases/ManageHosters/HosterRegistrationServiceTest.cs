@@ -18,7 +18,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageHosters;
 
-public class HosterRegistrationServiceTest : BearcatIntegrationTest
+public class HosterRegistrationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string HosterClassName = "TestHoster";
     private const string CaptchaHosterClassName = "CaptchaHoster";

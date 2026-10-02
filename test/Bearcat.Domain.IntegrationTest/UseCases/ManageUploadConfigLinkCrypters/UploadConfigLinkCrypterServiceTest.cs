@@ -9,7 +9,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageUploadConfigLinkCrypters;
 
-public class UploadConfigLinkCrypterServiceTest : BearcatIntegrationTest
+public class UploadConfigLinkCrypterServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private UploadConfigLinkCrypterService service = null!;

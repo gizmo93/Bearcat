@@ -16,7 +16,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageUploads;
 
-public class MissingFileValidationServiceTest : BearcatIntegrationTest
+public class MissingFileValidationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string HosterClassName = "TestHoster";
 

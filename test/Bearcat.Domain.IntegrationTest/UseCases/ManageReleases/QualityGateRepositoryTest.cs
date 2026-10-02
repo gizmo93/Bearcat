@@ -7,7 +7,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 
-public class QualityGateRepositoryTest : BearcatIntegrationTest
+public class QualityGateRepositoryTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private QualityGateRepository repository = null!;

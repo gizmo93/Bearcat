@@ -9,7 +9,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseFolderAutomations;
 
-public class ReleaseFolderAutomationServiceTest : BearcatIntegrationTest
+public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private ReleaseFolderAutomationService service = null!;

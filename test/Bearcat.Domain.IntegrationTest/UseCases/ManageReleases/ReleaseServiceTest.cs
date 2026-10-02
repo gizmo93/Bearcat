@@ -29,7 +29,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 
-public class ReleaseServiceTest : BearcatIntegrationTest
+public class ReleaseServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private ReleaseService service = null!;

@@ -18,7 +18,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 
-public class ReleaseFolderRetirementServiceTest : BearcatIntegrationTest
+public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string MirrorHosterClassName = "MirrorHoster";
 

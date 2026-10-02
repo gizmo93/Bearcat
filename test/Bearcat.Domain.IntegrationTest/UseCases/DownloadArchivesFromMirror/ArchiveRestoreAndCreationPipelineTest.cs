@@ -29,7 +29,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.DownloadArchivesFromMirror;
 
-public class ArchiveRestoreAndCreationPipelineTest : BearcatIntegrationTest
+public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string MirrorHosterClassName = "MirrorHoster";
     private const string TargetHosterClassName = "TargetHoster";

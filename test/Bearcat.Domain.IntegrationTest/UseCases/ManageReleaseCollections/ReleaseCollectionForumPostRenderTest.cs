@@ -14,7 +14,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseCollections;
 
-public class ReleaseCollectionForumPostRenderTest : BearcatIntegrationTest
+public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private ForumPostRenderService service = null!;

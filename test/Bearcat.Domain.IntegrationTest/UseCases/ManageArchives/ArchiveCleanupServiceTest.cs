@@ -19,7 +19,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageArchives;
 
-public class ArchiveCleanupServiceTest : BearcatIntegrationTest
+public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string MirrorHosterClassName = "MirrorHoster";
 

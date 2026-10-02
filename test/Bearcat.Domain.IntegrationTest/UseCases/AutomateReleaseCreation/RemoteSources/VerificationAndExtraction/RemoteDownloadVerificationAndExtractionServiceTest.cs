@@ -10,6 +10,7 @@ using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.Verification
 using Bearcat.Domain.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction.SfvVerification;
 using Bearcat.Domain.UseCases.ManageNotifications;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.FileSystem;
 using Bearcat.IntegrationTest.Utils;
@@ -20,7 +21,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.RemoteSources.VerificationAndExtraction;
 
-public class RemoteDownloadVerificationAndExtractionServiceTest : BearcatIntegrationTest
+public class RemoteDownloadVerificationAndExtractionServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string ReleaseName = "Show.S01E01.German.1080p.WEB.x264-GRP";
 

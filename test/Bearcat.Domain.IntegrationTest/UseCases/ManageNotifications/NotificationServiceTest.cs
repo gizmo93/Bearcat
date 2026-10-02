@@ -15,7 +15,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageNotifications;
 
-public class NotificationServiceTest : BearcatIntegrationTest
+public class NotificationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private NotificationService service = null!;

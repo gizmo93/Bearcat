@@ -13,7 +13,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageBackgroundTasks;
 
-public class BackgroundTaskStateServiceTest : BearcatIntegrationTest
+public class BackgroundTaskStateServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string Key = "release-import";
     private const string DisplayName = "Release import";

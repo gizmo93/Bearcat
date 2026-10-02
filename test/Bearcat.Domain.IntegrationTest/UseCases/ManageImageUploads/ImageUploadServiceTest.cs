@@ -18,7 +18,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageImageUploads;
 
-public class ImageUploadServiceTest : BearcatIntegrationTest
+public class ImageUploadServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string ImageHosterClassName = "ImgBb";
 

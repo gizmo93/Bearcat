@@ -16,7 +16,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageLinkCrypters;
 
-public class LinkCrypterServiceTest : BearcatIntegrationTest
+public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string LinkCrypterClassName = "TestCrypter";
     private const string SerializedConfig = "{\"apiKey\":\"secret\"}";

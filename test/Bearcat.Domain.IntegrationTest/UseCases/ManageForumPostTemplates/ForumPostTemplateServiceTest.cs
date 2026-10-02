@@ -9,7 +9,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageForumPostTemplates;
 
-public class ForumPostTemplateServiceTest : BearcatIntegrationTest
+public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private ForumPostTemplateService service = null!;

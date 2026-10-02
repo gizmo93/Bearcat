@@ -8,7 +8,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.Shared.QualityGate;
 
-public class QualityGateResetRepositoryTest : BearcatIntegrationTest
+public class QualityGateResetRepositoryTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private static readonly DateTime EvaluatedAt = new(2026, 5, 1, 12, 0, 0, DateTimeKind.Utc);
 

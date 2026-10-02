@@ -14,7 +14,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageDistributionSites;
 
-public class DistributionSiteRegistrationServiceTest : BearcatIntegrationTest
+public class DistributionSiteRegistrationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string DistributionSiteClassName = "TestForum";
     private const string FixedUrlDistributionSiteClassName = "FixedUrlForum";

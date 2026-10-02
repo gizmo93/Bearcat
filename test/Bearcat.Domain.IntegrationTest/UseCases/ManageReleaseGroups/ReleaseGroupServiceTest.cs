@@ -9,7 +9,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseGroups;
 
-public class ReleaseGroupServiceTest : BearcatIntegrationTest
+public class ReleaseGroupServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private ReleaseGroupService service = null!;

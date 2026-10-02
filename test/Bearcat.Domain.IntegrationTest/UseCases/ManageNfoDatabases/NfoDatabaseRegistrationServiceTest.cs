@@ -12,7 +12,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageNfoDatabases;
 
-public class NfoDatabaseRegistrationServiceTest : BearcatIntegrationTest
+public class NfoDatabaseRegistrationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string ClassName = "srrDB";
     private const string SerializedConfig = "{\"ApiKey\":\"secret\"}";

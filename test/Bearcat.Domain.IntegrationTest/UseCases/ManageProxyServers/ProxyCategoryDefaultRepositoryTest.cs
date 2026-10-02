@@ -2,6 +2,7 @@ using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageProxyServers.ReadModels;
 using Bearcat.Domain.ValueObjects;
+using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +10,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageProxyServers;
 
-public class ProxyCategoryDefaultRepositoryTest : BearcatIntegrationTest
+public class ProxyCategoryDefaultRepositoryTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     [Test]
     public async Task GetAllAsync_SeveralDefaults_ReturnsDefaultsOrderedByCategory()

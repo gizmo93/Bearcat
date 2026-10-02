@@ -9,7 +9,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageRemoteSourceAutomations;
 
-public class RemoteSourceAutomationServiceTest : BearcatIntegrationTest
+public class RemoteSourceAutomationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string TargetPath = "/data/downloads";
 

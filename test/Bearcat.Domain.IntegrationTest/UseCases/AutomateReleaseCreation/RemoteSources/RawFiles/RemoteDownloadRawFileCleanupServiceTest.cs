@@ -19,7 +19,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.AutomateReleaseCreation.RemoteSources.RawFiles;
 
-public class RemoteDownloadRawFileCleanupServiceTest : BearcatIntegrationTest
+public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string MirrorHosterClassName = "MirrorHoster";
     private const string ReleaseName = "Show.S01E01.German.1080p.WEB.x264-GRP";

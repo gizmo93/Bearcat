@@ -14,7 +14,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageArchiveConfigs;
 
-public class ArchiveConfigServiceTest : BearcatIntegrationTest
+public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private ArchiveConfigService service = null!;

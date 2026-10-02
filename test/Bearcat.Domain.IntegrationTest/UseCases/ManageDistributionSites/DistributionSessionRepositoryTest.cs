@@ -8,7 +8,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageDistributionSites;
 
-public class DistributionSessionRepositoryTest : BearcatIntegrationTest
+public class DistributionSessionRepositoryTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private DistributionSessionRepository repository = null!;

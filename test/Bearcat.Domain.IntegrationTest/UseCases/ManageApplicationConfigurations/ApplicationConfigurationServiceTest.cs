@@ -13,7 +13,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageApplicationConfigurations;
 
-public class ApplicationConfigurationServiceTest : BearcatIntegrationTest
+public class ApplicationConfigurationServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string ConfigurationKey = "ArchiveCleanup";
     private const string PropertyName = "AutoConvertToUnmanaged";

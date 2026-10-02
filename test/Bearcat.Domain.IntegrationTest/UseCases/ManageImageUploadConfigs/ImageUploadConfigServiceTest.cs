@@ -9,7 +9,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageImageUploadConfigs;
 
-public class ImageUploadConfigServiceTest : BearcatIntegrationTest
+public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private BearcatDbContext dbContext = null!;
     private ImageUploadConfigService service = null!;

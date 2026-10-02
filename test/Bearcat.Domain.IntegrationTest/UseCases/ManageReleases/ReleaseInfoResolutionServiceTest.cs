@@ -21,7 +21,8 @@ using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 
-public class ReleaseInfoResolutionServiceTest : BearcatIntegrationTest
+public class ReleaseInfoResolutionServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string WorkingDatabaseClassName = "WorkingNfoDatabase";
     private const string NfoProviderDatabaseClassName = "NfoProviderDatabase";

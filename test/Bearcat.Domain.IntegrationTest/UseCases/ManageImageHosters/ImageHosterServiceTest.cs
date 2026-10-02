@@ -16,7 +16,8 @@ using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageImageHosters;
 
-public class ImageHosterServiceTest : BearcatIntegrationTest
+public class ImageHosterServiceTest(DatabaseProvider databaseProvider)
+    : BearcatIntegrationTest(databaseProvider)
 {
     private const string ImageHosterClassName = "TestImageHoster";
     private const string SerializedConfig = "{\"apiKey\":\"secret\"}";
