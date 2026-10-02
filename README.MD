@@ -9,7 +9,7 @@ Bearcat also watches FTP and FTPS servers for new releases, downloads matching f
 
 Run it on your own desktop, NAS, or server and manage it through a web interface.
 
-[Installation](#installation) · [User documentation](https://gizmo93.github.io/Bearcat/) · [Downloads](https://github.com/gizmo93/Bearcat/releases)
+[Downloads](https://github.com/gizmo93/Bearcat/releases) · [Getting started guide](https://gizmo93.github.io/Bearcat/#get-started) · [User documentation](https://gizmo93.github.io/Bearcat/)
 
 ![Bearcat web interface for managing releases and uploads](docs/images/gui.png)
 
@@ -25,14 +25,6 @@ Run it on your own desktop, NAS, or server and manage it through a web interface
 - Forward upload notifications and errors to Telegram.
 
 See the [supported hosters and link crypters](https://gizmo93.github.io/Bearcat/#which-hosters-and-linkcrypters-are-supported) for the full list.
-
-## Installation
-
-- [Docker](https://gizmo93.github.io/Bearcat/use-the-docker-image/): run Bearcat on Linux, a NAS, or a server.
-- [Desktop app](https://gizmo93.github.io/Bearcat/use-the-desktop-launcher/): start and stop Bearcat on Windows or macOS.
-- [Windows service](https://gizmo93.github.io/Bearcat/use-the-windows-service/): keep Bearcat running in the background, including when no user is logged in.
-
-After installation, follow the [initial setup guide](https://gizmo93.github.io/Bearcat/post-installation/) to connect hoster accounts and configure your first release.
 
 ## Documentation
 
