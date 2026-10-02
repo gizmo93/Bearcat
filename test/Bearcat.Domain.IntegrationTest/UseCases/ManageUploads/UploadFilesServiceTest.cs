@@ -36,7 +36,6 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
 
     public interface IFolderHoster : IHosterWithFolders { }
 
-    private BearcatDbContext dbContext = null!;
     private Mock<IHoster> hosterMock = null!;
     private Mock<IHosterConfig> hosterConfigMock = null!;
     private Mock<IHosterFactory> hosterFactoryMock = null!;
@@ -48,7 +47,6 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
         releaseFolderPath = Directory
             .CreateDirectory(Path.Combine(tempRootPath, "release"))
@@ -75,14 +73,14 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             .Returns(new Dictionary<string, IHoster> { [HosterClassName] = hosterMock.Object });
 
         var notificationService = new NotificationService(
-            repository: new NotificationRepository(dbContext),
+            repository: new NotificationRepository(DbContext),
             timeProvider: CreateTimeProvider(),
             configurationProvider: CreateNotificationConfigurationProvider()
         );
 
         var uploadFilesRepository = new UploadFilesRepository(
-            dbContext,
-            dbContext,
+            DbContext,
+            DbContext,
             NoOpSecretProtector.Instance
         );
         var captchaVerificationService = new HosterCaptchaVerificationService(notificationService);
@@ -135,10 +133,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
     }
 
     [TearDown]
-    public async Task DisposeResourcesAsync()
+    public void DeleteTempRootPath()
     {
-        await dbContext.DisposeAsync();
-
         if (Directory.Exists(tempRootPath))
         {
             Directory.Delete(tempRootPath, recursive: true);
@@ -155,8 +151,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(upload.Id);
@@ -193,8 +189,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .Include(u => u.Notifications)
             .SingleAsync();
@@ -373,8 +369,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
 
         result.UploadState.ShouldBe(UploadState.Completed);
         result.UploadedFiles.Count.ShouldBe(2);
@@ -471,8 +467,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
 
         result.UploadState.ShouldBe(UploadState.Completed);
         result.UploadedFiles.ShouldAllBe(f => f.HosterFolderId == "folder-id");
@@ -538,7 +534,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             ProxySelection.SpecificProxyServer;
         upload.UploadConfig.HosterRegistration.MirrorDownloadProxyServerId =
             await AddProxyServerAsync();
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
         ProxyCategoryScopeState? stateDuringParallelLimitRequest = null;
         hosterMock
             .Setup(h =>
@@ -673,8 +669,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
 
         result.Id.ShouldBe(upload.Id);
         result.UploadState.ShouldBe(UploadState.Pending);
@@ -706,8 +702,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .Include(u => u.Notifications)
             .SingleAsync();
@@ -758,8 +754,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
 
         result.Id.ShouldBe(upload.Id);
         result.UploadState.ShouldBe(UploadState.Failed);
@@ -777,12 +773,12 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.Archive)
             .Include(u => u.Notifications)
             .SingleAsync();
-        var archive = await dbContext.Archives.SingleAsync();
+        var archive = await DbContext.Archives.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(upload.Id);
@@ -813,12 +809,12 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.Archive)
             .Include(u => u.Notifications)
             .SingleAsync();
-        var archive = await dbContext.Archives.SingleAsync();
+        var archive = await DbContext.Archives.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(upload.Id);
@@ -849,15 +845,15 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             ErrorMessages = [],
             UploadedFiles = [],
         };
-        dbContext.Uploads.Add(upload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(upload);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.SingleAsync();
 
         result.Id.ShouldBe(upload.Id);
         result.ArchiveId.ShouldBeNull();
@@ -885,8 +881,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .Include(u => u.Notifications)
             .SingleAsync();
@@ -951,8 +947,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .Include(u => u.Notifications)
             .SingleAsync();
@@ -1020,8 +1016,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .Include(u => u.Notifications)
             .SingleAsync();
@@ -1067,8 +1063,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
                 .ThenInclude(f => f.ArchiveFile)
             .SingleAsync();
@@ -1149,8 +1145,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var uploads = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var uploads = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .OrderBy(u => u.Id)
             .ToListAsync();
@@ -1175,8 +1171,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
                 .ThenInclude(f => f.ArchiveFile)
             .SingleAsync();
@@ -1257,8 +1253,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var uploads = await dbContext.Uploads.Include(u => u.UploadedFiles).ToListAsync();
+        DbContext.ChangeTracker.Clear();
+        var uploads = await DbContext.Uploads.Include(u => u.UploadedFiles).ToListAsync();
 
         startedUploads.ShouldBe(11);
         uploads.Count.ShouldBe(11);
@@ -1286,8 +1282,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
 
         result.UploadState.ShouldBe(UploadState.Failed);
         result.UploadedFiles.Single().ErrorMessages.ShouldBe(["Hoster exploded"]);
@@ -1331,8 +1327,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.Include(u => u.UploadedFiles).SingleAsync();
 
         result.UploadState.ShouldBe(UploadState.Canceled);
         result.OnlineState.ShouldBe(OnlineState.Unknown);
@@ -1396,8 +1392,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var canceledUpload = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var canceledUpload = await DbContext
             .Uploads.Include(u => u.Notifications)
             .SingleAsync(u => u.Id == otherUpload.Id);
 
@@ -1492,8 +1488,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         var upload = await AddUploadAsync(UploadState.CancellationRequested, []);
-        dbContext.ChangeTracker.Clear();
-        var trackedUpload = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var trackedUpload = await DbContext
             .Uploads.Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.HosterRegistration)
             .SingleAsync(u => u.Id == upload.Id);
@@ -1558,7 +1554,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         // Arrange
         var repository = new MissingCancellationUploadRepository();
         var notificationService = new NotificationService(
-            repository: new NotificationRepository(dbContext),
+            repository: new NotificationRepository(DbContext),
             timeProvider: CreateTimeProvider(),
             configurationProvider: CreateNotificationConfigurationProvider()
         );
@@ -1632,8 +1628,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         };
 
         var uploadFilesRepository = new UploadFilesRepository(
-            dbContext,
-            dbContext,
+            DbContext,
+            DbContext,
             NoOpSecretProtector.Instance
         );
         var validationService = new MissingFileValidationService(
@@ -1641,7 +1637,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             new FileSystemService(),
             Mock.Of<ILogger<MissingFileValidationService>>(),
             new NotificationService(
-                repository: new NotificationRepository(dbContext),
+                repository: new NotificationRepository(DbContext),
                 timeProvider: CreateTimeProvider(),
                 configurationProvider: CreateNotificationConfigurationProvider()
             )
@@ -1714,8 +1710,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             );
         }
 
-        dbContext.Uploads.Add(upload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(upload);
+        await DbContext.SaveChangesAsync();
 
         return upload;
     }
@@ -1728,7 +1724,7 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
         upload.UploadConfig.HosterRegistration.UploadProxyServerId = proxyServerId;
         upload.UploadConfig.HosterRegistration.MirrorDownloadProxySelection =
             ProxySelection.NoProxy;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         return proxyServerId;
     }
@@ -1743,8 +1739,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             Port = 8080,
         };
 
-        dbContext.ProxyServers.Add(proxyServer);
-        await dbContext.SaveChangesAsync();
+        DbContext.ProxyServers.Add(proxyServer);
+        await DbContext.SaveChangesAsync();
 
         return proxyServer.Id;
     }
@@ -1817,8 +1813,8 @@ public class UploadFilesServiceTest(DatabaseProvider databaseProvider)
             Name = "Default upload",
         };
 
-        dbContext.UploadConfigs.Add(uploadConfig);
-        await dbContext.SaveChangesAsync();
+        DbContext.UploadConfigs.Add(uploadConfig);
+        await DbContext.SaveChangesAsync();
 
         return uploadConfig;
     }

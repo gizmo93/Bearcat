@@ -35,7 +35,6 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
     private const string MirrorHosterClassName = "MirrorHoster";
     private const string TargetHosterClassName = "TargetHoster";
 
-    private BearcatDbContext dbContext = null!;
     private string tempRootPath = null!;
     private string releaseFolderPath = null!;
     private string archiveFilesBasePath = null!;
@@ -50,7 +49,6 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
         releaseFolderPath = Directory
             .CreateDirectory(Path.Combine(tempRootPath, "release"))
@@ -76,7 +74,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         archiverFactoryMock = new Mock<IArchiverFactory>(MockBehavior.Strict);
 
         var notificationService = new NotificationService(
-            repository: new NotificationRepository(dbContext),
+            repository: new NotificationRepository(DbContext),
             timeProvider: CreateTimeProvider(),
             configurationProvider: CreateNotificationConfigurationProvider()
         );
@@ -84,7 +82,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         var transferProgressTracker = new TransferProgressTracker(Mock.Of<IProxyRoutingCache>());
 
         restoreService = new ArchiveRestoreService(
-            new ArchiveRestoreRepository(dbContext),
+            new ArchiveRestoreRepository(DbContext),
             hosterFactoryMock.Object,
             new FileSystemService(),
             NoOpSecretProtector.Instance,
@@ -104,7 +102,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         );
 
         creationService = new ArchiveCreationService(
-            new ArchiveCreationRepository(dbContext),
+            new ArchiveCreationRepository(DbContext),
             NullLogger<ArchiveCreationService>.Instance,
             archiverFactoryMock.Object,
             new FileSystemService(),
@@ -118,10 +116,8 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
     }
 
     [TearDown]
-    public async Task DisposeResourcesAsync()
+    public void DeleteTempRootPath()
     {
-        await dbContext.DisposeAsync();
-
         if (Directory.Exists(tempRootPath))
         {
             Directory.Delete(tempRootPath, recursive: true);
@@ -139,12 +135,12 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         await creationService.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var archives = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var archives = await DbContext
             .Archives.Include(a => a.ArchiveFiles)
             .OrderBy(a => a.Id)
             .ToListAsync();
-        var waitingUpload = await dbContext.Uploads.SingleAsync(u =>
+        var waitingUpload = await DbContext.Uploads.SingleAsync(u =>
             u.Id == scenario.WaitingUploadId
         );
 
@@ -194,12 +190,12 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
         await creationService.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var archives = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var archives = await DbContext
             .Archives.Include(a => a.ArchiveFiles)
             .OrderBy(a => a.Id)
             .ToListAsync();
-        var waitingUpload = await dbContext.Uploads.SingleAsync(u =>
+        var waitingUpload = await DbContext.Uploads.SingleAsync(u =>
             u.Id == scenario.WaitingUploadId
         );
 
@@ -272,8 +268,8 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
             Name = "Target upload",
         };
 
-        dbContext.UploadConfigs.AddRange(mirrorUploadConfig, targetUploadConfig);
-        await dbContext.SaveChangesAsync();
+        DbContext.UploadConfigs.AddRange(mirrorUploadConfig, targetUploadConfig);
+        await DbContext.SaveChangesAsync();
 
         var firstArchiveFile = new ArchiveFile
         {
@@ -335,10 +331,10 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
             UploadedFiles = [],
         };
 
-        dbContext.Archives.Add(archive);
-        dbContext.Uploads.AddRange(mirrorUpload, waitingUpload);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.Archives.Add(archive);
+        DbContext.Uploads.AddRange(mirrorUpload, waitingUpload);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         return new DeletedArchiveScenario(archive.Id, waitingUpload.Id);
     }

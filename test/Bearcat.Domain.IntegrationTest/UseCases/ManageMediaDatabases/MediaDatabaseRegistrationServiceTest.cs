@@ -2,6 +2,7 @@ using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageMediaDatabases;
+using Bearcat.Domain.UseCases.ManageMediaDatabases.ReadModels;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.Security;
@@ -16,9 +17,9 @@ public class MediaDatabaseRegistrationServiceTest(DatabaseProvider databaseProvi
     : BearcatIntegrationTest(databaseProvider)
 {
     private const string ClassName = "TvdbMetadataDatabase";
+    private const string OtherClassName = "SteamMetadataDatabase";
     private const string SerializedConfig = "{\"ApiKey\":\"secret\"}";
 
-    private BearcatDbContext dbContext = null!;
     private Mock<IMediaMetadataDatabase> databaseMock = null!;
     private Mock<IMediaMetadataDatabaseConfig> configMock = null!;
     private Mock<IMediaMetadataDatabaseFactory> factoryMock = null!;
@@ -27,27 +28,20 @@ public class MediaDatabaseRegistrationServiceTest(DatabaseProvider databaseProvi
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         databaseMock = new Mock<IMediaMetadataDatabase>(MockBehavior.Strict);
         configMock = new Mock<IMediaMetadataDatabaseConfig>(MockBehavior.Strict);
         factoryMock = new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict);
         factoryMock.Setup(factory => factory.Get(ClassName)).Returns(databaseMock.Object);
 
         service = new MediaDatabaseRegistrationService(
-            new MediaDatabaseRegistrationRepository(dbContext, dbContext, factoryMock.Object),
+            new MediaDatabaseRegistrationRepository(DbContext, DbContext, factoryMock.Object),
             factoryMock.Object,
             NoOpSecretProtector.Instance,
             UnreadableSecretsNotificationServiceFactory.Create(
-                dbContext,
+                DbContext,
                 CreateNotificationConfigurationProvider()
             )
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -69,7 +63,7 @@ public class MediaDatabaseRegistrationServiceTest(DatabaseProvider databaseProvi
         await service.CreateAsync(ClassName, configuration, CancellationToken.None);
 
         // Assert
-        var registration = await dbContext.MediaDatabaseRegistrations.SingleAsync();
+        var registration = await DbContext.MediaDatabaseRegistrations.SingleAsync();
         registration.MediaDatabaseClassName.ShouldBe(ClassName);
         registration.SerializedConfig.ShouldBe(SerializedConfig);
         registration.IsActive.ShouldBeTrue();
@@ -117,7 +111,7 @@ public class MediaDatabaseRegistrationServiceTest(DatabaseProvider databaseProvi
         );
 
         // Assert
-        var updated = await dbContext.MediaDatabaseRegistrations.SingleAsync();
+        var updated = await DbContext.MediaDatabaseRegistrations.SingleAsync();
         updated.SerializedConfig.ShouldBe("{\"ApiKey\":\"updated\",\"Lang\":\"de\"}");
     }
 
@@ -168,8 +162,8 @@ public class MediaDatabaseRegistrationServiceTest(DatabaseProvider databaseProvi
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var updated = await dbContext.MediaDatabaseRegistrations.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var updated = await DbContext.MediaDatabaseRegistrations.SingleAsync();
         updated.SerializedConfig.ShouldBe("{\"ApiKey\":\"updated\"}");
         updated.HasUnreadableSecrets.ShouldBeFalse();
         databaseMock.Verify(
@@ -188,7 +182,7 @@ public class MediaDatabaseRegistrationServiceTest(DatabaseProvider databaseProvi
         await service.ToggleIsActiveAsync(registration.Id, CancellationToken.None);
 
         // Assert
-        var updated = await dbContext.MediaDatabaseRegistrations.SingleAsync();
+        var updated = await DbContext.MediaDatabaseRegistrations.SingleAsync();
         updated.IsActive.ShouldBeFalse();
     }
 
@@ -202,25 +196,140 @@ public class MediaDatabaseRegistrationServiceTest(DatabaseProvider databaseProvi
         await service.DeleteAsync(registration.Id, CancellationToken.None);
 
         // Assert
-        (await dbContext.MediaDatabaseRegistrations.AnyAsync()).ShouldBeFalse();
+        (await DbContext.MediaDatabaseRegistrations.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task GetAllAsync_SeveralRegistrations_ReturnsReadModelsOrderedByClassName()
+    {
+        // Arrange
+        var registration = await AddRegistrationAsync();
+        var otherRegistration = await AddRegistrationAsync(
+            isActive: false,
+            hasUnreadableSecrets: true,
+            className: OtherClassName
+        );
+        var repository = CreateRepositoryWithDatabaseLookup();
+
+        // Act
+        var result = await repository.GetAllAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe([
+            new MediaDatabaseRegistrationReadModel(
+                otherRegistration.Id,
+                IsActive: false,
+                HasUnreadableSecrets: true,
+                "Other database",
+                OtherClassName
+            ),
+            new MediaDatabaseRegistrationReadModel(
+                registration.Id,
+                IsActive: true,
+                HasUnreadableSecrets: false,
+                "Test database",
+                ClassName
+            ),
+        ]);
+    }
+
+    [Test]
+    public async Task GetByIdAsync_RegistrationExists_ReturnsReadModel()
+    {
+        // Arrange
+        await AddRegistrationAsync();
+        var registration = await AddRegistrationAsync(
+            hasUnreadableSecrets: true,
+            className: OtherClassName
+        );
+        var repository = CreateRepositoryWithDatabaseLookup();
+
+        // Act
+        var result = await repository.GetByIdAsync(registration.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(
+            new MediaDatabaseRegistrationReadModel(
+                registration.Id,
+                IsActive: true,
+                HasUnreadableSecrets: true,
+                "Other database",
+                OtherClassName
+            )
+        );
+    }
+
+    [Test]
+    public async Task GetByIdAsync_RegistrationDoesNotExist_ReturnsNull()
+    {
+        // Arrange
+        var registration = await AddRegistrationAsync();
+        var repository = CreateRepositoryWithDatabaseLookup();
+
+        // Act
+        var result = await repository.GetByIdAsync(registration.Id + 1, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ExistsForClassNameAsync_RegisteredAndUnregisteredClassName_ReturnsWhetherRegistered()
+    {
+        // Arrange
+        await AddRegistrationAsync();
+        var repository = CreateRepositoryWithDatabaseLookup();
+
+        // Act
+        var registeredExists = await repository.ExistsForClassNameAsync(
+            ClassName,
+            CancellationToken.None
+        );
+        var unregisteredExists = await repository.ExistsForClassNameAsync(
+            OtherClassName,
+            CancellationToken.None
+        );
+
+        // Assert
+        registeredExists.ShouldBeTrue();
+        unregisteredExists.ShouldBeFalse();
+    }
+
+    private MediaDatabaseRegistrationRepository CreateRepositoryWithDatabaseLookup()
+    {
+        databaseMock.Setup(database => database.Name).Returns("Test database");
+        var otherDatabaseMock = new Mock<IMediaMetadataDatabase>(MockBehavior.Strict);
+        otherDatabaseMock.Setup(database => database.Name).Returns("Other database");
+        factoryMock
+            .Setup(factory => factory.GetByClassName())
+            .Returns(
+                new Dictionary<string, IMediaMetadataDatabase>
+                {
+                    [ClassName] = databaseMock.Object,
+                    [OtherClassName] = otherDatabaseMock.Object,
+                }
+            );
+
+        return new MediaDatabaseRegistrationRepository(DbContext, DbContext, factoryMock.Object);
     }
 
     private async Task<MediaDatabaseRegistration> AddRegistrationAsync(
         bool isActive = true,
-        bool hasUnreadableSecrets = false
+        bool hasUnreadableSecrets = false,
+        string className = ClassName
     )
     {
         var registration = new MediaDatabaseRegistration
         {
-            MediaDatabaseClassName = ClassName,
+            MediaDatabaseClassName = className,
             SerializedConfig = SerializedConfig,
             IsActive = isActive,
             HasUnreadableSecrets = hasUnreadableSecrets,
         };
 
-        dbContext.MediaDatabaseRegistrations.Add(registration);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.MediaDatabaseRegistrations.Add(registration);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         return registration;
     }

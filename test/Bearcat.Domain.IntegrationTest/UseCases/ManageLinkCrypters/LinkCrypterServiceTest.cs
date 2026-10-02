@@ -4,6 +4,7 @@ using Bearcat.Abstractions.Proxies;
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.IntegrationTest.Shared.UnreadableSecrets;
 using Bearcat.Domain.UseCases.ManageLinkCrypters;
+using Bearcat.Domain.UseCases.ManageLinkCrypters.ReadModels;
 using Bearcat.Domain.UseCases.ManageProxyServers.Selection;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
@@ -22,7 +23,6 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
     private const string LinkCrypterClassName = "TestCrypter";
     private const string SerializedConfig = "{\"apiKey\":\"secret\"}";
 
-    private BearcatDbContext dbContext = null!;
     private Mock<ILinkCrypter> linkCrypterMock = null!;
     private Mock<ILinkCrypterConfig> linkCrypterConfigMock = null!;
     private Mock<ILinkCrypterFactory> linkCrypterFactoryMock = null!;
@@ -31,7 +31,6 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         linkCrypterConfigMock = new Mock<ILinkCrypterConfig>(MockBehavior.Strict);
         linkCrypterMock = new Mock<ILinkCrypter>(MockBehavior.Strict);
         linkCrypterFactoryMock = new Mock<ILinkCrypterFactory>(MockBehavior.Strict);
@@ -41,22 +40,16 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
             .Returns(linkCrypterMock.Object);
 
         service = new LinkCrypterService(
-            new LinkCrypterRegistrationWriteRepository(dbContext),
-            new LinkCrypterRegistrationReadRepository(dbContext, linkCrypterFactoryMock.Object),
+            new LinkCrypterRegistrationWriteRepository(DbContext),
+            new LinkCrypterRegistrationReadRepository(DbContext, linkCrypterFactoryMock.Object),
             linkCrypterFactoryMock.Object,
             NoOpSecretProtector.Instance,
             UnreadableSecretsNotificationServiceFactory.Create(
-                dbContext,
+                DbContext,
                 CreateNotificationConfigurationProvider()
             ),
-            new ProxySelectionValidator(new ProxyServerRepository(dbContext, dbContext))
+            new ProxySelectionValidator(new ProxyServerRepository(DbContext, DbContext))
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -75,7 +68,7 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var registration = await dbContext.LinkCrypterRegistrations.SingleAsync();
+        var registration = await DbContext.LinkCrypterRegistrations.SingleAsync();
 
         registration.ShouldNotBeNull();
         registration.Name.ShouldBe("Primary crypter");
@@ -96,7 +89,7 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
         await service.ToggleIsActiveAsync(registration.Id, CancellationToken.None);
 
         // Assert
-        var result = await dbContext.LinkCrypterRegistrations.SingleAsync();
+        var result = await DbContext.LinkCrypterRegistrations.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(registration.Id);
@@ -134,7 +127,7 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var result = await dbContext.LinkCrypterRegistrations.SingleAsync();
+        var result = await DbContext.LinkCrypterRegistrations.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(registration.Id);
@@ -180,8 +173,8 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.LinkCrypterRegistrations.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.LinkCrypterRegistrations.SingleAsync();
 
         result.SerializedConfig.ShouldBe("{\"apiKey\":\"updated\"}");
         result.HasUnreadableSecrets.ShouldBeFalse();
@@ -225,7 +218,7 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
         await service.DeleteAsync(registration.Id, CancellationToken.None);
 
         // Assert
-        var result = await dbContext.LinkCrypterRegistrations.AnyAsync();
+        var result = await DbContext.LinkCrypterRegistrations.AnyAsync();
 
         result.ShouldBeFalse();
     }
@@ -315,12 +308,12 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
             LinkCrypterRegistration = otherRegistration,
         };
         otherReleaseContainer.Upload = upload;
-        dbContext.LinkCrypterContainers.AddRange(
+        DbContext.LinkCrypterContainers.AddRange(
             releaseContainer,
             collectionContainer,
             otherReleaseContainer
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await service.GetLinkCrypterContainerCountAsync(
@@ -368,7 +361,7 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var registration = await dbContext.LinkCrypterRegistrations.SingleAsync();
+        var registration = await DbContext.LinkCrypterRegistrations.SingleAsync();
         registration.ProxySelection.ShouldBe(ProxySelection.SpecificProxyServer);
         registration.ProxyServerId.ShouldBe(proxyServer.Id);
     }
@@ -394,7 +387,7 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
 
         // Assert
         await act.ShouldThrowAsync<InvalidProxySelectionException>();
-        (await dbContext.LinkCrypterRegistrations.CountAsync()).ShouldBe(0);
+        (await DbContext.LinkCrypterRegistrations.CountAsync()).ShouldBe(0);
     }
 
     [Test]
@@ -451,8 +444,8 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.LinkCrypterRegistrations.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.LinkCrypterRegistrations.SingleAsync();
         result.ProxySelection.ShouldBe(ProxySelection.UseCategoryDefault);
         result.ProxyServerId.ShouldBeNull();
     }
@@ -490,6 +483,126 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
         ProxyCategoryScope.Current.ShouldBeNull();
     }
 
+    [Test]
+    public async Task GetAllAsync_SeveralRegistrations_ReturnsReadModelsWithCrypterCapabilities()
+    {
+        // Arrange
+        var proxyServer = await AddProxyServerAsync();
+        var primaryRegistration = await AddLinkCrypterRegistrationAsync(isActive: true);
+        var secondaryRegistration = await AddLinkCrypterRegistrationAsync(
+            isActive: false,
+            hasUnreadableSecrets: true,
+            proxySelection: ProxySelection.SpecificProxyServer,
+            proxyServerId: proxyServer.Id,
+            name: "Secondary crypter"
+        );
+        DbContext.ChangeTracker.Clear();
+        var readRepository = CreateReadRepositoryWithCrypterLookup();
+
+        // Act
+        var result = await readRepository.GetAllAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(
+            [
+                new LinkCrypterRegistrationReadModel(
+                    primaryRegistration.Id,
+                    "Primary crypter",
+                    LinkCrypterClassName,
+                    linkCrypterMock.Object.GetType().Name,
+                    IsActive: true,
+                    HasUnreadableSecrets: false,
+                    SupportsCaptcha: true,
+                    SupportsContainerDownload: false,
+                    SupportsClickAndLoad: true,
+                    ProxySelection.UseCategoryDefault,
+                    null
+                ),
+                new LinkCrypterRegistrationReadModel(
+                    secondaryRegistration.Id,
+                    "Secondary crypter",
+                    LinkCrypterClassName,
+                    linkCrypterMock.Object.GetType().Name,
+                    IsActive: false,
+                    HasUnreadableSecrets: true,
+                    SupportsCaptcha: true,
+                    SupportsContainerDownload: false,
+                    SupportsClickAndLoad: true,
+                    ProxySelection.SpecificProxyServer,
+                    proxyServer.Id
+                ),
+            ],
+            ignoreOrder: true
+        );
+    }
+
+    [Test]
+    public async Task GetByIdAsync_RegistrationExists_ReturnsReadModel()
+    {
+        // Arrange
+        await AddLinkCrypterRegistrationAsync(isActive: true);
+        var proxyServer = await AddProxyServerAsync();
+        var registration = await AddLinkCrypterRegistrationAsync(
+            isActive: false,
+            proxySelection: ProxySelection.SpecificProxyServer,
+            proxyServerId: proxyServer.Id,
+            name: "Secondary crypter"
+        );
+        DbContext.ChangeTracker.Clear();
+        var readRepository = CreateReadRepositoryWithCrypterLookup();
+
+        // Act
+        var result = await readRepository.GetByIdAsync(registration.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(
+            new LinkCrypterRegistrationReadModel(
+                registration.Id,
+                "Secondary crypter",
+                LinkCrypterClassName,
+                linkCrypterMock.Object.GetType().Name,
+                IsActive: false,
+                HasUnreadableSecrets: false,
+                SupportsCaptcha: true,
+                SupportsContainerDownload: false,
+                SupportsClickAndLoad: true,
+                ProxySelection.SpecificProxyServer,
+                proxyServer.Id
+            )
+        );
+    }
+
+    [Test]
+    public async Task GetByIdAsync_RegistrationDoesNotExist_ReturnsNull()
+    {
+        // Arrange
+        var registration = await AddLinkCrypterRegistrationAsync(isActive: true);
+        var readRepository = CreateReadRepositoryWithCrypterLookup();
+
+        // Act
+        var result = await readRepository.GetByIdAsync(registration.Id + 1, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    private LinkCrypterRegistrationReadRepository CreateReadRepositoryWithCrypterLookup()
+    {
+        linkCrypterMock.Setup(crypter => crypter.SupportsCaptcha).Returns(true);
+        linkCrypterMock.Setup(crypter => crypter.SupportsContainerDownload).Returns(false);
+        linkCrypterMock.Setup(crypter => crypter.SupportsClickAndLoad).Returns(true);
+        linkCrypterFactoryMock
+            .Setup(factory => factory.GetByClassName())
+            .Returns(
+                new Dictionary<string, ILinkCrypter>
+                {
+                    [LinkCrypterClassName] = linkCrypterMock.Object,
+                }
+            );
+
+        return new LinkCrypterRegistrationReadRepository(DbContext, linkCrypterFactoryMock.Object);
+    }
+
     private async Task<ProxyServer> AddProxyServerAsync()
     {
         var proxyServer = new ProxyServer
@@ -500,8 +613,8 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
             Port = 8080,
         };
 
-        dbContext.ProxyServers.Add(proxyServer);
-        await dbContext.SaveChangesAsync();
+        DbContext.ProxyServers.Add(proxyServer);
+        await DbContext.SaveChangesAsync();
 
         return proxyServer;
     }
@@ -510,22 +623,23 @@ public class LinkCrypterServiceTest(DatabaseProvider databaseProvider)
         bool isActive,
         bool hasUnreadableSecrets = false,
         ProxySelection proxySelection = ProxySelection.UseCategoryDefault,
-        int? proxyServerId = null
+        int? proxyServerId = null,
+        string name = "Primary crypter"
     )
     {
         var registration = new LinkCrypterRegistration
         {
             ProxySelection = proxySelection,
             ProxyServerId = proxyServerId,
-            Name = "Primary crypter",
+            Name = name,
             IsActive = isActive,
             HasUnreadableSecrets = hasUnreadableSecrets,
             LinkCrypterClassName = LinkCrypterClassName,
             SerializedConfig = SerializedConfig,
         };
 
-        dbContext.LinkCrypterRegistrations.Add(registration);
-        await dbContext.SaveChangesAsync();
+        DbContext.LinkCrypterRegistrations.Add(registration);
+        await DbContext.SaveChangesAsync();
 
         return registration;
     }

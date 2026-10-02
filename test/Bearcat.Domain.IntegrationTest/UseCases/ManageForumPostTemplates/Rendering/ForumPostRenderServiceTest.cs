@@ -14,27 +14,19 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageForumPostTemplates.Rende
 public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private Mock<IForumPostRenderSource> renderSourceMock = null!;
     private ForumPostRenderService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         renderSourceMock = new Mock<IForumPostRenderSource>(MockBehavior.Strict);
         renderSourceMock.SetupGet(source => source.Type).Returns(ForumPostTemplateType.Release);
 
         service = new ForumPostRenderService(
-            new ForumPostTemplateRepository(dbContext, dbContext),
+            new ForumPostTemplateRepository(DbContext, DbContext),
             [renderSourceMock.Object]
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -176,9 +168,9 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
             UpdatedAt = DateTime.UtcNow,
         };
 
-        dbContext.ForumPostTemplates.Add(template);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.ForumPostTemplates.Add(template);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         return template;
     }

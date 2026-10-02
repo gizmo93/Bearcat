@@ -23,7 +23,6 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
 {
     private const string MirrorHosterClassName = "MirrorHoster";
 
-    private BearcatDbContext dbContext = null!;
     private string tempRootPath = null!;
     private string releaseFolderPath = null!;
     private string archiveFilesBasePath = null!;
@@ -34,7 +33,6 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
         releaseFolderPath = Directory
             .CreateDirectory(Path.Combine(tempRootPath, "release"))
@@ -50,11 +48,11 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
             .Returns(Mock.Of<IHosterWithDownload>());
 
         service = new ReleaseFolderRetirementService(
-            new ReleaseFolderRetirementRepository(dbContext),
+            new ReleaseFolderRetirementRepository(DbContext),
             configurationMock.Object,
             new UnmanagedReleaseConverter(new MirrorCoverageEvaluator(hosterFactoryMock.Object)),
             new NotificationService(
-                repository: new NotificationRepository(dbContext),
+                repository: new NotificationRepository(DbContext),
                 timeProvider: CreateTimeProvider(),
                 configurationProvider: CreateNotificationConfigurationProvider()
             ),
@@ -64,10 +62,8 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
     }
 
     [TearDown]
-    public async Task DisposeResourcesAsync()
+    public void DeleteTempRootPath()
     {
-        await dbContext.DisposeAsync();
-
         if (Directory.Exists(tempRootPath))
         {
             Directory.Delete(tempRootPath, recursive: true);
@@ -99,9 +95,9 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Releases.SingleAsync(r => r.Id == release.Id);
-        var notification = await dbContext.Notifications.SingleAsync(n =>
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Releases.SingleAsync(r => r.Id == release.Id);
+        var notification = await DbContext.Notifications.SingleAsync(n =>
             n.ReleaseId == release.Id
         );
 
@@ -124,9 +120,9 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Releases.SingleAsync(r => r.Id == release.Id);
-        var notification = await dbContext.Notifications.SingleAsync(n =>
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Releases.SingleAsync(r => r.Id == release.Id);
+        var notification = await DbContext.Notifications.SingleAsync(n =>
             n.ReleaseId == release.Id
         );
 
@@ -166,8 +162,8 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Releases.SingleAsync(r => r.Id == release.Id);
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Releases.SingleAsync(r => r.Id == release.Id);
 
         result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
     }
@@ -214,8 +210,8 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Releases.SingleAsync(r => r.Id == release.Id);
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Releases.SingleAsync(r => r.Id == release.Id);
 
         result.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
     }
@@ -263,12 +259,12 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
 
     private async Task ShouldStillBeManagedAsync(Release release)
     {
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Releases.SingleAsync(r => r.Id == release.Id);
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Releases.SingleAsync(r => r.Id == release.Id);
 
         result.ReleaseType.ShouldBe(ReleaseType.Managed);
         result.ReleaseFolderPath.ShouldBe(releaseFolderPath);
-        (await dbContext.Notifications.AnyAsync(n => n.ReleaseId == release.Id)).ShouldBeFalse();
+        (await DbContext.Notifications.AnyAsync(n => n.ReleaseId == release.Id)).ShouldBeFalse();
     }
 
     private async Task<Release> AddScenarioAsync(
@@ -322,8 +318,8 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
             Name = "Default upload",
         };
 
-        dbContext.UploadConfigs.Add(uploadConfig);
-        await dbContext.SaveChangesAsync();
+        DbContext.UploadConfigs.Add(uploadConfig);
+        await DbContext.SaveChangesAsync();
 
         var archiveFolderPath = archiveInsideReleaseFolder
             ? Directory.CreateDirectory(Path.Combine(releaseFolderPath, "archives")).FullName
@@ -346,12 +342,12 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
             ErrorMessages = [],
         };
 
-        dbContext.Archives.Add(archive);
-        await dbContext.SaveChangesAsync();
+        DbContext.Archives.Add(archive);
+        await DbContext.SaveChangesAsync();
 
         if (withCompletedUpload)
         {
-            dbContext.Uploads.Add(
+            DbContext.Uploads.Add(
                 new Upload
                 {
                     UploadConfigId = uploadConfig.Id,
@@ -378,7 +374,7 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
 
         if (additionalUploadState is not null)
         {
-            dbContext.Uploads.Add(
+            DbContext.Uploads.Add(
                 new Upload
                 {
                     UploadConfigId = uploadConfig.Id,
@@ -391,8 +387,8 @@ public class ReleaseFolderRetirementServiceTest(DatabaseProvider databaseProvide
             );
         }
 
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         return release;
     }

@@ -18,24 +18,16 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private ReleaseReadRepository repository = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         repository = new ReleaseReadRepository(
-            dbContext,
+            DbContext,
             Mock.Of<IArchiverFactory>(),
             Mock.Of<ILinkCrypterFactory>()
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -47,7 +39,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             "Bearcat.Unmanaged.2026-GRP",
             ReleaseType.Unmanaged
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.SearchReleasesAsync(
@@ -66,7 +58,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         var releases = await AddInPostQueueFilterReleasesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.SearchReleasesAsync(
@@ -89,7 +81,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         var releases = await AddInPostQueueFilterReleasesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.SearchReleasesAsync(
@@ -124,8 +116,8 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         managedRelease.QualityGateState = QualityGateState.Failed;
         unmanagedRelease.QualityGateState = QualityGateState.Failed;
         passedRelease.QualityGateState = QualityGateState.Passed;
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetQualityIssuesQueueAsync(CancellationToken.None);
@@ -143,8 +135,8 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         var germanRelease = await AddReleaseAsync("Bearcat.German.2026-GRP");
         germanRelease.PrimaryLanguageCode = "de";
         await AddReleaseAsync("Bearcat.English.2026-GRP");
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.SearchReleasesAsync(
@@ -164,8 +156,8 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
         var germanRelease = await AddReleaseAsync("Bearcat.German.2026-GRP");
         germanRelease.PrimaryLanguageCode = "de";
         var releaseWithoutLanguage = await AddReleaseAsync("Bearcat.Unknown.2026-GRP");
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.SearchReleasesAsync(
@@ -188,7 +180,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             "Bearcat.DownloadLink.2026-GRP.part01.rar",
             "https://hoster.example/files/abc123"
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.SearchReleasesAsync(
@@ -211,7 +203,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             "Bearcat.ArchiveFile.2026-GRP.part02.rar",
             "https://hoster.example/files/archive"
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.SearchReleasesAsync(
@@ -234,7 +226,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             "Bearcat.UploadId.2026-GRP.part01.rar",
             "https://hoster.example/files/upload"
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.SearchReleasesAsync(
@@ -252,7 +244,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         var release = await AddReleaseAsync();
-        dbContext.ReleaseInfos.Add(
+        DbContext.ReleaseInfos.Add(
             new ReleaseInfo
             {
                 ReleaseId = release.Id,
@@ -311,8 +303,8 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 Source = ExternalIdentifierSource.Nfo,
             }
         );
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetReleaseInfoAsync(release.Id, CancellationToken.None);
@@ -374,8 +366,8 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             Title = "Bearcat Movie",
             CoverUrl = "https://image.tmdb.org/bearcat.jpg",
         };
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var releaseInfo = await repository.GetReleaseInfoAsync(release.Id, CancellationToken.None);
@@ -394,7 +386,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         var release = await AddReleaseAsync();
-        dbContext.ReleaseInfos.Add(
+        DbContext.ReleaseInfos.Add(
             new ReleaseInfo
             {
                 ReleaseId = release.Id,
@@ -404,8 +396,8 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             }
         );
         release.ReleaseNfo = new ReleaseNfo { FileName = "bearcat.nfo", Content = "nfo content" };
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetReleaseNfoAsync(release.Id, CancellationToken.None);
@@ -428,8 +420,8 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             ReleaseName = "Bearcat.Release.2026-GRP",
             ExternalInfos = [],
         };
-        dbContext.ReleaseInfos.Add(releaseInfo);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseInfos.Add(releaseInfo);
+        await DbContext.SaveChangesAsync();
 
         const string legacyUrlsJson =
             """[{"type":1,"url":"https://www.imdb.com/de/title/tt1234567"}]""";
@@ -451,8 +443,8 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 """;
         }
 
-        await dbContext.Database.ExecuteSqlInterpolatedAsync(insertLegacyExternalInfoSql);
-        dbContext.ChangeTracker.Clear();
+        await DbContext.Database.ExecuteSqlInterpolatedAsync(insertLegacyExternalInfoSql);
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetReleaseInfoAsync(release.Id, CancellationToken.None);
@@ -480,8 +472,8 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             "https://hoster.example/files/posted"
         );
         postedRelease.Release.UploadsPostedAt = DateTime.UtcNow.AddDays(1);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -509,7 +501,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 5)]),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -538,7 +530,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 ]),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -560,7 +552,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 new PostQueueConfigSpec([]),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -588,7 +580,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 ]),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -617,7 +609,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 ]),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -646,7 +638,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 ]),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -668,7 +660,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 new PostQueueConfigSpec([], HosterActive: false),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -700,7 +692,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 ),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -724,7 +716,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 ),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -748,7 +740,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 ),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -778,7 +770,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 ),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -808,7 +800,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 ),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -828,7 +820,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             [new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)])],
             imageConfigs: [new PostQueueImageConfigSpec(HasUpload: false)]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -848,7 +840,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             [new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)])],
             imageConfigs: [new PostQueueImageConfigSpec(HasUpload: true)]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -868,7 +860,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             [new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 10)])],
             imageConfigs: [new PostQueueImageConfigSpec(HasUpload: false, HosterActive: false)]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -890,12 +882,12 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 new PostQueueConfigSpec([new PostQueueUploadSpec(UploadState.Completed, 20)]),
             ]
         );
-        var unreadableHoster = await dbContext.HosterRegistrations.SingleAsync(registration =>
+        var unreadableHoster = await DbContext.HosterRegistrations.SingleAsync(registration =>
             registration.Name == "Bearcat.UnreadableHoster.2026-GRP hoster 2"
         );
         unreadableHoster.HasUnreadableSecrets = true;
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.SearchUploadsAsync(
@@ -993,7 +985,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 LinkCrypters = [],
                 Uploads = [],
             };
-            dbContext.AddRange(archiveConfig, hosterRegistration, uploadConfig);
+            DbContext.AddRange(archiveConfig, hosterRegistration, uploadConfig);
 
             foreach (var uploadSpec in configSpec.Uploads)
             {
@@ -1019,7 +1011,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             AddImageUploadConfig(release, $"{name} image {imageConfigIndex}", imageConfigSpec);
         }
 
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         return release;
     }
@@ -1044,11 +1036,11 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             ContainerScope = spec.Scope,
             LinkCrypterContainers = [],
         };
-        dbContext.AddRange(linkCrypterRegistration, uploadConfigLinkCrypter);
+        DbContext.AddRange(linkCrypterRegistration, uploadConfigLinkCrypter);
 
         if (spec.HasContainer)
         {
-            dbContext.Add(
+            DbContext.Add(
                 new LinkCrypterContainer
                 {
                     Scope = spec.Scope,
@@ -1078,11 +1070,11 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             Name = name,
             ImageUploads = [],
         };
-        dbContext.AddRange(imageHosterRegistration, imageUploadConfig);
+        DbContext.AddRange(imageHosterRegistration, imageUploadConfig);
 
         if (spec.HasUpload)
         {
-            dbContext.Add(
+            DbContext.Add(
                 new ImageUpload
                 {
                     ImageUploadConfig = imageUploadConfig,
@@ -1123,7 +1115,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 Notifications = [],
             };
             upload.Archive = archive;
-            dbContext.Add(archive);
+            DbContext.Add(archive);
 
             for (var i = 0; i < spec.FileCount; i++)
             {
@@ -1143,11 +1135,11 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                         CreatedAt = createdAt,
                     }
                 );
-                dbContext.Add(archiveFile);
+                DbContext.Add(archiveFile);
             }
         }
 
-        dbContext.Add(upload);
+        DbContext.Add(upload);
     }
 
     private sealed record PostQueueUploadSpec(
@@ -1209,9 +1201,9 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
                 BuildUnmanagedArchiveConfig("/data/archives/z", ArchiveState.Deleted),
             ],
         };
-        dbContext.Releases.Add(release);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.Releases.Add(release);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetUnmanagedArchiveFolderPathsAsync(
@@ -1277,8 +1269,8 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             UploadConfigs = [],
         };
 
-        dbContext.Releases.Add(release);
-        await dbContext.SaveChangesAsync();
+        DbContext.Releases.Add(release);
+        await DbContext.SaveChangesAsync();
 
         return release;
     }
@@ -1355,7 +1347,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             CreatedAt = DateTime.UtcNow,
         };
 
-        dbContext.AddRange(
+        DbContext.AddRange(
             archiveConfig,
             hosterRegistration,
             uploadConfig,
@@ -1364,7 +1356,7 @@ public class ReleaseReadRepositoryTest(DatabaseProvider databaseProvider)
             upload,
             uploadedFile
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         return (release, upload);
     }

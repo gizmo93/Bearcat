@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations;
+using Bearcat.Domain.UseCases.ManageReleaseFolderAutomations.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -12,22 +13,14 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseFolderAutomations
 public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
+    private ReleaseFolderAutomationRepository repository = null!;
     private ReleaseFolderAutomationService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
-        service = new ReleaseFolderAutomationService(
-            new ReleaseFolderAutomationRepository(dbContext, dbContext)
-        );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
+        repository = new ReleaseFolderAutomationRepository(DbContext, DbContext);
+        service = new ReleaseFolderAutomationService(repository);
     }
 
     [Test]
@@ -47,7 +40,7 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
         );
 
         // Assert
-        var automation = await dbContext.ReleaseFolderAutomations.SingleAsync();
+        var automation = await DbContext.ReleaseFolderAutomations.SingleAsync();
 
         result.ShouldBeGreaterThan(0);
         automation.Id.ShouldBe(result);
@@ -78,7 +71,7 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
         );
 
         // Assert
-        var result = await dbContext.ReleaseFolderAutomations.SingleAsync();
+        var result = await DbContext.ReleaseFolderAutomations.SingleAsync();
 
         result.BasePath.ShouldBe("/tmp/updated");
         result.FolderNamePattern.ShouldBe("*1080p*");
@@ -98,7 +91,7 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
         await service.SetEnabledAsync(automation.Id, false, CancellationToken.None);
 
         // Assert
-        var result = await dbContext.ReleaseFolderAutomations.SingleAsync();
+        var result = await DbContext.ReleaseFolderAutomations.SingleAsync();
 
         result.IsEnabled.ShouldBeFalse();
     }
@@ -114,9 +107,72 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
         await service.DeleteAsync(automation.Id, CancellationToken.None);
 
         // Assert
-        var result = await dbContext.ReleaseFolderAutomations.AnyAsync();
+        var result = await DbContext.ReleaseFolderAutomations.AnyAsync();
 
         result.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task GetAllAsync_AutomationsWithTemplates_ReturnsReadModelsOrderedByBasePathAndPattern()
+    {
+        // Arrange
+        var movieTemplate = await AddReleaseTemplateAsync("Movie template");
+        movieTemplate.ReleaseContentType = ReleaseContentType.Movie;
+        var seriesTemplate = await AddReleaseTemplateAsync("Series template");
+        seriesTemplate.ReleaseContentType = ReleaseContentType.TvShowEpisode;
+        seriesTemplate.ReleaseType = ReleaseType.Unmanaged;
+        await DbContext.SaveChangesAsync();
+        var otherBasePathAutomation = await AddAutomationAsync(movieTemplate.Id);
+        otherBasePathAutomation.BasePath = "/data/movies";
+        var lowResolutionAutomation = await AddAutomationAsync(seriesTemplate.Id, isEnabled: false);
+        lowResolutionAutomation.BasePath = "/data/incoming";
+        lowResolutionAutomation.FolderNamePattern = "*720p*";
+        var highResolutionAutomation = await AddAutomationAsync(movieTemplate.Id);
+        highResolutionAutomation.BasePath = "/data/incoming";
+        highResolutionAutomation.FolderNamePattern = "*1080p*";
+        highResolutionAutomation.PrimaryLanguageCode = "de";
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetAllAsync(CancellationToken.None);
+
+        // Assert
+        result.ShouldBe([
+            new ReleaseFolderAutomationReadModel(
+                ReleaseFolderAutomationId: highResolutionAutomation.Id,
+                BasePath: "/data/incoming",
+                FolderNamePattern: "*1080p*",
+                ReleaseTemplateId: movieTemplate.Id,
+                ReleaseTemplateName: "Movie template",
+                ReleaseType: ReleaseType.Managed,
+                ReleaseContentType: ReleaseContentType.Movie,
+                PrimaryLanguageCode: "de",
+                IsEnabled: true
+            ),
+            new ReleaseFolderAutomationReadModel(
+                ReleaseFolderAutomationId: lowResolutionAutomation.Id,
+                BasePath: "/data/incoming",
+                FolderNamePattern: "*720p*",
+                ReleaseTemplateId: seriesTemplate.Id,
+                ReleaseTemplateName: "Series template",
+                ReleaseType: ReleaseType.Unmanaged,
+                ReleaseContentType: ReleaseContentType.TvShowEpisode,
+                PrimaryLanguageCode: null,
+                IsEnabled: false
+            ),
+            new ReleaseFolderAutomationReadModel(
+                ReleaseFolderAutomationId: otherBasePathAutomation.Id,
+                BasePath: "/data/movies",
+                FolderNamePattern: null,
+                ReleaseTemplateId: movieTemplate.Id,
+                ReleaseTemplateName: "Movie template",
+                ReleaseType: ReleaseType.Managed,
+                ReleaseContentType: ReleaseContentType.Movie,
+                PrimaryLanguageCode: null,
+                IsEnabled: true
+            ),
+        ]);
     }
 
     private async Task<ReleaseTemplate> AddReleaseTemplateAsync(string name = "Managed template")
@@ -134,8 +190,8 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
             ReleaseGroup = releaseGroup,
         };
 
-        dbContext.ReleaseTemplates.Add(releaseTemplate);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseTemplates.Add(releaseTemplate);
+        await DbContext.SaveChangesAsync();
 
         return releaseTemplate;
     }
@@ -153,8 +209,8 @@ public class ReleaseFolderAutomationServiceTest(DatabaseProvider databaseProvide
             IsEnabled = isEnabled,
         };
 
-        dbContext.ReleaseFolderAutomations.Add(automation);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseFolderAutomations.Add(automation);
+        await DbContext.SaveChangesAsync();
 
         return automation;
     }

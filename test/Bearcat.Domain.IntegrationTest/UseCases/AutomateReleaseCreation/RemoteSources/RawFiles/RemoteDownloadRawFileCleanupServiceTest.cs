@@ -35,7 +35,6 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
         DateTimeKind.Unspecified
     );
 
-    private BearcatDbContext dbContext = null!;
     private string tempRootPath = null!;
     private string targetPath = null!;
     private string rawFolderPath = null!;
@@ -45,7 +44,6 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
         targetPath = Directory.CreateDirectory(Path.Combine(tempRootPath, "downloads")).FullName;
         rawFolderPath = Directory.CreateDirectory(Path.Combine(targetPath, ReleaseName)).FullName;
@@ -60,14 +58,14 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
             .Returns(Mock.Of<IHosterWithDownload>());
 
         service = new RemoteDownloadRawFileCleanupService(
-            new RemoteSourceDownloadRepository(dbContext),
+            new RemoteSourceDownloadRepository(DbContext),
             new UnmanagedReleaseConverter(new MirrorCoverageEvaluator(hosterFactoryMock.Object)),
             new RemoteDownloadFolderService(
                 new FileSystemService(),
                 NullLogger<RemoteDownloadFolderService>.Instance
             ),
             new NotificationService(
-                repository: new NotificationRepository(dbContext),
+                repository: new NotificationRepository(DbContext),
                 timeProvider: CreateTimeProvider(),
                 configurationProvider: CreateNotificationConfigurationProvider()
             ),
@@ -76,10 +74,8 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
     }
 
     [TearDown]
-    public async Task DisposeResourcesAsync()
+    public void DeleteTempRootPath()
     {
-        await dbContext.DisposeAsync();
-
         if (Directory.Exists(tempRootPath))
         {
             Directory.Delete(tempRootPath, recursive: true);
@@ -286,9 +282,9 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
             ArchiveFileSizeMb = 512,
         };
 
-        dbContext.ArchiveConfigs.Add(archiveConfig);
-        dbContext.RemoteSourceAutomations.Add(automation);
-        await dbContext.SaveChangesAsync();
+        DbContext.ArchiveConfigs.Add(archiveConfig);
+        DbContext.RemoteSourceAutomations.Add(automation);
+        await DbContext.SaveChangesAsync();
 
         var archiveFolderPath = archiveInsideRawFolder
             ? Directory.CreateDirectory(Path.Combine(rawFolderPath, "archives")).FullName
@@ -312,8 +308,8 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
             ErrorMessages = [],
         };
 
-        dbContext.Archives.Add(archive);
-        await dbContext.SaveChangesAsync();
+        DbContext.Archives.Add(archive);
+        await DbContext.SaveChangesAsync();
 
         if (withUploadConfigs)
         {
@@ -331,7 +327,7 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
                 hosterRegistration,
                 "Default upload"
             );
-            await dbContext.SaveChangesAsync();
+            await DbContext.SaveChangesAsync();
 
             AddCompletedUpload(uploadConfig, archive, archiveFile);
 
@@ -343,7 +339,7 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
                     hosterRegistration,
                     "Second upload"
                 );
-                await dbContext.SaveChangesAsync();
+                await DbContext.SaveChangesAsync();
 
                 AddUpload(failedUploadConfig, UploadState.Failed);
             }
@@ -354,7 +350,7 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
             }
         }
 
-        dbContext.RemoteSourceDownloads.Add(
+        DbContext.RemoteSourceDownloads.Add(
             new RemoteSourceDownload
             {
                 RemoteSourceAutomationId = automation.Id,
@@ -377,8 +373,8 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
             }
         );
 
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         return release;
     }
@@ -398,7 +394,7 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
             Name = name,
         };
 
-        dbContext.UploadConfigs.Add(uploadConfig);
+        DbContext.UploadConfigs.Add(uploadConfig);
 
         return uploadConfig;
     }
@@ -409,7 +405,7 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
         ArchiveFile archiveFile
     )
     {
-        dbContext.Uploads.Add(
+        DbContext.Uploads.Add(
             new Upload
             {
                 UploadConfigId = uploadConfig.Id,
@@ -436,7 +432,7 @@ public class RemoteDownloadRawFileCleanupServiceTest(DatabaseProvider databasePr
 
     private void AddUpload(UploadConfig uploadConfig, UploadState uploadState)
     {
-        dbContext.Uploads.Add(
+        DbContext.Uploads.Add(
             new Upload
             {
                 UploadConfigId = uploadConfig.Id,

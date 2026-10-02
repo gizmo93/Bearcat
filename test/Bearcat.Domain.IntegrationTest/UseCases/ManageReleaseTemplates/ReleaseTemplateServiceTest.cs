@@ -15,20 +15,12 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseTemplates;
 public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private ReleaseTemplateService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         service = new ReleaseTemplateService(CreateRepository());
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -47,7 +39,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var template = await dbContext.ReleaseTemplates.SingleAsync();
+        var template = await DbContext.ReleaseTemplates.SingleAsync();
 
         result.ShouldBeGreaterThan(0);
         template.Id.ShouldBe(result);
@@ -72,7 +64,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var template = await dbContext
+        var template = await DbContext
             .ReleaseTemplates.Include(t => t.ArchiveConfigTemplates)
             .SingleAsync();
         var archiveConfigTemplate = template.ArchiveConfigTemplates.Single();
@@ -131,7 +123,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var template = await dbContext
+        var template = await DbContext
             .ReleaseTemplates.AsSplitQuery()
             .Include(t => t.ArchiveConfigTemplates)
             .Include(t => t.UploadConfigTemplates)
@@ -179,7 +171,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var result = await dbContext.ReleaseTemplates.SingleAsync();
+        var result = await DbContext.ReleaseTemplates.SingleAsync();
 
         result.Name.ShouldBe("Updated template");
         result.ReleaseType.ShouldBe(ReleaseType.Managed);
@@ -219,10 +211,10 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         await service.DeleteAsync(seed.ReleaseTemplateId, CancellationToken.None);
 
         // Assert
-        (await dbContext.ReleaseTemplates.AnyAsync()).ShouldBeFalse();
-        (await dbContext.ArchiveConfigTemplates.AnyAsync()).ShouldBeFalse();
-        (await dbContext.UploadConfigTemplates.AnyAsync()).ShouldBeFalse();
-        (await dbContext.UploadConfigLinkCrypterTemplates.AnyAsync()).ShouldBeFalse();
+        (await DbContext.ReleaseTemplates.AnyAsync()).ShouldBeFalse();
+        (await DbContext.ArchiveConfigTemplates.AnyAsync()).ShouldBeFalse();
+        (await DbContext.UploadConfigTemplates.AnyAsync()).ShouldBeFalse();
+        (await DbContext.UploadConfigLinkCrypterTemplates.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -245,7 +237,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var result = await dbContext.ArchiveConfigTemplates.SingleAsync();
+        var result = await DbContext.ArchiveConfigTemplates.SingleAsync();
 
         result.Name.ShouldBe("ZIP Forum B");
         result.ArchiveFilesBasePath.ShouldBe("/tmp/updated-archives");
@@ -284,8 +276,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        (await dbContext.ArchiveConfigTemplates.AnyAsync()).ShouldBeFalse();
-        (await dbContext.ReleaseTemplates.AnyAsync()).ShouldBeTrue();
+        (await DbContext.ArchiveConfigTemplates.AnyAsync()).ShouldBeFalse();
+        (await DbContext.ReleaseTemplates.AnyAsync()).ShouldBeTrue();
     }
 
     [Test]
@@ -334,7 +326,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             releaseGroup.Id,
             CancellationToken.None
         );
-        var archiveConfigTemplate = await dbContext.ArchiveConfigTemplates.SingleAsync();
+        var archiveConfigTemplate = await DbContext.ArchiveConfigTemplates.SingleAsync();
 
         // Act
         var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
@@ -370,7 +362,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             releaseGroup.Id,
             CancellationToken.None
         );
-        var archiveConfigTemplate = await dbContext.ArchiveConfigTemplates.SingleAsync();
+        var archiveConfigTemplate = await DbContext.ArchiveConfigTemplates.SingleAsync();
 
         // Act
         var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
@@ -411,8 +403,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var archiveConfigTemplate = await dbContext.ArchiveConfigTemplates.SingleAsync();
-        var uploadConfigTemplate = await dbContext.UploadConfigTemplates.SingleAsync();
+        var archiveConfigTemplate = await DbContext.ArchiveConfigTemplates.SingleAsync();
+        var uploadConfigTemplate = await DbContext.UploadConfigTemplates.SingleAsync();
 
         uploadConfigTemplate.ArchiveConfigTemplateId.ShouldBe(archiveConfigTemplate.Id);
         uploadConfigTemplate.PremiumOnlyDownload.ShouldBeTrue();
@@ -451,7 +443,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var result = await dbContext.UploadConfigTemplates.SingleAsync(u =>
+        var result = await DbContext.UploadConfigTemplates.SingleAsync(u =>
             u.Id == seed.UploadConfigTemplateId
         );
 
@@ -474,10 +466,10 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        (await dbContext.UploadConfigTemplates.AnyAsync()).ShouldBeFalse();
-        (await dbContext.UploadConfigLinkCrypterTemplates.AnyAsync()).ShouldBeFalse();
+        (await DbContext.UploadConfigTemplates.AnyAsync()).ShouldBeFalse();
+        (await DbContext.UploadConfigLinkCrypterTemplates.AnyAsync()).ShouldBeFalse();
         (
-            await dbContext.ArchiveConfigTemplates.AnyAsync(a =>
+            await DbContext.ArchiveConfigTemplates.AnyAsync(a =>
                 a.Id == seed.ArchiveConfigTemplateId
             )
         ).ShouldBeTrue();
@@ -500,7 +492,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var result = await dbContext.UploadConfigLinkCrypterTemplates.SingleAsync();
+        var result = await DbContext.UploadConfigLinkCrypterTemplates.SingleAsync();
 
         result.Password.ShouldBeNull();
         result.EnableCaptcha.ShouldBeTrue();
@@ -521,9 +513,9 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        (await dbContext.UploadConfigLinkCrypterTemplates.AnyAsync()).ShouldBeFalse();
+        (await DbContext.UploadConfigLinkCrypterTemplates.AnyAsync()).ShouldBeFalse();
         (
-            await dbContext.UploadConfigTemplates.AnyAsync(u => u.Id == seed.UploadConfigTemplateId)
+            await DbContext.UploadConfigTemplates.AnyAsync(u => u.Id == seed.UploadConfigTemplateId)
         ).ShouldBeTrue();
     }
 
@@ -541,7 +533,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var template = await dbContext
+        var template = await DbContext
             .ReleaseTemplates.AsSplitQuery()
             .Include(t => t.ArchiveConfigTemplates)
             .Include(t => t.UploadConfigTemplates)
@@ -581,8 +573,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         var release = await AddReleaseWithConfigsAsync();
         var additionalArchiveContents = await AddAdditionalArchiveContentsAsync();
         release.ArchiveConfigs.Single().AdditionalArchiveContents = additionalArchiveContents;
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await service.CreateTemplateFromReleaseAsync(
@@ -895,8 +887,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             },
         ];
 
-        dbContext.AdditionalArchiveContents.AddRange(additionalArchiveContents);
-        await dbContext.SaveChangesAsync();
+        DbContext.AdditionalArchiveContents.AddRange(additionalArchiveContents);
+        await DbContext.SaveChangesAsync();
 
         return additionalArchiveContents;
     }
@@ -922,8 +914,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             },
         ];
 
-        dbContext.AdditionalArchiveContents.AddRange(additionalArchiveContents);
-        await dbContext.SaveChangesAsync();
+        DbContext.AdditionalArchiveContents.AddRange(additionalArchiveContents);
+        await DbContext.SaveChangesAsync();
 
         return additionalArchiveContents;
     }
@@ -933,12 +925,12 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         List<AdditionalArchiveContent> additionalArchiveContents
     )
     {
-        var archiveConfigTemplate = await dbContext.ArchiveConfigTemplates.SingleAsync(template =>
+        var archiveConfigTemplate = await DbContext.ArchiveConfigTemplates.SingleAsync(template =>
             template.Id == archiveConfigTemplateId
         );
         archiveConfigTemplate.AdditionalArchiveContents = additionalArchiveContents;
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
     }
 
     private ReleaseTemplateRepository CreateRepository()
@@ -952,8 +944,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             .Setup(factory => factory.GetLinkCrypters())
             .Returns([new LinkCrypterDto("Test crypter", "TestCrypter", [], true, true, true)]);
         return new ReleaseTemplateRepository(
-            dbContext,
-            dbContext,
+            DbContext,
+            DbContext,
             archiverFactory.Object,
             linkCrypterFactory.Object
         );
@@ -1025,7 +1017,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             )
         );
 
-        var hasTemplate = await dbContext.CollectionImageUploadConfigTemplates.AnyAsync();
+        var hasTemplate = await DbContext.CollectionImageUploadConfigTemplates.AnyAsync();
         hasTemplate.ShouldBeFalse();
     }
 
@@ -1037,7 +1029,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
         releaseTemplate.ReleaseCollectionDetectionMode =
             ReleaseCollectionDetectionMode.SeriesEpisodePattern;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
         var imageHosterRegistration = await AddImageHosterRegistrationAsync();
 
         // Act
@@ -1049,7 +1041,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var template = await dbContext.CollectionImageUploadConfigTemplates.SingleAsync();
+        var template = await DbContext.CollectionImageUploadConfigTemplates.SingleAsync();
         template.ReleaseTemplateId.ShouldBe(releaseTemplate.Id);
         template.ImageHosterRegistrationId.ShouldBe(imageHosterRegistration.Id);
         template.Name.ShouldBe("Series cover");
@@ -1063,7 +1055,7 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
         releaseTemplate.ReleaseCollectionDetectionMode =
             ReleaseCollectionDetectionMode.SeriesEpisodePattern;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
         var imageHosterRegistration = await AddImageHosterRegistrationAsync();
         await service.CreateCollectionImageUploadConfigTemplateAsync(
             releaseTemplate.Id,
@@ -1084,22 +1076,160 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var hasTemplate = await dbContext.CollectionImageUploadConfigTemplates.AnyAsync();
+        var hasTemplate = await DbContext.CollectionImageUploadConfigTemplates.AnyAsync();
         hasTemplate.ShouldBeFalse();
     }
 
-    private async Task<ImageHosterRegistration> AddImageHosterRegistrationAsync()
+    [Test]
+    public async Task UpdateImageUploadConfigTemplateAsync_TemplateExists_UpdatesNameAndImageHoster()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
+        var imgbb = await AddImageHosterRegistrationAsync();
+        var pixhost = await AddImageHosterRegistrationAsync("PiXhost");
+        var imageUploadConfigTemplateId = await service.CreateImageUploadConfigTemplateAsync(
+            releaseTemplate.Id,
+            "Cover",
+            imgbb.Id,
+            CancellationToken.None
+        );
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.UpdateImageUploadConfigTemplateAsync(
+            imageUploadConfigTemplateId,
+            "  Screens  ",
+            pixhost.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var template = await DbContext.ImageUploadConfigTemplates.SingleAsync();
+        template.Id.ShouldBe(imageUploadConfigTemplateId);
+        template.Name.ShouldBe("Screens");
+        template.ImageHosterRegistrationId.ShouldBe(pixhost.Id);
+    }
+
+    [Test]
+    public async Task DeleteImageUploadConfigTemplateAsync_TemplateExists_RemovesOnlyThisTemplate()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
+        var imgbb = await AddImageHosterRegistrationAsync();
+        var coverTemplateId = await service.CreateImageUploadConfigTemplateAsync(
+            releaseTemplate.Id,
+            "Cover",
+            imgbb.Id,
+            CancellationToken.None
+        );
+        var screensTemplateId = await service.CreateImageUploadConfigTemplateAsync(
+            releaseTemplate.Id,
+            "Screens",
+            imgbb.Id,
+            CancellationToken.None
+        );
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.DeleteImageUploadConfigTemplateAsync(coverTemplateId, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var remainingTemplate = await DbContext.ImageUploadConfigTemplates.SingleAsync();
+        remainingTemplate.Id.ShouldBe(screensTemplateId);
+        (await DbContext.ImageHosterRegistrations.SingleAsync()).Id.ShouldBe(imgbb.Id);
+    }
+
+    [Test]
+    public async Task UpdateCollectionImageUploadConfigTemplateAsync_TemplateExists_UpdatesNameAndImageHoster()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
+        releaseTemplate.ReleaseCollectionDetectionMode =
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern;
+        await DbContext.SaveChangesAsync();
+        var imgbb = await AddImageHosterRegistrationAsync();
+        var pixhost = await AddImageHosterRegistrationAsync("PiXhost");
+        var collectionImageUploadConfigTemplateId =
+            await service.CreateCollectionImageUploadConfigTemplateAsync(
+                releaseTemplate.Id,
+                "Series cover",
+                imgbb.Id,
+                CancellationToken.None
+            );
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.UpdateCollectionImageUploadConfigTemplateAsync(
+            collectionImageUploadConfigTemplateId,
+            " ",
+            pixhost.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var template = await DbContext.CollectionImageUploadConfigTemplates.SingleAsync();
+        template.Id.ShouldBe(collectionImageUploadConfigTemplateId);
+        template.Name.ShouldBeNull();
+        template.ImageHosterRegistrationId.ShouldBe(pixhost.Id);
+    }
+
+    [Test]
+    public async Task DeleteCollectionImageUploadConfigTemplateAsync_TemplateExists_RemovesOnlyThisTemplate()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        var releaseTemplate = await AddReleaseTemplateAsync(releaseGroup.Id);
+        releaseTemplate.ReleaseCollectionDetectionMode =
+            ReleaseCollectionDetectionMode.SeriesEpisodePattern;
+        await DbContext.SaveChangesAsync();
+        var imgbb = await AddImageHosterRegistrationAsync();
+        var seriesCoverTemplateId = await service.CreateCollectionImageUploadConfigTemplateAsync(
+            releaseTemplate.Id,
+            "Series cover",
+            imgbb.Id,
+            CancellationToken.None
+        );
+        var seasonCoverTemplateId = await service.CreateCollectionImageUploadConfigTemplateAsync(
+            releaseTemplate.Id,
+            "Season cover",
+            imgbb.Id,
+            CancellationToken.None
+        );
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.DeleteCollectionImageUploadConfigTemplateAsync(
+            seriesCoverTemplateId,
+            CancellationToken.None
+        );
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var remainingTemplate = await DbContext.CollectionImageUploadConfigTemplates.SingleAsync();
+        remainingTemplate.Id.ShouldBe(seasonCoverTemplateId);
+        (await DbContext.ImageHosterRegistrations.SingleAsync()).Id.ShouldBe(imgbb.Id);
+    }
+
+    private async Task<ImageHosterRegistration> AddImageHosterRegistrationAsync(
+        string name = "ImgBB"
+    )
     {
         var imageHosterRegistration = new ImageHosterRegistration
         {
-            Name = "ImgBB",
+            Name = name,
             ImageHosterClassName = "ImgBb",
             SerializedConfig = "{}",
             IsActive = true,
         };
 
-        dbContext.ImageHosterRegistrations.Add(imageHosterRegistration);
-        await dbContext.SaveChangesAsync();
+        DbContext.ImageHosterRegistrations.Add(imageHosterRegistration);
+        await DbContext.SaveChangesAsync();
 
         return imageHosterRegistration;
     }
@@ -1113,8 +1243,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             NumberOfHoursUntilReupload = 24,
         };
 
-        dbContext.ReleaseGroups.Add(releaseGroup);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseGroups.Add(releaseGroup);
+        await DbContext.SaveChangesAsync();
 
         return releaseGroup;
     }
@@ -1128,8 +1258,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             ReleaseGroupId = releaseGroupId,
         };
 
-        dbContext.ReleaseTemplates.Add(releaseTemplate);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseTemplates.Add(releaseTemplate);
+        await DbContext.SaveChangesAsync();
 
         return releaseTemplate;
     }
@@ -1146,8 +1276,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             IsActive = true,
         };
 
-        dbContext.HosterRegistrations.Add(hosterRegistration);
-        await dbContext.SaveChangesAsync();
+        DbContext.HosterRegistrations.Add(hosterRegistration);
+        await DbContext.SaveChangesAsync();
 
         return hosterRegistration;
     }
@@ -1162,8 +1292,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             IsActive = true,
         };
 
-        dbContext.LinkCrypterRegistrations.Add(linkCrypterRegistration);
-        await dbContext.SaveChangesAsync();
+        DbContext.LinkCrypterRegistrations.Add(linkCrypterRegistration);
+        await DbContext.SaveChangesAsync();
 
         return linkCrypterRegistration;
     }
@@ -1227,8 +1357,8 @@ public class ReleaseTemplateServiceTest(DatabaseProvider databaseProvider)
             },
         ];
 
-        dbContext.Releases.Add(release);
-        await dbContext.SaveChangesAsync();
+        DbContext.Releases.Add(release);
+        await DbContext.SaveChangesAsync();
 
         return release;
     }

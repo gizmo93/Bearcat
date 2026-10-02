@@ -20,21 +20,12 @@ public class ApplicationConfigurationServiceTest(DatabaseProvider databaseProvid
     private const string PropertyName = "AutoConvertToUnmanaged";
 
     private Mock<IApplicationConfigurationOverrideCache> overrideCacheMock = null!;
-    private BearcatDbContext readDbContext = null!;
     private ApplicationConfigurationService service = null!;
-    private BearcatDbContext writeDbContext = null!;
 
     [SetUp]
     public void Setup()
     {
-        readDbContext = Database.CreateDbContext();
-        readDbContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-        writeDbContext = Database.CreateDbContext();
-
-        var repository = new ApplicationConfigurationOverrideRepository(
-            readDbContext,
-            writeDbContext
-        );
+        var repository = new ApplicationConfigurationOverrideRepository(ReadDbContext, DbContext);
         overrideCacheMock = new Mock<IApplicationConfigurationOverrideCache>(MockBehavior.Strict);
 
         service = new ApplicationConfigurationService(
@@ -44,13 +35,6 @@ public class ApplicationConfigurationServiceTest(DatabaseProvider databaseProvid
             overrideCacheMock.Object,
             CreateTimeProvider()
         );
-    }
-
-    [TearDown]
-    public async Task DisposeServiceDbContextsAsync()
-    {
-        await readDbContext.DisposeAsync();
-        await writeDbContext.DisposeAsync();
     }
 
     [Test]
@@ -133,7 +117,7 @@ public class ApplicationConfigurationServiceTest(DatabaseProvider databaseProvid
         );
 
         // Assert
-        var result = await writeDbContext.ApplicationConfigurationOverrides.SingleAsync();
+        var result = await DbContext.ApplicationConfigurationOverrides.SingleAsync();
 
         result.ShouldNotBeNull();
         result.ConfigurationKey.ShouldBe(ConfigurationKey);
@@ -162,7 +146,7 @@ public class ApplicationConfigurationServiceTest(DatabaseProvider databaseProvid
         );
 
         // Assert
-        var result = await writeDbContext.ApplicationConfigurationOverrides.SingleAsync();
+        var result = await DbContext.ApplicationConfigurationOverrides.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(configurationOverride.Id);
@@ -182,7 +166,7 @@ public class ApplicationConfigurationServiceTest(DatabaseProvider databaseProvid
         await service.ResetOverrideAsync(ConfigurationKey, PropertyName, CancellationToken.None);
 
         // Assert
-        var result = await writeDbContext.ApplicationConfigurationOverrides.AnyAsync();
+        var result = await DbContext.ApplicationConfigurationOverrides.AnyAsync();
 
         result.ShouldBeFalse();
         overrideCacheMock.Verify();
@@ -200,7 +184,7 @@ public class ApplicationConfigurationServiceTest(DatabaseProvider databaseProvid
         await service.ResetOverrideAsync(ConfigurationKey, PropertyName, CancellationToken.None);
 
         // Assert
-        var result = await writeDbContext.ApplicationConfigurationOverrides.AnyAsync();
+        var result = await DbContext.ApplicationConfigurationOverrides.AnyAsync();
 
         result.ShouldBeFalse();
         overrideCacheMock.Verify();
@@ -259,8 +243,8 @@ public class ApplicationConfigurationServiceTest(DatabaseProvider databaseProvid
             UpdatedAt = DateTime.UtcNow.AddMinutes(-1),
         };
 
-        writeDbContext.ApplicationConfigurationOverrides.Add(configurationOverride);
-        await writeDbContext.SaveChangesAsync();
+        DbContext.ApplicationConfigurationOverrides.Add(configurationOverride);
+        await DbContext.SaveChangesAsync();
 
         return configurationOverride;
     }

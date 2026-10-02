@@ -24,7 +24,6 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
 {
     private const string MirrorHosterClassName = "MirrorHoster";
 
-    private BearcatDbContext dbContext = null!;
     private string releaseFolderPath = null!;
     private string archiveFilesBasePath = null!;
     private string tempRootPath = null!;
@@ -35,7 +34,6 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
         releaseFolderPath = Directory
             .CreateDirectory(Path.Combine(tempRootPath, "release"))
@@ -54,10 +52,8 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
     }
 
     [TearDown]
-    public async Task DisposeResourcesAsync()
+    public void DeleteTempRootPath()
     {
-        await dbContext.DisposeAsync();
-
         if (Directory.Exists(tempRootPath))
         {
             Directory.Delete(tempRootPath, recursive: true);
@@ -207,8 +203,8 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
         await service.ProcessAsync(CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Archives.Include(a => a.ArchiveFiles)
             .SingleAsync(a => a.Id == archive.Id);
 
@@ -250,8 +246,8 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
 
     private async Task ShouldBeDeletedAsync(Archive archive)
     {
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Archives.Include(a => a.ArchiveFiles)
             .SingleAsync(a => a.Id == archive.Id);
 
@@ -262,8 +258,8 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
 
     private async Task ShouldStillBeCreatedAsync(Archive archive)
     {
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Archives.Include(a => a.ArchiveFiles)
             .SingleAsync(a => a.Id == archive.Id);
 
@@ -275,7 +271,7 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
     private ArchiveCleanupService CreateService(IFileSystemService fileSystemService)
     {
         return new ArchiveCleanupService(
-            new ArchiveCleanupRepository(dbContext),
+            new ArchiveCleanupRepository(DbContext),
             configurationMock.Object,
             new MirrorCoverageEvaluator(hosterFactoryMock.Object),
             new LocalArchiveDeleter(fileSystemService),
@@ -330,8 +326,8 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
             Name = "Default upload",
         };
 
-        dbContext.UploadConfigs.Add(uploadConfig);
-        await dbContext.SaveChangesAsync();
+        DbContext.UploadConfigs.Add(uploadConfig);
+        await DbContext.SaveChangesAsync();
 
         var archiveFolderPath = Directory
             .CreateDirectory(Path.Combine(archiveFilesBasePath, Guid.NewGuid().ToString("N")))
@@ -357,8 +353,8 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
             ErrorMessages = [],
         };
 
-        dbContext.Archives.Add(archive);
-        await dbContext.SaveChangesAsync();
+        DbContext.Archives.Add(archive);
+        await DbContext.SaveChangesAsync();
 
         await AddUploadAsync(
             archive: archive,
@@ -377,10 +373,10 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
         bool assignToArchive
     )
     {
-        var uploadConfig = await dbContext.UploadConfigs.FirstAsync(c =>
+        var uploadConfig = await DbContext.UploadConfigs.FirstAsync(c =>
             c.ArchiveConfigId == archive.ArchiveConfigId
         );
-        var archiveFiles = await dbContext
+        var archiveFiles = await DbContext
             .ArchiveFiles.Where(f => f.ArchiveId == archive.Id)
             .OrderBy(f => f.Id)
             .ToListAsync();
@@ -408,9 +404,9 @@ public class ArchiveCleanupServiceTest(DatabaseProvider databaseProvider)
                 : [],
         };
 
-        dbContext.Uploads.Add(upload);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.Uploads.Add(upload);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
     }
 
     private static TimeProvider CreateTimeProvider()

@@ -17,16 +17,13 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseCollections;
 public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private ForumPostRenderService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = CreateDbContext();
-
         var releaseReadRepository = new ReleaseReadRepository(
-            dbContext,
+            DbContext,
             Mock.Of<IArchiverFactory>(factory =>
                 factory.GetArchivers()
                 == new List<ArchiverDto> { new("RAR", "RarArchiver", ".rar") }
@@ -36,21 +33,15 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
         var uploadBuilder = new ReleaseForumPostUploadBuilder(releaseReadRepository);
         var imageLinkBuilder = new ForumPostImageLinkBuilder(releaseReadRepository);
         var collectionSource = new ReleaseCollectionForumPostRenderSource(
-            new ReleaseCollectionForumPostRepository(dbContext),
+            new ReleaseCollectionForumPostRepository(DbContext),
             uploadBuilder,
             imageLinkBuilder
         );
 
         service = new ForumPostRenderService(
-            new ForumPostTemplateRepository(dbContext, dbContext),
+            new ForumPostTemplateRepository(DbContext, DbContext),
             [collectionSource]
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -71,8 +62,8 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
-        dbContext.ForumPostTemplates.Add(template);
-        await dbContext.SaveChangesAsync();
+        DbContext.ForumPostTemplates.Add(template);
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await service.RenderAsync(collection.Id, template.Id, CancellationToken.None);
@@ -100,8 +91,8 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
-        dbContext.ForumPostTemplates.Add(template);
-        await dbContext.SaveChangesAsync();
+        DbContext.ForumPostTemplates.Add(template);
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await service.RenderAsync(collection.Id, template.Id, CancellationToken.None);
@@ -125,8 +116,8 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
             UpdatedAt = DateTime.UtcNow,
         };
 
-        dbContext.ForumPostTemplates.Add(template);
-        await dbContext.SaveChangesAsync();
+        DbContext.ForumPostTemplates.Add(template);
+        await DbContext.SaveChangesAsync();
 
         var result = await service.RenderAsync(collection.Id, template.Id, CancellationToken.None);
 
@@ -200,14 +191,14 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
             ],
         };
 
-        dbContext.AddRange(
+        DbContext.AddRange(
             releaseGroup,
             collection,
             imageHosterRegistration,
             imageUploadConfig,
             imageUpload
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         return collection;
     }
@@ -309,7 +300,7 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
             CreatedAt = DateTime.UtcNow,
         };
 
-        dbContext.AddRange(
+        DbContext.AddRange(
             releaseGroup,
             collection,
             hosterRegistration,
@@ -320,7 +311,7 @@ public class ReleaseCollectionForumPostRenderTest(DatabaseProvider databaseProvi
             upload,
             container
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         return collection;
     }

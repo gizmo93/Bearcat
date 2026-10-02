@@ -17,25 +17,17 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageArchiveConfigs;
 public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private ArchiveConfigService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
-        var repository = new ArchiveConfigWriteRepository(dbContext);
+        var repository = new ArchiveConfigWriteRepository(DbContext);
         service = new ArchiveConfigService(
             repository,
             new UnmanagedReleaseArchiveInitializationService(new RealArchiverFactory()),
             CreateTimeProvider()
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -59,7 +51,7 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
         // Assert
         result.IsSuccess.ShouldBeTrue();
 
-        var archiveConfig = await dbContext.ArchiveConfigs.SingleAsync();
+        var archiveConfig = await DbContext.ArchiveConfigs.SingleAsync();
         archiveConfig.ShouldNotBeNull();
         archiveConfig.Id.ShouldBe(result.ArchiveConfigId!.Value);
         archiveConfig.ReleaseId.ShouldBe(releaseId);
@@ -92,7 +84,7 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
         // Assert
         result.IsSuccess.ShouldBeTrue();
 
-        var archiveConfig = await dbContext.ArchiveConfigs.SingleAsync();
+        var archiveConfig = await DbContext.ArchiveConfigs.SingleAsync();
         archiveConfig.ShouldNotBeNull();
         archiveConfig.ArchivePassword.ShouldBeNull();
         archiveConfig.ArchiveFileSizeMb.ShouldBe(0);
@@ -108,7 +100,7 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
         await service.DeleteAsync(archiveConfig.Id);
 
         // Assert
-        var result = await dbContext.ArchiveConfigs.AnyAsync();
+        var result = await DbContext.ArchiveConfigs.AnyAsync();
 
         result.ShouldBeFalse();
     }
@@ -162,7 +154,7 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var result = await dbContext.ArchiveConfigs.SingleAsync();
+        var result = await DbContext.ArchiveConfigs.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(archiveConfig.Id);
@@ -193,7 +185,7 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var result = await dbContext.ArchiveConfigs.SingleAsync();
+        var result = await DbContext.ArchiveConfigs.SingleAsync();
 
         result.ShouldNotBeNull();
         result.ArchivePassword.ShouldBeNull();
@@ -316,8 +308,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
         var additionalArchiveContents = await AddAdditionalArchiveContentsAsync();
         var archiveConfig = await AddArchiveConfigAsync();
         archiveConfig.AdditionalArchiveContents = [additionalArchiveContents[0]];
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await service.UpdateAsync(
@@ -353,8 +345,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
         var additionalArchiveContents = await AddAdditionalArchiveContentsAsync();
         var archiveConfig = await AddArchiveConfigAsync();
         archiveConfig.AdditionalArchiveContents = additionalArchiveContents;
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await service.UpdateAsync(
@@ -388,7 +380,7 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
         var archiveConfig = await AddArchiveConfigAsync();
         var collidingAdditionalArchiveContents =
             await AddAdditionalArchiveContentsWithSameEntryNameAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await service.UpdateAsync(
@@ -440,8 +432,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
         // Assert
         changeResult.ShouldBe(ArchiveFolderChangeResult.Relocated);
 
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .ArchiveConfigs.AsSplitQuery()
             .Include(c => c.Archives)
                 .ThenInclude(a => a.ArchiveFiles)
@@ -486,8 +478,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
         // Assert
         changeResult.ShouldBe(ArchiveFolderChangeResult.Relocated);
 
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .ArchiveConfigs.AsSplitQuery()
             .Include(c => c.Archives)
                 .ThenInclude(a => a.ArchiveFiles)
@@ -542,8 +534,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
         unconfirmedResult.ShouldBe(ArchiveFolderChangeResult.ConfirmationRequired);
         confirmedResult.ShouldBe(ArchiveFolderChangeResult.Reimported);
 
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .ArchiveConfigs.AsSplitQuery()
             .Include(c => c.Archives)
                 .ThenInclude(a => a.ArchiveFiles)
@@ -589,8 +581,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
         unconfirmedResult.ShouldBe(ArchiveFolderChangeResult.ConfirmationRequired);
         confirmedResult.ShouldBe(ArchiveFolderChangeResult.Reimported);
 
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .ArchiveConfigs.AsSplitQuery()
             .Include(c => c.Archives)
                 .ThenInclude(a => a.ArchiveFiles)
@@ -676,8 +668,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
             },
         ];
 
-        dbContext.AdditionalArchiveContents.AddRange(additionalArchiveContents);
-        await dbContext.SaveChangesAsync();
+        DbContext.AdditionalArchiveContents.AddRange(additionalArchiveContents);
+        await DbContext.SaveChangesAsync();
 
         return additionalArchiveContents;
     }
@@ -703,8 +695,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
             },
         ];
 
-        dbContext.AdditionalArchiveContents.AddRange(additionalArchiveContents);
-        await dbContext.SaveChangesAsync();
+        DbContext.AdditionalArchiveContents.AddRange(additionalArchiveContents);
+        await DbContext.SaveChangesAsync();
 
         return additionalArchiveContents;
     }
@@ -725,8 +717,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
             ArchiveFileSizeMb = 512,
         };
 
-        dbContext.ArchiveConfigs.Add(archiveConfig);
-        await dbContext.SaveChangesAsync();
+        DbContext.ArchiveConfigs.Add(archiveConfig);
+        await DbContext.SaveChangesAsync();
 
         return archiveConfig;
     }
@@ -767,8 +759,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
             ],
         };
 
-        dbContext.ArchiveConfigs.Add(archiveConfig);
-        await dbContext.SaveChangesAsync();
+        DbContext.ArchiveConfigs.Add(archiveConfig);
+        await DbContext.SaveChangesAsync();
 
         return archiveConfig;
     }
@@ -794,8 +786,8 @@ public class ArchiveConfigServiceTest(DatabaseProvider databaseProvider)
             ReleaseGroup = releaseGroup,
         };
 
-        dbContext.Releases.Add(release);
-        await dbContext.SaveChangesAsync();
+        DbContext.Releases.Add(release);
+        await DbContext.SaveChangesAsync();
 
         return release.Id;
     }

@@ -1,5 +1,6 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleaseGroups;
+using Bearcat.Domain.UseCases.ManageReleaseGroups.ReadModels;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -12,21 +13,14 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseGroups;
 public class ReleaseGroupServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
+    private ReleaseGroupRepository repository = null!;
     private ReleaseGroupService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
-        var repository = new ReleaseGroupRepository(dbContext, dbContext);
-        service = new ReleaseGroupService(repository, new QualityGateResetRepository(dbContext));
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
+        repository = new ReleaseGroupRepository(DbContext, DbContext);
+        service = new ReleaseGroupService(repository, new QualityGateResetRepository(DbContext));
     }
 
     [Test]
@@ -39,7 +33,7 @@ public class ReleaseGroupServiceTest(DatabaseProvider databaseProvider)
         var result = await service.CreateAsync(name, true, 24, null, CancellationToken.None);
 
         // Assert
-        var releaseGroup = await dbContext.ReleaseGroups.SingleAsync();
+        var releaseGroup = await DbContext.ReleaseGroups.SingleAsync();
 
         result.ShouldBeGreaterThan(0);
         releaseGroup.ShouldNotBeNull();
@@ -104,7 +98,7 @@ public class ReleaseGroupServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var result = await dbContext.ReleaseGroups.SingleAsync();
+        var result = await DbContext.ReleaseGroups.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(releaseGroup.Id);
@@ -120,8 +114,8 @@ public class ReleaseGroupServiceTest(DatabaseProvider databaseProvider)
         var releaseGroup = await AddReleaseGroupAsync();
         var release = await AddFailedReleaseAsync(releaseGroup.Id);
         var qualityProfile = new QualityProfile { Name = "Profile", Rules = [] };
-        dbContext.QualityProfiles.Add(qualityProfile);
-        await dbContext.SaveChangesAsync();
+        DbContext.QualityProfiles.Add(qualityProfile);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.UpdateAsync(
@@ -134,8 +128,8 @@ public class ReleaseGroupServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Releases.Include(r => r.QualityIssues)
             .SingleAsync(r => r.Id == release.Id);
 
@@ -162,8 +156,8 @@ public class ReleaseGroupServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Releases.Include(r => r.QualityIssues)
             .SingleAsync(r => r.Id == release.Id);
 
@@ -181,7 +175,7 @@ public class ReleaseGroupServiceTest(DatabaseProvider databaseProvider)
         await service.DeleteAsync(releaseGroup.Id, CancellationToken.None);
 
         // Assert
-        var result = await dbContext.ReleaseGroups.AnyAsync();
+        var result = await DbContext.ReleaseGroups.AnyAsync();
 
         result.ShouldBeFalse();
     }
@@ -191,7 +185,7 @@ public class ReleaseGroupServiceTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         var releaseGroup = await AddReleaseGroupAsync();
-        dbContext.Releases.Add(
+        DbContext.Releases.Add(
             new Release
             {
                 Name = "Bearcat.Release.001",
@@ -200,7 +194,7 @@ public class ReleaseGroupServiceTest(DatabaseProvider databaseProvider)
                 ReleaseGroupId = releaseGroup.Id,
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await Should.ThrowAsync<InvalidOperationException>(async () =>
@@ -210,6 +204,127 @@ public class ReleaseGroupServiceTest(DatabaseProvider databaseProvider)
         // Assert
         result.ShouldNotBeNull();
         result.Message.ShouldBe("Release groups with assigned releases cannot be deleted.");
+    }
+
+    [Test]
+    public async Task GetAllAsync_GroupsWithAndWithoutQualityProfile_ReturnsReleaseCountsOrderedByName()
+    {
+        // Arrange
+        var qualityProfile = new QualityProfile { Name = "Strict", Rules = [] };
+        var betaGroup = new ReleaseGroup
+        {
+            Name = "Beta releases",
+            EnableAutomaticReuploads = false,
+            NumberOfHoursUntilReupload = 24,
+        };
+        var alphaGroup = new ReleaseGroup
+        {
+            Name = "Alpha releases",
+            EnableAutomaticReuploads = true,
+            NumberOfHoursUntilReupload = 72,
+            QualityProfile = qualityProfile,
+        };
+        DbContext.ReleaseGroups.AddRange(betaGroup, alphaGroup);
+        await DbContext.SaveChangesAsync();
+        await AddReleaseAsync(alphaGroup.Id, "Bearcat.Alpha.001");
+        await AddReleaseAsync(alphaGroup.Id, "Bearcat.Alpha.002");
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetAllAsync(CancellationToken.None);
+
+        // Assert
+        var createdGroupIds = new[] { alphaGroup.Id, betaGroup.Id };
+        result
+            .Where(item => createdGroupIds.Contains(item.ReleaseGroupId))
+            .ShouldBe([
+                new ReleaseGroupReadModel(
+                    ReleaseGroupId: alphaGroup.Id,
+                    Name: "Alpha releases",
+                    EnableAutomaticReuploads: true,
+                    NumberOfHoursUntilReupload: 72,
+                    AssignedReleaseCount: 2,
+                    QualityProfileId: qualityProfile.Id,
+                    QualityProfileName: "Strict"
+                ),
+                new ReleaseGroupReadModel(
+                    ReleaseGroupId: betaGroup.Id,
+                    Name: "Beta releases",
+                    EnableAutomaticReuploads: false,
+                    NumberOfHoursUntilReupload: 24,
+                    AssignedReleaseCount: 0,
+                    QualityProfileId: null,
+                    QualityProfileName: null
+                ),
+            ]);
+    }
+
+    [Test]
+    public async Task GetReadModelByIdAsync_GroupWithQualityProfileExists_ReturnsReadModel()
+    {
+        // Arrange
+        var qualityProfile = new QualityProfile { Name = "Strict", Rules = [] };
+        var releaseGroup = new ReleaseGroup
+        {
+            Name = "Managed releases",
+            EnableAutomaticReuploads = true,
+            NumberOfHoursUntilReupload = 48,
+            QualityProfile = qualityProfile,
+        };
+        DbContext.ReleaseGroups.Add(releaseGroup);
+        await DbContext.SaveChangesAsync();
+        await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.001");
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetReadModelByIdAsync(
+            releaseGroup.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(
+            new ReleaseGroupReadModel(
+                ReleaseGroupId: releaseGroup.Id,
+                Name: "Managed releases",
+                EnableAutomaticReuploads: true,
+                NumberOfHoursUntilReupload: 48,
+                AssignedReleaseCount: 1,
+                QualityProfileId: qualityProfile.Id,
+                QualityProfileName: "Strict"
+            )
+        );
+    }
+
+    [Test]
+    public async Task GetReadModelByIdAsync_GroupDoesNotExist_ReturnsNull()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetReadModelByIdAsync(
+            releaseGroup.Id + 1,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    private async Task AddReleaseAsync(int releaseGroupId, string name)
+    {
+        DbContext.Releases.Add(
+            new Release
+            {
+                Name = name,
+                ReleaseType = ReleaseType.Managed,
+                ReleaseFolderPath = $"/tmp/{name}",
+                ReleaseGroupId = releaseGroupId,
+            }
+        );
+        await DbContext.SaveChangesAsync();
     }
 
     private async Task<Release> AddFailedReleaseAsync(int releaseGroupId)
@@ -232,8 +347,8 @@ public class ReleaseGroupServiceTest(DatabaseProvider databaseProvider)
             ],
         };
 
-        dbContext.Releases.Add(release);
-        await dbContext.SaveChangesAsync();
+        DbContext.Releases.Add(release);
+        await DbContext.SaveChangesAsync();
 
         return release;
     }
@@ -247,8 +362,8 @@ public class ReleaseGroupServiceTest(DatabaseProvider databaseProvider)
             NumberOfHoursUntilReupload = 24,
         };
 
-        dbContext.ReleaseGroups.Add(releaseGroup);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseGroups.Add(releaseGroup);
+        await DbContext.SaveChangesAsync();
 
         return releaseGroup;
     }

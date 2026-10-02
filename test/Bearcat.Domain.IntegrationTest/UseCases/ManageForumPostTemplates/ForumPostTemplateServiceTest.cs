@@ -12,22 +12,14 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageForumPostTemplates;
 public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private ForumPostTemplateService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         service = new ForumPostTemplateService(
-            new ForumPostTemplateRepository(dbContext, dbContext)
+            new ForumPostTemplateRepository(DbContext, DbContext)
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -42,7 +34,7 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var template = await dbContext.ForumPostTemplates.SingleAsync();
+        var template = await DbContext.ForumPostTemplates.SingleAsync();
         id.ShouldBe(template.Id);
         template.Name.ShouldBe("Release template");
         template.Type.ShouldBe(ForumPostTemplateType.Release);
@@ -62,7 +54,7 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var template = await dbContext.ForumPostTemplates.SingleAsync(t => t.Id == id);
+        var template = await DbContext.ForumPostTemplates.SingleAsync(t => t.Id == id);
         template.TemplateBody.ShouldBe(string.Empty);
     }
 
@@ -87,7 +79,7 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var template = await dbContext.ForumPostTemplates.SingleAsync(t => t.Id == id);
+        var template = await DbContext.ForumPostTemplates.SingleAsync(t => t.Id == id);
         template.Name.ShouldBe("Updated");
         template.Type.ShouldBe(ForumPostTemplateType.ReleaseCollection);
         template.TemplateBody.ShouldBe("Updated body");
@@ -114,7 +106,7 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var template = await dbContext.ForumPostTemplates.SingleAsync(t => t.Id == id);
+        var template = await DbContext.ForumPostTemplates.SingleAsync(t => t.Id == id);
         template.TemplateBody.ShouldBe(string.Empty);
     }
 
@@ -130,15 +122,81 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
-        dbContext.ForumPostTemplates.Add(template);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.ForumPostTemplates.Add(template);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         await service.DeleteAsync(template.Id, CancellationToken.None);
 
         // Assert
-        (await dbContext.ForumPostTemplates.AnyAsync()).ShouldBeFalse();
+        (await DbContext.ForumPostTemplates.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task DeleteAsync_TemplateUsedByPostedLocation_ClearsTemplateOfPostedLocation()
+    {
+        // Arrange
+        var template = CreateTemplate("To delete");
+        var postedLocation = new PostedLocation
+        {
+            Release = CreateRelease("Bearcat.Release.001"),
+            ForumPostTemplate = template,
+            Url = "https://forum.example/threads/1",
+            CreatedAt = DateTime.UtcNow,
+        };
+        DbContext.PostedLocations.Add(postedLocation);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.DeleteAsync(template.Id, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.ForumPostTemplates.AnyAsync()).ShouldBeFalse();
+        var result = await DbContext.PostedLocations.SingleAsync();
+        result.Id.ShouldBe(postedLocation.Id);
+        result.ForumPostTemplateId.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task DeleteAsync_TemplateUsedByPostingRule_ThrowsAndKeepsTemplate()
+    {
+        // Arrange
+        var template = CreateTemplate("To delete");
+        DbContext.ForumPostingRules.Add(
+            new ForumPostingRule
+            {
+                DistributionSiteRegistration = new DistributionSiteRegistration
+                {
+                    Name = "Forum A",
+                    DistributionSiteClassName = "TestForum",
+                    SerializedConfig = "{}",
+                    IsActive = true,
+                },
+                SortOrder = 0,
+                Name = "Rule A",
+                ConditionJson = "{}",
+                TargetNodeId = "1",
+                TargetPathSnapshot = "Forum",
+                ForumPostTemplate = template,
+                IsEnabled = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            }
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var action = () => service.DeleteAsync(template.Id, CancellationToken.None);
+
+        // Assert
+        await Should.ThrowAsync<DbUpdateException>(action);
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.ForumPostTemplates.SingleAsync()).Id.ShouldBe(template.Id);
+        (await DbContext.ForumPostingRules.SingleAsync()).ForumPostTemplateId.ShouldBe(template.Id);
     }
 
     [Test]
@@ -172,5 +230,34 @@ public class ForumPostTemplateServiceTest(DatabaseProvider databaseProvider)
         // Assert
         result.IsValid.ShouldBeTrue();
         result.Errors.ShouldBeEmpty();
+    }
+
+    private static ForumPostTemplate CreateTemplate(string name)
+    {
+        return new ForumPostTemplate
+        {
+            Name = name,
+            Type = ForumPostTemplateType.Release,
+            TemplateBody = string.Empty,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+    }
+
+    private static Release CreateRelease(string name)
+    {
+        return new Release
+        {
+            Name = name,
+            CreatedAt = DateTime.UtcNow,
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = $"/tmp/{name}",
+            ReleaseGroup = new ReleaseGroup
+            {
+                Name = $"{name} group",
+                EnableAutomaticReuploads = false,
+                NumberOfHoursUntilReupload = 24,
+            },
+        };
     }
 }

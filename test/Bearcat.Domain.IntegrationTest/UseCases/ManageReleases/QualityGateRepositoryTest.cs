@@ -10,20 +10,12 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 public class QualityGateRepositoryTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private QualityGateRepository repository = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
-        repository = new QualityGateRepository(dbContext);
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
+        repository = new QualityGateRepository(DbContext);
     }
 
     [Test]
@@ -113,6 +105,141 @@ public class QualityGateRepositoryTest(DatabaseProvider databaseProvider)
         result.ShouldBeEmpty();
     }
 
+    [Test]
+    public async Task GetForEvaluationAsync_SeveralReleasesWithDetails_LoadsRequestedReleaseWithAllIncludes()
+    {
+        // Arrange
+        await AddEvaluationReleaseAsync("Bearcat.Other.2026-GRP", "Other profile");
+        var release = await AddEvaluationReleaseAsync("Bearcat.Movie.2026-GRP", "Movie profile");
+
+        // Act
+        var result = await repository.GetForEvaluationAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Name.ShouldBe("Bearcat.Movie.2026-GRP");
+        result.ReleaseGroup.QualityProfile.ShouldNotBeNull();
+        result.ReleaseGroup.QualityProfile.Name.ShouldBe("Movie profile");
+        result
+            .ReleaseGroup.QualityProfile.Rules.Select(rule => rule.RuleType)
+            .ShouldBe(
+                [QualityCheckRuleType.MediaInfoPresent, QualityCheckRuleType.FilePatternPresent],
+                ignoreOrder: true
+            );
+        result.ReleaseInfo.ShouldNotBeNull();
+        result.ReleaseInfo.ReleaseName.ShouldBe("Bearcat.Movie.2026-GRP info");
+        result.Metadata.ShouldNotBeNull();
+        result.Metadata.Title.ShouldBe("Bearcat.Movie.2026-GRP title");
+        result.ReleaseNfo.ShouldNotBeNull();
+        result.ReleaseNfo.Content.ShouldBe("Bearcat.Movie.2026-GRP nfo");
+        result
+            .MediaFiles.Select(file => file.RelativePath)
+            .ShouldBe(
+                ["Bearcat.Movie.2026-GRP/part1.mkv", "Bearcat.Movie.2026-GRP/part2.mkv"],
+                ignoreOrder: true
+            );
+        result
+            .QualityIssues.Select(issue => issue.Description)
+            .ShouldBe(
+                ["Bearcat.Movie.2026-GRP missing nfo", "Bearcat.Movie.2026-GRP missing media info"],
+                ignoreOrder: true
+            );
+    }
+
+    [Test]
+    public async Task GetForEvaluationAsync_ReleaseDoesNotExist_ReturnsNull()
+    {
+        // Arrange
+        var release = await AddEvaluationReleaseAsync("Bearcat.Movie.2026-GRP", "Movie profile");
+
+        // Act
+        var result = await repository.GetForEvaluationAsync(release.Id + 1, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    private async Task<Release> AddEvaluationReleaseAsync(string name, string profileName)
+    {
+        var release = new Release
+        {
+            Name = name,
+            CreatedAt = new DateTime(2026, 5, 1, 12, 0, 0, DateTimeKind.Utc),
+            ReleaseType = ReleaseType.Managed,
+            ReleaseFolderPath = $"/tmp/{name}",
+            QualityGateState = QualityGateState.Failed,
+            ReleaseGroup = new ReleaseGroup
+            {
+                Name = $"{name} group",
+                EnableAutomaticReuploads = false,
+                NumberOfHoursUntilReupload = 24,
+                QualityProfile = new QualityProfile
+                {
+                    Name = profileName,
+                    Rules =
+                    [
+                        new QualityCheckRule
+                        {
+                            RuleType = QualityCheckRuleType.MediaInfoPresent,
+                            ParametersJson = "{}",
+                        },
+                        new QualityCheckRule
+                        {
+                            RuleType = QualityCheckRuleType.FilePatternPresent,
+                            ParametersJson = "{}",
+                        },
+                    ],
+                },
+            },
+            ReleaseInfo = new ReleaseInfo
+            {
+                NfoDatabaseClassName = ReleaseInfo.LocalNfoSource,
+                ReleaseName = $"{name} info",
+            },
+            Metadata = new ReleaseMetadata
+            {
+                MetadataDatabaseClassName = ReleaseMetadata.ManualSource,
+                Title = $"{name} title",
+            },
+            ReleaseNfo = new ReleaseNfo { FileName = $"{name}.nfo", Content = $"{name} nfo" },
+            MediaFiles =
+            [
+                CreateMediaFile($"{name}/part1.mkv"),
+                CreateMediaFile($"{name}/part2.mkv"),
+            ],
+            QualityIssues =
+            [
+                new ReleaseQualityIssue
+                {
+                    RuleType = QualityCheckRuleType.FilePatternPresent,
+                    Description = $"{name} missing nfo",
+                },
+                new ReleaseQualityIssue
+                {
+                    RuleType = QualityCheckRuleType.MediaInfoPresent,
+                    Description = $"{name} missing media info",
+                },
+            ],
+        };
+
+        DbContext.Releases.Add(release);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        return release;
+    }
+
+    private static ReleaseMediaFile CreateMediaFile(string relativePath)
+    {
+        return new ReleaseMediaFile
+        {
+            RelativePath = relativePath,
+            SizeBytes = 1_500_000_000,
+            MediaInfoJson = "{}",
+            MediaInfoText = "General",
+        };
+    }
+
     private async Task<Release> AddReleaseAsync(
         QualityGateState state,
         bool withProfile = true,
@@ -183,9 +310,9 @@ public class QualityGateRepositoryTest(DatabaseProvider databaseProvider)
                 .ToList(),
         };
 
-        dbContext.UploadConfigs.Add(uploadConfig);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.UploadConfigs.Add(uploadConfig);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         return release;
     }

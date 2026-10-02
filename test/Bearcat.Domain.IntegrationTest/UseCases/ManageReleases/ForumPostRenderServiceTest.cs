@@ -17,16 +17,14 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private ForumPostRenderService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = CreateDbContext();
-        var forumPostTemplateRepository = new ForumPostTemplateRepository(dbContext, dbContext);
+        var forumPostTemplateRepository = new ForumPostTemplateRepository(DbContext, DbContext);
         var releaseReadRepository = new ReleaseReadRepository(
-            dbContext,
+            DbContext,
             Mock.Of<IArchiverFactory>(factory => factory.GetArchivers() == new List<ArchiverDto>()),
             Mock.Of<ILinkCrypterFactory>()
         );
@@ -39,12 +37,6 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
         );
 
         service = new ForumPostRenderService(forumPostTemplateRepository, [renderSource]);
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -61,8 +53,8 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
             UpdatedAt = DateTime.UtcNow,
         };
 
-        dbContext.ForumPostTemplates.Add(template);
-        await dbContext.SaveChangesAsync();
+        DbContext.ForumPostTemplates.Add(template);
+        await DbContext.SaveChangesAsync();
 
         // Act
         var result = await service.RenderAsync(release.Id, template.Id, CancellationToken.None);
@@ -85,8 +77,8 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
             UpdatedAt = DateTime.UtcNow,
         };
 
-        dbContext.ForumPostTemplates.Add(template);
-        await dbContext.SaveChangesAsync();
+        DbContext.ForumPostTemplates.Add(template);
+        await DbContext.SaveChangesAsync();
 
         var result = await service.RenderAsync(release.Id, template.Id, CancellationToken.None);
 
@@ -152,8 +144,8 @@ public class ForumPostRenderServiceTest(DatabaseProvider databaseProvider)
             ],
         };
 
-        dbContext.AddRange(release, imageHosterRegistration, imageUploadConfig, imageUpload);
-        await dbContext.SaveChangesAsync();
+        DbContext.AddRange(release, imageHosterRegistration, imageUploadConfig, imageUpload);
+        await DbContext.SaveChangesAsync();
 
         return release;
     }

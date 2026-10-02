@@ -13,20 +13,12 @@ public class QualityGateResetRepositoryTest(DatabaseProvider databaseProvider)
 {
     private static readonly DateTime EvaluatedAt = new(2026, 5, 1, 12, 0, 0, DateTimeKind.Utc);
 
-    private BearcatDbContext dbContext = null!;
     private QualityGateResetRepository repository = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
-        repository = new QualityGateResetRepository(dbContext);
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
+        repository = new QualityGateResetRepository(DbContext);
     }
 
     [Test]
@@ -37,14 +29,14 @@ public class QualityGateResetRepositoryTest(DatabaseProvider databaseProvider)
         var releaseGroup = CreateReleaseGroup(profile);
         var failedRelease = AddRelease(releaseGroup, "Failed", QualityGateState.Failed);
         var passedRelease = AddRelease(releaseGroup, "Passed", QualityGateState.Passed);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         await repository.ResetForQualityProfileAsync(profile.Id, CancellationToken.None);
 
         // Assert
-        var releases = await dbContext
+        var releases = await DbContext
             .Releases.Include(r => r.QualityIssues)
             .Where(r => r.Id == failedRelease.Id || r.Id == passedRelease.Id)
             .ToListAsync();
@@ -55,7 +47,7 @@ public class QualityGateResetRepositoryTest(DatabaseProvider databaseProvider)
             && r.QualityGateEvaluatedAt == null
             && r.QualityIssues.Count == 0
         );
-        (await dbContext.ReleaseQualityIssues.AnyAsync()).ShouldBeFalse();
+        (await DbContext.ReleaseQualityIssues.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -69,14 +61,14 @@ public class QualityGateResetRepositoryTest(DatabaseProvider databaseProvider)
             "Approved",
             QualityGateState.ManuallyApproved
         );
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         await repository.ResetForQualityProfileAsync(profile.Id, CancellationToken.None);
 
         // Assert
-        var result = await dbContext
+        var result = await DbContext
             .Releases.Include(r => r.QualityIssues)
             .SingleAsync(r => r.Id == approvedRelease.Id);
 
@@ -92,15 +84,15 @@ public class QualityGateResetRepositoryTest(DatabaseProvider databaseProvider)
         var profile = CreateProfile();
         var otherReleaseGroup = CreateReleaseGroup(CreateProfile());
         var otherRelease = AddRelease(otherReleaseGroup, "Other", QualityGateState.Failed);
-        dbContext.QualityProfiles.Add(profile);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.QualityProfiles.Add(profile);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         await repository.ResetForQualityProfileAsync(profile.Id, CancellationToken.None);
 
         // Assert
-        var result = await dbContext
+        var result = await DbContext
             .Releases.Include(r => r.QualityIssues)
             .SingleAsync(r => r.Id == otherRelease.Id);
 
@@ -125,14 +117,14 @@ public class QualityGateResetRepositoryTest(DatabaseProvider databaseProvider)
             "Other",
             QualityGateState.Failed
         );
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         await repository.ResetForReleaseGroupAsync(releaseGroup.Id, CancellationToken.None);
 
         // Assert
-        var releases = await dbContext.Releases.Include(r => r.QualityIssues).ToListAsync();
+        var releases = await DbContext.Releases.Include(r => r.QualityIssues).ToListAsync();
         var reset = releases.Single(r => r.Id == failedRelease.Id);
         var approved = releases.Single(r => r.Id == approvedRelease.Id);
         var other = releases.Single(r => r.Id == otherRelease.Id);
@@ -192,7 +184,7 @@ public class QualityGateResetRepositoryTest(DatabaseProvider databaseProvider)
             ],
         };
 
-        dbContext.Releases.Add(release);
+        DbContext.Releases.Add(release);
 
         return release;
     }

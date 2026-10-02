@@ -1,3 +1,4 @@
+using Bearcat.Abstractions.ImageHoster.Results;
 using Bearcat.Abstractions.LinkCrypter;
 using Bearcat.Abstractions.MediaMetadataDatabase;
 using Bearcat.Domain.Entities;
@@ -23,28 +24,26 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseCollections;
 public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private ReleaseCollectionRepository repository = null!;
     private ReleaseCollectionService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         repository = new ReleaseCollectionRepository(
-            dbContext,
-            dbContext,
+            DbContext,
+            DbContext,
             Mock.Of<IMediaMetadataDatabaseFactory>()
         );
         service = new ReleaseCollectionService(
             repository,
             new CollectionLinkCrypterContainerService(
-                new LinkCrypterContainerCreationWriteRepository(dbContext),
+                new LinkCrypterContainerCreationWriteRepository(DbContext),
                 NullLogger<CollectionLinkCrypterContainerService>.Instance,
                 new Mock<ILinkCrypterFactory>().Object,
                 CreateTimeProvider(),
                 new NotificationService(
-                    repository: new NotificationRepository(dbContext),
+                    repository: new NotificationRepository(DbContext),
                     timeProvider: CreateTimeProvider(),
                     configurationProvider: CreateNotificationConfigurationProvider()
                 ),
@@ -52,12 +51,6 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             ),
             CreateTimeProvider()
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -70,8 +63,8 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             EnableAutomaticReuploads = false,
             NumberOfHoursUntilReupload = 24,
         };
-        dbContext.ReleaseGroups.Add(releaseGroup);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseGroups.Add(releaseGroup);
+        await DbContext.SaveChangesAsync();
 
         // Act
         var id = await service.CreateAsync(
@@ -82,8 +75,8 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var collection = await dbContext.ReleaseCollections.FindAsync(id);
+        DbContext.ChangeTracker.Clear();
+        var collection = await DbContext.ReleaseCollections.FindAsync(id);
 
         collection.ShouldNotBeNull();
         collection.Name.ShouldBe("Hostage S01");
@@ -110,15 +103,15 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             ReleaseContentType = ReleaseContentType.TvShowEpisode,
             CreatedAt = DateTime.UtcNow,
         };
-        dbContext.ReleaseCollections.Add(collection);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseCollections.Add(collection);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.UpdateSettingsAsync(collection.Id, ReleaseContentType.Other, "DE");
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var updated = await dbContext.ReleaseCollections.FindAsync(collection.Id);
+        DbContext.ChangeTracker.Clear();
+        var updated = await DbContext.ReleaseCollections.FindAsync(collection.Id);
 
         updated!.ReleaseContentType.ShouldBe(ReleaseContentType.Other);
         updated.PrimaryLanguageCode.ShouldBe("de");
@@ -141,15 +134,15 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             Name = "Hostage S01",
             CreatedAt = DateTime.UtcNow,
         };
-        dbContext.ReleaseCollections.Add(collection);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseCollections.Add(collection);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.UpdateAsync(collection.Id, "  Hostage Season 1  ");
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var updated = await dbContext.ReleaseCollections.FindAsync(collection.Id);
+        DbContext.ChangeTracker.Clear();
+        var updated = await DbContext.ReleaseCollections.FindAsync(collection.Id);
 
         updated!.Name.ShouldBe("Hostage Season 1");
     }
@@ -171,17 +164,104 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             Name = "Hostage S01",
             CreatedAt = DateTime.UtcNow,
         };
-        dbContext.ReleaseCollections.Add(collection);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseCollections.Add(collection);
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.DeleteAsync(collection.Id);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var exists = await dbContext.ReleaseCollections.AnyAsync(c => c.Id == collection.Id);
+        DbContext.ChangeTracker.Clear();
+        var exists = await DbContext.ReleaseCollections.AnyAsync(c => c.Id == collection.Id);
 
         exists.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task UpdateMetadataAsync_CoverUrlChanged_UpdatesMetadataAndRemovesCompletedImageUploads()
+    {
+        // Arrange
+        var collection = new ReleaseCollection
+        {
+            ReleaseGroup = new ReleaseGroup
+            {
+                Name = "Series",
+                EnableAutomaticReuploads = false,
+                NumberOfHoursUntilReupload = 24,
+            },
+            Key = "hostage.s01",
+            Name = "Hostage S01",
+            CreatedAt = DateTime.UtcNow,
+            Metadata = new ReleaseCollectionMetadata
+            {
+                MetadataDatabaseClassName = "TvdbMetadataDatabase",
+                Title = "Hostage",
+                CoverUrl = "https://artworks.example/old.jpg",
+            },
+        };
+        var imageUploadConfig = new ImageUploadConfig
+        {
+            ReleaseCollection = collection,
+            ImageHosterRegistration = new ImageHosterRegistration
+            {
+                Name = "PiXhost",
+                ImageHosterClassName = "PiXhost",
+                SerializedConfig = "{}",
+                IsActive = true,
+            },
+            Name = "Cover",
+        };
+        var completedUpload = new ImageUpload
+        {
+            ImageUploadConfig = imageUploadConfig,
+            CreatedAt = DateTime.UtcNow,
+            UploadedAt = DateTime.UtcNow,
+            UploadState = UploadState.Completed,
+            ImageUrls =
+            [
+                new ImageUploadUrl
+                {
+                    ImageSize = ImageSize.Full,
+                    Url = "https://pixhost.example/old.jpg",
+                },
+            ],
+        };
+        var failedUpload = new ImageUpload
+        {
+            ImageUploadConfig = imageUploadConfig,
+            CreatedAt = DateTime.UtcNow,
+            UploadState = UploadState.Failed,
+            ErrorMessages = ["Timeout"],
+        };
+        DbContext.AddRange(collection, imageUploadConfig, completedUpload, failedUpload);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        await service.UpdateMetadataAsync(
+            collection.Id,
+            new EditCollectionMetadataData(
+                Title: " Hostage (2025) ",
+                CoverUrl: "https://artworks.example/new.jpg",
+                Description: "Geiselnahme",
+                MetadataDatabaseUrl: null
+            )
+        );
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var metadata = await DbContext.ReleaseCollectionMetadata.SingleAsync();
+        metadata.ReleaseCollectionId.ShouldBe(collection.Id);
+        metadata.MetadataDatabaseClassName.ShouldBe("TvdbMetadataDatabase");
+        metadata.Title.ShouldBe("Hostage (2025)");
+        metadata.CoverUrl.ShouldBe("https://artworks.example/new.jpg");
+        metadata.Description.ShouldBe("Geiselnahme");
+        metadata.MetadataDatabaseUrl.ShouldBeNull();
+
+        var remainingUpload = await DbContext.ImageUploads.SingleAsync();
+        remainingUpload.Id.ShouldBe(failedUpload.Id);
+        remainingUpload.ErrorMessages.ShouldBe(["Timeout"]);
+        (await DbContext.ImageUploadUrls.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -196,8 +276,8 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             HosterClassName = "RapidgatorHoster",
             IsActive = true,
         };
-        dbContext.HosterRegistrations.Add(hosterRegistration);
-        await dbContext.SaveChangesAsync();
+        DbContext.HosterRegistrations.Add(hosterRegistration);
+        await DbContext.SaveChangesAsync();
 
         // Act
         var slotId = await service.CreateUploadSlotAsync(
@@ -212,8 +292,8 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var slot = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var slot = await DbContext
             .CollectionUploadSlots.Include(s => s.UploadConfigs)
             .SingleAsync(s => s.Id == slotId);
 
@@ -241,8 +321,8 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             HosterClassName = "RapidgatorHoster",
             IsActive = true,
         };
-        dbContext.HosterRegistrations.Add(hosterRegistration);
-        await dbContext.SaveChangesAsync();
+        DbContext.HosterRegistrations.Add(hosterRegistration);
+        await DbContext.SaveChangesAsync();
 
         // Act
         var slotId = await service.CreateUploadSlotAsync(
@@ -257,8 +337,8 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var slot = await dbContext.CollectionUploadSlots.FindAsync(slotId);
+        DbContext.ChangeTracker.Clear();
+        var slot = await DbContext.CollectionUploadSlots.FindAsync(slotId);
 
         slot!.PasswordPolicy.ShouldBe(CollectionUploadSlotPasswordPolicy.MustEqualExpectedValue);
         slot.ExpectedArchivePassword.ShouldBe("s3cr3t");
@@ -276,8 +356,8 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             HosterClassName = "RapidgatorHoster",
             IsActive = true,
         };
-        dbContext.HosterRegistrations.Add(hosterRegistration);
-        await dbContext.SaveChangesAsync();
+        DbContext.HosterRegistrations.Add(hosterRegistration);
+        await DbContext.SaveChangesAsync();
 
         // Act & Assert
         await Should.ThrowAsync<ArgumentException>(() =>
@@ -306,7 +386,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             HosterClassName = "RapidgatorHoster",
             IsActive = true,
         };
-        dbContext.HosterRegistrations.Add(hosterRegistration);
+        DbContext.HosterRegistrations.Add(hosterRegistration);
         var existingSlot = new CollectionUploadSlot
         {
             ReleaseCollectionId = seed.CollectionId,
@@ -314,8 +394,8 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             Name = "Rapidgator",
             PasswordPolicy = CollectionUploadSlotPasswordPolicy.Ignore,
         };
-        dbContext.CollectionUploadSlots.Add(existingSlot);
-        await dbContext.SaveChangesAsync();
+        DbContext.CollectionUploadSlots.Add(existingSlot);
+        await DbContext.SaveChangesAsync();
 
         // Act & Assert
         await Should.ThrowAsync<InvalidOperationException>(() =>
@@ -344,8 +424,8 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             HosterClassName = "RapidgatorHoster",
             IsActive = true,
         };
-        dbContext.HosterRegistrations.Add(hosterRegistration);
-        await dbContext.SaveChangesAsync();
+        DbContext.HosterRegistrations.Add(hosterRegistration);
+        await DbContext.SaveChangesAsync();
 
         // Act & Assert
         await Should.ThrowAsync<InvalidOperationException>(() =>
@@ -372,11 +452,11 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
         await service.DeleteUploadSlotAsync(seed.CollectionUploadSlotId);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var slotExists = await dbContext.CollectionUploadSlots.AnyAsync(s =>
+        DbContext.ChangeTracker.Clear();
+        var slotExists = await DbContext.CollectionUploadSlots.AnyAsync(s =>
             s.Id == seed.CollectionUploadSlotId
         );
-        var uploadConfigsExist = await dbContext.UploadConfigs.AnyAsync(uc =>
+        var uploadConfigsExist = await DbContext.UploadConfigs.AnyAsync(uc =>
             uc.CollectionUploadSlotId == seed.CollectionUploadSlotId
         );
 
@@ -406,8 +486,8 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var linkCrypters = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var linkCrypters = await DbContext
             .UploadConfigLinkCrypters.Where(linkCrypter =>
                 linkCrypter.UploadConfig.CollectionUploadSlotId == seed.CollectionUploadSlotId
             )
@@ -438,8 +518,8 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             CancellationToken.None
         );
 
-        dbContext.ChangeTracker.Clear();
-        var updatedLinkCrypters = await dbContext.UploadConfigLinkCrypters.ToListAsync();
+        DbContext.ChangeTracker.Clear();
+        var updatedLinkCrypters = await DbContext.UploadConfigLinkCrypters.ToListAsync();
 
         updatedLinkCrypters.Count.ShouldBe(2);
         updatedLinkCrypters.ShouldAllBe(linkCrypter =>
@@ -455,8 +535,8 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             CancellationToken.None
         );
 
-        dbContext.ChangeTracker.Clear();
-        var hasSharedLinkCrypters = await dbContext.UploadConfigLinkCrypters.AnyAsync();
+        DbContext.ChangeTracker.Clear();
+        var hasSharedLinkCrypters = await DbContext.UploadConfigLinkCrypters.AnyAsync();
 
         hasSharedLinkCrypters.ShouldBeFalse();
     }
@@ -558,19 +638,19 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             ReleaseType = ReleaseType.Managed,
             ReleaseFolderPath = "/tmp/e03",
             ReleaseGroupId = (
-                await dbContext.ReleaseCollections.FindAsync(seed.CollectionId)
+                await DbContext.ReleaseCollections.FindAsync(seed.CollectionId)
             )!.ReleaseGroupId,
         };
-        dbContext.Releases.Add(newRelease);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.Releases.Add(newRelease);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         await service.AddReleaseAsync(seed.CollectionId, newRelease.Id);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var release = await dbContext.Releases.FindAsync(newRelease.Id);
+        DbContext.ChangeTracker.Clear();
+        var release = await DbContext.Releases.FindAsync(newRelease.Id);
         release!.ReleaseCollectionId.ShouldBe(seed.CollectionId);
     }
 
@@ -579,7 +659,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         var seed = await AddReleaseCollectionWithUploadSlotAsync();
-        var releaseGroup = await dbContext.ReleaseGroups.FindAsync(seed.ReleaseGroupId);
+        var releaseGroup = await DbContext.ReleaseGroups.FindAsync(seed.ReleaseGroupId);
         var newRelease = new Release
         {
             Name = "Episode 3",
@@ -596,16 +676,16 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             ArchiveNamePrefix = "e03",
             ArchiveFileSizeMb = 512,
         };
-        dbContext.ArchiveConfigs.Add(archiveConfig);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.ArchiveConfigs.Add(archiveConfig);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         await service.AddReleaseAsync(seed.ReleaseCollectionId, newRelease.Id);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var slotUploadConfigs = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var slotUploadConfigs = await DbContext
             .UploadConfigs.Where(uc =>
                 uc.ReleaseId == newRelease.Id
                 && uc.CollectionUploadSlotId == seed.CollectionUploadSlotId
@@ -633,9 +713,9 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             ReleaseFolderPath = "/tmp/other",
             ReleaseGroup = otherGroup,
         };
-        dbContext.Releases.Add(otherRelease);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.Releases.Add(otherRelease);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act & Assert
         await Should.ThrowAsync<InvalidOperationException>(() =>
@@ -648,21 +728,21 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         var seed = await AddReleaseCollectionWithUploadSlotAsync();
-        var releaseId = await dbContext
+        var releaseId = await DbContext
             .UploadConfigs.Where(uc => uc.CollectionUploadSlotId == seed.CollectionUploadSlotId)
             .Select(uc => uc.ReleaseId)
             .FirstAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         await service.RemoveReleaseAsync(seed.ReleaseCollectionId, releaseId);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var release = await dbContext.Releases.FindAsync(releaseId);
+        DbContext.ChangeTracker.Clear();
+        var release = await DbContext.Releases.FindAsync(releaseId);
         release!.ReleaseCollectionId.ShouldBeNull();
 
-        var slotUploadConfigs = await dbContext
+        var slotUploadConfigs = await DbContext
             .UploadConfigs.Where(uc =>
                 uc.ReleaseId == releaseId && uc.CollectionUploadSlotId != null
             )
@@ -688,9 +768,9 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             ReleaseFolderPath = "/tmp/other",
             ReleaseGroup = otherGroup,
         };
-        dbContext.Releases.Add(otherRelease);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.Releases.Add(otherRelease);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act & Assert
         await Should.ThrowAsync<InvalidOperationException>(() =>
@@ -733,8 +813,8 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             IsActive = true,
         };
 
-        dbContext.LinkCrypterRegistrations.Add(linkCrypterRegistration);
-        dbContext.UploadConfigs.AddRange(
+        DbContext.LinkCrypterRegistrations.Add(linkCrypterRegistration);
+        DbContext.UploadConfigs.AddRange(
             CreateUploadConfig(
                 releaseGroup,
                 releaseCollection,
@@ -758,7 +838,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
                 enableClickAndLoad
             )
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         return new ReleaseCollectionUploadSlotSeed(
             releaseGroup.Id,
@@ -872,7 +952,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
             ReleaseGroup = releaseGroup,
             ReleaseCollection = releaseCollection,
         };
-        dbContext.ArchiveConfigs.AddRange(
+        DbContext.ArchiveConfigs.AddRange(
             new ArchiveConfig
             {
                 Release = release1,
@@ -892,7 +972,7 @@ public class ReleaseCollectionServiceTest(DatabaseProvider databaseProvider)
                 ArchiveFileSizeMb = 512,
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         return new ReleaseCollectionWithReleasesSeed(
             releaseCollection.Id,

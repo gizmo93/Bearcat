@@ -12,20 +12,12 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageImageUploadConfigs;
 public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private ImageUploadConfigService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
-        service = new ImageUploadConfigService(new ImageUploadConfigWriteRepository(dbContext));
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
+        service = new ImageUploadConfigService(new ImageUploadConfigWriteRepository(DbContext));
     }
 
     [Test]
@@ -44,7 +36,7 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var config = await dbContext.ImageUploadConfigs.SingleAsync(c => c.Id == configId);
+        var config = await DbContext.ImageUploadConfigs.SingleAsync(c => c.Id == configId);
         config.Name.ShouldBe(imageHosterRegistration.Name);
         config.ReleaseCollectionId.ShouldBe(collection.Id);
     }
@@ -65,7 +57,7 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var config = await dbContext.ImageUploadConfigs.SingleAsync(c => c.Id == configId);
+        var config = await DbContext.ImageUploadConfigs.SingleAsync(c => c.Id == configId);
         config.Name.ShouldBe("Series cover");
     }
 
@@ -85,7 +77,7 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var config = await dbContext.ImageUploadConfigs.SingleAsync(c => c.Id == configId);
+        var config = await DbContext.ImageUploadConfigs.SingleAsync(c => c.Id == configId);
         config.Name.ShouldBe(imageHosterRegistration.Name);
         config.ReleaseId.ShouldBe(release.Id);
         config.ImageHosterRegistrationId.ShouldBe(imageHosterRegistration.Id);
@@ -107,7 +99,7 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var config = await dbContext.ImageUploadConfigs.SingleAsync(c => c.Id == configId);
+        var config = await DbContext.ImageUploadConfigs.SingleAsync(c => c.Id == configId);
         config.Name.ShouldBe("Release cover");
     }
 
@@ -133,7 +125,7 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var config = await dbContext.ImageUploadConfigs.SingleAsync(c => c.Id == configId);
+        var config = await DbContext.ImageUploadConfigs.SingleAsync(c => c.Id == configId);
         config.Name.ShouldBe(imageHosterRegistration.Name);
     }
 
@@ -160,7 +152,7 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var config = await dbContext.ImageUploadConfigs.SingleAsync(c => c.Id == configId);
+        var config = await DbContext.ImageUploadConfigs.SingleAsync(c => c.Id == configId);
         config.Name.ShouldBe("Updated cover");
         config.ImageHosterRegistrationId.ShouldBe(secondHosterRegistration.Id);
     }
@@ -182,7 +174,7 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
         await service.DeleteAsync(configId, CancellationToken.None);
 
         // Assert
-        (await dbContext.ImageUploadConfigs.AnyAsync()).ShouldBeFalse();
+        (await DbContext.ImageUploadConfigs.AnyAsync()).ShouldBeFalse();
     }
 
     private async Task<Release> AddReleaseAsync()
@@ -206,8 +198,8 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
             UploadConfigs = [],
         };
 
-        dbContext.AddRange(releaseGroup, release);
-        await dbContext.SaveChangesAsync();
+        DbContext.AddRange(releaseGroup, release);
+        await DbContext.SaveChangesAsync();
 
         return release;
     }
@@ -229,8 +221,8 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
             CreatedAt = DateTime.UtcNow,
         };
 
-        dbContext.AddRange(releaseGroup, collection);
-        await dbContext.SaveChangesAsync();
+        DbContext.AddRange(releaseGroup, collection);
+        await DbContext.SaveChangesAsync();
 
         return collection;
     }
@@ -248,8 +240,8 @@ public class ImageUploadConfigServiceTest(DatabaseProvider databaseProvider)
             IsActive = true,
         };
 
-        dbContext.ImageHosterRegistrations.Add(imageHosterRegistration);
-        await dbContext.SaveChangesAsync();
+        DbContext.ImageHosterRegistrations.Add(imageHosterRegistration);
+        await DbContext.SaveChangesAsync();
 
         return imageHosterRegistration;
     }

@@ -24,8 +24,6 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageNotifications;
 public class NotificationPreferencesTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext readDbContext = null!;
-    private BearcatDbContext writeDbContext = null!;
     private ServiceProvider services = null!;
     private ApplicationConfigurationRegistry registry = null!;
     private ApplicationConfigurationOverrideCache cache = null!;
@@ -36,14 +34,7 @@ public class NotificationPreferencesTest(DatabaseProvider databaseProvider)
     [SetUp]
     public void Setup()
     {
-        readDbContext = Database.CreateDbContext();
-        readDbContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-        writeDbContext = Database.CreateDbContext();
-
-        var repository = new ApplicationConfigurationOverrideRepository(
-            readDbContext,
-            writeDbContext
-        );
+        var repository = new ApplicationConfigurationOverrideRepository(ReadDbContext, DbContext);
         services = new ServiceCollection()
             .AddSingleton<IApplicationConfigurationOverrideReadRepository>(repository)
             .BuildServiceProvider();
@@ -72,18 +63,16 @@ public class NotificationPreferencesTest(DatabaseProvider databaseProvider)
     public async Task DisposeServicesAsync()
     {
         await services.DisposeAsync();
-        await readDbContext.DisposeAsync();
-        await writeDbContext.DisposeAsync();
     }
 
     [Test]
     public async Task Preferences_PersistAcrossCacheReloadAndReset_OnlyAffectFutureNotifications()
     {
         await CreateUploadCompletedAsync("Before disabling");
-        var existing = await readDbContext.Notifications.SingleAsync();
+        var existing = await ReadDbContext.Notifications.SingleAsync();
 
         await DisableUploadCompletedAsync();
-        var savedOverride = await readDbContext.ApplicationConfigurationOverrides.SingleAsync();
+        var savedOverride = await ReadDbContext.ApplicationConfigurationOverrides.SingleAsync();
         savedOverride.SerializedValue.ShouldBe("false");
         await CreateUploadCompletedAsync("Suppressed immediately");
 
@@ -96,7 +85,7 @@ public class NotificationPreferencesTest(DatabaseProvider databaseProvider)
             cancellationToken: CancellationToken.None
         );
 
-        var remaining = await readDbContext.Notifications.SingleAsync();
+        var remaining = await ReadDbContext.Notifications.SingleAsync();
         remaining.Id.ShouldBe(existing.Id);
         remaining.Message.ShouldBe(existing.Message);
         remaining.ResolvedAt.ShouldBeNull();
@@ -106,8 +95,8 @@ public class NotificationPreferencesTest(DatabaseProvider databaseProvider)
             propertyName: nameof(NotificationConfiguration.UploadCompleted),
             cancellationToken: CancellationToken.None
         );
-        (await readDbContext.ApplicationConfigurationOverrides.CountAsync()).ShouldBe(0);
-        (await readDbContext.Notifications.CountAsync()).ShouldBe(1);
+        (await ReadDbContext.ApplicationConfigurationOverrides.CountAsync()).ShouldBe(0);
+        (await ReadDbContext.Notifications.CountAsync()).ShouldBe(1);
 
         await reloadedCache.RefreshAsync(CancellationToken.None);
         await reloadedNotifications.CreateAsync(
@@ -116,7 +105,7 @@ public class NotificationPreferencesTest(DatabaseProvider databaseProvider)
             cancellationToken: CancellationToken.None
         );
 
-        var messages = await readDbContext
+        var messages = await ReadDbContext
             .Notifications.OrderBy(n => n.Id)
             .Select(n => n.Message)
             .ToListAsync();
@@ -126,7 +115,7 @@ public class NotificationPreferencesTest(DatabaseProvider databaseProvider)
     [Test]
     public async Task Telegram_DisabledKind_SendsExistingQueueWithoutQueuingNewNotifications()
     {
-        writeDbContext.TelegramConfigurations.Add(
+        DbContext.TelegramConfigurations.Add(
             new TelegramConfiguration
             {
                 EncryptedBotToken = "test-token",
@@ -139,11 +128,11 @@ public class NotificationPreferencesTest(DatabaseProvider databaseProvider)
             }
         );
         await CreateUploadCompletedAsync("Already queued");
-        var existing = await writeDbContext.Notifications.SingleAsync();
-        writeDbContext.TelegramDeliveries.Add(
+        var existing = await DbContext.Notifications.SingleAsync();
+        DbContext.TelegramDeliveries.Add(
             new TelegramDelivery { Notification = existing, CreatedAt = timeProvider.GetLocalNow() }
         );
-        await writeDbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
         await DisableUploadCompletedAsync();
         await CreateUploadCompletedAsync("Must not be queued");
 
@@ -159,26 +148,26 @@ public class NotificationPreferencesTest(DatabaseProvider databaseProvider)
             )
             .Returns(Task.CompletedTask);
         var telegram = new TelegramNotificationService(
-            configurationRepository: new TelegramConfigurationRepository(writeDbContext),
-            readRepository: new TelegramNotificationReadRepository(readDbContext),
-            notificationReadRepository: new NotificationReadRepository(readDbContext),
-            deliveryRepository: new TelegramDeliveryRepository(writeDbContext),
+            configurationRepository: new TelegramConfigurationRepository(DbContext),
+            readRepository: new TelegramNotificationReadRepository(ReadDbContext),
+            notificationReadRepository: new NotificationReadRepository(ReadDbContext),
+            deliveryRepository: new TelegramDeliveryRepository(DbContext),
             secretProtector: NoOpSecretProtector.Instance,
             telegramClient: client.Object,
             timeProvider: timeProvider,
             configurationCache: new TelegramConfigurationCache(),
             unreadableSecretsNotificationService: UnreadableSecretsNotificationServiceFactory.Create(
-                writeDbContext,
+                DbContext,
                 CreateNotificationConfigurationProvider()
             )
         );
 
         await telegram.ProcessDeliveriesAsync(CancellationToken.None);
 
-        var delivery = await readDbContext.TelegramDeliveries.SingleAsync();
+        var delivery = await ReadDbContext.TelegramDeliveries.SingleAsync();
         delivery.NotificationId.ShouldBe(existing.Id);
         delivery.DeliveredAt.ShouldNotBeNull();
-        (await readDbContext.Notifications.CountAsync()).ShouldBe(1);
+        (await ReadDbContext.Notifications.CountAsync()).ShouldBe(1);
         client.VerifyAll();
         client.VerifyNoOtherCalls();
     }
@@ -193,7 +182,7 @@ public class NotificationPreferencesTest(DatabaseProvider databaseProvider)
         IApplicationConfigurationOverrideCache overrideCache
     ) =>
         new(
-            repository: new NotificationRepository(writeDbContext),
+            repository: new NotificationRepository(DbContext),
             timeProvider: timeProvider,
             configurationProvider: new ApplicationConfigurationProvider(registry, overrideCache)
         );

@@ -20,7 +20,6 @@ public class DistributionSiteSessionServiceTest(DatabaseProvider databaseProvide
     private const string DistributionSiteClassName = "TestForum";
     private const string StoredSerializedConfig = "stored-config";
 
-    private BearcatDbContext dbContext = null!;
     private Mock<IForumDistributionSite> distributionSiteMock = null!;
     private IDistributionSiteConfig storedConfig = null!;
     private DistributionSiteSessionService sessionService = null!;
@@ -28,7 +27,6 @@ public class DistributionSiteSessionServiceTest(DatabaseProvider databaseProvide
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         storedConfig = Mock.Of<IDistributionSiteConfig>();
         distributionSiteMock = new Mock<IForumDistributionSite>(MockBehavior.Strict);
         distributionSiteMock
@@ -40,17 +38,11 @@ public class DistributionSiteSessionServiceTest(DatabaseProvider databaseProvide
             .Returns(distributionSiteMock.Object);
 
         sessionService = new DistributionSiteSessionService(
-            new DistributionSiteRegistrationWriteRepository(dbContext),
-            new DistributionSessionRepository(dbContext, NoOpSecretProtector.Instance),
+            new DistributionSiteRegistrationWriteRepository(DbContext),
+            new DistributionSessionRepository(DbContext, NoOpSecretProtector.Instance),
             distributionSiteFactoryMock.Object,
             NoOpSecretProtector.Instance
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -71,9 +63,9 @@ public class DistributionSiteSessionServiceTest(DatabaseProvider databaseProvide
         // Assert
         result.IsSuccess.ShouldBeFalse();
         result.ErrorMessage.ShouldBe("Incorrect password. Please try again.");
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
         (
-            await dbContext.DistributionSiteRegistrations.SingleAsync()
+            await DbContext.DistributionSiteRegistrations.SingleAsync()
         ).EncryptedSession.ShouldBeNull();
     }
 
@@ -102,9 +94,9 @@ public class DistributionSiteSessionServiceTest(DatabaseProvider databaseProvide
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
         var storedSession = await new DistributionSessionRepository(
-            dbContext,
+            DbContext,
             NoOpSecretProtector.Instance
         ).GetByRegistrationIdAsync(registration.Id, CancellationToken.None);
         storedSession.ShouldNotBeNull();
@@ -156,9 +148,9 @@ public class DistributionSiteSessionServiceTest(DatabaseProvider databaseProvide
             IsActive = true,
         };
 
-        dbContext.DistributionSiteRegistrations.Add(registration);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.DistributionSiteRegistrations.Add(registration);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         return registration;
     }

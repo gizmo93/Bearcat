@@ -32,41 +32,39 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
+    private Mock<IHosterFactory> hosterFactoryMock = null!;
     private ReleaseService service = null!;
     private string tempRootPath = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempRootPath);
         var timeProvider = CreateTimeProvider();
+        hosterFactoryMock = new Mock<IHosterFactory>();
         var unmanagedReleaseArchiveInitializer = new UnmanagedReleaseArchiveInitializationService(
             new RealArchiverFactory()
         );
         service = new ReleaseService(
-            new ReleaseWriteRepository(dbContext),
+            new ReleaseWriteRepository(DbContext),
             timeProvider,
             unmanagedReleaseArchiveInitializer,
             new FileSystemService(),
-            new ReleaseFolderUsageRepository(dbContext),
+            new ReleaseFolderUsageRepository(DbContext),
             CreateReleaseFromFolderCreationService(
-                dbContext,
+                DbContext,
                 unmanagedReleaseArchiveInitializer,
                 timeProvider
             ),
-            new MirrorCoverageEvaluator(Mock.Of<IHosterFactory>()),
+            new MirrorCoverageEvaluator(hosterFactoryMock.Object),
             new LocalArchiveDeleter(Mock.Of<IFileSystemService>())
         );
     }
 
     [TearDown]
-    public async Task DisposeDbContextAsync()
+    public void DeleteTempRootPath()
     {
-        await dbContext.DisposeAsync();
-
         if (Directory.Exists(tempRootPath))
         {
             Directory.Delete(tempRootPath, recursive: true);
@@ -92,7 +90,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var release = await dbContext.Releases.SingleAsync();
+        var release = await DbContext.Releases.SingleAsync();
 
         result.ShouldBeGreaterThan(0);
         release.ShouldNotBeNull();
@@ -125,8 +123,8 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Releases.SingleAsync(r => r.Id == release.Id);
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Releases.SingleAsync(r => r.Id == release.Id);
         result.ReleaseContentType.ShouldBe(ReleaseContentType.TvShowEpisode);
     }
 
@@ -151,7 +149,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var result = await dbContext.Releases.SingleAsync();
+        var result = await DbContext.Releases.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(release.Id);
@@ -172,7 +170,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         await service.UpdateReleaseGroupAsync([], secondGroup.Id, CancellationToken.None);
 
         // Assert
-        var result = await dbContext.Releases.SingleAsync();
+        var result = await DbContext.Releases.SingleAsync();
 
         result.ShouldNotBeNull();
         result.Id.ShouldBe(release.Id);
@@ -196,7 +194,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var result = await dbContext.Releases.OrderBy(r => r.Id).ToListAsync();
+        var result = await DbContext.Releases.OrderBy(r => r.Id).ToListAsync();
 
         result.ShouldNotBeNull();
         result.Count.ShouldBe(2);
@@ -216,7 +214,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         var secondRelease = await AddReleaseAsync(releaseGroup.Id, "Bearcat.Release.002");
         firstRelease.PrimaryLanguageCode = "en";
         secondRelease.PrimaryLanguageCode = "en";
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         await service.UpdatePrimaryLanguageAsync(
@@ -226,8 +224,8 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var releases = await dbContext.Releases.OrderBy(release => release.Id).ToListAsync();
+        DbContext.ChangeTracker.Clear();
+        var releases = await DbContext.Releases.OrderBy(release => release.Id).ToListAsync();
         releases.ShouldAllBe(release => release.PrimaryLanguageCode == expectedLanguageCode);
     }
 
@@ -242,7 +240,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         await service.DeleteAsync(release.Id, CancellationToken.None);
 
         // Assert
-        var result = await dbContext.Releases.AnyAsync();
+        var result = await DbContext.Releases.AnyAsync();
 
         result.ShouldBeFalse();
     }
@@ -264,7 +262,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var release = await dbContext
+        var release = await DbContext
             .Releases.AsSplitQuery()
             .Include(r => r.ArchiveConfigs)
             .Include(r => r.UploadConfigs)
@@ -315,14 +313,14 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             FileName = "buy premium via me.txt",
             TextContent = "Buy premium via my link.",
         };
-        var archiveConfigTemplate = await dbContext.ArchiveConfigTemplates.SingleAsync();
+        var archiveConfigTemplate = await DbContext.ArchiveConfigTemplates.SingleAsync();
         archiveConfigTemplate.AdditionalArchiveContents =
         [
             additionalArchivePath,
             additionalArchiveTextFile,
         ];
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
         var releaseFolderPath = CreateTemplateReleaseFolder("Bearcat.Release.Template");
 
         // Act
@@ -352,7 +350,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
     {
         // Arrange
         var seed = await AddReleaseTemplateAsync();
-        var releaseTemplate = await dbContext
+        var releaseTemplate = await DbContext
             .ReleaseTemplates.Include(template => template.UploadConfigTemplates)
             .SingleAsync(template => template.Id == seed.ReleaseTemplateId);
 
@@ -365,7 +363,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         releaseTemplate.UploadConfigTemplates.Single().CollectionUploadSlotIsRequired = true;
         releaseTemplate.UploadConfigTemplates.Single().CollectionUploadSlotPasswordPolicy =
             CollectionUploadSlotPasswordPolicy.MustMatchAcrossReleases;
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
         var releaseFolderPath = CreateTemplateReleaseFolder(
             "Hostage.S01E01.German.AC3.DL.1080p.Web.x265-FuN.mkv"
         );
@@ -380,7 +378,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var release = await dbContext
+        var release = await DbContext
             .Releases.AsSplitQuery()
             .Include(release => release.ReleaseCollection)
                 .ThenInclude(collection => collection!.UploadSlots)
@@ -417,10 +415,10 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             SerializedConfig = "{}",
             IsActive = true,
         };
-        dbContext.ImageHosterRegistrations.Add(imageHosterRegistration);
-        await dbContext.SaveChangesAsync();
+        DbContext.ImageHosterRegistrations.Add(imageHosterRegistration);
+        await DbContext.SaveChangesAsync();
 
-        var releaseTemplate = await dbContext.ReleaseTemplates.SingleAsync(template =>
+        var releaseTemplate = await DbContext.ReleaseTemplates.SingleAsync(template =>
             template.Id == seed.ReleaseTemplateId
         );
         releaseTemplate.ReleaseCollectionDetectionMode =
@@ -433,7 +431,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
                 Name = "Series cover",
             },
         ];
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
         var firstEpisodeFolderPath = CreateTemplateReleaseFolder(
             "Hostage.S01E01.German.AC3.DL.1080p.Web.x265-FuN.mkv"
         );
@@ -458,7 +456,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var collection = await dbContext
+        var collection = await DbContext
             .ReleaseCollections.Include(releaseCollection => releaseCollection.ImageUploadConfigs)
             .SingleAsync(releaseCollection =>
                 releaseCollection.ReleaseGroupId == seed.ReleaseGroupId
@@ -488,8 +486,8 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var release = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var release = await DbContext
             .Releases.Include(release => release.ArchiveConfigs)
             .SingleAsync(release => release.Id == result);
 
@@ -498,7 +496,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         release.PrimaryLanguageCode.ShouldBe("de");
         release.MediaMetadataExtractedAt.ShouldNotBeNull();
         release.ArchiveConfigs.Single().ArchiveNamePrefix.ShouldBe("Custom.Release.Name");
-        (await dbContext.Notifications.AnyAsync()).ShouldBeFalse();
+        (await DbContext.Notifications.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -520,8 +518,8 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var release = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var release = await DbContext
             .Releases.AsSplitQuery()
             .Include(release => release.ArchiveConfigs)
                 .ThenInclude(config => config.Archives)
@@ -538,7 +536,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         archive.ArchiveFolderPath.ShouldBe(releaseFolderPath);
         archive.ArchiveState.ShouldBe(ArchiveState.Created);
         archive.ArchiveFiles.Count.ShouldBe(2);
-        (await dbContext.Notifications.AnyAsync()).ShouldBeFalse();
+        (await DbContext.Notifications.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -561,7 +559,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
 
         // Assert
         exception.FolderPath.ShouldBe(missingFolderPath);
-        (await dbContext.Releases.AnyAsync()).ShouldBeFalse();
+        (await DbContext.Releases.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -583,7 +581,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
 
         // Assert
         exception.ReleaseTemplateId.ShouldBe(4711);
-        (await dbContext.Releases.AnyAsync()).ShouldBeFalse();
+        (await DbContext.Releases.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -592,7 +590,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         // Arrange
         var seed = await AddReleaseTemplateAsync();
         var releaseFolderPath = CreateTemplateReleaseFolder("Existing.Release.1080p");
-        dbContext.Releases.Add(
+        DbContext.Releases.Add(
             new Release
             {
                 Name = "Existing.Release.1080p",
@@ -601,7 +599,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
                 ReleaseFolderPath = releaseFolderPath,
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var exception = await Should.ThrowAsync<ReleaseFolderAlreadyInUseException>(() =>
@@ -617,7 +615,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         // Assert
         exception.UsageKind.ShouldBe(ReleaseFolderUsageKind.ReleaseFolder);
         exception.FolderPath.ShouldBe(releaseFolderPath);
-        (await dbContext.Releases.CountAsync()).ShouldBe(1);
+        (await DbContext.Releases.CountAsync()).ShouldBe(1);
     }
 
     [Test]
@@ -648,7 +646,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
 
         // Assert
         exception.UsageKind.ShouldBe(ReleaseFolderUsageKind.UnmanagedArchiveFolder);
-        (await dbContext.Releases.CountAsync()).ShouldBe(1);
+        (await DbContext.Releases.CountAsync()).ShouldBe(1);
     }
 
     [Test]
@@ -657,7 +655,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         // Arrange
         var seed = await AddReleaseTemplateAsync();
         var releaseFolderPath = CreateTemplateReleaseFolder("Remote.Release.1080p");
-        dbContext.RemoteSourceDownloads.Add(
+        DbContext.RemoteSourceDownloads.Add(
             new RemoteSourceDownload
             {
                 SourceName = "Main FTP",
@@ -667,7 +665,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
                 State = RemoteSourceDownloadState.Downloading,
             }
         );
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         // Act
         var exception = await Should.ThrowAsync<ReleaseFolderAlreadyInUseException>(() =>
@@ -682,7 +680,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
 
         // Assert
         exception.UsageKind.ShouldBe(ReleaseFolderUsageKind.RemoteDownloadFolder);
-        (await dbContext.Releases.AnyAsync()).ShouldBeFalse();
+        (await DbContext.Releases.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -705,7 +703,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var release = await dbContext
+        var release = await DbContext
             .Releases.AsSplitQuery()
             .Include(r => r.ArchiveConfigs)
                 .ThenInclude(c => c.Archives)
@@ -755,7 +753,7 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        var release = await dbContext
+        var release = await DbContext
             .Releases.AsSplitQuery()
             .Include(r => r.ArchiveConfigs)
                 .ThenInclude(c => c.Archives)
@@ -786,8 +784,8 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         await service.ConvertToUnmanagedAsync(release.Id, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Releases.Include(r => r.ArchiveConfigs)
                 .ThenInclude(c => c.Archives)
             .SingleAsync(r => r.Id == release.Id);
@@ -821,8 +819,8 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         result.Message.ShouldBe(
             "All archive configs must have a created archive before the release can be converted to unmanaged."
         );
-        dbContext.ChangeTracker.Clear();
-        var unchanged = await dbContext.Releases.SingleAsync(r => r.Id == release.Id);
+        DbContext.ChangeTracker.Clear();
+        var unchanged = await DbContext.Releases.SingleAsync(r => r.Id == release.Id);
         unchanged.ReleaseType.ShouldBe(ReleaseType.Managed);
         unchanged.ReleaseFolderPath.ShouldBe("/data/releases/Bearcat.Release");
     }
@@ -878,8 +876,8 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         );
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Releases.AsSplitQuery()
             .Include(r => r.ArchiveConfigs)
                 .ThenInclude(c => c.Archives)
@@ -942,8 +940,8 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.Message.ShouldBe("A release folder must be assigned when converting to managed.");
-        dbContext.ChangeTracker.Clear();
-        var unchanged = await dbContext.Releases.SingleAsync(r => r.Id == releaseId);
+        DbContext.ChangeTracker.Clear();
+        var unchanged = await DbContext.Releases.SingleAsync(r => r.Id == releaseId);
         unchanged.ReleaseType.ShouldBe(ReleaseType.Unmanaged);
         unchanged.ReleaseFolderPath.ShouldBeNull();
     }
@@ -1003,17 +1001,213 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
         var releaseGroup = await AddReleaseGroupAsync("Managed releases");
         var release = await AddReleaseAsync(releaseGroup.Id);
         release.UploadsPostedAt = uploadsPostedAt;
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         await service.MarkUploadsPostedAsync(release.Id, CancellationToken.None);
 
         // Assert
-        dbContext.ChangeTracker.Clear();
-        var updatedRelease = await dbContext.Releases.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var updatedRelease = await DbContext.Releases.SingleAsync();
         updatedRelease.UploadsPostedAt.ShouldNotBeNull();
         updatedRelease.UploadsPostedAt.Value.ShouldBeGreaterThan(uploadsPostedAt);
+    }
+
+    [Test]
+    public async Task GetArchiveDeletionPreviewAsync_UnmanagedReleaseWithOnlineMirrorUpload_ReturnsCreatedArchivesAndMirrorHoster()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Unmanaged releases");
+        var release = await AddUnmanagedReleaseWithMirrorUploadAsync(
+            releaseGroup.Id,
+            UploadState.Completed
+        );
+        hosterFactoryMock
+            .Setup(factory => factory.GetByName("MirrorHoster"))
+            .Returns(Mock.Of<IHosterWithDownload>());
+
+        // Act
+        var preview = await service.GetArchiveDeletionPreviewAsync(
+            release.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        preview.CanDelete.ShouldBeTrue();
+        preview.DeletableArchiveFolderPaths.ShouldBe(["/archives/created"]);
+        preview.MirrorHosterNames.ShouldBe(["Mirror hoster"]);
+    }
+
+    [Test]
+    public async Task GetArchiveDeletionPreviewAsync_OtherUploadStillRunning_CannotDelete()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Unmanaged releases");
+        var release = await AddUnmanagedReleaseWithMirrorUploadAsync(
+            releaseGroup.Id,
+            UploadState.Uploading
+        );
+        hosterFactoryMock
+            .Setup(factory => factory.GetByName("MirrorHoster"))
+            .Returns(Mock.Of<IHosterWithDownload>());
+
+        // Act
+        var preview = await service.GetArchiveDeletionPreviewAsync(
+            release.Id,
+            CancellationToken.None
+        );
+
+        // Assert
+        preview.CanDelete.ShouldBeFalse();
+        preview.DeletableArchiveFolderPaths.ShouldBe(["/archives/created"]);
+        preview.MirrorHosterNames.ShouldBe(["Mirror hoster"]);
+    }
+
+    [Test]
+    public async Task DeleteLocalArchivesAsync_UnmanagedReleaseWithOnlineMirrorUpload_MarksCreatedArchivesDeleted()
+    {
+        // Arrange
+        var releaseGroup = await AddReleaseGroupAsync("Unmanaged releases");
+        var release = await AddUnmanagedReleaseWithMirrorUploadAsync(
+            releaseGroup.Id,
+            UploadState.Completed
+        );
+        hosterFactoryMock
+            .Setup(factory => factory.GetByName("MirrorHoster"))
+            .Returns(Mock.Of<IHosterWithDownload>());
+
+        // Act
+        await service.DeleteLocalArchivesAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var archives = await DbContext.Archives.OrderBy(archive => archive.Id).ToListAsync();
+        archives
+            .Select(archive => archive.ArchiveState)
+            .ShouldBe([ArchiveState.Deleted, ArchiveState.Deleted]);
+        (await DbContext.UploadedFiles.CountAsync()).ShouldBe(2);
+    }
+
+    private async Task<Release> AddUnmanagedReleaseWithMirrorUploadAsync(
+        int releaseGroupId,
+        UploadState otherUploadState
+    )
+    {
+        var mirrorHoster = new HosterRegistration
+        {
+            Name = "Mirror hoster",
+            SerializedConfig = "{}",
+            HosterClassName = "MirrorHoster",
+            IsActive = true,
+            UseForMirrorDownloads = true,
+        };
+        var otherHoster = new HosterRegistration
+        {
+            Name = "Other hoster",
+            SerializedConfig = "{}",
+            HosterClassName = "OtherHoster",
+            IsActive = true,
+        };
+        var createdArchive = new Archive
+        {
+            ArchiveFolderPath = "/archives/created",
+            CreatedAt = DateTime.UtcNow,
+            ArchiveState = ArchiveState.Created,
+            ArchiveFileSizeMb = 0,
+            ArchiveFiles =
+            [
+                new ArchiveFile { FullFileName = "/archives/created/release.part1.rar" },
+                new ArchiveFile { FullFileName = "/archives/created/release.part2.rar" },
+            ],
+            Uploads = [],
+            Notifications = [],
+        };
+        var deletedArchive = new Archive
+        {
+            ArchiveFolderPath = "/archives/deleted",
+            CreatedAt = DateTime.UtcNow,
+            ArchiveState = ArchiveState.Deleted,
+            ArchiveFileSizeMb = 0,
+            ArchiveFiles = [],
+            Uploads = [],
+            Notifications = [],
+        };
+        var archiveConfig = new ArchiveConfig
+        {
+            Name = "RAR",
+            ArchiveFilesBasePath = "/archives",
+            ArchiverName = "RarArchiver",
+            ArchiveNamePrefix = "Bearcat.Release.Unmanaged",
+            ArchiveFileSizeMb = 0,
+            Archives = [createdArchive, deletedArchive],
+            UploadConfigs = [],
+        };
+        var release = new Release
+        {
+            Name = "Bearcat.Release.Unmanaged",
+            CreatedAt = DateTime.UtcNow,
+            ReleaseType = ReleaseType.Unmanaged,
+            ReleaseFolderPath = null,
+            ReleaseGroupId = releaseGroupId,
+            ArchiveConfigs = [archiveConfig],
+        };
+        var mirrorUpload = new Upload
+        {
+            UploadConfig = new UploadConfig
+            {
+                Release = release,
+                ArchiveConfig = archiveConfig,
+                HosterRegistration = mirrorHoster,
+                Name = "Mirror upload",
+                Uploads = [],
+                LinkCrypters = [],
+            },
+            Archive = createdArchive,
+            CreatedAt = DateTime.UtcNow,
+            UploadedAt = DateTime.UtcNow,
+            UploadState = UploadState.Completed,
+            OnlineState = OnlineState.Online,
+            UploadedFiles = [],
+            LinkCrypterContainers = [],
+            Notifications = [],
+        };
+        mirrorUpload.UploadedFiles = createdArchive
+            .ArchiveFiles.Select(archiveFile => new UploadedFile
+            {
+                Upload = mirrorUpload,
+                ArchiveFile = archiveFile,
+                HosterFileLink =
+                    $"https://mirror.example/{Path.GetFileName(archiveFile.FullFileName)}",
+                OnlineState = OnlineState.Online,
+                CreatedAt = DateTime.UtcNow,
+            })
+            .ToList();
+        var otherUpload = new Upload
+        {
+            UploadConfig = new UploadConfig
+            {
+                Release = release,
+                ArchiveConfig = archiveConfig,
+                HosterRegistration = otherHoster,
+                Name = "Other upload",
+                Uploads = [],
+                LinkCrypters = [],
+            },
+            Archive = createdArchive,
+            CreatedAt = DateTime.UtcNow,
+            UploadState = otherUploadState,
+            OnlineState = OnlineState.Unknown,
+            UploadedFiles = [],
+            LinkCrypterContainers = [],
+            Notifications = [],
+        };
+
+        DbContext.AddRange(release, mirrorUpload, otherUpload);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        return release;
     }
 
     private async Task<Release> AddManagedReleaseWithArchiveAsync(
@@ -1068,9 +1262,9 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             ],
         };
 
-        dbContext.Releases.Add(release);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.Releases.Add(release);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         return release;
     }
@@ -1084,8 +1278,8 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             NumberOfHoursUntilReupload = 24,
         };
 
-        dbContext.ReleaseGroups.Add(releaseGroup);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseGroups.Add(releaseGroup);
+        await DbContext.SaveChangesAsync();
 
         return releaseGroup;
     }
@@ -1104,8 +1298,8 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             ReleaseGroupId = releaseGroupId,
         };
 
-        dbContext.Releases.Add(release);
-        await dbContext.SaveChangesAsync();
+        DbContext.Releases.Add(release);
+        await DbContext.SaveChangesAsync();
 
         return release;
     }
@@ -1168,8 +1362,8 @@ public class ReleaseServiceTest(DatabaseProvider databaseProvider)
             },
         ];
 
-        dbContext.ReleaseTemplates.Add(releaseTemplate);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseTemplates.Add(releaseTemplate);
+        await DbContext.SaveChangesAsync();
 
         return new ReleaseTemplateSeed(
             releaseTemplate.Id,

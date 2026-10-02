@@ -27,32 +27,24 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
     private const string SecondMetadataDatabaseClassName = "OtherMediaDatabase";
     private const string SerializedConfig = "{\"ApiKey\":\"secret\"}";
 
-    private BearcatDbContext dbContext = null!;
     private Mock<IMediaMetadataDatabaseFactory> metadataDatabaseFactoryMock = null!;
     private ReleaseCollectionInfoResolutionService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         metadataDatabaseFactoryMock = new Mock<IMediaMetadataDatabaseFactory>(MockBehavior.Strict);
 
         service = new ReleaseCollectionInfoResolutionService(
-            new ReleaseCollectionInfoRepository(dbContext),
+            new ReleaseCollectionInfoRepository(DbContext),
             new MediaMetadataResolver(
-                new MediaMetadataResolverRepository(dbContext, NoOpSecretProtector.Instance),
+                new MediaMetadataResolverRepository(DbContext, NoOpSecretProtector.Instance),
                 metadataDatabaseFactoryMock.Object,
                 new Mock<ILogger<MediaMetadataResolver>>().Object
             ),
             new Mock<ILogger<ReleaseCollectionInfoResolutionService>>().Object,
             CreateTimeProvider()
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -68,7 +60,7 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
             )
         );
         collection.PrimaryLanguageCode = "de";
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
         database
@@ -93,8 +85,8 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
         // Assert
         resolvedCount.ShouldBe(1);
 
-        dbContext.ChangeTracker.Clear();
-        var metadata = await dbContext.ReleaseCollectionMetadata.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var metadata = await DbContext.ReleaseCollectionMetadata.SingleAsync();
 
         metadata.ReleaseCollectionId.ShouldBe(collection.Id);
         metadata.MetadataDatabaseClassName.ShouldBe(MetadataDatabaseClassName);
@@ -103,7 +95,7 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
         metadata.CoverUrl.ShouldBe("https://artworks.thetvdb.com/banners/cover.jpg");
         metadata.MetadataDatabaseUrl.ShouldBe("https://www.thetvdb.com/series/bodies");
 
-        var persistedCollection = await dbContext.ReleaseCollections.SingleAsync();
+        var persistedCollection = await DbContext.ReleaseCollections.SingleAsync();
         persistedCollection.MetadataCheckedAt.ShouldNotBeNull();
 
         database.Verify(
@@ -158,8 +150,8 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
         // Assert
         resolvedCount.ShouldBe(1);
 
-        dbContext.ChangeTracker.Clear();
-        var metadata = await dbContext.ReleaseCollectionMetadata.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var metadata = await DbContext.ReleaseCollectionMetadata.SingleAsync();
         metadata.Title.ShouldBe("Bodies");
 
         database.Verify(
@@ -202,8 +194,8 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
         // Assert
         resolvedCount.ShouldBe(1);
 
-        dbContext.ChangeTracker.Clear();
-        var metadata = await dbContext.ReleaseCollectionMetadata.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var metadata = await DbContext.ReleaseCollectionMetadata.SingleAsync();
         metadata.MetadataDatabaseClassName.ShouldBe(MetadataDatabaseClassName);
 
         database.Verify(
@@ -234,7 +226,7 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
 
         // Assert
         resolvedCount.ShouldBe(0);
-        (await dbContext.ReleaseCollectionMetadata.AnyAsync()).ShouldBeFalse();
+        (await DbContext.ReleaseCollectionMetadata.AnyAsync()).ShouldBeFalse();
         metadataDatabaseFactoryMock.Verify(factory => factory.Get(It.IsAny<string>()), Times.Never);
     }
 
@@ -267,10 +259,10 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
         // Assert
         resolvedCount.ShouldBe(0);
 
-        dbContext.ChangeTracker.Clear();
-        (await dbContext.ReleaseCollectionMetadata.AnyAsync()).ShouldBeFalse();
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.ReleaseCollectionMetadata.AnyAsync()).ShouldBeFalse();
 
-        var persistedCollection = await dbContext.ReleaseCollections.SingleAsync(c =>
+        var persistedCollection = await DbContext.ReleaseCollections.SingleAsync(c =>
             c.Id == collection.Id
         );
         persistedCollection.MetadataCheckedAt.ShouldNotBeNull();
@@ -335,8 +327,8 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
         // Assert
         resolvedCount.ShouldBe(1);
 
-        dbContext.ChangeTracker.Clear();
-        var metadata = await dbContext.ReleaseCollectionMetadata.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var metadata = await DbContext.ReleaseCollectionMetadata.SingleAsync();
         metadata.MetadataDatabaseClassName.ShouldBe(SecondMetadataDatabaseClassName);
 
         firstDatabase.Verify(
@@ -380,8 +372,8 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
         // Assert
         resolved.ShouldBeTrue();
 
-        dbContext.ChangeTracker.Clear();
-        var metadata = await dbContext.ReleaseCollectionMetadata.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var metadata = await DbContext.ReleaseCollectionMetadata.SingleAsync();
         metadata.ReleaseCollectionId.ShouldBe(collection.Id);
         metadata.Title.ShouldBe("Bodies");
     }
@@ -420,9 +412,9 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
         // Assert
         resolvedCount.ShouldBe(0);
 
-        dbContext.ChangeTracker.Clear();
-        (await dbContext.ReleaseCollectionMetadata.AnyAsync()).ShouldBeFalse();
-        var persistedCollection = await dbContext.ReleaseCollections.SingleAsync(c =>
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.ReleaseCollectionMetadata.AnyAsync()).ShouldBeFalse();
+        var persistedCollection = await DbContext.ReleaseCollections.SingleAsync(c =>
             c.Id == collection.Id
         );
         persistedCollection.MetadataCheckedAt.ShouldNotBeNull();
@@ -457,9 +449,9 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
         // Assert
         resolvedCount.ShouldBe(0);
 
-        dbContext.ChangeTracker.Clear();
-        (await dbContext.ReleaseCollectionMetadata.AnyAsync()).ShouldBeFalse();
-        var persistedCollection = await dbContext.ReleaseCollections.SingleAsync(c =>
+        DbContext.ChangeTracker.Clear();
+        (await DbContext.ReleaseCollectionMetadata.AnyAsync()).ShouldBeFalse();
+        var persistedCollection = await DbContext.ReleaseCollections.SingleAsync(c =>
             c.Id == collection.Id
         );
         persistedCollection.MetadataCheckedAt.ShouldNotBeNull();
@@ -495,7 +487,7 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
 
         // Assert
         resolved.ShouldBeFalse();
-        (await dbContext.ReleaseCollectionMetadata.AnyAsync()).ShouldBeFalse();
+        (await DbContext.ReleaseCollectionMetadata.AnyAsync()).ShouldBeFalse();
     }
 
     [Test]
@@ -515,9 +507,9 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
             CoverUrl = "https://artworks.example/cover.jpg",
             MetadataDatabaseUrl = "https://www.thetvdb.com/series/bodies",
         };
-        dbContext.Update(collection);
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        DbContext.Update(collection);
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
         database
@@ -535,8 +527,8 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
 
         // Assert
         resolved.ShouldBeTrue();
-        dbContext.ChangeTracker.Clear();
-        var metadata = await dbContext.ReleaseCollectionMetadata.SingleAsync();
+        DbContext.ChangeTracker.Clear();
+        var metadata = await DbContext.ReleaseCollectionMetadata.SingleAsync();
         metadata.Description.ShouldBe("Vier Detectives, ein Verbrechen.");
         metadata.CoverUrl.ShouldBe("https://artworks.thetvdb.com/banners/cover.jpg");
     }
@@ -553,12 +545,93 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
             MetadataDatabaseClassName = ReleaseCollectionMetadata.ManualSource,
             Title = "Bodies",
         };
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         var resolved = await service.ResolveAsync(collection.Id, CancellationToken.None);
 
         resolved.ShouldBeFalse();
         metadataDatabaseFactoryMock.Verify(factory => factory.Get(It.IsAny<string>()), Times.Never);
+    }
+
+    [Test]
+    public async Task ProcessMissingCollectionMetadataAsync_OtherWorkerStoredMetadataFirst_KeepsExistingMetadataAndResolvesNextCollection()
+    {
+        // Arrange
+        await AddMediaDatabaseRegistrationAsync(MetadataDatabaseClassName, isActive: true);
+        var conflictingCollection = await AddCollectionAsync(
+            "Bodies.2023.S01.German.DL.1080p",
+            CreateRelease("Bodies.2023.S01E01.German.DL.1080p-GRP")
+        );
+        var nextCollection = await AddCollectionAsync(
+            "Hostage.2025.S01.German.DL.1080p",
+            CreateRelease("Hostage.2025.S01E01.German.DL.1080p-GRP")
+        );
+        DbContext.ChangeTracker.Clear();
+
+        var (database, config) = SetupMediaDatabase(MetadataDatabaseClassName);
+        database
+            .Setup(metadataDatabase =>
+                metadataDatabase.GetByTitleAsync(
+                    config,
+                    It.Is<MediaMetadataLookup>(lookup => lookup.Title == "Bodies"),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(async () =>
+            {
+                await AddMetadataFromOtherWorkerAsync(conflictingCollection.Id);
+                return CreateMetadata();
+            });
+        database
+            .Setup(metadataDatabase =>
+                metadataDatabase.GetByTitleAsync(
+                    config,
+                    It.Is<MediaMetadataLookup>(lookup => lookup.Title == "Hostage"),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new MediaMetadata(
+                    Title: "Hostage",
+                    Description: "Geiselnahme",
+                    Genre: null,
+                    CoverUrl: "https://artworks.thetvdb.com/banners/hostage.jpg",
+                    DatabaseUrl: "https://www.thetvdb.com/series/hostage"
+                )
+            );
+
+        // Act
+        await service.ProcessMissingCollectionMetadataAsync(CancellationToken.None);
+
+        // Assert
+        DbContext.ChangeTracker.Clear();
+        var metadata = await DbContext.ReleaseCollectionMetadata.ToListAsync();
+        metadata.Count.ShouldBe(2);
+
+        var conflictingMetadata = metadata.Single(item =>
+            item.ReleaseCollectionId == conflictingCollection.Id
+        );
+        conflictingMetadata.MetadataDatabaseClassName.ShouldBe("OtherWorkerDatabase");
+        conflictingMetadata.Title.ShouldBe("Bodies (other worker)");
+
+        var nextMetadata = metadata.Single(item => item.ReleaseCollectionId == nextCollection.Id);
+        nextMetadata.MetadataDatabaseClassName.ShouldBe(MetadataDatabaseClassName);
+        nextMetadata.Title.ShouldBe("Hostage");
+        nextMetadata.CoverUrl.ShouldBe("https://artworks.thetvdb.com/banners/hostage.jpg");
+    }
+
+    private async Task AddMetadataFromOtherWorkerAsync(int releaseCollectionId)
+    {
+        var otherWorkerDbContext = CreateDbContext();
+        otherWorkerDbContext.ReleaseCollectionMetadata.Add(
+            new ReleaseCollectionMetadata
+            {
+                ReleaseCollectionId = releaseCollectionId,
+                MetadataDatabaseClassName = "OtherWorkerDatabase",
+                Title = "Bodies (other worker)",
+            }
+        );
+        await otherWorkerDbContext.SaveChangesAsync();
     }
 
     private (
@@ -591,8 +664,8 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
             IsActive = isActive,
         };
 
-        dbContext.MediaDatabaseRegistrations.Add(registration);
-        await dbContext.SaveChangesAsync();
+        DbContext.MediaDatabaseRegistrations.Add(registration);
+        await DbContext.SaveChangesAsync();
     }
 
     private async Task<ReleaseCollection> AddCollectionAsync(string name, params Release[] releases)
@@ -613,8 +686,8 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
             Releases = releases.ToList(),
         };
 
-        dbContext.ReleaseCollections.Add(collection);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseCollections.Add(collection);
+        await DbContext.SaveChangesAsync();
 
         return collection;
     }
@@ -629,8 +702,8 @@ public class ReleaseCollectionInfoResolutionServiceTest(DatabaseProvider databas
             Releases = [],
         };
 
-        dbContext.ReleaseGroups.Add(releaseGroup);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseGroups.Add(releaseGroup);
+        await DbContext.SaveChangesAsync();
 
         return releaseGroup;
     }

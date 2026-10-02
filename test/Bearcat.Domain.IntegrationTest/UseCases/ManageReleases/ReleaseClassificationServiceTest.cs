@@ -1,5 +1,7 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases;
+using Bearcat.Domain.UseCases.ManageReleases.ReleaseNameParsing;
+using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database;
 using Bearcat.Infrastructure.Database.Repositories;
@@ -15,24 +17,16 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleases;
 public class ReleaseClassificationServiceTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private ReleaseClassificationService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         service = new ReleaseClassificationService(
-            new ReleaseClassificationRepository(dbContext),
+            new ReleaseClassificationRepository(DbContext),
             CreateTimeProvider(),
             NullLogger<ReleaseClassificationService>.Instance
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -66,7 +60,7 @@ public class ReleaseClassificationServiceTest(DatabaseProvider databaseProvider)
         await service.ClassifyAsync(release.Id);
 
         // Assert
-        var count = await dbContext.ReleaseClassifications.CountAsync(classification =>
+        var count = await DbContext.ReleaseClassifications.CountAsync(classification =>
             classification.ReleaseId == release.Id
         );
         count.ShouldBe(1);
@@ -89,9 +83,52 @@ public class ReleaseClassificationServiceTest(DatabaseProvider databaseProvider)
         stored.Resolution.ShouldBe(ReleaseResolution.Unknown);
     }
 
+    [Test]
+    public async Task ProcessPendingClassificationsAsync_OtherWorkerClassifiedReleaseFirst_KeepsExistingClassificationWithoutDuplicate()
+    {
+        // Arrange
+        var release = await AddReleaseAsync("Amok.1994.German.1080p.BluRay.x264-PL3X");
+        var racingService = new ReleaseClassificationService(
+            new ReleaseClassificationRepositoryWithConcurrentWorker(
+                new ReleaseClassificationRepository(DbContext),
+                () => AddClassificationFromOtherWorkerAsync(release.Id)
+            ),
+            CreateTimeProvider(),
+            NullLogger<ReleaseClassificationService>.Instance
+        );
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var classifiedCount = await racingService.ProcessPendingClassificationsAsync();
+
+        // Assert
+        classifiedCount.ShouldBe(1);
+        var classifications = await DbContext
+            .ReleaseClassifications.AsNoTracking()
+            .Where(classification => classification.ReleaseId == release.Id)
+            .ToListAsync();
+        classifications.ShouldHaveSingleItem().Title.ShouldBe("Classified by other worker");
+    }
+
+    private async Task AddClassificationFromOtherWorkerAsync(int releaseId)
+    {
+        var otherWorkerDbContext = CreateDbContext();
+        var classification = ReleaseClassificationBuilder.Build(
+            releaseName: "Amok.1994.German.1080p.BluRay.x264-PL3X",
+            mediaFiles: [],
+            contentKind: null,
+            nfoContent: null
+        );
+        classification.ReleaseId = releaseId;
+        classification.Title = "Classified by other worker";
+        classification.ClassifiedAt = DateTime.UtcNow;
+        otherWorkerDbContext.ReleaseClassifications.Add(classification);
+        await otherWorkerDbContext.SaveChangesAsync();
+    }
+
     private async Task<ReleaseClassification?> GetClassificationAsync(int releaseId)
     {
-        return await dbContext
+        return await DbContext
             .ReleaseClassifications.AsNoTracking()
             .FirstOrDefaultAsync(classification => classification.ReleaseId == releaseId);
     }
@@ -105,8 +142,8 @@ public class ReleaseClassificationServiceTest(DatabaseProvider databaseProvider)
             NumberOfHoursUntilReupload = 24,
             Releases = [],
         };
-        dbContext.ReleaseGroups.Add(releaseGroup);
-        await dbContext.SaveChangesAsync();
+        DbContext.ReleaseGroups.Add(releaseGroup);
+        await DbContext.SaveChangesAsync();
 
         var release = new Release
         {
@@ -118,8 +155,8 @@ public class ReleaseClassificationServiceTest(DatabaseProvider databaseProvider)
             ArchiveConfigs = [],
             UploadConfigs = [],
         };
-        dbContext.Releases.Add(release);
-        await dbContext.SaveChangesAsync();
+        DbContext.Releases.Add(release);
+        await DbContext.SaveChangesAsync();
 
         return release;
     }
@@ -131,5 +168,44 @@ public class ReleaseClassificationServiceTest(DatabaseProvider databaseProvider)
             .Build();
 
         return new TimeProvider(configuration);
+    }
+
+    private sealed class ReleaseClassificationRepositoryWithConcurrentWorker(
+        IReleaseClassificationRepository repository,
+        Func<Task> runConcurrentWorkerBeforeFirstSave
+    ) : IReleaseClassificationRepository
+    {
+        private bool concurrentWorkerHasRun;
+
+        public Task<Release?> GetReleaseForClassificationAsync(
+            int releaseId,
+            CancellationToken cancellationToken = default
+        ) => repository.GetReleaseForClassificationAsync(releaseId, cancellationToken);
+
+        public Task<IReadOnlyList<Release>> GetReleasesNeedingClassificationAsync(
+            int count,
+            int parserVersion,
+            HashSet<int> excludedReleaseIds,
+            CancellationToken cancellationToken = default
+        ) =>
+            repository.GetReleasesNeedingClassificationAsync(
+                count,
+                parserVersion,
+                excludedReleaseIds,
+                cancellationToken
+            );
+
+        public void ClearChangeTracker() => repository.ClearChangeTracker();
+
+        public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            if (!concurrentWorkerHasRun)
+            {
+                concurrentWorkerHasRun = true;
+                await runConcurrentWorkerBeforeFirstSave();
+            }
+
+            await repository.SaveChangesAsync(cancellationToken);
+        }
     }
 }

@@ -1,5 +1,6 @@
 using Bearcat.Abstractions.Configurations;
 using Bearcat.Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 
 namespace Bearcat.IntegrationTest.Utils;
@@ -16,10 +17,17 @@ public abstract class BearcatIntegrationTest(DatabaseProvider databaseProvider)
 
     protected BearcatIntegrationTestDatabase Database { get; private set; } = null!;
 
+    protected BearcatDbContext DbContext { get; private set; } = null!;
+
+    protected BearcatDbContext ReadDbContext { get; private set; } = null!;
+
     [SetUp]
     public async Task CreateDatabaseAsync()
     {
         Database = await BearcatIntegrationTestDatabase.CreateAsync(DatabaseProvider);
+        DbContext = CreateDbContext();
+        ReadDbContext = CreateDbContext();
+        ReadDbContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
     }
 
     [TearDown]

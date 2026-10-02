@@ -12,24 +12,16 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageReleaseCollections;
 public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private ReleaseCollectionRepository repository = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         repository = new ReleaseCollectionRepository(
-            dbContext,
-            dbContext,
+            DbContext,
+            DbContext,
             Mock.Of<IMediaMetadataDatabaseFactory>()
         );
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
     }
 
     [Test]
@@ -59,7 +51,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
             useSlot: false
         );
 
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -103,7 +95,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
                 ]),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -127,7 +119,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
                 ]),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -160,7 +152,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
                 ]),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -191,7 +183,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
                 ]),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -215,7 +207,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
                 ]),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -249,7 +241,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
                 ]),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -275,7 +267,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
                 ]),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -301,7 +293,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
                 ]),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -333,7 +325,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
                 ]),
             ]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -357,7 +349,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
             ],
             imageConfigs: [new CollectionImageConfigSpec(HasUpload: false)]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -381,7 +373,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
             ],
             imageConfigs: [new CollectionImageConfigSpec(HasUpload: true)]
         );
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetPostQueueAsync(CancellationToken.None);
@@ -417,7 +409,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
             UploadsPostedAt = uploadsPostedAt,
         };
 
-        dbContext.AddRange(releaseGroup, collection);
+        DbContext.AddRange(releaseGroup, collection);
 
         var releaseIndex = 0;
         foreach (var releaseSpec in releases)
@@ -432,7 +424,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
                 ReleaseGroup = releaseGroup,
                 ReleaseCollection = collection,
             };
-            dbContext.Add(release);
+            DbContext.Add(release);
 
             var configIndex = 0;
             foreach (var configSpec in releaseSpec.Configs)
@@ -464,7 +456,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
                         Name = configSpec.SlotName,
                         UploadConfigs = [],
                     };
-                    dbContext.Add(uploadSlot);
+                    DbContext.Add(uploadSlot);
                 }
 
                 var uploadConfig = new UploadConfig
@@ -476,7 +468,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
                     Name = $"{name} upload {releaseIndex}-{configIndex}",
                     LinkCrypters = [],
                 };
-                dbContext.AddRange(archiveConfig, hosterRegistration, uploadConfig);
+                DbContext.AddRange(archiveConfig, hosterRegistration, uploadConfig);
 
                 foreach (var uploadSpec in configSpec.Uploads)
                 {
@@ -508,7 +500,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
             );
         }
 
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         return collection;
     }
@@ -534,11 +526,11 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
             ContainerScope = LinkCrypterContainerScope.ReleaseCollection,
             LinkCrypterContainers = [],
         };
-        dbContext.AddRange(linkCrypterRegistration, uploadConfigLinkCrypter);
+        DbContext.AddRange(linkCrypterRegistration, uploadConfigLinkCrypter);
 
         if (spec.HasContainer && uploadSlot is not null)
         {
-            dbContext.Add(
+            DbContext.Add(
                 new LinkCrypterContainer
                 {
                     Scope = LinkCrypterContainerScope.ReleaseCollection,
@@ -572,11 +564,11 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
             Name = name,
             ImageUploads = [],
         };
-        dbContext.AddRange(imageHosterRegistration, imageUploadConfig);
+        DbContext.AddRange(imageHosterRegistration, imageUploadConfig);
 
         if (spec.HasUpload)
         {
-            dbContext.Add(
+            DbContext.Add(
                 new ImageUpload
                 {
                     ImageUploadConfig = imageUploadConfig,
@@ -616,7 +608,7 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
                 ArchiveFileSizeMb = 100,
             };
             upload.Archive = archive;
-            dbContext.Add(archive);
+            DbContext.Add(archive);
 
             for (var i = 0; i < spec.FileCount; i++)
             {
@@ -636,11 +628,11 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
                         CreatedAt = createdAt,
                     }
                 );
-                dbContext.Add(archiveFile);
+                DbContext.Add(archiveFile);
             }
         }
 
-        dbContext.Add(upload);
+        DbContext.Add(upload);
     }
 
     private sealed record CollectionUploadSpec(
@@ -786,13 +778,13 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
             );
         }
 
-        dbContext.AddRange(releaseGroup, collection, release, archiveConfig, hosterRegistration);
+        DbContext.AddRange(releaseGroup, collection, release, archiveConfig, hosterRegistration);
         if (uploadSlot is not null)
         {
-            dbContext.Add(uploadSlot);
+            DbContext.Add(uploadSlot);
         }
 
-        dbContext.AddRange(uploadConfig, archive, upload);
+        DbContext.AddRange(uploadConfig, archive, upload);
 
         if (withCollectionContainer && uploadSlot is not null)
         {
@@ -814,10 +806,10 @@ public class ReleaseCollectionPostQueueTest(DatabaseProvider databaseProvider)
                 CreatedAt = DateTime.UtcNow,
             };
 
-            dbContext.AddRange(linkCrypterRegistration, container);
+            DbContext.AddRange(linkCrypterRegistration, container);
         }
 
-        await dbContext.SaveChangesAsync();
+        await DbContext.SaveChangesAsync();
 
         return collection;
     }

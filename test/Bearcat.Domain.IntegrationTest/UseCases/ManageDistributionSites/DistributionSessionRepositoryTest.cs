@@ -11,20 +11,12 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManageDistributionSites;
 public class DistributionSessionRepositoryTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private DistributionSessionRepository repository = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
-        repository = new DistributionSessionRepository(dbContext, NoOpSecretProtector.Instance);
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
+        repository = new DistributionSessionRepository(DbContext, NoOpSecretProtector.Instance);
     }
 
     [Test]
@@ -89,8 +81,8 @@ public class DistributionSessionRepositoryTest(DatabaseProvider databaseProvider
             IsActive = true,
         };
 
-        dbContext.DistributionSiteRegistrations.Add(registration);
-        await dbContext.SaveChangesAsync();
+        DbContext.DistributionSiteRegistrations.Add(registration);
+        await DbContext.SaveChangesAsync();
 
         return registration;
     }

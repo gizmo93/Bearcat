@@ -11,20 +11,12 @@ namespace Bearcat.Domain.IntegrationTest.UseCases.ManagePostedLocations;
 public class PostedLocationReadRepositoryTest(DatabaseProvider databaseProvider)
     : BearcatIntegrationTest(databaseProvider)
 {
-    private BearcatDbContext dbContext = null!;
     private PostedLocationReadRepository repository = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
-        repository = new PostedLocationReadRepository(dbContext);
-    }
-
-    [TearDown]
-    public async Task DisposeDbContextAsync()
-    {
-        await dbContext.DisposeAsync();
+        repository = new PostedLocationReadRepository(DbContext);
     }
 
     [Test]
@@ -46,8 +38,8 @@ public class PostedLocationReadRepositoryTest(DatabaseProvider databaseProvider)
         );
         var secondPostedLocation = AddPostedLocation(release, "https://blog.example/post/1");
         AddPostedLocation(otherRelease, "https://forum.example/threads/2");
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.SearchForReleaseAsync(
@@ -75,8 +67,8 @@ public class PostedLocationReadRepositoryTest(DatabaseProvider databaseProvider)
             otherRelease,
             "https://forum.example/threads/2"
         );
-        await dbContext.SaveChangesAsync();
-        dbContext.ChangeTracker.Clear();
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
 
         // Act
         var result = await repository.GetByIdForReleaseAsync(
@@ -87,6 +79,84 @@ public class PostedLocationReadRepositoryTest(DatabaseProvider databaseProvider)
 
         // Assert
         result.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task GetForReleaseAsync_ReleaseAndCollectionPostedLocations_ReturnsOnlyPostedLocationsOfReleaseOrderedById()
+    {
+        // Arrange
+        var registration = new DistributionSiteRegistration
+        {
+            Name = "Example forum",
+            DistributionSiteClassName = "ExampleForum",
+            SerializedConfig = "{}",
+        };
+        var release = AddRelease("Bearcat.Release.001");
+        var otherRelease = AddRelease("Bearcat.Release.002");
+        var collection = AddCollection("Bearcat.Collection");
+        var firstPostedLocation = AddPostedLocation(release, "https://blog.example/post/1");
+        AddPostedLocation(otherRelease, "https://forum.example/threads/2");
+        AddCollectionPostedLocation(collection, "https://forum.example/threads/3");
+        var secondPostedLocation = AddPostedLocation(
+            release,
+            "https://forum.example/threads/1",
+            registration
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetForReleaseAsync(release.Id, CancellationToken.None);
+
+        // Assert
+        result
+            .Select(item => item.PostedLocationId)
+            .ShouldBe([firstPostedLocation.Id, secondPostedLocation.Id]);
+        result[0].DistributionSiteRegistrationId.ShouldBeNull();
+        result[0].DistributionSiteRegistrationName.ShouldBeNull();
+        result[0].Url.ShouldBe("https://blog.example/post/1");
+        result[1].DistributionSiteRegistrationId.ShouldBe(registration.Id);
+        result[1].DistributionSiteRegistrationName.ShouldBe("Example forum");
+    }
+
+    [Test]
+    public async Task GetForCollectionAsync_ReleaseAndCollectionPostedLocations_ReturnsOnlyPostedLocationsOfCollectionOrderedById()
+    {
+        // Arrange
+        var registration = new DistributionSiteRegistration
+        {
+            Name = "Example forum",
+            DistributionSiteClassName = "ExampleForum",
+            SerializedConfig = "{}",
+        };
+        var release = AddRelease("Bearcat.Release.001");
+        var collection = AddCollection("Bearcat.Collection.001");
+        var otherCollection = AddCollection("Bearcat.Collection.002");
+        var firstPostedLocation = AddCollectionPostedLocation(
+            collection,
+            "https://forum.example/threads/1",
+            registration
+        );
+        AddPostedLocation(release, "https://forum.example/threads/2");
+        AddCollectionPostedLocation(otherCollection, "https://forum.example/threads/3");
+        var secondPostedLocation = AddCollectionPostedLocation(
+            collection,
+            "https://blog.example/post/1"
+        );
+        await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
+
+        // Act
+        var result = await repository.GetForCollectionAsync(collection.Id, CancellationToken.None);
+
+        // Assert
+        result
+            .Select(item => item.PostedLocationId)
+            .ShouldBe([firstPostedLocation.Id, secondPostedLocation.Id]);
+        result[0].DistributionSiteRegistrationName.ShouldBe("Example forum");
+        result[0].Url.ShouldBe("https://forum.example/threads/1");
+        result[1].DistributionSiteRegistrationName.ShouldBeNull();
+        result[1].Url.ShouldBe("https://blog.example/post/1");
     }
 
     private Release AddRelease(string name)
@@ -105,7 +175,7 @@ public class PostedLocationReadRepositoryTest(DatabaseProvider databaseProvider)
             },
         };
 
-        dbContext.Releases.Add(release);
+        DbContext.Releases.Add(release);
 
         return release;
     }
@@ -124,7 +194,46 @@ public class PostedLocationReadRepositoryTest(DatabaseProvider databaseProvider)
             CreatedAt = DateTime.UtcNow,
         };
 
-        dbContext.PostedLocations.Add(postedLocation);
+        DbContext.PostedLocations.Add(postedLocation);
+
+        return postedLocation;
+    }
+
+    private ReleaseCollection AddCollection(string name)
+    {
+        var collection = new ReleaseCollection
+        {
+            ReleaseGroup = new ReleaseGroup
+            {
+                Name = $"{name} group",
+                EnableAutomaticReuploads = false,
+                NumberOfHoursUntilReupload = 24,
+            },
+            Key = name.ToLowerInvariant(),
+            Name = name,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        DbContext.ReleaseCollections.Add(collection);
+
+        return collection;
+    }
+
+    private PostedLocation AddCollectionPostedLocation(
+        ReleaseCollection collection,
+        string url,
+        DistributionSiteRegistration? distributionSiteRegistration = null
+    )
+    {
+        var postedLocation = new PostedLocation
+        {
+            ReleaseCollection = collection,
+            DistributionSiteRegistration = distributionSiteRegistration,
+            Url = url,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        DbContext.PostedLocations.Add(postedLocation);
 
         return postedLocation;
     }

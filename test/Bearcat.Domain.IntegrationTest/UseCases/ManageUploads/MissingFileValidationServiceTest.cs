@@ -21,24 +21,22 @@ public class MissingFileValidationServiceTest(DatabaseProvider databaseProvider)
 {
     private const string HosterClassName = "TestHoster";
 
-    private BearcatDbContext dbContext = null!;
     private string tempRootPath = null!;
     private MissingFileValidationService service = null!;
 
     [SetUp]
     public void Setup()
     {
-        dbContext = Database.CreateDbContext();
         tempRootPath = Path.Combine(Path.GetTempPath(), $"bearcat-tests-{Guid.NewGuid():N}");
 
         var notificationService = new NotificationService(
-            repository: new NotificationRepository(dbContext),
+            repository: new NotificationRepository(DbContext),
             timeProvider: CreateTimeProvider(),
             configurationProvider: CreateNotificationConfigurationProvider()
         );
 
         service = new MissingFileValidationService(
-            new UploadFilesRepository(dbContext, dbContext, NoOpSecretProtector.Instance),
+            new UploadFilesRepository(DbContext, DbContext, NoOpSecretProtector.Instance),
             new FileSystemService(),
             Mock.Of<ILogger<MissingFileValidationService>>(),
             notificationService
@@ -46,10 +44,8 @@ public class MissingFileValidationServiceTest(DatabaseProvider databaseProvider)
     }
 
     [TearDown]
-    public async Task DisposeResourcesAsync()
+    public void DeleteTempRootPath()
     {
-        await dbContext.DisposeAsync();
-
         if (Directory.Exists(tempRootPath))
         {
             Directory.Delete(tempRootPath, recursive: true);
@@ -63,9 +59,9 @@ public class MissingFileValidationServiceTest(DatabaseProvider databaseProvider)
         var missingArchiveFilePath = Path.Combine(tempRootPath, "missing", "archive.part1.rar");
         var upload = await AddPendingUploadWithArchiveAsync(missingArchiveFilePath);
 
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
-        var trackedUpload = await dbContext
+        var trackedUpload = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.Release)
@@ -82,8 +78,8 @@ public class MissingFileValidationServiceTest(DatabaseProvider databaseProvider)
         // Assert
         uploadsToSkip.ShouldHaveSingleItem().Id.ShouldBe(upload.Id);
 
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .Include(u => u.Archive)
             .SingleAsync(u => u.Id == upload.Id);
@@ -93,7 +89,7 @@ public class MissingFileValidationServiceTest(DatabaseProvider databaseProvider)
         result.UploadedFiles.ShouldBeEmpty();
         result.Archive.ShouldBeNull();
 
-        var archiveState = await dbContext
+        var archiveState = await DbContext
             .Archives.Where(a => a.ArchiveConfigId == upload.UploadConfig.ArchiveConfigId)
             .Select(a => a.ArchiveState)
             .SingleAsync();
@@ -110,9 +106,9 @@ public class MissingFileValidationServiceTest(DatabaseProvider databaseProvider)
             uploadedFileOnlineState: OnlineState.Online
         );
 
-        dbContext.ChangeTracker.Clear();
+        DbContext.ChangeTracker.Clear();
 
-        var trackedUpload = await dbContext
+        var trackedUpload = await DbContext
             .Uploads.Include(u => u.UploadedFiles)
             .Include(u => u.UploadConfig)
                 .ThenInclude(uc => uc.Release)
@@ -129,8 +125,8 @@ public class MissingFileValidationServiceTest(DatabaseProvider databaseProvider)
         // Assert
         uploadsToSkip.ShouldBeEmpty();
 
-        dbContext.ChangeTracker.Clear();
-        var result = await dbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
+        DbContext.ChangeTracker.Clear();
+        var result = await DbContext.Uploads.SingleAsync(u => u.Id == upload.Id);
 
         result.UploadState.ShouldBe(UploadState.Pending);
         result.ArchiveId.ShouldNotBeNull();
@@ -212,8 +208,8 @@ public class MissingFileValidationServiceTest(DatabaseProvider databaseProvider)
             ],
         };
 
-        dbContext.Uploads.Add(upload);
-        await dbContext.SaveChangesAsync();
+        DbContext.Uploads.Add(upload);
+        await DbContext.SaveChangesAsync();
 
         return upload;
     }
