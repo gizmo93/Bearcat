@@ -1,4 +1,5 @@
 using Bearcat.Infrastructure.Database;
+using EntityFramework.Exceptions.PostgreSQL;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Respawn;
@@ -104,6 +105,7 @@ public sealed class BearcatIntegrationTestDatabase : IAsyncDisposable
     {
         var options = new DbContextOptionsBuilder<BearcatDbContext>()
             .UseNpgsql(ConnectionString)
+            .UseExceptionProcessor()
             .Options;
 
         return new BearcatDbContext(options);

@@ -4,7 +4,6 @@ using Bearcat.Domain.ValueObjects;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.IntegrationTest.Utils;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using Shouldly;
 
 namespace Bearcat.Domain.IntegrationTest.UseCases.ManageAdditionalArchiveContents;
@@ -261,9 +260,8 @@ public class AdditionalArchiveContentRepositoryTest : BearcatIntegrationTest
         );
 
         // Assert
-        result
-            .InnerException.ShouldBeOfType<PostgresException>()
-            .ConstraintName.ShouldBe("CK_AdditionalArchiveContent_FieldsMatchType");
+        result.InnerException.ShouldNotBeNull();
+        result.InnerException.Message.ShouldContain("CK_AdditionalArchiveContent_FieldsMatchType");
     }
 
     [Test]
@@ -281,9 +279,8 @@ public class AdditionalArchiveContentRepositoryTest : BearcatIntegrationTest
         );
 
         // Assert
-        result
-            .InnerException.ShouldBeOfType<PostgresException>()
-            .ConstraintName.ShouldBe("CK_AdditionalArchiveContent_FieldsMatchType");
+        result.InnerException.ShouldNotBeNull();
+        result.InnerException.Message.ShouldContain("CK_AdditionalArchiveContent_FieldsMatchType");
     }
 
     [Test]

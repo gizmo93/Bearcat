@@ -45,6 +45,7 @@ using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.UseCases.PostToForums.Repositories;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.DistributionSites;
+using EntityFramework.Exceptions.PostgreSQL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -63,10 +64,13 @@ public static class ServiceProviderConfig
                     var connectionString = configuration
                         .GetRequiredSection("Database:ConnectionString")
                         .Value;
-                    builder.UseNpgsql(
-                        connectionString,
-                        opts => opts.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
-                    );
+                    builder
+                        .UseNpgsql(
+                            connectionString,
+                            opts =>
+                                opts.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+                        )
+                        .UseExceptionProcessor();
                 },
                 ServiceLifetime.Transient
             );

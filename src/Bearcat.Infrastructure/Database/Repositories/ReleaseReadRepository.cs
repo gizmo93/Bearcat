@@ -144,7 +144,7 @@ public class ReleaseReadRepository(
                         u.OnlineState,
                         u.NotFullyOnlineSince,
                         LinkCount = u.UploadedFiles.Count,
-                        ErrorMessages = u.ErrorMessages.ToList(),
+                        ErrorMessages = u.ErrorMessages,
                         ArchivePassword = u.Archive == null
                             ? null
                             : u.Archive.ArchiveConfig.ArchivePassword,
@@ -175,7 +175,7 @@ public class ReleaseReadRepository(
                     c.Scope,
                     c.State,
                     c.CreatedAt,
-                    Errors = c.Errors.ToList(),
+                    Errors = c.Errors,
                 })
                 .ToListAsync(cancellationToken: cancellationToken);
 
@@ -202,7 +202,7 @@ public class ReleaseReadRepository(
                     source.LinkCrypterContainer.Scope,
                     source.LinkCrypterContainer.State,
                     source.LinkCrypterContainer.CreatedAt,
-                    Errors = source.LinkCrypterContainer.Errors.ToList(),
+                    Errors = source.LinkCrypterContainer.Errors,
                 })
                 .ToListAsync(cancellationToken: cancellationToken);
 
@@ -614,7 +614,7 @@ public class ReleaseReadRepository(
                         upload.CreatedAt,
                         upload.UploadedAt,
                         upload.UploadState,
-                        ErrorMessages = upload.ErrorMessages.ToList(),
+                        ErrorMessages = upload.ErrorMessages,
                         ImageUrls = upload
                             .ImageUrls.OrderBy(url => url.ImageSize)
                             .ThenBy(url => url.Id)
@@ -686,9 +686,19 @@ public class ReleaseReadRepository(
             {
                 config.Name,
                 Urls = config
-                    .ImageUploads.OrderByDescending(upload => upload.UploadedAt ?? upload.CreatedAt)
-                    .ThenByDescending(upload => upload.Id)
-                    .Take(1)
+                    .ImageUploads.Where(upload =>
+                        upload.Id
+                        == dbRead
+                            .ImageUploads.Where(latestUpload =>
+                                latestUpload.ImageUploadConfigId == upload.ImageUploadConfigId
+                            )
+                            .OrderByDescending(latestUpload =>
+                                latestUpload.UploadedAt ?? latestUpload.CreatedAt
+                            )
+                            .ThenByDescending(latestUpload => latestUpload.Id)
+                            .Select(latestUpload => latestUpload.Id)
+                            .FirstOrDefault()
+                    )
                     .SelectMany(upload =>
                         upload
                             .ImageUrls.OrderBy(url => url.ImageSize)
@@ -947,7 +957,7 @@ public class ReleaseReadRepository(
                         ar.CreatedAt,
                         ar.ArchiveState,
                         ar.ArchiveFiles.Count,
-                        ar.ErrorMessages.ToList()
+                        ar.ErrorMessages
                     ))
                     .ToList(),
                 a.AdditionalArchiveContents.OrderBy(content => content.Name)
@@ -1022,7 +1032,7 @@ public class ReleaseReadRepository(
                         )
                     ),
                 u.UploadConfig.HosterRegistration.HasUnreadableSecrets,
-                u.ErrorMessages.ToList()
+                u.ErrorMessages
             ))
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -1132,7 +1142,7 @@ public class ReleaseReadRepository(
                 c.EnableCaptcha,
                 c.EnableContainerDownload,
                 c.EnableClickAndLoad,
-                Errors = c.Errors.ToList(),
+                Errors = c.Errors,
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -1161,7 +1171,7 @@ public class ReleaseReadRepository(
                 source.LinkCrypterContainer.EnableCaptcha,
                 source.LinkCrypterContainer.EnableContainerDownload,
                 source.LinkCrypterContainer.EnableClickAndLoad,
-                Errors = source.LinkCrypterContainer.Errors.ToList(),
+                Errors = source.LinkCrypterContainer.Errors,
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -1228,8 +1238,11 @@ public class ReleaseReadRepository(
             var pattern = ToContainsPattern(searchTerm);
 
             releases = releases.Where(r =>
-                EF.Functions.ILike(r.Name, pattern)
-                || (r.ReleaseFolderPath != null && EF.Functions.ILike(r.ReleaseFolderPath, pattern))
+                EF.Functions.Like(r.Name.ToLower(), pattern)
+                || (
+                    r.ReleaseFolderPath != null
+                    && EF.Functions.Like(r.ReleaseFolderPath.ToLower(), pattern)
+                )
             );
         }
 
@@ -1302,7 +1315,9 @@ public class ReleaseReadRepository(
         {
             var pattern = ToContainsPattern(postedLocationUrl);
             releases = releases.Where(r =>
-                r.PostedLocations.Any(location => EF.Functions.ILike(location.Url, pattern))
+                r.PostedLocations.Any(location =>
+                    EF.Functions.Like(location.Url.ToLower(), pattern)
+                )
             );
         }
 
@@ -1316,7 +1331,7 @@ public class ReleaseReadRepository(
                 r.UploadConfigs.Any(u =>
                     u.Uploads.Any(upload =>
                         upload.UploadedFiles.Any(file =>
-                            EF.Functions.ILike(file.HosterFileLink, pattern)
+                            EF.Functions.Like(file.HosterFileLink.ToLower(), pattern)
                         )
                     )
                 )
@@ -1332,7 +1347,7 @@ public class ReleaseReadRepository(
                 r.ArchiveConfigs.Any(config =>
                     config.Archives.Any(archive =>
                         archive.ArchiveFiles.Any(file =>
-                            EF.Functions.ILike(file.FullFileName, pattern)
+                            EF.Functions.Like(file.FullFileName.ToLower(), pattern)
                         )
                     )
                 )
@@ -1396,6 +1411,6 @@ public class ReleaseReadRepository(
 
     private static string ToContainsPattern(string value)
     {
-        return $"%{value}%";
+        return $"%{value.ToLowerInvariant()}%";
     }
 }

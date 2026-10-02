@@ -1,9 +1,8 @@
 using Bearcat.Domain.Entities;
 using Bearcat.Domain.UseCases.ManageReleases.ReleaseNameParsing;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
-using Microsoft.EntityFrameworkCore;
+using EntityFramework.Exceptions.Common;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 using TimeProvider = Bearcat.Domain.Shared.TimeProvider;
 
 namespace Bearcat.Domain.UseCases.ManageReleases;
@@ -48,7 +47,8 @@ public class ReleaseClassificationService(
             {
                 await repository.SaveChangesAsync(cancellationToken);
             }
-            catch (DbUpdateException exception) when (IsDuplicateClassificationException(exception))
+            catch (UniqueConstraintException exception)
+                when (IsDuplicateClassificationException(exception))
             {
                 logger.LogInformation(
                     exception,
@@ -134,13 +134,8 @@ public class ReleaseClassificationService(
         target.ClassifiedAt = source.ClassifiedAt;
     }
 
-    private static bool IsDuplicateClassificationException(DbUpdateException exception)
+    private static bool IsDuplicateClassificationException(UniqueConstraintException exception)
     {
-        return exception.InnerException
-            is PostgresException
-            {
-                SqlState: PostgresErrorCodes.UniqueViolation,
-                ConstraintName: "IX_ReleaseClassifications_ReleaseId",
-            };
+        return exception.Entries.Any(entry => entry.Entity is ReleaseClassification);
     }
 }

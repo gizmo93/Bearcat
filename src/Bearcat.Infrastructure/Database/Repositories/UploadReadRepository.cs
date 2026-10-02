@@ -93,6 +93,6 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
             u.NotFullyOnlineSince,
             u.FullyOfflineSince,
             u.UploadedFiles.Count,
-            u.ErrorMessages.ToList()
+            u.ErrorMessages
         );
 }
