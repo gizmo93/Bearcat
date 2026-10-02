@@ -12,6 +12,8 @@
         <Project Path="src/Bearcat.Application/Bearcat.Application.csproj" />
         <Project Path="src/Bearcat.Domain/Bearcat.Domain.csproj" />
         <Project Path="src/Bearcat.Infrastructure/Bearcat.Infrastructure.csproj" />
+        <Project Path="src/Bearcat.Infrastructure.Migrations.Postgres/Bearcat.Infrastructure.Migrations.Postgres.csproj" />
+        <Project Path="src/Bearcat.Infrastructure.Migrations.Sqlite/Bearcat.Infrastructure.Migrations.Sqlite.csproj" />
         <Project Path="src/Bearcat.Website/Bearcat.Website.csproj" />
     </Folder>
     <Folder Name="/4_Plugins/">

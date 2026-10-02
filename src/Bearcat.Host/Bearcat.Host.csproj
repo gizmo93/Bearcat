@@ -25,6 +25,8 @@
         <ProjectReference Include="..\Bearcat.DistributionSites\Bearcat.DistributionSites.csproj" />
         <ProjectReference Include="..\Bearcat.Domain\Bearcat.Domain.csproj" />
         <ProjectReference Include="..\Bearcat.Hosters\Bearcat.Hosters.csproj" />
+        <ProjectReference Include="..\Bearcat.Infrastructure.Migrations.Postgres\Bearcat.Infrastructure.Migrations.Postgres.csproj" />
+        <ProjectReference Include="..\Bearcat.Infrastructure.Migrations.Sqlite\Bearcat.Infrastructure.Migrations.Sqlite.csproj" />
         <ProjectReference Include="..\Bearcat.ImageHosters\Bearcat.ImageHosters.csproj" />
         <ProjectReference Include="..\Bearcat.LinkCrypters\Bearcat.LinkCrypters.csproj" />
         <ProjectReference Include="..\Bearcat.Media\Bearcat.Media.csproj" />

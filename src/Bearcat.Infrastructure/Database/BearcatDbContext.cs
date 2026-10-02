@@ -125,6 +125,26 @@ public sealed class BearcatDbContext : DbContext, IBearcatReadDbContext, IBearca
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BearcatDbContext).Assembly);
+
+        if (Database.IsSqlite())
+        {
+            ResetJsonbColumnTypes(modelBuilder);
+        }
+
         base.OnModelCreating(modelBuilder);
+    }
+
+    private static void ResetJsonbColumnTypes(ModelBuilder modelBuilder)
+    {
+        var jsonbProperties = modelBuilder
+            .Model.GetEntityTypes()
+            .SelectMany(entityType => entityType.GetProperties())
+            .Where(property => property.GetColumnType() == "jsonb")
+            .ToList();
+
+        foreach (var property in jsonbProperties)
+        {
+            property.SetColumnType(null);
+        }
     }
 }

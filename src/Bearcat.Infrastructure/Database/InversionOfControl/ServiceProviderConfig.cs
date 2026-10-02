@@ -45,7 +45,6 @@ using Bearcat.Domain.UseCases.ManageUploads.Repositories;
 using Bearcat.Domain.UseCases.PostToForums.Repositories;
 using Bearcat.Infrastructure.Database.Repositories;
 using Bearcat.Infrastructure.DistributionSites;
-using EntityFramework.Exceptions.PostgreSQL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -58,22 +57,14 @@ public static class ServiceProviderConfig
     {
         public void AddDatabase(IConfiguration configuration)
         {
-            services.AddDbContext<BearcatDbContext>(
-                builder =>
-                {
-                    var connectionString = configuration
-                        .GetRequiredSection("Database:ConnectionString")
-                        .Value;
-                    builder
-                        .UseNpgsql(
-                            connectionString,
-                            opts =>
-                                opts.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
-                        )
-                        .UseExceptionProcessor();
-                },
-                ServiceLifetime.Transient
-            );
+            if (DatabaseConfiguration.GetProvider(configuration) == DatabaseProvider.Sqlite)
+            {
+                services.AddSqliteDbContext(configuration);
+            }
+            else
+            {
+                services.AddPostgresDbContext(configuration);
+            }
 
             services.AddScoped<IBearcatWriteDbContext>(s =>
                 s.GetRequiredService<BearcatDbContext>()
@@ -88,6 +79,31 @@ public static class ServiceProviderConfig
             services.AddRepositories();
 
             services.AddScoped<IDistributionSessionRepository, DistributionSessionRepository>();
+        }
+
+        private void AddPostgresDbContext(IConfiguration configuration)
+        {
+            services.AddDbContext<BearcatDbContext>(
+                builder =>
+                    builder.UseBearcatPostgres(
+                        DatabaseConfiguration.GetPostgresConnectionString(configuration)
+                    ),
+                ServiceLifetime.Transient
+            );
+        }
+
+        private void AddSqliteDbContext(IConfiguration configuration)
+        {
+            var sqliteFilePath = DatabaseConfiguration.GetSqliteFilePath(configuration);
+            Directory.CreateDirectory(Path.GetDirectoryName(sqliteFilePath)!);
+            var connectionString = DatabaseConfiguration.CreateSqliteConnectionString(
+                sqliteFilePath
+            );
+
+            services.AddDbContext<BearcatDbContext>(
+                builder => builder.UseBearcatSqlite(connectionString),
+                ServiceLifetime.Transient
+            );
         }
 
         private void AddRepositories()

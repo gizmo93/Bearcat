@@ -5,18 +5,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="Database\Migrations\" />
-    </ItemGroup>
-
-    <ItemGroup>
         <PackageReference Include="EntityFrameworkCore.Exceptions.PostgreSQL" />
+        <PackageReference Include="EntityFrameworkCore.Exceptions.Sqlite" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" />
         <PackageReference Include="Microsoft.Extensions.Http" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
         <PackageReference Include="Npgsql" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
         <PackageReference Include="Telegram.Bot" />

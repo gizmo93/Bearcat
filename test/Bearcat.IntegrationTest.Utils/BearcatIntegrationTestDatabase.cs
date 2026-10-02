@@ -1,5 +1,4 @@
 using Bearcat.Infrastructure.Database;
-using EntityFramework.Exceptions.PostgreSQL;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Respawn;
@@ -56,8 +55,6 @@ public sealed class BearcatIntegrationTestDatabase : IAsyncDisposable
                 return sharedDatabase;
             }
 
-            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
             var database = new BearcatIntegrationTestDatabase(CreatePostgreSqlContainer());
             await database.StartAsync(cancellationToken);
             sharedDatabase = database;
@@ -103,12 +100,10 @@ public sealed class BearcatIntegrationTestDatabase : IAsyncDisposable
 
     private BearcatDbContext CreateStartedDbContext()
     {
-        var options = new DbContextOptionsBuilder<BearcatDbContext>()
-            .UseNpgsql(ConnectionString)
-            .UseExceptionProcessor()
-            .Options;
+        var optionsBuilder = new DbContextOptionsBuilder<BearcatDbContext>();
+        optionsBuilder.UseBearcatPostgres(ConnectionString);
 
-        return new BearcatDbContext(options);
+        return new BearcatDbContext(optionsBuilder.Options);
     }
 
     public async Task ResetAsync(CancellationToken cancellationToken = default)
