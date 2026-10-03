@@ -1,0 +1,46 @@
+@using Bearcat.Domain.UseCases.ManageArchives.Search
+<EditForm Model="model" OnSubmit="ApplyFiltersAsync" class="bearcat-release-search">
+    <div class="bearcat-release-search-grid">
+        <BbFormFieldInput TValue="string"
+                          @bind-Value="model.SearchTerm"
+                          Label="@L["SearchArchives"]"
+                          Placeholder="@L["ArchiveSearchPlaceholder"]" />
+
+        <BbFormFieldSelect TValue="ArchiveState?"
+                           @bind-Value="model.ArchiveState"
+                           Label="@L["State"]"
+                           Options="ArchiveStateOptions" />
+
+        <BbFormFieldSelect TValue="string"
+                           @bind-Value="model.ArchiverName"
+                           Label="@L["Archiver"]"
+                           Options="ArchiverOptions" />
+
+        <BbFormFieldSelect TValue="int"
+                           @bind-Value="model.ReleaseGroupId"
+                           Label="@L["ReleaseGroup"]"
+                           Options="ReleaseGroupOptions" />
+
+        <BbFormFieldSelect TValue="ArchiveOnDiskFilter?"
+                           @bind-Value="model.OnDiskFilter"
+                           Label="@L["OnDisk"]"
+                           Options="OnDiskFilterOptions" />
+    </div>
+
+    <div class="bearcat-release-search-actions">
+        <BbButton Type="ButtonType.Submit"
+                  Size="ButtonSize.Small"
+                  Class="bearcat-release-search-button">
+            <LucideIcon Name="search" class="h-4 w-4" />
+            @L["Search"]
+        </BbButton>
+        <BbButton Type="ButtonType.Button"
+                  Variant="ButtonVariant.Secondary"
+                  Size="ButtonSize.Small"
+                  Class="bearcat-release-search-button"
+                  OnClick="ResetFiltersAsync">
+            <LucideIcon Name="rotate-ccw" class="h-4 w-4" />
+            @L["ResetFilters"]
+        </BbButton>
+    </div>
+</EditForm>

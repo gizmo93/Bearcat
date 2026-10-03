@@ -97,9 +97,7 @@
                                    Property="@(upload => upload.UploadState.ToString())"
                                    Sortable="true">
                     <CellTemplate Context="upload">
-                        <BbBadge Variant="@GetUploadVariant(upload.UploadState)">
-                            @L.Localize(upload.UploadState)
-                        </BbBadge>
+                        <UploadStateBadge State="upload.UploadState" />
                     </CellTemplate>
                 </BbDataTableColumn>
                 <BbDataTableColumn TData="RunningUploadReadModel" TValue="double"

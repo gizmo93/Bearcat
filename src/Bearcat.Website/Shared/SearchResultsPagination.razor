@@ -1,0 +1,20 @@
+<div class="bearcat-release-pagination">
+    <p class="text-sm text-muted-foreground">
+        @L[ResultsSummaryResourceKey, FirstResult, LastResult, TotalCount]
+    </p>
+
+    <div class="bearcat-release-pagination-controls">
+        <label class="bearcat-page-size">
+            <span>@L["RowsPerPage"]</span>
+            <BbSelect TValue="int"
+                      Value="PageSize"
+                      ValueChanged="PageSizeChanged"
+                      Options="PageSizeOptions"
+                      Class="w-24" />
+        </label>
+
+        <PageNavigation CurrentPage="CurrentPage"
+                        TotalPages="TotalPages"
+                        GetPageUrl="GetPageUrl" />
+    </div>
+</div>

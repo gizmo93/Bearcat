@@ -172,6 +172,157 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
     }
 
     [Test]
+    public async Task SearchUploadsAsync_ReleaseGroupFilter_ReturnsUploadsOfReleasesInGroup()
+    {
+        // Arrange
+        var uploads = await AddSearchUploadsAsync();
+
+        // Act
+        var result = await repository.SearchUploadsAsync(
+            new UploadSearchQuery(ReleaseGroupId: uploads.SecondReleaseGroupId),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(2);
+        result
+            .Items.Select(item => item.UploadId)
+            .ShouldBe([uploads.PendingUpload.Id, uploads.OfflineUpload.Id]);
+    }
+
+    [Test]
+    public async Task SearchUploadsAsync_SearchTermMatchesReleaseNameInDifferentCase_ReturnsUploadsOfRelease()
+    {
+        // Arrange
+        var uploads = await AddSearchUploadsAsync();
+
+        // Act
+        var result = await repository.SearchUploadsAsync(
+            new UploadSearchQuery(SearchTerm: "  bearcat.SECOND  "),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(2);
+        result
+            .Items.Select(item => item.UploadId)
+            .ShouldBe([uploads.PendingUpload.Id, uploads.OfflineUpload.Id]);
+    }
+
+    [Test]
+    public async Task SearchUploadsAsync_SearchTermMatchesHosterFileLinkWithNonAsciiCharacterInDifferentCase_ReturnsUpload()
+    {
+        // Arrange
+        var uploads = await AddSearchUploadsAsync();
+
+        // Act
+        var result = await repository.SearchUploadsAsync(
+            new UploadSearchQuery(SearchTerm: "übersicht.PART2"),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        result.Items.Select(item => item.UploadId).ShouldBe([uploads.OfflineUpload.Id]);
+    }
+
+    [Test]
+    public async Task SearchUploadsAsync_SearchTermIsUploadIdWithHashPrefix_ReturnsUpload()
+    {
+        // Arrange
+        var uploads = await AddSearchUploadsAsync();
+
+        // Act
+        var result = await repository.SearchUploadsAsync(
+            new UploadSearchQuery(SearchTerm: $"#{uploads.PendingUpload.Id}"),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        result.Items.Select(item => item.UploadId).ShouldBe([uploads.PendingUpload.Id]);
+    }
+
+    [Test]
+    public async Task SearchUploadsAsync_SearchTermIsUploadIdWithoutHashPrefix_ContainsUpload()
+    {
+        // Arrange
+        var uploads = await AddSearchUploadsAsync();
+
+        // Act
+        var result = await repository.SearchUploadsAsync(
+            new UploadSearchQuery(SearchTerm: uploads.LatestUploadOfSecondHoster.Id.ToString()),
+            CancellationToken.None
+        );
+
+        // Assert
+        result
+            .Items.Select(item => item.UploadId)
+            .ShouldContain(uploads.LatestUploadOfSecondHoster.Id);
+    }
+
+    [Test]
+    public async Task SearchUploadsAsync_SearchTermMatchesNothing_ReturnsEmptyResult()
+    {
+        // Arrange
+        await AddSearchUploadsAsync();
+
+        // Act
+        var result = await repository.SearchUploadsAsync(
+            new UploadSearchQuery(SearchTerm: "does-not-exist"),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(0);
+        result.Items.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task SearchUploadsAsync_SearchTermAndFilters_ReturnsUploadsMatchingAll()
+    {
+        // Arrange
+        var uploads = await AddSearchUploadsAsync();
+
+        // Act
+        var result = await repository.SearchUploadsAsync(
+            new UploadSearchQuery(
+                SearchTerm: "bearcat.first",
+                HosterRegistrationId: uploads.SecondHosterRegistrationId,
+                ReleaseGroupId: uploads.FirstReleaseGroupId
+            ),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        result
+            .Items.Select(item => item.UploadId)
+            .ShouldBe([uploads.LatestUploadOfSecondHoster.Id]);
+    }
+
+    [Test]
+    public async Task SearchUploadsAsync_UploadsWithAndWithoutArchive_ProjectsArchiveId()
+    {
+        // Arrange
+        var uploads = await AddSearchUploadsAsync();
+
+        // Act
+        var result = await repository.SearchUploadsAsync(
+            new UploadSearchQuery(ReleaseId: uploads.SecondReleaseId),
+            CancellationToken.None
+        );
+
+        // Assert
+        result
+            .Items.Single(item => item.UploadId == uploads.OfflineUpload.Id)
+            .ArchiveId.ShouldBe(uploads.SecondArchiveId);
+        result
+            .Items.Single(item => item.UploadId == uploads.PendingUpload.Id)
+            .ArchiveId.ShouldBeNull();
+    }
+
+    [Test]
     public async Task GetUploadAsync_UploadExists_ReturnsProjectedReadModel()
     {
         // Arrange
@@ -200,6 +351,7 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
         result.FullyOfflineSince.ShouldBe(Midnight.AddHours(2).AddMilliseconds(750));
         result.LinkCount.ShouldBe(2);
         result.ErrorMessages.ShouldBe(["File offline", "Check of Façade.rar timed out"]);
+        result.ArchiveId.ShouldBe(uploads.SecondArchiveId);
     }
 
     [Test]
@@ -470,7 +622,7 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
                 upload.UploadedFiles =
                 [
                     CreateUploadedFile(secondArchive, "archive.part1.rar"),
-                    CreateUploadedFile(secondArchive, "archive.part2.rar"),
+                    CreateUploadedFile(secondArchive, "ÜBERSICHT.part2.rar"),
                 ];
             }
         );
@@ -500,6 +652,9 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
         return new SearchUploads(
             firstRelease.Id,
             secondRelease.Id,
+            firstRelease.ReleaseGroupId,
+            secondRelease.ReleaseGroupId,
+            secondArchive.Id,
             firstHoster.Id,
             secondHoster.Id,
             uploadedBeforeMidnight,
@@ -608,6 +763,9 @@ public class UploadReadRepositoryTest(DatabaseProvider databaseProvider)
     private sealed record SearchUploads(
         int FirstReleaseId,
         int SecondReleaseId,
+        int FirstReleaseGroupId,
+        int SecondReleaseGroupId,
+        int SecondArchiveId,
         int FirstHosterRegistrationId,
         int SecondHosterRegistrationId,
         Upload UploadedBeforeMidnight,

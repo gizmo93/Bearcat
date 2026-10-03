@@ -39,7 +39,9 @@ public class UploadsController(
             HosterRegistrationId: request.HosterRegistrationId,
             ReleaseId: request.ReleaseId,
             PageIndex: request.PageIndex,
-            PageSize: request.PageSize
+            PageSize: request.PageSize,
+            SearchTerm: request.SearchTerm,
+            ReleaseGroupId: request.ReleaseGroupId
         );
 
         var result = await uploadReadRepository.SearchUploadsAsync(query, cancellationToken);

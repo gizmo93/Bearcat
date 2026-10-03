@@ -71,9 +71,7 @@
                                        Width="180px">
                         <CellTemplate Context="summary">
                             <div class="flex items-center gap-2">
-                                <BbBadge Variant="@GetArchiveVariant(summary.ArchiveState)">
-                                    @L.Localize(summary.ArchiveState)
-                                </BbBadge>
+                                <ArchiveStateBadge State="summary.ArchiveState" />
                                 <ErrorMessagesTooltip Messages="summary.ErrorMessages" />
                             </div>
                         </CellTemplate>

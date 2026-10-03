@@ -18,6 +18,14 @@ public record UploadSearchRequest
 
     public int? ReleaseId { get; init; }
 
+    public int? ReleaseGroupId { get; init; }
+
+    /// <summary>
+    /// Case-insensitive substring match on the release name and the hoster links of the uploaded files.
+    /// A number, optionally prefixed with "#", also matches the upload with that id.
+    /// </summary>
+    public string? SearchTerm { get; init; }
+
     public int PageIndex { get; init; } = 0;
 
     public int PageSize { get; init; } = 10;

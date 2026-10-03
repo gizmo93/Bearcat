@@ -12,6 +12,7 @@ using Bearcat.Domain.UseCases.ManageReleases.ReadModels;
 using Bearcat.Domain.UseCases.ManageReleases.Repositories;
 using Bearcat.Website.Pages.ManageReleaseTemplates;
 using Bearcat.Website.ScopedOperations;
+using Bearcat.Website.Shared;
 using BlazorBlueprint.Components;
 using BlazorBlueprint.Primitives;
 using Microsoft.AspNetCore.Components;
@@ -34,10 +35,10 @@ public partial class AllReleasesPage(
     private IReadOnlyList<ReleaseGroupReadModel> releaseGroups = [];
     private readonly HashSet<int> selectedReleaseIds = [];
     private ReleaseSearchQuery searchQuery = new();
-    private ReleaseSearchUrlState? loadedState;
+    private SearchUrlState<ReleaseSearchQuery>? loadedState;
     private int totalCount;
     private int pageIndex;
-    private int pageSize = ReleaseSearchUrl.DefaultPageSize;
+    private int pageSize = SearchUrlParameters.DefaultPageSize;
     private int selectedBulkReleaseGroupId;
     private string selectedBulkPrimaryLanguageCode = NoBulkLanguageSelected;
     private bool isLoading;
@@ -87,18 +88,10 @@ public partial class AllReleasesPage(
     [SupplyParameterFromQuery(Name = "size")]
     public int? PageSize { get; set; }
 
-    private int CurrentPage => totalCount == 0 ? 1 : pageIndex + 1;
     private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
-    private int FirstResult => totalCount == 0 ? 0 : pageIndex * pageSize + 1;
-    private int LastResult => Math.Min(totalCount, (pageIndex + 1) * pageSize);
     private string ReleasesTableKey => $"{pageIndex}-{pageSize}-{searchQuery.GetHashCode()}";
     private bool AreAllVisibleReleasesSelected =>
         releases.Count > 0 && releases.All(r => selectedReleaseIds.Contains(r.ReleaseId));
-
-    private static IReadOnlyList<SelectOption<int>> PageSizeOptions =>
-        ReleaseSearchUrl
-            .PageSizes.Select(size => new SelectOption<int>(size, size.ToString()))
-            .ToList();
 
     private IReadOnlyList<SelectOption<int>> ReleaseGroupOptions =>
         [
@@ -292,7 +285,7 @@ public partial class AllReleasesPage(
                 return;
             }
 
-            loadedState = new ReleaseSearchUrlState(searchQuery, pageIndex, pageSize);
+            loadedState = new SearchUrlState<ReleaseSearchQuery>(searchQuery, pageIndex, pageSize);
         }
         finally
         {
@@ -385,8 +378,10 @@ public partial class AllReleasesPage(
         await RefreshReleasesAsync();
     }
 
-    private void OnPageSizeChanged()
+    private void ChangePageSize(int selectedPageSize)
     {
-        navigationManager.NavigateTo(ReleaseSearchUrl.Build(searchQuery, page: 1, pageSize));
+        navigationManager.NavigateTo(
+            ReleaseSearchUrl.Build(searchQuery, page: 1, selectedPageSize)
+        );
     }
 }

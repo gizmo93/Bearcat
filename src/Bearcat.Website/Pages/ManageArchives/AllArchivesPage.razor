@@ -1,0 +1,121 @@
+@page "/archives"
+@using Bearcat.Domain.UseCases.ManageArchives.Search
+
+<PageTitle>@L["Archives"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["Archives"]</h1>
+        </div>
+    </div>
+
+    <ArchiveSearchForm Archivers="archivers"
+                       ReleaseGroups="releaseGroups"
+                       Query="searchQuery"
+                       OnSearch="ApplySearchAsync" />
+
+    @if (archives.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+            @(isLoading ? L["Loading"] : L["NoArchivesFound"])
+        </div>
+    }
+    else
+    {
+        <div class="bearcat-config-list">
+            <div class="bearcat-config-header @ArchiveListGridClass">
+                <span>@L["Release"]</span>
+                <span>@L["ArchiveConfig"]</span>
+                <span>@L["State"]</span>
+                <span>@L["OnDisk"]</span>
+                <span>@L["CreatedAt"]</span>
+                <span>@L["Contents"]</span>
+                <span class="text-right">@L["Actions"]</span>
+            </div>
+            @foreach (var archive in archives)
+            {
+                <div class="bearcat-config-item cursor-pointer transition hover:bg-muted/40"
+                     @onclick="@(() => ShowArchiveDialogAsync(archive.ArchiveId))">
+                    <div class="bearcat-config-row @ArchiveListGridClass">
+                        <div class="min-w-0 space-y-1">
+                            <p class="text-xs tabular-nums text-muted-foreground">#@archive.ArchiveId</p>
+                            <a class="block text-sm font-semibold text-primary transition hover:underline [overflow-wrap:anywhere]"
+                               href="@GetReleaseArchivesUrl(archive)"
+                               @onclick:stopPropagation="true">
+                                @archive.ReleaseName
+                            </a>
+                            <p class="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground" title="@archive.ArchiveFolderPath">
+                                <LucideIcon Name="folder" class="h-3.5 w-3.5 shrink-0" />
+                                <span class="truncate">@archive.ArchiveFolderPath</span>
+                            </p>
+                        </div>
+
+                        <div class="min-w-0 space-y-1">
+                            <p class="bearcat-mobile-label">@L["ArchiveConfig"]</p>
+                            <p class="truncate text-sm" title="@archive.ArchiveConfigName">@archive.ArchiveConfigName</p>
+                            <BbBadge Variant="BadgeVariant.Outline">@GetArchiverDisplayName(archive.ArchiverName)</BbBadge>
+                        </div>
+
+                        <div>
+                            <p class="bearcat-mobile-label">@L["State"]</p>
+                            <div class="flex items-center gap-2">
+                                <ArchiveStateBadge State="archive.ArchiveState" />
+                                <ErrorMessagesTooltip Messages="archive.ErrorMessages" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="bearcat-mobile-label">@L["OnDisk"]</p>
+                            @if (ArchiveOnDiskStates.OnDisk.Contains(archive.ArchiveState))
+                            {
+                                <span class="inline-flex items-center gap-1.5 text-sm">
+                                    <LucideIcon Name="hard-drive" class="h-4 w-4 text-primary" />
+                                    @L["Yes"]
+                                </span>
+                            }
+                            else if (ArchiveOnDiskStates.NotOnDisk.Contains(archive.ArchiveState))
+                            {
+                                <span class="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                                    <LucideIcon Name="circle-off" class="h-4 w-4" />
+                                    @L["No"]
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-sm text-muted-foreground">-</span>
+                            }
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["CreatedAt"]</p>
+                            <p class="text-sm">@archive.CreatedAt.ToString("g")</p>
+                        </div>
+
+                        <div class="min-w-0 space-y-0.5">
+                            <p class="bearcat-mobile-label">@L["Contents"]</p>
+                            <p class="text-xs tabular-nums text-muted-foreground">@L["FileCountValue", archive.ArchiveFileCount]</p>
+                            <p class="text-xs tabular-nums text-muted-foreground">@L["UploadCountValue", archive.UploadCount]</p>
+                        </div>
+
+                        <div class="bearcat-config-actions" @onclick:stopPropagation="true">
+                            <BbButton Variant="ButtonVariant.Ghost"
+                                      Size="ButtonSize.IconSmall"
+                                      AriaLabel="@L["OpenArchiveDetails"]"
+                                      OnClick="@(() => ShowArchiveDialogAsync(archive.ArchiveId))">
+                                <LucideIcon Name="info" class="h-4 w-4" />
+                            </BbButton>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <SearchResultsPagination TotalCount="totalCount"
+                             PageIndex="pageIndex"
+                             PageSize="pageSize"
+                             ResultsSummaryResourceKey="ArchiveResultsSummary"
+                             GetPageUrl="GetPageUrl"
+                             PageSizeChanged="ChangePageSize" />
+</section>

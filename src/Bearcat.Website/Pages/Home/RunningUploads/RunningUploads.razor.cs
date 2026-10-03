@@ -73,16 +73,6 @@ public partial class RunningUploads(
         StateHasChanged();
     }
 
-    private static BadgeVariant GetUploadVariant(UploadState state) =>
-        state switch
-        {
-            UploadState.Uploading => BadgeVariant.Default,
-            UploadState.CancellationRequested => BadgeVariant.Secondary,
-            UploadState.Pending => BadgeVariant.Secondary,
-            UploadState.Failed => BadgeVariant.Destructive,
-            _ => BadgeVariant.Outline,
-        };
-
     private async Task CancelUploadAsync(RunningUploadReadModel upload)
     {
         var result = await dialogService.ConfirmAsync(

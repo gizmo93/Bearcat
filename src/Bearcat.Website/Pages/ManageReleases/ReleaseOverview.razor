@@ -148,9 +148,7 @@
                             else
                             {
                                 <div class="flex items-center gap-2">
-                                    <BbBadge Variant="@GetUploadVariant(upload.UploadState)">
-                                        @L.Localize(upload.UploadState.Value)
-                                    </BbBadge>
+                                    <UploadStateBadge State="upload.UploadState.Value" />
                                     <ErrorMessagesTooltip Messages="upload.ErrorMessages" />
                                 </div>
                             }
@@ -280,9 +278,7 @@
                                 }
                                 else
                                 {
-                                    <BbBadge Variant="@GetUploadVariant(imageUpload.UploadState)">
-                                        @L.Localize(imageUpload.UploadState.Value)
-                                    </BbBadge>
+                                    <UploadStateBadge State="imageUpload.UploadState.Value" />
                                     <ErrorMessagesTooltip Messages="imageUpload.ErrorMessages" />
                                 }
 

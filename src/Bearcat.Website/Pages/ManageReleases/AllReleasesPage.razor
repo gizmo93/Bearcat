@@ -198,24 +198,10 @@
         </EmptyTemplate>
     </BbDataTable>
 
-    <div class="bearcat-release-pagination">
-        <p class="text-sm text-muted-foreground">
-            @L["ReleaseResultsSummary", FirstResult, LastResult, totalCount]
-        </p>
-
-        <div class="bearcat-release-pagination-controls">
-            <label class="bearcat-page-size">
-                <span>@L["RowsPerPage"]</span>
-                <BbSelect TValue="int"
-                          @bind-Value="pageSize"
-                          @bind-Value:after="OnPageSizeChanged"
-                          Options="PageSizeOptions"
-                          Class="w-24" />
-            </label>
-
-            <PageNavigation CurrentPage="CurrentPage"
-                            TotalPages="TotalPages"
-                            GetPageUrl="GetPageUri" />
-        </div>
-    </div>
+    <SearchResultsPagination TotalCount="totalCount"
+                             PageIndex="pageIndex"
+                             PageSize="pageSize"
+                             ResultsSummaryResourceKey="ReleaseResultsSummary"
+                             GetPageUrl="GetPageUri"
+                             PageSizeChanged="ChangePageSize" />
 </section>

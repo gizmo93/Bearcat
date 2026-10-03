@@ -16,6 +16,15 @@ public static class NavigationRegistry
                 Entry("Releases", "/releases", "upload"),
                 Entry("ReleaseCollections", "/release-collections", "boxes"),
                 new NavigationSubmenu(
+                    "uploadsAndArchives",
+                    "UploadsAndArchives",
+                    "library",
+                    [
+                        Entry("Uploads", "/uploads", "cloud-upload"),
+                        Entry("Archives", "/archives", "archive"),
+                    ]
+                ),
+                new NavigationSubmenu(
                     "activity",
                     "Activity",
                     "radar",

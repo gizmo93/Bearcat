@@ -52,6 +52,20 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
             );
         }
 
+        if (query.ReleaseGroupId is not null)
+        {
+            uploadsQuery = uploadsQuery.Where(u =>
+                u.UploadConfig.Release.ReleaseGroupId == query.ReleaseGroupId.Value
+            );
+        }
+
+        var searchTerm = SearchTextPatterns.TrimOrNullWhenEmpty(query.SearchTerm);
+
+        if (searchTerm is not null)
+        {
+            uploadsQuery = ApplySearchTerm(uploadsQuery, searchTerm);
+        }
+
         var totalCount = await uploadsQuery.CountAsync(cancellationToken);
 
         var orderedQuery = query.UploadedAfter is not null
@@ -139,6 +153,20 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
             .ToList();
     }
 
+    private static IQueryable<Upload> ApplySearchTerm(IQueryable<Upload> uploads, string searchTerm)
+    {
+        var pattern = SearchTextPatterns.ToLowerCaseContainsPattern(searchTerm);
+        var uploadId = SearchTextPatterns.ParseIdWithOptionalHashPrefix(searchTerm);
+
+        return uploads.Where(u =>
+            u.Id == uploadId
+            || EF.Functions.Like(u.UploadConfig.Release.Name.ToLower(), pattern)
+            || u.UploadedFiles.Any(file =>
+                EF.Functions.Like(file.HosterFileLink.ToLower(), pattern)
+            )
+        );
+    }
+
     private static readonly Expression<Func<Upload, UploadReadModel>> ToReadModel =
         u => new UploadReadModel(
             u.Id,
@@ -155,6 +183,7 @@ public class UploadReadRepository(IBearcatReadDbContext dbRead) : IUploadReadRep
             u.NotFullyOnlineSince,
             u.FullyOfflineSince,
             u.UploadedFiles.Count,
-            u.ErrorMessages
+            u.ErrorMessages,
+            u.ArchiveId
         );
 }

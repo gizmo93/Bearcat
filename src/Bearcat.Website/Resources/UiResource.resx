@@ -1512,6 +1512,20 @@
   <data name="ProxyCategory.NfoDatabases.Description" xml:space="preserve"><value>Release information, NFO files and covers from NFO databases.</value></data>
   <data name="ProxyCategory.MediaDatabases" xml:space="preserve"><value>Media databases</value></data>
   <data name="ProxyCategory.MediaDatabases.Description" xml:space="preserve"><value>Metadata lookups for movies, series and games.</value></data>
+  <data name="All" xml:space="preserve"><value>All</value></data>
+  <data name="Archive" xml:space="preserve"><value>Archive</value></data>
+  <data name="Contents" xml:space="preserve"><value>Contents</value></data>
+  <data name="SearchUploads" xml:space="preserve"><value>Search uploads</value></data>
+  <data name="UploadSearchPlaceholder" xml:space="preserve"><value>Release name, ID or download link</value></data>
+  <data name="AnyUploadState" xml:space="preserve"><value>Any state</value></data>
+  <data name="SearchArchives" xml:space="preserve"><value>Search archives</value></data>
+  <data name="ArchiveSearchPlaceholder" xml:space="preserve"><value>Release name, ID, file name, folder or MD5</value></data>
+  <data name="AnyArchiveState" xml:space="preserve"><value>Any state</value></data>
+  <data name="OnDisk" xml:space="preserve"><value>On disk</value></data>
+  <data name="ArchiveResultsSummary" xml:space="preserve"><value>Showing {0}-{1} of {2} archives</value></data>
+  <data name="NoArchivesFound" xml:space="preserve"><value>No archives found</value></data>
+  <data name="UploadCountValue" xml:space="preserve"><value>{0} uploads</value></data>
+  <data name="UploadsAndArchives" xml:space="preserve"><value>Uploads and archives</value></data>
   <data name="PackReleaseFolderAsRootFolder" xml:space="preserve"><value>Pack release folder as root folder</value></data>
   <data name="PackReleaseFolderAsRootFolderHelp" xml:space="preserve"><value>When enabled, the archive contains one folder named after the release folder. When disabled, the contents of the release folder are packed directly at the top level of the archive. Only affects newly created archives.</value></data>
   <data name="CreateNonceFile" xml:space="preserve"><value>Create nonce file</value></data>

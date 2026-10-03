@@ -1,0 +1,99 @@
+@page "/uploads"
+@using Bearcat.Domain.UseCases.ManageUploads.ReadModels
+
+<PageTitle>@L["Uploads"] - Bearcat</PageTitle>
+
+<section class="space-y-4">
+    <div class="bearcat-page-header">
+        <div>
+            <h1 class="text-3xl font-semibold tracking-tight">@L["Uploads"]</h1>
+        </div>
+    </div>
+
+    <UploadSearchForm HosterRegistrations="hosterRegistrations"
+                      ReleaseGroups="releaseGroups"
+                      Query="searchQuery"
+                      OnSearch="ApplySearchAsync" />
+
+    @if (uploads.Count == 0)
+    {
+        <div class="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+            @(isLoading ? L["Loading"] : L["NoUploadsFound"])
+        </div>
+    }
+    else
+    {
+        <div class="bearcat-config-list">
+            <div class="bearcat-config-header @UploadListGridClass">
+                <span>@L["Release"]</span>
+                <span>@L["UploadConfig"]</span>
+                <span>@L["State"]</span>
+                <span>@L["OnlineState"]</span>
+                <span>@L["UploadedAt"]</span>
+                <span>@L["Archive"]</span>
+            </div>
+            @foreach (var upload in uploads)
+            {
+                <div class="bearcat-config-item">
+                    <div class="bearcat-config-row @UploadListGridClass">
+                        <div class="min-w-0 space-y-1">
+                            <p class="text-xs tabular-nums text-muted-foreground">#@upload.UploadId</p>
+                            <a class="block text-sm font-semibold text-primary transition hover:underline [overflow-wrap:anywhere]"
+                               href="@GetReleaseUploadsUrl(upload)">
+                                @upload.ReleaseName
+                            </a>
+                        </div>
+
+                        <div class="min-w-0 space-y-1">
+                            <p class="bearcat-mobile-label">@L["UploadConfig"]</p>
+                            <p class="truncate text-sm" title="@upload.UploadConfigName">@upload.UploadConfigName</p>
+                            <p class="truncate text-xs text-muted-foreground" title="@upload.HosterRegistrationName">@upload.HosterRegistrationName</p>
+                        </div>
+
+                        <div>
+                            <p class="bearcat-mobile-label">@L["State"]</p>
+                            <div class="flex items-center gap-2">
+                                <UploadStateBadge State="upload.UploadState" />
+                                <ErrorMessagesTooltip Messages="upload.ErrorMessages" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="bearcat-mobile-label">@L["OnlineState"]</p>
+                            <OnlineStateBadge Value="upload.OnlineState"
+                                              NotFullyOnlineSince="upload.NotFullyOnlineSince" />
+                        </div>
+
+                        <div class="min-w-0 space-y-0.5">
+                            <p class="bearcat-mobile-label">@L["UploadedAt"]</p>
+                            <p class="text-sm">@(upload.UploadedAt?.ToString("g") ?? "-")</p>
+                            <p class="text-xs text-muted-foreground">@L["CreatedAt"]: @upload.CreatedAt.ToString("g")</p>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="bearcat-mobile-label">@L["Archive"]</p>
+                            @if (upload.ArchiveId is { } archiveId)
+                            {
+                                <a class="text-sm tabular-nums text-primary transition hover:underline"
+                                   href="@GetArchiveSearchUrl(archiveId)">
+                                    #@archiveId
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-sm text-muted-foreground">-</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <SearchResultsPagination TotalCount="totalCount"
+                             PageIndex="pageIndex"
+                             PageSize="pageSize"
+                             ResultsSummaryResourceKey="UploadResultsSummary"
+                             GetPageUrl="GetPageUrl"
+                             PageSizeChanged="ChangePageSize" />
+</section>
