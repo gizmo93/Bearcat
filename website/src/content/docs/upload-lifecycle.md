@@ -131,6 +131,20 @@ fails, their states become `CreationFailed` and `Failed`.
 For reuploads, Bearcat may need to change the archive hashes or repack the files. See
 [Archive reuse and repackaging](#archive-reuse-and-repackaging) for the details.
 
+### Cancel a running archive creation
+
+Running archive creations show up on the start page under "Running archives". Each row has a
+cancel button. It covers packing, creating the MD5 hashes, and changing the MD5 hashes of a
+reused archive.
+
+- **New archive:** Bearcat deletes the archive and its files.
+- **Reused archive:** the archive is kept. Files whose hash change did not finish get new hashes
+  before the archive is assigned to the next upload.
+
+In both cases the uploads waiting for that archive become `Canceled`. Create a manual reupload when
+you want to try again. Stopping Bearcat does not cancel anything: an interrupted archive creation
+is finished or packed again on the next start.
+
 ## 4. Uploading to the hoster
 
 The **Archive upload** background task starts `Pending` uploads and changes their state to `Uploading`.

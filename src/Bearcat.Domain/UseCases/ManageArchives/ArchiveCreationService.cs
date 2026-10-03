@@ -24,6 +24,7 @@ public class ArchiveCreationService(
     IApplicationConfigurationProvider configurationProvider,
     ReleaseFolderEntriesForPackingService releaseFolderEntriesForPackingService,
     ITransferProgressTracker progressTracker,
+    ITransferCancellationRegistry cancellationRegistry,
     FolderSizeProgressReporter folderSizeProgressReporter
 )
 {
@@ -123,6 +124,11 @@ public class ArchiveCreationService(
             archive.Id
         );
 
+        DeleteArchiveFolderAndRemoveArchive(archive);
+    }
+
+    private void DeleteArchiveFolderAndRemoveArchive(Archive archive)
+    {
         fileSystemService.DeleteDirectoryIfExists(archive.ArchiveFolderPath);
         repository.Remove(archive);
     }
@@ -254,8 +260,14 @@ public class ArchiveCreationService(
             uploads: uploads,
             cancellationToken: cancellationToken
         );
+        var archiveHashesMustBeChanged =
+            archiveNeedsHashChange
+            || (
+                assignableArchive.ArchiveFiles.Any(f => f.Md5Hash is null)
+                && archiverFactory.GetByName(archiveConfig.ArchiverName).CanChangeHashInPlace
+            );
 
-        if (archiveNeedsHashChange)
+        if (archiveHashesMustBeChanged)
         {
             var archiveHasActiveUpload = await repository.HasActiveUploadAsync(
                 archiveId: assignableArchive.Id,
@@ -286,13 +298,18 @@ public class ArchiveCreationService(
                 return false;
             }
 
-            await ChangeArchiveFileHashesAsync(
-                archive: assignableArchive,
-                archiveConfig: archiveConfig,
-                knownHashes: await LoadKnownHashesAsync(archiveConfig.Id, cancellationToken),
-                transferType: TransferType.ArchiveHashChange,
-                cancellationToken: cancellationToken
-            );
+            var hashesWereChanged =
+                await ChangeExistingArchiveHashesOrCancelWaitingUploadsOnUserCancellationAsync(
+                    archive: assignableArchive,
+                    archiveConfig: archiveConfig,
+                    waitingUploads: uploads,
+                    cancellationToken: cancellationToken
+                );
+
+            if (!hashesWereChanged)
+            {
+                return true;
+            }
         }
 
         foreach (var upload in uploads)
@@ -319,6 +336,100 @@ public class ArchiveCreationService(
         );
 
         return true;
+    }
+
+    private async Task<bool> ChangeExistingArchiveHashesOrCancelWaitingUploadsOnUserCancellationAsync(
+        Archive archive,
+        ArchiveConfig archiveConfig,
+        IReadOnlyList<Upload> waitingUploads,
+        CancellationToken cancellationToken
+    )
+    {
+        var transferIdentifier = new TransferIdentifier(TransferType.ArchiveCreation, archive.Id);
+        var userCancellationToken = cancellationRegistry.Register(transferIdentifier);
+
+        try
+        {
+            using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken,
+                userCancellationToken
+            );
+
+            try
+            {
+                await ChangeArchiveFileHashesAsync(
+                    archive: archive,
+                    archiveConfig: archiveConfig,
+                    knownHashes: await LoadKnownHashesAsync(
+                        archiveConfig.Id,
+                        linkedTokenSource.Token
+                    ),
+                    transferType: TransferType.ArchiveHashChange,
+                    cancellationToken: linkedTokenSource.Token
+                );
+
+                return true;
+            }
+            catch (OperationCanceledException) when (userCancellationToken.IsCancellationRequested)
+            {
+                await SaveChangedHashesAndCancelWaitingUploadsAsync(
+                    archive: archive,
+                    waitingUploads: waitingUploads,
+                    cancellationToken: cancellationToken
+                );
+
+                return false;
+            }
+            catch (OperationCanceledException)
+            {
+                await repository.SaveChangesAsync(cancellationToken: CancellationToken.None);
+
+                throw;
+            }
+        }
+        finally
+        {
+            cancellationRegistry.Unregister(transferIdentifier);
+        }
+    }
+
+    private async Task SaveChangedHashesAndCancelWaitingUploadsAsync(
+        Archive archive,
+        IReadOnlyList<Upload> waitingUploads,
+        CancellationToken cancellationToken
+    )
+    {
+        logger.LogInformation(
+            "Canceled the MD5 hash change of existing archive {ArchiveId} on user request. {FileCountWithoutHash} archive files have no valid hash anymore and get new hashes before the archive is assigned again",
+            archive.Id,
+            archive.ArchiveFiles.Count(f => f.Md5Hash is null)
+        );
+
+        CancelUploadsBecauseArchiveCreationWasCanceled(waitingUploads);
+
+        await repository.SaveChangesAsync(cancellationToken: cancellationToken);
+    }
+
+    private void CancelUploadsBecauseArchiveCreationWasCanceled(
+        IReadOnlyList<Upload> waitingUploads
+    )
+    {
+        foreach (var upload in waitingUploads)
+        {
+            upload.UploadState = UploadState.Canceled;
+
+            notificationService.Create(
+                kind: NotificationKind.UploadCanceled,
+                message: "Upload canceled because the archive creation was canceled.",
+                entity: upload,
+                selector: n => n.Upload
+            );
+        }
+
+        logger.LogInformation(
+            "Canceled {UploadCount} uploads that were waiting for the canceled archive creation",
+            waitingUploads.Count
+        );
     }
 
     private void CarryOverOnlineFiles(Upload newUpload, Archive assignableArchive)
@@ -428,6 +539,8 @@ public class ArchiveCreationService(
 
                     return;
                 }
+
+                archiveFile.Md5Hash = null;
 
                 string hash;
                 bool hashIsNew;
@@ -665,61 +778,39 @@ public class ArchiveCreationService(
         repository.Add(archive);
         await repository.SaveChangesAsync(cancellationToken: cancellationToken);
 
-        var entriesForPacking =
-            releaseFolderEntriesForPackingService.GetReleaseFolderEntriesForPacking(
-                releaseFolderPath: releaseFolderPath,
-                additionalArchiveContents: config.AdditionalArchiveContents,
-                createNonceFile: config.CreateNonceFile
-            );
+        var transferIdentifier = new TransferIdentifier(TransferType.ArchiveCreation, archive.Id);
+        var userCancellationToken = cancellationRegistry.Register(transferIdentifier);
 
-        if (entriesForPacking.ErrorMessages.Count > 0)
+        try
         {
-            await MarkArchiveCreationFailedAsync(
-                archive,
-                entriesForPacking.ErrorMessages,
-                cancellationToken
+            using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken,
+                userCancellationToken
             );
 
-            return;
+            try
+            {
+                await PackAndHashArchiveAsync(
+                    archive: archive,
+                    archiver: archiver,
+                    releaseFolderPath: releaseFolderPath,
+                    archiveSettings: archiveSettings,
+                    cancellationToken: linkedTokenSource.Token
+                );
+            }
+            catch (OperationCanceledException) when (userCancellationToken.IsCancellationRequested)
+            {
+                await DeleteArchiveAndCancelWaitingUploadsAsync(
+                    archive: archive,
+                    waitingUploads: uploads,
+                    cancellationToken: cancellationToken
+                );
+            }
         }
-
-        var archiveResult = await CreateArchiveAsync(
-            archive: archive,
-            archiver: archiver,
-            releaseFolderPath: releaseFolderPath,
-            entriesForPacking: entriesForPacking.Entries,
-            archiveSettings: archiveSettings,
-            cancellationToken: cancellationToken
-        );
-
-        if (!archiveResult.IsSuccess)
+        finally
         {
-            await MarkArchiveCreationFailedAsync(
-                archive,
-                archiveResult.ErrorMessages ?? [],
-                cancellationToken
-            );
-
-            return;
+            cancellationRegistry.Unregister(transferIdentifier);
         }
-
-        archive.ArchiveFiles = archiveResult
-            .CreatedFileNames.Select(f => new ArchiveFile { FullFileName = f })
-            .ToList();
-
-        await repository.SaveChangesAsync(cancellationToken: cancellationToken);
-
-        await HashArchiveFilesAsync(archive, config, archiver, cancellationToken);
-        FinalizeArchive(archive);
-
-        await repository.SaveChangesAsync(cancellationToken: cancellationToken);
-
-        logger.LogInformation(
-            "Created archive {ArchiveId} for ArchiveConfig {ArchiveConfigId} with {FileCount} files",
-            archive.Id,
-            config.Id,
-            archive.ArchiveFiles.Count
-        );
     }
 
     private async Task<ArchiveResult> CreateArchiveAsync(
@@ -775,6 +866,91 @@ public class ArchiveCreationService(
             archive.ReleaseFolderEntriesCopiedForPacking = [];
             await repository.SaveChangesAsync(cancellationToken: CancellationToken.None);
         }
+    }
+
+    private async Task DeleteArchiveAndCancelWaitingUploadsAsync(
+        Archive archive,
+        IReadOnlyList<Upload> waitingUploads,
+        CancellationToken cancellationToken
+    )
+    {
+        logger.LogInformation(
+            "Canceled the creation of archive {ArchiveId} on user request, deleting the archive and its folder {ArchiveFolderPath}",
+            archive.Id,
+            archive.ArchiveFolderPath
+        );
+
+        DeleteArchiveFolderAndRemoveArchive(archive);
+        CancelUploadsBecauseArchiveCreationWasCanceled(waitingUploads);
+
+        await repository.SaveChangesAsync(cancellationToken: cancellationToken);
+    }
+
+    private async Task PackAndHashArchiveAsync(
+        Archive archive,
+        IArchiver archiver,
+        string releaseFolderPath,
+        ArchiveSettings archiveSettings,
+        CancellationToken cancellationToken
+    )
+    {
+        var config = archive.ArchiveConfig;
+
+        var entriesForPacking =
+            releaseFolderEntriesForPackingService.GetReleaseFolderEntriesForPacking(
+                releaseFolderPath: releaseFolderPath,
+                additionalArchiveContents: config.AdditionalArchiveContents,
+                createNonceFile: config.CreateNonceFile
+            );
+
+        if (entriesForPacking.ErrorMessages.Count > 0)
+        {
+            await MarkArchiveCreationFailedAsync(
+                archive,
+                entriesForPacking.ErrorMessages,
+                cancellationToken
+            );
+
+            return;
+        }
+
+        var archiveResult = await CreateArchiveAsync(
+            archive: archive,
+            archiver: archiver,
+            releaseFolderPath: releaseFolderPath,
+            entriesForPacking: entriesForPacking.Entries,
+            archiveSettings: archiveSettings,
+            cancellationToken: cancellationToken
+        );
+
+        if (!archiveResult.IsSuccess)
+        {
+            await MarkArchiveCreationFailedAsync(
+                archive,
+                archiveResult.ErrorMessages ?? [],
+                cancellationToken
+            );
+
+            return;
+        }
+
+        archive.ArchiveFiles = archiveResult
+            .CreatedFileNames.Select(f => new ArchiveFile { FullFileName = f })
+            .ToList();
+
+        await repository.SaveChangesAsync(cancellationToken: cancellationToken);
+
+        await HashArchiveFilesAsync(archive, config, archiver, cancellationToken);
+        FinalizeArchive(archive);
+
+        await repository.SaveChangesAsync(cancellationToken: cancellationToken);
+
+        logger.LogInformation(
+            "Created archive {ArchiveId} for ArchiveConfig {ArchiveConfigId} with {FileCount} files",
+            archive.Id,
+            config.Id,
+            archive.ArchiveFiles.Count
+        );
     }
 
     private async Task<ArchiveResult> PackReleaseFolderWithProgressAsync(

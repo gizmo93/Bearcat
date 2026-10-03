@@ -76,6 +76,21 @@
                     }
                 </CellTemplate>
             </BbDataTableColumn>
+            <BbDataTableColumn TData="RunningArchiveReadModel" TValue="int"
+                               Header=""
+                               Property="@(archive => archive.ArchiveId)"
+                               Width="56px">
+                <CellTemplate Context="archive">
+                    <div class="flex justify-end">
+                        <BbButton Variant="ButtonVariant.Ghost"
+                                  Size="ButtonSize.IconSmall"
+                                  AriaLabel="@L["CancelArchiveCreation"]"
+                                  OnClick="@(() => CancelArchiveCreationAsync(archive))">
+                            <LucideIcon Name="ban" class="h-4 w-4" />
+                        </BbButton>
+                    </div>
+                </CellTemplate>
+            </BbDataTableColumn>
         </Columns>
     </BbDataTable>
 

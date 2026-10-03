@@ -1,10 +1,15 @@
 using Bearcat.Domain.Shared.Transfers;
 using Bearcat.Domain.UseCases.ManageArchives.ReadModels;
+using BlazorBlueprint.Components;
 using Microsoft.AspNetCore.Components;
 
 namespace Bearcat.Website.Pages.Home.RunningArchives;
 
-public partial class RunningArchives : ComponentBase
+public partial class RunningArchives(
+    DialogService dialogService,
+    ToastService toastService,
+    ITransferCancellationRegistry transferCancellationRegistry
+) : ComponentBase
 {
     [Parameter]
     [EditorRequired]
@@ -43,6 +48,37 @@ public partial class RunningArchives : ComponentBase
                 $"Unexpected transfer type for running archive, {snapshot.Identifier.Type}"
             ),
         };
+    }
+
+    private async Task CancelArchiveCreationAsync(RunningArchiveReadModel archive)
+    {
+        var result = await dialogService.ConfirmAsync(
+            L["CancelArchiveCreation"],
+            L["CancelArchiveCreationConfirmation", archive.ArchiveId],
+            new ConfirmDialogOptions
+            {
+                ConfirmText = L["CancelArchiveCreation"],
+                CancelText = L["Close"],
+                Destructive = true,
+            }
+        );
+
+        if (!result.Confirmed)
+        {
+            return;
+        }
+
+        if (
+            transferCancellationRegistry.RequestCancellation(
+                new TransferIdentifier(TransferType.ArchiveCreation, archive.ArchiveId)
+            )
+        )
+        {
+            toastService.Success(L["ArchiveCreationCancellationRequested", archive.ArchiveId]);
+            return;
+        }
+
+        toastService.Error(L["ArchiveCreationAlreadyFinished", archive.ArchiveId]);
     }
 
     private void ToggleShowDetails(int archiveId)

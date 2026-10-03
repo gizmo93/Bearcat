@@ -22,6 +22,8 @@ public sealed class RecordingTransferProgressTracker : ITransferProgressTracker
 
     public List<TransferIdentifier> StoppedIdentifiers { get; } = [];
 
+    public Action<TransferIdentifier, int>? CallbackAfterBeginFile { get; set; }
+
     public void StartTracking(
         TransferIdentifier identifier,
         IReadOnlyList<TransferFile> plannedFiles
@@ -47,6 +49,8 @@ public sealed class RecordingTransferProgressTracker : ITransferProgressTracker
             inner.BeginFile(identifier, fileId, fileName, sourceName, totalBytes);
             LastSnapshotPerIdentifier[identifier] = inner.Get(identifier)!;
         }
+
+        CallbackAfterBeginFile?.Invoke(identifier, fileId);
     }
 
     public void AddBytes(TransferIdentifier identifier, int fileId, long bytes)

@@ -1247,6 +1247,10 @@
   <data name="ArchivePhasePacking" xml:space="preserve"><value>1/2 Packen</value></data>
   <data name="ArchivePhaseCreatingMd5Hashes" xml:space="preserve"><value>2/2 MD5-Hashes erstellen</value></data>
   <data name="ArchivePhaseChangingMd5HashesOfExistingArchive" xml:space="preserve"><value>MD5-Hashes des bestehenden Archivs ändern</value></data>
+  <data name="CancelArchiveCreation" xml:space="preserve"><value>Archiverstellung abbrechen</value></data>
+  <data name="CancelArchiveCreationConfirmation" xml:space="preserve"><value>Erstellung von Archiv #{0} abbrechen? Ein neues Archiv wird gelöscht, ein bestehendes Archiv bleibt erhalten. Die auf dieses Archiv wartenden Uploads werden abgebrochen.</value></data>
+  <data name="ArchiveCreationCancellationRequested" xml:space="preserve"><value>Abbruch für die Erstellung von Archiv #{0} angefragt.</value></data>
+  <data name="ArchiveCreationAlreadyFinished" xml:space="preserve"><value>Die Erstellung von Archiv #{0} ist bereits abgeschlossen.</value></data>
   <data name="Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="LogsDescription" xml:space="preserve"><value>Liveausgabe des Anwendungslogs</value></data>
   <data name="PauseStreaming" xml:space="preserve"><value>Pausieren</value></data>

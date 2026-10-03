@@ -111,6 +111,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
             new DefaultConfigurationProvider(),
             new ReleaseFolderEntriesForPackingService(new FileSystemService()),
             transferProgressTracker,
+            new TransferCancellationRegistry(),
             new FolderSizeProgressReporter()
         );
     }
@@ -180,7 +181,7 @@ public class ArchiveRestoreAndCreationPipelineTest(DatabaseProvider databaseProv
                     It.IsAny<int>(),
                     "secret",
                     It.IsAny<ArchiveOptions>(),
-                    CancellationToken.None
+                    It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(new ArchiveResult(true, ["repacked.part1.rar"], null));

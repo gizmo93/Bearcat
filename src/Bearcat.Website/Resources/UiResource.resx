@@ -1244,6 +1244,10 @@
   <data name="ArchivePhasePacking" xml:space="preserve"><value>1/2 Packing</value></data>
   <data name="ArchivePhaseCreatingMd5Hashes" xml:space="preserve"><value>2/2 Creating MD5 hashes</value></data>
   <data name="ArchivePhaseChangingMd5HashesOfExistingArchive" xml:space="preserve"><value>Changing MD5 hashes of existing archive</value></data>
+  <data name="CancelArchiveCreation" xml:space="preserve"><value>Cancel archive creation</value></data>
+  <data name="CancelArchiveCreationConfirmation" xml:space="preserve"><value>Cancel the creation of archive #{0}? A new archive is deleted, an existing archive is kept. The uploads waiting for this archive are canceled.</value></data>
+  <data name="ArchiveCreationCancellationRequested" xml:space="preserve"><value>Cancellation requested for the creation of archive #{0}.</value></data>
+  <data name="ArchiveCreationAlreadyFinished" xml:space="preserve"><value>The creation of archive #{0} already finished.</value></data>
   <data name="Logs" xml:space="preserve"><value>Logs</value></data>
   <data name="LogsDescription" xml:space="preserve"><value>Live output of the application log</value></data>
   <data name="PauseStreaming" xml:space="preserve"><value>Pause</value></data>
