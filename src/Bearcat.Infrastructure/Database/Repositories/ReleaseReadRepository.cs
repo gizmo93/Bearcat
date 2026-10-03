@@ -1257,11 +1257,11 @@ public class ReleaseReadRepository(
         ReleaseSearchQuery query
     )
     {
-        var searchTerm = Normalize(query.SearchTerm);
+        var searchTerm = SearchTextPatterns.TrimOrNullWhenEmpty(query.SearchTerm);
 
         if (searchTerm is not null)
         {
-            var pattern = ToContainsPattern(searchTerm);
+            var pattern = SearchTextPatterns.ToLowerCaseContainsPattern(searchTerm);
 
             releases = releases.Where(r =>
                 EF.Functions.Like(r.Name.ToLower(), pattern)
@@ -1303,7 +1303,7 @@ public class ReleaseReadRepository(
             );
         }
 
-        var archiverName = Normalize(query.ArchiverName);
+        var archiverName = SearchTextPatterns.TrimOrNullWhenEmpty(query.ArchiverName);
 
         if (archiverName is not null)
         {
@@ -1335,11 +1335,11 @@ public class ReleaseReadRepository(
             );
         }
 
-        var postedLocationUrl = Normalize(query.PostedLocationUrl);
+        var postedLocationUrl = SearchTextPatterns.TrimOrNullWhenEmpty(query.PostedLocationUrl);
 
         if (postedLocationUrl is not null)
         {
-            var pattern = ToContainsPattern(postedLocationUrl);
+            var pattern = SearchTextPatterns.ToLowerCaseContainsPattern(postedLocationUrl);
             releases = releases.Where(r =>
                 r.PostedLocations.Any(location =>
                     EF.Functions.Like(location.Url.ToLower(), pattern)
@@ -1347,11 +1347,11 @@ public class ReleaseReadRepository(
             );
         }
 
-        var downloadLink = Normalize(query.DownloadLink);
+        var downloadLink = SearchTextPatterns.TrimOrNullWhenEmpty(query.DownloadLink);
 
         if (downloadLink is not null)
         {
-            var pattern = ToContainsPattern(downloadLink);
+            var pattern = SearchTextPatterns.ToLowerCaseContainsPattern(downloadLink);
 
             releases = releases.Where(r =>
                 r.UploadConfigs.Any(u =>
@@ -1364,11 +1364,11 @@ public class ReleaseReadRepository(
             );
         }
 
-        var archiveFileName = Normalize(query.ArchiveFileName);
+        var archiveFileName = SearchTextPatterns.TrimOrNullWhenEmpty(query.ArchiveFileName);
 
         if (archiveFileName is not null)
         {
-            var pattern = ToContainsPattern(archiveFileName);
+            var pattern = SearchTextPatterns.ToLowerCaseContainsPattern(archiveFileName);
             releases = releases.Where(r =>
                 r.ArchiveConfigs.Any(config =>
                     config.Archives.Any(archive =>
@@ -1380,11 +1380,13 @@ public class ReleaseReadRepository(
             );
         }
 
-        var uploadId = Normalize(query.UploadId)?.TrimStart('#');
+        var uploadId = SearchTextPatterns.TrimOrNullWhenEmpty(query.UploadId);
 
         if (uploadId is not null)
         {
-            if (!int.TryParse(uploadId, out var parsedUploadId))
+            if (
+                SearchTextPatterns.ParseIdWithOptionalHashPrefix(uploadId) is not { } parsedUploadId
+            )
             {
                 return releases.Where(_ => false);
             }
@@ -1428,15 +1430,5 @@ public class ReleaseReadRepository(
             ),
             _ => releases,
         };
-    }
-
-    private static string? Normalize(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-    }
-
-    private static string ToContainsPattern(string value)
-    {
-        return $"%{value.ToLowerInvariant()}%";
     }
 }

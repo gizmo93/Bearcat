@@ -15,17 +15,6 @@ public partial class ArchiveConfigContent(DialogService dialogService)
     [Parameter]
     public ReleaseType ReleaseType { get; set; } = ReleaseType.Managed;
 
-    private static BadgeVariant GetArchiveVariant(ArchiveState state) =>
-        state switch
-        {
-            ArchiveState.Created => BadgeVariant.Default,
-            ArchiveState.CreationFailed => BadgeVariant.Destructive,
-            ArchiveState.MissingFiles => BadgeVariant.Destructive,
-            ArchiveState.Creating => BadgeVariant.Secondary,
-            ArchiveState.Restoring => BadgeVariant.Secondary,
-            _ => BadgeVariant.Outline,
-        };
-
     private async Task ShowArchiveDialogAsync(int archiveId)
     {
         var parameters = new Dictionary<string, object?>

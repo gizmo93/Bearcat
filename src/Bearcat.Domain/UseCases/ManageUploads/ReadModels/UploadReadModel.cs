@@ -17,5 +17,6 @@ public record UploadReadModel(
     DateTime? NotFullyOnlineSince,
     DateTime? FullyOfflineSince,
     int LinkCount,
-    IReadOnlyList<string> ErrorMessages
+    IReadOnlyList<string> ErrorMessages,
+    int? ArchiveId
 );

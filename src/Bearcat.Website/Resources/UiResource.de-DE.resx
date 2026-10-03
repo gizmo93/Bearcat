@@ -1508,4 +1508,18 @@
   <data name="ProxyCategory.NfoDatabases.Description" xml:space="preserve"><value>Releaseinformationen, NFO-Dateien und Cover aus NFO-Datenbanken.</value></data>
   <data name="ProxyCategory.MediaDatabases" xml:space="preserve"><value>Mediendatenbanken</value></data>
   <data name="ProxyCategory.MediaDatabases.Description" xml:space="preserve"><value>Metadatenabfragen für Filme, Serien und Spiele.</value></data>
+  <data name="All" xml:space="preserve"><value>Alle</value></data>
+  <data name="Archive" xml:space="preserve"><value>Archiv</value></data>
+  <data name="Contents" xml:space="preserve"><value>Inhalt</value></data>
+  <data name="SearchUploads" xml:space="preserve"><value>Uploads suchen</value></data>
+  <data name="UploadSearchPlaceholder" xml:space="preserve"><value>Releasename, ID oder Downloadlink</value></data>
+  <data name="AnyUploadState" xml:space="preserve"><value>Jeder Status</value></data>
+  <data name="SearchArchives" xml:space="preserve"><value>Archive suchen</value></data>
+  <data name="ArchiveSearchPlaceholder" xml:space="preserve"><value>Releasename, ID, Dateiname, Ordner oder MD5</value></data>
+  <data name="AnyArchiveState" xml:space="preserve"><value>Jeder Status</value></data>
+  <data name="OnDisk" xml:space="preserve"><value>Auf Datenträger</value></data>
+  <data name="ArchiveResultsSummary" xml:space="preserve"><value>Zeige {0}-{1} von {2} Archiven</value></data>
+  <data name="NoArchivesFound" xml:space="preserve"><value>Keine Archive gefunden</value></data>
+  <data name="UploadCountValue" xml:space="preserve"><value>{0} Uploads</value></data>
+  <data name="UploadsAndArchives" xml:space="preserve"><value>Uploads und Archive</value></data>
 </root>

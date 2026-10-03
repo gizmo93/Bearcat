@@ -9,5 +9,7 @@ public record UploadSearchQuery(
     int? HosterRegistrationId = null,
     int? ReleaseId = null,
     int PageIndex = 0,
-    int PageSize = 10
+    int PageSize = 10,
+    string? SearchTerm = null,
+    int? ReleaseGroupId = null
 );

@@ -330,16 +330,6 @@ public partial class ReleaseUploads(
         selectedUploadConfigId = InitialUploadConfigId ?? 0;
     }
 
-    private static BadgeVariant GetUploadVariant(UploadState state) =>
-        state switch
-        {
-            UploadState.Uploading => BadgeVariant.Default,
-            UploadState.CancellationRequested => BadgeVariant.Secondary,
-            UploadState.Pending => BadgeVariant.Secondary,
-            UploadState.Failed => BadgeVariant.Destructive,
-            _ => BadgeVariant.Outline,
-        };
-
     private static bool CanCheckOnlineStateNow(ReleaseUploadReadModel upload) =>
         upload
             is {

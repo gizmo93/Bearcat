@@ -1,0 +1,45 @@
+<EditForm Model="model" OnSubmit="ApplyFiltersAsync" class="bearcat-release-search">
+    <div class="bearcat-release-search-grid">
+        <BbFormFieldInput TValue="string"
+                          @bind-Value="model.SearchTerm"
+                          Label="@L["SearchUploads"]"
+                          Placeholder="@L["UploadSearchPlaceholder"]" />
+
+        <BbFormFieldSelect TValue="UploadState?"
+                           @bind-Value="model.UploadState"
+                           Label="@L["State"]"
+                           Options="UploadStateOptions" />
+
+        <BbFormFieldSelect TValue="OnlineState?"
+                           @bind-Value="model.OnlineState"
+                           Label="@L["OnlineState"]"
+                           Options="OnlineStateOptions" />
+
+        <BbFormFieldSelect TValue="int?"
+                           @bind-Value="model.HosterRegistrationId"
+                           Label="@L["HosterRegistration"]"
+                           Options="HosterRegistrationOptions" />
+
+        <BbFormFieldSelect TValue="int"
+                           @bind-Value="model.ReleaseGroupId"
+                           Label="@L["ReleaseGroup"]"
+                           Options="ReleaseGroupOptions" />
+    </div>
+
+    <div class="bearcat-release-search-actions">
+        <BbButton Type="ButtonType.Submit"
+                  Size="ButtonSize.Small"
+                  Class="bearcat-release-search-button">
+            <LucideIcon Name="search" class="h-4 w-4" />
+            @L["Search"]
+        </BbButton>
+        <BbButton Type="ButtonType.Button"
+                  Variant="ButtonVariant.Secondary"
+                  Size="ButtonSize.Small"
+                  Class="bearcat-release-search-button"
+                  OnClick="ResetFiltersAsync">
+            <LucideIcon Name="rotate-ccw" class="h-4 w-4" />
+            @L["ResetFilters"]
+        </BbButton>
+    </div>
+</EditForm>
